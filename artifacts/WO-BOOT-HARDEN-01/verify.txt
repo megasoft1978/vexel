@@ -4,12 +4,12 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.1s)
+-- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
 ninja: no work to do.
-Ran 58 tests in 3.917s
+Ran 59 tests in 2.389s
 
 OK
-Ran 58 tests: 58 passed, 0 failed, 0 errors, 0 skipped; 3.946s
+Ran 59 tests: 59 passed, 0 failed, 0 errors, 0 skipped; 2.416s
 valid ledger: 57 entries

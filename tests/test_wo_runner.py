@@ -255,6 +255,27 @@ class RunnerPrimitiveTests(unittest.TestCase):
                 wo_driver.assert_scope(root, base, frozen_head,
                     "# Files allowed to touch\n- `work/**`\n", "WO-FAKE")
 
+    def test_candidate_scope_accepts_unchanged_active_root_copy(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "scripts").mkdir(); (root / "scripts/ok.py").write_text("before\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            (root / "work").mkdir(); (root / "work/WO-FAKE.md").write_text(fake_work_order("WO-FAKE", base))
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "freeze order"], cwd=root, check=True)
+            wo_driver.load_wo("WO-FAKE", root)
+            (root / "scripts/ok.py").write_text("candidate\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "allowed change"], cwd=root, check=True)
+            candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            changed = wo_driver.assert_scope(root, base, candidate,
+                fake_work_order("WO-FAKE", base), "WO-FAKE")
+            self.assertEqual(changed, ["scripts/ok.py", "work/WO-FAKE.md"])
+
     def test_candidate_scope_hard_denies_frozen_paths_under_broad_allowlist(self) -> None:
         with temporary_directory() as name:
             root = Path(name); subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)

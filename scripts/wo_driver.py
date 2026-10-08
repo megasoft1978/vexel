@@ -526,8 +526,10 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         strict_schema_path = run_dir / "executor-report.schema.json"
         strict_schema_path.write_text(json.dumps(strict_schema, indent=2) + "\n", encoding="utf-8")
         report_path = run_dir / "report.json"
-        prompt = (f"Read work/{args.wo_id}.md and complete it. Run every acceptance command, "
-                  f"commit only an accepted implementation, and write the required JSON report to {report_path}.")
+        prompt = ("Complete the following hash-verified frozen work order. Use only this supplied "
+                  "root-copy snapshot; do not read or trust a work-order file from the task worktree. "
+                  "Run every acceptance command, commit only an accepted implementation, and write "
+                  f"the required JSON report to {report_path}.\n\nFROZEN WORK ORDER:\n{body}")
         command = [args.codex, "exec"]
         if session: command += ["resume", session]
         command += ["-m", "gpt-6-luna", "-c", "model_reasoning_effort=high",
