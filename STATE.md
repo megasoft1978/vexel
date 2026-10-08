@@ -20,8 +20,8 @@
 - M0-02 oracle: 24 pinned fixtures at 256x256; re-rendered to temporary files
   with librsvg 2.62.3 in 0.701 seconds, with committed goldens unchanged.
   Renderer evidence and environment details are in `artifacts/WO-M0-02/`.
-- Accepted candidate: `WO-M0-03` is ready to fast-forward merge at
-  `33d946fac5301bf88e1181b8e494525256c310f7`. Its harness validates pinned SVG
+- Completed work order: `WO-M0-03` is merged to `main` at
+  `6bff91bec9f1358b9caa9780d5c47ad8139ac7c6`. Its harness validates pinned SVG
   fixtures, requires all four render-task placeholders, restricts adapter
   output and process access, and records recoverable JSON/CSV results.
 - WO-M0-03 verification: 113 full tests and 28 focused tests pass with zero
