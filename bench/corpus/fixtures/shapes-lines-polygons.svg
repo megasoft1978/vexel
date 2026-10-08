@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 96" width="128" height="96">
+  <title>Shapes Lines Polygons</title>
+  <line x1="5" y1="8" x2="120" y2="8"/><polyline points="8,26 34,18 52,30"/><polygon points="76,20 116,24 102,50"/>
+</svg>

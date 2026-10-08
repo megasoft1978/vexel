@@ -85,3 +85,17 @@ before accepting output. Candidate and root scope checks hard-deny `work/**`,
 `tests/oracle/**`, both frozen manifest locks, and `OWNER-DIRECTIVES.md` before
 evaluating work-order allowlists. The active work order is tolerated in a
 candidate diff only when it is byte-identical to the validated root copy.
+
+## Corpus fetcher
+
+`python3 scripts/fetch_corpus.py --verify-only` validates the checked-in
+manifest digest, schema, licenses, coverage, exact fixture count, and local
+fixture hashes without network access. `--fetch` skips existing exact files
+and can fetch only manifest entries whose source URL is an HTTPS raw file under
+the pinned WPT revision's `svg/` directory. Redirects are rejected, the
+per-file cap is 2 MiB, and installation is atomic after digest verification.
+`--list --feature TAG` emits compact deterministic JSON in fixture-ID order.
+
+The fetcher uses Python's standard library. It is an explicit corpus
+maintenance command; the SVG application does not call it or retrieve
+document resources.

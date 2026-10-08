@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 96" width="128" height="96">
+  <title>Path Arcs</title>
+  <path d="M15 48 A30 30 0 0 1 75 48 A30 30 0 0 1 15 48 Z M82 18 h34 v60 h-34 z" fill="#6a8" fill-rule="evenodd"/>
+</svg>

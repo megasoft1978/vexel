@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 96" width="128" height="96">
+  <title>Metadata Namespaces</title>
+  <metadata><vexel:record xmlns:vexel="https://example.invalid/vexel" vexel:source="synthetic">Preserve this metadata</vexel:record></metadata><rect x="18" y="18" width="92" height="60"/>
+</svg>

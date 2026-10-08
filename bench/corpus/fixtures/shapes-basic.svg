@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 96" width="128" height="96">
+  <title>Shapes Basic</title>
+  <rect x="4" y="4" width="30" height="22"/><circle cx="62" cy="18" r="12"/><ellipse cx="102" cy="18" rx="15" ry="9"/>
+</svg>
