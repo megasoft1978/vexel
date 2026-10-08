@@ -1,21 +1,31 @@
 # Project state
 
-- Current work order: `WO-M0-02` has a corrected candidate on
-  `wo/WO-M0-02` at `1a45004c96873b643f35427ba2766e88ba020273`. Do not merge
-  yet. The second read-only review found unstreamed
-  semantic output, an invalid embedded image, and stale AC-6 worktree evidence.
-  All three findings have local corrective changes and fresh machine evidence.
-  The frozen verifier budget of two rounds is exhausted, so the corrected
-  candidate has not had its required independent review.
-- Current work order: `WO-M0-01` is implemented and accepted on candidate
+- Current work order: `WO-M0-02` is complete and merged to `main` at
+  `0f24ab6f4a5a9ab6f7ff3846ae3d6339316287a9`. All nine frozen commands pass;
+  the read-only review found no remaining code, safety, scope, or test defect.
+  It flagged only the ephemeral AC-6 worktree path, normalized in the retained
+  evidence and recorded in `artifacts/WO-M0-02/review-nits.md` per planner policy.
+- Working branch: `main`; no active task worktree for M0-02.
+- Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
+- Build: Debug, `mac-asan` (AddressSanitizer + UndefinedBehaviorSanitizer), and
+  `mac-ubsan` configure/build/CTest pass with Apple Clang 21.0.0.
+- Test inventory: latest M0-02 `./dev verify` reports 85 Python tests pass,
+  zero failures, errors, or skips. M0-02 focused suites report 12 generator
+  tests and 42 oracle/runner tests passing.
+- M0-02 stress generation: exact 10,000,000 / 100,000,000 / 1,000,000,000
+  byte documents. Mixed SHA-256 is
+  `895780c50a7e3b6f05e1ad34b68ca6d22684699e6fa1b7425a7f1baaa6caa9e7`.
+  Recorded generator times are in `bench/results/WO-M0-02.json`; they measure
+  input generation, not Vexel rendering.
+- M0-02 oracle: 24 pinned fixtures at 256x256; re-rendered to temporary files
+  with librsvg 2.62.3 in 0.701 seconds, with committed goldens unchanged.
+  Renderer evidence and environment details are in `artifacts/WO-M0-02/`.
+- Next: prepare and freeze `WO-M0-03` for the black-box competitor benchmark
+  CLI, then proceed to BOOT-06 and BOOT-07 before the M0-04 owner evidence gate.
+- Completed work order: `WO-M0-01` was implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
 - BOOT-05 revision 3 is accepted and merged at `178f0e57554cf1eae8182a9cf89330297b647ffb` (merge includes the previously verified candidate and the equivalent root-scope path matcher cleanup).
-- Working branch: `wo/WO-M0-02`; implementation changes are being committed in
-  the isolated task worktree before the retry.
-- Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
-- Build: Debug, `mac-asan` (AddressSanitizer + UndefinedBehaviorSanitizer), and `mac-ubsan` configure/build/CTest pass with Apple Clang 21.0.0.
-- Test inventory: corrected M0-02 candidate `./dev verify` reports 83 Python tests passed, zero failures/errors/skips; 10 generator tests and 42 oracle/runner tests passed. ASan and UBSan CTest each pass 1/1.
 - BOOT-05 evidence: `artifacts/WO-BOOT-05/`; final fresh verification reran all ten required commands. Fuzz seed `12648430` completed 144 invocations in 3.001 seconds; assertion and heap-overflow probes were detected.
 - Strict executor schema generation enumerates all nine frozen acceptance IDs and preserves runtime exact-key and command-evidence validation.
 - BOOT-04 revision 2 remains complete and merged. Its preflight transcripts remain preserved as compressed raw artifacts plus readable copies with trailing whitespace normalized for the required diff check.
@@ -38,6 +48,3 @@
   passed runner validation; the accepted report is retained in per-run evidence.
 - No renderer throughput, memory, or latency result is claimed for M0-01; its
   synthetic corpus is an input baseline, not a representative user corpus.
-- M0-02 exact-size generation: 10,000,000 / 100,000,000 / 1,000,000,000 bytes; mixed SHA-256 `895780c50a7e3b6f05e1ad34b68ca6d22684699e6fa1b7425a7f1baaa6caa9e7`; observed 0.010086 / 0.086280 / 0.587311 seconds. These are input generation times, not Vexel rendering results.
-- M0-02 embedded PNG verification: deterministic 97-byte payload decodes and renders via librsvg to 256x256 RGBA PNG.
-- Next: obtain owner/planner direction on fresh independent review after the frozen two-round cap; then merge M0-02 only after clean verifier acceptance. Continue with M0-03, roadmap BOOT-06/07 placement, and stop at M0-04 owner gate.
