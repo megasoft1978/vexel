@@ -7,3 +7,5 @@
 | 2026-10-08 | WO-BOOT-03 | complete; fresh verifier pass | `4cc8bfbab2ecdda7c4cd72354f99cb28c08ab477` | `44cce8f` | 14 tests pass; actionlint/policy checks pass; hosted CI pending (no remote); `artifacts/WO-BOOT-03/` |
 | 2026-10-08 | WO-BOOT-04 r2 | complete; fresh verifier pass; merged | `837e88acdc247c790b0b9785efed98f544584fcb` | `05dc456` | 37 targeted tests; fresh verifier reran seven checks and 43 full-suite tests; `artifacts/WO-BOOT-04/` |
 | 2026-10-08 | WO-BOOT-05 | ready; runner bootstrap repaired | `0bc1cfdc9f990878f087dfff936d12fb175f4678` | `982299f` | Frozen test/sanitizer/fuzz order; preflight evidence path fix; `work/WO-BOOT-05.md` |
+| 2026-10-08 | WO-BOOT-05 r1 | blocked before model turn | `0bc1cfdc9f990878f087dfff936d12fb175f4678` | — | Codex strict JSON output rejected `minProperties`; attempt evidence retained under `artifacts/WO-BOOT-05/runner-attempt1/` |
+| 2026-10-08 | WO-BOOT-05 r2 | ready | `98db9d414b79f30fafe1b8db9a8afec34e058ed1` | pending | ADR-0004 removes unsupported schema keyword; local runner preserves exact acceptance validation |

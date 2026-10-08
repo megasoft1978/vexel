@@ -252,6 +252,16 @@ class RunnerPrimitiveTests(unittest.TestCase):
             with self.assertRaisesRegex(wo_driver.RunnerError, "clean task worktree"):
                 wo_driver.require_clean_task(root)
 
+    def test_executor_report_rejects_empty_acceptance_evidence(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name)
+            report = root / "report.json"
+            report.write_text(json.dumps({"status": "complete", "base_sha": "a" * 40,
+                                          "head_sha": "b" * 40, "acceptance": {}, "summary": "ok"}))
+            schema = wo_validate.ROOT / "docs/schemas/executor-report.schema.json"
+            with self.assertRaisesRegex(wo_driver.RunnerError, "acceptance evidence"):
+                wo_driver.validate_report(report, schema, "a" * 40, {"AC-1"}, set())
+
     def test_verifier_stops_when_deterministic_check_fails(self) -> None:
         with temporary_directory() as name:
             root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)

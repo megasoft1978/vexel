@@ -1,6 +1,6 @@
 # Project state
 
-- Current work order: `WO-BOOT-05` revision 1 (READY; runner bootstrap repair committed, executor run pending).
+- Current work order: `WO-BOOT-05` revision 2 (READY; strict-output schema compatibility amendment committed, executor run pending).
 - Last accepted implementation commit: `05dc456a90ef67a8d9a1f8344fd52fe000f1af9c` (`fix: parse complete work order path rules`); final closeout is on `main` after fast-forward.
 - Working branch: `main`; BOOT-04 revision 2 is verified and merged.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
@@ -11,6 +11,7 @@
 - Installed CLI: `codex-cli 0.160.1`; executor preflight passes the owner-approved invocation contract. Approval bypass limitations are documented in the ADR.
 - Latest checks: 37 targeted tests; fresh exact-commit verification ran all seven frozen commands, 43 full-suite tests, actionlint, and a read-only review with `verdict=pass`.
 - BOOT-05 runner bootstrap repair scopes Codex preflight evidence to each ignored run directory; regression coverage confirms the root path guard accepts a new order without mutating BOOT-04 evidence.
-- Next: execute BOOT-05 through `scripts/wo-run.sh` from the clean main branch.
+- Initial BOOT-05 executor request was rejected before a model turn because the installed CLI's strict JSON output rejects `minProperties`; ADR-0004 records the fix. Revision 1 is closed as blocked, and revision 2 keeps exact acceptance validation in the runner.
+- Next: execute BOOT-05 revision 2 through `scripts/wo-run.sh` from the clean main branch.
 
 Resume by reading `AGENTS.md`, this file, the active work order, and the r4 operating model. Preserve the owner-provided `OWNER-DIRECTIVES.md`.

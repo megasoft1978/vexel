@@ -1,12 +1,12 @@
 ---
 id: WO-BOOT-05
-revision: 1
+revision: 2
 status: READY
 milestone: M0
 owner: project-owner
 executor: codex-gpt-6-luna
-base_sha: 0bc1cfdc9f990878f087dfff936d12fb175f4678
-spec_sha256: 7e030901da92ba781f21b673d085db6bd45d1ec3c84a1fdacdadfcd02d10eb9d
+base_sha: 98db9d414b79f30fafe1b8db9a8afec34e058ed1
+spec_sha256: a2c468e3086d167e0f42d362b94ad1331d78ee3a0eca68b4da3f3448346d8665
 parallel_safe: false
 ---
 # Goal
@@ -15,6 +15,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 # Context pointers
 - Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, this file, `docs/research-r4/01-operating-model.md`, `docs/research-r4/02-work-order-template.md`, `docs/research-r4/03-wrapper-scripts-spec.md`, `docs/research-r4/05-revised-roadmap.md`, `docs/CODING_STANDARD.md`, `scripts/README.md`, `CMakeLists.txt`, `CMakePresets.json`, `dev`.
 - Relevant ADRs: `docs/adr/0001-product-and-platform-locks.md`, `docs/adr/0003-codex-cli-compatibility-amendment.md`.
+- BOOT-05 recovery amendment: `docs/adr/0004-strict-json-schema-compatibility.md`.
 - Frozen tests/oracles: do not edit `tests/oracle/**`, `tests/golden/manifest.lock`, or `bench/corpus/manifest.lock`.
 - External docs: use local Apple Clang/CMake help and official CMake documentation only if a profile option is unclear. No external source code or downloads.
 
@@ -31,6 +32,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 - `scripts/test_runner.py`, `scripts/fuzz_smoke.py`, `scripts/sanitizer_probes.py`, `scripts/check_fuzz_workflow.py`, `scripts/README.md`
 - `tests/test_boot05.py`, `tests/README.md`, `tests/fuzz/README.md`, `tests/fuzz/**`
 - `docs/schemas/test-results.schema.json`, `docs/ci.md`
+- `docs/schemas/executor-report.schema.json`, `docs/adr/0004-strict-json-schema-compatibility.md`
 - `STATE.md`, `LEDGER.md`, `ledger.jsonl`, `artifacts/WO-BOOT-05/**`
 - `scripts/wo_driver.py` and `tests/test_wo_runner.py` only for the run-specific Codex preflight evidence path regression described in Required implementation.
 
@@ -49,6 +51,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 6. Add `.github/workflows/fuzz.yml`, macOS Apple Silicon only, with a short PR/manual smoke and a scheduled 60-second run. Use pinned actions, no dependency installation, no secrets, bounded job time, and upload no user data. Add a checker that rejects non-macOS runners and confirms the schedule uses `./dev fuzz --duration 60`.
 7. Fix BOOT-04 runner preflight artifact placement: executor/verifier CLI version/help evidence must live under the current ignored `artifacts/runs/<WO-ID>/<run-id>/` directory, never hard-coded to WO-BOOT-04. Add regression coverage proving a new WO's root path guard does not see an out-of-scope BOOT-04 artifact mutation.
 8. Document the module contracts, exact commands, result JSON, seed behavior, and the distinction between expected injected probe failures and real test failures. Update `STATE.md`, both ledgers, and retained artifacts only with observed results.
+9. Remove the unsupported `minProperties` keyword from `docs/schemas/executor-report.schema.json`. The runner already enforces an exact, non-empty set of acceptance IDs and executed command evidence after parsing, so strict structured output compatibility must not weaken runtime validation. Add a regression test for empty/missing acceptance evidence.
 
 # Acceptance criteria (machine-checkable)
 - AC-1 `./dev test-fast` exits 0 in under 30 seconds and writes schema-valid machine-readable results with zero failed or skipped tests; evidence `artifacts/WO-BOOT-05/fast-results.json`.
@@ -58,6 +61,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 - AC-5 `.github/workflows/fuzz.yml` is macOS-only, has PR/manual 3-second smoke and scheduled 60-second run; `python3 scripts/check_fuzz_workflow.py` and `actionlint .github/workflows/fuzz.yml` pass; evidence `artifacts/WO-BOOT-05/workflow.txt`.
 - AC-6 Fake-Codex runner test confirms preflight evidence is scoped under the active run directory and `assert_root_scope` accepts it; all new tests pass under `./dev verify`; evidence `artifacts/WO-BOOT-05/tests.txt`.
 - AC-7 `python3 scripts/ledger.py validate ledger.jsonl`, `git diff --check`, and changed-path validation pass; evidence `artifacts/WO-BOOT-05/local-checks.txt`.
+- AC-8 strict Codex schema preflight succeeds with the repository's executor report schema, and the runner continues rejecting empty or missing acceptance evidence.
 
 # Verification commands
 

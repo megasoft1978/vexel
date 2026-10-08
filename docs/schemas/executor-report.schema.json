@@ -10,7 +10,6 @@
     "head_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
     "acceptance": {
       "type": "object",
-      "minProperties": 1,
       "additionalProperties": {
         "type": "object",
         "additionalProperties": false,
