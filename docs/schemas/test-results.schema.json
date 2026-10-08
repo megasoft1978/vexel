@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vexel Python test results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["started_at", "ended_at", "elapsed_seconds", "counts", "tests"],
+  "properties": {
+    "started_at": { "type": "string" },
+    "ended_at": { "type": "string" },
+    "elapsed_seconds": { "type": "number", "minimum": 0 },
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["passed", "failed", "error", "skipped", "expected_failure", "unexpected_success"],
+      "properties": {
+        "passed": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 },
+        "error": { "type": "integer", "minimum": 0 },
+        "skipped": { "type": "integer", "minimum": 0 },
+        "expected_failure": { "type": "integer", "minimum": 0 },
+        "unexpected_success": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "tests": { "type": "array", "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "type": "string", "enum": ["passed", "failed", "error", "skipped", "expected_failure", "unexpected_success"] }
+      }
+    }}
+  }
+}

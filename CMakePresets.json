@@ -34,11 +34,31 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
+    },
+    {
+      "name": "mac-asan",
+      "displayName": "macOS Apple Silicon AddressSanitizer and UndefinedBehaviorSanitizer",
+      "inherits": "mac-debug",
+      "binaryDir": "${sourceDir}/build/mac-asan",
+      "cacheVariables": { "VEXEL_SANITIZER": "asan-ubsan" }
+    },
+    {
+      "name": "mac-ubsan",
+      "displayName": "macOS Apple Silicon UndefinedBehaviorSanitizer",
+      "inherits": "mac-debug",
+      "binaryDir": "${sourceDir}/build/mac-ubsan",
+      "cacheVariables": { "VEXEL_SANITIZER": "ubsan" }
     }
   ],
   "buildPresets": [
     { "name": "mac-debug", "configurePreset": "mac-debug" },
     { "name": "mac-release", "configurePreset": "mac-release" },
-    { "name": "mac-size", "configurePreset": "mac-size" }
+    { "name": "mac-size", "configurePreset": "mac-size" },
+    { "name": "mac-asan", "configurePreset": "mac-asan" },
+    { "name": "mac-ubsan", "configurePreset": "mac-ubsan" }
+  ],
+  "testPresets": [
+    { "name": "mac-asan", "configurePreset": "mac-asan", "output": { "outputOnFailure": true } },
+    { "name": "mac-ubsan", "configurePreset": "mac-ubsan", "output": { "outputOnFailure": true } }
   ]
 }

@@ -1,0 +1,12 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-05/build/mac-asan
+ninja: no work to do.
+{"duration_seconds": 3.010799, "failure": null, "iterations": 226, "requested_duration_seconds": 3.0, "seed": 12648430}

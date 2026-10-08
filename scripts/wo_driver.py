@@ -132,11 +132,29 @@ def assert_scope(root: Path, base: str, head: str, body: str,
     for name in changed:
         if name == frozen_path and _frozen_work_order_unchanged(root, head, name):
             continue
-        if name == frozen_path or not changed_path_allowed(name, allowed, protected):
+        if name == frozen_path or not _scope_path_allowed(name, allowed, protected):
             rejected.append(name)
     if rejected:
         raise RunnerError("candidate changed disallowed paths: " + ", ".join(rejected))
     return changed
+
+
+def _matches_work_order_pattern(path: str, pattern: str) -> bool:
+    if changed_path_allowed(path, [pattern], []):
+        return True
+    if pattern.endswith("/**"):
+        prefix = pattern[:-3].rstrip("/")
+        return path.startswith(prefix + "/")
+    return False
+
+
+def _scope_path_allowed(path: str, allowed: list[str], protected: list[str]) -> bool:
+    """Apply recursive `/**` work-order rules consistently with their meaning."""
+    if path.startswith("/") or "\\" in path or ".." in Path(path).parts:
+        return False
+    if any(_matches_work_order_pattern(path, pattern) for pattern in protected):
+        return False
+    return any(_matches_work_order_pattern(path, pattern) for pattern in allowed)
 
 
 def _frozen_work_order_unchanged(root: Path, head: str, path: str) -> bool:
@@ -302,7 +320,7 @@ def assert_root_scope(root: Path, body: str) -> None:
             continue
         path = line[3:].split(" -> ")[-1]
         if (path.startswith((".worktrees/", ".cache/", "artifacts/runs/"))
-                or changed_path_allowed(path, allowed, protected)):
+                or _scope_path_allowed(path, allowed, protected)):
             continue
         rejected.append(path)
     if rejected:

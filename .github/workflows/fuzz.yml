@@ -1,0 +1,25 @@
+name: macOS fuzz smoke
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * 1-5'
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz-smoke:
+    name: Apple Silicon CLI fuzz smoke
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Three second pull request or manual smoke
+        if: github.event_name != 'schedule'
+        run: ./dev fuzz --duration 3
+      - name: Scheduled sixty second smoke
+        if: github.event_name == 'schedule'
+        run: ./dev fuzz --duration 60

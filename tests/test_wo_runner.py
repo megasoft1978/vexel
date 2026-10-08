@@ -65,6 +65,12 @@ class FrozenWorkOrderTests(unittest.TestCase):
 
 
 class RunnerPrimitiveTests(unittest.TestCase):
+    def test_recursive_work_order_path_rules_allow_nested_evidence_and_protect_subtrees(self) -> None:
+        allowed, protected = ["artifacts/WO-BOOT-05/**", "tests/fuzz/**"], ["tests/oracle/**"]
+        self.assertTrue(wo_driver._scope_path_allowed("artifacts/WO-BOOT-05/probes/probes.json", allowed, protected))
+        self.assertTrue(wo_driver._scope_path_allowed("tests/fuzz/cases/README.md", allowed, protected))
+        self.assertFalse(wo_driver._scope_path_allowed("tests/oracle/frozen.json", allowed + ["tests/**"], protected))
+
     def fake_help(self, missing: str = ""):
         help_text = "--model --config --json --output-schema --output-last-message --image " \
                     "--dangerously-bypass-approvals-and-sandbox --skip-git-repo-check"
@@ -101,7 +107,8 @@ class RunnerPrimitiveTests(unittest.TestCase):
 
     def test_driver_rejects_non_darwin_before_codex(self) -> None:
         with patch.object(wo_driver.sys, "platform", "linux"):
-            self.assertEqual(wo_driver.main(["new", "WO-BOOT-04"]), 2)
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(wo_driver.main(["new", "WO-BOOT-04"]), 2)
 
     def test_session_parser_ignores_unknown_events_and_bad_ids(self) -> None:
         events = "\n".join([json.dumps({"type": "future.event", "thread_id": "ignored"}),
@@ -261,6 +268,10 @@ class RunnerPrimitiveTests(unittest.TestCase):
             schema = wo_validate.ROOT / "docs/schemas/executor-report.schema.json"
             with self.assertRaisesRegex(wo_driver.RunnerError, "acceptance evidence"):
                 wo_driver.validate_report(report, schema, "a" * 40, {"AC-1"}, set())
+            report.write_text(json.dumps({"status": "complete", "base_sha": "a" * 40,
+                                          "head_sha": "b" * 40, "summary": "missing acceptance"}))
+            with self.assertRaisesRegex(wo_driver.RunnerError, "schema validation"):
+                wo_driver.validate_report(report, schema, "a" * 40, {"AC-1"}, set())
 
     def test_strict_executor_schema_expands_work_order_acceptance_ids(self) -> None:
         schema = json.loads((wo_validate.ROOT / "docs/schemas/executor-report.schema.json").read_text())
@@ -376,6 +387,7 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             preflight_files = list((root / "artifacts/runs/WO-FAKE").glob("*/codex-preflight.txt"))
             self.assertEqual(len(preflight_files), 1)
             self.assertIn("codex-cli fake", preflight_files[0].read_text())
+            wo_driver.assert_root_scope(root, body)
 
     def test_concurrent_lock_and_interrupted_atomic_append(self) -> None:
         with temporary_directory() as name:
