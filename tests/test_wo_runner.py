@@ -198,6 +198,15 @@ class RunnerPrimitiveTests(unittest.TestCase):
                 wo_driver.assert_scope(root, base, frozen_head,
                     "# Files allowed to touch\n- `work/**`\n", "WO-FAKE")
 
+    def test_recursive_work_order_globs_match_nested_files(self) -> None:
+        allowed, protected = ["artifacts/WO-BOOT-05/**"], ["artifacts/WO-BOOT-05/private/**"]
+        self.assertTrue(wo_driver.work_order_path_allowed(
+            "artifacts/WO-BOOT-05/probes/heap_overflow.stderr.txt.gz", allowed, protected))
+        self.assertFalse(wo_driver.work_order_path_allowed(
+            "artifacts/WO-BOOT-05/private/key.txt", allowed, protected))
+        self.assertFalse(wo_driver.work_order_path_allowed(
+            "artifacts/WO-BOOT-06/result.json", allowed, protected))
+
     def test_review_diff_excludes_old_transcripts_and_stays_bounded(self) -> None:
         with temporary_directory() as name:
             root = Path(name); subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
