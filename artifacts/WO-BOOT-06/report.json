@@ -1,0 +1,52 @@
+{
+  "base_sha": "dfdfab99c062a70016fda7618cda87b305e54287",
+  "blockers": [],
+  "commands_evidence": "artifacts/WO-BOOT-06/verify.txt",
+  "commit": null,
+  "revision": 2,
+  "status": "pass",
+  "summary": "All frozen acceptance checks pass. The corrected output-path validation rejects dot-dot traversal outside .cache.",
+  "test_counts": {
+    "determinism": 1,
+    "edge_and_shift": 2,
+    "errors": 0,
+    "failures": 0,
+    "focused_golden": 9,
+    "full_suite": 122,
+    "negative_cases": 5,
+    "skips": 0
+  },
+  "tests": [
+    {
+      "evidence": "artifacts/WO-BOOT-06/tests.txt",
+      "id": "AC-1",
+      "status": "pass"
+    },
+    {
+      "evidence": "artifacts/WO-BOOT-06/identical.json",
+      "id": "AC-2",
+      "status": "pass"
+    },
+    {
+      "evidence": "artifacts/WO-BOOT-06/tolerance-tests.txt",
+      "id": "AC-3",
+      "status": "pass"
+    },
+    {
+      "evidence": "artifacts/WO-BOOT-06/failure-tests.txt",
+      "id": "AC-4",
+      "status": "pass"
+    },
+    {
+      "evidence": "artifacts/WO-BOOT-06/determinism.txt",
+      "id": "AC-5",
+      "status": "pass"
+    },
+    {
+      "evidence": "artifacts/WO-BOOT-06/local-checks.txt",
+      "id": "AC-6",
+      "status": "pass"
+    }
+  ],
+  "wo_id": "WO-BOOT-06"
+}

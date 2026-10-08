@@ -99,3 +99,52 @@ per-file cap is 2 MiB, and installation is atomic after digest verification.
 The fetcher uses Python's standard library. It is an explicit corpus
 maintenance command; the SVG application does not call it or retrieve
 document resources.
+
+## Golden PNG comparison
+
+`golden_diff.py` compares an actual PNG with one fixture from the frozen
+`tests/golden/manifest.lock`. It verifies the baseline SHA-256 before decoding
+either image and checks that the supplied SVG hash names that same fixture.
+The decoder accepts the locked 8-bit RGBA, non-interlaced profile, PNG filters
+0–4, standard zlib image data, and the manifest's optional six-byte `bKGD`
+chunk. It checks chunk CRCs, ordering, exact decompressed size, and rejects
+other color modes, bit depths, interlacing, chunks, malformed data, and images
+above its byte or pixel bounds. It uses Python's standard library only.
+
+All scalar results are exact: equal/different pixel counts, differing channel
+count, maximum channel delta, total absolute channel delta, and mean absolute
+channel delta across all RGBA channels. Edge tolerance is separate and explicit.
+A differing pixel is tolerated only when its maximum channel delta is within
+`--edge-channel-tolerance` and it is within Chebyshev distance
+`--edge-radius` of an 8-neighbor color or alpha boundary in the expected image.
+Defaults are radius 1 and channel delta 1; radius accepts 0–2 and channel delta
+0–16. Radius zero disables edge tolerance. Exit status is 0 when all differences
+are tolerated, 1 when any are not, and 2 for input, metadata, format, or output
+errors.
+
+The deterministic RGBA heatmap uses transparent pixels for unchanged areas,
+yellow for tolerated differences, and red for failing differences. The JSON
+report schema is version 1 and includes fixture and input hashes, pinned SVG
+hash, build SHA, scale/frame/font/backend metadata, dimensions, tolerances,
+all exact metrics, tolerance counts, and result. Metadata is required; hashes
+must be 64 lowercase hexadecimal characters, scale must be 0.01–64, frame
+0–1,000,000, and font/backend are bounded printable labels. Report and heatmap
+paths must be new paths under repository `.cache/`; symlinks and overwrites are
+refused. The utility has no baseline-writing mode.
+
+Example (replace the actual PNG and build SHA with the render under review):
+
+```sh
+python3 scripts/golden_diff.py \
+  --fixture shapes-basic \
+  --actual .cache/render/shapes-basic.png \
+  --report .cache/golden/shapes-basic.json \
+  --heatmap .cache/golden/shapes-basic-diff.png \
+  --svg-sha256 6f546464f23d6cd95be30fe2c98130b84b0f75796e4578b330b0695dcf6de5c7 \
+  --build-sha 0000000000000000000000000000000000000000000000000000000000000000 \
+  --scale 1 --frame 0 --font 'System Sans' --backend scalar \
+  --edge-radius 1 --edge-channel-tolerance 1
+```
+
+Changing a golden baseline requires a separate READY work order and a recorded
+reason. This comparison work order cannot update or regenerate baselines.

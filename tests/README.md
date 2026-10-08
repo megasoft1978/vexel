@@ -17,3 +17,8 @@ library code only; no test framework dependency is installed.
 `tests.test_benchmark_harness` checks the offline process adapter, pinned corpus
 hashes, bounded PNG validation, argv/shell safety, unsafe paths, failed trials,
 and JSON/CSV/output tamper detection. It never invokes a competitor or network.
+
+`tests.test_golden_diff` exercises the hash-verified PNG comparison CLI's
+decoder, exact metrics, explicit edge tolerance, metadata identity, safe output
+paths, and deterministic report/heatmap generation. See
+`docs/golden-images.md` for the supported PNG profile and invocation.

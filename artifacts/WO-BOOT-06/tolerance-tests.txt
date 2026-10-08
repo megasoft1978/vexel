@@ -1,0 +1,2 @@
+{"case": "edge-only", "differing_channels": 1, "differing_pixels": 1, "non_tolerated_pixels": 0, "result": "pass", "tolerated_pixels": 1}
+{"case": "shift-zero", "differing_channels": 6, "differing_pixels": 2, "non_tolerated_pixels": 2, "result": "fail", "tolerated_pixels": 0}
