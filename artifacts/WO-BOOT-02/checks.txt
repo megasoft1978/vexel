@@ -1,0 +1,45 @@
+$ cmake --preset mac-debug
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+EXIT 0
+
+$ cmake --build --preset mac-debug
+ninja: no work to do.
+EXIT 0
+
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 12 entries
+EXIT 0
+
+$ python3 -m unittest tests.test_ledger
+........
+----------------------------------------------------------------------
+Ran 8 tests in 0.173s
+
+OK
+EXIT 0
+
+$ python3 scripts/ledger.py append --help
+usage: ledger.py append [-h]
+                        (--entry-json ENTRY_JSON | --entry-file ENTRY_FILE)
+                        path
+
+positional arguments:
+  path
+
+options:
+  -h, --help            show this help message and exit
+  --entry-json ENTRY_JSON
+  --entry-file ENTRY_FILE
+EXIT 0
+
+$ ./build/mac-asan/bin/svgworkbench --version
+svgworkbench 0.0.1
+EXIT 0

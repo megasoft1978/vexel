@@ -28,3 +28,8 @@ cmake --build --preset mac-debug
 
 The version command prints `svgworkbench 0.0.1`. Additional configure/build
 presets are `mac-release` and `mac-size`.
+
+## License
+
+vexel is distributed under the Mozilla Public License 2.0 (MPL-2.0). See
+[`LICENSE`](LICENSE) for the license text.

@@ -1,22 +1,50 @@
-# Repository instructions
+# Agent rules
 
-Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first; it sets the platform
-boundary and overrides conflicting roadmap text. vexel is macOS-only initially
-(macOS 13+, Apple Silicon). Keep platform-specific code behind `platform/`
-interfaces; do not add other-OS code, CI jobs, runners, shims, or portability
-work.
+Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first. It overrides conflicting
+roadmap and tooling text. Follow the active `work/WO-*.md`; inspect its allowed
+and protected paths before editing. Keep each work order buildable, tested,
+verified, and recorded in `STATE.md` and the ledgers.
 
-## Map and commands
+## Platform and product locks
 
-- `app/`: executable composition; current entry point is `app/main.c`.
-- `docs/research-r4/`: authoritative operating model and ordered roadmap.
+- Initial support is Apple Silicon macOS 13+. Do not add Linux/Windows code,
+  shims, CI jobs, runners, packaging, or portability work.
+- Keep platform implementations behind `platform/` interfaces; do not add
+  stubs for unsupported operating systems.
+- C17, MPL-2.0, minimal dependencies, custom-drawn UI, and an owned SVG
+  parser/rasterizer are locked decisions. See `docs/adr/`.
+- Never read, fetch, or copy GPL SVG-editor source. Do not fetch external SVG
+  resources from the application. Record provenance for external algorithms.
+
+## Repository map
+
+- `app/`: executable composition.
+- `src/`: base, platform, XML/SVG, scene, raster, document, UI modules as added.
+- `docs/research-r4/`: authoritative operating model and roadmap.
 - `docs/research-r3/plan/`: architecture and coding guidance where r4 is silent.
-- `work/`: active work orders; `OWNER-DIRECTIVES.md` takes precedence.
-- `./dev build`: configure and build the macOS debug preset.
+- `docs/adr/`: accepted decisions; `work/`: immutable ready work orders.
+- `tests/`: unit, property, fuzz, UI, and oracle tests as introduced.
+- `bench/`: corpus metadata, generators, runners, and results.
+- `artifacts/`: work-order evidence; `build/` and `.cache/` are generated.
 
-Use C17, keep dependencies minimal, and do not read, fetch, or copy GPL SVG
-editor source. Preserve all user-provided files and keep generated output under
-ignored `build/` or `.cache/`. For each work order, inspect its allowed paths,
-acceptance criteria, and protected paths before editing. Do not claim tests,
-sanitizers, or performance results that were not run. Record external algorithm
-provenance in `docs/provenance.md` before introducing one.
+## Commands
+
+- `./dev build`: configure and build Debug.
+- `cmake --preset mac-release && cmake --build --preset mac-release`: Release.
+- `python3 scripts/ledger.py validate ledger.jsonl`: validate work history.
+- `python3 -m unittest`: run Python harness tests when present.
+- `./dev test`, `bench`, `fmt`, `lint`, `asan`, and `fuzz` become authoritative
+  only when their work orders implement them; do not claim missing commands run.
+
+## Engineering and safety
+
+Use the contracts in `docs/CODING_STANDARD.md`: explicit ownership, pointer+length
+slices, checked size arithmetic, bounded user input, no VLAs, and no unsafe
+string functions. Preserve unknown SVG/XML source. Keep generated files in
+ignored repo-local directories. Do not install system packages or touch sibling
+directories. Add dependencies only through an ADR and pinned provenance record.
+
+Never weaken frozen acceptance tests or oracles. Run commands named by the
+active work order, then report exact evidence. Do not invent test or performance
+results. Keep source files focused and under 800 lines; split cohesive modules
+before they grow further.
