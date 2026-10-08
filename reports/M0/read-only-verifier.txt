@@ -1,0 +1,1 @@
+The local packet validator is a deterministic read-only check of all linked source hashes and counts. The independent Codex review result is recorded by the WO-M0-04 runner under artifacts/runs/WO-M0-04/; this file is not that verdict.

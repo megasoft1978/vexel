@@ -1,0 +1,100 @@
+$ python3 reports/M0/validate_packet.py
+PASS schema version
+PASS required count fields
+PASS count values are non-negative integers
+PASS at least five owner examples requested
+PASS Markdown has a five-item owner evidence request
+PASS source records present
+PASS source record shape
+PASS source path is repository-relative: bench/corpus/manifest.json
+PASS source resolves inside repository: bench/corpus/manifest.json
+PASS source exists: bench/corpus/manifest.json
+PASS source SHA-256: bench/corpus/manifest.json
+PASS Markdown source hash index: bench/corpus/manifest.json
+PASS source record shape
+PASS source path is repository-relative: bench/corpus/manifest.sha256
+PASS source resolves inside repository: bench/corpus/manifest.sha256
+PASS source exists: bench/corpus/manifest.sha256
+PASS source SHA-256: bench/corpus/manifest.sha256
+PASS Markdown source hash index: bench/corpus/manifest.sha256
+PASS source record shape
+PASS source path is repository-relative: tests/golden/manifest.lock
+PASS source resolves inside repository: tests/golden/manifest.lock
+PASS source exists: tests/golden/manifest.lock
+PASS source SHA-256: tests/golden/manifest.lock
+PASS Markdown source hash index: tests/golden/manifest.lock
+PASS source record shape
+PASS source path is repository-relative: docs/corpus/PROVENANCE.md
+PASS source resolves inside repository: docs/corpus/PROVENANCE.md
+PASS source exists: docs/corpus/PROVENANCE.md
+PASS source SHA-256: docs/corpus/PROVENANCE.md
+PASS Markdown source hash index: docs/corpus/PROVENANCE.md
+PASS source record shape
+PASS source path is repository-relative: bench/results/WO-M0-02.json
+PASS source resolves inside repository: bench/results/WO-M0-02.json
+PASS source exists: bench/results/WO-M0-02.json
+PASS source SHA-256: bench/results/WO-M0-02.json
+PASS Markdown source hash index: bench/results/WO-M0-02.json
+PASS source record shape
+PASS source path is repository-relative: artifacts/WO-M0-02/oracle-render.txt
+PASS source resolves inside repository: artifacts/WO-M0-02/oracle-render.txt
+PASS source exists: artifacts/WO-M0-02/oracle-render.txt
+PASS source SHA-256: artifacts/WO-M0-02/oracle-render.txt
+PASS Markdown source hash index: artifacts/WO-M0-02/oracle-render.txt
+PASS source record shape
+PASS source path is repository-relative: bench/results/WO-M0-03.json
+PASS source resolves inside repository: bench/results/WO-M0-03.json
+PASS source exists: bench/results/WO-M0-03.json
+PASS source SHA-256: bench/results/WO-M0-03.json
+PASS Markdown source hash index: bench/results/WO-M0-03.json
+PASS source record shape
+PASS source path is repository-relative: bench/results/WO-M0-03.csv
+PASS source resolves inside repository: bench/results/WO-M0-03.csv
+PASS source exists: bench/results/WO-M0-03.csv
+PASS source SHA-256: bench/results/WO-M0-03.csv
+PASS Markdown source hash index: bench/results/WO-M0-03.csv
+PASS source record shape
+PASS source path is repository-relative: artifacts/WO-M0-03/verify.txt
+PASS source resolves inside repository: artifacts/WO-M0-03/verify.txt
+PASS source exists: artifacts/WO-M0-03/verify.txt
+PASS source SHA-256: artifacts/WO-M0-03/verify.txt
+PASS Markdown source hash index: artifacts/WO-M0-03/verify.txt
+PASS source record shape
+PASS source path is repository-relative: artifacts/WO-M0-01/provenance-check.txt
+PASS source resolves inside repository: artifacts/WO-M0-01/provenance-check.txt
+PASS source exists: artifacts/WO-M0-01/provenance-check.txt
+PASS source SHA-256: artifacts/WO-M0-01/provenance-check.txt
+PASS Markdown source hash index: artifacts/WO-M0-01/provenance-check.txt
+PASS source record shape
+PASS source path is repository-relative: artifacts/WO-M0-02/verify.txt
+PASS source resolves inside repository: artifacts/WO-M0-02/verify.txt
+PASS source exists: artifacts/WO-M0-02/verify.txt
+PASS source SHA-256: artifacts/WO-M0-02/verify.txt
+PASS Markdown source hash index: artifacts/WO-M0-02/verify.txt
+PASS source record shape
+PASS source path is repository-relative: artifacts/WO-M0-03/local-checks.txt
+PASS source resolves inside repository: artifacts/WO-M0-03/local-checks.txt
+PASS source exists: artifacts/WO-M0-03/local-checks.txt
+PASS source SHA-256: artifacts/WO-M0-03/local-checks.txt
+PASS Markdown source hash index: artifacts/WO-M0-03/local-checks.txt
+PASS required source recorded: bench/corpus/manifest.json
+PASS required source recorded: bench/corpus/manifest.json
+PASS required source recorded: bench/corpus/manifest.sha256
+PASS corpus manifest matches pinned digest
+PASS synthetic corpus fixture count
+PASS stress fixture example count
+PASS required source recorded: tests/golden/manifest.lock
+PASS pinned golden fixture count
+PASS required source recorded: bench/results/WO-M0-02.json
+PASS M0-02 generated stress tier count
+PASS M0-02 oracle fixture count
+PASS required source recorded: bench/results/WO-M0-03.json
+PASS required source recorded: bench/results/WO-M0-03.csv
+PASS M0-03 trial count matches JSON and CSV
+PASS competitor availability count
+PASS available competitor count
+PASS unavailable competitor count
+PASS compatible Vexel render availability
+PASS owner evidence counts explicitly zero
+All source, hash, count, and request checks passed.
+[exit 0]

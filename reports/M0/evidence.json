@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "evidence_date": "2026-10-08",
+  "status": "packet complete; owner evidence and proceed/pause/pivot/stop decision pending",
+  "counts": {
+    "owner_provided_files_and_tasks": 0,
+    "recorded_interviews": 0,
+    "user_outcome_records": 0,
+    "synthetic_corpus_fixtures": 24,
+    "pinned_golden_fixtures": 24,
+    "stress_tiers": 3,
+    "stress_fixture_examples": 4,
+    "competitors_available": 0,
+    "competitors_unavailable": 2,
+    "compatible_vexel_render_available": 0,
+    "m0_03_trials": 0,
+    "requested_owner_examples": 5
+  },
+  "measured_results": {
+    "m0_02": {
+      "generated_stress_documents": [
+        {
+          "family": "object-heavy",
+          "bytes": 10000000,
+          "elapsed_seconds": 0.010086
+        },
+        {
+          "family": "path-heavy",
+          "bytes": 100000000,
+          "elapsed_seconds": 0.08628
+        },
+        {
+          "family": "mixed",
+          "bytes": 1000000000,
+          "elapsed_seconds": 0.587311
+        }
+      ],
+      "mixed_sha256": "895780c50a7e3b6f05e1ad34b68ca6d22684699e6fa1b7425a7f1baaa6caa9e7",
+      "oracle_render": {
+        "fixture_count": 24,
+        "width": 256,
+        "height": 256,
+        "elapsed_seconds": 0.700504,
+        "renderer": "librsvg 2.62.3",
+        "meaning": "oracle re-render only; not Vexel rendering or a product performance result"
+      }
+    },
+    "m0_03": {
+      "mode": "smoke",
+      "trials": 0,
+      "available_competitors": [],
+      "unavailable_competitors": [
+        "Inkscape",
+        "Donner"
+      ],
+      "compatible_vexel_render": false,
+      "rss_measurements": 0,
+      "render_comparisons": 0
+    }
+  },
+  "availability_and_gaps": {
+    "owner_provided_files_and_tasks": {
+      "available": false,
+      "reason": "no owner-provided sample files or task records are present in the cited repository evidence"
+    },
+    "recorded_interviews": {
+      "available": false,
+      "reason": "no interview records are present in the cited repository evidence"
+    },
+    "user_outcome_records": {
+      "available": false,
+      "reason": "no user outcome records are present in the cited repository evidence"
+    },
+    "competitors": {
+      "available": false,
+      "reason": "M0-03 reports Inkscape and Donner executables not found"
+    },
+    "compatible_vexel_render": {
+      "available": false,
+      "reason": "M0-03 reports no compatible Vexel SVG render command"
+    },
+    "rss": {
+      "available": false,
+      "reason": "M0-03 bounded standard-library process interface does not provide peak RSS"
+    },
+    "render_comparison": {
+      "available": false,
+      "reason": "no compatible render command was available; CSV has header only and M0-03 has zero trials"
+    }
+  },
+  "sources": [
+    {
+      "path": "bench/corpus/manifest.json",
+      "sha256": "a05dcf0da95bd7c53ce6faec6704f7b739d6cbd9cf829dfff74b50dfb8359bbd",
+      "role": "synthetic corpus inventory and fixture provenance"
+    },
+    {
+      "path": "bench/corpus/manifest.sha256",
+      "sha256": "6afa2d4c611c4ce9f5986bdb354ee92163fa8a1808ecbd6dd1408e8d8ae45f33",
+      "role": "pinned corpus manifest digest"
+    },
+    {
+      "path": "tests/golden/manifest.lock",
+      "sha256": "a9fb0207a5dbd2ff833b090d3d49fef5c960a56bd1a68809a52430c4382bc1c4",
+      "role": "pinned golden fixture inventory"
+    },
+    {
+      "path": "docs/corpus/PROVENANCE.md",
+      "sha256": "f803ceaabd93411d07fad0d6641854f4ebe91f8a76d4fb2e7642efb93f0c97e2",
+      "role": "corpus provenance, synthetic-data and exclusion limits"
+    },
+    {
+      "path": "bench/results/WO-M0-02.json",
+      "sha256": "92ec0bb6ca6de2ec071b87f769c8f5095a9db3c55f99dd1669eb3b6bbd3de71d",
+      "role": "M0-02 generation timing and oracle-render measurements"
+    },
+    {
+      "path": "artifacts/WO-M0-02/oracle-render.txt",
+      "sha256": "403fe194d37ea9cb95ff88604c98593806ea4ba0a7bcc6626851f9277a4705dd",
+      "role": "M0-02 oracle-render run evidence"
+    },
+    {
+      "path": "bench/results/WO-M0-03.json",
+      "sha256": "854ff1ed1cacc0483598bd1d4fcb7d1fd118bd47062876759025e4cb929bf1b9",
+      "role": "M0-03 competitor availability, render compatibility and trial results"
+    },
+    {
+      "path": "bench/results/WO-M0-03.csv",
+      "sha256": "846f26ace59c2a3d0bc1be61e8a2e24222a8b09ea3575484f7192721c80756d6",
+      "role": "M0-03 machine-readable trial rows"
+    },
+    {
+      "path": "artifacts/WO-M0-03/verify.txt",
+      "sha256": "a659a8a8025b74a2d79790328f1de6e2810091cbb52588b4bce3132c27919ee4",
+      "role": "M0-03 verification summary"
+    },
+    {
+      "path": "artifacts/WO-M0-01/provenance-check.txt",
+      "sha256": "11953a172b5b7ef8fcd54da3016f1e03a5f7079c8285dbd1fce6f7322f396d4f",
+      "role": "M0-01 provenance validation evidence"
+    },
+    {
+      "path": "artifacts/WO-M0-02/verify.txt",
+      "sha256": "5cd9978d2c98cbac1adec83f89064707848b99631863c0c67c0f87409e363167",
+      "role": "M0-02 acceptance evidence"
+    },
+    {
+      "path": "artifacts/WO-M0-03/local-checks.txt",
+      "sha256": "5c69b7e464f2574cb51382f8fe98837885807c618ddcb3e14bc333a6ec889ada",
+      "role": "M0-03 local checks and fixture validation evidence"
+    }
+  ]
+}
