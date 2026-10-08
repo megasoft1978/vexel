@@ -58,9 +58,16 @@ class GoldenDiffTests(unittest.TestCase):
             manifest.write_text(json.dumps({"fixtures": [fixture]}), encoding="utf-8")
             args = metadata(fixture, root / "actual.png", root / "report", root / "heatmap")
             with patch.object(golden_diff, "MANIFEST", manifest):
-                report, _ = golden_diff.compare(args)
+                report, heat = golden_diff.compare(args)
             self.assertEqual(report["tolerance"], {"tolerated_pixels": 1, "non_tolerated_pixels": 0})
             self.assertEqual(report["metrics"]["differing_channels"], 1)
+            self.assertEqual(golden_diff.decode_png(heat)[2][width * 4 : width * 4 + 4],
+                             bytes([255, 255, 0, 255]))
+            args.edge_radius = 0
+            with patch.object(golden_diff, "MANIFEST", manifest):
+                zero_radius_report, _ = golden_diff.compare(args)
+            self.assertEqual(zero_radius_report["tolerance"],
+                             {"tolerated_pixels": 1, "non_tolerated_pixels": 0})
 
     def test_shift_with_zero_tolerance_is_not_tolerated(self) -> None:
         width = height = 3
@@ -117,6 +124,15 @@ class GoldenDiffTests(unittest.TestCase):
         png[start:end] = replacement
         with self.assertRaisesRegex(golden_diff.CompareError, "unsupported PNG filter"):
             golden_diff.decode_png(bytes(png))
+        valid = golden_diff.encode_png(1, 1, bytes([0, 0, 0, 255]))
+        ihdr_end = 8 + 25
+        idat_end = ihdr_end + 12 + struct.unpack_from(">I", valid, ihdr_end)[0]
+        bkgd_data = b"\x00\x00\x00\x00\x00\x00"
+        bkgd = struct.pack(">I", len(bkgd_data)) + b"bKGD" + bkgd_data
+        bkgd += struct.pack(">I", zlib.crc32(b"bKGD" + bkgd_data) & 0xFFFFFFFF)
+        malformed_order = valid[:idat_end] + bkgd + valid[idat_end:]
+        with self.assertRaisesRegex(golden_diff.CompareError, "bKGD chunk must precede IDAT"):
+            golden_diff.decode_png(malformed_order)
 
     def test_svg_metadata_mismatch_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as folder:

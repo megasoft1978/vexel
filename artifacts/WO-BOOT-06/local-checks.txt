@@ -9,17 +9,17 @@ Preset CMake variables:
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-06/build/mac-debug
 ninja: no work to do.
-Ran 122 tests in 5.224s
+Ran 122 tests in 5.944s
 
 OK
-Ran 122 tests: 122 passed, 0 failed, 0 errors, 0 skipped; 5.272s
-valid ledger: 87 entries
+Ran 122 tests: 122 passed, 0 failed, 0 errors, 0 skipped; 5.995s
+valid ledger: 92 entries
 [exit 0]
 
 $ python3 scripts/ledger.py validate ledger.jsonl
-valid ledger: 87 entries
+valid ledger: 92 entries
 [exit 0]
 
 $ python3 scripts/wo_validate.py WO-BOOT-06 --ready
-valid WO-BOOT-06 revision 1 sha256 71620f9467a91276729eacc581d4b05b1ebc092aaac37daceef2cc4b77db0e6c
+valid WO-BOOT-06 revision 2 sha256 d5e9fe8139e732af4e77de5aec8831dd93e8a410a910665d2ab9c566cd05a570
 [exit 0]

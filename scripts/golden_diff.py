@@ -136,8 +136,9 @@ def decode_png(data: bytes) -> tuple[int, int, bytes]:
                     raise CompareError(f"unsupported PNG chunk {chunk_type.decode('ascii', 'replace')}")
             else:
                 ended_idat = True
-                if chunk_type not in (b"bKGD",):
+                if chunk_type != b"bKGD":
                     raise CompareError(f"unsupported PNG chunk {chunk_type.decode('ascii', 'replace')}")
+                raise CompareError("PNG bKGD chunk must precede IDAT")
             if chunk_type == b"bKGD":
                 if length != 6 or seen_bkgd:
                     raise CompareError("malformed or duplicate PNG bKGD")
@@ -281,7 +282,7 @@ def compare(args: argparse.Namespace) -> tuple[dict[str, Any], bytes]:
         raise CompareError("actual image dimensions do not match the baseline")
     max_delta = total_delta = differing_channels = differing_pixels = 0
     tolerated = non_tolerated = 0
-    edge = _edge_pixels(expected, ew, eh) if args.edge_radius else bytearray(ew * eh)
+    edge = _edge_pixels(expected, ew, eh)
     heat = bytearray(ew * eh * 4)
     for pixel in range(ew * eh):
         offset = pixel * 4
@@ -294,17 +295,16 @@ def compare(args: argparse.Namespace) -> tuple[dict[str, Any], bytes]:
             total_delta += sum(deltas)
             x, y = pixel % ew, pixel // ew
             is_near_edge = False
-            if args.edge_radius:
-                for ny in range(max(0, y - args.edge_radius), min(eh, y + args.edge_radius + 1)):
-                    for nx in range(max(0, x - args.edge_radius), min(ew, x + args.edge_radius + 1)):
-                        if edge[ny * ew + nx]:
-                            is_near_edge = True
-                            break
-                    if is_near_edge:
+            for ny in range(max(0, y - args.edge_radius), min(eh, y + args.edge_radius + 1)):
+                for nx in range(max(0, x - args.edge_radius), min(ew, x + args.edge_radius + 1)):
+                    if edge[ny * ew + nx]:
+                        is_near_edge = True
                         break
+                if is_near_edge:
+                    break
             if pixel_max <= args.edge_channel_tolerance and is_near_edge:
                 tolerated += 1
-                heat[offset : offset + 4] = b"\xff\xd9\x00\xff"
+                heat[offset : offset + 4] = b"\xff\xff\x00\xff"
             else:
                 non_tolerated += 1
                 heat[offset : offset + 4] = b"\xff\x00\x00\xff"

@@ -5,7 +5,7 @@
   "commit": null,
   "revision": 2,
   "status": "pass",
-  "summary": "All frozen acceptance checks pass. The corrected output-path validation rejects dot-dot traversal outside .cache.",
+  "summary": "All frozen acceptance checks pass, including radius-zero boundary tolerance, malformed bKGD ordering rejection, exact yellow heatmap pixels, and .cache path traversal rejection.",
   "test_counts": {
     "determinism": 1,
     "edge_and_shift": 2,
