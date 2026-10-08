@@ -3,11 +3,12 @@ set -eu
 
 usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
+    printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz}'
     printf '%s\n' '       ./dev wo-help'
 }
 
 command_name=${1:-help}
-if [ "$#" -gt 1 ]; then
+if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ]; then
     usage >&2
     exit 2
 fi
@@ -17,7 +18,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|wo-help)
+    build|test-fast|test|verify|asan|ubsan|fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -43,8 +44,20 @@ case "$command_name" in
         cmake --build --preset mac-debug
         ;;
     test-fast|test)
-        PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_*.py'
+        PYTHONDONTWRITEBYTECODE=1 python3 scripts/test_runner.py --output .cache/test-results/latest.json
         python3 scripts/ledger.py validate ledger.jsonl
+        ;;
+    asan|ubsan)
+        preset=mac-$command_name
+        cmake --preset "$preset"
+        cmake --build --preset "$preset"
+        ctest --preset "$preset"
+        ;;
+    fuzz)
+        shift
+        cmake --preset mac-asan
+        cmake --build --preset mac-asan
+        python3 scripts/fuzz_smoke.py --binary build/mac-asan/bin/svgworkbench "$@"
         ;;
     verify)
         "$repo_root/dev" build

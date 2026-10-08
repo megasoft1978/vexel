@@ -19,6 +19,44 @@ then atomically replaces the log while the lock is held. Invalid input is
 rejected before the ledger is changed. The utility uses only Python's standard
 library and accepts ledger paths inside this repository.
 
+## Test runner and sanitizers
+
+`test_runner.py` discovers the complete Python `unittest` suite and emits
+`docs/schemas/test-results.schema.json` results: UTC start/end, monotonic
+elapsed seconds, outcome counts, and a status per test ID. `./dev test-fast`
+writes transient JSON to `.cache/test-results/latest.json`, fails on skipped
+or unsuccessful tests, then validates the append-only ledger. It uses only the
+Python standard library.
+
+`./dev asan` uses the `mac-asan` CMake configure/build/test presets with
+AddressSanitizer and UndefinedBehaviorSanitizer. `./dev ubsan` uses
+`mac-ubsan` with UndefinedBehaviorSanitizer. Both profiles require Xcode Apple
+Clang and retain the project's warning-as-error options. CTest runs
+`svgworkbench --version`. `scripts/sanitizer_probes.py --profile asan-ubsan`
+injects an assertion and heap overflow; its exact C sources, stdout/stderr,
+diagnostics, and JSON summary are retained in `artifacts/WO-BOOT-05/probes/`.
+These deliberately failing probe processes are expected detections; ordinary
+test failures remain regressions. Later verification reruns preserve that
+committed evidence and write fresh traces/results under ignored
+`.cache/sanitizer-probes/`, so successful post-commit checks leave the candidate
+tree clean.
+
+## CLI fuzz smoke
+
+`./dev fuzz [--duration SEC] [--seed INTEGER]` builds the ASan/UBSan profile,
+then runs the no-network argv fuzzer on the CLI. The default seed is `12648430`,
+and the JSON reports the selected seed, iterations, actual duration, and any
+failure. Duration defaults to three seconds and is capped at sixty seconds.
+The runner targets 48 cases per requested second, stops starting cases at the
+deadline, and grants an in-flight case at most 0.1 seconds of completion grace.
+This fixed case budget keeps repeat runs comparable while the deadline bounds
+slow runs. Exact valid `--version` and help output are accepted. Usage-error exit is expected. Signals,
+sanitizer findings, timeouts, and unexpected exits fail and retain argv plus
+stdout/stderr in `artifacts/WO-BOOT-05/fuzz-failures/`. The scheduled workflow
+runs a 60-second smoke; pull requests and manual dispatch run three seconds.
+Its checker enforces the macOS Apple Silicon runner, bounded runtime, and
+pinned actions.
+
 ## Work-order runners
 
 `wo-run.sh` and `wo-verify.sh` are thin delegates to `wo_driver.py`. They are

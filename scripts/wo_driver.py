@@ -130,6 +130,8 @@ def path_matches_rule(path: str, pattern: str) -> bool:
 
 
 def work_order_path_allowed(path: str, allowed: list[str], protected: list[str]) -> bool:
+    if path.startswith("/") or "\\" in path or ".." in PurePosixPath(path).parts:
+        return False
     if any(path_matches_rule(path, pattern) for pattern in protected):
         return False
     return any(path_matches_rule(path, pattern) for pattern in allowed)
