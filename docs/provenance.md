@@ -21,3 +21,7 @@ boundary invokes configured released binaries as argv arrays and does not
 inspect, fetch, install, or copy renderer source. No third-party algorithm or
 renderer dependency was added. The offline test renderer is project-authored
 Python test code and emits a deterministic PNG; it is not a competitor result.
+Adapter processes use macOS's built-in `sandbox-exec` with `process-fork`
+denied so child processes cannot outlive a timed trial. No package or runtime
+dependency was added; adapters that require subprocess helpers report failed
+trials explicitly.

@@ -30,6 +30,11 @@ tasks are `shapes-basic`, `stress-many-shapes`, and `stress-long-path`, each at
 process launch; it does not mean filesystem cache eviction. `warm-repeat` runs
 subsequent launches with normal OS caching.
 
+Each adapter runs under the macOS `sandbox-exec` utility with process creation
+denied. This keeps a timed adapter from leaving detached helpers running after
+the trial. A renderer that requires helper processes fails explicitly, and the
+harness fails closed if the macOS sandbox utility is unavailable.
+
 JSON retains complete bounded trial observations, output hashes, argv, adapter
 identity, fixture and source hashes, host metadata and limitations. CSV contains
 the same raw trials plus matching summary rows. JSON embeds integrity hashes

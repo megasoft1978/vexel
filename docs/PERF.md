@@ -21,6 +21,8 @@ condition, records raw trials, and reports median and nearest-rank p95 only
 when five valid observations exist. `cold-process` describes process launch;
 the harness does not evict filesystem caches. Commands are argv arrays with
 strict placeholders and bounded time, capture, and output sizes.
+Adapters run under the macOS process-fork sandbox; renderers that require
+helper processes fail explicitly instead of leaving detached work after a trial.
 
 The current smoke run verified all 24 fixture hashes and the manifest digest
 `a05dcf0da95bd7c53ce6faec6704f7b739d6cbd9cf829dfff74b50dfb8359bbd`. Inkscape

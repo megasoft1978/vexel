@@ -85,21 +85,20 @@ class BenchmarkHarnessTests(unittest.TestCase):
         self.assertEqual(capture["stderr_sha256"], hashlib.sha256(stderr.encode()).hexdigest())
         self.assertEqual(len(result[1]), compare.OUTPUT_LIMIT)
 
-    def test_escaped_descendant_cannot_hold_output_pipes_past_cleanup(self):
+    def test_process_policy_denies_detached_descendants(self):
         marker = self.cache / "escaped-child-finished"
-        child = ("import pathlib,time;time.sleep(.3);"
+        child = ("import pathlib,time;time.sleep(.2);"
                  f"pathlib.Path({str(marker)!r}).write_text('done')")
-        parent = ("import subprocess,sys;subprocess.Popen([sys.executable,'-c',"
-                  f"{child!r}],start_new_session=True)")
+        parent = ("import subprocess,sys;"
+                  f"child={child!r};"
+                  "exec(\"try:\\n subprocess.Popen([sys.executable,'-c',child],start_new_session=True)"
+                  "\\nexcept PermissionError:\\n print('process-fork denied')\")")
         result = compare.process([sys.executable, "-c", parent], 1.0)
         self.assertEqual(result[0], 0)
-        self.assertEqual(result[4], "output pipe remained open after child exit")
+        self.assertIsNone(result[4])
         self.assertLess(result[3], 1.0)
-        import time
-        deadline = time.monotonic() + 1.0
-        while not marker.exists() and time.monotonic() < deadline:
-            time.sleep(.01)
-        self.assertTrue(marker.exists())
+        self.assertIn(b"process-fork denied", result[1])
+        self.assertFalse(marker.exists())
 
     def test_fixture_tampering_is_detected_in_isolated_snapshot(self):
         import shutil

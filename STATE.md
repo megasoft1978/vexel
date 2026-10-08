@@ -22,12 +22,12 @@
   Renderer evidence and environment details are in `artifacts/WO-M0-02/`.
 - Current work order: `WO-M0-03` is frozen READY at `work/WO-M0-03.md`
   (base `cd503d6c348436faa183223d964957235b00a981`).
-- WO-M0-03 candidate contains the round-two fixes for bounded pipe cleanup,
-  stable smoke availability, test-count evidence, and full-stream output hashes.
-  The Codex executor could not write the linked worktree Git metadata; host
-  orchestration recorded the candidate. Latest local verification reports 103
-  tests passed with zero failures, errors, or skips; 18 focused tests pass.
-  Fresh independent review round two is pending.
+- WO-M0-03 candidate contains fixes for stable smoke availability, full-stream
+  hashes, and descendant process safety through macOS sandbox-exec. The Codex
+  executor could not write linked worktree Git metadata; host orchestration
+  records the candidate commits. Latest local verification reports 103 tests
+  passed with zero failures, errors, or skips; 18 focused tests pass. A fresh
+  independent review of the final candidate is pending.
 - Smoke verified all 24 corpus hashes; Inkscape and Donner are unavailable, and
   Vexel has no render command. No render comparison is claimed. Evidence is in
   `artifacts/WO-M0-03/` and `bench/results/WO-M0-03.*`.

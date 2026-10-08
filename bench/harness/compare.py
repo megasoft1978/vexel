@@ -33,6 +33,8 @@ TIMEOUT = 60.0
 OUTPUT_LIMIT = 16 * 1024
 PREVIEW_LIMIT = 512
 PNG_LIMIT = 32 * 1024 * 1024
+SANDBOX_EXEC = "/usr/bin/sandbox-exec"
+SANDBOX_PROFILE = "(version 1)(allow default)(deny process-fork)"
 PLACEHOLDERS = {"input", "output", "width", "height"}
 CSV_FIELDS = (
     "record_type", "trial_id", "adapter_id", "task", "fixture_id", "fixture_sha256", "condition",
@@ -287,7 +289,8 @@ def process(argv: list[str], timeout: float) -> tuple[int | None, bytes, bytes, 
     error = None
     code = None
     try:
-        proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+        sandboxed_argv = [SANDBOX_EXEC, "-p", SANDBOX_PROFILE, *argv]
+        proc = subprocess.Popen(sandboxed_argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, shell=False, start_new_session=True)
         code, error = _drain_process(proc, timeout, buffers, digests, totals, truncated)
     except OSError as exc:
@@ -570,8 +573,9 @@ def build_report(mode: str, metadata: dict, corpus: dict, records: dict[str, dic
             "metadata": metadata,
             "limits": {"trials_per_condition": TRIALS, "timeout_seconds": TIMEOUT,
                 "adapter_timeout_max_seconds": TIMEOUT, "stdout_stderr_capture_bytes": OUTPUT_LIMIT,
-                "preview_bytes": PREVIEW_LIMIT, "png_max_bytes": PNG_LIMIT,
-                "dimensions": [DIMENSION, DIMENSION]},
+            "preview_bytes": PREVIEW_LIMIT, "png_max_bytes": PNG_LIMIT,
+                "dimensions": [DIMENSION, DIMENSION],
+                "process_policy": "sandbox-exec allow default, deny process-fork"},
             "corpus": corpus, "fixtures": fixtures, "adapters": adapter_records,
             "availability": availability, "vexel_version_probe": probe,
             "trials": trials, "summary": summary, "limitations": limitations}
