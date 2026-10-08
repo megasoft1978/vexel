@@ -39,8 +39,10 @@ harness fails closed if the macOS sandbox utility is unavailable.
 JSON retains complete bounded trial observations, output hashes, argv, adapter
 identity, fixture and source hashes, host metadata and limitations. CSV contains
 the same raw trials plus matching summary rows. JSON embeds integrity hashes
-for itself and CSV; `--verify` checks those hashes, fixtures, and any retained
-PNG outputs without rewriting files. Stream hashes cover all child output while
+for itself and CSV. Both files are staged and verified before installation; a
+small journal and backups allow recovery if only one replacement completes.
+`--verify` checks those hashes, fixtures, and any retained PNG outputs without
+rewriting files. Stream hashes cover all child output while
 only the first 16 KiB is retained; byte totals and truncation flags make that
 distinction explicit. Pipe draining has a bounded cleanup window even if a
 detached child keeps an inherited stream open.

@@ -403,11 +403,62 @@ class BenchmarkHarnessTests(unittest.TestCase):
             summary_rows = [r for r in rows if r["record_type"] == "summary"]
             self.assertEqual([r["trial_id"] for r in raw_rows], [t["trial_id"] for t in report["trials"]])
             self.assertEqual([r["output_sha256"] for r in raw_rows], [t["output_sha256"] for t in report["trials"]])
+            for row, trial in zip(raw_rows, report["trials"]):
+                self.assertEqual(row["status"], trial["status"])
+                self.assertEqual(row["fixture_sha256"], trial["fixture_sha256"])
+                self.assertEqual(int(row["output_size"]), trial["output_size"])
+                self.assertEqual(row["condition"], trial["condition"])
+                self.assertEqual(int(row["trial_index"]), trial["trial_index"])
             self.assertTrue(all(t["task"] == "svg-render" for t in report["trials"]))
             self.assertTrue(all(r["task"] == "svg-render" for r in raw_rows))
             self.assertEqual(len(summary_rows), len(report["summary"]))
             for row, summary in zip(summary_rows, report["summary"]):
-                self.assertEqual(float(row["latency_median"]), summary["latency_seconds"]["median"])
+                for field in ("valid_count", "median", "p95_nearest_rank"):
+                    value = summary["latency_seconds"][field]
+                    self.assertEqual(row[f"latency_{field}"], "" if value is None else str(value))
+                    rss_value = summary["peak_rss_bytes"][field]
+                    self.assertEqual(row[f"rss_{field}"], "" if rss_value is None else str(rss_value))
+            compare.verify(json_path, csv_path)
+
+    def test_report_pair_install_rolls_back_after_second_replace_failure(self):
+        with tempfile.TemporaryDirectory(dir=self.cache) as folder:
+            folder = Path(folder)
+            output = self.cache / "outputs/atomic-pair.png"
+            output.parent.mkdir(parents=True, exist_ok=True)
+            data = compare.fake_png()
+            output.write_bytes(data)
+            trial = {"trial_id": "pair", "adapter_id": "fake", "fixture_id": "shapes-basic",
+                     "fixture_sha256": self.fixture["sha256"], "condition": "cold-process",
+                     "trial_index": 1, "status": "passed", "exit_code": 0,
+                     "elapsed_seconds": .1, "peak_rss_bytes": None,
+                     "output_path": str(output.relative_to(ROOT)), "output_size": len(data),
+                     "output_sha256": compare.sha(data), "stdout_preview": "",
+                     "stdout_sha256": compare.sha(b""), "stderr_preview": "",
+                     "stderr_sha256": compare.sha(b""), "argv": ["fake"], "error": None}
+            report = {"schema_version": 1, "work_order": "WO-M0-03",
+                      "fixtures": [{"fixture_id": "shapes-basic",
+                                    "fixture_sha256": self.fixture["sha256"],
+                                    "source_sha256": self.fixture["source_sha256"]}],
+                      "trials": [trial], "summary": []}
+            json_path, csv_path = folder / "report.json", folder / "report.csv"
+            compare.install_report(report, json_path, csv_path, [trial])
+            old_json, old_csv = json_path.read_bytes(), csv_path.read_bytes()
+            updated = dict(report, run_label="replacement")
+            real_replace = compare.os.replace
+            failed = False
+
+            def fail_json_replace(source, destination):
+                nonlocal failed
+                if Path(destination) == json_path and not failed:
+                    failed = True
+                    raise OSError("injected JSON replacement failure")
+                return real_replace(source, destination)
+
+            with mock.patch.object(compare.os, "replace", side_effect=fail_json_replace):
+                with self.assertRaisesRegex(OSError, "injected JSON replacement"):
+                    compare.install_report(updated, json_path, csv_path, [trial])
+            self.assertEqual(json_path.read_bytes(), old_json)
+            self.assertEqual(csv_path.read_bytes(), old_csv)
             compare.verify(json_path, csv_path)
 
     def test_verify_detects_json_csv_fixture_and_output_tampering(self):
