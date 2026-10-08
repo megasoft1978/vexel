@@ -4,7 +4,7 @@
   "machine": "Apple M5 Max, macOS 27.0",
   "compiler": "Apple Clang 21.0.0.21000334",
   "build": "Debug and Release",
-  "acceptance_status": "machine_checks_passed_pending_independent_review",
+  "acceptance_status": "complete_verified_and_merged",
   "task_queue_smoke": {
     "requested_cycles": 1000,
     "completed_cycles": 1000,
@@ -12,7 +12,7 @@
     "canceled_queued_work": true,
     "canceled_running_work": true,
     "stale_publications": 0,
-    "maximum_join_seconds": 0.000073,
+    "maximum_join_seconds": 7.3e-05,
     "join_limit_seconds": 2.0,
     "exit_code": 0
   },
@@ -50,5 +50,12 @@
     "baseline_pointer_comparison": "artifacts/WO-M1-04/baseline-ui-smoke-comparison.json",
     "task_smoke_asan": "artifacts/WO-M1-04/task-smoke-asan.txt",
     "task_smoke_ubsan": "artifacts/WO-M1-04/task-smoke-ubsan.txt"
-  }
+  },
+  "independent_review": {
+    "rounds": 2,
+    "verdict": "pass",
+    "findings": 0,
+    "evidence": "artifacts/WO-M1-04/verifier-verdict.json"
+  },
+  "implementation_commit": "91ff611782c843428fb5bdc4ba874e3ccdd37f94"
 }

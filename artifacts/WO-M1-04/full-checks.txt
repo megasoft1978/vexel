@@ -12,3 +12,5 @@ AC-4 `python3 -m json.tool bench/results/WO-M1-04.json` — exit 0; see `json-to
 AC-4 `git diff --check` — exit 0; no whitespace errors.
 
 The 100-cycle native window smoke is part of AC-1. Test-only synthetic pointer injection now targets the specified view directly; assertions continue to verify pointer type, coordinates, bounds, and button.
+
+Independent verification: two fresh read-only reviews passed; final round-2 verdict is saved in `verifier-verdict.json`, with runner metadata in `verifier-metadata.json`.
