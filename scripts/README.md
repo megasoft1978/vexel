@@ -149,3 +149,12 @@ python3 scripts/golden_diff.py \
 
 Changing a golden baseline requires a separate READY work order and a recorded
 reason. This comparison work order cannot update or regenerate baselines.
+
+## UI test driver
+
+`app/test_driver/driver.py` replays bounded JSONL placeholder events on macOS
+and emits deterministic PNG, semantic accessibility, and saved-state files
+under a new `.cache/` directory. It uses only Python's standard library; it
+does not open files named by the script or render SVG. See
+[`docs/ui-test-driver.md`](../docs/ui-test-driver.md) for the exact command
+schema, limits, and invocation.

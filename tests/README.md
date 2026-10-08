@@ -22,3 +22,8 @@ and JSON/CSV/output tamper detection. It never invokes a competitor or network.
 decoder, exact metrics, explicit edge tolerance, metadata identity, safe output
 paths, and deterministic report/heatmap generation. See
 `docs/golden-images.md` for the supported PNG profile and invocation.
+
+`tests.test_ui_driver` checks every JSONL placeholder command, its bounds and
+ordering, safe new output paths, valid PNG and semantic JSON artifacts, seed
+sensitivity, and byte-identical replays. It is exercised explicitly by
+`python3 -m unittest tests.test_ui_driver` and by `./dev test-fast`.
