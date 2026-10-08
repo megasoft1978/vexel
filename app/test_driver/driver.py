@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -212,6 +213,117 @@ def _safe_native_output(raw: str) -> Path:
     raise DriverError("native output root reached its 10000-run limit")
 
 
+def _safe_repeat_output(raw: str) -> Path:
+    """Reserve a new invocation directory under the requested cache root."""
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    lexical = Path(os.path.abspath(candidate))
+    cache = ROOT / ".cache"
+    if not lexical.is_relative_to(cache) or lexical == cache:
+        raise DriverError("repeat output root must stay under repository .cache")
+    current = ROOT
+    for part in lexical.relative_to(ROOT).parts:
+        current = current / part
+        if current.is_symlink():
+            raise DriverError("repeat output path contains a symlink")
+    lexical.mkdir(parents=True, exist_ok=True)
+    for index in range(1, 10001):
+        run = lexical / f"run-{index:04d}"
+        try:
+            run.mkdir()
+            return run
+        except FileExistsError:
+            if run.is_symlink() or not run.is_dir():
+                raise DriverError("repeat output run path is not a regular directory")
+    raise DriverError("repeat output root reached its 10000-run limit")
+
+
+def _hash_artifacts(directory: Path) -> dict[str, str]:
+    return {path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+            for path in sorted(directory.iterdir()) if path.is_file()}
+
+
+def repeat_replay(script: Path, out: Path, repeats: int, seed: int) -> str:
+    started = time.monotonic()
+    commands = read_script(script)
+    event_order = [{"index": index, "command": item["command"]}
+                   for index, item in enumerate(commands)]
+    virtual_ns = 0
+    frame_steps = []
+    for index, command in enumerate(commands):
+        if command["command"] == "frame":
+            virtual_ns += command["delta_ns"]
+            frame_steps.append({"index": index, "delta_ns": command["delta_ns"],
+                                "virtual_time_ns": virtual_ns})
+    baseline = None
+    digests = []
+    for iteration in range(1, repeats + 1):
+        run = out / f"replay-{iteration:04d}"
+        run.mkdir()
+        replay(commands, run, seed, emit_acks=False)
+        artifacts = _hash_artifacts(run)
+        digest_input = _json_bytes({"artifacts": artifacts, "event_order": event_order,
+                                    "frame_steps": frame_steps})
+        digest = hashlib.sha256(digest_input).hexdigest()
+        current = {"artifacts": artifacts, "event_order": event_order,
+                   "frame_steps": frame_steps, "digest": digest}
+        if baseline is not None and current != baseline:
+            raise DriverError(f"replay determinism mismatch on iteration {iteration}")
+        baseline = current
+        digests.append(digest)
+    elapsed = time.monotonic() - started
+    summary = {"repeats": repeats, "identical": len(set(digests)) == 1,
+               "digest": digests[0], "digests": digests,
+               "event_order": event_order, "frame_steps": frame_steps,
+               "elapsed_seconds": elapsed}
+    (out / "result.json").write_bytes(_json_bytes(summary))
+    sys.stdout.write(f"identical replay digests: {repeats}/{repeats} {digests[0]}\n")
+    sys.stdout.write(f"stable event order: {len(event_order)} commands; virtual frame steps: {len(frame_steps)}\n")
+    sys.stdout.write(f"repeat replay elapsed seconds: {elapsed:.6f}\n")
+    return digests[0]
+
+
+def validate_native_metal_replay_output(output: str) -> tuple[int, str, str]:
+    lines = output.splitlines()
+    prefix = "readback hashes identical: "
+    order = "stable offscreen frame order: frame-0000..frame-0019"
+    digest = lines[1][len(prefix):] if len(lines) > 1 and lines[1].startswith(prefix) else ""
+    if (len(lines) != 3 or lines[0] != "native replay frames: 20" or len(digest) != 64 or
+            any(character not in "0123456789abcdef" for character in digest) or lines[2] != order):
+        raise DriverError("native Metal replay returned malformed frame evidence")
+    return 20, digest, order
+
+
+def native_metal_replay(out: Path, repeats: int) -> float:
+    if repeats != 20:
+        raise DriverError("native Metal replay requires exactly 20 frames")
+    binary = ROOT / "build" / "mac-release" / "bin" / "svgworkbench"
+    if not binary.is_file():
+        raise DriverError("Release executable is missing; build preset mac-release first")
+    started = time.monotonic()
+    try:
+        result = subprocess.run([str(binary), "--native-metal-replay-smoke"], cwd=ROOT,
+                                capture_output=True, text=True, timeout=180, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DriverError(f"native Metal replay could not complete: {exc}") from exc
+    elapsed = time.monotonic() - started
+    (out / "native-replay.txt").write_text(result.stdout, encoding="utf-8")
+    (out / "native-replay.stderr.txt").write_text(result.stderr, encoding="utf-8")
+    if result.returncode != 0:
+        (out / "result.json").write_bytes(_json_bytes({
+            "frames": 0, "elapsed_seconds": elapsed, "exit_code": result.returncode,
+            "status": "failed", "diagnostic": result.stderr.strip()[:1000]}))
+        raise DriverError(f"native Metal replay failed with exit {result.returncode}: {result.stderr.strip()[:500]}")
+    frames, readback_hash, order = validate_native_metal_replay_output(result.stdout)
+    summary = {"frames": frames, "readback_sha256": readback_hash,
+               "frame_order": order, "elapsed_seconds": elapsed, "status": "passed"}
+    (out / "result.json").write_bytes(_json_bytes(summary))
+    sys.stdout.write("20 frames with identical readback hashes and stable offscreen frame order\n")
+    sys.stdout.write(f"readback sha256: {summary['readback_sha256']}\nnative replay elapsed seconds: {elapsed:.6f}\n")
+    return elapsed
+
+
 def _chunk(kind: bytes, payload: bytes) -> bytes:
     return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
 
@@ -234,7 +346,7 @@ def _json_bytes(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
-def replay(commands: list[dict[str, Any]], out: Path, seed: int) -> None:
+def replay(commands: list[dict[str, Any]], out: Path, seed: int, *, emit_acks: bool = True) -> None:
     width, height, virtual_ns = 320, 240, 0
     document_id = commands[0]["document_id"]
     pointer: dict[str, Any] | None = None
@@ -284,7 +396,8 @@ def replay(commands: list[dict[str, Any]], out: Path, seed: int) -> None:
             (out / "document.json").write_bytes(_json_bytes(saved))
             outputs.append("document.json")
         ack = {"command": name, "index": index, "outputs": outputs, "virtual_time_ns": virtual_ns}
-        sys.stdout.buffer.write(_json_bytes(ack))
+        if emit_acks:
+            sys.stdout.buffer.write(_json_bytes(ack))
 
 
 def validate_native_smoke_output(output: str, cycles: int) -> list[str]:
@@ -419,7 +532,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--native-platform-smoke", action="store_true")
     parser.add_argument("--native-metal-smoke", action="store_true")
+    parser.add_argument("--repeat-replay", action="store_true")
+    parser.add_argument("--native-metal-replay-smoke", action="store_true")
     parser.add_argument("--cycles", type=int, default=100)
+    parser.add_argument("--repeats", type=int, default=20)
     args = parser.parse_args(argv)
     if sys.platform != "darwin":
         print("error: UI test driver is supported on macOS only", file=sys.stderr)
@@ -428,9 +544,24 @@ def main(argv: list[str] | None = None) -> int:
         print("error: seed must be an unsigned 32-bit integer", file=sys.stderr)
         return 2
     try:
-        if args.native_metal_smoke:
-            if args.script is not None or args.native_platform_smoke:
-                raise DriverError("--native-metal-smoke cannot be combined with other modes")
+        modes = sum((args.native_metal_smoke, args.native_metal_replay_smoke,
+                     args.native_platform_smoke, args.repeat_replay))
+        if modes > 1:
+            raise DriverError("driver modes cannot be combined")
+        if args.native_metal_replay_smoke:
+            if args.script is not None:
+                raise DriverError("--script cannot be combined with native Metal replay")
+            out = _safe_native_output(args.output_dir)
+            native_metal_replay(out, args.repeats)
+        elif args.repeat_replay:
+            if args.script is None or not 1 <= args.repeats <= 100:
+                raise DriverError("--repeat-replay requires --script and repeats from 1 to 100")
+            script = _safe_script(args.script)
+            out = _safe_repeat_output(args.output_dir)
+            repeat_replay(script, out, args.repeats, args.seed)
+        elif args.native_metal_smoke:
+            if args.script is not None:
+                raise DriverError("--script cannot be combined with --native-metal-smoke")
             out = _safe_native_output(args.output_dir)
             native_metal_smoke(out)
         elif args.native_platform_smoke:

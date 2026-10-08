@@ -101,6 +101,24 @@ class DriverTests(unittest.TestCase):
         self.assertNotEqual((first / "frame-0000.png").read_bytes(),
                             (ROOT / seed_out / "frame-0000.png").read_bytes())
 
+    def test_repeat_replay_hashes_and_unique_invocation_directories(self) -> None:
+        root = self.output_path("repeat-root")
+        args = [sys.executable, str(DRIVER), "--repeat-replay", "--script", str(SAMPLE),
+                "--repeats", "20", "--output-dir", str(root), "--seed", "17"]
+        first = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, check=False)
+        second = subprocess.run(args, cwd=ROOT, text=True, capture_output=True, check=False)
+        self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertEqual(second.returncode, 0, second.stderr)
+        self.assertIn("identical replay digests: 20/20", first.stdout)
+        first_run = ROOT / root / "run-0001"
+        second_run = ROOT / root / "run-0002"
+        result_a = json.loads((first_run / "result.json").read_text())
+        result_b = json.loads((second_run / "result.json").read_text())
+        self.assertEqual(result_a["digests"], [result_a["digest"]] * 20)
+        self.assertEqual(result_b["digest"], result_a["digest"])
+        self.assertTrue(result_a["event_order"])
+        self.assertEqual(len(result_a["frame_steps"]), 1)
+
     def test_invalid_cli_and_jsonl_are_rejected(self) -> None:
         missing = subprocess.run([sys.executable, str(DRIVER)], cwd=ROOT, text=True, capture_output=True)
         self.assertEqual(missing.returncode, 2)

@@ -3,9 +3,10 @@
 These measurements establish a local starting point. The `--version` command
 only measures process startup and is not an SVG rendering benchmark.
 
-| Work order | Build | Binary bytes | `--version` median | Max RSS | Machine |
-|---|---|---:|---:|---:|---|
-| BOOT-01 | Release | 33,568 | 1.910 ms (31 runs) | 1,884,160 bytes (one run) | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| Work order | Build | Binary bytes | Latency (workload) | Max RSS | Machine |
+|---|---|---:|---|---:|---|
+| BOOT-01 | Release | 33,568 | `--version`: 1.910 ms median (31 runs) | 1,884,160 bytes (one run) | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M1-03 | Release | 94,752 | placeholder replay: 100.976 ms; Metal replay: 179.164 ms | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. No SVG throughput or renderer performance is measured yet.
@@ -40,3 +41,22 @@ as unperformed. `--run` separately records five Vexel `--version` process launch
 that startup task is never compared with SVG render latency. Peak RSS is
 unavailable from the bounded standard-library child process interface on this
 host. No performance advantage is claimed.
+
+## WO-M1-03 deterministic replay
+
+The Release executable is 94,752 bytes. The fixed placeholder JSONL scenario
+completed 20/20 identical replays with combined SHA-256
+`c46e612bbfa618d18a27693c33a952b9fce16bb941e3d9b6f5048b7bfd280c59`; one
+measured invocation took 100.976 ms. Two further outer invocations against the
+same output root reserved distinct numbered directories and produced the same
+digest. These results cover placeholder event replay, PNG/accessibility/saved
+state output hashing, and virtual frame advancement only.
+
+The initial visible-window replay crashed during AppKit teardown after the 20
+Metal frames. LLDB and AddressSanitizer localized the fault to
+`platform_window_destroy`'s autorelease-pool drain. The replay core now uses
+headless Metal blit command buffers while windowed Metal presentation remains
+separately smoke-tested. Twenty readbacks matched byte-for-byte with SHA-256
+`3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c`; measured
+replay latency was 179.164 ms. No SVG throughput or RSS was measured. Raw
+evidence is in `artifacts/WO-M1-03/` and `bench/results/WO-M1-03.json`.

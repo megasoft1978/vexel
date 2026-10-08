@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <CommonCrypto/CommonDigest.h>
 
 #include "platform/platform_window.h"
 #include "platform/platform_metal.h"
@@ -383,10 +384,49 @@ static int native_metal_smoke(void)
     return EXIT_SUCCESS;
 }
 
+static void print_sha256(const uint8_t digest[32])
+{
+    for (size_t index = 0; index < 32U; index++) {
+        (void)printf("%02x", digest[index]);
+    }
+}
+
+static int native_metal_replay_smoke(void)
+{
+    const unsigned repeats = 20U;
+    raster_tile tile = {0};
+    uint8_t expected_hash[CC_SHA256_DIGEST_LENGTH] = {0};
+    char diagnostic[192] = {0};
+    bool valid = raster_tile_create(64U, 48U, &tile);
+    for (unsigned frame = 0; valid && frame < repeats; frame++) {
+        uint8_t frame_hash[CC_SHA256_DIGEST_LENGTH] = {0};
+        valid = platform_metal_copy_and_hash(tile.rgba, tile.byte_count,
+            tile.width, tile.height, frame_hash, diagnostic, sizeof(diagnostic));
+        if (valid && frame == 0U) {
+            memcpy(expected_hash, frame_hash, sizeof(expected_hash));
+        } else if (valid && memcmp(expected_hash, frame_hash, sizeof(expected_hash)) != 0) {
+            (void)snprintf(diagnostic, sizeof(diagnostic), "frame %u readback hash changed", frame);
+            valid = false;
+        }
+    }
+    raster_tile_destroy(&tile);
+    if (!valid) {
+        (void)fprintf(stderr, "Metal replay: %s\n", diagnostic[0] == '\0' ? "setup failed" : diagnostic);
+        return EXIT_FAILURE;
+    }
+    (void)printf("native replay frames: %u\nreadback hashes identical: ", repeats);
+    print_sha256(expected_hash);
+    (void)printf("\nstable offscreen frame order: frame-0000..frame-0019\n");
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc == 2 && strcmp(argv[1], "--native-metal-smoke") == 0) {
         return native_metal_smoke();
+    }
+    if (argc == 2 && strcmp(argv[1], "--native-metal-replay-smoke") == 0) {
+        return native_metal_replay_smoke();
     }
     if (argc == 2 && strcmp(argv[1], "--tile-cpu-smoke") == 0) {
         return tile_cpu_smoke();

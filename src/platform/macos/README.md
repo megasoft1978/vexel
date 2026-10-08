@@ -19,3 +19,9 @@ current drawable, waits up to five seconds for explicit command completion, and
 compares every byte of the uploaded shared texture. Diagnostics name only the
 first differing byte. The native Metal smoke presents once, clears the layer,
 resizes the AppKit window, and validates a second frame.
+
+Repeated native replay uses the separate headless
+`platform_metal_copy_and_hash` entry point. It blits the bounded shared input
+texture to a second Metal texture, waits for completion with the same five-
+second bound, then compares and hashes the GPU readback. This path avoids
+AppKit window teardown and does not measure presentation timing.

@@ -52,6 +52,35 @@ placeholder PNG only depicts a flat canvas and seed-derived accent; the
 accessibility tree and saved state are not a real editor model. No wall-clock
 time or sleep is used.
 
+## Repeat replay and native Metal frame sequence
+
+Run a fixed JSONL script repeatedly with:
+
+```sh
+python3 app/test_driver/driver.py --repeat-replay \
+  --script tests/ui/mixed-commands.jsonl --repeats 20 \
+  --output-dir .cache/WO-M1-03/replay
+```
+
+Each invocation reserves `run-NNNN` under the output root; each repetition has
+its own `replay-NNNN` directory. Reusing the outer command reserves the next
+number and leaves earlier output intact. `result.json` records normalized
+command order, explicit frame deltas and accumulated virtual nanoseconds, each
+artifact SHA-256, and the combined replay digest. The first run is compared to
+every later run; any order or artifact hash difference fails the command. The
+virtual clock advances only on `frame` commands. Wall time is not read by the
+placeholder replay.
+
+Native Metal replay submits the same deterministic 64x48 scalar tile for 20
+frame steps using headless shared textures and Metal blit command buffers.
+Every command buffer has a five-second completion bound; the call compares
+every readback byte and calculates SHA-256 from the readback buffer. The native
+process has a separate 180-second bound and reports ordered frames and the
+repeated readback digest. It requires Apple Silicon macOS 13+ and Metal.
+Windowed AppKit/Metal presentation is covered by the separate native smoke. The
+replay does not test physical input, display timing, SVG rendering, throughput,
+or RSS.
+
 ## Native AppKit window smoke
 
 `src/platform/platform_window.h` is the C-callable platform boundary. Its

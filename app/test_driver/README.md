@@ -18,3 +18,16 @@ virtual frame clock never reads wall time.
 verifies exact uploaded-texture readback, clears and resizes the window, and
 checks a second frame. It requires the Release executable and an active macOS
 graphical session.
+
+`--repeat-replay --script ... --repeats 20` runs the bounded placeholder script
+in fresh numbered iteration directories, compares normalized command order
+and all artifact hashes, and prints the shared replay digest. Re-running the
+outer command under the same output root reserves another `run-NNNN` directory.
+Frame time is virtual and advances only by explicit `frame.delta_ns` values.
+
+`--native-metal-replay-smoke --repeats 20` submits the same scalar tile through
+20 explicit headless Metal blits. Each command has a five-second completion
+bound; the implementation checks exact readback bytes and hashes the returned
+bytes. Windowed AppKit/Metal presentation remains covered by
+`--native-metal-smoke`. The replay needs a Metal-capable macOS session and a
+Release executable; it is not an SVG renderer or a performance claim.

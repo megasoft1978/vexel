@@ -81,6 +81,29 @@ class PlatformDriverTests(unittest.TestCase):
     def test_clean_quit(self) -> None:
         driver.validate_normalized_events([self.events[-1]], ["close_request"])
 
+    def test_native_frame_sequence_output(self) -> None:
+        digest = "a" * 64
+        output = ("native replay frames: 20\nreadback hashes identical: " + digest +
+                  "\nstable offscreen frame order: frame-0000..frame-0019\n")
+        self.assertEqual(driver.validate_native_metal_replay_output(output), (
+            20, digest, "stable offscreen frame order: frame-0000..frame-0019"))
+        with self.assertRaises(driver.DriverError):
+            driver.validate_native_metal_replay_output(output.replace("frame-0019", "frame-0018"))
+
+    def test_native_metal_replay_submits_twenty_identical_frames(self) -> None:
+        cache = driver.ROOT / ".cache"
+        cache.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="metal-replay-", dir=cache) as temporary:
+            out = driver._safe_native_output(str(Path(temporary) / "native"))
+            elapsed = driver.native_metal_replay(out, 20)
+            report = json.loads((out / "result.json").read_text())
+            self.assertGreaterEqual(elapsed, 0.0)
+            self.assertEqual(report["status"], "passed")
+            self.assertEqual(report["frames"], 20)
+            self.assertEqual(report["frame_order"],
+                             "stable offscreen frame order: frame-0000..frame-0019")
+            self.assertEqual(len(report["readback_sha256"]), 64)
+
     def test_missing_or_malformed_events_rejected(self) -> None:
         with self.assertRaises(driver.DriverError):
             driver.validate_normalized_events(self.events[:-1], self.expected)
@@ -100,7 +123,17 @@ class PlatformDriverTests(unittest.TestCase):
             result = subprocess.run([
                 sys.executable, str(script), "--native-platform-smoke", "--cycles", "100",
                 "--output-dir", str(output_root),
-            ], text=True, capture_output=True, timeout=60, check=True)
+            ], text=True, capture_output=True, timeout=60, check=False)
+            if result.returncode != 0:
+                child = output_root / "run-0001"
+                child_stdout = child / "native-smoke.txt"
+                child_stderr = child / "native-smoke.stderr.txt"
+                details = "\n".join((
+                    result.stderr,
+                    child_stdout.read_text() if child_stdout.is_file() else "",
+                    child_stderr.read_text() if child_stderr.is_file() else "",
+                ))
+                self.fail(f"native 100-cycle smoke exited {result.returncode}:\n{details}")
             self.assertIn("completed cycles: 100", result.stdout)
             report = json.loads((output_root / "run-0001" / "result.json").read_text())
             self.assertEqual(report["cycles"], 100)

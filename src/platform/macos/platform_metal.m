@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <dispatch/dispatch.h>
+#include <CommonCrypto/CommonDigest.h>
 
 static const uint64_t PLATFORM_METAL_TIMEOUT_SECONDS = 5U;
 
@@ -32,6 +33,95 @@ static bool platform_metal_dimensions_valid(uint32_t width, uint32_t height,
     }
     size_t pixels = width_size * height_size;
     return pixels <= SIZE_MAX / 4U && pixels * 4U == byte_count;
+}
+
+static bool platform_metal_wait(id<MTLCommandBuffer> command, char *diagnostic,
+                                size_t diagnostic_capacity)
+{
+    dispatch_semaphore_t completed = dispatch_semaphore_create(0);
+    [command addCompletedHandler:^(__unused id<MTLCommandBuffer> buffer) {
+        dispatch_semaphore_signal(completed);
+    }];
+    [command commit];
+    dispatch_time_t deadline = dispatch_time(DISPATCH_TIME_NOW,
+        (int64_t)(PLATFORM_METAL_TIMEOUT_SECONDS * NSEC_PER_SEC));
+    if (dispatch_semaphore_wait(completed, deadline) != 0) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "Metal completion timed out after 5 seconds");
+    }
+    return command.status == MTLCommandBufferStatusCompleted ||
+        platform_metal_fail(diagnostic, diagnostic_capacity, "Metal command buffer failed");
+}
+
+static bool platform_metal_verify_readback(id<MTLTexture> texture, const uint8_t *rgba,
+                                           size_t byte_count, uint32_t width,
+                                           uint32_t height, uint8_t out_sha256[32],
+                                           char *diagnostic, size_t diagnostic_capacity)
+{
+    uint8_t *readback = malloc(byte_count);
+    if (readback == NULL) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "offscreen Metal readback allocation failed");
+    }
+    [texture getBytes:readback bytesPerRow:(size_t)width * 4U
+        fromRegion:MTLRegionMake2D(0, 0, width, height) mipmapLevel:0];
+    bool matches = memcmp(readback, rgba, byte_count) == 0;
+    if (matches) {
+        (void)CC_SHA256(readback, (CC_LONG)byte_count, out_sha256);
+    }
+    free(readback);
+    return matches || platform_metal_fail(diagnostic, diagnostic_capacity,
+                                           "offscreen Metal readback differs from input");
+}
+
+bool platform_metal_copy_and_hash(const uint8_t *rgba, size_t byte_count,
+                                  uint32_t width, uint32_t height,
+                                  uint8_t out_sha256[32], char *diagnostic,
+                                  size_t diagnostic_capacity)
+{
+    if (rgba == NULL || out_sha256 == NULL ||
+        !platform_metal_dimensions_valid(width, height, byte_count)) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "invalid offscreen Metal arguments");
+    }
+    @autoreleasepool {
+        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+        id<MTLCommandQueue> queue = [device newCommandQueue];
+        if (device == nil || queue == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "offscreen Metal device or queue unavailable");
+        }
+        MTLTextureDescriptor *descriptor = [MTLTextureDescriptor
+            texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+            width:width height:height mipmapped:NO];
+        descriptor.storageMode = MTLStorageModeShared;
+        descriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageShaderWrite;
+        id<MTLTexture> source = [device newTextureWithDescriptor:descriptor];
+        id<MTLTexture> destination = [device newTextureWithDescriptor:descriptor];
+        if (source == nil || destination == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "offscreen Metal texture allocation failed");
+        }
+        [source replaceRegion:MTLRegionMake2D(0, 0, width, height) mipmapLevel:0
+                    withBytes:rgba bytesPerRow:(size_t)width * 4U];
+        id<MTLCommandBuffer> command = [queue commandBuffer];
+        id<MTLBlitCommandEncoder> blit = [command blitCommandEncoder];
+        if (command == nil || blit == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "offscreen Metal blit encoder unavailable");
+        }
+        [blit copyFromTexture:source sourceSlice:0 sourceLevel:0
+                 sourceOrigin:MTLOriginMake(0, 0, 0)
+                       sourceSize:MTLSizeMake(width, height, 1)
+                        toTexture:destination destinationSlice:0 destinationLevel:0
+                       destinationOrigin:MTLOriginMake(0, 0, 0)];
+        [blit endEncoding];
+        if (!platform_metal_wait(command, diagnostic, diagnostic_capacity)) {
+            return false;
+        }
+        return platform_metal_verify_readback(destination, rgba, byte_count,
+            width, height, out_sha256, diagnostic, diagnostic_capacity);
+    }
 }
 
 bool platform_metal_present_and_verify(platform_window *window, const uint8_t *rgba,
