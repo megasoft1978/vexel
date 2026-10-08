@@ -12,6 +12,7 @@ import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import resource
 import selectors
 import signal
 import shutil
@@ -32,7 +33,8 @@ TRIALS = 5
 TIMEOUT = 60.0
 OUTPUT_LIMIT = 16 * 1024
 PREVIEW_LIMIT = 512
-PNG_LIMIT = 32 * 1024 * 1024
+PNG_LIMIT = 2 * 1024 * 1024
+MAX_ADAPTERS = 8
 SANDBOX_EXEC = "/usr/bin/sandbox-exec"
 PLACEHOLDERS = {"input", "output", "width", "height"}
 CSV_FIELDS = (
@@ -232,6 +234,8 @@ def adapter_list(config: Path | None, auto: bool) -> list[dict]:
         if adapter["id"] in seen:
             raise BenchError(f"duplicate adapter id: {adapter['id']}")
         seen.add(adapter["id"])
+    if len(adapters) > MAX_ADAPTERS:
+        raise BenchError(f"adapter count exceeds limit of {MAX_ADAPTERS}")
     return adapters
 
 
@@ -303,8 +307,13 @@ def _drain_process(proc: subprocess.Popen, timeout: float, buffers: list[bytearr
     return code, error
 
 
-def process(argv: list[str], timeout: float) -> tuple[int | None, bytes, bytes, float,
-                                                       str | None, int | None, dict]:
+def _limit_child_file_size() -> None:
+    resource.setrlimit(resource.RLIMIT_FSIZE, (PNG_LIMIT, PNG_LIMIT))
+    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+
+
+def process(argv: list[str], timeout: float, write_target: Path | None = None) -> tuple[int | None, bytes, bytes, float,
+                                                                                     str | None, int | None, dict]:
     start = time.monotonic()
     buffers = [bytearray(), bytearray()]
     digests = [hashlib.sha256(), hashlib.sha256()]
@@ -313,12 +322,15 @@ def process(argv: list[str], timeout: float) -> tuple[int | None, bytes, bytes, 
     error = None
     code = None
     try:
-        cache_path = str((ROOT / ".cache").resolve()).replace("\\", "\\\\").replace('"', '\\"')
-        profile = (f'(version 1)(allow default)(deny process-fork)(deny network*)'
-                   f'(deny file-write*)(allow file-write* (subpath "{cache_path}"))')
+        profile = '(version 1)(allow default)(deny process-fork)(deny network*)(deny file-write*)'
+        if write_target is not None:
+            target = safe_cache_target(str(write_target), ROOT / ".cache")
+            literal = str(target).replace("\\", "\\\\").replace('"', '\\"')
+            profile += f'(allow file-write* (literal "{literal}"))'
         sandboxed_argv = [SANDBOX_EXEC, "-p", profile, *argv]
         proc = subprocess.Popen(sandboxed_argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, shell=False, start_new_session=True)
+                                stderr=subprocess.PIPE, shell=False, start_new_session=True,
+                                preexec_fn=_limit_child_file_size)
         code, error = _drain_process(proc, timeout, buffers, digests, totals, truncated)
     except OSError as exc:
         error = f"launch failed: {exc}"
@@ -345,7 +357,8 @@ def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: in
                   "width": str(DIMENSION), "height": str(DIMENSION)}
         argv = [re.sub(r"\{(input|output|width|height)\}", lambda m: values[m.group(1)], x)
                 for x in validate_command(adapter["render_argv"])]
-        code, out, err, elapsed, error, rss, capture = process(argv, adapter["timeout_seconds"])
+        code, out, err, elapsed, error, rss, capture = process(
+            argv, adapter["timeout_seconds"], output)
     except BenchError as exc:
         code, out, err, elapsed, rss, error = None, b"", b"", 0.0, None, str(exc)
     status = "passed" if error is None and code == 0 else "failed"

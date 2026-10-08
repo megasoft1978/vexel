@@ -129,21 +129,39 @@ class BenchmarkHarnessTests(unittest.TestCase):
     def test_process_policy_denies_network_and_writes_outside_cache(self):
         outside = ROOT / "sandbox-write-guard-probe.txt"
         cached = self.cache / "sandbox-write-guard-probe.txt"
+        sidecar = self.cache / "sandbox-sidecar-probe.txt"
         self.assertFalse(outside.exists())
+        self.assertFalse(sidecar.exists())
         code = ("import pathlib,socket;"
                 f"pathlib.Path({str(cached)!r}).write_text('cache-ok');"
                 f"p=pathlib.Path({str(outside)!r});"
                 "exec(\"try:\\n p.write_text('escaped')\\n"
                 "except PermissionError: print('outside-write denied')\");"
+                f"q=pathlib.Path({str(sidecar)!r});"
+                "exec(\"try:\\n q.write_text('sidecar')\\n"
+                "except OSError: print('sidecar-write denied')\");"
                 "exec(\"try:\\n socket.socket().connect(('127.0.0.1',9))\\n"
                 "except OSError as e: print('network denied',e.errno)\")")
-        result = compare.process([sys.executable, "-c", code], 2.0)
+        result = compare.process([sys.executable, "-c", code], 2.0, cached)
         self.assertEqual(result[0], 0)
         self.assertIsNone(result[4])
         self.assertIn(b"outside-write denied", result[1])
+        self.assertIn(b"sidecar-write denied", result[1])
         self.assertIn(b"network denied", result[1])
         self.assertEqual(cached.read_text(), "cache-ok")
         self.assertFalse(outside.exists())
+        self.assertFalse(sidecar.exists())
+
+    def test_process_policy_limits_the_designated_output_file_size(self):
+        output = self.cache / "bounded-output.png"
+        code = ("import signal,pathlib;signal.signal(signal.SIGXFSZ,signal.SIG_IGN);"
+                f"p=pathlib.Path({str(output)!r});"
+                "exec(\"try:\\n p.write_bytes(b'x'*" + str(compare.PNG_LIMIT + 1) + ")\\n"
+                "except OSError: print('file-size limit enforced')\")")
+        result = compare.process([sys.executable, "-c", code], 2.0, output)
+        self.assertEqual(result[0], 0)
+        self.assertIn(b"file-size limit enforced", result[1])
+        self.assertLessEqual(output.stat().st_size, compare.PNG_LIMIT)
 
     def test_failed_or_empty_version_probe_disables_render_trials(self):
         adapter = {"id": "fake", "path": sys.executable,
@@ -188,6 +206,17 @@ class BenchmarkHarnessTests(unittest.TestCase):
             with self.assertRaises(compare.BenchError):
                 compare.adapter_list(path, False)
 
+    def test_config_rejects_more_than_bounded_adapter_count(self):
+        with tempfile.TemporaryDirectory(dir=self.cache) as folder:
+            path = Path(folder) / "adapters.json"
+            adapters = [{"id": f"fake-{index}", "path": sys.executable,
+                         "version_argv": ["--version"], "render_argv": ["renderer"],
+                         "timeout_seconds": 1.0}
+                        for index in range(compare.MAX_ADAPTERS + 1)]
+            path.write_text(json.dumps({"schema_version": 1, "adapters": adapters}))
+            with self.assertRaisesRegex(compare.BenchError, "adapter count exceeds limit"):
+                compare.adapter_list(path, False)
+
     def test_output_path_must_stay_under_repo_cache(self):
         with self.assertRaises(compare.BenchError):
             compare.safe_cache_target(str(ROOT / "outside.png"), self.cache)
@@ -229,7 +258,7 @@ class BenchmarkHarnessTests(unittest.TestCase):
 
     def _run_with_process(self, name, code, error=None, write_output=True, valid=True):
         out = self.cache / "outputs/fake/shapes-basic/cold-process-1.png"
-        def fake_process(argv, timeout):
+        def fake_process(argv, timeout, write_target=None):
             if write_output:
                 data = compare.fake_png()
                 if not valid:
@@ -267,7 +296,7 @@ class BenchmarkHarnessTests(unittest.TestCase):
         duplicate = compare.fake_png()
         duplicate = duplicate[:33] + duplicate[8:33] + duplicate[33:]
 
-        def fake_process(argv, timeout):
+        def fake_process(argv, timeout, write_target=None):
             Path(argv[-1]).write_bytes(duplicate)
             capture = {"stdout_bytes": 0, "stdout_truncated": False,
                        "stdout_sha256": compare.sha(b""), "stderr_bytes": 0,

@@ -22,10 +22,11 @@ when five valid observations exist. `cold-process` describes process launch;
 the harness does not evict filesystem caches. Commands are argv arrays with
 strict placeholders and bounded time, capture, and output sizes.
 Adapters run under the macOS sandbox with process forks and network access
-denied. Writes are limited to the repository's `.cache`; renderers that require
-helper processes or external resources fail explicitly instead of escaping the
-measurement boundary. A renderer is available only after a successful,
-non-empty version probe.
+denied. Writes are limited to the trial's designated output file under
+`.cache`, capped at 2 MiB; at most eight adapters can be configured. Renderers
+that require helper processes, sidecar files, or external resources fail
+explicitly instead of escaping the measurement boundary. A renderer is
+available only after a successful, non-empty version probe.
 
 The current smoke run verified all 24 fixture hashes and the manifest digest
 `a05dcf0da95bd7c53ce6faec6704f7b739d6cbd9cf829dfff74b50dfb8359bbd`. Inkscape
