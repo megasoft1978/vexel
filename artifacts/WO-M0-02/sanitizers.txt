@@ -1,2 +1,36 @@
-./dev asan: AppleClang 21.0.0; build succeeded; CTest 1/1 passed.
-./dev ubsan: AppleClang 21.0.0; build succeeded; CTest 1/1 passed.
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02/build/mac-asan
+ninja: no work to do.
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02/build/mac-asan
+    Start 1: cli-version
+1/1 Test #1: cli-version ......................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.02 sec
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02/build/mac-ubsan
+ninja: no work to do.
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02/build/mac-ubsan
+    Start 1: cli-version
+1/1 Test #1: cli-version ......................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.01 sec

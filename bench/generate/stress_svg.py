@@ -15,8 +15,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import zlib
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, Iterator
 
 CHUNK = 64 * 1024
 MAX_BYTES = 1_000_000_000
@@ -25,7 +26,8 @@ MAX_PATH_COMMANDS = 5_000_000
 MAX_DEPTH = 128
 MAX_IMAGE_BYTES = 16_000_000
 FAMILIES = ("object-heavy", "path-heavy", "nested-depth", "embedded-image")
-IMAGE_PROFILE = bytes.fromhex("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489")
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+PNG_PIXEL = zlib.compress(b"\x00\x20\x60\xa0\xff")
 
 
 def _validate(family: str, seed: int, size: int, objects: int, commands: int,
@@ -59,32 +61,120 @@ def _file_sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _expected_sha256(prefix: bytes, suffix: bytes, size: int) -> str:
+def _png_chunk(kind: bytes, data: bytes) -> bytes:
+    body = kind + data
+    return len(data).to_bytes(4, "big") + body + (zlib.crc32(body) & 0xFFFFFFFF).to_bytes(4, "big")
+
+
+def _image_payload(size: int) -> Iterator[bytes]:
+    ihdr = _png_chunk(b"IHDR", b"\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00")
+    idat = _png_chunk(b"IDAT", PNG_PIXEL)
+    base = len(PNG_SIGNATURE) + len(ihdr) + len(idat) + 12
+    if size < base:
+        raise ValueError(f"valid embedded PNG payload must be at least {base} bytes")
+    yield PNG_SIGNATURE
+    yield ihdr
+    yield idat
+    remaining = size - base
+    while remaining:
+        # PNG ancillary tEXt chunks carry deterministic padding without changing pixels.
+        chunk_size = min(remaining, 64 * 1024 + 12)
+        if 0 < remaining - chunk_size < 12:
+            chunk_size -= 12 - (remaining - chunk_size)
+        data_size = chunk_size - 12
+        yield _png_chunk(b"tEXt", b"vexel\x00" + b"x" * (data_size - 6))
+        remaining -= chunk_size
+    yield _png_chunk(b"IEND", b"")
+
+
+def _b64_chunks(chunks: Iterator[bytes]) -> Iterator[bytes]:
+    carry = b""
+    for chunk in chunks:
+        data = carry + chunk
+        usable = len(data) - len(data) % 3
+        if usable:
+            yield base64.b64encode(data[:usable])
+        carry = data[usable:]
+    if carry:
+        yield base64.b64encode(carry)
+
+
+def _semantic_chunks(family: str, seed: int, objects: int, commands: int, depth: int,
+                     image_bytes: int) -> tuple[Iterator[bytes], dict[str, int]]:
+    rng = random.Random(seed)
+    nested = depth if family in ("nested-depth", "mixed") else 0
+    object_count = objects if family == "object-heavy" else (max(1, objects // 3) if family == "mixed" else 0)
+    command_count = commands if family == "path-heavy" else (max(1, commands // 3) if family == "mixed" else 0)
+    payload_count = image_bytes if family == "embedded-image" else (max(0, image_bytes // 2) if family == "mixed" else 0)
+    counts = {"objects": 0, "path_commands": 0, "nested_groups": nested,
+              "images": 0, "image_payload_bytes": 0}
+    counts.update(objects=object_count, path_commands=command_count,
+                  images=int(payload_count > 0), image_payload_bytes=payload_count)
+    def chunks() -> Iterator[bytes]:
+        yield b'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">\n'
+        if nested:
+            yield b"<g>" * nested
+        if family in ("object-heavy", "mixed"):
+            for _ in range(object_count):
+                x, y = rng.randrange(256), rng.randrange(256)
+                yield f'<rect x="{x}" y="{y}" width="1" height="1"/>\n'.encode()
+        if family in ("path-heavy", "mixed"):
+            if command_count:
+                yield b'<path d="M0 0 '
+                for _ in range(command_count):
+                    yield f'L{rng.randrange(256)} {rng.randrange(256)} '.encode()
+                yield b'"/>\n'
+        if family in ("embedded-image", "mixed"):
+            if payload_count:
+                yield b'<image width="1" height="1" href="data:image/png;base64,'
+                yield from _b64_chunks(_image_payload(payload_count))
+                yield b'"/>\n'
+    return chunks(), counts
+
+
+def _expected_output(family: str, seed: int, objects: int, commands: int,
+                     depth: int, image_bytes: int, size: int) -> tuple[int, str]:
+    chunks, _ = _semantic_chunks(family, seed, objects, commands, depth, image_bytes)
+    total = 0
+    for chunk in chunks:
+        total += len(chunk)
+        if total > size:
+            raise ValueError("semantic content exceeds requested output size")
+    suffix = b"</g>\n" * (depth if family in ("nested-depth", "mixed") else 0) + b"</svg>\n"
+    padding = size - total - len(suffix)
+    if padding < 7:
+        raise ValueError("semantic content exceeds requested output size")
     digest = hashlib.sha256()
-    _write_all_hash_only = digest.update
-    _write_all_hash_only(prefix)
-    _write_all_hash_only(b"<!--")
-    remaining = size - len(prefix) - len(suffix) - 7
+    chunks, _ = _semantic_chunks(family, seed, objects, commands, depth, image_bytes)
+    for chunk in chunks:
+        digest.update(chunk)
+    digest.update(b"<!--")
+    remaining = padding - 7
     filler = b"x" * min(CHUNK, remaining)
     while remaining:
         block = filler if remaining >= len(filler) else filler[:remaining]
-        _write_all_hash_only(block)
+        digest.update(block)
         remaining -= len(block)
-    _write_all_hash_only(b"-->")
-    _write_all_hash_only(suffix)
-    return digest.hexdigest()
+    digest.update(b"-->")
+    digest.update(suffix)
+    return total, digest.hexdigest()
 
 
-def _install_atomically(path: Path, prefix: bytes, suffix: bytes, padding: int,
-                        size: int, expected_digest: str) -> str:
+def _install_atomically(path: Path, family: str, seed: int, objects: int,
+                        commands: int, depth: int, image_bytes: int,
+                        size: int, semantic_size: int, expected_digest: str) -> str:
     fd, temporary = tempfile.mkstemp(prefix=".stress-svg-", dir=path.parent)
     digest = hashlib.sha256()
     written = 0
     try:
         with os.fdopen(fd, "wb") as stream:
-            _write_all(stream, prefix, digest); written += len(prefix)
             marker, closer = b"<!--", b"-->"
-            pad_body = padding - len(marker) - len(closer)
+            chunks, _ = _semantic_chunks(family, seed, objects, commands, depth, image_bytes)
+            for chunk in chunks:
+                _write_all(stream, chunk, digest); written += len(chunk)
+            suffix = b"</g>\n" * (depth if family in ("nested-depth", "mixed") else 0) + b"</svg>\n"
+            padding = size - semantic_size - len(suffix) - 7
+            pad_body = padding
             _write_all(stream, marker, digest); written += len(marker)
             filler = b"x" * min(CHUNK, pad_body)
             remaining = pad_body
@@ -112,48 +202,6 @@ def _install_atomically(path: Path, prefix: bytes, suffix: bytes, padding: int,
     return digest.hexdigest()
 
 
-def _semantic(family: str, seed: int, objects: int, commands: int, depth: int,
-              image_bytes: int) -> tuple[bytes, bytes, dict[str, int]]:
-    rng = random.Random(seed)
-    begin = bytearray(b'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">\n')
-    end = bytearray()
-    if family in ("nested-depth", "mixed"):
-        end[:0] = b"</g>\n" * depth
-        begin.extend(b"<g>" * depth)
-    counts = {"objects": 0, "path_commands": 0,
-              "nested_groups": depth if family in ("nested-depth", "mixed") else 0,
-              "images": 0, "image_payload_bytes": 0}
-    if family == "object-heavy" or family == "mixed":
-        count = objects if family == "object-heavy" else max(1, objects // 3)
-        for i in range(count):
-            x, y = rng.randrange(256), rng.randrange(256)
-            begin.extend(f'<rect x="{x}" y="{y}" width="1" height="1"/>\n'.encode())
-        counts["objects"] += count
-    if family == "path-heavy" or family == "mixed":
-        count = commands if family == "path-heavy" else max(1, commands // 3)
-        if count:
-            path = bytearray(b'<path d="M0 0 ')
-            for _ in range(count):
-                path.extend(f'L{rng.randrange(256)} {rng.randrange(256)} '.encode())
-            path.extend(b'"/>\n')
-            begin.extend(path)
-        counts["path_commands"] += count
-    if family == "embedded-image" or family == "mixed":
-        count = image_bytes if family == "embedded-image" else max(0, image_bytes // 2)
-        if count:
-            payload = (IMAGE_PROFILE * ((count + len(IMAGE_PROFILE) - 1) // len(IMAGE_PROFILE)))[:count]
-            encoded = base64.b64encode(payload)
-            begin.extend(b'<image width="1" height="1" href="data:application/octet-stream;base64,')
-            begin.extend(encoded)
-            begin.extend(b'"/>\n')
-        counts["images"] = int(count > 0)
-        counts["image_payload_bytes"] = count
-    end.extend(b"</svg>\n")
-    if len(begin) + len(end) > MAX_BYTES:
-        raise ValueError("semantic content exceeds the total output limit")
-    return bytes(begin), bytes(end), counts
-
-
 def generate(path: Path, *, family: str, seed: int, size: int,
              objects: int = 100, commands: int = 100, depth: int = 4,
              image_bytes: int = 1024) -> dict[str, object]:
@@ -163,15 +211,9 @@ def generate(path: Path, *, family: str, seed: int, size: int,
     if ".." in path.parts or path.name in ("", ".", ".."):
         raise ValueError("destination path is invalid")
     path.parent.mkdir(parents=True, exist_ok=True)
-    prefix, suffix, counts = _semantic(family, seed, objects, commands, depth, image_bytes)
-    base_size = len(prefix) + len(suffix)
-    if base_size > size:
-        raise ValueError("semantic content exceeds requested output size")
-    # The exact-size padding is an XML comment and is emitted in fixed-size chunks.
-    padding = size - base_size
-    if padding < 7:
-        raise ValueError("requested output size leaves no valid bounded padding")
-    expected_digest = _expected_sha256(prefix, suffix, size)
+    expected_semantic_size, expected_digest = _expected_output(
+        family, seed, objects, commands, depth, image_bytes, size)
+    _, counts = _semantic_chunks(family, seed, objects, commands, depth, image_bytes)
     started = time.monotonic()
     try:
         report_path = str(path.relative_to(Path(__file__).resolve().parents[2]))
@@ -186,7 +228,8 @@ def generate(path: Path, *, family: str, seed: int, size: int,
         return {"path": report_path, "family": family, "seed": seed, "bytes": size,
                 "sha256": expected_digest, "counts": counts,
                 "elapsed_seconds": round(time.monotonic() - started, 6)}
-    digest = _install_atomically(path, prefix, suffix, padding, size, expected_digest)
+    digest = _install_atomically(path, family, seed, objects, commands, depth,
+                                 image_bytes, size, expected_semantic_size, expected_digest)
     return {"path": report_path, "family": family, "seed": seed, "bytes": size,
             "sha256": digest, "counts": counts,
             "elapsed_seconds": round(time.monotonic() - started, 6)}

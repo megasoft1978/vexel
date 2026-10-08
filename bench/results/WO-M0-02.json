@@ -24,7 +24,7 @@
         "images": 0,
         "image_payload_bytes": 0
       },
-      "elapsed_seconds": 0.005215
+      "elapsed_seconds": 0.010086
     },
     {
       "path": ".cache/m0-02/generated/path-100mb.svg",
@@ -39,14 +39,14 @@
         "images": 0,
         "image_payload_bytes": 0
       },
-      "elapsed_seconds": 0.045885
+      "elapsed_seconds": 0.08628
     },
     {
       "path": ".cache/m0-02/generated/mixed-1gb.svg",
       "family": "mixed",
       "seed": 12648430,
       "bytes": 1000000000,
-      "sha256": "f38a827df2f163e88417569e347b73a0f2905818f6a0315b1a8d057175587ee7",
+      "sha256": "895780c50a7e3b6f05e1ad34b68ca6d22684699e6fa1b7425a7f1baaa6caa9e7",
       "counts": {
         "objects": 33333,
         "path_commands": 333333,
@@ -54,27 +54,7 @@
         "images": 1,
         "image_payload_bytes": 256000
       },
-      "elapsed_seconds": 0.561217
+      "elapsed_seconds": 0.587311
     }
-  ],
-  "oracle_render": {
-    "fixture_count": 24,
-    "canvas": [
-      256,
-      256
-    ],
-    "elapsed_seconds": 0.564197,
-    "renderer_version": "2.62.3",
-    "renderer_license": "LGPL-2.1-or-later",
-    "lock_sha256": "a9fb0207a5dbd2ff833b090d3d49fef5c960a56bd1a68809a52430c4382bc1c4",
-    "png_total_bytes": 112426,
-    "machine": {
-      "os": "macOS-27.0-arm64-arm-64bit",
-      "architecture": "arm64",
-      "macos_version": "27.0",
-      "model_identifier": "Mac17,14",
-      "chip": "Apple M5 Max",
-      "memory": "64 GB"
-    }
-  }
+  ]
 }

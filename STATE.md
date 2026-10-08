@@ -1,10 +1,12 @@
 # Project state
 
-- Current work order: `WO-M0-02` candidate implementation is ready for the
-  final runner revalidation and independent verifier. The first wrapper run
-  failed AC-2 because repeat generation rejected matching existing outputs;
-  idempotent verification fixed that. The first fresh review found a runner
-  resume change outside this order's narrow scope; that change has been removed.
+- Current work order: `WO-M0-02` has a corrected candidate on
+  `wo/WO-M0-02`; latest candidate commit is recorded in the M0-02 handoff
+  evidence. Do not merge yet. The second read-only review found unstreamed
+  semantic output, an invalid embedded image, and stale AC-6 worktree evidence.
+  All three findings have local corrective changes and fresh machine evidence.
+  The frozen verifier budget of two rounds is exhausted, so the corrected
+  candidate has not had its required independent review.
 - Current work order: `WO-M0-01` is implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
@@ -13,7 +15,7 @@
   the isolated task worktree before the retry.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
 - Build: Debug, `mac-asan` (AddressSanitizer + UndefinedBehaviorSanitizer), and `mac-ubsan` configure/build/CTest pass with Apple Clang 21.0.0.
-- Test inventory: latest `./dev verify` reports 82 Python tests pass with zero failures or skips; targeted stress-generator, oracle, and runner suites pass.
+- Test inventory: corrected M0-02 candidate `./dev verify` reports 83 Python tests passed, zero failures/errors/skips; 10 generator tests and 42 oracle/runner tests passed. ASan and UBSan CTest each pass 1/1.
 - BOOT-05 evidence: `artifacts/WO-BOOT-05/`; final fresh verification reran all ten required commands. Fuzz seed `12648430` completed 144 invocations in 3.001 seconds; assertion and heap-overflow probes were detected.
 - Strict executor schema generation enumerates all nine frozen acceptance IDs and preserves runtime exact-key and command-evidence validation.
 - BOOT-04 revision 2 remains complete and merged. Its preflight transcripts remain preserved as compressed raw artifacts plus readable copies with trailing whitespace normalized for the required diff check.
@@ -36,5 +38,6 @@
   passed runner validation; the accepted report is retained in per-run evidence.
 - No renderer throughput, memory, or latency result is claimed for M0-01; its
   synthetic corpus is an input baseline, not a representative user corpus.
-- After WO-M0-02 is committed: prepare the M0-03 competitor benchmark, then
-  M0-04 evidence packet and stop for its owner gate.
+- M0-02 exact-size generation: 10,000,000 / 100,000,000 / 1,000,000,000 bytes; mixed SHA-256 `895780c50a7e3b6f05e1ad34b68ca6d22684699e6fa1b7425a7f1baaa6caa9e7`; observed 0.010086 / 0.086280 / 0.587311 seconds. These are input generation times, not Vexel rendering results.
+- M0-02 embedded PNG verification: deterministic 97-byte payload decodes and renders via librsvg to 256x256 RGBA PNG.
+- Next: obtain owner/planner direction on fresh independent review after the frozen two-round cap; then merge M0-02 only after clean verifier acceptance. Continue with M0-03, roadmap BOOT-06/07 placement, and stop at M0-04 owner gate.

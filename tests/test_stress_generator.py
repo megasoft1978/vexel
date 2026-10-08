@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import base64
+import struct
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
+import zlib
 from pathlib import Path
 from unittest.mock import patch
 
@@ -24,7 +28,7 @@ class StressGeneratorTests(unittest.TestCase):
 
     def build(self, name: str, family: str, **options: int) -> tuple[Path, dict[str, object]]:
         path = self.root / name
-        controls = {"objects": 20, "commands": 30, "depth": 4, "image_bytes": 64}
+        controls = {"objects": 20, "commands": 30, "depth": 4, "image_bytes": 97}
         aliases = {"path_commands": "commands", "image_payload_bytes": "image_bytes",
                    "nested_groups": "depth"}
         for key, value in options.items():
@@ -54,11 +58,33 @@ class StressGeneratorTests(unittest.TestCase):
                 for key, value in controls.items():
                     self.assertEqual(result["counts"][key], value)
         mixed, result = self.build("mixed.svg", "mixed", objects=9, path_commands=12,
-                                   nested_groups=3, image_payload_bytes=24)
+                                   nested_groups=3, image_payload_bytes=194)
         self.assertEqual(mixed.stat().st_size, 4096)
         self.assertEqual(result["counts"], {"objects": 3, "path_commands": 4,
                                              "nested_groups": 3, "images": 1,
-                                             "image_payload_bytes": 12})
+                                             "image_payload_bytes": 97})
+        root = ET.parse(self.root / "embedded-image.svg").getroot()
+        encoded = next(child.attrib["href"] for child in root if child.tag.endswith("image"))
+        png = base64.b64decode(encoded.split(",", 1)[1], validate=True)
+        self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
+        chunks = []
+        offset = 8
+        while offset < len(png):
+            length = struct.unpack(">I", png[offset:offset + 4])[0]
+            kind = png[offset + 4:offset + 8]
+            data = png[offset + 8:offset + 8 + length]
+            crc = struct.unpack(">I", png[offset + 8 + length:offset + 12 + length])[0]
+            self.assertEqual(crc, zlib.crc32(kind + data) & 0xFFFFFFFF)
+            chunks.append((kind, data))
+            offset += length + 12
+        self.assertEqual(chunks[-1], (b"IEND", b""))
+        self.assertEqual(zlib.decompress(b"".join(data for kind, data in chunks if kind == b"IDAT")),
+                         b"\x00\x20\x60\xa0\xff")
+
+    def test_semantic_chunks_are_bounded(self) -> None:
+        for family in ("object-heavy", "path-heavy", "mixed", "embedded-image"):
+            chunks, _ = stress_svg._semantic_chunks(family, 12, 1000, 5000, 4, 512_000)
+            self.assertLessEqual(max(map(len, chunks)), 100_000)
 
     def test_seed_and_controls_reproduce_exact_bytes(self) -> None:
         first, _ = self.build("first.svg", "object-heavy")
