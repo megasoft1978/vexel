@@ -1,12 +1,12 @@
 ---
 id: WO-BOOT-05
-revision: 2
+revision: 3
 status: READY
 milestone: M0
 owner: project-owner
 executor: codex-gpt-6-luna
-base_sha: 98db9d414b79f30fafe1b8db9a8afec34e058ed1
-spec_sha256: a2c468e3086d167e0f42d362b94ad1331d78ee3a0eca68b4da3f3448346d8665
+base_sha: e0f3a5a3365e58979812d0c004f6c6523698556b
+spec_sha256: eda0c890c282c25c1ad9522ff102c74c74472cdbc0b1cf63a89fd7ccf66ceec1
 parallel_safe: false
 ---
 # Goal
@@ -34,7 +34,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 - `docs/schemas/test-results.schema.json`, `docs/ci.md`
 - `docs/schemas/executor-report.schema.json`, `docs/adr/0004-strict-json-schema-compatibility.md`
 - `STATE.md`, `LEDGER.md`, `ledger.jsonl`, `artifacts/WO-BOOT-05/**`
-- `scripts/wo_driver.py` and `tests/test_wo_runner.py` only for the run-specific Codex preflight evidence path regression described in Required implementation.
+- `scripts/wo_driver.py` and `tests/test_wo_runner.py` only for the run-specific Codex preflight evidence path regression and strict per-work-order output schema generation described in Required implementation.
 
 # Protected paths
 - `OWNER-DIRECTIVES.md`
@@ -52,6 +52,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 7. Fix BOOT-04 runner preflight artifact placement: executor/verifier CLI version/help evidence must live under the current ignored `artifacts/runs/<WO-ID>/<run-id>/` directory, never hard-coded to WO-BOOT-04. Add regression coverage proving a new WO's root path guard does not see an out-of-scope BOOT-04 artifact mutation.
 8. Document the module contracts, exact commands, result JSON, seed behavior, and the distinction between expected injected probe failures and real test failures. Update `STATE.md`, both ledgers, and retained artifacts only with observed results.
 9. Remove the unsupported `minProperties` keyword from `docs/schemas/executor-report.schema.json`. The runner already enforces an exact, non-empty set of acceptance IDs and executed command evidence after parsing, so strict structured output compatibility must not weaken runtime validation. Add a regression test for empty/missing acceptance evidence.
+10. Generate a strict executor report schema under the ignored per-run directory with an explicit property and required key for each frozen AC ID, because strict Codex output requires object properties to be enumerated. Continue validating the returned report against the shared schema and exact work-order AC set locally.
 
 # Acceptance criteria (machine-checkable)
 - AC-1 `./dev test-fast` exits 0 in under 30 seconds and writes schema-valid machine-readable results with zero failed or skipped tests; evidence `artifacts/WO-BOOT-05/fast-results.json`.
@@ -62,6 +63,7 @@ Add a repeatable machine-readable Python test runner, macOS ASan/UBSan build pro
 - AC-6 Fake-Codex runner test confirms preflight evidence is scoped under the active run directory and `assert_root_scope` accepts it; all new tests pass under `./dev verify`; evidence `artifacts/WO-BOOT-05/tests.txt`.
 - AC-7 `python3 scripts/ledger.py validate ledger.jsonl`, `git diff --check`, and changed-path validation pass; evidence `artifacts/WO-BOOT-05/local-checks.txt`.
 - AC-8 strict Codex schema preflight succeeds with the repository's executor report schema, and the runner continues rejecting empty or missing acceptance evidence.
+- AC-9 the generated schema contains exactly the frozen acceptance IDs as required properties and disallows additional keys.
 
 # Verification commands
 
