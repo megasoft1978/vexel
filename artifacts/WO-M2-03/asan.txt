@@ -1,0 +1,22 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-asan
+ninja: no work to do.
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-asan
+    Start 1: cli-version
+1/3 Test #1: cli-version ......................   Passed    0.02 sec
+    Start 2: base-contract
+2/3 Test #2: base-contract ....................   Passed    0.02 sec
+    Start 3: xml-tokenizer
+3/3 Test #3: xml-tokenizer ....................   Passed    0.20 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.24 sec

@@ -1,0 +1,84 @@
+{
+  "work_order": "WO-M2-03",
+  "revision": 1,
+  "base_sha": "daf86e71deda8b42332a6fd5e684c1e03c1c5187",
+  "acceptance_status": "review_round2_findings_fixed_verifier_pending",
+  "machine": "Apple Silicon arm64, macOS 27.0",
+  "compiler": "Apple Clang 21.0.0.21000334",
+  "seed": 20261009,
+  "build_identity": "1e90528160b496724303b36cead5e339ad1ab6179252701f0a072a44151608cf",
+  "campaigns": {
+    "pr_smoke": {
+      "requested_seconds": 30,
+      "elapsed_seconds": 30.010654,
+      "iterations": 2158912,
+      "sanitizer_status": "clean"
+    },
+    "scheduled": {
+      "requested_seconds": 600,
+      "elapsed_seconds": 600.018358,
+      "iterations": 42108425,
+      "sanitizer_status": "clean"
+    }
+  },
+  "checks": {
+    "focused_tests": {
+      "passed": 14,
+      "total": 14
+    },
+    "synthetic_crash_canary": {
+      "captured": true,
+      "minimized": true,
+      "fingerprint_preserved": true,
+      "counts_as_parser_defect": false
+    },
+    "timeout_process_group_canary": {
+      "timed_out": true,
+      "process_group_terminated": true
+    },
+    "asan_ctest": {
+      "passed": 3,
+      "total": 3
+    },
+    "ubsan_ctest": {
+      "passed": 3,
+      "total": 3
+    },
+    "dev_verify": {
+      "passed": 161,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  },
+  "initial_executor_run": {
+    "status": "verification_failed_missing_release_binary",
+    "note": "The executor ran ./dev verify before the mac-release build; the native smoke and Metal replay tests require that executable. After the required Release build, the same full verification passed."
+  },
+  "first_verifier_findings": [
+    "Invariant-failure replay did not preserve the failing iteration in one-input mode; fixed by passing the iteration into the native harness and normalizing invariant diagnostics.",
+    "Retained regression records were not executed against the native tokenizer; fixed by replaying every mapped seed through the fuzzer binary in the regression test."
+  ],
+  "second_verifier_findings": [
+    "Native replay now flushes its input JSON before tokenization so a crashing replay preserves recovery data.",
+    "Regression records now require a normalized fingerprint.",
+    "Stack normalization now handles both /var/folders and /private/var/folders paths and line numbers."
+  ],
+  "full_suite_failures": [],
+  "claims": {
+    "svg_throughput": false,
+    "render_performance": false,
+    "parser_crashes": false
+  },
+  "implementation_commit": null,
+  "evidence": {
+    "focused_tests": "artifacts/WO-M2-03/focused-tests.txt",
+    "crash_canary": "artifacts/WO-M2-03/crash-canary.json",
+    "timeout_canary": "artifacts/WO-M2-03/timeout-canary.json",
+    "pr_smoke": "artifacts/WO-M2-03/pr-smoke.json",
+    "scheduled_campaign": "artifacts/WO-M2-03/scheduled-campaign.json",
+    "full_checks": "artifacts/WO-M2-03/full-checks.txt",
+    "verify_rerun": "artifacts/WO-M2-03/verify-rerun.txt",
+    "release_build": "artifacts/WO-M2-03/release-build.txt"
+  }
+}

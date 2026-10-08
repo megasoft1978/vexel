@@ -1,0 +1,19 @@
+{
+  "build_identity": "1e90528160b496724303b36cead5e339ad1ab6179252701f0a072a44151608cf",
+  "command": [
+    "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-asan/bin/xml_tokenizer_fuzz",
+    "--campaign",
+    "20261009",
+    "600"
+  ],
+  "duration_seconds": 600,
+  "elapsed_seconds": 600.018358,
+  "iterations": 42108425,
+  "kind": "xml_tokenizer_campaign",
+  "sanitizer_output": false,
+  "seed": 20261009,
+  "status": "pass",
+  "synthetic": false,
+  "timed_out": false,
+  "toolchain": "Apple clang version 21.0.0 (clang-2100.3.34.2)"
+}

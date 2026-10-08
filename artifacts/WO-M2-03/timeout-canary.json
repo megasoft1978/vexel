@@ -1,0 +1,8 @@
+{
+  "duration_limit_seconds": 0.2,
+  "kind": "synthetic_timeout_canary",
+  "process_group_terminated": true,
+  "returncode": -15,
+  "synthetic": true,
+  "timed_out": true
+}

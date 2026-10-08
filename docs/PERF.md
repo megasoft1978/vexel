@@ -122,3 +122,23 @@ attempts inside the executor's nested workspace-write sandbox failed in
 existing sandbox-exec and LaunchServices/XPC checks; those are retained as
 transient isolation evidence and did not reproduce on the host. No renderer
 throughput, RSS, or performance-improvement claim is made.
+
+## WO-M2-03 bounded XML tokenizer fuzz
+
+The fixed seed 20261009 completed the 30-second smoke in 30.01 seconds with
+2,158,912 cases and the 600-second campaign in 600.02 seconds with 42,108,425
+cases. Both used the same ASan/UBSan fuzzer binary (SHA-256
+`1e90528160b496724303b36cead5e339ad1ab6179252701f0a072a44151608cf`) built
+with Apple Clang 21.0.0. No sanitizer output or invariant failure was reported.
+These are bounded tokenizer fuzz counts, not rendering performance measurements;
+no throughput claim is made. The synthetic canary is explicitly excluded from
+parser defect counts. The first independent review also caught missing iteration
+preservation for invariant failures and a regression test that did not execute
+retained seeds through the native tokenizer; both were fixed and focused tests
+now pass 14/14. The second review also found missing native replay flushing,
+regression fingerprint validation, and `/var/folders` normalization; all three
+are fixed. The initial executor run lacked the Release binary needed
+by two native platform tests. After building the Release preset, `./dev verify`
+passed all 161 Python tests, native smoke, and 20-frame Metal replay; Debug,
+ASan, and UBSan CTest also pass. Fresh read-only review is pending. Evidence is
+under `artifacts/WO-M2-03/`.
