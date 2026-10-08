@@ -5,6 +5,8 @@
 #include <string.h>
 
 #include "platform/platform_window.h"
+#include "platform/platform_metal.h"
+#include "raster/tile.h"
 #include "test_driver/native_injection.h"
 
 #define NATIVE_COMMAND_LIMIT 64U
@@ -244,8 +246,14 @@ static bool execute_native_command(platform_window **window, const native_comman
         }
         *width = 320;
         *height = 240;
-        return drain_for(*window, PLATFORM_EVENT_OPEN, *width, *height, 0, 0, "") &&
-            drain_for(*window, PLATFORM_EVENT_SCALE, *width, *height, 0, 0, "");
+        bool open_event = drain_for(*window, PLATFORM_EVENT_OPEN, *width, *height, 0, 0, "");
+        bool scale_event = open_event && drain_for(*window, PLATFORM_EVENT_SCALE,
+                                                    *width, *height, 0, 0, "");
+        if (!open_event || !scale_event) {
+            (void)fprintf(stderr, "native smoke: initial events open=%d scale=%d\n",
+                          open_event ? 1 : 0, scale_event ? 1 : 0);
+        }
+        return open_event && scale_event;
     }
     if (*window == NULL) {
         return false;
@@ -310,8 +318,79 @@ static int native_smoke(unsigned cycles, const native_command *commands, size_t 
     return EXIT_SUCCESS;
 }
 
+static int tile_cpu_smoke(void)
+{
+    raster_tile tile = {0};
+    raster_tile invalid = {0};
+    if (!raster_tile_create(4U, 3U, &tile) ||
+        raster_tile_create(0U, 1U, &invalid) ||
+        raster_tile_create(4097U, 1U, &invalid) ||
+        raster_tile_create(UINT32_MAX, UINT32_MAX, &invalid) ||
+        tile.byte_count != 48U) {
+        raster_tile_destroy(&tile);
+        raster_tile_destroy(&invalid);
+        return EXIT_FAILURE;
+    }
+    (void)printf("tile bytes: %zu\nfirst rgba: %u,%u,%u,%u\nlast rgba: %u,%u,%u,%u\n",
+        tile.byte_count, tile.rgba[0], tile.rgba[1], tile.rgba[2], tile.rgba[3],
+        tile.rgba[44], tile.rgba[45], tile.rgba[46], tile.rgba[47]);
+    raster_tile_destroy(&tile);
+    return EXIT_SUCCESS;
+}
+
+static int native_metal_smoke(void)
+{
+    if (!platform_init()) {
+        (void)fputs("Metal smoke: AppKit initialization failed\n", stderr);
+        return EXIT_FAILURE;
+    }
+    const char title[] = "Vexel Metal smoke";
+    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true};
+    platform_window *window = NULL;
+    if (!platform_window_create(&config, &window)) {
+        platform_shutdown();
+        (void)fputs("Metal smoke: window creation failed\n", stderr);
+        return EXIT_FAILURE;
+    }
+    char diagnostic[192] = {0};
+    unsigned frames = 0;
+    raster_tile tile = {0};
+    bool valid = raster_tile_create(64U, 48U, &tile) &&
+        platform_metal_present_and_verify(window, tile.rgba, tile.byte_count,
+            tile.width, tile.height, diagnostic, sizeof(diagnostic));
+    if (valid) {
+        frames++;
+    }
+    raster_tile_destroy(&tile);
+    if (valid) {
+        platform_metal_reset(window);
+        valid = platform_window_resize(window, 256, 192) &&
+            raster_tile_create(96U, 64U, &tile) &&
+            platform_metal_present_and_verify(window, tile.rgba, tile.byte_count,
+                tile.width, tile.height, diagnostic, sizeof(diagnostic));
+        if (valid) {
+            frames++;
+        }
+    }
+    raster_tile_destroy(&tile);
+    platform_window_destroy(window);
+    platform_shutdown();
+    if (!valid) {
+        (void)fprintf(stderr, "Metal smoke: %s\n", diagnostic[0] == '\0' ? "frame failed" : diagnostic);
+        return EXIT_FAILURE;
+    }
+    (void)printf("presented frames: %u\nbyte-exact readback: pass\nresize/reset: pass\n", frames);
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[])
 {
+    if (argc == 2 && strcmp(argv[1], "--native-metal-smoke") == 0) {
+        return native_metal_smoke();
+    }
+    if (argc == 2 && strcmp(argv[1], "--tile-cpu-smoke") == 0) {
+        return tile_cpu_smoke();
+    }
     if (argc >= 4 && strcmp(argv[1], "--native-platform-smoke") == 0) {
         unsigned cycles = 0;
         size_t count = 0;

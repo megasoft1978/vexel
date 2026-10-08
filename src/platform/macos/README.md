@@ -11,3 +11,11 @@ The smoke-only injection declarations are private to `app/test_driver/` and
 exercise AppKit event dispatch without Accessibility permission or wall-clock
 sleep. They do not substitute for checking physical keyboard, pointer, display
 scale changes, or window-manager behavior by hand.
+
+`platform_metal.m` owns the Metal device, command queue, pipeline, texture, and
+CAMetalLayer. The C boundary accepts a borrowed RGBA pointer plus its exact
+length and retains no caller memory. It renders a fullscreen triangle into the
+current drawable, waits up to five seconds for explicit command completion, and
+compares every byte of the uploaded shared texture. Diagnostics name only the
+first differing byte. The native Metal smoke presents once, clears the layer,
+resizes the AppKit window, and validates a second frame.

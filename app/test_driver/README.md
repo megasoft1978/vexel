@@ -13,3 +13,8 @@ directory beneath its output root on every invocation so the work-order runner
 can repeat the same command without overwriting earlier evidence. The semantic
 tree and PNG artifacts are deterministic for a fixed script and seed; the
 virtual frame clock never reads wall time.
+
+`--native-metal-smoke` presents a deterministic CPU RGBA tile through Metal,
+verifies exact uploaded-texture readback, clears and resizes the window, and
+checks a second frame. It requires the Release executable and an active macOS
+graphical session.

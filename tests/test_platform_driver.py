@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 import tempfile
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -120,6 +121,31 @@ class PlatformDriverTests(unittest.TestCase):
             alias.symlink_to(root, target_is_directory=True)
             with self.assertRaises(driver.DriverError):
                 driver._safe_native_output(str(alias))
+
+    def test_scalar_tile_values_bounds_and_overflow(self) -> None:
+        binary = driver.ROOT / "build" / "mac-debug" / "bin" / "svgworkbench"
+        result = subprocess.run([str(binary), "--tile-cpu-smoke"], cwd=driver.ROOT,
+                                text=True, capture_output=True, timeout=10, check=True)
+        self.assertEqual(result.stdout.splitlines(), [
+            "tile bytes: 48", "first rgba: 0,0,0,255", "last rgba: 57,73,47,255"])
+        first = bytes((0, 0, 0, 255))
+        last = bytes(((3 * 17 + 2 * 3) & 255, (3 * 5 + 2 * 29) & 255,
+                      (3 * 11 + 2 * 7) & 255, 255))
+        self.assertEqual(last, bytes((57, 73, 47, 255)))
+        self.assertEqual(len(first + last), 8)
+
+    def test_native_metal_exact_readback_and_resized_frame(self) -> None:
+        cache = driver.ROOT / ".cache"
+        cache.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="metal-smoke-", dir=cache) as temporary:
+            out = driver._safe_native_output(str(Path(temporary) / "native"))
+            elapsed = driver.native_metal_smoke(out)
+            report = json.loads((out / "result.json").read_text())
+            self.assertGreaterEqual(elapsed, 0.0)
+            self.assertEqual(report["status"], "passed")
+            self.assertEqual(report["frames"], 2)
+            self.assertEqual(report["readback"], "byte-exact")
+            self.assertEqual(report["resize_reset"], "passed")
 
 
 if __name__ == "__main__":

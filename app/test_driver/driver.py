@@ -378,12 +378,47 @@ def native_smoke(out: Path, cycles: int) -> float:
     return elapsed
 
 
+def validate_metal_smoke_output(output: str) -> list[str]:
+    expected = ["presented frames: 2", "byte-exact readback: pass", "resize/reset: pass"]
+    if output.splitlines() != expected:
+        raise DriverError("native Metal smoke returned missing or malformed presentation evidence")
+    return expected
+
+
+def native_metal_smoke(out: Path) -> float:
+    binary = ROOT / "build" / "mac-release" / "bin" / "svgworkbench"
+    if not binary.is_file():
+        raise DriverError("Release executable is missing; build preset mac-release first")
+    started = time.monotonic()
+    try:
+        result = subprocess.run([str(binary), "--native-metal-smoke"], cwd=ROOT,
+                                capture_output=True, text=True, timeout=30, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DriverError(f"native Metal smoke could not complete: {exc}") from exc
+    elapsed = time.monotonic() - started
+    (out / "native-metal-smoke.txt").write_text(result.stdout, encoding="utf-8")
+    (out / "native-metal-smoke.stderr.txt").write_text(result.stderr, encoding="utf-8")
+    summary = {"elapsed_seconds": elapsed, "exit_code": result.returncode, "frames": 0,
+               "status": "failed"}
+    if result.returncode != 0:
+        summary["diagnostic"] = result.stderr.strip()[:1000]
+        (out / "result.json").write_bytes(_json_bytes(summary))
+        raise DriverError(f"native Metal smoke failed with exit {result.returncode}: {result.stderr.strip()[:500]}")
+    lines = validate_metal_smoke_output(result.stdout)
+    summary.update({"frames": 2, "readback": "byte-exact", "resize_reset": "passed", "status": "passed"})
+    (out / "result.json").write_bytes(_json_bytes(summary))
+    sys.stdout.write("\n".join(lines) + "\n")
+    sys.stdout.write(f"native smoke elapsed seconds: {elapsed:.6f}\n")
+    return elapsed
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--script")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--native-platform-smoke", action="store_true")
+    parser.add_argument("--native-metal-smoke", action="store_true")
     parser.add_argument("--cycles", type=int, default=100)
     args = parser.parse_args(argv)
     if sys.platform != "darwin":
@@ -393,7 +428,12 @@ def main(argv: list[str] | None = None) -> int:
         print("error: seed must be an unsigned 32-bit integer", file=sys.stderr)
         return 2
     try:
-        if args.native_platform_smoke:
+        if args.native_metal_smoke:
+            if args.script is not None or args.native_platform_smoke:
+                raise DriverError("--native-metal-smoke cannot be combined with other modes")
+            out = _safe_native_output(args.output_dir)
+            native_metal_smoke(out)
+        elif args.native_platform_smoke:
             if args.script is not None:
                 raise DriverError("--script cannot be combined with --native-platform-smoke")
             out = _safe_native_output(args.output_dir)

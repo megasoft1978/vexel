@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "platform/platform_window.h"
+#include "platform/macos/platform_metal_internal.h"
 #include "test_driver/native_injection.h"
 
 #include <limits.h>
@@ -26,6 +27,14 @@ struct platform_window {
 static bool platform_on_main_thread(void)
 {
     return [NSThread isMainThread];
+}
+
+void *platform_window_native_view(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL) {
+        return NULL;
+    }
+    return (__bridge void *)window->native.contentView;
 }
 
 static bool platform_dimensions_valid(int32_t width, int32_t height)

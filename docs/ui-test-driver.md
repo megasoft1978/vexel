@@ -84,3 +84,32 @@ records stdout, stderr, the JSONL scenario, exact completed-cycle count, and
 elapsed wall time. Synthetic AppKit events exercise event delivery and
 normalization; they do not replace manual testing with physical mouse,
 keyboard, trackpad, or display changes.
+
+## Deterministic CPU tile and Metal presentation
+
+`src/raster/tile.h` exposes `raster_tile_create` and `raster_tile_destroy`.
+The caller owns the returned allocation and releases it with the destroy
+function. Tiles are positive RGBA8 dimensions no larger than 4096 on either
+axis; byte count is checked before allocation and equals `width * height * 4`.
+The opaque test pattern is deterministic: R=`(17*x + 3*y) mod 256`,
+G=`(5*x + 29*y) mod 256`, B=`(11*x + 7*y) mod 256`, A=255.
+
+The C Metal interface in `src/platform/platform_metal.h` accepts a borrowed
+buffer valid through its synchronous call. Its macOS implementation uploads to
+a shared Metal texture, renders that texture to the current CAMetalLayer
+drawable, and waits for command completion with a five-second timeout. It then
+reads the uploaded texture back and compares every byte, reporting the first
+mismatch only. Metal, QuartzCore, and Cocoa are system frameworks; no external
+dependency is used.
+
+Run the native presentation, exact-readback, resize, and reset smoke with:
+
+```sh
+python3 app/test_driver/driver.py --native-metal-smoke \
+  --output-dir .cache/WO-M1-02/native-smoke
+```
+
+This path needs the Release build and an active graphical session. It records
+presented frame count, exact-readback result, resize/reset result, and elapsed
+smoke time in its run directory. The elapsed value measures this smoke only;
+it is not rendering throughput or memory usage.
