@@ -17,12 +17,17 @@ ROOT = Path(__file__).resolve().parent.parent
 SANITIZER_RE = re.compile(r"AddressSanitizer|UndefinedBehaviorSanitizer|runtime error:|LeakSanitizer")
 PRINTABLE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_./=:+"
 VERSION_OUTPUT = "svgworkbench 0.0.1"
+CASES_PER_SECOND = 64
 
 
 def expected_success(case: list[str], output: str) -> bool:
     if case == ["--version"] and output.strip() == VERSION_OUTPUT:
         return True
     return case == ["--help"] and re.search(r"(?m)^usage: svgworkbench(?:\s|$)", output) is not None
+
+
+def iteration_budget(duration: float) -> int:
+    return max(1, int(duration * CASES_PER_SECOND))
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -68,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     failure: str | None = None
     failure_case: dict[str, object] | None = None
     deadline = start + args.duration
-    while iterations == 0 or time.monotonic() < deadline:
+    while iterations < iteration_budget(args.duration):
         case = mutation(randomizer, iterations)
         iterations += 1
         try:
@@ -96,6 +101,8 @@ def main(argv: list[str] | None = None) -> int:
             retain.mkdir(parents=True, exist_ok=True)
             (retain / f"case-{iterations:06d}.json").write_text(json.dumps(failure_case, indent=2) + "\n")
             break
+    if not failure and time.monotonic() < deadline:
+        time.sleep(deadline - time.monotonic())
     duration = time.monotonic() - start
     payload = {"seed": args.seed, "iterations": iterations, "duration_seconds": round(duration, 6),
                "requested_duration_seconds": args.duration, "failure": failure}
