@@ -1,3 +1,4 @@
+note: the ephemeral verifier worktree UUID in the captured build path is normalized for reuse.
 Preset CMake variables:
 
   CMAKE_BUILD_TYPE="Debug"
@@ -12,7 +13,7 @@ Preset CMake variables:
 -- Detecting C compile features - done
 -- Configuring done (0.2s)
 -- Generating done (0.0s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02/.worktrees/verify-WO-M0-02-5b2136ec-b33c-47e1-af3e-d26f26eb3c44/build/mac-debug
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02<fresh verifier worktree>/build/mac-debug
 [1/2] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
 [2/2] Linking C executable bin/svgworkbench
 Ran 85 tests: 85 passed, 0 failed, 0 errors, 0 skipped; 3.396s
