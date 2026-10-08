@@ -46,8 +46,11 @@ tree clean.
 `./dev fuzz [--duration SEC] [--seed INTEGER]` builds the ASan/UBSan profile,
 then runs the no-network argv fuzzer on the CLI. The default seed is `12648430`,
 and the JSON reports the selected seed, iterations, actual duration, and any
-failure. Duration defaults to three seconds and is capped at sixty seconds;
-individual processes have a timeout. Usage-error exit is expected. Signals,
+failure. Duration defaults to three seconds and is capped at sixty seconds.
+The runner targets 48 cases per requested second, stops starting cases at the
+deadline, and grants an in-flight case at most 0.1 seconds of completion grace.
+This fixed case budget keeps repeat runs comparable while the deadline bounds
+slow runs. Exact valid `--version` and help output are accepted. Usage-error exit is expected. Signals,
 sanitizer findings, timeouts, and unexpected exits fail and retain argv plus
 stdout/stderr in `artifacts/WO-BOOT-05/fuzz-failures/`. The scheduled workflow
 runs a 60-second smoke; pull requests and manual dispatch run three seconds.
