@@ -288,6 +288,16 @@ class BenchmarkHarnessTests(unittest.TestCase):
         self.assertEqual(trial["status"], "failed")
         self.assertEqual(trial["error"], "timeout")
 
+    def test_real_timeout_terminates_child_and_fails_trial(self):
+        adapter = {**self.adapter,
+                   "render_argv": [sys.executable, "-c", "import time;time.sleep(10)", "{output}"],
+                   "timeout_seconds": 0.1}
+        trial = compare.run_one(adapter, self.fixture, self.cache, "cold-process", 1)
+        self.assertEqual(trial["status"], "failed")
+        self.assertEqual(trial["error"], "timeout")
+        self.assertIsNotNone(trial["exit_code"])
+        self.assertLess(trial["elapsed_seconds"], 2.0)
+
     def test_nonzero_exit_is_failed_trial(self):
         trial = self._run_with_process("nonzero", 9)
         self.assertEqual(trial["status"], "failed")

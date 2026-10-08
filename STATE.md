@@ -23,11 +23,15 @@
 - Current work order: `WO-M0-03` is frozen READY at `work/WO-M0-03.md`
   (base `cd503d6c348436faa183223d964957235b00a981`).
 - WO-M0-03 candidate contains fixes for stable smoke availability, full-stream
-  hashes, and descendant process safety through macOS sandbox-exec. The Codex
+  hashes, PNG format validation, bounded exact-path output writes, network and
+  process-fork isolation through macOS sandbox-exec, and reliable adapter
+  version gating. The Codex
   executor could not write linked worktree Git metadata; host orchestration
-  records the candidate commits. Latest local verification reports 104 tests
-  passed with zero failures, errors, or skips; 19 focused tests pass. A fresh
-  independent review of the final candidate is pending.
+  records the candidate commits. Latest local verification reports 110 tests
+  passed with zero failures, errors, or skips; 25 focused tests pass. An
+  independent review is checking the actual task-start diff; the normal
+  verifier diff includes the unchanged frozen work order because its declared
+  base predates the work-order freeze commit.
 - Smoke verified all 24 corpus hashes; Inkscape and Donner are unavailable, and
   Vexel has no render command. No render comparison is claimed. Evidence is in
   `artifacts/WO-M0-03/` and `bench/results/WO-M0-03.*`.
