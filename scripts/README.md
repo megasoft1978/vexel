@@ -68,8 +68,11 @@ The current CLI bypass exception and its limitations are recorded in
 
 Each work order provides a `# Verification commands` fenced `text` block. The
 verifier runs those argv lines without shell evaluation in a detached worktree
-at the exact candidate commit, then starts a fresh read-only Codex review with
-the verifier schema. Review input is capped at 250 KB; prior verifier event,
+at the exact candidate commit. For a full repository checkout, it configures
+and builds Debug and Release in that clean worktree before running the frozen
+commands, so native tests never rely on ignored build outputs from the executor.
+It then starts a fresh read-only Codex review with the verifier schema. Review
+input is capped at 250 KB; prior verifier event,
 stderr, and verdict artifacts are omitted from the review diff. Executor
 reports must cite commands that the wrapper itself ran successfully. Outputs
 are retained under `artifacts/runs/`.

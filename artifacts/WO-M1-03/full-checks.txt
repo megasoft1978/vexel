@@ -14,7 +14,7 @@ UBSan CTest: 1/1 passed.
 
 python3 scripts/ledger.py validate ledger.jsonl
 exit: 0
-valid ledger: 144 entries.
+valid ledger: 151 entries.
 
 python3 scripts/wo_validate.py WO-M1-03 --ready
 exit: 0

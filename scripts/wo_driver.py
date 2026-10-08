@@ -401,6 +401,30 @@ def run_checks(worktree: Path, run_dir: Path, body: str, timeout: float) -> list
     return results
 
 
+def prepare_verifier_builds(worktree: Path, run_dir: Path, timeout: float) -> list[dict[str, Any]]:
+    if not (worktree / "dev").is_file():
+        return []
+    commands = [
+        ["./dev", "build"],
+        ["cmake", "--preset", "mac-release"],
+        ["cmake", "--build", "--preset", "mac-release"],
+    ]
+    results: list[dict[str, Any]] = []
+    for index, command in enumerate(commands, start=1):
+        started = time.monotonic()
+        result = subprocess.run(command, cwd=worktree, capture_output=True, text=True,
+                                timeout=timeout, check=False)
+        record = {"argv": command, "exit_code": result.returncode,
+                  "duration_s": time.monotonic() - started,
+                  "stdout": result.stdout[-12000:], "stderr": result.stderr[-12000:]}
+        results.append(record)
+        (run_dir / f"verifier-build-{index:02d}.json").write_text(
+            json.dumps(record, indent=2) + "\n")
+        if result.returncode:
+            raise RunnerError(f"verifier prerequisite build {index} failed")
+    return results
+
+
 def bounded_review_diff(root: Path, base: str, candidate: str, limit: int = 250_000) -> bytes:
     result = subprocess.run(["git", "diff", "--no-ext-diff", "--no-renames", base, candidate,
                              "--", ".", ":(exclude)artifacts/**/verifier-events*.jsonl",
@@ -442,6 +466,7 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
     worktree.parent.mkdir(parents=True, exist_ok=True)
     repo(root, "worktree", "add", "--detach", str(worktree), candidate)
     try:
+        build_results = prepare_verifier_builds(worktree, run_dir, timeout)
         results = run_checks(worktree, run_dir, body, timeout)
         diff = bounded_review_diff(worktree, base, candidate)
         diff_path = run_dir / "candidate.diff"
@@ -480,7 +505,8 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
             raise RunnerError("verifier verdict failed schema or reports findings")
         metadata = {"wo_id": wo_id, "revision": int(fields["revision"]), "spec_sha256": spec_hash,
                     "candidate_sha": candidate, "cli_version": version, "duration_s": duration,
-                    "checks": results, "verdict": verdict, "session_id": parse_session_id(output)}
+                    "verifier_builds": build_results, "checks": results,
+                    "verdict": verdict, "session_id": parse_session_id(output)}
         (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n")
         return metadata
     finally:
