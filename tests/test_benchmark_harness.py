@@ -229,6 +229,19 @@ class BenchmarkHarnessTests(unittest.TestCase):
             with self.assertRaisesRegex(compare.BenchError, "adapter count exceeds limit"):
                 compare.adapter_list(path, False)
 
+    def test_fake_worker_rejects_outside_paths_and_existing_files(self):
+        outside = ROOT / "fake-worker-outside-probe.png"
+        existing = self.cache / "fake-worker-existing.png"
+        existing.write_bytes(b"keep")
+        for target, reason in ((outside, "unsafe output path"),
+                               (existing, "refuses to overwrite")):
+            result = subprocess.run([sys.executable, str(SCRIPT), "--fake-worker", str(target)],
+                                    cwd=ROOT, capture_output=True, text=True, timeout=10)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(reason, result.stderr)
+        self.assertFalse(outside.exists())
+        self.assertEqual(existing.read_bytes(), b"keep")
+
     def test_output_path_must_stay_under_repo_cache(self):
         with self.assertRaises(compare.BenchError):
             compare.safe_cache_target(str(ROOT / "outside.png"), self.cache)

@@ -755,10 +755,20 @@ def main() -> int:
         return 2
 
 
+def fake_worker(output_arg: str) -> int:
+    output = safe_cache_target(output_arg, ROOT / ".cache")
+    if output.exists() or output.is_symlink():
+        raise BenchError("fake worker refuses to overwrite an existing output")
+    with output.open("xb") as stream:
+        stream.write(fake_png())
+    return 0
+
+
 if __name__ == "__main__" and len(sys.argv) > 1 and sys.argv[1] == "--fake-worker":
     try:
-        Path(sys.argv[2]).write_bytes(fake_png())
-        raise SystemExit(0)
+        if len(sys.argv) != 3:
+            raise BenchError("fake worker requires one output path")
+        raise SystemExit(fake_worker(sys.argv[2]))
     except Exception as exc:
         print(str(exc), file=sys.stderr)
         raise SystemExit(1)
