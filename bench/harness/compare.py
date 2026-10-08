@@ -34,7 +34,6 @@ OUTPUT_LIMIT = 16 * 1024
 PREVIEW_LIMIT = 512
 PNG_LIMIT = 32 * 1024 * 1024
 SANDBOX_EXEC = "/usr/bin/sandbox-exec"
-SANDBOX_PROFILE = "(version 1)(allow default)(deny process-fork)"
 PLACEHOLDERS = {"input", "output", "width", "height"}
 CSV_FIELDS = (
     "record_type", "trial_id", "adapter_id", "task", "fixture_id", "fixture_sha256", "condition",
@@ -304,7 +303,10 @@ def process(argv: list[str], timeout: float) -> tuple[int | None, bytes, bytes, 
     error = None
     code = None
     try:
-        sandboxed_argv = [SANDBOX_EXEC, "-p", SANDBOX_PROFILE, *argv]
+        cache_path = str((ROOT / ".cache").resolve()).replace("\\", "\\\\").replace('"', '\\"')
+        profile = (f'(version 1)(allow default)(deny process-fork)(deny network*)'
+                   f'(deny file-write*)(allow file-write* (subpath "{cache_path}"))')
+        sandboxed_argv = [SANDBOX_EXEC, "-p", profile, *argv]
         proc = subprocess.Popen(sandboxed_argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, shell=False, start_new_session=True)
         code, error = _drain_process(proc, timeout, buffers, digests, totals, truncated)
@@ -463,7 +465,9 @@ def probe_adapters(adapters: list[dict]) -> list[dict]:
     for adapter in adapters:
         executable = adapter["path"] if os.path.isabs(adapter["path"]) else shutil.which(adapter["path"])
         if not executable or not Path(executable).exists():
+            adapter["version_probe_passed"] = False
             availability.append({"id": adapter["id"], "available": False,
+                                 "render_available": False,
                                  "reason": "executable not found"})
             continue
         validate_render_executable(adapter, executable)
@@ -477,10 +481,15 @@ def probe_adapters(adapters: list[dict]) -> list[dict]:
         adapter["version_probe"] = {"argv": argv, "exit_code": code,
             "elapsed_seconds": round(elapsed, 9), "error": error,
             **capture}
-        availability.append({"id": adapter["id"], "available": True,
-                              "render_available": bool(adapter["render_argv"]),
-                              "reason": None if adapter["render_argv"]
-                              else "no compatible render command declared"})
+        version = adapter["version"]
+        passed = code == 0 and error is None and bool(version)
+        adapter["version_probe_passed"] = passed
+        reason = None if passed else (error or ("version probe exited nonzero" if code != 0
+                                                else "version probe returned no version text"))
+        availability.append({"id": adapter["id"], "available": passed,
+                              "render_available": passed and bool(adapter["render_argv"]),
+                              "reason": reason if reason else (None if adapter["render_argv"]
+                              else "no compatible render command declared")})
     return availability
 
 
@@ -541,7 +550,7 @@ def render_trials(adapters: list[dict], records: dict[str, dict], cache: Path,
     if not enabled:
         return trials
     for adapter in adapters:
-        if "resolved_path" not in adapter:
+        if not adapter.get("version_probe_passed") or "resolved_path" not in adapter:
             continue
         for fixture_id in FIXTURES:
             if not adapter["render_argv"]:

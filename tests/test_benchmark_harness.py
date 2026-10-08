@@ -123,6 +123,45 @@ class BenchmarkHarnessTests(unittest.TestCase):
         self.assertIn(b"process-fork denied", result[1])
         self.assertFalse(marker.exists())
 
+    def test_process_policy_denies_network_and_writes_outside_cache(self):
+        outside = ROOT / "sandbox-write-guard-probe.txt"
+        cached = self.cache / "sandbox-write-guard-probe.txt"
+        self.assertFalse(outside.exists())
+        code = ("import pathlib,socket;"
+                f"pathlib.Path({str(cached)!r}).write_text('cache-ok');"
+                f"p=pathlib.Path({str(outside)!r});"
+                "exec(\"try:\\n p.write_text('escaped')\\n"
+                "except PermissionError: print('outside-write denied')\");"
+                "exec(\"try:\\n socket.socket().connect(('127.0.0.1',9))\\n"
+                "except OSError as e: print('network denied',e.errno)\")")
+        result = compare.process([sys.executable, "-c", code], 2.0)
+        self.assertEqual(result[0], 0)
+        self.assertIsNone(result[4])
+        self.assertIn(b"outside-write denied", result[1])
+        self.assertIn(b"network denied", result[1])
+        self.assertEqual(cached.read_text(), "cache-ok")
+        self.assertFalse(outside.exists())
+
+    def test_failed_or_empty_version_probe_disables_render_trials(self):
+        adapter = {"id": "fake", "path": sys.executable,
+                   "version_argv": ["--version"], "render_argv": [sys.executable, "{input}"],
+                   "timeout_seconds": 1.0}
+        capture = {"stdout_bytes": 0, "stdout_truncated": False,
+                   "stdout_sha256": compare.sha(b""), "stderr_bytes": 0,
+                   "stderr_truncated": False, "stderr_sha256": compare.sha(b"")}
+        for code, output, error, expected_reason in (
+                (1, b"", None, "version probe exited nonzero"),
+                (0, b"", None, "version probe returned no version text"),
+                (0, b"", "timeout", "timeout")):
+            candidate = dict(adapter)
+            with mock.patch.object(compare, "process", return_value=(
+                    code, output, b"", .01, error, None, capture)):
+                availability = compare.probe_adapters([candidate])
+            self.assertFalse(availability[0]["available"])
+            self.assertFalse(availability[0]["render_available"])
+            self.assertIn(expected_reason, availability[0]["reason"])
+            self.assertEqual(compare.render_trials([candidate], self.records, self.cache, True), [])
+
     def test_fixture_tampering_is_detected_in_isolated_snapshot(self):
         import shutil
         with tempfile.TemporaryDirectory(dir=self.cache) as folder:
