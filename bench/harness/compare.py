@@ -104,12 +104,38 @@ def load_corpus() -> tuple[dict, dict[str, dict]]:
     return {"manifest_sha256": expected, "fixture_count": len(records)}, found
 
 
+def _png_pass_size(size: int, start: int, step: int) -> int:
+    return 0 if size <= start else (size - start + step - 1) // step
+
+
+def _png_rows(width: int, height: int, bit_depth: int, channels: int,
+              interlace: int) -> list[tuple[int, int]]:
+    passes = ((0, 0, 1, 1),) if interlace == 0 else (
+        (0, 0, 8, 8), (4, 0, 8, 8), (0, 4, 4, 8), (2, 0, 4, 4),
+        (0, 2, 2, 4), (1, 0, 2, 2), (0, 1, 1, 2))
+    rows = []
+    for x, y, dx, dy in passes:
+        pass_width = _png_pass_size(width, x, dx)
+        pass_height = _png_pass_size(height, y, dy)
+        if pass_width and pass_height:
+            row_bytes = (pass_width * channels * bit_depth + 7) // 8
+            rows.append((row_bytes, pass_height))
+    return rows
+
+
+def _png_decoded_size(rows: list[tuple[int, int]]) -> int:
+    return sum((row_bytes + 1) * count for row_bytes, count in rows)
+
+
 def png_dimensions(data: bytes) -> tuple[int, int]:
     if len(data) < 45 or data[:8] != b"\x89PNG\r\n\x1a\n":
         raise BenchError("output is not a PNG")
     offset, width, height = 8, 0, 0
-    seen_ihdr, seen_idat, idat_ended, seen_end = False, False, False, False
+    seen_ihdr, seen_plte, seen_idat = False, False, False
+    idat_ended, seen_end = False, False
+    bit_depth, color_type, interlace = 0, -1, 0
     compressed = bytearray()
+    palette_size = 0
     while offset + 12 <= len(data):
         size = struct.unpack(">I", data[offset:offset + 4])[0]
         end = offset + 12 + size
@@ -126,12 +152,27 @@ def png_dimensions(data: bytes) -> tuple[int, int]:
             width, height = struct.unpack(">II", payload[:8])
             if (width, height) != (DIMENSION, DIMENSION):
                 raise BenchError("output PNG dimensions differ from 256x256 task")
-            if payload[8:13] != bytes((8, 6, 0, 0, 0)):
-                raise BenchError("PNG must use deterministic RGBA8 encoding")
+            bit_depth, color_type = payload[8], payload[9]
+            interlace = payload[12]
+            valid_depths = {0: (1, 2, 4, 8, 16), 2: (8, 16),
+                            3: (1, 2, 4, 8), 4: (8, 16), 6: (8, 16)}
+            if (color_type not in valid_depths or bit_depth not in valid_depths[color_type]
+                    or payload[10:12] != b"\0\0" or interlace not in (0, 1)):
+                raise BenchError("unsupported PNG header format")
             seen_ihdr = True
         elif kind == b"IHDR":
             raise BenchError("duplicate PNG header")
+        elif kind == b"PLTE":
+            if (seen_plte or seen_idat or not size or size > 768 or size % 3
+                    or color_type in (0, 4)):
+                raise BenchError("malformed PNG palette")
+            palette_size = size // 3
+            if color_type == 3 and palette_size > (1 << bit_depth):
+                raise BenchError("PNG palette exceeds indexed bit depth")
+            seen_plte = True
         if kind == b"IDAT":
+            if color_type == 3 and not seen_plte:
+                raise BenchError("indexed PNG is missing its palette")
             if idat_ended:
                 raise BenchError("PNG image data chunks are not contiguous")
             seen_idat = True
@@ -143,22 +184,30 @@ def png_dimensions(data: bytes) -> tuple[int, int]:
                 raise BenchError("malformed PNG end")
             seen_end = True
             break
+        if kind not in {b"IHDR", b"PLTE", b"IDAT"} and kind[0] & 0x20 == 0:
+            raise BenchError("unsupported critical PNG chunk")
         offset = end
     if not seen_ihdr or not seen_end or not width or not height:
         raise BenchError("incomplete PNG")
     try:
+        channels = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}[color_type]
+        rows = _png_rows(width, height, bit_depth, channels, interlace)
+        expected_size = _png_decoded_size(rows)
         inflater = zlib.decompressobj()
-        decoded = inflater.decompress(bytes(compressed), (width * 4 + 1) * height + 1)
+        decoded = inflater.decompress(bytes(compressed), expected_size + 1)
         if inflater.unconsumed_tail:
             raise BenchError("PNG pixel data exceeds declared dimensions")
         decoded += inflater.flush()
     except zlib.error as exc:
         raise BenchError("malformed PNG image data") from exc
-    if not inflater.eof or inflater.unused_data or len(decoded) != (width * 4 + 1) * height:
+    if not inflater.eof or inflater.unused_data or len(decoded) != expected_size:
         raise BenchError("malformed PNG pixel data size")
-    row_bytes = width * 4 + 1
-    if any(decoded[row * row_bytes] > 4 for row in range(height)):
-        raise BenchError("malformed PNG row filter")
+    offset = 0
+    for row_bytes, count in rows:
+        for _ in range(count):
+            if decoded[offset] > 4:
+                raise BenchError("malformed PNG row filter")
+            offset += row_bytes + 1
     return width, height
 
 
@@ -363,21 +412,32 @@ def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: in
         code, out, err, elapsed, rss, error = None, b"", b"", 0.0, None, str(exc)
     status = "passed" if error is None and code == 0 else "failed"
     output_size, output_hash = None, None
-    if status == "passed":
-        try:
-            if not output.is_file() or output.stat().st_size > PNG_LIMIT:
-                raise BenchError("missing or oversized output PNG")
-            image = output.read_bytes()
-            if png_dimensions(image) != (DIMENSION, DIMENSION):
-                raise BenchError("output PNG dimensions differ from 256x256 task")
-            output_size, output_hash = len(image), sha(image)
-        except (OSError, BenchError) as exc:
-            error, status = str(exc), "failed"
+    output_path = None
+    try:
+        if output.is_symlink():
+            raise BenchError("output must be a regular file")
+        if output.is_file():
+            output_path = str(output.relative_to(ROOT))
+            output_size = output.stat().st_size
+            if output_size <= PNG_LIMIT:
+                image = output.read_bytes()
+                output_hash = sha(image)
+            else:
+                image = b""
+            if status == "passed":
+                if output_size > PNG_LIMIT:
+                    raise BenchError("missing or oversized output PNG")
+                if png_dimensions(image) != (DIMENSION, DIMENSION):
+                    raise BenchError("output PNG dimensions differ from 256x256 task")
+        elif status == "passed":
+            raise BenchError("missing or oversized output PNG")
+    except (OSError, BenchError) as exc:
+        error, status = str(exc), "failed"
     return {"trial_id": trial_id, "adapter_id": adapter["id"], "fixture_id": fixture["fixture_id"],
             "fixture_sha256": fixture["sha256"], "task": "svg-render",
             "condition": condition, "trial_index": index,
             "status": status, "exit_code": code, "elapsed_seconds": round(elapsed, 9),
-            "peak_rss_bytes": rss, "output_path": str(output.relative_to(ROOT)) if output_hash else None,
+            "peak_rss_bytes": rss, "output_path": output_path,
             "output_size": output_size, "output_sha256": output_hash,
             "stdout_preview": out[:PREVIEW_LIMIT].decode("utf-8", "replace"),
             "stdout_bytes": capture["stdout_bytes"], "stdout_truncated": capture["stdout_truncated"],

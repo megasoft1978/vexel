@@ -8,8 +8,8 @@ Preset CMake variables:
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-03/build/mac-debug
 ninja: no work to do.
-Ran 109 tests in 6.894s
+Ran 109 tests in 4.724s
 
 OK
-Ran 109 tests: 109 passed, 0 failed, 0 errors, 0 skipped; 7.019s
+Ran 109 tests: 109 passed, 0 failed, 0 errors, 0 skipped; 4.791s
 valid ledger: 81 entries

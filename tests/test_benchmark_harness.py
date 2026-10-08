@@ -64,6 +64,18 @@ class BenchmarkHarnessTests(unittest.TestCase):
     def test_png_validator_checks_dimensions_and_crc(self):
         png = compare.fake_png()
         self.assertEqual(compare.png_dimensions(png), (256, 256))
+        def chunk(kind, payload):
+            body = kind + payload
+            return (len(payload).to_bytes(4, "big") + body
+                    + (zlib.crc32(body) & 0xffffffff).to_bytes(4, "big"))
+        for color_type, row, palette in (
+                (2, bytes((40, 80, 120)) * 256, b""),
+                (3, bytes(256), chunk(b"PLTE", bytes((40, 80, 120))))):
+            ihdr = chunk(b"IHDR", struct.pack(">IIBBBBB", 256, 256, 8, color_type, 0, 0, 0))
+            image = (b"\x89PNG\r\n\x1a\n" + ihdr + palette
+                     + chunk(b"IDAT", zlib.compress(b"".join(b"\0" + row for _ in range(256))))
+                     + chunk(b"IEND", b""))
+            self.assertEqual(compare.png_dimensions(image), (256, 256))
         duplicate_header = png[:33] + png[8:33] + png[33:]
         with self.assertRaisesRegex(compare.BenchError, "duplicate PNG header"):
             compare.png_dimensions(duplicate_header)
@@ -280,6 +292,9 @@ class BenchmarkHarnessTests(unittest.TestCase):
         trial = self._run_with_process("nonzero", 9)
         self.assertEqual(trial["status"], "failed")
         self.assertEqual(trial["exit_code"], 9)
+        self.assertEqual(trial["output_size"], len(compare.fake_png()))
+        self.assertEqual(trial["output_sha256"], compare.sha(compare.fake_png()))
+        self.assertIsNotNone(trial["output_path"])
 
     def test_missing_output_is_failed_trial(self):
         trial = self._run_with_process("missing", 0, write_output=False)
