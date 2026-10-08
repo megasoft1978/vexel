@@ -36,7 +36,10 @@ Clang and retain the project's warning-as-error options. CTest runs
 injects an assertion and heap overflow; its exact C sources, stdout/stderr,
 diagnostics, and JSON summary are retained in `artifacts/WO-BOOT-05/probes/`.
 These deliberately failing probe processes are expected detections; ordinary
-test failures remain regressions.
+test failures remain regressions. Later verification reruns preserve that
+committed evidence and write fresh traces/results under ignored
+`.cache/sanitizer-probes/`, so successful post-commit checks leave the candidate
+tree clean.
 
 ## CLI fuzz smoke
 

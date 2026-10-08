@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import json
 import contextlib
+import gzip
 import io
+import json
 import random
 import sys
 import unittest
@@ -19,6 +20,15 @@ import wo_driver
 
 
 class Boot05Contracts(unittest.TestCase):
+    def test_retained_sanitizer_probe_traces_are_compressed_evidence(self) -> None:
+        evidence = ROOT / "artifacts/WO-BOOT-05/probes"
+        report = json.loads((evidence / "probes.json").read_text())
+        self.assertTrue(report["all_detected"])
+        for item in report["probes"].values():
+            trace = evidence / item["stderr_artifact"]
+            self.assertTrue(trace.is_file())
+            self.assertTrue(gzip.decompress(trace.read_bytes()))
+
     def test_test_results_schema_accepts_machine_result_shape(self) -> None:
         schema = json.loads((ROOT / "docs/schemas/test-results.schema.json").read_text())
         item = {"started_at": "2026-10-08T00:00:00Z", "ended_at": "2026-10-08T00:00:01Z",

@@ -28,6 +28,11 @@ def main() -> int:
     evidence.mkdir(parents=True, exist_ok=True)
     cache = ROOT / ".cache/sanitizer-probes"
     cache.mkdir(parents=True, exist_ok=True)
+    retained_files = [evidence / "assertion.c", evidence / "heap_overflow.c",
+                      evidence / "assertion.stdout.txt.gz", evidence / "assertion.stderr.txt.gz",
+                      evidence / "heap_overflow.stdout.txt.gz", evidence / "heap_overflow.stderr.txt.gz",
+                      evidence / "probes.json"]
+    retain_evidence = not all(path.is_file() for path in retained_files)
     flags = ["-fsanitize=address,undefined", "-fno-omit-frame-pointer"] if args.profile == "asan-ubsan" else ["-fsanitize=undefined", "-fno-omit-frame-pointer"]
     compiler = subprocess.run(["xcrun", "--find", "clang"], capture_output=True, text=True)
     if compiler.returncode:
@@ -42,14 +47,21 @@ def main() -> int:
 
     def retain_trace(name: str, stream: str, content: str) -> str:
         artifact = f"{name}.{stream}.txt.gz"
-        (evidence / artifact).write_bytes(gzip.compress(content.encode("utf-8"), mtime=0))
+        compressed = gzip.compress(content.encode("utf-8"), mtime=0)
+        (cache / artifact).write_bytes(compressed)
+        if retain_evidence:
+            (evidence / artifact).write_bytes(compressed)
         return artifact
 
     for name, source in SOURCES.items():
         src = cache / f"{name}.c"
         binary = cache / name
         src.write_text(source, encoding="utf-8")
-        (evidence / f"{name}.c").write_text(source, encoding="utf-8")
+        retained_source = evidence / f"{name}.c"
+        if retained_source.exists() and retained_source.read_text(encoding="utf-8") != source:
+            raise SystemExit(f"retained {name} source does not match the probe fixture")
+        if retain_evidence:
+            retained_source.write_text(source, encoding="utf-8")
         built = subprocess.run([clang, "-isysroot", sdk.stdout.strip(), *flags,
                                 str(src), "-o", str(binary)], capture_output=True, text=True)
         item: dict[str, object] = {"compile_exit_code": built.returncode}
@@ -69,7 +81,11 @@ def main() -> int:
         all_detected = all_detected and detected
     results["completed_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     results["all_detected"] = all_detected
-    (evidence / "probes.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    results["retained_evidence_reused"] = not retain_evidence
+    latest = cache / "probes.latest.json"
+    latest.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+    if retain_evidence:
+        (evidence / "probes.json").write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(results, indent=2))
     return 0 if all_detected else 1
 

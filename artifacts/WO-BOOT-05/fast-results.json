@@ -1,9 +1,9 @@
 {
-  "started_at": "2026-10-08T14:42:37.702Z",
-  "ended_at": "2026-10-08T14:42:40.267Z",
-  "elapsed_seconds": 2.564765,
+  "started_at": "2026-10-08T14:52:22.565Z",
+  "ended_at": "2026-10-08T14:52:25.829Z",
+  "elapsed_seconds": 3.264078,
   "counts": {
-    "passed": 50,
+    "passed": 51,
     "failed": 0,
     "error": 0,
     "skipped": 0,
@@ -13,6 +13,10 @@
   "tests": [
     {
       "id": "tests.test_boot05.Boot05Contracts.test_fuzz_cli_bounds_and_deterministic_printable_mutation",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_boot05.Boot05Contracts.test_retained_sanitizer_probe_traces_are_compressed_evidence",
       "status": "passed"
     },
     {
