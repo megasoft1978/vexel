@@ -230,14 +230,22 @@ def safe_cache_target(value: str, cache: Path) -> Path:
     p = Path(value)
     if not p.is_absolute():
         p = ROOT / p
-    resolved = p.resolve()
-    cache_root = cache.resolve()
-    repo_cache = (ROOT / ".cache").resolve()
-    if (not cache_root.is_relative_to(repo_cache)
-            or resolved == cache_root or not resolved.is_relative_to(cache_root)
-            or resolved.name in {"", ".", ".."}):
+    target = Path(os.path.abspath(p))
+    cache_root = Path(os.path.abspath(cache))
+    repo_cache = Path(os.path.abspath(ROOT / ".cache"))
+    if (repo_cache.is_symlink() or not cache_root.is_relative_to(repo_cache)
+            or target == cache_root or not target.is_relative_to(cache_root)
+            or target.name in {"", ".", ".."}):
         raise BenchError("unsafe output path: output must stay under repo-local .cache")
-    return resolved
+    cursor = repo_cache
+    for part in target.relative_to(repo_cache).parts:
+        cursor /= part
+        if cursor.is_symlink():
+            raise BenchError("unsafe output path: symlinked cache components are forbidden")
+    resolved = target.resolve()
+    if not resolved.is_relative_to(cache_root.resolve()):
+        raise BenchError("unsafe output path: output must stay under repo-local .cache")
+    return target
 
 
 def safe_result_path(value: str) -> Path:

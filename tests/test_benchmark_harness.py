@@ -254,6 +254,16 @@ class BenchmarkHarnessTests(unittest.TestCase):
                 compare.safe_cache_target(str(link), self.cache)
         finally:
             link.unlink(missing_ok=True)
+        protected = self.cache / "existing-output.png"
+        protected.write_bytes(b"preserve")
+        alias = self.cache / "alias-output.png"
+        alias.symlink_to(protected)
+        try:
+            with self.assertRaisesRegex(compare.BenchError, "symlinked cache components"):
+                compare.safe_cache_target(str(alias), self.cache)
+            self.assertEqual(protected.read_bytes(), b"preserve")
+        finally:
+            alias.unlink(missing_ok=True)
         cache_link = ROOT / ".cache" / "m0-03-cache-escape-test"
         cache_link.symlink_to(ROOT.parent, target_is_directory=True)
         try:
