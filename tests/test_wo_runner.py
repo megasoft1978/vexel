@@ -211,7 +211,7 @@ class RunnerPrimitiveTests(unittest.TestCase):
 
     def test_dirty_base_is_rejected(self) -> None:
         with temporary_directory() as name:
-            root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            root = Path(name); subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
             subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
             subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
             (root / "file").write_text("clean\n"); subprocess.run(["git", "add", "."], cwd=root, check=True)
@@ -221,6 +221,28 @@ class RunnerPrimitiveTests(unittest.TestCase):
             (root / "file").write_text("dirty\n")
             with self.assertRaisesRegex(wo_driver.RunnerError, "clean main"):
                 wo_driver.require_clean_base(root, base)
+
+    def test_new_run_rejects_clean_non_main_branch(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); subprocess.run(["git", "init", "-q", "-b", "feature"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "file").write_text("clean\n"); subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            with self.assertRaisesRegex(wo_driver.RunnerError, "main branch"):
+                wo_driver.require_clean_base(root, base)
+
+    def test_resume_rejects_dirty_task_worktree(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "file").write_text("base\n"); subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            (root / "file").write_text("dirty\n")
+            with self.assertRaisesRegex(wo_driver.RunnerError, "clean task worktree"):
+                wo_driver.require_clean_task(root)
 
     def test_verifier_stops_when_deterministic_check_fails(self) -> None:
         with temporary_directory() as name:

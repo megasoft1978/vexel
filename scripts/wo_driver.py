@@ -128,12 +128,21 @@ def assert_scope(root: Path, base: str, head: str, body: str,
     result = subprocess.run(["git", "diff", "--name-only", "-z", base, head],
                             cwd=root, capture_output=True, check=True)
     changed = [part.decode("utf-8") for part in result.stdout.split(b"\0") if part]
-    frozen_paths = {f"work/{wo_id}.md"} if wo_id else set()
-    rejected = [name for name in changed if name in frozen_paths or
-                not changed_path_allowed(name, allowed, protected)]
+    frozen_path = f"work/{wo_id}.md" if wo_id else None
+    rejected = []
+    for name in changed:
+        if name == frozen_path and _frozen_work_order_unchanged(root, head, name):
+            continue
+        if name == frozen_path or not changed_path_allowed(name, allowed, protected):
+            rejected.append(name)
     if rejected:
         raise RunnerError("candidate changed disallowed paths: " + ", ".join(rejected))
     return changed
+
+
+def _frozen_work_order_unchanged(root: Path, head: str, path: str) -> bool:
+    candidate = subprocess.run(["git", "show", f"{head}:{path}"], cwd=root, capture_output=True)
+    return candidate.returncode == 0 and candidate.stdout == (root / path).read_bytes()
 
 
 def cache_matches(root: Path, key: dict[str, Any], session: str) -> bool:
@@ -225,12 +234,19 @@ def worktree_start(root: Path, wo_id: str, worktree: Path) -> str:
 
 
 def require_clean_base(root: Path, base: str) -> str:
+    if repo(root, "branch", "--show-current") != "main":
+        raise RunnerError("new run requires the main branch")
     head = repo(root, "rev-parse", "HEAD")
     if repo(root, "status", "--porcelain"):
         raise RunnerError("new run requires a clean main checkout")
     if subprocess.run(["git", "merge-base", "--is-ancestor", base, head], cwd=root).returncode:
         raise RunnerError("declared base_sha is not an ancestor of clean main")
     return head
+
+
+def require_clean_task(worktree: Path) -> None:
+    if repo(worktree, "status", "--porcelain"):
+        raise RunnerError("resume requires a clean task worktree")
 
 
 def validate_report(path: Path, schema_path: Path, base: str,
@@ -317,8 +333,23 @@ def bounded_review_diff(root: Path, base: str, candidate: str, limit: int = 250_
     return result
 
 
+def assert_verifier_scope(root: Path, wo_id: str, base: str, candidate: str) -> str:
+    body = (root / "work" / f"{wo_id}.md").read_text(encoding="utf-8")
+    start = base
+    if (root / ".cache" / "worktrees" / f"{wo_id}.json").exists():
+        start = worktree_start(root, wo_id, root / ".worktrees" / wo_id)
+    ancestor_checks = ((base, start), (start, candidate))
+    for older, newer in ancestor_checks:
+        if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer], cwd=root).returncode:
+            raise RunnerError("verification candidate does not descend from the frozen task start")
+    assert_scope(root, start, candidate, body, wo_id)
+    return body
+
+
 def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
                  candidate: str, codex: str, timeout: float) -> dict[str, Any]:
+    base = fields["base_sha"]
+    body = assert_verifier_scope(root, wo_id, base, candidate)
     run_id = str(uuid.uuid4())
     run_dir = root / "artifacts" / "runs" / wo_id / f"verify-{run_id}"
     run_dir.mkdir(parents=True, exist_ok=False)
@@ -326,9 +357,7 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
     worktree.parent.mkdir(parents=True, exist_ok=True)
     repo(root, "worktree", "add", "--detach", str(worktree), candidate)
     try:
-        body = (root / "work" / f"{wo_id}.md").read_text(encoding="utf-8")
         results = run_checks(worktree, run_dir, body, timeout)
-        base = fields["base_sha"]
         diff = bounded_review_diff(worktree, base, candidate)
         diff_path = run_dir / "candidate.diff"
         diff_path.write_bytes(diff)
@@ -390,6 +419,7 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
             worktree = root / ".worktrees" / args.wo_id
             if not worktree.is_dir() or repo(worktree, "branch", "--show-current") != f"wo/{args.wo_id}":
                 raise RunnerError("resume requires the known task branch and worktree")
+            require_clean_task(worktree)
             start_sha = worktree_start(root, args.wo_id, worktree)
         version, _, _ = preflight(args.codex,
                                   evidence=root / "artifacts/WO-BOOT-04/codex-preflight.txt")
