@@ -360,7 +360,7 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
         diff = bounded_review_diff(worktree, base, candidate)
         diff_path = run_dir / "candidate.diff"
         diff_path.write_bytes(diff)
-        version, exec_help, _ = preflight(codex, evidence=root / "artifacts/WO-BOOT-04/codex-preflight.txt")
+        version, exec_help, _ = preflight(codex, evidence=run_dir / "codex-preflight.txt")
         missing = [flag for flag in VERIFY_REQUIRED if not _has_flag(exec_help, flag)]
         if missing:
             raise RunnerError("Codex CLI missing verifier capabilities: " + ", ".join(missing))
@@ -420,12 +420,11 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
                 raise RunnerError("resume requires the known task branch and worktree")
             require_clean_task(worktree)
             start_sha = worktree_start(root, args.wo_id, worktree)
-        version, _, _ = preflight(args.codex,
-                                  evidence=root / "artifacts/WO-BOOT-04/codex-preflight.txt")
-        if args.mode == "new":
-            worktree = create_worktree(root, args.wo_id, start_sha)
         run_id = str(uuid.uuid4()); run_dir = root / "artifacts" / "runs" / args.wo_id / run_id
         run_dir.mkdir(parents=True, exist_ok=False)
+        version, _, _ = preflight(args.codex, evidence=run_dir / "codex-preflight.txt")
+        if args.mode == "new":
+            worktree = create_worktree(root, args.wo_id, start_sha)
         schema = root / "docs/schemas/executor-report.schema.json"
         report_path = run_dir / "report.json"
         prompt = (f"Read work/{args.wo_id}.md and complete it. Run every acceptance command, "

@@ -309,6 +309,10 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             schema_dir = root / "docs/schemas"; schema_dir.mkdir(parents=True)
             (schema_dir / "executor-report.schema.json").write_text(
                 (wo_validate.ROOT / "docs/schemas/executor-report.schema.json").read_text())
+            old_evidence = root / "artifacts/WO-BOOT-04/codex-preflight.txt"
+            old_evidence.parent.mkdir(parents=True)
+            old_evidence.write_text("previous work order evidence\n")
+            old_evidence_bytes = old_evidence.read_bytes()
             (root / ".gitignore").write_text("/.worktrees/\n/.cache/\n/artifacts/runs/\n")
             subprocess.run(["git", "add", "."], cwd=root, check=True)
             subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
@@ -316,7 +320,7 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             body = ("---\nid: WO-FAKE\nrevision: 1\nstatus: READY\nmilestone: M0\n"
                     "owner: test\nexecutor: test\nbase_sha: " + base + "\nparallel_safe: false\n"
                     "spec_sha256: PENDING\n---\n# Files allowed to touch\n- `scripts/**`\n"
-                    "- `artifacts/WO-BOOT-04/**`\n# Protected paths\n- `scripts/oracle/**`\n"
+                    "# Protected paths\n- `scripts/oracle/**`\n"
                     "# Acceptance criteria (machine-checkable)\n- AC-1 passes\n"
                     "# Verification commands\n\n```text\npython3 -c 'print(1)'\n```\n")
             digest = hashlib.sha256(body.replace("spec_sha256: PENDING\n", "").encode()).hexdigest()
@@ -348,6 +352,10 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             candidate = root / ".worktrees/WO-FAKE"
             self.assertEqual(subprocess.check_output(["git", "branch", "--show-current"], cwd=candidate, text=True).strip(), "wo/WO-FAKE")
             self.assertTrue((root / ".cache/threads.jsonl").exists())
+            self.assertEqual(old_evidence.read_bytes(), old_evidence_bytes)
+            preflight_files = list((root / "artifacts/runs/WO-FAKE").glob("*/codex-preflight.txt"))
+            self.assertEqual(len(preflight_files), 1)
+            self.assertIn("codex-cli fake", preflight_files[0].read_text())
 
     def test_concurrent_lock_and_interrupted_atomic_append(self) -> None:
         with temporary_directory() as name:
