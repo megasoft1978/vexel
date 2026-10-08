@@ -1,1 +1,1 @@
-valid ledger: 24 entries
+valid ledger: 30 entries

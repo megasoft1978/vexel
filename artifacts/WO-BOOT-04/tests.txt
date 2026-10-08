@@ -11,6 +11,7 @@ test_summary_preserves_unavailable_usage (tests.test_ledger.LedgerTests.test_sum
 test_current_spec_hash_is_valid (tests.test_wo_runner.FrozenWorkOrderTests.test_current_spec_hash_is_valid) ... ok
 test_hash_mutation_is_rejected (tests.test_wo_runner.FrozenWorkOrderTests.test_hash_mutation_is_rejected) ... ok
 test_scope_rejects_escape_and_protected_paths (tests.test_wo_runner.FrozenWorkOrderTests.test_scope_rejects_escape_and_protected_paths) ... ok
+test_work_order_path_rules_read_all_comma_separated_entries (tests.test_wo_runner.FrozenWorkOrderTests.test_work_order_path_rules_read_all_comma_separated_entries) ... ok
 test_work_order_symlink_escape_is_rejected (tests.test_wo_runner.FrozenWorkOrderTests.test_work_order_symlink_escape_is_rejected) ... ok
 test_concurrent_lock_and_interrupted_atomic_append (tests.test_wo_runner.RunnerPrimitiveTests.test_concurrent_lock_and_interrupted_atomic_append) ... ok
 test_dirty_base_is_rejected (tests.test_wo_runner.RunnerPrimitiveTests.test_dirty_base_is_rejected) ... ok
@@ -37,6 +38,6 @@ test_session_parser_ignores_unknown_events_and_bad_ids (tests.test_wo_runner.Run
 test_verifier_stops_when_deterministic_check_fails (tests.test_wo_runner.RunnerPrimitiveTests.test_verifier_stops_when_deterministic_check_fails) ... ok
 
 ----------------------------------------------------------------------
-Ran 36 tests in 2.718s
+Ran 37 tests in 3.006s
 
 OK

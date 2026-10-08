@@ -1,15 +1,15 @@
 # Project state
 
-- Current work order: `WO-BOOT-04` revision 2 (implementation complete locally; independent verifier and ledger acceptance pending).
-- Last accepted commit: `837e88acdc247c790b0b9785efed98f544584fcb` (`docs: record BOOT-03 verification`).
-- Working branch: `main`; BOOT-04 changes are being prepared for a scoped commit and fresh read-only verification.
+- Current work order: `WO-BOOT-05` (next; ready order not yet drafted).
+- Last accepted implementation commit: `05dc456a90ef67a8d9a1f8344fd52fe000f1af9c` (`fix: parse complete work order path rules`); final closeout is on `main` after fast-forward.
+- Working branch: `main`; BOOT-04 revision 2 is verified and merged.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
 - Build: Debug, Release, size, and ASan/UBSan scaffold checks passed on Apple Clang 21.0.0; current `./dev verify` passes.
-- Test inventory: 30 targeted ledger/runner tests pass; 36 Python tests pass through `./dev verify`; no application C tests exist yet.
+- Test inventory: 37 targeted ledger/runner tests pass at the verified candidate; 43 Python tests pass in the fresh verifier; no application C tests exist yet.
 - Initial Release CLI: 33,568 bytes; median `--version` process latency 1.910 ms over 31 runs; max RSS 1,884,160 bytes (single `/usr/bin/time -l` run).
-- BOOT-04 revision 2 implements frozen work-order validation, guarded task worktrees, JSONL session caching, resume identity checks, executor report validation, read-only exact-commit verification, and fake-Codex success/failure coverage. The owner-approved CLI amendment is documented in `docs/adr/0003-codex-cli-compatibility-amendment.md`.
+- BOOT-04 revision 2 is complete: frozen work-order validation, guarded task worktrees, JSONL session caching, resume identity checks, executor report validation, read-only exact-commit verification, path guards, and fake-Codex success/failure coverage. The owner-approved CLI amendment is documented in `docs/adr/0003-codex-cli-compatibility-amendment.md`.
 - Installed CLI: `codex-cli 0.160.1`; executor preflight passes the owner-approved invocation contract. Approval bypass limitations are documented in the ADR.
-- Latest checks: 30 targeted tests, `./dev verify`, ledger validation, actionlint, and `git diff --check` pass. Fresh independent review remains pending.
-- Next: review the committed BOOT-04 candidate with the read-only verifier, record acceptance, then prepare BOOT-05.
+- Latest checks: 37 targeted tests; fresh exact-commit verification ran all seven frozen commands, 43 full-suite tests, actionlint, and a read-only review with `verdict=pass`.
+- Next: draft BOOT-05 from the r4 test/sanitizer/fuzz requirements, then run it through the BOOT-04 runner.
 
 Resume by reading `AGENTS.md`, this file, the active work order, and the r4 operating model. Preserve the owner-provided `OWNER-DIRECTIVES.md`.
