@@ -11,6 +11,16 @@ only measures process startup and is not an SVG rendering benchmark.
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. No SVG throughput or renderer performance is measured yet.
 
+## WO-M1-04 task queue lifecycle
+
+The macOS queue bounds capacity to 1–64 tasks and worker count to 1–4. Context
+memory is borrowed and must remain alive through callback completion or queued
+cancellation. Cancellation is cooperative through an atomic token. Generation
+advances suppress results from older work. Shutdown requests cancellation,
+wakes and joins workers, then destroy releases storage. The owner quiesces all
+callers before destroy; an uncooperative callback can delay join. Lifecycle
+timings are correctness bounds only and are not performance claims.
+
 ## WO-M0-03 black-box protocol
 
 The standard-library harness in [`bench/harness`](../bench/harness/README.md)
@@ -60,3 +70,15 @@ separately smoke-tested. Twenty readbacks matched byte-for-byte with SHA-256
 `3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c`; measured
 replay latency was 179.164 ms. No SVG throughput or RSS was measured. Raw
 evidence is in `artifacts/WO-M1-03/` and `bench/results/WO-M1-03.json`.
+
+## WO-M1-04 bounded task queue
+
+Revision 3 completed 1,000 create/submit/cancel/join cycles in 0.044 s. The
+maximum measured queue shutdown join was 0.000073 s against the 2 s limit;
+queued and running cancellation passed and no stale result was published. The
+Release executable is 97,072 bytes. Focused tests passed 20/20 and the full
+suite passed 143/143; ASan and UBSan CTest each passed 1/1. Test-only pointer
+injection dispatches directly to its target view, so the native lifecycle
+smoke does not depend on LaunchServices activation. RSS, SVG throughput, and
+renderer latency were not measured. Evidence is in `artifacts/WO-M1-04/` and
+`bench/results/WO-M1-04.json`.

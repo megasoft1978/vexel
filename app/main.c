@@ -9,6 +9,7 @@
 #include "platform/platform_metal.h"
 #include "raster/tile.h"
 #include "test_driver/native_injection.h"
+#include "test_driver/native_task_tests.h"
 
 #define NATIVE_COMMAND_LIMIT 64U
 
@@ -422,6 +423,16 @@ static int native_metal_replay_smoke(void)
 
 int main(int argc, char *argv[])
 {
+    if (argc == 5 && strcmp(argv[1], "--native-task-smoke") == 0 && strcmp(argv[2], "--cycles") == 0) {
+        uint32_t cycles = 0U;
+        if (!parse_integer(argv[3], 10000U, &cycles) || cycles == 0U || strcmp(argv[4], "--run") != 0) {
+            return EXIT_FAILURE;
+        }
+        return native_task_smoke((unsigned)cycles, false) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+    if (argc == 2 && strcmp(argv[1], "--native-task-destroy-assert") == 0) {
+        return native_task_smoke(0U, true) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
     if (argc == 2 && strcmp(argv[1], "--native-metal-smoke") == 0) {
         return native_metal_smoke();
     }

@@ -1,0 +1,54 @@
+{
+    "work_order": "WO-M1-04",
+    "revision": 3,
+    "machine": "Apple M5 Max, macOS 27.0",
+    "compiler": "Apple Clang 21.0.0.21000334",
+    "build": "Debug and Release",
+    "acceptance_status": "machine_checks_passed_pending_independent_review",
+    "task_queue_smoke": {
+        "requested_cycles": 1000,
+        "completed_cycles": 1000,
+        "elapsed_seconds": 0.04388383399054874,
+        "canceled_queued_work": true,
+        "canceled_running_work": true,
+        "stale_publications": 0,
+        "maximum_join_seconds": 7.3e-05,
+        "join_limit_seconds": 2.0,
+        "exit_code": 0
+    },
+    "tests": {
+        "focused_count": 20,
+        "focused_failures": 0,
+        "focused_errors": 0,
+        "full_count": 143,
+        "full_passed": 143,
+        "full_failures": 0,
+        "full_errors": 0,
+        "full_skipped": 0
+    },
+    "sanitizers": {
+        "asan_ctest_passed": 1,
+        "asan_ctest_total": 1,
+        "ubsan_ctest_passed": 1,
+        "ubsan_ctest_total": 1
+    },
+    "binary": {
+        "release_bytes": 97072,
+        "rss_bytes": null
+    },
+    "claims": {
+        "svg_throughput": false,
+        "performance_improvement": false,
+        "rss": false
+    },
+    "evidence": {
+        "focused_tests": "artifacts/WO-M1-04/focused-tests.txt",
+        "full_suite": "artifacts/WO-M1-04/full-suite.txt",
+        "native_task_smoke": "artifacts/WO-M1-04/native-task-smoke.txt",
+        "asan": "artifacts/WO-M1-04/asan.txt",
+        "ubsan": "artifacts/WO-M1-04/ubsan.txt",
+        "baseline_pointer_comparison": "artifacts/WO-M1-04/baseline-ui-smoke-comparison.json",
+        "task_smoke_asan": "artifacts/WO-M1-04/task-smoke-asan.txt",
+        "task_smoke_ubsan": "artifacts/WO-M1-04/task-smoke-ubsan.txt"
+    }
+}

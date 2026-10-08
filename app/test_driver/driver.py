@@ -295,10 +295,12 @@ def validate_native_metal_replay_output(output: str) -> tuple[int, str, str]:
     return 20, digest, order
 
 
-def native_metal_replay(out: Path, repeats: int) -> float:
+def native_metal_replay(out: Path, repeats: int, build_type: str = "release") -> float:
     if repeats != 20:
         raise DriverError("native Metal replay requires exactly 20 frames")
-    binary = ROOT / "build" / "mac-release" / "bin" / "svgworkbench"
+    if build_type not in ("debug", "release"):
+        raise DriverError("native Metal replay build must be debug or release")
+    binary = ROOT / "build" / f"mac-{build_type}" / "bin" / "svgworkbench"
     if not binary.is_file():
         raise DriverError("Release executable is missing; build preset mac-release first")
     started = time.monotonic()
@@ -322,6 +324,37 @@ def native_metal_replay(out: Path, repeats: int) -> float:
     sys.stdout.write("20 frames with identical readback hashes and stable offscreen frame order\n")
     sys.stdout.write(f"readback sha256: {summary['readback_sha256']}\nnative replay elapsed seconds: {elapsed:.6f}\n")
     return elapsed
+
+
+def native_task_smoke(out: Path, cycles: int) -> None:
+    if type(cycles) is not int or not 1 <= cycles <= 10000:
+        raise DriverError("cycles must be an integer from 1 to 10000")
+    binary = ROOT / "build" / "mac-debug" / "bin" / "svgworkbench"
+    if not binary.is_file():
+        raise DriverError("Debug executable is missing; build preset mac-debug first")
+    started = time.monotonic()
+    try:
+        result = subprocess.run([str(binary), "--native-task-smoke", "--cycles", str(cycles), "--run"],
+                                cwd=ROOT, capture_output=True, text=True, timeout=300, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DriverError(f"native task smoke could not complete: {exc}") from exc
+    elapsed = time.monotonic() - started
+    (out / "native-task-smoke.txt").write_text(result.stdout, encoding="utf-8")
+    (out / "native-task-smoke.stderr.txt").write_text(result.stderr, encoding="utf-8")
+    if result.returncode != 0:
+        raise DriverError(f"native task smoke failed with exit {result.returncode}: {result.stderr.strip()[:500]}")
+    expected = [f"completed lifecycle cycles: {cycles}", "canceled queued work: pass",
+                "canceled running work: pass", "stale publications: 0"]
+    lines = result.stdout.splitlines()
+    if lines[:4] != expected or len(lines) != 5 or not lines[4].startswith("maximum join seconds: "):
+        raise DriverError("native task smoke returned malformed lifecycle evidence")
+    join_seconds = float(lines[4].split(": ", 1)[1])
+    if not 0.0 <= join_seconds < 2.0:
+        raise DriverError("native task smoke exceeded the 2 second join limit")
+    (out / "result.json").write_bytes(_json_bytes({"cycles": cycles, "elapsed_seconds": elapsed,
+        "maximum_join_seconds": join_seconds, "canceled_queued": True,
+        "canceled_running": True, "stale_publications": 0, "status": "passed"}))
+    sys.stdout.write(result.stdout)
 
 
 def _chunk(kind: bytes, payload: bytes) -> bytes:
@@ -534,6 +567,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--native-metal-smoke", action="store_true")
     parser.add_argument("--repeat-replay", action="store_true")
     parser.add_argument("--native-metal-replay-smoke", action="store_true")
+    parser.add_argument("--native-task-smoke", action="store_true")
     parser.add_argument("--cycles", type=int, default=100)
     parser.add_argument("--repeats", type=int, default=20)
     args = parser.parse_args(argv)
@@ -544,11 +578,16 @@ def main(argv: list[str] | None = None) -> int:
         print("error: seed must be an unsigned 32-bit integer", file=sys.stderr)
         return 2
     try:
-        modes = sum((args.native_metal_smoke, args.native_metal_replay_smoke,
+        modes = sum((args.native_metal_smoke, args.native_metal_replay_smoke, args.native_task_smoke,
                      args.native_platform_smoke, args.repeat_replay))
         if modes > 1:
             raise DriverError("driver modes cannot be combined")
-        if args.native_metal_replay_smoke:
+        if args.native_task_smoke:
+            if args.script is not None:
+                raise DriverError("--script cannot be combined with native task smoke")
+            out = _safe_native_output(args.output_dir)
+            native_task_smoke(out, args.cycles)
+        elif args.native_metal_replay_smoke:
             if args.script is not None:
                 raise DriverError("--script cannot be combined with native Metal replay")
             out = _safe_native_output(args.output_dir)

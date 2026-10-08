@@ -95,7 +95,7 @@ class PlatformDriverTests(unittest.TestCase):
         cache.mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="metal-replay-", dir=cache) as temporary:
             out = driver._safe_native_output(str(Path(temporary) / "native"))
-            elapsed = driver.native_metal_replay(out, 20)
+            elapsed = driver.native_metal_replay(out, 20, build_type="debug")
             report = json.loads((out / "result.json").read_text())
             self.assertGreaterEqual(elapsed, 0.0)
             self.assertEqual(report["status"], "passed")
@@ -103,6 +103,19 @@ class PlatformDriverTests(unittest.TestCase):
             self.assertEqual(report["frame_order"],
                              "stable offscreen frame order: frame-0000..frame-0019")
             self.assertEqual(len(report["readback_sha256"]), 64)
+
+    def test_task_queue_contract_and_owner_quiescence_assertion(self) -> None:
+        binary = driver.ROOT / "build" / "mac-debug" / "bin" / "svgworkbench"
+        smoke = subprocess.run([str(binary), "--native-task-smoke", "--cycles", "1", "--run"],
+                               cwd=driver.ROOT, text=True, capture_output=True, timeout=20, check=False)
+        self.assertEqual(smoke.returncode, 0, smoke.stderr)
+        self.assertIn("canceled queued work: pass", smoke.stdout)
+        self.assertIn("canceled running work: pass", smoke.stdout)
+        self.assertIn("stale publications: 0", smoke.stdout)
+        death = subprocess.run([str(binary), "--native-task-destroy-assert"], cwd=driver.ROOT,
+                               text=True, capture_output=True, timeout=20, check=False)
+        self.assertNotEqual(death.returncode, 0, "destroy with an admitted call must assert")
+        self.assertIn("active_calls", death.stderr)
 
     def test_missing_or_malformed_events_rejected(self) -> None:
         with self.assertRaises(driver.DriverError):

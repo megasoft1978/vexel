@@ -29,7 +29,8 @@ if(VEXEL_SANITIZER)
     endif()
 endif()
 
-add_executable(svgworkbench app/main.c src/raster/tile.c src/platform/macos/platform_window.m
+add_executable(svgworkbench app/main.c app/test_driver/native_task_tests.c src/raster/tile.c
+    src/platform/macos/platform_task.c src/platform/macos/platform_window.m
     src/platform/macos/platform_metal.m)
 target_include_directories(svgworkbench PRIVATE src app)
 set_source_files_properties(src/platform/macos/platform_window.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
@@ -37,7 +38,8 @@ set_source_files_properties(src/platform/macos/platform_metal.m PROPERTIES COMPI
 find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
 find_library(METAL_FRAMEWORK Metal REQUIRED)
 find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
-target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK})
+find_package(Threads REQUIRED)
+target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK} Threads::Threads)
 set_target_properties(svgworkbench PROPERTIES
     C_STANDARD 17
     C_STANDARD_REQUIRED YES

@@ -31,3 +31,12 @@ bound; the implementation checks exact readback bytes and hashes the returned
 bytes. Windowed AppKit/Metal presentation remains covered by
 `--native-metal-smoke`. The replay needs a Metal-capable macOS session and a
 Release executable; it is not an SVG renderer or a performance claim.
+
+`--native-task-smoke --cycles N` exercises the bounded macOS pthread task queue
+through the current Debug executable. It checks queued/running cancellation,
+generation suppression, result publication, allocation failure, owner
+quiescence assertion, and repeated joined shutdown. Queue capacity is 1–64 and
+worker count 1–4. Context remains caller-owned through cancellation or callback
+return; callbacks cooperate by polling an atomic token. Shutdown cancels, wakes,
+and joins workers before storage release. An uncooperative callback can delay
+join, and the owner must quiesce callers before destroy.

@@ -142,3 +142,15 @@ This path needs the Release build and an active graphical session. It records
 presented frame count, exact-readback result, resize/reset result, and elapsed
 smoke time in its run directory. The elapsed value measures this smoke only;
 it is not rendering throughput or memory usage.
+
+## Native task queue smoke
+
+The native task smoke uses the current Debug executable. It checks queue bounds,
+injected allocation failures, queued and running cancellation,
+generation-safe publication, the owner-quiescence assertion, and repeated
+shutdown/join cycles. Capacity is 1–64 tasks with 1–4 workers. Callback context
+is borrowed and stays alive through completion or cancellation. Callbacks poll
+their atomic cancellation token and return promptly. Old-generation results
+are discarded. Shutdown cancels, wakes, and joins workers before releasing
+storage; callbacks that ignore cancellation can delay join. The owner stops new
+API callers and waits for admitted calls to finish before destroy.

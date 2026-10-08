@@ -308,7 +308,15 @@ bool platform_test_inject_pointer(platform_window *window, platform_event_type t
             modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
             eventNumber:0 clickCount:(type == PLATFORM_EVENT_POINTER_MOVE ? 0 : 1)
             pressure:(type == PLATFORM_EVENT_POINTER_DOWN ? 1.0 : 0.0)];
-        [NSApp sendEvent:event];
+        VexelView *view = (VexelView *)window->native.contentView;
+        /* Test injection must not depend on LaunchServices activating the window. */
+        if (type == PLATFORM_EVENT_POINTER_MOVE) {
+            [view mouseMoved:event];
+        } else if (type == PLATFORM_EVENT_POINTER_DOWN) {
+            [view mouseDown:event];
+        } else {
+            [view mouseUp:event];
+        }
         return true;
     }
 }

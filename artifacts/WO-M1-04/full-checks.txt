@@ -1,0 +1,14 @@
+WO-M1-04 revision 3 machine-check summary
+
+AC-1 `python3 -m unittest tests.test_platform_driver tests.test_ui_driver` — exit 0; 20 passed, zero failures, errors, or skips. See `focused-tests.txt`.
+AC-2 `python3 app/test_driver/driver.py --native-task-smoke --cycles 1000 --output-dir .cache/WO-M1-04/native` — exit 0; 1,000 lifecycle cycles in 0.044 s, queued/running cancellation passed, zero stale publications, maximum join 0.000073 s. See `native-task-smoke.txt` and `.cache/WO-M1-04/native/run-0005/result.json`.
+AC-3 `./dev verify` — exit 0; 143 passed, zero failures, errors, or skips. See `full-suite.txt`.
+AC-4 `./dev asan` — exit 0; CTest 1/1 passed. See `asan.txt`.
+AC-4 `./dev ubsan` — exit 0; CTest 1/1 passed. See `ubsan.txt`.
+Additional native task smoke under ASan and UBSan each completed 1,000 cycles; see `task-smoke-asan.txt` and `task-smoke-ubsan.txt`.
+AC-4 `python3 scripts/ledger.py validate ledger.jsonl` — exit 0; see `ledger-validate.txt`.
+AC-4 `python3 scripts/wo_validate.py WO-M1-04 --ready` — exit 0; revision 3 spec hash `fd8f77ac5926456bb2eeee381aca39385ba61b344530c5552090be7611b4c988`. See `wo-validate.txt`.
+AC-4 `python3 -m json.tool bench/results/WO-M1-04.json` — exit 0; see `json-tool.txt`.
+AC-4 `git diff --check` — exit 0; no whitespace errors.
+
+The 100-cycle native window smoke is part of AC-1. Test-only synthetic pointer injection now targets the specified view directly; assertions continue to verify pointer type, coordinates, bounds, and button.
