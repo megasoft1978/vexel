@@ -1,10 +1,10 @@
 # Project state
 
 - Current work order: `WO-M0-01` is implemented and accepted on candidate
-  `f2a2db5035fda2afb0aa1413eb26c2d246003827`; it is ready for fast-forward merge.
+  `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
+  merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
 - BOOT-05 revision 3 is accepted and merged at `178f0e57554cf1eae8182a9cf89330297b647ffb` (merge includes the previously verified candidate and the equivalent root-scope path matcher cleanup).
-- Working branch: `wo/WO-M0-01`; merge this verified candidate to `main` before
-  starting `WO-M0-02`.
+- Working branch: `main`; no active task worktree.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
 - Build: Debug, `mac-asan` (AddressSanitizer + UndefinedBehaviorSanitizer), and `mac-ubsan` configure/build/CTest pass with Apple Clang 21.0.0.
 - Test inventory: latest `./dev verify` reports 69 Python tests pass with zero failures or skips; targeted ledger/runner/BOOT-05 and corpus tests pass.
@@ -30,5 +30,5 @@
   passed runner validation; the accepted report is retained in per-run evidence.
 - No renderer throughput, memory, or latency result is claimed for M0-01; its
   synthetic corpus is an input baseline, not a representative user corpus.
-- Next after merge: WO-M0-02 stress generator/oracle. Continue through M0-04
+- Next: WO-M0-02 stress generator/oracle. Continue through M0-04
   and stop for its owner gate.
