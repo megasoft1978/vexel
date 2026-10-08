@@ -1,15 +1,19 @@
 # Project state
 
-- Current work order: `WO-M0-02` is frozen and ready on `main`; its one-time
-  oracle baseline seeding exception is scoped to newly added files only.
+- Current work order: `WO-M0-02` candidate implementation is ready for the
+  final runner revalidation and independent verifier. The first wrapper run
+  failed AC-2 because repeat generation rejected matching existing outputs;
+  idempotent verification fixed that. The first fresh review found a runner
+  resume change outside this order's narrow scope; that change has been removed.
 - Current work order: `WO-M0-01` is implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
 - BOOT-05 revision 3 is accepted and merged at `178f0e57554cf1eae8182a9cf89330297b647ffb` (merge includes the previously verified candidate and the equivalent root-scope path matcher cleanup).
-- Working branch: `main`; no active task worktree.
+- Working branch: `wo/WO-M0-02`; implementation changes are being committed in
+  the isolated task worktree before the retry.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
 - Build: Debug, `mac-asan` (AddressSanitizer + UndefinedBehaviorSanitizer), and `mac-ubsan` configure/build/CTest pass with Apple Clang 21.0.0.
-- Test inventory: latest `./dev verify` reports 69 Python tests pass with zero failures or skips; targeted ledger/runner/BOOT-05 and corpus tests pass.
+- Test inventory: latest `./dev verify` reports 82 Python tests pass with zero failures or skips; targeted stress-generator, oracle, and runner suites pass.
 - BOOT-05 evidence: `artifacts/WO-BOOT-05/`; final fresh verification reran all ten required commands. Fuzz seed `12648430` completed 144 invocations in 3.001 seconds; assertion and heap-overflow probes were detected.
 - Strict executor schema generation enumerates all nine frozen acceptance IDs and preserves runtime exact-key and command-evidence validation.
 - BOOT-04 revision 2 remains complete and merged. Its preflight transcripts remain preserved as compressed raw artifacts plus readable copies with trailing whitespace normalized for the required diff check.
@@ -32,5 +36,5 @@
   passed runner validation; the accepted report is retained in per-run evidence.
 - No renderer throughput, memory, or latency result is claimed for M0-01; its
   synthetic corpus is an input baseline, not a representative user corpus.
-- After WO-M0-02: prepare the M0-03 competitor benchmark, then M0-04 evidence
-  packet and stop for its owner gate.
+- After WO-M0-02 is committed: prepare the M0-03 competitor benchmark, then
+  M0-04 evidence packet and stop for its owner gate.

@@ -1,0 +1,270 @@
+{
+  "schema_version": 1,
+  "purpose": "immutable independent test oracle; not SVG conformance or Vexel performance",
+  "renderer": {
+    "name": "librsvg rsvg-convert",
+    "version": "2.62.3",
+    "license": "LGPL-2.1-or-later (Homebrew package metadata)",
+    "upstream": "https://gitlab.gnome.org/GNOME/librsvg",
+    "documentation": [
+      "https://gnome.pages.gitlab.gnome.org/librsvg/devel-docs/product.html",
+      "https://gnome.pages.gitlab.gnome.org/librsvg/Rsvg-2.0/index.html"
+    ],
+    "version_output": "rsvg-convert version 2.62.3\n\nlibraries used:\n  cairo 1.18.4\n  pango 1.58.2\n  harfbuzz 14.3.1\n  fontconfig 2.18.3"
+  },
+  "environment": {
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "architecture": "arm64",
+    "macos_version": "27.0",
+    "model_identifier": "Mac17,14",
+    "chip": "Apple M5 Max",
+    "memory": "64 GB"
+  },
+  "raster": {
+    "width": 256,
+    "height": 256,
+    "format": "PNG"
+  },
+  "fixtures": [
+    {
+      "fixture_id": "clip-path",
+      "source_path": "bench/corpus/fixtures/clip-path.svg",
+      "source_sha256": "1926919653ea115b7fa33874c3f28e087ee893509176ff7afedca3bffcdf7fa9",
+      "png_path": "tests/golden/fixtures/clip-path.png",
+      "png_sha256": "7b220f792eb92fe6b12be7d64d9a0af6306451aaf17629fc3ba83460f7e6a1e8",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "image-embedded-data",
+      "source_path": "bench/corpus/fixtures/image-embedded-data.svg",
+      "source_sha256": "4c91f794ea4f21f958848e3d6e3236c5a6c4edb4d1d0c10da72850e54d12d5b9",
+      "png_path": "tests/golden/fixtures/image-embedded-data.png",
+      "png_sha256": "c1ee821b2cb8b074d6b6492662bf35db174cee159ec3b615a787e6e4235c8e5f",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "metadata-namespaces",
+      "source_path": "bench/corpus/fixtures/metadata-namespaces.svg",
+      "source_sha256": "acb6c5bbea9bd8414b7b7a0fad283a545beb3609b9cc255b471a4b5fb387c734",
+      "png_path": "tests/golden/fixtures/metadata-namespaces.png",
+      "png_sha256": "945c51a81911e37bce11d798df3cb9edbfe3543e465abfc6a32eb3d3af1e9be8",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "metadata-rdf-like",
+      "source_path": "bench/corpus/fixtures/metadata-rdf-like.svg",
+      "source_sha256": "7d5a6af1b235e3fe0c5e13f3acac307d39ff72a738b981e6aa4d8efb1829a72e",
+      "png_path": "tests/golden/fixtures/metadata-rdf-like.png",
+      "png_sha256": "2457939fb217fedcda1ace0f3c9bd0c1dc79387694ecac242da5f7a05bd0cd33",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "namespaces-custom-attributes",
+      "source_path": "bench/corpus/fixtures/namespaces-custom-attributes.svg",
+      "source_sha256": "0ea2323db45c1766602645af9e4f8ad0d2d743337ce55e394dc70c8b3f7f0dd4",
+      "png_path": "tests/golden/fixtures/namespaces-custom-attributes.png",
+      "png_sha256": "33032e75f8dde00162433d58d87b55a437b163f2a1e67b3f6885a373855eb4a0",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "path-arcs",
+      "source_path": "bench/corpus/fixtures/path-arcs.svg",
+      "source_sha256": "b223ca7c97c6aed8c755b4be984668d6d4a07f5d5fa209e8137621509a89175f",
+      "png_path": "tests/golden/fixtures/path-arcs.png",
+      "png_sha256": "df207308c2ce244cc18a754d1c184a73e9a23119a04b417e2bb5e1d77905f6e2",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "path-line-curves",
+      "source_path": "bench/corpus/fixtures/path-line-curves.svg",
+      "source_sha256": "802a63d44517df171682f3676c8c39baa93dd80d2735eba85df0eaba62b5cde7",
+      "png_path": "tests/golden/fixtures/path-line-curves.png",
+      "png_sha256": "2d347877e3dd6e0bac28a34daab4ea914534460939cc8cd06f8c7fbe64c1a458",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "path-relative-commands",
+      "source_path": "bench/corpus/fixtures/path-relative-commands.svg",
+      "source_sha256": "f393af8a0fcb25a450a2f509d8489467af43068b95642c0e0bb83104540993f8",
+      "png_path": "tests/golden/fixtures/path-relative-commands.png",
+      "png_sha256": "3d29debc13817ca85197bef4fb0c8d4e645f4ffa74de132b82e60230ef8e66be",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "shapes-basic",
+      "source_path": "bench/corpus/fixtures/shapes-basic.svg",
+      "source_sha256": "6f546464f23d6cd95be30fe2c98130b84b0f75796e4578b330b0695dcf6de5c7",
+      "png_path": "tests/golden/fixtures/shapes-basic.png",
+      "png_sha256": "debb237b1659fa9200dcd0bfa3d5df3ad660840d15d79afc962d284f1ea49a75",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "shapes-lines-polygons",
+      "source_path": "bench/corpus/fixtures/shapes-lines-polygons.svg",
+      "source_sha256": "96bfb3f921790ec6dad2101d6c7a6431761ab3c2536cce857a7895dbb0965296",
+      "png_path": "tests/golden/fixtures/shapes-lines-polygons.png",
+      "png_sha256": "e58f5cad132034fbcf55fb60719e8c2030ca1eee77f706840b03dac490522d84",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "shapes-rounded",
+      "source_path": "bench/corpus/fixtures/shapes-rounded.svg",
+      "source_sha256": "88e98733851a8204ac3759b0aa4399408b0b8edd0df4b3da601c2c468df14f12",
+      "png_path": "tests/golden/fixtures/shapes-rounded.png",
+      "png_sha256": "3e4bf67a5c99ca3e9d1b5bbbef32536c3153ab6ee2df158bee9fb5375d79ae65",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "stress-long-path",
+      "source_path": "bench/corpus/fixtures/stress-long-path.svg",
+      "source_sha256": "dc2ea0827f61b5acc8b745ff99c76f5b264b55176775f163d8c0cd374dc3de33",
+      "png_path": "tests/golden/fixtures/stress-long-path.png",
+      "png_sha256": "34be4a4ab7b1c110ef83a6e1ea73b2a37ca29585765b980336ab21da17292ac1",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "stress-many-shapes",
+      "source_path": "bench/corpus/fixtures/stress-many-shapes.svg",
+      "source_sha256": "cef2042ad7c16fff868e5193d8610371d410fa0bc83c26ff4e4e364b2e123c3e",
+      "png_path": "tests/golden/fixtures/stress-many-shapes.png",
+      "png_sha256": "9c56d81b9336c111c6119d82e2f2ed10d25a522d004c9c4773661e949dbe9f91",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "stress-nested-groups",
+      "source_path": "bench/corpus/fixtures/stress-nested-groups.svg",
+      "source_sha256": "510f6bf943763b103f39378fa101b79198c002571dd43f283b71776a46b2ae76",
+      "png_path": "tests/golden/fixtures/stress-nested-groups.png",
+      "png_sha256": "19e36fb10ea34d405ed7f5e9a5d35f51c61a3582a0d6104a4a12b7cca5548b8c",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "stress-text-collection",
+      "source_path": "bench/corpus/fixtures/stress-text-collection.svg",
+      "source_sha256": "687ac56a3376a5d500926dc6834ceea0331a7c497fe7d5f5533d1b79b1921276",
+      "png_path": "tests/golden/fixtures/stress-text-collection.png",
+      "png_sha256": "dba55847526bb610de245a725e7dea05a0427cf2bde94f7475bacd14c015967c",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "style-css-class",
+      "source_path": "bench/corpus/fixtures/style-css-class.svg",
+      "source_sha256": "dbb43bd4d8cf5ea828e8ce37a5e082553e5f1933335696eea041d05360b1ca5b",
+      "png_path": "tests/golden/fixtures/style-css-class.png",
+      "png_sha256": "faca5f11412b5c4eb77646bfab33d79018b18ecc0bf8590592701c90dfc23a4f",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "style-gradient",
+      "source_path": "bench/corpus/fixtures/style-gradient.svg",
+      "source_sha256": "1319037adf0546b9cc2265eab056459ebeaf3150a7dec6d6db1a57f64fb48ad8",
+      "png_path": "tests/golden/fixtures/style-gradient.png",
+      "png_sha256": "0edaab83cc44cfbb5c66d958e940c451647e51ba639b6cb9c48e962b28e8c921",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "style-opacity-transform",
+      "source_path": "bench/corpus/fixtures/style-opacity-transform.svg",
+      "source_sha256": "ae592a18c3453d4db7b6af16fa3cb38f6b747ac126ddd6c6a0e2d9544624433f",
+      "png_path": "tests/golden/fixtures/style-opacity-transform.png",
+      "png_sha256": "1b8f41087ff916ad10e76fb42c08ac77e63170b669fa79e9778f9d94eccae1ef",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "style-presentation-attributes",
+      "source_path": "bench/corpus/fixtures/style-presentation-attributes.svg",
+      "source_sha256": "8a4741889fe76bcc26446b8d11b10198d92e65dcaa2bb7fdae1dfc9a44553fa3",
+      "png_path": "tests/golden/fixtures/style-presentation-attributes.png",
+      "png_sha256": "879cc756c309efeb0346a1fd42dd30afd15f662f45bb603fbd7e2d262047ef34",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "text-basic",
+      "source_path": "bench/corpus/fixtures/text-basic.svg",
+      "source_sha256": "48741c4f973924b1d29fc1f86f32e1b48b1fb61207f29e4cd62051e44cce4c91",
+      "png_path": "tests/golden/fixtures/text-basic.png",
+      "png_sha256": "aeea67bf17b127fb07761a3212cf311e01c2d843cc562cb04a2026661c07ef24",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "text-positioning",
+      "source_path": "bench/corpus/fixtures/text-positioning.svg",
+      "source_sha256": "f09f30c074085b2b9c781d77262fe2812f17f5707ed0ba587fa525f53934fd5c",
+      "png_path": "tests/golden/fixtures/text-positioning.png",
+      "png_sha256": "891d0cb16dc8d2ee79b3a6f2c4be5e08d43b04335311ab1c167f41cc50976740",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "text-spans",
+      "source_path": "bench/corpus/fixtures/text-spans.svg",
+      "source_sha256": "97d40453681ac75e58748076076b0be6b98ca1dfdd4e94d6cd1627374b8af949",
+      "png_path": "tests/golden/fixtures/text-spans.png",
+      "png_sha256": "63c8bc13b66337b7a4c6b16e39dd09a7375c49cbf085955bee21155733a480ee",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "use-local-reference",
+      "source_path": "bench/corpus/fixtures/use-local-reference.svg",
+      "source_sha256": "8921e646e3371c5e8f073365c604a45f4402043c6ae2d112d549ec431a9796d5",
+      "png_path": "tests/golden/fixtures/use-local-reference.png",
+      "png_sha256": "0c049b249a2c6654b7cee9d860e67f0c89ec2e5a487c89440b32241eb92dfb4c",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    },
+    {
+      "fixture_id": "viewbox-preserve",
+      "source_path": "bench/corpus/fixtures/viewbox-preserve.svg",
+      "source_sha256": "4fa683ec87a380d4fadb2eb529891be4b26345ba2746d9d9ef97af36c2391577",
+      "png_path": "tests/golden/fixtures/viewbox-preserve.png",
+      "png_sha256": "42fd02ae6c52b0c29d99cc0651ef29389ae6a946970a9eaf399786b0d2cafecb",
+      "width": 256,
+      "height": 256,
+      "license": "MPL-2.0 project-authored test data"
+    }
+  ]
+}

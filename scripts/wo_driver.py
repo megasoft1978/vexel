@@ -155,12 +155,21 @@ def path_matches_rule(path: str, pattern: str) -> bool:
     return PurePosixPath(path).match(pattern)
 
 
-def work_order_path_allowed(path: str, allowed: list[str], protected: list[str]) -> bool:
+def _baseline_seed_path(path: str, wo_id: str | None, baseline: bool) -> bool:
+    return (wo_id == "WO-M0-02" and baseline and
+            (path.startswith("tests/oracle/") or path == "tests/golden/manifest.lock"))
+
+
+def work_order_path_allowed(path: str, allowed: list[str], protected: list[str],
+                            wo_id: str | None = None, baseline: bool = False,
+                            newly_added: bool = False) -> bool:
     if path.startswith("/") or "\\" in path or ".." in PurePosixPath(path).parts:
         return False
-    if any(path_matches_rule(path, pattern) for pattern in FROZEN_PATHS):
+    if (any(path_matches_rule(path, pattern) for pattern in FROZEN_PATHS)
+            and not (_baseline_seed_path(path, wo_id, baseline) and newly_added)):
         return False
-    if any(path_matches_rule(path, pattern) for pattern in protected):
+    seed_addition = _baseline_seed_path(path, wo_id, baseline) and newly_added
+    if any(path_matches_rule(path, pattern) for pattern in protected) and not seed_addition:
         return False
     return any(path_matches_rule(path, pattern) for pattern in allowed)
 
@@ -168,15 +177,28 @@ def work_order_path_allowed(path: str, allowed: list[str], protected: list[str])
 def assert_scope(root: Path, base: str, head: str, body: str,
                  wo_id: str | None = None) -> list[str]:
     allowed, protected = path_rules(body)
-    result = subprocess.run(["git", "diff", "--name-only", "-z", base, head],
+    baseline = (wo_id == "WO-M0-02" and
+                re.search(r"(?m)^baseline: true\s*$", body.split("# Goal", 1)[0]) is not None)
+    baseline_tree = subprocess.run(
+        ["git", "ls-tree", "-r", "--name-only", base, "--",
+         "tests/oracle", "tests/golden/manifest.lock"],
+        cwd=root, capture_output=True, text=True, check=True).stdout if baseline else ""
+    may_seed_baseline = baseline and not baseline_tree.strip()
+    result = subprocess.run(["git", "diff", "--name-status", "-z", "--no-renames", base, head],
                             cwd=root, capture_output=True, check=True)
-    changed = [part.decode("utf-8") for part in result.stdout.split(b"\0") if part]
+    parts = [part.decode("utf-8") for part in result.stdout.split(b"\0") if part]
+    if len(parts) % 2:
+        raise RunnerError("git returned malformed name-status output")
+    records = list(zip(parts[0::2], parts[1::2]))
+    changed = [path for _, path in records]
     frozen_path = f"work/{wo_id}.md" if wo_id else None
     rejected = []
-    for name in changed:
+    for status, name in records:
         if name == frozen_path and _frozen_work_order_unchanged(root, head, name):
             continue
-        if name == frozen_path or not work_order_path_allowed(name, allowed, protected):
+        if name == frozen_path or not work_order_path_allowed(
+                name, allowed, protected, wo_id, baseline,
+                status == "A" and may_seed_baseline):
             rejected.append(name)
     if rejected:
         raise RunnerError("candidate changed disallowed paths: " + ", ".join(rejected))
