@@ -145,6 +145,9 @@ def png_dimensions(data: bytes) -> tuple[int, int]:
         raise BenchError("malformed PNG image data") from exc
     if not inflater.eof or inflater.unused_data or len(decoded) != (width * 4 + 1) * height:
         raise BenchError("malformed PNG pixel data size")
+    row_bytes = width * 4 + 1
+    if any(decoded[row * row_bytes] > 4 for row in range(height)):
+        raise BenchError("malformed PNG row filter")
     return width, height
 
 

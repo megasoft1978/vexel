@@ -6,11 +6,13 @@ import csv
 import hashlib
 import importlib.util
 import json
+import struct
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+import zlib
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -66,6 +68,17 @@ class BenchmarkHarnessTests(unittest.TestCase):
             compare.png_dimensions(png[:-3] + b"bad")
         with self.assertRaises(compare.BenchError):
             compare.png_dimensions(b"not a png")
+        raw = bytearray(1025 * 256)
+        raw[0] = 5
+        def chunk(kind, payload):
+            body = kind + payload
+            return (len(payload).to_bytes(4, "big") + body
+                    + (zlib.crc32(body) & 0xffffffff).to_bytes(4, "big"))
+        ihdr = chunk(b"IHDR", struct.pack(">IIBBBBB", 256, 256, 8, 6, 0, 0, 0))
+        invalid_filter = (b"\x89PNG\r\n\x1a\n" + ihdr
+                          + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+        with self.assertRaisesRegex(compare.BenchError, "row filter"):
+            compare.png_dimensions(invalid_filter)
 
     def test_command_config_rejects_shell_strings_and_unknown_placeholders(self):
         for bad in ("renderer {input}", ["renderer", "{unknown}"], ["renderer", "{input"]):
