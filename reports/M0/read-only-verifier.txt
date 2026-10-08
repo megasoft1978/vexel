@@ -1,1 +1,6 @@
-The local packet validator is a deterministic read-only check of all linked source hashes and counts. The independent Codex review result is recorded by the WO-M0-04 runner under artifacts/runs/WO-M0-04/; this file is not that verdict.
+Fresh isolated Codex read-only review: PASS, no findings.
+It rechecked all 12 source hashes, fixture/stress/trial/availability counts,
+benchmark claims, the five-item owner request, and the open owner decision.
+Verdict: reports/M0/verifier-verdict.json
+The standard runner's earlier false scope finding and task-start diff rationale
+are recorded in reports/M0/runner-review-note.md.

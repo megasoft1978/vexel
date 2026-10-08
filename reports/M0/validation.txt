@@ -1,4 +1,3 @@
-$ python3 reports/M0/validate_packet.py
 PASS schema version
 PASS required count fields
 PASS count values are non-negative integers
@@ -97,4 +96,3 @@ PASS unavailable competitor count
 PASS compatible Vexel render availability
 PASS owner evidence counts explicitly zero
 All source, hash, count, and request checks passed.
-[exit 0]
