@@ -1,12 +1,13 @@
 ---
 id: WO-BOOT-06
-revision: 1
+revision: 2
+supersedes: 1
 status: READY
 milestone: M0
 owner: project-owner
 executor: codex-gpt-6-luna
-base_sha: 6d087941486cc5834369d07eff0058b59866fb78
-spec_sha256: 71620f9467a91276729eacc581d4b05b1ebc092aaac37daceef2cc4b77db0e6c
+base_sha: dfdfab99c062a70016fda7618cda87b305e54287
+spec_sha256: d5e9fe8139e732af4e77de5aec8831dd93e8a410a910665d2ab9c566cd05a570
 parallel_safe: false
 network: false
 ---
@@ -59,12 +60,22 @@ Add deterministic, dependency-free PNG golden comparison tooling that produces s
 - AC-5 Heatmap and JSON output are byte-identical across two identical invocations; evidence `artifacts/WO-BOOT-06/determinism.txt`.
 - AC-6 `./dev verify`, `python3 scripts/ledger.py validate ledger.jsonl`, `python3 scripts/wo_validate.py WO-BOOT-06 --ready`, and `git diff --check` exit 0; evidence `artifacts/WO-BOOT-06/local-checks.txt`.
 
-# Verification sequence
-1. Run `python3 -m unittest tests.test_golden_diff`.
-2. Run the pinned identical-image comparison and verify its JSON; store evidence under the named artifact directory and transient outputs under `.cache/`.
-3. Run tolerance and negative-path tests, including two-run byte determinism.
-4. Run `./dev verify` and the ledger/work-order/diff checks in AC-6.
-5. Confirm `tests/golden/manifest.lock`, every baseline PNG, the corpus manifest, and all oracle files are byte-identical to the task base.
+# Verification commands
+Run these sequentially from the repository root; the full suite must not overlap the benchmark harness tests.
+
+```text
+python3 -m unittest tests.test_golden_diff
+python3 scripts/golden_diff.py --fixture shapes-basic --actual tests/golden/fixtures/shapes-basic.png --report .cache/WO-BOOT-06/identical.json --heatmap .cache/WO-BOOT-06/identical.png --svg-sha256 6f546464f23d6cd95be30fe2c98130b84b0f75796e4578b330b0695dcf6de5c7 --build-sha 1111111111111111111111111111111111111111111111111111111111111111 --scale 1 --frame 0 --font "System Sans" --backend scalar
+python3 -m unittest tests.test_golden_diff.GoldenDiffTests.test_small_channel_difference_on_edge_is_tolerated tests.test_golden_diff.GoldenDiffTests.test_shift_with_zero_tolerance_is_not_tolerated
+python3 -m unittest tests.test_golden_diff.GoldenDiffTests.test_missing_baseline_is_an_error tests.test_golden_diff.GoldenDiffTests.test_bad_crc_and_filter_are_rejected tests.test_golden_diff.GoldenDiffTests.test_svg_metadata_mismatch_is_rejected tests.test_golden_diff.GoldenDiffTests.test_output_path_escape_and_symlink_are_rejected tests.test_golden_diff.GoldenDiffTests.test_existing_output_is_refused
+python3 -m unittest tests.test_golden_diff.GoldenDiffTests.test_report_and_heatmap_are_byte_deterministic
+./dev verify
+python3 scripts/ledger.py validate ledger.jsonl
+python3 scripts/wo_validate.py WO-BOOT-06 --ready
+git diff --check
+```
+
+Afterward confirm every protected baseline/lock/oracle path is unchanged from the task start.
 
 # Non-goals
 No golden creation/update, rendering engine, UI, CI/workflow change, image library dependency, comparison against unavailable renderers, or public performance claim.
