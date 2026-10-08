@@ -1,0 +1,12 @@
+AC-5 command evidence
+
+cmake --preset mac-release — exit 0; Release configured for arm64 / macOS 13.0. See release-configure.txt.
+cmake --build --preset mac-release — exit 0; see release-build.txt.
+python3 scripts/ledger.py validate ledger.jsonl — exit 0; valid ledger: 170 entries.
+python3 scripts/wo_validate.py WO-M2-01 --ready — exit 0; revision 2 spec hash 51539e64c90fe386c14bb76b8a92a4c638c14cc1dcbb7122012b51c95cf23ec2.
+python3 -m json.tool bench/results/WO-M2-01.json — exit 0; formatted output in json-tool.txt.
+git diff --check — exit 0; no whitespace errors.
+
+Release sizes: svgworkbench 97,040 bytes; vexel_base static library 3,504 bytes.
+Arena boundary: 5 chunks, 80 bytes retained payload capacity, 13 bytes used including alignment padding under a 96-byte cap.
+Allocator failure: 6 allocations attempted, 4 frees at destroy, zero live allocations; failure preserved arena statistics.

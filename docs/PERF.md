@@ -82,3 +82,23 @@ injection dispatches directly to its target view, so the native lifecycle
 smoke does not depend on LaunchServices activation. RSS, SVG throughput, and
 renderer latency were not measured. Evidence is in `artifacts/WO-M1-04/` and
 `bench/results/WO-M1-04.json`.
+
+## WO-M2-01 checked base API
+
+The Release `svgworkbench` executable is 97,040 bytes and the base static
+library is 3,504 bytes (Apple Clang 21.0.0.21000334, Apple Silicon arm64,
+macOS 27.0). The deterministic arena boundary test uses 16-byte initial
+chunks and a 96-byte total payload limit: its alignment sequence (1, 2, 4, 8,
+16, 64, 256, 4096) retains 5 chunks with 80 bytes of payload capacity and 13
+used bytes including alignment padding. The injected allocation-failure test
+records 6 allocator calls, 4 frees after destroy, and zero live allocations;
+the failed push leaves arena statistics unchanged.
+
+The base contract test passed in Debug, ASan+UBSan, and UBSan CTest runs. Debug
+CTest also passed the existing CLI smoke (2/2 total). `./dev verify` passed all
+143 Python tests and both Debug CTest cases. The revision-1 attempt's transient
+benchmark sandbox and LaunchServices failures are retained under
+`artifacts/WO-M2-01/r1-attempt/`; the revision-2 rerun passed. No SVG
+throughput, RSS, or performance-improvement claim is made. Detailed output is
+in `artifacts/WO-M2-01/` and the machine-readable result is
+`bench/results/WO-M2-01.json`.

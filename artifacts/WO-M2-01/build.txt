@@ -1,0 +1,12 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
+[1/3] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
+[2/3] Linking C static library libvexel_base.a
+[3/3] Linking C executable base_contract_test

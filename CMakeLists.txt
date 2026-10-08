@@ -40,6 +40,22 @@ find_library(METAL_FRAMEWORK Metal REQUIRED)
 find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
 find_package(Threads REQUIRED)
 target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK} Threads::Threads)
+
+add_library(vexel_base STATIC src/base/base.c)
+target_include_directories(vexel_base PUBLIC src/base)
+set_target_properties(vexel_base PROPERTIES
+    C_STANDARD 17
+    C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO
+)
+
+add_executable(base_contract_test tests/base/test_base.c)
+target_link_libraries(base_contract_test PRIVATE vexel_base)
+set_target_properties(base_contract_test PROPERTIES
+    C_STANDARD 17
+    C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO
+)
 set_target_properties(svgworkbench PROPERTIES
     C_STANDARD 17
     C_STANDARD_REQUIRED YES
@@ -51,7 +67,7 @@ set_target_properties(svgworkbench PROPERTIES
 )
 
 if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
-    target_compile_options(svgworkbench PRIVATE
+    set(VEXEL_STRICT_WARNINGS
         -Wall
         -Wextra
         -Wpedantic
@@ -62,6 +78,9 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
         -Wmissing-prototypes
         -Werror
     )
+    target_compile_options(svgworkbench PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(vexel_base PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(base_contract_test PRIVATE ${VEXEL_STRICT_WARNINGS})
 else()
     message(FATAL_ERROR "vexel requires Clang or GCC for its strict warning profile")
 endif()
@@ -69,9 +88,13 @@ endif()
 if(VEXEL_SANITIZER)
     target_compile_options(svgworkbench PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(svgworkbench PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(vexel_base PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(base_contract_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(base_contract_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
 endif()
 
 include(CTest)
 if(BUILD_TESTING)
     add_test(NAME cli-version COMMAND svgworkbench --version)
+    add_test(NAME base-contract COMMAND base_contract_test)
 endif()

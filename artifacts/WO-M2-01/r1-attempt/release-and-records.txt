@@ -1,0 +1,85 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-release
+[1/2] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
+[2/2] Linking C executable base_contract_test
+valid ledger: 168 entries
+valid WO-M2-01 revision 1 sha256 e353c2d7e33e7996b26f121e4ade353a825af17a4c3c4c508833877a8b32a2a5
+{
+    "work_order": "WO-M2-01",
+    "revision": 1,
+    "machine": "Apple Silicon arm64, macOS 27.0",
+    "compiler": "Apple Clang 21.0.0.21000334",
+    "build": "Debug and Release",
+    "acceptance_status": "blocked_by_executor_environment",
+    "binary": {
+        "release_svgworkbench_bytes": 97040,
+        "release_base_library_bytes": 3560,
+        "rss_bytes": null
+    },
+    "arena_boundary": {
+        "initial_chunk_bytes": 16,
+        "capacity_limit_bytes": 96,
+        "alignments_tested": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            64,
+            256,
+            4096
+        ],
+        "retained_chunks": 5,
+        "payload_capacity_bytes": 80,
+        "used_bytes_including_alignment_padding": 13,
+        "allocation_failure": {
+            "allocator_calls": 6,
+            "frees_after_destroy": 4,
+            "live_allocations_after_destroy": 0,
+            "failed_push_preserved_statistics": true
+        }
+    },
+    "tests": {
+        "debug_ctest_passed": 2,
+        "debug_ctest_total": 2,
+        "asan_ctest_passed": 2,
+        "asan_ctest_total": 2,
+        "ubsan_ctest_passed": 2,
+        "ubsan_ctest_total": 2,
+        "python_total": 143,
+        "python_passed": 133,
+        "python_failures": 8,
+        "python_errors": 2,
+        "python_skipped": 0
+    },
+    "environment_failures": {
+        "benchmark_process_policy_tests_exit_71": 7,
+        "native_platform_driver_tests_launchservices_exit_minus_11": 3
+    },
+    "claims": {
+        "svg_throughput": false,
+        "performance_improvement": false,
+        "rss": false
+    },
+    "evidence": {
+        "debug_build": "artifacts/WO-M2-01/build.txt",
+        "debug_ctest": "artifacts/WO-M2-01/ctest-debug.txt",
+        "full_suite": "artifacts/WO-M2-01/full-suite.txt",
+        "asan": "artifacts/WO-M2-01/asan.txt",
+        "ubsan": "artifacts/WO-M2-01/ubsan.txt",
+        "release_and_records": "artifacts/WO-M2-01/release-and-records.txt"
+    },
+    "implementation_commit": null
+}
+release svgworkbench bytes: 97040
+release base library bytes: 3560
+arena_alignment_boundary: chunks=5 payload_capacity=80 used_bytes=13
+arena_allocator_failure: allocations=6 frees=4 live=0
+base contract tests passed
