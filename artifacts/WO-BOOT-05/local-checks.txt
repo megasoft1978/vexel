@@ -1,6 +1,15 @@
 WO-BOOT-05 revision 3 local checks
+$ python3 scripts/ledger.py validate ledger.jsonl
+exit=0
+valid ledger: 43 entries
 
-- `python3 scripts/ledger.py validate ledger.jsonl`: pass, 38 entries.
-- `git diff --check 0bc1cfdc9f990878f087dfff936d12fb175f4678 HEAD`: pass after preserving the two original blocked-attempt preflight captures as `.raw.gz` and normalizing trailing horizontal whitespace in their readable copies.
-- Frozen work-order path scope (`assert_scope`, base `e0f3a5a3365e58979812d0c004f6c6523698556b`): pass; all changed paths match the BOOT-05 allowlist.
-- Fake-Codex preflight regression: run evidence is under `artifacts/runs/WO-FAKE/<run-id>/`; the prior `artifacts/WO-BOOT-04/codex-preflight.txt` is unchanged, and the new work-order root guard accepts the repository.
+$ git diff --check 0bc1cfdc9f990878f087dfff936d12fb175f4678 HEAD
+exit=0
+
+
+$ changed-path validation
+exit=0
+start=1589f8c38acd3e80df0e381c3f942399636d23f9
+head=d932fa6410ffa0ee3e22803c1b11145ef55ba50a
+changed_paths=41
+root_path_guard=pass
