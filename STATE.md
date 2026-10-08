@@ -1,6 +1,6 @@
 # Project state
 
-- Current work order: `WO-M0-02` is complete and merged to `main` at
+- Completed work order: `WO-M0-02` is merged to `main` at
   `0f24ab6f4a5a9ab6f7ff3846ae3d6339316287a9`. All nine frozen commands pass;
   the read-only review found no remaining code, safety, scope, or test defect.
   It flagged only the ephemeral AC-6 worktree path, normalized in the retained
@@ -20,8 +20,10 @@
 - M0-02 oracle: 24 pinned fixtures at 256x256; re-rendered to temporary files
   with librsvg 2.62.3 in 0.701 seconds, with committed goldens unchanged.
   Renderer evidence and environment details are in `artifacts/WO-M0-02/`.
-- Next: prepare and freeze `WO-M0-03` for the black-box competitor benchmark
-  CLI, then proceed to BOOT-06 and BOOT-07 before the M0-04 owner evidence gate.
+- Current work order: `WO-M0-03` is frozen READY at `work/WO-M0-03.md`
+  (base `cd503d6c348436faa183223d964957235b00a981`).
+- Next after M0-03: BOOT-06, BOOT-07, then prepare the M0-04 evidence packet
+  and stop at its owner gate.
 - Completed work order: `WO-M0-01` was implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
