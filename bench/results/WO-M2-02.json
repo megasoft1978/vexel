@@ -2,8 +2,7 @@
   "work_order": "WO-M2-02",
   "revision": 1,
   "base_sha": "b321f0ce4a2b35b8c38a436b5da59ede92635fe8",
-  "candidate_head_before_changes": "bd0dde8b6cd1aea888c22a3ea794c015d730ce77",
-  "acceptance_status": "machine_checks_passed_pending_independent_review",
+  "acceptance_status": "accepted_and_merged",
   "machine": "Apple Silicon arm64, macOS 27.0",
   "compiler": "Apple Clang 21.0.0.21000334",
   "python": "3.12.8",
@@ -32,8 +31,8 @@
     },
     "asan_fuzz": {
       "seed": 20261009,
-      "iterations": 4146195,
-      "elapsed_seconds": 60.000006,
+      "iterations": 4140212,
+      "elapsed_seconds": 60.000016,
       "sanitizer_status": "clean"
     },
     "dev_verify": {
@@ -56,7 +55,8 @@
     "expat_comparison": "artifacts/WO-M2-02/expat-comparison.json",
     "fuzz": "artifacts/WO-M2-02/fuzz.json",
     "verify": "artifacts/WO-M2-02/verify-host.txt",
-    "release_build": "artifacts/WO-M2-02/release-build.txt"
+    "release_build": "artifacts/WO-M2-02/release-build.txt",
+    "verifier": "artifacts/WO-M2-02/verifier-final/"
   },
   "transient_executor_isolation": {
     "attempts": 3,
@@ -80,5 +80,13 @@
   "release_binary_bytes": {
     "svgworkbench": 97040,
     "vexel_xml_static_library": 16552
+  },
+  "candidate_initial_sha": "bd0dde8b6cd1aea888c22a3ea794c015d730ce77",
+  "candidate_sha": "a170928f4d116ac7db446a06b7b054ce1ae40da0",
+  "independent_review": {
+    "verdict": "pass",
+    "findings": 0,
+    "duration_seconds": 60.47,
+    "evidence": "artifacts/WO-M2-02/verifier-final/"
   }
 }

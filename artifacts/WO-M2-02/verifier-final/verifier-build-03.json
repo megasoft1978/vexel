@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "cmake",
+    "--build",
+    "--preset",
+    "mac-release"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.7065637500054436,
+  "stdout": "[1/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o\n[2/20] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o\n[3/20] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[4/20] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o\n[5/20] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[6/20] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[7/20] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[8/20] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[9/20] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o\n[10/20] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[11/20] Linking C static library libvexel_base.a\n[12/20] Linking C executable base_contract_test\n[13/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o\n[14/20] Linking C static library libvexel_xml.a\n[15/20] Linking C executable bin/xml_tokenizer_cli\n[16/20] Linking C executable bin/xml_tokenizer_fuzz\n[17/20] Linking C executable bin/xml_tokenizer_test\n[18/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[19/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[20/20] Linking C executable bin/svgworkbench\n",
+  "stderr": ""
+}

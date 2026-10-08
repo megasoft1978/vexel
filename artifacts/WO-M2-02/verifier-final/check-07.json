@@ -1,0 +1,11 @@
+{
+  "index": 7,
+  "argv": [
+    "./dev",
+    "asan"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.6959449170099106,
+  "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-asan\nninja: no work to do.\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-asan\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.18 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.02 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.22 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.43 sec\n",
+  "stderr": ""
+}
