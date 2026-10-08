@@ -70,6 +70,37 @@ class BenchmarkHarnessTests(unittest.TestCase):
         self.assertIn(payload, result[1].decode())
         self.assertFalse(marker.exists())
 
+    def test_stream_hashes_cover_truncated_output_and_report_total_bytes(self):
+        stdout = "o" * (compare.OUTPUT_LIMIT + 19)
+        stderr = "e" * (compare.OUTPUT_LIMIT + 23)
+        script = (f"import sys;sys.stdout.write('o'*{len(stdout)});"
+                  f"sys.stderr.write('e'*{len(stderr)})")
+        result = compare.process([sys.executable, "-c", script], 2.0)
+        capture = result[6]
+        self.assertEqual(capture["stdout_bytes"], len(stdout))
+        self.assertEqual(capture["stderr_bytes"], len(stderr))
+        self.assertTrue(capture["stdout_truncated"])
+        self.assertTrue(capture["stderr_truncated"])
+        self.assertEqual(capture["stdout_sha256"], hashlib.sha256(stdout.encode()).hexdigest())
+        self.assertEqual(capture["stderr_sha256"], hashlib.sha256(stderr.encode()).hexdigest())
+        self.assertEqual(len(result[1]), compare.OUTPUT_LIMIT)
+
+    def test_escaped_descendant_cannot_hold_output_pipes_past_cleanup(self):
+        marker = self.cache / "escaped-child-finished"
+        child = ("import pathlib,time;time.sleep(.3);"
+                 f"pathlib.Path({str(marker)!r}).write_text('done')")
+        parent = ("import subprocess,sys;subprocess.Popen([sys.executable,'-c',"
+                  f"{child!r}],start_new_session=True)")
+        result = compare.process([sys.executable, "-c", parent], 1.0)
+        self.assertEqual(result[0], 0)
+        self.assertEqual(result[4], "output pipe remained open after child exit")
+        self.assertLess(result[3], 1.0)
+        import time
+        deadline = time.monotonic() + 1.0
+        while not marker.exists() and time.monotonic() < deadline:
+            time.sleep(.01)
+        self.assertTrue(marker.exists())
+
     def test_fixture_tampering_is_detected_in_isolated_snapshot(self):
         import shutil
         with tempfile.TemporaryDirectory(dir=self.cache) as folder:
@@ -140,7 +171,10 @@ class BenchmarkHarnessTests(unittest.TestCase):
                 if not valid:
                     data = b"malformed"
                 Path(argv[-1]).write_bytes(data)
-            return code, b"out", b"err", .01, error, None
+            capture = {"stdout_bytes": 3, "stdout_truncated": False,
+                       "stdout_sha256": compare.sha(b"out"), "stderr_bytes": 3,
+                       "stderr_truncated": False, "stderr_sha256": compare.sha(b"err")}
+            return code, b"out", b"err", .01, error, None, capture
         with mock.patch.object(compare, "process", side_effect=fake_process):
             return compare.run_one(self.adapter, self.fixture, self.cache, "cold-process", 1)
 

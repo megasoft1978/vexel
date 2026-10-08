@@ -12,13 +12,13 @@ import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import selectors
 import signal
 import shutil
 import statistics
 import struct
 import subprocess
 import sys
-import threading
 import time
 import zlib
 
@@ -38,7 +38,8 @@ CSV_FIELDS = (
     "record_type", "trial_id", "adapter_id", "task", "fixture_id", "fixture_sha256", "condition",
     "trial_index", "status", "exit_code", "elapsed_seconds", "peak_rss_bytes",
     "output_path", "output_size", "output_sha256", "stdout_preview",
-    "stdout_sha256", "stderr_preview", "stderr_sha256", "argv_json", "error",
+    "stdout_bytes", "stdout_truncated", "stdout_sha256", "stderr_preview",
+    "stderr_bytes", "stderr_truncated", "stderr_sha256", "argv_json", "error",
     "latency_valid_count", "latency_median", "latency_p95_nearest_rank",
     "rss_valid_count", "rss_median", "rss_p95_nearest_rank",
 )
@@ -220,52 +221,84 @@ def adapter_list(config: Path | None, auto: bool) -> list[dict]:
     return adapters
 
 
-def process(argv: list[str], timeout: float) -> tuple[int | None, bytes, bytes, float, str | None, int | None]:
-    start = time.monotonic()
-    try:
-        proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, shell=False, start_new_session=True)
-        buffers = [bytearray(), bytearray()]
-        def drain(pipe, buffer):
-            while True:
-                block = pipe.read(4096)
-                if not block:
-                    break
-                remaining = OUTPUT_LIMIT - len(buffer)
-                if remaining > 0:
-                    buffer.extend(block[:remaining])
-        readers = [threading.Thread(target=drain, args=(proc.stdout, buffers[0]), daemon=True),
-                   threading.Thread(target=drain, args=(proc.stderr, buffers[1]), daemon=True)]
-        for reader in readers:
-            reader.start()
-        try:
-            proc.wait(timeout=timeout)
-            code, error = proc.returncode, None
-        except subprocess.TimeoutExpired:
+def _drain_process(proc: subprocess.Popen, timeout: float, buffers: list[bytearray],
+                   digests: list, totals: list[int], truncated: list[bool]) -> tuple[int, str | None]:
+    selector = selectors.DefaultSelector()
+    streams = (proc.stdout, proc.stderr)
+    for index, stream in enumerate(streams):
+        os.set_blocking(stream.fileno(), False)
+        selector.register(stream, selectors.EVENT_READ, index)
+    deadline = time.monotonic() + timeout
+    cleanup_deadline = None
+    error = None
+    while proc.poll() is None or selector.get_map():
+        now = time.monotonic()
+        if proc.poll() is None and now >= deadline:
+            error, cleanup_deadline = "timeout", now + 0.25
             try:
                 os.killpg(proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
-            proc.wait()
-            code, error = None, "timeout"
-        # Adapters may fork helpers; do not leave descendants holding pipes or
-        # continuing work after the measured process returns.
-        try:
-            os.killpg(proc.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        for reader in readers:
-            reader.join()
-        proc.stdout.close()
-        proc.stderr.close()
-        out, err = bytes(buffers[0]), bytes(buffers[1])
-        # macOS resource usage is reported by wait4 by Python's subprocess internally,
-        # but portable stdlib APIs do not expose per-process peak RSS. Preserve null.
-        rss = None
+        if proc.poll() is not None and cleanup_deadline is None:
+            cleanup_deadline = now + 0.25
+        if cleanup_deadline is not None and now >= cleanup_deadline and selector.get_map():
+            error = error or "output pipe remained open after child exit"
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            for key in list(selector.get_map().values()):
+                selector.unregister(key.fileobj)
+                key.fileobj.close()
+            break
+        wait = 0.05 if cleanup_deadline is not None else min(0.05, max(0.0, deadline - now))
+        for key, _ in selector.select(wait):
+            index = key.data
+            try:
+                block = os.read(key.fd, 4096)
+            except BlockingIOError:
+                continue
+            if not block:
+                selector.unregister(key.fileobj)
+                key.fileobj.close()
+                continue
+            digests[index].update(block)
+            totals[index] += len(block)
+            room = OUTPUT_LIMIT - len(buffers[index])
+            if room > 0:
+                buffers[index].extend(block[:room])
+            if len(block) > max(0, room):
+                truncated[index] = True
+    code = proc.wait()
+    for stream in streams:
+        if not stream.closed:
+            stream.close()
+    selector.close()
+    return code, error
+
+
+def process(argv: list[str], timeout: float) -> tuple[int | None, bytes, bytes, float,
+                                                       str | None, int | None, dict]:
+    start = time.monotonic()
+    buffers = [bytearray(), bytearray()]
+    digests = [hashlib.sha256(), hashlib.sha256()]
+    totals = [0, 0]
+    truncated = [False, False]
+    error = None
+    code = None
+    try:
+        proc = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, shell=False, start_new_session=True)
+        code, error = _drain_process(proc, timeout, buffers, digests, totals, truncated)
     except OSError as exc:
-        out, err, code, error, rss = b"", b"", None, f"launch failed: {exc}", None
+        error = f"launch failed: {exc}"
+    # Per-child peak RSS is unavailable through the bounded standard-library interface.
+    rss = None
     elapsed = time.monotonic() - start
-    return code, out[:OUTPUT_LIMIT], err[:OUTPUT_LIMIT], elapsed, error, rss
+    capture = {"stdout_bytes": totals[0], "stdout_truncated": truncated[0],
+               "stdout_sha256": digests[0].hexdigest(), "stderr_bytes": totals[1],
+               "stderr_truncated": truncated[1], "stderr_sha256": digests[1].hexdigest()}
+    return code, bytes(buffers[0]), bytes(buffers[1]), elapsed, error, rss, capture
 
 
 def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: int) -> dict:
@@ -282,7 +315,7 @@ def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: in
                   "width": str(DIMENSION), "height": str(DIMENSION)}
         argv = [re.sub(r"\{(input|output|width|height)\}", lambda m: values[m.group(1)], x)
                 for x in validate_command(adapter["render_argv"])]
-        code, out, err, elapsed, error, rss = process(argv, adapter["timeout_seconds"])
+        code, out, err, elapsed, error, rss, capture = process(argv, adapter["timeout_seconds"])
     except BenchError as exc:
         code, out, err, elapsed, rss, error = None, b"", b"", 0.0, None, str(exc)
     status = "passed" if error is None and code == 0 else "failed"
@@ -303,8 +336,12 @@ def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: in
             "status": status, "exit_code": code, "elapsed_seconds": round(elapsed, 9),
             "peak_rss_bytes": rss, "output_path": str(output.relative_to(ROOT)) if output_hash else None,
             "output_size": output_size, "output_sha256": output_hash,
-            "stdout_preview": out[:PREVIEW_LIMIT].decode("utf-8", "replace"), "stdout_sha256": sha(out),
-            "stderr_preview": err[:PREVIEW_LIMIT].decode("utf-8", "replace"), "stderr_sha256": sha(err),
+            "stdout_preview": out[:PREVIEW_LIMIT].decode("utf-8", "replace"),
+            "stdout_bytes": capture["stdout_bytes"], "stdout_truncated": capture["stdout_truncated"],
+            "stdout_sha256": capture["stdout_sha256"],
+            "stderr_preview": err[:PREVIEW_LIMIT].decode("utf-8", "replace"),
+            "stderr_bytes": capture["stderr_bytes"], "stderr_truncated": capture["stderr_truncated"],
+            "stderr_sha256": capture["stderr_sha256"],
             "argv": argv, "error": error}
 
 
@@ -342,13 +379,13 @@ def machine_metadata() -> dict:
     memory = None
     if sys.platform == "darwin":
         try:
-            code, out, _, _, _, _ = process(["/usr/sbin/sysctl", "-n", "hw.model"], 2.0)
+            code, out, _, _, _, _, _ = process(["/usr/sbin/sysctl", "-n", "hw.model"], 2.0)
             if code == 0:
                 model = out.decode("ascii", "replace").strip() or "unavailable"
         except OSError:
             pass
         try:
-            code, out, _, _, _, _ = process(["/usr/sbin/sysctl", "-n", "hw.memsize"], 2.0)
+            code, out, _, _, _, _, _ = process(["/usr/sbin/sysctl", "-n", "hw.memsize"], 2.0)
             if code == 0:
                 memory = int(out.decode("ascii").strip())
         except (OSError, ValueError):
@@ -412,13 +449,15 @@ def probe_adapters(adapters: list[dict]) -> list[dict]:
                                  "reason": "executable not found"})
             continue
         argv = [executable, *adapter["version_argv"]]
-        code, out, err, elapsed, error, _ = process(
+        code, out, err, elapsed, error, _, capture = process(
             argv, min(float(adapter["timeout_seconds"]), 10.0))
         adapter["resolved_path"] = str(Path(executable).resolve())
         adapter["version"] = (out or err).decode("utf-8", "replace").strip() if code == 0 else None
-        adapter["version_sha256"] = sha(out or err) if code == 0 else None
+        adapter["version_sha256"] = (capture["stdout_sha256"] if capture["stdout_bytes"]
+                                      else capture["stderr_sha256"]) if code == 0 else None
         adapter["version_probe"] = {"argv": argv, "exit_code": code,
-                                    "elapsed_seconds": round(elapsed, 9), "error": error}
+            "elapsed_seconds": round(elapsed, 9), "error": error,
+            **capture}
         availability.append({"id": adapter["id"], "available": True,
                               "render_available": bool(adapter["render_argv"]),
                               "reason": None if adapter["render_argv"]
@@ -428,18 +467,22 @@ def probe_adapters(adapters: list[dict]) -> list[dict]:
 
 def probe_vexel(run: bool, trials: list[dict], summary: list[dict]) -> dict:
     path = ROOT / "build/mac-debug/bin/svgworkbench"
-    result = {"available": path.is_file(), "argv": None, "exit_code": None,
+    result = {"available": None, "argv": None, "exit_code": None,
               "elapsed_seconds": None, "version": None, "reason": None,
               "render_available": False,
               "render_unavailable_reason": "Vexel CLI has no compatible SVG render command"}
-    if not path.is_file():
+    if not run:
+        result["reason"] = "smoke mode does not launch the Vexel CLI; use --run for a version probe"
+    elif not path.is_file():
+        result["available"] = False
         result["reason"] = "Vexel CLI build is missing"
-    elif run:
+    else:
+        result["available"] = True
         argv = [str(path), "--version"]
         observations = []
         first_output = b""
         for index in range(1, TRIALS + 1):
-            code, out, err, elapsed, error, rss = process(argv, 10.0)
+            code, out, err, elapsed, error, rss, capture = process(argv, 10.0)
             if index == 1:
                 first_output = out or err
             observations.append({"trial_id": f"vexel:cli-version:{index}", "adapter_id": "vexel",
@@ -449,8 +492,13 @@ def probe_vexel(run: bool, trials: list[dict], summary: list[dict]) -> dict:
                 "exit_code": code, "elapsed_seconds": round(elapsed, 9), "peak_rss_bytes": rss,
                 "output_path": None, "output_size": None, "output_sha256": None,
                 "stdout_preview": out[:PREVIEW_LIMIT].decode("utf-8", "replace"),
-                "stdout_sha256": sha(out), "stderr_preview": err[:PREVIEW_LIMIT].decode("utf-8", "replace"),
-                "stderr_sha256": sha(err), "argv": argv, "error": error})
+                "stdout_bytes": capture["stdout_bytes"],
+                "stdout_truncated": capture["stdout_truncated"],
+                "stdout_sha256": capture["stdout_sha256"],
+                "stderr_preview": err[:PREVIEW_LIMIT].decode("utf-8", "replace"),
+                "stderr_bytes": capture["stderr_bytes"],
+                "stderr_truncated": capture["stderr_truncated"],
+                "stderr_sha256": capture["stderr_sha256"], "argv": argv, "error": error})
         trials.extend(observations)
         summary.append({"adapter_id": "vexel", "task": "cli-version-probe", "fixture_id": None,
                         "condition": "process-cold",
