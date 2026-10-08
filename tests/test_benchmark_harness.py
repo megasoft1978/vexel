@@ -30,7 +30,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
         self.meta, self.records = compare.load_corpus()
         self.fixture = self.records["shapes-basic"]
         self.adapter = {"id": "fake", "path": sys.executable,
-                        "render_argv": [sys.executable, "-c", "pass", "{output}"],
+                        "render_argv": [sys.executable, "-c", "pass", "{input}",
+                                       "{width}", "{height}", "{output}"],
                         "timeout_seconds": 1.0}
 
     def tearDown(self):
@@ -44,6 +45,20 @@ class BenchmarkHarnessTests(unittest.TestCase):
         for record in records.values():
             self.assertEqual(compare.sha(Path(record["path_abs"]).read_bytes()), record["sha256"])
 
+    def test_fixture_preflight_rejects_external_resource_references(self):
+        compare.validate_fixture_resources(
+            b'<svg xmlns="http://www.w3.org/2000/svg"><use href="#local"/></svg>')
+        compare.validate_fixture_resources(
+            b'<svg xmlns="http://www.w3.org/2000/svg"><image href="data:image/png;base64,AA=="/></svg>')
+        for fixture in (
+                b'<svg><image href="file:///private/document.png"/></svg>',
+                b'<svg><image href="external.svg"/></svg>',
+                b'<svg><style>@import "https://example.invalid/a.css";</style></svg>',
+                b'<svg><rect style="fill:url(file:///private/paint.svg#p)"/></svg>',
+                b'<!DOCTYPE svg SYSTEM "file:///private/external.dtd"><svg/>'):
+            with self.subTest(fixture=fixture), self.assertRaises(compare.BenchError):
+                compare.validate_fixture_resources(fixture)
+
     def test_report_does_not_claim_available_host_metadata_is_missing(self):
         metadata = {"hardware_model": "Mac17,14", "memory_bytes": 68_719_476_736}
         report = compare.build_report("smoke", metadata, self.meta, self.records,
@@ -52,7 +67,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
                              for item in report["limitations"]))
 
     def test_render_executable_must_match_version_probe(self):
-        adapter = {"render_argv": [sys.executable, "--input", "{input}"]}
+        adapter = {"render_argv": [sys.executable, "--input", "{input}", "--output", "{output}",
+                                   "--width", "{width}", "--height", "{height}"]}
         compare.validate_render_executable(adapter, sys.executable)
         adapter["render_argv"][0] = "/usr/bin/true"
         with self.assertRaisesRegex(compare.BenchError, "differs from the version-probed"):
@@ -99,6 +115,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
         for bad in ("renderer {input}", ["renderer", "{unknown}"], ["renderer", "{input"]):
             with self.subTest(bad=bad), self.assertRaises(compare.BenchError):
                 compare.validate_command(bad)
+        with self.assertRaisesRegex(compare.BenchError, "must use all task placeholders"):
+            compare.validate_render_placeholders(["renderer", "{input}", "{output}"])
 
     def test_shell_metacharacters_remain_one_argv_value(self):
         marker = self.cache / "shell-injection-marker"
@@ -177,7 +195,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
 
     def test_failed_or_empty_version_probe_disables_render_trials(self):
         adapter = {"id": "fake", "path": sys.executable,
-                   "version_argv": ["--version"], "render_argv": [sys.executable, "{input}"],
+                   "version_argv": ["--version"],
+                   "render_argv": [sys.executable, "{input}", "{output}", "{width}", "{height}"],
                    "timeout_seconds": 1.0}
         capture = {"stdout_bytes": 0, "stdout_truncated": False,
                    "stdout_sha256": compare.sha(b""), "stderr_bytes": 0,
@@ -222,7 +241,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=self.cache) as folder:
             path = Path(folder) / "adapters.json"
             adapters = [{"id": f"fake-{index}", "path": sys.executable,
-                         "version_argv": ["--version"], "render_argv": ["renderer"],
+                         "version_argv": ["--version"],
+                         "render_argv": ["renderer", "{input}", "{output}", "{width}", "{height}"],
                          "timeout_seconds": 1.0}
                         for index in range(compare.MAX_ADAPTERS + 1)]
             path.write_text(json.dumps({"schema_version": 1, "adapters": adapters}))
@@ -313,7 +333,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
 
     def test_real_timeout_terminates_child_and_fails_trial(self):
         adapter = {**self.adapter,
-                   "render_argv": [sys.executable, "-c", "import time;time.sleep(10)", "{output}"],
+                   "render_argv": [sys.executable, "-c", "import time;time.sleep(10)",
+                                  "{input}", "{width}", "{height}", "{output}"],
                    "timeout_seconds": 0.1}
         trial = compare.run_one(adapter, self.fixture, self.cache, "cold-process", 1)
         self.assertEqual(trial["status"], "failed")

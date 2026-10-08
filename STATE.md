@@ -27,8 +27,8 @@
   process-fork isolation through macOS sandbox-exec, and reliable adapter
   version gating. The Codex
   executor could not write linked worktree Git metadata; host orchestration
-  records the candidate commits. Latest local verification reports 111 tests
-  passed with zero failures, errors, or skips; 26 focused tests pass. An
+  records the candidate commits. Latest local verification reports 112 tests
+  passed with zero failures, errors, or skips; 27 focused tests pass. An
   independent review is checking the actual task-start diff; the normal
   verifier diff includes the unchanged frozen work order because its declared
   base predates the work-order freeze commit.

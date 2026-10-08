@@ -22,9 +22,10 @@ inspect, fetch, install, or copy renderer source. No third-party algorithm or
 renderer dependency was added. The offline test renderer is project-authored
 Python test code and emits a deterministic PNG; it is not a competitor result.
 Adapter processes use macOS's built-in `sandbox-exec` with process forks and
-network access denied. Each trial can write only its designated `.cache` PNG,
-with a 2 MiB file-size limit; configuration is capped at eight adapters. This
-prevents detached trial work, external resource access, sidecar creation, and
-writes outside the bounded output file. No package or runtime dependency was
-added; adapters that require subprocess helpers or external resources report
-failed trials explicitly.
+network access denied. Pinned SVG fixtures are parsed before use; external
+resource references, stylesheet imports, and XML external declarations are
+rejected. Configured render commands must receive the input, output, width, and
+height placeholders. Each trial can write only its designated `.cache` PNG,
+with a 2 MiB file-size limit; configuration is capped at eight adapters. No
+package or runtime dependency was added; adapters that require subprocess
+helpers or external resources report failed trials explicitly.

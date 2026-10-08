@@ -19,8 +19,11 @@ comparison tasks use the same three fixtures (`shapes-basic`,
 compatible renderer. It launches five fresh processes for each fixture and
 condition, records raw trials, and reports median and nearest-rank p95 only
 when five valid observations exist. `cold-process` describes process launch;
-the harness does not evict filesystem caches. Commands are argv arrays with
-strict placeholders and bounded time, capture, and output sizes.
+the harness does not evict filesystem caches. Commands are argv arrays that
+must receive `{input}`, `{output}`, `{width}`, and `{height}`; time, capture,
+and output sizes are bounded. Before each run, the harness parses the pinned
+SVGs and rejects external references, stylesheet imports, and XML external
+declarations.
 Adapters run under the macOS sandbox with process forks and network access
 denied. Writes are limited to the trial's designated output file under
 `.cache`, capped at 2 MiB; at most eight adapters can be configured. Renderers

@@ -21,6 +21,7 @@ import struct
 import subprocess
 import sys
 import time
+import xml.etree.ElementTree as ET
 import zlib
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -96,6 +97,7 @@ def load_corpus() -> tuple[dict, dict[str, dict]]:
         data = path.read_bytes()
         if sha(data) != rec.get("sha256"):
             raise BenchError(f"pinned fixture hash mismatch: {rec.get('fixture_id')}")
+        validate_fixture_resources(data)
         if rec.get("fixture_id") in found:
             raise BenchError("duplicate fixture id")
         found[rec["fixture_id"]] = {**rec, "path_abs": str(path.resolve())}
@@ -226,6 +228,37 @@ def validate_command(command: object) -> list[str]:
     return command
 
 
+def validate_render_placeholders(command: list[str]) -> None:
+    used = {name for item in command for name in re.findall(r"\{(input|output|width|height)\}", item)}
+    if used != PLACEHOLDERS:
+        missing = ", ".join(sorted(PLACEHOLDERS - used))
+        raise BenchError(f"render argv must use all task placeholders; missing: {missing}")
+
+
+def validate_fixture_resources(data: bytes) -> None:
+    if b"<!DOCTYPE" in data.upper() or b"<?XML-STYLESHEET" in data.upper():
+        raise BenchError("external XML declarations are not allowed in benchmark fixtures")
+    try:
+        root = ET.fromstring(data)
+    except ET.ParseError as exc:
+        raise BenchError("benchmark fixture is not well-formed XML") from exc
+    for element in root.iter():
+        values = list(element.attrib.values())
+        if element.text:
+            values.append(element.text)
+        for name, value in element.attrib.items():
+            if name.rsplit("}", 1)[-1].lower() in {"href", "src"}:
+                target = value.strip().lower()
+                if not target.startswith("#") and not target.startswith("data:image/"):
+                    raise BenchError("external SVG resource references are not allowed")
+        text = " ".join(values)
+        if re.search(r"@import\b", text, re.IGNORECASE):
+            raise BenchError("external SVG stylesheet imports are not allowed")
+        for match in re.finditer(r"url\(\s*(['\"]?)(.*?)\1\s*\)", text, re.IGNORECASE):
+            if not match.group(2).strip().startswith("#"):
+                raise BenchError("external SVG resource references are not allowed")
+
+
 def safe_cache_target(value: str, cache: Path) -> Path:
     p = Path(value)
     if not p.is_absolute():
@@ -278,6 +311,8 @@ def adapter_list(config: Path | None, auto: bool) -> list[dict]:
                 raise BenchError("adapter id must be a safe filename component")
             validate_command(item["version_argv"])
             validate_command(item["render_argv"])
+            if item["render_argv"]:
+                validate_render_placeholders(item["render_argv"])
             if not isinstance(item["timeout_seconds"], (int, float)) or not 0 < item["timeout_seconds"] <= TIMEOUT:
                 raise BenchError("adapter timeout must be between 0 and 60 seconds")
             adapters.append({**item, "source": "config"})
@@ -300,6 +335,8 @@ def validate_render_executable(adapter: dict, version_executable: str) -> None:
     command = adapter["render_argv"]
     if not command:
         return
+    if adapter.get("source") != "offline-self-test":
+        validate_render_placeholders(command)
     value = command[0]
     if "{" in value or "}" in value:
         raise BenchError("render argv must begin with its version-probed executable")
@@ -412,8 +449,11 @@ def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: in
     try:
         values = {"input": fixture["path_abs"], "output": str(output),
                   "width": str(DIMENSION), "height": str(DIMENSION)}
+        command = validate_command(adapter["render_argv"])
+        if adapter.get("source") != "offline-self-test":
+            validate_render_placeholders(command)
         argv = [re.sub(r"\{(input|output|width|height)\}", lambda m: values[m.group(1)], x)
-                for x in validate_command(adapter["render_argv"])]
+                for x in command]
         code, out, err, elapsed, error, rss, capture = process(
             argv, adapter["timeout_seconds"], output)
     except BenchError as exc:
@@ -691,7 +731,7 @@ def build_report(mode: str, metadata: dict, corpus: dict, records: dict[str, dic
                 "adapter_timeout_max_seconds": TIMEOUT, "stdout_stderr_capture_bytes": OUTPUT_LIMIT,
             "preview_bytes": PREVIEW_LIMIT, "png_max_bytes": PNG_LIMIT,
                 "dimensions": [DIMENSION, DIMENSION],
-                "process_policy": "sandbox-exec allow default, deny process-fork"},
+                "process_policy": "sandbox-exec denies network and process forks; writes limited to designated PNG; fixture references prevalidated"},
             "corpus": corpus, "fixtures": fixtures, "adapters": adapter_records,
             "availability": availability, "vexel_version_probe": probe,
             "trials": trials, "summary": summary, "limitations": limitations}
