@@ -20,23 +20,19 @@
 - M0-02 oracle: 24 pinned fixtures at 256x256; re-rendered to temporary files
   with librsvg 2.62.3 in 0.701 seconds, with committed goldens unchanged.
   Renderer evidence and environment details are in `artifacts/WO-M0-02/`.
-- Current work order: `WO-M0-03` is frozen READY at `work/WO-M0-03.md`
-  (base `cd503d6c348436faa183223d964957235b00a981`).
-- WO-M0-03 candidate contains fixes for stable smoke availability, full-stream
-  hashes, PNG format validation, bounded exact-path output writes, network and
-  process-fork isolation through macOS sandbox-exec, and reliable adapter
-  version gating. The Codex
-  executor could not write linked worktree Git metadata; host orchestration
-  records the candidate commits. Latest local verification reports 113 tests
-  passed with zero failures, errors, or skips; 28 focused tests pass. An
-  independent review is checking the actual task-start diff; the normal
-  verifier diff includes the unchanged frozen work order because its declared
-  base predates the work-order freeze commit.
-- Smoke verified all 24 corpus hashes; Inkscape and Donner are unavailable, and
-  Vexel has no render command. No render comparison is claimed. Evidence is in
-  `artifacts/WO-M0-03/` and `bench/results/WO-M0-03.*`.
-- Next after M0-03: BOOT-06, BOOT-07, then prepare the M0-04 evidence packet
-  and stop at its owner gate.
+- Accepted candidate: `WO-M0-03` is ready to fast-forward merge at
+  `33d946fac5301bf88e1181b8e494525256c310f7`. Its harness validates pinned SVG
+  fixtures, requires all four render-task placeholders, restricts adapter
+  output and process access, and records recoverable JSON/CSV results.
+- WO-M0-03 verification: 113 full tests and 28 focused tests pass with zero
+  failures, errors, or skips; ASan/UBSan CTest passes 1/1. Smoke verified all
+  24 corpus fixture hashes. Inkscape and Donner are unavailable, and Vexel has
+  no compatible render command, so no renderer comparison is claimed. The
+  fresh read-only review passed with no findings. Evidence is in
+  `artifacts/WO-M0-03/`, `artifacts/runs/WO-M0-03/`, and
+  `bench/results/WO-M0-03.*`.
+- Next: BOOT-06, then BOOT-07, then prepare the M0-04 evidence packet and stop
+  at its owner gate.
 - Completed work order: `WO-M0-01` was implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
