@@ -1,8 +1,8 @@
 # Project state
 
 - Current work order: `WO-M0-02` has a corrected candidate on
-  `wo/WO-M0-02`; latest candidate commit is recorded in the M0-02 handoff
-  evidence. Do not merge yet. The second read-only review found unstreamed
+  `wo/WO-M0-02` at `1a45004c96873b643f35427ba2766e88ba020273`. Do not merge
+  yet. The second read-only review found unstreamed
   semantic output, an invalid embedded image, and stale AC-6 worktree evidence.
   All three findings have local corrective changes and fresh machine evidence.
   The frozen verifier budget of two rounds is exhausted, so the corrected
