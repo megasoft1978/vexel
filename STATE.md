@@ -1,6 +1,6 @@
 # Project state
 
-- Current work order: `WO-BOOT-05` (next; ready order not yet drafted).
+- Current work order: `WO-BOOT-05` revision 1 (READY; planning commit pending before runner start).
 - Last accepted implementation commit: `05dc456a90ef67a8d9a1f8344fd52fe000f1af9c` (`fix: parse complete work order path rules`); final closeout is on `main` after fast-forward.
 - Working branch: `main`; BOOT-04 revision 2 is verified and merged.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
@@ -10,6 +10,6 @@
 - BOOT-04 revision 2 is complete: frozen work-order validation, guarded task worktrees, JSONL session caching, resume identity checks, executor report validation, read-only exact-commit verification, path guards, and fake-Codex success/failure coverage. The owner-approved CLI amendment is documented in `docs/adr/0003-codex-cli-compatibility-amendment.md`.
 - Installed CLI: `codex-cli 0.160.1`; executor preflight passes the owner-approved invocation contract. Approval bypass limitations are documented in the ADR.
 - Latest checks: 37 targeted tests; fresh exact-commit verification ran all seven frozen commands, 43 full-suite tests, actionlint, and a read-only review with `verdict=pass`.
-- Next: draft BOOT-05 from the r4 test/sanitizer/fuzz requirements, then run it through the BOOT-04 runner.
+- Next: commit the frozen BOOT-05 work order and ready ledger event, then execute it through `scripts/wo-run.sh`.
 
 Resume by reading `AGENTS.md`, this file, the active work order, and the r4 operating model. Preserve the owner-provided `OWNER-DIRECTIVES.md`.
