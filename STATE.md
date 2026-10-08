@@ -14,5 +14,5 @@
 - The three earlier review failures and the final passing review are retained in `artifacts/WO-BOOT-05/reviews/` and ignored per-run evidence under `artifacts/runs/WO-BOOT-05/`. The final review reported 52 tests passing, zero failures or skips; all ten commands passed.
 - No hosted GitHub workflow run was available. Initial Release CLI baseline remains 33,568 bytes; median `--version` latency 1.910 ms over 31 runs; max RSS 1,884,160 bytes (single run).
 - Hardening work order source `SECURITY-FINDINGS.md` is frozen by SHA-256 `a156b5187b6741385a1fcfe31a8330e0ac257120c8f963ddc342f3fb732dfc92`; its READY spec hash is recorded in `work/WO-BOOT-HARDEN-01.md`.
-- Hardening checks: 35 focused runner tests and 56 full fast tests pass, with zero failures/skips; workspace-write default, read-only verifier, frozen source snapshot, and unconditional hard-deny path tests pass.
+- Hardening checks: 36 focused runner tests and 57 full fast tests pass, with zero failures/skips; workspace-write default, read-only verifier, frozen source snapshot, and candidate/root hard-deny path tests pass.
 - Next after hardening acceptance: M0-01 corpus provenance/fetch. Continue through M0-04 and stop for its owner gate.

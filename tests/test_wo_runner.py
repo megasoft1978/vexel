@@ -147,6 +147,14 @@ class RunnerPrimitiveTests(unittest.TestCase):
         with self.assertRaisesRegex(wo_driver.RunnerError, "resume:--output-last-message"):
             wo_driver.preflight("fake", fake)
 
+    def test_resume_help_may_omit_inherited_short_sandbox_alias(self) -> None:
+        help_text = " ".join(wo_driver.EXEC_REQUIRED)
+        def fake(args, **kwargs):
+            if args[-1] == "--version": return SimpleNamespace(stdout="fake", stderr="")
+            result = help_text if args[2] != "resume" else help_text.replace(" -s ", " ")
+            return SimpleNamespace(stdout=result, stderr="")
+        self.assertEqual(wo_driver.preflight("fake", fake)[0], "fake")
+
     def test_driver_rejects_non_darwin_before_codex(self) -> None:
         with patch.object(wo_driver.sys, "platform", "linux"):
             with contextlib.redirect_stderr(io.StringIO()):
@@ -269,6 +277,19 @@ class RunnerPrimitiveTests(unittest.TestCase):
                 wo_driver.assert_scope(root, base, candidate,
                     "# Files allowed to touch\n- `**`\n- `work/**`\n- `tests/**`\n"
                     "- `bench/**`\n- `OWNER-DIRECTIVES.md`\n", "WO-FAKE")
+
+    def test_root_scope_hard_denies_frozen_paths_under_broad_allowlist(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+            body = ("# Files allowed to touch\n- `**`\n- `work/**`\n- `tests/**`\n"
+                    "- `bench/**`\n- `OWNER-DIRECTIVES.md`\n")
+            for relpath in ("work/WO-OTHER.md", "tests/oracle/frozen.json",
+                            "tests/golden/manifest.lock", "bench/corpus/manifest.lock",
+                            "OWNER-DIRECTIVES.md"):
+                target = root / relpath; target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("mutation\n")
+                with self.subTest(path=relpath), self.assertRaisesRegex(wo_driver.RunnerError, "out-of-scope"):
+                    wo_driver.assert_root_scope(root, body)
 
     def test_recursive_work_order_globs_match_nested_files(self) -> None:
         allowed, protected = ["artifacts/WO-BOOT-05/**"], ["artifacts/WO-BOOT-05/private/**"]
@@ -409,6 +430,18 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             self.assertIn("-s read-only", argv_record)
             self.assertTrue(result["session_id"])
 
+    def assert_fake_executor_lifecycle(self, root: Path, body: str,
+                                       old_evidence: Path, old_bytes: bytes) -> None:
+        candidate = root / ".worktrees/WO-FAKE"
+        branch = subprocess.check_output(["git", "branch", "--show-current"], cwd=candidate, text=True).strip()
+        self.assertEqual(branch, "wo/WO-FAKE")
+        self.assertTrue((root / ".cache/threads.jsonl").exists())
+        self.assertEqual(old_evidence.read_bytes(), old_bytes)
+        run_dir = next((root / "artifacts/runs/WO-FAKE").iterdir())
+        self.assertIn("codex-cli fake", (run_dir / "codex-preflight.txt").read_text())
+        self.assertIn("-s workspace-write", (run_dir / "argv.txt").read_text())
+        wo_driver.assert_root_scope(root, body)
+
     def test_fake_codex_completes_new_worktree_lifecycle(self) -> None:
         with temporary_directory() as name:
             root = Path(name)
@@ -460,16 +493,7 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             with patch.object(wo_driver, "ROOT", root), patch.object(wo_driver.sys, "platform", "darwin"):
                 with contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(wo_driver.main(["new", "WO-FAKE", "--codex", str(fake)]), 0)
-            candidate = root / ".worktrees/WO-FAKE"
-            self.assertEqual(subprocess.check_output(["git", "branch", "--show-current"], cwd=candidate, text=True).strip(), "wo/WO-FAKE")
-            self.assertTrue((root / ".cache/threads.jsonl").exists())
-            self.assertEqual(old_evidence.read_bytes(), old_evidence_bytes)
-            preflight_files = list((root / "artifacts/runs/WO-FAKE").glob("*/codex-preflight.txt"))
-            self.assertEqual(len(preflight_files), 1)
-            self.assertIn("codex-cli fake", preflight_files[0].read_text())
-            executor_argv = next((root / "artifacts/runs/WO-FAKE").glob("*/argv.txt")).read_text()
-            self.assertIn("-s workspace-write", executor_argv)
-            wo_driver.assert_root_scope(root, body)
+            self.assert_fake_executor_lifecycle(root, body, old_evidence, old_evidence_bytes)
 
     def test_concurrent_lock_and_interrupted_atomic_append(self) -> None:
         with temporary_directory() as name:

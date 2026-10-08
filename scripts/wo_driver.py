@@ -28,7 +28,7 @@ except ImportError:
 
 SESSION_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 EXEC_REQUIRED = ("--model", "--config", "--json", "--output-schema", "--output-last-message", "--image", "-s", "--skip-git-repo-check")
-RESUME_REQUIRED = EXEC_REQUIRED
+RESUME_REQUIRED = tuple(flag for flag in EXEC_REQUIRED if flag != "-s")
 VERIFY_REQUIRED = ("--model", "--config", "--sandbox", "--output-schema", "--output-last-message", "--json")
 FROZEN_PATHS = ("work/**", "tests/oracle/**", "tests/golden/manifest.lock",
                 "bench/corpus/manifest.lock", "OWNER-DIRECTIVES.md")
