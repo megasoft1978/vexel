@@ -41,7 +41,8 @@
   "sanitizer_smoke": {
     "asan_cycles": 100,
     "ubsan_cycles": 100,
-    "status": "passed"
+    "status": "passed",
+    "command_contract": "native lifecycle arguments supplied to both sanitizer binaries"
   },
   "verification": {
     "focused_tests": 8,
