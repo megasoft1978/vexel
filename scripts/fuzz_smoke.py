@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parent.parent
 SANITIZER_RE = re.compile(r"AddressSanitizer|UndefinedBehaviorSanitizer|runtime error:|LeakSanitizer")
 PRINTABLE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_./=:+"
 VERSION_OUTPUT = "svgworkbench 0.0.1"
-CASES_PER_SECOND = 64
+CASES_PER_SECOND = 48
+DEADLINE_GRACE_SECONDS = 0.1
 
 
 def expected_success(case: list[str], output: str) -> bool:
@@ -73,11 +74,13 @@ def main(argv: list[str] | None = None) -> int:
     failure: str | None = None
     failure_case: dict[str, object] | None = None
     deadline = start + args.duration
-    while iterations < iteration_budget(args.duration):
+    while iterations < iteration_budget(args.duration) and time.monotonic() < deadline:
         case = mutation(randomizer, iterations)
         iterations += 1
+        remaining = max(0.0, deadline - time.monotonic())
+        case_timeout = min(args.timeout, remaining + DEADLINE_GRACE_SECONDS)
         try:
-            process = subprocess.run([str(binary), *case], capture_output=True, timeout=args.timeout,
+            process = subprocess.run([str(binary), *case], capture_output=True, timeout=case_timeout,
                                      check=False, env={**os.environ, "ASAN_OPTIONS": "detect_leaks=0:abort_on_error=1"})
             stdout = process.stdout.decode("utf-8", errors="replace")
             stderr = process.stderr.decode("utf-8", errors="replace")

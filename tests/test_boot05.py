@@ -57,8 +57,8 @@ class Boot05Contracts(unittest.TestCase):
         self.assertTrue(fuzz_smoke.expected_success(["--help"], "usage: svgworkbench --help\n"))
         self.assertFalse(fuzz_smoke.expected_success(["--help", "extra"], "usage: svgworkbench\n"))
         self.assertTrue(fuzz_smoke.expected_success(["--version"], "svgworkbench 0.0.1\n"))
-        self.assertEqual(fuzz_smoke.iteration_budget(3), 192)
-        self.assertEqual(fuzz_smoke.iteration_budget(60), 3840)
+        self.assertEqual(fuzz_smoke.iteration_budget(3), 144)
+        self.assertEqual(fuzz_smoke.iteration_budget(60), 2880)
         with contextlib.redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):
                 fuzz_smoke.parse_args(["--duration", "61"])
