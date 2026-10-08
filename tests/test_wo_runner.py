@@ -138,6 +138,16 @@ class RunnerPrimitiveTests(unittest.TestCase):
             code, _, _ = wo_driver.run_captured([str(sleeper)], root, 0.05, "", root / "out2", root / "err2", cache, key)
             self.assertEqual(code, 124)
 
+    def test_session_cache_write_error_fails_closed(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); fake = root / "fake-codex"
+            fake.write_text("#!/usr/bin/env python3\nprint('{\\\"type\\\":\\\"thread.started\\\",\\\"thread_id\\\":\\\"12345678-1234-1234-1234-123456789abc\\\"}',flush=True)\n")
+            fake.chmod(0o755); cache = root / "threads.jsonl"; cache.write_text("truncated")
+            with self.assertRaisesRegex(wo_driver.RunnerError, "session event"):
+                wo_driver.run_captured([str(fake)], root, 2, "", root / "out", root / "err", cache, {})
+            self.assertTrue((root / "out").exists())
+            self.assertTrue((root / "err").exists())
+
     def test_resume_identity_and_changed_cache_key(self) -> None:
         with temporary_directory() as name:
             root = Path(name); cache = root / ".cache/threads.jsonl"
@@ -190,12 +200,14 @@ class RunnerPrimitiveTests(unittest.TestCase):
             base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             transcript = root / "artifacts/WO-FAKE/verifier-events.jsonl"
             transcript.parent.mkdir(parents=True); transcript.write_text("x" * 300_000)
+            (transcript.parent / "verdict-round2.json").write_text('{"verdict":"fail"}')
             (root / "scripts/code.py").write_text("reviewable code\n")
             subprocess.run(["git", "add", "."], cwd=root, check=True); subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
             head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             diff = wo_driver.bounded_review_diff(root, base, head)
             self.assertLess(len(diff), 1000)
             self.assertNotIn(b"xxxx", diff)
+            self.assertNotIn(b'verdict', diff)
 
     def test_dirty_base_is_rejected(self) -> None:
         with temporary_directory() as name:

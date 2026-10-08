@@ -30,10 +30,11 @@ test_resume_preflight_checks_every_invocation_capability (tests.test_wo_runner.R
 test_review_diff_excludes_old_transcripts_and_stays_bounded (tests.test_wo_runner.RunnerPrimitiveTests.test_review_diff_excludes_old_transcripts_and_stays_bounded) ... ok
 test_runner_help_does_not_start_work (tests.test_wo_runner.RunnerPrimitiveTests.test_runner_help_does_not_start_work) ... ok
 test_scope_git_protected_and_disallowed_paths (tests.test_wo_runner.RunnerPrimitiveTests.test_scope_git_protected_and_disallowed_paths) ... ok
+test_session_cache_write_error_fails_closed (tests.test_wo_runner.RunnerPrimitiveTests.test_session_cache_write_error_fails_closed) ... ok
 test_session_parser_ignores_unknown_events_and_bad_ids (tests.test_wo_runner.RunnerPrimitiveTests.test_session_parser_ignores_unknown_events_and_bad_ids) ... ok
 test_verifier_stops_when_deterministic_check_fails (tests.test_wo_runner.RunnerPrimitiveTests.test_verifier_stops_when_deterministic_check_fails) ... ok
 
 ----------------------------------------------------------------------
-Ran 33 tests in 2.787s
+Ran 34 tests in 2.641s
 
 OK
