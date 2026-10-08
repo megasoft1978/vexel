@@ -171,6 +171,23 @@ class RunnerPrimitiveTests(unittest.TestCase):
                 wo_driver.assert_scope(root, base, frozen_head,
                     "# Files allowed to touch\n- `work/**`\n", "WO-FAKE")
 
+    def test_review_diff_excludes_old_transcripts_and_stays_bounded(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "scripts").mkdir(); (root / "scripts/code.py").write_text("code\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True); subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            transcript = root / "artifacts/WO-FAKE/verifier-events.jsonl"
+            transcript.parent.mkdir(parents=True); transcript.write_text("x" * 300_000)
+            (root / "scripts/code.py").write_text("reviewable code\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True); subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
+            head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            diff = wo_driver.bounded_review_diff(root, base, head)
+            self.assertLess(len(diff), 1000)
+            self.assertNotIn(b"xxxx", diff)
+
     def test_dirty_base_is_rejected(self) -> None:
         with temporary_directory() as name:
             root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)

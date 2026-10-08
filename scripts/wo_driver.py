@@ -331,6 +331,16 @@ def run_checks(worktree: Path, run_dir: Path, body: str, timeout: float) -> list
     return results
 
 
+def bounded_review_diff(root: Path, base: str, candidate: str, limit: int = 250_000) -> bytes:
+    result = subprocess.run(["git", "diff", "--no-ext-diff", "--no-renames", base, candidate,
+                             "--", ".", ":(exclude)artifacts/**/verifier-events*.jsonl",
+                             ":(exclude)artifacts/**/verifier-stderr*.txt"],
+                            cwd=root, capture_output=True, check=True).stdout
+    if len(result) > limit:
+        raise RunnerError("candidate diff exceeds verifier input limit")
+    return result
+
+
 def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
                  candidate: str, codex: str, timeout: float) -> dict[str, Any]:
     run_id = str(uuid.uuid4())
@@ -343,10 +353,7 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
         body = (root / "work" / f"{wo_id}.md").read_text(encoding="utf-8")
         results = run_checks(worktree, run_dir, body, timeout)
         base = fields["base_sha"]
-        diff = subprocess.run(["git", "diff", "--no-ext-diff", "--no-renames", base, candidate],
-                              cwd=worktree, capture_output=True, check=True).stdout
-        if len(diff) > 250_000:
-            raise RunnerError("candidate diff exceeds verifier input limit")
+        diff = bounded_review_diff(worktree, base, candidate)
         diff_path = run_dir / "candidate.diff"
         diff_path.write_bytes(diff)
         version, exec_help, _ = preflight(codex, evidence=root / "artifacts/WO-BOOT-04/codex-preflight.txt")

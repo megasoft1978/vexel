@@ -6,9 +6,9 @@ $ ./dev test-fast
 exit: 0
 valid ledger: 24 entries
 .....................runner error: work-order runners support macOS only
-...............
+................
 ----------------------------------------------------------------------
-Ran 36 tests in 1.995s
+Ran 37 tests in 1.790s
 
 OK
 
@@ -26,9 +26,9 @@ Preset CMake variables:
 ninja: no work to do.
 valid ledger: 24 entries
 .....................runner error: work-order runners support macOS only
-...............
+................
 ----------------------------------------------------------------------
-Ran 36 tests in 2.166s
+Ran 37 tests in 1.783s
 
 OK
 
