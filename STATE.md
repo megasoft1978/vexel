@@ -25,8 +25,8 @@
 - WO-M0-03 candidate contains fixes for stable smoke availability, full-stream
   hashes, and descendant process safety through macOS sandbox-exec. The Codex
   executor could not write linked worktree Git metadata; host orchestration
-  records the candidate commits. Latest local verification reports 103 tests
-  passed with zero failures, errors, or skips; 18 focused tests pass. A fresh
+  records the candidate commits. Latest local verification reports 104 tests
+  passed with zero failures, errors, or skips; 19 focused tests pass. A fresh
   independent review of the final candidate is pending.
 - Smoke verified all 24 corpus hashes; Inkscape and Donner are unavailable, and
   Vexel has no render command. No render comparison is claimed. Evidence is in

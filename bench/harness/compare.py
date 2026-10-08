@@ -223,6 +223,18 @@ def adapter_list(config: Path | None, auto: bool) -> list[dict]:
     return adapters
 
 
+def validate_render_executable(adapter: dict, version_executable: str) -> None:
+    command = adapter["render_argv"]
+    if not command:
+        return
+    value = command[0]
+    if "{" in value or "}" in value:
+        raise BenchError("render argv must begin with its version-probed executable")
+    resolved = value if os.path.isabs(value) else shutil.which(value)
+    if not resolved or Path(resolved).resolve() != Path(version_executable).resolve():
+        raise BenchError("render argv executable differs from the version-probed adapter path")
+
+
 def _drain_process(proc: subprocess.Popen, timeout: float, buffers: list[bytearray],
                    digests: list, totals: list[int], truncated: list[bool]) -> tuple[int, str | None]:
     selector = selectors.DefaultSelector()
@@ -451,6 +463,7 @@ def probe_adapters(adapters: list[dict]) -> list[dict]:
             availability.append({"id": adapter["id"], "available": False,
                                  "reason": "executable not found"})
             continue
+        validate_render_executable(adapter, executable)
         argv = [executable, *adapter["version_argv"]]
         code, out, err, elapsed, error, _, capture = process(
             argv, min(float(adapter["timeout_seconds"]), 10.0))

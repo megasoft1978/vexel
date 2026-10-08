@@ -25,7 +25,8 @@ Commands are argv arrays, never shell strings. Only `{input}`, `{output}`,
 `{width}`, and `{height}` are substituted. Timeouts are capped at 60 seconds;
 captured output and PNGs have fixed size limits. Output paths are generated
 under repository `.cache/`; fixtures and outputs are hash checked. The selected
-tasks are `shapes-basic`, `stress-many-shapes`, and `stress-long-path`, each at
+render command must start with the same resolved executable used by its version
+probe. Tasks are `shapes-basic`, `stress-many-shapes`, and `stress-long-path`, each at
 256x256. Each condition launches five processes. `cold-process` means a fresh
 process launch; it does not mean filesystem cache eviction. `warm-repeat` runs
 subsequent launches with normal OS caching.

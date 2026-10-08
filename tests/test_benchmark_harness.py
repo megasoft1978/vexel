@@ -49,6 +49,16 @@ class BenchmarkHarnessTests(unittest.TestCase):
         self.assertFalse(any("host hardware metadata unavailable" in item
                              for item in report["limitations"]))
 
+    def test_render_executable_must_match_version_probe(self):
+        adapter = {"render_argv": [sys.executable, "--input", "{input}"]}
+        compare.validate_render_executable(adapter, sys.executable)
+        adapter["render_argv"][0] = "/usr/bin/true"
+        with self.assertRaisesRegex(compare.BenchError, "differs from the version-probed"):
+            compare.validate_render_executable(adapter, sys.executable)
+        adapter["render_argv"][0] = "{input}"
+        with self.assertRaisesRegex(compare.BenchError, "begin with its version-probed"):
+            compare.validate_render_executable(adapter, sys.executable)
+
     def test_png_validator_checks_dimensions_and_crc(self):
         png = compare.fake_png()
         self.assertEqual(compare.png_dimensions(png), (256, 256))
