@@ -36,3 +36,9 @@ The runner no longer blocks solely because `--ask-for-approval` or resume
 other required capabilities, session identity, report validation, scope, and
 worktree integrity. The exception does not change the preference for safer
 sandboxed CLI flags when a future supported CLI exposes them.
+
+The revision-1 BOOT-04 ledger history records only a ready event followed by a
+blocked preflight event; no executor session or implementation ran under that
+revision. Revision 2 supersedes that closed attempt. Ledger validation allows
+older revisions only when their history ends in a terminal blocked,
+superseded, or merged event, and rejects open or future revisions.

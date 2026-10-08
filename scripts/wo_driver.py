@@ -22,13 +22,14 @@ from pathlib import Path
 from typing import Any, Sequence
 
 try:
-    from .wo_validate import ID_RE, ROOT, ValidationError, changed_path_allowed, load_wo
+    from .wo_validate import ID_RE, ROOT, ValidationError, changed_path_allowed, load_wo, validate_json_schema
 except ImportError:
-    from wo_validate import ID_RE, ROOT, ValidationError, changed_path_allowed, load_wo
+    from wo_validate import ID_RE, ROOT, ValidationError, changed_path_allowed, load_wo, validate_json_schema
 
 SESSION_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 EXEC_REQUIRED = ("--model", "--config", "--json", "--output-schema", "--output-last-message", "--image", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check")
-VERIFY_REQUIRED = ("--model", "--sandbox", "--output-schema", "--json")
+RESUME_REQUIRED = EXEC_REQUIRED
+VERIFY_REQUIRED = ("--model", "--config", "--sandbox", "--output-schema", "--output-last-message", "--json")
 
 
 class RunnerError(RuntimeError):
@@ -37,45 +38,6 @@ class RunnerError(RuntimeError):
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def validate_json_schema(instance: Any, schema: dict[str, Any]) -> bool:
-    """Validate the JSON Schema subset used by runner reports."""
-    if "const" in schema and instance != schema["const"]:
-        return False
-    if "enum" in schema and instance not in schema["enum"]:
-        return False
-    expected = schema.get("type")
-    if expected:
-        types = expected if isinstance(expected, list) else [expected]
-        checks = {"object": lambda x: isinstance(x, dict), "array": lambda x: isinstance(x, list),
-                  "string": lambda x: isinstance(x, str), "integer": lambda x: type(x) is int,
-                  "number": lambda x: type(x) in (int, float), "boolean": lambda x: type(x) is bool,
-                  "null": lambda x: x is None}
-        if not any(t in checks and checks[t](instance) for t in types):
-            return False
-    if isinstance(instance, dict):
-        required = schema.get("required", [])
-        props = schema.get("properties", {})
-        if any(key not in instance for key in required) or len(instance) < schema.get("minProperties", 0):
-            return False
-        if schema.get("additionalProperties") is False and instance.keys() - props.keys():
-            return False
-        for key, value in instance.items():
-            if key in props and not validate_json_schema(value, props[key]):
-                return False
-            if key not in props and isinstance(schema.get("additionalProperties"), dict):
-                if not validate_json_schema(value, schema["additionalProperties"]):
-                    return False
-    if isinstance(instance, list) and "items" in schema:
-        if any(not validate_json_schema(item, schema["items"]) for item in instance):
-            return False
-    if isinstance(instance, str):
-        if len(instance) < schema.get("minLength", 0) or len(instance) > schema.get("maxLength", sys.maxsize):
-            return False
-        if "pattern" in schema and re.search(schema["pattern"], instance) is None:
-            return False
-    return True
 
 
 def parse_session_id(jsonl: str) -> str | None:
@@ -103,6 +65,7 @@ def preflight(codex: str, runner: Any = subprocess.run,
         evidence.write_text("version: " + version + "\n\nexec help:\n" + helps[0] +
                             "\nresume help:\n" + helps[1], encoding="utf-8")
     missing = [flag for flag in EXEC_REQUIRED if not _has_flag(helps[0], flag)]
+    missing.extend(f"resume:{flag}" for flag in RESUME_REQUIRED if not _has_flag(helps[1], flag))
     if missing:
         raise RunnerError("Codex CLI missing executor capabilities: " + ", ".join(missing))
     return version, helps[0], helps[1]
@@ -271,7 +234,8 @@ def require_clean_base(root: Path, base: str) -> str:
 
 
 def validate_report(path: Path, schema_path: Path, base: str,
-                    expected_acceptance: set[str]) -> dict[str, Any]:
+                    expected_acceptance: set[str],
+                    executed_commands: set[tuple[str, ...]]) -> dict[str, Any]:
     try:
         report = json.loads(path.read_text(encoding="utf-8"))
         schema = json.loads(schema_path.read_text(encoding="utf-8"))
@@ -279,10 +243,19 @@ def validate_report(path: Path, schema_path: Path, base: str,
         raise RunnerError(f"missing or malformed report/schema: {exc}") from exc
     if not validate_json_schema(report, schema):
         raise RunnerError("executor report failed schema validation")
-    if (report["base_sha"] != base or set(report["acceptance"]) != expected_acceptance
-            or not all(report["acceptance"].values())):
+    evidence_ok = all(isinstance(item, dict) and isinstance(item.get("commands"), list)
+                      and item["commands"] and all(_command_passed(cmd, executed_commands) for cmd in item["commands"])
+                      for item in report["acceptance"].values())
+    if report["base_sha"] != base or set(report["acceptance"]) != expected_acceptance or not evidence_ok:
         raise RunnerError("report base or acceptance evidence is invalid")
     return report
+
+
+def _command_passed(command: Any, executed_commands: set[tuple[str, ...]]) -> bool:
+    return (isinstance(command, dict) and command.get("exit_code") == 0
+            and isinstance(command.get("argv"), list) and bool(command["argv"])
+            and all(isinstance(part, str) for part in command["argv"])
+            and tuple(command["argv"]) in executed_commands)
 
 
 def acceptance_ids(body: str) -> set[str]:
@@ -334,7 +307,10 @@ def run_checks(worktree: Path, run_dir: Path, body: str, timeout: float) -> list
 def bounded_review_diff(root: Path, base: str, candidate: str, limit: int = 250_000) -> bytes:
     result = subprocess.run(["git", "diff", "--no-ext-diff", "--no-renames", base, candidate,
                              "--", ".", ":(exclude)artifacts/**/verifier-events*.jsonl",
-                             ":(exclude)artifacts/**/verifier-stderr*.txt"],
+                             ":(exclude)artifacts/**/verifier-stderr*.txt",
+                             ":(exclude)artifacts/**/verdict*.json",
+                             ":(exclude)artifacts/**/fresh-verifier*.txt",
+                             ":(exclude)artifacts/**/verifier-precheck-failure.txt"],
                             cwd=root, capture_output=True, check=True).stdout
     if len(result) > limit:
         raise RunnerError("candidate diff exceeds verifier input limit")
@@ -434,7 +410,9 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         session = parse_session_id(output) or session
         if not session: raise RunnerError("executor JSONL did not provide a thread.started UUID")
         body = (root / "work" / f"{args.wo_id}.md").read_text(encoding="utf-8")
-        report = validate_report(report_path, schema, base, acceptance_ids(body))
+        check_results = run_checks(worktree, run_dir, body, args.timeout)
+        executed_commands = {tuple(item["argv"]) for item in check_results}
+        report = validate_report(report_path, schema, base, acceptance_ids(body), executed_commands)
         head = repo(worktree, "rev-parse", "HEAD")
         if report["head_sha"] != head or repo(worktree, "status", "--porcelain"):
             raise RunnerError("reported head mismatch or candidate tree is dirty/uncommitted")

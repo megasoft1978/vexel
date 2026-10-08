@@ -49,11 +49,11 @@ class LedgerTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def make_wo(self, wo_id: str) -> None:
+    def make_wo(self, wo_id: str, revision: int = 1) -> None:
         work = self.directory / "work"
         work.mkdir(parents=True, exist_ok=True)
         path = work / f"{wo_id}.md"
-        content = (f"---\nid: {wo_id}\nrevision: 1\nstatus: READY\n"
+        content = (f"---\nid: {wo_id}\nrevision: {revision}\nstatus: READY\n"
                    f"base_sha: {BASE_SHA}\n"
                    "spec_sha256: PENDING\n---\n# temporary test order\n")
         digest = hashlib.sha256(content.replace("spec_sha256: PENDING\n", "").encode()).hexdigest()
@@ -119,6 +119,16 @@ class LedgerTests(unittest.TestCase):
         bad = entry("WO-TEST-01", "merged", "r1", "merged")
         with self.assertRaisesRegex(LedgerError, "invalid transition"):
             validate_bytes((json.dumps(bad) + "\n").encode(), self.directory)
+
+    def test_older_blocked_revision_is_retained_but_open_revision_is_rejected(self) -> None:
+        self.make_wo("WO-REVISION", revision=2)
+        ready = entry("WO-REVISION", "ready", "old-ready", "ready")
+        blocked = entry("WO-REVISION", "blocked", "old-blocked", "blocked")
+        data = (json.dumps(ready) + "\n" + json.dumps(blocked) + "\n").encode()
+        self.assertEqual(len(validate_bytes(data, self.directory)), 2)
+        unclosed = entry("WO-REVISION", "ready", "new-open", "ready")
+        with self.assertRaisesRegex(LedgerError, "not terminal"):
+            validate_bytes((json.dumps(unclosed) + "\n").encode(), self.directory)
 
     def test_invalid_append_does_not_change_ledger(self) -> None:
         self.make_wo("WO-TEST-01")

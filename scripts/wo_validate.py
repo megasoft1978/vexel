@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import re
 import sys
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -16,6 +17,47 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 class ValidationError(ValueError):
     """A work order or changed-path set violates its contract."""
+
+
+def validate_json_schema(instance: object, schema: dict[str, object]) -> bool:
+    """Validate the report schemas' deliberately small JSON Schema subset."""
+    if "const" in schema and instance != schema["const"]:
+        return False
+    if "enum" in schema and instance not in schema["enum"]:
+        return False
+    expected = schema.get("type")
+    if expected:
+        types = expected if isinstance(expected, list) else [expected]
+        checks = {"object": lambda x: isinstance(x, dict), "array": lambda x: isinstance(x, list),
+                  "string": lambda x: isinstance(x, str), "integer": lambda x: type(x) is int,
+                  "number": lambda x: type(x) in (int, float), "boolean": lambda x: type(x) is bool,
+                  "null": lambda x: x is None}
+        if not any(t in checks and checks[t](instance) for t in types):
+            return False
+    if isinstance(instance, dict):
+        required = schema.get("required", [])
+        props = schema.get("properties", {})
+        if any(key not in instance for key in required) or len(instance) < schema.get("minProperties", 0):
+            return False
+        if schema.get("additionalProperties") is False and instance.keys() - props.keys():
+            return False
+        for key, value in instance.items():
+            if key in props and not validate_json_schema(value, props[key]):
+                return False
+            if key not in props and isinstance(schema.get("additionalProperties"), dict):
+                if not validate_json_schema(value, schema["additionalProperties"]):
+                    return False
+    if isinstance(instance, list):
+        if len(instance) < schema.get("minItems", 0):
+            return False
+        if "items" in schema and any(not validate_json_schema(item, schema["items"]) for item in instance):
+            return False
+    if isinstance(instance, str):
+        if len(instance) < schema.get("minLength", 0) or len(instance) > schema.get("maxLength", sys.maxsize):
+            return False
+        if "pattern" in schema and re.search(schema["pattern"], instance) is None:
+            return False
+    return True
 
 
 def load_wo(wo_id: str, root: Path = ROOT) -> tuple[dict[str, str], str]:

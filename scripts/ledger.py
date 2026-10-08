@@ -126,6 +126,7 @@ def validate_bytes(data: bytes, root: Path = ROOT) -> list[dict[str, Any]]:
     run_ids: set[str] = set()
     latest: dict[tuple[str, int], str] = {}
     latest_entry: dict[tuple[str, int], dict[str, Any]] = {}
+    revision_events: dict[tuple[str, int], list[dict[str, Any]]] = {}
     for index, raw in enumerate(data.splitlines(), start=1):
         if not raw:
             raise LedgerError(f"line {index}: blank lines are not allowed")
@@ -152,7 +153,18 @@ def validate_bytes(data: bytes, root: Path = ROOT) -> list[dict[str, Any]]:
             raise LedgerError("merged must follow an accepted event")
         latest[key] = event
         latest_entry[key] = entry
+        revision_events.setdefault(key, []).append(entry)
         entries.append(entry)
+    for (wo_id, revision), history in revision_events.items():
+        try:
+            fields, _ = load_wo(wo_id, root)
+        except (OSError, ValidationError) as exc:
+            raise LedgerError(f"work order {wo_id} is not frozen: {exc}") from exc
+        current_revision = int(fields["revision"])
+        if revision > current_revision:
+            raise LedgerError(f"ledger revision {revision} is newer than frozen WO {wo_id} revision {current_revision}")
+        if revision < current_revision and history[-1]["event"] not in {"blocked", "superseded", "merged"}:
+            raise LedgerError(f"older WO revision {wo_id} revision {revision} is not terminal")
     return entries
 
 

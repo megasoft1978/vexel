@@ -8,10 +8,10 @@ Preset CMake variables:
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
 ninja: no work to do.
-.....................runner error: work-order runners support macOS only
-................
+......................runner error: work-order runners support macOS only
+.................
 ----------------------------------------------------------------------
-Ran 37 tests in 1.945s
+Ran 39 tests in 3.070s
 
 OK
 valid ledger: 24 entries

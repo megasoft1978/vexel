@@ -82,6 +82,15 @@ class RunnerPrimitiveTests(unittest.TestCase):
                     "--dangerously-bypass-approvals-and-sandbox --skip-git-repo-check"
         self.assertFalse(wo_driver._has_flag(help_text, "--model"))
 
+    def test_resume_preflight_checks_every_invocation_capability(self) -> None:
+        good = " ".join(wo_driver.EXEC_REQUIRED)
+        def fake(args, **kwargs):
+            if args[-1] == "--version": return SimpleNamespace(stdout="fake", stderr="")
+            text = good if args[2] != "resume" else good.replace("--output-last-message", "")
+            return SimpleNamespace(stdout=text, stderr="")
+        with self.assertRaisesRegex(wo_driver.RunnerError, "resume:--output-last-message"):
+            wo_driver.preflight("fake", fake)
+
     def test_driver_rejects_non_darwin_before_codex(self) -> None:
         with patch.object(wo_driver.sys, "platform", "linux"):
             self.assertEqual(wo_driver.main(["new", "WO-BOOT-04"]), 2)
@@ -94,16 +103,16 @@ class RunnerPrimitiveTests(unittest.TestCase):
 
     def test_report_schema_rejects_extra_fields_and_forged_failure(self) -> None:
         schema = json.loads((wo_validate.ROOT / "docs/schemas/executor-report.schema.json").read_text())
+        evidence = {"commands": [{"argv": ["make"], "exit_code": 0}]}
         good = {"status": "complete", "base_sha": "a" * 40, "head_sha": "b" * 40,
-                "acceptance": {"AC-1": True}, "summary": "done"}
+                "acceptance": {"AC-1": evidence}, "summary": "done"}
         self.assertTrue(wo_driver.validate_json_schema(good, schema))
         self.assertFalse(wo_driver.validate_json_schema(good | {"extra": True}, schema))
-        good["acceptance"]["AC-1"] = False
         with temporary_directory() as name:
             p = Path(name) / "report.json"; p.write_text(json.dumps(good))
             with self.assertRaisesRegex(wo_driver.RunnerError, "acceptance"):
                 wo_driver.validate_report(p, wo_validate.ROOT / "docs/schemas/executor-report.schema.json",
-                                          "a" * 40, {"AC-1"})
+                                          "a" * 40, {"AC-1"}, {("python3",)})
 
     def test_malformed_jsonl_and_missing_thread_id_fail_closed(self) -> None:
         self.assertIsNone(wo_driver.parse_session_id("{bad json}\n"))
@@ -113,7 +122,7 @@ class RunnerPrimitiveTests(unittest.TestCase):
         with temporary_directory() as name:
             with self.assertRaisesRegex(wo_driver.RunnerError, "missing or malformed"):
                 wo_driver.validate_report(Path(name) / "missing.json", Path(name) / "schema.json",
-                                          "a" * 40, {"AC-1"})
+                                          "a" * 40, {"AC-1"}, set())
 
     def test_fake_codex_success_and_timeout(self) -> None:
         with temporary_directory() as name:
@@ -266,7 +275,8 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
                     "owner: test\nexecutor: test\nbase_sha: " + base + "\nparallel_safe: false\n"
                     "spec_sha256: PENDING\n---\n# Files allowed to touch\n- `scripts/**`\n"
                     "- `artifacts/WO-BOOT-04/**`\n# Protected paths\n- `scripts/oracle/**`\n"
-                    "# Acceptance criteria (machine-checkable)\n- AC-1 passes\n")
+                    "# Acceptance criteria (machine-checkable)\n- AC-1 passes\n"
+                    "# Verification commands\n\n```text\npython3 -c 'print(1)'\n```\n")
             digest = hashlib.sha256(body.replace("spec_sha256: PENDING\n", "").encode()).hexdigest()
             (root / "work").mkdir()
             (root / "work/WO-FAKE.md").write_text(body.replace("spec_sha256: PENDING", f"spec_sha256: {digest}"))
@@ -286,7 +296,7 @@ subprocess.run(['git', 'add', 'scripts/generated.py'], check=True)
 subprocess.run(['git', 'commit', '-m', 'fake candidate'], check=True)
 head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
 target.parent.mkdir(parents=True, exist_ok=True)
-target.write_text(json.dumps({'status':'complete','base_sha':base,'head_sha':head,'acceptance':{'AC-1':True},'summary':'ok'}))
+target.write_text(json.dumps({'status':'complete','base_sha':base,'head_sha':head,'acceptance':{'AC-1':{'commands':[{'argv':['python3','-c','print(1)'],'exit_code':0}]}},'summary':'ok'}))
 print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-123456789abc'}), flush=True)
 """)
             fake.chmod(0o755)
