@@ -10,6 +10,6 @@ exit=0
 $ changed-path validation
 exit=0
 start=1589f8c38acd3e80df0e381c3f942399636d23f9
-head=f9e842af5ab35131931df366365a3a9d97553f9d
-changed_paths=41
+head=471584674331e1009c87c066cf93e27649d25d30
+changed_paths=45
 root_path_guard=pass
