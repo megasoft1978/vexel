@@ -43,3 +43,5 @@
 
 | 2026-10-09 | WO-M2-02 r1 | ready; bounded XML tokenizer and source spans | `b321f0ce4a2b35b8c38a436b5da59ede92635fe8` | — | Frozen limits, syntax, diagnostic offsets, corpus comparison, and deterministic ASan fuzz requirements; `work/WO-M2-02.md`. |
 | 2026-10-09 | WO-M2-02 r1 | complete; independently verified and merged | `b321f0ce4a2b35b8c38a436b5da59ede92635fe8` | `a170928f4d116ac7db446a06b7b054ce1ae40da0` | Final fresh read-only review passed all 12 commands with no findings; 147 Python tests and Debug/ASan/UBSan CTest 3/3; Expat 24/24; 100,000 malformed cases; ASan fuzz 60 s / 4,140,212 iterations clean. Release executable 97,040 bytes; XML static library 16,552 bytes. Three executor-sandbox suite failures were resolved by passing host reruns. Evidence: `artifacts/WO-M2-02/`, `artifacts/WO-M2-02/verifier-final/`, `bench/results/WO-M2-02.json`. |
+
+| 2026-10-09 | WO-M2-03 r1 | ready; bounded XML fuzz campaign and crash retention | `daf86e71deda8b42332a6fd5e684c1e03c1c5187` | — | Extends the macOS fuzz workflow to PR smoke and a 10-minute schedule; freezes replay, minimization, fingerprint, timeout, and issue-map contracts. `work/WO-M2-03.md`. |
