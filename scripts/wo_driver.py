@@ -27,9 +27,11 @@ except ImportError:
     from wo_validate import ID_RE, ROOT, ValidationError, load_wo, validate_json_schema
 
 SESSION_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-EXEC_REQUIRED = ("--model", "--config", "--json", "--output-schema", "--output-last-message", "--image", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check")
+EXEC_REQUIRED = ("--model", "--config", "--json", "--output-schema", "--output-last-message", "--image", "-s", "--skip-git-repo-check")
 RESUME_REQUIRED = EXEC_REQUIRED
 VERIFY_REQUIRED = ("--model", "--config", "--sandbox", "--output-schema", "--output-last-message", "--json")
+FROZEN_PATHS = ("work/**", "tests/oracle/**", "tests/golden/manifest.lock",
+                "bench/corpus/manifest.lock", "OWNER-DIRECTIVES.md")
 
 
 class RunnerError(RuntimeError):
@@ -69,6 +71,30 @@ def preflight(codex: str, runner: Any = subprocess.run,
     if missing:
         raise RunnerError("Codex CLI missing executor capabilities: " + ", ".join(missing))
     return version, helps[0], helps[1]
+
+
+def executor_sandbox_args(fields: dict[str, str], help_text: str) -> list[str]:
+    """Choose sandbox flags from explicit frozen order metadata."""
+    if fields.get("network") == "true":
+        flag = "--dangerously-bypass-approvals-and-sandbox"
+        if not _has_flag(help_text, flag):
+            raise RunnerError("network-enabled order requires the approved unsandboxed CLI flag")
+        return [flag]
+    if not _has_flag(help_text, "-s"):
+        raise RunnerError("executor requires Codex workspace-write sandbox support")
+    return ["-s", "workspace-write"]
+
+
+def assert_root_work_order_snapshot(root: Path, wo_id: str, expected_hash: str,
+                                    expected_bytes: bytes) -> None:
+    """Reject root-copy changes even when a caller holds an older parsed body."""
+    try:
+        _, current_hash = load_wo(wo_id, root)
+        current_bytes = (root / "work" / f"{wo_id}.md").read_bytes()
+    except (OSError, ValidationError) as exc:
+        raise RunnerError(f"frozen root work order is invalid: {exc}") from exc
+    if current_hash != expected_hash or current_bytes != expected_bytes:
+        raise RunnerError("frozen root work order changed during execution")
 
 
 def _has_flag(help_text: str, flag: str) -> bool:
@@ -131,6 +157,8 @@ def path_matches_rule(path: str, pattern: str) -> bool:
 
 def work_order_path_allowed(path: str, allowed: list[str], protected: list[str]) -> bool:
     if path.startswith("/") or "\\" in path or ".." in PurePosixPath(path).parts:
+        return False
+    if any(path_matches_rule(path, pattern) for pattern in FROZEN_PATHS):
         return False
     if any(path_matches_rule(path, pattern) for pattern in protected):
         return False
@@ -365,7 +393,11 @@ def bounded_review_diff(root: Path, base: str, candidate: str, limit: int = 250_
 
 
 def assert_verifier_scope(root: Path, wo_id: str, base: str, candidate: str) -> str:
-    body = (root / "work" / f"{wo_id}.md").read_text(encoding="utf-8")
+    try:
+        load_wo(wo_id, root)
+        body = (root / "work" / f"{wo_id}.md").read_text(encoding="utf-8")
+    except (OSError, ValidationError) as exc:
+        raise RunnerError(f"frozen root work order is invalid: {exc}") from exc
     start = base
     if (root / ".cache" / "worktrees" / f"{wo_id}.json").exists():
         start = worktree_start(root, wo_id, root / ".worktrees" / wo_id)
@@ -434,9 +466,39 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
                        capture_output=True, check=False)
 
 
+def _accept_executor_output(args: argparse.Namespace, root: Path, worktree: Path,
+                            start_sha: str, base: str, spec_hash: str, fields: dict[str, str],
+                            body: str, frozen_order_bytes: bytes, version: str, session: str,
+                            duration: float, command: list[str], report_path: Path,
+                            schema: Path, run_dir: Path) -> dict[str, Any]:
+    check_results = run_checks(worktree, run_dir, body, args.timeout)
+    executed_commands = {tuple(item["argv"]) for item in check_results}
+    report = validate_report(report_path, schema, base, acceptance_ids(body), executed_commands)
+    head = repo(worktree, "rev-parse", "HEAD")
+    if report["head_sha"] != head or repo(worktree, "status", "--porcelain"):
+        raise RunnerError("reported head mismatch or candidate tree is dirty/uncommitted")
+    if subprocess.run(["git", "merge-base", "--is-ancestor", base, head], cwd=worktree).returncode:
+        raise RunnerError("candidate commit is not a descendant of base")
+    changed = assert_scope(worktree, start_sha, head, body, args.wo_id)
+    assert_root_work_order_snapshot(root, args.wo_id, spec_hash, frozen_order_bytes)
+    assert_root_scope(root, body)
+    metadata = {"run_id": run_dir.name, "wo_id": args.wo_id, "revision": int(fields["revision"]),
+                "spec_sha256": spec_hash, "base_sha": base, "head_sha": head, "session_id": session,
+                "model": "gpt-6-luna", "cli_version": version, "duration_s": duration,
+                "usage": {"input_tokens": None, "output_tokens": None}, "changed_paths": changed,
+                "executor_argv": command}
+    (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    return metadata
+
+
 def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
                  spec_hash: str, key: dict[str, Any]) -> dict[str, Any]:
     base = fields["base_sha"]
+    current_fields, current_hash = load_wo(args.wo_id, root)
+    if current_hash != spec_hash or current_fields != fields:
+        raise RunnerError("frozen root work order changed after preflight")
+    frozen_order_path = root / "work" / f"{args.wo_id}.md"
+    frozen_order_bytes = frozen_order_path.read_bytes()
     lock_dir = root / ".cache" / "wo-locks"; lock_dir.mkdir(parents=True, exist_ok=True)
     with (lock_dir / f"{args.wo_id}.lock").open("a+b") as lock:
         try: fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -454,10 +516,10 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
             start_sha = worktree_start(root, args.wo_id, worktree)
         run_id = str(uuid.uuid4()); run_dir = root / "artifacts" / "runs" / args.wo_id / run_id
         run_dir.mkdir(parents=True, exist_ok=False)
-        version, _, _ = preflight(args.codex, evidence=run_dir / "codex-preflight.txt")
+        version, executor_help, _ = preflight(args.codex, evidence=run_dir / "codex-preflight.txt")
         if args.mode == "new":
             worktree = create_worktree(root, args.wo_id, start_sha)
-        body = (root / "work" / f"{args.wo_id}.md").read_text(encoding="utf-8")
+        body = frozen_order_bytes.decode("utf-8")
         schema = root / "docs/schemas/executor-report.schema.json"
         strict_schema = strict_executor_schema(
             json.loads(schema.read_text(encoding="utf-8")), acceptance_ids(body))
@@ -469,7 +531,8 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         command = [args.codex, "exec"]
         if session: command += ["resume", session]
         command += ["-m", "gpt-6-luna", "-c", "model_reasoning_effort=high",
-                    "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check",
+                    *executor_sandbox_args(fields, executor_help),
+                    "--skip-git-repo-check",
                     "--json", "--output-schema", str(strict_schema_path),
                     "--output-last-message", str(report_path)]
         for image in args.image: command += ["--image", image]
@@ -480,23 +543,9 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         if code != 0: raise RunnerError(f"Codex executor exited {code}")
         session = parse_session_id(output) or session
         if not session: raise RunnerError("executor JSONL did not provide a thread.started UUID")
-        check_results = run_checks(worktree, run_dir, body, args.timeout)
-        executed_commands = {tuple(item["argv"]) for item in check_results}
-        report = validate_report(report_path, schema, base, acceptance_ids(body), executed_commands)
-        head = repo(worktree, "rev-parse", "HEAD")
-        if report["head_sha"] != head or repo(worktree, "status", "--porcelain"):
-            raise RunnerError("reported head mismatch or candidate tree is dirty/uncommitted")
-        if subprocess.run(["git", "merge-base", "--is-ancestor", base, head], cwd=worktree).returncode:
-            raise RunnerError("candidate commit is not a descendant of base")
-        changed = assert_scope(worktree, start_sha, head, body, args.wo_id)
-        assert_root_scope(root, body)
-        metadata = {"run_id": run_id, "wo_id": args.wo_id, "revision": int(fields["revision"]),
-                    "spec_sha256": spec_hash, "base_sha": base, "head_sha": head, "session_id": session,
-                    "model": "gpt-6-luna", "cli_version": version, "duration_s": duration,
-                    "usage": {"input_tokens": None, "output_tokens": None}, "changed_paths": changed,
-                    "executor_argv": command}
-        (run_dir / "metadata.json").write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
-        return metadata
+        return _accept_executor_output(args, root, worktree, start_sha, base, spec_hash,
+                                       fields, body, frozen_order_bytes, version, session,
+                                       duration, command, report_path, schema, run_dir)
 
 
 def main(argv: list[str] | None = None) -> int:

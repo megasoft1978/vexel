@@ -26,6 +26,16 @@ def temporary_directory() -> tempfile.TemporaryDirectory[str]:
     return tempfile.TemporaryDirectory(dir=cache)
 
 
+def fake_work_order(wo_id: str, base: str, commands: str = "python3 -c 'print(1)'") -> str:
+    body = (f"---\nid: {wo_id}\nrevision: 1\nstatus: READY\nmilestone: M0\n"
+            f"owner: test\nexecutor: test\nbase_sha: {base}\nparallel_safe: false\n"
+            "spec_sha256: PENDING\n---\n# Files allowed to touch\n- `scripts/**`\n"
+            "# Acceptance criteria (machine-checkable)\n- AC-1 passes\n"
+            f"# Verification commands\n\n```text\n{commands}\n```\n")
+    digest = hashlib.sha256(body.replace("spec_sha256: PENDING\n", "").encode()).hexdigest()
+    return body.replace("spec_sha256: PENDING", f"spec_sha256: {digest}")
+
+
 class FrozenWorkOrderTests(unittest.TestCase):
     def test_current_spec_hash_is_valid(self) -> None:
         fields, digest = wo_validate.load_wo("WO-BOOT-04")
@@ -48,6 +58,17 @@ class FrozenWorkOrderTests(unittest.TestCase):
             (root / "work").mkdir(); (root / "work/WO-ESCAPE.md").symlink_to(outside)
             with self.assertRaisesRegex(wo_validate.ValidationError, "escapes"):
                 wo_validate.load_wo("WO-ESCAPE", root)
+
+    def test_root_work_order_snapshot_rejects_mutation(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); (root / "work").mkdir()
+            source = (wo_validate.ROOT / "work/WO-BOOT-HARDEN-01.md").read_bytes()
+            (root / "work/WO-BOOT-HARDEN-01.md").write_bytes(source)
+            _, digest = wo_validate.load_wo("WO-BOOT-HARDEN-01", root)
+            wo_driver.assert_root_work_order_snapshot(root, "WO-BOOT-HARDEN-01", digest, source)
+            (root / "work/WO-BOOT-HARDEN-01.md").write_bytes(source + b"\nchanged\n")
+            with self.assertRaisesRegex(wo_driver.RunnerError, "frozen root work order"):
+                wo_driver.assert_root_work_order_snapshot(root, "WO-BOOT-HARDEN-01", digest, source)
 
     def test_scope_rejects_escape_and_protected_paths(self) -> None:
         allow, protected = ["scripts/**"], ["scripts/oracle/**"]
@@ -72,9 +93,29 @@ class RunnerPrimitiveTests(unittest.TestCase):
         self.assertFalse(wo_driver.work_order_path_allowed("tests/oracle/frozen.json", allowed + ["tests/**"], protected))
         self.assertFalse(wo_driver.work_order_path_allowed("../outside", allowed, protected))
 
+    def test_frozen_paths_are_hard_denied_under_overlapping_allowlists(self) -> None:
+        allowed = ["**", "work/**", "tests/**", "bench/**", "OWNER-DIRECTIVES.md"]
+        for path in ("work/WO-OTHER.md", "tests/oracle/frozen.json",
+                     "tests/golden/manifest.lock", "bench/corpus/manifest.lock",
+                     "OWNER-DIRECTIVES.md"):
+            with self.subTest(path=path):
+                self.assertFalse(wo_driver.work_order_path_allowed(path, allowed, []))
+
+    def test_executor_sandbox_defaults_closed_and_requires_explicit_network(self) -> None:
+        help_text = "-s --sandbox --dangerously-bypass-approvals-and-sandbox"
+        self.assertEqual(wo_driver.executor_sandbox_args({}, help_text), ["-s", "workspace-write"])
+        self.assertEqual(wo_driver.executor_sandbox_args({"network": "false"}, help_text),
+                         ["-s", "workspace-write"])
+        self.assertEqual(wo_driver.executor_sandbox_args({"network": "not-a-boolean"}, help_text),
+                         ["-s", "workspace-write"])
+        with self.assertRaisesRegex(wo_driver.RunnerError, "requires the approved"):
+            wo_driver.executor_sandbox_args({"network": "true"}, "-s --sandbox")
+        self.assertEqual(wo_driver.executor_sandbox_args({"network": "true"}, help_text),
+                         ["--dangerously-bypass-approvals-and-sandbox"])
+
     def fake_help(self, missing: str = ""):
         help_text = "--model --config --json --output-schema --output-last-message --image " \
-                    "--dangerously-bypass-approvals-and-sandbox --skip-git-repo-check"
+                    "-s --sandbox --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check"
         help_text = help_text.replace(missing, "")
         def fake(args, **kwargs):
             if args[-1] == "--version":
@@ -89,8 +130,8 @@ class RunnerPrimitiveTests(unittest.TestCase):
         self.assertIn("--output-schema", resume_help)
 
     def test_preflight_rejects_unsupported_flag(self) -> None:
-        with self.assertRaisesRegex(wo_driver.RunnerError, "--dangerously-bypass"):
-            wo_driver.preflight("fake-codex", self.fake_help("--dangerously-bypass-approvals-and-sandbox"))
+        with self.assertRaisesRegex(wo_driver.RunnerError, "-s"):
+            wo_driver.preflight("fake-codex", self.fake_help("-s"))
 
     def test_preflight_requires_exact_option_tokens(self) -> None:
         help_text = "--model-extra --config --json --output-schema --output-last-message --image " \
@@ -206,6 +247,29 @@ class RunnerPrimitiveTests(unittest.TestCase):
                 wo_driver.assert_scope(root, base, frozen_head,
                     "# Files allowed to touch\n- `work/**`\n", "WO-FAKE")
 
+    def test_candidate_scope_hard_denies_frozen_paths_under_broad_allowlist(self) -> None:
+        with temporary_directory() as name:
+            root = Path(name); subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            (root / "baseline.txt").write_text("base\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            paths = ("work/WO-OTHER.md", "tests/oracle/frozen.json",
+                     "tests/golden/manifest.lock", "bench/corpus/manifest.lock",
+                     "OWNER-DIRECTIVES.md")
+            for relpath in paths:
+                target = root / relpath; target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("mutation\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "mutate frozen inputs"], cwd=root, check=True)
+            candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            with self.assertRaisesRegex(wo_driver.RunnerError, "disallowed"):
+                wo_driver.assert_scope(root, base, candidate,
+                    "# Files allowed to touch\n- `**`\n- `work/**`\n- `tests/**`\n"
+                    "- `bench/**`\n- `OWNER-DIRECTIVES.md`\n", "WO-FAKE")
+
     def test_recursive_work_order_globs_match_nested_files(self) -> None:
         allowed, protected = ["artifacts/WO-BOOT-05/**"], ["artifacts/WO-BOOT-05/private/**"]
         self.assertTrue(wo_driver.work_order_path_allowed(
@@ -298,14 +362,17 @@ class RunnerPrimitiveTests(unittest.TestCase):
             root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)
             subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
             subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
-            (root / "work").mkdir(); (root / "work/WO-FAKE.md").write_text(
-                "# Verification commands\n\n```text\npython3 -c 'raise SystemExit(1)'\n```\n")
             (root / "file").write_text("x\n"); subprocess.run(["git", "add", "."], cwd=root, check=True)
-            subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            (root / "work").mkdir(); (root / "work/WO-FAKE.md").write_text(
+                fake_work_order("WO-FAKE", base, "python3 -c 'raise SystemExit(1)'"))
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "freeze order"], cwd=root, check=True)
             candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-            fields = {"revision": "1", "base_sha": candidate}
+            fields, spec_hash = wo_validate.load_wo("WO-FAKE", root)
             with self.assertRaisesRegex(wo_driver.RunnerError, "command 1 failed"):
-                wo_driver.run_verifier(root, "WO-FAKE", fields, "a" * 64, candidate, "unused", 2)
+                wo_driver.run_verifier(root, "WO-FAKE", fields, spec_hash, candidate, "unused", 2)
 
     def test_fake_codex_verifier_uses_read_only_exact_commit(self) -> None:
         with temporary_directory() as name:
@@ -315,15 +382,17 @@ class RunnerPrimitiveTests(unittest.TestCase):
             schema_dir = root / "docs/schemas"; schema_dir.mkdir(parents=True)
             for schema in ("executor-report.schema.json", "verifier-verdict.schema.json"):
                 (schema_dir / schema).write_text((wo_validate.ROOT / "docs/schemas" / schema).read_text())
-            (root / "work").mkdir(); (root / "work/WO-FAKE.md").write_text(
-                "# Verification commands\n\n```text\npython3 -c 'print(1)'\n```\n")
             (root / "file").write_text("candidate\n"); subprocess.run(["git", "add", "."], cwd=root, check=True)
-            subprocess.run(["git", "commit", "-qm", "candidate"], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
+            base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            (root / "work").mkdir(); (root / "work/WO-FAKE.md").write_text(fake_work_order("WO-FAKE", base))
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "freeze order"], cwd=root, check=True)
             candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             fake = root / ".cache/fake-verifier"; fake.parent.mkdir()
             fake.write_text("""#!/usr/bin/env python3
 import json, pathlib, sys
-flags = '--model --config --sandbox --json --output-schema --output-last-message --image --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check'
+flags = '--model --config --sandbox -s --json --output-schema --output-last-message --image --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check'
 if '--version' in sys.argv: print('codex-cli fake'); raise SystemExit(0)
 if '--help' in sys.argv: print(flags); raise SystemExit(0)
 target = pathlib.Path(sys.argv[sys.argv.index('--output-last-message') + 1])
@@ -332,8 +401,8 @@ target.parent.mkdir(parents=True, exist_ok=True)
 target.write_text(json.dumps({'verdict':'pass','findings':[],'summary':'reviewed'}))
 print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-123456789abc'}), flush=True)
 """); fake.chmod(0o755)
-            fields = {"revision": "1", "base_sha": candidate}
-            result = wo_driver.run_verifier(root, "WO-FAKE", fields, "a" * 64, candidate, str(fake), 10)
+            fields, spec_hash = wo_validate.load_wo("WO-FAKE", root)
+            result = wo_driver.run_verifier(root, "WO-FAKE", fields, spec_hash, candidate, str(fake), 10)
             self.assertEqual(result["verdict"]["verdict"], "pass")
             self.assertEqual(result["candidate_sha"], candidate)
             argv_record = next((root / "artifacts/runs/WO-FAKE").glob("verify-*/argv.txt")).read_text()
@@ -372,10 +441,11 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             fake = root / ".cache/fake-codex"; fake.parent.mkdir(exist_ok=True)
             fake.write_text("""#!/usr/bin/env python3
 import json, pathlib, re, subprocess, sys
-flags = '--model --config --json --output-schema --output-last-message --image --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check'
+flags = '--model --config --json --output-schema --output-last-message --image -s --sandbox --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check'
 if '--version' in sys.argv: print('codex-cli fake'); raise SystemExit(0)
 if '--help' in sys.argv: print(flags); raise SystemExit(0)
 target = pathlib.Path(sys.argv[sys.argv.index('--output-last-message') + 1])
+(target.parent / 'argv.txt').write_text(' '.join(sys.argv))
 text = pathlib.Path('work/WO-FAKE.md').read_text()
 base = re.search(r'^base_sha: ([0-9a-f]{40})$', text, re.M).group(1)
 pathlib.Path('scripts/generated.py').write_text('generated\\n')
@@ -397,6 +467,8 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             preflight_files = list((root / "artifacts/runs/WO-FAKE").glob("*/codex-preflight.txt"))
             self.assertEqual(len(preflight_files), 1)
             self.assertIn("codex-cli fake", preflight_files[0].read_text())
+            executor_argv = next((root / "artifacts/runs/WO-FAKE").glob("*/argv.txt")).read_text()
+            self.assertIn("-s workspace-write", executor_argv)
             wo_driver.assert_root_scope(root, body)
 
     def test_concurrent_lock_and_interrupted_atomic_append(self) -> None:

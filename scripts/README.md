@@ -73,3 +73,15 @@ the verifier schema. Review input is capped at 250 KB; prior verifier event,
 stderr, and verdict artifacts are omitted from the review diff. Executor
 reports must cite commands that the wrapper itself ran successfully. Outputs
 are retained under `artifacts/runs/`.
+
+Executor commands use `-s workspace-write` by default. Only an exact
+`network: true` field in the hash-verified frozen work order selects the
+owner-approved unsandboxed CLI mode; absent or malformed values remain
+workspace-write. The independent verifier always uses `-s read-only`.
+
+The runner validates the active order's SHA-256 from the repository-root copy,
+uses a byte snapshot for the executor prompt, and rejects root-copy changes
+before accepting output. Candidate and root scope checks hard-deny `work/**`,
+`tests/oracle/**`, both frozen manifest locks, and `OWNER-DIRECTIVES.md` before
+evaluating work-order allowlists. The active work order is tolerated in a
+candidate diff only when it is byte-identical to the validated root copy.
