@@ -63,6 +63,13 @@ class StressGeneratorTests(unittest.TestCase):
         self.assertEqual(result["counts"], {"objects": 3, "path_commands": 4,
                                              "nested_groups": 3, "images": 1,
                                              "image_payload_bytes": 97})
+        zero_mixed, zero_result = self.build("mixed-zero.svg", "mixed", objects=0,
+                                             path_commands=0, nested_groups=0,
+                                             image_payload_bytes=0)
+        self.assertTrue(zero_mixed.exists())
+        self.assertEqual(zero_result["counts"], {"objects": 0, "path_commands": 0,
+                                                  "nested_groups": 0, "images": 0,
+                                                  "image_payload_bytes": 0})
         root = ET.parse(self.root / "embedded-image.svg").getroot()
         encoded = next(child.attrib["href"] for child in root if child.tag.endswith("image"))
         png = base64.b64decode(encoded.split(",", 1)[1], validate=True)
@@ -80,6 +87,13 @@ class StressGeneratorTests(unittest.TestCase):
         self.assertEqual(chunks[-1], (b"IEND", b""))
         self.assertEqual(zlib.decompress(b"".join(data for kind, data in chunks if kind == b"IDAT")),
                          b"\x00\x20\x60\xa0\xff")
+
+    def test_embedded_png_padding_boundaries_are_exact_or_rejected(self) -> None:
+        base = 8 + 25 + len(stress_svg.PNG_PIXEL) + 12 + 12
+        with self.assertRaisesRegex(ValueError, "final ancillary chunk"):
+            list(stress_svg._image_payload(base + 17))
+        payload = b"".join(stress_svg._image_payload(base + 18))
+        self.assertEqual(len(payload), base + 18)
 
     def test_semantic_chunks_are_bounded(self) -> None:
         for family in ("object-heavy", "path-heavy", "mixed", "embedded-image"):

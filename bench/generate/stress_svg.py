@@ -76,14 +76,18 @@ def _image_payload(size: int) -> Iterator[bytes]:
     yield ihdr
     yield idat
     remaining = size - base
-    while remaining:
+    max_chunk = 64 * 1024 + 12
+    while remaining > max_chunk + 17:
         # PNG ancillary tEXt chunks carry deterministic padding without changing pixels.
-        chunk_size = min(remaining, 64 * 1024 + 12)
-        if 0 < remaining - chunk_size < 12:
-            chunk_size -= 12 - (remaining - chunk_size)
+        chunk_size = max_chunk
         data_size = chunk_size - 12
         yield _png_chunk(b"tEXt", b"vexel\x00" + b"x" * (data_size - 6))
         remaining -= chunk_size
+    if remaining:
+        if remaining < 18:
+            raise ValueError("embedded PNG size cannot represent its final ancillary chunk")
+        data_size = remaining - 12
+        yield _png_chunk(b"tEXt", b"vexel\x00" + b"x" * (data_size - 6))
     yield _png_chunk(b"IEND", b"")
 
 
@@ -103,8 +107,8 @@ def _semantic_chunks(family: str, seed: int, objects: int, commands: int, depth:
                      image_bytes: int) -> tuple[Iterator[bytes], dict[str, int]]:
     rng = random.Random(seed)
     nested = depth if family in ("nested-depth", "mixed") else 0
-    object_count = objects if family == "object-heavy" else (max(1, objects // 3) if family == "mixed" else 0)
-    command_count = commands if family == "path-heavy" else (max(1, commands // 3) if family == "mixed" else 0)
+    object_count = objects if family == "object-heavy" else (objects // 3 if family == "mixed" else 0)
+    command_count = commands if family == "path-heavy" else (commands // 3 if family == "mixed" else 0)
     payload_count = image_bytes if family == "embedded-image" else (max(0, image_bytes // 2) if family == "mixed" else 0)
     counts = {"objects": 0, "path_commands": 0, "nested_groups": nested,
               "images": 0, "image_payload_bytes": 0}

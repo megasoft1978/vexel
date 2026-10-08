@@ -30,7 +30,7 @@ SESSION_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA
 EXEC_REQUIRED = ("--model", "--config", "--json", "--output-schema", "--output-last-message", "--image", "-s", "--skip-git-repo-check")
 RESUME_REQUIRED = tuple(flag for flag in EXEC_REQUIRED if flag != "-s")
 VERIFY_REQUIRED = ("--model", "--config", "--sandbox", "--output-schema", "--output-last-message", "--json")
-FROZEN_PATHS = ("work/**", "tests/oracle/**", "tests/golden/manifest.lock",
+FROZEN_PATHS = ("work/**", "tests/oracle/**", "tests/golden/**",
                 "bench/corpus/manifest.lock", "OWNER-DIRECTIVES.md")
 
 
@@ -157,7 +157,7 @@ def path_matches_rule(path: str, pattern: str) -> bool:
 
 def _baseline_seed_path(path: str, wo_id: str | None, baseline: bool) -> bool:
     return (wo_id == "WO-M0-02" and baseline and
-            (path.startswith("tests/oracle/") or path == "tests/golden/manifest.lock"))
+            (path.startswith("tests/oracle/") or path.startswith("tests/golden/")))
 
 
 def work_order_path_allowed(path: str, allowed: list[str], protected: list[str],
@@ -181,7 +181,7 @@ def assert_scope(root: Path, base: str, head: str, body: str,
                 re.search(r"(?m)^baseline: true\s*$", body.split("# Goal", 1)[0]) is not None)
     baseline_tree = subprocess.run(
         ["git", "ls-tree", "-r", "--name-only", base, "--",
-         "tests/oracle", "tests/golden/manifest.lock"],
+         "tests/oracle", "tests/golden"],
         cwd=root, capture_output=True, text=True, check=True).stdout if baseline else ""
     may_seed_baseline = baseline and not baseline_tree.strip()
     result = subprocess.run(["git", "diff", "--name-status", "-z", "--no-renames", base, head],

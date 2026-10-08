@@ -311,14 +311,16 @@ class RunnerPrimitiveTests(unittest.TestCase):
             baseline_body = ("---\nid: WO-M0-02\nbaseline: true\n---\n"
                              "# Files allowed to touch\n- `tests/oracle/**`\n- `tests/golden/**`\n"
                              "# Protected paths\n- `tests/oracle/**`\n- `tests/golden/manifest.lock`\n")
-            for relpath in ("tests/oracle/metadata.json", "tests/golden/manifest.lock"):
+            for relpath in ("tests/oracle/metadata.json", "tests/golden/manifest.lock",
+                            "tests/golden/fixtures/pixel.png"):
                 path = root / relpath; path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("first write\n")
             subprocess.run(["git", "add", "."], cwd=root, check=True)
             subprocess.run(["git", "commit", "-qm", "seed baseline"], cwd=root, check=True)
             candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             self.assertCountEqual(wo_driver.assert_scope(root, base, candidate, baseline_body, "WO-M0-02"),
-                                  ["tests/oracle/metadata.json", "tests/golden/manifest.lock"])
+                                  ["tests/oracle/metadata.json", "tests/golden/manifest.lock",
+                                   "tests/golden/fixtures/pixel.png"])
             with self.assertRaisesRegex(wo_driver.RunnerError, "disallowed"):
                 wo_driver.assert_scope(root, base, candidate, baseline_body, "WO-M0-03")
             later_path = root / "tests/oracle/later.json"
@@ -342,12 +344,15 @@ class RunnerPrimitiveTests(unittest.TestCase):
             subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
             oracle = root / "tests/oracle/metadata.json"; oracle.parent.mkdir(parents=True)
             oracle.write_text("baseline\n")
+            golden = root / "tests/golden/fixtures/pixel.png"; golden.parent.mkdir(parents=True)
+            golden.write_bytes(b"png baseline\n")
             (root / "seed.txt").write_text("seed\n")
             subprocess.run(["git", "add", "."], cwd=root, check=True)
             subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
             base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             oracle.write_text("modified\n")
-            lock = root / "tests/golden/manifest.lock"; lock.parent.mkdir(parents=True)
+            golden.write_bytes(b"changed png\n")
+            lock = root / "tests/golden/manifest.lock"; lock.parent.mkdir(parents=True, exist_ok=True)
             lock.write_text("unrelated first write\n")
             subprocess.run(["git", "add", "."], cwd=root, check=True)
             subprocess.run(["git", "commit", "-qm", "mutate and add"], cwd=root, check=True)
@@ -364,6 +369,16 @@ class RunnerPrimitiveTests(unittest.TestCase):
             deletion = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             with self.assertRaisesRegex(wo_driver.RunnerError, "disallowed"):
                 wo_driver.assert_scope(root, candidate, deletion, body, "WO-M0-02")
+
+            subprocess.run(["git", "checkout", "--", "tests/golden/fixtures/pixel.png"],
+                           cwd=root, check=True)
+            subprocess.run(["git", "rm", "tests/golden/fixtures/pixel.png"], cwd=root,
+                           check=True, capture_output=True)
+            subprocess.run(["git", "commit", "-qm", "delete golden png"], cwd=root, check=True)
+            golden_deletion = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            with self.assertRaisesRegex(wo_driver.RunnerError, "disallowed"):
+                wo_driver.assert_scope(root, deletion, golden_deletion, body, "WO-M0-02")
 
             # A broad pattern cannot turn root-scope checks into authorization for frozen paths.
             (root / "OWNER-DIRECTIVES.md").write_text("untracked frozen root file\n")
