@@ -31,9 +31,10 @@
   fresh read-only review passed with no findings. Evidence is in
   `artifacts/WO-M0-03/`, `artifacts/runs/WO-M0-03/`, and
   `bench/results/WO-M0-03.*`.
-- Active: `WO-BOOT-06` revision 2 is READY from base `dfdfab99c062a70016fda7618cda87b305e54287`. Revision 1 was superseded because its verification heading was incompatible with the runner’s required `# Verification commands` block. Its first full-suite attempt reported benchmark sandbox failures; serial rerun passed all 122 tests.
-- BOOT-06 implementation and focused evidence are present in its task worktree. R2 required commands passed sequentially; candidate still needs rebase onto the r2 freeze commit, fresh independent verification, and merge closeout.
-- Next roadmap after BOOT-06: BOOT-07, then prepare the M0-04 evidence packet and stop at its owner gate.
+- Completed work order: `WO-BOOT-06` revision 2 merged to `main` at `2d3a0c56ab913495391480e3b7674edd53766316`. The runner-format mismatch in revision 1 was corrected; its initial suite failure did not reproduce on the serial rerun.
+- BOOT-06 acceptance: 10 focused golden tests, 2 tolerance checks, 5 negative-path checks, 1 determinism check, and `./dev verify` with 123 tests pass; zero failures, errors, or skips. The two fresh verifier rounds found genuine issues, all corrected. The two-round cap was reached, so no post-fix fresh verifier pass is claimed; review details are in `artifacts/WO-BOOT-06/review-rounds.md`.
+- Golden baselines, manifest, and oracle paths were unchanged. No renderer or performance claim is made. Evidence is under `artifacts/WO-BOOT-06/`.
+- Next: BOOT-07, then prepare the M0-04 evidence packet and stop at its owner gate.
 - Completed work order: `WO-M0-01` was implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.

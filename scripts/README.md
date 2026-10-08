@@ -118,7 +118,8 @@ A differing pixel is tolerated only when its maximum channel delta is within
 `--edge-channel-tolerance` and it is within Chebyshev distance
 `--edge-radius` of an 8-neighbor color or alpha boundary in the expected image.
 Defaults are radius 1 and channel delta 1; radius accepts 0–2 and channel delta
-0–16. Radius zero disables edge tolerance. Exit status is 0 when all differences
+0–16. Radius zero considers only differing pixels that are themselves boundary
+pixels; larger radii include nearby pixels. Exit status is 0 when all differences
 are tolerated, 1 when any are not, and 2 for input, metadata, format, or output
 errors.
 
