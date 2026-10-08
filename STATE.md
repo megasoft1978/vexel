@@ -1,6 +1,8 @@
 # Project state
 
-- Current work order: `M0-01` corpus provenance/fetch is next.
+- Current work order: `WO-M0-01` corpus provenance/fetch is complete on the
+  isolated candidate branch at `eccfc61`; all six frozen acceptance criteria
+  passed. The candidate has not been merged into `main`.
 - BOOT-05 revision 3 is accepted and merged at `178f0e57554cf1eae8182a9cf89330297b647ffb` (merge includes the previously verified candidate and the equivalent root-scope path matcher cleanup).
 - Working branch: `main`; no active task worktree.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
@@ -17,4 +19,11 @@
 - `WO-BOOT-HARDEN-01` is complete, independently verified, and merged at `ee97effa31db1dd0863d847453a6eb9e71df57e0`.
 - Hardening checks: 38 focused runner tests and 59 full fast tests pass, with zero failures/skips; workspace-write default, read-only verifier, frozen source snapshot, unchanged active root-copy acceptance, and candidate/root hard-deny path tests pass.
 - First preflight attempt stopped because `exec resume --help` omits the inherited short sandbox alias; the runner now validates `-s` on `exec --help`. One substantive review round identified an untested active-order positive case and an executor prompt using the worktree copy; both were fixed before the passing final review.
-- Next after hardening acceptance: M0-01 corpus provenance/fetch. Continue through M0-04 and stop for its owner gate.
+- M0-01 corpus: 24 project-authored MPL-2.0 fixtures cover shapes, paths,
+  metadata/namespaces, style, text, embedded image, and small stress cases.
+  The pinned WPT 3-Clause BSD notice is retained and hash checked; no WPT test
+  file is included because the fixtures are synthetic and no upstream file
+  rights review was needed. Fetch/verify/query and 10 focused offline tests
+  passed; evidence is in `artifacts/WO-M0-01/`.
+- Next after M0-01: M0-02 stress generator/oracle. Continue through M0-04 and
+  stop for its owner gate.
