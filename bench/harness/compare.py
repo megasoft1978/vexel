@@ -105,7 +105,9 @@ def load_corpus() -> tuple[dict, dict[str, dict]]:
 def png_dimensions(data: bytes) -> tuple[int, int]:
     if len(data) < 45 or data[:8] != b"\x89PNG\r\n\x1a\n":
         raise BenchError("output is not a PNG")
-    offset, width, height, seen_end, compressed = 8, 0, 0, False, bytearray()
+    offset, width, height = 8, 0, 0
+    seen_ihdr, seen_idat, idat_ended, seen_end = False, False, False, False
+    compressed = bytearray()
     while offset + 12 <= len(data):
         size = struct.unpack(">I", data[offset:offset + 4])[0]
         end = offset + 12 + size
@@ -116,23 +118,31 @@ def png_dimensions(data: bytes) -> tuple[int, int]:
         crc = struct.unpack(">I", data[offset + 8 + size:end])[0]
         if zlib.crc32(kind + payload) & 0xffffffff != crc:
             raise BenchError("malformed PNG chunk checksum")
-        if offset == 8:
-            if kind != b"IHDR" or size != 13:
-                raise BenchError("malformed PNG header")
+        if not seen_ihdr:
+            if kind != b"IHDR" or size != 13 or offset != 8:
+                raise BenchError("malformed PNG header order")
             width, height = struct.unpack(">II", payload[:8])
             if (width, height) != (DIMENSION, DIMENSION):
                 raise BenchError("output PNG dimensions differ from 256x256 task")
             if payload[8:13] != bytes((8, 6, 0, 0, 0)):
                 raise BenchError("PNG must use deterministic RGBA8 encoding")
+            seen_ihdr = True
+        elif kind == b"IHDR":
+            raise BenchError("duplicate PNG header")
         if kind == b"IDAT":
+            if idat_ended:
+                raise BenchError("PNG image data chunks are not contiguous")
+            seen_idat = True
             compressed.extend(payload)
+        elif seen_idat and kind != b"IEND":
+            idat_ended = True
         if kind == b"IEND":
-            if size != 0 or end != len(data):
+            if not seen_idat or size != 0 or end != len(data):
                 raise BenchError("malformed PNG end")
             seen_end = True
             break
         offset = end
-    if not seen_end or not width or not height:
+    if not seen_ihdr or not seen_end or not width or not height:
         raise BenchError("incomplete PNG")
     try:
         inflater = zlib.decompressobj()

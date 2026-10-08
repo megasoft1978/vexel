@@ -64,6 +64,9 @@ class BenchmarkHarnessTests(unittest.TestCase):
     def test_png_validator_checks_dimensions_and_crc(self):
         png = compare.fake_png()
         self.assertEqual(compare.png_dimensions(png), (256, 256))
+        duplicate_header = png[:33] + png[8:33] + png[33:]
+        with self.assertRaisesRegex(compare.BenchError, "duplicate PNG header"):
+            compare.png_dimensions(duplicate_header)
         with self.assertRaises(compare.BenchError):
             compare.png_dimensions(png[:-3] + b"bad")
         with self.assertRaises(compare.BenchError):
@@ -258,6 +261,23 @@ class BenchmarkHarnessTests(unittest.TestCase):
         trial = self._run_with_process("malformed", 0, valid=False)
         self.assertEqual(trial["status"], "failed")
         self.assertIn("PNG", trial["error"])
+
+    def test_duplicate_png_header_is_failed_trial(self):
+        output = self.cache / "outputs/fake/shapes-basic/cold-process-1.png"
+        duplicate = compare.fake_png()
+        duplicate = duplicate[:33] + duplicate[8:33] + duplicate[33:]
+
+        def fake_process(argv, timeout):
+            Path(argv[-1]).write_bytes(duplicate)
+            capture = {"stdout_bytes": 0, "stdout_truncated": False,
+                       "stdout_sha256": compare.sha(b""), "stderr_bytes": 0,
+                       "stderr_truncated": False, "stderr_sha256": compare.sha(b"")}
+            return 0, b"", b"", .01, None, None, capture
+
+        with mock.patch.object(compare, "process", side_effect=fake_process):
+            trial = compare.run_one(self.adapter, self.fixture, self.cache, "cold-process", 1)
+        self.assertEqual(trial["status"], "failed")
+        self.assertIn("duplicate PNG header", trial["error"])
 
     def test_median_and_nearest_rank_p95_need_five_valid_trials(self):
         trials = [{"status": "passed", "elapsed_seconds": n, "peak_rss_bytes": None} for n in range(1, 6)]
