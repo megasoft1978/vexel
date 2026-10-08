@@ -1,0 +1,44 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "mac-debug",
+      "displayName": "macOS Apple Silicon Debug",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/mac-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "13.0"
+      }
+    },
+    {
+      "name": "mac-release",
+      "displayName": "macOS Apple Silicon Release",
+      "inherits": "mac-debug",
+      "binaryDir": "${sourceDir}/build/mac-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "mac-size",
+      "displayName": "macOS Apple Silicon Size",
+      "inherits": "mac-debug",
+      "binaryDir": "${sourceDir}/build/mac-size",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "mac-debug", "configurePreset": "mac-debug" },
+    { "name": "mac-release", "configurePreset": "mac-release" },
+    { "name": "mac-size", "configurePreset": "mac-size" }
+  ]
+}

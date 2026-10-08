@@ -1,0 +1,16 @@
+{
+  "work_order": "WO-BOOT-01",
+  "kind": "launch_latency_smoke",
+  "os": "macOS-27.0-arm64-arm-64bit",
+  "architecture": "arm64",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "cmake": "cmake version 3.31.6",
+  "build_type": "Release",
+  "fixture": "--version",
+  "trials": 31,
+  "binary_bytes": 33568,
+  "latency_ns_median": 1910208,
+  "latency_ns_min": 1625584,
+  "latency_ns_max": 2776833,
+  "claim": "Initial local baseline only; process launch dominates and this is not an SVG throughput benchmark."
+}

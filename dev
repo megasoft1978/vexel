@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+if [ "$#" -ne 1 ] || [ "$1" != "build" ]; then
+    printf '%s\n' 'usage: ./dev build' >&2
+    exit 2
+fi
+
+cmake --preset mac-debug
+cmake --build --preset mac-debug
