@@ -1,6 +1,6 @@
 # Project state
 
-- Current work order: `WO-BOOT-HARDEN-01` revision 1 implementation and local acceptance checks pass; fresh exact-commit verification is pending.
+- Current work order: `M0-01` corpus provenance/fetch is next.
 - BOOT-05 revision 3 is accepted and merged at `178f0e57554cf1eae8182a9cf89330297b647ffb` (merge includes the previously verified candidate and the equivalent root-scope path matcher cleanup).
 - Working branch: `main`; no active task worktree.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
@@ -14,6 +14,7 @@
 - The three earlier review failures and the final passing review are retained in `artifacts/WO-BOOT-05/reviews/` and ignored per-run evidence under `artifacts/runs/WO-BOOT-05/`. The final review reported 52 tests passing, zero failures or skips; all ten commands passed.
 - No hosted GitHub workflow run was available. Initial Release CLI baseline remains 33,568 bytes; median `--version` latency 1.910 ms over 31 runs; max RSS 1,884,160 bytes (single run).
 - Hardening work order source `SECURITY-FINDINGS.md` is frozen by SHA-256 `a156b5187b6741385a1fcfe31a8330e0ac257120c8f963ddc342f3fb732dfc92`; its READY spec hash is recorded in `work/WO-BOOT-HARDEN-01.md`.
+- `WO-BOOT-HARDEN-01` is complete, independently verified, and merged at `ee97effa31db1dd0863d847453a6eb9e71df57e0`.
 - Hardening checks: 38 focused runner tests and 59 full fast tests pass, with zero failures/skips; workspace-write default, read-only verifier, frozen source snapshot, unchanged active root-copy acceptance, and candidate/root hard-deny path tests pass.
-- First independent review attempt stopped at CLI preflight because `exec resume --help` omits the inherited short sandbox alias; the preflight now validates it on `exec --help`. The substantive review findings are addressed by a positive active-order scope test and by supplying the validated snapshot directly in the executor prompt.
+- First preflight attempt stopped because `exec resume --help` omits the inherited short sandbox alias; the runner now validates `-s` on `exec --help`. One substantive review round identified an untested active-order positive case and an executor prompt using the worktree copy; both were fixed before the passing final review.
 - Next after hardening acceptance: M0-01 corpus provenance/fetch. Continue through M0-04 and stop for its owner gate.
