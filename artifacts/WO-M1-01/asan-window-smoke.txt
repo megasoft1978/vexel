@@ -1,0 +1,2 @@
+native smoke events: open resize scale key pointer close
+completed cycles: 100

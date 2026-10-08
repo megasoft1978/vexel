@@ -4,7 +4,7 @@ if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum supported macOS version" FORCE)
 endif()
 
-project(vexel VERSION 0.0.1 LANGUAGES C)
+project(vexel VERSION 0.0.1 LANGUAGES C OBJC)
 
 if(NOT APPLE)
     message(FATAL_ERROR "vexel currently supports macOS only")
@@ -29,11 +29,18 @@ if(VEXEL_SANITIZER)
     endif()
 endif()
 
-add_executable(svgworkbench app/main.c)
+add_executable(svgworkbench app/main.c src/platform/macos/platform_window.m)
+target_include_directories(svgworkbench PRIVATE src app)
+set_source_files_properties(src/platform/macos/platform_window.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
+target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK})
 set_target_properties(svgworkbench PROPERTIES
     C_STANDARD 17
     C_STANDARD_REQUIRED YES
     C_EXTENSIONS NO
+    OBJC_STANDARD 17
+    OBJC_STANDARD_REQUIRED YES
+    OBJC_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 

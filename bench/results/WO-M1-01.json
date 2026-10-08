@@ -1,0 +1,57 @@
+{
+  "work_order": "WO-M1-01",
+  "environment": {
+    "os": "macOS 27.0 (Build 26A425)",
+    "architecture": "arm64",
+    "compiler": "Apple clang 21.0.0 (clang-2100.3.34.2)",
+    "build_type": "Release"
+  },
+  "release_executable": {
+    "path": "build/mac-release/bin/svgworkbench",
+    "size_bytes": 73952
+  },
+  "native_smoke": {
+    "requested_cycles": 100,
+    "completed_cycles": 100,
+    "acceptance_elapsed_seconds": 3.304583,
+    "status": "passed",
+    "events": [
+      "open",
+      "resize",
+      "scale",
+      "key",
+      "pointer",
+      "close"
+    ],
+    "benchmark": {
+      "cycles_per_run": 100,
+      "runs": 5,
+      "samples_elapsed_seconds": [
+        3.7841997079958674,
+        3.868203459001961,
+        4.182885500005796,
+        3.9978730000002543,
+        4.166297583011328
+      ],
+      "median_seconds": 3.9978730000002543,
+      "p95_nearest_rank_seconds": 4.182885500005796,
+      "all_completed": true
+    }
+  },
+  "sanitizer_smoke": {
+    "asan_cycles": 100,
+    "ubsan_cycles": 100,
+    "status": "passed"
+  },
+  "verification": {
+    "focused_tests": 7,
+    "full_tests_passed": 136,
+    "full_tests_failed": 0,
+    "full_tests_errors": 0,
+    "full_tests_skipped": 0
+  },
+  "claims": {
+    "rendering_throughput": null,
+    "rss": null
+  }
+}

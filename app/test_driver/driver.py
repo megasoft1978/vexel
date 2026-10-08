@@ -5,9 +5,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import struct
+import subprocess
 import sys
+import time
 import zlib
 from pathlib import Path
 from typing import Any
@@ -181,6 +184,34 @@ def _safe_output(raw: str) -> Path:
     return lexical
 
 
+def _safe_native_output(raw: str) -> Path:
+    """Reserve a fresh numbered run below a stable native-smoke output root."""
+    candidate = Path(raw)
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    lexical = Path(os.path.abspath(candidate))
+    cache = ROOT / ".cache"
+    if not lexical.is_relative_to(cache) or lexical == cache:
+        raise DriverError("native output root must stay under repository .cache")
+    current = ROOT
+    for part in lexical.relative_to(ROOT).parts:
+        current = current / part
+        if current.is_symlink():
+            raise DriverError("native output path contains a symlink")
+    if lexical.exists() and not lexical.is_dir():
+        raise DriverError("native output root must be a directory")
+    lexical.mkdir(parents=True, exist_ok=True)
+    for index in range(1, 10001):
+        run = lexical / f"run-{index:04d}"
+        try:
+            run.mkdir()
+            return run
+        except FileExistsError:
+            if run.is_symlink() or not run.is_dir():
+                raise DriverError("native output run path is not a regular directory")
+    raise DriverError("native output root reached its 10000-run limit")
+
+
 def _chunk(kind: bytes, payload: bytes) -> bytes:
     return struct.pack(">I", len(payload)) + kind + payload + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
 
@@ -256,11 +287,92 @@ def replay(commands: list[dict[str, Any]], out: Path, seed: int) -> None:
         sys.stdout.buffer.write(_json_bytes(ack))
 
 
+def validate_native_smoke_output(output: str, cycles: int) -> list[str]:
+    """Reject incomplete or malformed native lifecycle evidence."""
+    expected = ["native smoke events: open resize scale key pointer close",
+                f"completed cycles: {cycles}"]
+    lines = output.splitlines()
+    if lines != expected:
+        raise DriverError("native smoke returned missing or malformed event evidence")
+    return lines
+
+
+def validate_normalized_events(events: list[dict[str, Any]], expected: list[str]) -> None:
+    """Check the documented event payload before a replay is accepted."""
+    if [event.get("type") for event in events] != expected:
+        raise DriverError("native replay has missing, extra, or reordered events")
+    for event in events:
+        kind = event["type"]
+        if kind in {"resize", "scale"}:
+            if (type(event.get("pixel_width")) is not int or type(event.get("pixel_height")) is not int or
+                    event["pixel_width"] <= 0 or event["pixel_height"] <= 0 or
+                    type(event.get("backing_scale")) not in (int, float) or
+                    not math.isfinite(event["backing_scale"]) or event["backing_scale"] <= 0):
+                raise DriverError(f"native {kind} event has malformed backing dimensions")
+        elif kind.startswith("key_"):
+            if (type(event.get("key_code")) is not int or not 0 <= event["key_code"] <= 65535 or
+                    type(event.get("modifiers")) is not int or not 0 <= event["modifiers"] <= 0xFFFFFFFF or
+                    not isinstance(event.get("text", ""), str) or len(event.get("text", "").encode("utf-8")) > 255):
+                raise DriverError("native key event has malformed payload")
+        elif kind.startswith("pointer_"):
+            if (type(event.get("x")) is not int or type(event.get("y")) is not int or
+                    event["x"] < 0 or event["y"] < 0 or
+                    (kind != "pointer_move" and (type(event.get("button")) is not int or
+                                                   not 0 <= event["button"] <= 31))):
+                raise DriverError("native pointer event has malformed payload")
+
+
+def native_smoke(out: Path, cycles: int) -> float:
+    if type(cycles) is not int or not 1 <= cycles <= 10000:
+        raise DriverError("cycles must be an integer from 1 to 10000")
+    binary = ROOT / "build" / "mac-release" / "bin" / "svgworkbench"
+    if not binary.is_file():
+        raise DriverError("Release executable is missing; build preset mac-release first")
+    scenario_path = ROOT / "tests" / "ui" / "native-lifecycle.jsonl"
+    scenario = read_script(scenario_path)
+    expected_scenario = [
+        {"command": "open", "document_id": "native-smoke"},
+        {"command": "resize", "width": 640, "height": 480},
+        {"command": "key", "action": "down", "key": "a"},
+        {"command": "key", "action": "up", "key": "a"},
+        {"command": "pointer", "action": "move", "x": 12, "y": 18},
+        {"command": "pointer", "action": "down", "x": 12, "y": 18},
+        {"command": "pointer", "action": "up", "x": 12, "y": 18},
+        {"command": "quit"},
+    ]
+    if scenario != expected_scenario:
+        raise DriverError("native lifecycle scenario does not match the executable smoke actions")
+    (out / "scenario.jsonl").write_bytes(scenario_path.read_bytes())
+    started = time.monotonic()
+    try:
+        result = subprocess.run([str(binary), "--native-platform-smoke", "--cycles", str(cycles)],
+                                cwd=ROOT, capture_output=True, text=True, timeout=300, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DriverError(f"native smoke could not complete: {exc}") from exc
+    elapsed = time.monotonic() - started
+    (out / "native-smoke.txt").write_text(result.stdout, encoding="utf-8")
+    (out / "native-smoke.stderr.txt").write_text(result.stderr, encoding="utf-8")
+    summary = {"cycles": cycles, "elapsed_seconds": elapsed, "exit_code": result.returncode,
+               "events": [], "status": "failed"}
+    if result.returncode != 0:
+        summary["diagnostic"] = result.stderr.strip()[:1000]
+        (out / "result.json").write_bytes(_json_bytes(summary))
+        raise DriverError(f"native smoke failed with exit {result.returncode}: {result.stderr.strip()[:500]}")
+    lines = validate_native_smoke_output(result.stdout, cycles)
+    summary.update({"events": lines[0].split(": ", 1)[1].split(), "status": "passed"})
+    (out / "result.json").write_bytes(_json_bytes(summary))
+    sys.stdout.write("\n".join(lines) + "\n")
+    sys.stdout.write(f"native smoke elapsed seconds: {elapsed:.6f}\n")
+    return elapsed
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--script", required=True)
+    parser.add_argument("--script")
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--native-platform-smoke", action="store_true")
+    parser.add_argument("--cycles", type=int, default=100)
     args = parser.parse_args(argv)
     if sys.platform != "darwin":
         print("error: UI test driver is supported on macOS only", file=sys.stderr)
@@ -269,12 +381,20 @@ def main(argv: list[str] | None = None) -> int:
         print("error: seed must be an unsigned 32-bit integer", file=sys.stderr)
         return 2
     try:
-        script = _safe_script(args.script)
-        commands = read_script(script)
-        out = _safe_output(args.output_dir)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.mkdir()
-        replay(commands, out, args.seed)
+        if args.native_platform_smoke:
+            if args.script is not None:
+                raise DriverError("--script cannot be combined with --native-platform-smoke")
+            out = _safe_native_output(args.output_dir)
+            native_smoke(out, args.cycles)
+        else:
+            if args.script is None:
+                raise DriverError("--script is required unless --native-platform-smoke is used")
+            out = _safe_output(args.output_dir)
+            script = _safe_script(args.script)
+            commands = read_script(script)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.mkdir()
+            replay(commands, out, args.seed)
     except (DriverError, OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

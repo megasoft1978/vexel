@@ -49,3 +49,34 @@ Artifacts and acknowledgments are stable for the same script and seed. The
 placeholder PNG only depicts a flat canvas and seed-derived accent; the
 accessibility tree and saved state are not a real editor model. No wall-clock
 time or sleep is used.
+
+## Native AppKit window smoke
+
+`src/platform/platform_window.h` is the C-callable platform boundary. Its
+opaque window belongs to the caller and must be created, polled, resized, and
+destroyed on AppKit's main thread. Resize and scale payloads report backing
+pixel dimensions and scale; pointer x/y are logical points from the content
+view's top-left. Key payloads include the AppKit key code, modifier flags, and
+bounded UTF-8 text. Close requests are events and leave the C-owned handle
+valid until the caller destroys it. Polling pumps pending AppKit messages
+without waiting and returns false when the queue is empty.
+
+The driver validates `tests/ui/native-lifecycle.jsonl` and runs the Release
+executable for native lifecycle smoke checks:
+
+```sh
+python3 app/test_driver/driver.py --native-platform-smoke --cycles 100 \
+  --output-dir .cache/WO-M1-01/native-smoke
+```
+
+Each invocation reserves a new `run-NNNN` child beneath the requested output
+root. Repeating the command preserves earlier smoke evidence and cannot replace
+existing files. The root and every existing path component must remain under
+`.cache/` and must not be a symlink.
+
+The smoke creates, resizes, injects AppKit key/pointer events, requests close,
+and destroys each window 100 times without sleep-based synchronization. It
+records stdout, stderr, the JSONL scenario, exact completed-cycle count, and
+elapsed wall time. Synthetic AppKit events exercise event delivery and
+normalization; they do not replace manual testing with physical mouse,
+keyboard, trackpad, or display changes.

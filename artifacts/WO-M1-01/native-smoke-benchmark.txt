@@ -1,0 +1,14 @@
+{
+  "cycles_per_run": 100,
+  "runs": 5,
+  "samples_elapsed_seconds": [
+    3.7841997079958674,
+    3.868203459001961,
+    4.182885500005796,
+    3.9978730000002543,
+    4.166297583011328
+  ],
+  "median_seconds": 3.9978730000002543,
+  "p95_nearest_rank_seconds": 4.182885500005796,
+  "all_completed": true
+}
