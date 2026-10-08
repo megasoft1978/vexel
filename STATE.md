@@ -1,7 +1,7 @@
 # Project state
 
-- Current work order: `WO-BOOT-01` (running; fresh verifier pending).
-- Last accepted commit: `b90dfbc44623e9834852b19513116149c83a15f0` (research baseline).
+- Current work order: none; `WO-BOOT-01` is complete and verified.
+- Last accepted code commit: `beb0cdd` (`build: scaffold macOS C17 project`).
 - Working branch: `main` (BOOT-04 worktree tooling does not exist yet).
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
 - Build: Debug, Release, and ASan/UBSan smoke builds pass on Apple Clang 21.0.0.
