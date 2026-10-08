@@ -30,11 +30,13 @@ verified, and recorded in `STATE.md` and the ledgers.
 ## Commands
 
 - `./dev build`: configure and build Debug.
+- `./dev test-fast`: run local Python tests and validate the ledger.
+- `./dev verify`: run the Debug build and fast tests.
 - `cmake --preset mac-release && cmake --build --preset mac-release`: Release.
 - `python3 scripts/ledger.py validate ledger.jsonl`: validate work history.
 - `python3 -m unittest`: run Python harness tests when present.
-- `./dev test`, `bench`, `fmt`, `lint`, `asan`, and `fuzz` become authoritative
-  only when their work orders implement them; do not claim missing commands run.
+- `bench`, `fmt`, `lint`, `asan`, and `fuzz` become authoritative only when
+  their work orders implement them; do not claim missing commands run.
 
 ## Engineering and safety
 
