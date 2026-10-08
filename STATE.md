@@ -1,5 +1,7 @@
 # Project state
 
+- Current work order: `WO-M0-02` is frozen and ready on `main`; its one-time
+  oracle baseline seeding exception is scoped to newly added files only.
 - Current work order: `WO-M0-01` is implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
   merged to `main` at `6d5af96d73c946a1bd91ab7817a69e22eba79630`.
@@ -30,5 +32,5 @@
   passed runner validation; the accepted report is retained in per-run evidence.
 - No renderer throughput, memory, or latency result is claimed for M0-01; its
   synthetic corpus is an input baseline, not a representative user corpus.
-- Next: WO-M0-02 stress generator/oracle. Continue through M0-04
-  and stop for its owner gate.
+- After WO-M0-02: prepare the M0-03 competitor benchmark, then M0-04 evidence
+  packet and stop for its owner gate.
