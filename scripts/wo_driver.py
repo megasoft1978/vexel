@@ -116,9 +116,8 @@ def path_rules(body: str) -> tuple[list[str], list[str]]:
         elif line.startswith("# "):
             active = ""
         elif active:
-            match = re.search(r"`([^`]+)`", line)
-            if match:
-                sections[active].append(match.group(1))
+            for group in re.findall(r"`([^`]+)`", line):
+                sections[active].extend(part.strip() for part in group.split(",") if part.strip())
     return sections["allowed"], sections["protected"]
 
 

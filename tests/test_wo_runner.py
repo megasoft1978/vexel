@@ -55,6 +55,14 @@ class FrozenWorkOrderTests(unittest.TestCase):
         for path in ("scripts/oracle/frozen.py", "../outside", "/tmp/outside"):
             self.assertFalse(wo_validate.changed_path_allowed(path, allow, protected))
 
+    def test_work_order_path_rules_read_all_comma_separated_entries(self) -> None:
+        body = (wo_validate.ROOT / "work/WO-BOOT-04.md").read_text()
+        allowed, protected = wo_driver.path_rules(body)
+        self.assertIn("scripts/wo-verify.sh", allowed)
+        self.assertIn("docs/adr/0003-codex-cli-compatibility-amendment.md", allowed)
+        self.assertIn("tests/golden/manifest.lock", protected)
+        self.assertIn(".github/**", protected)
+
 
 class RunnerPrimitiveTests(unittest.TestCase):
     def fake_help(self, missing: str = ""):
