@@ -34,7 +34,8 @@
 - Completed work order: `WO-BOOT-06` revision 2 merged to `main` at `2d3a0c56ab913495391480e3b7674edd53766316`. The runner-format mismatch in revision 1 was corrected; its initial suite failure did not reproduce on the serial rerun.
 - BOOT-06 acceptance: 10 focused golden tests, 2 tolerance checks, 5 negative-path checks, 1 determinism check, and `./dev verify` with 123 tests pass; zero failures, errors, or skips. The two fresh verifier rounds found genuine issues, all corrected. The two-round cap was reached, so no post-fix fresh verifier pass is claimed; review details are in `artifacts/WO-BOOT-06/review-rounds.md`.
 - Golden baselines, manifest, and oracle paths were unchanged. No renderer or performance claim is made. Evidence is under `artifacts/WO-BOOT-06/`.
-- Active: `WO-BOOT-07` revision 1 is READY from base `70d18f4f9cfade2bdba653cc55c6338853a93296`; implementation will add a bounded deterministic JSONL test driver without a native UI or renderer.
+- `WO-BOOT-07` revision 1 stopped before commit: the driver implementation and focused tests pass, but the runner reused the smoke output path and the executor sandbox denied existing benchmark `sandbox-exec` tests. Revision 2 clears the smoke directory before replay; the full suite will be rerun from the host after executor completion. Evidence is retained under `artifacts/WO-BOOT-07/`.
+- Active: `WO-BOOT-07` revision 2 is READY from base `41fe3393793a1a982591b63092a6f707d541a431`.
 - Next after BOOT-07: prepare the M0-04 evidence packet and stop at its owner gate.
 - Completed work order: `WO-M0-01` was implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and

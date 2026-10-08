@@ -1,12 +1,13 @@
 ---
 id: WO-BOOT-07
-revision: 1
+revision: 2
+supersedes: 1
 status: READY
 milestone: M0
 owner: project-owner
 executor: codex-gpt-6-luna
-base_sha: 70d18f4f9cfade2bdba653cc55c6338853a93296
-spec_sha256: 46543cdd116d5f8bfcb6f52ec093d60bfb120e28d3f441bf217a847b54edb37f
+base_sha: 41fe3393793a1a982591b63092a6f707d541a431
+spec_sha256: 2a138e5bd0fc19c081656b04259b4512050d662b3626276e0b61d282f3fafe36
 parallel_safe: false
 network: false
 ---
@@ -65,6 +66,7 @@ Run these sequentially from the repository root; no tests may overlap.
 python3 -m unittest tests.test_ui_driver
 python3 -m unittest tests.test_ui_driver.DriverTests.test_all_commands_emit_placeholder_artifacts tests.test_ui_driver.DriverTests.test_identical_replay_is_byte_identical
 python3 -m unittest tests.test_ui_driver.DriverTests.test_invalid_cli_and_jsonl_are_rejected tests.test_ui_driver.DriverTests.test_path_escape_symlink_and_existing_output_are_rejected tests.test_ui_driver.DriverTests.test_bounds_and_command_order_are_enforced
+python3 -c "import shutil; from pathlib import Path; shutil.rmtree(Path('.cache/WO-BOOT-07/smoke'), ignore_errors=True)"
 python3 app/test_driver/driver.py --script tests/ui/mixed-commands.jsonl --output-dir .cache/WO-BOOT-07/smoke --seed 17
 python3 -m unittest tests.test_ui_driver.DriverTests.test_smoke_output_contract
 ./dev verify
