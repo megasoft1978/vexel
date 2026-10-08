@@ -35,7 +35,7 @@
 - BOOT-06 acceptance: 10 focused golden tests, 2 tolerance checks, 5 negative-path checks, 1 determinism check, and `./dev verify` with 123 tests pass; zero failures, errors, or skips. The two fresh verifier rounds found genuine issues, all corrected. The two-round cap was reached, so no post-fix fresh verifier pass is claimed; review details are in `artifacts/WO-BOOT-06/review-rounds.md`.
 - Golden baselines, manifest, and oracle paths were unchanged. No renderer or performance claim is made. Evidence is under `artifacts/WO-BOOT-06/`.
 - `WO-BOOT-07` revision 1 stopped before commit: the driver implementation and focused tests pass, but the runner reused the smoke output path and the executor sandbox denied existing benchmark `sandbox-exec` tests. Revision 2 clears the smoke directory before replay; the full suite will be rerun from the host after executor completion. Evidence is retained under `artifacts/WO-BOOT-07/`.
-- Active: `WO-BOOT-07` revision 2 is READY from base `41fe3393793a1a982591b63092a6f707d541a431`.
+- Active: `WO-BOOT-07` revision 2 was superseded before implementation verification because AC-4 lacked a machine command to validate smoke outputs. Revision 3 is READY from base `1dec48b2aa950274db63917f0413b9f715fc6857`; it adds an explicit PNG/JSON artifact validator.
 - Next after BOOT-07: prepare the M0-04 evidence packet and stop at its owner gate.
 - Completed work order: `WO-M0-01` was implemented and accepted on candidate
   `f2a2db5035fda2afb0aa1413eb26c2d246003827`, independently verified, and
