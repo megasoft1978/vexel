@@ -27,3 +27,7 @@ paths, and deterministic report/heatmap generation. See
 ordering, safe new output paths, valid PNG and semantic JSON artifacts, seed
 sensitivity, and byte-identical replays. It is exercised explicitly by
 `python3 -m unittest tests.test_ui_driver` and by `./dev test-fast`.
+
+`tests/ui/mixed-commands.jsonl` is the bounded placeholder UI replay fixture;
+`tests/ui/verify_smoke.py` validates its PNG and JSON output artifacts using the
+project's PNG profile decoder.
