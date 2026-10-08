@@ -1,9 +1,9 @@
 {
-  "started_at": "2026-10-08T14:52:22.565Z",
-  "ended_at": "2026-10-08T14:52:25.829Z",
-  "elapsed_seconds": 3.264078,
+  "started_at": "2026-10-08T15:01:33.995Z",
+  "ended_at": "2026-10-08T15:01:37.082Z",
+  "elapsed_seconds": 3.086701,
   "counts": {
-    "passed": 51,
+    "passed": 52,
     "failed": 0,
     "error": 0,
     "skipped": 0,
@@ -165,6 +165,10 @@
     },
     {
       "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_supported_fake",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_recursive_work_order_globs_match_nested_files",
       "status": "passed"
     },
     {

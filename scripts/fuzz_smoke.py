@@ -16,6 +16,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SANITIZER_RE = re.compile(r"AddressSanitizer|UndefinedBehaviorSanitizer|runtime error:|LeakSanitizer")
 PRINTABLE = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_./=:+"
+VERSION_OUTPUT = "svgworkbench 0.0.1"
+
+
+def expected_success(case: list[str], output: str) -> bool:
+    if case == ["--version"] and output.strip() == VERSION_OUTPUT:
+        return True
+    return case == ["--help"] and re.search(r"(?m)^usage: svgworkbench(?:\s|$)", output) is not None
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -73,7 +80,7 @@ def main(argv: list[str] | None = None) -> int:
                 failure = f"signal {abs(process.returncode)}"
             elif SANITIZER_RE.search(stdout + stderr):
                 failure = "sanitizer report"
-            elif process.returncode == 0 and not (case == ["--version"] and stdout.strip() == "svgworkbench 0.0.1"):
+            elif process.returncode == 0 and not expected_success(case, stdout + stderr):
                 failure = "unexpected exit 0 for invalid CLI arguments"
             elif process.returncode not in (0, 1):
                 failure = f"unexpected exit {process.returncode}"
