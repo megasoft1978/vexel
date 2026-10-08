@@ -13,10 +13,12 @@ that each item cites a successful command the wrapper actually ran.
 
 ## Decision
 
-Remove `minProperties` from the schema so the same report can be used with
-strict structured output. Keep the runtime exact-key and non-empty command
-evidence checks unchanged, and add a regression test that rejects missing or
-empty acceptance evidence. No acceptance criterion becomes optional.
+Remove `minProperties` from the base schema. The runner generates the strict
+executor schema in the ignored run directory, expanding its dynamic acceptance
+item schema into explicit required properties for exactly the current work
+order's AC IDs. Keep the runtime exact-key and non-empty command evidence checks
+unchanged, and add regression tests for schema expansion and missing or empty
+acceptance evidence. No acceptance criterion becomes optional.
 
 ## Consequences
 

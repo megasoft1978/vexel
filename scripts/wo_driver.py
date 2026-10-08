@@ -277,6 +277,22 @@ def acceptance_ids(body: str) -> set[str]:
     return set(re.findall(r"(?m)^-\s+(AC-\d+)\b", body))
 
 
+def strict_executor_schema(schema: dict[str, Any], acceptance: set[str]) -> dict[str, Any]:
+    """Expand dynamic acceptance keys to the explicit object required by strict output."""
+    if not acceptance:
+        raise RunnerError("work order has no acceptance IDs for strict report schema")
+    result = json.loads(json.dumps(schema))
+    try:
+        acceptance_schema = result["properties"]["acceptance"]
+        item_schema = acceptance_schema.pop("additionalProperties")
+    except (KeyError, AttributeError, TypeError) as exc:
+        raise RunnerError("executor report schema has no dynamic acceptance item schema") from exc
+    acceptance_schema["properties"] = {key: item_schema for key in sorted(acceptance)}
+    acceptance_schema["required"] = sorted(acceptance)
+    acceptance_schema["additionalProperties"] = False
+    return result
+
+
 def assert_root_scope(root: Path, body: str) -> None:
     allowed, protected = path_rules(body)
     status = repo(root, "status", "--porcelain", "--untracked-files=all")
@@ -425,7 +441,12 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         version, _, _ = preflight(args.codex, evidence=run_dir / "codex-preflight.txt")
         if args.mode == "new":
             worktree = create_worktree(root, args.wo_id, start_sha)
+        body = (root / "work" / f"{args.wo_id}.md").read_text(encoding="utf-8")
         schema = root / "docs/schemas/executor-report.schema.json"
+        strict_schema = strict_executor_schema(
+            json.loads(schema.read_text(encoding="utf-8")), acceptance_ids(body))
+        strict_schema_path = run_dir / "executor-report.schema.json"
+        strict_schema_path.write_text(json.dumps(strict_schema, indent=2) + "\n", encoding="utf-8")
         report_path = run_dir / "report.json"
         prompt = (f"Read work/{args.wo_id}.md and complete it. Run every acceptance command, "
                   f"commit only an accepted implementation, and write the required JSON report to {report_path}.")
@@ -433,7 +454,8 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         if session: command += ["resume", session]
         command += ["-m", "gpt-6-luna", "-c", "model_reasoning_effort=high",
                     "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check",
-                    "--json", "--output-schema", str(schema), "--output-last-message", str(report_path)]
+                    "--json", "--output-schema", str(strict_schema_path),
+                    "--output-last-message", str(report_path)]
         for image in args.image: command += ["--image", image]
         command += ["-"]
         stdout_path, stderr_path = run_dir / "stdout.jsonl", run_dir / "stderr.log"
@@ -442,7 +464,6 @@ def run_executor(args: argparse.Namespace, root: Path, fields: dict[str, str],
         if code != 0: raise RunnerError(f"Codex executor exited {code}")
         session = parse_session_id(output) or session
         if not session: raise RunnerError("executor JSONL did not provide a thread.started UUID")
-        body = (root / "work" / f"{args.wo_id}.md").read_text(encoding="utf-8")
         check_results = run_checks(worktree, run_dir, body, args.timeout)
         executed_commands = {tuple(item["argv"]) for item in check_results}
         report = validate_report(report_path, schema, base, acceptance_ids(body), executed_commands)

@@ -262,6 +262,16 @@ class RunnerPrimitiveTests(unittest.TestCase):
             with self.assertRaisesRegex(wo_driver.RunnerError, "acceptance evidence"):
                 wo_driver.validate_report(report, schema, "a" * 40, {"AC-1"}, set())
 
+    def test_strict_executor_schema_expands_work_order_acceptance_ids(self) -> None:
+        schema = json.loads((wo_validate.ROOT / "docs/schemas/executor-report.schema.json").read_text())
+        result = wo_driver.strict_executor_schema(schema, {"AC-1", "AC-3"})
+        acceptance = result["properties"]["acceptance"]
+        self.assertEqual(acceptance["required"], ["AC-1", "AC-3"])
+        self.assertEqual(set(acceptance["properties"]), {"AC-1", "AC-3"})
+        self.assertIs(acceptance["additionalProperties"], False)
+        with self.assertRaisesRegex(wo_driver.RunnerError, "no acceptance IDs"):
+            wo_driver.strict_executor_schema(schema, set())
+
     def test_verifier_stops_when_deterministic_check_fails(self) -> None:
         with temporary_directory() as name:
             root = Path(name); subprocess.run(["git", "init", "-q"], cwd=root, check=True)
