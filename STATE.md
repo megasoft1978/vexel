@@ -1,8 +1,10 @@
 # Project state
 
-- Current work order: `WO-M0-01` implementation is committed on its isolated branch; local checks pass, but the executor report citation gate needs a corrected retry before independent verification.
+- Current work order: `WO-M0-01` is implemented and accepted on candidate
+  `f2a2db5035fda2afb0aa1413eb26c2d246003827`; it is ready for fast-forward merge.
 - BOOT-05 revision 3 is accepted and merged at `178f0e57554cf1eae8182a9cf89330297b647ffb` (merge includes the previously verified candidate and the equivalent root-scope path matcher cleanup).
-- Working branch: `main`; no active task worktree.
+- Working branch: `wo/WO-M0-01`; merge this verified candidate to `main` before
+  starting `WO-M0-02`.
 - Platform: Apple Silicon macOS 13+ only, per `OWNER-DIRECTIVES.md`.
 - Build: Debug, `mac-asan` (AddressSanitizer + UndefinedBehaviorSanitizer), and `mac-ubsan` configure/build/CTest pass with Apple Clang 21.0.0.
 - Test inventory: latest `./dev verify` reports 69 Python tests pass with zero failures or skips; targeted ledger/runner/BOOT-05 and corpus tests pass.
@@ -18,6 +20,15 @@
 - Hardening checks: 38 focused runner tests and 59 full fast tests pass, with zero failures/skips; workspace-write default, read-only verifier, frozen source snapshot, unchanged active root-copy acceptance, and candidate/root hard-deny path tests pass.
 - First preflight attempt stopped because `exec resume --help` omits the inherited short sandbox alias; the runner now validates `-s` on `exec --help`. One substantive review round identified an untested active-order positive case and an executor prompt using the worktree copy; both were fixed before the passing final review.
 - M0-01 corpus candidate: 24 project-authored MPL-2.0 fixtures cover shapes, paths, metadata/namespaces, style, text, embedded image, and small stress cases. The pinned WPT 3-Clause BSD notice is retained and hash checked; no WPT test file is included. Fetch/verify/query and 10 focused offline tests pass; full `./dev verify` reports 69 tests, zero failures/skips. Evidence is in `artifacts/WO-M0-01/`.
-- Candidate history records ready/run-started/run-finished only. The executor report path/evidence issue must be corrected before appending verified/accepted/merged transitions.
-- The executor report was rejected by the wrapper because two acceptance records cited commands outside the frozen command list. No independent verifier or acceptance event is claimed; correct the report evidence before merge.
-- Next after M0-01: M0-02 stress generator/oracle. Continue through M0-04 and stop for its owner gate.
+- M0-01 acceptance: all six frozen machine criteria passed, 10 focused corpus
+  tests pass, and `./dev verify` reports 69 passed with zero failures/skips.
+  Fresh read-only exact-commit verification passed with no findings; evidence
+  is under `artifacts/WO-M0-01/` and ignored per-run records under
+  `artifacts/runs/WO-M0-01/`.
+- The initial executor report was rejected because two records cited commands
+  outside the frozen list. The resumed run corrected the command citations and
+  passed runner validation; the accepted report is retained in per-run evidence.
+- No renderer throughput, memory, or latency result is claimed for M0-01; its
+  synthetic corpus is an input baseline, not a representative user corpus.
+- Next after merge: WO-M0-02 stress generator/oracle. Continue through M0-04
+  and stop for its owner gate.
