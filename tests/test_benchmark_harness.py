@@ -42,6 +42,13 @@ class BenchmarkHarnessTests(unittest.TestCase):
         for record in records.values():
             self.assertEqual(compare.sha(Path(record["path_abs"]).read_bytes()), record["sha256"])
 
+    def test_report_does_not_claim_available_host_metadata_is_missing(self):
+        metadata = {"hardware_model": "Mac17,14", "memory_bytes": 68_719_476_736}
+        report = compare.build_report("smoke", metadata, self.meta, self.records,
+                                      [], [], {}, [], [])
+        self.assertFalse(any("host hardware metadata unavailable" in item
+                             for item in report["limitations"]))
+
     def test_png_validator_checks_dimensions_and_crc(self):
         png = compare.fake_png()
         self.assertEqual(compare.png_dimensions(png), (256, 256))
@@ -183,6 +190,8 @@ class BenchmarkHarnessTests(unittest.TestCase):
             summary_rows = [r for r in rows if r["record_type"] == "summary"]
             self.assertEqual([r["trial_id"] for r in raw_rows], [t["trial_id"] for t in report["trials"]])
             self.assertEqual([r["output_sha256"] for r in raw_rows], [t["output_sha256"] for t in report["trials"]])
+            self.assertTrue(all(t["task"] == "svg-render" for t in report["trials"]))
+            self.assertTrue(all(r["task"] == "svg-render" for r in raw_rows))
             self.assertEqual(len(summary_rows), len(report["summary"]))
             for row, summary in zip(summary_rows, report["summary"]):
                 self.assertEqual(float(row["latency_median"]), summary["latency_seconds"]["median"])

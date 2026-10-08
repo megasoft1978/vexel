@@ -298,7 +298,8 @@ def run_one(adapter: dict, fixture: dict, cache: Path, condition: str, index: in
         except (OSError, BenchError) as exc:
             error, status = str(exc), "failed"
     return {"trial_id": trial_id, "adapter_id": adapter["id"], "fixture_id": fixture["fixture_id"],
-            "fixture_sha256": fixture["sha256"], "condition": condition, "trial_index": index,
+            "fixture_sha256": fixture["sha256"], "task": "svg-render",
+            "condition": condition, "trial_index": index,
             "status": status, "exit_code": code, "elapsed_seconds": round(elapsed, 9),
             "peak_rss_bytes": rss, "output_path": str(output.relative_to(ROOT)) if output_hash else None,
             "output_size": output_size, "output_sha256": output_hash,
@@ -508,6 +509,15 @@ def build_report(mode: str, metadata: dict, corpus: dict, records: dict[str, dic
                             "render_argv": item["render_argv"]} for item in adapters]
     fixtures = [{"fixture_id": fid, "fixture_sha256": records[fid]["sha256"],
                  "source_sha256": records[fid]["source_sha256"]} for fid in FIXTURES]
+    limitations = ["process-cold means a fresh process only; filesystem cache eviction is not claimed",
+                   "peak RSS is unavailable through the bounded standard-library process interface",
+                   "no render measurements are available for adapters without a compatible declared command",
+                   "Vexel --version measures startup only and is not compared with SVG rendering"]
+    unavailable_hardware = [key for key, unavailable in (
+        ("hardware_model", metadata.get("hardware_model") in (None, "unavailable")),
+        ("memory_bytes", metadata.get("memory_bytes") is None)) if unavailable]
+    if unavailable_hardware:
+        limitations.append("host hardware metadata unavailable for: " + ", ".join(unavailable_hardware))
     return {"schema_version": 1, "work_order": "WO-M0-03", "mode": mode,
             "metadata": metadata,
             "limits": {"trials_per_condition": TRIALS, "timeout_seconds": TIMEOUT,
@@ -516,12 +526,7 @@ def build_report(mode: str, metadata: dict, corpus: dict, records: dict[str, dic
                 "dimensions": [DIMENSION, DIMENSION]},
             "corpus": corpus, "fixtures": fixtures, "adapters": adapter_records,
             "availability": availability, "vexel_version_probe": probe,
-            "trials": trials, "summary": summary,
-            "limitations": ["process-cold means a fresh process only; filesystem cache eviction is not claimed",
-                "peak RSS is unavailable through the bounded standard-library process interface",
-                "hardware model and physical memory are unavailable because sysctl metadata was unavailable",
-                "no render measurements are available for adapters without a compatible declared command",
-                "Vexel --version measures startup only and is not compared with SVG rendering"]}
+            "trials": trials, "summary": summary, "limitations": limitations}
 
 
 def save_outputs(report: dict, json_path: Path, csv_path: Path,
