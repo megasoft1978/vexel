@@ -1,9 +1,11 @@
 # Deterministic UI test driver
 
 `app/test_driver/driver.py` is a macOS-only, standard-library developer harness.
-It replays a JSONL stream against a small placeholder state model; it does not
-open a native window, read the named document, render SVG, or execute content.
-The document ID is only a bounded label.
+Its default mode replays JSONL against a small placeholder state model; native
+AppKit testing is a separate `--native-platform-smoke` mode. Neither mode reads
+SVG documents, renders SVG, or executes document content. In native mode the
+open command's bounded document ID supplies the window title, and the current
+synthetic key adapter accepts the key `a`.
 
 ## Invocation and limits
 
@@ -61,8 +63,9 @@ bounded UTF-8 text. Close requests are events and leave the C-owned handle
 valid until the caller destroys it. Polling pumps pending AppKit messages
 without waiting and returns false when the queue is empty.
 
-The driver validates `tests/ui/native-lifecycle.jsonl` and runs the Release
-executable for native lifecycle smoke checks:
+The driver reads `tests/ui/native-lifecycle.jsonl`, translates each open,
+resize, key, pointer, and quit command into a bounded argument, and runs the
+Release executable for native lifecycle smoke checks:
 
 ```sh
 python3 app/test_driver/driver.py --native-platform-smoke --cycles 100 \
@@ -74,8 +77,9 @@ root. Repeating the command preserves earlier smoke evidence and cannot replace
 existing files. The root and every existing path component must remain under
 `.cache/` and must not be a symlink.
 
-The smoke creates, resizes, injects AppKit key/pointer events, requests close,
-and destroys each window 100 times without sleep-based synchronization. It
+The smoke executes those scenario actions, injects corresponding AppKit
+key/pointer events, requests close, and destroys each window 100 times without
+sleep-based synchronization. It
 records stdout, stderr, the JSONL scenario, exact completed-cycle count, and
 elapsed wall time. Synthetic AppKit events exercise event delivery and
 normalization; they do not replace manual testing with physical mouse,

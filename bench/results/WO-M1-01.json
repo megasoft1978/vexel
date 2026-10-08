@@ -8,12 +8,12 @@
   },
   "release_executable": {
     "path": "build/mac-release/bin/svgworkbench",
-    "size_bytes": 73952
+    "size_bytes": 74048
   },
   "native_smoke": {
     "requested_cycles": 100,
     "completed_cycles": 100,
-    "acceptance_elapsed_seconds": 3.304583,
+    "acceptance_elapsed_seconds": 3.2132832079951186,
     "status": "passed",
     "events": [
       "open",
@@ -27,14 +27,14 @@
       "cycles_per_run": 100,
       "runs": 5,
       "samples_elapsed_seconds": [
-        3.7841997079958674,
-        3.868203459001961,
-        4.182885500005796,
-        3.9978730000002543,
-        4.166297583011328
+        3.209596042011981,
+        3.3999841249897145,
+        3.1406728330039186,
+        3.241060957996524,
+        3.1838259999931324
       ],
-      "median_seconds": 3.9978730000002543,
-      "p95_nearest_rank_seconds": 4.182885500005796,
+      "median_seconds": 3.209596042011981,
+      "p95_nearest_rank_seconds": 3.3999841249897145,
       "all_completed": true
     }
   },
@@ -44,8 +44,8 @@
     "status": "passed"
   },
   "verification": {
-    "focused_tests": 7,
-    "full_tests_passed": 136,
+    "focused_tests": 8,
+    "full_tests_passed": 137,
     "full_tests_failed": 0,
     "full_tests_errors": 0,
     "full_tests_skipped": 0

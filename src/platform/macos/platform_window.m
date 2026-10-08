@@ -263,42 +263,42 @@ bool platform_window_resize(platform_window *window, int32_t width_points, int32
     return true;
 }
 
-bool platform_test_inject_key(platform_window *window)
+bool platform_test_inject_key(platform_window *window, bool key_down)
 {
     if (!platform_on_main_thread() || window == NULL) {
         return false;
     }
     @autoreleasepool {
-        NSEvent *event = [NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint
+        NSEventType type = key_down ? NSEventTypeKeyDown : NSEventTypeKeyUp;
+        NSEvent *event = [NSEvent keyEventWithType:type location:NSZeroPoint
             modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
             characters:@"a" charactersIgnoringModifiers:@"a" isARepeat:NO keyCode:0];
-        [NSApp sendEvent:event];
-        event = [NSEvent keyEventWithType:NSEventTypeKeyUp location:NSZeroPoint modifierFlags:0
-            timestamp:0.0 windowNumber:window->native.windowNumber context:nil characters:@"a"
-            charactersIgnoringModifiers:@"a" isARepeat:NO keyCode:0];
         [NSApp sendEvent:event];
         return true;
     }
 }
 
-bool platform_test_inject_pointer(platform_window *window)
+bool platform_test_inject_pointer(platform_window *window, platform_event_type type,
+                                  int32_t logical_x, int32_t logical_y)
 {
-    if (!platform_on_main_thread() || window == NULL) {
+    if (!platform_on_main_thread() || window == NULL || logical_x < 0 || logical_y < 0 ||
+        (type != PLATFORM_EVENT_POINTER_MOVE && type != PLATFORM_EVENT_POINTER_DOWN &&
+         type != PLATFORM_EVENT_POINTER_UP)) {
         return false;
     }
     @autoreleasepool {
-        NSPoint point = NSMakePoint(12.0, NSHeight(window->native.contentView.bounds) - 18.0);
-        NSEvent *event = [NSEvent mouseEventWithType:NSEventTypeMouseMoved location:point
+        NSPoint point = NSMakePoint(logical_x,
+            NSHeight(window->native.contentView.bounds) - logical_y);
+        NSEventType event_type = NSEventTypeMouseMoved;
+        if (type == PLATFORM_EVENT_POINTER_DOWN) {
+            event_type = NSEventTypeLeftMouseDown;
+        } else if (type == PLATFORM_EVENT_POINTER_UP) {
+            event_type = NSEventTypeLeftMouseUp;
+        }
+        NSEvent *event = [NSEvent mouseEventWithType:event_type location:point
             modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
-            eventNumber:0 clickCount:0 pressure:0.0];
-        [NSApp sendEvent:event];
-        event = [NSEvent mouseEventWithType:NSEventTypeLeftMouseDown location:point
-            modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
-            eventNumber:0 clickCount:1 pressure:1.0];
-        [NSApp sendEvent:event];
-        event = [NSEvent mouseEventWithType:NSEventTypeLeftMouseUp location:point
-            modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
-            eventNumber:0 clickCount:1 pressure:0.0];
+            eventNumber:0 clickCount:(type == PLATFORM_EVENT_POINTER_MOVE ? 0 : 1)
+            pressure:(type == PLATFORM_EVENT_POINTER_DOWN ? 1.0 : 0.0)];
         [NSApp sendEvent:event];
         return true;
     }

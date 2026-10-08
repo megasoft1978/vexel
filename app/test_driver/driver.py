@@ -322,6 +322,28 @@ def validate_normalized_events(events: list[dict[str, Any]], expected: list[str]
                 raise DriverError("native pointer event has malformed payload")
 
 
+def native_command_arguments(commands: list[dict[str, Any]]) -> list[str]:
+    """Translate the validated JSONL actions into native executable arguments."""
+    result: list[str] = []
+    for command in commands:
+        name = command["command"]
+        if name == "open":
+            result.extend(["--open", command["document_id"]])
+        elif name == "resize":
+            result.extend(["--resize", str(command["width"]), str(command["height"])])
+        elif name == "key":
+            if command["key"] != "a":
+                raise DriverError("native smoke currently supports the key 'a'")
+            result.extend(["--key", command["action"], command["key"]])
+        elif name == "pointer":
+            result.extend(["--pointer", command["action"], str(command["x"]), str(command["y"])])
+        elif name == "quit":
+            result.append("--quit")
+        else:
+            raise DriverError(f"native smoke does not support the {name} command")
+    return result
+
+
 def native_smoke(out: Path, cycles: int) -> float:
     if type(cycles) is not int or not 1 <= cycles <= 10000:
         raise DriverError("cycles must be an integer from 1 to 10000")
@@ -330,22 +352,12 @@ def native_smoke(out: Path, cycles: int) -> float:
         raise DriverError("Release executable is missing; build preset mac-release first")
     scenario_path = ROOT / "tests" / "ui" / "native-lifecycle.jsonl"
     scenario = read_script(scenario_path)
-    expected_scenario = [
-        {"command": "open", "document_id": "native-smoke"},
-        {"command": "resize", "width": 640, "height": 480},
-        {"command": "key", "action": "down", "key": "a"},
-        {"command": "key", "action": "up", "key": "a"},
-        {"command": "pointer", "action": "move", "x": 12, "y": 18},
-        {"command": "pointer", "action": "down", "x": 12, "y": 18},
-        {"command": "pointer", "action": "up", "x": 12, "y": 18},
-        {"command": "quit"},
-    ]
-    if scenario != expected_scenario:
-        raise DriverError("native lifecycle scenario does not match the executable smoke actions")
+    native_arguments = native_command_arguments(scenario)
     (out / "scenario.jsonl").write_bytes(scenario_path.read_bytes())
     started = time.monotonic()
     try:
-        result = subprocess.run([str(binary), "--native-platform-smoke", "--cycles", str(cycles)],
+        result = subprocess.run([str(binary), "--native-platform-smoke", "--cycles", str(cycles),
+                                 *native_arguments],
                                 cwd=ROOT, capture_output=True, text=True, timeout=300, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise DriverError(f"native smoke could not complete: {exc}") from exc

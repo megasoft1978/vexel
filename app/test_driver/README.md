@@ -1,8 +1,10 @@
 # UI test driver
 
-`driver.py` is a macOS-only, Python standard-library test harness for replaying
-bounded JSONL UI events against a placeholder state model. It does not display a
-window, read an SVG document, or implement widgets. See `docs/ui-test-driver.md`
+`driver.py` is a macOS-only, Python standard-library test harness. Its default
+mode replays bounded JSONL UI events against a placeholder state model. The
+`--native-platform-smoke` mode translates a bounded open/resize/key/pointer/quit
+scenario into commands for the C app and exercises the AppKit window shim. It
+does not read SVG documents or implement widgets. See `docs/ui-test-driver.md`
 for the command schema, input limits, output artifacts, and replay guarantees.
 
 Inputs resolve inside the repository. Placeholder replay outputs must be new

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -32,6 +34,26 @@ class PlatformDriverTests(unittest.TestCase):
         self.assertEqual([item["command"] for item in commands],
                          ["open", "resize", "key", "key", "pointer", "pointer", "pointer", "quit"])
         driver.validate_normalized_events(self.events, self.expected)
+        self.assertEqual(driver.native_command_arguments(commands), [
+            "--open", "native-smoke", "--resize", "640", "480",
+            "--key", "down", "a", "--key", "up", "a",
+            "--pointer", "move", "12", "18", "--pointer", "down", "12", "18",
+            "--pointer", "up", "12", "18", "--quit",
+        ])
+
+    def test_native_translation_uses_scenario_values(self) -> None:
+        commands = driver.read_script(Path(__file__).parent / "ui" / "native-lifecycle.jsonl")
+        commands[0]["document_id"] = "custom-window-title"
+        commands[1]["width"], commands[1]["height"] = 800, 600
+        for command in commands:
+            if command["command"] == "pointer":
+                command["x"], command["y"] = 20, 30
+        translated = driver.native_command_arguments(commands)
+        self.assertEqual(translated[:5], ["--open", "custom-window-title", "--resize", "800", "600"])
+        self.assertEqual(translated[11:24], [
+            "--pointer", "move", "20", "30", "--pointer", "down", "20", "30",
+            "--pointer", "up", "20", "30", "--quit",
+        ])
 
     def test_resize_and_scale_payloads(self) -> None:
         self.assertEqual(self.events[1]["pixel_width"], 640)
@@ -69,11 +91,19 @@ class PlatformDriverTests(unittest.TestCase):
             driver.validate_native_smoke_output("native smoke events: open resize\ncompleted cycles: 100\n", 100)
 
     def test_100_cycles(self) -> None:
-        for _ in range(100):
-            driver.validate_normalized_events(self.events, self.expected)
-        self.assertEqual(driver.validate_native_smoke_output(
-            "native smoke events: open resize scale key pointer close\ncompleted cycles: 100\n", 100)[1],
-            "completed cycles: 100")
+        cache = driver.ROOT / ".cache"
+        cache.mkdir(exist_ok=True)
+        script = driver.ROOT / "app" / "test_driver" / "driver.py"
+        with tempfile.TemporaryDirectory(prefix="platform-cycles-", dir=cache) as temporary:
+            output_root = Path(temporary) / "native"
+            result = subprocess.run([
+                sys.executable, str(script), "--native-platform-smoke", "--cycles", "100",
+                "--output-dir", str(output_root),
+            ], text=True, capture_output=True, timeout=60, check=True)
+            self.assertIn("completed cycles: 100", result.stdout)
+            report = json.loads((output_root / "run-0001" / "result.json").read_text())
+            self.assertEqual(report["cycles"], 100)
+            self.assertEqual(report["status"], "passed")
 
     def test_native_output_root_is_repeatable_without_overwrite(self) -> None:
         cache = driver.ROOT / ".cache"
