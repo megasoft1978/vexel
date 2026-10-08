@@ -15,3 +15,9 @@ versions, OS/architecture, source hashes, PNG hashes, and fixed 256x256 raster
 dimensions. See `tests/oracle/metadata.json` and
 `tests/golden/manifest.lock`. This baseline is not an SVG conformance claim or
 a Vexel performance result.
+
+WO-M0-03 adds only process-invocation measurement infrastructure. The adapter
+boundary invokes configured released binaries as argv arrays and does not
+inspect, fetch, install, or copy renderer source. No third-party algorithm or
+renderer dependency was added. The offline test renderer is project-authored
+Python test code and emits a deterministic PNG; it is not a competitor result.

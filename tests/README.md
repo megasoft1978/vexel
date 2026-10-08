@@ -13,3 +13,7 @@ source/PNG SHA-256 offline; oracle tests never invoke `rsvg-convert`.
 The JSON includes UTC `started_at` and `ended_at`, monotonic elapsed seconds,
 status counts, and per-test IDs/statuses. Validation uses Python standard
 library code only; no test framework dependency is installed.
+
+`tests.test_benchmark_harness` checks the offline process adapter, pinned corpus
+hashes, bounded PNG validation, argv/shell safety, unsafe paths, failed trials,
+and JSON/CSV/output tamper detection. It never invokes a competitor or network.

@@ -22,6 +22,13 @@
   Renderer evidence and environment details are in `artifacts/WO-M0-02/`.
 - Current work order: `WO-M0-03` is frozen READY at `work/WO-M0-03.md`
   (base `cd503d6c348436faa183223d964957235b00a981`).
+- WO-M0-03 candidate implementation is ready for independent verification.
+  The runner executor could not write shared Git metadata, so the host
+  orchestrator is recording the already-tested candidate commit. Latest local
+  verification reports 100 tests passed with zero failures, errors, or skips.
+- Smoke verified all 24 corpus hashes; Inkscape and Donner are unavailable, and
+  Vexel has no render command. No render comparison is claimed. Evidence is in
+  `artifacts/WO-M0-03/` and `bench/results/WO-M0-03.*`.
 - Next after M0-03: BOOT-06, BOOT-07, then prepare the M0-04 evidence packet
   and stop at its owner gate.
 - Completed work order: `WO-M0-01` was implemented and accepted on candidate
