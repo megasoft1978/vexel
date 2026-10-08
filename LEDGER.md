@@ -16,3 +16,4 @@
 | 2026-10-08 | WO-BOOT-06 r1 | superseded after runner-format mismatch and first AC-6 attempt | `6d087941486cc5834369d07eff0058b59866fb78` | — | Rerun in task worktree: 122 tests pass; r2 corrects verification header/order; `artifacts/WO-BOOT-06/` |
 | 2026-10-08 | WO-BOOT-06 r2 | ready; implementation checks pass, review pending | `dfdfab99c062a70016fda7618cda87b305e54287` | — | 9 focused, 2 tolerance, 5 negative, 1 determinism tests; `./dev verify` 122 pass; `artifacts/WO-BOOT-06/verify.txt` |
 | 2026-10-08 | WO-BOOT-06 r2 | complete; two fresh reviews found issues that were fixed; cap reached; merged | `dfdfab99c062a70016fda7618cda87b305e54287` | `2d3a0c5` | 10 focused, 2 tolerance, 5 negative, 1 determinism tests; 123 full tests; baselines unchanged; `artifacts/WO-BOOT-06/` |
+| 2026-10-08 | WO-BOOT-07 r1 | ready | `70d18f4f9cfade2bdba653cc55c6338853a93296` | — | Frozen JSONL UI test driver protocol; `work/WO-BOOT-07.md` |
