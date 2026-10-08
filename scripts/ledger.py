@@ -17,6 +17,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+try:
+    from .wo_validate import ValidationError, load_wo
+except ImportError:
+    from wo_validate import ValidationError, load_wo
+
 ROOT = Path(__file__).resolve().parent.parent
 EVENTS = {
     "ready", "run_started", "run_finished", "verified", "accepted",
@@ -114,7 +119,7 @@ def _decode_line(raw: bytes, line_number: int) -> dict[str, Any]:
     return entry
 
 
-def validate_bytes(data: bytes) -> list[dict[str, Any]]:
+def validate_bytes(data: bytes, root: Path = ROOT) -> list[dict[str, Any]]:
     if data and not data.endswith(b"\n"):
         raise LedgerError("ledger must end with a newline")
     entries: list[dict[str, Any]] = []
@@ -125,6 +130,10 @@ def validate_bytes(data: bytes) -> list[dict[str, Any]]:
         if not raw:
             raise LedgerError(f"line {index}: blank lines are not allowed")
         entry = _decode_line(raw, index)
+        try:
+            load_wo(entry["wo_id"], root)
+        except (OSError, ValidationError) as exc:
+            raise LedgerError(f"line {index}: referenced WO is not frozen: {exc}") from exc
         run_id = entry["run_id"]
         if run_id in run_ids:
             raise LedgerError(f"line {index}: duplicate run_id {run_id}")
@@ -147,27 +156,28 @@ def validate_bytes(data: bytes) -> list[dict[str, Any]]:
     return entries
 
 
-def validate_file(path: Path) -> int:
+def validate_file(path: Path, root: Path = ROOT) -> int:
     try:
-        entries = validate_bytes(path.read_bytes())
+        entries = validate_bytes(path.read_bytes(), root)
     except OSError as exc:
         raise LedgerError(f"cannot read {path}: {exc}") from exc
     return len(entries)
 
 
-def _repo_path(raw: str) -> Path:
+def _repo_path(raw: str, root: Path = ROOT) -> Path:
     path = Path(raw)
-    resolved = (ROOT / path if not path.is_absolute() else path).resolve()
-    if not resolved.is_relative_to(ROOT):
+    resolved_root = root.resolve()
+    resolved = (resolved_root / path if not path.is_absolute() else path).resolve()
+    if not resolved.is_relative_to(resolved_root):
         raise LedgerError("ledger paths must stay inside the repository")
     return resolved
 
 
-def append_entry(path: Path, entry: dict[str, Any]) -> None:
+def append_entry(path: Path, entry: dict[str, Any], root: Path = ROOT) -> None:
     validate_entry(entry)
-    path = _repo_path(str(path))
+    path = _repo_path(str(path), root)
     lock_key = hashlib.sha256(str(path).encode()).hexdigest()
-    lock_path = ROOT / ".cache" / "ledger" / f"{lock_key}.lock"
+    lock_path = root / ".cache" / "ledger" / f"{lock_key}.lock"
     lock_path.parent.mkdir(parents=True, exist_ok=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     encoded = json.dumps(entry, ensure_ascii=False, separators=(",", ":")).encode() + b"\n"
@@ -175,10 +185,10 @@ def append_entry(path: Path, entry: dict[str, Any]) -> None:
     with lock_path.open("a+b") as lock_file:
         fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
         current = path.read_bytes() if path.exists() else b""
-        entries = validate_bytes(current)
+        entries = validate_bytes(current, root)
         if any(item["run_id"] == entry["run_id"] for item in entries):
             raise LedgerError(f"duplicate run_id {entry['run_id']}")
-        proposed = validate_bytes(current + encoded)
+        proposed = validate_bytes(current + encoded, root)
         if len(proposed) != len(entries) + 1:
             raise LedgerError("append validation did not add exactly one entry")
         mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o644
@@ -214,6 +224,11 @@ def _load_entry(args: argparse.Namespace) -> dict[str, Any]:
         raise LedgerError(f"malformed entry JSON: {exc}") from exc
 
 
+def _observed_total(history: list[dict[str, Any]], token_key: str) -> int | None:
+    values = [item["usage"][token_key] for item in history]
+    return None if any(value is None for value in values) else sum(values)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -224,15 +239,44 @@ def main(argv: list[str] | None = None) -> int:
     group = append.add_mutually_exclusive_group(required=True)
     group.add_argument("--entry-json")
     group.add_argument("--entry-file")
+    show = subparsers.add_parser("show", help="show a compact per-WO history")
+    show.add_argument("path")
+    show.add_argument("wo_id")
+    summary = subparsers.add_parser("summary", help="summarize work-order outcomes")
+    summary.add_argument("path")
     args = parser.parse_args(argv)
 
     try:
         if args.command == "validate":
-            count = validate_file(_repo_path(args.path))
+            count = validate_file(_repo_path(args.path), ROOT)
             print(f"valid ledger: {count} entries")
-        else:
+        elif args.command == "append":
             append_entry(_repo_path(args.path), _load_entry(args))
             print("entry appended")
+        else:
+            entries = validate_bytes(_repo_path(args.path).read_bytes(), ROOT)
+            if args.command == "show":
+                selected = [item for item in entries if item["wo_id"] == args.wo_id]
+                print(json.dumps({"wo_id": args.wo_id, "events": selected}, indent=2))
+            else:
+                groups: dict[str, list[dict[str, Any]]] = {}
+                for item in entries:
+                    groups.setdefault(item["wo_id"], []).append(item)
+                result = {
+                    wo_id: {
+                        "attempts": sum(item["event"] == "run_started" for item in history),
+                        "verified_passes": sum(item["event"] == "verified" and item["status"] == "pass" for item in history),
+                        "verified_failures": sum(item["event"] == "verified" and item["status"] != "pass" for item in history),
+                        "state": history[-1]["event"],
+                        "duration_s": sum(item["duration_s"] for item in history),
+                        "tokens": {
+                            "input": _observed_total(history, "input_tokens"),
+                            "output": _observed_total(history, "output_tokens"),
+                        },
+                    }
+                    for wo_id, history in groups.items()
+                }
+                print(json.dumps(result, indent=2, sort_keys=True))
     except (LedgerError, OSError) as exc:
         print(f"ledger error: {exc}", file=sys.stderr)
         return 2

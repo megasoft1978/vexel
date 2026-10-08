@@ -2,12 +2,15 @@
 
 `ledger.py` validates the machine-readable `ledger.jsonl` history and appends a
 single transition. The schema is `docs/schemas/ledger-entry.schema.json`;
-transition rules live in `ledger.py` and reject invalid event order or repeated
-`run_id` values.
+transition rules reject invalid event order, repeated run IDs, and entries that
+refer to missing or modified frozen work orders. The frozen hash covers the
+UTF-8 file except its own `spec_sha256` line.
 
 ```sh
 python3 scripts/ledger.py validate ledger.jsonl
 python3 scripts/ledger.py append ledger.jsonl --entry-file .cache/next-entry.json
+python3 scripts/ledger.py show ledger.jsonl WO-BOOT-01
+python3 scripts/ledger.py summary ledger.jsonl
 ```
 
 Appends serialize through an advisory `fcntl` lock in ignored `.cache/ledger/`.
@@ -15,3 +18,17 @@ Each update is written and fsynced to a temporary file in the ledger directory,
 then atomically replaces the log while the lock is held. Invalid input is
 rejected before the ledger is changed. The utility uses only Python's standard
 library and accepts ledger paths inside this repository.
+
+## Work-order runners
+
+`wo-run.sh` and `wo-verify.sh` are thin delegates to `wo_driver.py`. They are
+macOS-only. The driver records CLI version and help before work, creates an
+isolated `.worktrees/WO-ID` task checkout, persists session IDs as JSONL events
+arrive, and checks candidate commits, reports, path scope, and repository state.
+The current CLI bypass exception and its limitations are recorded in
+`docs/adr/0003-codex-cli-compatibility-amendment.md`.
+
+Each work order provides a `# Verification commands` fenced `text` block. The
+verifier runs those argv lines without shell evaluation in a detached worktree
+at the exact candidate commit, then starts a fresh read-only Codex review with
+the verifier schema. Outputs are retained under `artifacts/runs/`.

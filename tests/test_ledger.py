@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -10,7 +11,7 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from scripts.ledger import LedgerError, ROOT, append_entry, validate_bytes
+from scripts.ledger import LedgerError, ROOT, _observed_total, append_entry, validate_bytes
 
 LEDGER_TOOL = ROOT / "scripts" / "ledger.py"
 BASE_SHA = "b90dfbc44623e9834852b19513116149c83a15f0"
@@ -48,6 +49,16 @@ class LedgerTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
+    def make_wo(self, wo_id: str) -> None:
+        work = self.directory / "work"
+        work.mkdir(parents=True, exist_ok=True)
+        path = work / f"{wo_id}.md"
+        content = (f"---\nid: {wo_id}\nrevision: 1\nstatus: READY\n"
+                   f"base_sha: {BASE_SHA}\n"
+                   "spec_sha256: PENDING\n---\n# temporary test order\n")
+        digest = hashlib.sha256(content.replace("spec_sha256: PENDING\n", "").encode()).hexdigest()
+        path.write_text(content.replace("spec_sha256: PENDING", f"spec_sha256: {digest}"))
+
     def test_seeded_history_is_valid(self) -> None:
         data = (ROOT / "ledger.jsonl").read_bytes()
         entries = validate_bytes(data)
@@ -55,7 +66,21 @@ class LedgerTests(unittest.TestCase):
         boot01 = [item for item in entries if item["wo_id"] == "WO-BOOT-01"]
         self.assertEqual(boot01[-1]["event"], "merged")
 
+    def test_summary_preserves_unavailable_usage(self) -> None:
+        history = [entry("WO-X", "ready", "run", "ready")]
+        self.assertIsNone(_observed_total(history, "input_tokens"))
+        history[0]["usage"] = {"input_tokens": 4, "output_tokens": 0}
+        self.assertEqual(_observed_total(history, "input_tokens"), 4)
+
+    def test_summary_preserves_unavailable_usage(self) -> None:
+        history = [entry("WO-X", "ready", "run", "ready")]
+        self.assertIsNone(_observed_total(history, "input_tokens"))
+        history[0]["usage"] = {"input_tokens": 4, "output_tokens": 0}
+        self.assertEqual(_observed_total(history, "input_tokens"), 4)
+
     def test_interleaved_work_orders_keep_independent_transitions(self) -> None:
+        self.make_wo("WO-ONE")
+        self.make_wo("WO-TWO")
         entries = [
             entry("WO-ONE", "ready", "r1", "ready"),
             entry("WO-ONE", "run_started", "r2", "running"),
@@ -66,7 +91,7 @@ class LedgerTests(unittest.TestCase):
             entry("WO-ONE", "merged", "r7", "merged"),
         ]
         data = "".join(json.dumps(item) + "\n" for item in entries).encode()
-        self.assertEqual(len(validate_bytes(data)), len(entries))
+        self.assertEqual(len(validate_bytes(data, self.directory)), len(entries))
 
     def test_malformed_json_and_unknown_fields_fail(self) -> None:
         with self.assertRaises(LedgerError):
@@ -74,36 +99,40 @@ class LedgerTests(unittest.TestCase):
         bad = entry("WO-TEST-01", "ready", "r1", "ready")
         bad["unexpected"] = True
         with self.assertRaises(LedgerError):
-            validate_bytes((json.dumps(bad) + "\n").encode())
+            validate_bytes((json.dumps(bad) + "\n").encode(), self.directory)
         bad = entry("WO-TEST-01", "ready", "r2", "ready")
         bad["event"] = []
         with self.assertRaises(LedgerError):
-            validate_bytes((json.dumps(bad) + "\n").encode())
+            validate_bytes((json.dumps(bad) + "\n").encode(), self.directory)
 
     def test_duplicate_run_id_fails(self) -> None:
+        self.make_wo("WO-TEST-01")
+        self.make_wo("WO-TEST-02")
         first = entry("WO-TEST-01", "ready", "same-run", "ready")
         second = entry("WO-TEST-02", "ready", "same-run", "ready")
         data = (json.dumps(first) + "\n" + json.dumps(second) + "\n").encode()
         with self.assertRaisesRegex(LedgerError, "duplicate run_id"):
-            validate_bytes(data)
+            validate_bytes(data, self.directory)
 
     def test_invalid_transition_fails(self) -> None:
+        self.make_wo("WO-TEST-01")
         bad = entry("WO-TEST-01", "merged", "r1", "merged")
         with self.assertRaisesRegex(LedgerError, "invalid transition"):
-            validate_bytes((json.dumps(bad) + "\n").encode())
+            validate_bytes((json.dumps(bad) + "\n").encode(), self.directory)
 
     def test_invalid_append_does_not_change_ledger(self) -> None:
+        self.make_wo("WO-TEST-01")
         ready = entry("WO-TEST-01", "ready", "r1", "ready")
-        append_entry(self.path, ready)
+        append_entry(self.path, ready, self.directory)
         before = self.path.read_bytes()
         invalid = entry("WO-TEST-01", "merged", "r2", "merged")
         with self.assertRaises(LedgerError):
-            append_entry(self.path, invalid)
+            append_entry(self.path, invalid, self.directory)
         self.assertEqual(self.path.read_bytes(), before)
 
     def test_cli_rejects_invalid_entry_without_mutation(self) -> None:
         self.path.write_bytes(b"")
-        invalid = entry("WO-TEST-01", "merged", "bad-transition", "merged")
+        invalid = entry("WO-BOOT-04", "merged", "bad-transition", "merged")
         before = self.path.read_bytes()
         result = subprocess.run(
             [sys.executable, str(LEDGER_TOOL), "append", str(self.path),
@@ -116,18 +145,13 @@ class LedgerTests(unittest.TestCase):
 
     def test_concurrent_appends_remain_complete_and_valid(self) -> None:
         def append(index: int) -> None:
+            self.make_wo(f"WO-CONCURRENT-{index:02d}")
             item = entry(f"WO-CONCURRENT-{index:02d}", "ready", f"run-{index}", "ready")
-            result = subprocess.run(
-                [sys.executable, str(LEDGER_TOOL), "append", str(self.path),
-                 "--entry-json", json.dumps(item)],
-                capture_output=True, text=True,
-            )
-            if result.returncode:
-                raise AssertionError(result.stderr)
+            append_entry(self.path, item, self.directory)
 
         with ThreadPoolExecutor(max_workers=8) as pool:
             list(pool.map(append, range(24)))
-        entries = validate_bytes(self.path.read_bytes())
+        entries = validate_bytes(self.path.read_bytes(), self.directory)
         self.assertEqual(len(entries), 24)
         self.assertEqual(len({item["run_id"] for item in entries}), 24)
 

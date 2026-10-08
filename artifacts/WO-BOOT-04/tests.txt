@@ -1,0 +1,36 @@
+test_cli_rejects_invalid_entry_without_mutation (tests.test_ledger.LedgerTests.test_cli_rejects_invalid_entry_without_mutation) ... ok
+test_concurrent_appends_remain_complete_and_valid (tests.test_ledger.LedgerTests.test_concurrent_appends_remain_complete_and_valid) ... ok
+test_duplicate_run_id_fails (tests.test_ledger.LedgerTests.test_duplicate_run_id_fails) ... ok
+test_interleaved_work_orders_keep_independent_transitions (tests.test_ledger.LedgerTests.test_interleaved_work_orders_keep_independent_transitions) ... ok
+test_invalid_append_does_not_change_ledger (tests.test_ledger.LedgerTests.test_invalid_append_does_not_change_ledger) ... ok
+test_invalid_transition_fails (tests.test_ledger.LedgerTests.test_invalid_transition_fails) ... ok
+test_malformed_json_and_unknown_fields_fail (tests.test_ledger.LedgerTests.test_malformed_json_and_unknown_fields_fail) ... ok
+test_seeded_history_is_valid (tests.test_ledger.LedgerTests.test_seeded_history_is_valid) ... ok
+test_summary_preserves_unavailable_usage (tests.test_ledger.LedgerTests.test_summary_preserves_unavailable_usage) ... ok
+test_current_spec_hash_is_valid (tests.test_wo_runner.FrozenWorkOrderTests.test_current_spec_hash_is_valid) ... ok
+test_hash_mutation_is_rejected (tests.test_wo_runner.FrozenWorkOrderTests.test_hash_mutation_is_rejected) ... ok
+test_scope_rejects_escape_and_protected_paths (tests.test_wo_runner.FrozenWorkOrderTests.test_scope_rejects_escape_and_protected_paths) ... ok
+test_work_order_symlink_escape_is_rejected (tests.test_wo_runner.FrozenWorkOrderTests.test_work_order_symlink_escape_is_rejected) ... ok
+test_concurrent_lock_and_interrupted_atomic_append (tests.test_wo_runner.RunnerPrimitiveTests.test_concurrent_lock_and_interrupted_atomic_append) ... ok
+test_dirty_base_is_rejected (tests.test_wo_runner.RunnerPrimitiveTests.test_dirty_base_is_rejected) ... ok
+test_driver_rejects_non_darwin_before_codex (tests.test_wo_runner.RunnerPrimitiveTests.test_driver_rejects_non_darwin_before_codex) ... runner error: work-order runners support macOS only
+ok
+test_fake_codex_completes_new_worktree_lifecycle (tests.test_wo_runner.RunnerPrimitiveTests.test_fake_codex_completes_new_worktree_lifecycle) ... ok
+test_fake_codex_success_and_timeout (tests.test_wo_runner.RunnerPrimitiveTests.test_fake_codex_success_and_timeout) ... ok
+test_fake_codex_verifier_uses_read_only_exact_commit (tests.test_wo_runner.RunnerPrimitiveTests.test_fake_codex_verifier_uses_read_only_exact_commit) ... ok
+test_malformed_jsonl_and_missing_thread_id_fail_closed (tests.test_wo_runner.RunnerPrimitiveTests.test_malformed_jsonl_and_missing_thread_id_fail_closed) ... ok
+test_missing_report_and_schema_fail (tests.test_wo_runner.RunnerPrimitiveTests.test_missing_report_and_schema_fail) ... ok
+test_preflight_rejects_unsupported_flag (tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_rejects_unsupported_flag) ... ok
+test_preflight_requires_exact_option_tokens (tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_requires_exact_option_tokens) ... ok
+test_preflight_supported_fake (tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_supported_fake) ... ok
+test_report_schema_rejects_extra_fields_and_forged_failure (tests.test_wo_runner.RunnerPrimitiveTests.test_report_schema_rejects_extra_fields_and_forged_failure) ... ok
+test_resume_identity_and_changed_cache_key (tests.test_wo_runner.RunnerPrimitiveTests.test_resume_identity_and_changed_cache_key) ... ok
+test_runner_help_does_not_start_work (tests.test_wo_runner.RunnerPrimitiveTests.test_runner_help_does_not_start_work) ... ok
+test_scope_git_protected_and_disallowed_paths (tests.test_wo_runner.RunnerPrimitiveTests.test_scope_git_protected_and_disallowed_paths) ... ok
+test_session_parser_ignores_unknown_events_and_bad_ids (tests.test_wo_runner.RunnerPrimitiveTests.test_session_parser_ignores_unknown_events_and_bad_ids) ... ok
+test_verifier_stops_when_deterministic_check_fails (tests.test_wo_runner.RunnerPrimitiveTests.test_verifier_stops_when_deterministic_check_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 1.909s
+
+OK

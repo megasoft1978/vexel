@@ -1,4 +1,6 @@
 /build/
 /.cache/
+/.worktrees/
+/artifacts/runs/
 __pycache__/
 *.py[cod]
