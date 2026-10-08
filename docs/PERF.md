@@ -7,6 +7,9 @@ only measures process startup and is not an SVG rendering benchmark.
 |---|---|---:|---|---:|---|
 | BOOT-01 | Release | 33,568 | `--version`: 1.910 ms median (31 runs) | 1,884,160 bytes (one run) | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M1-03 | Release | 94,752 | placeholder replay: 100.976 ms; Metal replay: 179.164 ms | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M1-04 | Release | 97,072 | 1,000 task cycles: 44 ms; max join: 0.073 ms | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. No SVG throughput or renderer performance is measured yet.
@@ -102,3 +105,20 @@ benchmark sandbox and LaunchServices failures are retained under
 throughput, RSS, or performance-improvement claim is made. Detailed output is
 in `artifacts/WO-M2-01/` and the machine-readable result is
 `bench/results/WO-M2-01.json`.
+
+## WO-M2-02 XML tokenizer
+
+The tokenizer is an allocation-free, iterative lexical scanner with caller-owned
+token storage and a fixed 256-name depth stack. It validates 24 pinned corpus
+fixtures against Python 3.12.8 / Expat 2.6.4; element and attribute counts
+match on every fixture. The deterministic malformed generator checked 100,000
+inputs. The ASan+UBSan fuzz run used seed 20261009 for 60.000003 seconds and
+completed 4,318,388 generated inputs with zero sanitizer reports and valid
+span/offset invariants. Debug, ASan, and UBSan CTest each passed 3/3.
+
+The full `./dev verify` passed from the host shell: all 147 Python tests,
+Debug CTest 3/3, native window smoke, and 20-frame Metal replay. Three earlier
+attempts inside the executor's nested workspace-write sandbox failed in
+existing sandbox-exec and LaunchServices/XPC checks; those are retained as
+transient isolation evidence and did not reproduce on the host. No renderer
+throughput, RSS, or performance-improvement claim is made.

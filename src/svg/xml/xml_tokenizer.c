@@ -1,0 +1,507 @@
+#include "xml_tokenizer.h"
+#include "xml_internal.h"
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+#define XML_MAX_DEPTH 256U
+#define XML_MAX_NAME_BYTES 4096U
+#define XML_MAX_INPUT_BYTES (16U * 1024U * 1024U)
+#define XML_MAX_NODES 1000000U
+#define XML_MAX_ATTRIBUTES_PER_ELEMENT 4096U
+#define XML_MAX_TOTAL_ATTRIBUTES 1000000U
+#define XML_MAX_TEXT_RUN_BYTES (4U * 1024U * 1024U)
+
+typedef struct xml_open_name { svg_xml_span span; } xml_open_name;
+typedef struct xml_scanner {
+    base_bytes input;
+    svg_xml_options options;
+    svg_xml_token *tokens;
+    size_t capacity;
+    svg_xml_result result;
+    size_t cursor;
+    size_t root_count;
+    size_t depth;
+    size_t total_attributes;
+    xml_open_name stack[XML_MAX_DEPTH];
+} xml_scanner;
+
+static bool add_size(size_t a, size_t b, size_t *out)
+{
+    if (out == NULL || b > SIZE_MAX - a) return false;
+    *out = a + b;
+    return true;
+}
+
+static bool span_at(size_t start, size_t end, svg_xml_span *out)
+{
+    if (out == NULL || end < start) return false;
+    out->offset = start;
+    out->length = end - start;
+    return true;
+}
+
+static uint8_t byte_at(const xml_scanner *s, size_t at)
+{
+    return s->input.ptr[at];
+}
+
+static bool starts(const xml_scanner *s, size_t at, const char *literal, size_t length)
+{
+    return at <= s->input.len && length <= s->input.len - at &&
+           memcmp(s->input.ptr + at, literal, length) == 0;
+}
+
+static void fail(xml_scanner *s, svg_xml_error category, size_t offset)
+{
+    if (s->result.diagnostic.category == SVG_XML_ERROR_NONE) {
+        s->result.diagnostic.category = category;
+        s->result.diagnostic.offset = offset <= s->input.len ? offset : s->input.len;
+    }
+}
+
+static bool emit(xml_scanner *s, svg_xml_token token, size_t at)
+{
+    size_t next = 0;
+    if (!add_size(s->result.token_count, 1, &next) || next > s->capacity) {
+        fail(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, at);
+        return false;
+    }
+    s->tokens[s->result.token_count] = token;
+    s->result.token_count = next;
+    return true;
+}
+
+static bool count_node(xml_scanner *s, size_t at)
+{
+    size_t next = 0;
+    if (!add_size(s->result.node_count, 1, &next) || next > s->options.limits.nodes) {
+        fail(s, SVG_XML_ERROR_NODE_LIMIT, at);
+        return false;
+    }
+    s->result.node_count = next;
+    return true;
+}
+
+static bool parse_name(xml_scanner *s, size_t *position, svg_xml_span *span,
+                       svg_xml_span *prefix, svg_xml_span *local)
+{
+    size_t p = *position;
+    size_t first_end = p;
+    uint32_t cp = 0;
+    if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp) || !svg_xml_internal_name_start(cp)) {
+        fail(s, SVG_XML_ERROR_INVALID_NAME, *position);
+        return false;
+    }
+    while (p < s->input.len) {
+        size_t before = p;
+        if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp)) {
+            fail(s, SVG_XML_ERROR_INVALID_UTF8, before);
+            return false;
+        }
+        if (!svg_xml_internal_name_char(cp)) { p = before; break; }
+        if (cp == ':' && first_end == *position) first_end = before;
+    }
+    if(byte_at(s,*position)==':' || byte_at(s,p-1)==':') {
+        fail(s,SVG_XML_ERROR_INVALID_NAME,*position);
+        return false;
+    }
+    if (p - *position > XML_MAX_NAME_BYTES) {
+        fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, *position);
+        return false;
+    }
+    (void)span_at(*position, p, span);
+    if (first_end == *position) {
+        prefix->offset = *position; prefix->length = 0;
+        local->offset = *position; local->length = p - *position;
+    } else {
+        prefix->offset = *position; prefix->length = first_end - *position;
+        local->offset = first_end + 1; local->length = p - (first_end + 1);
+        if (local->length == 0 || memchr(s->input.ptr + local->offset, ':', local->length) != NULL) {
+            fail(s, SVG_XML_ERROR_INVALID_NAME, first_end);
+            return false;
+        }
+    }
+    *position = p;
+    return true;
+}
+
+static bool parse_pi_target(xml_scanner *s, size_t *position, svg_xml_span *name)
+{
+    size_t p = *position;
+    size_t start = p;
+    uint32_t cp = 0;
+    if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp) || !svg_xml_internal_name_start(cp)) {
+        fail(s, SVG_XML_ERROR_INVALID_NAME, start);
+        return false;
+    }
+    while (p < s->input.len) {
+        size_t before = p;
+        if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp)) {
+            fail(s, SVG_XML_ERROR_INVALID_UTF8, before);
+            return false;
+        }
+        if (!svg_xml_internal_name_char(cp)) { p = before; break; }
+    }
+    if (p - start > XML_MAX_NAME_BYTES) {
+        fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, start);
+        return false;
+    }
+    (void)span_at(start, p, name);
+    *position = p;
+    return true;
+}
+
+static bool valid_qname(xml_scanner *s, svg_xml_span prefix, svg_xml_span local)
+{
+    uint32_t first = 0;
+    size_t at = local.offset;
+    if (local.length == 0 || !svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &at, &first) ||
+        !svg_xml_internal_name_start(first)) {
+        fail(s, SVG_XML_ERROR_INVALID_NAME, local.offset);
+        return false;
+    }
+    if (prefix.length != 0) {
+        at = prefix.offset;
+        if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &at, &first) || !svg_xml_internal_name_start(first)) {
+            fail(s, SVG_XML_ERROR_INVALID_NAME, prefix.offset);
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool scan_reference(xml_scanner *s, size_t *position)
+{
+    size_t p = *position + 1;
+    if (p >= s->input.len) { fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, *position); return false; }
+    if (byte_at(s, p) == '#') {
+        ++p;
+        bool hex = false;
+        if (p < s->input.len && byte_at(s, p) == 'x') { hex = true; ++p; }
+        size_t digits = p;
+        uint32_t value = 0;
+        while (p < s->input.len && (hex ? ((byte_at(s,p)>='0'&&byte_at(s,p)<='9') ||
+               (byte_at(s,p)>='a'&&byte_at(s,p)<='f') || (byte_at(s,p)>='A'&&byte_at(s,p)<='F')) :
+               (byte_at(s,p)>='0'&&byte_at(s,p)<='9'))) {
+            uint8_t c=byte_at(s,p);
+            uint32_t digit=(uint32_t)(c>='0'&&c<='9'?c-'0':(c>='a'&&c<='f'?c-'a'+10U:c-'A'+10U));
+            if(value>0x10ffffU/(hex?16U:10U)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,*position);return false; }
+            value=value*(hex?16U:10U)+digit;
+            if(value>0x10ffffU) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,*position);return false; }
+            ++p;
+        }
+        if (p == digits || p >= s->input.len || byte_at(s,p) != ';') {
+            fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, *position); return false;
+        }
+        if(!svg_xml_internal_char(value)) { fail(s,SVG_XML_ERROR_INVALID_CHARACTER,*position);return false; }
+    } else {
+        size_t start = p;
+        uint32_t cp = 0;
+        if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp) || !svg_xml_internal_name_start(cp)) {
+            fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, *position); return false;
+        }
+        while (p < s->input.len) {
+            size_t before=p;
+            if (!svg_xml_internal_utf8_next(s->input.ptr,s->input.len,&p,&cp)) { fail(s,SVG_XML_ERROR_INVALID_UTF8,before); return false; }
+            if (!svg_xml_internal_name_char(cp)) { p=before; break; }
+        }
+        if (p >= s->input.len || byte_at(s,p) != ';') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,*position); return false; }
+        size_t n=p-start;
+        if (!((n==2 && memcmp(s->input.ptr+start,"lt",2)==0) ||
+              (n==2 && memcmp(s->input.ptr+start,"gt",2)==0) ||
+              (n==3 && memcmp(s->input.ptr+start,"amp",3)==0) ||
+              (n==4 && memcmp(s->input.ptr+start,"apos",4)==0) ||
+              (n==4 && memcmp(s->input.ptr+start,"quot",4)==0))) {
+            fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, *position); return false;
+        }
+    }
+    ++p;
+    *position = p;
+    return true;
+}
+
+static bool scan_chars(xml_scanner *s)
+{
+    size_t p=0;
+    while (p<s->input.len) {
+        size_t at=p; uint32_t cp=0;
+        if (!svg_xml_internal_utf8_next(s->input.ptr,s->input.len,&p,&cp)) { fail(s,SVG_XML_ERROR_INVALID_UTF8,at); return false; }
+        if (!svg_xml_internal_char(cp)) { fail(s,SVG_XML_ERROR_INVALID_CHARACTER,at); return false; }
+    }
+    return true;
+}
+
+static bool qname_equal(xml_scanner *s, svg_xml_span a, svg_xml_span b)
+{
+    return a.length==b.length && a.offset<=s->input.len && b.offset<=s->input.len &&
+        a.length<=s->input.len-a.offset && b.length<=s->input.len-b.offset &&
+        memcmp(s->input.ptr+a.offset,s->input.ptr+b.offset,a.length)==0;
+}
+
+static bool parse_comment(xml_scanner *s)
+{
+    size_t start=s->cursor, p=start+4, data=p;
+    while (p<s->input.len && !starts(s,p,"-->",3)) {
+        if (starts(s,p,"--",2)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false; }
+        ++p;
+    }
+    if (p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
+    svg_xml_token t={0}; t.kind=SVG_XML_TOKEN_COMMENT; t.depth=s->depth;
+    (void)span_at(start,p+3,&t.source); (void)span_at(data,p,&t.value);
+    if (!count_node(s,start) || !emit(s,t,start)) return false;
+    s->cursor=p+3; return true;
+}
+
+static bool parse_pi(xml_scanner *s)
+{
+    size_t start=s->cursor, p=start+2; svg_xml_span name={0};
+    if (!parse_pi_target(s,&p,&name)) return false;
+    bool declaration=name.length==3 && memcmp(s->input.ptr+name.offset,"xml",3)==0;
+    bool has_bom = starts(s, 0, "\xef\xbb\xbf", 3);
+    if (declaration && start!=0 && !(has_bom && start==3)) {
+        fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false;
+    }
+    if (!declaration && name.length==3) {
+        uint8_t a=s->input.ptr[name.offset], b=s->input.ptr[name.offset+1], c=s->input.ptr[name.offset+2];
+        if ((a=='x'||a=='X')&&(b=='m'||b=='M')&&(c=='l'||c=='L')) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
+    }
+    if (p>=s->input.len || (!svg_xml_internal_whitespace(byte_at(s,p)) && !starts(s,p,"?>",2))) {
+        fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false;
+    }
+    if(declaration && starts(s,p,"?>",2)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+    if (svg_xml_internal_whitespace(byte_at(s,p))) while (p<s->input.len && svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+    size_t data=p;
+    while (p<s->input.len && !starts(s,p,"?>",2)) ++p;
+    if (p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
+    svg_xml_token t={0}; t.kind=declaration?SVG_XML_TOKEN_DECLARATION:SVG_XML_TOKEN_PROCESSING_INSTRUCTION;
+    t.name=name; t.value.offset=data; t.value.length=p-data; t.depth=s->depth;
+    (void)span_at(start,p+2,&t.source);
+    if (!declaration && !count_node(s,start)) return false;
+    if (!emit(s,t,start)) return false;
+    s->cursor=p+2; return true;
+}
+
+static bool parse_text(xml_scanner *s)
+{
+    size_t start=s->cursor,p=start;
+    while (p<s->input.len && byte_at(s,p)!='<') {
+        if (starts(s,p,"]]>",3)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false; }
+        if (byte_at(s,p)=='&') { if (!scan_reference(s,&p)) return false; }
+        else ++p;
+    }
+    if (p==start) return true;
+    if (p-start>s->options.limits.text_run_bytes) { fail(s,SVG_XML_ERROR_TEXT_LIMIT,start); return false; }
+    if (s->depth==0) for (size_t i=start;i<p;++i) if (!svg_xml_internal_whitespace(byte_at(s,i))) {
+        fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,i); return false;
+    }
+    svg_xml_token t={0}; t.kind=SVG_XML_TOKEN_TEXT; t.depth=s->depth;
+    (void)span_at(start,p,&t.source); t.value=t.source;
+    bool nonspace=false; for(size_t i=start;i<p;++i) if(!svg_xml_internal_whitespace(byte_at(s,i))) nonspace=true;
+    if ((s->depth!=0 || nonspace) && !count_node(s,start)) return false;
+    if (!emit(s,t,start)) return false;
+    s->cursor=p; return true;
+}
+
+static bool parse_cdata(xml_scanner *s)
+{
+    size_t start=s->cursor, data=start+9,p=data;
+    while(p<s->input.len && !starts(s,p,"]]>",3)) ++p;
+    if(p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
+    if(s->depth==0) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
+    if(p-data>s->options.limits.text_run_bytes) { fail(s,SVG_XML_ERROR_TEXT_LIMIT,data); return false; }
+    svg_xml_token t={0}; t.kind=SVG_XML_TOKEN_CDATA;t.depth=s->depth;
+    (void)span_at(start,p+3,&t.source); (void)span_at(data,p,&t.value);
+    if(!count_node(s,start)||!emit(s,t,start)) return false;
+    s->cursor=p+3;return true;
+}
+
+static bool parse_end(xml_scanner *s)
+{
+    size_t start=s->cursor,p=start+2; svg_xml_span name={0},prefix={0},local={0};
+    if(!parse_name(s,&p,&name,&prefix,&local)) return false;
+    while(p<s->input.len && svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+    if(p>=s->input.len||byte_at(s,p)!='>') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false; }
+    if(s->depth==0||!qname_equal(s,name,s->stack[s->depth-1].span)) { fail(s,SVG_XML_ERROR_MISMATCHED_TAG,start); return false; }
+    svg_xml_token t={0}; t.kind=SVG_XML_TOKEN_END_ELEMENT;t.name=name;t.prefix=prefix;t.local_name=local;t.depth=s->depth-1;
+    (void)span_at(start,p+1,&t.source);
+    if(!emit(s,t,start)) return false;
+    --s->depth;s->cursor=p+1;return true;
+}
+
+static bool parse_start(xml_scanner *s)
+{
+    size_t start=s->cursor,p=start+1; svg_xml_span name={0},prefix={0},local={0};
+    if(!parse_name(s,&p,&name,&prefix,&local)) return false;
+    if(!valid_qname(s,prefix,local)) return false;
+    if(s->depth==0) {
+        if(s->root_count!=0) { fail(s,SVG_XML_ERROR_MULTIPLE_ROOTS,start); return false; }
+        ++s->root_count;
+    }
+    if(s->depth>=s->options.limits.nesting_depth||s->depth>=XML_MAX_DEPTH) { fail(s,SVG_XML_ERROR_DEPTH_LIMIT,start); return false; }
+    if(!count_node(s,start)) return false;
+    svg_xml_token t={0};t.kind=SVG_XML_TOKEN_START_ELEMENT;t.name=name;t.prefix=prefix;t.local_name=local;t.depth=s->depth;
+    (void)span_at(start,p,&t.source);
+    size_t parent_index=s->result.token_count;
+    if(!emit(s,t,start)) return false;
+    size_t local_attrs=0;
+    for(;;) {
+        bool separated=false;
+        while(p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) { ++p; separated=true; }
+        if(p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start);return false; }
+        if(byte_at(s,p)=='>') {
+            s->tokens[parent_index].source.length=p+1-start;
+            s->stack[s->depth].span=name;++s->depth;s->cursor=p+1;
+            return true;
+        }
+        if(byte_at(s,p)=='/'&&p+1<s->input.len&&byte_at(s,p+1)=='>') {
+            if(parent_index>=s->result.token_count) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start);return false; }
+            s->tokens[parent_index].kind=SVG_XML_TOKEN_EMPTY_ELEMENT;
+            s->tokens[parent_index].source.length=p+2-start;
+            s->cursor=p+2;return true;
+        }
+        if(!separated) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        if(local_attrs>=s->options.limits.attributes_per_element) { fail(s,SVG_XML_ERROR_ATTRIBUTE_LIMIT,p);return false; }
+        if(s->total_attributes>=s->options.limits.total_attributes) { fail(s,SVG_XML_ERROR_ATTRIBUTE_LIMIT,p);return false; }
+        size_t attr_start=p; svg_xml_span an={0},ap={0},al={0};
+        if(!parse_name(s,&p,&an,&ap,&al)) return false;
+        if(!valid_qname(s,ap,al)) return false;
+        for(size_t i=parent_index+1;i<s->result.token_count;++i) if(s->tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE && qname_equal(s,an,s->tokens[i].name)) {
+            fail(s,SVG_XML_ERROR_DUPLICATE_ATTRIBUTE,attr_start);return false;
+        }
+        while(p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+        if(p>=s->input.len||byte_at(s,p)!='=') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        ++p;while(p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+        if(p>=s->input.len||(byte_at(s,p)!='\''&&byte_at(s,p)!='"')) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        uint8_t quote=byte_at(s,p++);size_t value_start=p;
+        while(p<s->input.len&&byte_at(s,p)!=quote) {
+            if(byte_at(s,p)=='<') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+            if(byte_at(s,p)=='&') { if(!scan_reference(s,&p)) return false; } else ++p;
+        }
+        if(p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,value_start-1);return false; }
+        svg_xml_token a={0};a.kind=SVG_XML_TOKEN_ATTRIBUTE;a.name=an;a.prefix=ap;a.local_name=al;a.depth=s->depth;
+        (void)span_at(attr_start,p+1,&a.source);(void)span_at(value_start,p,&a.value);
+        if(!emit(s,a,attr_start)) return false;
+        ++local_attrs;++s->total_attributes;++s->result.attribute_count;++p;
+    }
+}
+
+static bool validate_decl_encoding(xml_scanner *s, const svg_xml_token *t)
+{
+    size_t p=t->value.offset, end=p+t->value.length;
+    bool have_version=false,have_encoding=false,have_standalone=false;
+    while(p<end) {
+        while(p<end&&svg_xml_internal_whitespace(s->input.ptr[p])) ++p;
+        if(p>=end) break;
+        size_t ns=p;while(p<end&&((s->input.ptr[p]>='A'&&s->input.ptr[p]<='Z')||(s->input.ptr[p]>='a'&&s->input.ptr[p]<='z')))++p;
+        size_t nl=p-ns;while(p<end&&svg_xml_internal_whitespace(s->input.ptr[p]))++p;
+        if(p>=end||s->input.ptr[p++]!='=') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        while(p<end&&svg_xml_internal_whitespace(s->input.ptr[p]))++p;
+        if(p>=end||(s->input.ptr[p]!='\''&&s->input.ptr[p]!='"')) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        uint8_t q=s->input.ptr[p++];size_t vs=p;while(p<end&&s->input.ptr[p]!=q)++p;
+        if(p>=end) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,vs-1);return false; }
+        size_t vl=p-vs;++p;
+        if(p<end&&!svg_xml_internal_whitespace(s->input.ptr[p])) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        if(nl==8&&memcmp(s->input.ptr+ns,"encoding",8)==0) {
+            if(!have_version||have_encoding||have_standalone||vl==0 ||
+               !((s->input.ptr[vs]>='A'&&s->input.ptr[vs]<='Z')||(s->input.ptr[vs]>='a'&&s->input.ptr[vs]<='z'))) {
+                fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,ns);return false;
+            }
+            for(size_t i=0;i<vl;++i) {
+                uint8_t c=s->input.ptr[vs+i];
+                if(!((c>='A'&&c<='Z')||(c>='a'&&c<='z')||(c>='0'&&c<='9')||c=='.'||c=='_'||c=='-')) {
+                    fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,vs+i);return false;
+                }
+            }
+            bool utf8=vl==5;
+            static const char expected[]="utf-8";
+            for(size_t i=0;i<5&&utf8;++i) {
+                uint8_t c=s->input.ptr[vs+i];
+                if(c>='A'&&c<='Z') c=(uint8_t)(c-'A'+'a');
+                if(c!=(uint8_t)expected[i]) utf8=false;
+            }
+            if(!utf8) { fail(s,SVG_XML_ERROR_UNSUPPORTED_ENCODING,vs);return false; }
+            have_encoding=true;
+        } else if(nl==7&&memcmp(s->input.ptr+ns,"version",7)==0) {
+            if(have_version||have_encoding||have_standalone||vl!=3||memcmp(s->input.ptr+vs,"1.0",3)!=0) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,vs);return false; }
+            have_version=true;
+        } else if(nl==10&&memcmp(s->input.ptr+ns,"standalone",10)==0) {
+            if(!have_version||have_standalone||!((vl==3&&memcmp(s->input.ptr+vs,"yes",3)==0)||
+                                                 (vl==2&&memcmp(s->input.ptr+vs,"no",2)==0))) {
+                fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,vs);return false;
+            }
+            have_standalone=true;
+        } else {
+            fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,ns);return false;
+        }
+    }
+    if(!have_version) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,t->source.offset);return false; }
+    return true;
+}
+
+static bool tokenize(xml_scanner *s)
+{
+    if(!base_bytes_valid(s->input)||s->tokens==NULL) { fail(s,SVG_XML_ERROR_INVALID_ARGUMENT,0);return false; }
+    if(s->input.len>s->options.limits.input_bytes) { fail(s,SVG_XML_ERROR_INPUT_LIMIT,s->options.limits.input_bytes);return false; }
+    if(!scan_chars(s)) return false;
+    if (starts(s, 0, "\xef\xbb\xbf", 3)) s->cursor = 3;
+    while(s->cursor<s->input.len) {
+        size_t p=s->cursor;
+        if(byte_at(s,p)!='<') { if(!parse_text(s))return false; continue; }
+        if(starts(s,p,"<!--",4)) { if(!parse_comment(s))return false; continue; }
+        if(starts(s,p,"<?",2)) {
+            size_t before=s->result.token_count;
+            if(!parse_pi(s))return false;
+            if(s->result.token_count>before&&s->tokens[before].kind==SVG_XML_TOKEN_DECLARATION&&
+               !validate_decl_encoding(s,&s->tokens[before])) return false;
+            continue;
+        }
+        if(starts(s,p,"<![CDATA[",9)) { if(!parse_cdata(s))return false;continue; }
+        if(starts(s,p,"<!DOCTYPE",9)||starts(s,p,"<!ENTITY",8)) { fail(s,SVG_XML_ERROR_UNSUPPORTED_DTD,p);return false; }
+        if(starts(s,p,"</",2)) { if(!parse_end(s))return false;continue; }
+        if(starts(s,p,"<!",2)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
+        if(!parse_start(s))return false;
+        ++s->result.element_count;
+    }
+    if(s->depth!=0||s->root_count==0) { fail(s,SVG_XML_ERROR_INCOMPLETE_DOCUMENT,s->input.len);return false; }
+    return true;
+}
+
+svg_xml_options svg_xml_default_options(void)
+{
+    svg_xml_options o={{XML_MAX_INPUT_BYTES, XML_MAX_DEPTH, XML_MAX_NODES,
+                        XML_MAX_ATTRIBUTES_PER_ELEMENT, XML_MAX_TOTAL_ATTRIBUTES,
+                        XML_MAX_TEXT_RUN_BYTES}};
+    return o;
+}
+
+svg_xml_result svg_xml_tokenize(base_bytes input, svg_xml_options options,
+                                svg_xml_token *tokens, size_t token_capacity)
+{
+    xml_scanner s={0};s.input=input;s.options=options;s.tokens=tokens;s.capacity=token_capacity;
+    s.result.diagnostic.category=SVG_XML_ERROR_NONE;s.result.diagnostic.offset=0;
+    if(options.limits.input_bytes > XML_MAX_INPUT_BYTES)
+        options.limits.input_bytes = XML_MAX_INPUT_BYTES;
+    if(options.limits.nesting_depth > XML_MAX_DEPTH)
+        options.limits.nesting_depth = XML_MAX_DEPTH;
+    if(options.limits.nodes > XML_MAX_NODES)
+        options.limits.nodes = XML_MAX_NODES;
+    if(options.limits.attributes_per_element > XML_MAX_ATTRIBUTES_PER_ELEMENT)
+        options.limits.attributes_per_element = XML_MAX_ATTRIBUTES_PER_ELEMENT;
+    if(options.limits.total_attributes > XML_MAX_TOTAL_ATTRIBUTES)
+        options.limits.total_attributes = XML_MAX_TOTAL_ATTRIBUTES;
+    if(options.limits.text_run_bytes > XML_MAX_TEXT_RUN_BYTES)
+        options.limits.text_run_bytes = XML_MAX_TEXT_RUN_BYTES;
+    s.options=options;
+    if(tokenize(&s)) return s.result;
+    s.result.token_count=0;
+    s.result.element_count=0;s.result.attribute_count=0;s.result.node_count=0;
+    return s.result;
+}
+
+const char *svg_xml_error_name(svg_xml_error error)
+{
+    static const char *const names[]={"none","invalid_argument","input_limit","invalid_utf8","invalid_character","unsupported_encoding","invalid_name","malformed_syntax","duplicate_attribute","mismatched_tag","depth_limit","node_limit","attribute_limit","text_limit","output_exhausted","unsupported_dtd","multiple_roots","incomplete_document"};
+    return (unsigned)error<sizeof(names)/sizeof(names[0])?names[(unsigned)error]:"unknown";
+}

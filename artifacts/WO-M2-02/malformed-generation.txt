@@ -1,0 +1,1 @@
+xml tokenizer focused C checks passed; deterministic malformed inputs=100000
