@@ -1,5 +1,7 @@
-.........
+$ python3 -m unittest tests.test_golden_diff
+..........
 ----------------------------------------------------------------------
-Ran 9 tests in 0.443s
+Ran 10 tests in 0.451s
 
 OK
+[exit 0]

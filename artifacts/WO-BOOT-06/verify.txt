@@ -1,7 +1,7 @@
 $ python3 -m unittest tests.test_golden_diff
-.........
+..........
 ----------------------------------------------------------------------
-Ran 9 tests in 0.420s
+Ran 10 tests in 0.451s
 
 OK
 [exit 0]
@@ -13,7 +13,7 @@ pass
 $ python3 -m unittest tests.test_golden_diff.GoldenDiffTests.test_small_channel_difference_on_edge_is_tolerated tests.test_golden_diff.GoldenDiffTests.test_shift_with_zero_tolerance_is_not_tolerated
 ..
 ----------------------------------------------------------------------
-Ran 2 tests in 0.002s
+Ran 2 tests in 0.003s
 
 OK
 [exit 0]
@@ -29,7 +29,7 @@ OK
 $ python3 -m unittest tests.test_golden_diff.GoldenDiffTests.test_report_and_heatmap_are_byte_deterministic
 .
 ----------------------------------------------------------------------
-Ran 1 test in 0.270s
+Ran 1 test in 0.275s
 
 OK
 [exit 0]
@@ -41,14 +41,14 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-06/build/mac-debug
 ninja: no work to do.
-Ran 122 tests in 5.944s
+Ran 123 tests in 5.758s
 
 OK
-Ran 122 tests: 122 passed, 0 failed, 0 errors, 0 skipped; 5.995s
+Ran 123 tests: 123 passed, 0 failed, 0 errors, 0 skipped; 5.822s
 valid ledger: 92 entries
 [exit 0]
 

@@ -26,7 +26,8 @@ slots. These values never change when tolerance is enabled.
 `--edge-channel-tolerance` is a maximum channel delta from 0 through 16
 (default 1). A differing pixel is tolerated only when it is within the declared
 channel delta and within the declared radius of an 8-neighbor color or alpha
-boundary in the expected image. Radius 0 disables tolerance. Tolerated and
+boundary in the expected image. Radius 0 considers only differing pixels that
+are themselves boundary pixels; larger radii include nearby pixels. Tolerated and
 non-tolerated pixels are reported separately. Exit 0 means all differences
 were tolerated; exit 1 means at least one failed; exit 2 means an input,
 metadata, format, or output error.

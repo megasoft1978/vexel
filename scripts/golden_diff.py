@@ -31,6 +31,18 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _read_png(path: Path) -> bytes:
+    """Read at most one byte beyond the image limit to bound input memory."""
+    try:
+        with path.open("rb") as handle:
+            data = handle.read(MAX_IMAGE_BYTES + 1)
+    except OSError as exc:
+        raise CompareError(f"cannot read PNG input: {exc}") from exc
+    if len(data) > MAX_IMAGE_BYTES:
+        raise CompareError("PNG exceeds the 64 MiB input limit")
+    return data
+
+
 def _read_manifest(path: Path | None = None) -> dict[str, dict[str, Any]]:
     path = MANIFEST if path is None else path
     try:
@@ -266,11 +278,8 @@ def compare(args: argparse.Namespace) -> tuple[dict[str, Any], bytes]:
     fixture = fixtures[args.fixture]
     metadata = _metadata(args, fixture)
     expected_path = ROOT / fixture["png_path"]
-    try:
-        expected_png = expected_path.read_bytes()
-        actual_png = Path(args.actual).read_bytes()
-    except OSError as exc:
-        raise CompareError(f"cannot read PNG input: {exc}") from exc
+    expected_png = _read_png(expected_path)
+    actual_png = _read_png(Path(args.actual))
     expected_sha, actual_sha = _sha256(expected_png), _sha256(actual_png)
     if expected_sha != fixture["png_sha256"]:
         raise CompareError(f"frozen baseline hash mismatch for {args.fixture}")

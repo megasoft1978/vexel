@@ -102,6 +102,14 @@ class GoldenDiffTests(unittest.TestCase):
                 with self.assertRaisesRegex(golden_diff.CompareError, "cannot read PNG"):
                     golden_diff.compare(args)
 
+    def test_oversized_input_is_bounded_before_full_read(self) -> None:
+        with tempfile.TemporaryDirectory() as folder:
+            image = Path(folder) / "large.png"
+            image.write_bytes(b"x" * 9)
+            with patch.object(golden_diff, "MAX_IMAGE_BYTES", 8):
+                with self.assertRaisesRegex(golden_diff.CompareError, "64 MiB input limit"):
+                    golden_diff._read_png(image)
+
     def test_bad_crc_and_filter_are_rejected(self) -> None:
         valid = self.baseline.read_bytes()
         corrupt_crc = bytearray(valid)

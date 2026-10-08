@@ -5,14 +5,14 @@
   "commit": null,
   "revision": 2,
   "status": "pass",
-  "summary": "All frozen acceptance checks pass, including radius-zero boundary tolerance, malformed bKGD ordering rejection, exact yellow heatmap pixels, and .cache path traversal rejection.",
+  "summary": "All frozen acceptance checks pass, including bounded PNG reads, radius-zero boundary tolerance, malformed bKGD ordering rejection, exact yellow heatmap pixels, and .cache traversal rejection.",
   "test_counts": {
     "determinism": 1,
     "edge_and_shift": 2,
     "errors": 0,
     "failures": 0,
-    "focused_golden": 9,
-    "full_suite": 122,
+    "focused_golden": 10,
+    "full_suite": 123,
     "negative_cases": 5,
     "skips": 0
   },
