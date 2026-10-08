@@ -67,9 +67,10 @@ class FrozenWorkOrderTests(unittest.TestCase):
 class RunnerPrimitiveTests(unittest.TestCase):
     def test_recursive_work_order_path_rules_allow_nested_evidence_and_protect_subtrees(self) -> None:
         allowed, protected = ["artifacts/WO-BOOT-05/**", "tests/fuzz/**"], ["tests/oracle/**"]
-        self.assertTrue(wo_driver._scope_path_allowed("artifacts/WO-BOOT-05/probes/probes.json", allowed, protected))
-        self.assertTrue(wo_driver._scope_path_allowed("tests/fuzz/cases/README.md", allowed, protected))
-        self.assertFalse(wo_driver._scope_path_allowed("tests/oracle/frozen.json", allowed + ["tests/**"], protected))
+        self.assertTrue(wo_driver.work_order_path_allowed("artifacts/WO-BOOT-05/probes/probes.json", allowed, protected))
+        self.assertTrue(wo_driver.work_order_path_allowed("tests/fuzz/cases/README.md", allowed, protected))
+        self.assertFalse(wo_driver.work_order_path_allowed("tests/oracle/frozen.json", allowed + ["tests/**"], protected))
+        self.assertFalse(wo_driver.work_order_path_allowed("../outside", allowed, protected))
 
     def fake_help(self, missing: str = ""):
         help_text = "--model --config --json --output-schema --output-last-message --image " \
@@ -204,6 +205,15 @@ class RunnerPrimitiveTests(unittest.TestCase):
             with self.assertRaisesRegex(wo_driver.RunnerError, "disallowed"):
                 wo_driver.assert_scope(root, base, frozen_head,
                     "# Files allowed to touch\n- `work/**`\n", "WO-FAKE")
+
+    def test_recursive_work_order_globs_match_nested_files(self) -> None:
+        allowed, protected = ["artifacts/WO-BOOT-05/**"], ["artifacts/WO-BOOT-05/private/**"]
+        self.assertTrue(wo_driver.work_order_path_allowed(
+            "artifacts/WO-BOOT-05/probes/heap_overflow.stderr.txt.gz", allowed, protected))
+        self.assertFalse(wo_driver.work_order_path_allowed(
+            "artifacts/WO-BOOT-05/private/key.txt", allowed, protected))
+        self.assertFalse(wo_driver.work_order_path_allowed(
+            "artifacts/WO-BOOT-06/result.json", allowed, protected))
 
     def test_review_diff_excludes_old_transcripts_and_stays_bounded(self) -> None:
         with temporary_directory() as name:
