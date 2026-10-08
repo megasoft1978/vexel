@@ -4,7 +4,7 @@
   "machine": "Apple Silicon arm64, macOS 27.0",
   "compiler": "Apple Clang 21.0.0.21000334",
   "build": "Debug and Release",
-  "acceptance_status": "machine_checks_passed_pending_independent_review",
+  "acceptance_status": "accepted_and_merged",
   "binary_bytes": {
     "release_svgworkbench": 97040,
     "release_base_static_library": 3504,
@@ -61,5 +61,11 @@
     "ubsan": "artifacts/WO-M2-01/ubsan.txt",
     "arena_metrics": "artifacts/WO-M2-01/arena-metrics.txt",
     "release_build": "artifacts/WO-M2-01/release-build.txt"
+  },
+  "independent_review": {
+    "verdict": "pass",
+    "findings": 0,
+    "duration_seconds": 41.7,
+    "evidence": "artifacts/WO-M2-01/verifier-final/"
   }
 }

@@ -1,0 +1,184 @@
+{
+  "wo_id": "WO-M2-01",
+  "revision": 2,
+  "spec_sha256": "51539e64c90fe386c14bb76b8a92a4c638c14cc1dcbb7122012b51c95cf23ec2",
+  "candidate_sha": "1a80ef3bfbff0b6e593c2f435bda05c4f11a9fa1",
+  "cli_version": "codex-cli 0.160.1",
+  "duration_s": 41.70101733300544,
+  "verifier_builds": [
+    {
+      "argv": [
+        "./dev",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_s": 1.0886344999889843,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.4s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\n[1/11] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[2/11] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[3/11] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[4/11] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[5/11] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[6/11] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[7/11] Linking C static library libvexel_base.a\n[8/11] Linking C executable base_contract_test\n[9/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[10/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[11/11] Linking C executable bin/svgworkbench\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "cmake",
+        "--preset",
+        "mac-release"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.44516270799795166,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Release\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.4s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-release\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "--preset",
+        "mac-release"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.4619272499985527,
+      "stdout": "[1/11] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[2/11] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[3/11] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[4/11] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[5/11] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[6/11] Linking C static library libvexel_base.a\n[7/11] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[8/11] Linking C executable base_contract_test\n[9/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[10/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[11/11] Linking C executable bin/svgworkbench\n",
+      "stderr": ""
+    }
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "argv": [
+        "./dev",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.09346929199818987,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\nninja: no work to do.\n",
+      "stderr": ""
+    },
+    {
+      "index": 2,
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "build/mac-debug",
+        "--output-on-failure"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.4170149580022553,
+      "stdout": "Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\n    Start 1: cli-version\n1/2 Test #1: cli-version ......................   Passed    0.20 sec\n    Start 2: base-contract\n2/2 Test #2: base-contract ....................   Passed    0.20 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.41 sec\n",
+      "stderr": ""
+    },
+    {
+      "index": 3,
+      "argv": [
+        "./dev",
+        "verify"
+      ],
+      "exit_code": 0,
+      "duration_s": 15.417144166989601,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\nninja: no work to do.\nInternal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\n    Start 1: cli-version\n1/2 Test #1: cli-version ......................   Passed    0.00 sec\n    Start 2: base-contract\n2/2 Test #2: base-contract ....................   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.01 sec\npresented frames: 2\nbyte-exact readback: pass\nresize/reset: pass\nnative smoke elapsed seconds: 0.141335\n20 frames with identical readback hashes and stable offscreen frame order\nreadback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c\nnative replay elapsed seconds: 0.135456\nRan 143 tests: 143 passed, 0 failed, 0 errors, 0 skipped; 15.178s\nvalid ledger: 170 entries\n",
+      "stderr": "Ran 143 tests in 15.099s\n\nOK\n"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "./dev",
+        "asan"
+      ],
+      "exit_code": 0,
+      "duration_s": 1.374208458000794,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.4s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-asan\n[1/11] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[2/11] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[3/11] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[4/11] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[5/11] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[6/11] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[7/11] Linking C static library libvexel_base.a\n[8/11] Linking C executable base_contract_test\n[9/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[10/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[11/11] Linking C executable bin/svgworkbench\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-asan\n    Start 1: cli-version\n1/2 Test #1: cli-version ......................   Passed    0.21 sec\n    Start 2: base-contract\n2/2 Test #2: base-contract ....................   Passed    0.23 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.45 sec\n",
+      "stderr": ""
+    },
+    {
+      "index": 5,
+      "argv": [
+        "./dev",
+        "ubsan"
+      ],
+      "exit_code": 0,
+      "duration_s": 1.548626666990458,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"ubsan\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.5s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-ubsan\n[1/11] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[2/11] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[3/11] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[4/11] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[5/11] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[6/11] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[7/11] Linking C static library libvexel_base.a\n[8/11] Linking C executable base_contract_test\n[9/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[10/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[11/11] Linking C executable bin/svgworkbench\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-ubsan\n    Start 1: cli-version\n1/2 Test #1: cli-version ......................   Passed    0.21 sec\n    Start 2: base-contract\n2/2 Test #2: base-contract ....................   Passed    0.21 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.42 sec\n",
+      "stderr": ""
+    },
+    {
+      "index": 6,
+      "argv": [
+        "cmake",
+        "--preset",
+        "mac-release"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.07438791700406,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Release\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-release\n",
+      "stderr": ""
+    },
+    {
+      "index": 7,
+      "argv": [
+        "cmake",
+        "--build",
+        "--preset",
+        "mac-release"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.01696125000307802,
+      "stdout": "ninja: no work to do.\n",
+      "stderr": ""
+    },
+    {
+      "index": 8,
+      "argv": [
+        "python3",
+        "scripts/ledger.py",
+        "validate",
+        "ledger.jsonl"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.06039908299862873,
+      "stdout": "valid ledger: 170 entries\n",
+      "stderr": ""
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/wo_validate.py",
+        "WO-M2-01",
+        "--ready"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.03382679200149141,
+      "stdout": "valid WO-M2-01 revision 2 sha256 51539e64c90fe386c14bb76b8a92a4c638c14cc1dcbb7122012b51c95cf23ec2\n",
+      "stderr": ""
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "-m",
+        "json.tool",
+        "bench/results/WO-M2-01.json"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.03288749999774154,
+      "stdout": "{\n    \"work_order\": \"WO-M2-01\",\n    \"revision\": 2,\n    \"machine\": \"Apple Silicon arm64, macOS 27.0\",\n    \"compiler\": \"Apple Clang 21.0.0.21000334\",\n    \"build\": \"Debug and Release\",\n    \"acceptance_status\": \"machine_checks_passed_pending_independent_review\",\n    \"binary_bytes\": {\n        \"release_svgworkbench\": 97040,\n        \"release_base_static_library\": 3504,\n        \"rss\": null\n    },\n    \"arena_boundary\": {\n        \"initial_chunk_bytes\": 16,\n        \"capacity_limit_bytes\": 96,\n        \"retained_chunks\": 5,\n        \"payload_capacity_bytes\": 80,\n        \"used_bytes_including_alignment_padding\": 13,\n        \"alignments\": [\n            1,\n            2,\n            4,\n            8,\n            16,\n            64,\n            256,\n            4096\n        ],\n        \"allocation_failure\": {\n            \"allocator_calls\": 6,\n            \"frees_after_destroy\": 4,\n            \"live_allocations_after_destroy\": 0,\n            \"failed_push_preserved_statistics\": true\n        }\n    },\n    \"tests\": {\n        \"debug_ctest_passed\": 2,\n        \"debug_ctest_total\": 2,\n        \"asan_ctest_passed\": 2,\n        \"asan_ctest_total\": 2,\n        \"ubsan_ctest_passed\": 2,\n        \"ubsan_ctest_total\": 2,\n        \"python_total\": 143,\n        \"python_passed\": 143,\n        \"python_failures\": 0,\n        \"python_errors\": 0,\n        \"python_skipped\": 0,\n        \"fixed_seed_arithmetic_cases\": 100000,\n        \"fixed_seed_slice_cases\": 10000\n    },\n    \"claims\": {\n        \"svg_throughput\": false,\n        \"performance_improvement\": false,\n        \"rss\": false\n    },\n    \"evidence\": {\n        \"debug_build\": \"artifacts/WO-M2-01/build.txt\",\n        \"debug_ctest\": \"artifacts/WO-M2-01/ctest-debug.txt\",\n        \"full_suite\": \"artifacts/WO-M2-01/full-suite.txt\",\n        \"asan\": \"artifacts/WO-M2-01/asan.txt\",\n        \"ubsan\": \"artifacts/WO-M2-01/ubsan.txt\",\n        \"arena_metrics\": \"artifacts/WO-M2-01/arena-metrics.txt\",\n        \"release_build\": \"artifacts/WO-M2-01/release-build.txt\"\n    }\n}\n",
+      "stderr": ""
+    },
+    {
+      "index": 11,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.022131542005809024,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "verdict": {
+    "verdict": "pass",
+    "findings": [],
+    "summary": "The implementation and supplied deterministic evidence satisfy the reviewed acceptance criteria. Debug and Release builds, Debug CTest, the full Python and CTest suite, ASan/UBSan CTest, work-order and JSON validation, and diff checks pass. The checked arithmetic and slice behavior, arena alignment and capacity handling, allocation-failure state preservation, reset/reuse behavior, and cleanup paths are consistent with the stated contracts. Pending ledger acceptance and the documented revision-1 preflight block were not treated as failures."
+  },
+  "session_id": "01a11da2-e2b1-7612-b714-ed2faab41105"
+}
