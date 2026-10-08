@@ -243,8 +243,8 @@ def _inside_cache(path: Path) -> Path:
     root = Path(__file__).resolve().parents[2]
     target = path if path.is_absolute() else root / path
     cache = (root / ".cache").resolve()
-    resolved_parent = target.parent.resolve()
-    if resolved_parent != cache and cache not in resolved_parent.parents:
+    resolved_target = target.resolve()
+    if resolved_target != cache and cache not in resolved_target.parents:
         raise ValueError("CLI output must be inside repo-local .cache")
     return target
 

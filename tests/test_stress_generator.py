@@ -150,6 +150,17 @@ class StressGeneratorTests(unittest.TestCase):
             stress_svg.generate(path, family="object-heavy", seed=1, size=4096)
         self.assertEqual(list(self.root.glob(".stress-svg-*")), [])
 
+    def test_cli_output_directory_symlink_cannot_escape_cache(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        link = root / ".cache" / "m0-02-output-escape-test"
+        link.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            link.symlink_to(Path("/tmp"), target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "inside repo-local .cache"):
+                stress_svg._inside_cache(Path(".cache/m0-02-output-escape-test"))
+        finally:
+            link.unlink(missing_ok=True)
+
     def test_failed_atomic_install_removes_temporary_file(self) -> None:
         target = self.root / "claimed.svg"
         target.write_bytes(b"winner")

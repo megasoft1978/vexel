@@ -56,5 +56,26 @@
       },
       "elapsed_seconds": 0.587311
     }
-  ]
+  ],
+  "oracle_render": {
+    "fixture_count": 24,
+    "canvas": [
+      256,
+      256
+    ],
+    "elapsed_seconds": 0.700504,
+    "mode": "re-rendered to temporary files; committed goldens unchanged",
+    "renderer_version": "2.62.3",
+    "renderer_license": "LGPL-2.1-or-later",
+    "lock_sha256": "a9fb0207a5dbd2ff833b090d3d49fef5c960a56bd1a68809a52430c4382bc1c4",
+    "png_total_bytes": 112426,
+    "machine": {
+      "os": "macOS-27.0-arm64-arm-64bit",
+      "architecture": "arm64",
+      "macos_version": "27.0",
+      "model_identifier": "Mac17,14",
+      "chip": "Apple M5 Max",
+      "memory": "64 GB"
+    }
+  }
 }

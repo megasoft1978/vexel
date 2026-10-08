@@ -1,5 +1,7 @@
-mode: existing immutable baseline verified
+mode: re-rendered to temporary files; committed goldens unchanged
 renderer: rsvg-convert version 2.62.3; ; libraries used:;   cairo 1.18.4;   pango 1.58.2;   harfbuzz 14.3.1;   fontconfig 2.18.3
+license: LGPL-2.1-or-later (Homebrew package metadata)
 fixture_count: 24
 canvas: 256x256
+elapsed_seconds: 0.700504
 lock_sha256: a9fb0207a5dbd2ff833b090d3d49fef5c960a56bd1a68809a52430c4382bc1c4

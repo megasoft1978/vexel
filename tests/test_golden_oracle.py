@@ -31,13 +31,13 @@ class GoldenOracleTests(unittest.TestCase):
         pngs = [ROOT / fixture["png_path"] for fixture in lock["fixtures"]]
         before = [hashlib.sha256(path.read_bytes()).hexdigest() for path in pngs]
         with tempfile.TemporaryDirectory() as name:
-            evidence = Path(name) / "render.txt"
             version_output = lock["renderer"]["version_output"] + "\n"
-            with patch.object(render_oracle, "EVIDENCE", evidence), patch.object(
-                    render_oracle.subprocess, "run",
-                    return_value=SimpleNamespace(stdout=version_output)):
+            with patch.object(render_oracle, "subprocess") as subprocess_mock, patch.object(
+                    render_oracle, "_render_fixtures", return_value=lock["fixtures"]), patch.object(
+                    render_oracle, "_record_render") as record:
+                subprocess_mock.run.return_value = SimpleNamespace(stdout=version_output)
                 render_oracle.render("rsvg-convert", "2.62.3")
-            self.assertIn("existing immutable baseline verified", evidence.read_text())
+                self.assertIn("re-rendered to temporary files", record.call_args.args[-1])
         after = [hashlib.sha256(path.read_bytes()).hexdigest() for path in pngs]
         self.assertEqual(before, after)
 

@@ -11,6 +11,7 @@ import platform
 import re
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -62,7 +63,8 @@ def validate_lock() -> None:
             raise ValueError(f"oracle PNG raster dimensions mismatch: {source['fixture_id']}")
 
 
-def _verify_existing(lock_path: Path, version: str, expected_version: str) -> bool:
+def _verify_existing(lock_path: Path, renderer: str, version: str,
+                     expected_version: str) -> bool:
     if not lock_path.exists():
         return False
     validate_lock()
@@ -74,11 +76,21 @@ def _verify_existing(lock_path: Path, version: str, expected_version: str) -> bo
     metadata_path = ORACLE / "metadata.json"
     if not metadata_path.is_file() or metadata_path.read_bytes() != lock_path.read_bytes():
         raise ValueError("oracle metadata copy does not match the immutable lock")
-    EVIDENCE.parent.mkdir(parents=True, exist_ok=True)
-    EVIDENCE.write_text("mode: existing immutable baseline verified\n"
-                        + "renderer: " + version.strip().replace("\n", "; ") + "\n"
-                        + "fixture_count: 24\ncanvas: 256x256\n"
-                        + "lock_sha256: " + sha256(lock_path) + "\n", encoding="utf-8")
+    corpus = json.loads((ROOT / "bench/corpus/manifest.json").read_text(encoding="utf-8"))
+    expected = {item["fixture_id"]: item for item in lock["fixtures"]}
+    cache = ROOT / ".cache/m0-02"
+    cache.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    with tempfile.TemporaryDirectory(prefix="oracle-render-", dir=cache) as temporary:
+        entries = _render_fixtures(renderer, corpus["fixtures"], Path(temporary))
+        elapsed = round(time.monotonic() - started, 6)
+        for entry in entries:
+            pinned = expected[entry["fixture_id"]]
+            if (entry["source_sha256"] != pinned["source_sha256"]
+                    or entry["png_sha256"] != pinned["png_sha256"]):
+                raise ValueError(f"fresh renderer output differs from immutable baseline: {entry['fixture_id']}")
+        _record_render(elapsed, expected_version, lock, entries, lock_path,
+                       "re-rendered to temporary files; committed goldens unchanged")
     return True
 
 
@@ -127,11 +139,13 @@ def _make_lock(expected_version: str, version: str, environment: dict[str, str],
 
 
 def _record_render(elapsed: float, expected_version: str, lock: dict[str, object],
-                   entries: list[dict[str, object]], lock_path: Path) -> None:
+                   entries: list[dict[str, object]], lock_path: Path,
+                   mode: str) -> None:
     results_path = ROOT / "bench/results/WO-M0-02.json"
     results = json.loads(results_path.read_text(encoding="utf-8"))
     results["oracle_render"] = {"fixture_count": len(entries), "canvas": [256, 256],
                                 "elapsed_seconds": elapsed,
+                                "mode": mode,
                                 "renderer_version": expected_version,
                                 "renderer_license": "LGPL-2.1-or-later",
                                 "lock_sha256": sha256(lock_path),
@@ -140,7 +154,8 @@ def _record_render(elapsed: float, expected_version: str, lock: dict[str, object
                                 "machine": lock["environment"]}
     results_path.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
     EVIDENCE.parent.mkdir(parents=True, exist_ok=True)
-    EVIDENCE.write_text("renderer: " + str(lock["renderer"]["version_output"]).replace("\n", "; ") + "\n"
+    EVIDENCE.write_text("mode: " + mode + "\n"
+                        + "renderer: " + str(lock["renderer"]["version_output"]).replace("\n", "; ") + "\n"
                         + "license: LGPL-2.1-or-later (Homebrew package metadata)\n"
                         + "fixture_count: 24\ncanvas: 256x256\nelapsed_seconds: "
                         + f"{elapsed:.6f}\nlock_sha256: {sha256(lock_path)}\n", encoding="utf-8")
@@ -152,7 +167,7 @@ def render(renderer: str, expected_version: str) -> None:
                              text=True).stdout
     if f"rsvg-convert version {expected_version}" not in version:
         raise ValueError(f"renderer version mismatch: expected {expected_version}")
-    if _verify_existing(lock_path, version, expected_version):
+    if _verify_existing(lock_path, renderer, version, expected_version):
         return
     metadata = json.loads((ROOT / "bench/corpus/manifest.json").read_text(encoding="utf-8"))
     png_dir = GOLDEN / "fixtures"
@@ -167,7 +182,7 @@ def render(renderer: str, expected_version: str) -> None:
     (ORACLE / "metadata.json").write_text(encoded, encoding="utf-8")
     validate_lock()
     _record_render(round(time.monotonic() - started, 6), expected_version,
-                   lock, entries, lock_path)
+                   lock, entries, lock_path, "goldens generated and pinned")
 
 
 def main(argv: list[str] | None = None) -> int:

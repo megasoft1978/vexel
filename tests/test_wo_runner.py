@@ -286,7 +286,8 @@ class RunnerPrimitiveTests(unittest.TestCase):
             subprocess.run(["git", "commit", "-qm", "base"], cwd=root, check=True)
             base = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
             paths = ("work/WO-OTHER.md", "tests/oracle/frozen.json",
-                     "tests/golden/manifest.lock", "bench/corpus/manifest.lock",
+                     "tests/golden/manifest.lock", "tests/golden/fixtures/frozen.png",
+                     "bench/corpus/manifest.lock",
                      "OWNER-DIRECTIVES.md")
             for relpath in paths:
                 target = root / relpath; target.parent.mkdir(parents=True, exist_ok=True)
@@ -391,7 +392,8 @@ class RunnerPrimitiveTests(unittest.TestCase):
             body = ("# Files allowed to touch\n- `**`\n- `work/**`\n- `tests/**`\n"
                     "- `bench/**`\n- `OWNER-DIRECTIVES.md`\n")
             for relpath in ("work/WO-OTHER.md", "tests/oracle/frozen.json",
-                            "tests/golden/manifest.lock", "bench/corpus/manifest.lock",
+                            "tests/golden/manifest.lock", "tests/golden/fixtures/frozen.png",
+                            "bench/corpus/manifest.lock",
                             "OWNER-DIRECTIVES.md"):
                 target = root / relpath; target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text("mutation\n")
