@@ -3,12 +3,24 @@
   "status": "complete",
   "summary": "Expanded project instructions and records, added the official MPL-2.0 text, and implemented a strict transition-validated atomic JSONL ledger. Eight tests pass, including invalid inputs and 24 concurrent appends.",
   "base_sha": "2d8e1ea60356d418d7a69cb6c926eacad7f16d08",
-  "head_sha": "pending commit",
+  "head_sha": "278c2270341a8eeda6e3538773c7e076257c5a69",
   "changed_paths": [
-    ".gitignore", "AGENTS.md", "CLAUDE.md", "docs/CODING_STANDARD.md",
-    "LEDGER.md", "LICENSE", "NOTICE", "README.md", "STATE.md",
-    "ledger.jsonl", "docs/adr/", "docs/schemas/ledger-entry.schema.json",
-    "scripts/README.md", "scripts/ledger.py", "tests/", "work/WO-BOOT-02.md",
+    ".gitignore",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/CODING_STANDARD.md",
+    "LEDGER.md",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "STATE.md",
+    "ledger.jsonl",
+    "docs/adr/",
+    "docs/schemas/ledger-entry.schema.json",
+    "scripts/README.md",
+    "scripts/ledger.py",
+    "tests/",
+    "work/WO-BOOT-02.md",
     "artifacts/WO-BOOT-02/"
   ],
   "commands": [
@@ -38,15 +50,47 @@
     }
   ],
   "tests": [
-    { "id": "valid-seeded-ledger", "status": "pass", "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt" },
-    { "id": "malformed-and-extra-fields", "status": "pass", "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt" },
-    { "id": "duplicate-run-id", "status": "pass", "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt" },
-    { "id": "invalid-transition", "status": "pass", "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt" },
-    { "id": "append-no-mutation-on-failure", "status": "pass", "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt" },
-    { "id": "concurrent-append-integrity", "status": "pass", "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt" },
-    { "id": "macos-debug-and-sanitizer-smoke", "status": "pass", "evidence": "artifacts/WO-BOOT-02/checks.txt" }
+    {
+      "id": "valid-seeded-ledger",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt"
+    },
+    {
+      "id": "malformed-and-extra-fields",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt"
+    },
+    {
+      "id": "duplicate-run-id",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt"
+    },
+    {
+      "id": "invalid-transition",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt"
+    },
+    {
+      "id": "append-no-mutation-on-failure",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt"
+    },
+    {
+      "id": "concurrent-append-integrity",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/ledger-tests.txt"
+    },
+    {
+      "id": "macos-debug-and-sanitizer-smoke",
+      "status": "pass",
+      "evidence": "artifacts/WO-BOOT-02/checks.txt"
+    }
   ],
-  "commit": null,
-  "usage": { "input_tokens": null, "output_tokens": null, "cli_version": "codex-cli 0.160.1" },
+  "commit": "278c2270341a8eeda6e3538773c7e076257c5a69",
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null,
+    "cli_version": "codex-cli 0.160.1"
+  },
   "blockers": []
 }
