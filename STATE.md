@@ -133,3 +133,5 @@
   base. Release `svgworkbench` is 189,328 bytes. Full trials and ratios are in
   `artifacts/WO-M4-04/raster-benchmark.json` and `reports/M4/`.
 - Active next work order: WO-M4-05, the bounded CSS/style subset.
+
+- WO-M4-05 revision 1 is frozen READY against base `5fe97cdf3dbe955638d9c5f0d54956ecc1fc2f0c` (spec SHA-256 `9d685bb1f3277b7dd31e3a59add24ff7acdacfdb73ed3b9ebf3b2f80fa3700af`). Its bounded CSS paint subset prioritizes observed `.land` and `.series` styles, cascade precedence, and inherited paint on groups; unsupported declarations remain source-preserved. Next: execute through `scripts/wo-run.sh`.
