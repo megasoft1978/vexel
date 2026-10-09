@@ -2,10 +2,10 @@
 
 `app/test_driver/driver.py` is a macOS-only, standard-library developer harness.
 Its default mode replays JSONL against a small placeholder state model; native
-AppKit testing is a separate `--native-platform-smoke` mode. Neither mode reads
-SVG documents, renders SVG, or executes document content. In native mode the
-open command's bounded document ID supplies the window title, and the current
-synthetic key adapter accepts the key `a`.
+AppKit testing is a separate `--native-platform-smoke` mode. Those driver modes
+do not read SVG documents, render SVG, or execute document content. The
+`svgworkbench --native-viewer-smoke <file.svg>` command separately exercises
+the real viewer load, first presentation, drag, magnify, fit key, and Cmd+Q path.
 
 ## Invocation and limits
 
@@ -86,6 +86,20 @@ converts viewport and cursor values to backing pixels before fit or anchored
 zoom; pointer-drag helpers use the same conversion. `--native-navigation-event-smoke` checks finite scale and cursor/delta
 payloads using deterministic synthetic NSEvent inputs.
 
+## Native SVG viewer smoke
+
+Run the viewer's actual asynchronous load and presentation path with:
+
+```sh
+build/mac-debug/bin/svgworkbench --native-viewer-smoke tests/svg/shape/fixtures/rect.svg
+```
+
+The smoke waits for a document frame, injects a drag, trackpad magnify, `0` fit
+key, and Cmd+Q, then reports its presented-frame count. It is a native AppKit
+and Metal check and requires an active graphical Apple Silicon macOS session.
+It is registered in CTest without a skip condition; headless environments fail
+the test and should run it on the maintainer's Mac.
+
 ## Repeat replay and native Metal frame sequence
 
 Run a fixed JSONL script repeatedly with:
@@ -121,7 +135,7 @@ or RSS.
 opaque window belongs to the caller and must be created, polled, resized, and
 destroyed on AppKit's main thread. Resize and scale payloads report backing
 pixel dimensions and scale; pointer x/y are logical points from the content
-view's top-left. Key payloads include the AppKit key code, modifier flags, and
+view's top-left. Key payloads include the AppKit key code, normalized modifier bits, and
 bounded UTF-8 text. Close requests are events and leave the C-owned handle
 valid until the caller destroys it. Polling pumps pending AppKit messages
 without waiting and returns false when the queue is empty.
@@ -157,13 +171,13 @@ axis; byte count is checked before allocation and equals `width * height * 4`.
 The opaque test pattern is deterministic: R=`(17*x + 3*y) mod 256`,
 G=`(5*x + 29*y) mod 256`, B=`(11*x + 7*y) mod 256`, A=255.
 
-The C Metal interface in `src/platform/platform_metal.h` accepts a borrowed
-buffer valid through its synchronous call. Its macOS implementation uploads to
-a shared Metal texture, renders that texture to the current CAMetalLayer
-drawable, and waits for command completion with a five-second timeout. It then
-reads the uploaded texture back and compares every byte, reporting the first
-mismatch only. Metal, QuartzCore, and Cocoa are system frameworks; no external
-dependency is used.
+The C Metal interface in `src/platform/platform_metal.h` includes a synchronous
+verification function that accepts a borrowed buffer, renders it to the current
+CAMetalLayer drawable, waits for completion, and compares every byte on
+readback. The interactive viewer uses `platform_metal_present`, which reuses
+its device, queue, pipeline, and size-matched texture and submits presentation
+without readback verification. Metal, QuartzCore, and Cocoa are system
+frameworks; no external dependency is used.
 
 Run the native presentation, exact-readback, resize, and reset smoke with:
 

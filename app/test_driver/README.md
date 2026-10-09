@@ -19,6 +19,11 @@ verifies exact uploaded-texture readback, clears and resizes the window, and
 checks a second frame. It requires the Release executable and an active macOS
 graphical session.
 
+`svgworkbench --native-viewer-smoke <file.svg>` uses the application's viewer
+path to load an SVG asynchronously, wait for its first frame, inject drag and
+magnify gestures, press `0` to fit, and quit with Cmd+Q. It is registered in
+CTest with no skip condition and requires an active graphical Metal session.
+
 `--repeat-replay --script ... --repeats 20` runs the bounded placeholder script
 in fresh numbered iteration directories, compares normalized command order
 and all artifact hashes, and prints the shared replay digest. Re-running the
