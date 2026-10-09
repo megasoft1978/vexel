@@ -1,4 +1,4 @@
-WO-M3-06 revision 2 machine acceptance
+WO-M3-06 revision 4 machine acceptance
 
 Corpus integrity
 - manifest.json: 58 files, SHA-256 9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30
@@ -10,15 +10,15 @@ Measurement
 - 116 fresh process trials: 3 each for 29 T1/T2 files, 1 each for 29 T3/T4 files; all had a 120 s timeout.
 - Outcomes: 2 ok, 56 unsupported, 0 resource limits, 0 crashes/timeouts.
 - T3 80–120 MiB band: 12 files; no supported previews, so first-preview <2 s gate fails. Maximum main-thread step 279,583 ns (passes <100 ms). Peak RSS was within the WO-M3-01 allowance (3x source bytes + 128 MiB) for all 12.
-- Unsupported files still retain max-step, RSS, process wall time and diagnostic fields. Full-index timing is present only for completed indexes; incomplete malformed inputs mark it unavailable. Two Natural Earth T1 previews have geometric-mean Inkscape/Vexel ratios of 81.463x for preview time and 33.711x for RSS; T2–T4 comparative ratios are unavailable because there are no successful Vexel rows. These are unlike-task directional comparisons, not render parity.
+- Unsupported files still retain max-step, RSS, process wall time and diagnostic fields. Full-index timing is present only for completed indexes; incomplete malformed inputs mark it unavailable. Two Natural Earth T1 previews have geometric-mean Inkscape/Vexel ratios of 84.447x for preview time and 33.711x for RSS; T2–T4 comparative ratios are unavailable because there are no successful Vexel rows. These are unlike-task directional comparisons, not render parity.
 
 Commands
 - PASS `cmake --build --preset mac-release --target svg_index_bench`
 - PASS `timeout 720 python3 reports/M3/head_to_head.py --run` (58 files / 116 trials; deterministic report checked at completion)
 - PASS `python3 reports/M3/head_to_head.py --check` (58 files / 116 trials)
 - PASS `python3 -m json.tool reports/M3/head-to-head.json`
-- PASS `python3 scripts/wo_validate.py WO-M3-06 --ready` (revision 2 SHA-256 58a540c26ce565e2d4543d4e7d3aae14fca6e27a31d90a31c3176f72f9c8a03a)
-- PASS `python3 scripts/ledger.py validate ledger.jsonl` (pre-closeout ledger 314 entries)
+- PASS `python3 scripts/wo_validate.py WO-M3-06 --ready` (revision 4 SHA-256 0cde745f080481937c4faf38c69a6284e84a5e8a68e4f82a32e6af4a2f1898c1)
+- PASS `python3 scripts/ledger.py validate ledger.jsonl` (review-worktree ledger 331 entries)
 - PASS `git diff --check`
 - PASS `timeout 900 ./dev verify` (Debug CTest 11/11; Python 191/191; native smoke and 20-frame Metal replay)
 - PASS `timeout 900 ./dev asan` (CTest 11/11)
@@ -34,3 +34,8 @@ Review round 1 correction evidence
 - The independent verifier caught three genuine report issues: unsupported rows were included in RSS geometric means, compiler metadata was missing, and live sysctl lookup made `--check` nondeterministic. Fixed by restricting both ratios to successful rows, recording compiler and all host metadata in retained raw campaign data, and checking only the pinned metadata/binary hash. T2–T4 ratios are now correctly unavailable.
 - PASS `python3 reports/M3/head_to_head.py --check` after regenerating the pinned report (58 files / 116 trials).
 - PASS compact final report diff is below the fresh verifier's 250,000-byte input cap: `head-to-head.json` 145,074 bytes; `head-to-head.md` 17,470 bytes. Per-trial timings, RSS, outcome/status/diagnostic fields remain; duplicated stdout and full `/usr/bin/time -l` text were removed after parsing.
+
+Final independent review
+- PASS exact candidate `1b28e8445aef01886d2419c912ea26d1b35b8bd1`: `./scripts/wo-verify.sh WO-M3-06 1b28e8445aef01886d2419c912ea26d1b35b8bd1` completed in 83.237 s; Debug and Release clean builds plus all seven frozen commands passed.
+- PASS fresh read-only verdict `artifacts/runs/WO-M3-06/verify-90542d7e-cd0f-4208-92f8-fe1969307c3c/verdict.json`: no findings; 58 file hashes/sizes verified, 116 trial rows reconciled, T1 geometric mean recomputed, limitations and failed preview wedge verified.
+- Incremental review diff was 179,130 bytes from the compact post-fix candidate `6c0e3086ef074f3df28143afc657c7a9546b5268`. The initial full-scope review `1769326` validated the entire 58-file/116-trial matrix and exposed the three findings; corrections and scope history are in `reports/M3/amendment.md` and the run ledger.
