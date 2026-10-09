@@ -1,100 +1,41 @@
 {
-  "status": "complete",
+  "status": "incomplete",
   "base_sha": "cd0eb044213dff02f3cff3290d0f414250a9633d",
-  "head_sha": "dc8b9980b37ded9d16bc0c3d484797c9ce8e7c96",
+  "head_sha": "c32a8195bc10cff7d66707dc2979d029f89c8157",
   "acceptance": {
     "AC-1": {
-      "commands": [
-        {
-          "argv": ["cmake", "--preset", "mac-debug"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["cmake", "--build", "--preset", "mac-debug"],
-          "exit_code": 0
-        }
-      ]
+      "debug_build": "pass",
+      "ctest": "12/12 pass",
+      "python_tests": "199/199 pass"
     },
     "AC-2": {
-      "commands": [
-        {
-          "argv": ["python3", "-m", "unittest", "tests.test_shape_render"],
-          "exit_code": 0
-        }
-      ]
+      "focused_shape_tests": "pass",
+      "nested_xlink_rejection": "pass",
+      "deep_document_bound": "pass",
+      "source_rewrite_contract": "fail: generated SVG buffer used for references and clip children"
     },
     "AC-3": {
-      "commands": [
-        {
-          "argv": ["python3", "-m", "unittest", "tests.test_shape_render"],
-          "exit_code": 0
-        }
-      ]
+      "librsvg_fixtures": "pass; existing thresholds unchanged"
     },
     "AC-4": {
-      "commands": [
-        {
-          "argv": ["cmake", "--preset", "mac-release"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["cmake", "--build", "--preset", "mac-release"],
-          "exit_code": 0
-        }
-      ]
+      "asan": "12/12 pass",
+      "ubsan": "12/12 pass",
+      "verify": "199 Python + 12 CTest pass",
+      "release_build": "pass"
     },
     "AC-5": {
-      "commands": [
-        {
-          "argv": ["./dev", "shape-fuzz", "--duration", "60", "--seed", "20261010", "--output", "artifacts/WO-M4-06/fuzz-report.json"],
-          "exit_code": 0
-        }
-      ]
+      "fuzz": "1,000,000 cases; zero crashes, invariants, or sanitizer reports"
     },
     "AC-6": {
-      "commands": [
-        {
-          "argv": ["python3", "-m", "json.tool", "bench/results/WO-M4-06.json"],
-          "exit_code": 0
-        }
-      ]
+      "raster_benchmark": "5 workloads x 21 trials; stable hashes; basic-solid frozen-base comparison"
     },
     "AC-7": {
-      "commands": [
-        {
-          "argv": ["./dev", "bench-corpus", "--run"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["./dev", "bench-corpus", "--check"],
-          "exit_code": 0
-        }
-      ]
+      "corpus": "58 files / 116 trials; 2 previewable, 56 unsupported, 0 limit, 0 crash"
     },
     "AC-8": {
-      "commands": [
-        {
-          "argv": ["python3", "-m", "json.tool", "reports/M4/head-to-head.json"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["python3", "-m", "json.tool", "bench/results/WO-M4-06.json"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["python3", "scripts/ledger.py", "validate", "ledger.jsonl"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["python3", "scripts/wo_validate.py", "WO-M4-06", "--ready"],
-          "exit_code": 0
-        },
-        {
-          "argv": ["git", "diff", "--check"],
-          "exit_code": 0
-        }
-      ]
+      "work_order_json_ledger_diff_checks": "pass",
+      "fresh_verifier": "fail; source-rewrite contract, prior evidence mismatches corrected in this revision"
     }
   },
-  "summary": "Execution and evidence capture are complete, but implementation is incomplete and no commit was made. Implemented non-rendering defs and unused-symbol skipping only; use expansion, gradients, clipping, dedicated diagnostics, and raster benchmarks are absent. ctest --test-dir build/mac-debug --output-on-failure exited 8 with 11/12 passing because index-replay reported “offscreen Metal device or queue unavailable.” ./dev asan, ./dev ubsan, and ./dev verify also exited 8 for that replay failure. Debug and Release configure/build passed; 16 shape-render Python tests passed with unchanged pixel thresholds; seeded ASan+UBSan fuzz passed 1,000,000 cases. Corpus run/check passed across 58 files: T1 2/12 successful, T2 0/17, T3 0/26, T4 0/3; supported-file delta +0. AC-6 has zero trials and unavailable metrics; no speed claim is made. Frozen work-order validation, ledger validation (376 entries), JSON checks, path guard, and diff check passed. Evidence and exact command outcomes are in artifacts/WO-M4-06/, including executor-report.json and full-checks.txt."
+  "summary": "Candidate c32a8195bc10cff7d66707dc2979d029f89c8157 implements bounded local use, gradients, and clipping. Debug/Release build, 12 CTests, 199 Python tests, ASan, UBSan, 1,000,000 ASan+UBSan fuzz cases, 33 librsvg differential fixtures, 5 x 21 raster trials, and 58-file/116-trial corpus checks pass. Candidate remains unmergeable because temporary generated SVG buffers for use expansion and clipping violate the frozen no-copy/no-rewrite acceptance. The focused fresh verifier on ae14e90 independently confirmed that blocker and also found two defects fixed in c32a819."
 }

@@ -1,10 +1,16 @@
-Frozen full-check command outcomes (exit codes):
-cmake --preset mac-debug: 0
-cmake --build --preset mac-debug: 0
-ctest --test-dir build/mac-debug --output-on-failure: 8 (11/12; index-replay failed because offscreen Metal device or queue unavailable)
-./dev asan: 8 (same index-replay failure)
-./dev ubsan: 8 (same index-replay failure)
-cmake --preset mac-release: 0
-cmake --build --preset mac-release: 0
-./dev verify: 8 (same index-replay failure)
-No other CTest failures, sanitizer reports, or skips were reported. This does not satisfy AC-1 or AC-4.
+Candidate c32a8195bc10cff7d66707dc2979d029f89c8157, macOS 27 arm64, Apple clang 21:
+cmake --build --preset mac-debug: pass
+ctest --test-dir build/mac-debug --output-on-failure: 12/12 pass
+python3 -m unittest: 199/199 pass (./dev verify)
+./dev asan: 12/12 pass; no sanitizer report
+./dev ubsan: 12/12 pass; no sanitizer report
+cmake --preset mac-release && cmake --build --preset mac-release: pass
+python3 -m unittest tests.test_shape_render: 16/16 pass
+./dev shape-fuzz --duration 75 --seed 20261010: 1,000,000 cases; 0 crashes, invariant failures, or sanitizer reports
+./dev bench-corpus --run / --check: 58 manifest files / 116 fresh trials; both pass
+python3 -m json.tool reports/M4/head-to-head.json: pass
+python3 -m json.tool bench/results/WO-M4-06.json: pass
+python3 scripts/ledger.py validate ledger.jsonl: pass (376 entries)
+python3 scripts/wo_validate.py WO-M4-06 --ready: pass
+git diff --check: pass
+Focused fresh verifier of prior candidate ae14e9032d58b855981451e76ea7fa334a8cc836: fail. Its depth OOB and nested xlink findings were corrected in c32a819; source-copy/rewrite acceptance finding remains blocking. Full generic review exceeds 250 KB input limit.

@@ -1,16 +1,27 @@
 {
   "work_order": "WO-M4-06",
-  "source_preservation": "verified by shape and CSS suites; borrowed bytes are not modified",
+  "candidate": "c32a8195bc10cff7d66707dc2979d029f89c8157",
+  "source_buffer": "Original caller buffer remains borrowed and is not mutated.",
+  "generated_source": "Temporary expanded SVG is created for local use and clip geometry; this violates the frozen avoid-copy-or-rewrite-source-bytes acceptance.",
   "implemented": {
     "definitions_non_rendering": true,
     "unused_symbols_non_rendering": true,
-    "local_use_expansion": false,
-    "linear_gradient": false,
-    "radial_gradient": false,
-    "clip_path": false,
-    "css_clip_path": false
+    "local_use_expansion": true,
+    "linear_gradient": true,
+    "radial_gradient": true,
+    "clip_path": true,
+    "css_clip_path": true
   },
-  "limits_verified": [],
-  "stable_diagnostics": "unsupported use, gradient, and clip content currently use existing unsupported diagnostics; dedicated reference diagnostics are not implemented",
-  "differential_fixture": "tests/svg/shape/fixtures/definitions-not-painted.svg"
+  "limits_verified": [
+    "reference depth 16",
+    "expanded use instances 65536",
+    "gradient stops 256",
+    "clip children 64",
+    "clip edges 65536",
+    "clip generated input 16 MiB",
+    "deep XML reference scan returns limit"
+  ],
+  "stable_diagnostics": "Existing unsupported/limit categories; nested xlink use requires root xlink namespace binding.",
+  "differential_fixture": "33 fixtures compared with librsvg; thresholds unchanged.",
+  "fresh_verifier": "fail; source rewrite is a blocking acceptance violation."
 }

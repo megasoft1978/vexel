@@ -323,31 +323,33 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## M4 cumulative shape and corpus workload
 
 Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 341648 / 224176 bytes; Release `svg_index_bench`: 159344 bytes;
-Debug/Release `shape_render_cli`: 225440 / 139728 bytes; Debug/Release `libvexel_shape.a`: 300128 / 105664 bytes.
+Debug/Release `svgworkbench`: 341696 / 224240 bytes; Release `svg_index_bench`: 159408 bytes;
+Debug/Release `shape_render_cli`: 225472 / 139808 bytes; Debug/Release `libvexel_shape.a`: 300392 / 105952 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 39.987x and RSS ratio of 33.175x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 40.363x and RSS ratio of 33.415x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.291 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 9.376 ms, full index 0.886 ms; natural-earth-world-map-countries: first preview 9.467 ms, full index 0.924 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.873 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 9.418 ms, full index 0.836 ms; natural-earth-world-map-countries: first preview 9.250 ms, full index 0.909 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
 ## WO-M4-06 candidate status
 
 Five fixed 512×512 Release raster workloads were measured with 21 fresh-process
-trials each. The basic solid fill measured 7.624 ms median / 8.016 ms p95 at
-34.4 million pixels/s; local `<use>` measured 7.445 / 7.907 ms; linear gradient
-8.227 / 8.538 ms; radial gradient 8.338 / 8.642 ms; and clipping 8.299 / 8.481
-ms. Peak process RSS ranged from 3,112,960 to 3,194,880 bytes. Every workload
-had a stable output SHA-256. The frozen-base CLI measured the basic solid fill
-at 10.102 ms median / 10.425 ms p95; it does not expose RSS metrics. Feature
-workloads were unsupported at the frozen base and have no direct comparison.
-These process-level samples are local evidence, not public speed claims. Raw
-trials and output hashes are in `artifacts/WO-M4-06/paint-benchmark.json` and
-`bench/results/WO-M4-06.json`.
+trials each on candidate `c32a819`. Basic solid fill measured 6.831 ms median /
+17.372 ms p95; local `<use>` 6.564 / 6.844 ms; linear gradient 7.364 / 7.807 ms;
+radial gradient 7.700 / 7.906 ms; clipping 7.338 / 7.529 ms. Peak process RSS
+ranged from 3,129,344 to 3,194,880 bytes. Every workload had a stable output
+SHA-256. The frozen-base CLI measured basic solid at 8.999 ms median; it does
+not expose RSS metrics. Feature workloads were unsupported at the frozen base
+and have no direct comparison. These process-level samples are local evidence,
+not public speed claims. Raw trials and output hashes are in
+`artifacts/WO-M4-06/paint-benchmark.json` and `bench/results/WO-M4-06.json`.
+This candidate is not mergeable: the frozen WO's no-source-copy/rewrite
+acceptance is violated by temporary SVG buffers used for reference expansion
+and clipping.
 
 WO-M4-04 corpus follow-up retains 58 unchanged source hashes and all 116 trials.
 Only `natural-earth-world-map-blank` and `natural-earth-world-map-countries`
