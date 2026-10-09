@@ -240,3 +240,21 @@ each pass 5/5, and native smoke plus 20-frame Metal replay pass. Three initial
 managed runs had sandbox and LaunchServices failures that did not reproduce;
 see `artifacts/WO-M2-05/verification-transients.md`. This is no longer a
 blocker. No general SVG throughput or performance advantage is claimed.
+
+## WO-M3-03 scheduler lifecycle benchmark
+
+The Release worker test ran exactly 1,000 scheduler create/submit/cancel/join
+cycles with one worker. Latest total elapsed time was 0.018880 s; maximum measured
+destroy/join time was 0.000110 s, with 1,000 accepted cancellation requests.
+The test binary was 70,288 bytes, built with AppleClang 21.0.0
+(`clang-2100.3.34.2`) for arm64 on macOS 27.0, model Mac17,14. The scan is
+bounded deterministic test work, not SVG rendering throughput. Exact metadata
+is in `artifacts/WO-M3-03/schedule-benchmark.json`.
+
+The focused snapshot/scheduler test passes Debug, ASan+UBSan, UBSan, and TSan.
+The first isolated executor pass saw transient offscreen Metal and Python
+process-policy failures. A later sequential clean-worktree run passed all 16
+frozen commands: Debug/ASan/UBSan CTest 10/10, full suite 177/177, and focused
+TSan 1/1. The original failure transcripts remain in
+`artifacts/WO-M3-03/`; passing command records are under
+`artifacts/runs/WO-M3-03/07d39ea9-fcb5-4dac-b5dc-e90eb80ca2ed/.`

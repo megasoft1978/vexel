@@ -19,6 +19,7 @@ typedef struct task_slot {
     uint64_t generation;
     platform_task_callback callback;
     void *context;
+    platform_task_context_cleanup cleanup;
     platform_task_cancel_token token;
     platform_task_result result;
 } task_slot;
@@ -128,8 +129,13 @@ static void *worker_main(void *opaque)
         slot = &queue->slots[index];
         if (slot->state == TASK_CANCELED_QUEUED ||
             (slot->state != TASK_QUEUED || slot->generation != queue->generation || queue->stopping)) {
+            platform_task_context_cleanup cleanup = slot->cleanup;
+            void *context = slot->context;
             slot->state = TASK_FREE;
+            slot->cleanup = NULL;
+            slot->context = NULL;
             (void)pthread_mutex_unlock(&queue->mutex);
+            if (cleanup != NULL) cleanup(context);
             continue;
         }
         slot->state = TASK_RUNNING;
@@ -137,6 +143,8 @@ static void *worker_main(void *opaque)
 
         int64_t value = 0;
         bool succeeded = slot->callback(slot->context, &slot->token, &value);
+        platform_task_context_cleanup cleanup = slot->cleanup;
+        void *context = slot->context;
 
         (void)pthread_mutex_lock(&queue->mutex);
         if (slot->generation == queue->generation &&
@@ -148,6 +156,7 @@ static void *worker_main(void *opaque)
         }
         (void)pthread_cond_broadcast(&queue->changed);
         (void)pthread_mutex_unlock(&queue->mutex);
+        if (cleanup != NULL) cleanup(context);
     }
 }
 
@@ -201,9 +210,10 @@ platform_task_status platform_task_queue_create(const platform_task_config *conf
     return PLATFORM_TASK_OK;
 }
 
-platform_task_status platform_task_submit(platform_task_queue *queue, uint64_t task_id,
-                                           uint64_t generation, platform_task_callback callback,
-                                           void *context)
+static platform_task_status submit_internal(platform_task_queue *queue, uint64_t task_id,
+                                             uint64_t generation,
+                                             platform_task_callback callback, void *context,
+                                             platform_task_context_cleanup cleanup)
 {
     if (queue == NULL || callback == NULL || task_id == 0U) return PLATFORM_TASK_INVALID;
     api_enter(queue);
@@ -225,7 +235,8 @@ platform_task_status platform_task_submit(platform_task_queue *queue, uint64_t t
     if (status == PLATFORM_TASK_OK) {
         size_t index = (size_t)(free_slot - queue->slots);
         free_slot->id = task_id; free_slot->generation = generation; free_slot->callback = callback;
-        free_slot->context = context; free_slot->result = (platform_task_result){0};
+        free_slot->context = context; free_slot->cleanup = cleanup;
+        free_slot->result = (platform_task_result){0};
         (void)atomic_store_explicit(&free_slot->token.canceled, false, memory_order_release);
         free_slot->state = TASK_QUEUED;
         size_t tail = (queue->queue_head + queue->queue_count) % queue->capacity;
@@ -233,6 +244,22 @@ platform_task_status platform_task_submit(platform_task_queue *queue, uint64_t t
         (void)pthread_cond_signal(&queue->changed);
     }
     (void)pthread_mutex_unlock(&queue->mutex); api_leave(queue); return status;
+}
+
+platform_task_status platform_task_submit(platform_task_queue *queue, uint64_t task_id,
+                                           uint64_t generation, platform_task_callback callback,
+                                           void *context)
+{
+    return submit_internal(queue, task_id, generation, callback, context, NULL);
+}
+
+platform_task_status platform_task_submit_owned(platform_task_queue *queue, uint64_t task_id,
+                                                 uint64_t generation,
+                                                 platform_task_callback callback,
+                                                 void *context,
+                                                 platform_task_context_cleanup cleanup)
+{
+    return submit_internal(queue, task_id, generation, callback, context, cleanup);
 }
 
 platform_task_status platform_task_cancel(platform_task_queue *queue, uint64_t task_id)

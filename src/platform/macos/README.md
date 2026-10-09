@@ -37,3 +37,11 @@ and prevents its results from being published. Shutdown requests cancellation
 and joins every worker before destroy frees storage. The owner must quiesce
 callers before destroy; debug builds assert if an admitted call remains active.
 A callback that ignores cancellation can delay shutdown and join.
+
+`platform_task_submit_owned` adds an optional terminal cleanup callback without
+changing borrowed `platform_task_submit`. Ownership transfers only when submit
+returns success. Cleanup runs exactly once after the callback returns or after
+a queued task is discarded, and never while the queue mutex is held. Failed
+submissions do not call cleanup. Queue slots are released under the mutex
+before cleanup runs, so cleanup can safely release snapshots or update module
+accounting without extending the queue critical section.

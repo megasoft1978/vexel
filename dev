@@ -5,6 +5,7 @@ usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
+    printf '%s\n' '       ./dev tsan'
     printf '%s\n' '       ./dev wo-help'
 }
 
@@ -19,7 +20,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|index-bench|asan|ubsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
+    build|test-fast|test|verify|index-bench|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -53,6 +54,11 @@ case "$command_name" in
         cmake --preset "$preset"
         cmake --build --preset "$preset"
         ctest --preset "$preset"
+        ;;
+    tsan)
+        cmake --preset mac-tsan
+        cmake --build --preset mac-tsan --target job_snapshot_test
+        ctest --test-dir build/mac-tsan -R '^job-snapshot$' --output-on-failure
         ;;
     fuzz)
         shift

@@ -1,0 +1,49 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03/build/mac-debug
+      Start  1: cli-version
+ 1/10 Test  #1: cli-version ......................   Passed    0.00 sec
+      Start  2: base-contract
+ 2/10 Test  #2: base-contract ....................   Passed    0.00 sec
+      Start  3: xml-tokenizer
+ 3/10 Test  #3: xml-tokenizer ....................   Passed    0.08 sec
+      Start  4: source-save
+ 4/10 Test  #4: source-save ......................   Passed    0.00 sec
+      Start  5: shape-render
+ 5/10 Test  #5: shape-render .....................   Passed    0.01 sec
+      Start  6: svg-index
+ 6/10 Test  #6: svg-index ........................   Passed    0.12 sec
+      Start  7: svg-token-stream-budget
+ 7/10 Test  #7: svg-token-stream-budget ..........   Passed    0.02 sec
+      Start  8: index-replay
+ 8/10 Test  #8: index-replay .....................***Failed    0.14 sec
+index replay preview: offscreen Metal device or queue unavailable
+progress: 10%
+progress: 50%
+progress: 90%
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=9396000
+stale_generation_rejected=true
+canceled_worker_rejected=true
+preview_state: submitted=true finished=true ready=true
+
+      Start  9: spatial-cache
+ 9/10 Test  #9: spatial-cache ....................   Passed    0.02 sec
+      Start 10: job-snapshot
+10/10 Test #10: job-snapshot .....................   Passed    0.05 sec
+
+90% tests passed, 1 tests failed out of 10
+
+Total Test time (real) =   0.45 sec
+
+The following tests FAILED:
+	  8 - index-replay (Failed)
+Errors while running CTest

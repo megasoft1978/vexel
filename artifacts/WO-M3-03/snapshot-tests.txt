@@ -1,0 +1,4 @@
+PASS: invalid nonempty NULL slice rejected; >256 MiB rejected; empty slice accepted.
+PASS: mutating caller storage leaves copied snapshot bytes unchanged.
+PASS: six threads each performed 20,000 concurrent retain/read/release cycles.
+PASS: deterministic scheduler digest and failed byte-budget submit ownership.

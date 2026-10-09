@@ -48,6 +48,13 @@
       "inherits": "mac-debug",
       "binaryDir": "${sourceDir}/build/mac-ubsan",
       "cacheVariables": { "VEXEL_SANITIZER": "ubsan" }
+    },
+    {
+      "name": "mac-tsan",
+      "displayName": "macOS Apple Silicon ThreadSanitizer (worker and snapshot only)",
+      "inherits": "mac-debug",
+      "binaryDir": "${sourceDir}/build/mac-tsan",
+      "cacheVariables": { "VEXEL_SANITIZER": "tsan" }
     }
   ],
   "buildPresets": [
@@ -55,10 +62,12 @@
     { "name": "mac-release", "configurePreset": "mac-release" },
     { "name": "mac-size", "configurePreset": "mac-size" },
     { "name": "mac-asan", "configurePreset": "mac-asan" },
-    { "name": "mac-ubsan", "configurePreset": "mac-ubsan" }
+    { "name": "mac-ubsan", "configurePreset": "mac-ubsan" },
+    { "name": "mac-tsan", "configurePreset": "mac-tsan" }
   ],
   "testPresets": [
     { "name": "mac-asan", "configurePreset": "mac-asan", "output": { "outputOnFailure": true } },
-    { "name": "mac-ubsan", "configurePreset": "mac-ubsan", "output": { "outputOnFailure": true } }
+    { "name": "mac-ubsan", "configurePreset": "mac-ubsan", "output": { "outputOnFailure": true } },
+    { "name": "mac-tsan", "configurePreset": "mac-tsan", "output": { "outputOnFailure": true } }
   ]
 }

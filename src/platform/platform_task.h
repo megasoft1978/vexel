@@ -13,6 +13,7 @@ typedef struct platform_task_queue platform_task_queue;
 typedef struct platform_task_cancel_token { atomic_bool canceled; } platform_task_cancel_token;
 typedef bool (*platform_task_callback)(void *context, const platform_task_cancel_token *token,
                                       int64_t *out_value);
+typedef void (*platform_task_context_cleanup)(void *context);
 typedef void *(*platform_task_alloc_fn)(void *context, size_t size);
 typedef void (*platform_task_free_fn)(void *context, void *memory);
 
@@ -48,6 +49,12 @@ platform_task_status platform_task_queue_create(const platform_task_config *conf
 platform_task_status platform_task_submit(platform_task_queue *queue, uint64_t task_id,
                                            uint64_t generation, platform_task_callback callback,
                                            void *context);
+/* On success queue owns context and calls cleanup exactly once outside its mutex. */
+platform_task_status platform_task_submit_owned(platform_task_queue *queue, uint64_t task_id,
+                                                 uint64_t generation,
+                                                 platform_task_callback callback,
+                                                 void *context,
+                                                 platform_task_context_cleanup cleanup);
 platform_task_status platform_task_cancel(platform_task_queue *queue, uint64_t task_id);
 platform_task_status platform_task_advance_generation(platform_task_queue *queue,
                                                        uint64_t generation);

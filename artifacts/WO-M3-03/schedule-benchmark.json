@@ -1,0 +1,13 @@
+{
+  "cycles": 1000,
+  "worker_count": 1,
+  "elapsed_seconds": 0.018880000,
+  "join_max_seconds": 0.000110000,
+  "cancellation_count": 1000,
+  "compiler": "AppleClang 21.0.0 (clang-2100.3.34.2)",
+  "os": "macOS 27.0",
+  "model": "Mac17,14",
+  "architecture": "arm64",
+  "build_type": "Release",
+  "binary_size_bytes": 70288
+}
