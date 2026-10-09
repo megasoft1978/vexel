@@ -1,11 +1,7 @@
 # Handoff
 
-WO-M1-04 revision 3 is complete, independently verified, and merged to `main`
-at `91ff611782c843428fb5bdc4ba874e3ccdd37f94`. Its queue owner-quiescence
-contract is in ADR-0006; deterministic native pointer test injection is in
-ADR-0007. All frozen checks pass. Evidence is under `artifacts/WO-M1-04/` and
-`artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/`.
+WO-M3-05's proceed/pause/pivot/stop owner decision remains OPEN. M4/M5 have not started.
 
-Continue with WO-M2-01, checked slices and arena allocation, following
-`docs/research-r4/05-revised-roadmap.md` and the coding standard. No owner gate
-is active until M3-05.
+WO-M3-06 revision 2 is machine-complete on branch `wo/WO-M3-06`; independent read-only review is pending. The 58-file external corpus is pinned by manifest and baseline hashes in `reports/M3/head-to-head.json`; its SVG files remain outside this repository. The 116 fresh Release trials found 2 supported previews, 56 unsupported outcomes, no limits or crashes. The 100 MiB first-preview wedge fails; max main-thread step and the per-file RSS allowance pass. Exact metrics, limitations, and checks are in `reports/M3/head-to-head.md` and `reports/M3/head-to-head-validation.txt`.
+
+Next: review the committed candidate with `./scripts/wo-verify.sh WO-M3-06 <candidate-sha>`. If the fresh review passes and changed-path scope is clean, record acceptance, fast-forward merge to `main`, update this handoff with the owner gate, and stop. Keep all M4/M5 work stopped pending owner review.

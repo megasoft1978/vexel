@@ -1,0 +1,31 @@
+WO-M3-06 revision 2 machine acceptance
+
+Corpus integrity
+- manifest.json: 58 files, SHA-256 9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30
+- INKSCAPE_BASELINE.md: 58 matching rows, SHA-256 3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba
+- All listed corpus size/hash checks passed; no corpus files copied into the repository.
+
+Measurement
+- Release svg_index_bench was rebuilt after the measurement-only JSON instrumentation.
+- 116 fresh process trials: 3 each for 29 T1/T2 files, 1 each for 29 T3/T4 files; all had a 120 s timeout.
+- Outcomes: 2 ok, 56 unsupported, 0 resource limits, 0 crashes/timeouts.
+- T3 80–120 MiB band: 12 files; no supported previews, so first-preview <2 s gate fails. Maximum main-thread step 279,583 ns (passes <100 ms). Peak RSS was within the WO-M3-01 allowance (3x source bytes + 128 MiB) for all 12.
+- Unsupported files still retain max-step, RSS, process wall time and diagnostic fields. Full-index timing is present only for completed indexes; incomplete malformed inputs mark it unavailable. Two natural-earth T1 previews have a geometric-mean Inkscape/Vexel time ratio of 88.708x. This is an unlike-task directional comparison, not render parity.
+
+Commands
+- PASS `cmake --build --preset mac-release --target svg_index_bench`
+- PASS `timeout 720 python3 reports/M3/head_to_head.py --run` (58 files / 116 trials; deterministic report checked at completion)
+- PASS `python3 reports/M3/head_to_head.py --check` (58 files / 116 trials)
+- PASS `python3 -m json.tool reports/M3/head-to-head.json`
+- PASS `python3 scripts/wo_validate.py WO-M3-06 --ready` (revision 2 SHA-256 58a540c26ce565e2d4543d4e7d3aae14fca6e27a31d90a31c3176f72f9c8a03a)
+- PASS `python3 scripts/ledger.py validate ledger.jsonl` (pre-closeout ledger 314 entries)
+- PASS `git diff --check`
+- PASS `timeout 900 ./dev verify` (Debug CTest 11/11; Python 191/191; native smoke and 20-frame Metal replay)
+- PASS `timeout 900 ./dev asan` (CTest 11/11)
+- PASS `timeout 900 ./dev ubsan` (CTest 11/11)
+
+Interpretation
+- Vexel's present subset only previews two of the 58 corpus files. Many valid documents complete indexing without a supported preview; some T3/T4 files are rejected as malformed by the current parser. This is an honest coverage gap. Inkscape baseline runs were not repeated because all files already had baseline rows, and no 1 GB input was sent to Inkscape.
+- The comparison measures Vexel open/index/first supported preview against supplied Inkscape CLI probe values; it does not measure full-render parity. Owner gate remains open; no M4/M5 work is started.
+- PASS benchmark smoke under `build/mac-asan/bin/svg_index_bench` on a supported real T1 file: valid outcome JSON, no sanitizer report.
+- PASS benchmark smoke under `build/mac-ubsan/bin/svg_index_bench` on an unsupported generated T1 file: valid outcome/index/step/RSS JSON, no sanitizer report.

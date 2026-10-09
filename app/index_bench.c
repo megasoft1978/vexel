@@ -36,6 +36,12 @@ static uint64_t now_ns(void)
     return ticks * (uint64_t)scale.numer / (uint64_t)scale.denom;
 }
 
+static void print_optional_ns(uint64_t value, bool available)
+{
+    if (available) (void)printf("%llu", (unsigned long long)value);
+    else (void)printf("null");
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2) { (void)fprintf(stderr, "usage: svg_index_bench FILE\n"); return 2; }
@@ -108,17 +114,7 @@ int main(int argc, char **argv)
         }
     }
     platform_task_shutdown(queue);
-    if (status != SVG_INDEX_COMPLETE || first_ns == 0U || first_ns > total_ns || !rendered ||
-        !preview_before_index_complete ||
-        !progress_10 || !progress_50 || !progress_90) {
-        (void)fprintf(stderr, "index failed: status=%d diagnostic=%d offset=%zu\n",
-                      (int)status, (int)progress.diagnostic.category,
-                      progress.diagnostic.offset);
-        platform_task_destroy(queue);
-        raster_tile_destroy(&preview.tile);
-        svg_shape_document_destroy(&preview.document);
-        free(preview.source.ptr); svg_index_destroy(session); free(bytes); return 1;
-    }
+    bool passed = status == SVG_INDEX_COMPLETE && first_ns != 0U && rendered;
     struct rusage usage = {0};
     if (getrusage(RUSAGE_SELF, &usage) != 0) {
         platform_task_destroy(queue);
@@ -127,21 +123,29 @@ int main(int argc, char **argv)
         free(preview.source.ptr); svg_index_destroy(session); free(bytes);
         return 1;
     }
-    (void)printf("{\"source_bytes\":%zu,\"read_ns\":%llu,\"first_preview_ns\":%llu,"
-                 "\"complete_index_ns\":%llu,\"max_step_ns\":%llu,"
-                 "\"preview_before_index_complete\":%s,"
-                 "\"progress_10_50_90_complete\":true,"
+    (void)printf("{\"outcome\":\"%s\",\"source_bytes\":%zu,\"read_ns\":%llu,"
+                 "\"first_preview_ns\":",
+                 passed ? "ok" : "unsupported",
+                 size, (unsigned long long)(read_end - read_start));
+    print_optional_ns(first_ns, first_ns != 0U);
+    (void)printf(",\"complete_index_ns\":");
+    print_optional_ns(total_ns, status == SVG_INDEX_COMPLETE);
+    (void)printf(",\"index_elapsed_ns\":%llu,\"max_step_ns\":%llu,"
+                 "\"index_complete\":%s,\"status_code\":%d,"
+                 "\"diagnostic_category\":%d,\"diagnostic_offset\":%zu,"
+                 "\"preview_before_index_complete\":%s,\"progress_10_50_90_complete\":%s,"
                  "\"element_count\":%zu,\"index_bytes\":%zu,\"peak_rss_bytes\":%llu}\n",
-                 size, (unsigned long long)(read_end - read_start),
-                 (unsigned long long)first_ns, (unsigned long long)total_ns,
-                 (unsigned long long)max_step_ns,
-                 preview_before_index_complete ? "true" : "false", progress.element_count,
-                 progress.element_count * sizeof(svg_index_element),
+                 (unsigned long long)total_ns, (unsigned long long)max_step_ns,
+                 status == SVG_INDEX_COMPLETE ? "true" : "false", (int)status,
+                 (int)progress.diagnostic.category, progress.diagnostic.offset,
+                 preview_before_index_complete ? "true" : "false",
+                 progress_10 && progress_50 && progress_90 ? "true" : "false",
+                 progress.element_count, progress.element_count * sizeof(svg_index_element),
                  (unsigned long long)usage.ru_maxrss);
     svg_index_destroy(session); free(bytes);
     platform_task_destroy(queue);
     raster_tile_destroy(&preview.tile);
     svg_shape_document_destroy(&preview.document);
     free(preview.source.ptr);
-    return 0;
+    return passed ? 0 : 1;
 }
