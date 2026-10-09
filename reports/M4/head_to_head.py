@@ -73,8 +73,14 @@ def perf_block(report: dict) -> str:
     preview = gates["first_visible_preview_100_mib"]
     step = gates["maximum_main_thread_step"]
     rss = gates["peak_rss_100_mib"]
+    time_ratio = t1["inkscape_seconds_over_vexel_first_preview_geomean"]
+    rss_ratio = t1["inkscape_rss_over_vexel_rss_geomean"]
+    ratio_text = (f"The {t1['comparable_successful_files']} comparable successful T1 rows have an Inkscape/Vexel "
+                  f"first-preview geometric mean of {time_ratio:.3f}x and RSS ratio of {rss_ratio:.3f}x."
+                  if time_ratio is not None and rss_ratio is not None else
+                  f"T1 comparison ratios are unavailable ({t1['comparable_successful_files']} comparable successful files).")
     return "\n".join([
-        "## WO-M4-01 bounded geometry and corpus workload",
+        "## M4 cumulative shape and corpus workload",
         "",
         f"Measured on {env['architecture']} {env['macos']}, {env['chip']}, {env['compiler']}.",
         f"Debug/Release `svgworkbench`: {sizes['debug_svgworkbench']} / {sizes['release_svgworkbench']} bytes; "
@@ -86,10 +92,7 @@ def perf_block(report: dict) -> str:
         f"The 58-file run produced {sum(t['ok'] for t in tiers.values())} previewable, "
         f"{sum(t['unsupported'] for t in tiers.values())} unsupported, "
         f"{sum(t['limit'] for t in tiers.values())} limit, and {sum(t['crash'] for t in tiers.values())} crash outcomes.",
-        f"For {t1['comparable_successful_files']} comparable successful T1 rows, the Inkscape/Vexel "
-        f"first-preview geometric mean is {t1['inkscape_seconds_over_vexel_first_preview_geomean']:.3f}x "
-        f"and RSS ratio is {t1['inkscape_rss_over_vexel_rss_geomean']:.3f}x. "
-        "T2–T4 ratios are unavailable because Vexel has no successful outcomes there.",
+        ratio_text + " T2–T4 ratios are unavailable when Vexel has no successful outcomes there.",
         "These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.",
         f"The 100 MiB first-preview gate is {preview['status']} ({preview['measured_files']}/{preview['eligible_t3_files']} eligible files); "
         f"maximum main-thread step is {step['max_step_ns'] / 1e6:.3f} ms "
@@ -112,7 +115,26 @@ def update_perf(report: dict) -> str:
 
 
 def run(harness) -> None:
+    original_classify = harness.classify
+    time_wrapper_fallback = {"used": False}
+
+    def classify_with_time_fallback(result, timed_out):
+        if "time: sysctl kern.clockrate: Operation not permitted" in result.stderr:
+            try:
+                measured = json.loads(result.stdout)
+            except (json.JSONDecodeError, TypeError):
+                measured = {}
+            if measured.get("outcome") in ("ok", "unsupported", "limit"):
+                time_wrapper_fallback["used"] = True
+                return measured["outcome"]
+        return original_classify(result, timed_out)
+
+    harness.classify = classify_with_time_fallback
     raw = harness.run_campaign()
+    if time_wrapper_fallback["used"]:
+        raw["environment"]["process_policy"] = (
+            "fresh Vexel process per trial; /usr/bin/time -l emitted child metrics but could not query "
+            "kern.clockrate in this sandbox; peak RSS uses the benchmark process getrusage value")
     RAW.parent.mkdir(parents=True, exist_ok=True)
     RAW.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
     shutil.copyfile(harness.POINTER, POINTER)

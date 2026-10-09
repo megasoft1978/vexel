@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     size_t cap_case_bytes = 0U;
     if (!command_cap_probe(&cap_case_bytes)) return 5;
     clock_t started = clock();
-    static const char *parts[] = {"M", "m", "L", "H", "V", "C", "Q", "A", "Z", " ", ",", "1e999", "nan", "-1000001", "0", "1", "2", "3", "4", "9"};
+    static const char *parts[] = {"M", "m", "L", "H", "V", "C", "c", "S", "s", "Q", "q", "T", "t", "A", "Z", " ", ",", "1e999", "nan", "-1000001", "0", "1", "2", "3", "4", "9"};
     static const char prefix[] = "<svg width=\"16\" height=\"16\"><path d=\"";
     static const char suffix[] = "\"/></svg>";
     static const char *shape_cases[] = {

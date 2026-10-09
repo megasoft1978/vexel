@@ -16,8 +16,11 @@ subpaths of one path share its fill rule, and each subpath closes at a later
 moveto or the end of path. Unsupported elements, colors and syntax fail
 without changing source bytes.
 
-Path commands are M/m, L/l, H/h, V/v, C/c, Q/q, A/a and Z/z with repeated
-groups. Coordinates are limited to absolute value 1,000,000; total path commands
+Path commands are M/m, L/l, H/h, V/v, C/c, S/s, Q/q, T/t, A/a and Z/z with repeated
+groups. S/s reflect the previous second cubic control point only after C/c or
+S/s; T/t reflect the previous quadratic control point only after Q/q or T/t.
+Every other command, including closepath, resets both reflection contexts.
+Coordinates are limited to absolute value 1,000,000; total path commands
 and point-list vertices across the document are limited to 65,536; flattened edges to 262,144. Cubics
 and quadratics use deterministic De Casteljau subdivision until every control
 point is at most 0.25 transformed user units from the finite endpoint segment;
@@ -32,7 +35,7 @@ black outside fills. The combined per-pixel edge-plus-shape tests are capped at
 200,000,000 per render.
 
 No CSS/style, stroke, gradients, filters, external resource,
-unsupported unit, smooth command, or unknown shape semantics are interpreted.
+unsupported unit, or unknown shape semantics are interpreted.
 This module has no platform or third-party dependency. Transform and shape syntax follows the W3C SVG 2 [Shapes](https://www.w3.org/TR/SVG2/shapes.html) and [Coordinate Systems and Transformations](https://www.w3.org/TR/SVG2/coords.html) specifications (consulted 2026-10-09).
 
 The subset grammar and arc endpoint semantics reference the W3C SVG 2

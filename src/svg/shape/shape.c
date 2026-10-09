@@ -313,7 +313,9 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
             fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+i);return false;
         }
     }
-    geom_point current={0,0}, first={0,0}; char cmd=0; bool open=false, path_first=true;
+    geom_point current={0,0}, first={0,0}, cubic_control={0,0}, quad_control={0,0};
+    char cmd=0; bool open=false, path_first=true;
+    bool cubic_reflect=false, quad_reflect=false;
     bool previous_number=false, previous_arc_flag=false;
     while (r.i < r.n) {
         size_t gap_start=r.i;skip_path_separators(&r);bool had_separator=r.i!=gap_start;if(r.i>=r.n)break;
@@ -327,9 +329,9 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
         bool rel=cmd>='a'&&cmd<='z'; char upper=rel?(char)(cmd-'a'+'A'):cmd;
         if(path_first&&upper!='M'){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i-1U);return false;}
         path_first=false;
-        if(upper=='Z') { if(open&&!add_edge(b,current,first))return false; current=first;open=false;cmd=0;continue; }
-        if(upper!='M'&&upper!='L'&&upper!='H'&&upper!='V'&&upper!='C'&&upper!='Q'&&upper!='A') { fail(b->diag,SVG_SHAPE_ERROR_UNSUPPORTED,span.offset+r.i-1U);return false; }
-        double v[7]={0}; unsigned count=upper=='H'||upper=='V'?1U:upper=='C'?6U:upper=='Q'?4U:upper=='A'?7U:2U;
+        if(upper=='Z') { if(open&&!add_edge(b,current,first))return false; current=first;open=false;cmd=0;cubic_reflect=false;quad_reflect=false;continue; }
+        if(upper!='M'&&upper!='L'&&upper!='H'&&upper!='V'&&upper!='C'&&upper!='S'&&upper!='Q'&&upper!='T'&&upper!='A') { fail(b->diag,SVG_SHAPE_ERROR_UNSUPPORTED,span.offset+r.i-1U);return false; }
+        double v[7]={0}; unsigned count=upper=='H'||upper=='V'?1U:upper=='C'?6U:(upper=='S'||upper=='Q')?4U:upper=='T'?2U:upper=='A'?7U:2U;
         size_t group_start=r.i; b->offset=span.offset+group_start;
         for(unsigned i=0;i<count;i++){
             if(!path_operand_boundary(&r,previous_number,previous_arc_flag,upper,i)){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i);return false;}
@@ -340,11 +342,16 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
         geom_point p=current; bool drawn=false;
         if(upper=='H')p.x=rel?current.x+v[0]:v[0];
         else if(upper=='V')p.y=rel?current.y+v[0]:v[0];
-        else if(upper=='C'||upper=='Q'||upper=='A') {
+        else if(upper=='C'||upper=='S'||upper=='Q'||upper=='T'||upper=='A') {
             if(upper=='C') { geom_point c1={v[0],v[1]},c2={v[2],v[3]};p=(geom_point){v[4],v[5]}; if(rel){c1.x+=current.x;c1.y+=current.y;c2.x+=current.x;c2.y+=current.y;p.x+=current.x;p.y+=current.y;} if(!point_bounded(c1)||!point_bounded(c2)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;} if(!add_curve(b,current,c1,c2,p))return false;drawn=true; }
-            else if(upper=='Q') {geom_point c={v[0],v[1]};p=(geom_point){v[2],v[3]};if(rel){c.x+=current.x;c.y+=current.y;p.x+=current.x;p.y+=current.y;}if(!point_bounded(c)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(!add_quad(b,current,c,p))return false;drawn=true;}
+            else if(upper=='S') { geom_point c1=cubic_reflect?(geom_point){2.0*current.x-cubic_control.x,2.0*current.y-cubic_control.y}:current; geom_point c2={v[0],v[1]};p=(geom_point){v[2],v[3]};if(rel){c2.x+=current.x;c2.y+=current.y;p.x+=current.x;p.y+=current.y;}if(!point_bounded(c1)||!point_bounded(c2)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(!add_curve(b,current,c1,c2,p))return false;cubic_control=c2;cubic_reflect=true;quad_reflect=false;drawn=true; }
+            else if(upper=='Q') {geom_point c={v[0],v[1]};p=(geom_point){v[2],v[3]};if(rel){c.x+=current.x;c.y+=current.y;p.x+=current.x;p.y+=current.y;}if(!point_bounded(c)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(!add_quad(b,current,c,p))return false;quad_control=c;quad_reflect=true;cubic_reflect=false;drawn=true;}
+            else if(upper=='T') {geom_point c=quad_reflect?(geom_point){2.0*current.x-quad_control.x,2.0*current.y-quad_control.y}:current;p=(geom_point){v[0],v[1]};if(rel){p.x+=current.x;p.y+=current.y;}if(!point_bounded(c)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(!add_quad(b,current,c,p))return false;quad_control=c;quad_reflect=true;cubic_reflect=false;drawn=true;}
             else { if((v[3]!=0.0&&v[3]!=1.0)||(v[4]!=0.0&&v[4]!=1.0)||v[0]<0.0||v[1]<0.0){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+group_start);return false;} p=(geom_point){v[5],v[6]};if(rel){p.x+=current.x;p.y+=current.y;}if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;} if(!add_arc(b,current,v[0],v[1],v[2],v[3]==1.0,v[4]==1.0,p,span.offset+group_start))return false;drawn=true; }
-        } else {p=(geom_point){v[0],v[1]};if(rel){p.x+=current.x;p.y+=current.y;} if(upper=='M'){if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(open&&!add_edge(b,current,first))return false;current=p;first=p;open=true;cmd=rel?'l':'L';continue;}}
+            if(upper=='C'){cubic_control=(geom_point){v[2],v[3]};if(rel){cubic_control.x+=current.x;cubic_control.y+=current.y;}cubic_reflect=true;quad_reflect=false;}
+            if(upper=='A'){cubic_reflect=false;quad_reflect=false;}
+        } else {p=(geom_point){v[0],v[1]};if(rel){p.x+=current.x;p.y+=current.y;} if(upper=='M'){if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(open&&!add_edge(b,current,first))return false;current=p;first=p;open=true;cmd=rel?'l':'L';cubic_reflect=false;quad_reflect=false;continue;}}
+        if(upper=='M'||upper=='L'||upper=='H'||upper=='V'){cubic_reflect=false;quad_reflect=false;}
         if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}
         if(!drawn&&!add_edge(b,current,p))return false; current=p; open=true;
     }

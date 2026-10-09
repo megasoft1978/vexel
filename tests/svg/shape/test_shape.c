@@ -15,8 +15,45 @@ static double segment_distance(geom_point p, geom_edge edge)
     return hypot(p.x-(edge.a.x+t*dx),p.y-(edge.a.y+t*dy));
 }
 
+static bool paths_equivalent(const char *left, const char *right)
+{
+    char left_svg[512], right_svg[512];
+    int left_len = snprintf(left_svg, sizeof(left_svg), "<svg width=\"16\" height=\"16\"><path d=\"%s\"/></svg>", left);
+    int right_len = snprintf(right_svg, sizeof(right_svg), "<svg width=\"16\" height=\"16\"><path d=\"%s\"/></svg>", right);
+    if (left_len < 0 || right_len < 0 || (size_t)left_len >= sizeof(left_svg) || (size_t)right_len >= sizeof(right_svg)) return false;
+    svg_shape_document a, b; svg_shape_diagnostic diagnostic;
+    bool ok = svg_shape_decode((base_bytes){(const uint8_t *)left_svg, (size_t)left_len}, &a, &diagnostic) == SVG_SHAPE_ERROR_NONE;
+    if (!ok) return false;
+    ok = svg_shape_decode((base_bytes){(const uint8_t *)right_svg, (size_t)right_len}, &b, &diagnostic) == SVG_SHAPE_ERROR_NONE;
+    if (!ok) { svg_shape_document_destroy(&a); return false; }
+    ok = a.source.ptr == (const uint8_t *)left_svg && a.source.len == (size_t)left_len &&
+         b.source.ptr == (const uint8_t *)right_svg && b.source.len == (size_t)right_len &&
+         a.edge_count == b.edge_count;
+    if (!ok) fprintf(stderr, "edge count %zu != %zu for %s vs %s\n", a.edge_count, b.edge_count, left, right);
+    for (size_t i = 0; ok && i < a.edge_count; i++) {
+        ok = fabs(a.edges[i].a.x - b.edges[i].a.x) < 1e-12 &&
+             fabs(a.edges[i].a.y - b.edges[i].a.y) < 1e-12 &&
+             fabs(a.edges[i].b.x - b.edges[i].b.x) < 1e-12 &&
+             fabs(a.edges[i].b.y - b.edges[i].b.y) < 1e-12;
+        if (!ok) fprintf(stderr, "edge mismatch %zu: %.15g,%.15g -> %.15g,%.15g / %.15g,%.15g -> %.15g,%.15g\n", i, a.edges[i].a.x, a.edges[i].a.y, a.edges[i].b.x, a.edges[i].b.y, b.edges[i].a.x, b.edges[i].a.y, b.edges[i].b.x, b.edges[i].b.y);
+    }
+    svg_shape_document_destroy(&a); svg_shape_document_destroy(&b);
+    return ok;
+}
+
 int main(void)
 {
+    const bool smooth_checks[] = {
+        paths_equivalent("M1 1 C2 1 3 2 4 2 S6 3 7 4", "M1 1 C2 1 3 2 4 2 C5 2 6 3 7 4"),
+        paths_equivalent("M1 1 c1 0 2 1 3 1 s2 1 3 2 2 1 3 2", "M1 1 c1 0 2 1 3 1 c1 0 2 1 3 2 c1 1 2 1 3 2"),
+        paths_equivalent("M1 1 Q2 3 4 1 T7 1", "M1 1 Q2 3 4 1 Q6 -1 7 1"),
+        paths_equivalent("M1 1 q1 2 3 0 t3 0 3 0", "M1 1 q1 2 3 0 q2 -2 3 0 q1 2 3 0"),
+        paths_equivalent("M1 1 C2 2 3 3 4 4 L7 7 S8 8 9 9", "M1 1 C2 2 3 3 4 4 L7 7 C7 7 8 8 9 9"),
+        paths_equivalent("M1 1 Q2 3 4 1 L7 1 T9 1", "M1 1 Q2 3 4 1 L7 1 Q7 1 9 1"),
+        paths_equivalent("M1 1 C2 2 3 3 4 4 Z S6 6 7 7", "M1 1 C2 2 3 3 4 4 Z C1 1 6 6 7 7")
+    };
+    for (size_t i = 0; i < sizeof(smooth_checks) / sizeof(smooth_checks[0]); i++) if (!smooth_checks[i]) { fprintf(stderr, "smooth equivalence %zu failed\n", i); return 40; }
+
     geom_affine translate={1,0,0,1,10,20}, scale={2,0,0,3,0,0}, composed;
     geom_point mapped;
     double bounds[4];
@@ -60,6 +97,22 @@ int main(void)
     static const uint8_t bad[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0 A3 3 0 2 0 4 4\"/></svg>";
     if (svg_shape_decode((base_bytes){bad, sizeof(bad)-1U}, &doc, &diagnostic) == SVG_SHAPE_ERROR_NONE) { svg_shape_document_destroy(&doc); return 3; }
     if (diagnostic.category != SVG_SHAPE_ERROR_PATH || diagnostic.offset == 0U || !valid) return 4;
+    static const uint8_t malformed_smooth[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0 S1 2 3\"/></svg>";
+    size_t malformed_smooth_group = (size_t)(strstr((const char *)malformed_smooth, "S1") - (const char *)malformed_smooth) + strlen("S1 2 3");
+    if (svg_shape_decode((base_bytes){malformed_smooth, sizeof(malformed_smooth)-1U}, &doc, &diagnostic) == SVG_SHAPE_ERROR_NONE ||
+        diagnostic.category != SVG_SHAPE_ERROR_PATH || diagnostic.offset != malformed_smooth_group) { fprintf(stderr, "malformed smooth got %d@%zu expected path@%zu\n", diagnostic.category, diagnostic.offset, malformed_smooth_group); return 41; }
+    static const uint8_t malformed_quad_smooth[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0 T1\"/></svg>";
+    size_t malformed_quad_group = (size_t)(strstr((const char *)malformed_quad_smooth, "T1") - (const char *)malformed_quad_smooth) + strlen("T1");
+    if (svg_shape_decode((base_bytes){malformed_quad_smooth, sizeof(malformed_quad_smooth)-1U}, &doc, &diagnostic) == SVG_SHAPE_ERROR_NONE ||
+        diagnostic.category != SVG_SHAPE_ERROR_PATH || diagnostic.offset != malformed_quad_group) return 44;
+    static const uint8_t smooth_overflow[] = "<svg width=\"8\" height=\"8\"><path d=\"M999999 0 s2 2 2 2\"/></svg>";
+    size_t smooth_overflow_group = (size_t)(strstr((const char *)smooth_overflow, "s2") - (const char *)smooth_overflow) + 1U;
+    if (svg_shape_decode((base_bytes){smooth_overflow, sizeof(smooth_overflow)-1U}, &doc, &diagnostic) == SVG_SHAPE_ERROR_NONE ||
+        diagnostic.category != SVG_SHAPE_ERROR_NUMBER || diagnostic.offset != smooth_overflow_group) { fprintf(stderr, "smooth overflow got %d@%zu expected number@%zu\n", diagnostic.category, diagnostic.offset, smooth_overflow_group); return 42; }
+    static const uint8_t quad_overflow[] = "<svg width=\"8\" height=\"8\"><path d=\"M999999 0 t2 2\"/></svg>";
+    size_t quad_overflow_group = (size_t)(strstr((const char *)quad_overflow, "t2") - (const char *)quad_overflow) + 1U;
+    if (svg_shape_decode((base_bytes){quad_overflow, sizeof(quad_overflow)-1U}, &doc, &diagnostic) == SVG_SHAPE_ERROR_NONE ||
+        diagnostic.category != SVG_SHAPE_ERROR_NUMBER || diagnostic.offset != quad_overflow_group) return 43;
     static const uint8_t overshoot[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0 C100 0 100 0 1 0\"/></svg>";
     if (svg_shape_decode((base_bytes){overshoot, sizeof(overshoot)-1U}, &doc, &diagnostic) != SVG_SHAPE_ERROR_NONE) return 8;
     bool retained_overshoot = false;

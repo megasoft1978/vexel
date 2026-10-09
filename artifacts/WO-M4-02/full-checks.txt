@@ -1,0 +1,11 @@
+Direct host verification of the isolated candidate worktree; all listed commands exited 0.
+- ./dev verify: Debug CTest 11/11; Python 192/192; native smoke and 20-frame Metal replay pass.
+- ./dev asan: CTest 11/11 pass.
+- ./dev ubsan: CTest 11/11 pass.
+- ./dev test-fast: Python 192/192; ledger validation passes.
+- python3 -m unittest tests.test_shape_render: 9/9 pass; ten librsvg 2.63.2 path/shape fixture comparisons meet the existing pixel tolerance.
+- ./dev shape-fuzz --duration 60 --seed 20261009 --output artifacts/WO-M4-02/fuzz-report.json: 1,000,000 cases; zero crashes, sanitizer reports, or invariants.
+- ./dev bench-corpus --run and --check: 58 files / 116 trials; 2 previewable, 56 unsupported, 0 limit, 0 crash.
+- path-command inventory --check: all 58 manifest hashes/sizes validated; 56 path-bearing files.
+- Release configure/build, frozen WO hash, report JSON, ledger validation, and git diff --check pass.
+The earlier Codex sandbox attempt had Metal/process-policy failures; its report is retained separately in executor-sandbox-checks.txt and runner-sandbox-report.json. The same candidate's direct host checks above pass.

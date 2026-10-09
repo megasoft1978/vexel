@@ -1,0 +1,767 @@
+{
+  "schema_version": 1,
+  "corpus_root": "/Users/megasoft78/Desktop/Freelance/vexel-corpus-real",
+  "manifest_path": "/Users/megasoft78/Desktop/Freelance/vexel-corpus-real/manifest.json",
+  "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
+  "files": 58,
+  "path_bearing_files": 56,
+  "command_totals": {
+    "A": 1779,
+    "C": 3720,
+    "H": 20554,
+    "L": 152833604,
+    "M": 9407888,
+    "Q": 184,
+    "S": 0,
+    "T": 0,
+    "V": 5376,
+    "Z": 1155963,
+    "a": 680147,
+    "c": 775512,
+    "h": 10811848,
+    "l": 7700082,
+    "m": 691947,
+    "q": 0,
+    "s": 1438,
+    "t": 0,
+    "v": 5662211,
+    "z": 4768381
+  },
+  "command_file_counts": {
+    "A": 2,
+    "C": 14,
+    "H": 11,
+    "L": 51,
+    "M": 52,
+    "Q": 2,
+    "S": 0,
+    "T": 0,
+    "V": 11,
+    "Z": 18,
+    "a": 7,
+    "c": 14,
+    "h": 21,
+    "l": 17,
+    "m": 15,
+    "q": 0,
+    "s": 3,
+    "t": 0,
+    "v": 21,
+    "z": 50
+  },
+  "entries": [
+    {
+      "path": "files/generated/cad_t1.svg",
+      "bytes": 997801,
+      "sha256": "0115d525c56b9644e336f6bc6a3ca591d6a8c7608f38557885d027a8f74309a0",
+      "command_occurrences": {
+        "L": 2,
+        "M": 10361,
+        "a": 5180,
+        "h": 10360,
+        "v": 5180,
+        "z": 5181
+      }
+    },
+    {
+      "path": "files/generated/cad_t2.svg",
+      "bytes": 10592198,
+      "sha256": "2ddafd2eeb039efea9345295dbe8f56c53e16935c1699d01a5f28d52105cd934",
+      "command_occurrences": {
+        "L": 2,
+        "M": 106497,
+        "a": 53248,
+        "h": 106496,
+        "v": 53248,
+        "z": 53249
+      }
+    },
+    {
+      "path": "files/generated/cad_t3.svg",
+      "bytes": 109719583,
+      "sha256": "1e3e2a7a2b0fa47be489955db72ad880f6cbd5378d3ee60cae54e689be14eed9",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1067861,
+        "a": 533930,
+        "h": 1067860,
+        "v": 533930,
+        "z": 533931
+      }
+    },
+    {
+      "path": "files/generated/cnc_t1.svg",
+      "bytes": 990772,
+      "sha256": "3854c3d66922e0463c9072d356866b424b497a42a14ac06fbd069449b3c6cf5e",
+      "command_occurrences": {
+        "L": 2,
+        "M": 31532,
+        "Z": 7644,
+        "l": 46819,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/cnc_t2.svg",
+      "bytes": 10162188,
+      "sha256": "f7408a2922737ba2492e0edba4491555a75c86ea684dc997d6ecf26f33f28fff",
+      "command_occurrences": {
+        "L": 2,
+        "M": 321107,
+        "Z": 77844,
+        "l": 476794,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/cnc_t3.svg",
+      "bytes": 102580014,
+      "sha256": "8e63e8911cf327942b16231d5dd5a599731e6ea97f2802ecbcd8f2e8e96f57a8",
+      "command_occurrences": {
+        "L": 2,
+        "M": 3216857,
+        "Z": 779844,
+        "l": 4776544,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/embedded_t1.svg",
+      "bytes": 912235,
+      "sha256": "b7011a6c4fdbac93a5f01b59c5ff484ce0deae0b11155744505d4d61f4e6ddd4",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/embedded_t2.svg",
+      "bytes": 9371925,
+      "sha256": "0f06ac65cd623a85b4775f2cbd57cafcf9244df18f10c597a0eeccf8548ba33f",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/embedded_t3.svg",
+      "bytes": 93970295,
+      "sha256": "ef733fd8f7b164ea79aa977c64c07cce1dd2647213d330689903cb6f3866b716",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/giant_path_t1.svg",
+      "bytes": 920236,
+      "sha256": "b83a25ec9adcfa73245eb2f46815d703318ab8e769bc4247b7380baa0dac6c69",
+      "command_occurrences": {
+        "L": 100002,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/giant_path_t2.svg",
+      "bytes": 8340030,
+      "sha256": "e81940fbf6e7d2fcef756f4e4c18ffc53008485b197509dbefc62b071724fbcd",
+      "command_occurrences": {
+        "L": 906820,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/giant_path_t3.svg",
+      "bytes": 91963466,
+      "sha256": "9f1ce0ac12ee8bbc51a87c1fa0e634fb92fc19cede34a40c6df503e9119ef317",
+      "command_occurrences": {
+        "L": 10000002,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/giant_path_t4.svg",
+      "bytes": 827663466,
+      "sha256": "478fd78fae6eefc35709fa828cb478f449a1249d14ef00671c33d6dc436c9ddf",
+      "command_occurrences": {
+        "L": 90000002,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/inkscape_t1.svg",
+      "bytes": 979796,
+      "sha256": "3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5",
+      "command_occurrences": {
+        "C": 1,
+        "L": 2,
+        "M": 34716,
+        "h": 69428,
+        "v": 34714,
+        "z": 34715
+      }
+    },
+    {
+      "path": "files/generated/inkscape_t2.svg",
+      "bytes": 10062253,
+      "sha256": "b0b7223ac34f78d64f8d37e7e6f82e05b76f626d9f1b01183cc533515a2d17d1",
+      "command_occurrences": {
+        "C": 1,
+        "L": 2,
+        "M": 356821,
+        "h": 713638,
+        "v": 356819,
+        "z": 356820
+      }
+    },
+    {
+      "path": "files/generated/inkscape_t3.svg",
+      "bytes": 100883678,
+      "sha256": "22893ce5b24f1b500ec14a3c9b889ad3eda9eebeddfa4bd0535972048e681c81",
+      "command_occurrences": {
+        "C": 1,
+        "L": 2,
+        "M": 3577873,
+        "h": 7155742,
+        "v": 3577871,
+        "z": 3577872
+      }
+    },
+    {
+      "path": "files/generated/map_t1.svg",
+      "bytes": 1310972,
+      "sha256": "aefe1044cd8a9bb66f2e75893cdea6719abb0050fb4ca2c76f96fb63b9225a3d",
+      "command_occurrences": {
+        "L": 77874,
+        "M": 2513,
+        "Z": 2512,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/map_t2.svg",
+      "bytes": 14191241,
+      "sha256": "53add44762c94b327f59bf8fa9e6368b42325f2e8fe15f863a6ac698eeb52ee3",
+      "command_occurrences": {
+        "L": 793261,
+        "M": 25590,
+        "Z": 25589,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/map_t3.svg",
+      "bytes": 150627424,
+      "sha256": "4798e52e9b03e00318fef9e5aea6bbacb94976e3466b0acdcf1b05cf65da2e61",
+      "command_occurrences": {
+        "L": 7947100,
+        "M": 256359,
+        "Z": 256358,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/nested_t1.svg",
+      "bytes": 978645,
+      "sha256": "26f6a4e9bef61a586e02d3cc7165ff8be4fce5644a8834e0f422e5a63636426b",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/nested_t2.svg",
+      "bytes": 9430992,
+      "sha256": "4cb44692c1a8a609a06b3e71ea7c7d5a8455ea5bcadc38752786f569b15b97f3",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/nested_t3.svg",
+      "bytes": 93956332,
+      "sha256": "fae3c3f79744c0ad9a641ceea820eae942e1a4d9dc48916e3550ead87429f29b",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/science_t1.svg",
+      "bytes": 1374397,
+      "sha256": "a094730dae56861051b2f0d7950ddbef4bf424678f26899626bdb99c92264c37",
+      "command_occurrences": {
+        "L": 60626,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/science_t2.svg",
+      "bytes": 14116675,
+      "sha256": "cd388b43a316494802ee7675f65a7a88bb8d26cfdd57b1b89a05494d3c6e9815",
+      "command_occurrences": {
+        "L": 623126,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/science_t3.svg",
+      "bytes": 117860153,
+      "sha256": "5acab0cc5ad433e8dbe50b38572809bc3ef717f781e05fc43acabd11d0ca35db",
+      "command_occurrences": {
+        "L": 5000001,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/science_t4.svg",
+      "bytes": 635202435,
+      "sha256": "728602067dd6f7f9ee31caa1d695719799aa5a1faf885a22410aa18f4cbac4be",
+      "command_occurrences": {
+        "L": 20000001,
+        "M": 2,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/text_t1.svg",
+      "bytes": 887035,
+      "sha256": "3526dfbddadee07b41ff0ab619d848bb1f1ca1ba465d8bed593e6c41c30c8f4d",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/text_t2.svg",
+      "bytes": 9024701,
+      "sha256": "a83f89dea471c0186d12864dd7e541c901b58fc43956f6af1bbc2d9be99f7eac",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/text_t3.svg",
+      "bytes": 90488308,
+      "sha256": "3d5ab69b4fa5068542595bec501113aca88452ef01225048e65bc7e4a7174a1d",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/use_t1.svg",
+      "bytes": 986323,
+      "sha256": "05f9fbc1c6a96ffd6f22d3ccf11cb96e9e1fcbae8444c500d019628ac6b6b955",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/use_t2.svg",
+      "bytes": 10036526,
+      "sha256": "5659c5233cd7d5aab6e54ef707926ac9bb18c2c2764497367ae941f7c9429164",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/use_t3.svg",
+      "bytes": 100542256,
+      "sha256": "b79888fb655e1070005764af8d731a4f3e7a1f15dc2d86e8d6e6f74eba3e96ef",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/generated/use_t4.svg",
+      "bytes": 1005597835,
+      "sha256": "5b6b081b054e375fb5d59bc021ddfd840bea61bf31779f73efba388ff353d838",
+      "command_occurrences": {
+        "L": 2,
+        "M": 1,
+        "z": 1
+      }
+    },
+    {
+      "path": "files/real/1-42-polytope-7-cube-svg.svg",
+      "bytes": 29836045,
+      "sha256": "af9adadf539dd6fd595b86175b5535130b921ba3fc4974dd45f45d3ab13b948a",
+      "command_occurrences": {}
+    },
+    {
+      "path": "files/real/2015-louisiana-gubernatorial-election-runoff-by-precinct-svg.svg",
+      "bytes": 16162430,
+      "sha256": "c7c84624043af3dfd6df57655db825bc3218c22ba44bbf0866f1b68fa98d0cc6",
+      "command_occurrences": {
+        "H": 40,
+        "V": 44,
+        "h": 113091,
+        "l": 199121,
+        "m": 4199,
+        "v": 122897
+      }
+    },
+    {
+      "path": "files/real/aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg.svg",
+      "bytes": 22666147,
+      "sha256": "16b538cbacc3538dd33f88e67286d9bd5c31a2d51ea0d8d0357aaed6c0fe8f3b",
+      "command_occurrences": {
+        "C": 1,
+        "H": 88,
+        "L": 373857,
+        "M": 39157,
+        "V": 83,
+        "Z": 5,
+        "c": 4,
+        "h": 38156,
+        "l": 60263,
+        "m": 3499,
+        "v": 22999,
+        "z": 3184
+      }
+    },
+    {
+      "path": "files/real/amhara-topographic-map-svg.svg",
+      "bytes": 15593284,
+      "sha256": "8180e8229fffb767ce89e5b9f270da53efbe110224ca74c2763f6363ac4cc6f0",
+      "command_occurrences": {
+        "c": 45828,
+        "h": 1622,
+        "l": 8207,
+        "m": 34808,
+        "s": 444,
+        "v": 1676,
+        "z": 33700
+      }
+    },
+    {
+      "path": "files/real/bulgaria-in-1915-geographic-map-en-svg.svg",
+      "bytes": 15165804,
+      "sha256": "e121dfdc33d34c1f8b12c93c1c4a25aebb55f1cf09e0aea4e72eaa50cecb6270",
+      "command_occurrences": {
+        "C": 1,
+        "L": 10456,
+        "M": 276,
+        "c": 7038,
+        "h": 47,
+        "l": 525,
+        "m": 30992,
+        "v": 38,
+        "z": 6984
+      }
+    },
+    {
+      "path": "files/real/cambodia-geographic-map-en-svg.svg",
+      "bytes": 20142590,
+      "sha256": "dc4ffbd72175c91329ec34fc2edd0a8dda4236aa04fda48e5642fbd695fc2376",
+      "command_occurrences": {
+        "C": 3,
+        "H": 264,
+        "L": 59,
+        "M": 85,
+        "V": 370,
+        "Z": 1,
+        "c": 209,
+        "h": 31103,
+        "l": 60812,
+        "m": 61700,
+        "v": 38801,
+        "z": 33
+      }
+    },
+    {
+      "path": "files/real/chuaattractormodified-svg.svg",
+      "bytes": 20763720,
+      "sha256": "cc5e3219486963dca0c050e26f24dde1cb6ae4585e8f3dccfbaec4c27b2d3631",
+      "command_occurrences": {
+        "L": 100143,
+        "M": 100057,
+        "Q": 72,
+        "z": 11
+      }
+    },
+    {
+      "path": "files/real/coat-of-arms-of-the-kingdom-of-naples-1808-svg.svg",
+      "bytes": 25708531,
+      "sha256": "e27360a92ed04c4b9bbf21c18113245456b7238c0f9775ec9f3dc097d2078985",
+      "command_occurrences": {
+        "A": 1735,
+        "C": 27,
+        "H": 10,
+        "L": 1753,
+        "M": 43,
+        "V": 7,
+        "Z": 19,
+        "a": 19194,
+        "c": 50409,
+        "h": 972,
+        "l": 23945,
+        "m": 18751,
+        "v": 2433,
+        "z": 17787
+      }
+    },
+    {
+      "path": "files/real/coat-of-arms-of-villa-alemana-svg.svg",
+      "bytes": 42628426,
+      "sha256": "a14a711cb9d28c146a534c3f7877af0313cb5aa75c3a88bacee3159eb56084c4",
+      "command_occurrences": {
+        "A": 44,
+        "C": 59,
+        "H": 44,
+        "L": 153,
+        "M": 71,
+        "V": 70,
+        "Z": 46,
+        "a": 21830,
+        "c": 38285,
+        "h": 449,
+        "l": 20609,
+        "m": 9378,
+        "v": 533,
+        "z": 9009
+      }
+    },
+    {
+      "path": "files/real/columbiarivermap-svg.svg",
+      "bytes": 16687292,
+      "sha256": "65eb43452a2b1864a77455af64d30596a06b1b52ad7e3a613b16bb83076b63a8",
+      "command_occurrences": {}
+    },
+    {
+      "path": "files/real/comunas-occitanas-d-alemanha-svg.svg",
+      "bytes": 43507208,
+      "sha256": "8daa02fca58aa1a86b3ec46fe32b39cdf126537b804ef811f9a331849d7acbb2",
+      "command_occurrences": {
+        "C": 1,
+        "H": 1508,
+        "L": 78,
+        "M": 23,
+        "V": 552,
+        "Z": 26,
+        "c": 16991,
+        "h": 327332,
+        "l": 515018,
+        "m": 20857,
+        "v": 233715,
+        "z": 20790
+      }
+    },
+    {
+      "path": "files/real/corsica-geographic-map-svg.svg",
+      "bytes": 14927948,
+      "sha256": "fb94cab442acd13bdce1401d79bd97429357eaf7731d34159596c62f0908944a",
+      "command_occurrences": {
+        "C": 3,
+        "H": 48,
+        "L": 544897,
+        "M": 13212,
+        "V": 33,
+        "Z": 12,
+        "c": 244,
+        "h": 3004,
+        "l": 5364,
+        "m": 3855,
+        "v": 2465,
+        "z": 82
+      }
+    },
+    {
+      "path": "files/real/corvuscoraxiucn-svg.svg",
+      "bytes": 26496549,
+      "sha256": "03d5702cd8919c3d449a417dd59fb46c75cec272d8345bd09ba29723490b7093",
+      "command_occurrences": {
+        "L": 1455648,
+        "M": 28801
+      }
+    },
+    {
+      "path": "files/real/dibujo-piu-svg.svg",
+      "bytes": 87755815,
+      "sha256": "96056a4f073bd990fbeef93abaa3a1814524600c3f03b2492e436a4e2c21687f",
+      "command_occurrences": {
+        "C": 1493,
+        "H": 16968,
+        "L": 5,
+        "M": 3397,
+        "V": 961,
+        "Z": 217,
+        "c": 496943,
+        "h": 459023,
+        "l": 33964,
+        "m": 253601,
+        "v": 13359,
+        "z": 4398
+      }
+    },
+    {
+      "path": "files/real/dukesofhohenbergarms-svg.svg",
+      "bytes": 28075813,
+      "sha256": "52170d76aaa0e32364f6a72d6848b498136dac5599e5c17ee141530932c85cae",
+      "command_occurrences": {
+        "C": 2116,
+        "H": 1057,
+        "L": 256,
+        "M": 2109,
+        "V": 1055,
+        "Z": 2097,
+        "a": 45852,
+        "c": 93385,
+        "h": 2255,
+        "l": 34393,
+        "m": 20910,
+        "v": 587,
+        "z": 20575
+      }
+    },
+    {
+      "path": "files/real/france-osm-mapnik-svg.svg",
+      "bytes": 19491319,
+      "sha256": "8cb5c3d887d6cc7fcbb36929f8761327c5c2d22641e3987db8885aecc90ab4d1",
+      "command_occurrences": {
+        "a": 913,
+        "c": 1345,
+        "h": 252851,
+        "l": 364655,
+        "m": 129618,
+        "s": 73,
+        "v": 250915,
+        "z": 2532
+      }
+    },
+    {
+      "path": "files/real/gaussian-2d-svg.svg",
+      "bytes": 16746052,
+      "sha256": "2ad1a157119836661eb26a7fa4f3e2c4ed58ccd8b98c71a777fd602ed56892d7",
+      "command_occurrences": {
+        "L": 580152,
+        "M": 21744,
+        "Q": 112,
+        "z": 21627
+      }
+    },
+    {
+      "path": "files/real/geographic-map-of-norway-sweden-finland-and-denmark-svg.svg",
+      "bytes": 20101913,
+      "sha256": "a5bd32f11baecad21e08441ce622f524f50239387438926aed582b5995800f61",
+      "command_occurrences": {
+        "C": 8,
+        "H": 122,
+        "L": 13764,
+        "M": 31166,
+        "V": 94,
+        "Z": 79,
+        "c": 76,
+        "h": 127215,
+        "l": 558281,
+        "m": 70839,
+        "v": 172024,
+        "z": 40860
+      }
+    },
+    {
+      "path": "files/real/germany-districts-municipalities-location-map-2013-svg.svg",
+      "bytes": 26486961,
+      "sha256": "3d43b0a850d22d7ab0b00b755f65fb9afb3f1714fa13c822a468079cba4bfcaf",
+      "command_occurrences": {
+        "c": 17283,
+        "h": 328879,
+        "l": 514768,
+        "m": 20841,
+        "s": 921,
+        "v": 233648,
+        "z": 20789
+      }
+    },
+    {
+      "path": "files/real/ideogram-human-chromosome-20-svg.svg",
+      "bytes": 21285516,
+      "sha256": "acf901bd8ff888a7df896a8bccb78777417fb5c1067a0f4fd3ba463ba39eb422",
+      "command_occurrences": {
+        "C": 5,
+        "H": 405,
+        "M": 211,
+        "V": 2107,
+        "Z": 402,
+        "c": 7472,
+        "h": 2325,
+        "m": 8099,
+        "v": 4359,
+        "z": 4220
+      }
+    },
+    {
+      "path": "files/real/koppen-geiger-map-a-present-svg.svg",
+      "bytes": 79058833,
+      "sha256": "a68b74d82ca8220458dc89b6ab24ef394d5422ac09ea3eb0dd5d29f5e6ba4116",
+      "command_occurrences": {
+        "L": 3492555,
+        "M": 117323,
+        "z": 5
+      }
+    },
+    {
+      "path": "files/real/municipalities-of-italy-svg.svg",
+      "bytes": 91915099,
+      "sha256": "42e0cc01c85f3c8d6846b997ac6953d2e3f803ec35df61af38e9ca5a4b4c1a5a",
+      "command_occurrences": {
+        "L": 5440972,
+        "M": 9322
+      }
+    },
+    {
+      "path": "files/real/spain-languages-de-svg.svg",
+      "bytes": 90812529,
+      "sha256": "a6f9a03e063e29340d6c264f05467b6cd54cf179dea330828198d045beec96ff",
+      "command_occurrences": {
+        "L": 5274295,
+        "M": 29401
+      }
+    },
+    {
+      "path": "files/real/world-map-blank.svg",
+      "bytes": 241682,
+      "sha256": "af3baeb067ad198fcf3c2b805e9c95d2dc6b7297cf4113d6c0ed5e0df80209a6",
+      "command_occurrences": {
+        "L": 17851,
+        "M": 1687,
+        "Z": 1634
+      }
+    },
+    {
+      "path": "files/real/world-map-countries.svg",
+      "bytes": 260823,
+      "sha256": "bf7e4a29d7c4de905e99bf8688df548986a7c2f0f42f127335adf9ca86b865e0",
+      "command_occurrences": {
+        "L": 17851,
+        "M": 1687,
+        "Z": 1634
+      }
+    }
+  ]
+}

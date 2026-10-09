@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M4-01/reference-comparison.json"
+OUT = ROOT / "artifacts/WO-M4-02/reference-comparison.json"
 
 
 def png_rgba(data):
@@ -157,7 +157,6 @@ class ShapeRenderTests(unittest.TestCase):
             "transform_overflow": '<svg width="16" height="16"><rect width="1" height="1" transform="matrix(1e300 0 0 1 0 0)"/></svg>',
             "ellipse_segment_cap": '<svg width="16" height="16"><circle r="1000000"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
-            "unsupported_smooth": '<svg width="16" height="16"><path d="M0 0 S1 1 2 2"/></svg>',
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}
         with tempfile.TemporaryDirectory(prefix="vexel-shape-bounds-") as temp:
@@ -198,7 +197,7 @@ class ShapeRenderTests(unittest.TestCase):
             run = subprocess.run([str(binary), str(degenerate), str(temp_path / "degenerate.rgba")], capture_output=True)
             self.assertEqual(run.returncode, 0)
             report["cases"].append({"name": "degenerate_path", "result": "safe_empty_or_filled"})
-        target = ROOT / "artifacts/WO-M4-01/bounds-and-diagnostics.json"
+        target = ROOT / "artifacts/WO-M4-02/bounds-and-diagnostics.json"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(report, indent=2) + "\n")
 
