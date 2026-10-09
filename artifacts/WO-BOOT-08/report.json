@@ -153,7 +153,7 @@
     }
   },
   "base_sha": "97bc3d1cb89d3cddfb48a796868fdb98aada16b7",
-  "head_sha": "ab0969470085a5525cfbefd2c2ede6e50db0cf2c",
+  "head_sha": "d17cb50510510594fdd54ee816c58d7a1fc69b62",
   "status": "complete",
-  "summary": "All 14 frozen acceptance commands completed successfully. Two fresh comparable performance runs with strict nested report validation produced repeated relative regressions in 100 MiB first-preview p95 (319.26 ms, 354.56 ms) and peak RSS (140,001,280 bytes, 139,313,152 bytes); the second reports gate status fail while absolute limits pass. The 10 MiB metric warned once then passed; the noisy owner-step metric did not advance its streak. BOOT-08 is ready for owner review in the M3-05 decision packet."
+  "summary": "All 14 frozen acceptance commands completed successfully. Two fresh comparable runs with strict nested report validation show 100 MiB first-preview p95 within the pinned relative threshold (277.57 ms, 274.66 ms). Peak RSS breaches its relative threshold twice (137,904,128 bytes, 139,526,144 bytes), so the second run reports gate status fail while all absolute targets pass. The first maximum-step observation was noisy, the second healthy; 10 MiB p95 passed both runs. BOOT-08 is ready for owner review in the M3-05 decision packet."
 }

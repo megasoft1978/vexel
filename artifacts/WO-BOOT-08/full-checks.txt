@@ -12,13 +12,13 @@ PASS  python3 scripts/wo_validate.py WO-BOOT-08 --ready
 PASS  JSON validation for baseline, committed two-run report, gate evidence, tests, and contract
 PASS  git diff --check
 
-The direct perf-gate invocation uses its own clean history and exits 0 on a first relative warning. Two archived comparable regression trials below are consecutive and therefore report fail for the repeated relative metrics.
+The direct perf-gate invocation uses its own clean history and exits 0 on a first relative warning. The two archived comparable trials below are consecutive; only peak RSS breaches on both.
 
 Performance comparison details (same M5 Max / Mac17,14 / macOS 27.0 / Apple Clang 21; workload hashes match pinned M3-01):
-  100 MiB first-preview p95: baseline 269.12 ms; run 1 319.26 ms (warning); run 2 354.56 ms (fail).
-  100 MiB peak child RSS: baseline 126,959,616 bytes; run 1 140,001,280 (warning); run 2 139,313,152 (fail).
-  Both 100 MiB metrics crossed their relative-to-baseline limits twice, so the second comparable run is reported as fail. Absolute targets still pass: first-preview p95 <2 s, owner-step maximum <100 ms, RSS <500 MiB.
-  Maximum-step CV exceeded 10% in both runs and is marked noisy; it does not advance its violation streak. The 10 MiB p95 warned once on run 1 and passed on run 2.
+  100 MiB first-preview p95: baseline 269.12 ms; run 1 277.57 ms (pass); run 2 274.66 ms (pass).
+  100 MiB peak child RSS: baseline 126,959,616 bytes; run 1 137,904,128 (warning); run 2 139,526,144 (fail).
+  Only peak RSS crossed its relative-to-baseline limit on two comparable runs, so the second run reports fail. First-preview p95 passed both observations. Absolute targets still pass: first-preview p95 <2 s, owner-step maximum <100 ms, RSS <500 MiB.
+  Run 1 maximum-step CV exceeded 10% and is marked noisy; run 2 maximum step passed. The 10 MiB p95 passed both runs.
   Release svgworkbench: 172032 bytes; svg_index_bench: 107136 bytes; 8 linked dylib/framework entries.
   App-bundle size and pan/zoom event-to-present p95 are explicitly unavailable; no package or timed presentation path exists.
 
