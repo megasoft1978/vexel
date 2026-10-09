@@ -12,19 +12,19 @@
   "measured_trials": 7,
   "latency_seconds": {
     "raw": [
-      0.01703258400084451,
-      0.014987332993769087,
-      0.014241124998079613,
-      0.014297417001216672,
-      0.014314583997474983,
-      0.016492624999955297,
-      0.014239374999306165
+      0.015978416995494626,
+      0.016223541999352165,
+      0.014889958998537622,
+      0.013472209000610746,
+      0.012926875002449378,
+      0.013420250004855916,
+      0.013888916000723839
     ],
-    "median": 0.014314583997474983,
-    "p95_nearest_rank": 0.01703258400084451
+    "median": 0.013888916000723839,
+    "p95_nearest_rank": 0.016223541999352165
   },
-  "pixel_throughput_per_second": 4578267.870834403,
-  "max_rss_bytes": 2244608,
+  "pixel_throughput_per_second": 4718582.78908048,
+  "max_rss_bytes": 2211840,
   "rss_method": "maximum of nine /usr/bin/time -l maximum resident set size observations (two warmup and seven measured fresh child processes)",
   "timing_method": "Python time.perf_counter around seven measured fresh /usr/bin/time -l CLI processes after two warmups; includes startup, input read, decode, raster and output write; filesystem caches were not evicted",
   "note": "End-to-end CLI workload, not an isolated raster-kernel benchmark."

@@ -22,6 +22,13 @@
       "source_unchanged": true
     },
     {
+      "name": "missing_numeric_separator",
+      "category": "path",
+      "offset": 46,
+      "source_sha256": "caa18b64c022ca2e981583ff0a4864824e32d7ea6dd3558925658c350492d490",
+      "source_unchanged": true
+    },
+    {
       "name": "invalid_arc_flag",
       "category": "path",
       "offset": 43,

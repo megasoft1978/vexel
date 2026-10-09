@@ -3,7 +3,7 @@ WO-M2-05 revision 2 final machine checks (2026-10-09)
 PASS ./dev build
 PASS ctest --test-dir build/mac-debug --output-on-failure (5/5)
 PASS python3 -m unittest tests.test_shape_render (6/6; includes curve overshoot, SVG namespace, numeric separator, viewBox meet, and per-channel tolerance regressions)
-PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 random cases plus one 327,730-byte command-cap exhaustion seed; 6.485 s wall; ASan+UBSan clean)
+PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 random cases plus one 327,730-byte command-cap exhaustion seed; 6.465 s wall; ASan+UBSan clean)
 PASS python3 -m json.tool artifacts/WO-M2-05/reference-comparison.json (7/7 fixture comparisons; alpha delta <=160, covered RGB delta <=1, zero interior differences)
 PASS ./dev verify (171 Python tests, 0 failures/errors/skips; Debug CTest 5/5; native smoke and 20-frame Metal replay pass)
 PASS ./dev asan (CTest 5/5; includes aggregate multi-path command cap and viewBox letterboxing tests)
@@ -16,4 +16,4 @@ PASS git diff --check
 
 Fresh verifier round 1 findings and fixes are recorded in `round-1-review-findings.md`. Round 2 findings and fixes are in `round-2-review-findings.md`. Round 3 found the aggregate document command cap, default viewBox sizing, incomplete reference tolerance checks, and stale performance text; fixes are recorded in `round-3-review-findings.md`. Round 4 found missing rectangle dimensions and ignored processing instructions; fixes are recorded in `round-4-review-findings.md`. A fresh exact-commit review round 5 is pending.
 
-PASS Release end-to-end benchmark: 7 measured fresh processes after 2 warmups; median 14.315 ms, p95 17.033 ms, 4.58 MPixel/s, maximum RSS 2,244,608 bytes; raw evidence `artifacts/WO-M2-05/render-benchmark.json`.
+PASS Release end-to-end benchmark: 7 measured fresh processes after 2 warmups; median 13.889 ms, p95 16.224 ms, 4.72 MPixel/s, maximum RSS 2,211,840 bytes; raw evidence `artifacts/WO-M2-05/render-benchmark.json`.

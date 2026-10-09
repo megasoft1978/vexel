@@ -47,6 +47,18 @@ static void skip_path_separators(number_reader *r)
     while (r->i < r->n && (r->p[r->i] == ' ' || r->p[r->i] == '\t' || r->p[r->i] == '\r' || r->p[r->i] == '\n' || r->p[r->i] == ',')) r->i++;
 }
 
+static bool path_operand_boundary(number_reader *r, bool previous_number,
+                                 bool previous_arc_flag, char command,
+                                 unsigned argument)
+{
+    size_t before = r->i;
+    skip_path_separators(r);
+    if (!previous_number || r->i != before) return true;
+    if (r->i < r->n && (r->p[r->i] == '+' || r->p[r->i] == '-')) return true;
+    return command == 'A' &&
+           ((argument == 4U) || (argument == 5U && previous_arc_flag));
+}
+
 static bool next_number_separator(number_reader *r)
 {
     size_t before = r->i;
@@ -273,10 +285,15 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
         }
     }
     geom_point current={0,0}, first={0,0}; char cmd=0; bool open=false, path_first=true;
+    bool previous_number=false, previous_arc_flag=false;
     while (r.i < r.n) {
-        skip_path_separators(&r); if(r.i>=r.n)break;
-        if ((r.p[r.i] >= 'A'&&r.p[r.i]<='Z')||(r.p[r.i]>='a'&&r.p[r.i]<='z')) cmd=(char)r.p[r.i++];
+        size_t gap_start=r.i;skip_path_separators(&r);bool had_separator=r.i!=gap_start;if(r.i>=r.n)break;
+        if ((r.p[r.i] >= 'A'&&r.p[r.i]<='Z')||(r.p[r.i]>='a'&&r.p[r.i]<='z')) {cmd=(char)r.p[r.i++];previous_number=false;previous_arc_flag=false;}
         else if(cmd==0 || cmd=='Z' || cmd=='z') { fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i); return false; }
+        else {
+            if(previous_number&&!had_separator&&!(r.p[r.i]=='+'||r.p[r.i]=='-')) {fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i);return false;}
+            previous_number=false;previous_arc_flag=false;
+        }
         if (++b->command_count > SHAPE_MAX_COMMANDS) { fail(b->diag,SVG_SHAPE_ERROR_LIMIT,span.offset+r.i); return false; }
         bool rel=cmd>='a'&&cmd<='z'; char upper=rel?(char)(cmd-'a'+'A'):cmd;
         if(path_first&&upper!='M'){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i-1U);return false;}
@@ -286,9 +303,10 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
         double v[7]={0}; unsigned count=upper=='H'||upper=='V'?1U:upper=='C'?6U:upper=='Q'?4U:upper=='A'?7U:2U;
         size_t group_start=r.i; b->offset=span.offset+group_start;
         for(unsigned i=0;i<count;i++){
-            skip_path_separators(&r);
+            if(!path_operand_boundary(&r,previous_number,previous_arc_flag,upper,i)){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i);return false;}
             bool ok=upper=='A'&&(i==3U||i==4U)?read_arc_flag(&r,&v[i]):read_number(&r,&v[i]);
             if(!ok){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+group_start);return false;}
+            previous_number=true;previous_arc_flag=upper=='A'&&(i==3U||i==4U);
         }
         geom_point p=current; bool drawn=false;
         if(upper=='H')p.x=rel?current.x+v[0]:v[0];

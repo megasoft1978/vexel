@@ -10,5 +10,5 @@ Preset CMake variables:
 [1/5] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
 [2/5] Linking C static library libvexel_shape.a
 [3/5] Linking C executable bin/shape_render_cli
-[4/5] Linking C executable bin/shape_test
-[5/5] Linking C executable bin/shape_fuzz
+[4/5] Linking C executable bin/shape_fuzz
+[5/5] Linking C executable bin/shape_test
