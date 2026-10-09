@@ -1,4 +1,5 @@
 #include "shape_bounds.h"
+#include "../svg/clip/clip.h"
 
 #include <float.h>
 #include <math.h>
@@ -357,6 +358,143 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
     free(edge_pixels);
     if (diagnostic != NULL)
         *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0};
+    return true;
+}
+
+typedef struct clip_boundary_context {
+    const svg_shape_document *document;
+    raster_boundary_mask *boundary;
+    double scale;
+    double offset_x;
+    double offset_y;
+    size_t work;
+    bool force_full_mask;
+    bool mark;
+} clip_boundary_context;
+
+static bool clip_edge_pixel_bounds(const clip_boundary_context *context,
+                                   geom_edge edge,
+                                   raster_pixel_bounds *out)
+{
+    const svg_shape_document *doc = context->document;
+    double x1 = context->offset_x + (edge.a.x - doc->view_x) * context->scale;
+    double x2 = context->offset_x + (edge.b.x - doc->view_x) * context->scale;
+    double y1 = context->offset_y + (edge.a.y - doc->view_y) * context->scale;
+    double y2 = context->offset_y + (edge.b.y - doc->view_y) * context->scale;
+    if (!isfinite(x1) || !isfinite(x2) || !isfinite(y1) || !isfinite(y2))
+        return false;
+    double epsilon = fmax(1.0, fmax(fabs(x1), fmax(fabs(x2),
+                    fmax(fabs(y1), fabs(y2))))) * DBL_EPSILON * 8.0;
+    uint32_t x_first, x_last, y_first, y_last;
+    bool x_visible = boundary_pixel_range(fmin(x1, x2) - epsilon,
+        fmax(x1, x2) + epsilon, doc->width, &x_first, &x_last);
+    bool y_visible = boundary_pixel_range(fmin(y1, y2) - epsilon,
+        fmax(y1, y2) + epsilon, doc->height, &y_first, &y_last);
+    *out = x_visible && y_visible ?
+        (raster_pixel_bounds){x_first, x_last, y_first, y_last, true} :
+        (raster_pixel_bounds){0U, 0U, 0U, 0U, false};
+    return true;
+}
+
+static bool add_clip_edge_work(clip_boundary_context *context, size_t amount)
+{
+    if (amount > RASTER_BOUNDARY_WORK_LIMIT - context->work) return false;
+    context->work += amount;
+    return true;
+}
+
+static bool visit_clip_boundary_edge(void *opaque, geom_edge edge)
+{
+    clip_boundary_context *context = opaque;
+    raster_pixel_bounds box;
+    if (!context->mark) {
+        if (!clip_edge_pixel_bounds(context, edge, &box)) {
+            context->force_full_mask = true;
+            return add_clip_edge_work(context, 2U);
+        }
+        size_t amount = 2U;
+        if (box.visible) {
+            size_t width = (size_t)box.x_last - box.x_first + 1U;
+            size_t height = (size_t)box.y_last - box.y_first + 1U;
+            size_t area;
+            if (!checked_mul_size(width, height, &area) ||
+                !checked_add_size(amount, area, &amount)) return false;
+        }
+        return add_clip_edge_work(context, amount);
+    }
+    if (context->force_full_mask ||
+        !clip_edge_pixel_bounds(context, edge, &box)) {
+        context->force_full_mask = true;
+        return true;
+    }
+    if (!box.visible) return true;
+    for (uint32_t y = box.y_first; y <= box.y_last; y++) {
+        size_t row = (size_t)y * context->document->width;
+        for (uint32_t x = box.x_first; x <= box.x_last; x++)
+            mark_pixel(context->boundary, row + x);
+    }
+    return true;
+}
+
+static bool mark_full_boundary_mask(clip_boundary_context *context)
+{
+    size_t pixels = context->boundary->bit_count;
+    if (!add_clip_edge_work(context, pixels)) return false;
+    for (size_t pixel = 0U; pixel < pixels; pixel++)
+        mark_pixel(context->boundary, pixel);
+    return true;
+}
+
+bool raster_shape_bounds_mark_clip_boundaries(
+    const svg_shape_document *doc, double scale, double offset_x,
+    double offset_y, raster_boundary_mask *boundary)
+{
+    if (doc == NULL || boundary == NULL || boundary->bits == NULL ||
+        !isfinite(scale) || scale <= 0.0 ||
+        !isfinite(offset_x) || !isfinite(offset_y)) return false;
+    if (doc->clips == NULL) return true;
+    clip_boundary_context context = {
+        .document = doc,
+        .boundary = boundary,
+        .scale = scale,
+        .offset_x = offset_x,
+        .offset_y = offset_y,
+        .work = boundary->mark_work,
+    };
+    for (size_t shape = 0U; shape < doc->shape_count; shape++) {
+        if (doc->clips[shape] == NULL) continue;
+        bool mapping_valid = true;
+        if (!svg_clip_visit_boundary_edges(doc->clips[shape],
+                visit_clip_boundary_edge, &context, &mapping_valid)) return false;
+        if (!mapping_valid) {
+            size_t units = svg_clip_work_units(doc->clips[shape]);
+            size_t fallback_work;
+            if (!checked_mul_size(units, 2U, &fallback_work) ||
+                !add_clip_edge_work(&context, fallback_work)) return false;
+            context.force_full_mask = true;
+            break;
+        }
+        if (context.force_full_mask) break;
+    }
+    if (context.force_full_mask) {
+        if (!mark_full_boundary_mask(&context)) return false;
+        boundary->mark_work = context.work;
+        return true;
+    }
+    boundary->mark_work = context.work;
+    context.mark = true;
+    for (size_t shape = 0U; shape < doc->shape_count; shape++) {
+        if (doc->clips[shape] == NULL) continue;
+        bool mapping_valid = true;
+        if (!svg_clip_visit_boundary_edges(doc->clips[shape],
+                visit_clip_boundary_edge, &context, &mapping_valid)) return false;
+        if (!mapping_valid || context.force_full_mask) {
+            if (!mark_full_boundary_mask(&context)) return false;
+            boundary->mark_work = context.work;
+            return true;
+        }
+    }
+    boundary->mark_work = context.work;
     return true;
 }
 

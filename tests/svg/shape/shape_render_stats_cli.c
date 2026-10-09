@@ -95,7 +95,7 @@ int main(int argc, char **argv)
         fprintf(stderr, "stroke_tests=%" PRIu64 "\n", work.stroke_tests);
         fprintf(stderr, "scanline_edge_entries=%" PRIu64 "\n", work.scanline_edge_entries);
         fprintf(stderr, "shape_row_visits=%" PRIu64 "\n", work.shape_row_visits);
-        fprintf(stderr, "boundary_pixel_marks=%" PRIu64 "\n", work.boundary_pixel_marks);
+        fprintf(stderr, "boundary_mark_work=%" PRIu64 "\n", work.boundary_mark_work);
         fprintf(stderr, "total_work=%" PRIu64 "\n", work.total_work);
     }
     raster_tile_destroy(&reference_tile);

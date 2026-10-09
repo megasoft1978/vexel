@@ -1,6 +1,6 @@
 # Blockers
 
-Active: WO-M4-06 merge staging and environment-limited native CTests.
+Active: WO-M4-06 environment-limited native CTests and full `test-fast` suite.
 
 ## Resolved: WO-M1-04 shutdown lifetime contract
 
@@ -47,21 +47,29 @@ verifier evidence is under
 - Do not merge or start M4-06b until source traversal, gradient defaults and
   evidence gaps are fixed and a fresh verifier passes.
 
-## Current WO-M4-06 review repairs
+## WO-M4-06 merge integration review brief 6 — current status
 
-The five P2 findings are repaired on `wo/WO-M4-06`. The requested `main`
-content was merged into the worktree from merge commit `10a9878` (second parent
-`ae2b673`). The conflict resolutions preserve the culling/scanline renderer,
-paint/clip sampling, and frozen oracle thresholds. Focused tests and the new
-librsvg fixture pass.
+The three librsvg threshold regressions are repaired. Round-4
+`mark_varying_shape_bounds` promoted every pixel in a gradient or clip shape
+bound to 4×4 sampling; removing it restores center sampling away from the
+existing shape/clip boundary map. Scratch `0732b8e`, `9bae63e`, and current
+outputs are byte-identical on the three affected fixtures. The updated scalar
+reference remains uncullled and now uses the same boundary-map sampling choice.
+All 47 librsvg comparisons pass unchanged thresholds, and the added
+culled-versus-reference fixture checks and 120 seeded paint/clip differential
+cases pass.
 
-Debug, ASan, UBSan, and `./dev verify` each report 18/20 CTests. The only two
-failures are `native-viewer-smoke` (LaunchServices/Hiservices connection error,
-zero frames) and `index-replay` (no offscreen Metal device/queue). Debug and
-Release builds, the 18-test focused Python suite, `shape_test`, 1,000,000-case
-ASan+UBSan fuzz, 58-file/116-trial corpus run/check, and the JSON checks pass.
+Debug and Release builds, `shape_test`, the focused Python renderer suite
+(20/20), the 1,000,000-case ASan+UBSan fuzz run, and corpus run/check pass.
+Debug, ASan, UBSan, and `./dev verify` each report 18/20 CTests: the two
+sandbox-only failures are `native-viewer-smoke` (LaunchServices connection)
+and `index-replay` (offscreen Metal device/queue unavailable). `./dev test-fast`
+reports 202/212 passing, with 8 failures and 2 errors in benchmark
+process-policy/timeout and platform-driver tests. Detailed evidence is in
+`artifacts/WO-M4-06/` and the current `HANDOFF.md`.
 
-The merge is not staged or complete in Git: its resolved files are present in
-the worktree, but Git cannot create `.git/worktrees/WO-M4-06/index.lock` in this
-sandbox. The maintainer must stage and finalize the merge. The post-merge runner
-path guard could not be rerun, and the work remains uncommitted.
+The repaired four solid-workload outputs are identical to `9bae63e` and their
+paired median changes are within observed noise. The 58-file corpus still has
+two successful previews and 56 unsupported files. Git index, branch, and commit
+state remain unchanged per the user's instruction. The post-merge runner path
+guard remains unverified.

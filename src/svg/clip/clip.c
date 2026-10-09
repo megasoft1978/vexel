@@ -1,5 +1,6 @@
 #include "clip.h"
 #include "../shape/shape_alloc.h"
+#include "../shape/shape_internal.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -253,6 +254,54 @@ bool svg_clip_contains(const svg_shape_clip *clip, double x, double y)
         }
     }
     return inside && svg_clip_contains(clip->parent, root_x, root_y);
+}
+
+static bool clip_local_to_document(const svg_shape_clip *clip,
+                                   geom_affine local_to_document,
+                                   geom_point point, geom_point *out)
+{
+    if (clip->object_bounding_box) {
+        point.x = clip->bounds[0] + point.x *
+                  (clip->bounds[2] - clip->bounds[0]);
+        point.y = clip->bounds[1] + point.y *
+                  (clip->bounds[3] - clip->bounds[1]);
+    }
+    return geom_affine_map_point(local_to_document, point, out);
+}
+
+bool svg_clip_visit_boundary_edges(const svg_shape_clip *clip,
+                                   svg_clip_boundary_edge_visitor visitor,
+                                   void *context, bool *mapping_valid)
+{
+    if (mapping_valid != NULL) *mapping_valid = true;
+    if (visitor == NULL) return false;
+    for (const svg_shape_clip *current = clip; current != NULL;
+         current = current->parent) {
+        geom_affine local_to_document;
+        if (!svg_shape_affine_inverse(current->user_inverse,
+                                      &local_to_document)) {
+            if (mapping_valid != NULL) *mapping_valid = false;
+            return true;
+        }
+        const svg_shape_document *geometry = &current->geometry;
+        for (size_t shape = 0U; shape < geometry->shape_count; shape++) {
+            if (!geometry->shape_filled[shape]) continue;
+            size_t first = geometry->shape_edge_start[shape];
+            size_t end = first + geometry->shape_edge_count[shape];
+            for (size_t edge_index = first; edge_index < end; edge_index++) {
+                geom_edge edge = geometry->edges[edge_index];
+                if (!clip_local_to_document(current, local_to_document,
+                                            edge.a, &edge.a) ||
+                    !clip_local_to_document(current, local_to_document,
+                                            edge.b, &edge.b)) {
+                    if (mapping_valid != NULL) *mapping_valid = false;
+                    return true;
+                }
+                if (!visitor(context, edge)) return false;
+            }
+        }
+    }
+    return true;
 }
 
 size_t svg_clip_work_units(const svg_shape_clip *clip)

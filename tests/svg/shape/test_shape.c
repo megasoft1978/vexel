@@ -600,6 +600,24 @@ int main(void)
     if (!gradient_checks()) { fprintf(stderr, "gradient rendering failed\n"); return 50; }
     if (!clip_checks()) { fprintf(stderr, "clip rendering failed\n"); return 51; }
     if (!clip_work_budget_check()) { fprintf(stderr, "clip work budget failed\n"); return 52; }
+    static const uint8_t zero_area_gradient[] =
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\">"
+        "<stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/>"
+        "</linearGradient></defs><rect width=\"0\" height=\"8\" fill=\"url(#g)\"/>"
+        "<rect width=\"4\" height=\"4\" fill=\"red\"/></svg>";
+    svg_shape_document zero_doc = {0};
+    svg_shape_diagnostic zero_diag = {0};
+    const char *zero_fill = strstr((const char *)zero_area_gradient, "url(#g)");
+    if (zero_fill == NULL ||
+        svg_shape_decode((base_bytes){zero_area_gradient,
+            sizeof(zero_area_gradient) - 1U}, &zero_doc, &zero_diag) !=
+                SVG_SHAPE_ERROR_UNSUPPORTED ||
+        zero_diag.offset != (size_t)(zero_fill - (const char *)zero_area_gradient) ||
+        zero_doc.edge_count != 0U) {
+        svg_shape_document_destroy(&zero_doc);
+        return 53;
+    }
+    svg_shape_document_destroy(&zero_doc);
     static const uint8_t definitions[] = "<svg width=\"8\" height=\"8\"><defs><rect width=\"2\" height=\"2\"/><symbol id=\"unused\"><circle r=\"1\"/></symbol></defs><rect x=\"3\" width=\"2\" height=\"2\"/></svg>";
     svg_shape_document definition_doc = {0};
     svg_shape_diagnostic definition_diag;

@@ -6,6 +6,7 @@
 #include "css.h"
 
 typedef struct svg_shape_clip svg_shape_clip;
+typedef bool (*svg_clip_boundary_edge_visitor)(void *context, geom_edge edge);
 
 svg_shape_error svg_clip_resolve(base_bytes source,
                                  const svg_xml_token *tokens,
@@ -26,6 +27,12 @@ bool svg_clip_apply_group(svg_shape_document *document,
                           size_t first_shape, size_t end_shape,
                           svg_shape_clip *clip);
 bool svg_clip_contains(const svg_shape_clip *clip, double x, double y);
+/* Visits every filled child edge in this clip and its parent chain, mapped back
+ * into the painted document's user space. mapping_valid is false when a clip
+ * transform cannot be inverted safely; callers should then disable culling. */
+bool svg_clip_visit_boundary_edges(const svg_shape_clip *clip,
+                                   svg_clip_boundary_edge_visitor visitor,
+                                   void *context, bool *mapping_valid);
 size_t svg_clip_work_units(const svg_shape_clip *clip);
 void svg_clip_destroy(svg_shape_clip *clip);
 

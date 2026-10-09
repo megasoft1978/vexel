@@ -34,6 +34,7 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
                                const uint32_t *active_edges, size_t active_count,
                                const geom_edge *local_edges,
                                const bool *dash_seams, double px, double py,
+                               double paint_x, double paint_y,
                                bool scalar_oracle_alpha,
                                uint8_t sample_rgba[4])
 {
@@ -41,7 +42,8 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
     uint8_t parity = 0U;
     uint8_t fill[4] = {0U, 0U, 0U, 0U};
     for (size_t i = 0U; i < active_count; i++) {
-        size_t edge_index = active_edges[i];
+        size_t edge_index = active_edges != NULL ? active_edges[i] :
+                            doc->shape_edge_start[shape] + i;
         geom_edge edge = doc->edges[edge_index];
         bool upward = edge.a.y <= py && edge.b.y > py;
         bool downward = edge.b.y <= py && edge.a.y > py;
@@ -58,8 +60,8 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
         bool gradient = doc->paints != NULL &&
             doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID;
         if (gradient) {
-            svg_paint_sample(&doc->paints[shape], doc->paint_stops, px, py,
-                             sampled_fill);
+            svg_paint_sample(&doc->paints[shape], doc->paint_stops,
+                             paint_x, paint_y, sampled_fill);
         }
         if (scalar_oracle_alpha && !gradient) {
             /* The test-only alpha mode preserves the frozen scalar oracle. */

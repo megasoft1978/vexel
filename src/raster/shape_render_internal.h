@@ -13,7 +13,7 @@ typedef struct raster_shape_work_stats {
     uint64_t stroke_tests;
     uint64_t scanline_edge_entries;
     uint64_t shape_row_visits;
-    uint64_t boundary_pixel_marks;
+    uint64_t boundary_mark_work;
     uint64_t total_work;
 } raster_shape_work_stats;
 
@@ -22,6 +22,7 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
                                const uint32_t *active_edges, size_t active_count,
                                const geom_edge *local_edges,
                                const bool *dash_seams, double px, double py,
+                               double paint_x, double paint_y,
                                bool scalar_oracle_alpha,
                                uint8_t sample_rgba[4]);
 bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,

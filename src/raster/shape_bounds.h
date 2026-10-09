@@ -47,6 +47,9 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *document,
                                          double offset_y,
                                          raster_boundary_mask *out,
                                          svg_shape_diagnostic *diagnostic);
+bool raster_shape_bounds_mark_clip_boundaries(
+    const svg_shape_document *document, double scale, double offset_x,
+    double offset_y, raster_boundary_mask *boundary);
 void raster_boundary_mask_destroy(raster_boundary_mask *mask);
 bool raster_boundary_mask_test(const raster_boundary_mask *mask, size_t pixel_index);
 

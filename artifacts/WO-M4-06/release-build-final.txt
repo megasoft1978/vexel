@@ -1,0 +1,21 @@
+[1/20] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline.c.o
+[2/20] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[3/20] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[4/20] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[5/20] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[6/20] Linking C static library libvexel_shape.a
+[7/20] Linking C executable bin/ui_focus_bench
+[8/20] Linking C executable bin/ui_interaction_test
+[9/20] Linking C executable bin/css_test
+[10/20] Linking C executable bin/ui_core_test
+[11/20] Linking C executable bin/shape_render_stats_cli
+[12/20] Linking C executable bin/ui_demo_render
+[13/20] Linking C executable bin/shape_render_reference_cli
+[14/20] Linking C executable bin/shape_fuzz
+[15/20] Linking C executable bin/viewer_frame_test
+[16/20] Linking C executable bin/ui_demo_interaction_test
+[17/20] Linking C executable bin/shape_render_cli
+[18/20] Linking C executable bin/shape_test
+[19/20] Linking C executable bin/svg_index_bench
+[20/20] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
