@@ -15,7 +15,9 @@ DRIVER = ROOT / "app/test_driver/driver.py"
 
 class ViewerNavigationDriverTests(unittest.TestCase):
     def test_navigation_replay_deterministic(self) -> None:
-        with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as raw:
+        cache_root = ROOT / ".cache"
+        cache_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=cache_root) as raw:
             root = Path(raw)
             script = root / "script.jsonl"
             script.write_text("""{"command":"open","document_id":"nav"}
