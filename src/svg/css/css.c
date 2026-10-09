@@ -88,6 +88,18 @@ static void comments(base_bytes s, size_t *i, size_t end) {
         skip_ws(s, i, end);
     }
 }
+static bool skip_comment(base_bytes s, size_t *i, size_t end) {
+    if (*i + 1U >= end || s.ptr[*i] != '/' || s.ptr[*i + 1U] != '*')
+        return false;
+    *i += 2U;
+    while (*i + 1U < end && !(s.ptr[*i] == '*' && s.ptr[*i + 1U] == '/'))
+        (*i)++;
+    if (*i + 1U < end)
+        *i += 2U;
+    else
+        *i = end;
+    return true;
+}
 static void trim_value(base_bytes s, size_t *a, size_t *z) {
     bool moved = true;
     while (moved && *a < *z) {
@@ -184,11 +196,11 @@ static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z, rule_decl **out, 
         if (i >= z)
             break;
         size_t seg = i, colon = SIZE_MAX;
-        while (i < z && sh->source.ptr[i] != ';') {
-            if (i + 1 < z && sh->source.ptr[i] == '/' && sh->source.ptr[i + 1] == '*') {
-                comments(sh->source, &i, z);
+        while (i < z) {
+            if (skip_comment(sh->source, &i, z))
                 continue;
-            }
+            if (sh->source.ptr[i] == ';')
+                break;
             if (sh->source.ptr[i] == ':' && colon == SIZE_MAX)
                 colon = i;
             i++;
@@ -293,11 +305,14 @@ static bool parse_stylesheet(svg_css_sheet *sh, size_t a, size_t z) {
             break;
         if (sh->source.ptr[i] == '@') {
             while (i < z && sh->source.ptr[i] != ';' && sh->source.ptr[i] != '{')
-                i++;
+                if (!skip_comment(sh->source, &i, z))
+                    i++;
             if (i < z && sh->source.ptr[i] == '{') {
                 unsigned depth = 1;
                 i++;
                 while (i < z && depth) {
+                    if (skip_comment(sh->source, &i, z))
+                        continue;
                     if (sh->source.ptr[i] == '{')
                         depth++;
                     else if (sh->source.ptr[i] == '}')
@@ -310,13 +325,16 @@ static bool parse_stylesheet(svg_css_sheet *sh, size_t a, size_t z) {
         }
         size_t sel_start = i, brace = i;
         while (brace < z && sh->source.ptr[brace] != '{' && sh->source.ptr[brace] != '}')
-            brace++;
+            if (!skip_comment(sh->source, &brace, z))
+                brace++;
         if (brace >= z || sh->source.ptr[brace] != '{') {
             break;
         }
         size_t end = brace + 1;
         unsigned depth = 1;
         while (end < z && depth) {
+            if (skip_comment(sh->source, &end, z))
+                continue;
             if (sh->source.ptr[end] == '{')
                 depth++;
             else if (sh->source.ptr[end] == '}')

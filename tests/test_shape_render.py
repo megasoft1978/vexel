@@ -70,12 +70,14 @@ class ShapeRenderTests(unittest.TestCase):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         source = (b'<svg width="16" height="8" fill="green"><style>/* keep */\n'
                  b'.paint, rect.alt { FiLl: blue; } rect { fill: green; } '
-                 b'#target.paint { FILL: RED ! IMPORTANT; } .outer { stroke: blue; stroke-width: 2; }'
+                 b'#target.paint { FILL: RED ! IMPORTANT; } '
+                 b'.paint { fill: red !important /* ; } */; } '
+                 b'.outer { stroke: blue; stroke-width: 2; }'
                  b'</style><g class="outer"><g><rect id="target" class="paint extra" '
                  b'x="1" y="1" width="4" height="4" fill="white" style="fill: white"/></g>'
                  b'<rect class="paint" x="7" y="1" width="4" height="4" '
-                 b'style="fill: blue ! IMPORTANT; fill: white"/>'
-                 b'<rect class="paint" x="12" y="1" width="3" height="4" style="fill: white"/></g></svg>')
+                 b'style="fill: blue ! IMPORTANT /* ; } */; fill: white"/>'
+                 b'<rect class="plain" x="12" y="1" width="3" height="4" style="fill: white"/></g></svg>')
         with tempfile.TemporaryDirectory(prefix="vexel-css-", dir=TEMP_ROOT) as temp:
             input_path, output_path = Path(temp) / "style.svg", Path(temp) / "style.rgba"
             input_path.write_bytes(source)
