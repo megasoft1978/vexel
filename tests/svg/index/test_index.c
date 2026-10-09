@@ -98,12 +98,14 @@ static bool equivalent_file(const char *path)
         status = svg_xml_token_stream_step(stream, 7U);
         size_t after = svg_xml_token_stream_bytes_read(stream);
         okay = after >= before && after - before <= 7U;
+        if (!okay) (void)fprintf(stderr, "step %zu advanced %zu to %zu status %d\n", steps, before, after, (int)status);
         ++steps;
         svg_xml_result progress = svg_xml_token_stream_result(stream);
         emitted_before_complete = emitted_before_complete ||
             (progress.token_count > 0U && status == SVG_XML_STREAM_OK);
     }
     svg_xml_result incremental = svg_xml_token_stream_result(stream);
+    if (status != SVG_XML_STREAM_COMPLETE) (void)fprintf(stderr, "stream status %d diagnostic %s at %zu steps %zu\n", (int)status, svg_xml_error_name(incremental.diagnostic.category), incremental.diagnostic.offset, steps);
     svg_xml_token *actual_tokens = NULL;
     size_t actual_count = 0U;
     okay = okay && status == SVG_XML_STREAM_COMPLETE && steps > 1U && emitted_before_complete &&
@@ -112,6 +114,14 @@ static bool equivalent_file(const char *path)
         actual_count == expected.token_count;
     for (size_t i = 0U; okay && i < expected.token_count; ++i) {
         okay = same_token(actual_tokens[i], reference[i]);
+        if (!okay) (void)fprintf(stderr, "token %zu differs: kind %d/%d depth %zu/%zu source %zu+%zu/%zu+%zu name %zu+%zu/%zu+%zu value %zu+%zu/%zu+%zu prefix %zu+%zu/%zu+%zu local %zu+%zu/%zu+%zu\n",
+            i, (int)actual_tokens[i].kind, (int)reference[i].kind,
+            actual_tokens[i].depth, reference[i].depth,
+            actual_tokens[i].source.offset, actual_tokens[i].source.length, reference[i].source.offset, reference[i].source.length,
+            actual_tokens[i].name.offset, actual_tokens[i].name.length, reference[i].name.offset, reference[i].name.length,
+            actual_tokens[i].value.offset, actual_tokens[i].value.length, reference[i].value.offset, reference[i].value.length,
+            actual_tokens[i].prefix.offset, actual_tokens[i].prefix.length, reference[i].prefix.offset, reference[i].prefix.length,
+            actual_tokens[i].local_name.offset, actual_tokens[i].local_name.length, reference[i].local_name.offset, reference[i].local_name.length);
     }
     svg_xml_token_stream_destroy(stream);
     free(actual_tokens);

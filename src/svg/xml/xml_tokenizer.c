@@ -48,6 +48,10 @@ typedef struct xml_scanner {
     bool stream_start_active;
     bool stream_start_separated;
     bool stream_end_active;
+    bool stream_name_active;
+    bool stream_start_name_ready;
+    bool stream_end_name_ready;
+    unsigned stream_end_prefix_progress;
     unsigned stream_start_phase;
     size_t stream_start_pos;
     size_t stream_start_token_index;
@@ -55,8 +59,12 @@ typedef struct xml_scanner {
     size_t stream_start_attribute_offset;
     size_t stream_start_value_offset;
     size_t stream_end_pos;
-    size_t stream_end_name_offset;
-    size_t stream_end_name_length;
+    size_t stream_name_start;
+    size_t stream_name_pos;
+    size_t stream_name_first_colon;
+    svg_xml_span stream_end_name;
+    svg_xml_span stream_end_prefix;
+    svg_xml_span stream_end_local_name;
     svg_xml_span stream_start_name;
     svg_xml_span stream_start_prefix;
     svg_xml_span stream_start_local_name;
@@ -578,6 +586,8 @@ static bool stream_scan_characters(xml_scanner *s, size_t budget)
 static bool stream_parse_next(xml_scanner *s, size_t limit)
 {
     size_t p = s->cursor;
+    if (s->stream_start_active) return stream_parse_start(s, limit);
+    if (s->stream_end_active) return stream_parse_end(s, limit);
     if (s->pending_kind == XML_STREAM_PENDING_TEXT || byte_at(s, p) != '<')
         return stream_parse_text(s, limit);
     if (s->pending_kind == XML_STREAM_PENDING_COMMENT || starts(s, p, "<!--", 4U))
@@ -591,24 +601,19 @@ static bool stream_parse_next(xml_scanner *s, size_t limit)
         return false;
     }
     if (starts(s, p, "</", 2U)) {
-        if (!stream_tag_complete(s, limit))
-            return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
-        if (!parse_end(s)) return false;
-        stream_pending_clear(s);
-        return true;
+        return stream_parse_end(s, limit);
     }
     if (starts(s, p, "<!", 2U)) {
         fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p);
         return false;
     }
-    if (!stream_tag_complete(s, limit)) return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
-    if (!parse_start(s)) return false;
-    ++s->result.element_count;
-    return true;
+    return stream_parse_start(s, limit);
 }
 
 static size_t stream_frontier(const xml_scanner *s)
 {
+    if (s->stream_start_active) return s->stream_start_pos;
+    if (s->stream_end_active) return s->stream_end_pos;
     if (s->pending_kind == XML_STREAM_PENDING_NONE) return s->cursor;
     size_t frontier = s->pending_cursor;
     if (s->pending_data > frontier) frontier = s->pending_data;

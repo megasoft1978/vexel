@@ -21,27 +21,31 @@ static bool token_equal(const svg_xml_token *a, const svg_xml_token *b)
 int main(void)
 {
     const size_t run = 128U * 1024U;
-    static const char start[] = "<svg><!--";
+    static const char start[] = "<svg a=\"";
+    static const char comment_start[] = "<!--";
     static const char comment_end[] = "-->";
     static const char cdata_start[] = "<![CDATA[";
     static const char cdata_end[] = "]]>";
     static const char pi_start[] = "<?p ";
     static const char pi_end[] = "?>";
-    static const char end[] = "</svg>";
-    size_t length = sizeof(start) - 1U + run + sizeof(comment_end) - 1U + run +
+    static const char end[] = "</svg";
+    size_t length = sizeof(start) - 1U + run + 2U + sizeof(comment_start) - 1U + run + sizeof(comment_end) - 1U + run +
         sizeof(cdata_start) - 1U + run + sizeof(cdata_end) - 1U +
-        sizeof(pi_start) - 1U + run + sizeof(pi_end) - 1U + sizeof(end) - 1U;
+        sizeof(pi_start) - 1U + run + sizeof(pi_end) - 1U + sizeof(end) - 1U + run + 1U;
     uint8_t *source = malloc(length);
     svg_xml_token *reference = calloc(length, sizeof(*reference));
     CHECK(source != NULL && reference != NULL);
     size_t at = 0U;
 #define APPEND_LITERAL(value) do { size_t n = sizeof(value) - 1U; memcpy(source + at, value, n); at += n; } while (0)
     APPEND_LITERAL(start);
+    memset(source + at, 'a', run); at += run; source[at++] = '"'; source[at++] = '>';
+    APPEND_LITERAL(comment_start);
     memset(source + at, 'c', run); at += run; APPEND_LITERAL(comment_end);
     memset(source + at, 't', run); at += run; APPEND_LITERAL(cdata_start);
     memset(source + at, 'd', run); at += run; APPEND_LITERAL(cdata_end);
     APPEND_LITERAL(pi_start); memset(source + at, 'p', run); at += run;
     APPEND_LITERAL(pi_end); APPEND_LITERAL(end);
+    memset(source + at, ' ', run); at += run; source[at++] = '>';
 #undef APPEND_LITERAL
     CHECK(at == length);
     base_bytes input = {source, length};
@@ -69,6 +73,6 @@ int main(void)
     free(reference);
     free(source);
     svg_xml_token_stream_destroy(stream);
-    (void)puts("long token stream preserved one-shot spans within 1 KiB steps");
+    (void)puts("long tags and tokens preserved one-shot spans within 1 KiB steps");
     return EXIT_SUCCESS;
 }
