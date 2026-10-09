@@ -1,0 +1,11 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-04/build/mac-debug
+[1/2] Building C object CMakeFiles/source_save_test.dir/tests/document/test_source_save.c.o
+[2/2] Linking C executable bin/source_save_test

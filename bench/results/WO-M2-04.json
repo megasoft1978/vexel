@@ -1,0 +1,64 @@
+{
+  "work_order": "WO-M2-04",
+  "revision": 1,
+  "base_sha": "bfc758d9b19cb1f1999cd88114f39ae1b9eaeca8",
+  "acceptance_status": "machine_checks_pass_verifier_pending",
+  "machine": "Apple Silicon arm64, macOS 27.0",
+  "compiler": "Apple Clang 21.0.0.21000334",
+  "source_save": {
+    "serializer": false,
+    "input_limit_bytes": 16777216,
+    "max_path_bytes": 1023,
+    "native_atomic_replacement_tested": true,
+    "successful_stages": {
+      "temporary_file_fsync": true,
+      "rename_commit_point": true,
+      "parent_directory_fsync": true
+    }
+  },
+  "checks": {
+    "debug_build": {"status": "pass"},
+    "debug_ctest": {"passed": 4, "total": 4},
+    "focused_tests": {"passed": 4, "total": 4},
+    "fixture_roundtrips": {"records": 3, "all_byte_and_sha256_equal": true},
+    "failure_atomicity": {
+      "malformed_xml": true,
+      "injected_write": true,
+      "injected_rename": true,
+      "destination_hash_and_mode_preserved": true,
+      "temporary_files_leaked": 0
+    },
+    "permission_preservation": true,
+    "asan_ctest": {"passed": 4, "total": 4},
+    "ubsan_ctest": {"passed": 4, "total": 4},
+    "dev_verify": {
+      "status": "pass_after_host_rerun",
+      "managed_attempts_failed": 3,
+      "host_attempts_passed": 1,
+      "python_passed": 165,
+      "python_failed": 0,
+      "python_errors": 0,
+      "python_skipped": 0,
+      "details": "The three managed executor failures did not reproduce in the host shell after building Release."
+    }
+  },
+  "claims": {
+    "save_latency_measured": false,
+    "svg_throughput": false,
+    "render_performance": false
+  },
+  "implementation_commit": null,
+  "evidence": {
+    "build_and_ctest": "artifacts/WO-M2-04/build-and-ctest.txt",
+    "focused_tests": "artifacts/WO-M2-04/focused-tests.txt",
+    "roundtrip": "artifacts/WO-M2-04/roundtrip.json",
+    "failure_atomicity": "artifacts/WO-M2-04/failure-atomicity.json",
+    "native_save": "artifacts/WO-M2-04/native-save.txt",
+    "verify_first_attempt": "artifacts/WO-M2-04/verify.txt",
+    "verify_retry": "artifacts/WO-M2-04/verify-rerun.txt",
+    "host_verify": "artifacts/WO-M2-04/host-verify.txt",
+    "asan": "artifacts/WO-M2-04/asan.txt",
+    "ubsan": "artifacts/WO-M2-04/ubsan.txt",
+    "verification_rerun": "artifacts/WO-M2-04/verification-rerun.md"
+  }
+}

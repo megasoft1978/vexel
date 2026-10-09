@@ -144,3 +144,21 @@ ASan, and UBSan CTest also pass. The final fresh read-only review passed all 13
 frozen commands without findings; the work is merged at
 `f53cc4322d86c7228287578affa6825154f1f1e5`. Evidence is under
 `artifacts/WO-M2-03/` and `artifacts/runs/WO-M2-03/verify-eebaef9f-4245-4e61-8b87-d81b2f3acb73/`.
+
+## WO-M2-04 lossless no-op source save
+
+The no-op save validates bounded XML and atomically replaces an existing
+regular file through a same-directory temporary file. C and Python authored
+fixtures cover metadata, namespaces, comments, significant whitespace, mixed
+LF/CRLF/CR endings, quote styles, processing instructions, and CDATA. Every
+recorded source and saved byte count and SHA-256 match. Successful native tests
+report temporary-file fsync, atomic rename, and parent-directory fsync; fault
+injection confirms parse, write, and rename failures keep the original target
+hash/mode and leave no temporary file. No save latency, renderer throughput,
+RSS, or performance improvement was measured. Evidence is in
+`artifacts/WO-M2-04/` and `bench/results/WO-M2-04.json`.
+
+The managed executor's full-suite attempts failed in environment-dependent
+benchmark sandbox and LaunchServices checks. The host-shell `./dev verify`
+rerun passed all 165 tests, native smoke, and Metal replay after the Release
+build. Fresh independent review is pending.

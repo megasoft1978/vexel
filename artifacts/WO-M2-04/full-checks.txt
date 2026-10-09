@@ -1,0 +1,23 @@
+Frozen verification commands (run from the repository root)
+
+PASS  ./dev build
+PASS  ctest --test-dir build/mac-debug --output-on-failure (4/4)
+PASS  python3 -m unittest tests.test_source_save (4/4)
+FAIL  ./dev verify (attempt 1: 155 passed, 8 failed, 2 errors, 0 skipped)
+PASS  ./dev asan (CTest 4/4)
+PASS  ./dev ubsan (CTest 4/4)
+PASS  python3 scripts/ledger.py validate ledger.jsonl (202 entries)
+PASS  python3 scripts/wo_validate.py WO-M2-04 --ready (frozen SHA-256 matches supplied snapshot)
+PASS  python3 -m json.tool bench/results/WO-M2-04.json
+PASS  git diff --check
+
+Required prerequisite before ./dev verify:
+PASS  cmake --preset mac-release && cmake --build --preset mac-release
+
+Retries:
+FAIL  ./dev verify (attempt 2: 155 passed, 8 failed, 2 errors, 0 skipped)
+FAIL  ./dev verify (final source, attempt 3: 155 passed, 8 failed, 2 errors, 0 skipped)
+
+The verify failures are existing benchmark sandbox/process-policy tests under
+the managed host sandbox and native LaunchServices lifecycle smoke failures.
+The new source-save C and Python tests pass in all verify attempts.
