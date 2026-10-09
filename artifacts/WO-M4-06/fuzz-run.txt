@@ -1,12 +1,5 @@
-Preset CMake variables:
-
-  CMAKE_BUILD_TYPE="Debug"
-  CMAKE_OSX_ARCHITECTURES="arm64"
-  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
-  VEXEL_SANITIZER="asan-ubsan"
-
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan
-ninja: no work to do.
-{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan/bin/shape_fuzz", "cap_exhaustion_cases": 1, "cap_exhaustion_input_bytes": 327730, "cases": 1000000, "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)", "crashes": 0, "duration_seconds": 65.438, "evenodd_cases": 250000, "evenodd_renders": 7813, "fractional_cases": 750000, "fractional_renders": 7813, "host": {"machine": "arm64", "macos_version": "27.0", "platform": "macOS-27.0-arm64-arm-64bit"}, "input_max_bytes": 327730, "invariant_failures": 0, "metric_availability": {"peak_rss": "not collected by the bounded fuzz harness"}, "nonzero_cases": 250000, "nonzero_renders": 7813, "peak_rss_bytes": null, "process_cpu_seconds": 64.709, "random_input_max_bytes": 4096, "renderer": "Vexel scalar 4x4 shape rasterizer", "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "sanitizer_stderr": "artifacts/WO-M4-06/fuzz-report.stderr.txt", "sanitizer_stderr_bytes": 0, "seed": 20261010, "source_revision": "56ab981fe97b2b8c224022344f0364a66ea9caff", "stroke_cases": 48049, "stroke_renders": 3269}
+Command: ./dev shape-fuzz --duration 90 --seed 20261010 --output artifacts/WO-M4-06/fuzz-report.json
+Source revision: e8da8ad6d082a621ed7d784aa08a502b0719ac39
+Result: pass (1000000 cases, 73.008s)
+Crashes: 0; invariant failures: 0; sanitizer reports: 0
+Sanitizer stderr bytes: 0
