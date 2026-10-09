@@ -34,22 +34,27 @@ static size_t lru_slot(const raster_tile_cache *cache) {
 }
 static uint64_t next_tick(raster_tile_cache *cache) {
     if (cache->clock == UINT64_MAX) {
-        uint64_t rank = 1;
-        for (;;) {
-            size_t selected = cache->max_entries;
-            for (size_t i = 0; i < cache->max_entries; ++i) {
-                cache_entry *e = &cache->entries[i];
-                if (!e->occupied || e->last_used == 0) continue;
-                if (selected == cache->max_entries || e->last_used < cache->entries[selected].last_used ||
-                    (e->last_used == cache->entries[selected].last_used && i < selected)) selected = i;
-            }
-            if (selected == cache->max_entries) break;
-            cache->entries[selected].last_used = rank++;
+        uint64_t oldest = UINT64_MAX;
+        for (size_t i = 0; i < cache->max_entries; ++i)
+            if (cache->entries[i].occupied && cache->entries[i].last_used < oldest)
+                oldest = cache->entries[i].last_used;
+        if (oldest == UINT64_MAX) cache->clock = 0;
+        else {
+            /* Subtracting the oldest live tick preserves order without a sort buffer. */
+            uint64_t offset = oldest - 1;
+            for (size_t i = 0; i < cache->max_entries; ++i)
+                if (cache->entries[i].occupied) cache->entries[i].last_used -= offset;
+            cache->clock -= offset;
         }
-        cache->clock = rank;
     }
     return ++cache->clock;
 }
+
+#ifdef VEXEL_TESTING
+void raster_tile_cache_test_set_clock(raster_tile_cache *cache, uint64_t clock) {
+    if (cache != NULL) cache->clock = clock;
+}
+#endif
 
 bool raster_tile_cache_create(size_t byte_cap, size_t max_entries, uint64_t generation,
                               uint32_t scale_bucket, raster_tile_cache **out_cache) {

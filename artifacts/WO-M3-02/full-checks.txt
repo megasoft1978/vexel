@@ -1,5 +1,3 @@
-=== ready work-order validation ===
-valid WO-M3-02 revision 2 sha256 52ab6889f4084320f1016fb17474e2272507263f1183dced9d59ec40f49c5d83
 === ./dev build ===
 Preset CMake variables:
 
@@ -7,7 +5,7 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
 ninja: no work to do.
@@ -15,11 +13,11 @@ ninja: no work to do.
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
     Start 1: cli-version
-1/9 Test #1: cli-version ......................   Passed    0.00 sec
+1/9 Test #1: cli-version ......................   Passed    0.01 sec
     Start 2: base-contract
 2/9 Test #2: base-contract ....................   Passed    0.00 sec
     Start 3: xml-tokenizer
-3/9 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+3/9 Test #3: xml-tokenizer ....................   Passed    0.08 sec
     Start 4: source-save
 4/9 Test #4: source-save ......................   Passed    0.00 sec
     Start 5: shape-render
@@ -35,29 +33,38 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build
 
 100% tests passed, 0 tests failed out of 9
 
-Total Test time (real) =   0.37 sec
-=== focused spatial/cache native test ===
-{"insertions":10000,"entry_count":100,"accounted_bytes":5200,"byte_cap":8192,"max_accounted_bytes":5200,"max_entries":100,"ownership_success":true,"ownership_failure":true,"deterministic_lru":true,"generation_invalidation":true,"scale_invalidation":true}
+Total Test time (real) =   0.39 sec
+=== focused native spatial/cache test ===
+{"insertions":10000,"entry_count":100,"accounted_bytes":5200,"byte_cap":8192,"max_accounted_bytes":5200,"max_entries":100,"ownership_success":true,"ownership_failure":true,"deterministic_lru":true,"clock_rollover":true,"generation_invalidation":true,"scale_invalidation":true}
 spatial and tile-cache deterministic checks passed
 === focused Python wrapper ===
 .
 ----------------------------------------------------------------------
-Ran 1 test in 0.021s
+Ran 1 test in 0.023s
 
 OK
-=== Release build ===
+=== Release configure/build ===
 Preset CMake variables:
 
   CMAKE_BUILD_TYPE="Release"
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-release
-ninja: no work to do.
-=== deterministic benchmark ===
-entries=100000 queries=1000 build_seconds=0.008071 p50_ms=0.000 p95_ms=0.002 max_ms=0.006
+[1/10] Building C object CMakeFiles/spatial_cache_test.dir/tests/raster/cache/cache_contract.c.o
+[2/10] Building C object CMakeFiles/vexel_tile_cache.dir/src/raster/tile_cache.c.o
+[3/10] Building C object CMakeFiles/spatial_cache_test.dir/tests/svg/spatial/spatial_cache_test.c.o
+[4/10] Building C object CMakeFiles/vexel_tile_cache_test.dir/src/raster/tile_cache.c.o
+[5/10] Building C object CMakeFiles/spatial_cache_test.dir/src/raster/tile.c.o
+[6/10] Linking C static library libvexel_tile_cache.a
+[7/10] Linking C static library libvexel_tile_cache_test.a
+[8/10] Building C object CMakeFiles/spatial_cache_bench.dir/app/spatial_cache_bench.c.o
+[9/10] Linking C executable bin/spatial_cache_test
+[10/10] Linking C executable bin/spatial_cache_bench
+=== benchmark ===
+entries=100000 queries=1000 build_seconds=0.008534 p50_ms=0.000 p95_ms=0.002 max_ms=0.016
 === ./dev verify ===
 Preset CMake variables:
 
@@ -65,7 +72,7 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
 ninja: no work to do.
@@ -76,7 +83,7 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build
     Start 2: base-contract
 2/9 Test #2: base-contract ....................   Passed    0.00 sec
     Start 3: xml-tokenizer
-3/9 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+3/9 Test #3: xml-tokenizer ....................   Passed    0.08 sec
     Start 4: source-save
 4/9 Test #4: source-save ......................   Passed    0.00 sec
     Start 5: shape-render
@@ -86,7 +93,7 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build
     Start 7: svg-token-stream-budget
 7/9 Test #7: svg-token-stream-budget ..........   Passed    0.02 sec
     Start 8: index-replay
-8/9 Test #8: index-replay .....................   Passed    0.13 sec
+8/9 Test #8: index-replay .....................   Passed    0.12 sec
     Start 9: spatial-cache
 9/9 Test #9: spatial-cache ....................   Passed    0.02 sec
 
@@ -101,18 +108,18 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 176 tests in 14.643s
+Ran 176 tests in 15.050s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.150892
+native smoke elapsed seconds: 0.153030
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.125405
-Ran 176 tests: 176 passed, 0 failed, 0 errors, 0 skipped; 14.684s
-valid ledger: 233 entries
+native replay elapsed seconds: 0.121906
+Ran 176 tests: 176 passed, 0 failed, 0 errors, 0 skipped; 15.106s
+valid ledger: 238 entries
 === ./dev asan ===
 Preset CMake variables:
 
@@ -124,16 +131,25 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-asan
-ninja: no work to do.
+[1/10] Building C object CMakeFiles/spatial_cache_test.dir/src/raster/tile.c.o
+[2/10] Building C object CMakeFiles/spatial_cache_test.dir/tests/raster/cache/cache_contract.c.o
+[3/10] Building C object CMakeFiles/spatial_cache_test.dir/tests/svg/spatial/spatial_cache_test.c.o
+[4/10] Building C object CMakeFiles/vexel_tile_cache_test.dir/src/raster/tile_cache.c.o
+[5/10] Building C object CMakeFiles/vexel_tile_cache.dir/src/raster/tile_cache.c.o
+[6/10] Building C object CMakeFiles/spatial_cache_bench.dir/app/spatial_cache_bench.c.o
+[7/10] Linking C static library libvexel_tile_cache.a
+[8/10] Linking C static library libvexel_tile_cache_test.a
+[9/10] Linking C executable bin/spatial_cache_test
+[10/10] Linking C executable bin/spatial_cache_bench
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-asan
     Start 1: cli-version
-1/9 Test #1: cli-version ......................   Passed    0.01 sec
+1/9 Test #1: cli-version ......................   Passed    0.02 sec
     Start 2: base-contract
 2/9 Test #2: base-contract ....................   Passed    0.02 sec
     Start 3: xml-tokenizer
 3/9 Test #3: xml-tokenizer ....................   Passed    0.23 sec
     Start 4: source-save
-4/9 Test #4: source-save ......................   Passed    0.01 sec
+4/9 Test #4: source-save ......................   Passed    0.02 sec
     Start 5: shape-render
 5/9 Test #5: shape-render .....................   Passed    0.05 sec
     Start 6: svg-index
@@ -141,13 +157,13 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build
     Start 7: svg-token-stream-budget
 7/9 Test #7: svg-token-stream-budget ..........   Passed    0.09 sec
     Start 8: index-replay
-8/9 Test #8: index-replay .....................   Passed    0.15 sec
+8/9 Test #8: index-replay .....................   Passed    0.16 sec
     Start 9: spatial-cache
-9/9 Test #9: spatial-cache ....................   Passed    0.08 sec
+9/9 Test #9: spatial-cache ....................   Passed    0.31 sec
 
 100% tests passed, 0 tests failed out of 9
 
-Total Test time (real) =   0.78 sec
+Total Test time (real) =   1.04 sec
 === ./dev ubsan ===
 Preset CMake variables:
 
@@ -156,10 +172,19 @@ Preset CMake variables:
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
   VEXEL_SANITIZER="ubsan"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-ubsan
-ninja: no work to do.
+[1/10] Building C object CMakeFiles/spatial_cache_test.dir/src/raster/tile.c.o
+[2/10] Building C object CMakeFiles/spatial_cache_test.dir/tests/raster/cache/cache_contract.c.o
+[3/10] Building C object CMakeFiles/spatial_cache_test.dir/tests/svg/spatial/spatial_cache_test.c.o
+[4/10] Building C object CMakeFiles/vexel_tile_cache_test.dir/src/raster/tile_cache.c.o
+[5/10] Building C object CMakeFiles/vexel_tile_cache.dir/src/raster/tile_cache.c.o
+[6/10] Building C object CMakeFiles/spatial_cache_bench.dir/app/spatial_cache_bench.c.o
+[7/10] Linking C static library libvexel_tile_cache_test.a
+[8/10] Linking C static library libvexel_tile_cache.a
+[9/10] Linking C executable bin/spatial_cache_test
+[10/10] Linking C executable bin/spatial_cache_bench
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-ubsan
     Start 1: cli-version
 1/9 Test #1: cli-version ......................   Passed    0.01 sec
@@ -178,19 +203,15 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build
     Start 8: index-replay
 8/9 Test #8: index-replay .....................   Passed    0.13 sec
     Start 9: spatial-cache
-9/9 Test #9: spatial-cache ....................   Passed    0.04 sec
+9/9 Test #9: spatial-cache ....................   Passed    0.25 sec
 
 100% tests passed, 0 tests failed out of 9
 
-Total Test time (real) =   0.57 sec
-=== spatial index Python regression ===
-..
-----------------------------------------------------------------------
-Ran 2 tests in 0.114s
-
-OK
+Total Test time (real) =   0.80 sec
 === ledger validation ===
-valid ledger: 233 entries
-=== benchmark JSON validation ===
-=== diff check ===
-all recorded checks passed
+valid ledger: 238 entries
+=== ready work order validation ===
+valid WO-M3-02 revision 3 sha256 e3b2616562a4c58537e6d942a99d164ac1bada9252946827df548b08bca2559e
+=== JSON validation ===
+=== git diff check ===
+all machine checks passed

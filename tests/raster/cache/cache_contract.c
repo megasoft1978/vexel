@@ -37,8 +37,14 @@ int spatial_cache_contract_tests(void) {
     CHECK(raster_tile_cache_get(cache, 1) != NULL && raster_tile_cache_get(cache, 2) == NULL);
     CHECK(raster_tile_cache_get(cache, 3) != NULL);
     CHECK(a_ptr != NULL);
+    raster_tile_cache_test_set_clock(cache, UINT64_MAX);
+    CHECK(raster_tile_cache_get(cache, 3) != NULL);
+    raster_tile e = make_tile(5);
+    CHECK(raster_tile_cache_put(cache, 4, &e) && e.rgba == NULL);
+    CHECK(raster_tile_cache_get(cache, 1) == NULL && raster_tile_cache_get(cache, 2) == NULL);
+    CHECK(raster_tile_cache_get(cache, 3) != NULL && raster_tile_cache_get(cache, 4) != NULL);
     CHECK(raster_tile_cache_set_epoch(cache, 2, 1));
-    CHECK(raster_tile_cache_get(cache, 1) == NULL && raster_tile_cache_get(cache, 3) == NULL);
+    CHECK(raster_tile_cache_get(cache, 1) == NULL && raster_tile_cache_get(cache, 3) == NULL && raster_tile_cache_get(cache, 4) == NULL);
     raster_tile d = make_tile(4);
     CHECK(raster_tile_cache_put(cache, 4, &d));
     CHECK(raster_tile_cache_set_epoch(cache, 2, 2));
@@ -58,7 +64,7 @@ int spatial_cache_contract_tests(void) {
     }
     raster_tile_cache_stats stats;
     CHECK(raster_tile_cache_get_stats(cache, &stats));
-    printf("{\"insertions\":10000,\"entry_count\":%zu,\"accounted_bytes\":%zu,\"byte_cap\":%zu,\"max_accounted_bytes\":%zu,\"max_entries\":%zu,\"ownership_success\":true,\"ownership_failure\":true,\"deterministic_lru\":true,\"generation_invalidation\":true,\"scale_invalidation\":true}\n",
+    printf("{\"insertions\":10000,\"entry_count\":%zu,\"accounted_bytes\":%zu,\"byte_cap\":%zu,\"max_accounted_bytes\":%zu,\"max_entries\":%zu,\"ownership_success\":true,\"ownership_failure\":true,\"deterministic_lru\":true,\"clock_rollover\":true,\"generation_invalidation\":true,\"scale_invalidation\":true}\n",
            stats.entry_count, stats.accounted_bytes, cap, max_accounted, max_entries);
     raster_tile_cache_destroy(cache);
     return 0;

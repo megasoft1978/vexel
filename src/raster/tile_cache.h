@@ -23,4 +23,8 @@ bool raster_tile_cache_put(raster_tile_cache *cache, uint64_t key, raster_tile *
 bool raster_tile_cache_set_epoch(raster_tile_cache *cache, uint64_t generation, uint32_t scale_bucket);
 bool raster_tile_cache_get_stats(const raster_tile_cache *cache, raster_tile_cache_stats *out_stats);
 
+#ifdef VEXEL_TESTING
+void raster_tile_cache_test_set_clock(raster_tile_cache *cache, uint64_t clock);
+#endif
+
 #endif
