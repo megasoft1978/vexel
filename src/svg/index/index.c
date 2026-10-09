@@ -39,8 +39,6 @@ struct svg_index_session {
 };
 
 #define SVG_INDEX_MAX_COMPONENT_BYTES (SVG_INDEX_MAX_STORAGE_BYTES / 2U)
-#define SVG_INDEX_MAX_TOKENS (SVG_INDEX_MAX_COMPONENT_BYTES / sizeof(svg_xml_token))
-
 static bool task_is_canceled(void *context)
 {
     const platform_task_cancel_token *token = context;
@@ -59,40 +57,30 @@ static bool validate_document(void *opaque, const platform_task_cancel_token *to
                               int64_t *out_value)
 {
     svg_index_session *s = opaque;
-    size_t capacity = s->source.len / 512U + 32U;
-    if (capacity > SVG_INDEX_MAX_TOKENS) capacity = SVG_INDEX_MAX_TOKENS;
-    if (capacity == 0U) capacity = 1U;
-    svg_xml_token *tokens = NULL;
-    for (;;) {
-        if (atomic_load_explicit(&token->canceled, memory_order_acquire)) {
-            free(tokens);
-            return false;
-        }
-        size_t bytes = 0U;
-        if (!base_size_mul(capacity, sizeof(*tokens), &bytes) ||
-            bytes > SVG_INDEX_MAX_STORAGE_BYTES) { free(tokens); return false; }
-        svg_xml_token *next = realloc(tokens, bytes);
-        if (next == NULL) { free(tokens); return false; }
-        tokens = next;
-        svg_xml_result result = svg_xml_tokenize_large_cancelable(s->source, tokens, capacity,
-            task_is_canceled, (void *)token);
-        if (atomic_load_explicit(&token->canceled, memory_order_acquire)) {
-            free(tokens);
-            return false;
-        }
-        if (result.diagnostic.category == SVG_XML_ERROR_OUTPUT_EXHAUSTED &&
-            capacity < SVG_INDEX_MAX_TOKENS) {
-            size_t doubled = 0U;
-            if (!base_size_mul(capacity, 2U, &doubled)) { free(tokens); return false; }
-            capacity = doubled > SVG_INDEX_MAX_TOKENS ? SVG_INDEX_MAX_TOKENS : doubled;
-            continue;
-        }
-        s->validation.diagnostic = result.diagnostic;
-        s->validation.token_count = result.token_count;
-        s->validation.tokens = tokens;
-        *out_value = (int64_t)result.diagnostic.category;
-        return result.diagnostic.category == SVG_XML_ERROR_NONE;
+    svg_xml_token_stream *stream = NULL;
+    svg_xml_stream_status status = svg_xml_token_stream_start(s->source,
+        SVG_INDEX_MAX_COMPONENT_BYTES, task_is_canceled, (void *)token, &stream);
+    while (status == SVG_XML_STREAM_OK &&
+           !atomic_load_explicit(&token->canceled, memory_order_acquire))
+        status = svg_xml_token_stream_step(stream, SVG_INDEX_MAX_STEP_BYTES);
+    if (atomic_load_explicit(&token->canceled, memory_order_acquire) ||
+        status == SVG_XML_STREAM_CANCELED) {
+        svg_xml_token_stream_destroy(stream);
+        return false;
     }
+    svg_xml_result result = svg_xml_token_stream_result(stream);
+    s->validation.diagnostic = result.diagnostic;
+    s->validation.token_count = result.token_count;
+    if (status == SVG_XML_STREAM_COMPLETE &&
+        !svg_xml_token_stream_take(stream, &s->validation.tokens,
+                                   &s->validation.token_count)) {
+        s->validation.diagnostic = (svg_xml_diagnostic){SVG_XML_ERROR_OUTPUT_EXHAUSTED, 0U};
+        status = SVG_XML_STREAM_FAILED;
+    }
+    *out_value = (int64_t)s->validation.diagnostic.category;
+    svg_xml_token_stream_destroy(stream);
+    return status == SVG_XML_STREAM_COMPLETE &&
+           s->validation.diagnostic.category == SVG_XML_ERROR_NONE;
 }
 
 static void harvest_validation(svg_index_session *s)

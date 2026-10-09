@@ -8,18 +8,12 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-ubsan
-[1/7] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
-[2/7] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
-[3/7] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
-[4/7] Linking C static library libvexel_index.a
-[5/7] Linking C executable bin/svg_index_test
+[1/2] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
+[2/2] Linking C executable bin/svg_index_test
 ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
-[6/7] Linking C executable bin/svg_index_bench
-[7/7] Linking C executable bin/svgworkbench
-ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-ubsan
     Start 1: cli-version
-1/7 Test #1: cli-version ......................   Passed    0.17 sec
+1/7 Test #1: cli-version ......................   Passed    0.01 sec
     Start 2: base-contract
 2/7 Test #2: base-contract ....................   Passed    0.01 sec
     Start 3: xml-tokenizer
@@ -31,8 +25,8 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build
     Start 6: svg-index
 6/7 Test #6: svg-index ........................   Passed    0.33 sec
     Start 7: index-replay
-7/7 Test #7: index-replay .....................   Passed    0.03 sec
+7/7 Test #7: index-replay .....................   Passed    0.04 sec
 
 100% tests passed, 0 tests failed out of 7
 
-Total Test time (real) =   0.73 sec
+Total Test time (real) =   0.57 sec

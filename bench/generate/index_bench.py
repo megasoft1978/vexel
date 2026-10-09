@@ -72,7 +72,7 @@ def main() -> int:
     args = parser.parse_args()
     if args.seed != SEED or args.cold_trials != 5 or args.warm_trials != 10:
         parser.error("the frozen campaign requires seed 20261009, 5 cold and 10 warm trials")
-    sizes = {"10MiB": (10 * 1024 * 1024, 100000, False),
+    sizes = {"10MiB": (10 * 1024 * 1024, 99999, False),
              "100MiB": (100 * 1024 * 1024, 100000, True)}
     selected = args.sizes.split(",")
     if not selected or any(label not in sizes for label in selected):
@@ -89,6 +89,7 @@ def main() -> int:
         cold = [run_trial(binary, source) for _ in range(5)]
         warm = [run_trial(binary, source) for _ in range(10)]
         all_trials = cold + warm
+        read = [row["read_ns"] for row in all_trials]
         first = [row["first_preview_ns"] for row in all_trials]
         complete = [row["complete_index_ns"] for row in all_trials]
         steps = [row["max_step_ns"] for row in all_trials]
@@ -96,8 +97,11 @@ def main() -> int:
             "source_bytes": source.stat().st_size,
             "source_sha256": subprocess.run(["shasum", "-a", "256", str(source)],
                                               capture_output=True, text=True, check=True).stdout.split()[0],
-            "workload": "100000 simple rectangles" if not map_like else "100000 map-like grouped records",
+            "workload": "100000 simple rectangles including preview" if not map_like else
+                "100000 map-like grouped records plus one preview rectangle",
             "cold_trials": cold, "warm_trials": warm,
+            "source_read_median_ns": percentile(read, 0.5),
+            "source_read_p95_ns": percentile(read, 0.95),
             "first_preview_median_ns": percentile(first, 0.5),
             "first_preview_p95_ns": percentile(first, 0.95),
             "complete_index_median_ns": percentile(complete, 0.5),
@@ -112,14 +116,18 @@ def main() -> int:
             "index_bytes": max(int(row["index_bytes"]) for row in all_trials),
         }
     clang = subprocess.run(["clang", "--version"], capture_output=True, text=True, check=True).stdout.splitlines()[0]
-    payload = {"schema_version": 1, "seed": args.seed, "machine": platform.platform(),
+    payload = {"schema_version": 1, "seed": args.seed,
+               "machine": platform.platform(), "machine_model": "Mac Studio (Mac17,14)",
+               "chip": "Apple M5 Max", "memory_bytes": 68719476736,
                "architecture": platform.machine(), "compiler": clang, "build": "mac-release",
                "cache_caveat": "Cold/warm labels are run order only; OS file cache is not flushed.",
                "cases": cases}
     output = args.output if args.output.is_absolute() else ROOT / args.output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({key: {"first_preview_median_ns": value["first_preview_median_ns"],
+    print(json.dumps({key: {"source_read_median_ns": value["source_read_median_ns"],
+                            "source_read_p95_ns": value["source_read_p95_ns"],
+                            "first_preview_median_ns": value["first_preview_median_ns"],
                             "max_step_latency_ns": value["max_step_latency_ns"]}
                       for key, value in cases.items()}, indent=2))
     return 0

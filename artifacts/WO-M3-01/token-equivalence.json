@@ -1,7 +1,7 @@
 {
   "status": "passed",
   "fixture_count": 24,
-  "comparison": "completed index-session token records versus one-shot token kinds, spans, names, values, prefixes, local names, and depth",
+  "comparison": "resumable svg_xml_token_stream output versus one-shot token kinds and spans",
   "fixtures": [
     "clip-path.svg",
     "image-embedded-data.svg",

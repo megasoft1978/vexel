@@ -13,12 +13,12 @@
   ],
   "verified": {
     "debug_ctest": "7/7 passed",
-    "focused_python_tests": "2/2 passed; 24 pinned fixtures and 6 exact diagnostic offsets",
+    "focused_python_tests": "2/2 passed; resumable token stream matches 24 pinned fixtures; 6 diagnostic offsets match",
     "full_python_suite": "175/175 passed",
     "asan_ctest": "7/7 passed",
     "ubsan_ctest": "7/7 passed",
     "benchmark": "15 trials per workload; latency, owner-step, and RSS gates passed",
-    "native_index_replay": "10/50/90/100 progress; Metal readback before completion; max owner-loop interval 16.864 ms; stale and canceled workers rejected",
+    "native_index_replay": "10/50/90/100 progress; Metal readback before completion; max owner-loop interval 18.280 ms; stale and canceled workers rejected",
     "ready_work_order_validation": "passed",
     "ledger_validation": "passed",
     "diff_check": "passed"
@@ -26,20 +26,24 @@
   "metrics": {
     "10MiB": {
       "source_bytes": 10485760,
-      "first_preview_median_ns": 210416,
-      "first_preview_p95_ns": 231292,
-      "complete_index_median_ns": 176782416,
-      "max_step_latency_ns": 207541,
-      "peak_child_rss_bytes": 60456960,
-      "index_bytes": 5600112
+      "source_read_median_ns": 1116750,
+      "source_read_p95_ns": 1169916,
+      "first_preview_median_ns": 227667,
+      "first_preview_p95_ns": 460083,
+      "complete_index_median_ns": 40937292,
+      "max_step_latency_ns": 222542,
+      "peak_child_rss_bytes": 58507264,
+      "index_bytes": 5600056
     },
     "100MiB": {
       "source_bytes": 104857600,
-      "first_preview_median_ns": 134875,
-      "first_preview_p95_ns": 157333,
-      "complete_index_median_ns": 619183542,
-      "max_step_latency_ns": 718541,
-      "peak_child_rss_bytes": 143245312,
+      "source_read_median_ns": 10495583,
+      "source_read_p95_ns": 11016875,
+      "first_preview_median_ns": 149333,
+      "first_preview_p95_ns": 161042,
+      "complete_index_median_ns": 336622667,
+      "max_step_latency_ns": 580541,
+      "peak_child_rss_bytes": 143294464,
       "index_bytes": 5600112
     }
   },
@@ -47,6 +51,13 @@
     "full XML token records become queryable after the cancellable background validation completes; the resumable owner reader emits complete tag spans",
     "progressive replay is headless; visible AppKit teardown previously reproduced a crash while separate native Metal smoke passes"
   ],
-  "decision": "Candidate corrected after fresh review; all four findings addressed; next fresh read-only review pending.",
-  "release_binary_bytes": 151232
+  "decision": "Candidate corrected after fresh review; the token stream, malformed diagnostics, exact workloads, machine metadata, worker cancellation, and stale-generation cases are covered; next fresh read-only review pending.",
+  "release_binary_bytes": 151680,
+  "machine": {
+    "model": "Mac Studio (Mac17,14)",
+    "chip": "Apple M5 Max",
+    "memory_bytes": 68719476736,
+    "os": "macOS 27.0",
+    "architecture": "arm64"
+  }
 }

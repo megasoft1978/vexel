@@ -86,19 +86,32 @@ static bool equivalent_file(const char *path)
     (void)fclose(file);
     svg_xml_result expected = svg_xml_tokenize((base_bytes){source, length},
         svg_xml_default_options(), reference, length);
-    svg_index_session *session = NULL;
+    svg_xml_token_stream *stream = NULL;
     bool okay = expected.diagnostic.category == SVG_XML_ERROR_NONE &&
-        svg_index_start((base_bytes){source, length}, 1U, &session) == SVG_INDEX_OK;
-    svg_index_status status = SVG_INDEX_OK;
-    while (okay && status == SVG_INDEX_OK)
-        status = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
-    svg_index_progress progress = svg_index_get_progress(session);
-    okay = okay && status == SVG_INDEX_COMPLETE && progress.token_count == expected.token_count;
-    for (size_t i = 0U; okay && i < expected.token_count; ++i) {
-        svg_xml_token actual;
-        okay = svg_index_token_at(session, i, &actual) && same_token(actual, reference[i]);
+        svg_xml_token_stream_start((base_bytes){source, length},
+            SVG_INDEX_MAX_STORAGE_BYTES / 2U, NULL, NULL, &stream) == SVG_XML_STREAM_OK;
+    svg_xml_stream_status status = SVG_XML_STREAM_OK;
+    size_t steps = 0U;
+    bool emitted_before_complete = false;
+    while (okay && status == SVG_XML_STREAM_OK) {
+        status = svg_xml_token_stream_step(stream, 7U);
+        ++steps;
+        svg_xml_result progress = svg_xml_token_stream_result(stream);
+        emitted_before_complete = emitted_before_complete ||
+            (progress.token_count > 0U && status == SVG_XML_STREAM_OK);
     }
-    svg_index_destroy(session);
+    svg_xml_result incremental = svg_xml_token_stream_result(stream);
+    svg_xml_token *actual_tokens = NULL;
+    size_t actual_count = 0U;
+    okay = okay && status == SVG_XML_STREAM_COMPLETE && steps > 1U && emitted_before_complete &&
+        incremental.token_count == expected.token_count &&
+        svg_xml_token_stream_take(stream, &actual_tokens, &actual_count) &&
+        actual_count == expected.token_count;
+    for (size_t i = 0U; okay && i < expected.token_count; ++i) {
+        okay = same_token(actual_tokens[i], reference[i]);
+    }
+    svg_xml_token_stream_destroy(stream);
+    free(actual_tokens);
     free(reference); free(source);
     return okay;
 }
@@ -158,7 +171,7 @@ static bool check_frozen_fixture_equivalence(int argc, char **argv)
             return false;
         }
     }
-    (void)printf("{\"status\":\"passed\",\"fixture_count\":%d,\"comparison\":\"incremental index tokens vs one-shot token kinds and spans\"}\n",
+    (void)printf("{\"status\":\"passed\",\"fixture_count\":%d,\"comparison\":\"resumable tokenizer stream vs one-shot token kinds and spans\"}\n",
                  argc - 2);
     return true;
 }
