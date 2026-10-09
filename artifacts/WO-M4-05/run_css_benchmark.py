@@ -44,7 +44,13 @@ def main():
     source_paths = ["CMakeLists.txt", "src/svg/css/css.c", "src/svg/css/css.h",
                     "src/svg/shape/shape.c", "src/svg/shape/shape.h",
                     "src/raster/shape_render.c", "tests/svg/css/test_css.c",
-                    "tests/svg/shape/shape_render_cli.c"]
+                    "tests/svg/shape/shape_render_cli.c",
+                    "artifacts/WO-M4-05/run_css_benchmark.py"]
+    source_dirty = subprocess.run(["git", "status", "--porcelain", "--", *source_paths],
+                                  cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
+    source_commit = subprocess.run(["git", "log", "-1", "--format=%H", "--",
+                                    "src/svg/css/css.c"], cwd=ROOT,
+                                   capture_output=True, text=True, check=True).stdout.strip()
     snapshot = hashlib.sha256()
     for relative in source_paths:
         snapshot.update(relative.encode())
@@ -90,7 +96,12 @@ def main():
     legacy["css_benchmark_renderer"] = "Vexel scalar shape_render_cli, Release; decode and raster in fresh process"
     legacy["css_benchmark_trial_count"] = TRIALS
     legacy["css_candidate_base_sha"] = "5fe97cdf3dbe955638d9c5f0d54956ecc1fc2f0c"
-    legacy["css_candidate_source_status"] = "uncommitted worktree; source_revision fields in legacy section identify git HEAD only"
+    legacy["candidate_sha"] = source_commit
+    legacy["candidate_source_dirty"] = bool(source_dirty)
+    legacy["candidate_source_dirty_paths"] = source_dirty.splitlines() if source_dirty else []
+    legacy["css_candidate_source_status"] = (
+        "dirty source tree" if source_dirty else "clean committed source tree")
+    legacy["css_candidate_commit_sha"] = source_commit
     legacy["css_candidate_source_snapshot_sha256"] = snapshot.hexdigest()
     OUT.write_text(json.dumps(legacy, indent=2, sort_keys=True) + "\n")
     print(json.dumps({name: {"median_ns": value["median_latency_ns"],
