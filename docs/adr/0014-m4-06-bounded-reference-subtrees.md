@@ -2,7 +2,7 @@
 
 - Status: accepted by planner
 - Date: 2026-10-09
-- Scope: WO-M4-06 revision 3 only
+- Scope: WO-M4-06 revisions 3 and 4 only
 - Authority: planner continuation decision; supersedes ADR-0013 only for the
   referenced-subtree behavior required by WO-M4-06.
 
@@ -30,3 +30,6 @@ equality before and after decode/render.
 `<use>` and clip-path resolution may retain the existing contiguous-slice
 architecture only under these hard caps. Oversized references are skipped with
 a diagnostic. Token traversal without copying is deferred to M5 performance work.
+
+Revision 4 removes a contradictory blanket ADR protection from the frozen
+work-order path rules; only this specifically listed amendment ADR is allowed.
