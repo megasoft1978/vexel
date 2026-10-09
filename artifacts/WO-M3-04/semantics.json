@@ -1,0 +1,29 @@
+{
+  "generation": 7,
+  "active": {
+    "percent": 42,
+    "label": "Indexing document",
+    "nodes": [
+      {"id":"canvas","role":"canvas","name":"Zoom 101.700%","bounds":{"x":0,"y":0,"width":320,"height":240},"value":"navigation-demo"},
+      {"id":"progress","role":"progressbar","name":"Indexing document","bounds":{"x":0,"y":0,"width":320,"height":20},"value":42},
+      {"id":"cancel","role":"button","name":"Cancel indexing","bounds":{"x":0,"y":20,"width":96,"height":28},"enabled":true}
+    ]
+  },
+  "cancel_request": {
+    "worker_phase_after_action": "active",
+    "cancel_requested": true,
+    "button_enabled": false
+  },
+  "terminal_states": {
+    "canceled": {"cancel_node_present": false},
+    "complete": {"percent": 100,"cancel_node_present": false},
+    "failed": {"cancel_node_present": false}
+  },
+  "zoom_scale": 1.017,
+  "pan": {"x": -32.485, "y": -40.092},
+  "stale_progress_generation_rejected": true,
+  "same_generation_terminal_reopen_rejected": true,
+  "source_evidence": "tests/ui/navigation-golden/semantics-0000.json through semantics-0002.json",
+  "command": "./build/mac-debug/bin/viewer_navigation_test",
+  "exit_code": 0
+}

@@ -147,6 +147,30 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
 }
 - (void)mouseDown:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_DOWN]; }
 - (void)mouseUp:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_UP]; }
+- (void)scrollWheel:(NSEvent *)event
+{
+    NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
+    double x = point.x, y = NSHeight(self.bounds) - point.y;
+    double dx = event.scrollingDeltaX, dy = event.scrollingDeltaY;
+    if (!isfinite(x) || !isfinite(y) || !isfinite(dx) || !isfinite(dy) ||
+        fabs(dx) > 10000.0 || fabs(dy) > 10000.0) return;
+    platform_event value = {0};
+    value.type = PLATFORM_EVENT_SCROLL;
+    value.logical_x = (int32_t)llround(x); value.logical_y = (int32_t)llround(y);
+    value.precise_x = x; value.precise_y = y; value.delta_x = dx; value.delta_y = dy;
+    (void)platform_emit(self.owner, &value);
+}
+- (void)magnifyWithEvent:(NSEvent *)event
+{
+    NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
+    double x = point.x, y = NSHeight(self.bounds) - point.y, amount = event.magnification;
+    if (!isfinite(x) || !isfinite(y) || !isfinite(amount) || fabs(amount) > 100.0) return;
+    platform_event value = {0};
+    value.type = PLATFORM_EVENT_MAGNIFY;
+    value.logical_x = (int32_t)llround(x); value.logical_y = (int32_t)llround(y);
+    value.precise_x = x; value.precise_y = y; value.magnification = amount;
+    (void)platform_emit(self.owner, &value);
+}
 - (void)emitButton:(NSEvent *)event type:(platform_event_type)type
 {
     NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
@@ -158,6 +182,28 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.modifiers = (uint32_t)event.modifierFlags;
     (void)platform_emit(self.owner, &value);
 }
+@end
+
+@interface VexelSyntheticMagnifyEvent : NSEvent
+@property(nonatomic) NSPoint injectedLocation;
+@property(nonatomic) CGFloat injectedMagnification;
+@end
+
+@interface VexelSyntheticScrollEvent : NSEvent
+@property(nonatomic) NSPoint injectedLocation;
+@property(nonatomic) CGFloat injectedDeltaX;
+@property(nonatomic) CGFloat injectedDeltaY;
+@end
+
+@implementation VexelSyntheticScrollEvent
+- (NSPoint)locationInWindow { return self.injectedLocation; }
+- (CGFloat)scrollingDeltaX { return self.injectedDeltaX; }
+- (CGFloat)scrollingDeltaY { return self.injectedDeltaY; }
+@end
+
+@implementation VexelSyntheticMagnifyEvent
+- (NSPoint)locationInWindow { return self.injectedLocation; }
+- (CGFloat)magnification { return self.injectedMagnification; }
 @end
 
 @interface VexelNativeWindow : NSWindow <NSWindowDelegate>
@@ -317,6 +363,42 @@ bool platform_test_inject_pointer(platform_window *window, platform_event_type t
         } else {
             [view mouseUp:event];
         }
+        return true;
+    }
+}
+
+bool platform_test_inject_scroll(platform_window *window, double delta_x, double delta_y,
+                                 double logical_x, double logical_y)
+{
+    if (!platform_on_main_thread() || window == NULL || !isfinite(delta_x) ||
+        !isfinite(delta_y) || !isfinite(logical_x) || !isfinite(logical_y) ||
+        fabs(delta_x) > 10000.0 || fabs(delta_y) > 10000.0 || logical_x < 0.0 ||
+        logical_y < 0.0 || logical_x >= 4096.0 || logical_y >= 4096.0) return false;
+    @autoreleasepool {
+        VexelView *view = (VexelView *)window->native.contentView;
+        NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
+        VexelSyntheticScrollEvent *event = [[VexelSyntheticScrollEvent alloc] init];
+        event.injectedLocation = point;
+        event.injectedDeltaX = (CGFloat)delta_x;
+        event.injectedDeltaY = (CGFloat)delta_y;
+        [view scrollWheel:event];
+        return true;
+    }
+}
+
+bool platform_test_inject_magnify(platform_window *window, double magnification,
+                                  double logical_x, double logical_y)
+{
+    if (!platform_on_main_thread() || window == NULL || !isfinite(magnification) ||
+        fabs(magnification) > 100.0 || !isfinite(logical_x) || !isfinite(logical_y) ||
+        logical_x < 0.0 || logical_y < 0.0 || logical_x >= 4096.0 || logical_y >= 4096.0) return false;
+    @autoreleasepool {
+        VexelView *view = (VexelView *)window->native.contentView;
+        NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
+        VexelSyntheticMagnifyEvent *event = [[VexelSyntheticMagnifyEvent alloc] init];
+        event.injectedLocation = point;
+        event.injectedMagnification = (CGFloat)magnification;
+        [view magnifyWithEvent:event];
         return true;
     }
 }

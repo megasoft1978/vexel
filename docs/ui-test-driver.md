@@ -52,6 +52,35 @@ placeholder PNG only depicts a flat canvas and seed-derived accent; the
 accessibility tree and saved state are not a real editor model. No wall-clock
 time or sleep is used.
 
+## Viewer navigation replay
+
+`--navigation-replay` adds bounded `navigate`, generation-tagged
+`index_progress`, and `cancel` commands. Navigate actions are `fit`, `wheel`,
+`pinch`, or `pan`; each supplies finite `x`, `y`, and `value` fields whose
+magnitude is at most 10,000. The replay mirrors the C model: scale is clamped
+to 0.05–64, wheel factor is `exp(-value * 0.001)`, pinch factor is
+`exp(value)`, and zoom preserves the world point under the cursor. Progress
+generations cannot move backward; terminal generations cannot be reopened.
+Cancel records a request and leaves the phase active until a subsequent
+progress command reports cancellation. Active semantics include an enabled
+Cancel indexing button; after a request it is disabled, and after cancellation,
+completion, or failure it is omitted.
+
+Run the frozen navigation baseline replay with:
+
+```sh
+python3 app/test_driver/driver.py --navigation-replay \
+  --script tests/ui/navigation-replay.jsonl \
+  --output-dir .cache/WO-M3-04/replay --seed 17
+python3 tests/ui/verify_navigation.py --actual .cache/WO-M3-04/replay \
+  --baseline tests/ui/navigation-golden
+```
+
+The baseline manifest pins screenshot and semantic JSON bytes with SHA-256.
+`--native-navigation-event-smoke` exercises the scroll and magnify event
+normalizers with deterministic synthetic NSEvent inputs and checks top-left
+logical cursor coordinates.
+
 ## Repeat replay and native Metal frame sequence
 
 Run a fixed JSONL script repeatedly with:

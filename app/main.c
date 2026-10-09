@@ -422,6 +422,36 @@ static int native_metal_replay_smoke(void)
     return EXIT_SUCCESS;
 }
 
+static int native_navigation_event_smoke(void)
+{
+    const char title[] = "Vexel navigation event smoke";
+    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true};
+    platform_window *window = NULL;
+    if (!platform_init() || !platform_window_create(&config, &window)) return EXIT_FAILURE;
+    bool scroll = platform_test_inject_scroll(window, 2.0, -120.0, 42.5, 31.25);
+    bool magnify = scroll && platform_test_inject_magnify(window, 0.125, 42.5, 31.25);
+    bool saw_scroll = false, saw_magnify = false;
+    platform_event event;
+    while (magnify && platform_poll_event(window, &event)) {
+        if (event.type == PLATFORM_EVENT_SCROLL) {
+            saw_scroll = event.delta_x == 2.0 && event.delta_y == -120.0 &&
+                fabs(event.precise_x - 42.5) < 1e-8 && fabs(event.precise_y - 31.25) < 1e-8;
+        } else if (event.type == PLATFORM_EVENT_MAGNIFY) {
+            saw_magnify = fabs(event.magnification - 0.125) < 1e-8 &&
+                fabs(event.precise_x - 42.5) < 1e-8 && fabs(event.precise_y - 31.25) < 1e-8;
+        }
+    }
+    if (!saw_scroll || !saw_magnify) {
+        (void)fprintf(stderr, "native event smoke: scroll=%d magnify=%d\n", saw_scroll ? 1 : 0, saw_magnify ? 1 : 0);
+        return EXIT_FAILURE;
+    }
+    (void)puts("native scroll: delta=(2,-120) cursor=(42.5,31.25)");
+    (void)puts("native magnify: delta=0.125 cursor=(42.5,31.25)");
+    /* This one-shot process exits immediately; lifecycle teardown is covered
+     * independently by --native-platform-smoke. */
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char *argv[])
 {
     if (argc == 3 && strcmp(argv[1], "--index-replay") == 0) {
@@ -442,6 +472,9 @@ int main(int argc, char *argv[])
     }
     if (argc == 2 && strcmp(argv[1], "--native-metal-replay-smoke") == 0) {
         return native_metal_replay_smoke();
+    }
+    if (argc == 2 && strcmp(argv[1], "--native-navigation-event-smoke") == 0) {
+        return native_navigation_event_smoke();
     }
     if (argc == 2 && strcmp(argv[1], "--tile-cpu-smoke") == 0) {
         return tile_cpu_smoke();

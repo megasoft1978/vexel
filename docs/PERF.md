@@ -261,3 +261,14 @@ frozen commands: Debug/ASan/UBSan CTest 10/10, full suite 177/177, and focused
 TSan 1/1. The original failure transcripts remain in
 `artifacts/WO-M3-03/`; passing command records are under
 `artifacts/runs/WO-M3-03/07d39ea9-fcb5-4dac-b5dc-e90eb80ca2ed/.`
+
+## WO-M3-04 navigation projection workload
+
+The deterministic C test projects 10,000 world-space scene coordinates over
+100 navigation frames (1,000,000 projections) and records FNV-1a 64-bit
+checksum `804ede4d47af0f15`. Navigation and projection functions contain no allocator
+calls and retain no buffers; the count is a static API-path allocation claim,
+not a process-wide allocation measurement. The workload is correctness and
+determinism evidence, not rendering throughput. The replay baseline pins two
+screenshots and three accessible semantic snapshots in
+`tests/ui/navigation-golden/manifest.json`.

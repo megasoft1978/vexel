@@ -1,0 +1,24 @@
+WO-M3-04 AC-5 evidence
+
+python3 app/test_driver/driver.py --navigation-replay --script tests/ui/navigation-replay.jsonl --output-dir .cache/WO-M3-04/acceptance-replay --seed 17
+exit_code: 0
+15 commands replayed deterministically. Outputs: frame-0000.png,
+frame-0001.png, accessibility-0000.json through accessibility-0002.json,
+semantics-0000.json through semantics-0002.json.
+
+python3 tests/ui/verify_navigation.py --actual .cache/WO-M3-04/acceptance-replay --baseline tests/ui/navigation-golden
+exit_code: 0
+navigation golden replay matched: 5 files
+
+python3 ./build/mac-debug/bin/viewer_navigation_test
+exit_code: 0
+projection_items: 1000000; frames: 100; scene items per frame: 10000
+checksum: 804ede4d47af0f15
+allocation count: 0 allocator calls in navigation/projection API paths
+
+Pinned baseline SHA-256 values:
+frame-0000.png 5ba3a50177cc4ab7a569e10b5e2fe723ac5735c1dc422bae428301a44a1453e5
+frame-0001.png eb9f7ab82966398e72ac8eba76fde1a397f4087c462032b407cc18deac53f3f5
+semantics-0000.json b1fe92734296ac8dd2463df365dea1b5a19b195e9e8eb2d5413c293348ad6506
+semantics-0001.json 556b4301f050e285ea443c2a1adb5de7ac059e2a9cd8e7d068929e0f8897fe9c
+semantics-0002.json 8f09bbde0cbb58a11696b05b08a3046bbc9e5e071220debb1edb88abdd521c42

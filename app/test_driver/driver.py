@@ -119,6 +119,9 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
         "text_commit": {"command", "text"},
         "frame": {"command", "delta_ns"},
         "progress": {"command", "percent", "label"},
+        "navigate": {"command", "action", "x", "y", "value"},
+        "index_progress": {"command", "generation", "percent", "phase", "label"},
+        "cancel": {"command"},
         "accessibility": {"command"},
         "screenshot": {"command"},
         "save": {"command"},
@@ -126,6 +129,8 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
     }
     width, height, virtual_ns = 320, 240, 0
     quit_seen = False
+    nav_generation = 0
+    nav_phase = "idle"
     for index, command in enumerate(commands):
         name = command.get("command")
         if not isinstance(name, str) or name not in specs:
@@ -161,6 +166,26 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
         elif name == "progress":
             _integer(command["percent"], "percent", 0, 100)
             _string(command["label"], "label", 256, empty=True)
+        elif name == "navigate":
+            if command["action"] not in {"fit", "wheel", "pinch", "pan"}:
+                raise DriverError("navigation action must be fit, wheel, pinch, or pan")
+            for field in ("x", "y", "value"):
+                if type(command[field]) not in (int, float) or not math.isfinite(command[field]) or abs(command[field]) > 10000:
+                    raise DriverError(f"navigation {field} must be finite and bounded")
+        elif name == "index_progress":
+            generation = _integer(command["generation"], "generation", 0, 0xFFFFFFFFFFFFFFFF)
+            _integer(command["percent"], "percent", 0, 100)
+            if generation < nav_generation or command["phase"] not in {"active", "complete", "canceled", "failed"}:
+                raise DriverError("progress generation or phase is invalid")
+            if generation == nav_generation and nav_phase in {"complete", "canceled", "failed"} and command["phase"] != nav_phase:
+                raise DriverError("terminal progress generation cannot be reopened")
+            if command["phase"] == "active" and command["percent"] >= 100:
+                raise DriverError("active progress must be below 100 percent")
+            nav_generation = generation
+            nav_phase = command["phase"]
+            _string(command["label"], "label", 95, empty=True)
+        elif name == "cancel":
+            pass
         elif name == "quit":
             quit_seen = True
             if index != len(commands) - 1:
@@ -379,13 +404,17 @@ def _json_bytes(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
 
-def replay(commands: list[dict[str, Any]], out: Path, seed: int, *, emit_acks: bool = True) -> None:
+def replay(commands: list[dict[str, Any]], out: Path, seed: int, *, emit_acks: bool = True,
+           navigation_mode: bool = False) -> None:
     width, height, virtual_ns = 320, 240, 0
     document_id = commands[0]["document_id"]
     pointer: dict[str, Any] | None = None
     keys: set[str] = set()
     text_commits: list[str] = []
     progress = {"percent": 0, "label": ""}
+    phase, generation = "idle", 0
+    cancel_requested = False
+    scale, pan_x, pan_y = 1.0, 0.0, 0.0
     screenshot_number = accessibility_number = 0
     for index, command in enumerate(commands):
         name = command["command"]
@@ -405,21 +434,61 @@ def replay(commands: list[dict[str, Any]], out: Path, seed: int, *, emit_acks: b
             virtual_ns += command["delta_ns"]
         elif name == "progress":
             progress = {"percent": command["percent"], "label": command["label"]}
+            phase = "active" if progress["percent"] < 100 else "complete"
+        elif name == "navigate":
+            action, x, y, value = command["action"], command["x"], command["y"], command["value"]
+            if action == "fit":
+                scale = max(0.05, min(64.0, min(width / 400.0, height / 300.0)))
+                pan_x, pan_y = (width - 400.0 * scale) / 2.0, (height - 300.0 * scale) / 2.0
+            elif action == "pan":
+                pan_x += x
+                pan_y += y
+            else:
+                factor = math.exp(-value * 0.001) if action == "wheel" else math.exp(value)
+                next_scale = max(0.05, min(64.0, scale * factor))
+                world_x, world_y = (x - pan_x) / scale, (y - pan_y) / scale
+                pan_x, pan_y, scale = x - world_x * next_scale, y - world_y * next_scale, next_scale
+        elif name == "index_progress":
+            if generation != command["generation"]:
+                cancel_requested = False
+            generation, phase = command["generation"], command["phase"]
+            progress = {"percent": command["percent"], "label": command["label"]}
+            if phase == "complete":
+                progress["percent"] = 100
+        elif name == "cancel":
+            if phase == "active":
+                cancel_requested = True
         elif name == "screenshot":
             filename = f"frame-{screenshot_number:04d}.png"
-            (out / filename).write_bytes(_png(width, height, seed, progress["percent"]))
+            if navigation_mode:
+                png = _png(width, height, seed, progress["percent"])
+                marker = _chunk(b"tEXt", f"scale={scale:.6f};pan={pan_x:.3f},{pan_y:.3f}".encode())
+                png = png[:-12] + marker + png[-12:]
+                (out / filename).write_bytes(png)
+            else:
+                (out / filename).write_bytes(_png(width, height, seed, progress["percent"]))
             screenshot_number += 1
             outputs.append(filename)
         elif name == "accessibility":
             filename = f"accessibility-{accessibility_number:04d}.json"
             tree = {"bounds": {"height": height, "width": width, "x": 0, "y": 0}, "children": [
                 {"bounds": {"height": height, "width": width, "x": 0, "y": 0}, "id": "canvas",
-                 "name": "Document canvas", "role": "canvas", "states": [], "value": document_id},
-                {"bounds": {"height": 16, "width": width, "x": 0, "y": 0}, "id": "progress",
-                 "name": progress["label"], "role": "status", "states": [], "value": progress["percent"]},
+                 "name": f"Zoom {scale * 100:.3f}%" if navigation_mode else "Document canvas", "role": "canvas", "states": [], "value": document_id},
+                {"bounds": {"height": 20 if navigation_mode else 16, "width": width, "x": 0, "y": 0}, "id": "progress",
+                 "name": progress["label"], "role": "progressbar" if navigation_mode else "status", "states": [], "value": progress["percent"]},
             ], "id": "root", "name": "Vexel placeholder", "role": "application",
                 "states": [], "value": "", "virtual_time_ns": virtual_ns}
+            if navigation_mode and phase == "active":
+                tree["children"].append({"bounds": {"height": 28, "width": 96, "x": 0, "y": 20},
+                    "enabled": not cancel_requested, "id": "cancel", "name": "Cancel indexing", "role": "button", "value": ""})
+            if navigation_mode:
+                tree["generation"] = generation
+                tree["phase"] = phase
+                tree["pan"] = {"x": round(pan_x, 3), "y": round(pan_y, 3)}
+                tree["scale"] = round(scale, 6)
             (out / filename).write_bytes(_json_bytes(tree))
+            if navigation_mode:
+                (out / f"semantics-{accessibility_number:04d}.json").write_bytes(_json_bytes(tree))
             accessibility_number += 1
             outputs.append(filename)
         elif name == "save":
@@ -564,6 +633,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--native-platform-smoke", action="store_true")
+    parser.add_argument("--navigation-replay", action="store_true")
     parser.add_argument("--native-metal-smoke", action="store_true")
     parser.add_argument("--repeat-replay", action="store_true")
     parser.add_argument("--native-metal-replay-smoke", action="store_true")
@@ -579,7 +649,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         modes = sum((args.native_metal_smoke, args.native_metal_replay_smoke, args.native_task_smoke,
-                     args.native_platform_smoke, args.repeat_replay))
+                     args.native_platform_smoke, args.repeat_replay, args.navigation_replay))
         if modes > 1:
             raise DriverError("driver modes cannot be combined")
         if args.native_task_smoke:
@@ -608,6 +678,15 @@ def main(argv: list[str] | None = None) -> int:
                 raise DriverError("--script cannot be combined with --native-platform-smoke")
             out = _safe_native_output(args.output_dir)
             native_smoke(out, args.cycles)
+        elif args.navigation_replay:
+            if args.script is None:
+                raise DriverError("--navigation-replay requires --script")
+            out = _safe_output(args.output_dir)
+            script = _safe_script(args.script)
+            commands = read_script(script)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            out.mkdir()
+            replay(commands, out, args.seed, navigation_mode=True)
         else:
             if args.script is None:
                 raise DriverError("--script is required unless --native-platform-smoke is used")

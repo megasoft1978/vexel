@@ -7,8 +7,10 @@
 
 /* AppKit window contract. All calls, including destroy and shutdown, must run
  * on the main thread. The opaque window is owned by the caller until destroy.
- * Pointer coordinates are logical points from the view's top-left; dimensions
- * are backing pixels. Text is UTF-8 and truncated only at a code-point edge. */
+ * Pointer and precise gesture coordinates are logical points from the view's
+ * top-left; dimensions are backing pixels. Scroll deltas are finite AppKit
+ * scrollingDeltaX/Y values, bounded to +/-10000; magnification is finite and
+ * bounded to +/-100. Text is UTF-8 and truncated only at a code-point edge. */
 typedef struct platform_window platform_window;
 
 typedef enum platform_event_type {
@@ -21,6 +23,8 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_POINTER_MOVE,
     PLATFORM_EVENT_POINTER_DOWN,
     PLATFORM_EVENT_POINTER_UP,
+    PLATFORM_EVENT_SCROLL,
+    PLATFORM_EVENT_MAGNIFY,
     PLATFORM_EVENT_CLOSE_REQUEST
 } platform_event_type;
 
@@ -31,6 +35,11 @@ typedef struct platform_event {
     uint32_t pixel_width;
     uint32_t pixel_height;
     double backing_scale;
+    double delta_x;
+    double delta_y;
+    double magnification;
+    double precise_x;
+    double precise_y;
     uint16_t key_code;
     uint32_t modifiers;
     uint8_t button;
