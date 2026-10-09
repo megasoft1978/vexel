@@ -86,6 +86,14 @@ def finite_nonnegative(value: Any, label: str) -> float:
     return value
 
 
+def finite_signed(value: Any, label: str) -> float:
+    if type(value) is int and -(1 << 63) <= value <= (1 << 63) - 1:
+        return value
+    if type(value) is float and math.isfinite(value):
+        return value
+    raise GateError(f"{label} must be a finite signed 64-bit number")
+
+
 def load_json(path: Path, label: str) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"), parse_constant=lambda v: (_ for _ in ()).throw(GateError(f"{label} contains non-finite {v}")))
@@ -366,7 +374,8 @@ def validate_gate_metric(metric: str, item: dict[str, Any]) -> None:
     exact_keys(item, expected, f"result gate metric {metric}")
     for key in ("value", "delta_from_baseline"):
         if item[key] is not None:
-            finite_nonnegative(item[key], f"result gate metric {metric}.{key}")
+            (finite_signed if key == "delta_from_baseline" else finite_nonnegative)(
+                item[key], f"result gate metric {metric}.{key}")
     for key in expected - {"status", "reason", "value", "consecutive_violations", "delta_from_baseline"}:
         finite_nonnegative(item[key], f"result gate metric {metric}.{key}")
     if type(item["consecutive_violations"]) is not int or item["consecutive_violations"] not in (0, 1, 2):

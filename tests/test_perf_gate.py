@@ -163,6 +163,14 @@ class PerfGateTests(unittest.TestCase):
         result_path = gate.ROOT / "artifacts/WO-BOOT-08/perf-gate.json"
         result = gate.load_json(result_path, "test result report")
         gate.validate_result(result)
+        improved = copy.deepcopy(result)
+        metric = improved["gate"]["metrics"]["100MiB.first_preview_p95_ns"]
+        metric["delta_from_baseline"] = -1
+        gate.validate_result(improved)
+        invalid_measurement = copy.deepcopy(improved)
+        invalid_measurement["gate"]["metrics"]["100MiB.first_preview_p95_ns"]["value"] = -1
+        with self.assertRaises(gate.GateError):
+            gate.validate_result(invalid_measurement)
         malformed_result = copy.deepcopy(result)
         malformed_result["schema_version"] = True
         with self.assertRaises(gate.GateError):
