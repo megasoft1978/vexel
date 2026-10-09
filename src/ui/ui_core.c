@@ -31,7 +31,7 @@ static ui_tokens ui_theme_tokens(ui_theme theme)
 
 static uint16_t ui_index(const ui_tree *tree, uint32_t id)
 {
-    if (tree == NULL || id == 0U) return UI_NO_NODE;
+    if (tree == NULL || tree->count > UI_MAX_NODES || id == 0U) return UI_NO_NODE;
     for (size_t index = 0; index < tree->count; index++) {
         if (tree->nodes[index].occupied && tree->nodes[index].spec.id == id) {
             return (uint16_t)index;
@@ -51,8 +51,44 @@ bool ui_tree_init(ui_tree *tree, ui_theme theme)
     if (tree == NULL || (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT)) return false;
     memset(tree, 0, sizeof(*tree));
     tree->tokens = ui_theme_tokens(theme);
-    return ui_tree_add(tree, &(ui_node_spec){UI_ROOT_ID, 0U, UI_AXIS_VERTICAL,
-        0U, 0U, 0U, 0U, tree->tokens.window});
+    ui_node_spec root = {0};
+    root.id = UI_ROOT_ID;
+    root.axis = UI_AXIS_VERTICAL;
+    root.color = tree->tokens.window;
+    root.role = UI_ROLE_WINDOW;
+    root.label = "Editor";
+    root.label_len = 6U;
+    return ui_tree_add(tree, &root);
+}
+
+static bool ui_utf8_valid(const char *text, size_t length)
+{
+    if (length > 0U && text == NULL) return false;
+    size_t index = 0U;
+    while (index < length) {
+        uint8_t first = (uint8_t)text[index];
+        size_t continuation = 0U;
+        uint8_t lower = 0x80U, upper = 0xbfU;
+        if (first < 0x80U) { index++; continue; }
+        if (first >= 0xc2U && first <= 0xdfU) continuation = 1U;
+        else if (first == 0xe0U) { continuation = 2U; lower = 0xa0U; }
+        else if (first >= 0xe1U && first <= 0xecU) continuation = 2U;
+        else if (first == 0xedU) { continuation = 2U; upper = 0x9fU; }
+        else if (first >= 0xeeU && first <= 0xefU) continuation = 2U;
+        else if (first == 0xf0U) { continuation = 3U; lower = 0x90U; }
+        else if (first >= 0xf1U && first <= 0xf3U) continuation = 3U;
+        else if (first == 0xf4U) { continuation = 3U; upper = 0x8fU; }
+        else return false;
+        if (continuation > length - index - 1U) return false;
+        uint8_t second = (uint8_t)text[index + 1U];
+        if (second < lower || second > upper) return false;
+        for (size_t offset = 2U; offset <= continuation; offset++) {
+            uint8_t byte = (uint8_t)text[index + offset];
+            if (byte < 0x80U || byte > 0xbfU) return false;
+        }
+        index += continuation + 1U;
+    }
+    return true;
 }
 
 bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec)
@@ -62,6 +98,10 @@ bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec)
         spec->preferred_width > RASTER_TILE_MAX_AXIS ||
         spec->preferred_height > RASTER_TILE_MAX_AXIS ||
         spec->padding > RASTER_TILE_MAX_AXIS || spec->gap > RASTER_TILE_MAX_AXIS ||
+        (spec->role < UI_ROLE_NONE || spec->role > UI_ROLE_STATUS) || spec->label_len > UI_TEXT_MAX_BYTES ||
+        spec->value_len > UI_TEXT_MAX_BYTES ||
+        !ui_utf8_valid(spec->label, spec->label_len) ||
+        !ui_utf8_valid(spec->value, spec->value_len) ||
         ui_index(tree, spec->id) != UI_NO_NODE) {
         return false;
     }
@@ -73,8 +113,14 @@ bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec)
         if (parent == UI_NO_NODE || tree->nodes[parent].child_count == UINT16_MAX) return false;
     }
     uint16_t added = (uint16_t)tree->count;
-    tree->nodes[added] = (ui_node){.spec = *spec, .first_child = UI_NO_NODE,
+    ui_node *new_node = &tree->nodes[added];
+    *new_node = (ui_node){.spec = *spec, .first_child = UI_NO_NODE,
         .next_sibling = UI_NO_NODE, .occupied = true};
+    new_node->spec.label = NULL;
+    new_node->spec.value = NULL;
+    new_node->spec.state &= ~(uint32_t)UI_STATE_FOCUSED;
+    if (spec->label_len > 0U) memcpy(new_node->label, spec->label, spec->label_len);
+    if (spec->value_len > 0U) memcpy(new_node->value, spec->value, spec->value_len);
     tree->count++;
     if (parent != UI_NO_NODE) {
         ui_node *owner = &tree->nodes[parent];
@@ -160,7 +206,8 @@ static bool ui_layout_node(ui_tree *tree, uint16_t index, ui_rect box, uint32_t 
 
 bool ui_tree_layout(ui_tree *tree, uint32_t width, uint32_t height)
 {
-    if (tree == NULL || tree->count == 0U || tree->laid_out || width == 0U || height == 0U ||
+    if (tree == NULL || tree->count == 0U || tree->count > UI_MAX_NODES ||
+        tree->laid_out || width == 0U || height == 0U ||
         width > RASTER_TILE_MAX_AXIS || height > RASTER_TILE_MAX_AXIS) return false;
     if (!ui_layout_node(tree, 0U, (ui_rect){0U, 0U, width, height}, 0U)) return false;
     tree->laid_out = true;
@@ -206,19 +253,151 @@ static bool ui_render_node(const ui_node *node, raster_tile *tile)
     return true;
 }
 
+static bool ui_render_focus_ring(const ui_node *node, uint32_t accent, raster_tile *tile)
+{
+    if (node->bounds.width < 2U || node->bounds.height < 2U) return true;
+    ui_node edge = *node;
+    edge.spec.color = accent;
+    edge.bounds.height = 1U;
+    if (!ui_render_node(&edge, tile)) return false;
+    edge.bounds.y = node->bounds.y + node->bounds.height - 1U;
+    if (!ui_render_node(&edge, tile)) return false;
+    edge.bounds = (ui_rect){node->bounds.x, node->bounds.y + 1U, 1U, node->bounds.height - 2U};
+    if (!ui_render_node(&edge, tile)) return false;
+    edge.bounds.x = node->bounds.x + node->bounds.width - 1U;
+    return ui_render_node(&edge, tile);
+}
+
 bool ui_tree_render(const ui_tree *tree, raster_tile *out_tile)
 {
-    if (tree == NULL || out_tile == NULL || !tree->laid_out || tree->count == 0U) return false;
+    if (tree == NULL || out_tile == NULL || !tree->laid_out || tree->count == 0U ||
+        tree->count > UI_MAX_NODES) return false;
     *out_tile = (raster_tile){0};
     const ui_rect root = tree->nodes[0].bounds;
     if (!raster_tile_create(root.width, root.height, out_tile)) return false;
     for (size_t index = 0U; index < tree->count; index++) {
         const ui_node *node = &tree->nodes[index];
         if ((node->spec.color & 255U) == 0U) continue;
-        if (!ui_render_node(node, out_tile)) {
+        if (!ui_render_node(node, out_tile) ||
+            ((node->spec.state & UI_STATE_FOCUSED) != 0U &&
+             !ui_render_focus_ring(node, tree->tokens.accent, out_tile))) {
             raster_tile_destroy(out_tile);
             return false;
         }
     }
     return true;
+}
+
+
+static bool ui_role_focusable(ui_role role)
+{
+    return role == UI_ROLE_BUTTON || role == UI_ROLE_CHECKBOX ||
+        role == UI_ROLE_TEXT_FIELD || role == UI_ROLE_SLIDER || role == UI_ROLE_ROW;
+}
+
+static bool ui_node_focusable(const ui_node *node)
+{
+    return node != NULL && node->occupied && ui_role_focusable(node->spec.role) &&
+        (node->spec.state & UI_STATE_DISABLED) == 0U;
+}
+
+bool ui_focus_next(ui_tree *tree, bool reverse)
+{
+    if (tree == NULL || tree->count < 2U) return false;
+    uint16_t current = ui_index(tree, tree->focused_id);
+    size_t start = current == UI_NO_NODE ? (reverse ? tree->count - 1U : 0U) : (size_t)current;
+    for (size_t step = 1U; step <= tree->count; step++) {
+        size_t candidate;
+        if (reverse) candidate = (start + tree->count - (step % tree->count)) % tree->count;
+        else candidate = (start + step) % tree->count;
+        if (ui_node_focusable(&tree->nodes[candidate])) {
+            for (size_t index = 0U; index < tree->count; index++) {
+                tree->nodes[index].spec.state &= ~(uint32_t)UI_STATE_FOCUSED;
+            }
+            tree->nodes[candidate].spec.state |= UI_STATE_FOCUSED;
+            tree->focused_id = tree->nodes[candidate].spec.id;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ui_semantics_snapshot_build(const ui_tree *tree, ui_semantics_snapshot *out_snapshot)
+{
+    if (tree == NULL || out_snapshot == NULL || tree->count > UI_MAX_NODES) return false;
+    memset(out_snapshot, 0, sizeof(*out_snapshot));
+    for (size_t index = 0U; index < tree->count; index++) {
+        const ui_node *source = &tree->nodes[index];
+        if (!source->occupied || source->spec.label_len > UI_TEXT_MAX_BYTES ||
+            source->spec.value_len > UI_TEXT_MAX_BYTES) return false;
+        ui_semantics_node *node = &out_snapshot->nodes[index];
+        node->id = source->spec.id;
+        node->parent_id = source->spec.parent_id;
+        node->role = source->spec.role;
+        node->state = source->spec.state;
+        node->label_len = source->spec.label_len;
+        node->value_len = source->spec.value_len;
+        memcpy(node->label, source->label, node->label_len);
+        memcpy(node->value, source->value, node->value_len);
+    }
+    out_snapshot->count = tree->count;
+    return true;
+}
+
+bool ui_command_registry_init(ui_command_registry *registry)
+{
+    if (registry == NULL) return false;
+    *registry = (ui_command_registry){0};
+    return true;
+}
+
+bool ui_command_register(ui_command_registry *registry, uint32_t command_id,
+                         uint32_t key, uint32_t modifiers, bool enabled)
+{
+    if (registry == NULL || command_id == 0U || key == 0U ||
+        (modifiers & ~(UI_MOD_SHIFT | UI_MOD_COMMAND | UI_MOD_OPTION | UI_MOD_CONTROL)) != 0U ||
+        registry->count >= UI_MAX_COMMANDS) return false;
+    for (size_t index = 0U; index < registry->count; index++) {
+        const ui_command_binding *binding = &registry->bindings[index];
+        if (binding->command_id == command_id ||
+            (binding->key == key && binding->modifiers == modifiers)) return false;
+    }
+    registry->bindings[registry->count++] = (ui_command_binding){command_id, key, modifiers, enabled};
+    return true;
+}
+
+static bool ui_command_lookup(const ui_command_registry *registry, uint32_t key,
+                              uint32_t modifiers, uint32_t *out_command_id)
+{
+    if (registry == NULL || registry->count > UI_MAX_COMMANDS) return false;
+    for (size_t index = 0U; index < registry->count; index++) {
+        const ui_command_binding *binding = &registry->bindings[index];
+        if (binding->enabled && binding->key == key && binding->modifiers == modifiers) {
+            *out_command_id = binding->command_id;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ui_dispatch_key(ui_tree *tree, const ui_command_registry *registry,
+                     uint32_t key, uint32_t modifiers, uint32_t *out_command_id)
+{
+    if (tree == NULL || out_command_id == NULL) return false;
+    *out_command_id = 0U;
+    if (key == UI_KEY_TAB) return ui_focus_next(tree, (modifiers & UI_MOD_SHIFT) != 0U);
+    if (key == UI_KEY_RETURN || key == UI_KEY_SPACE) {
+        uint16_t index = ui_index(tree, tree->focused_id);
+        if (index == UI_NO_NODE || !ui_node_focusable(&tree->nodes[index])) return false;
+        ui_node *focused = &tree->nodes[index];
+        if (focused->spec.role == UI_ROLE_CHECKBOX) {
+            focused->spec.state ^= (uint32_t)UI_STATE_CHECKED;
+            *out_command_id = focused->spec.command_id;
+            return true;
+        }
+        if (focused->spec.command_id == 0U) return false;
+        *out_command_id = focused->spec.command_id;
+        return true;
+    }
+    return ui_command_lookup(registry, key, modifiers, out_command_id);
 }

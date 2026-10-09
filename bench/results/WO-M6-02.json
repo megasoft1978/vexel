@@ -1,0 +1,43 @@
+{
+  "work_order": "WO-M6-02",
+  "machine": "arm64",
+  "os": "macOS-27.0-arm64-arm-64bit",
+  "compiler": "AppleClang 21.0.0",
+  "build_type": "Release",
+  "workload": "5,000,000 focus-next moves across 128-node tree, fresh process",
+  "trials": [
+    {
+      "wall_ns": 402381417,
+      "cpu_ms": 208.732,
+      "ns_per_move": 41.7,
+      "max_rss_bytes": 1916928
+    },
+    {
+      "wall_ns": 194608500,
+      "cpu_ms": 189.133,
+      "ns_per_move": 37.8,
+      "max_rss_bytes": 1916928
+    },
+    {
+      "wall_ns": 216969084,
+      "cpu_ms": 210.71,
+      "ns_per_move": 42.1,
+      "max_rss_bytes": 1916928
+    },
+    {
+      "wall_ns": 199171667,
+      "cpu_ms": 193.176,
+      "ns_per_move": 38.6,
+      "max_rss_bytes": 1916928
+    },
+    {
+      "wall_ns": 204149292,
+      "cpu_ms": 198.049,
+      "ns_per_move": 39.6,
+      "max_rss_bytes": 1916928
+    }
+  ],
+  "median_ns_per_move": 39.6,
+  "median_max_rss_bytes": 1916928,
+  "binary_bytes": 122304
+}

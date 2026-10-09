@@ -7,7 +7,8 @@
 static bool add(ui_tree *tree, uint32_t id, uint32_t parent, uint32_t width,
                 uint32_t height, uint32_t color)
 {
-    ui_node_spec spec = {id, parent, UI_AXIS_HORIZONTAL, width, height, 0U, 4U, color};
+    ui_node_spec spec = {.id = id, .parent_id = parent, .axis = UI_AXIS_HORIZONTAL,
+        .preferred_width = width, .preferred_height = height, .gap = 4U, .color = color};
     return ui_tree_add(tree, &spec);
 }
 
@@ -31,7 +32,7 @@ int main(void)
             second == NULL ? 0U : second->bounds.height);
         return 4;
     }
-    if (ui_tree_add(&tree, &(ui_node_spec){4U, UI_ROOT_ID, UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U})) return 5;
+    if (ui_tree_add(&tree, &(ui_node_spec){.id = 4U, .parent_id = UI_ROOT_ID, .axis = UI_AXIS_VERTICAL})) return 5;
     raster_tile a = {0}, b = {0};
     if (!ui_tree_render(&tree, &a) || !ui_tree_render(&tree, &b) ||
         a.byte_count != b.byte_count || memcmp(a.rgba, b.rgba, a.byte_count) != 0) return 6;
