@@ -6,12 +6,13 @@ usage() {
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
+    printf '%s\n' 'usage: ./dev bench-corpus [--run|--check]'
     printf '%s\n' '       ./dev tsan'
     printf '%s\n' '       ./dev wo-help'
 }
 
 command_name=${1:-help}
-if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ]; then
+if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ]; then
     usage >&2
     exit 2
 fi
@@ -21,7 +22,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|index-bench|perf-gate|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
+    build|test-fast|test|verify|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -113,5 +114,14 @@ case "$command_name" in
     perf-gate)
         shift
         python3 scripts/perf_gate.py "$@"
+        ;;
+    bench-corpus)
+        shift
+        if [ "$#" -eq 0 ]; then set -- --run; fi
+        if [ "${1:-}" = --run ]; then
+            cmake --preset mac-release
+            cmake --build --preset mac-release --target svg_index_bench
+        fi
+        python3 reports/M4/head_to_head.py "$@"
         ;;
 esac

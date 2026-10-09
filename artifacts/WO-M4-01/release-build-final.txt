@@ -1,0 +1,6 @@
+[1/5] Linking C executable bin/shape_fuzz
+[2/5] Linking C executable bin/shape_render_cli
+[3/5] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[4/5] Linking C executable bin/shape_test
+[5/5] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

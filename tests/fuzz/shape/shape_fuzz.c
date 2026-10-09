@@ -59,17 +59,37 @@ int main(int argc, char **argv)
     static const char *parts[] = {"M", "m", "L", "H", "V", "C", "Q", "A", "Z", " ", ",", "1e999", "nan", "-1000001", "0", "1", "2", "3", "4", "9"};
     static const char prefix[] = "<svg width=\"16\" height=\"16\"><path d=\"";
     static const char suffix[] = "\"/></svg>";
+    static const char *shape_cases[] = {
+        "<circle cx=\"8\" cy=\"8\" r=\"4\"/>",
+        "<ellipse cx=\"8\" cy=\"8\" rx=\"4\" ry=\"2\"/>",
+        "<polygon points=\"1,1 8,1 8,8 1,8\"/>",
+        "<polyline points=\"1 1 8 1 8 8 1 8\"/>",
+        "<line x1=\"1\" y1=\"1\" x2=\"8\" y2=\"8\"/>",
+        "<g transform=\"translate(2 3) rotate(15)\"><rect width=\"4\" height=\"4\"/></g>",
+        "<g transform=\"skewX(10)\"><circle r=\"3\"/></g>",
+        "<polygon points=\"1 2 3\"/>"
+    };
+    static const char shape_prefix[] = "<svg width=\"16\" height=\"16\">";
+    static const char shape_suffix[] = "</svg>";
     unsigned long completed = 0;
     for (unsigned long c = 0; c < count; c++) {
         uint8_t input[INPUT_CAP]; size_t n = 0;
-        memcpy(input, prefix, sizeof(prefix)-1U); n = sizeof(prefix)-1U;
-        size_t tokens = (size_t)(next_u32(&state) % 64U) + 1U;
-        for (size_t i = 0; i < tokens; i++) {
-            const char *part = parts[next_u32(&state) % (sizeof(parts)/sizeof(parts[0]))]; size_t len = strlen(part);
-            if (len > INPUT_CAP - n - (sizeof(suffix)-1U)) break;
-            memcpy(input+n, part, len); n += len;
+        if ((next_u32(&state) & 1U) != 0U) {
+            memcpy(input, shape_prefix, sizeof(shape_prefix)-1U); n=sizeof(shape_prefix)-1U;
+            const char *shape=shape_cases[next_u32(&state)%(sizeof(shape_cases)/sizeof(shape_cases[0]))];
+            size_t length=strlen(shape);
+            memcpy(input+n,shape,length);n+=length;
+            memcpy(input+n,shape_suffix,sizeof(shape_suffix)-1U);n+=sizeof(shape_suffix)-1U;
+        } else {
+            memcpy(input, prefix, sizeof(prefix)-1U); n = sizeof(prefix)-1U;
+            size_t tokens = (size_t)(next_u32(&state) % 64U) + 1U;
+            for (size_t i = 0; i < tokens; i++) {
+                const char *part = parts[next_u32(&state) % (sizeof(parts)/sizeof(parts[0]))]; size_t len = strlen(part);
+                if (len > INPUT_CAP - n - (sizeof(suffix)-1U)) break;
+                memcpy(input+n, part, len); n += len;
+            }
+            memcpy(input+n, suffix, sizeof(suffix)-1U); n += sizeof(suffix)-1U;
         }
-        memcpy(input+n, suffix, sizeof(suffix)-1U); n += sizeof(suffix)-1U;
         svg_shape_document doc; svg_shape_diagnostic diag;
         svg_shape_error error = svg_shape_decode((base_bytes){input,n}, &doc, &diag);
         if (error == SVG_SHAPE_ERROR_NONE) {

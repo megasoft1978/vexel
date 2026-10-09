@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M2-05/reference-comparison.json"
+OUT = ROOT / "artifacts/WO-M4-01/reference-comparison.json"
 
 
 def png_rgba(data):
@@ -146,6 +146,16 @@ class ShapeRenderTests(unittest.TestCase):
             "repeated_viewbox_commas": '<svg width="16" height="16" viewBox="0,,0,16,16"/>',
             "rect_missing_width": '<svg width="16" height="16"><rect height="4"/></svg>',
             "rect_missing_height": '<svg width="16" height="16"><rect width="4"/></svg>',
+            "negative_circle_radius": '<svg width="16" height="16"><circle r="-1"/></svg>',
+            "negative_ellipse_radius": '<svg width="16" height="16"><ellipse rx="1" ry="-1"/></svg>',
+            "negative_rect_dimension": '<svg width="16" height="16"><rect width="-1" height="2"/></svg>',
+            "odd_polygon_points": '<svg width="16" height="16"><polygon points="1 2 3"/></svg>',
+            "trailing_polygon_comma": '<svg width="16" height="16"><polygon points="1 1 2 2,"/></svg>',
+            "nan_transform": '<svg width="16" height="16"><g transform="translate(NaN 1)"/></svg>',
+            "trailing_transform_comma": '<svg width="16" height="16"><g transform="translate(1,)"/></svg>',
+            "skew_transform": '<svg width="16" height="16"><rect width="1" height="1" transform="skewX(10)"/></svg>',
+            "transform_overflow": '<svg width="16" height="16"><rect width="1" height="1" transform="matrix(1e300 0 0 1 0 0)"/></svg>',
+            "ellipse_segment_cap": '<svg width="16" height="16"><circle r="1000000"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
             "unsupported_smooth": '<svg width="16" height="16"><path d="M0 0 S1 1 2 2"/></svg>',
         }
@@ -174,12 +184,21 @@ class ShapeRenderTests(unittest.TestCase):
             self.assertEqual(category, "limit")
             report["cases"].append({"name": "flattened_edge_cap", "category": category, "offset": int(offset),
                                     "generated_curve_groups": 65535})
+            source = '<svg width="16" height="16">' + '<g transform="translate(1)"/>' * 4097 + '</svg>'
+            src = temp_path / "transform-count-cap.svg"
+            src.write_text(source)
+            run = subprocess.run([str(binary), str(src), str(temp_path / "transform-count-cap.rgba")], capture_output=True, text=True)
+            self.assertNotEqual(run.returncode, 0)
+            category, offset = run.stderr.strip().split(":", 1)
+            self.assertEqual(category, "limit")
+            report["cases"].append({"name": "transform_count_cap", "category": category, "offset": int(offset),
+                                    "generated_transform_nodes": 4097})
             degenerate = temp_path / "degenerate.svg"
             degenerate.write_text('<svg width="16" height="16"><path d="M2 2 L2 2 Z"/></svg>')
             run = subprocess.run([str(binary), str(degenerate), str(temp_path / "degenerate.rgba")], capture_output=True)
             self.assertEqual(run.returncode, 0)
             report["cases"].append({"name": "degenerate_path", "result": "safe_empty_or_filled"})
-        target = ROOT / "artifacts/WO-M2-05/bounds-and-diagnostics.json"
+        target = ROOT / "artifacts/WO-M4-01/bounds-and-diagnostics.json"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(json.dumps(report, indent=2) + "\n")
 
@@ -244,6 +263,19 @@ class ShapeRenderTests(unittest.TestCase):
                 self.assertNotEqual(run.returncode, 0)
                 self.assertEqual(category, category_expected)
                 self.assertEqual(int(offset), source.index(marker))
+
+    def test_transform_diagnostic_preserves_attribute_value_offset(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        source = b'<svg width="16" height="16"><g transform="skewX(10)"/></svg>'
+        with tempfile.TemporaryDirectory(prefix="vexel-transform-offset-") as temp:
+            input_path = Path(temp) / "offset.svg"
+            output_path = Path(temp) / "offset.rgba"
+            input_path.write_bytes(source)
+            run = subprocess.run([str(binary), str(input_path), str(output_path)], capture_output=True, text=True)
+        category, offset = run.stderr.strip().split(":", 1)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertEqual(category, "unsupported")
+        self.assertEqual(int(offset), source.index(b"skewX"))
 
     def test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr(self):
         script = ROOT / "tests/fuzz/shape/shape_fuzz.py"

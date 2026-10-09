@@ -317,3 +317,39 @@ The gate runs five cold-order and ten warm-order samples on deterministic 10 MiB
 Two comparable runs on Mac Studio Mac17,14 / Apple M5 Max / macOS 27.0 / Apple Clang 21 showed 100 MiB first-preview p95 of 277.57 ms and 274.66 ms against 269.12 ms last-green p95; both observations remain within the 10% relative threshold. Peak child RSS was 137,904,128 and 139,526,144 bytes against 126,959,616 bytes; the repeated >5% change trips the two-run gate. Both absolute targets still pass: 100 MiB first-preview p95 remains below 2 s and peak RSS remains below 500 MiB. The first maximum-step sample had CV above 10% and was marked noisy; the next was healthy. The 10 MiB p95 passed both runs. Only peak RSS repeated its relative breach; its absolute target remains below 500 MiB. The first-preview p95 and maximum owner step remain below their absolute targets. This is a regression signal for review, not evidence of a public speed claim.
 
 The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` harness is 107,136 bytes. `otool -L` records 8 linked dylib/framework entries. Binary/package stretch targets remain report-only; no app bundle exists. Cached pan/zoom event-to-present p95 is unavailable because current UI navigation tests do not time presentation. Full raw runs and gate history are in `artifacts/WO-BOOT-08/` and `bench/results/WO-BOOT-08.json`.
+
+## WO-M4-01 bounded geometry and corpus workload
+
+Debug and Release sizes on arm64 macOS 27.0, Apple M5 Max, Apple Clang 21.0.0
+(`clang-2100.3.34.2`) are: `svgworkbench` 265,312 / 172,416 bytes,
+`svg_index_bench` 107,504 bytes in Release, `shape_render_cli` 149,040 /
+87,872 bytes, and `libvexel_shape.a` 106,320 / 37,672 bytes.
+
+`./dev bench-corpus` now reruns the established fresh-process progressive index
+workload, verifies every external manifest hash, and writes M4-specific reports
+without changing the frozen M3 report. The 58-file report records 2 previewable,
+56 unsupported, no limits, and no crashes. Both previewable files are Natural
+Earth T1 maps, so geometry support alone has not increased whole-file coverage;
+common class CSS, stroke and local references remain future work. For those two
+successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 91.875x
+and the RSS ratio is 33.832x. T2–T4 ratios are unavailable because Vexel has no
+successful outcomes there. These are directional open/index task comparisons
+against the supplied Inkscape CLI baseline, not full-render parity.
+
+The 100 MiB preview gate fails because 0/12 eligible T3 files produced a
+preview. The maximum measured main-thread index step was 0.215 ms, under 100 ms;
+all 12 eligible files passed the existing per-file RSS allowance. The two T1
+first-preview measurements were 4.218 and 3.986 ms; full-index measurements
+were 0.851 and 0.879 ms. Host, binary hash, per-file aggregate results and
+ratios are in `reports/M4/head-to-head.json` and `.md`; raw per-trial data and
+the external manifest pointer stay in ignored `.cache/M4/`.
+
+The filled-shape differential fixtures passed with librsvg
+`rsvg-convert 2.63.2 (Cairo 1.18.6, Pango 1.58.2, HarfBuzz 14.6.0)`. Fixture
+source/output hashes and per-case mismatch counts are in
+`artifacts/WO-M4-01/reference-comparison.json`. The final seeded ASan+UBSan
+shape campaign result is retained at `artifacts/WO-M4-01/fuzz-report.json`;
+it completed 1,000,000 cases in 21.459 seconds with no sanitizer reports,
+crashes, or invariant failures. The runner sandbox blocked offscreen Metal
+access during its first verification attempts; the complete Debug, ASan,
+UBSan, and Python suites pass when run directly in the isolated worktree. The sandbox failure transcript and direct host results are retained in the M4 logs.
