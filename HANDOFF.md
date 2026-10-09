@@ -24,4 +24,4 @@ The corpus remains 2/58 previewable, 56 unsupported, with no limit/crash results
 
 The standard verifier completed its frozen commands but its fixed 250 KB prompt cap rejected the complete artifact diff. The follow-up used a clean worktree, reran every frozen command, and performed a fresh read-only review of the focused implementation/test diff.
 
-Next: prepare and freeze WO-M4-06 (gradients, clipping, and local references) from the roadmap and corpus feature inventory.
+WO-M4-06 revision 1 is frozen READY (spec `e3a8b6dc33c470f4306abc227ba2af985b075c551503a79efbc83ac8a1434e56`) for bounded local references, gradients, and clipping. Next: execute on `wo/WO-M4-06`.
