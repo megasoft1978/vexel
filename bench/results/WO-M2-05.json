@@ -2,7 +2,7 @@
   "work_order": "WO-M2-05",
   "revision": 2,
   "base_sha": "5619a8cb828db7a792b3bd086c83a431dd4b4509",
-  "acceptance_status": "candidate_ready_for_fresh_review",
+  "acceptance_status": "accepted_and_merged",
   "machine": "Apple Silicon arm64, macOS 27.0",
   "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
   "reference_renderer": {
@@ -92,7 +92,9 @@
     "asan_ctest": "pass (5/5)",
     "ubsan_ctest": "pass (5/5)",
     "release_build": "pass",
-    "implementation_commit": null
+    "implementation_commit": null,
+    "independent_review": "pass (fresh read-only, zero findings)",
+    "verifier_run": "artifacts/runs/WO-M2-05/verify-449522aa-185a-41f2-9b91-abde398ee3c0"
   },
   "evidence": {
     "comparison": "artifacts/WO-M2-05/reference-comparison.json",
@@ -108,5 +110,6 @@
     "render_benchmark": "artifacts/WO-M2-05/render-benchmark.json",
     "sanitizer_stderr": "artifacts/WO-M2-05/fuzz-report.stderr.txt"
   },
-  "spec_sha256": "35d71223cc2beb5818d10747a0e7483ba388e428e3fb1c6482192839093da73a"
+  "spec_sha256": "35d71223cc2beb5818d10747a0e7483ba388e428e3fb1c6482192839093da73a",
+  "implementation_commit": "4a105eb6fd8633a488ee61f8b15f24387b0e0463"
 }
