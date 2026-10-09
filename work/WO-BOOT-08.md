@@ -1,12 +1,12 @@
 ---
 id: WO-BOOT-08
-revision: 1
+revision: 2
 status: READY
 milestone: M3
 owner: sonnet-5.5
 executor: codex-gpt-6-luna
 base_sha: 2b0499eac241e35e7e88ff7d66b5ac6843b7544d
-spec_sha256: bd4e30c4282f604a1afa319c5d1b443d6af975694d2c3d8066acabf644fc6aeb
+spec_sha256: 78a94a34531d8dc568d546cd15ea70257e3358fc581aa16b1f8559956c399fa6
 parallel_safe: false
 network: false
 ---
@@ -14,8 +14,8 @@ network: false
 Add a macOS-only local performance gate that reports current viewer/index size and performance evidence against a pinned last-green baseline, while failing only after the same metric violates its limit in two consecutive comparable runs.
 
 # Context pointers
-- Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/PERF.md`, `docs/research-r4/00-verdict-and-changes.md`, `docs/research-r4/05-revised-roadmap.md`, `docs/research-r3/plan/06-benchmark-and-quality.md`, `bench/generate/README.md`, `bench/generate/index_bench.py`, `scripts/README.md`, `dev`.
-- Relevant ADRs: `docs/adr/0001-product-and-platform-locks.md`.
+- Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/PERF.md`, `docs/research-r4/00-verdict-and-changes.md`, `docs/research-r4/05-revised-roadmap.md`, `docs/research-r3/plan/06-benchmark-and-quality.md`, `bench/generate/README.md`, `bench/generate/index_bench.py`, `scripts/README.md`, `dev`. Revision 2 supersedes revision 1 only to resolve the path-guard overlap recorded in ADR-0009; implementation acceptance and allowlist are unchanged.
+- Relevant ADRs: `docs/adr/0001-product-and-platform-locks.md`, `docs/adr/0009-boot-08-script-allowlist.md`.
 - Existing last-green evidence: `bench/results/WO-M3-01.json`, `bench/results/WO-M3-02.json`, `bench/results/WO-M3-03.json`; use M3-01's same-host 10/100 MiB indexing trial data for comparable first-preview, maximum owner-step, and peak-RSS metrics.
 - Frozen tests/oracles: existing `tests/test_svg_index.py`, M3-01 benchmark report and corpus/generated fixture hashes; do not edit them.
 - External docs: none.
@@ -43,7 +43,7 @@ Add a macOS-only local performance gate that reports current viewer/index size a
 - `ledger.jsonl`
 
 # Protected paths
-- `work/**` except this active work order; `OWNER-DIRECTIVES.md`; `docs/adr/**`; `docs/schemas/**`; `tests/oracle/**`; `tests/golden/**`; `bench/corpus/**`; all prior benchmark results and artifacts; all of `scripts/**` except `scripts/perf_gate.py` and `scripts/README.md`; all paths outside the allowlist.
+- `work/**` except this active work order; `OWNER-DIRECTIVES.md`; `docs/adr/**`; `docs/schemas/**`; `tests/oracle/**`; `tests/golden/**`; `bench/corpus/**`; all prior benchmark results and artifacts; all other paths outside the exact allowlist. `scripts/perf_gate.py` and `scripts/README.md` are allowed explicitly; do not touch any other `scripts/` path.
 - Do not rewrite `bench/results/WO-M3-01.json`, any prior benchmark result, or any frozen fixture/oracle.
 
 # Required implementation
