@@ -9,8 +9,8 @@ public document cleanup.
 
 `<defs>` is non-rendering and `<symbol>` is non-rendering unless reached by a
 live `<use>`. Local `href="#id"` and root-bound `xlink:href="#id"` references
-traverse the original token array at the use position. No source subtree,
-rewritten document, or source map is allocated. A fixed-capacity ID table
+traverse the original token array at the use position. The use path allocates
+no source subtree copy, rewritten document, or source map. A fixed-capacity ID table
 supports up to 65,536 unique IDs. Use reference depth is capped at 16, instances
 at 65,536, each traversed reference span at 64 KiB, aggregate reference-span
 visits at 1 MiB, active element visits at 4,194,304, and transform operations

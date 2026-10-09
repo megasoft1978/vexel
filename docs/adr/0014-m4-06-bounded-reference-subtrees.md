@@ -29,11 +29,14 @@ equality before and after decode/render.
 
 The `<use>` implementation now traverses the already-tokenized original source
 inside shape decode. It does not copy referenced subtrees, so its per-reference
-copy usage is zero. The same 64 KiB per-reference and 1 MiB per-job values cap
-the source spans visited through references, bounding repeated traversal. The
-clip and paint-server paths continue to read original token spans. This
-direct-traversal implementation supersedes the contiguous-slice approach
-described above for this work order.
+copy usage is zero. The 64 KiB per-reference and 1 MiB per-job values cap the
+source spans visited by `<use>`, bounding repeated traversal. Paint servers
+read original token spans. The clip module continues to copy only the bounded
+clip-child span into scratch behind a generated wrapper; that wrapper syntax
+is at most 198 bytes, each child span at most 64 KiB, and clip scratch copies
+at most 512 KiB per job. The original document remains borrowed and unchanged.
+This direct-traversal implementation supersedes full-document rewriting for
+`<use>` while retaining the bounded clip decoding path.
 
 The replacement limits are a fixed 131,072-slot ID index (512 KiB), at most
 65,536 IDs and use instances, reference depth 16, active element visits

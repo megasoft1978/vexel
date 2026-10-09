@@ -1,13 +1,15 @@
 # Blockers
 
-No active blockers.
+No implementation blocker remains for AC-9. Full machine acceptance is still
+open because this host session cannot provide the offscreen Metal device or
+queue required by the existing `index-replay` CTest.
 
-## Resolved: WO-M4-06 revision 2 acceptance and revision 4 review findings
+## Resolved: WO-M4-06 revision 2 acceptance block
 
-Planner authority recorded in ADR-0014 and WO-M4-06 revision 4 allows copied
-reference subtrees up to 64 KiB each and 1 MiB total per render job, with 512
-KiB sub-budgets for `<use>` and clipping. Revision 4 also fixes omitted SVG
-`stop-color` to its initial black value. Candidate-specific Debug/Release,
-ASan/UBSan, 1,000,000-case fuzz, 35 librsvg fixture, 58-file corpus, and
-21-trial benchmark evidence is under `artifacts/WO-M4-06/`. Independent fresh
-review and merge are pending.
+Revision 2's source-copy restriction was resolved by the planner amendment and
+later frozen revisions. The current AC-9 repair replaces the former bounded
+copy path with direct traversal of original tokens; 64 KiB per-reference and
+1 MiB per-job source-span limits remain as traversal-work bounds. It also
+retains depth 16, a 65,536-use cap, and fixed ID-index allocation. The source
+and allocation evidence is in `artifacts/WO-M4-06/reference-matrix.json`.
+Fresh read-only review remains pending.

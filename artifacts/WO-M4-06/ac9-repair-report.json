@@ -1,0 +1,76 @@
+{
+  "work_order": "WO-M4-06 revision 4",
+  "source_commit": "d6dba56184d3a7530ca0dcc0186d9c9b1f45d657",
+  "status": "incomplete",
+  "acceptance": {
+    "AC-1": {
+      "debug_configure": "pass",
+      "debug_build": "pass",
+      "debug_ctest": "11/12; index-replay blocked by unavailable offscreen Metal device/queue"
+    },
+    "AC-2": {
+      "focused_shape_test": "pass",
+      "focused_python_render_tests": "16/16 pass",
+      "source_sha256_before_after": "pass",
+      "bounded_allocation_assertions": "pass"
+    },
+    "AC-3": {
+      "librsvg_fixtures": "39/39 pass; unchanged thresholds; zero interior diffs; max shared RGB delta 1"
+    },
+    "AC-4": {
+      "asan_ctest": "11/12; same offscreen Metal failure",
+      "ubsan_ctest": "11/12; same offscreen Metal failure",
+      "verify": "11/12 CTest; same offscreen Metal failure",
+      "release_configure_build": "pass",
+      "sanitizer_shape_test_binaries": "pass"
+    },
+    "AC-5": {
+      "fuzz": "1,000,000 ASan+UBSan cases; 0 crashes, reports, invariant failures"
+    },
+    "AC-6": {
+      "benchmarks": "5 workloads x 21 trials; stable hashes; median/p95/throughput/RSS recorded; frozen-base basic-solid comparison; no speed claim"
+    },
+    "AC-7": {
+      "corpus": "58 files / 116 trials; 2 previewable, 56 unsupported, 0 limit, 0 crash; manifest and Inkscape baseline hashes retained"
+    },
+    "AC-8": {
+      "work_order_validation": "pass",
+      "ledger_validation": "pass; 388 entries",
+      "json_validation": "pass",
+      "diff_check": "pass before final evidence edits; rerun pending",
+      "runner_path_guard": "pass on 61 implementation paths",
+      "fresh_read_only_review": "pending",
+      "git_diff_check": "pass after evidence edits"
+    },
+    "AC-9": {
+      "direct_original_token_traversal": "pass",
+      "rewritten_document_bytes": 0,
+      "source_map_bytes": 0,
+      "additional_token_arrays": 0,
+      "fixed_reference_index_bytes": 524288,
+      "reference_span_limits": "64 KiB per reference; 1 MiB aggregate per decode; limit diagnostic tested",
+      "depth_instance_cycle_missing_external": "covered and passing"
+    }
+  },
+  "commands": {
+    "cmake --preset mac-debug": "pass",
+    "cmake --build --preset mac-debug": "pass",
+    "ctest --test-dir build/mac-debug --output-on-failure": "11/12; index-replay offscreen Metal unavailable",
+    "python3 -m unittest tests.test_shape_render": "pass; 16 tests",
+    "build/mac-debug/bin/shape_test": "pass",
+    "./dev shape-fuzz --duration 90 --seed 20261010 --output artifacts/WO-M4-06/fuzz-report.json": "pass; 1,000,000 cases in 27.82 seconds",
+    "./dev asan": "11/12; index-replay offscreen Metal unavailable",
+    "./dev ubsan": "11/12; index-replay offscreen Metal unavailable",
+    "cmake --preset mac-release": "pass",
+    "cmake --build --preset mac-release": "pass",
+    "./dev verify": "11/12 CTest; index-replay offscreen Metal unavailable",
+    "./dev bench-corpus --run": "pass; 58 files and 116 trials",
+    "./dev bench-corpus --check": "pass",
+    "python3 -m json.tool reports/M4/head-to-head.json": "pass",
+    "python3 -m json.tool bench/results/WO-M4-06.json": "pass",
+    "python3 scripts/ledger.py validate ledger.jsonl": "pass; 388 entries",
+    "python3 scripts/wo_validate.py WO-M4-06 --ready": "pass",
+    "git diff --check": "pass after evidence edits"
+  },
+  "summary": "AC-9 source-backed traversal repair and its focused bounds, source-preservation, sanitizer-shape, differential, fuzz, benchmark, corpus, and path-scope evidence pass. Full work-order acceptance remains incomplete because the existing index-replay CTest cannot acquire offscreen Metal in this host session; a fresh read-only review remains pending."
+}

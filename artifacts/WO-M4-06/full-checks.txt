@@ -1,13 +1,53 @@
-WO-M4-06 revision 4 final machine checks
-Candidate: 3396d8109223de9018956104b066d8d0a5255ace (README-only commit after renderer source e53c760436c0d16afb9b15f7e8adaf6967dc9a2a).
+Preset CMake variables:
 
-- Debug configure/build + CTest: pass, 12/12 (`debug-configure.txt`, `debug-build.txt`, `debug-ctest.txt`).
-- `./dev verify`: pass, CTest 12/12, Python 199/199, native smoke/replay (`verify.txt`).
-- Focused renderer/CSS tests: pass, 16/16; 35 librsvg differential fixtures pass the unchanged thresholds (`reference-tests.txt`, `reference-comparison.json`).
-- ASan CTest: pass, 12/12; UBSan CTest: pass, 12/12 (`asan.txt`, `ubsan.txt`).
-- Release configure/build: pass (`release-configure.txt`, `release-build.txt`).
-- Shape fuzz: 1,000,000 ASan+UBSan cases, 93.495 s, zero crashes/invariant failures/reports (`fuzz-report.json`, `fuzz-run.txt`).
-- Corpus: 58 files / 116 trials, 2 previewable / 56 unsupported / 0 limit / 0 crash; source manifest and baseline validation pass (`corpus-run.txt`, `corpus-check.txt`).
-- Raster benchmark: five workloads, 21 trials each, stable hashes, RSS 3,112,960–3,211,264 B (`paint-benchmark.json`).
-- Work order revision 4, ledger, JSON, and diff checks pass (`work-order-validation.txt`, `ledger-validation.txt`).
-- Independent read-only review: pending. No merge claim until it passes.
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
+      Start  1: cli-version
+ 1/12 Test  #1: cli-version ......................   Passed    0.01 sec
+      Start  2: base-contract
+ 2/12 Test  #2: base-contract ....................   Passed    0.01 sec
+      Start  3: xml-tokenizer
+ 3/12 Test  #3: xml-tokenizer ....................   Passed    0.09 sec
+      Start  4: source-save
+ 4/12 Test  #4: source-save ......................   Passed    0.00 sec
+      Start  5: shape-render
+ 5/12 Test  #5: shape-render .....................   Passed    0.08 sec
+      Start  6: css-cascade
+ 6/12 Test  #6: css-cascade ......................   Passed    0.00 sec
+      Start  7: svg-index
+ 7/12 Test  #7: svg-index ........................   Passed    0.11 sec
+      Start  8: viewer-navigation
+ 8/12 Test  #8: viewer-navigation ................   Passed    0.01 sec
+      Start  9: svg-token-stream-budget
+ 9/12 Test  #9: svg-token-stream-budget ..........   Passed    0.02 sec
+      Start 10: index-replay
+10/12 Test #10: index-replay .....................***Failed    0.11 sec
+index replay preview: offscreen Metal device or queue unavailable
+progress: 10%
+progress: 50%
+progress: 90%
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=8632000
+stale_generation_rejected=true
+canceled_worker_rejected=true
+preview_state: submitted=true finished=true ready=true
+
+      Start 11: spatial-cache
+11/12 Test #11: spatial-cache ....................   Passed    0.03 sec
+      Start 12: job-snapshot
+12/12 Test #12: job-snapshot .....................   Passed    0.04 sec
+
+92% tests passed, 1 tests failed out of 12
+
+Total Test time (real) =   0.53 sec
+
+The following tests FAILED:
+	 10 - index-replay (Failed)
+Errors while running CTest

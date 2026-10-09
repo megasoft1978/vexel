@@ -322,28 +322,30 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 
 ## M4 cumulative shape and corpus workload
 
-Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 341696 / 224240 bytes; Release `svg_index_bench`: 159408 bytes;
-Debug/Release `shape_render_cli`: 225472 / 139808 bytes; Debug/Release `libvexel_shape.a`: 302520 / 106648 bytes.
+Measured on arm64 macOS 27.0, unavailable, Apple clang version 21.0.0 (clang-2100.3.34.2).
+Debug/Release `svgworkbench`: 343424 / 224896 bytes; Release `svg_index_bench`: 160064 bytes;
+Debug/Release `shape_render_cli`: 227168 / 123952 bytes; Debug/Release `libvexel_shape.a`: 306072 / 104464 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 39.217x and RSS ratio of 32.824x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 37.640x and RSS ratio of 33.234x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 18.516 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 9.688 ms, full index 0.999 ms; natural-earth-world-map-countries: first preview 9.525 ms, full index 1.106 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.812 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 9.888 ms, full index 0.893 ms; natural-earth-world-map-countries: first preview 10.131 ms, full index 1.125 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
 ## WO-M4-06 candidate status
 
-Revision 4 fixes SVG's default `stop-color` behavior and records planner-approved
-bounded subtree-copy limits: 64 KiB per reference and 1 MiB combined per render
-job (512 KiB each for `<use>` and clipping). Candidate-specific tests cover 35
-librsvg fixtures, source SHA preservation, copy limits, and gradient samples.
-Implementation evidence is tied to source revision `e53c760`; a later
-README-only commit records the default. Final review and merge status are
-tracked in `STATE.md`.
+The AC-9 repair traverses live `<use>` references directly from the original
+XML token array. The `<use>` path allocates no rewritten document, source map,
+or copied subtree. The original 64 KiB per-reference and 1 MiB per-job values now cap
+reference-span traversal work; depth, instance, element-visit, and transform
+caps are recorded in `artifacts/WO-M4-06/reference-matrix.json`. The decoder's
+pre-existing source-sized token array is the only source-proportional token
+allocation. Tests assert that allocation shape on small and 128 KiB padded
+inputs and verify source SHA preservation. Current review and full-suite status
+are tracked in `STATE.md`.
 
 WO-M4-04 corpus follow-up retains 58 unchanged source hashes and all 116 trials.
 Only `natural-earth-world-map-blank` and `natural-earth-world-map-countries`
@@ -447,27 +449,37 @@ full-render parity.
 
 ## WO-M4-06 bounded references, gradients, and clipping
 
-Five 512×512 Release raster workloads ran 21 fresh-process trials each on arm64
-macOS 27.0 with Apple clang 21.0.0. Candidate median/p95 latency was 9.748/182.043
-ms for solid fill (one startup outlier), 9.569/10.847 ms for local `<use>`,
-10.336/12.610 ms for linear gradients, 10.353/12.554 ms for radial gradients,
-and 10.135/11.840 ms for clipping. Peak RSS ranged from 3,112,960 to 3,211,264
-bytes; all output hashes were stable. The frozen-base solid workload measured
-8.663/10.279 ms median/p95, so the candidate median is 12.5% slower. Its peak
-RSS is unavailable. New workloads have no comparable base. No public performance
-claim is made. Raw trials and hashes are in `artifacts/WO-M4-06/paint-benchmark.json`
-and `bench/results/WO-M4-06.json`.
+The Release paint benchmark ran five 512×512 workloads with 21 fresh-process
+trials each on arm64 macOS 27.0 using Apple clang 21.0.0. Candidate median/p95
+latencies were 7.539/8.861 ms for solid fill, 8.059/8.934 ms for local `<use>`,
+8.952/12.499 ms for linear gradients, 8.489/9.201 ms for radial gradients,
+and 8.150/9.383 ms for clipping. Maximum process RSS ranged from 3,047,424 to
+3,129,344 bytes and every output hash was stable. A separate frozen-base
+`81f2008` solid workload measured 7.222/10.649 ms median/p95; its peak RSS is
+unavailable because that CLI has no metrics option. The measurements include
+process startup, decode, rasterization, and output. They do not support a
+performance claim. Full trial values and hashes are in
+`artifacts/WO-M4-06/paint-benchmark.json` and `bench/results/WO-M4-06.json`.
 
-The independent `rsvg-convert 2.63.2` comparison covers 35 fixtures. Every
-fixture passes the existing raw jointly-covered RGB and edge-pixel thresholds;
-maximum jointly-covered RGB delta is 1 and edge differences stay within the
-120-pixel limit. The set includes reference expansion, clip units, gradient
-endpoints/interpolation, user-space defaults, omitted `stop-color` (SVG initial
-black), and CSS paint. Source/output hashes are recorded in
+The differential set contains 39 fixtures rendered with librsvg
+`rsvg-convert 2.63.2`. All pass the unchanged thresholds: zero interior
+differences, maximum jointly covered straight-RGB delta 1, and at most 120 edge
+difference pixels. It covers nested and CSS-inherited `<use>`, symbol viewBox
+mapping, use of gradient/clip definitions, gradients and their defaults, and
+clipping. The source/output hashes are in
 `artifacts/WO-M4-06/reference-comparison.json`.
 
-The 58-file real corpus has 2 successful open/index previews and 56 unsupported
-outcomes (T1 2/12; T2 0/17; T3 0/26; T4 0/3), with no limits or crashes. This
-harness still measures the open/index path, not the renderer. The 100 MiB
-first-preview wedge remains unmet; maximum main-thread step and RSS gates pass.
-WO-M4-06b wires partial raster output into the viewer and corpus path.
+The 58-file corpus run retained the supplied manifest and Inkscape baseline
+hashes across 116 trials. It produced 2 successful open/index previews and 56
+unsupported outcomes (T1 2/12; T2 0/17; T3 0/26; T4 0/3), with no limits or
+crashes. The 100 MiB first-preview gate remains unmet; maximum main-thread step
+and the per-file RSS gates pass. This is open/index evidence, not full-render
+parity.
+
+The focused shape test passes in Debug, ASan+UBSan, and UBSan builds; the 16
+focused Python render tests and all 39 differential fixtures pass. Full Debug,
+ASan, UBSan, and `./dev verify` CTest runs each report 11/12 because this host
+session cannot create an offscreen Metal device or queue for `index-replay`.
+The sanitized million-case shape fuzz run completed with zero crashes,
+sanitizer reports, or invariant failures. Exact transcripts are in
+`artifacts/WO-M4-06/`.

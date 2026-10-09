@@ -1,7 +1,7 @@
 # Real-corpus head-to-head
 
 Corpus: `/Users/megasoft78/Desktop/Freelance/vexel-corpus-real` (58 files), manifest SHA-256 `9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30`.
-Baseline: Inkscape 1.4.4, SHA-256 `3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba`. Host: macOS 27.0, Apple M5 Max / arm64.
+Baseline: Inkscape 1.4.4, SHA-256 `3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba`. Host: macOS 27.0, unavailable / arm64.
 
 This measures open/index and first supported preview. It does not measure full-render parity. Inkscape rows use the supplied CLI baseline protocol, which differs by tier and is not an identical task.
 
@@ -9,64 +9,64 @@ This measures open/index and first supported preview. It does not measure full-r
 
 | ID | Tier | Bytes | Outcome | Vexel first preview (ms) | Full index (ms) | Max step (ms) | Vexel peak RSS (bytes) | Inkscape seconds | Inkscape peak RSS (bytes) | Trials |
 |---|---:|---:|---|---:|---:|---:|---:|---:|---:|---|
-| `generated-cad_t1` | T1 | 997801 | unsupported | — | 6.234 | 0.110 | 15106048 | 1.810 (PASS) | 461029376 | unsupported,unsupported,unsupported |
-| `generated-cad_t2` | T2 | 10592198 | unsupported | — | 63.079 | 0.218 | 120979456 | 5.204 (PASS) | 3414999040 | unsupported,unsupported,unsupported |
-| `generated-cad_t3` | T3 | 109719583 | unsupported | — | — | 0.300 | 270385152 | 86.352 (PASS) | 6987595776 | unsupported |
-| `generated-cnc_t1` | T1 | 990772 | unsupported | — | 5.599 | 0.100 | 12582912 | 1.135 (PASS) | 459276288 | unsupported,unsupported,unsupported |
-| `generated-cnc_t2` | T2 | 10162188 | unsupported | — | 50.699 | 0.217 | 93847552 | 5.099 (PASS) | 3554623488 | unsupported,unsupported,unsupported |
-| `generated-cnc_t3` | T3 | 102580014 | unsupported | — | — | 0.188 | 296828928 | 120.422 (PASS) | 11081990144 | unsupported |
-| `generated-embedded_t1` | T1 | 912235 | unsupported | — | 4.517 | 0.076 | 8044544 | 0.469 (PASS) | 201703424 | unsupported,unsupported,unsupported |
-| `generated-embedded_t2` | T2 | 9371925 | unsupported | — | 42.050 | 0.188 | 50020352 | 2.207 (PASS) | 764624896 | unsupported,unsupported,unsupported |
-| `generated-embedded_t3` | T3 | 93970295 | unsupported | — | — | 0.233 | 226000896 | 105.567 (PASS) | 7058604032 | unsupported |
-| `generated-giant_path_t1` | T1 | 920236 | unsupported | — | 3.321 | 0.061 | 2981888 | 0.721 (PASS) | 171704320 | unsupported,unsupported,unsupported |
-| `generated-giant_path_t2` | T2 | 8340030 | unsupported | — | 27.015 | 0.062 | 10403840 | 8.389 (PASS) | 429801472 | unsupported,unsupported,unsupported |
-| `generated-giant_path_t3` | T3 | 91963466 | unsupported | — | 286.913 | 0.078 | 94027776 | 7.825 (PASS) | 6721667072 | unsupported |
-| `generated-giant_path_t4` | T4 | 827663466 | unsupported | — | 2698.387 | 0.176 | 829734912 | 150.276 (PASS) | 13627867136 | unsupported |
-| `generated-inkscape_t1` | T1 | 979796 | unsupported | — | 5.562 | 0.228 | 13615104 | 58.114 (PASS) | 585383936 | unsupported,unsupported,unsupported |
-| `generated-inkscape_t2` | T2 | 10062253 | unsupported | — | 51.634 | 0.203 | 102596608 | 180.212 (FAIL / TIMEOUT) | 3929587712 | unsupported,unsupported,unsupported |
-| `generated-inkscape_t3` | T3 | 100883678 | unsupported | — | — | 0.193 | 295157760 | 302.047 (FAIL / TIMEOUT) | — | unsupported |
-| `generated-map_t1` | T1 | 1310972 | unsupported | — | 5.114 | 0.064 | 4571136 | 0.706 (PASS) | 179191808 | unsupported,unsupported,unsupported |
-| `generated-map_t2` | T2 | 14191241 | unsupported | — | 50.658 | 0.071 | 29212672 | 1.200 (PASS) | 491094016 | unsupported,unsupported,unsupported |
-| `generated-map_t3` | T3 | 150627424 | unsupported | — | 492.788 | 0.163 | 267468800 | 11.323 (PASS) | 3491594240 | unsupported |
-| `generated-nested_t1` | T1 | 978645 | unsupported | — | — | 0.069 | 3194880 | 133.647 (PASS) | 372523008 | unsupported,unsupported,unsupported |
-| `generated-nested_t2` | T2 | 9430992 | unsupported | — | — | 0.083 | 11649024 | 180.061 (FAIL / TIMEOUT) | 672284672 | unsupported,unsupported,unsupported |
+| `generated-cad_t1` | T1 | 997801 | unsupported | — | 8.363 | 0.149 | 15876096 | 1.810 (PASS) | 461029376 | unsupported,unsupported,unsupported |
+| `generated-cad_t2` | T2 | 10592198 | unsupported | — | 62.450 | 0.240 | 120963072 | 5.204 (PASS) | 3414999040 | unsupported,unsupported,unsupported |
+| `generated-cad_t3` | T3 | 109719583 | unsupported | — | — | 0.197 | 270368768 | 86.352 (PASS) | 6987595776 | unsupported |
+| `generated-cnc_t1` | T1 | 990772 | unsupported | — | 4.745 | 0.084 | 13336576 | 1.135 (PASS) | 459276288 | unsupported,unsupported,unsupported |
+| `generated-cnc_t2` | T2 | 10162188 | unsupported | — | 46.417 | 0.161 | 93847552 | 5.099 (PASS) | 3554623488 | unsupported,unsupported,unsupported |
+| `generated-cnc_t3` | T3 | 102580014 | unsupported | — | — | 0.165 | 296812544 | 120.422 (PASS) | 11081990144 | unsupported |
+| `generated-embedded_t1` | T1 | 912235 | unsupported | — | 3.952 | 0.070 | 8044544 | 0.469 (PASS) | 201703424 | unsupported,unsupported,unsupported |
+| `generated-embedded_t2` | T2 | 9371925 | unsupported | — | 38.067 | 0.171 | 48431104 | 2.207 (PASS) | 764624896 | unsupported,unsupported,unsupported |
+| `generated-embedded_t3` | T3 | 93970295 | unsupported | — | — | 0.812 | 224411648 | 105.567 (PASS) | 7058604032 | unsupported |
+| `generated-giant_path_t1` | T1 | 920236 | unsupported | — | 2.727 | 0.054 | 2981888 | 0.721 (PASS) | 171704320 | unsupported,unsupported,unsupported |
+| `generated-giant_path_t2` | T2 | 8340030 | unsupported | — | 25.578 | 0.051 | 10403840 | 8.389 (PASS) | 429801472 | unsupported,unsupported,unsupported |
+| `generated-giant_path_t3` | T3 | 91963466 | unsupported | — | 288.524 | 0.059 | 94027776 | 7.825 (PASS) | 6721667072 | unsupported |
+| `generated-giant_path_t4` | T4 | 827663466 | unsupported | — | 2483.479 | 0.214 | 829718528 | 150.276 (PASS) | 13627867136 | unsupported |
+| `generated-inkscape_t1` | T1 | 979796 | unsupported | — | 4.893 | 0.194 | 13615104 | 58.114 (PASS) | 585383936 | unsupported,unsupported,unsupported |
+| `generated-inkscape_t2` | T2 | 10062253 | unsupported | — | 49.786 | 0.207 | 102596608 | 180.212 (FAIL / TIMEOUT) | 3929587712 | unsupported,unsupported,unsupported |
+| `generated-inkscape_t3` | T3 | 100883678 | unsupported | — | — | 0.204 | 296714240 | 302.047 (FAIL / TIMEOUT) | — | unsupported |
+| `generated-map_t1` | T1 | 1310972 | unsupported | — | 5.063 | 0.100 | 4571136 | 0.706 (PASS) | 179191808 | unsupported,unsupported,unsupported |
+| `generated-map_t2` | T2 | 14191241 | unsupported | — | 47.626 | 0.064 | 29212672 | 1.200 (PASS) | 491094016 | unsupported,unsupported,unsupported |
+| `generated-map_t3` | T3 | 150627424 | unsupported | — | 486.139 | 0.174 | 267468800 | 11.323 (PASS) | 3491594240 | unsupported |
+| `generated-nested_t1` | T1 | 978645 | unsupported | — | — | 0.069 | 3162112 | 133.647 (PASS) | 372523008 | unsupported,unsupported,unsupported |
+| `generated-nested_t2` | T2 | 9430992 | unsupported | — | — | 0.074 | 11632640 | 180.061 (FAIL / TIMEOUT) | 672284672 | unsupported,unsupported,unsupported |
 | `generated-nested_t3` | T3 | 93956332 | unsupported | — | — | 0.072 | 96157696 | 300.085 (FAIL / TIMEOUT) | — | unsupported |
-| `generated-science_t1` | T1 | 1374397 | unsupported | — | 6.165 | 0.099 | 9879552 | 0.802 (PASS) | 298762240 | unsupported,unsupported,unsupported |
-| `generated-science_t2` | T2 | 14116675 | unsupported | — | 57.454 | 0.203 | 66895872 | 4.967 (PASS) | 1648328704 | unsupported,unsupported,unsupported |
-| `generated-science_t3` | T3 | 117860153 | unsupported | — | — | 13.735 | 270155776 | 30.565 (PASS) | 8231960576 | unsupported |
-| `generated-science_t4` | T4 | 635202435 | unsupported | — | — | 0.228 | 785924096 | 302.239 (FAIL / TIMEOUT) | — | unsupported |
-| `generated-text_t1` | T1 | 887035 | unsupported | — | 5.233 | 0.080 | 10338304 | 2.000 (PASS) | 797786112 | unsupported,unsupported,unsupported |
-| `generated-text_t2` | T2 | 9024701 | unsupported | — | 47.227 | 0.196 | 72794112 | 16.074 (PASS) | 6822363136 | unsupported,unsupported,unsupported |
-| `generated-text_t3` | T3 | 90488308 | unsupported | — | — | 0.172 | 256720896 | 60.228 (PASS) | 14394998784 | unsupported |
-| `generated-use_t1` | T1 | 986323 | unsupported | — | 6.288 | 0.094 | 15826944 | 1.043 (PASS) | 583909376 | unsupported,unsupported,unsupported |
-| `generated-use_t2` | T2 | 10036526 | unsupported | — | 66.020 | 0.210 | 128532480 | 7.405 (PASS) | 4728373248 | unsupported,unsupported,unsupported |
-| `generated-use_t3` | T3 | 100542256 | unsupported | — | — | 18.516 | 232587264 | 111.468 (PASS) | 10144759808 | unsupported |
-| `generated-use_t4` | T4 | 1005597835 | unsupported | — | — | 17.220 | 1136066560 | 40.961 (FAIL / TIMEOUT) | 14546288640 | unsupported |
-| `commons-1-42-polytope-7-cube-svg` | T3 | 29836045 | unsupported | — | — | 0.204 | 182091776 | 7.604 (PASS) | 4396826624 | unsupported |
-| `commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg` | T2 | 16162430 | unsupported | — | 56.275 | 0.103 | 25165824 | 1.106 (PASS) | 374915072 | unsupported,unsupported,unsupported |
-| `commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg` | T3 | 22666147 | unsupported | — | 78.548 | 0.181 | 45613056 | 1.740 (PASS) | 768491520 | unsupported |
-| `commons-amhara-topographic-map-svg` | T2 | 15593284 | unsupported | — | 51.608 | 0.072 | 18481152 | 1.017 (PASS) | 297582592 | unsupported,unsupported,unsupported |
-| `commons-bulgaria-in-1915-geographic-map-en-svg` | T2 | 15165804 | unsupported | — | 58.203 | 0.087 | 41156608 | 1.788 (PASS) | 610844672 | unsupported,unsupported,unsupported |
-| `commons-cambodia-geographic-map-en-svg` | T3 | 20142590 | unsupported | — | 77.243 | 0.199 | 61636608 | 2.838 (PASS) | 931348480 | unsupported |
-| `commons-chuaattractormodified-svg` | T3 | 20763720 | unsupported | — | — | 0.019 | 22806528 | 5.210 (PASS) | 2032254976 | unsupported |
-| `commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg` | T3 | 25708531 | unsupported | — | 93.887 | 0.102 | 47300608 | 1.686 (PASS) | 458997760 | unsupported |
-| `commons-coat-of-arms-of-villa-alemana-svg` | T3 | 42628426 | unsupported | — | 143.863 | 0.083 | 56999936 | 5.606 (PASS) | 523485184 | unsupported |
-| `commons-columbiarivermap-svg` | T2 | 16687292 | unsupported | — | — | 0.057 | 18743296 | 0.773 (PASS) | 361447424 | unsupported,unsupported,unsupported |
-| `commons-comunas-occitanas-d-alemanha-svg` | T3 | 43507208 | unsupported | — | 138.464 | 0.083 | 55984128 | 3.748 (PASS) | 799064064 | unsupported |
-| `commons-corsica-geographic-map-svg` | T2 | 14927948 | unsupported | — | 50.487 | 0.072 | 30031872 | 1.938 (PASS) | 516685824 | unsupported,unsupported,unsupported |
-| `commons-corvuscoraxiucn-svg` | T3 | 26496549 | unsupported | — | 85.807 | 0.140 | 45891584 | 2.142 (PASS) | 696352768 | unsupported |
-| `commons-dibujo-piu-svg` | T3 | 87755815 | unsupported | — | 307.507 | 0.189 | 174243840 | 13.365 (PASS) | 1827225600 | unsupported |
-| `commons-dukesofhohenbergarms-svg` | T3 | 28075813 | unsupported | — | 95.726 | 0.212 | 53198848 | 2.876 (PASS) | 748142592 | unsupported |
-| `commons-france-osm-mapnik-svg` | T2 | 19491319 | unsupported | — | — | 0.014 | 21528576 | 2.552 (PASS) | 521846784 | unsupported,unsupported,unsupported |
-| `commons-gaussian-2d-svg` | T2 | 16746052 | unsupported | — | — | 0.017 | 18792448 | 1.556 (PASS) | 510377984 | unsupported,unsupported,unsupported |
-| `commons-geographic-map-of-norway-sweden-finland-and-denmark-svg` | T3 | 20101913 | unsupported | — | 72.880 | 0.179 | 57786368 | 3.405 (PASS) | 1373749248 | unsupported |
-| `commons-germany-districts-municipalities-location-map-2013-svg` | T3 | 26486961 | unsupported | — | — | 0.036 | 28524544 | 3.675 (PASS) | 765837312 | unsupported |
-| `commons-ideogram-human-chromosome-20-svg` | T3 | 21285516 | unsupported | — | 90.278 | 0.276 | 103792640 | 1.971 (PASS) | 1239302144 | unsupported |
-| `commons-koppen-geiger-map-a-present-svg` | T3 | 79058833 | unsupported | — | 267.544 | 0.233 | 146030592 | 6.839 (PASS) | 1859502080 | unsupported |
-| `commons-municipalities-of-italy-svg` | T3 | 91915099 | unsupported | — | 302.053 | 0.084 | 100630528 | 5.145 (PASS) | 917422080 | unsupported |
-| `commons-spain-languages-de-svg` | T3 | 90812529 | unsupported | — | 290.108 | 0.105 | 112082944 | 5.409 (PASS) | 1168162816 | unsupported |
-| `natural-earth-world-map-blank` | T1 | 241682 | ok | 9.688 | 0.999 | 0.054 | 4653056 | 0.347 (PASS) | 150437888 | ok,ok,ok |
-| `natural-earth-world-map-countries` | T1 | 260823 | ok | 9.525 | 1.106 | 0.063 | 4734976 | 0.409 (PASS) | 157794304 | ok,ok,ok |
+| `generated-science_t1` | T1 | 1374397 | unsupported | — | 5.271 | 0.090 | 9846784 | 0.802 (PASS) | 298762240 | unsupported,unsupported,unsupported |
+| `generated-science_t2` | T2 | 14116675 | unsupported | — | 53.971 | 0.193 | 66895872 | 4.967 (PASS) | 1648328704 | unsupported,unsupported,unsupported |
+| `generated-science_t3` | T3 | 117860153 | unsupported | — | — | 0.181 | 268566528 | 30.565 (PASS) | 8231960576 | unsupported |
+| `generated-science_t4` | T4 | 635202435 | unsupported | — | — | 0.170 | 785924096 | 302.239 (FAIL / TIMEOUT) | — | unsupported |
+| `generated-text_t1` | T1 | 887035 | unsupported | — | 4.344 | 0.076 | 10338304 | 2.000 (PASS) | 797786112 | unsupported,unsupported,unsupported |
+| `generated-text_t2` | T2 | 9024701 | unsupported | — | 42.317 | 0.166 | 71204864 | 16.074 (PASS) | 6822363136 | unsupported,unsupported,unsupported |
+| `generated-text_t3` | T3 | 90488308 | unsupported | — | — | 0.173 | 256720896 | 60.228 (PASS) | 14394998784 | unsupported |
+| `generated-use_t1` | T1 | 986323 | unsupported | — | 5.990 | 0.093 | 16596992 | 1.043 (PASS) | 583909376 | unsupported,unsupported,unsupported |
+| `generated-use_t2` | T2 | 10036526 | unsupported | — | 60.872 | 0.230 | 126943232 | 7.405 (PASS) | 4728373248 | unsupported,unsupported,unsupported |
+| `generated-use_t3` | T3 | 100542256 | unsupported | — | — | 0.251 | 230981632 | 111.468 (PASS) | 10144759808 | unsupported |
+| `generated-use_t4` | T4 | 1005597835 | unsupported | — | — | 0.435 | 1136033792 | 40.961 (FAIL / TIMEOUT) | 14546288640 | unsupported |
+| `commons-1-42-polytope-7-cube-svg` | T3 | 29836045 | unsupported | — | — | 0.184 | 175816704 | 7.604 (PASS) | 4396826624 | unsupported |
+| `commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg` | T2 | 16162430 | unsupported | — | 50.659 | 0.081 | 25133056 | 1.106 (PASS) | 374915072 | unsupported,unsupported,unsupported |
+| `commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg` | T3 | 22666147 | unsupported | — | 71.851 | 0.160 | 44040192 | 1.740 (PASS) | 768491520 | unsupported |
+| `commons-amhara-topographic-map-svg` | T2 | 15593284 | unsupported | — | 46.157 | 0.059 | 18464768 | 1.017 (PASS) | 297582592 | unsupported,unsupported,unsupported |
+| `commons-bulgaria-in-1915-geographic-map-en-svg` | T2 | 15165804 | unsupported | — | 54.602 | 0.080 | 41156608 | 1.788 (PASS) | 610844672 | unsupported,unsupported,unsupported |
+| `commons-cambodia-geographic-map-en-svg` | T3 | 20142590 | unsupported | — | 69.445 | 0.167 | 60047360 | 2.838 (PASS) | 931348480 | unsupported |
+| `commons-chuaattractormodified-svg` | T3 | 20763720 | unsupported | — | — | 0.017 | 22806528 | 5.210 (PASS) | 2032254976 | unsupported |
+| `commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg` | T3 | 25708531 | unsupported | — | 86.387 | 0.145 | 47300608 | 1.686 (PASS) | 458997760 | unsupported |
+| `commons-coat-of-arms-of-villa-alemana-svg` | T3 | 42628426 | unsupported | — | 140.868 | 0.127 | 57032704 | 5.606 (PASS) | 523485184 | unsupported |
+| `commons-columbiarivermap-svg` | T2 | 16687292 | unsupported | — | — | 0.050 | 18726912 | 0.773 (PASS) | 361447424 | unsupported,unsupported,unsupported |
+| `commons-comunas-occitanas-d-alemanha-svg` | T3 | 43507208 | unsupported | — | 139.109 | 0.115 | 55967744 | 3.748 (PASS) | 799064064 | unsupported |
+| `commons-corsica-geographic-map-svg` | T2 | 14927948 | unsupported | — | 51.289 | 0.112 | 29999104 | 1.938 (PASS) | 516685824 | unsupported,unsupported,unsupported |
+| `commons-corvuscoraxiucn-svg` | T3 | 26496549 | unsupported | — | 94.097 | 0.102 | 45891584 | 2.142 (PASS) | 696352768 | unsupported |
+| `commons-dibujo-piu-svg` | T3 | 87755815 | unsupported | — | 348.704 | 0.214 | 174211072 | 13.365 (PASS) | 1827225600 | unsupported |
+| `commons-dukesofhohenbergarms-svg` | T3 | 28075813 | unsupported | — | 101.908 | 0.200 | 53198848 | 2.876 (PASS) | 748142592 | unsupported |
+| `commons-france-osm-mapnik-svg` | T2 | 19491319 | unsupported | — | — | 0.073 | 21528576 | 2.552 (PASS) | 521846784 | unsupported,unsupported,unsupported |
+| `commons-gaussian-2d-svg` | T2 | 16746052 | unsupported | — | — | 0.063 | 18792448 | 1.556 (PASS) | 510377984 | unsupported,unsupported,unsupported |
+| `commons-geographic-map-of-norway-sweden-finland-and-denmark-svg` | T3 | 20101913 | unsupported | — | 77.267 | 0.185 | 56197120 | 3.405 (PASS) | 1373749248 | unsupported |
+| `commons-germany-districts-municipalities-location-map-2013-svg` | T3 | 26486961 | unsupported | — | — | 0.035 | 28524544 | 3.675 (PASS) | 765837312 | unsupported |
+| `commons-ideogram-human-chromosome-20-svg` | T3 | 21285516 | unsupported | — | 90.180 | 0.271 | 103792640 | 1.971 (PASS) | 1239302144 | unsupported |
+| `commons-koppen-geiger-map-a-present-svg` | T3 | 79058833 | unsupported | — | 256.981 | 0.187 | 146014208 | 6.839 (PASS) | 1859502080 | unsupported |
+| `commons-municipalities-of-italy-svg` | T3 | 91915099 | unsupported | — | 336.113 | 0.184 | 100630528 | 5.145 (PASS) | 917422080 | unsupported |
+| `commons-spain-languages-de-svg` | T3 | 90812529 | unsupported | — | 273.986 | 0.120 | 112099328 | 5.409 (PASS) | 1168162816 | unsupported |
+| `natural-earth-world-map-blank` | T1 | 241682 | ok | 9.888 | 0.893 | 0.056 | 4554752 | 0.347 (PASS) | 150437888 | ok,ok,ok |
+| `natural-earth-world-map-countries` | T1 | 260823 | ok | 10.131 | 1.125 | 0.061 | 4718592 | 0.409 (PASS) | 157794304 | ok,ok,ok |
 
 ## Tier summary
 
@@ -74,7 +74,7 @@ Speedup is Inkscape supplied probe seconds divided by Vexel first-preview second
 
 | Tier | Files | OK | Unsupported | Limit | Crash/timeout | Comparable files | Geomean time ratio | Geomean RSS ratio |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| T1 | 12 | 2 | 10 | 0 | 0 | 2 | 39.217x | 32.824x (2 files) |
+| T1 | 12 | 2 | 10 | 0 | 0 | 2 | 37.640x | 33.234x (2 files) |
 | T2 | 17 | 0 | 17 | 0 | 0 | 0 | — | — (0 files) |
 | T3 | 26 | 0 | 26 | 0 | 0 | 0 | — | — (0 files) |
 | T4 | 3 | 0 | 3 | 0 | 0 | 0 | — | — (0 files) |
@@ -82,7 +82,7 @@ Speedup is Inkscape supplied probe seconds divided by Vexel first-preview second
 ## Wedge checks
 
 - 100 MiB first visible preview under 2 seconds: **fail_no_preview**; measured 0 of 12 T3 files in the 80–120 MiB band; maximum None ns.
-- Maximum main-thread index step under 100 ms: **pass**; maximum 18515542 ns. Pre-index preview occurred in 0 eligible files.
+- Maximum main-thread index step under 100 ms: **pass**; maximum 811625 ns. Pre-index preview occurred in 0 eligible files.
 - 100 MiB-band RSS allowance (3× source bytes + 128 MiB): **pass** across 12 eligible files; measured peak RSS appears in the JSON and per-file table.
 - Inkscape RSS can exceed Vexel's indexed input footprint substantially; this comparison is not a memory parity claim.
 
@@ -147,4 +147,4 @@ Speedup is Inkscape supplied probe seconds divided by Vexel first-preview second
 
 ## Reproducibility
 
-Release binary SHA-256: `0b22776da01bd1241b0170a45f5b79597bbf57d8edb858cf8ed29f0799e9ade5`. Fresh processes, 3 repetitions for T1/T2, 1 for T3/T4, each with a 120s timeout. External source files remain at the referenced corpus path; no corpus file is stored in this repository.
+Release binary SHA-256: `e4f98a5aaf7ac2f4e29e1c7c244e5c9b9dea34156fe32cc55d5740496f126601`. Fresh processes, 3 repetitions for T1/T2, 1 for T3/T4, each with a 120s timeout. External source files remain at the referenced corpus path; no corpus file is stored in this repository.

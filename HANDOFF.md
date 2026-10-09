@@ -1,18 +1,9 @@
 # WO-M4-06 handoff
 
-WO-M4-06 revision 4 is implemented on `wo/WO-M4-06`. The SVG omitted
-`stop-color` default now renders as black and has a focused regression plus a
-librsvg fixture. The amended copy limits are 64 KiB per referenced subtree and
-1 MiB combined per render job. Current renderer source is
-`e53c760436c0d16afb9b15f7e8adaf6967dc9a2a`; README-only follow-up
-`3396d8109223de9018956104b066d8d0a5255ace` documents the default.
+The AC-9 repair is implemented in source commit `d6dba56184d3a7530ca0dcc0186d9c9b1f45d657` on `wo/WO-M4-06`. Live `<use>` instances traverse the original XML token array at their source position; the full-document rewrite, `<use>` subtree copies, second tokenization, and source map are removed. The 64 KiB per-reference and 1 MiB per-job values bound repeated use-span traversal. The separate clip decoder retains its bounded 64 KiB child / 512 KiB per-job scratch path with at most 198 bytes of generated wrapper syntax. The decoder retains only its pre-existing source-sized token array plus a fixed 512 KiB ID index for live-use decoding. Tests verify the allocation formula on small and 128 KiB padded live-use documents, original source pointer/length, and SHA-256 preservation. The userSpaceOnUse radial default and its discriminating librsvg fixture were already fixed at `7420fad` and were not redone.
 
-Machine gates pass: Debug CTest 12/12, `./dev verify` Python 199/199 and native
-smoke/replay, ASan/UBSan CTest 12/12, Release build, 1,000,000 sanitized fuzz
-cases, 35 librsvg fixtures, and 58 corpus files / 116 trials. Corpus outcomes
-remain 2 previewable, 56 unsupported, no limits/crashes; this is still the
-open/index harness. Independent read-only review and merge are next.
+Evidence: Debug/ASan/UBSan shape tests pass; `python3 -m unittest tests.test_shape_render` passes 16/16; all 39 librsvg fixtures pass unchanged thresholds; the ASan+UBSan shape fuzz run completes 1,000,000 cases with zero crashes, reports, or invariant failures; Release configure/build and corpus run/check pass. The 58-file corpus has 2 successful previews, 56 unsupported, 0 limits, and 0 crashes. All five paint workloads have 21 stable-output trials, compared honestly with frozen base `81f2008`; no speed claim is made.
 
-After merge, continue with WO-M4-06b to wire the renderer into the viewer and
-corpus harness, then M4-07 (skip the bake-off if it costs more than one WO) and
-M4-08 fidelity gate packet.
+The full Debug, ASan, UBSan, and `./dev verify` CTest runs each pass 11/12. Their only failure is `index-replay`, which reports that the host session cannot acquire an offscreen Metal device or queue. The full work-order gate and fresh read-only review remain pending; do not mark the order complete or merge from this handoff. Exact transcripts and updated matrix are in `artifacts/WO-M4-06/`.
+
+After acceptance, continue with WO-M4-06b to wire the renderer into the viewer and corpus harness, then M4-07 (skip the bake-off if it costs more than one WO) and M4-08 fidelity gate packet.
