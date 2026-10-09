@@ -101,7 +101,7 @@ svg_xml_result svg_xml_tokenize_large_cancelable(base_bytes input, svg_xml_token
 /* Borrows immutable input until destroy; max_storage_bytes bounds its token vector. */
 svg_xml_stream_status svg_xml_token_stream_start(base_bytes input, size_t max_storage_bytes,
     svg_xml_cancel_check_fn canceled, void *cancel_context, svg_xml_token_stream **out_stream);
-/* Resumes character validation/token emission; budget is capped at 64 KiB. */
+/* Resumes validation/token emission under one shared byte budget, capped at 64 KiB. */
 svg_xml_stream_status svg_xml_token_stream_step(svg_xml_token_stream *stream, size_t byte_budget);
 svg_xml_result svg_xml_token_stream_result(const svg_xml_token_stream *stream);
 /* Grammar-validated source prefix; safe to query between worker steps. */

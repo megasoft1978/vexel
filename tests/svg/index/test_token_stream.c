@@ -18,8 +18,50 @@ static bool token_equal(const svg_xml_token *a, const svg_xml_token *b)
         a->value.offset == b->value.offset && a->value.length == b->value.length;
 }
 
+static void check_validation_and_parsing_share_budget(void)
+{
+    static const uint8_t source[] = "<svg/>";
+    svg_xml_token_stream *stream = NULL;
+    CHECK(svg_xml_token_stream_start((base_bytes){source, sizeof(source) - 1U},
+        8U * sizeof(svg_xml_token), NULL, NULL, &stream) == SVG_XML_STREAM_OK);
+    CHECK(svg_xml_token_stream_step(stream, sizeof(source) - 1U) == SVG_XML_STREAM_OK);
+    CHECK(svg_xml_token_stream_result(stream).token_count == 0U);
+    CHECK(svg_xml_token_stream_bytes_read(stream) == 0U);
+    CHECK(svg_xml_token_stream_step(stream, sizeof(source) - 1U) == SVG_XML_STREAM_COMPLETE);
+    svg_xml_token_stream_destroy(stream);
+}
+
+static void check_split_utf8_budget(void)
+{
+    static const uint8_t source[] = "<svg> \xc3\xa9</svg>";
+    svg_xml_token reference[4] = {{0}};
+    svg_xml_result expected = svg_xml_tokenize((base_bytes){source, sizeof(source) - 1U},
+        svg_xml_default_options(), reference, 4U);
+    CHECK(expected.diagnostic.category == SVG_XML_ERROR_NONE);
+    svg_xml_token_stream *stream = NULL;
+    CHECK(svg_xml_token_stream_start((base_bytes){source, sizeof(source) - 1U},
+        8U * sizeof(svg_xml_token), NULL, NULL, &stream) == SVG_XML_STREAM_OK);
+    svg_xml_stream_status status = SVG_XML_STREAM_OK;
+    for (size_t step = 0U; status == SVG_XML_STREAM_OK && step < 40U; ++step) {
+        size_t before = svg_xml_token_stream_bytes_read(stream);
+        status = svg_xml_token_stream_step(stream, 7U);
+        size_t after = svg_xml_token_stream_bytes_read(stream);
+        CHECK(after >= before && after - before <= 7U);
+    }
+    CHECK(status == SVG_XML_STREAM_COMPLETE);
+    svg_xml_token *actual = NULL;
+    size_t count = 0U;
+    CHECK(svg_xml_token_stream_take(stream, &actual, &count));
+    CHECK(count == expected.token_count);
+    for (size_t i = 0U; i < count; ++i) CHECK(token_equal(&actual[i], &reference[i]));
+    free(actual);
+    svg_xml_token_stream_destroy(stream);
+}
+
 int main(void)
 {
+    check_validation_and_parsing_share_budget();
+    check_split_utf8_budget();
     const size_t run = 128U * 1024U;
     static const char start[] = "<svg a=\"";
     static const char comment_start[] = "<!--";

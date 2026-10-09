@@ -97,6 +97,11 @@ static bool equivalent_file(const char *path)
         size_t before = svg_xml_token_stream_bytes_read(stream);
         status = svg_xml_token_stream_step(stream, 7U);
         size_t after = svg_xml_token_stream_bytes_read(stream);
+        if (status == SVG_XML_STREAM_FAILED) {
+            svg_xml_result failed = svg_xml_token_stream_result(stream);
+            (void)fprintf(stderr, "failed at step %zu frontier %zu->%zu: %s at %zu\n", steps, before, after,
+                svg_xml_error_name(failed.diagnostic.category), failed.diagnostic.offset);
+        }
         okay = after >= before && after - before <= 7U;
         if (!okay) (void)fprintf(stderr, "step %zu advanced %zu to %zu status %d\n", steps, before, after, (int)status);
         ++steps;

@@ -11,7 +11,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,744 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.265 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
-| WO-M3-01 | Release | 151,968 bytes; see `bench/results/WO-M3-01.json` | source read: 10 MiB median 0.994 ms (p95 1.215 ms); 100 MiB 9.341 ms (p95 12.431 ms); validated decode+raster preview: 10 MiB median 21.53 ms (p95 22.83 ms); 100 MiB median 214.10 ms (p95 227.35 ms); full index+XML validation 38.79 ms / 286.78 ms | 37.9 MB / 139.5 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M3-01 | Release | 151,968 bytes; see `bench/results/WO-M3-01.json` | source read: 10 MiB median 0.890 ms (p95 0.932 ms); 100 MiB 8.626 ms (p95 8.918 ms); validated decode+raster preview: 10 MiB median 27.81 ms (p95 28.80 ms); 100 MiB median 257.05 ms (p95 269.12 ms); full index+XML validation 44.84 ms / 334.21 ms | 33.9 MB / 127.0 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload

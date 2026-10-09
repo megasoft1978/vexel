@@ -34,6 +34,7 @@ typedef struct xml_scanner {
     size_t depth;
     size_t total_attributes;
     size_t char_cursor;
+    size_t char_sequence_start;
     size_t token_storage_limit;
     xml_stream_pending_kind pending_kind;
     size_t pending_start;
@@ -53,6 +54,8 @@ typedef struct xml_scanner {
     bool stream_end_name_ready;
     unsigned stream_end_prefix_progress;
     unsigned stream_start_phase;
+    unsigned char_pending_length;
+    unsigned char_pending_width;
     size_t stream_start_pos;
     size_t stream_start_token_index;
     size_t stream_start_local_attributes;
@@ -72,6 +75,7 @@ typedef struct xml_scanner {
     svg_xml_span stream_attribute_prefix;
     svg_xml_span stream_attribute_local_name;
     uint8_t stream_start_quote;
+    uint8_t char_pending[4];
     svg_xml_cancel_check_fn cancel_check;
     void *cancel_context;
     bool canceled;
@@ -562,22 +566,42 @@ static bool tokenize(xml_scanner *s)
 
 static bool stream_scan_characters(xml_scanner *s, size_t budget)
 {
-    size_t end = 0U;
-    if (!add_size(s->char_cursor, budget, &end) || end > s->input.len) end = s->input.len;
-    while (!cancel_requested(s) && s->char_cursor < end) {
-        size_t at = s->char_cursor, next = at;
-        uint32_t cp = 0U;
-        if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &next, &cp)) {
-            fail(s, SVG_XML_ERROR_INVALID_UTF8, at);
-            return false;
+    size_t used = 0U;
+    while (!cancel_requested(s) && used < budget && s->char_cursor < s->input.len) {
+        uint8_t byte = byte_at(s, s->char_cursor);
+        if (s->char_pending_length == 0U) {
+            s->char_sequence_start = s->char_cursor;
+            s->char_pending_width = byte < 0x80U ? 1U :
+                (byte >= 0xc2U && byte <= 0xdfU) ? 2U :
+                (byte >= 0xe0U && byte <= 0xefU) ? 3U :
+                (byte >= 0xf0U && byte <= 0xf4U) ? 4U : 1U;
         }
-        if (!svg_xml_internal_char(cp)) {
-            fail(s, SVG_XML_ERROR_INVALID_CHARACTER, at);
-            return false;
+        s->char_pending[s->char_pending_length++] = byte;
+        ++s->char_cursor;
+        ++used;
+        if (s->char_pending_length == s->char_pending_width) {
+            size_t next = 0U;
+            uint32_t cp = 0U;
+            if (!svg_xml_internal_utf8_next(s->char_pending, s->char_pending_length, &next, &cp) ||
+                next != s->char_pending_length) {
+                fail(s, SVG_XML_ERROR_INVALID_UTF8, s->char_sequence_start);
+                return false;
+            }
+            if (!svg_xml_internal_char(cp)) {
+                fail(s, SVG_XML_ERROR_INVALID_CHARACTER, s->char_sequence_start);
+                return false;
+            }
+            s->char_pending_length = 0U;
+            s->char_pending_width = 0U;
         }
-        s->char_cursor = next;
     }
-    if (s->char_cursor == s->input.len) s->chars_complete = true;
+    if (s->char_cursor == s->input.len) {
+        if (s->char_pending_length != 0U) {
+            fail(s, SVG_XML_ERROR_INVALID_UTF8, s->char_sequence_start);
+            return false;
+        }
+        s->chars_complete = true;
+    }
     return !s->canceled && s->result.diagnostic.category == SVG_XML_ERROR_NONE;
 }
 
@@ -653,6 +677,7 @@ svg_xml_stream_status svg_xml_token_stream_step(svg_xml_token_stream *stream, si
     if (s->result.diagnostic.category != SVG_XML_ERROR_NONE) return SVG_XML_STREAM_FAILED;
     if (s->stream_complete) return SVG_XML_STREAM_COMPLETE;
     if (byte_budget > 64U * 1024U) byte_budget = 64U * 1024U;
+    size_t char_initial = s->char_cursor;
     if (!stream_scan_characters(s, byte_budget)) {
         if (s->canceled) return SVG_XML_STREAM_CANCELED;
         s->result.token_count = 0U;
@@ -662,11 +687,14 @@ svg_xml_stream_status svg_xml_token_stream_step(svg_xml_token_stream *stream, si
         return SVG_XML_STREAM_FAILED;
     }
     if (!s->chars_complete) return SVG_XML_STREAM_OK;
+    size_t char_work = s->char_cursor - char_initial;
+    if (char_work >= byte_budget) return SVG_XML_STREAM_OK;
+    size_t parse_budget = byte_budget - char_work;
     size_t initial = stream_frontier(s);
     size_t limit = 0U;
-    if (!add_size(initial, byte_budget, &limit) || limit > s->input.len) limit = s->input.len;
+    if (!add_size(initial, parse_budget, &limit) || limit > s->input.len) limit = s->input.len;
     while (!cancel_requested(s) && s->cursor < s->input.len &&
-           stream_frontier(s) - initial < byte_budget) {
+           stream_frontier(s) - initial < parse_budget) {
         size_t before = stream_frontier(s);
         if (!stream_parse_next(s, limit) || stream_frontier(s) == before) break;
     }

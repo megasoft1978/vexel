@@ -231,20 +231,23 @@ static bool stream_parse_pi(xml_scanner *s, size_t limit)
     }
     size_t p = s->pending_cursor;
     if (!s->pending_pi_data_ready) {
-        if (p >= limit) {
-            if (p == s->input.len) fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, s->cursor);
-            return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
+        if (!s->pending_nonspace) {
+            if (p >= limit) {
+                if (p == s->input.len) fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, s->cursor);
+                return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
+            }
+            if (!svg_xml_internal_whitespace(byte_at(s, p)) && !starts(s, p, "?>", 2U)) {
+                fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p);
+                return false;
+            }
+            if (starts(s, p, "?>", 2U)) {
+                if (s->pending_declaration) { fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p); return false; }
+                s->pending_data = p;
+                s->pending_first_nonspace = p;
+                s->pending_pi_data_ready = true;
+            } else s->pending_nonspace = true;
         }
-        if (!svg_xml_internal_whitespace(byte_at(s, p)) && !starts(s, p, "?>", 2U)) {
-            fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p);
-            return false;
-        }
-        if (starts(s, p, "?>", 2U)) {
-            if (s->pending_declaration) { fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p); return false; }
-            s->pending_data = p;
-            s->pending_first_nonspace = p;
-            s->pending_pi_data_ready = true;
-        } else {
+        if (!s->pending_pi_data_ready) {
             while (p < limit && p < s->input.len && svg_xml_internal_whitespace(byte_at(s, p))) ++p;
             if (p == limit && p < s->input.len) {
                 s->pending_cursor = p;
