@@ -29,5 +29,7 @@ The early preview subset requires an SVG root with supported `width` and
 are accepted by the current shape decoder. Unsupported attributes such as
 `transform`, element prefixes, and unsupported root attributes keep the source
 record but mark it unsupported, allowing a later eligible shape to be chosen.
-The UI marks a preview visible only after the worker has produced its owned
-raster tile.
+Start tags longer than 64 KiB remain indexed with their original spans but are
+not scanned for early-preview eligibility; this keeps owner-thread attribute
+inspection within the step budget. The UI marks a preview visible only after
+the worker has produced its owned raster tile.

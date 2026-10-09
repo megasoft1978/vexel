@@ -364,6 +364,37 @@ int main(int argc, char **argv)
     free(long_source);
     if (!canceled) return fail("10/50/90 cancellation failed");
 
+    size_t large_tag_length = 128U * 1024U;
+    uint8_t *large_tag_source = malloc(large_tag_length);
+    if (large_tag_source == NULL) return fail("large attribute fixture allocation failed");
+    static const char large_tag_prefix[] = "<svg width='";
+    static const char large_tag_suffix[] = "' height='1'><rect width='1' height='1'/></svg>";
+    memcpy(large_tag_source, large_tag_prefix, sizeof(large_tag_prefix) - 1U);
+    memset(large_tag_source + sizeof(large_tag_prefix) - 1U, '1',
+        large_tag_length - (sizeof(large_tag_prefix) - 1U) - (sizeof(large_tag_suffix) - 1U));
+    memcpy(large_tag_source + large_tag_length - (sizeof(large_tag_suffix) - 1U),
+        large_tag_suffix, sizeof(large_tag_suffix) - 1U);
+    if (svg_index_start((base_bytes){large_tag_source, large_tag_length}, 4U,
+                        &session) != SVG_INDEX_OK) {
+        free(large_tag_source);
+        return fail("large attribute session start failed");
+    }
+    step = SVG_INDEX_OK;
+    uint64_t max_large_tag_step = 0U;
+    while (step == SVG_INDEX_OK) {
+        uint64_t started = wall_time_ns();
+        step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+        uint64_t elapsed = wall_time_ns() - started;
+        if (elapsed > max_large_tag_step) max_large_tag_step = elapsed;
+    }
+    p = svg_index_get_progress(session);
+    bool large_tag_indexed = step == SVG_INDEX_COMPLETE && p.complete &&
+        !p.first_preview_ready && max_large_tag_step < 100000000U;
+    svg_index_destroy(session);
+    free(large_tag_source);
+    if (!large_tag_indexed)
+        return fail("large start tag was not bounded and retained as preview-ineligible");
+
     size_t validation_length = 1024U * 1024U;
     uint8_t *validation_source = malloc(validation_length);
     if (validation_source == NULL) return fail("validation cleanup fixture allocation failed");

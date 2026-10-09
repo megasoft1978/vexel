@@ -11,7 +11,8 @@
     "loading progress model and headless native replay with offscreen Metal readback",
     "deterministic 10 MiB and 100 MiB performance campaign",
     "preview publication waits for tokenizer validation through the candidate span; malformed prefixes cannot publish",
-    "streaming token validation resumes long text, comment, CDATA, and PI scanning within byte budgets"
+    "streaming token validation resumes long text, comment, CDATA, and PI scanning within byte budgets",
+    "preview-attribute inspection skips start tags over 64 KiB while preserving their indexed spans"
   ],
   "verified": {
     "debug_ctest": "8/8 passed",
@@ -26,7 +27,8 @@
     "diff_check": "passed",
     "benchmark_preview_gate": "all 15 trials per input observed tile completion before indexing completion",
     "prefix_validation": "malformed-prefix test rejects preview with exact XML error offset; later malformed tail preserves a preview over its validated prefix",
-    "token_stream_budget": "512 KiB mixed long-token fixture preserves one-shot token equivalence and asserts <=1 KiB advancement on every step in the WO-allowed svg-token-stream-budget CTest"
+    "token_stream_budget": "512 KiB mixed long-token fixture preserves one-shot token equivalence and asserts <=1 KiB advancement on every step in the WO-allowed svg-token-stream-budget CTest",
+    "large_tag_owner_bound": "128 KiB root width tag remains source-backed, is excluded from preview eligibility, and all measured owner steps remain below 100 ms"
   },
   "metrics": {
     "10MiB": {

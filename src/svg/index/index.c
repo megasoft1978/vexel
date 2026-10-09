@@ -146,6 +146,7 @@ static bool preview_attributes_supported(const svg_index_session *s,
                                          const svg_xml_reader_tag *tag,
                                          svg_index_support shape)
 {
+    if (tag->source.length > SVG_INDEX_MAX_STEP_BYTES) return false;
     size_t end = tag->source.offset + tag->source.length;
     size_t at = tag->name.offset + tag->name.length;
     bool width = false, height = false, data = false;
