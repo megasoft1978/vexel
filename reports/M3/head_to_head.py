@@ -163,7 +163,8 @@ def run_campaign() -> dict:
             record["trials"].append(run_one(path))
         trials.append(record)
         print(f"{item['id']}: {','.join(t['outcome'] for t in record['trials'])}", flush=True)
-    raw = {"schema_version": 1, "manifest_path": str(CORPUS / "manifest.json"),
+    raw = {"schema_version": 1, "environment": environment_metadata(),
+           "manifest_path": str(CORPUS / "manifest.json"),
            "manifest_sha256": manifest_hash,
            "baseline_path": str(CORPUS / "INKSCAPE_BASELINE.md"),
            "baseline_sha256": baseline_hash,
@@ -250,8 +251,8 @@ def summarize_tiers(result_rows: list[dict]) -> dict[str, dict]:
             rss = row["metrics"]["peak_rss_bytes"]
             if row["outcome"] == "ok" and base and base["status"].startswith("PASS") and first:
                 speed.append(base["seconds"] / (first / 1e9))
-            if base and base["status"].startswith("PASS") and base["peak_rss_bytes"] and rss:
-                rss_ratio.append(base["peak_rss_bytes"] / rss)
+                if base["peak_rss_bytes"] and rss:
+                    rss_ratio.append(base["peak_rss_bytes"] / rss)
         tier_summary[tier] = {"files": len(rows), "ok": sum(r["outcome"] == "ok" for r in rows),
                               "unsupported": sum(r["outcome"] == "unsupported" for r in rows),
                               "limit": sum(r["outcome"] == "limit" for r in rows),
@@ -299,9 +300,11 @@ def environment_metadata() -> dict:
     os_version = subprocess.run(["sw_vers", "-productVersion"], capture_output=True, text=True, check=False)
     os_name = subprocess.run(["sw_vers", "-productName"], capture_output=True, text=True, check=False)
     chip = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"], capture_output=True, text=True, check=False)
+    compiler = subprocess.run(["clang", "--version"], capture_output=True, text=True, check=False)
     return {"platform": platform.platform(), "architecture": platform.machine(),
             "python": sys.version.split()[0], "macos": f"{os_name.stdout.strip()} {os_version.stdout.strip()}".strip(),
             "chip": chip.stdout.strip() if chip.returncode == 0 else "unavailable",
+            "compiler": compiler.stdout.splitlines()[0] if compiler.returncode == 0 else "unavailable",
             "binary_path": str(BIN), "binary_sha256": sha256(BIN), "build": "mac-release",
             "timeout_seconds": TIMEOUT_SECONDS,
             "process_policy": "fresh Vexel process per trial; /usr/bin/time -l captures RSS",
@@ -314,13 +317,16 @@ def aggregate(raw: dict) -> dict:
         raise ValueError("corpus manifest or Inkscape baseline changed since measurement")
     baselines = load_baselines(entries, manifest_hash, baseline_hash)
     rows = build_result_rows(raw, entries, baselines)
+    environment = raw.get("environment")
+    if not isinstance(environment, dict) or environment.get("binary_sha256") != sha256(BIN):
+        raise ValueError("raw host/toolchain metadata missing or Release binary hash changed")
     return {"schema_version": 1, "corpus": {"root": str(CORPUS),
             "manifest_path": raw["manifest_path"], "manifest_sha256": raw["manifest_sha256"],
             "baseline_path": raw["baseline_path"], "baseline_sha256": raw["baseline_sha256"],
-            "files": len(entries)}, "environment": environment_metadata(),
+            "files": len(entries)}, "environment": environment,
             "comparison_limitations": ["Vexel open/index/first-supported-preview and Inkscape CLI probe are different tasks.",
                 "This measures open/index behavior, not full-render parity.",
-                "Time geometric means include only successful Vexel rows with passing Inkscape baseline rows; RSS ratios use any measured Vexel RSS with a passing Inkscape RSS row."],
+                "Time and RSS geometric means include only successful Vexel rows with passing Inkscape baseline rows."],
             "wedge_gates": wedge_summary(rows), "tier_summary": summarize_tiers(rows), "results": rows}
 
 
@@ -340,7 +346,7 @@ def render_markdown(report: dict) -> str:
         base_s = "—" if not base else f"{base['seconds']:.3f} ({base['status']})"
         base_rss = "—" if not base or base["peak_rss_bytes"] is None else str(base["peak_rss_bytes"])
         lines.append(f"| `{row['id']}` | {row['tier']} | {row['bytes']} | {row['outcome']} | {ms('first_preview_ns')} | {ms('complete_index_ns')} | {ms('max_step_ns')} | {m['peak_rss_bytes'] if m['peak_rss_bytes'] is not None else '—'} | {base_s} | {base_rss} | {','.join(row['trial_outcomes'])} |")
-    lines += ["", "## Tier summary", "", "Speedup is Inkscape supplied probe seconds divided by Vexel first-preview seconds; RSS ratio is Inkscape peak RSS divided by Vexel peak RSS. Time geometric means include only successful Vexel outcomes; RSS geometric means include every measured Vexel RSS and PASS Inkscape RSS. Protocols differ, so these are directional workload comparisons.",
+    lines += ["", "## Tier summary", "", "Speedup is Inkscape supplied probe seconds divided by Vexel first-preview seconds; RSS ratio is Inkscape peak RSS divided by Vexel peak RSS. Both geometric means include only successful Vexel outcomes and PASS Inkscape rows. Protocols differ, so these are directional workload comparisons.",
               "", "| Tier | Files | OK | Unsupported | Limit | Crash/timeout | Comparable files | Geomean time ratio | Geomean RSS ratio |", "|---|---:|---:|---:|---:|---:|---:|---:|---:|"]
     for tier, summary in report["tier_summary"].items():
         speed = summary["inkscape_seconds_over_vexel_first_preview_geomean"]
