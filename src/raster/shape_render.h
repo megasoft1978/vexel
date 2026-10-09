@@ -6,7 +6,7 @@
 
 #include <stdbool.h>
 
-/* Scalar pixel-center fill. out_tile must be empty; caller owns it on success. */
+/* Deterministic scalar 4x4 subpixel fill. out_tile must be empty; caller owns it on success. */
 bool raster_shape_render(const svg_shape_document *document, raster_tile *out_tile,
                          svg_shape_diagnostic *diagnostic);
 

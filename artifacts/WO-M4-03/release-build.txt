@@ -1,0 +1,51 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03/build/mac-release
+[1/41] Building C object CMakeFiles/vexel_jobs.dir/src/jobs/source_snapshot.c.o
+[2/41] Building C object CMakeFiles/vexel_document.dir/src/document/source_save.c.o
+[3/41] Building C object CMakeFiles/spatial_cache_test.dir/tests/raster/cache/cache_contract.c.o
+[4/41] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o
+[5/41] Building C object CMakeFiles/vexel_jobs.dir/src/jobs/job_scheduler.c.o
+[6/41] Building C object CMakeFiles/vexel_document.dir/src/platform/macos/platform_atomic_file.c.o
+[7/41] Building C object CMakeFiles/vexel_spatial.dir/src/spatial/index.c.o
+[8/41] Building C object CMakeFiles/vexel_tile_cache.dir/src/raster/tile_cache.c.o
+[9/41] Building C object CMakeFiles/vexel_tile_cache_test.dir/src/raster/tile_cache.c.o
+[10/41] Building C object CMakeFiles/spatial_cache_test.dir/src/raster/tile.c.o
+[11/41] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o
+[12/41] Building C object CMakeFiles/viewer_navigation_test.dir/tests/ui/viewer_navigation_test.c.o
+[13/41] Building C object CMakeFiles/vexel_jobs.dir/src/platform/macos/platform_task.c.o
+[14/41] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
+[15/41] Building C object CMakeFiles/spatial_cache_test.dir/tests/svg/spatial/spatial_cache_test.c.o
+[16/41] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[17/41] Building C object CMakeFiles/spatial_cache_bench.dir/app/spatial_cache_bench.c.o
+[18/41] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
+[19/41] Linking C executable bin/xml_tokenizer_cli
+[20/41] Linking C executable bin/shape_fuzz
+[21/41] Linking C static library libvexel_document.a
+[22/41] Linking C static library libvexel_spatial.a
+[23/41] Linking C static library libvexel_tile_cache_test.a
+[24/41] Linking C static library libvexel_tile_cache.a
+[25/41] Linking C executable bin/xml_tokenizer_fuzz
+[26/41] Linking C executable bin/viewer_navigation_test
+[27/41] Building C object CMakeFiles/svg_token_stream_test.dir/tests/svg/index/test_token_stream.c.o
+[28/41] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
+[29/41] Linking C static library libvexel_jobs.a
+[30/41] Building C object CMakeFiles/source_save_test.dir/tests/document/test_source_save.c.o
+[31/41] Building C object CMakeFiles/job_snapshot_test.dir/tests/jobs/test_job_snapshot.c.o
+[32/41] Linking C executable bin/shape_test
+[33/41] Linking C executable bin/xml_tokenizer_test
+[34/41] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
+[35/41] Linking C executable bin/spatial_cache_test
+[36/41] Linking C executable bin/spatial_cache_bench
+[37/41] Linking C executable bin/svg_index_test
+ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
+[38/41] Linking C executable bin/svg_token_stream_test
+[39/41] Linking C executable bin/source_save_test
+[40/41] Linking C executable bin/job_snapshot_test
+[41/41] Linking C executable base_contract_test

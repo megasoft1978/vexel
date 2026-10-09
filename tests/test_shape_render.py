@@ -12,7 +12,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M4-02/reference-comparison.json"
+OUT = ROOT / "artifacts/WO-M4-03/reference-comparison.json"
 
 
 def png_rgba(data):
@@ -66,7 +66,7 @@ class ShapeRenderTests(unittest.TestCase):
     def test_decoder_diagnostics_source_retention_and_raster(self):
         self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
         result = subprocess.run([str(ROOT / "build/mac-debug/bin/shape_test")], check=True, capture_output=True, text=True)
-        self.assertIn("shape decoder and scalar raster checks passed", result.stdout)
+        self.assertIn("shape decoder and 4x4 antialiased raster checks passed", result.stdout)
 
     def test_reference_comparison_and_repeatability(self):
         renderer = shutil.which("rsvg-convert")
@@ -96,7 +96,10 @@ class ShapeRenderTests(unittest.TestCase):
                         offset = (y * width + x) * 4
                         delta = max(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(4))
                         max_alpha_delta = max(max_alpha_delta, abs(ours[offset + 3] - reference_rgba[offset + 3]))
-                        if ours[offset + 3] != 0 and reference_rgba[offset + 3] != 0:
+                        # Cairo's PNG writer stores quantized straight RGB in
+                        # low-alpha boundary pixels; compare RGB on fully
+                        # covered pixels and alpha on the boundary.
+                        if ours[offset + 3] == 255 and reference_rgba[offset + 3] == 255:
                             max_rgb_delta = max(max_rgb_delta, *(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(3)))
                         if not delta:
                             continue
@@ -104,9 +107,9 @@ class ShapeRenderTests(unittest.TestCase):
                         edge = False
                         for yy in range(max(0, y - 1), min(height, y + 2)):
                             for xx in range(max(0, x - 1), min(width, x + 2)):
-                                oi = (yy * width + xx) * 4 + 3
-                                if (ours[oi] != ours[offset + 3] or
-                                        reference_rgba[oi] != reference_rgba[offset + 3]):
+                                oi = (yy * width + xx) * 4
+                                if (ours[oi:oi + 4] != ours[offset:offset + 4] or
+                                        reference_rgba[oi:oi + 4] != reference_rgba[offset:offset + 4]):
                                     edge = True
                         if edge:
                             edge_diffs += 1
@@ -120,11 +123,11 @@ class ShapeRenderTests(unittest.TestCase):
                                 "vexel_sha256": hashlib.sha256(ours).hexdigest(),
                                 "reference_png_sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
                                 "edge_diff_pixels": edge_diffs, "interior_diff_pixels": bad_interior,
-                                "max_channel_diff": max_channel, "max_rgb_diff_when_covered": max_rgb_delta,
+                                "max_channel_diff": max_channel, "max_rgb_diff_when_fully_covered": max_rgb_delta,
                                 "max_alpha_diff": max_alpha_delta})
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps({"renderer_path": renderer, "renderer_version": version,
-                                   "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160, covered RGB delta <=1, and at most 120 differing pixels per fixture",
+                "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160; fully covered RGB delta <=1; and at most 120 differing pixels per fixture",
                                    "cases": results}, indent=2) + "\n")
 
     def test_bounds_and_stable_diagnostics(self):
@@ -197,9 +200,6 @@ class ShapeRenderTests(unittest.TestCase):
             run = subprocess.run([str(binary), str(degenerate), str(temp_path / "degenerate.rgba")], capture_output=True)
             self.assertEqual(run.returncode, 0)
             report["cases"].append({"name": "degenerate_path", "result": "safe_empty_or_filled"})
-        target = ROOT / "artifacts/WO-M4-02/bounds-and-diagnostics.json"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(report, indent=2) + "\n")
 
     def test_independent_shape_fill_rules_and_painter_order(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"

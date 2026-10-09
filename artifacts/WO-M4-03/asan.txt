@@ -1,0 +1,109 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03/build/mac-asan
+[1/57] Building C object CMakeFiles/vexel_ui_state.dir/src/ui/index_progress.c.o
+[2/57] Building C object CMakeFiles/vexel_jobs.dir/src/jobs/source_snapshot.c.o
+[3/57] Building C object CMakeFiles/vexel_document.dir/src/document/source_save.c.o
+[4/57] Building C object CMakeFiles/vexel_jobs.dir/src/jobs/job_scheduler.c.o
+[5/57] Building C object CMakeFiles/vexel_document.dir/src/platform/macos/platform_atomic_file.c.o
+[6/57] Building C object CMakeFiles/vexel_tile_cache.dir/src/raster/tile_cache.c.o
+[7/57] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o
+[8/57] Building C object CMakeFiles/vexel_tile_cache_test.dir/src/raster/tile_cache.c.o
+[9/57] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o
+[10/57] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
+[11/57] Building C object CMakeFiles/vexel_jobs.dir/src/platform/macos/platform_task.c.o
+[12/57] Building C object CMakeFiles/vexel_index.dir/src/platform/macos/platform_task.c.o
+[13/57] Building C object CMakeFiles/vexel_spatial.dir/src/spatial/index.c.o
+[14/57] Building C object CMakeFiles/vexel_ui_state.dir/src/ui/viewer_controls.c.o
+[15/57] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
+[16/57] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o
+[17/57] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
+[18/57] Building C object CMakeFiles/job_snapshot_test.dir/tests/jobs/test_job_snapshot.c.o
+[19/57] Building C object CMakeFiles/spatial_cache_test.dir/src/raster/tile.c.o
+[20/57] Building C object CMakeFiles/spatial_cache_test.dir/tests/raster/cache/cache_contract.c.o
+[21/57] Building C object CMakeFiles/spatial_cache_test.dir/tests/svg/spatial/spatial_cache_test.c.o
+[22/57] Linking C static library libvexel_tile_cache.a
+[23/57] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
+[24/57] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o
+[25/57] Linking C static library libvexel_document.a
+[26/57] Linking C static library libvexel_spatial.a
+[27/57] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[28/57] Building C object CMakeFiles/spatial_cache_bench.dir/app/spatial_cache_bench.c.o
+[29/57] Linking C static library libvexel_jobs.a
+[30/57] Linking C static library libvexel_tile_cache_test.a
+[31/57] Building C object CMakeFiles/viewer_navigation_test.dir/tests/ui/viewer_navigation_test.c.o
+[32/57] Building C object CMakeFiles/svg_token_stream_test.dir/tests/svg/index/test_token_stream.c.o
+[33/57] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o
+[34/57] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
+[35/57] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
+[36/57] Linking C executable bin/shape_render_cli
+[37/57] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
+[38/57] Linking C executable bin/xml_tokenizer_cli
+[39/57] Linking C static library libvexel_index.a
+[40/57] Building C object CMakeFiles/source_save_test.dir/tests/document/test_source_save.c.o
+[41/57] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
+[42/57] Linking C executable bin/spatial_cache_bench
+[43/57] Linking C executable bin/job_snapshot_test
+[44/57] Linking C executable bin/spatial_cache_test
+[45/57] Linking C executable bin/shape_test
+[46/57] Linking C executable bin/svg_token_stream_test
+[47/57] Linking C executable bin/xml_tokenizer_fuzz
+[48/57] Linking C executable bin/xml_tokenizer_test
+[49/57] Linking C executable bin/svg_index_bench
+[50/57] Linking C executable bin/source_save_test
+[51/57] Linking C executable base_contract_test
+[52/57] Linking C static library libvexel_ui_state.a
+[53/57] Linking C executable bin/viewer_navigation_test
+[54/57] Linking C executable bin/svg_index_test
+ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
+[55/57] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o
+[56/57] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o
+[57/57] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03/build/mac-asan
+      Start  1: cli-version
+ 1/11 Test  #1: cli-version ......................   Passed    0.21 sec
+      Start  2: base-contract
+ 2/11 Test  #2: base-contract ....................   Passed    0.19 sec
+      Start  3: xml-tokenizer
+ 3/11 Test  #3: xml-tokenizer ....................   Passed    0.46 sec
+      Start  4: source-save
+ 4/11 Test  #4: source-save ......................   Passed    0.19 sec
+      Start  5: shape-render
+ 5/11 Test  #5: shape-render .....................   Passed    0.25 sec
+      Start  6: svg-index
+ 6/11 Test  #6: svg-index ........................   Passed    0.34 sec
+      Start  7: viewer-navigation
+ 7/11 Test  #7: viewer-navigation ................   Passed    0.24 sec
+      Start  8: svg-token-stream-budget
+ 8/11 Test  #8: svg-token-stream-budget ..........   Passed    0.27 sec
+      Start  9: index-replay
+ 9/11 Test  #9: index-replay .....................***Failed    0.13 sec
+index replay preview: offscreen Metal device or queue unavailable
+progress: 10%
+progress: 50%
+progress: 90%
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=12423000
+stale_generation_rejected=true
+canceled_worker_rejected=true
+preview_state: submitted=true finished=true ready=true
+
+      Start 10: spatial-cache
+10/11 Test #10: spatial-cache ....................   Passed    0.30 sec
+      Start 11: job-snapshot
+11/11 Test #11: job-snapshot .....................   Passed    0.24 sec
+
+91% tests passed, 1 tests failed out of 11
+
+Total Test time (real) =   2.84 sec
+
+The following tests FAILED:
+	  9 - index-replay (Failed)
+Errors while running CTest

@@ -323,15 +323,15 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## M4 cumulative shape and corpus workload
 
 Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 265312 / 172464 bytes; Release `svg_index_bench`: 124064 bytes;
-Debug/Release `shape_render_cli`: 149040 / 87904 bytes; Debug/Release `libvexel_shape.a`: 108600 / 38928 bytes.
+Debug/Release `svgworkbench`: 265664 / 172576 bytes; Release `svg_index_bench`: 124176 bytes;
+Debug/Release `shape_render_cli`: 149344 / 88016 bytes; Debug/Release `libvexel_shape.a`: 113392 / 40544 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 69.453x and RSS ratio of 33.773x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 47.651x and RSS ratio of 33.652x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.203 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 5.378 ms, full index 0.872 ms; natural-earth-world-map-countries: first preview 5.471 ms, full index 0.948 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.207 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 7.858 ms, full index 0.897 ms; natural-earth-world-map-countries: first preview 7.954 ms, full index 0.994 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
@@ -345,3 +345,36 @@ it completed 1,000,000 cases in 24.382 seconds with no sanitizer reports,
 crashes, or invariant failures. The runner sandbox blocked offscreen Metal
 access during its first verification attempts; the complete Debug, ASan,
 UBSan, and Python suites pass when run directly in the isolated worktree. The sandbox failure transcript and direct host results are retained in the M4 logs.
+
+## WO-M4-03 deterministic shape raster
+
+The Release CLI benchmark compares the frozen `6cd61dd6570ab556af7d6a1feb8899d3f849f8af`
+archive with this 4x4 coverage implementation on the same arm64 macOS 27.0
+host and Apple clang 21.0.0; the specific hardware model is unavailable in the
+benchmark harness. Each fixed 128x128 workload uses two warmups and
+21 measured trials; results include per-trial latencies, median/p95, throughput,
+peak RSS, and output hashes in `artifacts/WO-M4-03/raster-benchmark.json`.
+
+| Workload | Base median / p95 (ms) | Candidate median / p95 (ms) | Median change | Candidate pixels/s |
+|---|---:|---:|---:|---:|
+| Simple rectangle | 2.528 / 2.743 | 2.674 / 2.898 | +5.79% | 6,126,484 |
+| Curved fill | 3.103 / 3.361 | 4.989 / 5.225 | +60.82% | 3,283,696 |
+| 16 fractional rectangles | 3.324 / 3.506 | 5.964 / 6.154 | +79.44% | 2,746,958 |
+
+The first implementation made the simple workload 75.30% slower. An interior-pixel
+fast path now uses one center sample when no edge bounds cross the pixel, while
+boundary pixels retain all 16 fixed samples. The simple workload is now 5.79%
+slower than base; curved and multi-shape cases remain 60.82% and 79.44% slower
+because their more numerous edges make boundary classification more costly.
+The sample grid and work cap remain unchanged. Peak process RSS is 2,048,000 bytes
+for base and 2,031,616 bytes for candidate. This is a measured quality/performance
+tradeoff, not a speedup claim. The renderer and harness use 128x128 tiles; CLI
+timing includes SVG decode, process startup, and rasterization.
+
+The 17 librsvg 2.63.2 fixtures pass with zero interior differences, maximum
+alpha delta at most 56, fully covered RGB difference at most 1, and no more than
+58 differing edge pixels per fixture. Fixture source, Vexel RGBA, and librsvg
+PNG hashes are retained in `artifacts/WO-M4-03/reference-comparison.json`.
+The seeded ASan+UBSan raster campaign result is in
+`artifacts/WO-M4-03/fuzz-report.json`; it separately counts generated and
+rasterized fractional, evenodd, and nonzero cases.

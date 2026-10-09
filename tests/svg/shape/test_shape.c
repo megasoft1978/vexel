@@ -41,8 +41,92 @@ static bool paths_equivalent(const char *left, const char *right)
     return ok;
 }
 
+static bool render_source(const char *source, raster_tile *tile, svg_shape_document *doc,
+                         svg_shape_diagnostic *diagnostic)
+{
+    size_t length = strlen(source);
+    if (svg_shape_decode((base_bytes){(const uint8_t *)source, length}, doc, diagnostic) != SVG_SHAPE_ERROR_NONE) return false;
+    if (!raster_shape_render(doc, tile, diagnostic)) {
+        svg_shape_document_destroy(doc);
+        return false;
+    }
+    return true;
+}
+
+static uint8_t pixel_alpha(const raster_tile *tile, uint32_t x, uint32_t y)
+{
+    return tile->rgba[((size_t)y * tile->width + x) * 4U + 3U];
+}
+
+static bool antialias_and_fill_checks(void)
+{
+    static const char same_nonzero[] = "<svg width=\"16\" height=\"16\"><path fill=\"red\" d=\"M1 1 H15 V15 H1 Z M5 5 H11 V11 H5 Z\"/></svg>";
+    static const char same_evenodd[] = "<svg width=\"16\" height=\"16\"><path fill=\"red\" fill-rule=\"evenodd\" d=\"M1 1 H15 V15 H1 Z M5 5 H11 V11 H5 Z\"/></svg>";
+    static const char opposite_nonzero[] = "<svg width=\"16\" height=\"16\"><path fill=\"red\" d=\"M1 1 H15 V15 H1 Z M5 5 V11 H11 V5 Z\"/></svg>";
+    static const char fractional[] = "<svg width=\"8\" height=\"8\"><rect x=\"1.25\" y=\"1.25\" width=\"4\" height=\"4\" fill=\"#336699\"/></svg>";
+    const char *cases[] = {same_nonzero, same_evenodd, opposite_nonzero, fractional};
+    raster_tile tiles[4] = {{0}};
+    svg_shape_document docs[4] = {{0}};
+    svg_shape_diagnostic diag;
+    for (size_t i = 0; i < 4U; i++) {
+        if (!render_source(cases[i], &tiles[i], &docs[i], &diag)) return false;
+    }
+    bool ok = pixel_alpha(&tiles[0], 7U, 7U) == 255U &&
+              pixel_alpha(&tiles[1], 7U, 7U) == 0U &&
+              pixel_alpha(&tiles[2], 7U, 7U) == 0U &&
+              tiles[0].rgba[((size_t)7U * 16U + 7U) * 4U] == 255U &&
+              tiles[1].rgba[((size_t)7U * 16U + 7U) * 4U] == 0U &&
+              pixel_alpha(&tiles[0], 0U, 0U) == 0U &&
+              pixel_alpha(&tiles[3], 1U, 1U) > 0U && pixel_alpha(&tiles[3], 1U, 1U) < 255U &&
+              pixel_alpha(&tiles[3], 2U, 2U) == 255U &&
+              tiles[3].rgba[((size_t)2U * 8U + 2U) * 4U] == 51U &&
+              tiles[3].rgba[((size_t)2U * 8U + 2U) * 4U + 1U] == 102U;
+    ok = ok && docs[3].source.ptr == (const uint8_t *)fractional &&
+         docs[3].source.len == strlen(fractional) &&
+         pixel_alpha(&tiles[3], 0U, 0U) == 0U &&
+         tiles[3].rgba[0] == 0U && tiles[3].rgba[1] == 0U && tiles[3].rgba[2] == 0U;
+    raster_tile repeat = {0};
+    if (ok) ok = raster_shape_render(&docs[3], &repeat, &diag) &&
+                 repeat.byte_count == tiles[3].byte_count &&
+                 memcmp(repeat.rgba, tiles[3].rgba, repeat.byte_count) == 0;
+    raster_tile_destroy(&repeat);
+    for (size_t i = 0; i < 4U; i++) {
+        raster_tile_destroy(&tiles[i]);
+        svg_shape_document_destroy(&docs[i]);
+    }
+    if (!ok) return false;
+
+    static const char order[] = "<svg width=\"8\" height=\"8\"><rect x=\"1\" y=\"1\" width=\"5\" height=\"5\" fill=\"blue\"/><rect x=\"3.5\" y=\"1\" width=\"3\" height=\"5\" fill=\"red\"/></svg>";
+    raster_tile ordered = {0}; svg_shape_document ordered_doc = {0};
+    if (!render_source(order, &ordered, &ordered_doc, &diag)) return false;
+    ok = ordered.rgba[((size_t)2U * 8U + 4U) * 4U] == 255U &&
+         ordered.rgba[((size_t)2U * 8U + 4U) * 4U + 2U] == 0U &&
+         pixel_alpha(&ordered, 2U, 2U) == 255U;
+    raster_tile_destroy(&ordered); svg_shape_document_destroy(&ordered_doc);
+    if (!ok) return false;
+
+    static const char aligned[] = "<svg width=\"16\" height=\"16\"><rect x=\"0\" y=\"0\" width=\"8\" height=\"8\"/><rect x=\"8\" y=\"8\" width=\"8\" height=\"8\"/></svg>";
+    raster_tile boundary = {0}; svg_shape_document boundary_doc = {0};
+    if (!render_source(aligned, &boundary, &boundary_doc, &diag)) return false;
+    ok = pixel_alpha(&boundary, 0U, 0U) == 255U &&
+         pixel_alpha(&boundary, 8U, 0U) == 0U &&
+         pixel_alpha(&boundary, 0U, 8U) == 0U &&
+         pixel_alpha(&boundary, 8U, 8U) == 255U;
+    raster_tile_destroy(&boundary); svg_shape_document_destroy(&boundary_doc);
+    if (!ok) return false;
+
+    svg_shape_document oversize = {0};
+    oversize.width = 5000U; oversize.height = 5000U;
+    oversize.view_width = 16.0; oversize.view_height = 16.0;
+    raster_tile rejected = {0};
+    if (raster_shape_render(&oversize, &rejected, &diag) ||
+        diag.category != SVG_SHAPE_ERROR_LIMIT || rejected.rgba != NULL) return false;
+    return true;
+}
+
 int main(void)
 {
+    if (!antialias_and_fill_checks()) { fprintf(stderr, "antialias/fill checks failed\n"); return 45; }
     const bool smooth_checks[] = {
         paths_equivalent("M1 1 C2 1 3 2 4 2 S6 3 7 4", "M1 1 C2 1 3 2 4 2 C5 2 6 3 7 4"),
         paths_equivalent("M1 1 c1 0 2 1 3 1 s2 1 3 2 2 1 3 2", "M1 1 c1 0 2 1 3 1 c1 0 2 1 3 2 c1 1 2 1 3 2"),
@@ -192,6 +276,6 @@ int main(void)
     static const uint8_t zero_shape[]="<svg width=\"8\" height=\"8\"><circle r=\"0\"/><ellipse rx=\"0\" ry=\"2\"/></svg>";
     if(svg_shape_decode((base_bytes){zero_shape,sizeof(zero_shape)-1U},&doc,&diagnostic)!=SVG_SHAPE_ERROR_NONE||doc.edge_count!=0U)return 27;
     svg_shape_document_destroy(&doc);
-    puts("shape decoder and scalar raster checks passed");
+    puts("shape decoder and 4x4 antialiased raster checks passed");
     return 0;
 }

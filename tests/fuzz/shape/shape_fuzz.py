@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--duration", type=int, default=60)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--cases", type=int, default=1_000_000)
-    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/WO-M4-02/fuzz-report.json")
+    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/WO-M4-03/fuzz-report.json")
     args = parser.parse_args()
     if not 1 <= args.duration <= 600 or not 1 <= args.cases <= 100_000_000 or not 0 <= args.seed <= 0xFFFFFFFF:
         parser.error("duration, case count, or seed is outside the configured bounds")
@@ -38,16 +38,29 @@ def main():
     campaign_seconds = float(fields["duration"])
     cap_exhaustion = int(fields.get("cap_exhaustion", "0"))
     cap_case_bytes = int(fields.get("cap_case_bytes", "0"))
+    fractional_cases = int(fields.get("fractional_cases", "0"))
+    evenodd_cases = int(fields.get("evenodd_cases", "0"))
+    nonzero_cases = int(fields.get("nonzero_cases", "0"))
+    fractional_renders = int(fields.get("fractional_renders", "0"))
+    evenodd_renders = int(fields.get("evenodd_renders", "0"))
+    nonzero_renders = int(fields.get("nonzero_renders", "0"))
     if cases < 1_000_000 and campaign_seconds < args.duration:
         raise RuntimeError("campaign did not reach either required floor")
     if cap_exhaustion != 1 or cap_case_bytes < 1 or cap_case_bytes > 16 * 1024 * 1024:
         raise RuntimeError("bounded command-cap exhaustion case did not pass")
+    if min(fractional_cases, evenodd_cases, nonzero_cases) == 0:
+        raise RuntimeError("fractional geometry and both fill rules were not exercised")
+    if min(fractional_renders, evenodd_renders, nonzero_renders) == 0:
+        raise RuntimeError("fractional geometry and both fill rules did not reach the rasterizer")
     report = {"seed": args.seed, "cases": cases, "duration_seconds": round(elapsed, 3),
               "process_cpu_seconds": campaign_seconds,
               "binary": str(binary), "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
               "sanitizer_stderr": str(stderr_path), "sanitizer_stderr_bytes": len(run.stderr.encode()),
               "random_input_max_bytes": 4096, "cap_exhaustion_cases": cap_exhaustion,
               "cap_exhaustion_input_bytes": cap_case_bytes,
+              "fractional_cases": fractional_cases, "evenodd_cases": evenodd_cases,
+              "nonzero_cases": nonzero_cases, "fractional_renders": fractional_renders,
+              "evenodd_renders": evenodd_renders, "nonzero_renders": nonzero_renders,
               "input_max_bytes": max(4096, cap_case_bytes),
               "crashes": 0, "sanitizer_reports": 0,
               "invariant_failures": 0, "result": "pass"}

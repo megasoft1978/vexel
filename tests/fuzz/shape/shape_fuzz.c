@@ -69,12 +69,29 @@ int main(int argc, char **argv)
         "<g transform=\"skewX(10)\"><circle r=\"3\"/></g>",
         "<polygon points=\"1 2 3\"/>"
     };
+    static const char *coverage_cases[] = {
+        "<rect x=\"1.125\" y=\"2.375\" width=\"8.5\" height=\"6.25\"/>",
+        "<path fill-rule=\"evenodd\" d=\"M0.25 0.5 H14.75 V14.5 H0.25 Z M4.5 4.25 H11.5 V11.75 H4.5 Z\"/>",
+        "<path d=\"M0.25 0.5 H14.75 V14.5 H0.25 Z M4.5 4.25 V11.75 H11.5 V4.25 Z\"/>"
+    };
     static const char shape_prefix[] = "<svg width=\"16\" height=\"16\">";
     static const char shape_suffix[] = "</svg>";
     unsigned long completed = 0;
+    unsigned long fractional_cases = 0, evenodd_cases = 0, nonzero_cases = 0;
+    unsigned long fractional_renders = 0, evenodd_renders = 0, nonzero_renders = 0;
     for (unsigned long c = 0; c < count; c++) {
         uint8_t input[INPUT_CAP]; size_t n = 0;
-        if ((next_u32(&state) & 1U) != 0U) {
+        unsigned mode = (unsigned)(c % 4UL);
+        if (mode < 3U) {
+            memcpy(input, shape_prefix, sizeof(shape_prefix)-1U); n=sizeof(shape_prefix)-1U;
+            const char *shape=coverage_cases[mode];
+            size_t length=strlen(shape);
+            memcpy(input+n,shape,length);n+=length;
+            memcpy(input+n,shape_suffix,sizeof(shape_suffix)-1U);n+=sizeof(shape_suffix)-1U;
+            fractional_cases++;
+            if (mode == 1U) evenodd_cases++;
+            if (mode == 2U) nonzero_cases++;
+        } else if ((next_u32(&state) & 1U) != 0U) {
             memcpy(input, shape_prefix, sizeof(shape_prefix)-1U); n=sizeof(shape_prefix)-1U;
             const char *shape=shape_cases[next_u32(&state)%(sizeof(shape_cases)/sizeof(shape_cases[0]))];
             size_t length=strlen(shape);
@@ -94,8 +111,19 @@ int main(int argc, char **argv)
         svg_shape_error error = svg_shape_decode((base_bytes){input,n}, &doc, &diag);
         if (error == SVG_SHAPE_ERROR_NONE) {
             if (doc.width == 0U || doc.width > 4096U || doc.height == 0U || doc.height > 4096U || doc.edge_count > SVG_SHAPE_MAX_EDGES) return 3;
-            raster_tile tile;
-            if (raster_shape_render(&doc, &tile, &diag)) raster_tile_destroy(&tile);
+            bool render_case = (mode < 3U && c % 128UL == mode) ||
+                               (mode == 3U && c % 128UL == 3UL);
+            if (render_case) {
+                raster_tile tile;
+                if (!raster_shape_render(&doc, &tile, &diag)) {
+                    svg_shape_document_destroy(&doc);
+                    return 6;
+                }
+                raster_tile_destroy(&tile);
+                if (mode == 0U) fractional_renders++;
+                else if (mode == 1U) evenodd_renders++;
+                else if (mode == 2U) nonzero_renders++;
+            }
             svg_shape_document_destroy(&doc);
         } else if (diag.category == SVG_SHAPE_ERROR_NONE || diag.offset > n) return 4;
         completed++;
@@ -103,7 +131,8 @@ int main(int argc, char **argv)
             (double)(clock() - started) / (double)CLOCKS_PER_SEC >= (double)duration) break;
     }
     double seconds = (double)(clock() - started) / (double)CLOCKS_PER_SEC;
-    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu\n",
-           seed_long, completed, seconds, cap_case_bytes);
+    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu fractional_cases=%lu evenodd_cases=%lu nonzero_cases=%lu fractional_renders=%lu evenodd_renders=%lu nonzero_renders=%lu\n",
+           seed_long, completed, seconds, cap_case_bytes, fractional_cases, evenodd_cases, nonzero_cases,
+           fractional_renders, evenodd_renders, nonzero_renders);
     return 0;
 }
