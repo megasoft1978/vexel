@@ -117,25 +117,49 @@ static bool parse_stops(base_bytes source, const svg_xml_token *tokens,
 
 static bool gradient_coordinates(base_bytes source, const svg_xml_token *tokens,
                                  size_t count, size_t gradient, bool object_box,
+                                 double viewport_width, double viewport_height,
                                  svg_shape_paint *paint)
 {
     const char *names[5];
     double defaults[5];
     if (paint->kind == SVG_SHAPE_PAINT_LINEAR) {
         names[0] = "x1"; names[1] = "y1"; names[2] = "x2"; names[3] = "y2";
-        defaults[0] = 0.0; defaults[1] = 0.0; defaults[2] = 1.0; defaults[3] = 0.0;
+        defaults[0] = 0.0;
+        defaults[1] = 0.0;
+        defaults[2] = object_box ? 1.0 : viewport_width;
+        defaults[3] = 0.0;
     } else {
         names[0] = "cx"; names[1] = "cy"; names[2] = "r"; names[3] = "fx"; names[4] = "fy";
-        defaults[0] = 0.5; defaults[1] = 0.5; defaults[2] = 0.5; defaults[3] = 0.5; defaults[4] = 0.5;
+        double radius = hypot(viewport_width, viewport_height) / sqrt(2.0);
+        defaults[0] = object_box ? 0.5 : viewport_width * 0.5;
+        defaults[1] = object_box ? 0.5 : viewport_height * 0.5;
+        defaults[2] = object_box ? 0.5 : radius;
+        defaults[3] = defaults[0];
+        defaults[4] = defaults[1];
     }
     size_t count_coordinates = paint->kind == SVG_SHAPE_PAINT_LINEAR ? 4U : 5U;
     for (size_t i = 0U; i < count_coordinates; ++i) {
         svg_xml_span value;
         paint->coordinates[i] = defaults[i];
         if (!attr(source, tokens, count, gradient, names[i], &value)) continue;
-        if (!object_box && value.length != 0U && source.ptr[value.offset + value.length - 1U] == '%') return false;
         if (!number(source, value, &paint->coordinates[i])) return false;
+        if (!object_box && value.length != 0U && source.ptr[value.offset + value.length - 1U] == '%') {
+            double scale;
+            if (paint->kind == SVG_SHAPE_PAINT_LINEAR)
+                scale = (i == 0U || i == 2U) ? viewport_width : viewport_height;
+            else if (i == 0U || i == 3U) scale = viewport_width;
+            else if (i == 1U || i == 4U) scale = viewport_height;
+            else scale = hypot(viewport_width, viewport_height) / sqrt(2.0);
+            paint->coordinates[i] *= scale;
+        }
         if (object_box && (paint->coordinates[i] < 0.0 || paint->coordinates[i] > 1.0)) return false;
+    }
+    if (paint->kind == SVG_SHAPE_PAINT_RADIAL) {
+        svg_xml_span focal;
+        if (!attr(source, tokens, count, gradient, "fx", &focal))
+            paint->coordinates[3] = paint->coordinates[0];
+        if (!attr(source, tokens, count, gradient, "fy", &focal))
+            paint->coordinates[4] = paint->coordinates[1];
     }
     if (paint->kind == SVG_SHAPE_PAINT_RADIAL &&
         (paint->coordinates[2] <= 0.0 || paint->coordinates[3] != paint->coordinates[0] ||
@@ -147,6 +171,7 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        const svg_xml_token *tokens,
                                        size_t token_count, svg_xml_span fill,
                                        const geom_edge *edges, size_t edge_count,
+                                       double viewport_width, double viewport_height,
                                        svg_shape_paint *paint,
                                        svg_paint_stop **stops,
                                        size_t *stop_count,
@@ -183,7 +208,9 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
     if (attr(source, tokens, token_count, target, "spreadMethod", &value) && !eq(source, value, "pad")) goto unsupported;
     if (attr(source, tokens, token_count, target, "gradientTransform", &value) ||
         attr(source, tokens, token_count, target, "href", &value)) goto unsupported;
-    if (!gradient_coordinates(source, tokens, token_count, target, result.object_bounding_box, &result)) goto unsupported;
+    if (!gradient_coordinates(source, tokens, token_count, target,
+                              result.object_bounding_box, viewport_width,
+                              viewport_height, &result)) goto unsupported;
     svg_paint_stop local[SVG_PAINT_MAX_GRADIENT_STOPS];
     size_t local_count = 0U;
     bool stop_limit = false;

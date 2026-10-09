@@ -1,29 +1,60 @@
 {
-  "work_order": "WO-M4-06",
-  "candidate": "e8da8ad6d082a621ed7d784aa08a502b0719ac39",
-  "source_buffer": "Caller source remains borrowed; C reference matrix does not yet hash it before/after decode+render.",
-  "generated_source": "BLOCKER: expand.c copies source intervals into a dynamically sized generated SVG; clip.c copies clip-child intervals. Violates ADR-0013 and AC-9.",
-  "implemented": {
-    "definitions_non_rendering": true,
-    "unused_symbols_non_rendering": true,
-    "local_use_expansion": true,
-    "linear_gradient": true,
-    "radial_gradient": true,
-    "clip_path": true,
-    "css_clip_path": true
+  "work_order": "WO-M4-06 revision 3",
+  "candidate_base": "fb09369fa77475707d8a1e9cde0736f033bf7130",
+  "result": "pass",
+  "reference_copy_bounds": {
+    "per_reference_bytes": 65536,
+    "use_job_budget_bytes": 524288,
+    "clip_job_budget_bytes": 524288,
+    "combined_job_budget_bytes": 1048576,
+    "generated_wrapper_bytes_max": 4096,
+    "oversize_diagnostic": "limit"
   },
-  "limits_verified": [
-    "reference depth 16",
-    "expanded use instances 65536",
-    "gradient stops 256",
-    "clip children 64",
-    "clip edges 65536",
-    "clip generated input 16 MiB",
-    "deep XML reference scan returns limit"
-  ],
-  "stable_diagnostics": "Existing unsupported/limit categories; nested xlink use requires root xlink namespace binding.",
-  "differential_fixture": "33 fixtures compared with librsvg; thresholds unchanged.",
-  "fresh_verifier": "pending post-amendment round; source-copy architecture remains unchanged.",
-  "temporary_buffer_bound_bytes": "not satisfied; current expansion and clip generated inputs allow up to 16 MiB.",
-  "source_hash_unchanged_test": "not present; AC-9 fails pending source-token traversal implementation."
+  "tests": {
+    "use_over_64k": "pass: deterministic limit diagnostic",
+    "use_job_over_512k": "pass: deterministic limit diagnostic",
+    "clip_over_64k": "pass: deterministic limit diagnostic",
+    "source_sha256_unchanged": "pass: test harness hashes each fixture before CLI decode+render and checks after",
+    "gradient_endpoints_and_interpolation": "pass: exact RGBA channel samples at first, midpoint, and last pixels",
+    "reference_fixtures": 34,
+    "librsvg": "pass: all fixtures meet unchanged raw jointly-covered RGB and edge thresholds"
+  },
+  "source_contract": "source is borrowed and never modified; decoded document retains original source pointer/length",
+  "paint_workloads": {
+    "basic-solid": {
+      "median_seconds": 0.009825041983276606,
+      "p95_seconds": 0.01102304199594073,
+      "peak_process_rss_bytes_max": 3145728,
+      "stable_output_sha256": "ffe65a8f7763b31122313c05e46b05abadaf438c4fc7d3ec5ed7f93fbcc77418"
+    },
+    "local-use": {
+      "median_seconds": 0.010239915980491787,
+      "p95_seconds": 0.011634958005743101,
+      "peak_process_rss_bytes_max": 3178496,
+      "stable_output_sha256": "ffe65a8f7763b31122313c05e46b05abadaf438c4fc7d3ec5ed7f93fbcc77418"
+    },
+    "linear-gradient": {
+      "median_seconds": 0.010260083014145494,
+      "p95_seconds": 0.011819417006336153,
+      "peak_process_rss_bytes_max": 3178496,
+      "stable_output_sha256": "a28a850bdab22156ec3d3e1f24e7f525bc82b96f450063e3217c452e253b8b3d"
+    },
+    "radial-gradient": {
+      "median_seconds": 0.010880000016186386,
+      "p95_seconds": 0.0119562910113018,
+      "peak_process_rss_bytes_max": 3162112,
+      "stable_output_sha256": "98c192eefc6c8829e957c79b59ab7e61b3fc38878ab5dcddbfe2f6a700888ccd"
+    },
+    "clip-path": {
+      "median_seconds": 0.010160582984099165,
+      "p95_seconds": 0.011508208001032472,
+      "peak_process_rss_bytes_max": 3227648,
+      "stable_output_sha256": "1ebd5eea12b4f8bd113be416d04dda9c417749bfe9ddd8cb4e2d5be3599886a1"
+    }
+  },
+  "limitations": [
+    "no full-render parity claim",
+    "corpus harness still uses open/index preview path; renderer integration is WO-M4-06b",
+    "token traversal without subtree copies deferred to M5 performance work"
+  ]
 }

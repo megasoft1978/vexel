@@ -14,7 +14,7 @@ ARTIFACTS = ROOT / "artifacts/WO-M4-06"
 CACHE = ROOT / ".cache/M4-06/paint-bench"
 OUTPUT = ROOT / "bench/results/WO-M4-06.json"
 CLI = ROOT / "build/mac-release/bin/shape_render_cli"
-BASE_CLI = ROOT.parents[1] / "build/mac-debug/bin/shape_render_cli"
+BASE_CLI = ROOT / ".cache/M4-06/frozen-base/build/mac-release/bin/shape_render_cli"
 TRIALS = 21
 SIZE = 512
 

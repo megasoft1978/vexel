@@ -377,6 +377,17 @@
       "max_channel_diff": 0,
       "max_jointly_covered_straight_rgb_diff": 0,
       "max_alpha_diff": 0
+    },
+    {
+      "case": "user-space-gradient-defaults",
+      "source_sha256": "882ba4ace98ffbfe238dab4ec26091b65f05b5026fa6a5b202bec0e02e0926a7",
+      "vexel_sha256": "ccfdfbb732edfa84427414d8dc17fa3b4c0fc7b7b2399c2b6e134df5ce447bd8",
+      "reference_png_sha256": "1c30dad792f3ca23d80c8ab7af32bf5ef7407c7119dfb7e868f54f34ab1c1c8d",
+      "edge_diff_pixels": 0,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 0,
+      "max_jointly_covered_straight_rgb_diff": 0,
+      "max_alpha_diff": 0
     }
   ]
 }

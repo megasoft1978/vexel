@@ -8,11 +8,19 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
-[1/2] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[2/2] Linking C executable bin/shape_test
+[1/9] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[2/9] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[3/9] Linking C static library libvexel_shape.a
+[4/9] Linking C executable bin/css_test
+[5/9] Linking C executable bin/shape_test
+[6/9] Linking C executable bin/svg_index_bench
+[7/9] Linking C executable bin/shape_fuzz
+[8/9] Linking C executable bin/shape_render_cli
+[9/9] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
       Start  1: cli-version
- 1/12 Test  #1: cli-version ......................   Passed    0.01 sec
+ 1/12 Test  #1: cli-version ......................   Passed    0.57 sec
       Start  2: base-contract
  2/12 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
@@ -22,20 +30,20 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build
       Start  5: shape-render
  5/12 Test  #5: shape-render .....................   Passed    0.33 sec
       Start  6: css-cascade
- 6/12 Test  #6: css-cascade ......................   Passed    0.00 sec
+ 6/12 Test  #6: css-cascade ......................   Passed    0.18 sec
       Start  7: svg-index
- 7/12 Test  #7: svg-index ........................   Passed    0.13 sec
+ 7/12 Test  #7: svg-index ........................   Passed    0.15 sec
       Start  8: viewer-navigation
  8/12 Test  #8: viewer-navigation ................   Passed    0.03 sec
       Start  9: svg-token-stream-budget
  9/12 Test  #9: svg-token-stream-budget ..........   Passed    0.06 sec
       Start 10: index-replay
-10/12 Test #10: index-replay .....................   Passed    0.13 sec
+10/12 Test #10: index-replay .....................   Passed    0.14 sec
       Start 11: spatial-cache
-11/12 Test #11: spatial-cache ....................   Passed    0.06 sec
+11/12 Test #11: spatial-cache ....................   Passed    0.05 sec
       Start 12: job-snapshot
 12/12 Test #12: job-snapshot .....................   Passed    0.05 sec
 
 100% tests passed, 0 tests failed out of 12
 
-Total Test time (real) =   0.97 sec
+Total Test time (real) =   1.75 sec

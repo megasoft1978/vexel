@@ -324,14 +324,14 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 
 Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
 Debug/Release `svgworkbench`: 341696 / 224240 bytes; Release `svg_index_bench`: 159408 bytes;
-Debug/Release `shape_render_cli`: 225472 / 139808 bytes; Debug/Release `libvexel_shape.a`: 300392 / 105952 bytes.
+Debug/Release `shape_render_cli`: 225472 / 139808 bytes; Debug/Release `libvexel_shape.a`: 302368 / 106496 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 40.363x and RSS ratio of 33.415x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 39.320x and RSS ratio of 33.471x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.873 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 9.418 ms, full index 0.836 ms; natural-earth-world-map-countries: first preview 9.250 ms, full index 0.909 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.287 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 9.451 ms, full index 0.833 ms; natural-earth-world-map-countries: first preview 9.713 ms, full index 0.947 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
@@ -450,3 +450,32 @@ counts are 2/12, 0/17, 0/26, and 0/3. T1 geomean Inkscape/Vexel ratios are
 42.437x first-preview time and 33.471x peak RSS; higher-tier comparisons are
 unavailable because no files preview. This remains open/index evidence, not
 full-render parity.
+
+## WO-M4-06 bounded references, gradients, and clipping
+
+The Release raster microbenchmarks use 512x512 output and 21 fresh-process
+trials per workload on arm64 macOS 27.0 with Apple clang 21.0.0. The candidate
+median/p95 latencies are 9.825/11.023 ms for a solid rectangle, 10.240/11.635
+ms for local `<use>`, 10.260/11.819 ms for a linear gradient, 10.880/11.956 ms
+for a radial gradient, and 10.161/11.508 ms for clipping. Candidate peak RSS
+ranges from 3,145,728 to 3,227,648 bytes, and each workload has a stable output
+hash. The comparable frozen M4-05 Release solid workload measured 8.840 ms
+median; candidate is 11.1% slower by the medians. The frozen baseline p95 has a
+118.028 ms startup outlier. Its peak RSS is unavailable because the frozen CLI
+has no metrics interface. No public performance claim is made. Raw trials are
+in `artifacts/WO-M4-06/paint-benchmark.json` and `bench/results/WO-M4-06.json`.
+
+The independent `rsvg-convert 2.63.2` comparison covers 34 shape, use,
+gradient, clipping, and CSS fixtures. Every fixture passes the existing raw
+jointly-covered RGB and edge-pixel thresholds; the maximum jointly covered RGB
+delta is 1 and the highest edge-difference count is 88 (limit 120). The new
+user-space gradient default fixture matches librsvg exactly. Source and output
+hashes are recorded in `artifacts/WO-M4-06/reference-comparison.json`.
+
+The 58-file real corpus still has 2 successful previews and 56 unsupported
+outcomes (T1 2/12; T2 0/17; T3 0/26; T4 0/3), with no limits or crashes. These
+results use the existing open/index preview path; the renderer is not yet wired
+into that path. This measures open/index behavior and selected fixture pixels,
+not full-render parity. The 100 MiB first-preview wedge remains unmet; maximum
+main-thread step and existing RSS gates pass. M4-06b will wire partial tile
+rendering into the corpus/viewer path.

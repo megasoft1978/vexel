@@ -6,10 +6,13 @@
 #include <string.h>
 
 #define EXPAND_MAX_BYTES (16U * 1024U * 1024U)
+#define EXPAND_MAX_REFERENCE_BYTES (64U * 1024U)
+#define EXPAND_MAX_JOB_REFERENCE_BYTES (512U * 1024U)
 #define EXPAND_MAX_IDS 65536U
 #define EXPAND_ID_TABLE 131072U
 #define EXPAND_MAX_DEPTH 16U
 #define EXPAND_MAX_INSTANCES 65536U
+#define EXPAND_MAX_SOURCE_MAP_ENTRIES 65536U
 
 typedef struct reference_id { svg_xml_span id; size_t token; } reference_id;
 typedef struct expander {
@@ -20,7 +23,7 @@ typedef struct expander {
     size_t *id_slots;
     size_t id_count;
     uint8_t *out;
-    size_t len, cap, instances;
+    size_t len, cap, instances, reference_bytes;
     size_t stack[EXPAND_MAX_DEPTH];
     size_t stack_len;
     size_t first_use_offset;
@@ -63,7 +66,7 @@ static bool source_map_add(expander *e, size_t output_offset, size_t length,
             return true;
         }
     }
-    if (e->map->count >= 1048576U || e->map->count + 1U > SIZE_MAX / sizeof(*e->map->entries)) return false;
+    if (e->map->count >= EXPAND_MAX_SOURCE_MAP_ENTRIES || e->map->count + 1U > SIZE_MAX / sizeof(*e->map->entries)) return false;
     size_t next = e->map->count + 1U;
     svg_reference_source_map_entry *grown = realloc(e->map->entries, next * sizeof(*e->map->entries));
     if (grown == NULL) return false;
@@ -133,6 +136,15 @@ static bool expand_use(expander *e,size_t use,size_t use_end)
     if(target==SIZE_MAX){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,href.offset);return false;}
     for(size_t i=0;i<e->stack_len;i++)if(e->stack[i]==target){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,href.offset);return false;}
     if(e->stack_len>=EXPAND_MAX_DEPTH||++e->instances>EXPAND_MAX_INSTANCES){error_at(e,SVG_SHAPE_ERROR_LIMIT,e->tokens[use].name.offset);return false;}
+    size_t target_end = close_token(e, target);
+    size_t subtree_start = e->tokens[target].source.offset;
+    size_t subtree_end = e->tokens[target_end].source.offset + e->tokens[target_end].source.length;
+    if (subtree_end < subtree_start || subtree_end - subtree_start > EXPAND_MAX_REFERENCE_BYTES ||
+        e->reference_bytes > EXPAND_MAX_JOB_REFERENCE_BYTES - (subtree_end - subtree_start)) {
+        error_at(e, SVG_SHAPE_ERROR_LIMIT, e->tokens[use].name.offset);
+        return false;
+    }
+    e->reference_bytes += subtree_end - subtree_start;
     bool symbol=eq(e->src,e->tokens[target].local_name,"symbol");
     bool supported=symbol||eq(e->src,e->tokens[target].local_name,"g")||eq(e->src,e->tokens[target].local_name,"rect")||eq(e->src,e->tokens[target].local_name,"path")||eq(e->src,e->tokens[target].local_name,"circle")||eq(e->src,e->tokens[target].local_name,"ellipse")||eq(e->src,e->tokens[target].local_name,"line")||eq(e->src,e->tokens[target].local_name,"polygon")||eq(e->src,e->tokens[target].local_name,"polyline");
     if(!supported){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,e->tokens[target].name.offset);return false;}
@@ -150,7 +162,6 @@ static bool expand_use(expander *e,size_t use,size_t use_end)
     }
     if(!literal(e,">"))return false;
     e->stack[e->stack_len++]=target;
-    size_t target_end=close_token(e,target);
     size_t content_start,target_stop;
     if(symbol){content_start=e->tokens[target].source.offset+e->tokens[target].source.length;target_stop=e->tokens[target_end].source.offset;}
     else {content_start=e->tokens[target].source.offset;target_stop=e->tokens[target_end].source.offset+e->tokens[target_end].source.length;}

@@ -8,11 +8,19 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan
-[1/2] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[2/2] Linking C executable bin/shape_test
+[1/9] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[2/9] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[3/9] Linking C static library libvexel_shape.a
+[4/9] Linking C executable bin/shape_fuzz
+[5/9] Linking C executable bin/css_test
+[6/9] Linking C executable bin/shape_test
+[7/9] Linking C executable bin/svg_index_bench
+[8/9] Linking C executable bin/shape_render_cli
+[9/9] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan
       Start  1: cli-version
- 1/12 Test  #1: cli-version ......................   Passed    0.01 sec
+ 1/12 Test  #1: cli-version ......................   Passed    0.20 sec
       Start  2: base-contract
  2/12 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
@@ -20,9 +28,9 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build
       Start  4: source-save
  4/12 Test  #4: source-save ......................   Passed    0.01 sec
       Start  5: shape-render
- 5/12 Test  #5: shape-render .....................   Passed    5.06 sec
+ 5/12 Test  #5: shape-render .....................   Passed    3.11 sec
       Start  6: css-cascade
- 6/12 Test  #6: css-cascade ......................   Passed    0.01 sec
+ 6/12 Test  #6: css-cascade ......................   Passed    0.19 sec
       Start  7: svg-index
  7/12 Test  #7: svg-index ........................   Passed    0.15 sec
       Start  8: viewer-navigation
@@ -38,4 +46,4 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build
 
 100% tests passed, 0 tests failed out of 12
 
-Total Test time (real) =   5.91 sec
+Total Test time (real) =   4.33 sec

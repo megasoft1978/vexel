@@ -6,7 +6,8 @@
 #include <string.h>
 
 #define CLIP_MAX_CHILDREN 64U
-#define CLIP_MAX_BYTES (16U * 1024U * 1024U)
+#define CLIP_MAX_REFERENCE_BYTES (64U * 1024U)
+#define CLIP_MAX_JOB_REFERENCE_BYTES (512U * 1024U)
 #define CLIP_MAX_EDGES 65536U
 
 struct svg_shape_clip {
@@ -149,9 +150,11 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     size_t prefix_length = (size_t)prefix_result;
     static const char suffix[] = "</svg>";
     size_t child_length = child_end - child_start;
-    if (prefix_length > CLIP_MAX_BYTES - sizeof(suffix) - child_length) goto limit;
+    if (child_length > CLIP_MAX_REFERENCE_BYTES ||
+        prefix_length > SIZE_MAX - sizeof(suffix) - child_length) goto limit;
     size_t total = prefix_length + child_length + sizeof(suffix) - 1U;
-    if (*document_clip_bytes > CLIP_MAX_BYTES - total) goto limit;
+    if (total > CLIP_MAX_JOB_REFERENCE_BYTES ||
+        *document_clip_bytes > CLIP_MAX_JOB_REFERENCE_BYTES - total) goto limit;
     uint8_t *scratch = malloc(total + 1U);
     svg_shape_clip *clip = calloc(1U, sizeof(*clip));
     if (scratch == NULL || clip == NULL) {

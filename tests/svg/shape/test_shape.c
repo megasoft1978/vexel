@@ -100,6 +100,46 @@ static bool reference_rejection_checks(void)
     deep_length += sizeof(depth_suffix) - 1U;
     if (svg_shape_decode((base_bytes){(const uint8_t *)too_deep, deep_length}, &doc, &diag) !=
         SVG_SHAPE_ERROR_LIMIT || diag.category != SVG_SHAPE_ERROR_LIMIT) return false;
+    size_t oversized_capacity = 70U * 1024U;
+    char *oversized = malloc(oversized_capacity);
+    if (oversized == NULL) return false;
+    static const char oversized_prefix[] = "<svg width=\"8\" height=\"8\"><defs><g id=\"x\"><!--";
+    static const char oversized_suffix[] = "--><rect width=\"1\" height=\"1\"/></g></defs><use href=\"#x\"/></svg>";
+    size_t oversized_len = sizeof(oversized_prefix) - 1U;
+    memcpy(oversized, oversized_prefix, oversized_len);
+    memset(oversized + oversized_len, 'a', 65U * 1024U);
+    oversized_len += 65U * 1024U;
+    memcpy(oversized + oversized_len, oversized_suffix, sizeof(oversized_suffix) - 1U);
+    oversized_len += sizeof(oversized_suffix) - 1U;
+    bool bounded = svg_shape_decode((base_bytes){(const uint8_t *)oversized, oversized_len},
+                                    &doc, &diag) == SVG_SHAPE_ERROR_LIMIT &&
+                   diag.category == SVG_SHAPE_ERROR_LIMIT;
+    free(oversized);
+    if (!bounded) return false;
+    size_t aggregate_capacity = 2U * 1024U * 1024U;
+    char *aggregate = malloc(aggregate_capacity);
+    if (aggregate == NULL) return false;
+    static const char aggregate_prefix[] = "<svg width=\"8\" height=\"8\"><defs><g id=\"x\"><!--";
+    static const char aggregate_middle[] = "--><rect width=\"1\" height=\"1\"/></g></defs>";
+    static const char aggregate_use[] = "<use href=\"#x\"/>";
+    static const char aggregate_suffix[] = "</svg>";
+    size_t aggregate_len = sizeof(aggregate_prefix) - 1U;
+    memcpy(aggregate, aggregate_prefix, aggregate_len);
+    memset(aggregate + aggregate_len, 'b', 48U * 1024U);
+    aggregate_len += 48U * 1024U;
+    memcpy(aggregate + aggregate_len, aggregate_middle, sizeof(aggregate_middle) - 1U);
+    aggregate_len += sizeof(aggregate_middle) - 1U;
+    for (size_t i = 0U; i < 22U; ++i) {
+        memcpy(aggregate + aggregate_len, aggregate_use, sizeof(aggregate_use) - 1U);
+        aggregate_len += sizeof(aggregate_use) - 1U;
+    }
+    memcpy(aggregate + aggregate_len, aggregate_suffix, sizeof(aggregate_suffix) - 1U);
+    aggregate_len += sizeof(aggregate_suffix) - 1U;
+    bounded = svg_shape_decode((base_bytes){(const uint8_t *)aggregate, aggregate_len},
+                               &doc, &diag) == SVG_SHAPE_ERROR_LIMIT &&
+              diag.category == SVG_SHAPE_ERROR_LIMIT;
+    free(aggregate);
+    if (!bounded) return false;
     static const char xlink[] = "<svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"8\" height=\"8\"><use xlink:href=\"#x\" fill=\"red\"/><rect id=\"x\" x=\"1\" y=\"1\" width=\"3\" height=\"3\"/></svg>";
     raster_tile use_tile = {0};
     if (!render_source(xlink, &use_tile, &doc, &diag) ||
@@ -289,18 +329,31 @@ static bool gradient_checks(void)
     left = ((size_t)8U * 16U + 1U) * 4U;
     right = ((size_t)8U * 16U + 14U) * 4U;
     ok = tile.rgba[left] > tile.rgba[left + 2U] && tile.rgba[right + 2U] > tile.rgba[right];
+    size_t first = ((size_t)8U * 16U) * 4U;
+    size_t last = ((size_t)8U * 16U + 15U) * 4U;
+    size_t midpoint = ((size_t)8U * 16U + 8U) * 4U;
+    ok = ok && tile.rgba[first] == 247U && tile.rgba[first + 2U] == 8U &&
+         tile.rgba[midpoint] == 120U && tile.rgba[midpoint + 2U] == 135U &&
+         tile.rgba[last] == 8U && tile.rgba[last + 2U] == 247U;
     raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
     if (!ok) return false;
     static const char *invalid[] = {
         "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\" spreadMethod=\"reflect\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
         "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"base\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" href=\"#base\"/></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
         "<svg width=\"8\" height=\"8\"><rect width=\"8\" height=\"8\" fill=\"url(https://example.invalid/g)\"/></svg>",
-        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x2=\"50%\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>"
     };
     for (size_t i = 0U; i < sizeof(invalid) / sizeof(invalid[0]); ++i) {
         if (svg_shape_decode((base_bytes){(const uint8_t *)invalid[i], strlen(invalid[i])},
                              &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
     }
+    static const char percent_user_space[] = "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x2=\"50%\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(percent_user_space, &tile, &doc, &diag)) return false;
+    first = ((size_t)4U * 8U) * 4U;
+    last = ((size_t)4U * 8U + 7U) * 4U;
+    ok = tile.rgba[first] > tile.rgba[first + 2U] &&
+         tile.rgba[last + 2U] > tile.rgba[last];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
     char many[32768];
     static const char many_prefix[] = "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\">";
     static const char many_stop[] = "<stop stop-color=\"red\"/>";
@@ -357,8 +410,24 @@ static bool clip_checks(void)
     }
     memcpy(too_many + length, clip_suffix, sizeof(clip_suffix) - 1U);
     length += sizeof(clip_suffix) - 1U;
-    return svg_shape_decode((base_bytes){(const uint8_t *)too_many, length}, &doc, &diag) ==
-           SVG_SHAPE_ERROR_LIMIT && diag.category == SVG_SHAPE_ERROR_LIMIT;
+    if (svg_shape_decode((base_bytes){(const uint8_t *)too_many, length}, &doc, &diag) !=
+        SVG_SHAPE_ERROR_LIMIT || diag.category != SVG_SHAPE_ERROR_LIMIT) return false;
+    size_t large_capacity = 70U * 1024U;
+    char *large = malloc(large_capacity);
+    if (large == NULL) return false;
+    static const char large_prefix[] = "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\"><!--";
+    static const char large_suffix[] = "--><rect width=\"8\" height=\"8\"/></clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>";
+    size_t large_len = sizeof(large_prefix) - 1U;
+    memcpy(large, large_prefix, large_len);
+    memset(large + large_len, 'c', 65U * 1024U);
+    large_len += 65U * 1024U;
+    memcpy(large + large_len, large_suffix, sizeof(large_suffix) - 1U);
+    large_len += sizeof(large_suffix) - 1U;
+    bool limited = svg_shape_decode((base_bytes){(const uint8_t *)large, large_len},
+                                    &doc, &diag) == SVG_SHAPE_ERROR_LIMIT &&
+                   diag.category == SVG_SHAPE_ERROR_LIMIT;
+    free(large);
+    return limited;
 }
 
 static bool clip_work_budget_check(void)

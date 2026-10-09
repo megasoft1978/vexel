@@ -238,11 +238,13 @@ class ShapeRenderTests(unittest.TestCase):
             temp_path = Path(temp)
             for fixture in sorted(FIXTURES.glob("*.svg")):
                 raw = fixture.read_bytes()
+                source_hash = hashlib.sha256(raw).digest()
                 first, second, reference = (temp_path / f"{fixture.stem}-{i}.rgba" for i in range(3))
                 subprocess.run([str(CLI), str(fixture), str(first)], check=True, capture_output=True)
                 subprocess.run([str(CLI), str(fixture), str(second)], check=True, capture_output=True)
                 self.assertEqual(first.read_bytes(), second.read_bytes(), fixture.name)
                 subprocess.run([renderer, "--format", "png", "--output", str(reference), str(fixture)], check=True, capture_output=True)
+                self.assertEqual(source_hash, hashlib.sha256(fixture.read_bytes()).digest(), fixture.name)
                 rw, rh, reference_rgba = png_rgba(reference.read_bytes())
                 ours = first.read_bytes()
                 width, height = 16, 16

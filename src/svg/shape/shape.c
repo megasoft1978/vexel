@@ -778,7 +778,7 @@ svg_shape_error svg_shape_decode_source(base_bytes source, svg_shape_document *o
             if (gradient_fill) {
                 svg_shape_error paint_result = svg_paint_resolve_fill(
                     source, tokens, xr.token_count, fs, out->edges + before,
-                    out->edge_count - before, &out->paints[b.shape_index],
+                    out->edge_count - before, out->view_width, out->view_height, &out->paints[b.shape_index],
                     &out->paint_stops, &out->paint_stop_count, diagnostic);
                 if (paint_result != SVG_SHAPE_ERROR_NONE) goto bad;
             }

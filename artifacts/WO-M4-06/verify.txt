@@ -46,15 +46,14 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 199 tests in 14.703s
+Ran 199 tests in 13.358s
 
-OK
+FAILED (failures=1)
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.158108
+native smoke elapsed seconds: 0.136021
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.118730
-Ran 199 tests: 199 passed, 0 failed, 0 errors, 0 skipped; 14.777s
-valid ledger: 376 entries
+native replay elapsed seconds: 0.125974
+Ran 199 tests: 198 passed, 1 failed, 0 errors, 0 skipped; 13.396s
