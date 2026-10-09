@@ -67,37 +67,32 @@ static bool join_hit(geom_point previous, geom_point vertex, geom_point next,
 }
 
 static bool stroke_contains(const svg_shape_document *doc, size_t shape,
-                            double px, double py)
+                            const geom_edge *local_edges, double px, double py)
 {
     const svg_shape_stroke *stroke = &doc->strokes[shape];
+    size_t first = doc->shape_edge_start[shape], count = doc->shape_edge_count[shape];
+    if (stroke->rgba[3] == 0U || stroke->width <= 0.0 || count == 0U) return false;
+    if (local_edges == NULL) return false;
     geom_affine inverse = doc->shape_stroke_inverse[shape];
     geom_point local_sample;
     if (!geom_affine_map_point(inverse, (geom_point){px, py}, &local_sample)) return false;
     px = local_sample.x;
     py = local_sample.y;
-    size_t first = doc->shape_edge_start[shape], count = doc->shape_edge_count[shape];
-    if (stroke->rgba[3] == 0U || stroke->width <= 0.0 || count == 0U) return false;
     double radius = stroke->width * 0.5;
     bool closed = doc->shape_stroke_closed[shape];
     if (!closed && doc->shape_filled[shape] && count > 0U) count--;
     size_t pattern_count = stroke->dash_count;
     if (pattern_count == 0U) {
         for (size_t i = 0; i < count; i++) {
-            geom_edge e = doc->edges[first+i];
-            if (!geom_affine_map_point(inverse, e.a, &e.a) ||
-                !geom_affine_map_point(inverse, e.b, &e.b)) return false;
+            geom_edge e = local_edges[first+i];
             svg_shape_linecap cap = (!closed && (i==0U||i+1U==count)) ? stroke->cap : SVG_SHAPE_CAP_BUTT;
             if (segment_hit(e.a,e.b,px,py,radius,cap)) return true;
         }
         size_t joins = closed ? count : (count > 0U ? count-1U : 0U);
         for (size_t i=0; i<joins; i++) {
             size_t next_index=closed?i:(i+1U);
-            geom_edge prev=doc->edges[first+(next_index+count-1U)%count];
-            geom_edge next=doc->edges[first+next_index%count];
-            if (!geom_affine_map_point(inverse, prev.a, &prev.a) ||
-                !geom_affine_map_point(inverse, prev.b, &prev.b) ||
-                !geom_affine_map_point(inverse, next.a, &next.a) ||
-                !geom_affine_map_point(inverse, next.b, &next.b)) return false;
+            geom_edge prev=local_edges[first+(next_index+count-1U)%count];
+            geom_edge next=local_edges[first+next_index%count];
             if (join_hit(prev.a,prev.b,next.b,px,py,radius,stroke)) return true;
         }
         return false;
@@ -115,9 +110,7 @@ static bool stroke_contains(const svg_shape_document *doc, size_t shape,
     }
     double remain = stroke->dash[pattern % pattern_count] - phase;
     for (size_t i = 0; i < count; i++) {
-        geom_edge edge = doc->edges[first+i];
-        if (!geom_affine_map_point(inverse, edge.a, &edge.a) ||
-            !geom_affine_map_point(inverse, edge.b, &edge.b)) return false;
+        geom_edge edge = local_edges[first+i];
         double dx=edge.b.x-edge.a.x, dy=edge.b.y-edge.a.y, length=hypot(dx,dy), at=0.0;
         if (length == 0.0) continue;
         while (at < length) {
@@ -190,7 +183,8 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
     return pixels <= (size_t)RASTER_MAX_TESTS / per_pixel;
 }
 
-static bool render_sample(const svg_shape_document *doc, double sample_x,
+static bool render_sample(const svg_shape_document *doc, const geom_edge *local_edges,
+                          double sample_x,
                           double sample_y, double scale, double offset_x,
                           double offset_y, uint8_t *sample_rgba,
                           int32_t *winding, uint8_t *parity,
@@ -227,7 +221,7 @@ static bool render_sample(const svg_shape_document *doc, double sample_x,
         bool inside = doc->shape_evenodd[shape] ? parity[shape] != 0U : winding[shape] != 0;
         const uint8_t *fill = colors + shape * 4U;
         if (inside && fill[3] != 0U) memcpy(sample_rgba, fill, 4U);
-        if (stroke_contains(doc, shape, px, py))
+        if (stroke_contains(doc, shape, local_edges, px, py))
             memcpy(sample_rgba, doc->strokes[shape].rgba, 4U);
     }
     return true;
@@ -261,7 +255,8 @@ static bool pixel_may_cross_edge(const svg_shape_document *doc,
     return false;
 }
 
-static bool render_pixel(const svg_shape_document *doc, uint32_t x, uint32_t y,
+static bool render_pixel(const svg_shape_document *doc, const geom_edge *local_edges,
+                         uint32_t x, uint32_t y,
                          double scale, double offset_x, double offset_y,
                          raster_tile *tile, int32_t *winding,
                          uint8_t *parity, uint8_t *colors,
@@ -282,7 +277,7 @@ static bool render_pixel(const svg_shape_document *doc, uint32_t x, uint32_t y,
         double bottom = doc->view_y + ((double)y + 1.0 - offset_y) / scale;
         if (!pixel_may_cross_edge(doc, left, top, right, bottom)) {
             uint8_t center_rgba[4] = {0U, 0U, 0U, 0U};
-            if (!render_sample(doc, (double)x + 0.5, (double)y + 0.5,
+            if (!render_sample(doc, local_edges, (double)x + 0.5, (double)y + 0.5,
                                scale, offset_x, offset_y, center_rgba,
                                winding, parity, colors, diag)) return false;
             size_t center_offset = ((size_t)y * doc->width + x) * 4U;
@@ -294,7 +289,7 @@ static bool render_pixel(const svg_shape_document *doc, uint32_t x, uint32_t y,
     for (size_t sy = 0; sy < RASTER_SAMPLES_PER_AXIS; sy++) {
         for (size_t sx = 0; sx < RASTER_SAMPLES_PER_AXIS; sx++) {
             uint8_t sample_rgba[4] = {0U, 0U, 0U, 0U};
-            if (!render_sample(doc, (double)x + locations[sx],
+            if (!render_sample(doc, local_edges, (double)x + locations[sx],
                                (double)y + locations[sy], scale, offset_x,
                                offset_y, sample_rgba, winding, parity, colors,
                                diag)) return false;
@@ -312,6 +307,40 @@ static bool render_pixel(const svg_shape_document *doc, uint32_t x, uint32_t y,
     tile->rgba[offset + 1U] = covered == 0U ? 0U : (uint8_t)((green + covered / 2U) / covered);
     tile->rgba[offset + 2U] = covered == 0U ? 0U : (uint8_t)((blue + covered / 2U) / covered);
     tile->rgba[offset + 3U] = (uint8_t)((alpha + RASTER_SAMPLE_COUNT / 2U) / RASTER_SAMPLE_COUNT);
+    return true;
+}
+
+static bool prepare_local_stroke_edges(const svg_shape_document *doc,
+                                       geom_edge **out_edges,
+                                       svg_shape_diagnostic *diag)
+{
+    *out_edges = NULL;
+    bool needed = false;
+    for (size_t i = 0; i < doc->shape_count; i++)
+        needed |= doc->strokes[i].rgba[3] != 0U && doc->strokes[i].width > 0.0 &&
+                  doc->shape_edge_count[i] != 0U;
+    if (!needed || doc->edge_count == 0U) return true;
+    if (doc->edge_count > SIZE_MAX / sizeof(**out_edges)) {
+        if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
+        return false;
+    }
+    geom_edge *edges = malloc(doc->edge_count * sizeof(*edges));
+    if (edges == NULL) {
+        if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, 0};
+        return false;
+    }
+    for (size_t i = 0; i < doc->edge_count; i++) {
+        edges[i] = doc->edges[i];
+        size_t shape = doc->shape_ids[i];
+        if (doc->strokes[shape].rgba[3] != 0U && doc->strokes[shape].width > 0.0 &&
+            (!geom_affine_map_point(doc->shape_stroke_inverse[shape], edges[i].a, &edges[i].a) ||
+             !geom_affine_map_point(doc->shape_stroke_inverse[shape], edges[i].b, &edges[i].b))) {
+            free(edges);
+            if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0};
+            return false;
+        }
+    }
+    *out_edges = edges;
     return true;
 }
 
@@ -359,16 +388,18 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }
+    geom_edge *local_edges = NULL;
+    if (!prepare_local_stroke_edges(doc, &local_edges, diag)) return false;
     int32_t *winding = calloc(doc->shape_count, sizeof(*winding));
     uint8_t *parity = calloc(doc->shape_count, sizeof(*parity));
     uint8_t *colors = calloc(doc->shape_count, 4U);
     if (doc->shape_count != 0U && (winding == NULL || parity == NULL || colors == NULL)) {
-        free(winding); free(parity); free(colors);
+        free(winding); free(parity); free(colors); free(local_edges);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, 0};
         return false;
     }
     if (!raster_tile_create(doc->width, doc->height, out)) {
-        free(winding); free(parity); free(colors);
+        free(winding); free(parity); free(colors); free(local_edges);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }
@@ -380,14 +411,14 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
     double offset_y = ((double)doc->height - doc->view_height * scale) * 0.5;
     for (uint32_t y = 0; y < doc->height; y++) {
         for (uint32_t x = 0; x < doc->width; x++) {
-            if (!render_pixel(doc, x, y, scale, offset_x, offset_y, out,
+            if (!render_pixel(doc, local_edges, x, y, scale, offset_x, offset_y, out,
                               winding, parity, colors, diag)) {
-                raster_tile_destroy(out); free(winding); free(parity); free(colors);
+                raster_tile_destroy(out); free(winding); free(parity); free(colors); free(local_edges);
                 return false;
             }
         }
     }
-    free(winding); free(parity); free(colors);
+    free(winding); free(parity); free(colors); free(local_edges);
     if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0};
     return true;
 }

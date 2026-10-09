@@ -785,7 +785,11 @@ bad:
 
 void svg_shape_document_destroy(svg_shape_document *document)
 {
-    if(document!=NULL){free(document->edges);free(document->colors);free(document->shape_ids);free(document->shape_evenodd);free(document->shape_stroke_closed);free(document->shape_edge_start);free(document->shape_edge_count);free(document->strokes);*document=(svg_shape_document){0};}
+    if (document == NULL) return;
+    free(document->edges); free(document->colors); free(document->shape_ids);
+    free(document->shape_evenodd); free(document->shape_filled); free(document->shape_stroke_closed);
+    free(document->shape_edge_start); free(document->shape_edge_count);
+    free(document->shape_stroke_inverse); free(document->strokes); *document = (svg_shape_document){0};
 }
 
 const char *svg_shape_error_name(svg_shape_error e)
