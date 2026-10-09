@@ -140,5 +140,7 @@ regression fingerprint validation, and `/var/folders` normalization; all three
 are fixed. The initial executor run lacked the Release binary needed
 by two native platform tests. After building the Release preset, `./dev verify`
 passed all 161 Python tests, native smoke, and 20-frame Metal replay; Debug,
-ASan, and UBSan CTest also pass. Fresh read-only review is pending. Evidence is
-under `artifacts/WO-M2-03/`.
+ASan, and UBSan CTest also pass. The final fresh read-only review passed all 13
+frozen commands without findings; the work is merged at
+`f53cc4322d86c7228287578affa6825154f1f1e5`. Evidence is under
+`artifacts/WO-M2-03/` and `artifacts/runs/WO-M2-03/verify-eebaef9f-4245-4e61-8b87-d81b2f3acb73/`.
