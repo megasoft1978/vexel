@@ -161,4 +161,7 @@ RSS, or performance improvement was measured. Evidence is in
 The managed executor's full-suite attempts failed in environment-dependent
 benchmark sandbox and LaunchServices checks. The host-shell `./dev verify`
 rerun passed all 165 tests, native smoke, and Metal replay after the Release
-build. Fresh independent review is pending.
+build. The final fresh review passed all ten frozen commands with no findings;
+the implementation is merged at
+`44945019b06bb09e67881abe645c2e453b979427`. Evidence is under
+`artifacts/runs/WO-M2-04/verify-16e8fdc9-d718-4d8a-87fe-bc31a406d54b/`.

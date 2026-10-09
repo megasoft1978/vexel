@@ -2,7 +2,7 @@
   "work_order": "WO-M2-04",
   "revision": 1,
   "base_sha": "bfc758d9b19cb1f1999cd88114f39ae1b9eaeca8",
-  "acceptance_status": "machine_checks_pass_verifier_pending",
+  "acceptance_status": "accepted_merged",
   "machine": "Apple Silicon arm64, macOS 27.0",
   "compiler": "Apple Clang 21.0.0.21000334",
   "source_save": {
@@ -47,7 +47,7 @@
     "svg_throughput": false,
     "render_performance": false
   },
-  "implementation_commit": null,
+  "implementation_commit": "44945019b06bb09e67881abe645c2e453b979427",
   "evidence": {
     "build_and_ctest": "artifacts/WO-M2-04/build-and-ctest.txt",
     "focused_tests": "artifacts/WO-M2-04/focused-tests.txt",
@@ -59,6 +59,7 @@
     "host_verify": "artifacts/WO-M2-04/host-verify.txt",
     "asan": "artifacts/WO-M2-04/asan.txt",
     "ubsan": "artifacts/WO-M2-04/ubsan.txt",
-    "verification_rerun": "artifacts/WO-M2-04/verification-rerun.md"
+    "verification_rerun": "artifacts/WO-M2-04/verification-rerun.md",
+    "final_verifier": "artifacts/runs/WO-M2-04/verify-16e8fdc9-d718-4d8a-87fe-bc31a406d54b/"
   }
 }
