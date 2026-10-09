@@ -321,9 +321,9 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## WO-M4-01 bounded geometry and corpus workload
 
 Debug and Release sizes on arm64 macOS 27.0, Apple M5 Max, Apple Clang 21.0.0
-(`clang-2100.3.34.2`) are: `svgworkbench` 265,312 / 172,416 bytes,
-`svg_index_bench` 107,504 bytes in Release, `shape_render_cli` 149,040 /
-87,872 bytes, and `libvexel_shape.a` 106,320 / 37,672 bytes.
+(`clang-2100.3.34.2`) are: `svgworkbench` 265,312 / 172,464 bytes,
+`svg_index_bench` 107,552 bytes in Release, `shape_render_cli` 149,040 /
+87,904 bytes, and `libvexel_shape.a` 106,888 / 37,960 bytes.
 
 `./dev bench-corpus` now reruns the established fresh-process progressive index
 workload, verifies every external manifest hash, and writes M4-specific reports
@@ -349,7 +349,7 @@ The filled-shape differential fixtures passed with librsvg
 source/output hashes and per-case mismatch counts are in
 `artifacts/WO-M4-01/reference-comparison.json`. The final seeded ASan+UBSan
 shape campaign result is retained at `artifacts/WO-M4-01/fuzz-report.json`;
-it completed 1,000,000 cases in 21.459 seconds with no sanitizer reports,
+it completed 1,000,000 cases in 24.867 seconds with no sanitizer reports,
 crashes, or invariant failures. The runner sandbox blocked offscreen Metal
 access during its first verification attempts; the complete Debug, ASan,
 UBSan, and Python suites pass when run directly in the isolated worktree. The sandbox failure transcript and direct host results are retained in the M4 logs.

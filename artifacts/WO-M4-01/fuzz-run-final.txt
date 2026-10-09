@@ -8,8 +8,5 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-asan
-[1/4] Building C object CMakeFiles/vexel_shape.dir/src/geom/geometry.c.o
-[2/4] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[3/4] Linking C static library libvexel_shape.a
-[4/4] Linking C executable bin/shape_fuzz
-{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-asan/bin/shape_fuzz", "cap_exhaustion_cases": 1, "cap_exhaustion_input_bytes": 327730, "cases": 1000000, "crashes": 0, "duration_seconds": 21.459, "input_max_bytes": 327730, "invariant_failures": 0, "process_cpu_seconds": 20.974, "random_input_max_bytes": 4096, "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "sanitizer_stderr": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/artifacts/WO-M4-01/fuzz-report.stderr.txt", "sanitizer_stderr_bytes": 0, "seed": 20261009}
+ninja: no work to do.
+{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-asan/bin/shape_fuzz", "cap_exhaustion_cases": 1, "cap_exhaustion_input_bytes": 327730, "cases": 1000000, "crashes": 0, "duration_seconds": 24.867, "input_max_bytes": 327730, "invariant_failures": 0, "process_cpu_seconds": 24.398, "random_input_max_bytes": 4096, "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "sanitizer_stderr": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/artifacts/WO-M4-01/fuzz-report.stderr.txt", "sanitizer_stderr_bytes": 0, "seed": 20261009}

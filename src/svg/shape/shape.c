@@ -200,10 +200,17 @@ static bool begin_shape(builder *b, bool evenodd)
             return false;
         }
         b->doc->shape_evenodd = rules;
+        bool *filled = realloc(b->doc->shape_filled, next * sizeof(*filled));
+        if (filled == NULL) {
+            fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
+            return false;
+        }
+        b->doc->shape_filled = filled;
         b->shape_capacity = next;
     }
     b->shape_index = b->doc->shape_count++;
     b->doc->shape_evenodd[b->shape_index] = evenodd;
+    b->doc->shape_filled[b->shape_index] = true;
     return true;
 }
 
@@ -501,7 +508,11 @@ static bool ellipse_edges(builder *b, double cx, double cy, double rx, double ry
         double theta=6.283185307179586*(double)i/(double)steps;
         geom_point next=i==steps?(geom_point){cx+rx,cy}:
             (geom_point){cx+rx*cos(theta),cy+ry*sin(theta)};
-        if (!point_bounded(next) || !add_edge(b,previous,next)) return false;
+        if (!point_bounded(next)) {
+            fail(b->diag, SVG_SHAPE_ERROR_NUMBER, b->offset);
+            return false;
+        }
+        if (!add_edge(b,previous,next)) return false;
         previous=next;
     }
     return true;
@@ -595,6 +606,7 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
                 double xy[4]={0};const char *names[4]={"x1","y1","x2","y2"};
                 for(size_t k=0U;k<4U;k++)if(!number_attr(source,tokens,xr.token_count,i,names[k],&xy[k])){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
                 if(!point_bounded((geom_point){xy[0],xy[1]})||!point_bounded((geom_point){xy[2],xy[3]})){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
+                out->shape_filled[b.shape_index]=false;
                 if(!add_edge(&b,(geom_point){xy[0],xy[1]},(geom_point){xy[2],xy[3]}))goto bad;
             } else {
                 svg_xml_span points;
@@ -639,7 +651,7 @@ bad:
 
 void svg_shape_document_destroy(svg_shape_document *document)
 {
-    if(document!=NULL){free(document->edges);free(document->colors);free(document->shape_ids);free(document->shape_evenodd);*document=(svg_shape_document){0};}
+    if(document!=NULL){free(document->edges);free(document->colors);free(document->shape_ids);free(document->shape_evenodd);free(document->shape_filled);*document=(svg_shape_document){0};}
 }
 
 const char *svg_shape_error_name(svg_shape_error e)

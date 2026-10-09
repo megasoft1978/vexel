@@ -42,14 +42,15 @@ static bool render_pixel(const svg_shape_document *doc, uint32_t x, uint32_t y,
     double py = doc->view_y + (sample_y - offset_y) / scale;
     for (size_t i = 0; i < doc->edge_count; i++) {
         geom_edge edge = doc->edges[i];
-        bool upward = edge.a.y <= py && edge.b.y > py;
-        bool downward = edge.b.y <= py && edge.a.y > py;
-        if ((!upward && !downward) || !edge_crosses_right(edge, px, py)) continue;
         uint32_t shape = doc->shape_ids[i];
         if ((size_t)shape >= doc->shape_count) {
             if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0};
             return false;
         }
+        if (!doc->shape_filled[shape]) continue;
+        bool upward = edge.a.y <= py && edge.b.y > py;
+        bool downward = edge.b.y <= py && edge.a.y > py;
+        if ((!upward && !downward) || !edge_crosses_right(edge, px, py)) continue;
         winding[shape] += upward ? 1 : -1;
         parity[shape] ^= 1U;
         memcpy(colors + (size_t)shape * 4U, doc->colors + i * 4U, 4U);
@@ -71,7 +72,8 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
         doc->edge_count > SVG_SHAPE_MAX_EDGES || doc->shape_count > SVG_SHAPE_MAX_EDGES ||
         (doc->edge_count != 0U && (doc->edges == NULL || doc->colors == NULL ||
                                    doc->shape_ids == NULL)) ||
-        (doc->shape_count != 0U && doc->shape_evenodd == NULL) ||
+        (doc->shape_count != 0U &&
+         (doc->shape_evenodd == NULL || doc->shape_filled == NULL)) ||
         !isfinite(doc->view_x) || !isfinite(doc->view_y) ||
         !isfinite(doc->view_width) || !isfinite(doc->view_height) ||
         doc->view_width <= 0.0 || doc->view_height <= 0.0 ||

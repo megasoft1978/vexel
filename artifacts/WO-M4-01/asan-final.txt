@@ -8,23 +8,31 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-asan
-[1/5] Linking C executable bin/shape_render_cli
-[2/5] Linking C executable bin/svg_index_bench
-[3/5] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[4/5] Linking C executable bin/shape_test
-[5/5] Linking C executable bin/svgworkbench
+[1/13] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
+[2/13] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
+[3/13] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[4/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[5/13] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
+[6/13] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
+[7/13] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[8/13] Linking C static library libvexel_shape.a
+[9/13] Linking C executable bin/shape_render_cli
+[10/13] Linking C executable bin/shape_test
+[11/13] Linking C executable bin/shape_fuzz
+[12/13] Linking C executable bin/svg_index_bench
+[13/13] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-asan
       Start  1: cli-version
- 1/11 Test  #1: cli-version ......................   Passed    0.28 sec
+ 1/11 Test  #1: cli-version ......................   Passed    0.21 sec
       Start  2: base-contract
  2/11 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
- 3/11 Test  #3: xml-tokenizer ....................   Passed    0.22 sec
+ 3/11 Test  #3: xml-tokenizer ....................   Passed    0.24 sec
       Start  4: source-save
  4/11 Test  #4: source-save ......................   Passed    0.01 sec
       Start  5: shape-render
- 5/11 Test  #5: shape-render .....................   Passed    0.27 sec
+ 5/11 Test  #5: shape-render .....................   Passed    0.24 sec
       Start  6: svg-index
  6/11 Test  #6: svg-index ........................   Passed    0.15 sec
       Start  7: viewer-navigation
@@ -40,4 +48,4 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build
 
 100% tests passed, 0 tests failed out of 11
 
-Total Test time (real) =   1.38 sec
+Total Test time (real) =   1.29 sec

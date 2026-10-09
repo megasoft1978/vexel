@@ -34,7 +34,8 @@ typedef struct svg_shape_document {
     uint8_t *colors; /* one owned RGBA color per edge */
     uint32_t *shape_ids; /* edge-to-element map; preserves independent fills */
     size_t shape_count;
-    bool *shape_evenodd; /* one fill rule per rect/path element */
+    bool *shape_evenodd; /* one fill rule per shape element */
+    bool *shape_filled; /* false for open line geometry, which awaits stroke */
     base_bytes source; /* borrowed; caller keeps source alive with document */
 } svg_shape_document;
 
