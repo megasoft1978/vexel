@@ -1,7 +1,7 @@
 # Handoff
 
-M3-06 is complete and merged to `main`. It measured 58 files / 116 fresh-process trials: 2 previewable, 56 unsupported, no limits or crashes. The report is open/index evidence and does not claim full-render parity.
+WO-M4-01 revision 1 is accepted and fast-forward merged to `main` at `c7aa4c9fa2966b90deaa08e4cb848c78db29de1b`. It adds bounded basic shapes, affine transforms, nested groups, and repeatable corpus reporting with measured binary sizes. Seven fresh read-only reviews ended in a pass after six substantive findings were fixed.
 
-The owner has resolved the M3-05/M3-06 gate and directed the project to proceed through M4/M5. ADR-0012 records the decision and its limits: public and synthetic corpus evidence is accepted for engineering; no customer pilot or release decision is implied.
+Verification: CTest 11/11, Python 192/192, Debug/Release, ASan/UBSan, native smoke and 20-frame replay pass. Seeded shape fuzz passed 1,000,000 cases. Corpus: 58 files/116 trials, 2 previewable, 56 unsupported, no limits/crashes. The 100 MiB preview gate fails; maximum main-thread step and RSS gates pass. The data measures open/index, not full-render parity.
 
-Before implementation, all 58 corpus XML files (4,429,240,515 declared bytes) were streamed and inventoried. Results and the feature-based work order are in `reports/M4/corpus-feature-frequency.md` and `.json`; no corpus files were copied or modified. Next: prepare and run WO-M4-01 for common geometry primitives and affine transforms, then continue the M4 fidelity sequence using corpus coverage.
+Next: freeze and execute WO-M4-02 for path grammar and curve coverage using `docs/research-r4/05-revised-roadmap.md` and the corpus feature inventory.
