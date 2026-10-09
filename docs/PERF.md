@@ -269,6 +269,8 @@ The deterministic C test projects 10,000 world-space scene coordinates over
 checksum `804ede4d47af0f15`. Navigation and projection functions contain no allocator
 calls and retain no buffers; the count is a static API-path allocation claim,
 not a process-wide allocation measurement. The workload is correctness and
-determinism evidence, not rendering throughput. The replay baseline pins two
-screenshots and three accessible semantic snapshots in
-`tests/ui/navigation-golden/manifest.json`.
+determinism evidence, not rendering throughput. The original flat-canvas and
+semantic baseline remains in `manifest.json`; an additive `manifest-rendered.json`
+pins two screenshots with transformed scene geometry and the progress/cancel
+overlay. Retina 2x viewport, drag, and cursor conversion is also covered. No wall-time,
+rendering throughput, or process-wide allocation number is claimed.

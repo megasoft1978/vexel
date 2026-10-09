@@ -8,7 +8,9 @@
 /* AppKit window contract. All calls, including destroy and shutdown, must run
  * on the main thread. The opaque window is owned by the caller until destroy.
  * Pointer and precise gesture coordinates are logical points from the view's
- * top-left; dimensions are backing pixels. Scroll deltas are finite AppKit
+ * top-left; dimensions are backing pixels. `backing_scale` is populated on
+ * resize, scale, scroll, and magnify events. Convert cursor and viewport values
+ * to backing pixels before applying a navigation transform. Scroll deltas are finite AppKit
  * scrollingDeltaX/Y values, bounded to +/-10000; magnification is finite and
  * bounded to +/-100. Text is UTF-8 and truncated only at a code-point edge. */
 typedef struct platform_window platform_window;

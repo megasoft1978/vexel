@@ -8,7 +8,9 @@
     "scale_clamps_0_05_64": "passed",
     "non_finite_rejection": "passed",
     "invalid_resize_rejection": "passed",
-    "resize_preserves_center_world_point": "passed"
+    "resize_preserves_center_world_point": "passed",
+    "retina_2x_backing_conversion": "passed",
+    "retina_scaled_drag_conversion": "passed"
   },
   "projection_workload": {
     "scene_items_per_frame": 10000,
@@ -16,7 +18,8 @@
     "projection_count": 1000000,
     "checksum_fnv1a64": "804ede4d47af0f15",
     "navigation_api_heap_allocations": 0,
-    "allocation_evidence": "navigation and projection APIs contain no allocator calls"
+    "allocation_evidence": "navigation and projection APIs contain no allocator calls",
+    "retina_backing_scale": "2x viewport, drag, wheel, and pinch conversion passed"
   },
   "command": "./build/mac-debug/bin/viewer_navigation_test",
   "exit_code": 0

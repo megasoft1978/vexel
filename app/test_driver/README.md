@@ -44,7 +44,10 @@ join, and the owner must quiesce callers before destroy.
 `--navigation-replay` replays bounded fit, pan, wheel, pinch, generation-tagged
 progress, cancel-request, screenshot, and semantic snapshot commands. It uses
 the same top-left logical point convention and zoom equations documented in
-`docs/ui-test-driver.md`; output bytes do not depend on wall-clock sleeps.
-`tests/ui/verify_navigation.py` checks local hash-pinned screen baselines. The
-C model test projects 10,000 scene coordinates in each of 100 navigation frames
-without invoking an allocator.
+`docs/ui-test-driver.md`. The navigation screen PNGs draw transformed scene
+shapes and the progress/cancel overlay; the legacy flat-canvas PNG is retained
+for byte compatibility. Output bytes do not depend on wall-clock sleeps.
+`tests/ui/verify_navigation.py` checks local hash-pinned legacy and rendered
+screen baselines. The C model test projects 10,000 scene coordinates in each of
+100 navigation frames without invoking an allocator. A 2x backing-scale test
+checks logical resize, drag, wheel, and pinch conversion.

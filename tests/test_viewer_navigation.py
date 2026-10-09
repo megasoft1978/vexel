@@ -26,6 +26,8 @@ class ViewerNavigationDriverTests(unittest.TestCase):
 {"command":"index_progress","generation":2,"percent":37,"phase":"active","label":"Indexing"}
 {"command":"screenshot"}
 {"command":"accessibility"}
+{"command":"index_progress","generation":3,"percent":100,"phase":"complete","label":"Ready"}
+{"command":"screenshot"}
 {"command":"quit"}
 """, encoding="utf-8")
             outputs = [root / "one", root / "two"]
@@ -36,6 +38,10 @@ class ViewerNavigationDriverTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual({p.name: p.read_bytes() for p in outputs[0].iterdir()},
                              {p.name: p.read_bytes() for p in outputs[1].iterdir()})
+            self.assertNotEqual((outputs[0] / "navigation-frame-0000.png").read_bytes(),
+                                (outputs[0] / "frame-0000.png").read_bytes())
+            self.assertNotEqual((outputs[0] / "navigation-frame-0000.png").read_bytes(),
+                                (outputs[0] / "navigation-frame-0001.png").read_bytes())
             semantic = json.loads((outputs[0] / "semantics-0000.json").read_text())
             self.assertEqual(semantic["children"][1]["value"], 37)
             self.assertEqual(semantic["children"][2]["enabled"], True)

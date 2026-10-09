@@ -158,6 +158,8 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.type = PLATFORM_EVENT_SCROLL;
     value.logical_x = (int32_t)llround(x); value.logical_y = (int32_t)llround(y);
     value.precise_x = x; value.precise_y = y; value.delta_x = dx; value.delta_y = dy;
+    value.backing_scale = self.window.backingScaleFactor;
+    if (!isfinite(value.backing_scale) || !(value.backing_scale > 0.0)) return;
     (void)platform_emit(self.owner, &value);
 }
 - (void)magnifyWithEvent:(NSEvent *)event
@@ -169,6 +171,8 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.type = PLATFORM_EVENT_MAGNIFY;
     value.logical_x = (int32_t)llround(x); value.logical_y = (int32_t)llround(y);
     value.precise_x = x; value.precise_y = y; value.magnification = amount;
+    value.backing_scale = self.window.backingScaleFactor;
+    if (!isfinite(value.backing_scale) || !(value.backing_scale > 0.0)) return;
     (void)platform_emit(self.owner, &value);
 }
 - (void)emitButton:(NSEvent *)event type:(platform_event_type)type

@@ -435,10 +435,12 @@ static int native_navigation_event_smoke(void)
     while (magnify && platform_poll_event(window, &event)) {
         if (event.type == PLATFORM_EVENT_SCROLL) {
             saw_scroll = event.delta_x == 2.0 && event.delta_y == -120.0 &&
-                fabs(event.precise_x - 42.5) < 1e-8 && fabs(event.precise_y - 31.25) < 1e-8;
+                fabs(event.precise_x - 42.5) < 1e-8 && fabs(event.precise_y - 31.25) < 1e-8 &&
+                isfinite(event.backing_scale) && event.backing_scale > 0.0;
         } else if (event.type == PLATFORM_EVENT_MAGNIFY) {
             saw_magnify = fabs(event.magnification - 0.125) < 1e-8 &&
-                fabs(event.precise_x - 42.5) < 1e-8 && fabs(event.precise_y - 31.25) < 1e-8;
+                fabs(event.precise_x - 42.5) < 1e-8 && fabs(event.precise_y - 31.25) < 1e-8 &&
+                isfinite(event.backing_scale) && event.backing_scale > 0.0;
         }
     }
     if (!saw_scroll || !saw_magnify) {

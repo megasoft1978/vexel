@@ -5,7 +5,8 @@
 profile validator and checks the semantic-tree and saved-state JSON outputs.
 
 `navigation-replay.jsonl` covers fit, wheel and pinch zoom, pan, progress,
-cancel request, screenshots, and semantic snapshots. Its new baselines live
-only in `navigation-golden/`; `verify_navigation.py` validates every baseline
-file against the SHA-256 manifest before byte comparison. The frozen lifecycle
-scenario remains unchanged.
+cancel request, screenshots, and semantic snapshots. New rendered navigation
+screens and semantics live only in `navigation-golden/`; the original flat
+canvas baseline and manifest remain byte-for-byte unchanged. The verifier
+checks both manifests and every SHA-256 before comparing output bytes. The
+frozen lifecycle scenario remains unchanged.

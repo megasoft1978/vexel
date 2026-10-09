@@ -57,3 +57,25 @@ Requested report write to
 was denied with PermissionError because that path is outside the writable
 task-worktree root. The report copy is retained at
 artifacts/runs/WO-M3-04/f24ffa31-77c6-49b8-a111-2b316a680f7e/report.json.
+
+
+Post-review correction verification (candidate after both substantive fixes):
+./dev verify: exit 0; Debug CTest 11/11; Python 178/178; ledger valid.
+./dev asan: exit 0; CTest 11/11.
+./dev ubsan: exit 0; CTest 11/11.
+Focused C navigation + Python driver tests pass; baseline verifier matches 7
+files (legacy metadata plus new rendered navigation screens). Native event smoke
+passes with finite positive backing_scale. The C model verifies 2x viewport and
+logical cursor conversion while preserving the anchored world coordinate.
+Artifacts: verify-final.txt, asan-final.txt, ubsan-final.txt, native-events.txt,
+navigation-tests.json, navigation-golden-manifest.json, and golden-and-10k.txt.
+
+
+Final corrected candidate with Retina drag conversion:
+./dev verify: exit 0; Debug CTest 11/11, Python 178/178.
+./dev asan: exit 0; CTest 11/11.
+./dev ubsan: exit 0; CTest 11/11.
+Focused new suites pass 8/8; baseline comparison passes 7 files; native event
+smoke exits 0. Deterministic 2x C tests cover logical viewport, drag, wheel,
+pinch, and cursor-anchor conversion. Logs: verify-corrected.txt,
+asan-corrected.txt, ubsan-corrected.txt.

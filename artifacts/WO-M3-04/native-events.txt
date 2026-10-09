@@ -1,23 +1,11 @@
-WO-M3-04 AC-3 native input evidence
+WO-M3-04 native input evidence
 
 ./build/mac-debug/bin/svgworkbench --native-navigation-event-smoke
 exit_code: 0
 native scroll: delta=(2,-120) cursor=(42.5,31.25)
 native magnify: delta=0.125 cursor=(42.5,31.25)
 
-AppKit normalized both synthetic NSEvent payloads through the view handlers.
-The scroll event retained fractional logical top-left cursor coordinates and
-the expected deltas. The magnify event retained the expected magnification and
-cursor. AppKit emitted LaunchServices/XPC warnings in this headless run. The
-one-shot process exits after the event assertions because window teardown
-crashes during host LaunchServices cleanup. The unchanged native-lifecycle
-scenario was separately attempted but exited -11 before completing its first
-cycle; no lifecycle coverage is claimed for that run. The work-order fallback
-for an AppKit delivery limitation is not invoked for scroll/magnify payloads;
-both handlers delivered as expected.
-
-
-Final rerun: native lifecycle smoke completed all 100 cycles with exit 0 in
-3.876105 s; see native-lifecycle-rerun.txt. The navigation event smoke exited 0
-and preserved both payloads; its initial LaunchServices warning did not affect
-the result.
+Both event handlers preserve finite positive backing_scale from the active
+window. Cursor positions remain fractional logical top-left points; the C
+retina test converts viewport and cursor to backing pixels at 2x and preserves
+the anchored world point. The scaled drag helpers are covered by the same 2x C test.

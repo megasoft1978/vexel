@@ -76,10 +76,15 @@ python3 tests/ui/verify_navigation.py --actual .cache/WO-M3-04/replay \
   --baseline tests/ui/navigation-golden
 ```
 
-The baseline manifest pins screenshot and semantic JSON bytes with SHA-256.
-`--native-navigation-event-smoke` exercises the scroll and magnify event
-normalizers with deterministic synthetic NSEvent inputs and checks top-left
-logical cursor coordinates.
+The legacy flat-canvas artifacts remain pinned by `manifest.json`. Each
+navigation screenshot also emits a separate custom-rendered screen with the
+transformed document shapes and progress/cancel overlay; those PNGs are pinned
+by the additive `manifest-rendered.json`. The verifier checks both manifests.
+Native window dimensions are backing pixels while AppKit cursor coordinates
+are logical points. Events carry `backing_scale`; the navigation adapter
+converts viewport and cursor values to backing pixels before fit or anchored
+zoom; pointer-drag helpers use the same conversion. `--native-navigation-event-smoke` checks finite scale and cursor/delta
+payloads using deterministic synthetic NSEvent inputs.
 
 ## Repeat replay and native Metal frame sequence
 

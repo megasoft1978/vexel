@@ -8,7 +8,7 @@ semantics-0000.json through semantics-0002.json.
 
 python3 tests/ui/verify_navigation.py --actual .cache/WO-M3-04/acceptance-replay --baseline tests/ui/navigation-golden
 exit_code: 0
-navigation golden replay matched: 5 files
+navigation golden replay matched: 7 files across metadata and rendered screens
 
 python3 ./build/mac-debug/bin/viewer_navigation_test
 exit_code: 0
@@ -22,3 +22,13 @@ frame-0001.png eb9f7ab82966398e72ac8eba76fde1a397f4087c462032b407cc18deac53f3f5
 semantics-0000.json b1fe92734296ac8dd2463df365dea1b5a19b195e9e8eb2d5413c293348ad6506
 semantics-0001.json 556b4301f050e285ea443c2a1adb5de7ac059e2a9cd8e7d068929e0f8897fe9c
 semantics-0002.json 8f09bbde0cbb58a11696b05b08a3046bbc9e5e071220debb1edb88abdd521c42
+
+Retina 2x viewport and cursor conversion, including anchored wheel zoom, passes. Rendered frame PNGs are retained as navigation-frame-0000.png and navigation-frame-0001.png; legacy flat frames and manifest are unchanged.
+
+Rendered navigation frame SHA-256:
+navigation-frame-0000.png f6221b0a17dc1ad5cf6675f8ea1f455c99d13226021f94461af1b818a33348a9
+navigation-frame-0001.png 642b9b9640e6504ec05ce2642a01b9bf85ff0e891afade7361c00135c977f0fc
+
+New rendered screen hashes are recorded in `manifest-rendered.json`; its files are additive and the original manifest/baseline files are unchanged.
+
+The 2x conversion coverage also exercises scaled pointer drag.

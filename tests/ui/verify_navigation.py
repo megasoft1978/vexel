@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def verify(actual: Path, baseline: Path) -> int:
-    manifest = json.loads((baseline / "manifest.json").read_text(encoding="utf-8"))
+def verify_manifest(actual: Path, baseline: Path, name: str) -> int:
+    manifest = json.loads((baseline / name).read_text(encoding="utf-8"))
     entries = manifest.get("files")
     if not isinstance(entries, dict) or not entries:
         raise ValueError("baseline manifest has no pinned files")
@@ -28,6 +28,11 @@ def verify(actual: Path, baseline: Path) -> int:
     return len(entries)
 
 
+def verify(actual: Path, baseline: Path) -> int:
+    return (verify_manifest(actual, baseline, "manifest.json") +
+            verify_manifest(actual, baseline, "manifest-rendered.json"))
+
+
 def main() -> int:
     if len(sys.argv) != 5 or sys.argv[1] != "--actual" or sys.argv[3] != "--baseline":
         print("usage: verify_navigation.py --actual OUTPUT --baseline BASELINE", file=sys.stderr)
@@ -38,7 +43,7 @@ def main() -> int:
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
         print(f"navigation golden verification failed: {exc}", file=sys.stderr)
         return 1
-    print(f"navigation golden replay matched: {count} files")
+    print(f"navigation golden replay matched: {count} files across metadata and rendered screens")
     return 0
 
 

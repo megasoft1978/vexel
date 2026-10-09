@@ -49,6 +49,26 @@ int main(void)
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_DOWN) ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_FIT)) return 8;
 
+    ui_viewer_navigation retina;
+    if (!ui_viewer_navigation_init(&retina, 800.0, 600.0, 400.0, 300.0) ||
+        !ui_viewer_navigation_resize_scaled(&retina, 800.0, 600.0, 2.0) ||
+        retina.viewport_width != 1600.0 || retina.viewport_height != 1200.0 ||
+        !ui_viewer_navigation_fit(&retina)) return 15;
+    double retina_world_x = (400.0 - retina.pan_x) / retina.scale;
+    double retina_world_y = (300.0 - retina.pan_y) / retina.scale;
+    if (!ui_viewer_navigation_wheel_scaled(&retina, -120.0, 200.0, 150.0, 2.0) ||
+        !ui_viewer_navigation_project(&retina, retina_world_x, retina_world_y, &sx, &sy) ||
+        !close_to(sx, 400.0) || !close_to(sy, 300.0) ||
+        !ui_viewer_navigation_pinch_scaled(&retina, 0.1, 200.0, 150.0, 2.0)) return 16;
+    double pan_before = retina.pan_x;
+    if (!ui_viewer_navigation_drag_begin_scaled(&retina, 20.0, 15.0, 2.0) ||
+        !ui_viewer_navigation_drag_scaled(&retina, 25.0, 20.0, 2.0) ||
+        !ui_viewer_navigation_drag_end(&retina) ||
+        !close_to(retina.pan_x - pan_before, 10.0)) return 18;
+    if (ui_viewer_navigation_resize_scaled(&retina, 800.0, 600.0, NAN) ||
+        ui_viewer_navigation_wheel_scaled(&retina, 1.0, 200.0, 150.0, 0.0) ||
+        ui_viewer_navigation_pinch_scaled(&retina, 1.0, INFINITY, 150.0, 2.0)) return 17;
+
     ui_viewer_progress progress = {0};
     if (!ui_viewer_progress_update(&progress, 4U, 37U, UI_PROGRESS_ACTIVE, "Indexing", 8U) ||
         ui_viewer_progress_update(&progress, 3U, 99U, UI_PROGRESS_ACTIVE, "stale", 5U)) return 9;
@@ -84,5 +104,6 @@ int main(void)
     }
     (void)printf("navigation tests: pass\nprojection_items: 1000000\nchecksum: %016llx\nallocations: 0 (navigation API has no allocator calls)\n",
                  (unsigned long long)checksum);
+    (void)puts("retina_backing_scale: 2x viewport, drag, and cursor conversion pass");
     return 0;
 }

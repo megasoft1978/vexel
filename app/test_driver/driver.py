@@ -400,6 +400,47 @@ def _png(width: int, height: int, seed: int, progress: int) -> bytes:
             + _chunk(b"IDAT", zlib.compress(bytes(rows), level=9)) + _chunk(b"IEND", b""))
 
 
+def _navigation_png(width: int, height: int, scale: float, pan_x: float, pan_y: float,
+                    percent: int, phase: str, cancel_requested: bool) -> bytes:
+    pixels = bytearray((246, 247, 249, 255) * (width * height))
+
+    def rect(x: int, y: int, rect_width: int, rect_height: int,
+             color: tuple[int, int, int, int]) -> None:
+        left, top = max(0, x), max(0, y)
+        right, bottom = min(width, x + rect_width), min(height, y + rect_height)
+        for py in range(top, bottom):
+            start = (py * width + left) * 4
+            pixels[start:(py * width + right) * 4] = bytes(color) * (right - left)
+
+    scene = ((42.0, 36.0, 112.0, 78.0, (218, 71, 68, 255)),
+             (226.0, 48.0, 118.0, 84.0, (48, 111, 190, 255)),
+             (134.0, 178.0, 96.0, 74.0, (46, 151, 103, 255)))
+    for world_x, world_y, world_width, world_height, color in scene:
+        left, top = round(pan_x + world_x * scale), round(pan_y + world_y * scale)
+        rect(left, top, max(1, round(world_width * scale)), max(1, round(world_height * scale)), color)
+
+    bar_height = min(height, 8)
+    fill_width = width * percent // 100
+    rect(0, 0, fill_width, bar_height, (34, 128, 224, 255))
+    rect(fill_width, 0, width - fill_width, bar_height, (48, 54, 64, 255))
+    if phase == "active":
+        rect(8, 16, 96, 28, (44, 48, 56, 255) if not cancel_requested else (128, 132, 140, 255))
+        for offset in range(12):
+            for px, py in ((20 + offset, 24 + offset), (32 - offset, 24 + offset)):
+                if 0 <= px < width and 0 <= py < height:
+                    start = (py * width + px) * 4
+                    pixels[start:start + 4] = b"\xff\xff\xff\xff"
+
+    rows = bytearray()
+    row_bytes = width * 4
+    for y in range(height):
+        rows.append(0)
+        rows.extend(pixels[y * row_bytes:(y + 1) * row_bytes])
+    header = struct.pack(">2I5B", width, height, 8, 6, 0, 0, 0)
+    return (b"\x89PNG\r\n\x1a\n" + _chunk(b"IHDR", header)
+            + _chunk(b"IDAT", zlib.compress(bytes(rows), level=9)) + _chunk(b"IEND", b""))
+
+
 def _json_bytes(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
 
@@ -465,6 +506,11 @@ def replay(commands: list[dict[str, Any]], out: Path, seed: int, *, emit_acks: b
                 marker = _chunk(b"tEXt", f"scale={scale:.6f};pan={pan_x:.3f},{pan_y:.3f}".encode())
                 png = png[:-12] + marker + png[-12:]
                 (out / filename).write_bytes(png)
+                rendered_name = f"navigation-frame-{screenshot_number:04d}.png"
+                rendered = _navigation_png(width, height, scale, pan_x, pan_y,
+                                           progress["percent"], phase, cancel_requested)
+                (out / rendered_name).write_bytes(rendered)
+                outputs.append(rendered_name)
             else:
                 (out / filename).write_bytes(_png(width, height, seed, progress["percent"]))
             screenshot_number += 1

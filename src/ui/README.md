@@ -9,8 +9,13 @@ or a newer generation clears the visible-preview state. Rendering a native
 progress control remains the window layer's responsibility. `viewer_controls.h`
 adds caller-owned navigation, progress, semantic, and RGBA overlay values.
 
-View coordinates and pan are logical top-left points; document coordinates are
-world units; `screen = world * scale + pan`. Wheel input uses
+Navigation state and pan use backing pixels; document coordinates are world
+units; `screen = world * scale + pan`. Use `resize_scaled` for logical viewport
+dimensions and the scaled drag/wheel/pinch helpers for logical pointer or
+cursor positions at the AppKit boundary. They multiply both by the current
+backing scale before updating one transform, so fit and anchored zoom share a
+coordinate space.
+Wheel input uses
 `exp(-delta_y * 0.001)` and pinch input uses `exp(magnification)`. Both clamp
 scale to 0.05–64 and solve pan from the world point under the cursor. Resize
 keeps the world point under the old viewport center at the new center. Fit

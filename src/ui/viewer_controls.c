@@ -62,6 +62,26 @@ bool ui_viewer_navigation_pinch(ui_viewer_navigation *state, double magnificatio
     return ui_viewer_navigation_zoom(state, exp(magnification), x, y);
 }
 
+bool ui_viewer_navigation_wheel_scaled(ui_viewer_navigation *state, double delta_y,
+                                       double logical_x, double logical_y,
+                                       double backing_scale)
+{
+    if (!finite_positive(backing_scale) || !isfinite(logical_x) || !isfinite(logical_y)) return false;
+    double pixel_x = logical_x * backing_scale, pixel_y = logical_y * backing_scale;
+    if (!isfinite(pixel_x) || !isfinite(pixel_y)) return false;
+    return ui_viewer_navigation_wheel(state, delta_y, pixel_x, pixel_y);
+}
+
+bool ui_viewer_navigation_pinch_scaled(ui_viewer_navigation *state, double magnification,
+                                        double logical_x, double logical_y,
+                                        double backing_scale)
+{
+    if (!finite_positive(backing_scale) || !isfinite(logical_x) || !isfinite(logical_y)) return false;
+    double pixel_x = logical_x * backing_scale, pixel_y = logical_y * backing_scale;
+    if (!isfinite(pixel_x) || !isfinite(pixel_y)) return false;
+    return ui_viewer_navigation_pinch(state, magnification, pixel_x, pixel_y);
+}
+
 bool ui_viewer_navigation_resize(ui_viewer_navigation *state, double width, double height)
 {
     if (state == NULL || !finite_positive(width) || !finite_positive(height) ||
@@ -76,6 +96,17 @@ bool ui_viewer_navigation_resize(ui_viewer_navigation *state, double width, doub
     state->pan_x = pan_x;
     state->pan_y = pan_y;
     return true;
+}
+
+bool ui_viewer_navigation_resize_scaled(ui_viewer_navigation *state, double logical_width,
+                                        double logical_height, double backing_scale)
+{
+    if (!finite_positive(logical_width) || !finite_positive(logical_height) ||
+        !finite_positive(backing_scale)) return false;
+    double pixel_width = logical_width * backing_scale;
+    double pixel_height = logical_height * backing_scale;
+    if (!finite_positive(pixel_width) || !finite_positive(pixel_height)) return false;
+    return ui_viewer_navigation_resize(state, pixel_width, pixel_height);
 }
 
 bool ui_viewer_navigation_drag_begin(ui_viewer_navigation *state, double x, double y)
@@ -99,6 +130,24 @@ bool ui_viewer_navigation_drag_end(ui_viewer_navigation *state)
     if (state == NULL || !state->dragging) return false;
     state->dragging = false;
     return true;
+}
+
+bool ui_viewer_navigation_drag_begin_scaled(ui_viewer_navigation *state, double logical_x,
+                                            double logical_y, double backing_scale)
+{
+    if (!finite_positive(backing_scale) || !isfinite(logical_x) || !isfinite(logical_y)) return false;
+    double pixel_x = logical_x * backing_scale, pixel_y = logical_y * backing_scale;
+    if (!isfinite(pixel_x) || !isfinite(pixel_y)) return false;
+    return ui_viewer_navigation_drag_begin(state, pixel_x, pixel_y);
+}
+
+bool ui_viewer_navigation_drag_scaled(ui_viewer_navigation *state, double logical_x,
+                                       double logical_y, double backing_scale)
+{
+    if (!finite_positive(backing_scale) || !isfinite(logical_x) || !isfinite(logical_y)) return false;
+    double pixel_x = logical_x * backing_scale, pixel_y = logical_y * backing_scale;
+    if (!isfinite(pixel_x) || !isfinite(pixel_y)) return false;
+    return ui_viewer_navigation_drag(state, pixel_x, pixel_y);
 }
 
 bool ui_viewer_navigation_fit(ui_viewer_navigation *state)

@@ -46,15 +46,29 @@ bool ui_viewer_navigation_init(ui_viewer_navigation *state, double viewport_widt
                                double viewport_height, double document_width,
                                double document_height);
 bool ui_viewer_navigation_resize(ui_viewer_navigation *state, double width, double height);
+/* Navigation state uses backing pixels. Convert AppKit logical coordinates at
+ * the platform boundary with its current backing scale. */
+bool ui_viewer_navigation_resize_scaled(ui_viewer_navigation *state, double logical_width,
+                                        double logical_height, double backing_scale);
 bool ui_viewer_navigation_drag_begin(ui_viewer_navigation *state, double x, double y);
 bool ui_viewer_navigation_drag(ui_viewer_navigation *state, double x, double y);
 bool ui_viewer_navigation_drag_end(ui_viewer_navigation *state);
+bool ui_viewer_navigation_drag_begin_scaled(ui_viewer_navigation *state, double logical_x,
+                                            double logical_y, double backing_scale);
+bool ui_viewer_navigation_drag_scaled(ui_viewer_navigation *state, double logical_x,
+                                       double logical_y, double backing_scale);
 bool ui_viewer_navigation_zoom(ui_viewer_navigation *state, double factor,
                                double cursor_x, double cursor_y);
 bool ui_viewer_navigation_wheel(ui_viewer_navigation *state, double delta_y,
                                 double cursor_x, double cursor_y);
+bool ui_viewer_navigation_wheel_scaled(ui_viewer_navigation *state, double delta_y,
+                                       double logical_x, double logical_y,
+                                       double backing_scale);
 bool ui_viewer_navigation_pinch(ui_viewer_navigation *state, double magnification,
                                 double cursor_x, double cursor_y);
+bool ui_viewer_navigation_pinch_scaled(ui_viewer_navigation *state, double magnification,
+                                       double logical_x, double logical_y,
+                                       double backing_scale);
 bool ui_viewer_navigation_fit(ui_viewer_navigation *state);
 bool ui_viewer_navigation_key(ui_viewer_navigation *state, ui_viewer_key key);
 bool ui_viewer_navigation_project(const ui_viewer_navigation *state, double world_x,
