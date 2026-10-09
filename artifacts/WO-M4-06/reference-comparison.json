@@ -399,6 +399,17 @@
       "max_channel_diff": 0,
       "max_jointly_covered_straight_rgb_diff": 0,
       "max_alpha_diff": 0
+    },
+    {
+      "case": "user-space-radial-default-radius",
+      "source_sha256": "f26a9779e148556bca988abc22dfa2b25c03c24b48640829984cb2ce91445e50",
+      "vexel_sha256": "0f99a3e89afb37c2bb13c8bd742f5ef958a2bfbfff543e6e5babc54d21da8910",
+      "reference_png_sha256": "0130f58113de569d272aa42db398e273da4577dbd647420c771cf9882ecc5fac",
+      "edge_diff_pixels": 8,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 1,
+      "max_jointly_covered_straight_rgb_diff": 1,
+      "max_alpha_diff": 0
     }
   ]
 }

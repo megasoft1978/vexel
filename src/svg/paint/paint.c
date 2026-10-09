@@ -134,7 +134,7 @@ static bool gradient_coordinates(base_bytes source, const svg_xml_token *tokens,
         double radius = hypot(viewport_width, viewport_height) / sqrt(2.0);
         defaults[0] = object_box ? 0.5 : viewport_width * 0.5;
         defaults[1] = object_box ? 0.5 : viewport_height * 0.5;
-        defaults[2] = object_box ? 0.5 : radius;
+        defaults[2] = object_box ? 0.5 : radius * 0.5;
         defaults[3] = defaults[0];
         defaults[4] = defaults[1];
     }

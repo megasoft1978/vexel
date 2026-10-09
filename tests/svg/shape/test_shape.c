@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <CommonCrypto/CommonDigest.h>
 
 static double segment_distance(geom_point p, geom_edge edge)
 {
@@ -51,6 +52,23 @@ static bool render_source(const char *source, raster_tile *tile, svg_shape_docum
         return false;
     }
     return true;
+}
+
+static bool source_bytes_unchanged_check(void)
+{
+    uint8_t source[] = "<svg width=\"8\" height=\"8\"><defs><rect id=\"r\" width=\"6\" height=\"6\" fill=\"red\"/></defs><use href=\"#r\"/></svg>";
+    const size_t source_len = sizeof(source) - 1U;
+    unsigned char before[CC_SHA256_DIGEST_LENGTH], after[CC_SHA256_DIGEST_LENGTH];
+    if (CC_SHA256(source, (CC_LONG)source_len, before) == NULL) return false;
+    raster_tile tile = {0};
+    svg_shape_document doc = {0};
+    svg_shape_diagnostic diagnostic;
+    bool ok = render_source((const char *)source, &tile, &doc, &diagnostic);
+    if (ok) ok = CC_SHA256(source, (CC_LONG)source_len, after) != NULL &&
+                 memcmp(before, after, sizeof(before)) == 0;
+    raster_tile_destroy(&tile);
+    svg_shape_document_destroy(&doc);
+    return ok;
 }
 
 static uint8_t pixel_alpha(const raster_tile *tile, uint32_t x, uint32_t y);
@@ -343,6 +361,14 @@ static bool gradient_checks(void)
          tile.rgba[last] == 8U && tile.rgba[last + 2U] == 247U;
     raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
     if (!ok) return false;
+    static const char user_space_radial_default[] = "<svg width=\"16\" height=\"16\"><defs><radialGradient id=\"g\" gradientUnits=\"userSpaceOnUse\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></radialGradient></defs><rect x=\"6\" y=\"6\" width=\"4\" height=\"4\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(user_space_radial_default, &tile, &doc, &diag)) return false;
+    size_t radial_edge = ((size_t)6U * 16U + 6U) * 4U;
+    size_t radial_center = ((size_t)8U * 16U + 8U) * 4U;
+    ok = tile.rgba[radial_edge] > 180U && tile.rgba[radial_edge] < 220U &&
+         tile.rgba[radial_center] > 200U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
     static const char *invalid[] = {
         "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\" spreadMethod=\"reflect\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
         "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"base\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" href=\"#base\"/></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
@@ -566,6 +592,7 @@ static bool stroke_cap_join_and_dash_checks(void)
 
 int main(void)
 {
+    if (!source_bytes_unchanged_check()) { fprintf(stderr, "source bytes changed during decode/render\n"); return 53; }
     if (!reference_rejection_checks()) { fprintf(stderr, "reference diagnostics failed\n"); return 49; }
     if (!gradient_checks()) { fprintf(stderr, "gradient rendering failed\n"); return 50; }
     if (!clip_checks()) { fprintf(stderr, "clip rendering failed\n"); return 51; }
