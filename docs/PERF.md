@@ -353,20 +353,20 @@ archive with this 4x4 coverage implementation on the same arm64 macOS 27.0
 host and Apple clang 21.0.0; the specific hardware model is unavailable in the
 benchmark harness. Each fixed 128x128 workload uses two warmups and
 21 measured trials; results include per-trial latencies, median/p95, throughput,
-peak RSS, and output hashes in `artifacts/WO-M4-03/raster-benchmark.json`. The
-candidate code commit is `26d6b19d38b23be633c0d85642cd637f4ebdba1e`; the source
-tree was clean for this campaign.
+peak RSS, and output hashes in `artifacts/WO-M4-03/raster-benchmark.json`. Each
+trial alternates base/candidate order to reduce host clock/load drift. Candidate
+source commit `6370ecfeadda70ef7b6fe34b2c3d1a05bd7e9740` was clean for this campaign.
 
 | Workload | Base median / p95 (ms) | Candidate median / p95 (ms) | Median change | Candidate pixels/s |
 |---|---:|---:|---:|---:|
-| Simple rectangle | 3.681 / 4.376 | 3.998 / 4.892 | +8.61% | 4,098,091 |
-| Curved fill | 4.810 / 5.525 | 7.190 / 7.969 | +49.50% | 2,278,575 |
-| 16 fractional rectangles | 4.698 / 5.599 | 8.266 / 10.505 | +75.95% | 1,982,155 |
+| Simple rectangle | 2.437 / 2.907 | 2.734 / 3.539 | +12.18% | 5,992,321 |
+| Curved fill | 3.069 / 3.260 | 4.832 / 5.027 | +57.48% | 3,390,407 |
+| 16 fractional rectangles | 3.246 / 3.609 | 5.803 / 5.908 | +78.79% | 2,823,205 |
 
 The first implementation made the simple workload 75.30% slower. An interior-pixel
 fast path now uses one center sample when no edge bounds cross the pixel, while
-boundary pixels retain all 16 fixed samples. The simple workload is now 8.61%
-slower than base; curved and multi-shape cases remain 49.50% and 75.95% slower
+boundary pixels retain all 16 fixed samples. The simple workload is now 12.18%
+slower than base; curved and multi-shape cases remain 57.48% and 78.79% slower
 because their more numerous edges make boundary classification more costly.
 The sample grid and work cap remain unchanged. Peak process RSS is 2,048,000 bytes
 for base and 2,031,616 bytes for candidate. This is a measured quality/performance
