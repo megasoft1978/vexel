@@ -239,6 +239,29 @@ int main(int argc, char **argv)
         return fail("generation invalidation failed");
     svg_index_destroy(session);
 
+    static const uint8_t container_spans[] =
+        "<svg width='2' height='2'><g><rect width='1' height='1'/></g></svg>";
+    if (svg_index_start((base_bytes){container_spans, sizeof(container_spans) - 1U},
+                        1U, &session) != SVG_INDEX_OK)
+        return fail("container span session start failed");
+    step = SVG_INDEX_OK;
+    while (step == SVG_INDEX_OK) step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+    svg_index_element root_record = {0}, group_record = {0}, child_record = {0};
+    size_t group_offset = sizeof("<svg width='2' height='2'>") - 1U;
+    size_t child_length = sizeof("<rect width='1' height='1'/>") - 1U;
+    bool spans_retained = step == SVG_INDEX_COMPLETE &&
+        svg_index_element_at(session, 0U, &root_record) &&
+        root_record.parent == SIZE_MAX && root_record.source_offset == 0U &&
+        root_record.source_length == sizeof(container_spans) - 1U && root_record.closed &&
+        svg_index_element_at(session, 1U, &group_record) && group_record.parent == 0U &&
+        group_record.source_offset == group_offset &&
+        group_record.source_length == sizeof("<g><rect width='1' height='1'/></g>") - 1U &&
+        group_record.closed && svg_index_element_at(session, 2U, &child_record) &&
+        child_record.parent == 1U && child_record.source_offset == group_offset + sizeof("<g>") - 1U &&
+        child_record.source_length == child_length && child_record.closed;
+    svg_index_destroy(session);
+    if (!spans_retained) return fail("root or non-empty parent source span was not retained");
+
     static const uint8_t rich[] = "<?xml version='1.0' encoding=\"UTF-8\"?>\r\n<!--c--><?p data?><a:root xmlns:a='urn:x' a:k=\"v&amp;x\">x\r\ny<![CDATA[z]]><a:child/></a:root>";
     if (svg_index_start((base_bytes){rich, sizeof(rich) - 1U}, 3U, &session) != SVG_INDEX_OK)
         return fail("rich XML session start failed");
