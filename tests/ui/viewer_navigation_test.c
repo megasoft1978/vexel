@@ -41,14 +41,25 @@ int main(void)
     double center_world_y = (nav.viewport_height * 0.5 - nav.pan_y) / nav.scale;
     if (!ui_viewer_navigation_resize(&nav, 1000.0, 800.0) ||
         !ui_viewer_navigation_project(&nav, center_world_x, center_world_y, &sx, &sy) ||
+        !close_to(sx, 500.0) || !close_to(sy, 400.0)) return 8;
+    if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_ZOOM_IN) ||
+        !ui_viewer_navigation_project(&nav, center_world_x, center_world_y, &sx, &sy) ||
         !close_to(sx, 500.0) || !close_to(sy, 400.0) ||
-        !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_ZOOM_IN) ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_ZOOM_OUT) ||
-        !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_LEFT) ||
+        !ui_viewer_navigation_project(&nav, center_world_x, center_world_y, &sx, &sy) ||
+        !close_to(sx, 500.0) || !close_to(sy, 400.0)) return 20;
+    double key_pan_x = nav.pan_x, key_pan_y = nav.pan_y;
+    if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_LEFT) ||
+        !close_to(nav.pan_x, key_pan_x + 32.0) || nav.pan_y != key_pan_y ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_RIGHT) ||
+        !close_to(nav.pan_x, key_pan_x) || nav.pan_y != key_pan_y ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_UP) ||
+        !close_to(nav.pan_y, key_pan_y + 32.0) ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_DOWN) ||
-        !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_FIT)) return 8;
+        !close_to(nav.pan_y, key_pan_y)) return 21;
+    if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_FIT) ||
+        !close_to(nav.scale, 2.5) || !close_to(nav.pan_x, 0.0) ||
+        !close_to(nav.pan_y, 150.0)) return 22;
     nav.pan_x = DBL_MAX;
     if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_LEFT) || !isfinite(nav.pan_x) ||
         nav.pan_x != DBL_MAX || !isfinite(nav.pan_y) || !ui_viewer_navigation_fit(&nav)) return 19;
