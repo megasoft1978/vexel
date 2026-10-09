@@ -170,7 +170,10 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
             if command["action"] not in {"fit", "wheel", "pinch", "pan"}:
                 raise DriverError("navigation action must be fit, wheel, pinch, or pan")
             for field in ("x", "y", "value"):
-                if type(command[field]) not in (int, float) or not math.isfinite(command[field]) or abs(command[field]) > 10000:
+                value = command[field]
+                if type(value) not in (int, float) or abs(value) > 10000:
+                    raise DriverError(f"navigation {field} must be finite and bounded")
+                if isinstance(value, float) and not math.isfinite(value):
                     raise DriverError(f"navigation {field} must be finite and bounded")
         elif name == "index_progress":
             generation = _integer(command["generation"], "generation", 0, 0xFFFFFFFFFFFFFFFF)

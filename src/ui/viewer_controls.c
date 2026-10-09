@@ -166,12 +166,13 @@ bool ui_viewer_navigation_fit(ui_viewer_navigation *state)
 
 bool ui_viewer_navigation_key(ui_viewer_navigation *state, ui_viewer_key key)
 {
-    if (state == NULL) return false;
+    if (state == NULL || !isfinite(state->pan_x) || !isfinite(state->pan_y)) return false;
+    double next_x = state->pan_x, next_y = state->pan_y;
     switch (key) {
-        case UI_VIEWER_KEY_LEFT: state->pan_x += 32.0; break;
-        case UI_VIEWER_KEY_RIGHT: state->pan_x -= 32.0; break;
-        case UI_VIEWER_KEY_UP: state->pan_y += 32.0; break;
-        case UI_VIEWER_KEY_DOWN: state->pan_y -= 32.0; break;
+        case UI_VIEWER_KEY_LEFT: next_x += 32.0; break;
+        case UI_VIEWER_KEY_RIGHT: next_x -= 32.0; break;
+        case UI_VIEWER_KEY_UP: next_y += 32.0; break;
+        case UI_VIEWER_KEY_DOWN: next_y -= 32.0; break;
         case UI_VIEWER_KEY_ZOOM_IN: return ui_viewer_navigation_zoom(state, 1.25,
             state->viewport_width * 0.5, state->viewport_height * 0.5);
         case UI_VIEWER_KEY_ZOOM_OUT: return ui_viewer_navigation_zoom(state, 0.8,
@@ -179,7 +180,10 @@ bool ui_viewer_navigation_key(ui_viewer_navigation *state, ui_viewer_key key)
         case UI_VIEWER_KEY_FIT: return ui_viewer_navigation_fit(state);
         default: return false;
     }
-    return isfinite(state->pan_x) && isfinite(state->pan_y);
+    if (!isfinite(next_x) || !isfinite(next_y)) return false;
+    state->pan_x = next_x;
+    state->pan_y = next_y;
+    return true;
 }
 
 bool ui_viewer_navigation_project(const ui_viewer_navigation *state, double wx, double wy,

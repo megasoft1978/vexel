@@ -1,5 +1,6 @@
 #include "ui/viewer_controls.h"
 
+#include <float.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -48,6 +49,9 @@ int main(void)
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_UP) ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_DOWN) ||
         !ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_FIT)) return 8;
+    nav.pan_x = DBL_MAX;
+    if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_LEFT) || !isfinite(nav.pan_x) ||
+        nav.pan_x != DBL_MAX || !isfinite(nav.pan_y) || !ui_viewer_navigation_fit(&nav)) return 19;
 
     ui_viewer_navigation retina;
     if (!ui_viewer_navigation_init(&retina, 800.0, 600.0, 400.0, 300.0) ||

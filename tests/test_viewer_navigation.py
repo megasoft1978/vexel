@@ -14,6 +14,22 @@ DRIVER = ROOT / "app/test_driver/driver.py"
 
 
 class ViewerNavigationDriverTests(unittest.TestCase):
+    def test_oversized_integer_is_rejected_without_traceback(self) -> None:
+        cache_root = ROOT / ".cache"
+        cache_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=cache_root) as raw:
+            root = Path(raw)
+            script = root / "oversized.jsonl"
+            script.write_text(
+                '{"command":"open","document_id":"d"}\n'
+                '{"command":"navigate","action":"pan","x":' + "9" * 1000 +
+                ',"y":0,"value":0}\n{"command":"quit"}\n', encoding="utf-8")
+            result = subprocess.run([sys.executable, str(DRIVER), "--navigation-replay",
+                "--script", str(script), "--output-dir", str(root / "out"), "--seed", "17"],
+                cwd=ROOT, text=True, capture_output=True, check=False)
+            self.assertEqual(result.returncode, 2, result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
     def test_navigation_replay_deterministic(self) -> None:
         cache_root = ROOT / ".cache"
         cache_root.mkdir(parents=True, exist_ok=True)
