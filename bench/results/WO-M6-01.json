@@ -1,0 +1,34 @@
+{
+  "work_order": "WO-M6-01",
+  "machine": "arm64",
+  "os": "macOS-27.0-arm64-arm-64bit",
+  "compiler": "AppleClang 21.0.0",
+  "build_type": "Release",
+  "workload": "ui_demo_render dark 1280x800 fresh process",
+  "trials": [
+    {
+      "elapsed_ns": 9916083,
+      "max_rss_bytes": 6275072
+    },
+    {
+      "elapsed_ns": 9699042,
+      "max_rss_bytes": 6291456
+    },
+    {
+      "elapsed_ns": 9769666,
+      "max_rss_bytes": 6275072
+    },
+    {
+      "elapsed_ns": 9007000,
+      "max_rss_bytes": 6275072
+    },
+    {
+      "elapsed_ns": 9044791,
+      "max_rss_bytes": 6291456
+    }
+  ],
+  "median_elapsed_ns": 9699042,
+  "median_max_rss_bytes": 6275072,
+  "output_rgba_bytes": 4096000,
+  "binary_bytes": 105280
+}

@@ -44,6 +44,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,744 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.265 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M3-01 | Release | 151,968 bytes; see `bench/results/WO-M3-01.json` | source read: 10 MiB median 0.890 ms (p95 0.932 ms); 100 MiB 8.626 ms (p95 8.918 ms); validated decode+raster preview: 10 MiB median 27.81 ms (p95 28.80 ms); 100 MiB median 257.05 ms (p95 269.12 ms); full index+XML validation 44.84 ms / 334.21 ms | 33.9 MB / 127.0 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M3-02 | Release | benchmark binary 35,376 bytes | 100,000 records / 1,000 viewport queries: index build 8.729 ms; query p50 0.000292 ms, p95 0.001833 ms, max 0.022583 ms | cache pressure accounted peak 6,000 / 8,192 bytes over 10,000 inserts, including the allocated 100-entry metadata array | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M6-01 | Release | `ui_demo_render` 105,280 bytes | 1280x800 dark chrome: 9.699 ms median across 5 fresh processes | 6,275,072 bytes peak RSS | Apple Silicon arm64, macOS 27.0, AppleClang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
