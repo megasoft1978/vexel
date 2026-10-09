@@ -12,6 +12,13 @@
 
 static const uint64_t PLATFORM_METAL_TIMEOUT_SECONDS = 5U;
 
+static id<MTLDevice> platform_present_device;
+static id<MTLCommandQueue> platform_present_queue;
+static id<MTLRenderPipelineState> platform_present_pipeline;
+static id<MTLTexture> platform_present_texture;
+static uint32_t platform_present_texture_width;
+static uint32_t platform_present_texture_height;
+
 static bool platform_metal_fail(char *diagnostic, size_t capacity, const char *message)
 {
     if (diagnostic != NULL && capacity > 0U) {
@@ -254,6 +261,146 @@ bool platform_metal_present_and_verify(platform_window *window, const uint8_t *r
     }
 }
 
+static bool platform_metal_prepare_present(char *diagnostic, size_t diagnostic_capacity)
+{
+    if (platform_present_device != nil && platform_present_queue != nil &&
+        platform_present_pipeline != nil) {
+        return true;
+    }
+    id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+    id<MTLCommandQueue> queue = [device newCommandQueue];
+    if (device == nil || queue == nil) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "Metal device or command queue unavailable");
+    }
+    static NSString *shader = @"#include <metal_stdlib>\n"
+        "using namespace metal;\n"
+        "struct V { float4 position [[position]]; float2 uv; };\n"
+        "vertex V vmain(uint id [[vertex_id]]) {\n"
+        "  float2 p[3] = {float2(-1,-1), float2(3,-1), float2(-1,3)};\n"
+        "  float2 t[3] = {float2(0,1), float2(2,1), float2(0,-1)};\n"
+        "  V o; o.position=float4(p[id],0,1); o.uv=t[id]; return o; }\n"
+        "fragment float4 fmain(V in [[stage_in]], texture2d<float> tex [[texture(0)]]) {\n"
+        "  constexpr sampler s(coord::normalized, address::clamp_to_edge, filter::nearest);\n"
+        "  return tex.sample(s,in.uv); }\n";
+    NSError *error = nil;
+    id<MTLLibrary> library = [device newLibraryWithSource:shader options:nil error:&error];
+    if (library == nil) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "Metal presentation shader compilation failed");
+    }
+    MTLRenderPipelineDescriptor *descriptor = [[MTLRenderPipelineDescriptor alloc] init];
+    descriptor.vertexFunction = [library newFunctionWithName:@"vmain"];
+    descriptor.fragmentFunction = [library newFunctionWithName:@"fmain"];
+    descriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+    id<MTLRenderPipelineState> pipeline =
+        [device newRenderPipelineStateWithDescriptor:descriptor error:&error];
+    if (pipeline == nil) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "Metal presentation pipeline creation failed");
+    }
+    platform_present_device = device;
+    platform_present_queue = queue;
+    platform_present_pipeline = pipeline;
+    return true;
+}
+
+static bool platform_metal_present_dimensions_valid(uint32_t width, uint32_t height,
+                                                     size_t byte_count)
+{
+    if (width == 0U || height == 0U || width > 8192U || height > 8192U) return false;
+    size_t w = (size_t)width;
+    size_t h = (size_t)height;
+    if (w > SIZE_MAX / h) return false;
+    size_t pixels = w * h;
+    return pixels <= SIZE_MAX / 4U && pixels * 4U == byte_count;
+}
+
+bool platform_metal_present(platform_window *window, const uint8_t *rgba,
+                            size_t byte_count, uint32_t width, uint32_t height,
+                            char *diagnostic, size_t diagnostic_capacity)
+{
+    if (![NSThread isMainThread] || window == NULL || rgba == NULL ||
+        !platform_metal_present_dimensions_valid(width, height, byte_count)) {
+        return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                   "invalid Metal presentation arguments or wrong thread");
+    }
+    @autoreleasepool {
+        if (!platform_metal_prepare_present(diagnostic, diagnostic_capacity)) {
+            return false;
+        }
+        NSView *view = (__bridge NSView *)platform_window_native_view(window);
+        if (view == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "window view unavailable");
+        }
+        CAMetalLayer *layer = (CAMetalLayer *)view.layer;
+        if (![layer isKindOfClass:[CAMetalLayer class]]) {
+            layer = [CAMetalLayer layer];
+            layer.device = platform_present_device;
+            layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+            layer.framebufferOnly = NO;
+            layer.contentsScale = view.window.backingScaleFactor;
+            view.wantsLayer = YES;
+            view.layer = layer;
+        }
+        layer.device = platform_present_device;
+        layer.frame = view.bounds;
+        layer.contentsScale = view.window.backingScaleFactor;
+        layer.drawableSize = CGSizeMake((CGFloat)width, (CGFloat)height);
+        if (platform_present_texture == nil || platform_present_texture_width != width ||
+            platform_present_texture_height != height) {
+            MTLTextureDescriptor *texture_descriptor = [MTLTextureDescriptor
+                texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                width:width height:height mipmapped:NO];
+            texture_descriptor.storageMode = MTLStorageModeShared;
+            texture_descriptor.usage = MTLTextureUsageShaderRead;
+            id<MTLTexture> texture =
+                [platform_present_device newTextureWithDescriptor:texture_descriptor];
+            if (texture == nil) {
+                return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                           "Metal presentation texture allocation failed");
+            }
+            platform_present_texture = texture;
+            platform_present_texture_width = width;
+            platform_present_texture_height = height;
+        }
+        [platform_present_texture replaceRegion:MTLRegionMake2D(0, 0, width, height)
+            mipmapLevel:0 withBytes:rgba bytesPerRow:(size_t)width * 4U];
+        id<CAMetalDrawable> drawable = [layer nextDrawable];
+        if (drawable == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "CAMetalLayer returned no drawable");
+        }
+        id<MTLCommandBuffer> command = [platform_present_queue commandBuffer];
+        if (command == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "Metal presentation command buffer unavailable");
+        }
+        MTLRenderPassDescriptor *pass = [MTLRenderPassDescriptor renderPassDescriptor];
+        pass.colorAttachments[0].texture = drawable.texture;
+        pass.colorAttachments[0].loadAction = MTLLoadActionClear;
+        pass.colorAttachments[0].storeAction = MTLStoreActionStore;
+        id<MTLRenderCommandEncoder> encoder =
+            [command renderCommandEncoderWithDescriptor:pass];
+        if (encoder == nil) {
+            return platform_metal_fail(diagnostic, diagnostic_capacity,
+                                       "Metal presentation encoder unavailable");
+        }
+        [encoder setRenderPipelineState:platform_present_pipeline];
+        [encoder setFragmentTexture:platform_present_texture atIndex:0];
+        [encoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:3];
+        [encoder endEncoding];
+        [command presentDrawable:drawable];
+        [command commit];
+        if (diagnostic != NULL && diagnostic_capacity > 0U) {
+            (void)snprintf(diagnostic, diagnostic_capacity,
+                           "presented %ux%u RGBA frame", width, height);
+        }
+        return true;
+    }
+}
+
 void platform_metal_reset(platform_window *window)
 {
     if (![NSThread isMainThread] || window == NULL) {
@@ -263,5 +410,11 @@ void platform_metal_reset(platform_window *window)
         NSView *view = (__bridge NSView *)platform_window_native_view(window);
         view.layer = nil;
         view.wantsLayer = NO;
+        platform_present_texture = nil;
+        platform_present_texture_width = 0U;
+        platform_present_texture_height = 0U;
+        platform_present_pipeline = nil;
+        platform_present_queue = nil;
+        platform_present_device = nil;
     }
 }

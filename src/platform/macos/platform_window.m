@@ -29,6 +29,16 @@ static bool platform_on_main_thread(void)
     return [NSThread isMainThread];
 }
 
+static uint32_t platform_modifiers(NSEventModifierFlags flags)
+{
+    uint32_t value = 0U;
+    if ((flags & NSEventModifierFlagCommand) != 0U) value |= PLATFORM_MODIFIER_COMMAND;
+    if ((flags & NSEventModifierFlagControl) != 0U) value |= PLATFORM_MODIFIER_CONTROL;
+    if ((flags & NSEventModifierFlagShift) != 0U) value |= PLATFORM_MODIFIER_SHIFT;
+    if ((flags & NSEventModifierFlagOption) != 0U) value |= PLATFORM_MODIFIER_OPTION;
+    return value;
+}
+
 void *platform_window_native_view(platform_window *window)
 {
     if (!platform_on_main_thread() || window == NULL) {
@@ -114,7 +124,7 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     platform_event value = {0};
     value.type = PLATFORM_EVENT_KEY_DOWN;
     value.key_code = event.keyCode;
-    value.modifiers = (uint32_t)event.modifierFlags;
+    value.modifiers = platform_modifiers(event.modifierFlags);
     NSData *data = [event.charactersIgnoringModifiers dataUsingEncoding:NSUTF8StringEncoding];
     size_t amount = data.length < sizeof(value.text) - 1 ? (size_t)data.length : sizeof(value.text) - 1;
     if (amount > 0) {
@@ -132,7 +142,7 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     platform_event value = {0};
     value.type = PLATFORM_EVENT_KEY_UP;
     value.key_code = event.keyCode;
-    value.modifiers = (uint32_t)event.modifierFlags;
+    value.modifiers = platform_modifiers(event.modifierFlags);
     (void)platform_emit(self.owner, &value);
 }
 - (void)mouseMoved:(NSEvent *)event
@@ -158,6 +168,7 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.type = PLATFORM_EVENT_SCROLL;
     value.logical_x = (int32_t)llround(x); value.logical_y = (int32_t)llround(y);
     value.precise_x = x; value.precise_y = y; value.delta_x = dx; value.delta_y = dy;
+    value.modifiers = platform_modifiers(event.modifierFlags);
     value.backing_scale = self.window.backingScaleFactor;
     if (!isfinite(value.backing_scale) || !(value.backing_scale > 0.0)) return;
     (void)platform_emit(self.owner, &value);
@@ -183,7 +194,7 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.logical_x = (int32_t)point.x;
     value.logical_y = (int32_t)(NSHeight(self.bounds) - point.y);
     value.button = (uint8_t)event.buttonNumber;
-    value.modifiers = (uint32_t)event.modifierFlags;
+    value.modifiers = platform_modifiers(event.modifierFlags);
     (void)platform_emit(self.owner, &value);
 }
 @end
@@ -285,6 +296,7 @@ bool platform_window_create(const platform_window_config *config, platform_windo
             free(window);
             return false;
         }
+        native.releasedWhenClosed = NO;
         window->native = native;
         native.owner = window;
         native.delegate = native;
@@ -322,6 +334,24 @@ bool platform_window_resize(platform_window *window, int32_t width_points, int32
     return true;
 }
 
+bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len)
+{
+    if (!platform_on_main_thread() || window == NULL || title_utf8 == NULL ||
+        title_len == 0U || title_len > 1024U) {
+        return false;
+    }
+    for (size_t index = 0U; index < title_len; index++) {
+        if (title_utf8[index] == '\0') return false;
+    }
+    @autoreleasepool {
+        NSString *title = [[NSString alloc] initWithBytes:title_utf8
+            length:title_len encoding:NSUTF8StringEncoding];
+        if (title == nil) return false;
+        window->native.title = title;
+        return true;
+    }
+}
+
 bool platform_test_inject_key(platform_window *window, bool key_down)
 {
     if (!platform_on_main_thread() || window == NULL) {
@@ -332,6 +362,31 @@ bool platform_test_inject_key(platform_window *window, bool key_down)
         NSEvent *event = [NSEvent keyEventWithType:type location:NSZeroPoint
             modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
             characters:@"a" charactersIgnoringModifiers:@"a" isARepeat:NO keyCode:0];
+        [NSApp sendEvent:event];
+        return true;
+    }
+}
+
+bool platform_test_inject_key_text(platform_window *window, const char *text, size_t text_len,
+                                   uint16_t key_code, uint32_t modifiers)
+{
+    if (!platform_on_main_thread() || window == NULL || text == NULL || text_len > 8U ||
+        (modifiers & ~(uint32_t)(PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL |
+                                PLATFORM_MODIFIER_SHIFT | PLATFORM_MODIFIER_OPTION)) != 0U) {
+        return false;
+    }
+    @autoreleasepool {
+        NSString *characters = [[NSString alloc] initWithBytes:text length:text_len
+            encoding:NSUTF8StringEncoding];
+        if (characters == nil) return false;
+        NSEventModifierFlags flags = 0;
+        if ((modifiers & PLATFORM_MODIFIER_COMMAND) != 0U) flags |= NSEventModifierFlagCommand;
+        if ((modifiers & PLATFORM_MODIFIER_CONTROL) != 0U) flags |= NSEventModifierFlagControl;
+        if ((modifiers & PLATFORM_MODIFIER_SHIFT) != 0U) flags |= NSEventModifierFlagShift;
+        if ((modifiers & PLATFORM_MODIFIER_OPTION) != 0U) flags |= NSEventModifierFlagOption;
+        NSEvent *event = [NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint
+            modifierFlags:flags timestamp:0.0 windowNumber:window->native.windowNumber context:nil
+            characters:characters charactersIgnoringModifiers:characters isARepeat:NO keyCode:key_code];
         [NSApp sendEvent:event];
         return true;
     }

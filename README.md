@@ -1,8 +1,27 @@
 # vexel
 
 vexel is a macOS-first, C17 workbench for large SVG documents. The initial
-scaffold builds a small command-line executable; application features will be
-added through reviewed work orders.
+application is a native SVG viewer for the supported document subset.
+
+## Status
+
+| Feature | Status |
+| --- | --- |
+| Interactive SVG viewer | Built |
+
+## Usage
+
+```sh
+./build/mac-release/bin/svgworkbench file.svg
+```
+
+The viewer supports fit, zoom, pan, resize, and clean quit. To build and launch
+the Release executable in one step, run `./dev run file.svg`. A headless PPM
+frame can be rendered with:
+
+```sh
+svgworkbench --render-frame file.svg --size 1280x800 --out frame.ppm
+```
 
 ## Requirements
 

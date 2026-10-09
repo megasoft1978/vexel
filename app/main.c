@@ -11,6 +11,8 @@
 #include "test_driver/native_injection.h"
 #include "test_driver/native_task_tests.h"
 #include "index_replay.h"
+#include "app/render_frame_cli.h"
+#include "app/viewer.h"
 
 #define NATIVE_COMMAND_LIMIT 64U
 
@@ -456,6 +458,16 @@ static int native_navigation_event_smoke(void)
 
 int main(int argc, char *argv[])
 {
+    if (argc >= 2 && strcmp(argv[1], "--render-frame") == 0) {
+        return app_run_render_frame(argc, argv);
+    }
+    if (argc == 3 && strcmp(argv[1], "--native-viewer-smoke") == 0) {
+        return app_run_native_viewer_smoke(argv[2]);
+    }
+    if (argc == 2 && argv[1][0] != '-' &&
+        bounded_length(argv[1], 4096U) > 0U && bounded_length(argv[1], 4096U) <= 4096U) {
+        return app_run_viewer(argv[1]);
+    }
     if (argc == 3 && strcmp(argv[1], "--index-replay") == 0) {
         return app_run_index_replay(argv[2]);
     }
@@ -498,6 +510,9 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    (void)fputs("usage: svgworkbench --version\n", stderr);
-    return EXIT_FAILURE;
+    (void)fputs("usage: svgworkbench <file.svg>\n"
+                "       svgworkbench --version\n"
+                "       svgworkbench --render-frame <file.svg> --size WxH --out <file.ppm> "
+                "[--zoom N] [--pan X,Y]\n", stderr);
+    return 2;
 }
