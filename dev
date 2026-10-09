@@ -3,12 +3,12 @@ set -eu
 
 usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
-    printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml}'
+    printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
     printf '%s\n' '       ./dev wo-help'
 }
 
 command_name=${1:-help}
-if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ]; then
+if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ]; then
     usage >&2
     exit 2
 fi
@@ -18,7 +18,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|asan|ubsan|fuzz|fuzz-xml|wo-help)
+    build|test-fast|test|verify|asan|ubsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -84,6 +84,12 @@ case "$command_name" in
         [ "$duration" -ne 600 ] || report=artifacts/WO-M2-03/scheduled-campaign.json
         python3 scripts/xml_fuzz_campaign.py --binary build/mac-asan/bin/xml_tokenizer_fuzz \
             --duration "$duration" --seed "$seed" --output "$report"
+        ;;
+    shape-fuzz)
+        shift
+        cmake --preset mac-asan
+        cmake --build --preset mac-asan --target shape_fuzz
+        python3 scripts/shape_fuzz.py --binary build/mac-asan/bin/shape_fuzz "$@"
         ;;
     verify)
         "$repo_root/dev" build

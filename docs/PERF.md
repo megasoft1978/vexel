@@ -10,9 +10,11 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M1-04 | Release | 97,072 | 1,000 task cycles: 44 ms; max join: 0.073 ms | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M2-05 | Release | 97,040; shape CLI 53,344; shape library 23,320 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.272 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
-`/usr/bin/time -l`. No SVG throughput or renderer performance is measured yet.
+`/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
+below; it does not represent general SVG throughput.
 
 ## WO-M1-04 task queue lifecycle
 
@@ -165,3 +167,39 @@ build. The final fresh review passed all ten frozen commands with no findings;
 the implementation is merged at
 `44945019b06bb09e67881abe645c2e453b979427`. Evidence is under
 `artifacts/runs/WO-M2-04/verify-16e8fdc9-d718-4d8a-87fe-bc31a406d54b/`.
+
+## WO-M2-05 bounded shape rendering
+
+The supported-shape comparison uses `/opt/homebrew/bin/rsvg-convert`, version
+2.62.3 (Cairo 1.18.4, Pango 1.58.2, HarfBuzz 14.3.1). Seven project-authored
+fixtures cover rectangles, closed lines, cubic and quadratic curves, elliptical
+arcs, even-odd fill, and degenerate geometry. The Python harness renders each
+twice and requires byte-identical Vexel RGBA output. Reference comparison is
+exact in the interior and allows differences only within a one-pixel band at
+Vexel coverage boundaries; all seven cases pass. Source and render hashes and
+per-case pixel differences are recorded in
+`artifacts/WO-M2-05/reference-comparison.json`.
+
+The fixed-seed ASan+UBSan campaign (`20261009`) completed 1,000,000 cases in
+6.695 s wall time (6.478 s process CPU time), with zero sanitizer reports,
+crashes, or invariant failures. Inputs were at most 4,096 bytes. The result is
+in `artifacts/WO-M2-05/fuzz-report.json`. Release sizes on Apple Silicon macOS
+27.0 with Apple Clang 21.0.0 (`clang-2100.3.34.2`) are recorded in
+`bench/results/WO-M2-05.json`: `svgworkbench` 97,040 bytes, shape CLI 53,344,
+shape static library 23,288, and XML static library 16,552.
+
+For a deterministic 256x256 SVG containing 64 rectangles, seven fresh-process
+Release CLI trials after two warmups had a 15.272 ms median and 17.464 ms
+nearest-rank p95 (4.29 MPixel/s using total viewport pixels). Maximum RSS was
+2,244,608 bytes. Timing includes process startup, file read, decode, scalar
+raster, and raw output write; caches were not evicted. This is not isolated
+raster-kernel throughput. Raw trials and hashes are in
+`artifacts/WO-M2-05/render-benchmark.json`.
+
+The shape-specific build, CTest, focused differential tests, ASan/UBSan fuzz,
+UBSan CTest, Release build, and final `./dev verify` pass. The full suite
+reports 170 Python tests with zero failures/errors/skips; Debug/ASan/UBSan CTest
+each pass 5/5, and native smoke plus 20-frame Metal replay pass. Three initial
+managed runs had sandbox and LaunchServices failures that did not reproduce;
+see `artifacts/WO-M2-05/verification-transients.md`. This is no longer a
+blocker. No general SVG throughput or performance advantage is claimed.

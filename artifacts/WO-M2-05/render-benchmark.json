@@ -1,0 +1,30 @@
+{
+  "work_order": "WO-M2-05",
+  "workload": "fresh-process CLI: read SVG, decode 64 rects, raster 256x256 RGBA tile, write raw RGBA",
+  "machine": "Apple Silicon arm64, macOS 27.0",
+  "build": "Release",
+  "source_bytes": 3860,
+  "source_sha256": "e650b1ddb0003f182bc1ff3541736389fd332a9faa669fb3d4141a1aaa550a98",
+  "output_bytes": 262144,
+  "output_sha256": "5b70ae2fd22dbfe0c9915d37f5c0a27166caf6d6c82bfda56c3ec988146a8009",
+  "warmup_trials": 2,
+  "measured_trials": 7,
+  "latency_seconds": {
+    "raw": [
+      0.017463833006331697,
+      0.015173374995356426,
+      0.015748666992294602,
+      0.015374249996966682,
+      0.014866249999613501,
+      0.015271875003236346,
+      0.014985083005740307
+    ],
+    "median": 0.015271875003236346,
+    "p95_nearest_rank": 0.017463833006331697
+  },
+  "pixel_throughput_per_second": 4291287.087283775,
+  "max_rss_bytes": 2244608,
+  "rss_method": "maximum of nine /usr/bin/time -l maximum resident set size observations (two warmup and seven measured fresh child processes)",
+  "timing_method": "Python time.perf_counter around seven measured fresh /usr/bin/time -l CLI processes after two warmups; includes startup, input read, decode, raster and output write; filesystem caches were not evicted",
+  "note": "End-to-end CLI workload, not an isolated raster-kernel benchmark."
+}

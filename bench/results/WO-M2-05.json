@@ -1,0 +1,103 @@
+{
+  "work_order": "WO-M2-05",
+  "revision": 1,
+  "base_sha": "d45060bb7211a67dd62b83c156f0a9775a85c55a",
+  "acceptance_status": "candidate_ready_for_fresh_review",
+  "machine": "Apple Silicon arm64, macOS 27.0",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "reference_renderer": {
+    "path": "/opt/homebrew/bin/rsvg-convert",
+    "version": "rsvg-convert version 2.62.3",
+    "libraries": [
+      "Cairo 1.18.4",
+      "Pango 1.58.2",
+      "HarfBuzz 14.3.1",
+      "fontconfig 2.18.3"
+    ]
+  },
+  "fixtures": {
+    "count": 7,
+    "cases": [
+      "arc",
+      "cubic",
+      "degenerate",
+      "evenodd",
+      "line",
+      "quadratic",
+      "rect"
+    ],
+    "source_hashes_in": "artifacts/WO-M2-05/reference-comparison.json",
+    "repeat_renders_byte_identical": true,
+    "reference_comparison": {
+      "edge_tolerance": "one pixel around Vexel coverage boundary; interior exact",
+      "interior_diff_pixels": 0,
+      "edge_diff_pixels_total": 74,
+      "max_channel_diff": 255,
+      "all_cases_pass": true
+    },
+    "focused_test_count": 5
+  },
+  "fuzz": {
+    "seed": 20261009,
+    "cases": 1000000,
+    "wall_seconds": 6.695,
+    "process_cpu_seconds": 6.478,
+    "input_max_bytes": 4096,
+    "sanitizers": [
+      "AddressSanitizer",
+      "UndefinedBehaviorSanitizer"
+    ],
+    "crashes": 0,
+    "sanitizer_reports": 0,
+    "invariant_failures": 0
+  },
+  "release_sizes_bytes": {
+    "svgworkbench": 97040,
+    "shape_render_cli": 53344,
+    "libvexel_base.a": 3504,
+    "libvexel_xml.a": 16552,
+    "libvexel_shape.a": 23288
+  },
+  "measurements": {
+    "render_throughput": 4291287.087283775,
+    "render_latency_seconds": {
+      "raw": [
+        0.017463833006331697,
+        0.015173374995356426,
+        0.015748666992294602,
+        0.015374249996966682,
+        0.014866249999613501,
+        0.015271875003236346,
+        0.014985083005740307
+      ],
+      "median": 0.015271875003236346,
+      "p95_nearest_rank": 0.017463833006331697
+    },
+    "max_rss_bytes": 2244608,
+    "method": "Python time.perf_counter around seven measured fresh /usr/bin/time -l CLI processes after two warmups; includes startup, input read, decode, raster and output write; filesystem caches were not evicted",
+    "rss_method": "maximum of nine /usr/bin/time -l maximum resident set size observations (two warmup and seven measured fresh child processes)",
+    "measurement_scope": "End-to-end CLI workload, not an isolated raster-kernel benchmark."
+  },
+  "verification": {
+    "debug_ctest": "pass (5/5)",
+    "focused_shape_tests": "pass (5/5)",
+    "dev_verify": "pass (170/170 Python tests; Debug CTest 5/5; native smoke and Metal replay pass)",
+    "asan_ctest": "pass (5/5)",
+    "ubsan_ctest": "pass (5/5)",
+    "release_build": "pass",
+    "implementation_commit": null
+  },
+  "evidence": {
+    "comparison": "artifacts/WO-M2-05/reference-comparison.json",
+    "bounds": "artifacts/WO-M2-05/bounds-and-diagnostics.json",
+    "fuzz": "artifacts/WO-M2-05/fuzz-report.json",
+    "build_ctest": "artifacts/WO-M2-05/build-ctest.txt",
+    "focused_tests": "artifacts/WO-M2-05/focused-tests.txt",
+    "fuzz_command": "artifacts/WO-M2-05/fuzz-command.txt",
+    "full_verify": "artifacts/WO-M2-05/verify-host-rerun.txt",
+    "verification_transients": "artifacts/WO-M2-05/verification-transients.md",
+    "sanitizers": "artifacts/WO-M2-05/asan.txt and artifacts/WO-M2-05/ubsan.txt",
+    "release": "artifacts/WO-M2-05/release.txt",
+    "render_benchmark": "artifacts/WO-M2-05/render-benchmark.json"
+  }
+}

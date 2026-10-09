@@ -1,0 +1,64 @@
+{
+  "cases": [
+    {
+      "name": "huge",
+      "category": "path",
+      "offset": 43,
+      "source_sha256": "9332d51d664a522e4dc2c477042d51ca9c7e13a16593784fa806b7284095fcf3",
+      "source_unchanged": true
+    },
+    {
+      "name": "nonfinite",
+      "category": "path",
+      "offset": 43,
+      "source_sha256": "7fa7c6f9ec74444b8ca6aad7bc6b0d517b56c2573111cba24ace62283d17f32d",
+      "source_unchanged": true
+    },
+    {
+      "name": "malformed",
+      "category": "path",
+      "offset": 38,
+      "source_sha256": "987894497cf3f6a053487a33bc424bfc920fd272f3b7657e5be2a0aaaaf09094",
+      "source_unchanged": true
+    },
+    {
+      "name": "invalid_arc_flag",
+      "category": "path",
+      "offset": 43,
+      "source_sha256": "9704d71826095f275cec97573d4ef15effd5f2f1bcba766451f5242ce0499118",
+      "source_unchanged": true
+    },
+    {
+      "name": "nonliteral_arc_flag",
+      "category": "path",
+      "offset": 43,
+      "source_sha256": "6d608585115eaeab229a82b2216a820137ccb6f15412b09ecbc78d7dcec2bb31",
+      "source_unchanged": true
+    },
+    {
+      "name": "missing_initial_move",
+      "category": "path",
+      "offset": 37,
+      "source_sha256": "7a68f316651bdaeaf1adff964c78c53616a6edd0428cbf68f36d48456762340e",
+      "source_unchanged": true
+    },
+    {
+      "name": "unsupported_smooth",
+      "category": "unsupported",
+      "offset": 42,
+      "source_sha256": "dbaf64d591d30240216f76df4118626dd41f088ff76dd4a655f2dfd57f5cec1c",
+      "source_unchanged": true
+    },
+    {
+      "name": "flattened_edge_cap",
+      "category": "limit",
+      "offset": 599227,
+      "generated_curve_groups": 65535
+    },
+    {
+      "name": "degenerate_path",
+      "result": "safe_empty_or_filled"
+    }
+  ],
+  "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"
+}

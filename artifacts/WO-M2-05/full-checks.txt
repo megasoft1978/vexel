@@ -1,0 +1,21 @@
+WO-M2-05 final machine checks (2026-10-09)
+
+PASS ./dev build
+PASS ctest --test-dir build/mac-debug --output-on-failure (5/5)
+PASS python3 -m unittest tests.test_shape_render (5/5)
+PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 cases; 6.695 s; ASan+UBSan clean)
+PASS python3 -m json.tool artifacts/WO-M2-05/reference-comparison.json (7/7 fixture comparisons)
+PASS ./dev verify (170 Python tests, 0 failed/errors/skips; Debug CTest 5/5; native smoke and 20-frame Metal replay pass)
+PASS ./dev asan (CTest 5/5)
+PASS ./dev ubsan (CTest 5/5)
+PASS cmake --preset mac-release; cmake --build --preset mac-release
+PASS python3 scripts/ledger.py validate ledger.jsonl
+PASS python3 scripts/wo_validate.py WO-M2-05 --ready (spec SHA-256 32e88b289096e7793adf851cad0e54d820fa8c7cf88e5b6389b2899af08b42a9)
+PASS python3 -m json.tool bench/results/WO-M2-05.json
+PASS git diff --check
+
+The early managed `./dev verify` failures did not reproduce on subsequent runs;
+see `verification-transients.md` and the retained original logs. The fresh
+read-only verifier is the remaining gate before acceptance.
+
+PASS Release end-to-end benchmark: 7 measured fresh processes after 2 warmups; median 15.272 ms, p95 17.464 ms, 4.29 MPixel/s, maximum RSS 2,244,608 bytes; raw evidence `artifacts/WO-M2-05/render-benchmark.json`.

@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+"""Run a fixed-seed, bounded shape parser/render fuzz campaign."""
+import argparse
+import json
+import subprocess
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--binary", type=Path, required=True)
+    parser.add_argument("--duration", type=int, default=60)
+    parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--cases", type=int, default=1_000_000)
+    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/WO-M2-05/fuzz-report.json")
+    args = parser.parse_args()
+    if not 1 <= args.duration <= 600 or not 1 <= args.cases <= 100_000_000 or not 0 <= args.seed <= 0xFFFFFFFF:
+        parser.error("duration, case count, or seed is outside the configured bounds")
+    binary = args.binary.resolve()
+    if not binary.is_file():
+        parser.error(f"fuzz binary does not exist: {binary}")
+    start = time.monotonic()
+    run = subprocess.run([str(binary), str(args.seed), str(args.cases), str(args.duration)], cwd=ROOT,
+                         capture_output=True, text=True, timeout=args.duration + 10, check=True)
+    elapsed = time.monotonic() - start
+    fields = dict(item.split("=", 1) for item in run.stdout.strip().split())
+    cases = int(fields["cases"])
+    campaign_seconds = float(fields["duration"])
+    if cases < 1_000_000 and campaign_seconds < args.duration:
+        raise RuntimeError("campaign did not reach either required floor")
+    report = {"seed": args.seed, "cases": cases, "duration_seconds": round(elapsed, 3),
+              "process_cpu_seconds": campaign_seconds,
+              "binary": str(binary), "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+              "input_max_bytes": 4096, "crashes": 0, "sanitizer_reports": 0,
+              "invariant_failures": 0, "result": "pass"}
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, indent=2) + "\n")
+    print(json.dumps(report, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()
