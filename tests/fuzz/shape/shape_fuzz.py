@@ -16,7 +16,7 @@ def main():
     parser.add_argument("--duration", type=int, default=60)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--cases", type=int, default=1_000_000)
-    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/WO-M4-03/fuzz-report.json")
+    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/WO-M4-04/fuzz-report.json")
     args = parser.parse_args()
     if not 1 <= args.duration <= 600 or not 1 <= args.cases <= 100_000_000 or not 0 <= args.seed <= 0xFFFFFFFF:
         parser.error("duration, case count, or seed is outside the configured bounds")
@@ -45,6 +45,8 @@ def main():
     fractional_renders = int(fields.get("fractional_renders", "0"))
     evenodd_renders = int(fields.get("evenodd_renders", "0"))
     nonzero_renders = int(fields.get("nonzero_renders", "0"))
+    stroke_cases = int(fields.get("stroke_cases", "0"))
+    stroke_renders = int(fields.get("stroke_renders", "0"))
     if cases < 1_000_000 and campaign_seconds < args.duration:
         raise RuntimeError("campaign did not reach either required floor")
     if cap_exhaustion != 1 or cap_case_bytes < 1 or cap_case_bytes > 16 * 1024 * 1024:
@@ -53,6 +55,8 @@ def main():
         raise RuntimeError("fractional geometry and both fill rules were not exercised")
     if min(fractional_renders, evenodd_renders, nonzero_renders) == 0:
         raise RuntimeError("fractional geometry and both fill rules did not reach the rasterizer")
+    if stroke_cases == 0 or stroke_renders == 0:
+        raise RuntimeError("stroke cases did not reach the rasterizer")
     compiler = subprocess.run(["clang", "--version"], check=True, capture_output=True,
                               text=True).stdout.splitlines()[0]
     source_revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
@@ -73,6 +77,7 @@ def main():
               "fractional_cases": fractional_cases, "evenodd_cases": evenodd_cases,
               "nonzero_cases": nonzero_cases, "fractional_renders": fractional_renders,
               "evenodd_renders": evenodd_renders, "nonzero_renders": nonzero_renders,
+              "stroke_cases": stroke_cases, "stroke_renders": stroke_renders,
               "input_max_bytes": max(4096, cap_case_bytes),
               "crashes": 0, "sanitizer_reports": 0,
               "invariant_failures": 0, "result": "pass"}

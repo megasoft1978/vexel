@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M4-03/reference-comparison.json"
+OUT = ROOT / "artifacts/WO-M4-04/reference-comparison.json"
 
 
 def png_rgba(data):
@@ -175,7 +175,19 @@ class ShapeRenderTests(unittest.TestCase):
             "skew_transform": '<svg width="16" height="16"><rect width="1" height="1" transform="skewX(10)"/></svg>',
             "transform_overflow": '<svg width="16" height="16"><rect width="1" height="1" transform="matrix(1e300 0 0 1 0 0)"/></svg>',
             "ellipse_segment_cap": '<svg width="16" height="16"><circle r="1000000"/></svg>',
+            "negative_stroke_width": '<svg width="16" height="16"><line stroke="red" stroke-width="-1"/></svg>',
+            "invalid_stroke_cap": '<svg width="16" height="16"><line stroke="red" stroke-linecap="triangle"/></svg>',
+            "bad_dash_separator": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1,,2"/></svg>',
+            "too_many_dash_values": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"/></svg>',
+            "unsupported_stroked_path": '<svg width="16" height="16"><path stroke="red" d="M1 1 L8 8"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
+        }
+        stroke_diagnostic_offsets = {
+            "negative_stroke_width": ("number", "-1"),
+            "invalid_stroke_cap": ("unsupported", "triangle"),
+            "bad_dash_separator": ("number", "1,,2"),
+            "too_many_dash_values": ("number", "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"),
+            "unsupported_stroked_path": ("unsupported", "red"),
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}
         with tempfile.TemporaryDirectory(prefix="vexel-shape-bounds-") as temp:
@@ -190,6 +202,10 @@ class ShapeRenderTests(unittest.TestCase):
                 category, offset = run.stderr.strip().split(":", 1)
                 self.assertTrue(offset.isdigit(), name)
                 self.assertEqual(digest_before, digest_after, name)
+                if name in stroke_diagnostic_offsets:
+                    expected_category, marker = stroke_diagnostic_offsets[name]
+                    self.assertEqual(category, expected_category, name)
+                    self.assertEqual(int(offset), source.index(marker), name)
                 report["cases"].append({"name": name, "category": category, "offset": int(offset),
                                         "source_sha256": digest_before, "source_unchanged": True})
             # Curved groups exhaust the edge cap before the 65,536 command cap.

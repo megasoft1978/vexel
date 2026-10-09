@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-BASE_SHA = "6cd61dd6570ab556af7d6a1feb8899d3f849f8af"
+BASE_SHA = "1e9c7b81f1bda074031af4fd165240e8d5eeba09"
 WARMUPS = 2
 TRIALS = 21
 
@@ -41,8 +41,19 @@ def workload_sources():
             shapes.append(f'<rect x="{x}.25" y="{y}.5" width="24.5" height="24.25" '
                           f'fill="#{color[0]:02x}{color[1]:02x}{color[2]:02x}"/>')
     multi = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-             f'viewBox="0 0 {width} {height}">' + "".join(shapes) + "</svg>")
-    return {"simple": simple, "curved": curved, "multi_shape": multi}
+              f'viewBox="0 0 {width} {height}">' + "".join(shapes) + "</svg>")
+    line = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+            f'viewBox="0 0 {width} {height}"><line x1="8" y1="64" x2="120" y2="64" '
+            'stroke="#336699" stroke-width="3" stroke-linecap="round"/></svg>')
+    curve = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+             f'viewBox="0 0 {width} {height}"><circle cx="64" cy="64" r="48" fill="none" '
+             'stroke="#8040a0" stroke-width="2" stroke-linejoin="round"/></svg>')
+    dashed = (f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+              f'viewBox="0 0 {width} {height}"><polyline points="8 112 32 16 64 112 96 16 120 112" '
+              'fill="none" stroke="#a04020" stroke-width="2" stroke-linejoin="round" '
+              'stroke-dasharray="7 3 2" stroke-dashoffset="-1"/></svg>')
+    return {"simple": simple, "curved": curved, "multi_shape": multi,
+            "line_stroke": line, "curve_stroke": curve, "dashed_stroke": dashed}
 
 
 def build_revision(root):
@@ -65,7 +76,7 @@ def percentile95(values):
 
 
 def validate_payload(payload):
-    expected = {"simple", "curved", "multi_shape"}
+    expected = {"simple", "curved", "multi_shape", "line_stroke", "curve_stroke", "dashed_stroke"}
     if payload.get("schema_version") != 1 or set(payload.get("workloads", {})) != expected:
         raise ValueError("benchmark workload schema mismatch")
     for name, workload in payload["workloads"].items():
@@ -75,6 +86,8 @@ def validate_payload(payload):
             raise ValueError(f"missing deterministic workload description: {name}")
         for revision in ("base", "candidate"):
             result = workload[revision]
+            if revision == "base" and str(result.get("status", "")).startswith("unsupported"):
+                continue
             if (result["warmups"] != WARMUPS or result["trials"] != TRIALS or
                     len(result["trial_latency_ns"]) != TRIALS or
                     len(result["output_sha256"]) != 64 or
@@ -86,12 +99,17 @@ def measure_pair(base_binary, candidate_binary, source, temp, label):
     input_path = temp / f"{label}.svg"
     output_path = temp / f"{label}.rgba"
     input_path.write_text(source, encoding="utf-8")
+    base_probe = subprocess.run([str(base_binary), "--metrics", str(input_path), str(output_path)],
+                                capture_output=True, text=True, check=False)
+    base_available = base_probe.returncode == 0
     samples = {"base": {"timings": [], "hashes": [], "rss": []},
                "candidate": {"timings": [], "hashes": [], "rss": []}}
     binaries = {"base": base_binary, "candidate": candidate_binary}
     for index in range(WARMUPS + TRIALS):
         order = ("base", "candidate") if index % 2 == 0 else ("candidate", "base")
         for revision in order:
+            if revision == "base" and not base_available:
+                continue
             binary = binaries[revision]
             started = time.perf_counter_ns()
             result = run([str(binary), "--metrics", str(input_path), str(output_path)], capture=True)
@@ -105,6 +123,15 @@ def measure_pair(base_binary, candidate_binary, source, temp, label):
                         sample["rss"].append(int(line.split("=", 1)[1]))
     results = {}
     for revision, sample in samples.items():
+        if revision == "base" and not base_available:
+            results[revision] = {"status": "unsupported: frozen base rejects stroke attributes",
+                                 "warmups": 0, "trials": 0, "trial_latency_ns": [],
+                                 "median_latency_ns": None, "p95_latency_ns": None,
+                                 "pixels": 128*128, "pixels_per_second": None,
+                                 "output_sha256": None, "trial_output_sha256": [],
+                                 "peak_rss_bytes": None,
+                                 "peak_rss_status": "unavailable: frozen base rejects workload"}
+            continue
         if len(set(sample["hashes"])) != 1:
             raise RuntimeError(f"nondeterministic output from {binaries[revision]}: {sample['hashes']}")
         timings, hashes, rss = sample["timings"], sample["hashes"], sample["rss"]
@@ -145,7 +172,8 @@ def main():
                              **pair}
             old = results[name]["base"]["median_latency_ns"]
             new = results[name]["candidate"]["median_latency_ns"]
-            results[name]["median_change_percent"] = round((new - old) * 100.0 / old, 2)
+            results[name]["median_change_percent"] = (round((new - old) * 100.0 / old, 2)
+                                                       if old is not None else None)
         dirty_paths = source_dirty_paths(ROOT)
         # Evidence-only commits must not make the measured raster revision appear newer.
         source_revision = run(["git", "-C", str(ROOT), "log", "-1", "--format=%H", "--",

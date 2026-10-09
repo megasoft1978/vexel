@@ -12,8 +12,12 @@ elements replace earlier opaque fills at each subpixel before coverage is
 resolved. A `fill="none"` element is parsed but
 does not erase earlier pixels. The output tile must be empty when passed in.
 
+After each element's fill, bounded strokes are tested against the same 4x4
+sample grid. The stroke decoder stores each element's ordered edge range,
+literal RGBA color, local width, inverse element transform, cap/join policy,
+and bounded dash state.
 The operation rejects invalid viewport data, malformed edge/group arrays, and
-work above 200,000,000 edge and shape evaluations across all 16 subpixel
+work above 200,000,000 edge, stroke, and shape evaluations across all 16 subpixel
 samples plus the conservative per-pixel edge-boundary scan. Checked arithmetic
 accounts for that scan and rejects excessive work before the pixel loop;
 quality is never reduced to satisfy the cap. Temporary winding,

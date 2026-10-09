@@ -1,11 +1,12 @@
 # Bounded SVG shape subset
 
 `svg_shape_decode` borrows exact source bytes and returns the source slice plus
-owned flattened edges, per-edge RGBA colors and edge-to-element IDs. The caller
+owned flattened edges, per-edge RGBA colors, edge-to-element IDs, and bounded
+per-element stroke state. The caller
 keeps source bytes alive until the document is destroyed. The source is never
 modified. Diagnostics are stable
 categories plus a byte offset into that source; XML scanner failures retain the
-scanner offset. Root `svg`, `rect`, `path`, `circle`, `ellipse`, `line`, `polygon`, and `polyline` are supported; fill implicitly closes paths and point lists, while `line` remains invisible until stroke support. Ellipses use deterministic polygonal flattening with at most 0.25 transformed user-unit sagitta and a 4096-segment cap. The bound scales the unit-circle chord error by the larger semiaxis, then by the active affine matrix norm; this remains conservative for eccentric ellipses without treating angular parameter as arc length. Nested groups and shapes support bounded `matrix`, `translate`, `scale`, and `rotate` transforms; skew forms are rejected. Group nesting is capped at 64 and transform operations at 4096 per document. Root viewport
+scanner offset. Root `svg`, `rect`, `path`, `circle`, `ellipse`, `line`, `polygon`, and `polyline` are supported; fill implicitly closes paths and point lists, while `line` remains invisible without a stroke. Ellipses use deterministic polygonal flattening with at most 0.25 transformed user-unit sagitta and a 4096-segment cap. The bound scales the unit-circle chord error by the larger semiaxis, then by the active affine matrix norm; this remains conservative for eccentric ellipses without treating angular parameter as arc length. Nested groups and shapes support bounded `matrix`, `translate`, `scale`, and `rotate` transforms; skew forms are rejected. Group nesting is capped at 64 and transform operations at 4096 per document. Root viewport
 dimensions are finite unitless or px lengths (positive, at most 4096); tile
 extents round up to integer pixels while preserving the viewport scale, with an
 optional finite positive `viewBox` using the default centered meet mapping. Rectangles accept x/y/width/height; omitted
@@ -34,8 +35,19 @@ subpaths. Output uses scalar pixel-center point-in-path tests and transparent
 black outside fills. The combined per-pixel edge-plus-shape tests are capped at
 200,000,000 per render.
 
-No CSS/style, stroke, gradients, filters, external resource,
-unsupported unit, or unknown shape semantics are interpreted.
+Direct presentation attributes implement a bounded first stroke subset on
+line, polyline, polygon, rect, circle, and ellipse: literal stroke color, width,
+butt/square/round caps, miter/bevel/round joins with miter-limit fallback, and
+positive dash lists of at most 16 entries with phase continuity along each
+ordered outline. Strokes use local user units and inverse-map samples through
+the element transform, so nonuniform scaling changes stroke thickness correctly.
+Width defaults to 1 user unit; stroke defaults to none, cap to
+butt, join to miter, miter limit to 4, and dashing to solid. Stroke paints
+after fill for each element. Painted paths are explicitly unsupported because
+their subpath boundaries are not represented in the raster document. Widths
+are capped at 1024 user units; miter limits at 64; dash values at 1,000,000.
+Unsupported CSS/style, gradients, filters, external resources, unsupported
+units, or unknown shape semantics are not interpreted.
 This module has no platform or third-party dependency. Transform and shape syntax follows the W3C SVG 2 [Shapes](https://www.w3.org/TR/SVG2/shapes.html) and [Coordinate Systems and Transformations](https://www.w3.org/TR/SVG2/coords.html) specifications (consulted 2026-10-09).
 
 The subset grammar and arc endpoint semantics reference the W3C SVG 2

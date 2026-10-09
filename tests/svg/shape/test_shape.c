@@ -128,9 +128,71 @@ static bool antialias_and_fill_checks(void)
     return true;
 }
 
+static bool stroke_decode_and_render_checks(void)
+{
+    static const char defaults[] = "<svg width=\"8\" height=\"8\"><line x1=\"1\" y1=\"1\" x2=\"7\" y2=\"1\"/></svg>";
+    svg_shape_document default_doc={0}; svg_shape_diagnostic diag;
+    if (svg_shape_decode((base_bytes){(const uint8_t *)defaults,sizeof(defaults)-1U},&default_doc,&diag)!=SVG_SHAPE_ERROR_NONE) return false;
+    bool default_ok=default_doc.strokes[0].rgba[3]==0U && default_doc.strokes[0].width==1.0 &&
+        default_doc.strokes[0].cap==SVG_SHAPE_CAP_BUTT && default_doc.strokes[0].join==SVG_SHAPE_JOIN_MITER &&
+        default_doc.strokes[0].miter_limit==4.0 && default_doc.strokes[0].dash_count==0U;
+    svg_shape_document_destroy(&default_doc);
+    if (!default_ok) return false;
+    static const char source[] = "<svg width=\"16\" height=\"16\"><line x1=\"3\" y1=\"8\" x2=\"13\" y2=\"8\" stroke=\"red\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-dasharray=\"3 2 1\" stroke-dashoffset=\"-1\"/></svg>";
+    svg_shape_document doc = {0}; raster_tile tile = {0};
+    if (svg_shape_decode((base_bytes){(const uint8_t *)source, sizeof(source)-1U}, &doc, &diag) != SVG_SHAPE_ERROR_NONE) return false;
+    bool parsed = doc.source.ptr == (const uint8_t *)source && doc.source.len == sizeof(source)-1U &&
+        doc.shape_count == 1U && doc.shape_edge_count[0] == 1U &&
+        doc.strokes[0].rgba[0] == 255U && doc.strokes[0].rgba[3] == 255U &&
+        doc.strokes[0].width == 2.0 && doc.strokes[0].dash_count == 3U &&
+        doc.strokes[0].cap == SVG_SHAPE_CAP_ROUND && doc.strokes[0].dash_offset == -1.0;
+    bool rendered = parsed && raster_shape_render(&doc, &tile, &diag);
+    bool visible = rendered && pixel_alpha(&tile, 3U, 8U) > 0U && pixel_alpha(&tile, 8U, 8U) > 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!visible) return false;
+    static const char transformed[]="<svg width=\"16\" height=\"16\"><g transform=\"scale(2)\"><line x1=\"1\" y1=\"1\" x2=\"6\" y2=\"1\" stroke=\"blue\" stroke-width=\"1\"/></g></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)transformed,sizeof(transformed)-1U},&doc,&diag)!=SVG_SHAPE_ERROR_NONE ||
+        doc.strokes[0].width!=1.0 || doc.shape_stroke_closed[0]) { svg_shape_document_destroy(&doc); return false; }
+    svg_shape_document_destroy(&doc);
+    static const char anisotropic[]="<svg width=\"16\" height=\"16\"><g transform=\"scale(2 1)\"><line x1=\"2\" y1=\"2\" x2=\"6\" y2=\"2\" stroke=\"blue\" stroke-width=\"2\"/></g></svg>";
+    if (!render_source(anisotropic,&tile,&doc,&diag)) return false;
+    bool width_follows_normal = pixel_alpha(&tile,8U,2U)>0U && pixel_alpha(&tile,8U,3U)==0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!width_follows_normal) return false;
+    static const char joins[]="<svg width=\"16\" height=\"16\"><polyline points=\"2 2 8 8 14 2\" stroke=\"red\" stroke-linejoin=\"round\" stroke-miterlimit=\"1\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)joins,sizeof(joins)-1U},&doc,&diag)!=SVG_SHAPE_ERROR_NONE ||
+        doc.strokes[0].join!=SVG_SHAPE_JOIN_ROUND || doc.strokes[0].miter_limit!=1.0 || doc.shape_stroke_closed[0]) {
+        svg_shape_document_destroy(&doc); return false;
+    }
+    svg_shape_document_destroy(&doc);
+    static const char painter[]="<svg width=\"8\" height=\"8\"><rect x=\"1\" y=\"1\" width=\"6\" height=\"6\" fill=\"blue\" stroke=\"red\" stroke-width=\"2\"/></svg>";
+    if (!render_source(painter,&tile,&doc,&diag)) return false;
+    size_t edge=((size_t)1U*8U+3U)*4U, interior=((size_t)3U*8U+3U)*4U;
+    bool order_ok=tile.rgba[edge]==255U && tile.rgba[edge+2U]==0U &&
+        tile.rgba[interior]==0U && tile.rgba[interior+2U]==255U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!order_ok) return false;
+    static const char limit_work[]="<svg width=\"4096\" height=\"4096\"><line x1=\"1\" y1=\"1\" x2=\"2\" y2=\"1\" stroke=\"red\" stroke-dasharray=\"0.0000001 0.0000001\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)limit_work,sizeof(limit_work)-1U},&doc,&diag)!=SVG_SHAPE_ERROR_NONE) return false;
+    if (raster_shape_render(&doc,&tile,&diag) || diag.category!=SVG_SHAPE_ERROR_LIMIT || tile.rgba!=NULL) {
+        svg_shape_document_destroy(&doc); raster_tile_destroy(&tile); return false;
+    }
+    svg_shape_document_destroy(&doc);
+    static const char invalid[] = "<svg width=\"8\" height=\"8\"><line stroke=\"red\" stroke-dasharray=\"1,,2\"/></svg>";
+    size_t expected = (size_t)(strstr(invalid, "1,,2") - invalid);
+    if (svg_shape_decode((base_bytes){(const uint8_t *)invalid,sizeof(invalid)-1U},&doc,&diag)==SVG_SHAPE_ERROR_NONE ||
+        diag.category != SVG_SHAPE_ERROR_NUMBER || diag.offset != expected) return false;
+    static const char unsupported[] = "<svg width=\"8\" height=\"8\"><path stroke=\"blue\" d=\"M1 1 L7 7\"/></svg>";
+    expected = (size_t)(strstr(unsupported, "blue") - unsupported);
+    if (svg_shape_decode((base_bytes){(const uint8_t *)unsupported,sizeof(unsupported)-1U},&doc,&diag)==SVG_SHAPE_ERROR_NONE ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED || diag.offset != expected) return false;
+    return true;
+}
+
 int main(void)
 {
     if (!antialias_and_fill_checks()) { fprintf(stderr, "antialias/fill checks failed\n"); return 45; }
+    if (!stroke_decode_and_render_checks()) { fprintf(stderr, "stroke checks failed\n"); return 46; }
     const bool smooth_checks[] = {
         paths_equivalent("M1 1 C2 1 3 2 4 2 S6 3 7 4", "M1 1 C2 1 3 2 4 2 C5 2 6 3 7 4"),
         paths_equivalent("M1 1 c1 0 2 1 3 1 s2 1 3 2 2 1 3 2", "M1 1 c1 0 2 1 3 1 c1 0 2 1 3 2 c1 1 2 1 3 2"),

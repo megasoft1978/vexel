@@ -11,6 +11,20 @@
 
 #define SVG_SHAPE_MAX_EDGES 262144U
 #define SVG_SHAPE_MAX_COMMANDS 65536U
+#define SVG_SHAPE_MAX_DASH_VALUES 16U
+
+typedef enum svg_shape_linecap { SVG_SHAPE_CAP_BUTT, SVG_SHAPE_CAP_SQUARE, SVG_SHAPE_CAP_ROUND } svg_shape_linecap;
+typedef enum svg_shape_linejoin { SVG_SHAPE_JOIN_MITER, SVG_SHAPE_JOIN_BEVEL, SVG_SHAPE_JOIN_ROUND } svg_shape_linejoin;
+typedef struct svg_shape_stroke {
+    uint8_t rgba[4];
+    double width;
+    double miter_limit;
+    double dash_offset;
+    double dash[SVG_SHAPE_MAX_DASH_VALUES];
+    uint8_t dash_count;
+    svg_shape_linecap cap;
+    svg_shape_linejoin join;
+} svg_shape_stroke;
 
 typedef enum svg_shape_error {
     SVG_SHAPE_ERROR_NONE = 0,
@@ -36,6 +50,11 @@ typedef struct svg_shape_document {
     size_t shape_count;
     bool *shape_evenodd; /* one fill rule per shape element */
     bool *shape_filled; /* false for open line geometry, which awaits stroke */
+    bool *shape_stroke_closed;
+    size_t *shape_edge_start;
+    size_t *shape_edge_count;
+    geom_affine *shape_stroke_inverse;
+    svg_shape_stroke *strokes;
     base_bytes source; /* borrowed; caller keeps source alive with document */
 } svg_shape_document;
 

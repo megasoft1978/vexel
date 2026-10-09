@@ -67,7 +67,12 @@ int main(int argc, char **argv)
         "<line x1=\"1\" y1=\"1\" x2=\"8\" y2=\"8\"/>",
         "<g transform=\"translate(2 3) rotate(15)\"><rect width=\"4\" height=\"4\"/></g>",
         "<g transform=\"skewX(10)\"><circle r=\"3\"/></g>",
-        "<polygon points=\"1 2 3\"/>"
+        "<polygon points=\"1 2 3\"/>",
+        "<line x1=\"4\" y1=\"4\" x2=\"4\" y2=\"4\" stroke=\"red\" stroke-width=\"2\" stroke-linecap=\"round\"/>",
+        "<rect width=\"0\" height=\"4\" stroke=\"blue\" stroke-dasharray=\"1 2 3\"/>",
+        "<polyline points=\"2 2 8 2 8 2 8 8\" fill=\"none\" stroke=\"green\" stroke-width=\"1.5\" stroke-linejoin=\"bevel\"/>",
+        "<polygon points=\"2 2 8 2 8 8 2 8\" fill=\"none\" stroke=\"#369\" stroke-width=\"2\" stroke-linejoin=\"miter\" stroke-miterlimit=\"2\"/>",
+        "<line x1=\"1\" y1=\"8\" x2=\"15\" y2=\"8\" stroke=\"black\" stroke-dasharray=\"3 2 1\" stroke-dashoffset=\"-2\"/>"
     };
     static const char *coverage_cases[] = {
         "<rect x=\"1.125\" y=\"2.375\" width=\"8.5\" height=\"6.25\"/>",
@@ -79,6 +84,7 @@ int main(int argc, char **argv)
     unsigned long completed = 0;
     unsigned long fractional_cases = 0, evenodd_cases = 0, nonzero_cases = 0;
     unsigned long fractional_renders = 0, evenodd_renders = 0, nonzero_renders = 0;
+    unsigned long stroke_cases = 0U, stroke_renders = 0U;
     for (unsigned long c = 0; c < count; c++) {
         uint8_t input[INPUT_CAP]; size_t n = 0;
         unsigned mode = (unsigned)(c % 4UL);
@@ -94,6 +100,7 @@ int main(int argc, char **argv)
         } else if ((next_u32(&state) & 1U) != 0U) {
             memcpy(input, shape_prefix, sizeof(shape_prefix)-1U); n=sizeof(shape_prefix)-1U;
             const char *shape=shape_cases[next_u32(&state)%(sizeof(shape_cases)/sizeof(shape_cases[0]))];
+            if (strstr(shape, "stroke=") != NULL) stroke_cases++;
             size_t length=strlen(shape);
             memcpy(input+n,shape,length);n+=length;
             memcpy(input+n,shape_suffix,sizeof(shape_suffix)-1U);n+=sizeof(shape_suffix)-1U;
@@ -120,6 +127,7 @@ int main(int argc, char **argv)
                     return 6;
                 }
                 raster_tile_destroy(&tile);
+                if (mode == 3U) stroke_renders++;
                 if (mode == 0U) fractional_renders++;
                 else if (mode == 1U) evenodd_renders++;
                 else if (mode == 2U) nonzero_renders++;
@@ -131,8 +139,8 @@ int main(int argc, char **argv)
             (double)(clock() - started) / (double)CLOCKS_PER_SEC >= (double)duration) break;
     }
     double seconds = (double)(clock() - started) / (double)CLOCKS_PER_SEC;
-    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu fractional_cases=%lu evenodd_cases=%lu nonzero_cases=%lu fractional_renders=%lu evenodd_renders=%lu nonzero_renders=%lu\n",
+    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu fractional_cases=%lu evenodd_cases=%lu nonzero_cases=%lu fractional_renders=%lu evenodd_renders=%lu nonzero_renders=%lu stroke_cases=%lu stroke_renders=%lu\n",
            seed_long, completed, seconds, cap_case_bytes, fractional_cases, evenodd_cases, nonzero_cases,
-           fractional_renders, evenodd_renders, nonzero_renders);
+           fractional_renders, evenodd_renders, nonzero_renders, stroke_cases, stroke_renders);
     return 0;
 }
