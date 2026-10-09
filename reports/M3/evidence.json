@@ -1,0 +1,481 @@
+{
+  "competitors": {
+    "available": [],
+    "compatible_vexel_render": false,
+    "render_trials": 0,
+    "unavailable": [
+      {
+        "name": "inkscape",
+        "reason": "executable not found"
+      },
+      {
+        "name": "donner",
+        "reason": "executable not found"
+      }
+    ],
+    "vexel_reason": "Vexel CLI has no compatible SVG render command"
+  },
+  "confidence_and_limits": {
+    "customer_demand": "No evidence; zero owner/user/pilot records.",
+    "generalization": "Measurements describe the named Apple M5 Max / macOS 27.0 / Apple Clang 21.0.0 environment and synthetic workloads only.",
+    "measured_claims": "High confidence for counts and measurements that are directly recorded in hash-pinned source artifacts; all source bytes and derived values are checked locally.",
+    "product_scope": "Apple Silicon macOS 13+ target; no claim of complete SVG compatibility."
+  },
+  "fuzz_and_sanitizers": {
+    "m2_03_xml_campaigns": [
+      {
+        "duration_seconds": 30,
+        "iterations": 2158912,
+        "sanitizer_output": false,
+        "status": "pass"
+      },
+      {
+        "duration_seconds": 600,
+        "iterations": 42108425,
+        "sanitizer_output": false,
+        "status": "pass"
+      }
+    ],
+    "m2_05_shape_fuzz": {
+      "cases": 1000000,
+      "crashes": 0,
+      "invariant_failures": 0,
+      "result": "pass",
+      "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+      "sanitizer_reports": 0,
+      "sanitizer_stderr_bytes": 0
+    },
+    "sanitizer_ctest": "Debug/ASan/UBSan acceptance evidence is recorded in source work-order artifacts; these fuzz campaigns reported no sanitizer output."
+  },
+  "hardware_toolchain": {
+    "architecture": "arm64",
+    "chip": "Apple M5 Max",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "machine": "macOS-27.0-arm64-arm-64bit",
+    "machine_model": "Mac Studio (Mac17,14)",
+    "memory_bytes": 68719476736,
+    "os": "macOS 27.0"
+  },
+  "known_failures_and_gaps": [
+    "Final BOOT-08 gate fails on repeated relative 100 MiB RSS regression; its absolute RSS threshold passes.",
+    "Pan event-to-present p95 and app-bundle size are unavailable with explicit reasons.",
+    "M0-03 has no competitor render trials; Inkscape and Donner are unavailable and Vexel has no compatible SVG render command.",
+    "M0–M3 uses synthetic engineering coverage; no owner files, tasks, interviews, user outcomes, or pilots are recorded.",
+    "The viewer review material is static screenshots and semantic snapshots plus scripted checks; no live customer pilot is claimed."
+  ],
+  "m2_04_source_preservation": {
+    "byte_equal_all": true,
+    "byte_equal_cases": 3,
+    "failure_atomicity_all": true,
+    "failure_atomicity_cases": 4,
+    "latency": {
+      "reason": "M2-04 records byte equality and failure atomicity; no save latency measurement was made.",
+      "value": null
+    }
+  },
+  "owner_decision": {
+    "choice": null,
+    "options": [
+      {
+        "choice": "proceed",
+        "implication": "Authorize M4/M5 planning after reviewing real representative tasks; technical progress alone does not validate demand."
+      },
+      {
+        "choice": "pause",
+        "implication": "Hold M4/M5 until five representative files/tasks and outcomes are reviewed; preserves the current evidence boundary."
+      },
+      {
+        "choice": "pivot",
+        "implication": "Redirect scope based on owner-provided tasks; requires evidence identifying a better target workflow."
+      },
+      {
+        "choice": "stop",
+        "implication": "End product work if the evidence does not justify further investment; retain the packet for the decision record."
+      }
+    ],
+    "request": "Please provide five representative real files/tasks, each with the task, expected successful result, and any sensitivity or retention limits.",
+    "status": "open"
+  },
+  "owner_user_pilot_counts": {
+    "interviews": 0,
+    "owner_files_and_tasks": 0,
+    "pilot_count_basis": "M0 product evidence states no owner responses or user outcomes are available; no pilot record is cited.",
+    "pilots": 0,
+    "real_files_tasks_requested": 5,
+    "user_outcomes": 0
+  },
+  "performance_gate": {
+    "absolute_limits": {
+      "100MiB.first_preview_p95_ns": 2000000000,
+      "100MiB.max_step_ns": 100000000,
+      "100MiB.peak_rss_bytes": 524288000,
+      "10MiB.first_preview_p95_ns": 1000000000
+    },
+    "final_metrics": {
+      "100MiB.first_preview_p95_ns": {
+        "absolute_limit": 2000000000,
+        "baseline_value": 269116333,
+        "consecutive_violations": 0,
+        "regression_limit": 296027966.3,
+        "status": "pass",
+        "tolerance_fraction": 0.1,
+        "value": 274657958
+      },
+      "100MiB.max_step_ns": {
+        "absolute_limit": 100000000,
+        "baseline_value": 437958,
+        "consecutive_violations": 0,
+        "regression_limit": 481753.80000000005,
+        "status": "pass",
+        "tolerance_fraction": 0.1,
+        "value": 218834
+      },
+      "100MiB.peak_rss_bytes": {
+        "absolute_limit": 524288000,
+        "baseline_value": 126959616,
+        "consecutive_violations": 2,
+        "regression_limit": 133307596.80000001,
+        "status": "fail",
+        "tolerance_fraction": 0.05,
+        "value": 139526144
+      },
+      "10MiB.first_preview_p95_ns": {
+        "absolute_limit": 1000000000,
+        "baseline_value": 28798125,
+        "consecutive_violations": 0,
+        "regression_limit": 31677937.500000004,
+        "status": "pass",
+        "tolerance_fraction": 0.1,
+        "value": 28098625
+      }
+    },
+    "per_run": [
+      {
+        "metrics": {
+          "100MiB.first_preview_p95_ns": {
+            "consecutive_violations": 0,
+            "status": "pass",
+            "value": 277571708
+          },
+          "100MiB.max_step_ns": {
+            "consecutive_violations": 0,
+            "status": "noisy",
+            "value": 495417
+          },
+          "100MiB.peak_rss_bytes": {
+            "consecutive_violations": 1,
+            "status": "warning",
+            "value": 137904128
+          },
+          "10MiB.first_preview_p95_ns": {
+            "consecutive_violations": 0,
+            "status": "pass",
+            "value": 28415500
+          }
+        },
+        "overall_status": "warning",
+        "timestamp_utc": "2026-10-09T07:45:21Z"
+      },
+      {
+        "metrics": {
+          "100MiB.first_preview_p95_ns": {
+            "consecutive_violations": 0,
+            "status": "pass",
+            "value": 274657958
+          },
+          "100MiB.max_step_ns": {
+            "consecutive_violations": 0,
+            "status": "pass",
+            "value": 218834
+          },
+          "100MiB.peak_rss_bytes": {
+            "consecutive_violations": 2,
+            "status": "fail",
+            "value": 139526144
+          },
+          "10MiB.first_preview_p95_ns": {
+            "consecutive_violations": 0,
+            "status": "pass",
+            "value": 28098625
+          }
+        },
+        "overall_status": "fail",
+        "timestamp_utc": "2026-10-09T07:45:30Z"
+      }
+    ],
+    "relative_regression_note": "100 MiB peak RSS is below the 500 MiB absolute cap, but fails the 5% relative baseline gate after two comparable violations.",
+    "run_timestamps_utc": [
+      "2026-10-09T07:45:21Z",
+      "2026-10-09T07:45:30Z"
+    ],
+    "unavailable": {
+      "app_bundle_bytes": {
+        "bytes": null,
+        "reason": "no macOS app-bundle packaging target exists in this work order",
+        "status": "unavailable"
+      },
+      "pan_zoom_event_to_present_p95_ns": {
+        "reason": "navigation test validates event behavior but does not time presentation",
+        "status": "unavailable",
+        "value": null
+      }
+    }
+  },
+  "progressive_index": {
+    "baseline_commit": "159c7e761ce87862e85742cd25fb61a9aef01da4",
+    "baseline_report_sha256": "f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a",
+    "cases": {
+      "100MiB": {
+        "first_preview_p95_ns": 274657958,
+        "full_index_median_ns": 343656583,
+        "maximum_step_ns": 218834,
+        "peak_rss_bytes": 139526144,
+        "progressive_preview_before_completion": true,
+        "trial_counts": {
+          "cold_order": 5,
+          "warm_order": 10
+        }
+      },
+      "10MiB": {
+        "first_preview_p95_ns": 28098625,
+        "full_index_median_ns": 44385250,
+        "maximum_step_ns": 273208,
+        "peak_rss_bytes": 37912576,
+        "progressive_preview_before_completion": true,
+        "trial_counts": {
+          "cold_order": 5,
+          "warm_order": 10
+        }
+      }
+    },
+    "gate_result": "fail",
+    "protocol": {
+      "cache_caveat": "Cold/warm labels are run order only; OS file cache is not flushed.",
+      "cold_order_trials": 5,
+      "warm_order_trials": 10
+    }
+  },
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "artifacts/WO-BOOT-08/gate-contract.json",
+      "sha256": "bc797fad33ede0c898d040deb06fdda0edd2ba19b48b3ad41321d7f055c96f2c"
+    },
+    {
+      "path": "artifacts/WO-BOOT-08/regression-run-01.json",
+      "sha256": "65a18aacf615ae026940afda93a8c7762935432b2f381af80721359da24afe05"
+    },
+    {
+      "path": "artifacts/WO-BOOT-08/regression-run-02.json",
+      "sha256": "a9e63e81454ad47c9d223cc72169925de722f8917ea6c4fdd6625a20288a1506"
+    },
+    {
+      "path": "artifacts/WO-M0-01/provenance-check.txt",
+      "sha256": "11953a172b5b7ef8fcd54da3016f1e03a5f7079c8285dbd1fce6f7322f396d4f"
+    },
+    {
+      "path": "artifacts/WO-M0-02/oracle-render.txt",
+      "sha256": "403fe194d37ea9cb95ff88604c98593806ea4ba0a7bcc6626851f9277a4705dd"
+    },
+    {
+      "path": "artifacts/WO-M0-02/verify.txt",
+      "sha256": "5cd9978d2c98cbac1adec83f89064707848b99631863c0c67c0f87409e363167"
+    },
+    {
+      "path": "artifacts/WO-M0-03/local-checks.txt",
+      "sha256": "5c69b7e464f2574cb51382f8fe98837885807c618ddcb3e14bc333a6ec889ada"
+    },
+    {
+      "path": "artifacts/WO-M0-03/verify.txt",
+      "sha256": "a659a8a8025b74a2d79790328f1de6e2810091cbb52588b4bce3132c27919ee4"
+    },
+    {
+      "path": "artifacts/WO-M2-03/pr-smoke.json",
+      "sha256": "551fecd5b139ab58c6a035ba933d198dcc88fc33330a9fe6dbfd45a2017931dd"
+    },
+    {
+      "path": "artifacts/WO-M2-03/scheduled-campaign.json",
+      "sha256": "746031ac58e248c2a2d4590ae11e839f86eaa9dfb7948b8f37e0e54afda0f2c2"
+    },
+    {
+      "path": "artifacts/WO-M2-04/failure-atomicity.json",
+      "sha256": "44f644bcc4a279be597243ab843eafbfa104cafc9b4fcf7a5abd8fa974cf5ca0"
+    },
+    {
+      "path": "artifacts/WO-M2-04/roundtrip.json",
+      "sha256": "83ba83a9236eb3ae05d2f7c791c8b0f6f4b69d4a5bb8d423c3116d9765c53ecc"
+    },
+    {
+      "path": "artifacts/WO-M2-05/fuzz-report.json",
+      "sha256": "c544147e95da12bb267e68af98f381ebe6b90a69a0773ab73ff00fd5d110e37c"
+    },
+    {
+      "path": "artifacts/WO-M3-01/progressive-replay.json",
+      "sha256": "e589f05056582ab98d1de9f1cdff5be1756969f1293e66337e1414e12f1af789"
+    },
+    {
+      "path": "artifacts/WO-M3-04/navigation-frame-0000.png",
+      "sha256": "f6221b0a17dc1ad5cf6675f8ea1f455c99d13226021f94461af1b818a33348a9"
+    },
+    {
+      "path": "artifacts/WO-M3-04/navigation-frame-0001.png",
+      "sha256": "642b9b9640e6504ec05ce2642a01b9bf85ff0e891afade7361c00135c977f0fc"
+    },
+    {
+      "path": "artifacts/WO-M3-04/navigation-golden-manifest.json",
+      "sha256": "311a9c14328193a87435c7a0b881defd9fce23ba3d7a7a294185ed87d9b3b887"
+    },
+    {
+      "path": "artifacts/WO-M3-04/navigation-tests.json",
+      "sha256": "0dfe40c8f02a4243a3b8d7ba87a514082efd50a3e691bb1df6d61d44f0ec34ee"
+    },
+    {
+      "path": "artifacts/WO-M3-04/semantics-0000.json",
+      "sha256": "b1fe92734296ac8dd2463df365dea1b5a19b195e9e8eb2d5413c293348ad6506"
+    },
+    {
+      "path": "artifacts/WO-M3-04/semantics-0001.json",
+      "sha256": "556b4301f050e285ea443c2a1adb5de7ac059e2a9cd8e7d068929e0f8897fe9c"
+    },
+    {
+      "path": "artifacts/WO-M3-04/semantics-0002.json",
+      "sha256": "8f09bbde0cbb58a11696b05b08a3046bbc9e5e071220debb1edb88abdd521c42"
+    },
+    {
+      "path": "artifacts/WO-M3-04/semantics.json",
+      "sha256": "223b9456dd000f127e4b2a077c92fe4bd6796fbbb7b4b091a5d2191574d51648"
+    },
+    {
+      "path": "bench/corpus/manifest.json",
+      "sha256": "a05dcf0da95bd7c53ce6faec6704f7b739d6cbd9cf829dfff74b50dfb8359bbd"
+    },
+    {
+      "path": "bench/corpus/manifest.sha256",
+      "sha256": "6afa2d4c611c4ce9f5986bdb354ee92163fa8a1808ecbd6dd1408e8d8ae45f33"
+    },
+    {
+      "path": "bench/results/WO-BOOT-08.json",
+      "sha256": "a9e63e81454ad47c9d223cc72169925de722f8917ea6c4fdd6625a20288a1506"
+    },
+    {
+      "path": "bench/results/WO-M0-02.json",
+      "sha256": "92ec0bb6ca6de2ec071b87f769c8f5095a9db3c55f99dd1669eb3b6bbd3de71d"
+    },
+    {
+      "path": "bench/results/WO-M0-03.csv",
+      "sha256": "846f26ace59c2a3d0bc1be61e8a2e24222a8b09ea3575484f7192721c80756d6"
+    },
+    {
+      "path": "bench/results/WO-M0-03.json",
+      "sha256": "854ff1ed1cacc0483598bd1d4fcb7d1fd118bd47062876759025e4cb929bf1b9"
+    },
+    {
+      "path": "bench/results/WO-M3-01.json",
+      "sha256": "f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a"
+    },
+    {
+      "path": "docs/PERF.md",
+      "sha256": "7e9e6ec7ebb3840b640154cda264560c281f686708efc2ee69ae0c752f20cb80"
+    },
+    {
+      "path": "docs/adr/0001-product-and-platform-locks.md",
+      "sha256": "143ecfd9821b69b23d732eb774b576192c82eec10562a8942e1a454158429ed0"
+    },
+    {
+      "path": "docs/adr/0006-m1-04-owner-quiescence.md",
+      "sha256": "45f9e99b64d3184fc7fce5e9a6823b0fd758fd779b44ae6d1a9b120c7a9f31fa"
+    },
+    {
+      "path": "docs/corpus/PROVENANCE.md",
+      "sha256": "f803ceaabd93411d07fad0d6641854f4ebe91f8a76d4fb2e7642efb93f0c97e2"
+    },
+    {
+      "path": "reports/M0/evidence.json",
+      "sha256": "d4eeadf18d6da4001e0b6f2d531aec419669edc8c028d92ae481dcd500db082b"
+    },
+    {
+      "path": "reports/M0/product-evidence.md",
+      "sha256": "2336211d8e9fdef2cf5731b5cc31e15e6799ba619f75264b6379bf41b28a188f"
+    },
+    {
+      "path": "tests/golden/manifest.lock",
+      "sha256": "a9fb0207a5dbd2ff833b090d3d49fef5c960a56bd1a68809a52430c4382bc1c4"
+    },
+    {
+      "path": "work/WO-BOOT-08.md",
+      "sha256": "f7fbc767f475c0a4b264987bdd54719e8e87e4910fee4e04bffef12f5790c98f"
+    },
+    {
+      "path": "work/WO-M3-01.md",
+      "sha256": "54bd664e5061aede7a133b07869e96f9401027cc7f404b86a11ff24b8230e748"
+    },
+    {
+      "path": "work/WO-M3-02.md",
+      "sha256": "d2547fe2a339e20a7e1c01c7468010452750ee73166c494699a0a130af03bbdf"
+    },
+    {
+      "path": "work/WO-M3-03.md",
+      "sha256": "4f191c263623fe02d8ef51c7ac2a71ed80ee6fef94b00a0a7055510b21de88fe"
+    },
+    {
+      "path": "work/WO-M3-04.md",
+      "sha256": "9fd77fed0650fb718b209626b43641b99fbadf9654fbe6488555f0206289a0db"
+    }
+  ],
+  "synthetic_corpus": {
+    "fixtures": 24,
+    "goldens": 24,
+    "limits": [
+      "Engineering coverage only; not customer evidence.",
+      "Unknown representativeness; 24 goldens are not an SVG conformance claim.",
+      "Generated stress documents and oracle-render timing are not Vexel rendering performance."
+    ]
+  },
+  "viewer_navigation": {
+    "checks": {
+      "drag_pan": "passed",
+      "fit_and_centering": "passed",
+      "invalid_resize_rejection": "passed",
+      "keyboard_pan_zoom_fit": "passed",
+      "non_finite_rejection": "passed",
+      "pinch_anchor": "passed",
+      "resize_preserves_center_world_point": "passed",
+      "retina_2x_backing_conversion": "passed",
+      "retina_scaled_drag_conversion": "passed",
+      "scale_clamps_0_05_64": "passed",
+      "wheel_anchor": "passed"
+    },
+    "checksum_fnv1a64": "804ede4d47af0f15",
+    "frames": 100,
+    "presentation_timing": {
+      "reason": "navigation test validates event behavior but does not time presentation",
+      "value": null
+    },
+    "projection_count": 1000000,
+    "scene_items_per_frame": 10000,
+    "screenshots": [
+      {
+        "path": "artifacts/WO-M3-04/navigation-frame-0000.png",
+        "sha256": "f6221b0a17dc1ad5cf6675f8ea1f455c99d13226021f94461af1b818a33348a9"
+      },
+      {
+        "path": "artifacts/WO-M3-04/navigation-frame-0001.png",
+        "sha256": "642b9b9640e6504ec05ce2642a01b9bf85ff0e891afade7361c00135c977f0fc"
+      }
+    ],
+    "semantic_snapshots": [
+      {
+        "path": "artifacts/WO-M3-04/semantics-0000.json",
+        "sha256": "b1fe92734296ac8dd2463df365dea1b5a19b195e9e8eb2d5413c293348ad6506"
+      },
+      {
+        "path": "artifacts/WO-M3-04/semantics-0001.json",
+        "sha256": "556b4301f050e285ea443c2a1adb5de7ac059e2a9cd8e7d068929e0f8897fe9c"
+      },
+      {
+        "path": "artifacts/WO-M3-04/semantics-0002.json",
+        "sha256": "8f09bbde0cbb58a11696b05b08a3046bbc9e5e071220debb1edb88abdd521c42"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+WO-M3-05 revision 2 verification record
+Base SHA: 70f9e175a12ecb757f5fb572087e2d70259f57de
+Spec SHA-256: 05a2cdd9a5ebdb9289782c370a3e209838082d4cf6f4d647d2c7c3fdebcfabd9
+
+Frozen acceptance commands run by the controlling executor
+
+$ python3 reports/M3/validate_packet.py --write
+PASS wrote reports/M3/evidence.json and reports/M3/decision.md (41 checked sources)
+exit_code=0
+
+$ python3 reports/M3/validate_packet.py --check
+PASS checked 41 source hashes, derived values, schema, and Markdown consistency
+exit_code=0
+
+$ python3 reports/M3/validate_packet.py --check
+PASS checked 41 source hashes, derived values, schema, and Markdown consistency
+exit_code=0
+
+$ python3 -m json.tool reports/M3/evidence.json
+PASS valid JSON
+exit_code=0
+
+$ python3 scripts/ledger.py validate ledger.jsonl
+PASS valid ledger (310 entries)
+exit_code=0
+
+$ python3 scripts/wo_validate.py WO-M3-05 --ready
+PASS valid WO-M3-05 revision 2 sha256 05a2cdd9a5ebdb9289782c370a3e209838082d4cf6f4d647d2c7c3fdebcfabd9
+exit_code=0
+
+$ git diff --check
+PASS no whitespace errors
+exit_code=0
+
+The validator recomputes all 41 source hashes and report claims. Repeated read-only validation keeps the generated JSON/Markdown bytes unchanged. The recorded BOOT-08 pair has 5 cold-order + 10 warm-order trials per case; only 100 MiB peak RSS fails after two relative breaches (137,904,128 and 139,526,144 bytes), while each value is below the 524,288,000-byte absolute limit. Pan-to-present and bundle size are unavailable with explicit reasons. Owner files/tasks, interviews, outcomes, and pilots remain zero; the decision is OPEN.
+
+The nested runner executor report omitted AC-7 and could not write the shared worktree Git metadata, so runner report acceptance did not pass. The controlling executor corrected the machine evidence and will commit this reviewed candidate, then invoke the exact clean read-only verifier. The executor-generated self-review is not treated as independent verification.
