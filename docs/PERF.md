@@ -10,7 +10,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M1-04 | Release | 97,072 | 1,000 task cycles: 44 ms; max join: 0.073 ms | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
-| WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,624 | 4.72 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 13.889 ms) | 2,211,840 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,744 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.265 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
@@ -182,25 +182,25 @@ per-case pixel differences are recorded in
 `artifacts/WO-M2-05/reference-comparison.json`.
 
 The fixed-seed ASan+UBSan campaign (`20261009`) completed 1,000,000 random cases in
-6.465 s wall time (6.170 s process CPU time), with zero sanitizer reports,
+6.579 s wall time (6.522 s process CPU time), with zero sanitizer reports,
 crashes, or invariant failures. Random inputs were at most 4,096 bytes; a
 deterministic 327,730-byte seed also exhausted the command cap safely. The result is
 in `artifacts/WO-M2-05/fuzz-report.json`. Release sizes on Apple Silicon macOS
 27.0 with Apple Clang 21.0.0 (`clang-2100.3.34.2`) are recorded in
 `bench/results/WO-M2-05.json`: `svgworkbench` 97,040 bytes, shape CLI 53,408,
-shape static library 24,624, and XML static library 16,552.
+shape static library 24,744, and XML static library 16,552.
 
 For a deterministic 256x256 SVG containing 64 rectangles, seven fresh-process
-Release CLI trials after two warmups had a 13.889 ms median and 16.224 ms
-nearest-rank p95 (4.72 MPixel/s using total viewport pixels). Maximum RSS was
-2,211,840 bytes. Timing includes process startup, file read, decode, scalar
+Release CLI trials after two warmups had a 15.265 ms median and 16.618 ms
+nearest-rank p95 (4.29 MPixel/s using total viewport pixels). Maximum RSS was
+2,244,608 bytes. Timing includes process startup, file read, decode, scalar
 raster, and raw output write; caches were not evicted. This is not isolated
 raster-kernel throughput. Raw trials and hashes are in
 `artifacts/WO-M2-05/render-benchmark.json`.
 
 The shape-specific build, CTest, focused differential tests, ASan/UBSan fuzz,
 UBSan CTest, Release build, and final `./dev verify` pass. The full suite
-reports 171 Python tests with zero failures/errors/skips; Debug/ASan/UBSan CTest
+reports 173 Python tests with zero failures/errors/skips; Debug/ASan/UBSan CTest
 each pass 5/5, and native smoke plus 20-frame Metal replay pass. Three initial
 managed runs had sandbox and LaunchServices failures that did not reproduce;
 see `artifacts/WO-M2-05/verification-transients.md`. This is no longer a

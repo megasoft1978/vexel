@@ -24,8 +24,15 @@ def main():
         parser.error(f"fuzz binary does not exist: {binary}")
     start = time.monotonic()
     run = subprocess.run([str(binary), str(args.seed), str(args.cases), str(args.duration)], cwd=ROOT,
-                         capture_output=True, text=True, timeout=args.duration + 10, check=True)
+                         capture_output=True, text=True, timeout=args.duration + 10, check=False)
     elapsed = time.monotonic() - start
+    stderr_path = args.output.with_suffix(".stderr.txt")
+    stderr_path.parent.mkdir(parents=True, exist_ok=True)
+    stderr_path.write_text(run.stderr)
+    if run.returncode != 0:
+        raise RuntimeError(f"fuzz process exited {run.returncode}; stderr retained at {stderr_path}")
+    if run.stderr:
+        raise RuntimeError(f"fuzz process emitted sanitizer stderr; retained at {stderr_path}")
     fields = dict(item.split("=", 1) for item in run.stdout.strip().split())
     cases = int(fields["cases"])
     campaign_seconds = float(fields["duration"])
@@ -38,6 +45,7 @@ def main():
     report = {"seed": args.seed, "cases": cases, "duration_seconds": round(elapsed, 3),
               "process_cpu_seconds": campaign_seconds,
               "binary": str(binary), "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+              "sanitizer_stderr": str(stderr_path), "sanitizer_stderr_bytes": len(run.stderr.encode()),
               "random_input_max_bytes": 4096, "cap_exhaustion_cases": cap_exhaustion,
               "cap_exhaustion_input_bytes": cap_case_bytes,
               "input_max_bytes": max(4096, cap_case_bytes),

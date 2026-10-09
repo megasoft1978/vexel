@@ -229,6 +229,40 @@ class ShapeRenderTests(unittest.TestCase):
         self.assertEqual(alpha(8, 11), 255)
         self.assertEqual(alpha(8, 12), 0)
 
+    def test_root_height_diagnostic_uses_height_value_offset(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        cases = ((b'<svg width="16" height="bad"/>', b'bad', "number"),
+                 (b'<svg width="16" height="5000"/>', b'5000', "viewport"))
+        with tempfile.TemporaryDirectory(prefix="vexel-height-offset-") as temp:
+            for index, (source, marker, category_expected) in enumerate(cases):
+                input_path = Path(temp) / f"height-{index}.svg"
+                output_path = Path(temp) / f"height-{index}.rgba"
+                input_path.write_bytes(source)
+                run = subprocess.run([str(binary), str(input_path), str(output_path)],
+                                     capture_output=True, text=True)
+                category, offset = run.stderr.strip().split(":", 1)
+                self.assertNotEqual(run.returncode, 0)
+                self.assertEqual(category, category_expected)
+                self.assertEqual(int(offset), source.index(marker))
+
+    def test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr(self):
+        script = ROOT / "tests/fuzz/shape/shape_fuzz.py"
+        with tempfile.TemporaryDirectory(prefix="vexel-fuzz-stderr-") as temp:
+            temp_path = Path(temp)
+            binary = temp_path / "fake-shape-fuzz"
+            binary.write_text("#!/usr/bin/env python3\nimport sys\n"
+                              "print('seed=7 cases=1000000 duration=0.1 cap_exhaustion=1 cap_case_bytes=327730')\n"
+                              "sys.stderr.write('runtime error: simulated UBSan diagnostic\\n')\n")
+            binary.chmod(0o755)
+            report = temp_path / "fuzz-report.json"
+            run = subprocess.run(["python3", str(script), "--binary", str(binary), "--seed", "7",
+                                  "--duration", "1", "--output", str(report)],
+                                 capture_output=True, text=True)
+            stderr_record = report.with_suffix(".stderr.txt")
+            self.assertNotEqual(run.returncode, 0)
+            self.assertIn("retained at", run.stderr)
+            self.assertEqual(stderr_record.read_text(), "runtime error: simulated UBSan diagnostic\n")
+
 
 if __name__ == "__main__":
     unittest.main()
