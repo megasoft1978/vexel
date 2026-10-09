@@ -40,6 +40,9 @@ is checked during character scanning and parsing. A failed stream exposes its
 stable diagnostic but cannot transfer a partial token vector. The index uses
 this API on its worker so `token_at` data is produced by resumable scanning,
 independently of the owner's progressive element reader.
+Long text, comment, CDATA, and processing-instruction runs retain their scan
+cursor across steps; the C regression test compares these token spans against
+the one-shot tokenizer while checking the byte budget on every step.
 `svg_xml_token_stream_bytes_read` reports the grammar-parser frontier (after
 character validation) so other threads can safely determine whether an early
 source span has been validated. If validation fails, the error offset bounds

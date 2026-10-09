@@ -15,6 +15,14 @@
 #define XML_MAX_TEXT_RUN_BYTES (4U * 1024U * 1024U)
 
 typedef struct xml_open_name { svg_xml_span span; } xml_open_name;
+typedef enum xml_stream_pending_kind {
+    XML_STREAM_PENDING_NONE = 0,
+    XML_STREAM_PENDING_TEXT,
+    XML_STREAM_PENDING_COMMENT,
+    XML_STREAM_PENDING_CDATA,
+    XML_STREAM_PENDING_PI,
+    XML_STREAM_PENDING_TAG
+} xml_stream_pending_kind;
 typedef struct xml_scanner {
     base_bytes input;
     svg_xml_options options;
@@ -27,6 +35,35 @@ typedef struct xml_scanner {
     size_t total_attributes;
     size_t char_cursor;
     size_t token_storage_limit;
+    xml_stream_pending_kind pending_kind;
+    size_t pending_start;
+    size_t pending_cursor;
+    size_t pending_data;
+    size_t pending_first_nonspace;
+    svg_xml_span pending_name;
+    uint8_t pending_quote;
+    bool pending_nonspace;
+    bool pending_declaration;
+    bool pending_pi_data_ready;
+    bool stream_start_active;
+    bool stream_start_separated;
+    bool stream_end_active;
+    unsigned stream_start_phase;
+    size_t stream_start_pos;
+    size_t stream_start_token_index;
+    size_t stream_start_local_attributes;
+    size_t stream_start_attribute_offset;
+    size_t stream_start_value_offset;
+    size_t stream_end_pos;
+    size_t stream_end_name_offset;
+    size_t stream_end_name_length;
+    svg_xml_span stream_start_name;
+    svg_xml_span stream_start_prefix;
+    svg_xml_span stream_start_local_name;
+    svg_xml_span stream_attribute_name;
+    svg_xml_span stream_attribute_prefix;
+    svg_xml_span stream_attribute_local_name;
+    uint8_t stream_start_quote;
     svg_xml_cancel_check_fn cancel_check;
     void *cancel_context;
     bool canceled;
@@ -536,32 +573,46 @@ static bool stream_scan_characters(xml_scanner *s, size_t budget)
     return !s->canceled && s->result.diagnostic.category == SVG_XML_ERROR_NONE;
 }
 
-static bool stream_parse_next(xml_scanner *s)
+#include "xml_stream_internal.inc"
+
+static bool stream_parse_next(xml_scanner *s, size_t limit)
 {
     size_t p = s->cursor;
-    if (byte_at(s, p) != '<') return parse_text(s);
-    if (starts(s, p, "<!--", 4U)) return parse_comment(s);
-    if (starts(s, p, "<?", 2U)) {
-        size_t before = s->result.token_count;
-        if (!parse_pi(s)) return false;
-        if (s->result.token_count > before &&
-            s->tokens[before].kind == SVG_XML_TOKEN_DECLARATION &&
-            !validate_decl_encoding(s, &s->tokens[before])) return false;
-        return true;
-    }
-    if (starts(s, p, "<![CDATA[", 9U)) return parse_cdata(s);
+    if (s->pending_kind == XML_STREAM_PENDING_TEXT || byte_at(s, p) != '<')
+        return stream_parse_text(s, limit);
+    if (s->pending_kind == XML_STREAM_PENDING_COMMENT || starts(s, p, "<!--", 4U))
+        return stream_parse_comment(s, limit);
+    if (s->pending_kind == XML_STREAM_PENDING_PI || starts(s, p, "<?", 2U))
+        return stream_parse_pi(s, limit);
+    if (s->pending_kind == XML_STREAM_PENDING_CDATA || starts(s, p, "<![CDATA[", 9U))
+        return stream_parse_cdata(s, limit);
     if (starts(s, p, "<!DOCTYPE", 9U) || starts(s, p, "<!ENTITY", 8U)) {
         fail(s, SVG_XML_ERROR_UNSUPPORTED_DTD, p);
         return false;
     }
-    if (starts(s, p, "</", 2U)) return parse_end(s);
+    if (starts(s, p, "</", 2U)) {
+        if (!stream_tag_complete(s, limit))
+            return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
+        if (!parse_end(s)) return false;
+        stream_pending_clear(s);
+        return true;
+    }
     if (starts(s, p, "<!", 2U)) {
         fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p);
         return false;
     }
+    if (!stream_tag_complete(s, limit)) return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
     if (!parse_start(s)) return false;
     ++s->result.element_count;
     return true;
+}
+
+static size_t stream_frontier(const xml_scanner *s)
+{
+    if (s->pending_kind == XML_STREAM_PENDING_NONE) return s->cursor;
+    size_t frontier = s->pending_cursor;
+    if (s->pending_data > frontier) frontier = s->pending_data;
+    return frontier;
 }
 
 svg_xml_stream_status svg_xml_token_stream_start(base_bytes input, size_t max_storage_bytes,
@@ -606,10 +657,13 @@ svg_xml_stream_status svg_xml_token_stream_step(svg_xml_token_stream *stream, si
         return SVG_XML_STREAM_FAILED;
     }
     if (!s->chars_complete) return SVG_XML_STREAM_OK;
-    size_t initial = s->cursor;
-    while (!cancel_requested(s) && s->cursor < s->char_cursor &&
-           s->cursor - initial < byte_budget) {
-        if (!stream_parse_next(s)) break;
+    size_t initial = stream_frontier(s);
+    size_t limit = 0U;
+    if (!add_size(initial, byte_budget, &limit) || limit > s->input.len) limit = s->input.len;
+    while (!cancel_requested(s) && s->cursor < s->input.len &&
+           stream_frontier(s) - initial < byte_budget) {
+        size_t before = stream_frontier(s);
+        if (!stream_parse_next(s, limit) || stream_frontier(s) == before) break;
     }
     if (s->canceled) return SVG_XML_STREAM_CANCELED;
     if (s->result.diagnostic.category != SVG_XML_ERROR_NONE) {
@@ -646,7 +700,7 @@ svg_xml_result svg_xml_token_stream_result(const svg_xml_token_stream *stream)
 
 size_t svg_xml_token_stream_bytes_read(const svg_xml_token_stream *stream)
 {
-    return stream == NULL ? 0U : stream->scanner.cursor;
+    return stream == NULL ? 0U : stream_frontier(&stream->scanner);
 }
 
 bool svg_xml_token_stream_take(svg_xml_token_stream *stream, svg_xml_token **out_tokens,

@@ -10,7 +10,8 @@
     "owned minimal preview source extraction and worker shape decode/raster with generation checks",
     "loading progress model and headless native replay with offscreen Metal readback",
     "deterministic 10 MiB and 100 MiB performance campaign",
-    "preview publication waits for tokenizer validation through the candidate span; malformed prefixes cannot publish"
+    "preview publication waits for tokenizer validation through the candidate span; malformed prefixes cannot publish",
+    "streaming token validation resumes long text, comment, CDATA, and PI scanning within byte budgets"
   ],
   "verified": {
     "debug_ctest": "7/7 passed",
@@ -19,34 +20,35 @@
     "asan_ctest": "7/7 passed",
     "ubsan_ctest": "7/7 passed",
     "benchmark": "15 trials per workload; latency, owner-step, and RSS gates passed",
-    "native_index_replay": "10/50/90/100 progress; 10 MiB Metal readback and UI visibility after tile publication; 36.626 ms max owner step; stale/canceled workers rejected",
+    "native_index_replay": "10/50/90/100 progress; 10 MiB Metal readback and UI visibility after tile publication; 19.970 ms max owner step; stale/canceled workers rejected",
     "ready_work_order_validation": "passed",
     "ledger_validation": "passed",
     "diff_check": "passed",
     "benchmark_preview_gate": "all 15 trials per input observed tile completion before indexing completion",
-    "prefix_validation": "malformed-prefix test rejects preview with exact XML error offset; later malformed tail preserves a preview over its validated prefix"
+    "prefix_validation": "malformed-prefix test rejects preview with exact XML error offset; later malformed tail preserves a preview over its validated prefix",
+    "token_stream_budget": "512 KiB mixed long-token fixture preserves one-shot token equivalence and asserts <=1 KiB advancement on every step"
   },
   "metrics": {
     "10MiB": {
       "source_bytes": 10485760,
-      "source_read_median_ns": 923709,
-      "source_read_p95_ns": 1075083,
-      "first_preview_median_ns": 22132625,
-      "first_preview_p95_ns": 23994334,
-      "complete_index_median_ns": 42534875,
-      "max_step_latency_ns": 302667,
-      "peak_child_rss_bytes": 37896192,
+      "source_read_median_ns": 1209750,
+      "source_read_p95_ns": 1345167,
+      "first_preview_median_ns": 21745125,
+      "first_preview_p95_ns": 24166791,
+      "complete_index_median_ns": 42302500,
+      "max_step_latency_ns": 313584,
+      "peak_child_rss_bytes": 53116928,
       "index_bytes": 5600056
     },
     "100MiB": {
       "source_bytes": 104857600,
-      "source_read_median_ns": 10081000,
-      "source_read_p95_ns": 12865000,
-      "first_preview_median_ns": 218462833,
-      "first_preview_p95_ns": 226002417,
-      "complete_index_median_ns": 343374541,
-      "max_step_latency_ns": 254791,
-      "peak_child_rss_bytes": 129400832,
+      "source_read_median_ns": 12190833,
+      "source_read_p95_ns": 14660000,
+      "first_preview_median_ns": 240884792,
+      "first_preview_p95_ns": 282867583,
+      "complete_index_median_ns": 417066417,
+      "max_step_latency_ns": 20917667,
+      "peak_child_rss_bytes": 145244160,
       "index_bytes": 5600112
     }
   },
@@ -54,8 +56,8 @@
     "full XML token records become queryable after the cancellable background validation completes; the resumable owner reader emits complete tag spans",
     "progressive replay is headless; visible AppKit teardown previously reproduced a crash while separate native Metal smoke passes"
   ],
-  "decision": "Candidate repaired after review finding: publication waits for the XML grammar parser frontier through the candidate span, malformed prefixes are covered by a deterministic regression test, and a later malformed tail can retain only a validated preview. Fresh read-only review pending.",
-  "release_binary_bytes": 151936,
+  "decision": "Candidate repaired after review findings: preview publication waits for grammar validation through the candidate span; malformed prefixes are rejected; long lexical runs resume within the per-step byte budget. Fresh read-only review pending.",
+  "release_binary_bytes": 151968,
   "machine": {
     "model": "Mac Studio (Mac17,14)",
     "chip": "Apple M5 Max",

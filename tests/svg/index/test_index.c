@@ -93,8 +93,11 @@ static bool equivalent_file(const char *path)
     svg_xml_stream_status status = SVG_XML_STREAM_OK;
     size_t steps = 0U;
     bool emitted_before_complete = false;
-    while (okay && status == SVG_XML_STREAM_OK) {
+    while (okay && status == SVG_XML_STREAM_OK && steps < 10000U) {
+        size_t before = svg_xml_token_stream_bytes_read(stream);
         status = svg_xml_token_stream_step(stream, 7U);
+        size_t after = svg_xml_token_stream_bytes_read(stream);
+        okay = after >= before && after - before <= 7U;
         ++steps;
         svg_xml_result progress = svg_xml_token_stream_result(stream);
         emitted_before_complete = emitted_before_complete ||

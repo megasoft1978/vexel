@@ -1,1 +1,1 @@
-  151936 build/mac-release/bin/svgworkbench
+  151968 build/mac-release/bin/svgworkbench

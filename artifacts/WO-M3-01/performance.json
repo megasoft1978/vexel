@@ -18,14 +18,14 @@
         "cold": 5,
         "warm": 10
       },
-      "source_read_median_ns": 923709,
-      "source_read_p95_ns": 1075083,
-      "first_preview_median_ns": 22132625,
-      "first_preview_p95_ns": 23994334,
-      "complete_index_median_ns": 42534875,
-      "max_step_latency_ns": 302667,
+      "source_read_median_ns": 1209750,
+      "source_read_p95_ns": 1345167,
+      "first_preview_median_ns": 21745125,
+      "first_preview_p95_ns": 24166791,
+      "complete_index_median_ns": 42302500,
+      "max_step_latency_ns": 313584,
       "preview_before_index_complete": true,
-      "peak_child_rss_bytes": 37896192,
+      "peak_child_rss_bytes": 53116928,
       "index_bytes": 5600056
     },
     "100MiB": {
@@ -36,14 +36,14 @@
         "cold": 5,
         "warm": 10
       },
-      "source_read_median_ns": 10081000,
-      "source_read_p95_ns": 12865000,
-      "first_preview_median_ns": 218462833,
-      "first_preview_p95_ns": 226002417,
-      "complete_index_median_ns": 343374541,
-      "max_step_latency_ns": 254791,
+      "source_read_median_ns": 12190833,
+      "source_read_p95_ns": 14660000,
+      "first_preview_median_ns": 240884792,
+      "first_preview_p95_ns": 282867583,
+      "complete_index_median_ns": 417066417,
+      "max_step_latency_ns": 20917667,
       "preview_before_index_complete": true,
-      "peak_child_rss_bytes": 129400832,
+      "peak_child_rss_bytes": 145244160,
       "index_bytes": 5600112
     }
   },

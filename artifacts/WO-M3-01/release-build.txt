@@ -7,27 +7,16 @@ Preset CMake variables:
 -- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
-[1/22] Building C object CMakeFiles/vexel_ui_state.dir/src/ui/index_progress.c.o
-[2/22] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
-[3/22] Building C object CMakeFiles/vexel_document.dir/src/document/source_save.c.o
-[4/22] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o
-[5/22] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[6/22] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
-[7/22] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o
-[8/22] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
-[9/22] Building C object CMakeFiles/source_save_test.dir/tests/document/test_source_save.c.o
-[10/22] Linking C static library libvexel_ui_state.a
-[11/22] Linking C static library libvexel_document.a
-[12/22] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
-[13/22] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
-[14/22] Linking C executable bin/shape_fuzz
-[15/22] Linking C executable bin/shape_render_cli
-[16/22] Linking C executable bin/xml_tokenizer_cli
-[17/22] Linking C executable bin/shape_test
-[18/22] Linking C executable bin/xml_tokenizer_fuzz
-[19/22] Linking C executable bin/source_save_test
-[20/22] Linking C executable bin/svg_index_test
+[1/11] Linking C executable bin/xml_tokenizer_fuzz
+[2/11] Linking C executable bin/source_save_test
+[3/11] Linking C executable bin/shape_test
+[4/11] Linking C executable bin/shape_render_cli
+[5/11] Linking C executable bin/shape_fuzz
+[6/11] Linking C executable bin/xml_tokenizer_cli
+[7/11] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
+[8/11] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
+[9/11] Linking C executable bin/svg_index_test
 ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
-[21/22] Linking C executable bin/xml_tokenizer_test
-[22/22] Linking C executable bin/svgworkbench
+[10/11] Linking C executable bin/xml_tokenizer_test
+[11/11] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
