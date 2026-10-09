@@ -1,7 +1,7 @@
 # Handoff
 
-WO-M3-06 revision 4 is complete and fast-forward merged to `main` at `c086461583b554f2d09a48570663381813280844`. Fresh read-only review `verify-90542d7e-cd0f-4208-92f8-fe1969307c3c` passed with no findings.
+M3-06 is complete and merged to `main`. It measured 58 files / 116 fresh-process trials: 2 previewable, 56 unsupported, no limits or crashes. The report is open/index evidence and does not claim full-render parity.
 
-The 58-file, 116-trial report is in `reports/M3/head-to-head.md` and `.json`. It records 2 supported previews, 56 unsupported outcomes, no limits/crashes, a failed 100 MiB preview wedge, passing max-step and RSS gates, and explicitly disclaims full-render parity. No corpus files were copied into this repository.
+The owner has resolved the M3-05/M3-06 gate and directed the project to proceed through M4/M5. ADR-0012 records the decision and its limits: public and synthetic corpus evidence is accepted for engineering; no customer pilot or release decision is implied.
 
-Stop here. The M3-05 owner proceed/pause/pivot/stop decision remains OPEN. Do not start M4/M5 until the owner responds.
+Before implementation, all 58 corpus XML files (4,429,240,515 declared bytes) were streamed and inventoried. Results and the feature-based work order are in `reports/M4/corpus-feature-frequency.md` and `.json`; no corpus files were copied or modified. Next: prepare and run WO-M4-01 for common geometry primitives and affine transforms, then continue the M4 fidelity sequence using corpus coverage.
