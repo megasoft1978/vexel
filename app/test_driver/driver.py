@@ -167,7 +167,8 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
             _integer(command["percent"], "percent", 0, 100)
             _string(command["label"], "label", 256, empty=True)
         elif name == "navigate":
-            if command["action"] not in {"fit", "wheel", "pinch", "pan"}:
+            action = command["action"]
+            if not isinstance(action, str) or action not in {"fit", "wheel", "pinch", "pan"}:
                 raise DriverError("navigation action must be fit, wheel, pinch, or pan")
             for field in ("x", "y", "value"):
                 value = command[field]
@@ -175,6 +176,8 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
                     raise DriverError(f"navigation {field} must be finite and bounded")
                 if isinstance(value, float) and not math.isfinite(value):
                     raise DriverError(f"navigation {field} must be finite and bounded")
+            if action == "pinch" and abs(command["value"]) > 100:
+                raise DriverError("pinch value exceeds the supported magnification range")
         elif name == "index_progress":
             generation = _integer(command["generation"], "generation", 0, 0xFFFFFFFFFFFFFFFF)
             _integer(command["percent"], "percent", 0, 100)
