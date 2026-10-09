@@ -1,0 +1,1 @@
+valid WO-BOOT-08 revision 1 sha256 bd4e30c4282f604a1afa319c5d1b443d6af975694d2c3d8066acabf644fc6aeb

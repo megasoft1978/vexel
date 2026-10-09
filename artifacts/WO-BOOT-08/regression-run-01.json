@@ -1,0 +1,639 @@
+{
+  "baseline_provenance": {
+    "commit": "159c7e761ce87862e85742cd25fb61a9aef01da4",
+    "report": "bench/results/WO-M3-01.json",
+    "report_sha256": "f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a",
+    "work_order": "WO-M3-01"
+  },
+  "build": {
+    "benchmark_executable": "build/mac-release/bin/svg_index_bench",
+    "benchmark_executable_bytes": 107136,
+    "benchmark_executable_sha256": "c3bf6dba9df9027ce4d5a8450ae66699f4a8374a205bc23c055622f8d473c1a4",
+    "configuration": "Release",
+    "dependencies": [
+      {
+        "identity": "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa (compatibility version 1.0.0, current version 24.0.0)",
+        "install_name": "/System/Library/Frameworks/Cocoa.framework/Versions/A/Cocoa"
+      },
+      {
+        "identity": "/System/Library/Frameworks/Metal.framework/Versions/A/Metal (compatibility version 1.0.0, current version 382.5.3)",
+        "install_name": "/System/Library/Frameworks/Metal.framework/Versions/A/Metal"
+      },
+      {
+        "identity": "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore (compatibility version 1.2.0, current version 1223.2.2)",
+        "install_name": "/System/Library/Frameworks/QuartzCore.framework/Versions/A/QuartzCore"
+      },
+      {
+        "identity": "/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1359.0.0)",
+        "install_name": "/usr/lib/libSystem.B.dylib"
+      },
+      {
+        "identity": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit (compatibility version 45.0.0, current version 2775.10.103)",
+        "install_name": "/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit"
+      },
+      {
+        "identity": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 5027.0.69)",
+        "install_name": "/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation"
+      },
+      {
+        "identity": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation (compatibility version 300.0.0, current version 5027.0.69)",
+        "install_name": "/System/Library/Frameworks/Foundation.framework/Versions/C/Foundation"
+      },
+      {
+        "identity": "/usr/lib/libobjc.A.dylib (compatibility version 1.0.0, current version 228.0.0)",
+        "install_name": "/usr/lib/libobjc.A.dylib"
+      }
+    ],
+    "executable": "build/mac-release/bin/svgworkbench",
+    "executable_bytes": 172032,
+    "executable_sha256": "8c5610865d34ee3e29dee4c6a91093afd72bc0fbf21b175242bf432f96ae15fc",
+    "source_commit": "ba170a1abbcab9a028b9bc7c6475858d19529ae3",
+    "source_diff_sha256": "94555e1d33a7f436bdcabfdd41634fc85205082f7647c78174d7bf3f5c1bc69f",
+    "working_tree_dirty": true
+  },
+  "build_sha": "ba170a1abbcab9a028b9bc7c6475858d19529ae3",
+  "cases": {
+    "100MiB": {
+      "cold_order_trials": [
+        {
+          "complete_index_ns": 363863125,
+          "element_count": 100002,
+          "first_preview_ns": 281090541,
+          "index_bytes": 5600112,
+          "max_step_ns": 386167,
+          "peak_rss_bytes": 125698048,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 380450500,
+          "progress_10_50_90_complete": true,
+          "read_ns": 11914208,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 355360750,
+          "element_count": 100002,
+          "first_preview_ns": 282960625,
+          "index_bytes": 5600112,
+          "max_step_ns": 147667,
+          "peak_rss_bytes": 126124032,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 370730042,
+          "progress_10_50_90_complete": true,
+          "read_ns": 11043875,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 337213292,
+          "element_count": 100002,
+          "first_preview_ns": 264086750,
+          "index_bytes": 5600112,
+          "max_step_ns": 164750,
+          "peak_rss_bytes": 126943232,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 350555042,
+          "progress_10_50_90_complete": true,
+          "read_ns": 8958458,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 349536000,
+          "element_count": 100002,
+          "first_preview_ns": 267569541,
+          "index_bytes": 5600112,
+          "max_step_ns": 184167,
+          "peak_rss_bytes": 139526144,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 363178125,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9232500,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 350602291,
+          "element_count": 100002,
+          "first_preview_ns": 276460125,
+          "index_bytes": 5600112,
+          "max_step_ns": 195292,
+          "peak_rss_bytes": 126943232,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 364414000,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9125334,
+          "source_bytes": 104857600
+        }
+      ],
+      "input_bytes": 104857600,
+      "input_sha256": "0acabf47c6f2fc2f747042adbb33e19d3901d75c22d8e7d90b77984626171f65",
+      "summary": {
+        "complete_index_median_ns": 352909625,
+        "complete_index_p95_ns": 454789708,
+        "first_preview_median_ns": 276460125,
+        "first_preview_p95_ns": 374336875,
+        "index_bytes": 5600112,
+        "max_step_ns": 386167,
+        "peak_rss_bytes": 139526144,
+        "source_read_median_ns": 9367208,
+        "source_read_p95_ns": 18732208
+      },
+      "trial_variability": {
+        "first_preview_ns": {
+          "coefficient_of_variation": 0.09717690473928546,
+          "mean": 281834497.26666665,
+          "sample_standard_deviation": 27387804.093127273
+        },
+        "max_step_ns": {
+          "coefficient_of_variation": 0.3690446938097423,
+          "mean": 229400.06666666668,
+          "sample_standard_deviation": 84658.87736293448
+        },
+        "peak_rss_bytes": {
+          "coefficient_of_variation": 0.04156264419600547,
+          "mean": 128747656.53333333,
+          "sample_standard_deviation": 5351093.039564452
+        }
+      },
+      "warm_order_trials": [
+        {
+          "complete_index_ns": 358186875,
+          "element_count": 100002,
+          "first_preview_ns": 283804709,
+          "index_bytes": 5600112,
+          "max_step_ns": 155125,
+          "peak_rss_bytes": 126861312,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 372400208,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9924709,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 349923292,
+          "element_count": 100002,
+          "first_preview_ns": 266977542,
+          "index_bytes": 5600112,
+          "max_step_ns": 207125,
+          "peak_rss_bytes": 126959616,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 363439167,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9253625,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 368439667,
+          "element_count": 100002,
+          "first_preview_ns": 280988375,
+          "index_bytes": 5600112,
+          "max_step_ns": 373542,
+          "peak_rss_bytes": 139476992,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 382936292,
+          "progress_10_50_90_complete": true,
+          "read_ns": 8803834,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 454789708,
+          "element_count": 100002,
+          "first_preview_ns": 374336875,
+          "index_bytes": 5600112,
+          "max_step_ns": 227750,
+          "peak_rss_bytes": 124780544,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 478117875,
+          "progress_10_50_90_complete": true,
+          "read_ns": 18732208,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 341246250,
+          "element_count": 100002,
+          "first_preview_ns": 265233917,
+          "index_bytes": 5600112,
+          "max_step_ns": 187917,
+          "peak_rss_bytes": 126664704,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 355156167,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9367208,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 352909625,
+          "element_count": 100002,
+          "first_preview_ns": 271231500,
+          "index_bytes": 5600112,
+          "max_step_ns": 218125,
+          "peak_rss_bytes": 125239296,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 367312417,
+          "progress_10_50_90_complete": true,
+          "read_ns": 10266917,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 376995125,
+          "element_count": 100002,
+          "first_preview_ns": 299780042,
+          "index_bytes": 5600112,
+          "max_step_ns": 386125,
+          "peak_rss_bytes": 126238720,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 392240875,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9213583,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 350620625,
+          "element_count": 100002,
+          "first_preview_ns": 272304167,
+          "index_bytes": 5600112,
+          "max_step_ns": 267250,
+          "peak_rss_bytes": 126959616,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 365719750,
+          "progress_10_50_90_complete": true,
+          "read_ns": 10886333,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 355762250,
+          "element_count": 100002,
+          "first_preview_ns": 277601208,
+          "index_bytes": 5600112,
+          "max_step_ns": 170958,
+          "peak_rss_bytes": 124911616,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 370066334,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9119667,
+          "source_bytes": 104857600
+        },
+        {
+          "complete_index_ns": 346927625,
+          "element_count": 100002,
+          "first_preview_ns": 263091542,
+          "index_bytes": 5600112,
+          "max_step_ns": 169041,
+          "peak_rss_bytes": 137887744,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 361281583,
+          "progress_10_50_90_complete": true,
+          "read_ns": 9460125,
+          "source_bytes": 104857600
+        }
+      ],
+      "workload": "100000 map-like grouped records plus one preview rectangle"
+    },
+    "10MiB": {
+      "cold_order_trials": [
+        {
+          "complete_index_ns": 50310834,
+          "element_count": 100001,
+          "first_preview_ns": 30819584,
+          "index_bytes": 5600056,
+          "max_step_ns": 251042,
+          "peak_rss_bytes": 31080448,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 58409584,
+          "progress_10_50_90_complete": true,
+          "read_ns": 880000,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 48676500,
+          "element_count": 100001,
+          "first_preview_ns": 29311500,
+          "index_bytes": 5600056,
+          "max_step_ns": 261708,
+          "peak_rss_bytes": 31309824,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 53270833,
+          "progress_10_50_90_complete": true,
+          "read_ns": 933709,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 47115625,
+          "element_count": 100001,
+          "first_preview_ns": 29387542,
+          "index_bytes": 5600056,
+          "max_step_ns": 237292,
+          "peak_rss_bytes": 31604736,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 51580917,
+          "progress_10_50_90_complete": true,
+          "read_ns": 991125,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 45715667,
+          "element_count": 100001,
+          "first_preview_ns": 27235542,
+          "index_bytes": 5600056,
+          "max_step_ns": 241000,
+          "peak_rss_bytes": 31604736,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 50263125,
+          "progress_10_50_90_complete": true,
+          "read_ns": 1045667,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 47068750,
+          "element_count": 100001,
+          "first_preview_ns": 28223417,
+          "index_bytes": 5600056,
+          "max_step_ns": 309041,
+          "peak_rss_bytes": 31490048,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 51350041,
+          "progress_10_50_90_complete": true,
+          "read_ns": 993625,
+          "source_bytes": 10485760
+        }
+      ],
+      "input_bytes": 10485760,
+      "input_sha256": "016758c1f6e01ad6fe79a0053b9c92ad8651e8bfdaabeec949a3553bf38a9156",
+      "summary": {
+        "complete_index_median_ns": 46422625,
+        "complete_index_p95_ns": 53377083,
+        "first_preview_median_ns": 28106917,
+        "first_preview_p95_ns": 31910458,
+        "index_bytes": 5600056,
+        "max_step_ns": 436542,
+        "peak_rss_bytes": 44007424,
+        "source_read_median_ns": 967041,
+        "source_read_p95_ns": 1045667
+      },
+      "trial_variability": {
+        "first_preview_ns": {
+          "coefficient_of_variation": 0.05080615404422631,
+          "mean": 28432555.733333334,
+          "sample_standard_deviation": 1444548.8064587833
+        },
+        "max_step_ns": {
+          "coefficient_of_variation": 0.22304935097412373,
+          "mean": 272424.93333333335,
+          "sample_standard_deviation": 60764.20456916893
+        },
+        "peak_rss_bytes": {
+          "coefficient_of_variation": 0.09729004700081746,
+          "mean": 32667511.466666665,
+          "sample_standard_deviation": 3178223.725991743
+        }
+      },
+      "warm_order_trials": [
+        {
+          "complete_index_ns": 45736041,
+          "element_count": 100001,
+          "first_preview_ns": 27496458,
+          "index_bytes": 5600056,
+          "max_step_ns": 244458,
+          "peak_rss_bytes": 31604736,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 49640250,
+          "progress_10_50_90_complete": true,
+          "read_ns": 988250,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 43938459,
+          "element_count": 100001,
+          "first_preview_ns": 26590875,
+          "index_bytes": 5600056,
+          "max_step_ns": 297750,
+          "peak_rss_bytes": 32276480,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 48284333,
+          "progress_10_50_90_complete": true,
+          "read_ns": 934958,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 45742125,
+          "element_count": 100001,
+          "first_preview_ns": 26831750,
+          "index_bytes": 5600056,
+          "max_step_ns": 255000,
+          "peak_rss_bytes": 31555584,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 50169042,
+          "progress_10_50_90_complete": true,
+          "read_ns": 990750,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 46158625,
+          "element_count": 100001,
+          "first_preview_ns": 27769334,
+          "index_bytes": 5600056,
+          "max_step_ns": 241541,
+          "peak_rss_bytes": 31457280,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 50605667,
+          "progress_10_50_90_complete": true,
+          "read_ns": 967041,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 46422625,
+          "element_count": 100001,
+          "first_preview_ns": 28456292,
+          "index_bytes": 5600056,
+          "max_step_ns": 233042,
+          "peak_rss_bytes": 32129024,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 50817125,
+          "progress_10_50_90_complete": true,
+          "read_ns": 966125,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 49248250,
+          "element_count": 100001,
+          "first_preview_ns": 27771667,
+          "index_bytes": 5600056,
+          "max_step_ns": 379833,
+          "peak_rss_bytes": 33013760,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 53826791,
+          "progress_10_50_90_complete": true,
+          "read_ns": 1025292,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 53377083,
+          "element_count": 100001,
+          "first_preview_ns": 31910458,
+          "index_bytes": 5600056,
+          "max_step_ns": 436542,
+          "peak_rss_bytes": 44007424,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 58403167,
+          "progress_10_50_90_complete": true,
+          "read_ns": 1002958,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 46019250,
+          "element_count": 100001,
+          "first_preview_ns": 28737875,
+          "index_bytes": 5600056,
+          "max_step_ns": 240875,
+          "peak_rss_bytes": 32292864,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 50555125,
+          "progress_10_50_90_complete": true,
+          "read_ns": 958333,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 46766584,
+          "element_count": 100001,
+          "first_preview_ns": 28106917,
+          "index_bytes": 5600056,
+          "max_step_ns": 231959,
+          "peak_rss_bytes": 32292864,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 51100375,
+          "progress_10_50_90_complete": true,
+          "read_ns": 951750,
+          "source_bytes": 10485760
+        },
+        {
+          "complete_index_ns": 45293709,
+          "element_count": 100001,
+          "first_preview_ns": 27839125,
+          "index_bytes": 5600056,
+          "max_step_ns": 225291,
+          "peak_rss_bytes": 32292864,
+          "preview_before_index_complete": true,
+          "process_elapsed_ns": 49546917,
+          "progress_10_50_90_complete": true,
+          "read_ns": 953167,
+          "source_bytes": 10485760
+        }
+      ],
+      "workload": "100000 simple rectangles including preview"
+    }
+  },
+  "comparison": {
+    "baseline_values": {
+      "100MiB": {
+        "first_preview_median_ns": 257052708,
+        "first_preview_p95_ns": 269116333,
+        "index_bytes": 5600112,
+        "input_sha256": "0acabf47c6f2fc2f747042adbb33e19d3901d75c22d8e7d90b77984626171f65",
+        "max_step_ns": 437958,
+        "peak_rss_bytes": 126959616
+      },
+      "10MiB": {
+        "first_preview_median_ns": 27809375,
+        "first_preview_p95_ns": 28798125,
+        "index_bytes": 5600056,
+        "input_sha256": "016758c1f6e01ad6fe79a0053b9c92ad8651e8bfdaabeec949a3553bf38a9156",
+        "max_step_ns": 415500,
+        "peak_rss_bytes": 33914880
+      }
+    },
+    "reasons": [],
+    "status": "comparable"
+  },
+  "gate": {
+    "absolute_limits": {
+      "100MiB.first_preview_p95_ns": 2000000000,
+      "100MiB.max_step_ns": 100000000,
+      "100MiB.peak_rss_bytes": 524288000,
+      "10MiB.first_preview_p95_ns": 1000000000
+    },
+    "metrics": {
+      "100MiB.first_preview_p95_ns": {
+        "absolute_limit": 2000000000,
+        "baseline_value": 269116333,
+        "consecutive_violations": 1,
+        "delta_from_baseline": 105220542,
+        "effective_limit": 296027966.3,
+        "regression_limit": 296027966.3,
+        "status": "warning",
+        "tolerance_fraction": 0.1,
+        "value": 374336875
+      },
+      "100MiB.max_step_ns": {
+        "absolute_limit": 100000000,
+        "baseline_value": 437958,
+        "consecutive_violations": 0,
+        "delta_from_baseline": -51791,
+        "reason": "trial coefficient of variation exceeds 10 percent",
+        "status": "noisy",
+        "value": 386167
+      },
+      "100MiB.peak_rss_bytes": {
+        "absolute_limit": 524288000,
+        "baseline_value": 126959616,
+        "consecutive_violations": 1,
+        "delta_from_baseline": 12566528,
+        "effective_limit": 133307596.80000001,
+        "regression_limit": 133307596.80000001,
+        "status": "warning",
+        "tolerance_fraction": 0.05,
+        "value": 139526144
+      },
+      "10MiB.first_preview_p95_ns": {
+        "absolute_limit": 1000000000,
+        "baseline_value": 28798125,
+        "consecutive_violations": 1,
+        "delta_from_baseline": 3112333,
+        "effective_limit": 31677937.500000004,
+        "regression_limit": 31677937.500000004,
+        "status": "warning",
+        "tolerance_fraction": 0.1,
+        "value": 31910458
+      }
+    },
+    "regression_tolerances": {
+      "100MiB.first_preview_p95_ns": 0.1,
+      "100MiB.max_step_ns": 0.1,
+      "100MiB.peak_rss_bytes": 0.05,
+      "10MiB.first_preview_p95_ns": 0.1
+    },
+    "status": "warning"
+  },
+  "hardware_toolchain": {
+    "architecture": "arm64",
+    "chip": "Apple M5 Max",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "machine": "macOS-27.0-arm64-arm-64bit",
+    "machine_model": "Mac Studio (Mac17,14)",
+    "memory_bytes": 68719476736,
+    "os": "macOS 27.0"
+  },
+  "run_timestamp_utc": "2026-10-09T07:26:43Z",
+  "schema_version": 1,
+  "seed": 20261009,
+  "stretch_targets": {
+    "app_bundle": {
+      "bytes": null,
+      "reason": "no macOS app-bundle packaging target exists in this work order",
+      "status": "unavailable"
+    },
+    "executable_bytes": 172032,
+    "executable_reason": "measured Release output is not separately stripped; 10 MiB stripped-binary target is aspirational",
+    "executable_status": "report_only",
+    "pan_zoom_event_to_present_p95_ns": {
+      "reason": "navigation test validates event behavior but does not time presentation",
+      "status": "unavailable",
+      "value": null
+    },
+    "targets": {
+      "app_bundle_bytes": 26214400,
+      "cached_pan_zoom_p95_ns": 33000000,
+      "single_arch_stripped_executable_bytes": 10485760
+    }
+  },
+  "trial_protocol": {
+    "cache_caveat": "Cold/warm labels are run order only; OS file cache is not flushed.",
+    "cold_order_trials": 5,
+    "warm_order_trials": 10
+  }
+}

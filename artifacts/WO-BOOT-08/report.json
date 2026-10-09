@@ -1,0 +1,159 @@
+{
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "perf-gate",
+            "--help"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "perf-gate",
+            "--output",
+            ".cache/WO-BOOT-08/result.json",
+            "--history",
+            ".cache/WO-BOOT-08/history.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "perf-gate",
+            "--output",
+            ".cache/WO-BOOT-08/result.json",
+            "--history",
+            ".cache/WO-BOOT-08/history.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            ".cache/WO-BOOT-08/result.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/perf-gate-baseline.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-BOOT-08.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_perf_gate"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-BOOT-08/gate-contract.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-BOOT-08",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-BOOT-08/perf-gate.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-BOOT-08/gate-tests.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "base_sha": "2b0499eac241e35e7e88ff7d66b5ac6843b7544d",
+  "head_sha": "f9d91fe9ce467da08bedb6d6daff2d3beabb2119",
+  "status": "complete",
+  "summary": "Implementation candidate and local evidence are recorded, but the work order is not accepted: ./dev verify, ./dev asan, and ./dev ubsan each exit 8 because index-replay cannot obtain an offscreen Metal device or queue; ./dev test-fast exits 1 with 8 failures and 2 errors in the pre-existing full suite. No implementation commit was created. The exact requested report destination is outside this worktree\u2019s writable root; this report is retained at artifacts/WO-BOOT-08/report.json. Next work order remains M3-05 with a human owner review gate after BOOT-08 acceptance."
+}

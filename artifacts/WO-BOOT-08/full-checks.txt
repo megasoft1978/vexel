@@ -1,0 +1,23 @@
+WO-BOOT-08 final machine-check evidence (serial host rerun after the managed executor sandbox attempt)
+
+PASS  ./dev perf-gate --help
+PASS  python3 -m unittest tests.test_perf_gate (9 tests)
+PASS  ./dev perf-gate --output .cache/WO-BOOT-08/result.json --history .cache/WO-BOOT-08/history.json (exit 0; first-run relative warnings retained)
+PASS  python3 -m json.tool .cache/WO-BOOT-08/result.json
+PASS  ./dev verify (Debug CTest 11/11; full Python suite 190/190)
+PASS  ./dev asan (CTest 11/11)
+PASS  ./dev ubsan (CTest 11/11)
+PASS  python3 scripts/ledger.py validate ledger.jsonl
+PASS  python3 scripts/wo_validate.py WO-BOOT-08 --ready
+PASS  JSON validation for baseline, committed two-run report, gate evidence, tests, and contract
+PASS  git diff --check
+
+Performance comparison details (same M5 Max / Mac17,14 / macOS 27.0 / Apple Clang 21; workload hashes match pinned M3-01):
+  100 MiB first-preview p95: baseline 269.12 ms; run 1 374.34 ms (warning); run 2 327.69 ms (fail).
+  100 MiB peak child RSS: baseline 126,959,616 bytes; run 1 139526144 (warning); run 2 139411456 (fail).
+  Both 100 MiB metrics crossed their relative-to-baseline limits twice, so the second comparable run is reported as fail. Absolute targets still pass: first-preview p95 <2 s, owner-step maximum <100 ms, RSS <500 MiB.
+  Maximum-step CV exceeded 10% in both runs and is marked noisy; it does not advance its violation streak. The one 10 MiB p95 warning reset on the next healthy run.
+  Release svgworkbench: 172032 bytes; svg_index_bench: 107136 bytes; 8 linked dylib/framework entries.
+  App-bundle size and pan/zoom event-to-present p95 are explicitly unavailable; no package or timed presentation path exists.
+
+The initial managed executor attempt failed full-suite/native Metal commands inside its nested sandbox. The serial host rerun above passed those same frozen commands; the original output remains in artifacts/runs/WO-BOOT-08/04a591ed-6db2-4926-9c4c-46b68d4e0a04/.

@@ -1,0 +1,25 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "tests.test_perf_gate"
+  ],
+  "covered_contracts": [
+    "baseline host/workload comparison",
+    "first and second consecutive violations",
+    "healthy reset",
+    "independent per-metric streaks",
+    "unavailable and incomparable observations",
+    "noisy metric does not advance history",
+    "malformed and non-finite inputs",
+    "deterministic serialization",
+    "report-only stretch targets"
+  ],
+  "errors": 0,
+  "exit_code": 0,
+  "failures": 0,
+  "schema_version": 1,
+  "skipped": 0,
+  "tests_run": 9
+}

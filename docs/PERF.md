@@ -1,5 +1,36 @@
 # Performance baseline
 
+## Local Release performance gate
+
+Run `./dev perf-gate` on Apple Silicon macOS to build the Release index
+benchmark and capture the frozen five cold-order plus ten warm-order trials
+for each 10 MiB simple and 100 MiB map-like input. Cold/warm are run-order
+labels; the command does not evict the OS file cache. Reports and per-metric
+violation history default to ignored `.cache/perf-gate/`; use `--output` and
+`--history` to choose other paths under `.cache/`.
+
+The gate pins `bench/results/WO-M3-01.json` by SHA-256 and records its source
+commit, host/toolchain identity, input hashes, Release executable hash and
+bytes, `otool -L` identities, raw trials, and median/p95/maximum-step/peak-RSS
+summaries. Results are comparable only when both generated input hashes and
+the exact model, chip, memory, architecture, OS, and compiler identity match
+the pinned baseline. Incomparable and unavailable observations do not mutate
+violation streaks. A healthy comparable value resets only its own metric; one
+breach warns and a second consecutive comparable breach fails.
+
+Measured limits are estimates: 10 MiB first preview below 1 s, 100 MiB first
+preview below 2 s, maximum owner step below 100 ms, and 100 MiB peak RSS at or
+below 500 MiB. The single-architecture stripped executable (10 MiB), app bundle
+(25 MiB), and cached pan/zoom event-to-present p95 (33 ms) remain report-only
+stretch targets. The current navigation correctness workload does not time
+presentation, and no app-bundle packaging target exists; both are reported as
+unavailable with reasons. Spatial-query timing is not pan latency.
+
+The baseline record `bench/results/perf-gate-baseline.json` preserves the
+M3-01 report hash and measured values without modifying that report. The
+implementation evidence and current machine-check output are retained under
+`artifacts/WO-BOOT-08/`.
+
 These measurements establish a local starting point. The `--version` command
 only measures process startup and is not an SVG rendering benchmark.
 
@@ -276,3 +307,20 @@ overlay. Retina 2x viewport, drag, and cursor conversion is also covered. No wal
 rendering throughput, or process-wide allocation number is claimed.
 
 The reviewed WO-M3-04 Release executable is 172,032 bytes after a clean `mac-release` build. This milestone has no RSS or latency result: the projection workload records deterministic operation count and checksum, not elapsed time.
+
+The BOOT-08 local run on Mac Studio Mac17,14 / Apple M5 Max / macOS 27.0
+compared to the exact pinned baseline and passed its measured gates. The
+10 MiB / 100 MiB first-preview medians were 29.59 ms / 290.12 ms; the 100 MiB
+maximum owner step was 0.46 ms and peak child RSS was 139,526,144 bytes. The
+Release `svg_index_bench` executable was 107,136 bytes. The report records the
+app bundle and pan presentation metric as unavailable. Full raw trials and
+host/toolchain detail are in `bench/results/WO-BOOT-08.json` and
+`artifacts/WO-BOOT-08/perf-gate.json`. These measurements are local evidence,
+not a public speed claim.
+## WO-BOOT-08 local performance gate
+
+The gate runs five cold-order and ten warm-order samples on deterministic 10 MiB simple and 100 MiB map-like index workloads. The pinned M3-01 baseline hash and exact host/toolchain/workload identity are checked before comparing. Per-trial raw values, median, nearest-rank p95, maximum owner step, peak child RSS, sample standard deviation, and coefficient of variation are retained in `bench/results/WO-BOOT-08.json`. A metric above 10% CV is reported as noisy and does not advance its repeated-violation streak.
+
+Two comparable runs on Mac Studio Mac17,14 / Apple M5 Max / macOS 27.0 / Apple Clang 21 showed 100 MiB first-preview p95 of 374.34 ms and 327.69 ms against 269.12 ms last-green p95; the repeated >10% slowdown trips the two-run gate. Peak child RSS was 139,526,144 and 139,411,456 bytes against 126,959,616 bytes; the repeated >5% change also trips the gate. Both absolute targets still pass: 100 MiB first-preview p95 remains below 2 s and peak RSS remains below 500 MiB. The maximum-step samples had CV above 10% and were marked noisy; their absolute values remain below 100 ms. The 10 MiB p95 warning did not repeat and its streak reset. This is a regression signal for review, not evidence of a public speed claim.
+
+The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` harness is 107,136 bytes. `otool -L` records 8 linked dylib/framework entries. Binary/package stretch targets remain report-only; no app bundle exists. Cached pan/zoom event-to-present p95 is unavailable because current UI navigation tests do not time presentation. Full raw runs and gate history are in `artifacts/WO-BOOT-08/` and `bench/results/WO-BOOT-08.json`.

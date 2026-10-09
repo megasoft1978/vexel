@@ -112,8 +112,9 @@ default. `--output` and `--history` can select other paths under `.cache/`.
 The command validates the pinned M3-01 report hash before use and compares
 only exact host/toolchain and input-hash matches. One comparable breach warns;
 the same metric must breach again on the next comparable observation to fail.
-A healthy measurement resets its own streak; unavailable and incomparable
-observations do not update streaks. The report includes Release executable
+A healthy measurement resets its own streak; unavailable, incomparable, and
+noisy observations do not update streaks. Trial CV above 10% marks that metric
+noisy per the benchmark protocol. The report includes Release executable
 bytes, `otool -L` dependencies, and explicit app-bundle and pan/zoom timing
 unavailability. Binary, bundle, and cached pan targets remain report-only.
 
