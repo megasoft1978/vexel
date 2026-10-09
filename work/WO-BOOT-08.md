@@ -1,12 +1,12 @@
 ---
 id: WO-BOOT-08
-revision: 3
+revision: 4
 status: READY
 milestone: M3
 owner: sonnet-5.5
 executor: codex-gpt-6-luna
-base_sha: 642d6f5a4cc29ef8c2b7870f5608a4c8c139cf38
-spec_sha256: d9d960adf81cac5a99633e2ab114a1cfb89a5e1434206e702c0ae886604caa92
+base_sha: e45caa8fdd889960d722b876d372df49f5401781
+spec_sha256: fabd65abd662c1d12fa66c8d02871385e67a11f2172289f3e7b7bdc5b80d59af
 parallel_safe: false
 network: false
 ---
@@ -14,8 +14,8 @@ network: false
 Add a macOS-only local performance gate that reports current viewer/index size and performance evidence against a pinned last-green baseline, while failing only after the same metric violates its limit in two consecutive comparable runs.
 
 # Context pointers
-- Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/PERF.md`, `docs/research-r4/00-verdict-and-changes.md`, `docs/research-r4/05-revised-roadmap.md`, `docs/research-r3/plan/06-benchmark-and-quality.md`, `bench/generate/README.md`, `bench/generate/index_bench.py`, `scripts/README.md`, `dev`. Revision 3 supersedes revisions 1 and 2 only to advance the verifier comparison base beyond ADR-0009, as recorded in ADR-0010; implementation acceptance and allowlist are unchanged.
-- Relevant ADRs: `docs/adr/0001-product-and-platform-locks.md`, `docs/adr/0009-boot-08-script-allowlist.md`, `docs/adr/0010-boot-08-verifier-base.md`.
+- Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/PERF.md`, `docs/research-r4/00-verdict-and-changes.md`, `docs/research-r4/05-revised-roadmap.md`, `docs/research-r3/plan/06-benchmark-and-quality.md`, `bench/generate/README.md`, `bench/generate/index_bench.py`, `scripts/README.md`, `dev`. Revision 4 supersedes revisions 1–3 to resolve scope parser behavior recorded in ADR-0011; implementation acceptance and allowlist are unchanged. The comparison base includes ADR-0009 and ADR-0010.
+- Relevant ADRs: `docs/adr/0001-product-and-platform-locks.md`, `docs/adr/0009-boot-08-script-allowlist.md`, `docs/adr/0010-boot-08-verifier-base.md`, `docs/adr/0011-boot-08-scope-parser.md`.
 - Existing last-green evidence: `bench/results/WO-M3-01.json`, `bench/results/WO-M3-02.json`, `bench/results/WO-M3-03.json`; use M3-01's same-host 10/100 MiB indexing trial data for comparable first-preview, maximum owner-step, and peak-RSS metrics.
 - Frozen tests/oracles: existing `tests/test_svg_index.py`, M3-01 benchmark report and corpus/generated fixture hashes; do not edit them.
 - External docs: none.
@@ -43,7 +43,7 @@ Add a macOS-only local performance gate that reports current viewer/index size a
 - `ledger.jsonl`
 
 # Protected paths
-- `work/**` except this active work order; `OWNER-DIRECTIVES.md`; `docs/adr/**`; `docs/schemas/**`; `tests/oracle/**`; `tests/golden/**`; `bench/corpus/**`; all prior benchmark results and artifacts; all other paths outside the exact allowlist. `scripts/perf_gate.py` and `scripts/README.md` are allowed explicitly; do not touch any other `scripts/` path.
+- `work/**` except this active work order; `OWNER-DIRECTIVES.md`; `docs/adr/**`; `docs/schemas/**`; `tests/oracle/**`; `tests/golden/**`; `bench/corpus/**`; all prior benchmark results and artifacts; all other paths outside the exact allowlist. scripts/perf_gate.py and scripts/README.md are allowed explicitly; do not touch any other scripts path.
 - Do not rewrite `bench/results/WO-M3-01.json`, any prior benchmark result, or any frozen fixture/oracle.
 
 # Required implementation
