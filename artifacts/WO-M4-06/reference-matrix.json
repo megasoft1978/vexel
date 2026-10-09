@@ -1,6 +1,6 @@
 {
   "work_order": "WO-M4-06",
-  "candidate": "c32a8195bc10cff7d66707dc2979d029f89c8157",
+  "candidate": "6691bac7a9e6955dbe3a841bad41a62f53a4250a",
   "source_buffer": "Original caller buffer remains borrowed and is not mutated.",
   "generated_source": "Temporary expanded SVG is created for local use and clip geometry; this violates the frozen avoid-copy-or-rewrite-source-bytes acceptance.",
   "implemented": {
@@ -23,5 +23,5 @@
   ],
   "stable_diagnostics": "Existing unsupported/limit categories; nested xlink use requires root xlink namespace binding.",
   "differential_fixture": "33 fixtures compared with librsvg; thresholds unchanged.",
-  "fresh_verifier": "fail; source rewrite is a blocking acceptance violation."
+  "fresh_verifier": "fail after three focused rounds; generated SVG buffers violate the frozen no-copy/no-rewrite requirement."
 }

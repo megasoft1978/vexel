@@ -1,27 +1,24 @@
-# Handoff
+# WO-M4-06 handoff
 
-WO-M4-04 revision 1 is complete and fast-forward merged to `main` at
-`dac63d6e8f8cd08787f3ee7e71099d0655ee258e`. Final candidate
-`f48c19f017ddf1cbc756e4ff79a9c26d674335fd` passed fresh read-only review
-`verify-3c3ca13c-0382-4d62-8823-d11408b97fa4` with no findings in 89.518 s;
-all 18 frozen commands pass. Debug/ASan/UBSan CTest 11/11, Python 192/192,
-native smoke/replay, 9 focused tests, 26 strict librsvg fixtures, and 1M
-ASan+UBSan fuzz pass. The final raster benchmark records 2.138/4.301/5.331 ms
-simple/curved/multi-shape fill and 2.501/10.735/78.994 ms line/curved/dashed
-strokes. The corpus has 2/58 previews and 56 unsupported; the 100 MiB preview
-gate fails, while max-step (0.199 ms) and RSS gates pass. This is open/index and
-selected-shape evidence, not full SVG parity. Detailed results:
-`artifacts/WO-M4-04/`, `reports/M4/head-to-head.md`, and `docs/PERF.md`.
+Status: blocked; candidate is not merged. The worktree branch `wo/WO-M4-06` contains implementation and evidence through reviewed candidate `6691bac7a9e6955dbe3a841bad41a62f53a4250a` (code revision `c32a8195bc10cff7d66707dc2979d029f89c8157`).
 
-Next: prepare and freeze WO-M4-05 for the CSS/style subset, following the M4
-feature priority inventory at `reports/M4/corpus-feature-frequency.md`.
+## Completed
 
-## WO-M4-05 closeout
+- Bounded local `<use>`/`<symbol>` handling, linear and radial gradients, clipping paths, CSS `clip-path`, diagnostics, and raster integration.
+- Fixed the fresh verifier's depth-index out-of-bounds finding and nested unbound `xlink:href` validation gap.
+- Refreshed candidate comparison, benchmark, corpus, fuzz, and verifier artifacts.
+- `./dev verify`: 12/12 CTests and 199/199 Python tests pass.
+- `./dev asan`: 12/12 CTests pass; `./dev ubsan`: 12/12 CTests pass.
+- Release configure/build pass; 16/16 librsvg differential tests pass at unchanged thresholds.
+- Seeded ASan+UBSan fuzz: 1,000,000 cases, zero crashes, invariant failures, or sanitizer reports.
+- Raster benchmark: five 512x512 workloads, 21 trials each, stable hashes; basic-solid frozen-base comparison recorded.
+- Corpus: 58 files, 116 fresh trials; 2 successful previews, 56 unsupported, 0 limit, 0 crash. 100 MiB preview gate remains fail; maximum owner step 0.873 ms; RSS gate passes 12/12.
+- Three fresh focused verifier rounds recorded under `artifacts/WO-M4-06/focused-verifier-*.json`.
 
-WO-M4-05 is fast-forward merged to `main` at `81f2008311e886d3b8dc8da262fe3f40f2f9b14b`; reviewed candidate `9209ae3b670911470100e97b9538daf83dfa509d` implements the bounded CSS paint cascade and passes a fresh read-only review with no findings. The review fixed comment delimiter parsing, added an integration regression proving inline `!important` beats stylesheet `!important`, and replaced stale failure text. In a fresh clean worktree, `./dev build`, Release configure/build, and all 19 frozen commands passed: Debug/ASan/UBSan CTest 12/12, Python 199/199, native smoke/replay, 16 focused reference tests, 1,000,000 ASan+UBSan fuzz cases, 58-file corpus run/check, and Release builds.
+## Blocking acceptance issue
 
-The corpus remains 2/58 previewable, 56 unsupported, with no limit/crash results. The 100 MiB first-preview gate fails (0/12 eligible files), while max main-thread step is 0.199 ms and RSS gate passes. CSS workloads have 21 fresh-process trials, median/p95 27.890/29.662 ms stylesheet and 27.483/29.013 ms inline; peak RSS 2,113,536/2,146,304 B and stable shared output hash. There is no comparable pre-WO CSS workload. Evidence is in `artifacts/WO-M4-05/`; this is open/index and selected-shape evidence, not full-render parity.
+The frozen `work/WO-M4-06.md` requires “Avoid copying or rewriting source bytes.” `src/svg/reference/expand.c` builds a generated SVG for `<use>` expansion and `src/svg/clip/clip.c` builds a scratch SVG for clip geometry. The original caller buffer remains unchanged, but these derived source buffers violate the explicit work-order constraint. The third fresh verifier still fails on this issue. Do not merge this branch or mark WO-M4-06 complete.
 
-The standard verifier completed its frozen commands but its fixed 250 KB prompt cap rejected the complete artifact diff. The follow-up used a clean worktree, reran every frozen command, and performed a fresh read-only review of the focused implementation/test diff.
+## Resume
 
-WO-M4-06 revision 1 is frozen READY (spec `e3a8b6dc33c470f4306abc227ba2af985b075c551503a79efbc83ac8a1434e56`) for bounded local references, gradients, and clipping. Next: execute on `wo/WO-M4-06`.
+Resolve the design contract before continuing: implement reference/clip traversal without generated SVG source buffers, or obtain a recorded owner/planner amendment to the frozen work order. Then rerun the frozen acceptance commands, refresh evidence for the final candidate, run a fresh read-only verifier, and merge only if it passes. M4-07 and later work orders remain pending.

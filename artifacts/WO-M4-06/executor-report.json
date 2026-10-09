@@ -1,7 +1,7 @@
 {
   "status": "incomplete",
   "base_sha": "cd0eb044213dff02f3cff3290d0f414250a9633d",
-  "head_sha": "c32a8195bc10cff7d66707dc2979d029f89c8157",
+  "head_sha": "6691bac7a9e6955dbe3a841bad41a62f53a4250a",
   "acceptance": {
     "AC-1": {
       "debug_build": "pass",
@@ -37,5 +37,5 @@
       "fresh_verifier": "fail; source-rewrite contract, prior evidence mismatches corrected in this revision"
     }
   },
-  "summary": "Candidate c32a8195bc10cff7d66707dc2979d029f89c8157 implements bounded local use, gradients, and clipping. Debug/Release build, 12 CTests, 199 Python tests, ASan, UBSan, 1,000,000 ASan+UBSan fuzz cases, 33 librsvg differential fixtures, 5 x 21 raster trials, and 58-file/116-trial corpus checks pass. Candidate remains unmergeable because temporary generated SVG buffers for use expansion and clipping violate the frozen no-copy/no-rewrite acceptance. The focused fresh verifier on ae14e90 independently confirmed that blocker and also found two defects fixed in c32a819."
+  "summary": "Reviewed candidate 6691bac7a9e6955dbe3a841bad41a62f53a4250a contains implementation revision c32a8195bc10cff7d66707dc2979d029f89c8157. Debug/Release, 12 CTests, 199 Python tests, ASan, UBSan, 1,000,000 ASan+UBSan fuzz cases, 33 librsvg differential fixtures, five raster workloads with 21 trials, and the 58-file corpus check pass. Three fresh focused review rounds confirmed the depth and xlink fixes and matching fuzz evidence. All three reject the generated SVG buffers used by references/clipping under the frozen no-copy/no-rewrite requirement. Candidate remains blocked and unmerged."
 }
