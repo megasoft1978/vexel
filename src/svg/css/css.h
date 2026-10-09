@@ -9,7 +9,7 @@
 
 /* Bounded, source-preserving CSS paint subset. All spans address source bytes.
  */
-#define SVG_CSS_PROPERTY_COUNT 9U
+#define SVG_CSS_PROPERTY_COUNT 10U
 #define SVG_CSS_MAX_BYTES (1024U * 1024U)
 #define SVG_CSS_MAX_RULES 4096U
 #define SVG_CSS_MAX_DECLARATIONS 16384U
@@ -25,7 +25,8 @@ typedef enum svg_css_property {
     SVG_CSS_STROKE_LINEJOIN,
     SVG_CSS_STROKE_MITERLIMIT,
     SVG_CSS_STROKE_DASHARRAY,
-    SVG_CSS_STROKE_DASHOFFSET
+    SVG_CSS_STROKE_DASHOFFSET,
+    SVG_CSS_CLIP_PATH
 } svg_css_property;
 
 typedef struct svg_css_value {

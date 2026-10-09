@@ -85,11 +85,16 @@ set_target_properties(vexel_document PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRE
 add_library(vexel_shape STATIC
     src/geom/geometry.c
     src/svg/css/css.c
+    src/svg/reference/reference.c
+    src/svg/reference/expand.c
+    src/svg/paint/paint.c
+    src/svg/clip/clip.c
     src/svg/shape/shape.c
+    src/svg/shape/document.c
     src/raster/shape_render.c
     src/raster/tile.c
 )
-target_include_directories(vexel_shape PUBLIC src src/geom src/svg/shape src/svg/css src/raster src/svg/xml src/base)
+target_include_directories(vexel_shape PUBLIC src src/geom src/svg/shape src/svg/css src/svg/reference src/raster src/svg/xml src/base)
 target_link_libraries(vexel_shape PUBLIC vexel_xml vexel_base)
 set_target_properties(vexel_shape PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 

@@ -1,4 +1,6 @@
 #include "shape_render.h"
+#include "../svg/paint/paint.h"
+#include "../svg/clip/clip.h"
 
 #include <limits.h>
 #include <math.h>
@@ -212,6 +214,17 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
     if (doc->edge_count > SIZE_MAX / (RASTER_SAMPLE_COUNT + 1U) ||
         doc->shape_count > SIZE_MAX / RASTER_SAMPLE_COUNT) return false;
     size_t edge_tests = doc->edge_count * (RASTER_SAMPLE_COUNT + 1U);
+    size_t clip_tests = 0U;
+    if (doc->clips != NULL) {
+        for (size_t i = 0U; i < doc->shape_count; ++i) {
+            size_t count = svg_clip_work_units(doc->clips[i]);
+            if (count > SIZE_MAX / (RASTER_SAMPLE_COUNT + 1U) ||
+                count * (RASTER_SAMPLE_COUNT + 1U) > SIZE_MAX - clip_tests) return false;
+            clip_tests += count * (RASTER_SAMPLE_COUNT + 1U);
+        }
+    }
+    if (clip_tests > SIZE_MAX - edge_tests) return false;
+    edge_tests += clip_tests;
     size_t stroke_tests = 0U;
     if (doc->strokes != NULL && doc->shape_edge_count != NULL) {
         for (size_t i=0; i<doc->shape_count; i++) {
@@ -291,9 +304,16 @@ static bool render_sample(const svg_shape_document *doc, const geom_edge *local_
     }
     for (size_t shape = 0; shape < doc->shape_count; shape++) {
         bool inside = doc->shape_evenodd[shape] ? parity[shape] != 0U : winding[shape] != 0;
+        bool allowed = doc->clips == NULL || svg_clip_contains(doc->clips[shape], px, py);
         const uint8_t *fill = colors + shape * 4U;
-        if (inside && fill[3] != 0U) memcpy(sample_rgba, fill, 4U);
-        if (stroke_contains(doc, shape, local_edges, dash_seams, px, py))
+        uint8_t sampled_fill[4];
+        if (inside && allowed) {
+            memcpy(sampled_fill, fill, sizeof(sampled_fill));
+            if (doc->paints != NULL && doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID)
+                svg_paint_sample(&doc->paints[shape], doc->paint_stops, px, py, sampled_fill);
+            if (sampled_fill[3] != 0U) memcpy(sample_rgba, sampled_fill, 4U);
+        }
+        if (allowed && stroke_contains(doc, shape, local_edges, dash_seams, px, py))
             memcpy(sample_rgba, doc->strokes[shape].rgba, 4U);
     }
     return true;
@@ -437,10 +457,15 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
          (doc->shape_evenodd == NULL || doc->shape_filled == NULL ||
           doc->shape_stroke_closed == NULL || doc->shape_edge_start == NULL ||
           doc->shape_edge_count == NULL || doc->shape_stroke_inverse == NULL ||
-          doc->strokes == NULL)) ||
+          doc->strokes == NULL || doc->paints == NULL || doc->clips == NULL)) ||
         !isfinite(doc->view_x) || !isfinite(doc->view_y) ||
         !isfinite(doc->view_width) || !isfinite(doc->view_height) ||
         doc->view_width <= 0.0 || doc->view_height <= 0.0) {
+        if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
+        return false;
+    }
+    if (doc->paint_stop_count > SVG_PAINT_MAX_STOPS ||
+        (doc->paint_stop_count != 0U && doc->paint_stops == NULL)) {
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }

@@ -1,0 +1,10 @@
+Frozen full-check command outcomes (exit codes):
+cmake --preset mac-debug: 0
+cmake --build --preset mac-debug: 0
+ctest --test-dir build/mac-debug --output-on-failure: 8 (11/12; index-replay failed because offscreen Metal device or queue unavailable)
+./dev asan: 8 (same index-replay failure)
+./dev ubsan: 8 (same index-replay failure)
+cmake --preset mac-release: 0
+cmake --build --preset mac-release: 0
+./dev verify: 8 (same index-replay failure)
+No other CTest failures, sanitizer reports, or skips were reported. This does not satisfy AC-1 or AC-4.

@@ -1,0 +1,16 @@
+{
+  "work_order": "WO-M4-06",
+  "source_preservation": "verified by shape and CSS suites; borrowed bytes are not modified",
+  "implemented": {
+    "definitions_non_rendering": true,
+    "unused_symbols_non_rendering": true,
+    "local_use_expansion": false,
+    "linear_gradient": false,
+    "radial_gradient": false,
+    "clip_path": false,
+    "css_clip_path": false
+  },
+  "limits_verified": [],
+  "stable_diagnostics": "unsupported use, gradient, and clip content currently use existing unsupported diagnostics; dedicated reference diagnostics are not implemented",
+  "differential_fixture": "tests/svg/shape/fixtures/definitions-not-painted.svg"
+}

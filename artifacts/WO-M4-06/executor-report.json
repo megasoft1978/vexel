@@ -1,0 +1,100 @@
+{
+  "status": "complete",
+  "base_sha": "cd0eb044213dff02f3cff3290d0f414250a9633d",
+  "head_sha": "dc8b9980b37ded9d16bc0c3d484797c9ce8e7c96",
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": ["cmake", "--preset", "mac-debug"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["cmake", "--build", "--preset", "mac-debug"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": ["python3", "-m", "unittest", "tests.test_shape_render"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": ["python3", "-m", "unittest", "tests.test_shape_render"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": ["cmake", "--preset", "mac-release"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["cmake", "--build", "--preset", "mac-release"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": ["./dev", "shape-fuzz", "--duration", "60", "--seed", "20261010", "--output", "artifacts/WO-M4-06/fuzz-report.json"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": ["python3", "-m", "json.tool", "bench/results/WO-M4-06.json"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-7": {
+      "commands": [
+        {
+          "argv": ["./dev", "bench-corpus", "--run"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["./dev", "bench-corpus", "--check"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-8": {
+      "commands": [
+        {
+          "argv": ["python3", "-m", "json.tool", "reports/M4/head-to-head.json"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["python3", "-m", "json.tool", "bench/results/WO-M4-06.json"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["python3", "scripts/ledger.py", "validate", "ledger.jsonl"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["python3", "scripts/wo_validate.py", "WO-M4-06", "--ready"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["git", "diff", "--check"],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "summary": "Execution and evidence capture are complete, but implementation is incomplete and no commit was made. Implemented non-rendering defs and unused-symbol skipping only; use expansion, gradients, clipping, dedicated diagnostics, and raster benchmarks are absent. ctest --test-dir build/mac-debug --output-on-failure exited 8 with 11/12 passing because index-replay reported “offscreen Metal device or queue unavailable.” ./dev asan, ./dev ubsan, and ./dev verify also exited 8 for that replay failure. Debug and Release configure/build passed; 16 shape-render Python tests passed with unchanged pixel thresholds; seeded ASan+UBSan fuzz passed 1,000,000 cases. Corpus run/check passed across 58 files: T1 2/12 successful, T2 0/17, T3 0/26, T4 0/3; supported-file delta +0. AC-6 has zero trials and unavailable metrics; no speed claim is made. Frozen work-order validation, ledger validation (376 entries), JSON checks, path guard, and diff check passed. Evidence and exact command outcomes are in artifacts/WO-M4-06/, including executor-report.json and full-checks.txt."
+}

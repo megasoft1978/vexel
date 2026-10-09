@@ -15,7 +15,7 @@ TEMP_ROOT = ROOT / ".cache"
 TEMP_ROOT.mkdir(exist_ok=True)
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M4-05/reference-comparison.json"
+OUT = ROOT / "artifacts/WO-M4-06/reference-comparison.json"
 
 
 def png_rgba(data):

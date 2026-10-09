@@ -143,7 +143,8 @@ static int property(base_bytes s, svg_xml_span n) {
                                                         "stroke-linejoin",
                                                         "stroke-miterlimit",
                                                         "stroke-dasharray",
-                                                        "stroke-dashoffset"};
+                                                        "stroke-dashoffset",
+                                                        "clip-path"};
     for (int i = 0; i < (int)SVG_CSS_PROPERTY_COUNT; i++)
         if (eq_ci(s, n, names[i]))
             return i;
@@ -496,7 +497,8 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
                                       "stroke-linejoin",
                                       "stroke-miterlimit",
                                       "stroke-dasharray",
-                                      "stroke-dashoffset"};
+                                      "stroke-dashoffset",
+                                      "clip-path"};
         svg_xml_span v;
         if (span_attr(source, t, count, element, names[p], &v)) {
             rule_decl d = {(svg_css_property)p, v, false};
