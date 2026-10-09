@@ -90,10 +90,14 @@ class ShapeRenderTests(unittest.TestCase):
                 # Renderer antialiasing may affect pixels within one pixel of a
                 # Vexel coverage boundary; every other channel must match exactly.
                 bad_interior, edge_diffs, max_channel = 0, 0, 0
+                max_alpha_delta, max_rgb_delta = 0, 0
                 for y in range(height):
                     for x in range(width):
                         offset = (y * width + x) * 4
                         delta = max(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(4))
+                        max_alpha_delta = max(max_alpha_delta, abs(ours[offset + 3] - reference_rgba[offset + 3]))
+                        if ours[offset + 3] != 0 and reference_rgba[offset + 3] != 0:
+                            max_rgb_delta = max(max_rgb_delta, *(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(3)))
                         if not delta:
                             continue
                         max_channel = max(max_channel, delta)
@@ -101,7 +105,8 @@ class ShapeRenderTests(unittest.TestCase):
                         for yy in range(max(0, y - 1), min(height, y + 2)):
                             for xx in range(max(0, x - 1), min(width, x + 2)):
                                 oi = (yy * width + xx) * 4 + 3
-                                if ours[oi] != ours[offset + 3]:
+                                if (ours[oi] != ours[offset + 3] or
+                                        reference_rgba[oi] != reference_rgba[offset + 3]):
                                     edge = True
                         if edge:
                             edge_diffs += 1
@@ -109,14 +114,17 @@ class ShapeRenderTests(unittest.TestCase):
                             bad_interior += 1
                 self.assertEqual(bad_interior, 0, fixture.name)
                 self.assertLessEqual(edge_diffs, 120, fixture.name)
+                self.assertLessEqual(max_alpha_delta, 160, fixture.name)
+                self.assertLessEqual(max_rgb_delta, 1, fixture.name)
                 results.append({"case": fixture.stem, "source_sha256": hashlib.sha256(raw).hexdigest(),
                                 "vexel_sha256": hashlib.sha256(ours).hexdigest(),
                                 "reference_png_sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
                                 "edge_diff_pixels": edge_diffs, "interior_diff_pixels": bad_interior,
-                                "max_channel_diff": max_channel})
+                                "max_channel_diff": max_channel, "max_rgb_diff_when_covered": max_rgb_delta,
+                                "max_alpha_diff": max_alpha_delta})
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps({"renderer_path": renderer, "renderer_version": version,
-                                   "edge_tolerance": "one pixel around Vexel coverage boundary; interior exact",
+                                   "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160, covered RGB delta <=1, and at most 120 differing pixels per fixture",
                                    "cases": results}, indent=2) + "\n")
 
     def test_bounds_and_stable_diagnostics(self):
@@ -200,6 +208,22 @@ class ShapeRenderTests(unittest.TestCase):
             subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
                            capture_output=True)
             self.assertEqual(output_path.stat().st_size, 9 * 8 * 4)
+
+    def test_default_viewbox_meet_letterboxes_mismatched_aspect_ratio(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        source = (b'<svg width="16" height="16" viewBox="0 0 32 16">'
+                  b'<rect x="0" y="0" width="32" height="16"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-viewbox-meet-") as temp:
+            input_path, output_path = Path(temp) / "meet.svg", Path(temp) / "meet.rgba"
+            input_path.write_bytes(source)
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+            rgba = output_path.read_bytes()
+        alpha = lambda x, y: rgba[(y * 16 + x) * 4 + 3]
+        self.assertEqual(alpha(8, 1), 0)
+        self.assertEqual(alpha(8, 4), 255)
+        self.assertEqual(alpha(8, 11), 255)
+        self.assertEqual(alpha(8, 12), 0)
 
 
 if __name__ == "__main__":

@@ -2,11 +2,11 @@ WO-M2-05 revision 2 final machine checks (2026-10-09)
 
 PASS ./dev build
 PASS ctest --test-dir build/mac-debug --output-on-failure (5/5)
-PASS python3 -m unittest tests.test_shape_render (5/5; includes curve overshoot, namespace, and separator regressions)
-PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 random cases plus one 327,730-byte command-cap exhaustion seed; 6.640 s wall; ASan+UBSan clean)
-PASS python3 -m json.tool artifacts/WO-M2-05/reference-comparison.json (7/7 fixture comparisons)
-PASS ./dev verify (170 Python tests, 0 failures/errors/skips; Debug CTest 5/5; native smoke and 20-frame Metal replay pass)
-PASS ./dev asan (CTest 5/5)
+PASS python3 -m unittest tests.test_shape_render (6/6; includes curve overshoot, SVG namespace, numeric separator, viewBox meet, and per-channel tolerance regressions)
+PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 random cases plus one 327,730-byte command-cap exhaustion seed; 6.468 s wall; ASan+UBSan clean)
+PASS python3 -m json.tool artifacts/WO-M2-05/reference-comparison.json (7/7 fixture comparisons; alpha delta <=160, covered RGB delta <=1, zero interior differences)
+PASS ./dev verify (171 Python tests, 0 failures/errors/skips; Debug CTest 5/5; native smoke and 20-frame Metal replay pass)
+PASS ./dev asan (CTest 5/5; includes aggregate multi-path command cap and viewBox letterboxing tests)
 PASS ./dev ubsan (CTest 5/5)
 PASS cmake --preset mac-release; cmake --build --preset mac-release
 PASS python3 scripts/ledger.py validate ledger.jsonl
@@ -14,6 +14,6 @@ PASS python3 scripts/wo_validate.py WO-M2-05 --ready (revision 2, spec SHA-256 3
 PASS python3 -m json.tool bench/results/WO-M2-05.json
 PASS git diff --check
 
-The first fresh verifier round found and prompted fixes to namespace semantics, coordinate bounds, and fuzz cap exhaustion. The second round found and prompted fixes to curve overshoot, value-specific comma parsing, and one stale size entry. Both finding sets and their fixes are recorded in `round-1-review-findings.md` and `round-2-review-findings.md`.
+Fresh verifier round 1 findings and fixes are recorded in `round-1-review-findings.md`. Round 2 findings and fixes are in `round-2-review-findings.md`. Round 3 found the aggregate document command cap, default viewBox sizing, incomplete reference tolerance checks, and stale performance text; fixes are recorded in `round-3-review-findings.md`. A fresh exact-commit review is pending.
 
-PASS Release end-to-end benchmark: 7 measured fresh processes after 2 warmups; median 14.474 ms, p95 14.929 ms, 4.53 MPixel/s, maximum RSS 2,244,608 bytes; raw evidence `artifacts/WO-M2-05/render-benchmark.json`.
+PASS Release end-to-end benchmark: 7 measured fresh processes after 2 warmups; median 14.789 ms, p95 17.733 ms, 4.43 MPixel/s, maximum RSS 2,228,224 bytes; raw evidence `artifacts/WO-M2-05/render-benchmark.json`.

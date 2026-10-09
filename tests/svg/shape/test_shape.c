@@ -2,6 +2,7 @@
 #include "shape_render.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 int main(void)
@@ -26,6 +27,31 @@ int main(void)
     }
     svg_shape_document_destroy(&doc);
     if (!retained_overshoot) return 9;
+    size_t source_bytes = 330000U + 256U;
+    uint8_t *many_paths = malloc(source_bytes);
+    if (many_paths == NULL) return 10;
+    static const char path_start[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0";
+    static const char path_middle[] = "\"/><path d=\"M0 0";
+    static const char path_end[] = "\"/></svg>";
+    size_t offset = sizeof(path_start) - 1U;
+    memcpy(many_paths, path_start, offset);
+    for (size_t path = 0; path < 2U; path++) {
+        for (size_t i = 0; i < 33000U; i++) {
+            memcpy(many_paths + offset, " L1 1", 5U);
+            offset += 5U;
+        }
+        if (path == 0U) {
+            memcpy(many_paths + offset, path_middle, sizeof(path_middle) - 1U);
+            offset += sizeof(path_middle) - 1U;
+        }
+    }
+    memcpy(many_paths + offset, path_end, sizeof(path_end) - 1U);
+    offset += sizeof(path_end) - 1U;
+    if (svg_shape_decode((base_bytes){many_paths, offset}, &doc, &diagnostic) == SVG_SHAPE_ERROR_NONE) {
+        svg_shape_document_destroy(&doc); free(many_paths); return 11;
+    }
+    free(many_paths);
+    if (diagnostic.category != SVG_SHAPE_ERROR_LIMIT) return 12;
     static const uint8_t blank[] = "<svg width=\"8\" height=\"8\"/>";
     if (svg_shape_decode((base_bytes){blank, sizeof(blank)-1U}, &doc, &diagnostic) != SVG_SHAPE_ERROR_NONE) return 5;
     if (!raster_shape_render(&doc, &tile, &diagnostic)) { svg_shape_document_destroy(&doc); return 6; }

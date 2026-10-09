@@ -1,7 +1,7 @@
 {
   "renderer_path": "/opt/homebrew/bin/rsvg-convert",
   "renderer_version": "rsvg-convert version 2.62.3\n\nlibraries used:\n  cairo 1.18.4\n  pango 1.58.2\n  harfbuzz 14.3.1\n  fontconfig 2.18.3",
-  "edge_tolerance": "one pixel around Vexel coverage boundary; interior exact",
+  "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160, covered RGB delta <=1, and at most 120 differing pixels per fixture",
   "cases": [
     {
       "case": "arc",
@@ -10,7 +10,9 @@
       "reference_png_sha256": "2fcc737193b5f77b00d8b651050c2b731ae451b5257ff3fc892d5f446dc88b88",
       "edge_diff_pixels": 14,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 136
+      "max_channel_diff": 136,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 136
     },
     {
       "case": "cubic",
@@ -19,7 +21,9 @@
       "reference_png_sha256": "44b2a347f9ae2701c86f7534230f0b4025accb4ea4ab2a894b6bb26387cd5a9d",
       "edge_diff_pixels": 26,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 255
+      "max_channel_diff": 255,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 113
     },
     {
       "case": "degenerate",
@@ -28,7 +32,9 @@
       "reference_png_sha256": "d7d8842974406d5e3962981b727857c049f0f84f2126c09e3e284ef650050f9b",
       "edge_diff_pixels": 0,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 0
+      "max_channel_diff": 0,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 0
     },
     {
       "case": "evenodd",
@@ -37,7 +43,9 @@
       "reference_png_sha256": "0f4e0fadfeef37f5a4fed1085cba2d4418d3f3499c630f18edc7ca6e4a9fcac1",
       "edge_diff_pixels": 0,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 0
+      "max_channel_diff": 0,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 0
     },
     {
       "case": "line",
@@ -46,7 +54,9 @@
       "reference_png_sha256": "a98e1c2709df66f3d5dc06c44ebb5be66d5892e45384f9dbe85fcef9dc3a00ac",
       "edge_diff_pixels": 12,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 136
+      "max_channel_diff": 136,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 136
     },
     {
       "case": "quadratic",
@@ -55,7 +65,9 @@
       "reference_png_sha256": "b81bbefc08a31d55f79a39c730dd8b1504cb20a7eae64d413844587dd77c248c",
       "edge_diff_pixels": 22,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 153
+      "max_channel_diff": 153,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 113
     },
     {
       "case": "rect",
@@ -64,7 +76,9 @@
       "reference_png_sha256": "618967ce18cfd58f3f1da758ae94d42a327ed25a9e3b2b7e8f96af7bc06d56fe",
       "edge_diff_pixels": 0,
       "interior_diff_pixels": 0,
-      "max_channel_diff": 0
+      "max_channel_diff": 0,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 0
     }
   ]
 }

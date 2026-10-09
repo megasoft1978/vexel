@@ -8,7 +8,7 @@ categories plus a byte offset into that source; XML scanner failures retain the
 scanner offset. Root `svg`, `rect`, and `path` are supported. Root viewport
 dimensions are finite unitless or px lengths (positive, at most 4096); tile
 extents round up to integer pixels while preserving the viewport scale, with an
-optional finite positive `viewBox`. Rectangles accept x/y/width/height; omitted
+optional finite positive `viewBox` using the default centered meet mapping. Rectangles accept x/y/width/height; omitted
 x/y are zero and negative dimensions fail. Fill supports none, #RGB, #RRGGBB,
 black, white, red, green and blue. `fill-rule` is nonzero or evenodd,
 independently for each rect/path element. Elements paint in source order;
@@ -17,10 +17,10 @@ moveto or the end of path. Unsupported elements, colors and syntax fail
 without changing source bytes.
 
 Path commands are M/m, L/l, H/h, V/v, C/c, Q/q, A/a and Z/z with repeated
-groups. Coordinates are limited to absolute value 1,000,000; command count is
-limited to 65,536; flattened edges to 262,144. Cubics and quadratics use
-deterministic De Casteljau subdivision until every control point is at most
-0.25 user units from the endpoint chord; recursion depth is capped at 16.
+groups. Coordinates are limited to absolute value 1,000,000; total path commands
+across the document are limited to 65,536; flattened edges to 262,144. Cubics
+and quadratics use deterministic De Casteljau subdivision until every control
+point is at most 0.25 user units from the finite endpoint segment; recursion depth is capped at 16.
 Elliptical arcs use endpoint-to-center conversion and a sagitta tolerance of
 0.25 user units, with total edges bounded by the document cap. These are
 user-space flatness bounds, not device-pixel guarantees. Arc flags must be

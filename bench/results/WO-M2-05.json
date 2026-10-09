@@ -29,19 +29,21 @@
     "source_hashes_in": "artifacts/WO-M2-05/reference-comparison.json",
     "repeat_renders_byte_identical": true,
     "reference_comparison": {
-      "edge_tolerance": "one pixel around Vexel coverage boundary; interior exact",
+      "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160, covered RGB delta <=1, and at most 120 differing pixels per fixture",
       "interior_diff_pixels": 0,
       "edge_diff_pixels_total": 74,
       "max_channel_diff": 255,
-      "all_cases_pass": true
+      "all_cases_pass": true,
+      "max_rgb_diff_when_covered": 0,
+      "max_alpha_diff": 136
     },
-    "focused_test_count": 5
+    "focused_test_count": 6
   },
   "fuzz": {
     "seed": 20261009,
     "cases": 1000000,
-    "wall_seconds": 6.64,
-    "process_cpu_seconds": 6.392,
+    "wall_seconds": 6.468,
+    "process_cpu_seconds": 6.409,
     "input_max_bytes": 327730,
     "sanitizers": [
       "AddressSanitizer",
@@ -59,32 +61,32 @@
     "shape_render_cli": 53392,
     "libvexel_base.a": 3504,
     "libvexel_xml.a": 16552,
-    "libvexel_shape.a": 24144
+    "libvexel_shape.a": 24296
   },
   "measurements": {
-    "render_throughput": 4527934.37676762,
+    "render_throughput": 4431476.627360983,
     "render_latency_seconds": {
       "raw": [
-        0.014575165987480432,
-        0.014073917001951486,
-        0.014096250000875443,
-        0.014928625008906238,
-        0.014611209000577219,
-        0.014473707997240126,
-        0.01417375000892207
+        0.017733000000589527,
+        0.01643891700950917,
+        0.01463641700684093,
+        0.01478875000611879,
+        0.0152824170072563,
+        0.013986499994643964,
+        0.013608917011879385
       ],
-      "median": 0.014473707997240126,
-      "p95_nearest_rank": 0.014928625008906238
+      "median": 0.01478875000611879,
+      "p95_nearest_rank": 0.017733000000589527
     },
-    "max_rss_bytes": 2244608,
+    "max_rss_bytes": 2228224,
     "method": "Python time.perf_counter around seven measured fresh /usr/bin/time -l CLI processes after two warmups; includes startup, input read, decode, raster and output write; filesystem caches were not evicted",
     "rss_method": "maximum of nine /usr/bin/time -l maximum resident set size observations (two warmup and seven measured fresh child processes)",
     "measurement_scope": "End-to-end CLI workload, not an isolated raster-kernel benchmark."
   },
   "verification": {
     "debug_ctest": "pass (5/5)",
-    "focused_shape_tests": "pass (5/5)",
-    "dev_verify": "pass (170/170 Python tests; Debug CTest 5/5; native smoke and Metal replay pass)",
+    "focused_shape_tests": "pass (6/6)",
+    "dev_verify": "pass (171/171 Python tests; Debug CTest 5/5; native smoke and Metal replay pass)",
     "asan_ctest": "pass (5/5)",
     "ubsan_ctest": "pass (5/5)",
     "release_build": "pass",

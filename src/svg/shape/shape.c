@@ -14,6 +14,7 @@ typedef struct builder {
     size_t edge_capacity;
     size_t shape_capacity;
     size_t shape_index;
+    size_t command_count;
     size_t offset;
     svg_shape_diagnostic *diag;
 } builder;
@@ -271,14 +272,15 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
             fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+i);return false;
         }
     }
-    geom_point current={0,0}, first={0,0}; char cmd=0; size_t commands=0; bool open=false;
+    geom_point current={0,0}, first={0,0}; char cmd=0; bool open=false, path_first=true;
     while (r.i < r.n) {
         skip_path_separators(&r); if(r.i>=r.n)break;
         if ((r.p[r.i] >= 'A'&&r.p[r.i]<='Z')||(r.p[r.i]>='a'&&r.p[r.i]<='z')) cmd=(char)r.p[r.i++];
         else if(cmd==0 || cmd=='Z' || cmd=='z') { fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i); return false; }
-        if (++commands > SHAPE_MAX_COMMANDS) { fail(b->diag,SVG_SHAPE_ERROR_LIMIT,span.offset+r.i); return false; }
+        if (++b->command_count > SHAPE_MAX_COMMANDS) { fail(b->diag,SVG_SHAPE_ERROR_LIMIT,span.offset+r.i); return false; }
         bool rel=cmd>='a'&&cmd<='z'; char upper=rel?(char)(cmd-'a'+'A'):cmd;
-        if(commands==1U&&upper!='M'){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i-1U);return false;}
+        if(path_first&&upper!='M'){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i-1U);return false;}
+        path_first=false;
         if(upper=='Z') { if(open&&!add_edge(b,current,first))return false; current=first;open=false;cmd=0;continue; }
         if(upper!='M'&&upper!='L'&&upper!='H'&&upper!='V'&&upper!='C'&&upper!='Q'&&upper!='A') { fail(b->diag,SVG_SHAPE_ERROR_UNSUPPORTED,span.offset+r.i-1U);return false; }
         double v[7]={0}; unsigned count=upper=='H'||upper=='V'?1U:upper=='C'?6U:upper=='Q'?4U:upper=='A'?7U:2U;
@@ -346,7 +348,7 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
     svg_xml_token *tokens=calloc(cap,sizeof(*tokens));if(tokens==NULL){fail(diagnostic,SVG_SHAPE_ERROR_OOM,0);return SVG_SHAPE_ERROR_OOM;}
     svg_xml_result xr=svg_xml_tokenize(source,svg_xml_default_options(),tokens,cap);
     if(xr.diagnostic.category!=SVG_XML_ERROR_NONE){free(tokens);fail(diagnostic,SVG_SHAPE_ERROR_XML,xr.diagnostic.offset);return SVG_SHAPE_ERROR_XML;}
-    builder b={out,0,0,0,0,diagnostic}; size_t root=SIZE_MAX; svg_xml_span v={0};
+    builder b={out,0,0,0,0,0,diagnostic}; size_t root=SIZE_MAX; svg_xml_span v={0};
     out->source=source;
     for(size_t i=0;i<xr.token_count;i++)if(tokens[i].kind==SVG_XML_TOKEN_START_ELEMENT||tokens[i].kind==SVG_XML_TOKEN_EMPTY_ELEMENT){
         svg_xml_token *t=&tokens[i]; bool is_root=t->depth==0;

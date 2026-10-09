@@ -22,17 +22,24 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
 }
 
 static bool render_pixel(const svg_shape_document *doc, uint32_t x, uint32_t y,
-                         double sx, double sy, raster_tile *tile, int32_t *winding,
+                         double scale, double offset_x, double offset_y,
+                         raster_tile *tile, int32_t *winding,
                          uint8_t *parity, uint8_t *colors,
                          svg_shape_diagnostic *diag)
 {
+    double sample_x = (double)x + 0.5;
+    double sample_y = (double)y + 0.5;
+    double content_width = doc->view_width * scale;
+    double content_height = doc->view_height * scale;
+    if (sample_x < offset_x || sample_y < offset_y ||
+        sample_x >= offset_x + content_width || sample_y >= offset_y + content_height) return true;
     if (doc->shape_count != 0U) {
         memset(winding, 0, doc->shape_count * sizeof(*winding));
         memset(parity, 0, doc->shape_count);
         memset(colors, 0, doc->shape_count * 4U);
     }
-    double px = doc->view_x + ((double)x + 0.5) / sx;
-    double py = doc->view_y + ((double)y + 0.5) / sy;
+    double px = doc->view_x + (sample_x - offset_x) / scale;
+    double py = doc->view_y + (sample_y - offset_y) / scale;
     for (size_t i = 0; i < doc->edge_count; i++) {
         geom_edge edge = doc->edges[i];
         bool upward = edge.a.y <= py && edge.b.y > py;
@@ -93,9 +100,13 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
     memset(out->rgba, 0, out->byte_count);
     double sx = (double)doc->width / doc->view_width;
     double sy = (double)doc->height / doc->view_height;
+    double scale = fmin(sx, sy);
+    double offset_x = ((double)doc->width - doc->view_width * scale) * 0.5;
+    double offset_y = ((double)doc->height - doc->view_height * scale) * 0.5;
     for (uint32_t y = 0; y < doc->height; y++) {
         for (uint32_t x = 0; x < doc->width; x++) {
-            if (!render_pixel(doc, x, y, sx, sy, out, winding, parity, colors, diag)) {
+            if (!render_pixel(doc, x, y, scale, offset_x, offset_y, out,
+                              winding, parity, colors, diag)) {
                 raster_tile_destroy(out); free(winding); free(parity); free(colors);
                 return false;
             }
