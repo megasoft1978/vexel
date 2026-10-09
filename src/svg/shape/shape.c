@@ -38,7 +38,26 @@ static void fail(svg_shape_diagnostic *d, svg_shape_error e, size_t offset)
 
 static void skip_space(number_reader *r)
 {
+    while (r->i < r->n && (r->p[r->i] == ' ' || r->p[r->i] == '\t' || r->p[r->i] == '\r' || r->p[r->i] == '\n')) r->i++;
+}
+
+static void skip_path_separators(number_reader *r)
+{
     while (r->i < r->n && (r->p[r->i] == ' ' || r->p[r->i] == '\t' || r->p[r->i] == '\r' || r->p[r->i] == '\n' || r->p[r->i] == ',')) r->i++;
+}
+
+static bool next_number_separator(number_reader *r)
+{
+    size_t before = r->i;
+    skip_space(r);
+    bool had_space = r->i != before;
+    if (r->i < r->n && r->p[r->i] == ',') {
+        r->i++;
+        skip_space(r);
+        return r->i < r->n && r->p[r->i] != ',';
+    }
+    if (had_space) return r->i < r->n;
+    return r->i < r->n && (r->p[r->i] == '+' || r->p[r->i] == '-');
 }
 
 /* Decimal conversion is byte-based and independent of the process locale. */
@@ -159,16 +178,20 @@ static geom_point midpoint(geom_point a, geom_point z)
     return (geom_point){(a.x+z.x)*0.5,(a.y+z.y)*0.5};
 }
 
-static double point_line_distance(geom_point p,geom_point a,geom_point z)
+static double point_segment_distance(geom_point p,geom_point a,geom_point z)
 {
-    double dx=z.x-a.x,dy=z.y-a.y,length=hypot(dx,dy);
-    if(length==0.0)return hypot(p.x-a.x,p.y-a.y);
-    return fabs(dx*(a.y-p.y)-(a.x-p.x)*dy)/length;
+    double dx=z.x-a.x,dy=z.y-a.y,length_squared=dx*dx+dy*dy;
+    if(length_squared==0.0)return hypot(p.x-a.x,p.y-a.y);
+    double projection=((p.x-a.x)*dx+(p.y-a.y)*dy)/length_squared;
+    if(projection<0.0)projection=0.0;
+    if(projection>1.0)projection=1.0;
+    geom_point nearest={a.x+projection*dx,a.y+projection*dy};
+    return hypot(p.x-nearest.x,p.y-nearest.y);
 }
 
 static bool add_curve_recursive(builder *b,geom_point p0,geom_point p1,geom_point p2,geom_point p3,unsigned depth)
 {
-    if(fmax(point_line_distance(p1,p0,p3),point_line_distance(p2,p0,p3))<=0.25)return add_edge(b,p0,p3);
+    if(fmax(point_segment_distance(p1,p0,p3),point_segment_distance(p2,p0,p3))<=0.25)return add_edge(b,p0,p3);
     if(depth>=16U){fail(b->diag,SVG_SHAPE_ERROR_LIMIT,b->offset);return false;}
     geom_point a=midpoint(p0,p1),c=midpoint(p1,p2),d=midpoint(p2,p3);
     geom_point e=midpoint(a,c),f=midpoint(c,d),m=midpoint(e,f);
@@ -182,7 +205,7 @@ static bool add_curve(builder *b,geom_point p0,geom_point p1,geom_point p2,geom_
 
 static bool add_quad_recursive(builder *b,geom_point p0,geom_point p1,geom_point p2,unsigned depth)
 {
-    if(point_line_distance(p1,p0,p2)<=0.25)return add_edge(b,p0,p2);
+    if(point_segment_distance(p1,p0,p2)<=0.25)return add_edge(b,p0,p2);
     if(depth>=16U){fail(b->diag,SVG_SHAPE_ERROR_LIMIT,b->offset);return false;}
     geom_point a=midpoint(p0,p1),c=midpoint(p1,p2),m=midpoint(a,c);
     return add_quad_recursive(b,p0,a,m,depth+1U)&&add_quad_recursive(b,m,c,p2,depth+1U);
@@ -250,7 +273,7 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
     }
     geom_point current={0,0}, first={0,0}; char cmd=0; size_t commands=0; bool open=false;
     while (r.i < r.n) {
-        skip_space(&r); if(r.i>=r.n)break;
+        skip_path_separators(&r); if(r.i>=r.n)break;
         if ((r.p[r.i] >= 'A'&&r.p[r.i]<='Z')||(r.p[r.i]>='a'&&r.p[r.i]<='z')) cmd=(char)r.p[r.i++];
         else if(cmd==0 || cmd=='Z' || cmd=='z') { fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i); return false; }
         if (++commands > SHAPE_MAX_COMMANDS) { fail(b->diag,SVG_SHAPE_ERROR_LIMIT,span.offset+r.i); return false; }
@@ -261,6 +284,7 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
         double v[7]={0}; unsigned count=upper=='H'||upper=='V'?1U:upper=='C'?6U:upper=='Q'?4U:upper=='A'?7U:2U;
         size_t group_start=r.i; b->offset=span.offset+group_start;
         for(unsigned i=0;i<count;i++){
+            skip_path_separators(&r);
             bool ok=upper=='A'&&(i==3U||i==4U)?read_arc_flag(&r,&v[i]):read_number(&r,&v[i]);
             if(!ok){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+group_start);return false;}
         }
@@ -334,7 +358,7 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
             svg_xml_span ws,hs,vs; if(!attr(source,tokens,xr.token_count,i,"width",&ws)||!attr(source,tokens,xr.token_count,i,"height",&hs)){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,t->name.offset);goto bad;}
             double w,h;if(!read_dimension(source,ws,&w)||!read_dimension(source,hs,&h)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,ws.offset);goto bad;}
             if(w<1||h<1||w>4096||h>4096){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,ws.offset);goto bad;}out->width=(uint32_t)ceil(w);out->height=(uint32_t)ceil(h);out->view_x=0;out->view_y=0;out->view_width=w;out->view_height=h;
-            if(attr(source,tokens,xr.token_count,i,"viewBox",&vs)){number_reader vr={source.ptr+vs.offset,vs.length,0,vs.offset};if(!read_number(&vr,&out->view_x)||!read_number(&vr,&out->view_y)||!read_number(&vr,&out->view_width)||!read_number(&vr,&out->view_height)||out->view_width<=0||out->view_height<=0){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}skip_space(&vr);if(vr.i!=vr.n||fabs(out->view_x+out->view_width)>SHAPE_MAX_COORD||fabs(out->view_y+out->view_height)>SHAPE_MAX_COORD){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}}
+            if(attr(source,tokens,xr.token_count,i,"viewBox",&vs)){number_reader vr={source.ptr+vs.offset,vs.length,0,vs.offset};if(!read_number(&vr,&out->view_x)||!next_number_separator(&vr)||!read_number(&vr,&out->view_y)||!next_number_separator(&vr)||!read_number(&vr,&out->view_width)||!next_number_separator(&vr)||!read_number(&vr,&out->view_height)||out->view_width<=0||out->view_height<=0){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}skip_space(&vr);if(vr.i!=vr.n||fabs(out->view_x+out->view_width)>SHAPE_MAX_COORD||fabs(out->view_y+out->view_height)>SHAPE_MAX_COORD){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}}
         } else {
             uint8_t color[4]={0,0,0,255};svg_xml_span fs;if(attr(source,tokens,xr.token_count,i,"fill",&fs)&&!parse_color(source,fs,color)){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,fs.offset);goto bad;}
             svg_xml_span rule;if(attr(source,tokens,xr.token_count,i,"fill-rule",&rule)&&!span_eq(source,rule,"evenodd")&&!span_eq(source,rule,"nonzero")){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,rule.offset);goto bad;}

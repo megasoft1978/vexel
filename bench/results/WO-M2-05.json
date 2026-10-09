@@ -40,8 +40,8 @@
   "fuzz": {
     "seed": 20261009,
     "cases": 1000000,
-    "wall_seconds": 6.648,
-    "process_cpu_seconds": 6.588,
+    "wall_seconds": 6.64,
+    "process_cpu_seconds": 6.392,
     "input_max_bytes": 327730,
     "sanitizers": [
       "AddressSanitizer",
@@ -56,27 +56,27 @@
   },
   "release_sizes_bytes": {
     "svgworkbench": 97040,
-    "shape_render_cli": 53344,
+    "shape_render_cli": 53392,
     "libvexel_base.a": 3504,
     "libvexel_xml.a": 16552,
-    "libvexel_shape.a": 23888
+    "libvexel_shape.a": 24144
   },
   "measurements": {
-    "render_throughput": 4362256.602588919,
+    "render_throughput": 4527934.37676762,
     "render_latency_seconds": {
       "raw": [
-        0.016171875002328306,
-        0.01537412499601487,
-        0.01483637499040924,
-        0.015023416999611072,
-        0.0149329999985639,
-        0.01601720799226314,
-        0.0150078340084292
+        0.014575165987480432,
+        0.014073917001951486,
+        0.014096250000875443,
+        0.014928625008906238,
+        0.014611209000577219,
+        0.014473707997240126,
+        0.01417375000892207
       ],
-      "median": 0.015023416999611072,
-      "p95_nearest_rank": 0.016171875002328306
+      "median": 0.014473707997240126,
+      "p95_nearest_rank": 0.014928625008906238
     },
-    "max_rss_bytes": 2228224,
+    "max_rss_bytes": 2244608,
     "method": "Python time.perf_counter around seven measured fresh /usr/bin/time -l CLI processes after two warmups; includes startup, input read, decode, raster and output write; filesystem caches were not evicted",
     "rss_method": "maximum of nine /usr/bin/time -l maximum resident set size observations (two warmup and seven measured fresh child processes)",
     "measurement_scope": "End-to-end CLI workload, not an isolated raster-kernel benchmark."

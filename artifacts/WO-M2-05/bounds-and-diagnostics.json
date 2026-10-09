@@ -71,6 +71,27 @@
       "source_unchanged": true
     },
     {
+      "name": "trailing_root_dimension_comma",
+      "category": "number",
+      "offset": 12,
+      "source_sha256": "2e6ac9bae3057d5b61d95530e4b1eb22e0c4b37b001f6220316985ac3d763762",
+      "source_unchanged": true
+    },
+    {
+      "name": "trailing_rect_dimension_comma",
+      "category": "unsupported",
+      "offset": 53,
+      "source_sha256": "e08d59a4ab2c26d08a40e8276a21b73c496f69ce8435d858978f5a42a2727a8f",
+      "source_unchanged": true
+    },
+    {
+      "name": "repeated_viewbox_commas",
+      "category": "viewport",
+      "offset": 37,
+      "source_sha256": "fc6ddb56ec153966ebf7d0bdf26ad5f51c0f0c12ba2e16ce1c554e89cc8e0ac3",
+      "source_unchanged": true
+    },
+    {
       "name": "unsupported_smooth",
       "category": "unsupported",
       "offset": 42,

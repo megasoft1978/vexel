@@ -11,7 +11,7 @@ Preset CMake variables:
 ninja: no work to do.
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build/mac-asan
     Start 1: cli-version
-1/5 Test #1: cli-version ......................   Passed    0.02 sec
+1/5 Test #1: cli-version ......................   Passed    0.01 sec
     Start 2: base-contract
 2/5 Test #2: base-contract ....................   Passed    0.01 sec
     Start 3: xml-tokenizer
@@ -23,4 +23,4 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build
 
 100% tests passed, 0 tests failed out of 5
 
-Total Test time (real) =   0.26 sec
+Total Test time (real) =   0.24 sec

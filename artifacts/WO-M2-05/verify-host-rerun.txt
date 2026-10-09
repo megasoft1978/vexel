@@ -15,7 +15,7 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build
     Start 2: base-contract
 2/5 Test #2: base-contract ....................   Passed    0.00 sec
     Start 3: xml-tokenizer
-3/5 Test #3: xml-tokenizer ....................   Passed    0.06 sec
+3/5 Test #3: xml-tokenizer ....................   Passed    0.07 sec
     Start 4: source-save
 4/5 Test #4: source-save ......................   Passed    0.00 sec
     Start 5: shape-render
@@ -32,15 +32,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 170 tests in 21.348s
+Ran 170 tests in 19.992s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.139520
+native smoke elapsed seconds: 0.129423
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.094262
-Ran 170 tests: 170 passed, 0 failed, 0 errors, 0 skipped; 21.385s
+native replay elapsed seconds: 0.095483
+Ran 170 tests: 170 passed, 0 failed, 0 errors, 0 skipped; 20.025s
 valid ledger: 217 entries

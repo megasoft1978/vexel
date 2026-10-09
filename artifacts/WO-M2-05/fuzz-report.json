@@ -1,8 +1,8 @@
 {
   "seed": 20261009,
   "cases": 1000000,
-  "duration_seconds": 6.648,
-  "process_cpu_seconds": 6.588,
+  "duration_seconds": 6.417,
+  "process_cpu_seconds": 6.354,
   "binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build/mac-asan/bin/shape_fuzz",
   "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
   "random_input_max_bytes": 4096,
