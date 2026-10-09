@@ -3,11 +3,11 @@
   "work_order": "WO-M3-01",
   "revision": 1,
   "implementation": [
-    "64 KiB owner-thread source-index steps with a complete-source XML validator worker",
-    "same-grammar token output through the bounded 1 GiB tokenizer path",
-    "stable borrowed element/source spans and unsupported-element records",
-    "owned minimal preview source extraction",
-    "task-worker shape decode and raster with generation-tagged session progress",
+    "64 KiB owner-thread steps through a resumable XML tag reader",
+    "cancellable complete-source XML validation on the task worker with token spans available after validation",
+    "combined element-record and token-vector storage capped at 256 MiB",
+    "stable borrowed element/source spans and explicit unsupported-element records",
+    "owned minimal preview source extraction and worker shape decode/raster with generation checks",
     "loading progress model and headless native replay with offscreen Metal readback",
     "deterministic 10 MiB and 100 MiB performance campaign"
   ],
@@ -17,15 +17,31 @@
     "full_python_suite": "174/174 passed",
     "asan_ctest": "7/7 passed",
     "ubsan_ctest": "7/7 passed",
-    "benchmark": "15 trials per workload; numeric latency, owner-step, and RSS gates passed",
-    "native_index_replay": "Metal offscreen preview readback, 10/50/90/100 progress, preview tile ready before full index",
+    "benchmark": "15 trials per workload; latency, owner-step, and RSS gates passed",
+    "native_index_replay": "Metal offscreen readback and progress 10/50/90/100 passed; preview before completion",
     "ready_work_order_validation": "passed",
     "ledger_validation": "passed",
     "diff_check": "passed"
   },
+  "metrics": {
+    "10MiB": {
+      "first_preview_median_ns": 217125,
+      "first_preview_p95_ns": 344459,
+      "complete_index_median_ns": 178230291,
+      "max_step_latency_ns": 266833,
+      "peak_child_rss_bytes": 60456960
+    },
+    "100MiB": {
+      "first_preview_median_ns": 148458,
+      "first_preview_p95_ns": 179292,
+      "complete_index_median_ns": 635839292,
+      "max_step_latency_ns": 294958,
+      "peak_child_rss_bytes": 143245312
+    }
+  },
   "remaining_limitations": [
-    "tokens become queryable after full background XML validation instead of being emitted incrementally as each source token completes",
-    "the replay is headless; visible AppKit window teardown reproduced the existing autorelease-pool crash, while the separate native Metal smoke passes"
+    "the resumable reader emits tag spans while full XML token records become queryable only after complete background validation",
+    "replay is headless; visible AppKit teardown previously reproduced a crash while separate native Metal smoke passes"
   ],
-  "decision": "Candidate submitted for a fresh read-only review; do not claim continuous token streaming or visible-window replay."
+  "decision": "Candidate submitted for fresh read-only review; no continuous full-token streaming or visible-window replay is claimed."
 }

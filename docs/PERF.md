@@ -11,7 +11,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,744 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.265 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
-| WO-M3-01 (candidate) | Release | see `bench/results/WO-M3-01.json` | first decode+raster preview: 10 MiB median 0.216 ms; 100 MiB median 0.154 ms; full index+XML validation 139 ms / 452 ms | 60.5 MB / 143.2 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M3-01 (candidate) | Release | 134,400 bytes; see `bench/results/WO-M3-01.json` | first decode+raster preview: 10 MiB median 0.217 ms (p95 0.344 ms); 100 MiB median 0.148 ms (p95 0.179 ms); full index+XML validation 178 ms / 636 ms | 60.5 MB / 143.2 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
@@ -38,10 +38,12 @@ source read and complete-index timings are separate. Both cases remained under
 the 100 ms per-step and 128 MiB + 3x-source RSS gates. Raw trials and generated
 input hashes are in `bench/results/WO-M3-01.json`.
 
-This candidate records a preview source range and demonstrates worker decode
-and raster in the benchmark driver. The current app does not yet wire an open
-document UI replay to that session, and token stream equivalence is not
-exposed by the index API; those acceptance items remain open for review.
+The resumable reader advances in bounded owner-thread steps and emits complete
+tag source spans. Full token spans become queryable after the cancellable
+background validator completes; it does not stream the validator's full token
+records through the index API. The current app replay remains headless and does
+not yet wire an open-document UI to this session. These integration boundaries
+remain open for review.
 
 ## WO-M0-03 black-box protocol
 

@@ -31,6 +31,17 @@ token storage and reports output exhaustion normally. The bounded index module
 uses it on a validation worker; this does not change the 16 MiB cap or
 allocation-free behavior of `svg_xml_tokenize`.
 
+`svg_xml_reader` is a resumable source scanner for large documents. It borrows
+the immutable source, retains lexical state across calls, and advances no more
+than the requested budget (capped at 64 KiB). It emits complete element tag
+spans as they become available; comments, CDATA, and processing instructions
+are skipped while preserving their boundary state. The reader is intentionally
+not the grammar validator: the index runs `svg_xml_tokenize_large_cancelable`
+on its worker, which supplies authoritative XML diagnostics and final token
+spans. Consumers must not treat early tag events as proof that the whole input
+is valid. Name bytes above ASCII are passed through for the validator to check
+against XML 1.0 Name rules.
+
 Accepted syntax includes XML 1.0 documents encoded as UTF-8 with an optional
 leading BOM, XML declaration,
 PI, comments, element and empty-element tags, quoted attributes, character

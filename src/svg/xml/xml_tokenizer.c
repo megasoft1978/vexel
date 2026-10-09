@@ -24,8 +24,20 @@ typedef struct xml_scanner {
     size_t root_count;
     size_t depth;
     size_t total_attributes;
+    svg_xml_cancel_check_fn cancel_check;
+    void *cancel_context;
+    bool canceled;
     xml_open_name stack[XML_MAX_DEPTH];
 } xml_scanner;
+
+static bool cancel_requested(xml_scanner *s)
+{
+    if (s->cancel_check != NULL && s->cancel_check(s->cancel_context)) {
+        s->canceled = true;
+        return true;
+    }
+    return false;
+}
 
 static bool add_size(size_t a, size_t b, size_t *out)
 {
@@ -94,7 +106,7 @@ static bool parse_name(xml_scanner *s, size_t *position, svg_xml_span *span,
         fail(s, SVG_XML_ERROR_INVALID_NAME, *position);
         return false;
     }
-    while (p < s->input.len) {
+    while (!cancel_requested(s) && p < s->input.len) {
         size_t before = p;
         if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp)) {
             fail(s, SVG_XML_ERROR_INVALID_UTF8, before);
@@ -136,7 +148,7 @@ static bool parse_pi_target(xml_scanner *s, size_t *position, svg_xml_span *name
         fail(s, SVG_XML_ERROR_INVALID_NAME, start);
         return false;
     }
-    while (p < s->input.len) {
+    while (!cancel_requested(s) && p < s->input.len) {
         size_t before = p;
         if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp)) {
             fail(s, SVG_XML_ERROR_INVALID_UTF8, before);
@@ -182,7 +194,7 @@ static bool scan_reference(xml_scanner *s, size_t *position)
         if (p < s->input.len && byte_at(s, p) == 'x') { hex = true; ++p; }
         size_t digits = p;
         uint32_t value = 0;
-        while (p < s->input.len && (hex ? ((byte_at(s,p)>='0'&&byte_at(s,p)<='9') ||
+        while (!cancel_requested(s) && p < s->input.len && (hex ? ((byte_at(s,p)>='0'&&byte_at(s,p)<='9') ||
                (byte_at(s,p)>='a'&&byte_at(s,p)<='f') || (byte_at(s,p)>='A'&&byte_at(s,p)<='F')) :
                (byte_at(s,p)>='0'&&byte_at(s,p)<='9'))) {
             uint8_t c=byte_at(s,p);
@@ -202,7 +214,7 @@ static bool scan_reference(xml_scanner *s, size_t *position)
         if (!svg_xml_internal_utf8_next(s->input.ptr, s->input.len, &p, &cp) || !svg_xml_internal_name_start(cp)) {
             fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, *position); return false;
         }
-        while (p < s->input.len) {
+        while (!cancel_requested(s) && p < s->input.len) {
             size_t before=p;
             if (!svg_xml_internal_utf8_next(s->input.ptr,s->input.len,&p,&cp)) { fail(s,SVG_XML_ERROR_INVALID_UTF8,before); return false; }
             if (!svg_xml_internal_name_char(cp)) { p=before; break; }
@@ -225,7 +237,7 @@ static bool scan_reference(xml_scanner *s, size_t *position)
 static bool scan_chars(xml_scanner *s)
 {
     size_t p=0;
-    while (p<s->input.len) {
+    while (!cancel_requested(s) && p<s->input.len) {
         size_t at=p; uint32_t cp=0;
         if (!svg_xml_internal_utf8_next(s->input.ptr,s->input.len,&p,&cp)) { fail(s,SVG_XML_ERROR_INVALID_UTF8,at); return false; }
         if (!svg_xml_internal_char(cp)) { fail(s,SVG_XML_ERROR_INVALID_CHARACTER,at); return false; }
@@ -243,7 +255,7 @@ static bool qname_equal(xml_scanner *s, svg_xml_span a, svg_xml_span b)
 static bool parse_comment(xml_scanner *s)
 {
     size_t start=s->cursor, p=start+4, data=p;
-    while (p<s->input.len && !starts(s,p,"-->",3)) {
+    while (!cancel_requested(s) && p<s->input.len && !starts(s,p,"-->",3)) {
         if (starts(s,p,"--",2)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false; }
         ++p;
     }
@@ -271,9 +283,9 @@ static bool parse_pi(xml_scanner *s)
         fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false;
     }
     if(declaration && starts(s,p,"?>",2)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
-    if (svg_xml_internal_whitespace(byte_at(s,p))) while (p<s->input.len && svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+    if (svg_xml_internal_whitespace(byte_at(s,p))) while (!cancel_requested(s) && p<s->input.len && svg_xml_internal_whitespace(byte_at(s,p))) ++p;
     size_t data=p;
-    while (p<s->input.len && !starts(s,p,"?>",2)) ++p;
+    while (!cancel_requested(s) && p<s->input.len && !starts(s,p,"?>",2)) ++p;
     if (p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
     svg_xml_token t={0}; t.kind=declaration?SVG_XML_TOKEN_DECLARATION:SVG_XML_TOKEN_PROCESSING_INSTRUCTION;
     t.name=name; t.value.offset=data; t.value.length=p-data; t.depth=s->depth;
@@ -286,7 +298,7 @@ static bool parse_pi(xml_scanner *s)
 static bool parse_text(xml_scanner *s)
 {
     size_t start=s->cursor,p=start;
-    while (p<s->input.len && byte_at(s,p)!='<') {
+    while (!cancel_requested(s) && p<s->input.len && byte_at(s,p)!='<') {
         if (starts(s,p,"]]>",3)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false; }
         if (byte_at(s,p)=='&') { if (!scan_reference(s,&p)) return false; }
         else ++p;
@@ -307,7 +319,7 @@ static bool parse_text(xml_scanner *s)
 static bool parse_cdata(xml_scanner *s)
 {
     size_t start=s->cursor, data=start+9,p=data;
-    while(p<s->input.len && !starts(s,p,"]]>",3)) ++p;
+    while(!cancel_requested(s) && p<s->input.len && !starts(s,p,"]]>",3)) ++p;
     if(p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
     if(s->depth==0) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start); return false; }
     if(p-data>s->options.limits.text_run_bytes) { fail(s,SVG_XML_ERROR_TEXT_LIMIT,data); return false; }
@@ -321,7 +333,7 @@ static bool parse_end(xml_scanner *s)
 {
     size_t start=s->cursor,p=start+2; svg_xml_span name={0},prefix={0},local={0};
     if(!parse_name(s,&p,&name,&prefix,&local)) return false;
-    while(p<s->input.len && svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+    while(!cancel_requested(s) && p<s->input.len && svg_xml_internal_whitespace(byte_at(s,p))) ++p;
     if(p>=s->input.len||byte_at(s,p)!='>') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p); return false; }
     if(s->depth==0||!qname_equal(s,name,s->stack[s->depth-1].span)) { fail(s,SVG_XML_ERROR_MISMATCHED_TAG,start); return false; }
     svg_xml_token t={0}; t.kind=SVG_XML_TOKEN_END_ELEMENT;t.name=name;t.prefix=prefix;t.local_name=local;t.depth=s->depth-1;
@@ -347,8 +359,9 @@ static bool parse_start(xml_scanner *s)
     if(!emit(s,t,start)) return false;
     size_t local_attrs=0;
     for(;;) {
+        if (cancel_requested(s)) return false;
         bool separated=false;
-        while(p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) { ++p; separated=true; }
+        while(!cancel_requested(s) && p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) { ++p; separated=true; }
         if(p>=s->input.len) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,start);return false; }
         if(byte_at(s,p)=='>') {
             s->tokens[parent_index].source.length=p+1-start;
@@ -370,12 +383,12 @@ static bool parse_start(xml_scanner *s)
         for(size_t i=parent_index+1;i<s->result.token_count;++i) if(s->tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE && qname_equal(s,an,s->tokens[i].name)) {
             fail(s,SVG_XML_ERROR_DUPLICATE_ATTRIBUTE,attr_start);return false;
         }
-        while(p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+        while(!cancel_requested(s) && p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) ++p;
         if(p>=s->input.len||byte_at(s,p)!='=') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
-        ++p;while(p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) ++p;
+        ++p;while(!cancel_requested(s) && p<s->input.len&&svg_xml_internal_whitespace(byte_at(s,p))) ++p;
         if(p>=s->input.len||(byte_at(s,p)!='\''&&byte_at(s,p)!='"')) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
         uint8_t quote=byte_at(s,p++);size_t value_start=p;
-        while(p<s->input.len&&byte_at(s,p)!=quote) {
+        while(!cancel_requested(s) && p<s->input.len&&byte_at(s,p)!=quote) {
             if(byte_at(s,p)=='<') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
             if(byte_at(s,p)=='&') { if(!scan_reference(s,&p)) return false; } else ++p;
         }
@@ -391,15 +404,15 @@ static bool validate_decl_encoding(xml_scanner *s, const svg_xml_token *t)
 {
     size_t p=t->value.offset, end=p+t->value.length;
     bool have_version=false,have_encoding=false,have_standalone=false;
-    while(p<end) {
-        while(p<end&&svg_xml_internal_whitespace(s->input.ptr[p])) ++p;
+    while(!cancel_requested(s) && p<end) {
+        while(!cancel_requested(s) && p<end&&svg_xml_internal_whitespace(s->input.ptr[p])) ++p;
         if(p>=end) break;
-        size_t ns=p;while(p<end&&((s->input.ptr[p]>='A'&&s->input.ptr[p]<='Z')||(s->input.ptr[p]>='a'&&s->input.ptr[p]<='z')))++p;
-        size_t nl=p-ns;while(p<end&&svg_xml_internal_whitespace(s->input.ptr[p]))++p;
+        size_t ns=p;while(!cancel_requested(s) && p<end&&((s->input.ptr[p]>='A'&&s->input.ptr[p]<='Z')||(s->input.ptr[p]>='a'&&s->input.ptr[p]<='z')))++p;
+        size_t nl=p-ns;while(!cancel_requested(s) && p<end&&svg_xml_internal_whitespace(s->input.ptr[p]))++p;
         if(p>=end||s->input.ptr[p++]!='=') { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
-        while(p<end&&svg_xml_internal_whitespace(s->input.ptr[p]))++p;
+        while(!cancel_requested(s) && p<end&&svg_xml_internal_whitespace(s->input.ptr[p]))++p;
         if(p>=end||(s->input.ptr[p]!='\''&&s->input.ptr[p]!='"')) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
-        uint8_t q=s->input.ptr[p++];size_t vs=p;while(p<end&&s->input.ptr[p]!=q)++p;
+        uint8_t q=s->input.ptr[p++];size_t vs=p;while(!cancel_requested(s) && p<end&&s->input.ptr[p]!=q)++p;
         if(p>=end) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,vs-1);return false; }
         size_t vl=p-vs;++p;
         if(p<end&&!svg_xml_internal_whitespace(s->input.ptr[p])) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
@@ -446,7 +459,7 @@ static bool tokenize(xml_scanner *s)
     if(s->input.len>s->options.limits.input_bytes) { fail(s,SVG_XML_ERROR_INPUT_LIMIT,s->options.limits.input_bytes);return false; }
     if(!scan_chars(s)) return false;
     if (starts(s, 0, "\xef\xbb\xbf", 3)) s->cursor = 3;
-    while(s->cursor<s->input.len) {
+    while(!cancel_requested(s) && s->cursor<s->input.len) {
         size_t p=s->cursor;
         if(byte_at(s,p)!='<') { if(!parse_text(s))return false; continue; }
         if(starts(s,p,"<!--",4)) { if(!parse_comment(s))return false; continue; }
@@ -503,10 +516,17 @@ svg_xml_result svg_xml_tokenize(base_bytes input, svg_xml_options options,
 svg_xml_result svg_xml_tokenize_large(base_bytes input, svg_xml_token *tokens,
                                       size_t token_capacity)
 {
+    return svg_xml_tokenize_large_cancelable(input, tokens, token_capacity, NULL, NULL);
+}
+
+svg_xml_result svg_xml_tokenize_large_cancelable(base_bytes input, svg_xml_token *tokens,
+    size_t token_capacity, svg_xml_cancel_check_fn canceled, void *cancel_context)
+{
     svg_xml_options options = svg_xml_default_options();
     options.limits.input_bytes = 1024U * 1024U * 1024U;
     xml_scanner s = {0};
     s.input = input; s.options = options; s.tokens = tokens; s.capacity = token_capacity;
+    s.cancel_check = canceled; s.cancel_context = cancel_context;
     s.result.diagnostic.category = SVG_XML_ERROR_NONE;
     if (tokenize(&s)) return s.result;
     s.result.token_count = 0U;

@@ -1,3 +1,5 @@
+
+$ ./dev build
 Preset CMake variables:
 
   CMAKE_BUILD_TYPE="Debug"
@@ -7,26 +9,32 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
-[1/2] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
-[2/2] Linking C executable bin/svg_index_test
+[1/5] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
+[2/5] Linking C static library libvexel_index.a
+[3/5] Linking C executable bin/svg_index_test
 ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
+[4/5] Linking C executable bin/svg_index_bench
+[5/5] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+
+$ ctest --test-dir build/mac-debug --output-on-failure
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
     Start 1: cli-version
-1/7 Test #1: cli-version ......................   Passed    0.00 sec
+1/7 Test #1: cli-version ......................   Passed    0.18 sec
     Start 2: base-contract
-2/7 Test #2: base-contract ....................   Passed    0.00 sec
+2/7 Test #2: base-contract ....................   Passed    0.01 sec
     Start 3: xml-tokenizer
-3/7 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+3/7 Test #3: xml-tokenizer ....................   Passed    0.08 sec
     Start 4: source-save
 4/7 Test #4: source-save ......................   Passed    0.00 sec
     Start 5: shape-render
 5/7 Test #5: shape-render .....................   Passed    0.01 sec
     Start 6: svg-index
-6/7 Test #6: svg-index ........................   Passed    0.21 sec
+6/7 Test #6: svg-index ........................   Passed    0.18 sec
     Start 7: index-replay
 7/7 Test #7: index-replay .....................   Passed    0.03 sec
 
 100% tests passed, 0 tests failed out of 7
 
-Total Test time (real) =   0.32 sec
+Total Test time (real) =   0.49 sec

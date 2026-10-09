@@ -1,5 +1,7 @@
+
+$ python3 -m unittest tests.test_svg_index
 .
 ----------------------------------------------------------------------
-Ran 1 test in 0.036s
+Ran 1 test in 0.007s
 
 OK

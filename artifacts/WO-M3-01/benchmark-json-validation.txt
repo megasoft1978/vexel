@@ -1,0 +1,423 @@
+
+$ python3 -m json.tool bench/results/WO-M3-01.json
+{
+    "schema_version": 1,
+    "seed": 20261009,
+    "machine": "macOS-27.0-arm64-arm-64bit",
+    "architecture": "arm64",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "build": "mac-release",
+    "cache_caveat": "Cold/warm labels are run order only; OS file cache is not flushed.",
+    "cases": {
+        "10MiB": {
+            "source_bytes": 10485760,
+            "source_sha256": "e31223e83bcda33d21a59027c7306b63c3b9d556ee0534649b19b33b537b27bf",
+            "workload": "100000 simple rectangles",
+            "cold_trials": [
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1328875,
+                    "first_preview_ns": 344459,
+                    "complete_index_ns": 192610917,
+                    "max_step_ns": 266833,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 377070250
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1032625,
+                    "first_preview_ns": 217625,
+                    "complete_index_ns": 181583375,
+                    "max_step_ns": 207916,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 186037292
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1076750,
+                    "first_preview_ns": 216000,
+                    "complete_index_ns": 174190958,
+                    "max_step_ns": 218250,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 178925083
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1053333,
+                    "first_preview_ns": 223333,
+                    "complete_index_ns": 176048750,
+                    "max_step_ns": 212291,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 180623083
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1064333,
+                    "first_preview_ns": 224208,
+                    "complete_index_ns": 182934583,
+                    "max_step_ns": 199375,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 187460667
+                }
+            ],
+            "warm_trials": [
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1143459,
+                    "first_preview_ns": 219667,
+                    "complete_index_ns": 176196084,
+                    "max_step_ns": 192791,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 180835708
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1022792,
+                    "first_preview_ns": 225125,
+                    "complete_index_ns": 177595417,
+                    "max_step_ns": 198750,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 182101459
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1060208,
+                    "first_preview_ns": 213083,
+                    "complete_index_ns": 179486917,
+                    "max_step_ns": 185333,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 184052459
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1034500,
+                    "first_preview_ns": 192791,
+                    "complete_index_ns": 178230291,
+                    "max_step_ns": 193125,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 182740917
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1007625,
+                    "first_preview_ns": 216667,
+                    "complete_index_ns": 176183917,
+                    "max_step_ns": 195042,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 180804292
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1052958,
+                    "first_preview_ns": 210750,
+                    "complete_index_ns": 174519500,
+                    "max_step_ns": 204333,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 178837292
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1013625,
+                    "first_preview_ns": 202042,
+                    "complete_index_ns": 185680542,
+                    "max_step_ns": 190750,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 189957666
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1028500,
+                    "first_preview_ns": 217125,
+                    "complete_index_ns": 185072709,
+                    "max_step_ns": 198292,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 189503375
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1189417,
+                    "first_preview_ns": 230166,
+                    "complete_index_ns": 176132208,
+                    "max_step_ns": 203625,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 181403667
+                },
+                {
+                    "source_bytes": 10485760,
+                    "read_ns": 1171125,
+                    "first_preview_ns": 209500,
+                    "complete_index_ns": 183081667,
+                    "max_step_ns": 227000,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 187626000
+                }
+            ],
+            "first_preview_median_ns": 217125,
+            "first_preview_p95_ns": 344459,
+            "complete_index_median_ns": 178230291,
+            "max_step_latency_ns": 266833,
+            "progressive_replay": {
+                "events": [
+                    10,
+                    50,
+                    90,
+                    100
+                ],
+                "first_preview_before_index_complete": true,
+                "worker_render_completed": true
+            },
+            "peak_child_rss_bytes": 60456960,
+            "index_bytes": 5600112
+        },
+        "100MiB": {
+            "source_bytes": 104857600,
+            "source_sha256": "0acabf47c6f2fc2f747042adbb33e19d3901d75c22d8e7d90b77984626171f65",
+            "workload": "100000 map-like grouped records",
+            "cold_trials": [
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10830041,
+                    "first_preview_ns": 146125,
+                    "complete_index_ns": 611189625,
+                    "max_step_ns": 187125,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 626495708
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10052958,
+                    "first_preview_ns": 165625,
+                    "complete_index_ns": 597052166,
+                    "max_step_ns": 173542,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 611509167
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10609417,
+                    "first_preview_ns": 149916,
+                    "complete_index_ns": 609717000,
+                    "max_step_ns": 175500,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 624800042
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10921083,
+                    "first_preview_ns": 148458,
+                    "complete_index_ns": 652884041,
+                    "max_step_ns": 169875,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 668332792
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10050583,
+                    "first_preview_ns": 137458,
+                    "complete_index_ns": 633999000,
+                    "max_step_ns": 174833,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 648504417
+                }
+            ],
+            "warm_trials": [
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10504833,
+                    "first_preview_ns": 151667,
+                    "complete_index_ns": 657892000,
+                    "max_step_ns": 238417,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 672935000
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10530375,
+                    "first_preview_ns": 170833,
+                    "complete_index_ns": 624331500,
+                    "max_step_ns": 196125,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 639180000
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10145000,
+                    "first_preview_ns": 124833,
+                    "complete_index_ns": 636094791,
+                    "max_step_ns": 167916,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 650717500
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10158959,
+                    "first_preview_ns": 179292,
+                    "complete_index_ns": 644642083,
+                    "max_step_ns": 177500,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 659316292
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10618917,
+                    "first_preview_ns": 148417,
+                    "complete_index_ns": 647404542,
+                    "max_step_ns": 188750,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 662620833
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 11387375,
+                    "first_preview_ns": 156833,
+                    "complete_index_ns": 642776500,
+                    "max_step_ns": 269500,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 658886625
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10573167,
+                    "first_preview_ns": 146083,
+                    "complete_index_ns": 651543500,
+                    "max_step_ns": 172708,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 666596625
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10308917,
+                    "first_preview_ns": 148250,
+                    "complete_index_ns": 635839292,
+                    "max_step_ns": 190083,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 650683458
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10941500,
+                    "first_preview_ns": 117416,
+                    "complete_index_ns": 618084166,
+                    "max_step_ns": 294958,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 633749875
+                },
+                {
+                    "source_bytes": 104857600,
+                    "read_ns": 10485083,
+                    "first_preview_ns": 160416,
+                    "complete_index_ns": 634447500,
+                    "max_step_ns": 199875,
+                    "preview_before_index_complete": true,
+                    "progress_10_50_90_complete": true,
+                    "element_count": 100002,
+                    "index_bytes": 5600112,
+                    "process_elapsed_ns": 649695250
+                }
+            ],
+            "first_preview_median_ns": 148458,
+            "first_preview_p95_ns": 179292,
+            "complete_index_median_ns": 635839292,
+            "max_step_latency_ns": 294958,
+            "progressive_replay": {
+                "events": [
+                    10,
+                    50,
+                    90,
+                    100
+                ],
+                "first_preview_before_index_complete": true,
+                "worker_render_completed": true
+            },
+            "peak_child_rss_bytes": 143245312,
+            "index_bytes": 5600112
+        }
+    }
+}

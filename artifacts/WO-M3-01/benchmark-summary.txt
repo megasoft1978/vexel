@@ -1,23 +1,25 @@
-Preset CMake variables:
+WO-M3-01 benchmark summary
 
-  CMAKE_BUILD_TYPE="Release"
-  CMAKE_OSX_ARCHITECTURES="arm64"
-  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+Machine: macOS-27.0-arm64-arm-64bit / arm64
+Compiler: Apple clang version 21.0.0 (clang-2100.3.34.2)
+Build: mac-release; seed: 20261009
+Cache caveat: Cold/warm labels are run order only; OS file cache is not flushed.
+Trials: five first-use + ten warm per workload.
 
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
-[1/4] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
-[2/4] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
-[3/4] Linking C static library libvexel_index.a
-[4/4] Linking C executable bin/svg_index_bench
-{
-  "10MiB": {
-    "first_preview_median_ns": 216417,
-    "max_step_latency_ns": 307500
-  },
-  "100MiB": {
-    "first_preview_median_ns": 154333,
-    "max_step_latency_ns": 204125
-  }
-}
+10MiB (100000 simple rectangles):
+  read median: 1053333 ns
+  first preview median / p95: 217125 / 344459 ns
+  full index median: 178230291 ns
+  max owner step: 266833 ns
+  peak child RSS: 60456960 bytes
+  index capacity bytes: 5600112
+  source SHA-256: e31223e83bcda33d21a59027c7306b63c3b9d556ee0534649b19b33b537b27bf
+
+100MiB (100000 map-like grouped records):
+  read median: 10530375 ns
+  first preview median / p95: 148458 / 179292 ns
+  full index median: 635839292 ns
+  max owner step: 294958 ns
+  peak child RSS: 143245312 bytes
+  index capacity bytes: 5600112
+  source SHA-256: 0acabf47c6f2fc2f747042adbb33e19d3901d75c22d8e7d90b77984626171f65

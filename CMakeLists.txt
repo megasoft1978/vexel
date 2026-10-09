@@ -46,6 +46,7 @@ add_library(vexel_base STATIC src/base/base.c)
 add_library(vexel_xml STATIC
     src/svg/xml/xml_chars.c
     src/svg/xml/xml_tokenizer.c
+    src/svg/xml/xml_reader.c
 )
 target_include_directories(vexel_xml PUBLIC src/svg/xml src/base)
 target_link_libraries(vexel_xml PUBLIC vexel_base)

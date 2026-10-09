@@ -1,1 +1,17 @@
-ninja: no work to do.
+
+$ cmake --preset mac-release
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
+
+$ cmake --build --preset mac-release
+[1/2] Linking C executable bin/svg_index_test
+ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
+[2/2] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

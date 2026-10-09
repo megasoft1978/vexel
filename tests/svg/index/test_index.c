@@ -5,11 +5,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 static int fail(const char *message)
 {
     (void)fprintf(stderr, "svg index: %s\n", message);
     return 1;
+}
+
+static uint64_t wall_time_ns(void)
+{
+    struct timespec value = {0};
+    (void)timespec_get(&value, TIME_UTC);
+    return (uint64_t)value.tv_sec * 1000000000U + (uint64_t)value.tv_nsec;
 }
 
 static bool cancel_at_percent(const uint8_t *source, size_t length, unsigned target)
@@ -19,10 +27,13 @@ static bool cancel_at_percent(const uint8_t *source, size_t length, unsigned tar
     svg_index_progress p = svg_index_get_progress(session);
     ui_index_progress view = {0};
     while (p.bytes_read < length && p.bytes_read * 100U / length < target) {
+        uint64_t started = wall_time_ns();
         if (svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES) != SVG_INDEX_OK) {
             svg_index_destroy(session);
             return false;
         }
+        uint64_t elapsed = wall_time_ns() - started;
+        if (elapsed >= 100000000U) { svg_index_destroy(session); return false; }
         p = svg_index_get_progress(session);
         if (!ui_index_progress_update(&view, &p)) {
             svg_index_destroy(session);
@@ -34,7 +45,9 @@ static bool cancel_at_percent(const uint8_t *source, size_t length, unsigned tar
     reached = reached && svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES) == SVG_INDEX_CANCELED;
     p = svg_index_get_progress(session);
     reached = reached && p.canceled;
+    uint64_t destroy_start = wall_time_ns();
     svg_index_destroy(session);
+    reached = reached && wall_time_ns() - destroy_start < 100000000U;
     return reached;
 }
 
@@ -82,7 +95,9 @@ int main(void)
     if (ui_index_progress_update(&view, &stale)) return fail("stale progress was accepted");
     svg_index_element e;
     if (!svg_index_element_at(session, 1U, &e) || e.support != SVG_INDEX_SUPPORTED_RECT ||
-        e.depth != 1U || e.parent != 0U || !e.closed) return fail("rect record mismatch");
+        e.depth != 1U || e.parent != 0U || !e.closed || e.source_offset != 5U ||
+        e.source_length != 17U || memcmp(source + e.source_offset, "<rect width='2'/>", 17U) != 0)
+        return fail("rect record mismatch");
     if (!svg_index_element_at(session, 2U, &e) || e.support != SVG_INDEX_UNSUPPORTED)
         return fail("unsupported record missing");
     base_mut_bytes preview_source = {0};
@@ -126,7 +141,15 @@ int main(void)
     while (step == SVG_INDEX_OK) step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
     p = svg_index_get_progress(session);
     bool bad_tail = step == SVG_INDEX_MALFORMED && !p.complete && p.first_preview_ready &&
-                    p.diagnostic.category == SVG_XML_ERROR_MISMATCHED_TAG;
+                    p.diagnostic.category == SVG_XML_ERROR_MISMATCHED_TAG &&
+                    p.diagnostic.offset == 12U;
+    svg_xml_token *malformed_tokens = calloc(sizeof(malformed), sizeof(*malformed_tokens));
+    if (malformed_tokens == NULL) { svg_index_destroy(session); return fail("diagnostic reference allocation failed"); }
+    svg_xml_result malformed_reference = svg_xml_tokenize((base_bytes){malformed, sizeof(malformed) - 1U},
+        svg_xml_default_options(), malformed_tokens, sizeof(malformed));
+    free(malformed_tokens);
+    bad_tail = bad_tail && malformed_reference.diagnostic.category == p.diagnostic.category &&
+               malformed_reference.diagnostic.offset == p.diagnostic.offset;
     svg_index_destroy(session);
     if (!bad_tail) return fail("malformed tail was not diagnosed after preview");
 
@@ -161,6 +184,16 @@ int main(void)
     p = svg_index_get_progress(session);
     bool bad_attribute = step == SVG_INDEX_MALFORMED &&
         p.diagnostic.category == SVG_XML_ERROR_MALFORMED_SYNTAX && !p.complete;
+    svg_xml_token *bad_reference_tokens = calloc(bad_length, sizeof(*bad_reference_tokens));
+    if (bad_reference_tokens == NULL) {
+        svg_index_destroy(session); free(bad_source);
+        return fail("large diagnostic reference allocation failed");
+    }
+    svg_xml_result bad_reference = svg_xml_tokenize((base_bytes){bad_source, bad_length},
+        svg_xml_default_options(), bad_reference_tokens, bad_length);
+    free(bad_reference_tokens);
+    bad_attribute = bad_attribute && bad_reference.diagnostic.category == p.diagnostic.category &&
+                    bad_reference.diagnostic.offset == p.diagnostic.offset;
     svg_index_destroy(session);
     free(bad_source);
     if (!bad_attribute) return fail("large malformed source was accepted");
