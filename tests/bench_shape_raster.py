@@ -147,8 +147,12 @@ def main():
             new = results[name]["candidate"]["median_latency_ns"]
             results[name]["median_change_percent"] = round((new - old) * 100.0 / old, 2)
         dirty_paths = source_dirty_paths(ROOT)
+        # Evidence-only commits must not make the measured raster revision appear newer.
+        source_revision = run(["git", "-C", str(ROOT), "log", "-1", "--format=%H", "--",
+                               "src/raster/shape_render.c", "tests/svg/shape/shape_render_cli.c",
+                               "CMakeLists.txt"], capture=True).stdout.strip()
         payload = {"schema_version": 1, "base_sha": BASE_SHA,
-                   "candidate_sha": run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture=True).stdout.strip(),
+                   "candidate_sha": source_revision,
                    "candidate_source_dirty": bool(dirty_paths),
                    "candidate_source_dirty_paths": dirty_paths,
                    "host": {"platform": platform.platform(), "machine": platform.machine(),
