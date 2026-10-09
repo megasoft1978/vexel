@@ -27,9 +27,21 @@ equality before and after decode/render.
 
 ## Consequences
 
-`<use>` and clip-path resolution may retain the existing contiguous-slice
-architecture only under these hard caps. Oversized references are skipped with
-a diagnostic. Token traversal without copying is deferred to M5 performance work.
+The `<use>` implementation now traverses the already-tokenized original source
+inside shape decode. It does not copy referenced subtrees, so its per-reference
+copy usage is zero. The same 64 KiB per-reference and 1 MiB per-job values cap
+the source spans visited through references, bounding repeated traversal. The
+clip and paint-server paths continue to read original token spans. This
+direct-traversal implementation supersedes the contiguous-slice approach
+described above for this work order.
+
+The replacement limits are a fixed 131,072-slot ID index (512 KiB), at most
+65,536 IDs and use instances, reference depth 16, active element visits
+4,194,304, transform operations 4,096, and XML/instance depth 64. These bounds
+are independent of expansion output size and are documented in
+`src/svg/shape/traverse-README.md`. Generated wrapper syntax and source maps
+are eliminated. Source bytes remain borrowed and diagnostics use original byte
+offsets.
 
 Revision 4 removes a contradictory blanket ADR protection from the frozen
 work-order path rules; only this specifically listed amendment ADR is allowed.

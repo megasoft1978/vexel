@@ -390,6 +390,39 @@
       "max_alpha_diff": 0
     },
     {
+      "case": "use-css-parent",
+      "source_sha256": "4aca7f0c6fa7fe2fa5416f7650a9cd616e991dc366cf81a659089eb516fa434e",
+      "vexel_sha256": "b6c62ab15da33217354db741d51a1b5ff8957e8b64be3dac7e9dd77f5393e89e",
+      "reference_png_sha256": "d02006824eaa8ca75c71b42fe57b06feda1511a6d3f64f1d34368a4db8609fcb",
+      "edge_diff_pixels": 0,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 0,
+      "max_jointly_covered_straight_rgb_diff": 0,
+      "max_alpha_diff": 0
+    },
+    {
+      "case": "use-gradient-clip",
+      "source_sha256": "6c6b6ab36adefacdc1196af4cf0bd7c0b424915e3741b94d72515cb0a04a4d7c",
+      "vexel_sha256": "f998f2573988fe93c311bf3535fbceaad330a3773e5cbc3b401b9cd17d151409",
+      "reference_png_sha256": "b912ba6f05941d79d25abcc0492b79b7791af9da9dfb86ae2c171f6b9f232ad7",
+      "edge_diff_pixels": 5,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 1,
+      "max_jointly_covered_straight_rgb_diff": 1,
+      "max_alpha_diff": 0
+    },
+    {
+      "case": "use-nested-transforms",
+      "source_sha256": "840267b35ee5d2b9ffacf0f8776372b7d16dd55aff9ce6e30cd858d65788a559",
+      "vexel_sha256": "9468842ebc521a26398676cafa27facfe205c8546b5814689f21062593c6a3de",
+      "reference_png_sha256": "3bc22e2eb5763200743d180f8f5cadabd709d48aa57e3520e96dbcd837a44174",
+      "edge_diff_pixels": 0,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 0,
+      "max_jointly_covered_straight_rgb_diff": 0,
+      "max_alpha_diff": 0
+    },
+    {
       "case": "user-space-gradient-defaults",
       "source_sha256": "882ba4ace98ffbfe238dab4ec26091b65f05b5026fa6a5b202bec0e02e0926a7",
       "vexel_sha256": "ccfdfbb732edfa84427414d8dc17fa3b4c0fc7b7b2399c2b6e134df5ce447bd8",

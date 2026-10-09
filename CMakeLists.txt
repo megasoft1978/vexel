@@ -86,10 +86,11 @@ add_library(vexel_shape STATIC
     src/geom/geometry.c
     src/svg/css/css.c
     src/svg/reference/reference.c
-    src/svg/reference/expand.c
     src/svg/paint/paint.c
     src/svg/clip/clip.c
     src/svg/shape/shape.c
+    src/svg/shape/traverse.c
+    src/svg/shape/transform.c
     src/svg/shape/document.c
     src/raster/shape_render.c
     src/raster/tile.c
@@ -114,7 +115,7 @@ target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_stat
 add_executable(shape_render_cli tests/svg/shape/shape_render_cli.c)
 target_link_libraries(shape_render_cli PRIVATE vexel_shape)
 set_target_properties(shape_render_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-add_executable(shape_test tests/svg/shape/test_shape.c)
+add_executable(shape_test tests/svg/shape/test_shape.c tests/svg/shape/test_reference.c)
 target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(css_test tests/svg/css/test_css.c)

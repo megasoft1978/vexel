@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+  <defs>
+    <linearGradient id="paint" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="8" y2="0">
+      <stop stop-color="#ed2412"/>
+      <stop offset="1" stop-color="#1744e8"/>
+    </linearGradient>
+    <clipPath id="clip" clipPathUnits="userSpaceOnUse">
+      <rect x="1" y="1" width="5" height="7"/>
+    </clipPath>
+    <g id="target">
+      <rect width="8" height="8" fill="url(#paint)" clip-path="url(#clip)"/>
+    </g>
+  </defs>
+  <use href="#target"/>
+</svg>

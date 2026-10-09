@@ -2,15 +2,19 @@
 
 The shape module turns a borrowed SVG source slice into owned flattened edges,
 per-edge solid fallback colors, per-shape fill/stroke state, gradients, and clip
-records. It supports the bounded root/shape/CSS/transform subset implemented in
-`shape.c`. `document.c` owns the public decode wrapper and frees all document
-allocations, including recursively owned clip geometry.
+records. `traverse.c` owns token traversal, inherited style/transform contexts,
+and live `<use>` instances. `transform.c` parses the bounded affine syntax.
+`shape.c` owns supported geometry parsing and flattening. `document.c` owns
+public document cleanup.
 
-Local `href="#id"` and namespace-bound `xlink:href="#id"` references support
-basic shapes, groups, and symbols through bounded expansion. IDs are indexed
-with a 65,536-entry cap; expansion depth is capped at 16, and instances at
-65,536. Source bytes are borrowed and remain unchanged. Expansion diagnostics
-for copied child content may currently refer to generated-source offsets.
+`<defs>` is non-rendering and `<symbol>` is non-rendering unless reached by a
+live `<use>`. Local `href="#id"` and root-bound `xlink:href="#id"` references
+traverse the original token array at the use position. No source subtree,
+rewritten document, or source map is allocated. A fixed-capacity ID table
+supports up to 65,536 unique IDs. Use reference depth is capped at 16, instances
+at 65,536, each traversed reference span at 64 KiB, aggregate reference-span
+visits at 1 MiB, active element visits at 4,194,304, and transform operations
+at 4,096. Diagnostics keep offsets into the original borrowed source.
 
 Linear and centered radial gradients support 2–256 literal-color stops,
 monotone finite offsets, stop opacity, object-bounding-box or user-space units,
@@ -22,8 +26,8 @@ document edge and clip-edge budgets.
 
 CSS retains source spans and supports the nine fill/stroke paint properties
 plus `clip-path` through presentation attributes, stylesheets, inline styles,
-and inherited group paint where the property applies. The stylesheet is capped
-at 1 MiB, 4,096 rules, and 16,384 declarations. Unsupported SVG or CSS
+and inherited group/use paint where the property applies. The stylesheet is
+capped at 1 MiB, 4,096 rules, and 16,384 declarations. Unsupported SVG or CSS
 semantics return stable diagnostics rather than fetching external content.
 
 The renderer uses a deterministic scalar 4×4 coverage rasterizer. Its behavior
