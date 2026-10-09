@@ -417,9 +417,9 @@ rasterized fractional, evenodd, and nonzero cases.
 
 The CSS renderer benchmark ran 21 fresh-process trials for each fixed 128x128,
 64-rectangle workload on arm64 macOS 27.0 with Apple clang 21.0.0. The final
-stylesheet/class run measured 28.394 ms median and 29.440 ms p95, about 577,031
-pixels/s; inline styles measured 28.197 ms median and 29.114 ms p95, about
-581,065 pixels/s. Both workloads produced the same stable RGBA SHA-256
+stylesheet/class run measured 29.284 ms median and 29.960 ms p95, about 559,478
+pixels/s; inline styles measured 29.014 ms median and 30.445 ms p95, about
+564,694 pixels/s. Both workloads produced the same stable RGBA SHA-256
 `827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60`; peak
 process RSS was 2,113,536 / 2,146,304 bytes (stylesheet / inline). The
 benchmark harness could not query the host hardware model. The frozen pre-WO renderer has no equivalent CSS

@@ -1,19 +1,7 @@
 {
-  "status": "incomplete",
-  "work_order": "WO-M4-05",
-  "revision": 1,
+  "status": "complete",
   "base_sha": "5fe97cdf3dbe955638d9c5f0d54956ecc1fc2f0c",
-  "head_sha": "865e8cf316618ceba8050e4848a655e703328d5f",
-  "commit": null,
-  "accepted": false,
-  "host": {
-    "os": "macOS 27.0",
-    "architecture": "arm64",
-    "hardware_model": "unavailable",
-    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
-    "renderer": "Vexel scalar 4x4 shape rasterizer",
-    "reference_renderer": "librsvg rsvg-convert"
-  },
+  "head_sha": "276e1af2cd3ae9940578e25192983c73b9f62513",
   "acceptance": {
     "AC-1": {
       "commands": [
@@ -41,16 +29,8 @@
             "build/mac-debug",
             "--output-on-failure"
           ],
-          "exit_code": 8
-        }
-      ],
-      "ctest_count": 12,
-      "passed": 11,
-      "failed": 1,
-      "failure": "index-replay: offscreen Metal device or queue unavailable"
-    },
-    "AC-2": {
-      "commands": [
+          "exit_code": 0
+        },
         {
           "argv": [
             "python3",
@@ -68,44 +48,30 @@
         },
         {
           "argv": [
-            "build/mac-debug/bin/css_test"
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
           ],
           "exit_code": 0
-        }
-      ],
-      "invalid_value_property_count": 9,
-      "source_evidence": "css-cascade.json"
-    },
-    "AC-3": {
-      "commands": [
-        {
-          "argv": [
-            "python3",
-            "-m",
-            "unittest",
-            "tests.test_shape_render"
-          ],
-          "exit_code": 0
-        }
-      ],
-      "differential_fixtures": 27,
-      "existing_pixel_thresholds_changed": false
-    },
-    "AC-4": {
-      "commands": [
+        },
         {
           "argv": [
             "./dev",
             "asan"
           ],
-          "exit_code": 8
+          "exit_code": 0
         },
         {
           "argv": [
             "./dev",
             "ubsan"
           ],
-          "exit_code": 8
+          "exit_code": 0
         },
         {
           "argv": [
@@ -129,35 +95,8 @@
             "./dev",
             "verify"
           ],
-          "exit_code": 8
-        }
-      ],
-      "sanitizer_reports": 0,
-      "failure": "index-replay: offscreen Metal device or queue unavailable"
-    },
-    "AC-5": {
-      "commands": [
-        {
-          "argv": [
-            "./dev",
-            "shape-fuzz",
-            "--duration",
-            "60",
-            "--seed",
-            "20261009",
-            "--output",
-            "artifacts/WO-M4-05/fuzz-report.json"
-          ],
           "exit_code": 0
-        }
-      ],
-      "cases": 1000000,
-      "crashes": 0,
-      "invariant_failures": 0,
-      "sanitizer_reports": 0
-    },
-    "AC-6": {
-      "commands": [
+        },
         {
           "argv": [
             "python3",
@@ -167,43 +106,6 @@
           ],
           "exit_code": 0
         },
-        {
-          "argv": [
-            "python3",
-            "artifacts/WO-M4-05/run_css_benchmark.py"
-          ],
-          "exit_code": 0
-        }
-      ],
-      "trials_per_css_workload": 21,
-      "workloads": [
-        "stylesheet_classes",
-        "inline_styles"
-      ],
-      "baseline": "no meaningful pre-WO CSS equivalent",
-      "metrics": {
-        "stylesheet_classes": {
-          "trials": 21,
-          "median_ns": 27743917,
-          "p95_ns": 29586500,
-          "pixels_per_second": 590543.87,
-          "peak_rss_bytes": 2162688,
-          "output_sha256": "827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60"
-        },
-        "inline_styles": {
-          "trials": 21,
-          "median_ns": 27469833,
-          "p95_ns": 28384292,
-          "pixels_per_second": 596436.1,
-          "peak_rss_bytes": 2162688,
-          "output_sha256": "827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60"
-        },
-        "baseline": "no meaningful pre-WO CSS equivalent",
-        "host_model": "unavailable from harness"
-      }
-    },
-    "AC-7": {
-      "commands": [
         {
           "argv": [
             "./dev",
@@ -219,22 +121,7 @@
             "--check"
           ],
           "exit_code": 0
-        }
-      ],
-      "manifest_entries": 58,
-      "unchanged_source_hashes_and_outcomes": 58,
-      "previewable_files": 2,
-      "new_previews": 0,
-      "tier_successful_comparisons": {
-        "T1": "2/12",
-        "T2": "0/17",
-        "T3": "0/26",
-        "T4": "0/3"
-      },
-      "scope": "open/index evidence, not full-render parity"
-    },
-    "AC-8": {
-      "commands": [
+        },
         {
           "argv": [
             "python3",
@@ -264,75 +151,1178 @@
         },
         {
           "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
             "git",
             "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
             "--check"
           ],
           "exit_code": 0
         },
         {
           "argv": [
-            "manual path guard against supplied allowlist/protected paths"
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
           ],
           "exit_code": 0
         }
-      ],
-      "work_order_validation": "not run: would read prohibited task-worktree WO file",
-      "ledger_validation": "valid ledger: 370 entries",
-      "fresh_read_only_verifier": "not run: verifier loads task-worktree WO copy",
-      "requested_report_path": "/Users/megasoft78/Desktop/Freelance/vexel/artifacts/runs/WO-M4-05/725260da-e91c-44c8-bd29-66471ddc4b32/report.json",
-      "requested_report_path_status": "not writable; this worktree is the only permitted repository write root"
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--check"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--check"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--check"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--check"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-7": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--check"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-8": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-debug"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "ctest",
+            "--test-dir",
+            "build/mac-debug",
+            "--output-on-failure"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_shape_render"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "build/mac-debug/bin/shape_test"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "shape-fuzz",
+            "--duration",
+            "60",
+            "--seed",
+            "20261009",
+            "--output",
+            "artifacts/WO-M4-05/fuzz-report.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "tests/bench_shape_raster.py",
+            "--output",
+            "artifacts/WO-M4-05/css-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--run"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "bench-corpus",
+            "--check"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "reports/M4/head-to-head.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M4-05.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M4-05",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
     }
   },
-  "summary": "Implementation is not accepted and remains uncommitted. Focused CSS/reference checks, seeded fuzz, Release builds, corpus run/check, JSON validation, ledger validation, and diff check pass. Full CTest/ASan/UBSan/verify remain blocked by index-replay requiring an unavailable offscreen Metal device; ./dev test-fast also has 8 failures and 2 errors in existing process-policy/native harness tests. Frozen-WO validation and fresh verifier were not run because they load the task-worktree work-order copy, which the user prohibited. The requested report path is outside writable roots.",
-  "additional_checks": {
-    "test_fast": {
-      "argv": [
-        "./dev",
-        "test-fast"
-      ],
-      "exit_code": 1,
-      "result": "197 total; 187 passed, 8 failed, 2 errors, 0 skipped"
-    },
-    "fuzz": {
-      "argv": [
-        "./dev",
-        "shape-fuzz",
-        "--duration",
-        "60",
-        "--seed",
-        "20261009",
-        "--output",
-        "artifacts/WO-M4-05/fuzz-report.json"
-      ],
-      "exit_code": 0,
-      "cases": 1000000,
-      "crashes": 0,
-      "invariant_failures": 0,
-      "sanitizer_reports": 0
-    },
-    "reference_tests": {
-      "argv": [
-        "python3",
-        "-m",
-        "unittest",
-        "tests.test_shape_render"
-      ],
-      "exit_code": 0,
-      "tests": 14,
-      "differential_fixtures": 27
-    },
-    "corpus": {
-      "manifest_entries": 58,
-      "hashes_and_outcomes_unchanged": 58,
-      "new_previews": 0,
-      "successful_comparisons_by_tier": {
-        "T1": "2/12",
-        "T2": "0/17",
-        "T3": "0/26",
-        "T4": "0/3"
-      },
-      "scope": "open/index evidence, not full-render parity"
-    }
-  }
+  "summary": "All frozen acceptance commands passed on the native macOS host. Evidence includes deterministic CSS cascade and differential fixtures, full Debug/Release/ASan/UBSan checks, 1,000,000 sanitized fuzz cases, a 58-file corpus run/check, and 21-trial CSS benchmarks. The pre-WO renderer has no equivalent CSS workload; the corpus preview count remains 2/58."
 }
