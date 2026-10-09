@@ -35,11 +35,11 @@
         },
         "AC-8": {
             "work_order_validation": "pass",
-            "ledger_validation": "pass; 388 entries",
+            "ledger_validation": "pass; 390 entries",
             "json_validation": "pass",
-            "diff_check": "pass before final evidence edits; rerun pending",
-            "runner_path_guard": "pass on 61 implementation paths",
-            "fresh_read_only_review": "pending",
+            "diff_check": "pass; git diff --check produced no output after final evidence edits",
+            "runner_path_guard": "pass; runner assert_scope allowed all 70 committed paths and active work-order matcher allowed 15 pending paths",
+            "fresh_read_only_review": "not started: codex exec app-server initialization failed with Operation not permitted under this restricted shell; stderr retained",
             "git_diff_check": "pass after evidence edits"
         },
         "AC-9": {
@@ -68,9 +68,18 @@
         "./dev bench-corpus --check": "pass",
         "python3 -m json.tool reports/M4/head-to-head.json": "pass",
         "python3 -m json.tool bench/results/WO-M4-06.json": "pass",
-        "python3 scripts/ledger.py validate ledger.jsonl": "pass; 388 entries",
+        "python3 scripts/ledger.py validate ledger.jsonl": "pass; 390 entries",
         "python3 scripts/wo_validate.py WO-M4-06 --ready": "pass",
-        "git diff --check": "pass after evidence edits"
+        "git diff --check": "pass; clean after final evidence edits"
     },
-    "summary": "AC-9 source-backed traversal repair and its focused bounds, source-preservation, sanitizer-shape, differential, fuzz, benchmark, corpus, and path-scope evidence pass. Full work-order acceptance remains incomplete because the existing index-replay CTest cannot acquire offscreen Metal in this host session; a fresh read-only review remains pending."
+    "summary": "AC-9 source-backed traversal repair and focused bounds, source-preservation, sanitizer-shape, differential, fuzz, benchmark, corpus, and path-scope evidence pass. Full acceptance remains incomplete: index-replay cannot acquire offscreen Metal, and the requested fresh read-only reviewer could not start because the local Codex CLI app-server initialization is denied by this restricted shell.",
+    "fresh_verifier_attempt": {
+        "candidate_sha": "20ed36c3158d0b56142ef442e6261d136c042876",
+        "mode": "read-only",
+        "result": "not_started",
+        "exit_code": 1,
+        "error": "failed to initialize in-process app-server client: Operation not permitted",
+        "stderr_artifact": "artifacts/WO-M4-06/fresh-verifier-stderr.txt",
+        "verdict_artifact": "not produced"
+    }
 }

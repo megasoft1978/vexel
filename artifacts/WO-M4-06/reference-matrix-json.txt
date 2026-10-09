@@ -1,7 +1,7 @@
 {
     "work_order": "WO-M4-06 revision 4",
     "tested_implementation_commit": "d6dba56184d3a7530ca0dcc0186d9c9b1f45d657",
-    "result": "AC-9 pass; overall verification incomplete because host CTest requires unavailable offscreen Metal and fresh review is pending",
+    "result": "AC-9 pass; overall verification incomplete because host CTest requires unavailable offscreen Metal and fresh review could not start",
     "reference_traversal_bounds": {
         "source_map_bytes": 0,
         "reference_depth_max": 16,
@@ -190,5 +190,5 @@
         "performance_claim": false
     },
     "source_contract": "Original document source is borrowed and unchanged. Live <use> references traverse original tokens at the use position with no subtree copy. Clip resolution separately uses a bounded copied child span and small generated wrapper; diagnostics address original source.",
-    "overall_gate_note": "Debug/ASan/UBSan CTest and ./dev verify each report 11/12 because index-replay cannot obtain an offscreen Metal device or queue in this host session. The focused shape tests pass in Debug/ASan/UBSan; the fresh read-only review remains pending."
+    "overall_gate_note": "Debug/ASan/UBSan CTest and ./dev verify each report 11/12 because index-replay cannot obtain an offscreen Metal device or queue in this host session. Focused shape tests pass in Debug/ASan/UBSan. A fresh read-only review was attempted against candidate 20ed36c but the Codex CLI failed before starting because in-process app-server initialization returned Operation not permitted; no verdict was produced."
 }

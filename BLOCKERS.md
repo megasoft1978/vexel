@@ -2,7 +2,9 @@
 
 No implementation blocker remains for AC-9. Full machine acceptance is still
 open because this host session cannot provide the offscreen Metal device or
-queue required by the existing `index-replay` CTest.
+queue required by the existing `index-replay` CTest. The fresh read-only review
+also could not start: local Codex CLI app-server initialization returned
+`Operation not permitted` before any reviewer verdict was produced.
 
 ## Resolved: WO-M4-06 revision 2 acceptance block
 
@@ -12,4 +14,5 @@ copy path with direct traversal of original tokens; 64 KiB per-reference and
 1 MiB per-job source-span limits remain as traversal-work bounds. It also
 retains depth 16, a 65,536-use cap, and fixed ID-index allocation. The source
 and allocation evidence is in `artifacts/WO-M4-06/reference-matrix.json`.
-Fresh read-only review remains pending.
+The review attempt and exact startup error are recorded in
+`artifacts/WO-M4-06/fresh-verifier-attempt.json`.
