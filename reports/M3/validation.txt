@@ -34,4 +34,8 @@ exit_code=0
 
 The validator recomputes all 41 source hashes and report claims. Repeated read-only validation keeps the generated JSON/Markdown bytes unchanged. The recorded BOOT-08 pair has 5 cold-order + 10 warm-order trials per case; only 100 MiB peak RSS fails after two relative breaches (137,904,128 and 139,526,144 bytes), while each value is below the 524,288,000-byte absolute limit. Pan-to-present and bundle size are unavailable with explicit reasons. Owner files/tasks, interviews, outcomes, and pilots remain zero; the decision is OPEN.
 
-The nested runner executor report omitted AC-7 and could not write the shared worktree Git metadata, so runner report acceptance did not pass. The controlling executor corrected the machine evidence and will commit this reviewed candidate, then invoke the exact clean read-only verifier. The executor-generated self-review is not treated as independent verification.
+The nested runner executor report omitted AC-7 and could not write shared worktree Git metadata. The controlling executor recorded the exact frozen-command results, committed the candidate, and ran the independent clean verifier. Final verdict: PASS, no findings; changed-path scope is restricted to this packet, STATE, LEDGER, and ledger.jsonl. Reviewer evidence: artifacts/runs/WO-M3-05/verify-a3acfe99-3db8-4bbb-b058-cbdc81188fd7/.
+
+AC-1 determinism check: SHA-256 before and after both `--check` commands was unchanged:
+- evidence.json: 00819133d764c00e9efcddb758cfa9a9cb881a9f07940a9a2778e591c1f59d7e
+- decision.md: 14cb17654c5ef361bfc21e5789133b16b36185421a9e63a8e4d7a22f67d9b14e
