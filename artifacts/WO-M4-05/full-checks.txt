@@ -1,0 +1,12 @@
+Frozen verification command summary (final working-tree source):
+
+cmake --preset mac-debug: PASS, exit 0 (debug-configure.txt)
+cmake --build --preset mac-debug: PASS, exit 0 (debug-build.txt)
+ctest --test-dir build/mac-debug --output-on-failure: FAIL, exit 8; 11/12 passed. index-replay reports "offscreen Metal device or queue unavailable" (debug-ctest.txt).
+./dev asan: FAIL, exit 8 only at same index-replay environment requirement; no sanitizer report (asan.txt).
+./dev ubsan: FAIL, exit 8 only at same index-replay environment requirement; no sanitizer report (ubsan.txt).
+cmake --preset mac-release: PASS, exit 0 (release-configure.txt)
+cmake --build --preset mac-release: PASS, exit 0 (release-build.txt)
+./dev verify: FAIL, exit 8 only at same index-replay environment requirement (verify.txt).
+
+The full acceptance gate is not green in this host environment. No test or oracle threshold was changed.

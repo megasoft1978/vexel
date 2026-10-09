@@ -1,9 +1,9 @@
 #include "shape.h"
+#include "css.h"
 
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-
 #define SHAPE_MAX_BYTES (16U * 1024U * 1024U)
 #define SHAPE_MAX_COMMANDS 65536U
 #define SHAPE_MAX_COORD 1000000.0
@@ -20,20 +20,17 @@ typedef struct builder {
     svg_shape_diagnostic *diag;
     geom_affine transform;
 } builder;
-
 static bool span_eq(base_bytes s, svg_xml_span span, const char *literal)
 {
     size_t n = strlen(literal);
     return span.length == n && span.offset <= s.len && n <= s.len - span.offset &&
         memcmp(s.ptr + span.offset, literal, n) == 0;
 }
-
 static bool point_bounded(geom_point point)
 {
     return geom_finite_point(point) && fabs(point.x) <= SHAPE_MAX_COORD &&
            fabs(point.y) <= SHAPE_MAX_COORD;
 }
-
 static bool affine_inverse(geom_affine matrix, geom_affine *inverse)
 {
     double determinant = matrix.a * matrix.d - matrix.b * matrix.c;
@@ -49,7 +46,6 @@ static bool affine_inverse(geom_affine matrix, geom_affine *inverse)
     *inverse = result;
     return true;
 }
-
 static double transformed_flatness_tolerance(const builder *b)
 {
     double row_norm=fmax(fabs(b->transform.a)+fabs(b->transform.c),
@@ -60,12 +56,10 @@ static double transformed_flatness_tolerance(const builder *b)
     if (!isfinite(scale) || scale < 1.0) scale=1.0;
     return 0.25/scale;
 }
-
 static void fail(svg_shape_diagnostic *d, svg_shape_error e, size_t offset)
 {
     if (d != NULL) *d = (svg_shape_diagnostic){e, offset};
 }
-
 static void skip_space(number_reader *r)
 {
     while (r->i < r->n && (r->p[r->i] == ' ' || r->p[r->i] == '\t' || r->p[r->i] == '\r' || r->p[r->i] == '\n')) r->i++;
@@ -188,7 +182,6 @@ static bool add_edge(builder *b, geom_point a, geom_point z)
     b->doc->edge_count++;
     return true;
 }
-
 static bool begin_shape(builder *b, bool evenodd)
 {
     if (b->doc->shape_count >= SVG_SHAPE_MAX_EDGES ||
@@ -246,7 +239,6 @@ static bool begin_shape(builder *b, bool evenodd)
     };
     return true;
 }
-
 static geom_point midpoint(geom_point a, geom_point z)
 {
     return (geom_point){(a.x+z.x)*0.5,(a.y+z.y)*0.5};
@@ -387,20 +379,18 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
 static bool parse_color(base_bytes src, svg_xml_span s, uint8_t out[4])
 {
     out[3]=255U;
-    if(span_eq(src,s,"none")){out[3]=0U;return true;}
-    if(span_eq(src,s,"black")){out[0]=out[1]=out[2]=0U;return true;}
-    if(span_eq(src,s,"white")){out[0]=out[1]=out[2]=255U;return true;}
-    if(span_eq(src,s,"red")){out[0]=255U;out[1]=out[2]=0U;return true;}
-    if(span_eq(src,s,"green")){out[0]=0U;out[1]=128U;out[2]=0U;return true;}
-    if(span_eq(src,s,"blue")){out[0]=out[1]=0U;out[2]=255U;return true;}
+    if(svg_css_keyword_equals(src,s,"none")){out[3]=0U;return true;}
+    if(svg_css_keyword_equals(src,s,"black")){out[0]=out[1]=out[2]=0U;return true;}
+    if(svg_css_keyword_equals(src,s,"white")){out[0]=out[1]=out[2]=255U;return true;}
+    if(svg_css_keyword_equals(src,s,"red")){out[0]=255U;out[1]=out[2]=0U;return true;}
+    if(svg_css_keyword_equals(src,s,"green")){out[0]=0U;out[1]=128U;out[2]=0U;return true;}
+    if(svg_css_keyword_equals(src,s,"blue")){out[0]=out[1]=0U;out[2]=255U;return true;}
     if(s.length==4U&&src.ptr[s.offset]=='#'){for(size_t i=0;i<3U;i++){uint8_t c=src.ptr[s.offset+1U+i];int v=c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:c>='A'&&c<='F'?c-'A'+10:-1;if(v<0)return false;out[i]=(uint8_t)(v*17); }return true;}
     if(s.length==7U&&src.ptr[s.offset]=='#'){for(size_t i=0;i<3U;i++){uint8_t a=src.ptr[s.offset+1U+i*2U],c=src.ptr[s.offset+2U+i*2U];int h=a>='0'&&a<='9'?a-'0':a>='a'&&a<='f'?a-'a'+10:a>='A'&&a<='F'?a-'A'+10:-1;int l=c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:c>='A'&&c<='F'?c-'A'+10:-1;if(h<0||l<0)return false;out[i]=(uint8_t)(h*16+l);}return true;}
     return false;
 }
-
 static bool attr(base_bytes src, svg_xml_token *tokens, size_t count,
                  size_t element, const char *name, svg_xml_span *value);
-
 static bool parse_stroke_number(base_bytes src, svg_xml_span span, double *out)
 {
     number_reader r = {src.ptr + span.offset, span.length, 0U, span.offset};
@@ -410,7 +400,7 @@ static bool parse_stroke_number(base_bytes src, svg_xml_span span, double *out)
 }
 static bool parse_dasharray(base_bytes src, svg_xml_span span, svg_shape_stroke *stroke)
 {
-    if (span_eq(src, span, "none")) return true;
+    if (svg_css_keyword_equals(src, span, "none")) return true;
     number_reader r = {src.ptr + span.offset, span.length, 0U, span.offset};
     while (true) {
         skip_space(&r);
@@ -430,44 +420,43 @@ static bool parse_dasharray(base_bytes src, svg_xml_span span, svg_shape_stroke 
     if (stroke->dash_count == 0U) return false;
     return true;
 }
-static bool parse_stroke(base_bytes src, svg_xml_token *tokens, size_t count,
-                         size_t element, svg_shape_stroke *stroke,
-                         svg_shape_diagnostic *diag)
+static bool parse_stroke(base_bytes src, svg_shape_stroke *stroke,
+                         const svg_css_paint *paint, svg_shape_diagnostic *diag)
 {
     svg_xml_span span;
-    if (attr(src, tokens, count, element, "stroke", &span) &&
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE, &span) &&
         !parse_color(src, span, stroke->rgba)) {
         fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset); return false;
     }
-    if (!attr(src, tokens, count, element, "stroke", &span)) stroke->rgba[3] = 0U;
-    if (attr(src, tokens, count, element, "stroke-width", &span)) {
+    if (!svg_css_paint_value(paint, SVG_CSS_STROKE, &span)) stroke->rgba[3] = 0U;
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_WIDTH, &span)) {
         if (!parse_stroke_number(src, span, &stroke->width) || stroke->width < 0.0 || stroke->width > 1024.0) {
             fail(diag, SVG_SHAPE_ERROR_NUMBER, span.offset); return false;
         }
     }
-    if (attr(src, tokens, count, element, "stroke-miterlimit", &span)) {
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_MITERLIMIT, &span)) {
         if (!parse_stroke_number(src, span, &stroke->miter_limit) || stroke->miter_limit < 1.0 || stroke->miter_limit > 64.0) {
             fail(diag, SVG_SHAPE_ERROR_NUMBER, span.offset); return false;
         }
     }
-    if (attr(src, tokens, count, element, "stroke-dashoffset", &span)) {
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_DASHOFFSET, &span)) {
         if (!parse_stroke_number(src, span, &stroke->dash_offset) || fabs(stroke->dash_offset) > 1000000.0) {
             fail(diag, SVG_SHAPE_ERROR_NUMBER, span.offset); return false;
         }
     }
-    if (attr(src, tokens, count, element, "stroke-linecap", &span)) {
-        if (span_eq(src, span, "butt")) stroke->cap = SVG_SHAPE_CAP_BUTT;
-        else if (span_eq(src, span, "square")) stroke->cap = SVG_SHAPE_CAP_SQUARE;
-        else if (span_eq(src, span, "round")) stroke->cap = SVG_SHAPE_CAP_ROUND;
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_LINECAP, &span)) {
+        if (svg_css_keyword_equals(src, span, "butt")) stroke->cap = SVG_SHAPE_CAP_BUTT;
+        else if (svg_css_keyword_equals(src, span, "square")) stroke->cap = SVG_SHAPE_CAP_SQUARE;
+        else if (svg_css_keyword_equals(src, span, "round")) stroke->cap = SVG_SHAPE_CAP_ROUND;
         else { fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset); return false; }
     }
-    if (attr(src, tokens, count, element, "stroke-linejoin", &span)) {
-        if (span_eq(src, span, "miter")) stroke->join = SVG_SHAPE_JOIN_MITER;
-        else if (span_eq(src, span, "bevel")) stroke->join = SVG_SHAPE_JOIN_BEVEL;
-        else if (span_eq(src, span, "round")) stroke->join = SVG_SHAPE_JOIN_ROUND;
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_LINEJOIN, &span)) {
+        if (svg_css_keyword_equals(src, span, "miter")) stroke->join = SVG_SHAPE_JOIN_MITER;
+        else if (svg_css_keyword_equals(src, span, "bevel")) stroke->join = SVG_SHAPE_JOIN_BEVEL;
+        else if (svg_css_keyword_equals(src, span, "round")) stroke->join = SVG_SHAPE_JOIN_ROUND;
         else { fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset); return false; }
     }
-    if (attr(src, tokens, count, element, "stroke-dasharray", &span) &&
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_DASHARRAY, &span) &&
         !parse_dasharray(src, span, stroke)) {
         fail(diag, SVG_SHAPE_ERROR_NUMBER, span.offset); return false;
     }
@@ -478,7 +467,6 @@ static bool attr(base_bytes src, svg_xml_token *tokens,size_t count,size_t eleme
     for(size_t i=element+1U;i<count&&tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE;i++)if(tokens[i].prefix.length==0U&&span_eq(src,tokens[i].local_name,name)){*value=tokens[i].value;return true;}
     return false;
 }
-
 static bool number_attr(base_bytes src, svg_xml_token *tokens, size_t count,
                         size_t element, const char *name, double *value)
 {
@@ -489,7 +477,6 @@ static bool number_attr(base_bytes src, svg_xml_token *tokens, size_t count,
     skip_space(&reader);
     return reader.i == reader.n;
 }
-
 static bool read_transform_args(number_reader *r, double *values, size_t count)
 {
     for (size_t i=0U;i<count;i++) {
@@ -498,7 +485,6 @@ static bool read_transform_args(number_reader *r, double *values, size_t count)
     }
     return true;
 }
-
 static bool transform_parse(base_bytes src, svg_xml_span span, geom_affine *out,
                             size_t *operation_count)
 {
@@ -576,7 +562,6 @@ static bool transform_parse(base_bytes src, svg_xml_span span, geom_affine *out,
     *operation_count=operations;
     return true;
 }
-
 static bool transformed_node(base_bytes src, svg_xml_token *tokens, size_t count,
                              size_t element, geom_affine parent, geom_affine *out,
                              size_t *operations, svg_shape_diagnostic *diag)
@@ -595,7 +580,6 @@ static bool transformed_node(base_bytes src, svg_xml_token *tokens, size_t count
     }
     return true;
 }
-
 static bool ellipse_edges(builder *b, double cx, double cy, double rx, double ry)
 {
     if (rx == 0.0 || ry == 0.0) return true;
@@ -627,7 +611,6 @@ static bool ellipse_edges(builder *b, double cx, double cy, double rx, double ry
     }
     return true;
 }
-
 static bool attributes_supported(base_bytes source,svg_xml_token *tokens,size_t count,size_t element,bool root,svg_xml_span kind)
 {
     for(size_t i=element+1U;i<count&&tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE;i++){
@@ -643,13 +626,16 @@ static bool attributes_supported(base_bytes source,svg_xml_token *tokens,size_t 
             span_eq(source,kind,"ellipse") ? (span_eq(source,n,"cx")||span_eq(source,n,"cy")||span_eq(source,n,"rx")||span_eq(source,n,"ry")) :
             span_eq(source,kind,"line") ? (span_eq(source,n,"x1")||span_eq(source,n,"y1")||span_eq(source,n,"x2")||span_eq(source,n,"y2")) :
             (span_eq(source,n,"points"));
-        bool ok=root?(span_eq(source,n,"xmlns")||span_eq(source,n,"version")||span_eq(source,n,"width")||span_eq(source,n,"height")||span_eq(source,n,"viewBox")||span_eq(source,n,"transform")):
-            span_eq(source,kind,"g") ? span_eq(source,n,"transform") : (common||shape);
+        bool metadata=span_eq(source,n,"id")||span_eq(source,n,"class")||span_eq(source,n,"style");
+        bool paint=span_eq(source,n,"fill")||span_eq(source,n,"fill-rule")||span_eq(source,n,"stroke")||
+            span_eq(source,n,"stroke-width")||span_eq(source,n,"stroke-linecap")||span_eq(source,n,"stroke-linejoin")||
+            span_eq(source,n,"stroke-miterlimit")||span_eq(source,n,"stroke-dasharray")||span_eq(source,n,"stroke-dashoffset");
+        bool ok=root?(metadata||paint||span_eq(source,n,"xmlns")||span_eq(source,n,"version")||span_eq(source,n,"width")||span_eq(source,n,"height")||span_eq(source,n,"viewBox")||span_eq(source,n,"transform")):
+            span_eq(source,kind,"g") ? (metadata||paint||span_eq(source,n,"transform")) : (metadata||common||shape);
         if(!ok)return false;
     }
     return true;
 }
-
 svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg_shape_diagnostic *diagnostic)
 {
     svg_shape_diagnostic local_diagnostic;
@@ -661,12 +647,21 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
     svg_xml_token *tokens=calloc(cap,sizeof(*tokens));if(tokens==NULL){fail(diagnostic,SVG_SHAPE_ERROR_OOM,0);return SVG_SHAPE_ERROR_OOM;}
     svg_xml_result xr=svg_xml_tokenize(source,svg_xml_default_options(),tokens,cap);
     if(xr.diagnostic.category!=SVG_XML_ERROR_NONE){free(tokens);fail(diagnostic,SVG_SHAPE_ERROR_XML,xr.diagnostic.offset);return SVG_SHAPE_ERROR_XML;}
+    svg_css_sheet *css=NULL;
+    svg_css_error css_error=svg_css_sheet_create(source,tokens,xr.token_count,&css);
+    if(css_error!=SVG_CSS_OK){free(tokens);fail(diagnostic,css_error==SVG_CSS_LIMIT?SVG_SHAPE_ERROR_LIMIT:SVG_SHAPE_ERROR_OOM,0);return diagnostic->category;}
     builder b={.doc=out,.diag=diagnostic,.transform=geom_affine_identity()}; size_t root=SIZE_MAX; svg_xml_span v={0};
     geom_affine transform_stack[65];
+    svg_css_paint paint_stack[65];
     size_t transform_ops=0U;
+    bool in_style=false;size_t style_depth=0U;
     out->source=source;
     for(size_t i=0;i<xr.token_count;i++){
         svg_xml_token *t=&tokens[i];
+        if(in_style){if(t->kind==SVG_XML_TOKEN_END_ELEMENT&&t->depth==style_depth)in_style=false;continue;}
+        if(svg_css_is_style_element(source,t)){
+            if(t->kind==SVG_XML_TOKEN_START_ELEMENT){in_style=true;style_depth=t->depth;}continue;
+        }
         if(t->kind==SVG_XML_TOKEN_PROCESSING_INSTRUCTION){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
         if(t->kind==SVG_XML_TOKEN_CDATA){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->value.offset);goto bad;}
         if(t->kind==SVG_XML_TOKEN_TEXT){
@@ -682,6 +677,13 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
         if(is_root){if(!span_eq(source,t->local_name,"svg")||t->prefix.length!=0U){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}root=i;}
         else if(t->prefix.length!=0U||(!is_group&&!span_eq(source,t->local_name,"rect")&&!span_eq(source,t->local_name,"path")&&!span_eq(source,t->local_name,"circle")&&!span_eq(source,t->local_name,"ellipse")&&!span_eq(source,t->local_name,"line")&&!span_eq(source,t->local_name,"polygon")&&!span_eq(source,t->local_name,"polyline"))){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
         if(!attributes_supported(source,tokens,xr.token_count,i,is_root,t->local_name)){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
+        const svg_css_paint *parent_paint=t->depth==0U?NULL:&paint_stack[t->depth-1U];
+        svg_css_error paint_error =
+            svg_css_compute(css, source, tokens, xr.token_count, i, parent_paint, &paint_stack[t->depth]);
+        if (paint_error != SVG_CSS_OK) {
+            fail(diagnostic, paint_error == SVG_CSS_LIMIT ? SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_OOM, 0U);
+            goto bad;
+        }
         geom_affine parent=t->depth==0U?geom_affine_identity():transform_stack[t->depth-1U];
         geom_affine current; size_t local_ops=0U;
         if(!transformed_node(source,tokens,xr.token_count,i,parent,&current,&local_ops,diagnostic))goto bad;
@@ -695,27 +697,27 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
             if(w<1||w>4096){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,ws.offset);goto bad;}if(h<1||h>4096){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,hs.offset);goto bad;}out->width=(uint32_t)ceil(w);out->height=(uint32_t)ceil(h);out->view_x=0;out->view_y=0;out->view_width=w;out->view_height=h;
             if(attr(source,tokens,xr.token_count,i,"viewBox",&vs)){number_reader vr={source.ptr+vs.offset,vs.length,0,vs.offset};if(!read_number(&vr,&out->view_x)||!next_number_separator(&vr)||!read_number(&vr,&out->view_y)||!next_number_separator(&vr)||!read_number(&vr,&out->view_width)||!next_number_separator(&vr)||!read_number(&vr,&out->view_height)||out->view_width<=0||out->view_height<=0){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}skip_space(&vr);if(vr.i!=vr.n||fabs(out->view_x+out->view_width)>SHAPE_MAX_COORD||fabs(out->view_y+out->view_height)>SHAPE_MAX_COORD){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}}
         } else if (!is_group) {
-            uint8_t color[4]={0,0,0,255};svg_xml_span fs;if(attr(source,tokens,xr.token_count,i,"fill",&fs)&&!parse_color(source,fs,color)){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,fs.offset);goto bad;}
-            svg_xml_span rule;if(attr(source,tokens,xr.token_count,i,"fill-rule",&rule)&&!span_eq(source,rule,"evenodd")&&!span_eq(source,rule,"nonzero")){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,rule.offset);goto bad;}
+            uint8_t color[4]={0,0,0,255};svg_xml_span fs;if(svg_css_paint_value(&paint_stack[t->depth],SVG_CSS_FILL,&fs)&&!parse_color(source,fs,color)){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,fs.offset);goto bad;}
+            svg_xml_span rule;if(svg_css_paint_value(&paint_stack[t->depth],SVG_CSS_FILL_RULE,&rule)&&!svg_css_keyword_equals(source,rule,"evenodd")&&!svg_css_keyword_equals(source,rule,"nonzero")){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,rule.offset);goto bad;}
             bool evenodd=false;
-            if(attr(source,tokens,xr.token_count,i,"fill-rule",&rule))evenodd=span_eq(source,rule,"evenodd");
+            if(svg_css_paint_value(&paint_stack[t->depth],SVG_CSS_FILL_RULE,&rule))evenodd=svg_css_keyword_equals(source,rule,"evenodd");
             b.offset=t->name.offset;
             b.transform=current;
             if(!begin_shape(&b,evenodd))goto bad;
             size_t before=out->edge_count;
-            if (!parse_stroke(source, tokens, xr.token_count, i,
-                              &out->strokes[b.shape_index], diagnostic)) goto bad;
+            if (!parse_stroke(source, &out->strokes[b.shape_index],
+                              &paint_stack[t->depth], diagnostic)) goto bad;
             if (out->strokes[b.shape_index].rgba[3] != 0U &&
                 !affine_inverse(current, &out->shape_stroke_inverse[b.shape_index])) {
                 svg_xml_span stroke_span;
-                (void)attr(source, tokens, xr.token_count, i, "stroke", &stroke_span);
+                (void)svg_css_paint_value(&paint_stack[t->depth], SVG_CSS_STROKE, &stroke_span);
                 fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
                 goto bad;
             }
             if (span_eq(source, t->local_name, "path") &&
                 out->strokes[b.shape_index].rgba[3] != 0U) {
                 svg_xml_span stroke_span;
-                (void)attr(source, tokens, xr.token_count, i, "stroke", &stroke_span);
+                (void)svg_css_paint_value(&paint_stack[t->depth], SVG_CSS_STROKE, &stroke_span);
                 fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
                 goto bad;
             }
@@ -778,11 +780,10 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
         }
     }
     if(root==SIZE_MAX){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,0);goto bad;}
-    free(tokens);return SVG_SHAPE_ERROR_NONE;
+    svg_css_sheet_destroy(css);free(tokens);return SVG_SHAPE_ERROR_NONE;
 bad:
-    free(tokens);svg_shape_document_destroy(out);return diagnostic->category;
+    svg_css_sheet_destroy(css);free(tokens);svg_shape_document_destroy(out);return diagnostic->category;
 }
-
 void svg_shape_document_destroy(svg_shape_document *document)
 {
     if (document == NULL) return;
@@ -791,7 +792,6 @@ void svg_shape_document_destroy(svg_shape_document *document)
     free(document->shape_edge_start); free(document->shape_edge_count);
     free(document->shape_stroke_inverse); free(document->strokes); *document = (svg_shape_document){0};
 }
-
 const char *svg_shape_error_name(svg_shape_error e)
 {
     static const char *names[]={"none","invalid-argument","xml","unsupported","number","limit","path","viewport","oom"};

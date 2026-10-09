@@ -46,8 +46,15 @@ butt, join to miter, miter limit to 4, and dashing to solid. Stroke paints
 after fill for each element. Painted paths are explicitly unsupported because
 their subpath boundaries are not represented in the raster document. Widths
 are capped at 1024 user units; miter limits at 64; dash values at 1,000,000.
-Unsupported CSS/style, gradients, filters, external resources, unsupported
-units, or unknown shape semantics are not interpreted.
+Paint style resolves through root `svg`, nested `g`, and supported basic
+shapes. Internal `<style>` blocks and `style` attributes accept the nine paint
+properties listed above. Simple compound selectors support an optional
+element, one ID, and up to 16 class terms; comma lists, importance, specificity,
+source order, and inherited paint are applied deterministically. The stylesheet
+is capped at 1 MiB, 4096 rules, and 16,384 declarations; a selector can match
+at most 256 class tokens. Unsupported selectors, declarations, values,
+gradients, filters, external resources, unsupported units, or unknown shape
+semantics are not interpreted. Source bytes remain borrowed and unchanged.
 This module has no platform or third-party dependency. Transform and shape syntax follows the W3C SVG 2 [Shapes](https://www.w3.org/TR/SVG2/shapes.html) and [Coordinate Systems and Transformations](https://www.w3.org/TR/SVG2/coords.html) specifications (consulted 2026-10-09).
 
 The subset grammar and arc endpoint semantics reference the W3C SVG 2

@@ -135,3 +135,7 @@
 - Active next work order: WO-M4-05, the bounded CSS/style subset.
 
 - WO-M4-05 revision 1 is frozen READY against base `5fe97cdf3dbe955638d9c5f0d54956ecc1fc2f0c` (spec SHA-256 `9d685bb1f3277b7dd31e3a59add24ff7acdacfdb73ed3b9ebf3b2f80fa3700af`). Its bounded CSS paint subset prioritizes observed `.land` and `.series` styles, cascade precedence, and inherited paint on groups; unsupported declarations remain source-preserved. Next: execute through `scripts/wo-run.sh`.
+
+- The first sandboxed WO-M4-05 executor stalled before producing a report. Its offscreen Metal and process-policy failures did not reproduce in direct native runs. The candidate now passes Debug CTest 12/12, `./dev verify` with 199 Python tests plus native smoke/replay, `./dev test-fast` with 199/199, ASan and UBSan CTest 12/12 each, 16 focused Python reference tests, 27 librsvg fixtures, and 1,000,000 sanitized fuzz cases. Release build and corpus run/check also pass.
+- WO-M4-05 direct Release evidence: 21-trial CSS workloads produce a stable shared RGBA hash; stylesheet/class median/p95 26.529/33.697 ms, inline style 26.223/27.232 ms, and RSS 2,179,072/2,146,304 B. The corpus remains 2/58 previewable (56 unsupported), with no limit/crash outcomes; this is open/index, not full-render parity. Candidate source and report updates are in the task worktree and await commit plus fresh read-only review.
+- Active next work order: complete WO-M4-05 commit and independent verification; then prepare WO-M4-06.

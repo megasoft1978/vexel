@@ -1,0 +1,1 @@
+{"inline_styles": {"median_ns": 26223459, "p95_ns": 27232125, "sha256": "827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60"}, "stylesheet_classes": {"median_ns": 26529000, "p95_ns": 33697375, "sha256": "827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60"}}

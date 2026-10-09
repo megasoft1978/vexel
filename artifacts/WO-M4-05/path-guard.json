@@ -1,0 +1,242 @@
+{
+  "status": "pass",
+  "changed_paths": [
+    {
+      "path": "CMakeLists.txt",
+      "allowed": true
+    },
+    {
+      "path": "HANDOFF.md",
+      "allowed": true
+    },
+    {
+      "path": "LEDGER.md",
+      "allowed": true
+    },
+    {
+      "path": "STATE.md",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/asan.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-corpus-check.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-debug-build.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-debug-configure.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-debug-ctest.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-head-to-head.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-head-to-head.md",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-reference-comparison.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-reference-tests.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/baseline-shape-test.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/benchmark-command.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/benchmark-json-check.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/corpus-check.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/corpus-run.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/css-benchmark-base-run.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/css-benchmark-baseline.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/css-benchmark-run.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/css-benchmark.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/css-cascade.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/css-tests.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/debug-build.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/debug-configure.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/debug-ctest.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/diff-check.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/executor-report.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/focused-ctest.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/full-checks.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/fuzz-report.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/fuzz-report.stderr.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/fuzz-run.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/head-to-head-json-check.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/ledger-validation.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/legacy-benchmark-run.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/path-guard.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/reference-comparison.json",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/reference-tests.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/release-build.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/release-configure.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/run_css_benchmark.py",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/shape-test.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/test-fast.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/ubsan.txt",
+      "allowed": true
+    },
+    {
+      "path": "artifacts/WO-M4-05/verify.txt",
+      "allowed": true
+    },
+    {
+      "path": "bench/results/WO-M4-05.json",
+      "allowed": true
+    },
+    {
+      "path": "docs/PERF.md",
+      "allowed": true
+    },
+    {
+      "path": "reports/M4/head-to-head.json",
+      "allowed": true
+    },
+    {
+      "path": "reports/M4/head-to-head.md",
+      "allowed": true
+    },
+    {
+      "path": "src/svg/css/README.md",
+      "allowed": true
+    },
+    {
+      "path": "src/svg/css/css.c",
+      "allowed": true
+    },
+    {
+      "path": "src/svg/css/css.h",
+      "allowed": true
+    },
+    {
+      "path": "src/svg/shape/README.md",
+      "allowed": true
+    },
+    {
+      "path": "src/svg/shape/shape.c",
+      "allowed": true
+    },
+    {
+      "path": "tests/svg/css/test_css.c",
+      "allowed": true
+    },
+    {
+      "path": "tests/svg/shape/fixtures/css-cascade.svg",
+      "allowed": true
+    },
+    {
+      "path": "tests/test_shape_render.py",
+      "allowed": true
+    }
+  ],
+  "method": "manual matcher against user-supplied allowlist/protected-path snapshot; did not load worktree work order"
+}

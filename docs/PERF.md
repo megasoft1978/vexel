@@ -323,15 +323,15 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## M4 cumulative shape and corpus workload
 
 Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 283216 / 189328 bytes; Release `svg_index_bench`: 124416 bytes;
-Debug/Release `shape_render_cli`: 166944 / 88256 bytes; Debug/Release `libvexel_shape.a`: 151008 / 52408 bytes.
+Debug/Release `svgworkbench`: 302528 / 206304 bytes; Release `svg_index_bench`: 141392 bytes;
+Debug/Release `shape_render_cli`: 186256 / 105280 bytes; Debug/Release `libvexel_shape.a`: 187848 / 67104 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 42.482x and RSS ratio of 33.590x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 42.513x and RSS ratio of 33.350x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.199 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 8.816 ms, full index 0.866 ms; natural-earth-world-map-countries: first preview 8.920 ms, full index 0.950 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.341 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 8.703 ms, full index 0.839 ms; natural-earth-world-map-countries: first preview 9.023 ms, full index 0.936 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
@@ -412,3 +412,25 @@ PNG hashes are retained in `artifacts/WO-M4-03/reference-comparison.json`.
 The seeded ASan+UBSan raster campaign result is in
 `artifacts/WO-M4-03/fuzz-report.json`; it separately counts generated and
 rasterized fractional, evenodd, and nonzero cases.
+
+## WO-M4-05 CSS paint cascade
+
+The CSS renderer benchmark ran 21 fresh-process trials for each fixed 128x128,
+64-rectangle workload on arm64 macOS 27.0 with Apple clang 21.0.0. The final
+stylesheet/class run measured 26.529 ms median and 33.697 ms p95, about 617,588
+pixels/s; inline styles measured 26.223 ms median and 27.232 ms p95, about
+624,784 pixels/s. Both workloads produced the same stable RGBA SHA-256
+`827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60`; peak
+process RSS was 2,179,072 / 2,146,304 bytes (stylesheet / inline). The
+benchmark harness could not query the host hardware model. The frozen pre-WO renderer has no equivalent CSS
+workload, so no CSS baseline comparison is available. These are local
+process-level renderer measurements, not public performance claims. Raw trials
+and the existing comparable non-CSS raster workloads are in
+`artifacts/WO-M4-05/css-benchmark.json` and `bench/results/WO-M4-05.json`.
+
+The real-corpus run retained 58/58 input hashes and outcomes, with two
+previewable T1 files and no new previews. T1/T2/T3/T4 successful comparison
+counts are 2/12, 0/17, 0/26, and 0/3. T1 geomean Inkscape/Vexel ratios are
+42.513x first-preview time and 33.350x peak RSS; higher-tier comparisons are
+unavailable because no files preview. This remains open/index evidence, not
+full-render parity.

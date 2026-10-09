@@ -11,9 +11,11 @@ import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+TEMP_ROOT = ROOT / ".cache"
+TEMP_ROOT.mkdir(exist_ok=True)
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M4-04/reference-comparison.json"
+OUT = ROOT / "artifacts/WO-M4-05/reference-comparison.json"
 
 
 def png_rgba(data):
@@ -64,6 +66,162 @@ def png_rgba(data):
 
 
 class ShapeRenderTests(unittest.TestCase):
+    def test_css_cascade_inheritance_and_source_preservation(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        source = (b'<svg width="16" height="8" fill="green"><style>/* keep */\n'
+                 b'.paint, rect.alt { FiLl: blue; } rect { fill: green; } '
+                 b'#target.paint { FILL: RED ! IMPORTANT; } .outer { stroke: blue; stroke-width: 2; }'
+                 b'</style><g class="outer"><g><rect id="target" class="paint extra" '
+                 b'x="1" y="1" width="4" height="4" fill="white" style="fill: white"/></g>'
+                 b'<rect class="paint" x="7" y="1" width="4" height="4" '
+                 b'style="fill: blue ! IMPORTANT; fill: white"/>'
+                 b'<rect class="paint" x="12" y="1" width="3" height="4" style="fill: white"/></g></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-css-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "style.svg", Path(temp) / "style.rgba"
+            input_path.write_bytes(source)
+            before = hashlib.sha256(input_path.read_bytes()).digest()
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+            rgba = output_path.read_bytes()
+            self.assertEqual(before, hashlib.sha256(input_path.read_bytes()).digest())
+        pixel = lambda x, y: rgba[(y * 16 + x) * 4:(y * 16 + x) * 4 + 4]
+        self.assertEqual(pixel(2, 2), bytes((255, 0, 0, 255)))  # ID beats class and type.
+        self.assertEqual(pixel(8, 2), bytes((0, 0, 255, 255)))  # Inline important beats normal.
+        self.assertEqual(pixel(13, 2), bytes((255, 255, 255, 255)))  # Inline normal beats stylesheet normal.
+
+    def test_css_invalid_recognized_value_has_value_offset(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        source = '<svg width="8" height="8"><style>rect { stroke-width: nope; }</style><rect width="4" height="4"/></svg>'
+        with tempfile.TemporaryDirectory(prefix="vexel-css-invalid-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "invalid.svg", Path(temp) / "invalid.rgba"
+            input_path.write_text(source)
+            run = subprocess.run([str(binary), str(input_path), str(output_path)],
+                                 capture_output=True, text=True)
+        self.assertNotEqual(run.returncode, 0)
+        category, offset = run.stderr.strip().split(":", 1)
+        self.assertEqual(category, "number")
+        self.assertEqual(int(offset), source.index("nope"))
+
+    def test_css_invalid_values_for_all_nine_paint_properties(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        cases = {
+            "fill": ("magenta", "unsupported"),
+            "fill-rule": ("invalid", "unsupported"),
+            "stroke": ("magenta", "unsupported"),
+            "stroke-width": ("-1", "number"),
+            "stroke-linecap": ("triangle", "unsupported"),
+            "stroke-linejoin": ("invalid", "unsupported"),
+            "stroke-miterlimit": ("0", "number"),
+            "stroke-dasharray": ("0", "number"),
+            "stroke-dashoffset": ("wat", "number"),
+        }
+        with tempfile.TemporaryDirectory(prefix="vexel-css-all-invalid-", dir=TEMP_ROOT) as temp:
+            for prop, (value, expected_category) in cases.items():
+                source = (f'<svg width="8" height="8"><style>rect {{ {prop}: {value}; }}</style>'
+                          '<rect width="4" height="4"/></svg>')
+                input_path = Path(temp) / f"{prop}.svg"
+                input_path.write_text(source)
+                run = subprocess.run([str(binary), str(input_path), str(Path(temp) / "out.rgba")],
+                                     capture_output=True, text=True)
+                self.assertNotEqual(run.returncode, 0, prop)
+                category, offset = run.stderr.strip().split(":", 1)
+                self.assertEqual(category, expected_category, prop)
+                self.assertEqual(int(offset), source.index(value), prop)
+
+    def test_css_stylesheet_limit_and_unsupported_declarations(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        over_limits = [
+            '<style>' + 'x' * (1024 * 1024 + 1) + '</style>',
+            '<style>' + 'rect{fill:red;}' * 4097 + '</style>',
+            '<style>rect{' + 'fill:red;' * 16385 + '}</style>',
+        ]
+        with tempfile.TemporaryDirectory(prefix="vexel-css-limit-", dir=TEMP_ROOT) as temp:
+            for index, style in enumerate(over_limits):
+                input_path, output_path = Path(temp) / f"limit-{index}.svg", Path(temp) / "out.rgba"
+                input_path.write_text(f'<svg width="8" height="8">{style}</svg>')
+                run = subprocess.run([str(binary), str(input_path), str(output_path)],
+                                     capture_output=True, text=True)
+                self.assertNotEqual(run.returncode, 0, index)
+                self.assertEqual(run.stderr.strip(), "limit:0", index)
+        valid = '<svg width="8" height="8"><style>rect { opacity: 0; }</style><rect width="4" height="4"/></svg>'
+        with tempfile.TemporaryDirectory(prefix="vexel-css-ignored-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "ignored.svg", Path(temp) / "out.rgba"
+            input_path.write_text(valid)
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+
+    def test_css_class_tokens_and_initial_paint(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        source = ('<svg width="8" height="8"><style>rect { fill: green; } '
+                  '.bar { fill: red; } .unsupported g { fill: blue; }</style>'
+                  '<rect class="foobar" width="3" height="3"/>'
+                  '<rect x="4" width="3" height="3"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-css-class-tokens-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "tokens.svg", Path(temp) / "tokens.rgba"
+            input_path.write_text(source)
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+            rgba = output_path.read_bytes()
+        pixel = lambda x, y: rgba[(y * 8 + x) * 4:(y * 8 + x) * 4 + 4]
+        self.assertEqual(pixel(1, 1), bytes((0, 128, 0, 255)))  # .bar does not match foobar.
+        self.assertEqual(pixel(5, 1), bytes((0, 128, 0, 255)))
+        default_source = '<svg width="8" height="8"><rect width="3" height="3"/></svg>'
+        with tempfile.TemporaryDirectory(prefix="vexel-css-initial-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "default.svg", Path(temp) / "default.rgba"
+            input_path.write_text(default_source)
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+            default_rgba = output_path.read_bytes()
+        self.assertEqual(default_rgba[(1 * 8 + 1) * 4:(1 * 8 + 1) * 4 + 4],
+                         bytes((0, 0, 0, 255)))
+        many_tokens = " ".join([f"c{i}" for i in range(256)] + ["target"])
+        many_terms = "." + ".".join(f"a{i}" for i in range(17))
+        bounded = (f'<svg width="8" height="8"><style>rect {{ fill: green; }} '
+                   f'.target {{ fill: red; }} {many_terms} {{ fill: blue; }}</style>'
+                   f'<rect class="{many_tokens}" width="3" height="3"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-css-bounded-classes-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "bounded.svg", Path(temp) / "bounded.rgba"
+            input_path.write_text(bounded)
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+            bounded_rgba = output_path.read_bytes()
+        self.assertEqual(bounded_rgba[(1 * 8 + 1) * 4:(1 * 8 + 1) * 4 + 4],
+                         bytes((0, 128, 0, 255)))
+
+    def test_css_presentation_precedence_source_order_and_inheritance(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        source = (b'<svg width="16" height="8" fill="blue"><style>'
+                 b'.direct { fill: red; } .same { fill: red; } .same { fill: green; } '
+                 b'.parent { fill: white; }</style>'
+                 b'<rect x="0" y="0" width="3" height="3"/>'
+                 b'<g class="parent"><g><rect x="4" y="0" width="3" height="3"/></g></g>'
+                 b'<rect class="direct" fill="blue" x="8" y="0" width="3" height="3"/>'
+                 b'<rect class="same" x="12" y="0" width="3" height="3"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-css-precedence-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "precedence.svg", Path(temp) / "precedence.rgba"
+            input_path.write_bytes(source)
+            subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
+                           capture_output=True)
+            rgba = output_path.read_bytes()
+        pixel = lambda x, y: rgba[(y * 16 + x) * 4:(y * 16 + x) * 4 + 4]
+        self.assertEqual(pixel(1, 1), bytes((0, 0, 255, 255)))  # Root paint is inherited.
+        self.assertEqual(pixel(5, 1), bytes((255, 255, 255, 255)))  # Nested group paint is inherited.
+        self.assertEqual(pixel(9, 1), bytes((255, 0, 0, 255)))  # Rule beats presentation attribute.
+        self.assertEqual(pixel(13, 1), bytes((0, 128, 0, 255)))  # Later equal-specificity rule wins.
+
+    def test_css_rule_match_work_limit(self):
+        binary = ROOT / "build/mac-debug/bin/shape_render_cli"
+        rules = "".join(f".c{index} {{ fill: red; }}" for index in range(2048))
+        shapes = '<rect width="1" height="1"/>' * 2050
+        source = f'<svg width="8" height="8"><style>{rules}</style>{shapes}</svg>'
+        with tempfile.TemporaryDirectory(prefix="vexel-css-match-limit-", dir=TEMP_ROOT) as temp:
+            input_path, output_path = Path(temp) / "limit.svg", Path(temp) / "limit.rgba"
+            input_path.write_text(source)
+            run = subprocess.run([str(binary), str(input_path), str(output_path)],
+                                 capture_output=True, text=True)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertEqual(run.stderr.strip(), "limit:0")
+
     def test_decoder_diagnostics_source_retention_and_raster(self):
         self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
         result = subprocess.run([str(ROOT / "build/mac-debug/bin/shape_test")], check=True, capture_output=True, text=True)
@@ -74,7 +232,7 @@ class ShapeRenderTests(unittest.TestCase):
         self.assertIsNotNone(renderer, "rsvg-convert is required by this work order")
         version = subprocess.run([renderer, "--version"], check=True, capture_output=True, text=True).stdout.strip()
         results = []
-        with tempfile.TemporaryDirectory(prefix="vexel-shape-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-shape-", dir=TEMP_ROOT) as temp:
             temp_path = Path(temp)
             for fixture in sorted(FIXTURES.glob("*.svg")):
                 raw = fixture.read_bytes()
@@ -180,8 +338,6 @@ class ShapeRenderTests(unittest.TestCase):
             "bad_dash_separator": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1,,2"/></svg>',
             "too_many_dash_values": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"/></svg>',
             "unsupported_stroked_path": '<svg width="16" height="16"><path stroke="red" d="M1 1 L8 8"/></svg>',
-            "unsupported_root_stroke": '<svg width="16" height="16" stroke="red"/>',
-            "unsupported_group_stroke": '<svg width="16" height="16"><g stroke="red"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
         }
         stroke_diagnostic_offsets = {
@@ -192,7 +348,7 @@ class ShapeRenderTests(unittest.TestCase):
             "unsupported_stroked_path": ("unsupported", "red"),
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}
-        with tempfile.TemporaryDirectory(prefix="vexel-shape-bounds-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-shape-bounds-", dir=TEMP_ROOT) as temp:
             temp_path = Path(temp)
             for name, source in cases.items():
                 src, out = temp_path / f"{name}.svg", temp_path / f"{name}.rgba"
@@ -243,7 +399,7 @@ class ShapeRenderTests(unittest.TestCase):
                   b'<path fill="blue" fill-rule="evenodd" '
                   b'd="M2 2 H14 V14 H2 M5 5 H11 V11 H5"/>'
                   b'</svg>')
-        with tempfile.TemporaryDirectory(prefix="vexel-shape-order-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-shape-order-", dir=TEMP_ROOT) as temp:
             input_path, output_path = Path(temp) / "order.svg", Path(temp) / "order.rgba"
             input_path.write_bytes(source)
             subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
@@ -258,7 +414,7 @@ class ShapeRenderTests(unittest.TestCase):
     def test_fractional_viewport_rounds_tile_extent_up(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         source = b'<svg width="8.5px" height="7.25"/>'
-        with tempfile.TemporaryDirectory(prefix="vexel-shape-fractional-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-shape-fractional-", dir=TEMP_ROOT) as temp:
             input_path, output_path = Path(temp) / "fractional.svg", Path(temp) / "fractional.rgba"
             input_path.write_bytes(source)
             subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
@@ -269,7 +425,7 @@ class ShapeRenderTests(unittest.TestCase):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         source = (b'<svg width="16" height="16" viewBox="0 0 32 16">'
                   b'<rect x="0" y="0" width="32" height="16"/></svg>')
-        with tempfile.TemporaryDirectory(prefix="vexel-viewbox-meet-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-viewbox-meet-", dir=TEMP_ROOT) as temp:
             input_path, output_path = Path(temp) / "meet.svg", Path(temp) / "meet.rgba"
             input_path.write_bytes(source)
             subprocess.run([str(binary), str(input_path), str(output_path)], check=True,
@@ -285,7 +441,7 @@ class ShapeRenderTests(unittest.TestCase):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         cases = ((b'<svg width="16" height="bad"/>', b'bad', "number"),
                  (b'<svg width="16" height="5000"/>', b'5000', "viewport"))
-        with tempfile.TemporaryDirectory(prefix="vexel-height-offset-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-height-offset-", dir=TEMP_ROOT) as temp:
             for index, (source, marker, category_expected) in enumerate(cases):
                 input_path = Path(temp) / f"height-{index}.svg"
                 output_path = Path(temp) / f"height-{index}.rgba"
@@ -300,7 +456,7 @@ class ShapeRenderTests(unittest.TestCase):
     def test_transform_diagnostic_preserves_attribute_value_offset(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         source = b'<svg width="16" height="16"><g transform="skewX(10)"/></svg>'
-        with tempfile.TemporaryDirectory(prefix="vexel-transform-offset-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-transform-offset-", dir=TEMP_ROOT) as temp:
             input_path = Path(temp) / "offset.svg"
             output_path = Path(temp) / "offset.rgba"
             input_path.write_bytes(source)
@@ -312,7 +468,7 @@ class ShapeRenderTests(unittest.TestCase):
 
     def test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr(self):
         script = ROOT / "tests/fuzz/shape/shape_fuzz.py"
-        with tempfile.TemporaryDirectory(prefix="vexel-fuzz-stderr-") as temp:
+        with tempfile.TemporaryDirectory(prefix="vexel-fuzz-stderr-", dir=TEMP_ROOT) as temp:
             temp_path = Path(temp)
             binary = temp_path / "fake-shape-fuzz"
             binary.write_text("#!/usr/bin/env python3\nimport sys\n"

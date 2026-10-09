@@ -15,3 +15,11 @@ selected-shape evidence, not full SVG parity. Detailed results:
 
 Next: prepare and freeze WO-M4-05 for the CSS/style subset, following the M4
 feature priority inventory at `reports/M4/corpus-feature-frequency.md`.
+
+## WO-M4-05 candidate in progress
+
+The first `wo-run.sh new` executor stalled before writing its report; I interrupted only that WO process after it had been idle for over 15 minutes. The candidate worktree is preserved. Its initial sandbox runs reported Metal/process-policy failures, but direct native reruns pass. Current evidence under `artifacts/WO-M4-05/` includes Debug CTest 12/12, 199/199 fast tests, 199 Python tests plus native smoke/replay from `./dev verify`, ASan and UBSan CTest 12/12, 16 focused Python reference tests, 27 librsvg fixtures, 1,000,000 sanitized fuzz cases, Release build, and 58-file/116-trial corpus checks.
+
+The current corpus still has 2 previewable T1 files and 56 unsupported outcomes, with no limit/crash rows. CSS-specific Release workloads have 21 fresh-process trials, median/p95 of 26.529/33.697 ms for stylesheet classes and 26.223/27.232 ms for inline style, and peak RSS of 2,179,072/2,146,304 bytes. Both outputs share SHA-256 `827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60`. The pre-WO base has no comparable CSS workload.
+
+Next: commit the reviewed candidate paths, refresh post-commit benchmark identity, run `python3 scripts/wo_validate.py WO-M4-05 --ready`, ledger/diff/scope checks, then invoke `./scripts/wo-verify.sh WO-M4-05 <candidate-sha>`. Repair any genuine verifier findings and merge only after the fresh review passes.
