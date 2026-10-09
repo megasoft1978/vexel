@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "purpose": "custom-rendered navigation and progress screen oracle",
+  "files": {
+    "navigation-frame-0000.png": "f6221b0a17dc1ad5cf6675f8ea1f455c99d13226021f94461af1b818a33348a9",
+    "navigation-frame-0001.png": "642b9b9640e6504ec05ce2642a01b9bf85ff0e891afade7361c00135c977f0fc"
+  }
+}

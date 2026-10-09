@@ -1,0 +1,157 @@
+#include "xml_tokenizer.h"
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define CHECK(condition) do { if (!(condition)) { \
+    fprintf(stderr, "check failed at %s:%d: %s\n", __FILE__, __LINE__, #condition); \
+    abort(); \
+} } while (0)
+
+static svg_xml_result run(const char *text, svg_xml_options options, svg_xml_token *tokens, size_t cap)
+{
+    base_bytes input={(const uint8_t *)text,strlen(text)};
+    svg_xml_result r=svg_xml_tokenize(input,options,tokens,cap);
+    CHECK(r.diagnostic.offset<=input.len);
+    if(r.diagnostic.category==SVG_XML_ERROR_NONE) {
+        for(size_t i=0;i<r.token_count;++i) {
+            CHECK(tokens[i].source.offset<=input.len);
+            CHECK(tokens[i].source.length<=input.len-tokens[i].source.offset);
+            CHECK(tokens[i].name.offset<=input.len);
+            CHECK(tokens[i].name.length<=input.len-tokens[i].name.offset);
+            CHECK(tokens[i].value.offset<=input.len);
+            CHECK(tokens[i].value.length<=input.len-tokens[i].value.offset);
+            CHECK(tokens[i].prefix.offset<=input.len);
+            CHECK(tokens[i].prefix.length<=input.len-tokens[i].prefix.offset);
+            CHECK(tokens[i].local_name.offset<=input.len);
+            CHECK(tokens[i].local_name.length<=input.len-tokens[i].local_name.offset);
+        }
+    } else CHECK(r.token_count==0);
+    return r;
+}
+
+static void expect_error(const char *s, svg_xml_error e)
+{
+    svg_xml_token tokens[64];svg_xml_result r=run(s,svg_xml_default_options(),tokens,64);
+    CHECK(r.diagnostic.category==e);
+}
+
+static uint32_t rng_next(uint32_t *state)
+{
+    *state^=*state<<13U;*state^=*state>>17U;*state^=*state<<5U;return *state;
+}
+
+static bool span_is(const char *source, svg_xml_span span, const char *expected)
+{
+    size_t n=strlen(expected);
+    return span.length==n&&memcmp(source+span.offset,expected,n)==0;
+}
+
+int main(void)
+{
+    const char source[]="<?xml version='1.0' encoding=\"UTF-8\"?>\r\n<!--c--><?p data?><a:root xmlns:a='urn:x' a:k=\"v&amp;x\">x\r\ny<![CDATA[z]]><a:child/></a:root>";
+    char original[sizeof(source)];memcpy(original,source,sizeof(source));
+    svg_xml_token tokens[64];svg_xml_result r=run(source,svg_xml_default_options(),tokens,64);
+    CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE&&r.element_count==2&&r.attribute_count==2);
+    CHECK(memcmp(source,original,sizeof(source))==0);
+    bool declaration=false,comment=false,pi=false,start=false,end=false,empty=false,text=false,cdata=false,qname=false;
+    bool attr_exact=false,comment_exact=false,pi_exact=false,text_exact=false,cdata_exact=false;
+    bool qname_exact=false,start_source_exact=false;
+    for(size_t i=0;i<r.token_count;++i) {
+        svg_xml_token *t=&tokens[i];
+        declaration|=t->kind==SVG_XML_TOKEN_DECLARATION;comment|=t->kind==SVG_XML_TOKEN_COMMENT;
+        pi|=t->kind==SVG_XML_TOKEN_PROCESSING_INSTRUCTION;start|=t->kind==SVG_XML_TOKEN_START_ELEMENT;
+        end|=t->kind==SVG_XML_TOKEN_END_ELEMENT;empty|=t->kind==SVG_XML_TOKEN_EMPTY_ELEMENT;
+        text|=t->kind==SVG_XML_TOKEN_TEXT;cdata|=t->kind==SVG_XML_TOKEN_CDATA;
+        if(t->kind==SVG_XML_TOKEN_START_ELEMENT&&t->prefix.length==1&&t->local_name.length==4)qname=true;
+        if(t->kind==SVG_XML_TOKEN_START_ELEMENT&&span_is(source,t->prefix,"a")&&
+           span_is(source,t->local_name,"root"))qname_exact=true;
+        if(t->kind==SVG_XML_TOKEN_START_ELEMENT&&
+           span_is(source,t->source,"<a:root xmlns:a='urn:x' a:k=\"v&amp;x\">"))
+            start_source_exact=true;
+        if(t->kind==SVG_XML_TOKEN_ATTRIBUTE&&span_is(source,t->name,"a:k")&&span_is(source,t->value,"v&amp;x"))attr_exact=true;
+        if(t->kind==SVG_XML_TOKEN_COMMENT&&span_is(source,t->value,"c"))comment_exact=true;
+        if(t->kind==SVG_XML_TOKEN_PROCESSING_INSTRUCTION&&span_is(source,t->value,"data"))pi_exact=true;
+        if(t->kind==SVG_XML_TOKEN_TEXT&&span_is(source,t->value,"x\r\ny"))text_exact=true;
+        if(t->kind==SVG_XML_TOKEN_CDATA&&span_is(source,t->value,"z"))cdata_exact=true;
+    }
+    CHECK(declaration&&comment&&pi&&start&&end&&empty&&text&&cdata&&qname);
+    CHECK(qname_exact&&start_source_exact);
+    CHECK(attr_exact&&comment_exact&&pi_exact&&text_exact&&cdata_exact);
+    expect_error("<a x='1' x=\"2\"/>",SVG_XML_ERROR_DUPLICATE_ATTRIBUTE);
+    expect_error("<a x='1'y='2'/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a:1/>",SVG_XML_ERROR_INVALID_NAME);
+    expect_error("<a><b></a>",SVG_XML_ERROR_MISMATCHED_TAG);
+    expect_error("<a/><b/>",SVG_XML_ERROR_MULTIPLE_ROOTS);
+    expect_error("<a>",SVG_XML_ERROR_INCOMPLETE_DOCUMENT);
+    expect_error("<!DOCTYPE a><a/>",SVG_XML_ERROR_UNSUPPORTED_DTD);
+    expect_error("<a><!-- -- --></a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a><?x nope</a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a><![CDATA[x</a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a x='unterminated/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a>&unknown;</a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<?xml version='1.0' encoding='UTF-16'?><a/>",SVG_XML_ERROR_UNSUPPORTED_ENCODING);
+    expect_error("<?xml version='1.0'encoding='UTF-8'?><a/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a>\001</a>",SVG_XML_ERROR_INVALID_CHARACTER);
+    expect_error("<1a/>",SVG_XML_ERROR_INVALID_NAME);
+    expect_error("<:a/>",SVG_XML_ERROR_INVALID_NAME);
+    expect_error("<a>&#0;</a>",SVG_XML_ERROR_INVALID_CHARACTER);
+    r=run("<a><?empty?></a>",svg_xml_default_options(),tokens,64);CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE);
+    r=run("<?xml version='1.0' standalone='yes'?><a/>",svg_xml_default_options(),tokens,64);CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE);
+    r=run("<?a:b:c data?><a/>",svg_xml_default_options(),tokens,64);
+    CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE&&span_is("<?a:b:c data?><a/>",tokens[0].name,"a:b:c"));
+    r=run("<?a:1 data?><a/>",svg_xml_default_options(),tokens,64);
+    CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE&&span_is("<?a:1 data?><a/>",tokens[0].name,"a:1"));
+    const char bom_document[]="\xef\xbb\xbf<?xml version='1.0'?><a/>";
+    r=run(bom_document,svg_xml_default_options(),tokens,64);
+    CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE);
+    CHECK(tokens[0].kind==SVG_XML_TOKEN_DECLARATION&&tokens[0].source.offset==3);
+
+    svg_xml_options o=svg_xml_default_options();o.limits.nesting_depth=1;
+    CHECK(run("<a><b/></a>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_DEPTH_LIMIT);
+    o=svg_xml_default_options();o.limits.nodes=1;
+    CHECK(run("<a>x</a>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_NODE_LIMIT);
+    o=svg_xml_default_options();o.limits.attributes_per_element=1;
+    CHECK(run("<a x='1' y='2'/>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_ATTRIBUTE_LIMIT);
+    o=svg_xml_default_options();o.limits.total_attributes=1;
+    CHECK(run("<a x='1'><b y='2'/></a>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_ATTRIBUTE_LIMIT);
+    o=svg_xml_default_options();o.limits.text_run_bytes=2;
+    CHECK(run("<a>abc</a>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_TEXT_LIMIT);
+    CHECK(run("<a><![CDATA[abc]]></a>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_TEXT_LIMIT);
+    o=svg_xml_default_options();o.limits.input_bytes=2;
+    CHECK(run("<a/>",o,tokens,64).diagnostic.category==SVG_XML_ERROR_INPUT_LIMIT);
+    o=svg_xml_default_options();o.limits.input_bytes=SIZE_MAX;
+    size_t oversized_length=(16U*1024U*1024U)+1U;
+    uint8_t *oversized=(uint8_t *)malloc(oversized_length);CHECK(oversized!=NULL);
+    base_bytes oversized_input={oversized,oversized_length};
+    r=svg_xml_tokenize(oversized_input,o,tokens,64);
+    CHECK(r.diagnostic.category==SVG_XML_ERROR_INPUT_LIMIT&&r.diagnostic.offset==16U*1024U*1024U);
+    free(oversized);
+    CHECK(run("<a/>",svg_xml_default_options(),tokens,0).diagnostic.category==SVG_XML_ERROR_OUTPUT_EXHAUSTED);
+    CHECK(run("<a x='1'/>",svg_xml_default_options(),tokens,1).diagnostic.category==SVG_XML_ERROR_OUTPUT_EXHAUSTED);
+
+    const uint8_t bad_utf8[]={ '<','a','>',0xc0,0xaf,'<','/','a','>' };
+    base_bytes in={bad_utf8,sizeof(bad_utf8)};r=svg_xml_tokenize(in,svg_xml_default_options(),tokens,64);
+    CHECK(r.diagnostic.category==SVG_XML_ERROR_INVALID_UTF8&&r.diagnostic.offset<=in.len);
+    const char *alphabet="<>/!?-=[]'\" abcxyz:012;&#\r\n";
+    uint32_t seed=20261009U;size_t generated=0;
+    uint8_t fuzz[96];
+    for(size_t n=0;n<100000;++n) {
+        size_t len=(size_t)(rng_next(&seed)%sizeof(fuzz));
+        for(size_t i=0;i<len;++i)fuzz[i]=(uint8_t)alphabet[rng_next(&seed)%(sizeof("<>/!?-=[]'\" abcxyz:012;&#\r\n")-1U)];
+        in.ptr=fuzz;in.len=len;r=svg_xml_tokenize(in,svg_xml_default_options(),tokens,64);
+        CHECK(r.diagnostic.offset<=len);
+        if(r.diagnostic.category==SVG_XML_ERROR_NONE)for(size_t i=0;i<r.token_count;++i) {
+            CHECK(tokens[i].source.offset<=len&&tokens[i].source.length<=len-tokens[i].source.offset);
+            CHECK(tokens[i].name.offset<=len&&tokens[i].name.length<=len-tokens[i].name.offset);
+            CHECK(tokens[i].value.offset<=len&&tokens[i].value.length<=len-tokens[i].value.offset);
+            CHECK(tokens[i].prefix.offset<=len&&tokens[i].prefix.length<=len-tokens[i].prefix.offset);
+            CHECK(tokens[i].local_name.offset<=len&&tokens[i].local_name.length<=len-tokens[i].local_name.offset);
+        }
+        ++generated;
+    }
+    printf("xml tokenizer focused C checks passed; deterministic malformed inputs=%zu\n",generated);
+    return 0;
+}

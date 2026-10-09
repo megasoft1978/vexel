@@ -1,0 +1,8 @@
+{"command":"open","document_id":"native-smoke"}
+{"command":"resize","width":640,"height":480}
+{"command":"key","action":"down","key":"a"}
+{"command":"key","action":"up","key":"a"}
+{"command":"pointer","action":"move","x":12,"y":18}
+{"command":"pointer","action":"down","x":12,"y":18}
+{"command":"pointer","action":"up","x":12,"y":18}
+{"command":"quit"}

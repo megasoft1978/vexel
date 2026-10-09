@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vexel verifier verdict",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "findings", "summary"],
+  "properties": {
+    "verdict": { "enum": ["pass", "fail"] },
+    "findings": { "type": "array", "items": { "type": "string", "maxLength": 1000 } },
+    "summary": { "type": "string", "maxLength": 2000 }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "work_order": "WO-M1-03",
+  "revision": 3,
+  "machine": "Apple Silicon, macOS 27.0",
+  "compiler": "Apple Clang 21.0.0.21000334",
+  "build": "Release",
+  "release_binary_bytes": 94752,
+  "placeholder_replay": {
+    "script": "tests/ui/mixed-commands.jsonl",
+    "repeats_per_invocation": 20,
+    "successful_invocations": 3,
+    "identical_replay_digest": "c46e612bbfa618d18a27693c33a952b9fce16bb941e3d9b6f5048b7bfd280c59",
+    "artifact_and_event_order_matches": true,
+    "measured_elapsed_seconds": 0.100976
+  },
+  "native_metal_replay": {
+    "requested_frames": 20,
+    "completed_frames": 20,
+    "status": "passed",
+    "elapsed_seconds": 0.179164,
+    "exit_code": 0,
+    "readback_hash": "3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c",
+    "frame_order": "frame-0000..frame-0019"
+  },
+  "claims": {
+    "svg_throughput": false,
+    "rss": false
+  }
+}

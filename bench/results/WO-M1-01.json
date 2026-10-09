@@ -1,0 +1,58 @@
+{
+  "work_order": "WO-M1-01",
+  "environment": {
+    "os": "macOS 27.0 (Build 26A425)",
+    "architecture": "arm64",
+    "compiler": "Apple clang 21.0.0 (clang-2100.3.34.2)",
+    "build_type": "Release"
+  },
+  "release_executable": {
+    "path": "build/mac-release/bin/svgworkbench",
+    "size_bytes": 74048
+  },
+  "native_smoke": {
+    "requested_cycles": 100,
+    "completed_cycles": 100,
+    "acceptance_elapsed_seconds": 3.2132832079951186,
+    "status": "passed",
+    "events": [
+      "open",
+      "resize",
+      "scale",
+      "key",
+      "pointer",
+      "close"
+    ],
+    "benchmark": {
+      "cycles_per_run": 100,
+      "runs": 5,
+      "samples_elapsed_seconds": [
+        3.209596042011981,
+        3.3999841249897145,
+        3.1406728330039186,
+        3.241060957996524,
+        3.1838259999931324
+      ],
+      "median_seconds": 3.209596042011981,
+      "p95_nearest_rank_seconds": 3.3999841249897145,
+      "all_completed": true
+    }
+  },
+  "sanitizer_smoke": {
+    "asan_cycles": 100,
+    "ubsan_cycles": 100,
+    "status": "passed",
+    "command_contract": "native lifecycle arguments supplied to both sanitizer binaries"
+  },
+  "verification": {
+    "focused_tests": 8,
+    "full_tests_passed": 137,
+    "full_tests_failed": 0,
+    "full_tests_errors": 0,
+    "full_tests_skipped": 0
+  },
+  "claims": {
+    "rendering_throughput": null,
+    "rss": null
+  }
+}

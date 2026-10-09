@@ -1,0 +1,43 @@
+{
+  "base_sha": "1e9c7b81f1bda074031af4fd165240e8d5eeba09",
+  "candidate_sha": "65157aa484fa97634e3ca197da08723d97ab71c7",
+  "candidate_source_dirty": false,
+  "candidate_source_dirty_paths": [],
+  "css_benchmark_host": {
+    "machine": "arm64",
+    "macos_version": "27.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "css_benchmark_renderer": "Vexel scalar shape_render_cli, Release; decode and raster in fresh process",
+  "css_benchmark_trial_count": 21,
+  "css_candidate_base_sha": "5fe97cdf3dbe955638d9c5f0d54956ecc1fc2f0c",
+  "css_candidate_commit_sha": "65157aa484fa97634e3ca197da08723d97ab71c7",
+  "css_candidate_source_snapshot_sha256": "3027224bd2bd070f4557d90bddc2ffc26220a908e3c66f1bcf309574bd984c85",
+  "css_candidate_source_status": "clean committed source tree",
+  "css_workloads": {
+    "inline_styles": {
+      "baseline_status": "no baseline: frozen pre-WO renderer has no CSS workload equivalent",
+      "input_sha256": "46c1cd8dfb8d37fdfa136dda34b98e4184df8a48e61602ea73d96ded028b6e90",
+      "median_latency_ns": 27483292,
+      "output_sha256": "827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60",
+      "p95_latency_ns": 29013416,
+      "peak_rss_bytes": 2146304,
+      "peak_rss_status": "available via getrusage on macOS",
+      "pixels": 16384,
+      "pixels_per_second": 596144.01,
+      "trials": 21
+    },
+    "stylesheet_classes": {
+      "baseline_status": "no baseline: frozen pre-WO renderer has no CSS workload equivalent",
+      "input_sha256": "23cad5e7bbf3623972ca60b3371055ab92902944db3d061985af4b7277cb1680",
+      "median_latency_ns": 27890416,
+      "output_sha256": "827e21fe25c8fd57db0185583ded7a6b9d988f54846b914cf12c536ba393fd60",
+      "p95_latency_ns": 29662125,
+      "peak_rss_bytes": 2113536,
+      "peak_rss_status": "available via getrusage on macOS",
+      "pixels": 16384,
+      "pixels_per_second": 587441.94,
+      "trials": 21
+    }
+  }
+}

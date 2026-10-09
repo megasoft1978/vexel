@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vexel work ledger entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ts", "wo_id", "event", "revision", "base_sha", "head_sha",
+    "run_id", "session_id", "model", "cli_version", "duration_s",
+    "usage", "status", "artifacts", "note"
+  ],
+  "properties": {
+    "ts": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "wo_id": { "type": "string", "minLength": 1 },
+    "event": { "enum": ["ready", "run_started", "run_finished", "verified", "accepted", "rejected", "merged", "blocked", "superseded"] },
+    "revision": { "type": "integer", "minimum": 1 },
+    "base_sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+    "head_sha": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" },
+    "run_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "minLength": 1 },
+    "cli_version": { "type": "string", "minLength": 1 },
+    "duration_s": { "type": "number", "minimum": 0 },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_tokens", "output_tokens"],
+      "properties": {
+        "input_tokens": { "type": ["integer", "null"], "minimum": 0 },
+        "output_tokens": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    },
+    "status": { "type": "string", "minLength": 1 },
+    "artifacts": { "type": "array", "items": { "type": "string" } },
+    "note": { "type": "string", "maxLength": 500 }
+  }
+}

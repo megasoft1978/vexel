@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 96" width="128" height="96">
+  <title>Style Opacity Transform</title>
+  <g transform="translate(16 10) rotate(8 48 38)" opacity="0.75"><rect x="10" y="10" width="80" height="58" fill="#e55"/></g>
+</svg>

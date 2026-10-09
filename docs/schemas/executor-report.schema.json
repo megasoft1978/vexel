@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vexel executor report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "base_sha", "head_sha", "acceptance", "summary"],
+  "properties": {
+    "status": { "const": "complete" },
+    "base_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "head_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "acceptance": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["commands"],
+        "properties": {
+          "commands": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["argv", "exit_code"],
+              "properties": {
+                "argv": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+                "exit_code": { "const": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": { "type": "string", "maxLength": 2000 }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "work_order": "WO-M2-02",
+  "revision": 1,
+  "base_sha": "b321f0ce4a2b35b8c38a436b5da59ede92635fe8",
+  "acceptance_status": "accepted_and_merged",
+  "machine": "Apple Silicon arm64, macOS 27.0",
+  "compiler": "Apple Clang 21.0.0.21000334",
+  "python": "3.12.8",
+  "expat": "expat_2.6.4",
+  "checks": {
+    "debug_ctest": {
+      "passed": 3,
+      "total": 3
+    },
+    "focused_python": {
+      "passed": 4,
+      "total": 4
+    },
+    "deterministic_malformed_inputs": 100000,
+    "expat_fixtures": {
+      "checked": 24,
+      "accepted_and_counts_match": 24
+    },
+    "asan_ctest": {
+      "passed": 3,
+      "total": 3
+    },
+    "ubsan_ctest": {
+      "passed": 3,
+      "total": 3
+    },
+    "asan_fuzz": {
+      "seed": 20261009,
+      "iterations": 4140212,
+      "elapsed_seconds": 60.000016,
+      "sanitizer_status": "clean"
+    },
+    "dev_verify": {
+      "passed": 147,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "host_runs": 4
+    }
+  },
+  "full_suite_failures": [],
+  "claims": {
+    "svg_throughput": false,
+    "performance_improvement": false,
+    "rss": false
+  },
+  "evidence": {
+    "debug_build_ctest": "artifacts/WO-M2-02/build-and-ctest.txt",
+    "focused_tests": "artifacts/WO-M2-02/focused-tests.txt",
+    "expat_comparison": "artifacts/WO-M2-02/expat-comparison.json",
+    "fuzz": "artifacts/WO-M2-02/fuzz.json",
+    "verify": "artifacts/WO-M2-02/verify-host.txt",
+    "release_build": "artifacts/WO-M2-02/release-build.txt",
+    "verifier": "artifacts/WO-M2-02/verifier-final/"
+  },
+  "transient_executor_isolation": {
+    "attempts": 3,
+    "summary": "Nested workspace-write sandbox caused sandbox-exec and LaunchServices/XPC failures; direct host reruns passed without source or test changes.",
+    "evidence": [
+      "artifacts/WO-M2-02/verify.txt",
+      "artifacts/WO-M2-02/verify-rerun.txt",
+      "artifacts/WO-M2-02/verify-final.txt",
+      "artifacts/WO-M2-02/verify-host.txt"
+    ]
+  },
+  "review_fixes": [
+    "Accept a leading UTF-8 BOM while preserving subsequent source offsets.",
+    "Clamp caller-provided input, node, per-element attribute, total attribute, and text limits to documented hard ceilings.",
+    "Assert exact QName prefix and local-name source bytes.",
+    "Reject adjacent attributes without XML whitespace and reject QName local parts that do not begin with a NameStart character.",
+    "Validate source, name, value, prefix, and local-name spans in every successful deterministic malformed-generator case.",
+    "Confine resolved fuzz-report outputs to repository .cache/ or this work order\u2019s artifacts directory, with regression tests for traversal and absolute paths.",
+    "Parse processing-instruction targets as XML Names, exclude the separator from PI data spans, and record the full non-empty start-tag span. Split UTF-8/XML character helpers into their own internal source module."
+  ],
+  "release_binary_bytes": {
+    "svgworkbench": 97040,
+    "vexel_xml_static_library": 16552
+  },
+  "candidate_initial_sha": "bd0dde8b6cd1aea888c22a3ea794c015d730ce77",
+  "candidate_sha": "a170928f4d116ac7db446a06b7b054ce1ae40da0",
+  "independent_review": {
+    "verdict": "pass",
+    "findings": 0,
+    "duration_seconds": 60.47,
+    "evidence": "artifacts/WO-M2-02/verifier-final/"
+  }
+}

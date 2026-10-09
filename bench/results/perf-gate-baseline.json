@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "source_work_order": "WO-M3-01",
+  "source_commit": "159c7e761ce87862e85742cd25fb61a9aef01da4",
+  "source_report": "bench/results/WO-M3-01.json",
+  "source_report_sha256": "f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a",
+  "host_toolchain": {
+    "machine_model": "Mac Studio (Mac17,14)",
+    "chip": "Apple M5 Max",
+    "memory_bytes": 68719476736,
+    "architecture": "arm64",
+    "os": "macOS 27.0",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)"
+  },
+  "limits": {
+    "10MiB.first_preview_p95_ns": 1000000000,
+    "100MiB.first_preview_p95_ns": 2000000000,
+    "100MiB.max_step_ns": 100000000,
+    "100MiB.peak_rss_bytes": 524288000
+  },
+  "regression_tolerances": {
+    "10MiB.first_preview_p95_ns": 0.1,
+    "100MiB.first_preview_p95_ns": 0.1,
+    "100MiB.max_step_ns": 0.1,
+    "100MiB.peak_rss_bytes": 0.05
+  },
+  "cases": {
+    "10MiB": {
+      "input_sha256": "016758c1f6e01ad6fe79a0053b9c92ad8651e8bfdaabeec949a3553bf38a9156",
+      "first_preview_median_ns": 27809375,
+      "first_preview_p95_ns": 28798125,
+      "max_step_ns": 415500,
+      "peak_rss_bytes": 33914880,
+      "index_bytes": 5600056
+    },
+    "100MiB": {
+      "input_sha256": "0acabf47c6f2fc2f747042adbb33e19d3901d75c22d8e7d90b77984626171f65",
+      "first_preview_median_ns": 257052708,
+      "first_preview_p95_ns": 269116333,
+      "max_step_ns": 437958,
+      "peak_rss_bytes": 126959616,
+      "index_bytes": 5600112
+    }
+  },
+  "stretch_targets": {
+    "cached_pan_zoom_p95_ns": 33000000,
+    "single_arch_stripped_executable_bytes": 10485760,
+    "app_bundle_bytes": 26214400
+  }
+}

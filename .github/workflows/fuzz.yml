@@ -1,0 +1,38 @@
+name: macOS XML tokenizer fuzz campaign
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * 1-5'
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz-xml:
+    name: Apple Silicon XML tokenizer campaign
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Thirty second pull request or manual smoke
+        if: github.event_name != 'schedule'
+        run: ./dev fuzz-xml --duration 30 --seed 20261009
+      - name: Ten minute weekday campaign
+        if: github.event_name == 'schedule'
+        run: ./dev fuzz-xml --duration 600 --seed 20261009
+      - name: Print narrowly scoped failure evidence
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          roots = [Path('artifacts/WO-M2-03/failures'), Path('artifacts/WO-M2-03/pr-smoke.json'), Path('artifacts/WO-M2-03/scheduled-campaign.json')]
+          for root in roots:
+              files = sorted(root.rglob('*')) if root.is_dir() else [root]
+              for path in files:
+                  if path.is_file():
+                      print(f'FAILURE_EVIDENCE {path} BASE64 {base64.b64encode(path.read_bytes()).decode()}')
+          PY
