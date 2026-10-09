@@ -25,6 +25,8 @@ class JobSnapshotTests(unittest.TestCase):
         self.assertEqual(summary["failed_submit_cleanup"], 0)
         self.assertEqual(summary["deterministic_digest"], "pass")
         self.assertEqual(summary["byte_budget"], "pass")
+        self.assertEqual(summary["scheduler_capacity"], "pass")
+        self.assertEqual(summary["random_cleanup_accounting"], "zero_after_generation")
         self.assertEqual(summary["generation_filter"], "pass")
         self.assertEqual(summary["random_schedule"], "pass")
         ARTIFACTS.mkdir(parents=True, exist_ok=True)
@@ -35,7 +37,9 @@ class JobSnapshotTests(unittest.TestCase):
             "PASS: invalid nonempty NULL slice rejected; >256 MiB rejected; empty slice accepted.\n"
             "PASS: mutating caller storage leaves copied snapshot bytes unchanged.\n"
             "PASS: six threads each performed 20,000 concurrent retain/read/release cycles.\n"
-            "PASS: deterministic scheduler digest and failed byte-budget submit ownership.\n",
+            "PASS: deterministic scheduler digest and failed byte-budget submit ownership.\n"
+            "PASS: scheduler capacity returns JOBS_FULL at capacity one.\n"
+            "PASS: randomized cancel/generation run drains in-flight byte accounting to zero.\n",
             encoding="utf-8",
         )
 

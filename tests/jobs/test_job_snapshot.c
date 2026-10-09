@@ -293,6 +293,29 @@ static bool aggregate_budget_test(void)
     return true;
 }
 
+static bool scheduler_capacity_test(void)
+{
+    uint8_t data[4096] = {0};
+    jobs_source_snapshot *snapshot = NULL;
+    CHECK(jobs_source_snapshot_create(data, sizeof(data), &snapshot) == JOBS_SNAPSHOT_OK);
+    jobs_scheduler_config config = {1U, 1U, 2U * sizeof(data)};
+    jobs_scheduler *scheduler = NULL;
+    CHECK(jobs_scheduler_create(&config, &scheduler) == JOBS_OK);
+    CHECK(jobs_scheduler_submit(scheduler, 40U, 1U, snapshot) == JOBS_OK);
+    /* A completed slot remains occupied until poll, so this is deterministic. */
+    CHECK(jobs_scheduler_submit(scheduler, 41U, 1U, snapshot) == JOBS_FULL);
+    CHECK(jobs_scheduler_inflight_bytes(scheduler) == sizeof(data));
+    CHECK(jobs_scheduler_cancel(scheduler, 40U) == JOBS_OK);
+    for (size_t i = 0U; i < 3000U && jobs_scheduler_inflight_bytes(scheduler) != 0U; ++i) {
+        struct timespec delay = {0, 1000000L};
+        (void)nanosleep(&delay, NULL);
+    }
+    CHECK(jobs_scheduler_inflight_bytes(scheduler) == 0U);
+    jobs_scheduler_destroy(scheduler);
+    jobs_source_snapshot_release(snapshot);
+    return true;
+}
+
 static uint32_t random_next(uint32_t *state)
 {
     *state ^= *state << 13U; *state ^= *state >> 17U; *state ^= *state << 5U;
@@ -337,6 +360,13 @@ static bool randomized_schedules(void)
             delivered[result.task_id] = true;
         }
     }
+    generation++;
+    CHECK(jobs_scheduler_advance_generation(scheduler, generation) == JOBS_OK);
+    for (size_t i = 0U; i < 3000U && jobs_scheduler_inflight_bytes(scheduler) != 0U; ++i) {
+        struct timespec delay = {0, 1000000L};
+        (void)nanosleep(&delay, NULL);
+    }
+    CHECK(jobs_scheduler_inflight_bytes(scheduler) == 0U);
     jobs_scheduler_destroy(scheduler);
     jobs_source_snapshot_release(snapshot);
     printf("random_seed=1295209779 random_submissions=%zu random_cancellations=%zu\n",
@@ -412,11 +442,13 @@ int main(int argc, char **argv)
         strcmp(argv[2], "--output") == 0) return run_benchmark(argv[3], argv[0]);
     if (argc != 1) return 2;
     if (!snapshot_tests() || !queue_cleanup_tests() || !scheduler_test() ||
-        !aggregate_budget_test() ||
+        !aggregate_budget_test() || !scheduler_capacity_test() ||
         !randomized_schedules()) return 1;
     puts("{\"status\":\"pass\",\"snapshot\":\"pass\",\"owned_cleanup_cases\":4,"
          "\"failed_submit_cleanup\":0,\"deterministic_digest\":\"pass\","
-         "\"byte_budget\":\"pass\",\"generation_filter\":\"pass\","
+         "\"byte_budget\":\"pass\",\"scheduler_capacity\":\"pass\","
+         "\"random_cleanup_accounting\":\"zero_after_generation\","
+         "\"generation_filter\":\"pass\","
          "\"random_seed\":1295209779,\"random_schedule\":\"pass\"}");
     return 0;
 }
