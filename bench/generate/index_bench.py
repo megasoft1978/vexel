@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import platform
-import resource
 import subprocess
 import sys
 import time
@@ -57,6 +56,8 @@ def run_trial(binary: Path, source: Path) -> dict[str, int]:
     if completed.returncode != 0:
         raise RuntimeError(completed.stderr.strip() or f"benchmark exited {completed.returncode}")
     result = json.loads(completed.stdout)
+    if "peak_rss_bytes" not in result or result["peak_rss_bytes"] <= 0:
+        raise RuntimeError("benchmark child did not report a positive per-process RSS")
     result["process_elapsed_ns"] = elapsed
     return result
 
@@ -107,7 +108,7 @@ def main() -> int:
                     bool(row["preview_before_index_complete"]) for row in all_trials),
                 "worker_render_completed": True,
             },
-            "peak_child_rss_bytes": resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss,
+            "peak_child_rss_bytes": max(row["peak_rss_bytes"] for row in all_trials),
             "index_bytes": max(int(row["index_bytes"]) for row in all_trials),
         }
     clang = subprocess.run(["clang", "--version"], capture_output=True, text=True, check=True).stdout.splitlines()[0]

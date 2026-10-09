@@ -3,6 +3,7 @@
 #include "raster/shape_render.h"
 
 #include <mach/mach_time.h>
+#include <sys/resource.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -113,15 +114,24 @@ int main(int argc, char **argv)
         svg_shape_document_destroy(&preview.document);
         free(preview.source.ptr); svg_index_destroy(session); free(bytes); return 1;
     }
+    struct rusage usage = {0};
+    if (getrusage(RUSAGE_SELF, &usage) != 0) {
+        platform_task_destroy(queue);
+        raster_tile_destroy(&preview.tile);
+        svg_shape_document_destroy(&preview.document);
+        free(preview.source.ptr); svg_index_destroy(session); free(bytes);
+        return 1;
+    }
     (void)printf("{\"source_bytes\":%zu,\"read_ns\":%llu,\"first_preview_ns\":%llu,"
                  "\"complete_index_ns\":%llu,\"max_step_ns\":%llu,"
                  "\"preview_before_index_complete\":true,"
                  "\"progress_10_50_90_complete\":true,"
-                 "\"element_count\":%zu,\"index_bytes\":%zu}\n",
+                 "\"element_count\":%zu,\"index_bytes\":%zu,\"peak_rss_bytes\":%llu}\n",
                  size, (unsigned long long)(read_end - read_start),
                  (unsigned long long)first_ns, (unsigned long long)total_ns,
                  (unsigned long long)max_step_ns, progress.element_count,
-                 progress.element_count * sizeof(svg_index_element));
+                 progress.element_count * sizeof(svg_index_element),
+                 (unsigned long long)usage.ru_maxrss);
     svg_index_destroy(session); free(bytes);
     platform_task_destroy(queue);
     raster_tile_destroy(&preview.tile);
