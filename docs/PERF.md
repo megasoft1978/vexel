@@ -343,7 +343,7 @@ job (512 KiB each for `<use>` and clipping). Candidate-specific tests cover 35
 librsvg fixtures, source SHA preservation, copy limits, and gradient samples.
 Implementation evidence is tied to source revision `e53c760`; a later
 README-only commit records the default. Final review and merge status are
-tracked in `STATE-laneA.md`.
+tracked in `STATE.md`.
 
 WO-M4-04 corpus follow-up retains 58 unchanged source hashes and all 116 trials.
 Only `natural-earth-world-map-blank` and `natural-earth-world-map-countries`
