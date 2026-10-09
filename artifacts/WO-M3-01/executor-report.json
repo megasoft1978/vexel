@@ -1,0 +1,31 @@
+{
+  "status": "candidate_partial",
+  "work_order": "WO-M3-01",
+  "revision": 1,
+  "implementation": [
+    "bounded source-backed index sessions",
+    "generation invalidation and cancellation",
+    "small-source one-shot XML diagnostics",
+    "synthetic preview source extraction",
+    "task-worker preview decode and raster benchmark",
+    "loading progress state adapter",
+    "10 MiB and 100 MiB benchmark campaign"
+  ],
+  "verified": {
+    "debug_ctest": "6/6 passed",
+    "focused_python_tests": "1/1 passed",
+    "full_python_suite": "174/174 passed",
+    "asan_ctest": "6/6 passed",
+    "ubsan_ctest": "6/6 passed",
+    "benchmark": "15 trials per workload; all measured latency and RSS gates passed",
+    "ready_work_order_validation": "passed",
+    "ledger_validation": "passed",
+    "diff_check": "passed"
+  },
+  "remaining_acceptance_gaps": [
+    "the index API does not expose an incremental token stream for exact token-equivalence checks",
+    "the native app open-document flow does not yet consume index progress or present the preview tile",
+    "large-input full XML diagnostics are not equivalent to the complete M2 tokenizer"
+  ],
+  "decision": "Do not mark AC-1 or AC-3 fully passed until the gaps are resolved."
+}

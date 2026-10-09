@@ -11,6 +11,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,744 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.265 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M3-01 (candidate) | Release | see `bench/results/WO-M3-01.json` | first decode+raster preview: 10 MiB median 0.171 ms; 100 MiB median 0.087 ms; complete index 8.0 ms / 53.7 ms | 20.0 MB / 114.4 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
@@ -25,6 +26,22 @@ advances suppress results from older work. Shutdown requests cancellation,
 wakes and joins workers, then destroy releases storage. The owner quiesces all
 callers before destroy; an uncooperative callback can delay join. Lifecycle
 timings are correctness bounds only and are not performance claims.
+
+## WO-M3-01 progressive index candidate
+
+The 10 MiB input contains 100,000 simple rectangle elements. The 100 MiB
+map-like input contains 100,000 grouped records with bounded attributes. Each
+campaign records five first-use and ten warm process trials; OS file caches
+were not flushed, so cold/warm labels indicate run order only. First-preview
+latency includes shape decoding and tile rasterization on the task worker;
+source read and complete-index timings are separate. Both cases remained under
+the 100 ms per-step and 128 MiB + 3x-source RSS gates. Raw trials and generated
+input hashes are in `bench/results/WO-M3-01.json`.
+
+This candidate records a preview source range and demonstrates worker decode
+and raster in the benchmark driver. The current app does not yet wire an open
+document UI replay to that session, and token stream equivalence is not
+exposed by the index API; those acceptance items remain open for review.
 
 ## WO-M0-03 black-box protocol
 

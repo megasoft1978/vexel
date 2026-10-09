@@ -1,0 +1,21 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
+[1/2] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
+[2/2] Linking C executable bin/svg_index_bench
+{
+  "10MiB": {
+    "first_preview_median_ns": 170958,
+    "max_step_latency_ns": 268417
+  },
+  "100MiB": {
+    "first_preview_median_ns": 86792,
+    "max_step_latency_ns": 185000
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "status": "partial",
+  "one_shot_defaults_changed": false,
+  "small_document_validation": "delegates to unchanged svg_xml_tokenize for sources up to 64 KiB",
+  "incremental_token_stream_equivalence": "not exposed or verified"
+}

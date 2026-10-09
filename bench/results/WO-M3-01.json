@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "seed": 20261009,
+  "machine": "macOS-27.0-arm64-arm-64bit",
+  "architecture": "arm64",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "build": "mac-release",
+  "cache_caveat": "Cold/warm labels are run order only; OS file cache is not flushed.",
+  "cases": {
+    "10MiB": {
+      "source_bytes": 10485760,
+      "source_sha256": "a30ebe7c18a1dbe371e3e140c4282f8af33a5549df73be63b24d9b046e534306",
+      "workload": "100000 simple rectangles",
+      "cold_trials": [
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1352458,
+          "first_preview_ns": 245875,
+          "complete_index_ns": 10661750,
+          "max_step_ns": 268417,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 190278750
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1191542,
+          "first_preview_ns": 204625,
+          "complete_index_ns": 9683459,
+          "max_step_ns": 231917,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 14456209
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1134375,
+          "first_preview_ns": 193500,
+          "complete_index_ns": 9242750,
+          "max_step_ns": 210625,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 13655125
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1109500,
+          "first_preview_ns": 194416,
+          "complete_index_ns": 7867000,
+          "max_step_ns": 202958,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12415875
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1099959,
+          "first_preview_ns": 177750,
+          "complete_index_ns": 8401958,
+          "max_step_ns": 203125,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12709250
+        }
+      ],
+      "warm_trials": [
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1104416,
+          "first_preview_ns": 171041,
+          "complete_index_ns": 8257833,
+          "max_step_ns": 216500,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12283083
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1149375,
+          "first_preview_ns": 171500,
+          "complete_index_ns": 7789750,
+          "max_step_ns": 185666,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12340750
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1047750,
+          "first_preview_ns": 170958,
+          "complete_index_ns": 8011375,
+          "max_step_ns": 189500,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12143958
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1067084,
+          "first_preview_ns": 170541,
+          "complete_index_ns": 7323958,
+          "max_step_ns": 180709,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 11783958
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1054333,
+          "first_preview_ns": 170625,
+          "complete_index_ns": 7509750,
+          "max_step_ns": 207833,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12287458
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1122291,
+          "first_preview_ns": 164875,
+          "complete_index_ns": 7635583,
+          "max_step_ns": 200083,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 11849167
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1023958,
+          "first_preview_ns": 159167,
+          "complete_index_ns": 8513875,
+          "max_step_ns": 197500,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12884083
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1143541,
+          "first_preview_ns": 169250,
+          "complete_index_ns": 7139750,
+          "max_step_ns": 200500,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12082583
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1048458,
+          "first_preview_ns": 162208,
+          "complete_index_ns": 7111416,
+          "max_step_ns": 194125,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 11394083
+        },
+        {
+          "source_bytes": 10485760,
+          "read_ns": 1024334,
+          "first_preview_ns": 159750,
+          "complete_index_ns": 8410584,
+          "max_step_ns": 181417,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 12587291
+        }
+      ],
+      "first_preview_median_ns": 170958,
+      "first_preview_p95_ns": 245875,
+      "complete_index_median_ns": 8011375,
+      "max_step_latency_ns": 268417,
+      "peak_child_rss_bytes": 20004864,
+      "index_bytes": 5600112
+    },
+    "100MiB": {
+      "source_bytes": 104857600,
+      "source_sha256": "0ab73c5c9d66a8ce118a0802e9724e74d34c69638752c4e760c144ca025dc2d8",
+      "workload": "100000 map-like grouped records",
+      "cold_trials": [
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10363042,
+          "first_preview_ns": 90041,
+          "complete_index_ns": 52337416,
+          "max_step_ns": 176375,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 66999375
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10544334,
+          "first_preview_ns": 88667,
+          "complete_index_ns": 54124584,
+          "max_step_ns": 153167,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 68760542
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10580958,
+          "first_preview_ns": 86500,
+          "complete_index_ns": 52799375,
+          "max_step_ns": 177375,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 67456000
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 9980500,
+          "first_preview_ns": 76208,
+          "complete_index_ns": 53468833,
+          "max_step_ns": 149208,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 67457458
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10179208,
+          "first_preview_ns": 77208,
+          "complete_index_ns": 51496916,
+          "max_step_ns": 178208,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 65747917
+        }
+      ],
+      "warm_trials": [
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10323000,
+          "first_preview_ns": 86333,
+          "complete_index_ns": 50892125,
+          "max_step_ns": 162250,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 65231084
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10239959,
+          "first_preview_ns": 88000,
+          "complete_index_ns": 53679917,
+          "max_step_ns": 156000,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 68082208
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10666750,
+          "first_preview_ns": 85083,
+          "complete_index_ns": 52773417,
+          "max_step_ns": 144666,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 68206667
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 10140291,
+          "first_preview_ns": 76667,
+          "complete_index_ns": 55003167,
+          "max_step_ns": 185000,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 69558833
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 8366584,
+          "first_preview_ns": 90167,
+          "complete_index_ns": 56003000,
+          "max_step_ns": 149500,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 67777083
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 8837792,
+          "first_preview_ns": 89125,
+          "complete_index_ns": 58085708,
+          "max_step_ns": 150459,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 70435250
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 8316167,
+          "first_preview_ns": 91083,
+          "complete_index_ns": 54855500,
+          "max_step_ns": 157792,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 66758375
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 8615292,
+          "first_preview_ns": 86084,
+          "complete_index_ns": 59677834,
+          "max_step_ns": 164250,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 72066458
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 8940833,
+          "first_preview_ns": 86792,
+          "complete_index_ns": 54576417,
+          "max_step_ns": 153833,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 67179833
+        },
+        {
+          "source_bytes": 104857600,
+          "read_ns": 9157958,
+          "first_preview_ns": 98375,
+          "complete_index_ns": 53027625,
+          "max_step_ns": 155125,
+          "element_count": 100002,
+          "index_bytes": 5600112,
+          "process_elapsed_ns": 65815875
+        }
+      ],
+      "first_preview_median_ns": 86792,
+      "first_preview_p95_ns": 98375,
+      "complete_index_median_ns": 53679917,
+      "max_step_latency_ns": 185000,
+      "peak_child_rss_bytes": 114376704,
+      "index_bytes": 5600112
+    }
+  }
+}
