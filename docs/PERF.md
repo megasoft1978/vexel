@@ -318,33 +318,23 @@ Two comparable runs on Mac Studio Mac17,14 / Apple M5 Max / macOS 27.0 / Apple C
 
 The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` harness is 107,136 bytes. `otool -L` records 8 linked dylib/framework entries. Binary/package stretch targets remain report-only; no app bundle exists. Cached pan/zoom event-to-present p95 is unavailable because current UI navigation tests do not time presentation. Full raw runs and gate history are in `artifacts/WO-BOOT-08/` and `bench/results/WO-BOOT-08.json`.
 
+<!-- M4-01 generated report start -->
+
 ## WO-M4-01 bounded geometry and corpus workload
 
-Debug and Release sizes on arm64 macOS 27.0, Apple M5 Max, Apple Clang 21.0.0
-(`clang-2100.3.34.2`) are: `svgworkbench` 265,312 / 172,464 bytes,
-`svg_index_bench` 107,552 bytes in Release, `shape_render_cli` 149,040 /
-87,904 bytes, and `libvexel_shape.a` 106,632 / 37,832 bytes. The same sizes
-are recorded in `reports/M4/head-to-head.json` and checked by
-`./dev bench-corpus --check`.
+Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
+Debug/Release `svgworkbench`: 265312 / 172464 bytes; Release `svg_index_bench`: 107552 bytes;
+Debug/Release `shape_render_cli`: 149040 / 87904 bytes; Debug/Release `libvexel_shape.a`: 106632 / 37832 bytes.
+Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
-`./dev bench-corpus` now reruns the established fresh-process progressive index
-workload, verifies every external manifest hash, and writes M4-specific reports
-without changing the frozen M3 report. The 58-file report records 2 previewable,
-56 unsupported, no limits, and no crashes. Both previewable files are Natural
-Earth T1 maps, so geometry support alone has not increased whole-file coverage;
-common class CSS, stroke and local references remain future work. For those two
-successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 72.926x
-and the RSS ratio is 33.832x. T2–T4 ratios are unavailable because Vexel has no
-successful outcomes there. These are directional open/index task comparisons
-against the supplied Inkscape CLI baseline, not full-render parity.
+The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
+For 2 comparable successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 72.926x and RSS ratio is 33.832x. T2–T4 ratios are unavailable because Vexel has no successful outcomes there.
+These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.200 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 5.195 ms, full index 0.837 ms; natural-earth-world-map-countries: first preview 5.137 ms, full index 0.906 ms
+Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
+<!-- M4-01 generated report end -->
 
-The 100 MiB preview gate fails because 0/12 eligible T3 files produced a
-preview. The maximum measured main-thread index step was 0.200 ms, under 100 ms;
-all 12 eligible files passed the existing per-file RSS allowance. The two T1
-first-preview measurements were 5.195 and 5.137 ms; full-index measurements
-were 0.837 and 0.906 ms. Host, binary hash, per-file aggregate results and
-ratios are in `reports/M4/head-to-head.json` and `.md`; raw per-trial data and
-the external manifest pointer stay in ignored `.cache/M4/`.
 
 The filled-shape differential fixtures passed with librsvg
 `rsvg-convert 2.63.2 (Cairo 1.18.6, Pango 1.58.2, HarfBuzz 14.6.0)`. Fixture

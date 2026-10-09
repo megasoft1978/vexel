@@ -16,6 +16,9 @@ RAW = ROOT / ".cache/M4/head-to-head-raw.json"
 POINTER = ROOT / ".cache/M4/corpus-pointer.json"
 REPORT = ROOT / "reports/M4/head-to-head.json"
 MARKDOWN = ROOT / "reports/M4/head-to-head.md"
+PERF = ROOT / "docs/PERF.md"
+PERF_START = "<!-- M4-01 generated report start -->"
+PERF_END = "<!-- M4-01 generated report end -->"
 
 
 def load_harness():
@@ -55,14 +58,69 @@ def render(harness, raw: dict) -> tuple[str, str]:
     return json.dumps(report, indent=2) + "\n", markdown
 
 
+def perf_block(report: dict) -> str:
+    env = report["environment"]
+    sizes = report["binary_sizes_bytes"]
+    tiers = report["tier_summary"]
+    gates = report["wedge_gates"]
+    t1 = tiers["T1"]
+    successes = [row for row in report["results"] if row["tier"] == "T1" and row["outcome"] == "ok"]
+    successful_metrics = [
+        f"{row['id']}: first preview {row['metrics']['first_preview_ns'] / 1e6:.3f} ms, "
+        f"full index {row['metrics']['complete_index_ns'] / 1e6:.3f} ms"
+        for row in successes
+    ]
+    preview = gates["first_visible_preview_100_mib"]
+    step = gates["maximum_main_thread_step"]
+    rss = gates["peak_rss_100_mib"]
+    return "\n".join([
+        "## WO-M4-01 bounded geometry and corpus workload",
+        "",
+        f"Measured on {env['architecture']} {env['macos']}, {env['chip']}, {env['compiler']}.",
+        f"Debug/Release `svgworkbench`: {sizes['debug_svgworkbench']} / {sizes['release_svgworkbench']} bytes; "
+        f"Release `svg_index_bench`: {sizes['release_svg_index_bench']} bytes;",
+        f"Debug/Release `shape_render_cli`: {sizes['debug_shape_render_cli']} / {sizes['release_shape_render_cli']} bytes; "
+        f"Debug/Release `libvexel_shape.a`: {sizes['debug_libvexel_shape']} / {sizes['release_libvexel_shape']} bytes.",
+        "Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.",
+        "",
+        f"The 58-file run produced {sum(t['ok'] for t in tiers.values())} previewable, "
+        f"{sum(t['unsupported'] for t in tiers.values())} unsupported, "
+        f"{sum(t['limit'] for t in tiers.values())} limit, and {sum(t['crash'] for t in tiers.values())} crash outcomes.",
+        f"For {t1['comparable_successful_files']} comparable successful T1 rows, the Inkscape/Vexel "
+        f"first-preview geometric mean is {t1['inkscape_seconds_over_vexel_first_preview_geomean']:.3f}x "
+        f"and RSS ratio is {t1['inkscape_rss_over_vexel_rss_geomean']:.3f}x. "
+        "T2–T4 ratios are unavailable because Vexel has no successful outcomes there.",
+        "These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.",
+        f"The 100 MiB first-preview gate is {preview['status']} ({preview['measured_files']}/{preview['eligible_t3_files']} eligible files); "
+        f"maximum main-thread step is {step['max_step_ns'] / 1e6:.3f} ms "
+        f"({step['status']}); 100 MiB RSS gate is {rss['status']} "
+        f"({sum(1 for row in rss['files'] if row['within_limit'])}/{len(rss['files'])} within the per-file allowance).",
+        "Successful T1 measurements: " + ("; ".join(successful_metrics) if successful_metrics else "none"),
+        "Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.",
+    ])
+
+
+def update_perf(report: dict) -> str:
+    text = PERF.read_text(encoding="utf-8")
+    if text.count(PERF_START) != 1 or text.count(PERF_END) != 1:
+        raise ValueError("docs/PERF.md must contain one M4 generated-section marker pair")
+    start = text.index(PERF_START) + len(PERF_START)
+    end = text.index(PERF_END)
+    if end < start:
+        raise ValueError("docs/PERF.md M4 generated-section markers are reversed")
+    return text[:start] + "\n\n" + perf_block(report) + "\n" + text[end:]
+
+
 def run(harness) -> None:
     raw = harness.run_campaign()
     RAW.parent.mkdir(parents=True, exist_ok=True)
     RAW.write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
     shutil.copyfile(harness.POINTER, POINTER)
     report_json, report_md = render(harness, raw)
+    report = json.loads(report_json)
     REPORT.write_text(report_json, encoding="utf-8")
     MARKDOWN.write_text(report_md, encoding="utf-8")
+    PERF.write_text(update_perf(report), encoding="utf-8")
     print(f"reported {len(raw['results'])} files / "
           f"{sum(len(row['trials']) for row in raw['results'])} fresh trials")
 
@@ -72,7 +130,10 @@ def check(harness) -> None:
     if json.loads(POINTER.read_text(encoding="utf-8")) != json.loads(harness.POINTER.read_text(encoding="utf-8")):
         raise ValueError("M4 corpus pointer differs from the verified harness pointer")
     expected_json, expected_md = render(harness, raw)
-    if REPORT.read_text(encoding="utf-8") != expected_json or MARKDOWN.read_text(encoding="utf-8") != expected_md:
+    expected_perf = update_perf(json.loads(expected_json))
+    if (REPORT.read_text(encoding="utf-8") != expected_json or
+            MARKDOWN.read_text(encoding="utf-8") != expected_md or
+            PERF.read_text(encoding="utf-8") != expected_perf):
         raise ValueError("M4 report differs from retained trials or current corpus inputs")
     print(f"checked {len(raw['results'])} files / "
           f"{sum(len(row['trials']) for row in raw['results'])} fresh trials")
