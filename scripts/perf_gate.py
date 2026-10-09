@@ -416,11 +416,15 @@ def validate_result(result: Any) -> dict[str, Any]:
     cases = exact_keys(result["cases"], {"10MiB", "100MiB"}, "result cases")
     for label, case in cases.items():
         validate_result_case(label, case)
-    exact_keys(result["baseline_provenance"], {"work_order", "commit", "report", "report_sha256"}, "result baseline_provenance")
-    strict_hash(result["baseline_provenance"]["report_sha256"], "result baseline_provenance.report_sha256")
+    provenance = exact_keys(result["baseline_provenance"], {"work_order", "commit", "report", "report_sha256"}, "result baseline_provenance")
+    for name in ("work_order", "commit", "report"):
+        strict_string(provenance[name], f"result baseline_provenance.{name}")
+    strict_hash(provenance["report_sha256"], "result baseline_provenance.report_sha256")
     comparison = exact_keys(result["comparison"], {"status", "reasons", "baseline_values"}, "result comparison")
     if comparison["status"] not in ("comparable", "incomparable") or not isinstance(comparison["reasons"], list) or any(not isinstance(x, str) for x in comparison["reasons"]):
         raise GateError("result comparison is malformed")
+    if (comparison["status"] == "comparable") != (len(comparison["reasons"]) == 0):
+        raise GateError("result comparison status and reasons disagree")
     exact_keys(comparison["baseline_values"], {"10MiB", "100MiB"}, "result comparison.baseline_values")
     for label, case in comparison["baseline_values"].items():
         exact_keys(case, {"input_sha256", "first_preview_median_ns", "first_preview_p95_ns", "max_step_ns", "peak_rss_bytes", "index_bytes"}, f"result comparison.baseline_values.{label}")
