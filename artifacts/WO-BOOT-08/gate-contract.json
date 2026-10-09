@@ -1,12 +1,11 @@
 {
   "baseline_sha256": "f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a",
   "deterministic_serialization": "sorted JSON keys; stable summaries; only run_timestamp_utc and raw timing observations vary",
-  "trial_variability": "sample standard deviation and coefficient of variation are recorded; metrics above 10 percent CV are marked noisy and do not advance violation history",
   "fail_closed_checks": {
     "missing_and_extra_trial_fields": "rejected",
     "negative_and_non_finite_values": "rejected",
     "trial_count": "exactly 5 cold-order + 10 warm-order per case",
-    "unknown_fields": "rejected by exact-key validators"
+    "unknown_fields": "rejected at every raw-observation and generated-result nesting level"
   },
   "gate_streak_behavior": "first consecutive breach warning; second comparable consecutive breach fails; healthy metric resets; unavailable or incomparable observations preserve streaks",
   "report_only_targets": [
@@ -16,6 +15,8 @@
   ],
   "result_schema": "WO-BOOT-08 local performance gate result v1",
   "schema_version": 1,
+  "schema_version_type": "JSON integer 1 only; booleans are rejected",
+  "trial_variability": "sample standard deviation and coefficient of variation are recorded; metrics above 10 percent CV are marked noisy and do not advance violation history",
   "unavailable_metrics": {
     "app_bundle": {
       "bytes": null,

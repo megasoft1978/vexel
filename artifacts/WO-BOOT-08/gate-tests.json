@@ -14,12 +14,13 @@
     "noisy metric does not advance history",
     "malformed and non-finite inputs",
     "deterministic serialization",
-    "report-only stretch targets"
+    "report-only stretch targets",
+    "strict nested raw and generated report schema validation, including boolean schema-version rejection"
   ],
   "errors": 0,
   "exit_code": 0,
   "failures": 0,
   "schema_version": 1,
   "skipped": 0,
-  "tests_run": 9
+  "tests_run": 10
 }

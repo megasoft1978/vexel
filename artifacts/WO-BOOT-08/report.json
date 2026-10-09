@@ -152,8 +152,8 @@
       ]
     }
   },
-  "base_sha": "2b0499eac241e35e7e88ff7d66b5ac6843b7544d",
-  "head_sha": "f9d91fe9ce467da08bedb6d6daff2d3beabb2119",
+  "base_sha": "97bc3d1cb89d3cddfb48a796868fdb98aada16b7",
+  "head_sha": "ab0969470085a5525cfbefd2c2ede6e50db0cf2c",
   "status": "complete",
-  "summary": "Implementation candidate and local evidence are recorded, but the work order is not accepted: ./dev verify, ./dev asan, and ./dev ubsan each exit 8 because index-replay cannot obtain an offscreen Metal device or queue; ./dev test-fast exits 1 with 8 failures and 2 errors in the pre-existing full suite. No implementation commit was created. The exact requested report destination is outside this worktree\u2019s writable root; this report is retained at artifacts/WO-BOOT-08/report.json. Next work order remains M3-05 with a human owner review gate after BOOT-08 acceptance."
+  "summary": "All 14 frozen acceptance commands completed successfully. Two fresh comparable performance runs with strict nested report validation produced repeated relative regressions in 100 MiB first-preview p95 (319.26 ms, 354.56 ms) and peak RSS (140,001,280 bytes, 139,313,152 bytes); the second reports gate status fail while absolute limits pass. The 10 MiB metric warned once then passed; the noisy owner-step metric did not advance its streak. BOOT-08 is ready for owner review in the M3-05 decision packet."
 }
