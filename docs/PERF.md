@@ -11,6 +11,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,744 | 4.29 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 15.265 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M3-01 | Release | 151,968 bytes; see `bench/results/WO-M3-01.json` | source read: 10 MiB median 0.890 ms (p95 0.932 ms); 100 MiB 8.626 ms (p95 8.918 ms); validated decode+raster preview: 10 MiB median 27.81 ms (p95 28.80 ms); 100 MiB median 257.05 ms (p95 269.12 ms); full index+XML validation 44.84 ms / 334.21 ms | 33.9 MB / 127.0 MB peak child RSS | Mac Studio Mac17,14, M5 Max, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
@@ -25,6 +26,24 @@ advances suppress results from older work. Shutdown requests cancellation,
 wakes and joins workers, then destroy releases storage. The owner quiesces all
 callers before destroy; an uncooperative callback can delay join. Lifecycle
 timings are correctness bounds only and are not performance claims.
+
+## WO-M3-01 progressive index candidate
+
+The 10 MiB input contains 100,000 simple rectangle elements. The 100 MiB
+map-like input contains 100,000 grouped records with bounded attributes. Each
+campaign records five first-use and ten warm process trials; OS file caches
+were not flushed, so cold/warm labels indicate run order only. First-preview
+latency includes shape decoding and tile rasterization on the task worker;
+source read and complete-index timings are separate. Both cases remained under
+the 100 ms per-step and 128 MiB + 3x-source RSS gates. Raw trials and generated
+input hashes are in `bench/results/WO-M3-01.json`.
+
+The resumable reader advances in bounded owner-thread steps and emits complete
+tag source spans. Full token spans become queryable after the cancellable
+background validator completes; it does not stream the validator's full token
+records through the index API. The current app replay remains headless and does
+not yet wire an open-document UI to this session. These integration boundaries
+remain open for review.
 
 ## WO-M0-03 black-box protocol
 

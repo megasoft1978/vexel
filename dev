@@ -3,12 +3,13 @@ set -eu
 
 usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
+    printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
     printf '%s\n' '       ./dev wo-help'
 }
 
 command_name=${1:-help}
-if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ]; then
+if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ]; then
     usage >&2
     exit 2
 fi
@@ -18,7 +19,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|asan|ubsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
+    build|test-fast|test|verify|index-bench|asan|ubsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -95,5 +96,11 @@ case "$command_name" in
         "$repo_root/dev" build
         ctest --test-dir build/mac-debug --output-on-failure
         "$repo_root/dev" test-fast
+        ;;
+    index-bench)
+        shift
+        cmake --preset mac-release
+        cmake --build --preset mac-release --target svg_index_bench
+        python3 bench/generate/index_bench.py "$@"
         ;;
 esac
