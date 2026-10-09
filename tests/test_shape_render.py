@@ -128,6 +128,10 @@ class ShapeRenderTests(unittest.TestCase):
             "invalid_arc_flag": '<svg width="16" height="16"><path d="M0 0 A1 1 0 2 0 4 4"/></svg>',
             "nonliteral_arc_flag": '<svg width="16" height="16"><path d="M0 0 A1 1 0 1.0 0 4 4"/></svg>',
             "missing_initial_move": '<svg width="16" height="16"><path d="L0 0"/></svg>',
+            "relative_curve_overflow": '<svg width="16" height="16"><path d="M999999 0 c2 2 2 2 2 2"/></svg>',
+            "relative_quad_overflow": '<svg width="16" height="16"><path d="M999999 0 q2 2 2 2"/></svg>',
+            "prefixed_svg_attribute": '<svg width="16" height="16"><rect x="1" y="1" width="4" height="4" x:fill="red"/></svg>',
+            "wrong_default_namespace": '<svg xmlns="urn:other" width="16" height="16"/>',
             "unsupported_smooth": '<svg width="16" height="16"><path d="M0 0 S1 1 2 2"/></svg>',
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}

@@ -29,12 +29,19 @@ def main():
     fields = dict(item.split("=", 1) for item in run.stdout.strip().split())
     cases = int(fields["cases"])
     campaign_seconds = float(fields["duration"])
+    cap_exhaustion = int(fields.get("cap_exhaustion", "0"))
+    cap_case_bytes = int(fields.get("cap_case_bytes", "0"))
     if cases < 1_000_000 and campaign_seconds < args.duration:
         raise RuntimeError("campaign did not reach either required floor")
+    if cap_exhaustion != 1 or cap_case_bytes < 1 or cap_case_bytes > 16 * 1024 * 1024:
+        raise RuntimeError("bounded command-cap exhaustion case did not pass")
     report = {"seed": args.seed, "cases": cases, "duration_seconds": round(elapsed, 3),
               "process_cpu_seconds": campaign_seconds,
               "binary": str(binary), "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
-              "input_max_bytes": 4096, "crashes": 0, "sanitizer_reports": 0,
+              "random_input_max_bytes": 4096, "cap_exhaustion_cases": cap_exhaustion,
+              "cap_exhaustion_input_bytes": cap_case_bytes,
+              "input_max_bytes": max(4096, cap_case_bytes),
+              "crashes": 0, "sanitizer_reports": 0,
               "invariant_failures": 0, "result": "pass"}
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2) + "\n")

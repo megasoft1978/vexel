@@ -9,10 +9,38 @@
 #include <string.h>
 
 #define INPUT_CAP 4096U
+#define SHAPE_SOURCE_LIMIT (16U * 1024U * 1024U)
 
 static uint32_t next_u32(uint32_t *state)
 {
     uint32_t x = *state; x ^= x << 13U; x ^= x >> 17U; x ^= x << 5U; *state = x; return x;
+}
+
+static bool command_cap_probe(size_t *input_bytes)
+{
+    static const uint8_t prefix[] = "<svg width=\"16\" height=\"16\"><path d=\"M0 0";
+    static const uint8_t segment[] = " L1 1";
+    static const uint8_t suffix[] = "\"/></svg>";
+    size_t groups = (size_t)SVG_SHAPE_MAX_COMMANDS;
+    if (groups > (SIZE_MAX - sizeof(prefix) - sizeof(suffix)) / (sizeof(segment) - 1U)) return false;
+    size_t total = (sizeof(prefix) - 1U) + groups * (sizeof(segment) - 1U) + (sizeof(suffix) - 1U);
+    if (total > SHAPE_SOURCE_LIMIT) return false;
+    uint8_t *input = malloc(total);
+    if (input == NULL) return false;
+    size_t offset = 0U;
+    memcpy(input + offset, prefix, sizeof(prefix) - 1U); offset += sizeof(prefix) - 1U;
+    for (size_t i = 0; i < groups; i++) {
+        memcpy(input + offset, segment, sizeof(segment) - 1U);
+        offset += sizeof(segment) - 1U;
+    }
+    memcpy(input + offset, suffix, sizeof(suffix) - 1U); offset += sizeof(suffix) - 1U;
+    svg_shape_document doc;
+    svg_shape_diagnostic diag;
+    svg_shape_error error = svg_shape_decode((base_bytes){input, offset}, &doc, &diag);
+    if (error == SVG_SHAPE_ERROR_NONE) svg_shape_document_destroy(&doc);
+    free(input);
+    *input_bytes = offset;
+    return error == SVG_SHAPE_ERROR_LIMIT && diag.category == SVG_SHAPE_ERROR_LIMIT;
 }
 
 int main(int argc, char **argv)
@@ -25,6 +53,8 @@ int main(int argc, char **argv)
     if (errno != 0 || end == argv[2] || *end != '\0' || count > 100000000UL) return 2;
     errno = 0; unsigned long duration = strtoul(argv[3], &end, 10);
     if (errno != 0 || end == argv[3] || *end != '\0' || duration > 600UL) return 2;
+    size_t cap_case_bytes = 0U;
+    if (!command_cap_probe(&cap_case_bytes)) return 5;
     clock_t started = clock();
     static const char *parts[] = {"M", "m", "L", "H", "V", "C", "Q", "A", "Z", " ", ",", "1e999", "nan", "-1000001", "0", "1", "2", "3", "4", "9"};
     static const char prefix[] = "<svg width=\"16\" height=\"16\"><path d=\"";
@@ -53,6 +83,7 @@ int main(int argc, char **argv)
             (double)(clock() - started) / (double)CLOCKS_PER_SEC >= (double)duration) break;
     }
     double seconds = (double)(clock() - started) / (double)CLOCKS_PER_SEC;
-    printf("seed=%lu cases=%lu duration=%.3f\n", seed_long, completed, seconds);
+    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu\n",
+           seed_long, completed, seconds, cap_case_bytes);
     return 0;
 }

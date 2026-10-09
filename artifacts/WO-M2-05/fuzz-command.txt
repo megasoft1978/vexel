@@ -9,4 +9,4 @@ Preset CMake variables:
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build/mac-asan
 ninja: no work to do.
-{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build/mac-asan/bin/shape_fuzz", "cases": 1000000, "crashes": 0, "duration_seconds": 6.661, "input_max_bytes": 4096, "invariant_failures": 0, "process_cpu_seconds": 6.458, "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "seed": 20261009}
+{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build/mac-asan/bin/shape_fuzz", "cap_exhaustion_cases": 1, "cap_exhaustion_input_bytes": 327730, "cases": 1000000, "crashes": 0, "duration_seconds": 6.648, "input_max_bytes": 327730, "invariant_failures": 0, "process_cpu_seconds": 6.588, "random_input_max_bytes": 4096, "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "seed": 20261009}

@@ -7,13 +7,4 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build/mac-debug
-[1/10] Building C object CMakeFiles/vexel_shape.dir/src/geom/geometry.c.o
-[2/10] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[3/10] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
-[4/10] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
-[5/10] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
-[6/10] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[7/10] Linking C static library libvexel_shape.a
-[8/10] Linking C executable bin/shape_fuzz
-[9/10] Linking C executable bin/shape_render_cli
-[10/10] Linking C executable bin/shape_test
+ninja: no work to do.

@@ -43,6 +43,34 @@
       "source_unchanged": true
     },
     {
+      "name": "relative_curve_overflow",
+      "category": "number",
+      "offset": 48,
+      "source_sha256": "6a2770fbc41dc42d7919d7380b554eabf159e0b6fa82eab1a950ce8db7aef380",
+      "source_unchanged": true
+    },
+    {
+      "name": "relative_quad_overflow",
+      "category": "number",
+      "offset": 48,
+      "source_sha256": "afd6dbf7a9425867c44af2dbca5665b693855a53865e5f1179b7bccbe9a185de",
+      "source_unchanged": true
+    },
+    {
+      "name": "prefixed_svg_attribute",
+      "category": "unsupported",
+      "offset": 29,
+      "source_sha256": "5ff0a8deb58e8d34419b4970fe4a9977743b14066a00bec2b36686b4bff4ee2a",
+      "source_unchanged": true
+    },
+    {
+      "name": "wrong_default_namespace",
+      "category": "unsupported",
+      "offset": 12,
+      "source_sha256": "5b6108f8b3cf3e45218882dc46952a64bfbfaf439c30b4419bd48a129d11f575",
+      "source_unchanged": true
+    },
+    {
       "name": "unsupported_smooth",
       "category": "unsupported",
       "offset": 42,

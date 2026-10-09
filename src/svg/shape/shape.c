@@ -25,6 +25,12 @@ static bool span_eq(base_bytes s, svg_xml_span span, const char *literal)
         memcmp(s.ptr + span.offset, literal, n) == 0;
 }
 
+static bool point_bounded(geom_point point)
+{
+    return geom_finite_point(point) && fabs(point.x) <= SHAPE_MAX_COORD &&
+           fabs(point.y) <= SHAPE_MAX_COORD;
+}
+
 static void fail(svg_shape_diagnostic *d, svg_shape_error e, size_t offset)
 {
     if (d != NULL) *d = (svg_shape_diagnostic){e, offset};
@@ -262,11 +268,11 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
         if(upper=='H')p.x=rel?current.x+v[0]:v[0];
         else if(upper=='V')p.y=rel?current.y+v[0]:v[0];
         else if(upper=='C'||upper=='Q'||upper=='A') {
-            if(upper=='C') { geom_point c1={v[0],v[1]},c2={v[2],v[3]};p=(geom_point){v[4],v[5]}; if(rel){c1.x+=current.x;c1.y+=current.y;c2.x+=current.x;c2.y+=current.y;p.x+=current.x;p.y+=current.y;} if(!add_curve(b,current,c1,c2,p))return false;drawn=true; }
-            else if(upper=='Q') {geom_point c={v[0],v[1]};p=(geom_point){v[2],v[3]};if(rel){c.x+=current.x;c.y+=current.y;p.x+=current.x;p.y+=current.y;}if(!add_quad(b,current,c,p))return false;drawn=true;}
-            else { if((v[3]!=0.0&&v[3]!=1.0)||(v[4]!=0.0&&v[4]!=1.0)||v[0]<0.0||v[1]<0.0){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+group_start);return false;} p=(geom_point){v[5],v[6]};if(rel){p.x+=current.x;p.y+=current.y;} if(!add_arc(b,current,v[0],v[1],v[2],v[3]==1.0,v[4]==1.0,p,span.offset+group_start))return false;drawn=true; }
-        } else {p=(geom_point){v[0],v[1]};if(rel){p.x+=current.x;p.y+=current.y;} if(upper=='M'){if(open&&!add_edge(b,current,first))return false;current=p;first=p;open=true;cmd=rel?'l':'L';continue;}}
-        if(!geom_finite_point(p)||fabs(p.x)>SHAPE_MAX_COORD||fabs(p.y)>SHAPE_MAX_COORD){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}
+            if(upper=='C') { geom_point c1={v[0],v[1]},c2={v[2],v[3]};p=(geom_point){v[4],v[5]}; if(rel){c1.x+=current.x;c1.y+=current.y;c2.x+=current.x;c2.y+=current.y;p.x+=current.x;p.y+=current.y;} if(!point_bounded(c1)||!point_bounded(c2)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;} if(!add_curve(b,current,c1,c2,p))return false;drawn=true; }
+            else if(upper=='Q') {geom_point c={v[0],v[1]};p=(geom_point){v[2],v[3]};if(rel){c.x+=current.x;c.y+=current.y;p.x+=current.x;p.y+=current.y;}if(!point_bounded(c)||!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(!add_quad(b,current,c,p))return false;drawn=true;}
+            else { if((v[3]!=0.0&&v[3]!=1.0)||(v[4]!=0.0&&v[4]!=1.0)||v[0]<0.0||v[1]<0.0){fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+group_start);return false;} p=(geom_point){v[5],v[6]};if(rel){p.x+=current.x;p.y+=current.y;}if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;} if(!add_arc(b,current,v[0],v[1],v[2],v[3]==1.0,v[4]==1.0,p,span.offset+group_start))return false;drawn=true; }
+        } else {p=(geom_point){v[0],v[1]};if(rel){p.x+=current.x;p.y+=current.y;} if(upper=='M'){if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}if(open&&!add_edge(b,current,first))return false;current=p;first=p;open=true;cmd=rel?'l':'L';continue;}}
+        if(!point_bounded(p)){fail(b->diag,SVG_SHAPE_ERROR_NUMBER,span.offset+group_start);return false;}
         if(!drawn&&!add_edge(b,current,p))return false; current=p; open=true;
     }
     if(open && !add_edge(b,current,first))return false;
@@ -289,13 +295,14 @@ static bool parse_color(base_bytes src, svg_xml_span s, uint8_t out[4])
 
 static bool attr(base_bytes src, svg_xml_token *tokens,size_t count,size_t element,const char *name,svg_xml_span *value)
 {
-    for(size_t i=element+1U;i<count&&tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE;i++)if(span_eq(src,tokens[i].local_name,name)){*value=tokens[i].value;return true;}
+    for(size_t i=element+1U;i<count&&tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE;i++)if(tokens[i].prefix.length==0U&&span_eq(src,tokens[i].local_name,name)){*value=tokens[i].value;return true;}
     return false;
 }
 
 static bool attributes_supported(base_bytes source,svg_xml_token *tokens,size_t count,size_t element,bool root,bool rect)
 {
     for(size_t i=element+1U;i<count&&tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE;i++){
+        if(tokens[i].prefix.length!=0U)return false;
         svg_xml_span n=tokens[i].local_name;
         bool ok=root?(span_eq(source,n,"xmlns")||span_eq(source,n,"version")||span_eq(source,n,"width")||span_eq(source,n,"height")||span_eq(source,n,"viewBox")):
             (span_eq(source,n,"fill")||span_eq(source,n,"fill-rule")||(rect&&(span_eq(source,n,"x")||span_eq(source,n,"y")||span_eq(source,n,"width")||span_eq(source,n,"height")))||(!rect&&span_eq(source,n,"d")));
@@ -323,6 +330,7 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
         else if(t->prefix.length!=0U||(!span_eq(source,t->local_name,"rect")&&!span_eq(source,t->local_name,"path"))){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
         if(!attributes_supported(source,tokens,xr.token_count,i,is_root,span_eq(source,t->local_name,"rect"))){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
         if(is_root){
+            svg_xml_span ns;if(attr(source,tokens,xr.token_count,i,"xmlns",&ns)&&!span_eq(source,ns,"http://www.w3.org/2000/svg")){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,ns.offset);goto bad;}
             svg_xml_span ws,hs,vs; if(!attr(source,tokens,xr.token_count,i,"width",&ws)||!attr(source,tokens,xr.token_count,i,"height",&hs)){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,t->name.offset);goto bad;}
             double w,h;if(!read_dimension(source,ws,&w)||!read_dimension(source,hs,&h)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,ws.offset);goto bad;}
             if(w<1||h<1||w>4096||h>4096){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,ws.offset);goto bad;}out->width=(uint32_t)ceil(w);out->height=(uint32_t)ceil(h);out->view_x=0;out->view_y=0;out->view_width=w;out->view_height=h;

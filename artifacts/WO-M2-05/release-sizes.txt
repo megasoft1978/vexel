@@ -2,4 +2,4 @@ build/mac-release/bin/svgworkbench 97040
 build/mac-release/bin/shape_render_cli 53344
 build/mac-release/libvexel_base.a 3504
 build/mac-release/libvexel_xml.a 16552
-build/mac-release/libvexel_shape.a 23288
+build/mac-release/libvexel_shape.a 23888
