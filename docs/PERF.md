@@ -10,7 +10,7 @@ only measures process startup and is not an SVG rendering benchmark.
 | WO-M1-04 | Release | 97,072 | 1,000 task cycles: 44 ms; max join: 0.073 ms | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-01 | Release | 97,040 | no renderer workload | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 | WO-M2-02 | Release | 97,040; XML static library 16,552 | parser throughput not measured | not measured | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
-| WO-M2-05 | Release | 97,040; shape CLI 53,392; shape library 24,296 | 4.43 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 14.789 ms) | 2,228,224 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
+| WO-M2-05 | Release | 97,040; shape CLI 53,408; shape library 24,448 | 4.58 MPixel/s (256x256, 64 rects; 7 fresh-process trials, median 14.315 ms) | 2,244,608 bytes | Apple Silicon, macOS 27.0, Apple Clang 21.0.0 |
 
 Raw latency metadata is in `bench/results/WO-BOOT-01.json`. RSS came from
 `/usr/bin/time -l`. WO-M2-05 records one bounded end-to-end shape CLI workload
@@ -182,18 +182,18 @@ per-case pixel differences are recorded in
 `artifacts/WO-M2-05/reference-comparison.json`.
 
 The fixed-seed ASan+UBSan campaign (`20261009`) completed 1,000,000 random cases in
-6.468 s wall time (6.409 s process CPU time), with zero sanitizer reports,
+6.485 s wall time (6.206 s process CPU time), with zero sanitizer reports,
 crashes, or invariant failures. Random inputs were at most 4,096 bytes; a
 deterministic 327,730-byte seed also exhausted the command cap safely. The result is
 in `artifacts/WO-M2-05/fuzz-report.json`. Release sizes on Apple Silicon macOS
 27.0 with Apple Clang 21.0.0 (`clang-2100.3.34.2`) are recorded in
-`bench/results/WO-M2-05.json`: `svgworkbench` 97,040 bytes, shape CLI 53,392,
-shape static library 24,296, and XML static library 16,552.
+`bench/results/WO-M2-05.json`: `svgworkbench` 97,040 bytes, shape CLI 53,408,
+shape static library 24,448, and XML static library 16,552.
 
 For a deterministic 256x256 SVG containing 64 rectangles, seven fresh-process
-Release CLI trials after two warmups had a 14.789 ms median and 17.733 ms
-nearest-rank p95 (4.43 MPixel/s using total viewport pixels). Maximum RSS was
-2,228,224 bytes. Timing includes process startup, file read, decode, scalar
+Release CLI trials after two warmups had a 14.315 ms median and 17.033 ms
+nearest-rank p95 (4.58 MPixel/s using total viewport pixels). Maximum RSS was
+2,244,608 bytes. Timing includes process startup, file read, decode, scalar
 raster, and raw output write; caches were not evicted. This is not isolated
 raster-kernel throughput. Raw trials and hashes are in
 `artifacts/WO-M2-05/render-benchmark.json`.

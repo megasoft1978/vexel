@@ -42,8 +42,8 @@
     "fuzz": {
         "seed": 20261009,
         "cases": 1000000,
-        "wall_seconds": 6.346,
-        "process_cpu_seconds": 6.292,
+        "wall_seconds": 6.485,
+        "process_cpu_seconds": 6.206,
         "input_max_bytes": 327730,
         "sanitizers": [
             "AddressSanitizer",
@@ -58,27 +58,27 @@
     },
     "release_sizes_bytes": {
         "svgworkbench": 97040,
-        "shape_render_cli": 53392,
+        "shape_render_cli": 53408,
         "libvexel_base.a": 3504,
         "libvexel_xml.a": 16552,
-        "libvexel_shape.a": 24296
+        "libvexel_shape.a": 24448
     },
     "measurements": {
-        "render_throughput": 4431476.627360983,
+        "render_throughput": 4578267.870834403,
         "render_latency_seconds": {
             "raw": [
-                0.017733000000589527,
-                0.01643891700950917,
-                0.01463641700684093,
-                0.01478875000611879,
-                0.0152824170072563,
-                0.013986499994643964,
-                0.013608917011879385
+                0.01703258400084451,
+                0.014987332993769087,
+                0.014241124998079613,
+                0.014297417001216672,
+                0.014314583997474983,
+                0.016492624999955297,
+                0.014239374999306165
             ],
-            "median": 0.01478875000611879,
-            "p95_nearest_rank": 0.017733000000589527
+            "median": 0.014314583997474983,
+            "p95_nearest_rank": 0.01703258400084451
         },
-        "max_rss_bytes": 2228224,
+        "max_rss_bytes": 2244608,
         "method": "Python time.perf_counter around seven measured fresh /usr/bin/time -l CLI processes after two warmups; includes startup, input read, decode, raster and output write; filesystem caches were not evicted",
         "rss_method": "maximum of nine /usr/bin/time -l maximum resident set size observations (two warmup and seven measured fresh child processes)",
         "measurement_scope": "End-to-end CLI workload, not an isolated raster-kernel benchmark."

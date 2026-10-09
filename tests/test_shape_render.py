@@ -143,6 +143,9 @@ class ShapeRenderTests(unittest.TestCase):
             "trailing_root_dimension_comma": '<svg width="16," height="16"/>',
             "trailing_rect_dimension_comma": '<svg width="16" height="16"><rect x="1" y="1" width="4," height="4"/></svg>',
             "repeated_viewbox_commas": '<svg width="16" height="16" viewBox="0,,0,16,16"/>',
+            "rect_missing_width": '<svg width="16" height="16"><rect height="4"/></svg>',
+            "rect_missing_height": '<svg width="16" height="16"><rect width="4"/></svg>',
+            "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
             "unsupported_smooth": '<svg width="16" height="16"><path d="M0 0 S1 1 2 2"/></svg>',
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}

@@ -92,6 +92,27 @@
       "source_unchanged": true
     },
     {
+      "name": "rect_missing_width",
+      "category": "unsupported",
+      "offset": 29,
+      "source_sha256": "a8178f0eab9c9a14cc90a4de64e81276f534ce5e93bef5d12994e0a15be4a57a",
+      "source_unchanged": true
+    },
+    {
+      "name": "rect_missing_height",
+      "category": "unsupported",
+      "offset": 29,
+      "source_sha256": "8b08195605515639b6f782043af82cb07ad4b6b18d8054c38b2ff3694aa12715",
+      "source_unchanged": true
+    },
+    {
+      "name": "unsupported_stylesheet_pi",
+      "category": "unsupported",
+      "offset": 2,
+      "source_sha256": "2a37afba6c4d5e3f97052a18d1983b9d5a1a7377638213cf62d611e804d14c21",
+      "source_unchanged": true
+    },
+    {
       "name": "unsupported_smooth",
       "category": "unsupported",
       "offset": 42,
