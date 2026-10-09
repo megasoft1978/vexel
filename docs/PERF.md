@@ -274,3 +274,5 @@ semantic baseline remains in `manifest.json`; an additive `manifest-rendered.jso
 pins two screenshots with transformed scene geometry and the progress/cancel
 overlay. Retina 2x viewport, drag, and cursor conversion is also covered. No wall-time,
 rendering throughput, or process-wide allocation number is claimed.
+
+The reviewed WO-M3-04 Release executable is 172,032 bytes after a clean `mac-release` build. This milestone has no RSS or latency result: the projection workload records deterministic operation count and checksum, not elapsed time.
