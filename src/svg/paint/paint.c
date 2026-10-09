@@ -96,15 +96,16 @@ static bool parse_stops(base_bytes source, const svg_xml_token *tokens,
         if (!eq(source, tokens[i].local_name, "stop") || tokens[i].prefix.length != 0U) return false;
         svg_xml_span offset = {0}, stop_color = {0}, opacity = {0};
         (void)attr(source, tokens, count, i, "offset", &offset);
-        (void)attr(source, tokens, count, i, "stop-color", &stop_color);
+        bool has_stop_color = attr(source, tokens, count, i, "stop-color", &stop_color);
         (void)attr(source, tokens, count, i, "stop-opacity", &opacity);
         double position = 0.0, alpha = 1.0;
         if (offset.length != 0U && !number(source, offset, &position)) return false;
-        if (stop_color.length == 0U) return false;
         if (opacity.length != 0U && !number(source, opacity, &alpha)) return false;
         if (position < 0.0 || position > 1.0 || alpha < 0.0 || alpha > 1.0 ||
-            (n != 0U && position < stops[n - 1U].offset) ||
-            !color(source, stop_color, stops[n].rgba)) return false;
+            (n != 0U && position < stops[n - 1U].offset)) return false;
+        if (!has_stop_color) memset(stops[n].rgba, 0, 3U);
+        else if (stop_color.length == 0U || !color(source, stop_color, stops[n].rgba))
+            return false;
         stops[n].offset = position;
         stops[n].rgba[3] = (uint8_t)lround(alpha * 255.0);
         ++n;

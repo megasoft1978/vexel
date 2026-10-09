@@ -317,6 +317,12 @@ static bool gradient_checks(void)
               tile.rgba[left + 3U] == 255U && tile.rgba[right + 3U] == 255U;
     raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
     if (!ok) return false;
+    static const char default_stop_color[] = "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\"><stop offset=\"0\"/><stop offset=\"1\" stop-color=\"white\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(default_stop_color, &tile, &doc, &diag)) return false;
+    ok = tile.rgba[0] < 40U && tile.rgba[1] < 40U && tile.rgba[2] < 40U &&
+         tile.rgba[3] == 255U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
     static const char radial[] = "<svg width=\"16\" height=\"16\"><defs><radialGradient id=\"g\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\" stop-opacity=\"0\"/></radialGradient></defs><circle cx=\"8\" cy=\"8\" r=\"7\" fill=\"url(#g)\"/></svg>";
     if (!render_source(radial, &tile, &doc, &diag)) return false;
     size_t center = ((size_t)8U * 16U + 8U) * 4U;
