@@ -1,72 +1,122 @@
 {
   "work_order": "WO-M4-06 revision 4",
-  "tested_implementation_commit": "d6dba56184d3a7530ca0dcc0186d9c9b1f45d657",
-  "result": "AC-9 pass; overall verification incomplete because host CTest requires unavailable offscreen Metal and fresh review could not start",
+  "tested_worktree_base_commit": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
+  "tested_changes_committed": false,
+  "status": "review-finding repairs implemented; verification evidence refreshed; commit and full acceptance remain incomplete in this sandbox",
+  "review_finding_repairs": {
+    "use_transform_order": "fixed composition to use.transform \u00b7 translate(x,y) \u00b7 symbol viewBox mapping; non-commuting scale/rotate/symbol regression and rsvg fixture pass",
+    "transformed_paint_and_clip_units": "current inverse affine is passed through resolution/sampling; userSpaceOnUse maps samples to element user space; objectBoundingBox uses untransformed local bounds; singular transforms return unsupported",
+    "stop_style_and_class": "stop-color/stop-opacity use CSS cascade; inline and class styles pass; currentColor, inherit, unresolved classes, and matched unsupported declarations diagnose unsupported",
+    "declared_group_clips": "clip-path is cleared from inherited style; group/use clips use whole subtree bounds, resolve once per declaration, and intersect with nested clips",
+    "allocation_tests": "actual allocator hook measures decode+render total/peak, token arrays, fixed index, bounded clip copies, and exact 8x8 output; source hashes are checked around live use/paint/clip documents",
+    "indexed_paint_clip_lookup": "paint and clip references use the prebuilt id index; 512 late-gradient shapes are bounded by a probe counter",
+    "documentation": "paint, clip, CSS, shape, and traversal READMEs describe transform, group clip, stop style, wrapper, and stricter byte/instance limits"
+  },
   "reference_traversal_bounds": {
-    "source_map_bytes": 0,
-    "reference_depth_max": 16,
-    "use_instances_max": 65536,
-    "xml_depth_max": 64,
-    "element_visits_max": 4194304,
-    "transform_operations_max": 4096,
     "source_bytes_max": 16777216,
-    "exhausted_bound_diagnostic": "SVG_SHAPE_ERROR_LIMIT",
-    "cycle_missing_external_and_duplicate_id_diagnostic": "SVG_SHAPE_ERROR_UNSUPPORTED",
-    "use_subtree_copies": 0,
-    "clip_subtree_scratch_copy_per_reference_bytes_max": 65536,
-    "clip_subtree_scratch_copy_per_job_bytes_max": 524288,
-    "clip_generated_wrapper_syntax_bytes_max": 198,
+    "source_map_bytes": 0,
     "full_document_rewrite_bytes": 0,
-    "use_generated_wrapper_bytes": 0,
-    "aggregate_use_source_span_visit_bytes_max": 1048576,
-    "per_use_source_span_visit_bytes_max": 65536
+    "use_subtree_copy_bytes": 0,
+    "use_reference_depth_max": 16,
+    "use_target_span_limit_bytes": 65536,
+    "use_target_span_65536_accepted": true,
+    "use_target_span_65537_limit_diagnostic": true,
+    "aggregate_use_span_limit_bytes": 1048576,
+    "use_instances_max": 65536,
+    "use_instances_65536_accepted": true,
+    "use_instances_65537_limit_diagnostic": true,
+    "instance_boundary_target_bytes": 11,
+    "maximum_target_size_for_all_65536_instances_under_1MiB": 16,
+    "clip_child_span_limit_bytes": 65536,
+    "clip_child_span_65536_accepted": true,
+    "clip_child_span_65537_limit_diagnostic": true,
+    "clip_job_scratch_limit_bytes": 524288,
+    "clip_job_scratch_524288_accepted": true,
+    "clip_job_scratch_over_524288_limit_diagnostic": true,
+    "clip_scratch_accounting_includes_wrapper_and_nul": true,
+    "clip_wrapper_prefix_buffer_bytes": 192,
+    "clip_generated_wrapper_syntax_max_bytes": 197,
+    "max_xml_depth": 64,
+    "max_active_element_visits": 4194304,
+    "max_transform_operations": 4096,
+    "bound_exhaustion_diagnostic": "SVG_SHAPE_ERROR_LIMIT"
   },
   "decode_allocation_bounds": {
-    "baseline_token_array": "one decoder token array with capacity source_length / 2 + 2; pre-existing accepted M4-04/05 allocation",
+    "actual_allocator_hook": "test-only wrappers count allocations during decode+render and report total, peak, token-array, fixed-index, clip-copy, and output bytes",
+    "baseline_token_array": "one source-sized decoder token array with capacity source_length / 2 + 2; measured token-array delta between small and padded source equals this exact formula",
     "id_index": {
       "capacity_slots": 131072,
       "slot_bytes": 4,
       "max_bytes": 524288,
-      "sizing": "compile-time fixed capacity, independent of source length"
+      "sizing": "fixed, independent of source length"
     },
+    "use_path_additional_source_sized_token_arrays": 0,
+    "bounded_clip_decode_token_array": "clip child wrapper is separately parsed; its token allocation is bounded by the 64 KiB child span plus fixed wrapper syntax",
     "rewritten_source_bytes": 0,
     "source_map_bytes": 0,
-    "additional_token_arrays": 0,
-    "test": "decode_reference_memory_bounds_check compares reported allocations with the baseline token formula for a small live-use document and a 128 KiB padded live-use document; source pointer/length and SHA-256 are unchanged",
-    "clip_resolution": "separate bounded path: at most 64 KiB referenced child span per clip; aggregate scratch allocation including wrapper at most 512 KiB/job; generated syntax is at most 198 bytes (192-byte stack prefix buffer plus 6-byte suffix)"
+    "output_tile_allocation_bytes_for_8x8": 256,
+    "clip_child_copy_budget_bytes_per_job": 524288,
+    "use_growth_assertion": "total and peak growth between one and 32 same-size uses are each capped at 2048 bytes per additional instance",
+    "group_clip_assertion": "clip-copy bytes are equal for a group with one and 16 child shapes, confirming one resolution per group declaration",
+    "source_sha256_before_after_decode_render": "pass for live use + gradient + clip documents; original pointer and length retained"
   },
   "reference_tests": {
-    "nested_group_transforms_and_z_order": "pass",
-    "symbol_viewbox_and_use_xy": "pass",
-    "css_styled_parent_inherited_paint": "pass",
-    "use_referencing_gradient_and_clip": "pass",
-    "reference_depth_16": "pass",
-    "reference_depth_17": "pass: deterministic limit diagnostic",
-    "use_instance_cap_65536_plus_one": "pass: deterministic limit diagnostic",
-    "cycle_missing_external_duplicate_and_unbound_xlink": "pass: unsupported diagnostic with original-source offset",
-    "per_reference_span_over_64k": "pass: deterministic limit diagnostic",
-    "aggregate_reference_span_over_1m": "pass: deterministic limit diagnostic",
-    "source_sha256_before_after_decode_and_render": "pass",
-    "live_use_decode_allocation_scaling": "pass: baseline token array formula plus fixed ID index only for small and 128 KiB padded documents; no rewrite/source map/extra token array"
+    "focused_shape_test": "pass",
+    "use_transform_scale_rotate_symbol": "pass",
+    "transformed_user_space_and_object_bbox_linear_radial_paint_clip": "pass",
+    "singular_gradient_and_clip_diagnostics": "unsupported category asserted",
+    "stop_inline_style_and_class": "pass",
+    "unsupported_stop_currentColor_class_and_stylesheet": "unsupported category asserted",
+    "group_clip_whole_subtree_bbox_and_nested_intersection": "pass",
+    "clip_resolved_once_per_group": "pass; one versus 16 descendants allocates equal clip scratch",
+    "use_span_64KiB_and_64KiB_plus_one": "pass",
+    "clip_span_64KiB_and_64KiB_plus_one": "pass",
+    "clip_job_scratch_512KiB_and_over": "pass",
+    "instances_65536_and_65537": "pass",
+    "allocator_total_peak_index_clip_and_output_checks": "pass",
+    "indexed_paint_lookup_512_late_gradient_shapes": "pass; probe count bounded to at most twice the shape count",
+    "source_sha256_before_after_decode_render": "pass"
   },
   "differential_fixtures": {
     "renderer": "rsvg-convert version 2.63.2",
-    "count": 39,
+    "fixture_count": 46,
+    "new_fixtures": [
+      "use-transform-order",
+      "user-space-transform",
+      "object-bbox-transform",
+      "use-user-space-transform",
+      "stop-style-class",
+      "clip-group-object-bbox",
+      "clip-nested-intersection"
+    ],
     "interior_differences": 0,
     "max_jointly_covered_straight_rgb_delta": 1,
     "max_edge_diff_pixels": 88,
     "edge_threshold_pixels": 120,
-    "status": "all fixtures pass; frozen thresholds unchanged",
-    "comparison_artifact": "artifacts/WO-M4-06/reference-comparison.json"
+    "frozen_thresholds_changed": false,
+    "status": "all fixtures pass"
   },
   "shape_checks": {
+    "debug_configure_build": "pass",
+    "debug_ctest": "11/12; only index-replay fails because offscreen Metal device/queue is unavailable in this sandbox",
+    "asan_ctest": "11/12; same Metal limitation",
+    "ubsan_ctest": "11/12; same Metal limitation",
     "debug_shape_test": "pass",
     "asan_shape_test": "pass",
     "ubsan_shape_test": "pass",
-    "focused_librsvg_unittest": "pass: 16 tests",
-    "debug_ctest": "11/12 pass; index-replay cannot obtain an offscreen Metal device/queue in this host session",
-    "asan_ctest": "11/12 pass; same offscreen Metal failure",
-    "ubsan_ctest": "11/12 pass; same offscreen Metal failure"
+    "focused_python_shape_render": "16/16 pass",
+    "full_python_suite": "189/199 passed; 8 failures and 2 errors from sandbox process-policy/native LaunchServices/Metal limits; see python-full-final.txt",
+    "release_configure_build": "pass",
+    "verify": "11/12 CTest; same Metal limitation"
+  },
+  "fuzz": {
+    "cases": 1000000,
+    "duration_seconds": 34.39,
+    "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+    "crashes": 0,
+    "sanitizer_reports": 0,
+    "invariant_failures": 0,
+    "result": "pass"
   },
   "corpus": {
     "files": 58,
@@ -75,120 +125,56 @@
     "unsupported": 56,
     "limit": 0,
     "crash": 0,
-    "by_tier": {
-      "T1": {
-        "files": 12,
-        "ok": 2,
-        "unsupported": 10,
-        "limit": 0,
-        "crash": 0
-      },
-      "T2": {
-        "files": 17,
-        "ok": 0,
-        "unsupported": 17,
-        "limit": 0,
-        "crash": 0
-      },
-      "T3": {
-        "files": 26,
-        "ok": 0,
-        "unsupported": 26,
-        "limit": 0,
-        "crash": 0
-      },
-      "T4": {
-        "files": 3,
-        "ok": 0,
-        "unsupported": 3,
-        "limit": 0,
-        "crash": 0
-      }
-    },
     "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
-    "supplied_inkscape_baseline_sha256": "3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba",
-    "open_index_only": true,
-    "100_mib_first_preview_gate": "fail_no_preview",
-    "max_main_thread_step_ns": 811625,
-    "100_mib_rss_gate": "pass"
+    "baseline_sha256": "3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba",
+    "first_preview_100_mib_gate": "fail_no_preview",
+    "maximum_main_thread_step": "pass",
+    "peak_rss_100_mib_gate": "pass"
   },
   "benchmark": {
     "status": "complete",
-    "renderer": "Vexel scalar 4x4 shape rasterizer",
-    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
-    "host": {
-      "platform": "macOS-27.0-arm64-arm-64bit",
-      "machine": "arm64",
-      "macos_version": "27.0"
-    },
-    "image_dimensions": [
-      512,
-      512
-    ],
     "trials_per_workload": 21,
+    "performance_claim": false,
     "workloads": [
       {
         "name": "basic-solid",
-        "trials": 21,
-        "median_seconds": 0.007539042000644258,
-        "p95_seconds": 0.008860541999638372,
-        "throughput_pixels_per_second_median": 34771526.67110731,
-        "peak_process_rss_bytes_max": 3047424,
-        "output_sha256": "ffe65a8f7763b31122313c05e46b05abadaf438c4fc7d3ec5ed7f93fbcc77418",
-        "stable_hashes": true,
-        "frozen_base_comparison": "same workload measured only for basic-solid"
+        "median_seconds": 0.009485374999712803,
+        "p95_seconds": 0.014390875001481618,
+        "peak_process_rss_bytes_max": 3112960,
+        "stable_hash": true
       },
       {
         "name": "local-use",
-        "trials": 21,
-        "median_seconds": 0.008058542000071611,
-        "p95_seconds": 0.008933666999837442,
-        "throughput_pixels_per_second_median": 32529953.929342367,
-        "peak_process_rss_bytes_max": 3063808,
-        "output_sha256": "ffe65a8f7763b31122313c05e46b05abadaf438c4fc7d3ec5ed7f93fbcc77418",
-        "stable_hashes": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        "median_seconds": 0.011058207999667502,
+        "p95_seconds": 0.011850125001728884,
+        "peak_process_rss_bytes_max": 3129344,
+        "stable_hash": true
       },
       {
         "name": "linear-gradient",
-        "trials": 21,
-        "median_seconds": 0.008951666999564623,
-        "p95_seconds": 0.012498915999458404,
-        "throughput_pixels_per_second_median": 29284377.98375987,
-        "peak_process_rss_bytes_max": 3096576,
-        "output_sha256": "a28a850bdab22156ec3d3e1f24e7f525bc82b96f450063e3217c452e253b8b3d",
-        "stable_hashes": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        "median_seconds": 0.012583707999510807,
+        "p95_seconds": 0.014455541999268462,
+        "peak_process_rss_bytes_max": 3112960,
+        "stable_hash": true
       },
       {
         "name": "radial-gradient",
-        "trials": 21,
-        "median_seconds": 0.008489457999530714,
-        "p95_seconds": 0.00920062500063068,
-        "throughput_pixels_per_second_median": 30878767.527266283,
-        "peak_process_rss_bytes_max": 3080192,
-        "output_sha256": "98c192eefc6c8829e957c79b59ab7e61b3fc38878ab5dcddbfe2f6a700888ccd",
-        "stable_hashes": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        "median_seconds": 0.011971249999987776,
+        "p95_seconds": 0.016959667000264744,
+        "peak_process_rss_bytes_max": 3112960,
+        "stable_hash": true
       },
       {
         "name": "clip-path",
-        "trials": 21,
-        "median_seconds": 0.00815037500069593,
-        "p95_seconds": 0.009382041000208119,
-        "throughput_pixels_per_second_median": 32163428.060379613,
-        "peak_process_rss_bytes_max": 3129344,
-        "output_sha256": "1ebd5eea12b4f8bd113be416d04dda9c417749bfe9ddd8cb4e2d5be3599886a1",
-        "stable_hashes": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        "median_seconds": 0.012944500000230619,
+        "p95_seconds": 0.017792624999856343,
+        "peak_process_rss_bytes_max": 3178496,
+        "stable_hash": true
       }
-    ],
-    "frozen_base_revision": "81f2008311e886d3b8dc8da262fe3f40f2f9b14b",
-    "frozen_base_basic_solid_median_seconds": 0.0072216660000776756,
-    "frozen_base_basic_solid_p95_seconds": 0.010649207999449573,
-    "frozen_base_peak_rss": "unavailable: frozen-base CLI does not support --metrics",
-    "performance_claim": false
+    ]
   },
-  "source_contract": "Original document source is borrowed and unchanged. Live <use> references traverse original tokens at the use position with no subtree copy. Clip resolution separately uses a bounded copied child span and small generated wrapper; diagnostics address original source.",
-  "overall_gate_note": "Debug/ASan/UBSan CTest and ./dev verify each report 11/12 because index-replay cannot obtain an offscreen Metal device or queue in this host session. Focused shape tests pass in Debug/ASan/UBSan. A fresh read-only review was attempted against candidate 20ed36c but the Codex CLI failed before starting because in-process app-server initialization returned Operation not permitted; no verdict was produced."
+  "path_scope": "all 68 modified/untracked paths pass frozen work-order allow/protect matcher; tests/oracle and tests/golden diff is empty",
+  "commit_status": "No focused commits could be written: the sandbox rejected writes to the shared worktree git metadata. Changes remain uncommitted.",
+  "independent_review": "not rerun; user prohibited launching nested codex exec",
+  "overall_gate_note": "Implementation and requested local evidence are refreshed. Work remains incomplete because focused commits cannot be created in this sandbox, full CTest/verify cannot acquire offscreen Metal, full Python tests hit sandbox process/native failures, and the independent review was not rerun."
 }

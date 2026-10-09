@@ -1,4 +1,5 @@
 #include "reference.h"
+#include "../shape/shape_alloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -101,12 +102,14 @@ svg_shape_error svg_reference_index_create(base_bytes source,
 
     /* The slot count is a compile-time constant. It never tracks source or ID
      * count, and the 16 MiB source limit keeps token indices within uint32_t. */
-    index->slots = calloc(SVG_REFERENCE_ID_TABLE_CAPACITY,
+    index->slots = svg_shape_calloc(SVG_REFERENCE_ID_TABLE_CAPACITY,
                           sizeof(*index->slots));
     if (index->slots == NULL) {
         set_failure(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
         return SVG_SHAPE_ERROR_OOM;
     }
+    (void)svg_shape_alloc_set_tag(index->slots,
+                                  SVG_SHAPE_ALLOC_TAG_REFERENCE_INDEX);
     index->id_count = id_count;
 
     for (size_t i = 0U; i < count; ++i) {
@@ -149,12 +152,12 @@ svg_shape_error svg_reference_index_create(base_bytes source,
 void svg_reference_index_destroy(svg_reference_index *index)
 {
     if (index == NULL) return;
-    free(index->slots);
+    svg_shape_free(index->slots);
     *index = (svg_reference_index){0};
 }
 
 bool svg_reference_index_find(base_bytes source, const svg_xml_token *tokens,
-                              size_t count, const svg_reference_index *index,
+                              size_t count, svg_reference_index *index,
                               svg_xml_span id, size_t *element)
 {
     if (!base_bytes_valid(source) || tokens == NULL || index == NULL ||
@@ -163,6 +166,7 @@ bool svg_reference_index_find(base_bytes source, const svg_xml_token *tokens,
     size_t slot = (size_t)span_hash(source, id) &
                   (SVG_REFERENCE_ID_TABLE_CAPACITY - 1U);
     while (index->slots[slot] != 0U) {
+        if (index->lookup_probes != SIZE_MAX) index->lookup_probes++;
         size_t candidate = (size_t)index->slots[slot] - 1U;
         if (candidate >= count) return false;
         svg_xml_span candidate_id;
@@ -174,6 +178,7 @@ bool svg_reference_index_find(base_bytes source, const svg_xml_token *tokens,
         }
         slot = (slot + 1U) & (SVG_REFERENCE_ID_TABLE_CAPACITY - 1U);
     }
+    if (index->lookup_probes != SIZE_MAX) index->lookup_probes++;
     return false;
 }
 
@@ -181,6 +186,11 @@ size_t svg_reference_index_storage_bytes(const svg_reference_index *index)
 {
     return index != NULL && index->slots != NULL ?
         SVG_REFERENCE_ID_TABLE_CAPACITY * sizeof(*index->slots) : 0U;
+}
+
+size_t svg_reference_index_lookup_probes(const svg_reference_index *index)
+{
+    return index == NULL ? 0U : index->lookup_probes;
 }
 
 bool svg_reference_definition_end(base_bytes source,

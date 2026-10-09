@@ -20,19 +20,19 @@ void svg_shape_document_destroy(svg_shape_document *document)
     if (document == NULL) return;
     for (size_t i = 0U; i < document->shape_count; ++i)
         svg_clip_destroy(document->clips == NULL ? NULL : document->clips[i]);
-    free(document->edges);
-    free(document->colors);
-    free(document->shape_ids);
-    free(document->shape_evenodd);
-    free(document->shape_filled);
-    free(document->shape_stroke_closed);
-    free(document->shape_edge_start);
-    free(document->shape_edge_count);
-    free(document->shape_stroke_inverse);
-    free(document->strokes);
-    free(document->paints);
-    free(document->paint_stops);
-    free(document->clips);
+    svg_shape_free(document->edges);
+    svg_shape_free(document->colors);
+    svg_shape_free(document->shape_ids);
+    svg_shape_free(document->shape_evenodd);
+    svg_shape_free(document->shape_filled);
+    svg_shape_free(document->shape_stroke_closed);
+    svg_shape_free(document->shape_edge_start);
+    svg_shape_free(document->shape_edge_count);
+    svg_shape_free(document->shape_stroke_inverse);
+    svg_shape_free(document->strokes);
+    svg_shape_free(document->paints);
+    svg_shape_free(document->paint_stops);
+    svg_shape_free(document->clips);
     *document = (svg_shape_document){0};
 }
 

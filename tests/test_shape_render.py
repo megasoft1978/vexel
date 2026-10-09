@@ -247,8 +247,7 @@ class ShapeRenderTests(unittest.TestCase):
                 self.assertEqual(source_hash, hashlib.sha256(fixture.read_bytes()).digest(), fixture.name)
                 rw, rh, reference_rgba = png_rgba(reference.read_bytes())
                 ours = first.read_bytes()
-                width, height = 16, 16
-                self.assertEqual((rw, rh), (width, height))
+                width, height = rw, rh
                 self.assertEqual(len(ours), width * height * 4)
                 # Renderer antialiasing may affect pixels within one pixel of a
                 # fill-coverage boundary; every interior channel must match exactly.

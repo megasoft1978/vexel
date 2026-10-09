@@ -92,6 +92,7 @@ add_library(vexel_shape STATIC
     src/svg/shape/traverse.c
     src/svg/shape/transform.c
     src/svg/shape/document.c
+    src/svg/shape/shape_alloc.c
     src/raster/shape_render.c
     src/raster/tile.c
 )

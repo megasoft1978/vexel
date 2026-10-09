@@ -3,8 +3,10 @@
 #include "shape_internal.h"
 #include "reference.h"
 #include "shape_render.h"
+#include "shape_alloc.h"
 
 #include <CommonCrypto/CommonDigest.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,59 +44,350 @@ static bool source_bytes_unchanged_check(void)
     return ok;
 }
 
-static bool decode_reference_memory_bounds_check(void)
+static bool build_allocation_source(size_t padding, size_t uses,
+                                    uint8_t **out, size_t *out_length)
 {
     static const char prefix[] =
-        "<svg width=\"8\" height=\"8\"><defs><rect id=\"r\" width=\"2\" height=\"2\"/></defs><!--";
-    static const char suffix[] = "--><use href=\"#r\"/></svg>";
-    static const uint8_t small[] =
-        "<svg width=\"8\" height=\"8\"><defs><rect id=\"r\" width=\"2\" height=\"2\"/></defs><use href=\"#r\"/></svg>";
-    const size_t padding = 128U * 1024U;
-    size_t large_length = sizeof(prefix) - 1U + padding + sizeof(suffix) - 1U;
-    uint8_t *large = malloc(large_length);
-    if (large == NULL) return false;
-    size_t cursor = sizeof(prefix) - 1U;
-    memcpy(large, prefix, cursor);
-    memset(large + cursor, 'p', padding);
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"paint\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><clipPath id=\"clip\" clipPathUnits=\"userSpaceOnUse\"><rect width=\"8\" height=\"8\"/></clipPath><g id=\"target\"><rect width=\"8\" height=\"8\" fill=\"url(#paint)\"/></g></defs><!--";
+    static const char middle[] = "-->";
+    static const char use[] = "<use href=\"#target\"/>";
+    static const char suffix[] =
+        "<rect width=\"8\" height=\"8\" fill=\"url(#paint)\" clip-path=\"url(#clip)\"/></svg>";
+    if (out == NULL || out_length == NULL || uses == 0U) return false;
+    size_t length = sizeof(prefix) - 1U;
+    if (padding > SIZE_MAX - length) return false;
+    length += padding;
+    if (sizeof(middle) - 1U > SIZE_MAX - length) return false;
+    length += sizeof(middle) - 1U;
+    if (uses > (SIZE_MAX - length) / (sizeof(use) - 1U)) return false;
+    length += uses * (sizeof(use) - 1U);
+    if (sizeof(suffix) - 1U > SIZE_MAX - length) return false;
+    length += sizeof(suffix) - 1U;
+    uint8_t *source = malloc(length);
+    if (source == NULL) return false;
+    size_t cursor = 0U;
+    memcpy(source + cursor, prefix, sizeof(prefix) - 1U);
+    cursor += sizeof(prefix) - 1U;
+    memset(source + cursor, 'p', padding);
     cursor += padding;
-    memcpy(large + cursor, suffix, sizeof(suffix) - 1U);
-
-    base_bytes inputs[2] = {
-        {small, sizeof(small) - 1U},
-        {large, large_length}
-    };
-    bool ok = true;
-    for (size_t i = 0U; ok && i < 2U; ++i) {
-        unsigned char before[CC_SHA256_DIGEST_LENGTH];
-        unsigned char after[CC_SHA256_DIGEST_LENGTH];
-        svg_shape_decode_memory_bounds bounds = {0};
-        svg_shape_document document = {0};
-        svg_shape_diagnostic diagnostic = {0};
-        ok = CC_SHA256(inputs[i].ptr, (CC_LONG)inputs[i].len, before) != NULL &&
-             svg_shape_decode_source_with_bounds(inputs[i], &document,
-                                                  &diagnostic, &bounds) ==
-                 SVG_SHAPE_ERROR_NONE;
-        if (ok) {
-            size_t token_capacity = inputs[i].len / 2U + 2U;
-            size_t expected_tokens = token_capacity * sizeof(svg_xml_token);
-            ok = document.source.ptr == inputs[i].ptr &&
-                 document.source.len == inputs[i].len &&
-                 document.shape_count == 1U &&
-                 bounds.token_array_bytes == expected_tokens &&
-                 bounds.reference_index_bytes ==
-                     SVG_REFERENCE_ID_TABLE_CAPACITY * sizeof(uint32_t) &&
-                 bounds.rewritten_source_bytes == 0U &&
-                 bounds.source_map_bytes == 0U &&
-                 CC_SHA256(inputs[i].ptr, (CC_LONG)inputs[i].len, after) != NULL &&
-                 memcmp(before, after, sizeof(before)) == 0;
-        }
-        svg_shape_document_destroy(&document);
+    memcpy(source + cursor, middle, sizeof(middle) - 1U);
+    cursor += sizeof(middle) - 1U;
+    for (size_t i = 0U; i < uses; ++i) {
+        memcpy(source + cursor, use, sizeof(use) - 1U);
+        cursor += sizeof(use) - 1U;
     }
-    free(large);
+    memcpy(source + cursor, suffix, sizeof(suffix) - 1U);
+    cursor += sizeof(suffix) - 1U;
+    *out = source;
+    *out_length = cursor;
+    return cursor == length;
+}
+
+static bool measure_allocation_source(const uint8_t *source, size_t length,
+                                     svg_shape_alloc_stats *stats,
+                                     size_t *index_bytes, size_t *lookup_probes)
+{
+    if (source == NULL || stats == NULL || index_bytes == NULL ||
+        lookup_probes == NULL || length > UINT32_MAX) return false;
+    unsigned char before[CC_SHA256_DIGEST_LENGTH], after[CC_SHA256_DIGEST_LENGTH];
+    if (CC_SHA256(source, (CC_LONG)length, before) == NULL) return false;
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    svg_shape_decode_memory_bounds bounds = {0};
+    raster_tile tile = {0};
+    svg_shape_alloc_tracking_start();
+    svg_shape_error error = svg_shape_decode_source_with_bounds(
+        (base_bytes){source, length}, &document, &diagnostic, &bounds);
+    bool ok = error == SVG_SHAPE_ERROR_NONE &&
+              raster_shape_render(&document, &tile, &diagnostic);
+    svg_shape_alloc_tracking_stop(stats);
+    *index_bytes = bounds.reference_index_bytes;
+    *lookup_probes = bounds.reference_lookup_probes;
+    if (ok) ok = document.source.ptr == source && document.source.len == length &&
+        CC_SHA256(source, (CC_LONG)length, after) != NULL &&
+        memcmp(before, after, sizeof(before)) == 0;
+    raster_tile_destroy(&tile);
+    svg_shape_document_destroy(&document);
     return ok;
 }
 
+static bool decode_reference_memory_bounds_check(void)
+{
+    static const char prefix[] =
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"paint\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><clipPath id=\"clip\" clipPathUnits=\"userSpaceOnUse\"><rect width=\"8\" height=\"8\"/></clipPath><g id=\"target\"><rect width=\"8\" height=\"8\" fill=\"url(#paint)\"/></g></defs><!--";
+    static const char use[] = "<use href=\"#target\"/>";
+    static const char middle[] = "-->";
+    static const char suffix[] =
+        "<rect width=\"8\" height=\"8\" fill=\"url(#paint)\" clip-path=\"url(#clip)\"/></svg>";
+    const size_t use_count_many = 32U;
+    const size_t padding_one = 64U * 1024U;
+    size_t use_length = sizeof(use) - 1U;
+    if (use_length == 0U || use_count_many - 1U > padding_one / use_length)
+        return false;
+    size_t padding_many = padding_one - (use_count_many - 1U) * use_length;
+    size_t base_length = sizeof(prefix) - 1U + sizeof(middle) - 1U +
+                         sizeof(suffix) - 1U;
+    if (base_length > SIZE_MAX - padding_one - use_length) return false;
+    size_t one_length = base_length + padding_one + use_length;
+    size_t many_length = base_length + padding_many + use_count_many * use_length;
+    if (one_length != many_length) return false;
+    uint8_t *small = NULL, *padded_one = NULL, *padded_many = NULL;
+    size_t small_length = 0U, one_size = 0U, many_size = 0U;
+    if (!build_allocation_source(0U, 1U, &small, &small_length) ||
+        !build_allocation_source(padding_one, 1U, &padded_one, &one_size) ||
+        !build_allocation_source(padding_many, use_count_many,
+                                 &padded_many, &many_size)) {
+        free(small); free(padded_one); free(padded_many);
+        return false;
+    }
+    if (one_size != many_size) {
+        free(small); free(padded_one); free(padded_many);
+        return false;
+    }
+    svg_shape_alloc_stats stats[3] = {{0}};
+    size_t index_bytes[3] = {0U}, lookup_probes[3] = {0U};
+    bool ok = measure_allocation_source(small, small_length, &stats[0],
+                                        &index_bytes[0], &lookup_probes[0]) &&
+              measure_allocation_source(padded_one, one_size, &stats[1],
+                                        &index_bytes[1], &lookup_probes[1]) &&
+              measure_allocation_source(padded_many, many_size, &stats[2],
+                                        &index_bytes[2], &lookup_probes[2]);
+    if (ok) {
+        for (size_t i = 0U; i < 3U; ++i) {
+            ok = ok && !stats[i].overflow && stats[i].peak_live_bytes != 0U &&
+                 stats[i].total_allocated_bytes >= stats[i].peak_live_bytes &&
+                 stats[i].allocation_count != 0U && stats[i].clip_copy_bytes != 0U &&
+                 stats[i].output_bytes == 8U * 8U * 4U &&
+                 stats[i].reference_index_bytes == index_bytes[i] &&
+                 index_bytes[i] == SVG_REFERENCE_ID_TABLE_CAPACITY * sizeof(uint32_t) &&
+                 lookup_probes[i] != 0U;
+        }
+        size_t small_non_token = stats[0].total_allocated_bytes -
+            stats[0].token_array_bytes;
+        size_t padded_non_token = stats[1].total_allocated_bytes -
+            stats[1].token_array_bytes;
+        size_t small_capacity = small_length / 2U + 2U;
+        size_t padded_capacity = one_size / 2U + 2U;
+        size_t expected_baseline_growth =
+            (padded_capacity - small_capacity) * sizeof(svg_xml_token);
+        size_t use_growth_budget = (use_count_many - 1U) * 2048U;
+        ok = ok && stats[1].token_array_bytes > stats[0].token_array_bytes &&
+             stats[1].token_array_bytes - stats[0].token_array_bytes ==
+                 expected_baseline_growth &&
+             small_non_token == padded_non_token &&
+             stats[1].token_array_bytes == stats[2].token_array_bytes &&
+             stats[1].reference_index_bytes == stats[2].reference_index_bytes &&
+             stats[2].clip_copy_bytes == stats[1].clip_copy_bytes &&
+             stats[2].clip_copy_bytes <= 512U * 1024U &&
+             stats[2].total_allocated_bytes >= stats[1].total_allocated_bytes &&
+             stats[2].total_allocated_bytes - stats[1].total_allocated_bytes <=
+                 use_growth_budget &&
+             stats[2].peak_live_bytes >= stats[1].peak_live_bytes &&
+             stats[2].peak_live_bytes - stats[1].peak_live_bytes <=
+                 use_growth_budget &&
+             lookup_probes[2] > lookup_probes[1];
+    }
+    free(small); free(padded_one); free(padded_many);
+    return ok;
+}
+
+static bool group_clip_scratch_resolved_once_check(void)
+{
+    static const char prefix[] =
+        "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\" clipPathUnits=\"objectBoundingBox\"><rect width=\"0.5\" height=\"1\"/></clipPath></defs><g clip-path=\"url(#c)\">";
+    static const char shape[] = "<rect width=\"4\" height=\"4\" fill=\"red\"/>";
+    static const char suffix[] = "</g></svg>";
+    const size_t counts[] = {1U, 16U};
+    svg_shape_alloc_stats stats[2] = {{0}};
+    size_t index_bytes[2] = {0U}, lookup_probes[2] = {0U};
+    bool ok = true;
+    for (size_t test = 0U; test < 2U && ok; ++test) {
+        size_t shape_bytes = sizeof(shape) - 1U;
+        size_t length = sizeof(prefix) - 1U + sizeof(suffix) - 1U;
+        if (counts[test] > (SIZE_MAX - length) / shape_bytes) return false;
+        length += counts[test] * shape_bytes;
+        uint8_t *source = malloc(length);
+        if (source == NULL) return false;
+        size_t cursor = 0U;
+        memcpy(source + cursor, prefix, sizeof(prefix) - 1U);
+        cursor += sizeof(prefix) - 1U;
+        for (size_t i = 0U; i < counts[test]; ++i) {
+            memcpy(source + cursor, shape, shape_bytes);
+            cursor += shape_bytes;
+        }
+        memcpy(source + cursor, suffix, sizeof(suffix) - 1U);
+        cursor += sizeof(suffix) - 1U;
+        ok = cursor == length && measure_allocation_source(
+            source, length, &stats[test], &index_bytes[test],
+            &lookup_probes[test]);
+        free(source);
+    }
+    return ok && !stats[0].overflow && !stats[1].overflow &&
+        stats[0].clip_copy_bytes != 0U &&
+        stats[0].clip_copy_bytes == stats[1].clip_copy_bytes &&
+        stats[0].output_bytes == 8U * 8U * 4U &&
+        stats[1].output_bytes == 8U * 8U * 4U &&
+        stats[0].reference_index_bytes == stats[1].reference_index_bytes &&
+        lookup_probes[0] != 0U && lookup_probes[1] != 0U;
+}
+
 static uint8_t pixel_alpha(const raster_tile *tile, uint32_t x, uint32_t y);
+
+static bool decode_use_target_size(size_t target_size,
+                                   svg_shape_error expected_error)
+{
+    static const char prefix[] =
+        "<svg width=\"1\" height=\"1\"><defs><g id=\"x\"><!--";
+    static const char suffix[] = "--></g></defs><use href=\"#x\"/></svg>";
+    static const size_t fixed_target_size =
+        sizeof("<g id=\"x\">") - 1U + sizeof("<!--") - 1U +
+        sizeof("-->") - 1U + sizeof("</g>") - 1U;
+    if (target_size < fixed_target_size) return false;
+    size_t payload_size = target_size - fixed_target_size;
+    size_t source_size = sizeof(prefix) - 1U;
+    if (payload_size > SIZE_MAX - source_size) return false;
+    source_size += payload_size;
+    if (sizeof(suffix) - 1U > SIZE_MAX - source_size) return false;
+    source_size += sizeof(suffix) - 1U;
+    char *source = malloc(source_size);
+    if (source == NULL) return false;
+    size_t cursor = 0U;
+    memcpy(source + cursor, prefix, sizeof(prefix) - 1U);
+    cursor += sizeof(prefix) - 1U;
+    memset(source + cursor, 'a', payload_size);
+    cursor += payload_size;
+    memcpy(source + cursor, suffix, sizeof(suffix) - 1U);
+    cursor += sizeof(suffix) - 1U;
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    svg_shape_error error = svg_shape_decode(
+        (base_bytes){(const uint8_t *)source, cursor}, &document, &diagnostic);
+    bool ok = error == expected_error &&
+        (expected_error != SVG_SHAPE_ERROR_LIMIT ||
+         diagnostic.category == SVG_SHAPE_ERROR_LIMIT);
+    if (!ok) fprintf(stderr, "use boundary %zu: expected %d got %d at %zu\n",
+                      target_size, (int)expected_error, (int)error,
+                      diagnostic.offset);
+    svg_shape_document_destroy(&document);
+    free(source);
+    return ok;
+}
+
+static bool build_clip_boundary_source(size_t child_bytes,
+                                       size_t declaring_elements,
+                                       char **out_source, size_t *out_length)
+{
+    static const char prefix[] =
+        "<svg width=\"1\" height=\"1\"><defs><clipPath id=\"c\" clipPathUnits=\"objectBoundingBox\">";
+    static const char child_prefix[] = "<!--";
+    static const char child_middle[] = "--><rect width=\"1\" height=\"1\"/>";
+    static const char suffix[] = "</clipPath></defs>";
+    static const char declaration[] =
+        "<rect width=\"1\" height=\"1\" clip-path=\"url(#c)\"/>";
+    static const char document_suffix[] = "</svg>";
+    const size_t fixed_child = sizeof(child_prefix) - 1U +
+                               sizeof(child_middle) - 1U;
+    if (out_source == NULL || out_length == NULL || child_bytes < fixed_child ||
+        declaring_elements == 0U) return false;
+    size_t payload = child_bytes - fixed_child;
+    size_t length = sizeof(prefix) - 1U;
+    if (child_bytes > SIZE_MAX - length) return false;
+    length += child_bytes;
+    if (sizeof(suffix) - 1U > SIZE_MAX - length) return false;
+    length += sizeof(suffix) - 1U;
+    size_t declaration_bytes = sizeof(declaration) - 1U;
+    if (declaring_elements > (SIZE_MAX - length) / declaration_bytes) return false;
+    length += declaring_elements * declaration_bytes;
+    if (sizeof(document_suffix) - 1U > SIZE_MAX - length) return false;
+    length += sizeof(document_suffix) - 1U;
+    char *source = malloc(length);
+    if (source == NULL) return false;
+    size_t cursor = 0U;
+    memcpy(source + cursor, prefix, sizeof(prefix) - 1U);
+    cursor += sizeof(prefix) - 1U;
+    memcpy(source + cursor, child_prefix, sizeof(child_prefix) - 1U);
+    cursor += sizeof(child_prefix) - 1U;
+    memset(source + cursor, 'b', payload);
+    cursor += payload;
+    memcpy(source + cursor, child_middle, sizeof(child_middle) - 1U);
+    cursor += sizeof(child_middle) - 1U;
+    memcpy(source + cursor, suffix, sizeof(suffix) - 1U);
+    cursor += sizeof(suffix) - 1U;
+    for (size_t i = 0U; i < declaring_elements; ++i) {
+        memcpy(source + cursor, declaration, declaration_bytes);
+        cursor += declaration_bytes;
+    }
+    memcpy(source + cursor, document_suffix, sizeof(document_suffix) - 1U);
+    cursor += sizeof(document_suffix) - 1U;
+    *out_source = source;
+    *out_length = cursor;
+    return cursor == length;
+}
+
+static bool decode_clip_boundary(size_t child_bytes, size_t declarations,
+                                 svg_shape_error expected_error)
+{
+    char *source = NULL;
+    size_t source_length = 0U;
+    if (!build_clip_boundary_source(child_bytes, declarations, &source,
+                                    &source_length)) return false;
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    svg_shape_error error = svg_shape_decode(
+        (base_bytes){(const uint8_t *)source, source_length}, &document,
+        &diagnostic);
+    bool ok = error == expected_error &&
+        (expected_error != SVG_SHAPE_ERROR_LIMIT ||
+         diagnostic.category == SVG_SHAPE_ERROR_LIMIT);
+    if (!ok) fprintf(stderr, "clip boundary child=%zu declarations=%zu: expected %d got %d at %zu\n",
+                      child_bytes, declarations, (int)expected_error,
+                      (int)error, diagnostic.offset);
+    svg_shape_document_destroy(&document);
+    free(source);
+    return ok;
+}
+
+static bool reference_boundary_checks(void)
+{
+    const size_t reference_limit = 64U * 1024U;
+    if (!decode_use_target_size(reference_limit, SVG_SHAPE_ERROR_NONE)) {
+        fprintf(stderr, "use exact source span failed\n"); return false;
+    }
+    if (!decode_use_target_size(reference_limit + 1U, SVG_SHAPE_ERROR_LIMIT)) {
+        fprintf(stderr, "use oversized source span failed\n"); return false;
+    }
+
+    static const char object_box_wrapper[] =
+        "<svg width=\"1\" height=\"1\" viewBox=\"0 0 1 1\">";
+    const size_t wrapper_bytes = sizeof(object_box_wrapper) - 1U;
+    const size_t scratch_limit = 512U * 1024U;
+    const size_t suffix_bytes = sizeof("</svg>") - 1U;
+    if (wrapper_bytes + suffix_bytes + 1U >= reference_limit) return false;
+    const size_t exact_aggregate_child = reference_limit - wrapper_bytes -
+                                        suffix_bytes - 1U;
+    if (!decode_clip_boundary(reference_limit, 1U, SVG_SHAPE_ERROR_NONE)) {
+        fprintf(stderr, "clip exact source span failed\n"); return false;
+    }
+    if (!decode_clip_boundary(reference_limit + 1U, 1U,
+                              SVG_SHAPE_ERROR_LIMIT)) {
+        fprintf(stderr, "clip oversized source span failed\n"); return false;
+    }
+    if (exact_aggregate_child > reference_limit ||
+        (wrapper_bytes + exact_aggregate_child + suffix_bytes + 1U) * 8U !=
+            scratch_limit) {
+        fprintf(stderr, "clip scratch calculation failed: %zu\n",
+                exact_aggregate_child); return false;
+    }
+    if (!decode_clip_boundary(exact_aggregate_child, 8U,
+                              SVG_SHAPE_ERROR_NONE)) {
+        fprintf(stderr, "clip exact aggregate failed\n"); return false;
+    }
+    if (!decode_clip_boundary(exact_aggregate_child, 9U,
+                              SVG_SHAPE_ERROR_LIMIT)) {
+        fprintf(stderr, "clip over aggregate failed\n"); return false;
+    }
+    return true;
+}
 
 static bool reference_rejection_checks(void)
 {
@@ -324,16 +617,31 @@ static bool reference_rejection_checks(void)
                      "<svg width=\"1\" height=\"1\"><defs><g id=\"g\"/></defs>");
     used = wrote < 0 ? repeated_capacity : (size_t)wrote;
     bool composed = used < repeated_capacity;
-    for (size_t i = 0U; composed && i < 65537U; ++i) {
+    for (size_t i = 0U; composed && i < 65536U; ++i) {
         wrote = snprintf(repeated + used, repeated_capacity - used, "<use href=\"#g\"/>");
         if (wrote < 0 || (size_t)wrote >= repeated_capacity - used) composed = false;
         else used += (size_t)wrote;
     }
     static const char tail[] = "</svg>";
     if (composed && sizeof(tail) - 1U < repeated_capacity - used) {
-        memcpy(repeated + used, tail, sizeof(tail) - 1U); used += sizeof(tail) - 1U;
-        composed = svg_shape_decode((base_bytes){(const uint8_t *)repeated, used}, &doc, &diag) ==
-                   SVG_SHAPE_ERROR_LIMIT && diag.category == SVG_SHAPE_ERROR_LIMIT;
+        memcpy(repeated + used, tail, sizeof(tail) - 1U);
+        size_t instance_source_len = used + sizeof(tail) - 1U;
+        composed = svg_shape_decode(
+            (base_bytes){(const uint8_t *)repeated, instance_source_len}, &doc,
+            &diag) == SVG_SHAPE_ERROR_NONE && doc.shape_count == 0U;
+        svg_shape_document_destroy(&doc);
+        wrote = snprintf(repeated + used, repeated_capacity - used,
+                         "<use href=\"#g\"/>");
+        if (wrote < 0 || (size_t)wrote >= repeated_capacity - used) composed = false;
+        else used += (size_t)wrote;
+        if (composed && sizeof(tail) - 1U < repeated_capacity - used) {
+            memcpy(repeated + used, tail, sizeof(tail) - 1U);
+            used += sizeof(tail) - 1U;
+            composed = svg_shape_decode(
+                (base_bytes){(const uint8_t *)repeated, used}, &doc, &diag) ==
+                    SVG_SHAPE_ERROR_LIMIT &&
+                diag.category == SVG_SHAPE_ERROR_LIMIT;
+        } else composed = false;
     } else composed = false;
     free(repeated);
     if (!composed) return false;
@@ -353,9 +661,73 @@ static uint8_t pixel_alpha(const raster_tile *tile, uint32_t x, uint32_t y)
     return tile->rgba[((size_t)y * tile->width + x) * 4U + 3U];
 }
 
+static bool use_transform_order_check(void)
+{
+    static const char scaled[] =
+        "<svg width=\"16\" height=\"16\"><defs><rect id=\"r\" width=\"1\" height=\"1\"/></defs><use href=\"#r\" x=\"4\" y=\"3\" transform=\"scale(2)\"/></svg>";
+    static const char rotated[] =
+        "<svg width=\"16\" height=\"16\"><defs><rect id=\"r\" width=\"2\" height=\"1\"/></defs><g transform=\"translate(8 0)\"><use href=\"#r\" x=\"2\" y=\"1\" transform=\"rotate(90)\"/></g></svg>";
+    static const char symbol[] =
+        "<svg width=\"16\" height=\"16\"><defs><symbol id=\"s\" viewBox=\"0 0 2 2\"><rect width=\"1\" height=\"1\"/></symbol></defs><use href=\"#s\" x=\"2\" y=\"1\" width=\"4\" height=\"4\" transform=\"scale(2)\"/></svg>";
+    const char *cases[] = {scaled, rotated, symbol};
+    const geom_point expected[] = {{8.0, 6.0}, {7.0, 2.0}, {4.0, 2.0}};
+    for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i) {
+        svg_shape_document doc = {0};
+        svg_shape_diagnostic diagnostic = {0};
+        base_bytes source = {(const uint8_t *)cases[i], strlen(cases[i])};
+        if (svg_shape_decode(source, &doc, &diagnostic) != SVG_SHAPE_ERROR_NONE ||
+            doc.edge_count == 0U ||
+            fabs(doc.edges[0].a.x - expected[i].x) > 1e-9 ||
+            fabs(doc.edges[0].a.y - expected[i].y) > 1e-9) {
+            svg_shape_document_destroy(&doc);
+            return false;
+        }
+        svg_shape_document_destroy(&doc);
+    }
+    return true;
+}
+
+static bool indexed_paint_lookup_check(void)
+{
+    static const char prefix[] = "<svg width=\"16\" height=\"16\">";
+    static const char shape[] = "<rect width=\"1\" height=\"1\" fill=\"url(#late)\"/>";
+    static const char suffix[] =
+        "<defs><linearGradient id=\"late\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs></svg>";
+    const size_t shape_count = 512U;
+    size_t capacity = sizeof(prefix) - 1U +
+        shape_count * (sizeof(shape) - 1U) + sizeof(suffix) - 1U;
+    uint8_t *source = malloc(capacity);
+    if (source == NULL) return false;
+    size_t length = sizeof(prefix) - 1U;
+    memcpy(source, prefix, length);
+    for (size_t i = 0U; i < shape_count; ++i) {
+        memcpy(source + length, shape, sizeof(shape) - 1U);
+        length += sizeof(shape) - 1U;
+    }
+    memcpy(source + length, suffix, sizeof(suffix) - 1U);
+    length += sizeof(suffix) - 1U;
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    svg_shape_decode_memory_bounds bounds = {0};
+    bool ok = svg_shape_decode_source_with_bounds(
+        (base_bytes){source, length}, &document, &diagnostic, &bounds) ==
+            SVG_SHAPE_ERROR_NONE &&
+        document.shape_count == shape_count &&
+        bounds.reference_lookup_probes >= shape_count &&
+        bounds.reference_lookup_probes <= shape_count * 2U;
+    svg_shape_document_destroy(&document);
+    free(source);
+    return ok;
+}
+
 bool svg_shape_reference_tests(void)
 {
-    return source_bytes_unchanged_check() &&
-           decode_reference_memory_bounds_check() &&
-           reference_rejection_checks();
+    if (!source_bytes_unchanged_check()) { fprintf(stderr, "source preservation failed\n"); return false; }
+    if (!decode_reference_memory_bounds_check()) { fprintf(stderr, "allocation bounds failed\n"); return false; }
+    if (!group_clip_scratch_resolved_once_check()) { fprintf(stderr, "group clip allocation failed\n"); return false; }
+    if (!reference_boundary_checks()) { fprintf(stderr, "reference boundaries failed\n"); return false; }
+    if (!reference_rejection_checks()) { fprintf(stderr, "reference rejection failed\n"); return false; }
+    if (!use_transform_order_check()) { fprintf(stderr, "use transform failed\n"); return false; }
+    if (!indexed_paint_lookup_check()) { fprintf(stderr, "indexed lookup failed\n"); return false; }
+    return true;
 }

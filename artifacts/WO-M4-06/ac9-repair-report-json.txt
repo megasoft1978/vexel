@@ -1,85 +1,29 @@
 {
-    "work_order": "WO-M4-06 revision 4",
-    "source_commit": "d6dba56184d3a7530ca0dcc0186d9c9b1f45d657",
-    "status": "incomplete",
-    "acceptance": {
-        "AC-1": {
-            "debug_configure": "pass",
-            "debug_build": "pass",
-            "debug_ctest": "11/12; index-replay blocked by unavailable offscreen Metal device/queue"
-        },
-        "AC-2": {
-            "focused_shape_test": "pass",
-            "focused_python_render_tests": "16/16 pass",
-            "source_sha256_before_after": "pass",
-            "bounded_allocation_assertions": "pass"
-        },
-        "AC-3": {
-            "librsvg_fixtures": "39/39 pass; unchanged thresholds; zero interior diffs; max shared RGB delta 1"
-        },
-        "AC-4": {
-            "asan_ctest": "11/12; same offscreen Metal failure",
-            "ubsan_ctest": "11/12; same offscreen Metal failure",
-            "verify": "11/12 CTest; same offscreen Metal failure",
-            "release_configure_build": "pass",
-            "sanitizer_shape_test_binaries": "pass"
-        },
-        "AC-5": {
-            "fuzz": "1,000,000 ASan+UBSan cases; 0 crashes, reports, invariant failures"
-        },
-        "AC-6": {
-            "benchmarks": "5 workloads x 21 trials; stable hashes; median/p95/throughput/RSS recorded; frozen-base basic-solid comparison; no speed claim"
-        },
-        "AC-7": {
-            "corpus": "58 files / 116 trials; 2 previewable, 56 unsupported, 0 limit, 0 crash; manifest and Inkscape baseline hashes retained"
-        },
-        "AC-8": {
-            "work_order_validation": "pass",
-            "ledger_validation": "pass; 390 entries",
-            "json_validation": "pass",
-            "diff_check": "pass; git diff --check produced no output after final evidence edits",
-            "runner_path_guard": "pass; runner assert_scope allowed all 70 committed paths and active work-order matcher allowed 15 pending paths",
-            "fresh_read_only_review": "not started: codex exec app-server initialization failed with Operation not permitted under this restricted shell; stderr retained",
-            "git_diff_check": "pass after evidence edits"
-        },
-        "AC-9": {
-            "direct_original_token_traversal": "pass",
-            "rewritten_document_bytes": 0,
-            "source_map_bytes": 0,
-            "additional_token_arrays": 0,
-            "fixed_reference_index_bytes": 524288,
-            "reference_span_limits": "64 KiB per reference; 1 MiB aggregate per decode; limit diagnostic tested",
-            "depth_instance_cycle_missing_external": "covered and passing"
-        }
-    },
-    "commands": {
-        "cmake --preset mac-debug": "pass",
-        "cmake --build --preset mac-debug": "pass",
-        "ctest --test-dir build/mac-debug --output-on-failure": "11/12; index-replay offscreen Metal unavailable",
-        "python3 -m unittest tests.test_shape_render": "pass; 16 tests",
-        "build/mac-debug/bin/shape_test": "pass",
-        "./dev shape-fuzz --duration 90 --seed 20261010 --output artifacts/WO-M4-06/fuzz-report.json": "pass; 1,000,000 cases in 27.82 seconds",
-        "./dev asan": "11/12; index-replay offscreen Metal unavailable",
-        "./dev ubsan": "11/12; index-replay offscreen Metal unavailable",
-        "cmake --preset mac-release": "pass",
-        "cmake --build --preset mac-release": "pass",
-        "./dev verify": "11/12 CTest; index-replay offscreen Metal unavailable",
-        "./dev bench-corpus --run": "pass; 58 files and 116 trials",
-        "./dev bench-corpus --check": "pass",
-        "python3 -m json.tool reports/M4/head-to-head.json": "pass",
-        "python3 -m json.tool bench/results/WO-M4-06.json": "pass",
-        "python3 scripts/ledger.py validate ledger.jsonl": "pass; 390 entries",
-        "python3 scripts/wo_validate.py WO-M4-06 --ready": "pass",
-        "git diff --check": "pass; clean after final evidence edits"
-    },
-    "summary": "AC-9 source-backed traversal repair and focused bounds, source-preservation, sanitizer-shape, differential, fuzz, benchmark, corpus, and path-scope evidence pass. Full acceptance remains incomplete: index-replay cannot acquire offscreen Metal, and the requested fresh read-only reviewer could not start because the local Codex CLI app-server initialization is denied by this restricted shell.",
-    "fresh_verifier_attempt": {
-        "candidate_sha": "20ed36c3158d0b56142ef442e6261d136c042876",
-        "mode": "read-only",
-        "result": "not_started",
-        "exit_code": 1,
-        "error": "failed to initialize in-process app-server client: Operation not permitted",
-        "stderr_artifact": "artifacts/WO-M4-06/fresh-verifier-stderr.txt",
-        "verdict_artifact": "not produced"
-    }
+  "work_order": "WO-M4-06 revision 4",
+  "base_commit": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
+  "candidate_commit": null,
+  "status": "repairs implemented and focused checks pass; commit/overall acceptance incomplete",
+  "review_finding_repairs": {
+    "use_transform_order": "fixed composition to use.transform \u00b7 translate(x,y) \u00b7 symbol viewBox mapping; non-commuting scale/rotate/symbol regression and rsvg fixture pass",
+    "transformed_paint_and_clip_units": "current inverse affine is passed through resolution/sampling; userSpaceOnUse maps samples to element user space; objectBoundingBox uses untransformed local bounds; singular transforms return unsupported",
+    "stop_style_and_class": "stop-color/stop-opacity use CSS cascade; inline and class styles pass; currentColor, inherit, unresolved classes, and matched unsupported declarations diagnose unsupported",
+    "declared_group_clips": "clip-path is cleared from inherited style; group/use clips use whole subtree bounds, resolve once per declaration, and intersect with nested clips",
+    "allocation_tests": "actual allocator hook measures decode+render total/peak, token arrays, fixed index, bounded clip copies, and exact 8x8 output; source hashes are checked around live use/paint/clip documents",
+    "indexed_paint_clip_lookup": "paint and clip references use the prebuilt id index; 512 late-gradient shapes are bounded by a probe counter",
+    "documentation": "paint, clip, CSS, shape, and traversal READMEs describe transform, group clip, stop style, wrapper, and stricter byte/instance limits"
+  },
+  "verification": {
+    "focused_shape_test": "pass in Debug, ASan, and UBSan",
+    "focused_python_shape_render": "16/16 pass",
+    "rsvg_differential": "46/46 fixtures pass; max joint RGB delta 1, max edge difference 88, zero interior differences",
+    "fuzz": "1000000 ASan+UBSan cases; 0 crashes, 0 reports, 0 invariant failures",
+    "corpus": "58 files/116 trials; 2 preview, 56 unsupported, 0 limit, 0 crash",
+    "release": "configure/build pass",
+    "paint_benchmark": "5 workloads x 21 stable-hash trials",
+    "full_ctest": "11/12; index-replay blocked by missing offscreen Metal",
+    "full_python": "189/199; 8 failures and 2 errors due sandbox process/native limitations"
+  },
+  "path_scope": "all 68 modified/untracked paths pass frozen work-order allow/protect matcher; tests/oracle and tests/golden diff is empty",
+  "commit_blocker": "No focused commits could be written: the sandbox rejected writes to the shared worktree git metadata. Changes remain uncommitted.",
+  "independent_review": "not rerun; user prohibited launching nested codex exec"
 }

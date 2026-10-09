@@ -7,7 +7,8 @@ never rewrites or owns source text. The stylesheet object owns only bounded
 rule/declaration metadata and must be destroyed after decoding.
 
 The module recognizes fill, fill-rule, stroke, stroke-width, stroke-linecap,
-stroke-linejoin, stroke-miterlimit, stroke-dasharray, and stroke-dashoffset.
+stroke-linejoin, stroke-miterlimit, stroke-dasharray, stroke-dashoffset,
+clip-path, stop-color, and stop-opacity.
 Selectors are one optional element, one optional ID, and up to sixteen class
 terms, with comma lists. It does not evaluate combinators, pseudo selectors,
 attribute selectors, namespaces, at-rule bodies, imports, or resources. Rules,
@@ -19,9 +20,13 @@ are ASCII case-insensitive as CSS requires.
 
 The cascade applies inherited computed paint, presentation attributes, matched
 rules, and inline declarations by importance, specificity, and source order.
-The shape decoder validates the winning paint value and reports its original
-value byte offset. Non-paint declarations and unsupported selectors remain in
-the unchanged SVG source and have no rendering effect.
+The shape decoder validates the winning property and reports its original
+value byte offset. `clip-path` is reset at each element and handled by
+traversal at the element that declares it. Non-paint declarations and
+unsupported selectors remain in the unchanged SVG source and have no rendering
+effect. A stop matched by a supported selector with an unsupported declaration
+returns an explicit unsupported diagnostic instead of silently using default
+stop values.
 
 This is original project code. CSS cascade and SVG styling behavior follow
 CSS Cascade Level 3 and SVG 2 Styling (consulted 2026-10-09); no renderer or

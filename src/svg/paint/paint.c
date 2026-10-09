@@ -1,4 +1,5 @@
 #include "paint.h"
+#include "../shape/shape_alloc.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -81,11 +82,38 @@ static bool color(base_bytes source, svg_xml_span span, uint8_t rgba[4])
     return true;
 }
 
-static bool parse_stops(base_bytes source, const svg_xml_token *tokens,
-                        size_t count, size_t gradient, svg_paint_stop stops[SVG_PAINT_MAX_GRADIENT_STOPS],
-                        size_t *stop_count, bool *hit_limit)
+static bool supported_stop_inline_style(base_bytes source, svg_xml_span style)
+{
+    size_t i = style.offset, end = style.offset + style.length;
+    while (i < end) {
+        while (i < end && (source.ptr[i] == ' ' || source.ptr[i] == '\t' ||
+                           source.ptr[i] == '\r' || source.ptr[i] == '\n' ||
+                           source.ptr[i] == ';')) i++;
+        if (i == end) break;
+        size_t name = i;
+        while (i < end && source.ptr[i] != ':' && source.ptr[i] != ';') i++;
+        if (i == end || source.ptr[i] != ':') return false;
+        size_t name_end = i;
+        while (name_end > name && (source.ptr[name_end - 1U] == ' ' ||
+                                   source.ptr[name_end - 1U] == '\t')) name_end--;
+        svg_xml_span property = {name, name_end - name};
+        if (!eq(source, property, "stop-color") &&
+            !eq(source, property, "stop-opacity")) return false;
+        i++;
+        while (i < end && source.ptr[i] != ';') i++;
+        if (i < end) i++;
+    }
+    return true;
+}
+
+static bool parse_stops(svg_css_sheet *css, base_bytes source,
+                        const svg_xml_token *tokens, size_t count,
+                        size_t gradient,
+                        svg_paint_stop stops[SVG_PAINT_MAX_GRADIENT_STOPS],
+                        size_t *stop_count, bool *hit_limit, bool *hit_oom)
 {
     *hit_limit = false;
+    *hit_oom = false;
     size_t end = element_end(tokens, count, gradient);
     size_t n = 0U;
     for (size_t i = gradient + 1U; i < end; ++i) {
@@ -94,13 +122,33 @@ static bool parse_stops(base_bytes source, const svg_xml_token *tokens,
             tokens[i].depth != tokens[gradient].depth + 1U) continue;
         if (n == SVG_PAINT_MAX_GRADIENT_STOPS) { *hit_limit = true; return false; }
         if (!eq(source, tokens[i].local_name, "stop") || tokens[i].prefix.length != 0U) return false;
-        svg_xml_span offset = {0}, stop_color = {0}, opacity = {0};
+        svg_xml_span offset = {0}, stop_color = {0}, opacity = {0}, style = {0};
         (void)attr(source, tokens, count, i, "offset", &offset);
-        bool has_stop_color = attr(source, tokens, count, i, "stop-color", &stop_color);
-        (void)attr(source, tokens, count, i, "stop-opacity", &opacity);
+        if (attr(source, tokens, count, i, "style", &style) &&
+            !supported_stop_inline_style(source, style)) return false;
+        svg_css_paint computed;
+        svg_css_error css_error = svg_css_compute(css, source, tokens, count, i,
+                                                 NULL, &computed);
+        if (css_error != SVG_CSS_OK) {
+            *hit_limit = css_error == SVG_CSS_LIMIT;
+            *hit_oom = css_error == SVG_CSS_OOM;
+            return false;
+        }
+        for (size_t property = 0U; property < SVG_CSS_PROPERTY_COUNT; ++property) {
+            if (property != SVG_CSS_STOP_COLOR &&
+                property != SVG_CSS_STOP_OPACITY &&
+                computed.values[property].present) return false;
+        }
+        bool has_stop_color = svg_css_paint_value(
+            &computed, SVG_CSS_STOP_COLOR, &stop_color);
+        bool has_opacity = svg_css_paint_value(
+            &computed, SVG_CSS_STOP_OPACITY, &opacity);
+        svg_xml_span class_name = {0};
+        bool has_class = attr(source, tokens, count, i, "class", &class_name);
+        if (has_class && !has_stop_color && !has_opacity) return false;
         double position = 0.0, alpha = 1.0;
         if (offset.length != 0U && !number(source, offset, &position)) return false;
-        if (opacity.length != 0U && !number(source, opacity, &alpha)) return false;
+        if (has_opacity && !number(source, opacity, &alpha)) return false;
         if (position < 0.0 || position > 1.0 || alpha < 0.0 || alpha > 1.0 ||
             (n != 0U && position < stops[n - 1U].offset)) return false;
         if (!has_stop_color) memset(stops[n].rgba, 0, 3U);
@@ -170,8 +218,12 @@ static bool gradient_coordinates(base_bytes source, const svg_xml_token *tokens,
 
 svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        const svg_xml_token *tokens,
-                                       size_t token_count, svg_xml_span fill,
+                                       size_t token_count,
+                                       svg_reference_index *references,
+                                       svg_css_sheet *css,
+                                       svg_xml_span fill,
                                        const geom_edge *edges, size_t edge_count,
+                                       geom_affine user_inverse,
                                        double viewport_width, double viewport_height,
                                        svg_shape_paint *paint,
                                        svg_paint_stop **stops,
@@ -183,19 +235,11 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
         memcmp(source.ptr + fill.offset, "url(#", 5U) != 0 ||
         source.ptr[fill.offset + fill.length - 1U] != ')') return SVG_SHAPE_ERROR_UNSUPPORTED;
     svg_xml_span target_id = {fill.offset + 5U, fill.length - 6U};
-    size_t target = SIZE_MAX;
-    for (size_t i = 0U; i < token_count; ++i) {
-        if (tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT &&
-            tokens[i].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) continue;
-        svg_xml_span id;
-        if (attr(source, tokens, token_count, i, "id", &id) && id.length == target_id.length &&
-            memcmp(source.ptr + id.offset, source.ptr + target_id.offset, id.length) == 0) {
-            target = i;
-            break;
-        }
-    }
-    if (target == SIZE_MAX) goto unsupported;
+    size_t target;
+    if (!svg_reference_index_find(source, tokens, token_count, references,
+                                  target_id, &target)) goto unsupported;
     svg_shape_paint result = {0};
+    result.user_inverse = user_inverse;
     if (eq(source, tokens[target].local_name, "linearGradient")) result.kind = SVG_SHAPE_PAINT_LINEAR;
     else if (eq(source, tokens[target].local_name, "radialGradient")) result.kind = SVG_SHAPE_PAINT_RADIAL;
     else goto unsupported;
@@ -214,27 +258,36 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
                               viewport_height, &result)) goto unsupported;
     svg_paint_stop local[SVG_PAINT_MAX_GRADIENT_STOPS];
     size_t local_count = 0U;
-    bool stop_limit = false;
-    if (!parse_stops(source, tokens, token_count, target, local, &local_count, &stop_limit)) {
+    bool stop_limit = false, stop_oom = false;
+    if (!parse_stops(css, source, tokens, token_count, target, local,
+                     &local_count, &stop_limit, &stop_oom)) {
         if (stop_limit) goto limit;
+        if (stop_oom) goto oom;
         goto unsupported;
     }
     if (local_count > SVG_PAINT_MAX_STOPS - *stop_count) goto limit;
     if (edge_count == 0U) goto unsupported;
-    double min_x = edges[0].a.x, min_y = edges[0].a.y, max_x = min_x, max_y = min_y;
+    geom_point first_local;
+    if (!geom_affine_map_point(user_inverse, edges[0].a, &first_local))
+        goto unsupported;
+    double min_x = first_local.x, min_y = first_local.y;
+    double max_x = min_x, max_y = min_y;
     for (size_t i = 0U; i < edge_count; ++i) {
-        const geom_point p[2] = {edges[i].a, edges[i].b};
+        const geom_point source_points[2] = {edges[i].a, edges[i].b};
         for (size_t j = 0U; j < 2U; ++j) {
-            if (p[j].x < min_x) min_x = p[j].x;
-            if (p[j].x > max_x) max_x = p[j].x;
-            if (p[j].y < min_y) min_y = p[j].y;
-            if (p[j].y > max_y) max_y = p[j].y;
+            geom_point point;
+            if (!geom_affine_map_point(user_inverse, source_points[j], &point))
+                goto unsupported;
+            if (point.x < min_x) min_x = point.x;
+            if (point.x > max_x) max_x = point.x;
+            if (point.y < min_y) min_y = point.y;
+            if (point.y > max_y) max_y = point.y;
         }
     }
     result.bounds[0] = min_x; result.bounds[1] = min_y;
     result.bounds[2] = max_x; result.bounds[3] = max_y;
     if (result.object_bounding_box && (max_x <= min_x || max_y <= min_y)) goto unsupported;
-    svg_paint_stop *grown = realloc(*stops, (*stop_count + local_count) * sizeof(**stops));
+    svg_paint_stop *grown = svg_shape_realloc(*stops, (*stop_count + local_count) * sizeof(**stops));
     if (grown == NULL) {
         if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, fill.offset};
         return SVG_SHAPE_ERROR_OOM;
@@ -249,6 +302,9 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
 limit:
     if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, fill.offset};
     return SVG_SHAPE_ERROR_LIMIT;
+oom:
+    if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, fill.offset};
+    return SVG_SHAPE_ERROR_OOM;
 unsupported:
     if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_UNSUPPORTED, fill.offset};
     return SVG_SHAPE_ERROR_UNSUPPORTED;
@@ -258,10 +314,15 @@ void svg_paint_sample(const svg_shape_paint *paint, const svg_paint_stop *stops,
                       double x, double y, uint8_t rgba[4])
 {
     if (paint == NULL || stops == NULL || paint->stop_count < 2U) return;
-    double gx = x, gy = y, t;
+    geom_point local;
+    if (!geom_affine_map_point(paint->user_inverse, (geom_point){x, y}, &local))
+        return;
+    double gx = local.x, gy = local.y, t;
     if (paint->object_bounding_box) {
-        gx = (x - paint->bounds[0]) / (paint->bounds[2] - paint->bounds[0]);
-        gy = (y - paint->bounds[1]) / (paint->bounds[3] - paint->bounds[1]);
+        gx = (local.x - paint->bounds[0]) /
+             (paint->bounds[2] - paint->bounds[0]);
+        gy = (local.y - paint->bounds[1]) /
+             (paint->bounds[3] - paint->bounds[1]);
     }
     if (paint->kind == SVG_SHAPE_PAINT_LINEAR) {
         double dx = paint->coordinates[2] - paint->coordinates[0];

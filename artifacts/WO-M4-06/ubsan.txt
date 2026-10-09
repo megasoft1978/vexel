@@ -5,51 +5,53 @@ Preset CMake variables:
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
   VEXEL_SANITIZER="ubsan"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
-[1/15] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
-[2/15] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
-[3/15] Building C object CMakeFiles/vexel_shape.dir/src/svg/reference/reference.c.o
-[4/15] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
-[5/15] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
-[6/15] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
-[7/15] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[8/15] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[9/15] Linking C static library libvexel_shape.a
-[10/15] Linking C executable bin/shape_test
-[11/15] Linking C executable bin/css_test
-[12/15] Linking C executable bin/shape_render_cli
-[13/15] Linking C executable bin/shape_fuzz
-[14/15] Linking C executable bin/svg_index_bench
-[15/15] Linking C executable bin/svgworkbench
+[1/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
+[2/17] Building C object CMakeFiles/css_test.dir/tests/svg/css/test_css.c.o
+[3/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
+[4/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
+[5/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
+[6/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
+[7/17] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
+[8/17] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[9/17] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[10/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[11/17] Linking C static library libvexel_shape.a
+[12/17] Linking C executable bin/shape_fuzz
+[13/17] Linking C executable bin/css_test
+[14/17] Linking C executable bin/shape_test
+[15/17] Linking C executable bin/shape_render_cli
+[16/17] Linking C executable bin/svg_index_bench
+[17/17] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
       Start  1: cli-version
- 1/12 Test  #1: cli-version ......................   Passed    0.23 sec
+ 1/12 Test  #1: cli-version ......................   Passed    0.18 sec
       Start  2: base-contract
  2/12 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
- 3/12 Test  #3: xml-tokenizer ....................   Passed    0.15 sec
+ 3/12 Test  #3: xml-tokenizer ....................   Passed    0.18 sec
       Start  4: source-save
  4/12 Test  #4: source-save ......................   Passed    0.01 sec
       Start  5: shape-render
- 5/12 Test  #5: shape-render .....................   Passed    0.38 sec
+ 5/12 Test  #5: shape-render .....................   Passed    0.59 sec
       Start  6: css-cascade
- 6/12 Test  #6: css-cascade ......................   Passed    0.34 sec
+ 6/12 Test  #6: css-cascade ......................   Passed    0.18 sec
       Start  7: svg-index
- 7/12 Test  #7: svg-index ........................   Passed    0.14 sec
+ 7/12 Test  #7: svg-index ........................   Passed    0.13 sec
       Start  8: viewer-navigation
  8/12 Test  #8: viewer-navigation ................   Passed    0.03 sec
       Start  9: svg-token-stream-budget
  9/12 Test  #9: svg-token-stream-budget ..........   Passed    0.06 sec
       Start 10: index-replay
-10/12 Test #10: index-replay .....................***Failed    0.11 sec
+10/12 Test #10: index-replay .....................***Failed    0.12 sec
 index replay preview: offscreen Metal device or queue unavailable
 progress: 10%
 progress: 50%
 progress: 90%
-index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=6787000
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=8952000
 stale_generation_rejected=true
 canceled_worker_rejected=true
 preview_state: submitted=true finished=true ready=true
@@ -61,7 +63,7 @@ preview_state: submitted=true finished=true ready=true
 
 92% tests passed, 1 tests failed out of 12
 
-Total Test time (real) =   1.59 sec
+Total Test time (real) =   1.62 sec
 
 The following tests FAILED:
 	 10 - index-replay (Failed)

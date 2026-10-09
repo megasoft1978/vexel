@@ -1,19 +1,19 @@
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
       Start  1: cli-version
- 1/12 Test  #1: cli-version ......................   Passed    0.31 sec
+ 1/12 Test  #1: cli-version ......................   Passed    0.17 sec
       Start  2: base-contract
  2/12 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
- 3/12 Test  #3: xml-tokenizer ....................   Passed    0.08 sec
+ 3/12 Test  #3: xml-tokenizer ....................   Passed    0.07 sec
       Start  4: source-save
  4/12 Test  #4: source-save ......................   Passed    0.01 sec
       Start  5: shape-render
- 5/12 Test  #5: shape-render .....................   Passed    0.08 sec
+ 5/12 Test  #5: shape-render .....................   Passed    0.16 sec
       Start  6: css-cascade
- 6/12 Test  #6: css-cascade ......................   Passed    0.18 sec
+ 6/12 Test  #6: css-cascade ......................   Passed    0.00 sec
       Start  7: svg-index
- 7/12 Test  #7: svg-index ........................   Passed    0.12 sec
+ 7/12 Test  #7: svg-index ........................   Passed    0.11 sec
       Start  8: viewer-navigation
  8/12 Test  #8: viewer-navigation ................   Passed    0.02 sec
       Start  9: svg-token-stream-budget
@@ -24,7 +24,7 @@ index replay preview: offscreen Metal device or queue unavailable
 progress: 10%
 progress: 50%
 progress: 90%
-index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=7217000
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=8469000
 stale_generation_rejected=true
 canceled_worker_rejected=true
 preview_state: submitted=true finished=true ready=true
@@ -32,11 +32,11 @@ preview_state: submitted=true finished=true ready=true
       Start 11: spatial-cache
 11/12 Test #11: spatial-cache ....................   Passed    0.03 sec
       Start 12: job-snapshot
-12/12 Test #12: job-snapshot .....................   Passed    0.05 sec
+12/12 Test #12: job-snapshot .....................   Passed    0.04 sec
 
 92% tests passed, 1 tests failed out of 12
 
-Total Test time (real) =   1.01 sec
+Total Test time (real) =   0.76 sec
 
 The following tests FAILED:
 	 10 - index-replay (Failed)

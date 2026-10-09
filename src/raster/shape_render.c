@@ -1,4 +1,5 @@
 #include "shape_render.h"
+#include "../svg/shape/shape_alloc.h"
 #include "../svg/paint/paint.h"
 #include "../svg/clip/clip.h"
 
@@ -419,10 +420,10 @@ static bool prepare_local_stroke_edges(const svg_shape_document *doc,
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }
-    geom_edge *edges = malloc(doc->edge_count * sizeof(*edges));
-    bool *seams = calloc(doc->shape_count, sizeof(*seams));
+    geom_edge *edges = svg_shape_malloc(doc->edge_count * sizeof(*edges));
+    bool *seams = svg_shape_calloc(doc->shape_count, sizeof(*seams));
     if (edges == NULL || seams == NULL) {
-        free(edges); free(seams);
+        svg_shape_free(edges); svg_shape_free(seams);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, 0};
         return false;
     }
@@ -432,7 +433,7 @@ static bool prepare_local_stroke_edges(const svg_shape_document *doc,
         if (doc->strokes[shape].rgba[3] != 0U && doc->strokes[shape].width > 0.0 &&
             (!geom_affine_map_point(doc->shape_stroke_inverse[shape], edges[i].a, &edges[i].a) ||
              !geom_affine_map_point(doc->shape_stroke_inverse[shape], edges[i].b, &edges[i].b))) {
-            free(edges); free(seams);
+            svg_shape_free(edges); svg_shape_free(seams);
             if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0};
             return false;
         }
@@ -497,19 +498,21 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
     geom_edge *local_edges = NULL;
     bool *dash_seams = NULL;
     if (!prepare_local_stroke_edges(doc, &local_edges, &dash_seams, diag)) return false;
-    int32_t *winding = calloc(doc->shape_count, sizeof(*winding));
-    uint8_t *parity = calloc(doc->shape_count, sizeof(*parity));
-    uint8_t *colors = calloc(doc->shape_count, 4U);
+    int32_t *winding = svg_shape_calloc(doc->shape_count, sizeof(*winding));
+    uint8_t *parity = svg_shape_calloc(doc->shape_count, sizeof(*parity));
+    uint8_t *colors = svg_shape_calloc(doc->shape_count, 4U);
     if (doc->shape_count != 0U && (winding == NULL || parity == NULL || colors == NULL)) {
-        free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
+        svg_shape_free(winding); svg_shape_free(parity); svg_shape_free(colors); svg_shape_free(local_edges); svg_shape_free(dash_seams);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, 0};
         return false;
     }
     if (!raster_tile_create(doc->width, doc->height, out)) {
-        free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
+        svg_shape_free(winding); svg_shape_free(parity); svg_shape_free(colors); svg_shape_free(local_edges); svg_shape_free(dash_seams);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }
+    svg_shape_alloc_note_external(out->rgba, out->byte_count);
+    (void)svg_shape_alloc_set_tag(out->rgba, SVG_SHAPE_ALLOC_TAG_OUTPUT);
     memset(out->rgba, 0, out->byte_count);
     double sx = (double)doc->width / doc->view_width;
     double sy = (double)doc->height / doc->view_height;
@@ -520,12 +523,13 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
         for (uint32_t x = 0; x < doc->width; x++) {
             if (!render_pixel(doc, local_edges, dash_seams, x, y, scale, offset_x, offset_y, out,
                               winding, parity, colors, diag)) {
-                raster_tile_destroy(out); free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
+                svg_shape_alloc_forget_external(out->rgba);
+                raster_tile_destroy(out); svg_shape_free(winding); svg_shape_free(parity); svg_shape_free(colors); svg_shape_free(local_edges); svg_shape_free(dash_seams);
                 return false;
             }
         }
     }
-    free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
+    svg_shape_free(winding); svg_shape_free(parity); svg_shape_free(colors); svg_shape_free(local_edges); svg_shape_free(dash_seams);
     if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0};
     return true;
 }

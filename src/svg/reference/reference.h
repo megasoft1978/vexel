@@ -15,6 +15,7 @@
 typedef struct svg_reference_index {
     uint32_t *slots;
     size_t id_count;
+    size_t lookup_probes;
 } svg_reference_index;
 
 /* Locate the matching close token for a non-empty definition container. */
@@ -33,9 +34,10 @@ svg_shape_error svg_reference_index_create(base_bytes source,
                                            svg_shape_diagnostic *diagnostic);
 void svg_reference_index_destroy(svg_reference_index *index);
 bool svg_reference_index_find(base_bytes source, const svg_xml_token *tokens,
-                              size_t count, const svg_reference_index *index,
+                              size_t count, svg_reference_index *index,
                               svg_xml_span id, size_t *element);
 size_t svg_reference_index_storage_bytes(const svg_reference_index *index);
+size_t svg_reference_index_lookup_probes(const svg_reference_index *index);
 bool svg_reference_xlink_is_bound(base_bytes source, const svg_xml_token *tokens,
                                   size_t count);
 bool svg_reference_use_attributes_supported(base_bytes source,

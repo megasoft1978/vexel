@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+  <defs>
+    <rect id="unit" width="2" height="2"/>
+    <symbol id="symbol" viewBox="0 0 2 2"><rect width="2" height="2"/></symbol>
+  </defs>
+  <use href="#unit" x="3" y="2" transform="scale(2)" fill="#e04030"/>
+  <g transform="translate(8 0)">
+    <use href="#unit" x="2" y="1" transform="rotate(90)" fill="#30a060"/>
+  </g>
+  <use href="#symbol" x="4" y="8" width="2" height="2"
+       transform="scale(1.5)" fill="#3050d0"/>
+</svg>

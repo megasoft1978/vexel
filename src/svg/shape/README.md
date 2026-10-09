@@ -18,15 +18,21 @@ at 4,096. Diagnostics keep offsets into the original borrowed source.
 
 Linear and centered radial gradients support 2–256 literal-color stops,
 monotone finite offsets, stop opacity, object-bounding-box or user-space units,
-and pad spread. Gradient transforms and inherited gradient references are
-unsupported. Clip paths support local `url(#id)`, `userSpaceOnUse` (the default)
-or `objectBoundingBox`, and union of up to 64 basic shape/path children. Nested
-clips and external references fail closed. Raster work is bounded by the
-document edge and clip-edge budgets.
+and pad spread. Stop color and opacity use the CSS cascade for attributes,
+inline styles, and supported class selectors. Gradient transforms and inherited
+gradient references are unsupported. Both paint units sample in the
+referencing element's user space and use its untransformed local bounds where
+needed; singular transforms fail with `unsupported`. Clip paths support local
+`url(#id)`, `userSpaceOnUse` (the default) or `objectBoundingBox`, and union of
+up to 64 basic shape/path children. Group/use clips use the whole subtree AABB,
+resolve once per declaration, and intersect with descendant clips. Nested
+clip declarations inside clip geometry and external references fail closed.
+Raster work is bounded by the document edge and clip-edge budgets.
 
-CSS retains source spans and supports the nine fill/stroke paint properties
-plus `clip-path` through presentation attributes, stylesheets, inline styles,
-and inherited group/use paint where the property applies. The stylesheet is
+CSS retains source spans and supports the nine fill/stroke paint properties,
+`clip-path`, `stop-color`, and `stop-opacity` through presentation attributes,
+stylesheets, and inline styles. Fill/stroke paint is inherited; `clip-path` is
+applied at its declaring element. The stylesheet is
 capped at 1 MiB, 4,096 rules, and 16,384 declarations. Unsupported SVG or CSS
 semantics return stable diagnostics rather than fetching external content.
 

@@ -9,7 +9,7 @@
 
 /* Bounded, source-preserving CSS paint subset. All spans address source bytes.
  */
-#define SVG_CSS_PROPERTY_COUNT 10U
+#define SVG_CSS_PROPERTY_COUNT 12U
 #define SVG_CSS_MAX_BYTES (1024U * 1024U)
 #define SVG_CSS_MAX_RULES 4096U
 #define SVG_CSS_MAX_DECLARATIONS 16384U
@@ -26,7 +26,9 @@ typedef enum svg_css_property {
     SVG_CSS_STROKE_MITERLIMIT,
     SVG_CSS_STROKE_DASHARRAY,
     SVG_CSS_STROKE_DASHOFFSET,
-    SVG_CSS_CLIP_PATH
+    SVG_CSS_CLIP_PATH,
+    SVG_CSS_STOP_COLOR,
+    SVG_CSS_STOP_OPACITY
 } svg_css_property;
 
 typedef struct svg_css_value {
@@ -63,7 +65,12 @@ static inline bool svg_css_paint_value(const svg_css_paint *paint, svg_css_prope
     return true;
 }
 typedef struct svg_css_sheet svg_css_sheet;
-typedef enum svg_css_error { SVG_CSS_OK, SVG_CSS_LIMIT, SVG_CSS_OOM } svg_css_error;
+typedef enum svg_css_error {
+    SVG_CSS_OK,
+    SVG_CSS_LIMIT,
+    SVG_CSS_OOM,
+    SVG_CSS_UNSUPPORTED
+} svg_css_error;
 
 svg_css_error svg_css_sheet_create(base_bytes source, const svg_xml_token *tokens,
                                    size_t token_count, svg_css_sheet **out);

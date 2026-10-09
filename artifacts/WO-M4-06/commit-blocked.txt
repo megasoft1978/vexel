@@ -1,0 +1,5 @@
+Focused commits were requested, but Git metadata is outside the writable sandbox.
+Observed errors:
+- git add: could not create .git/worktrees/WO-M4-06/index.lock: Operation not permitted.
+- Staging with GIT_INDEX_FILE=/private/tmp/vexel-WO-M4-06.index succeeded, but git commit failed opening .git/worktrees/WO-M4-06/COMMIT_EDITMSG: Operation not permitted.
+No commits or branch updates were created; all changes remain in the worktree.

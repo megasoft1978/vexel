@@ -1,10 +1,10 @@
 {
   "seed": 20261010,
   "cases": 1000000,
-  "duration_seconds": 27.82,
-  "process_cpu_seconds": 27.091,
+  "duration_seconds": 34.39,
+  "process_cpu_seconds": 31.277,
   "renderer": "Vexel scalar 4x4 shape rasterizer",
-  "source_revision": "d6dba56184d3a7530ca0dcc0186d9c9b1f45d657",
+  "source_revision": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
   "binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan/bin/shape_fuzz",
   "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
   "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
@@ -34,5 +34,7 @@
   "crashes": 0,
   "sanitizer_reports": 0,
   "invariant_failures": 0,
-  "result": "pass"
+  "result": "pass",
+  "worktree_dirty": true,
+  "worktree_note": "Fuzz binary built from dirty worktree based on 2a484b195f8264b7b71632ef8eed6ea6cb881331; tested source changes are not represented by source_revision."
 }

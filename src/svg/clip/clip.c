@@ -1,4 +1,5 @@
 #include "clip.h"
+#include "../shape/shape_alloc.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -13,8 +14,11 @@
 struct svg_shape_clip {
     svg_shape_document geometry;
     uint8_t *source;
+    size_t references;
+    struct svg_shape_clip *parent;
     bool object_bounding_box;
     double bounds[4];
+    geom_affine user_inverse;
 };
 
 static bool eq(base_bytes source, svg_xml_span span, const char *text)
@@ -78,33 +82,28 @@ static bool point_inside(const svg_shape_document *doc, size_t shape,
 }
 
 svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
-                                 size_t token_count, svg_xml_span value,
+                                 size_t token_count,
+                                 svg_reference_index *references,
+                                 svg_xml_span value,
                                  const svg_shape_document *document,
                                  size_t *document_clip_bytes,
-                                 size_t target_shape, svg_shape_clip **out,
+                                 geom_affine user_inverse,
+                                 const double local_bounds[4],
+                                 svg_shape_clip **out,
                                  svg_shape_diagnostic *diagnostic)
 {
     if (out == NULL || document == NULL || document_clip_bytes == NULL ||
-        target_shape >= document->shape_count) {
+        local_bounds == NULL) {
         if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT, value.offset};
         return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
     }
     *out = NULL;
     svg_xml_span id;
     if (!parse_reference(source, value, &id)) goto unsupported;
-    size_t target = SIZE_MAX;
-    for (size_t i = 0U; i < token_count; ++i) {
-        if (tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT &&
-            tokens[i].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) continue;
-        svg_xml_span candidate;
-        if (attr(source, tokens, token_count, i, "id", &candidate) &&
-            candidate.length == id.length &&
-            memcmp(source.ptr + candidate.offset, source.ptr + id.offset, id.length) == 0) {
-            target = i;
-            break;
-        }
-    }
-    if (target == SIZE_MAX || !eq(source, tokens[target].local_name, "clipPath") ||
+    size_t target;
+    if (!svg_reference_index_find(source, tokens, token_count, references,
+                                  id, &target) ||
+        !eq(source, tokens[target].local_name, "clipPath") ||
         tokens[target].prefix.length != 0U) goto unsupported;
     if (attr(source, tokens, token_count, target, "clip-path", &id) ||
         attr(source, tokens, token_count, target, "transform", &id) ||
@@ -138,6 +137,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
         }
     }
     if (child_count == 0U || child_start > child_end || child_end > source.len) goto unsupported;
+    /* The prefix permits 191 payload bytes; suffix and NUL count in scratch. */
     char prefix_pattern[192];
     int prefix_result = object_box
         ? snprintf(prefix_pattern, sizeof(prefix_pattern),
@@ -153,36 +153,29 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     if (child_length > CLIP_MAX_REFERENCE_BYTES ||
         prefix_length > SIZE_MAX - sizeof(suffix) - child_length) goto limit;
     size_t total = prefix_length + child_length + sizeof(suffix) - 1U;
-    if (total > CLIP_MAX_JOB_REFERENCE_BYTES ||
-        *document_clip_bytes > CLIP_MAX_JOB_REFERENCE_BYTES - total) goto limit;
-    uint8_t *scratch = malloc(total + 1U);
-    svg_shape_clip *clip = calloc(1U, sizeof(*clip));
+    if (total >= CLIP_MAX_JOB_REFERENCE_BYTES) goto limit;
+    size_t allocation_bytes = total + 1U;
+    if (*document_clip_bytes > CLIP_MAX_JOB_REFERENCE_BYTES - allocation_bytes)
+        goto limit;
+    uint8_t *scratch = svg_shape_malloc(allocation_bytes);
+    svg_shape_clip *clip = svg_shape_calloc(1U, sizeof(*clip));
     if (scratch == NULL || clip == NULL) {
-        free(scratch); free(clip);
+        svg_shape_free(scratch); svg_shape_free(clip);
         if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, value.offset};
         return SVG_SHAPE_ERROR_OOM;
     }
+    (void)svg_shape_alloc_set_tag(scratch, SVG_SHAPE_ALLOC_TAG_CLIP_COPY);
     memcpy(scratch, prefix_pattern, prefix_length);
     memcpy(scratch + prefix_length, source.ptr + child_start, child_length);
     memcpy(scratch + prefix_length + child_length, suffix, sizeof(suffix) - 1U);
     scratch[total] = 0U;
     clip->source = scratch;
+    clip->references = 1U;
     clip->object_bounding_box = object_box;
-    size_t first = document->shape_edge_start[target_shape];
-    size_t count = document->shape_edge_count[target_shape];
-    if (count == 0U) { svg_clip_destroy(clip); goto unsupported; }
-    clip->bounds[0] = clip->bounds[2] = document->edges[first].a.x;
-    clip->bounds[1] = clip->bounds[3] = document->edges[first].a.y;
-    for (size_t i = first; i < first + count; ++i) {
-        geom_point points[2] = {document->edges[i].a, document->edges[i].b};
-        for (size_t j = 0U; j < 2U; ++j) {
-            if (points[j].x < clip->bounds[0]) clip->bounds[0] = points[j].x;
-            if (points[j].y < clip->bounds[1]) clip->bounds[1] = points[j].y;
-            if (points[j].x > clip->bounds[2]) clip->bounds[2] = points[j].x;
-            if (points[j].y > clip->bounds[3]) clip->bounds[3] = points[j].y;
-        }
-    }
-    if (object_box && (clip->bounds[2] <= clip->bounds[0] || clip->bounds[3] <= clip->bounds[1])) {
+    clip->user_inverse = user_inverse;
+    memcpy(clip->bounds, local_bounds, sizeof(clip->bounds));
+    if (object_box && (clip->bounds[2] <= clip->bounds[0] ||
+                       clip->bounds[3] <= clip->bounds[1])) {
         svg_clip_destroy(clip); goto unsupported;
     }
     svg_shape_error error = svg_shape_decode((base_bytes){scratch, total}, &clip->geometry, diagnostic);
@@ -197,7 +190,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
         return error;
     }
     if (clip->geometry.edge_count > CLIP_MAX_EDGES) { svg_clip_destroy(clip); goto limit; }
-    *document_clip_bytes += total;
+    *document_clip_bytes += allocation_bytes;
     *out = clip;
     return SVG_SHAPE_ERROR_NONE;
 limit:
@@ -211,25 +204,102 @@ unsupported:
 bool svg_clip_contains(const svg_shape_clip *clip, double x, double y)
 {
     if (clip == NULL) return true;
+    double root_x = x, root_y = y;
+    geom_point local;
+    if (!geom_affine_map_point(clip->user_inverse, (geom_point){x, y}, &local))
+        return false;
+    x = local.x;
+    y = local.y;
     if (clip->object_bounding_box) {
         x = (x - clip->bounds[0]) / (clip->bounds[2] - clip->bounds[0]);
         y = (y - clip->bounds[1]) / (clip->bounds[3] - clip->bounds[1]);
     }
+    bool inside = false;
     for (size_t i = 0U; i < clip->geometry.shape_count; ++i) {
-        if (clip->geometry.shape_filled[i] && point_inside(&clip->geometry, i, x, y)) return true;
+        if (clip->geometry.shape_filled[i] && point_inside(&clip->geometry, i, x, y)) {
+            inside = true;
+            break;
+        }
     }
-    return false;
+    return inside && svg_clip_contains(clip->parent, root_x, root_y);
 }
 
 size_t svg_clip_work_units(const svg_shape_clip *clip)
 {
-    return clip == NULL ? 0U : clip->geometry.edge_count + clip->geometry.shape_count;
+    if (clip == NULL) return 0U;
+    size_t own = clip->geometry.edge_count + clip->geometry.shape_count;
+    size_t parent = svg_clip_work_units(clip->parent);
+    return parent > SIZE_MAX - own ? SIZE_MAX : own + parent;
 }
 
 void svg_clip_destroy(svg_shape_clip *clip)
 {
     if (clip == NULL) return;
+    if (clip->references > 1U) { clip->references--; return; }
+    svg_shape_clip *parent = clip->parent;
     svg_shape_document_destroy(&clip->geometry);
-    free(clip->source);
-    free(clip);
+    svg_shape_free(clip->source);
+    svg_shape_free(clip);
+    svg_clip_destroy(parent);
+}
+
+static bool clip_retain(svg_shape_clip *clip)
+{
+    if (clip == NULL || clip->references == SIZE_MAX) return false;
+    clip->references++;
+    return true;
+}
+
+bool svg_clip_local_bounds(const svg_shape_document *document,
+                           size_t first_edge, size_t edge_count,
+                           geom_affine user_inverse, double bounds[4])
+{
+    if (document == NULL || bounds == NULL || edge_count == 0U ||
+        first_edge > document->edge_count ||
+        edge_count > document->edge_count - first_edge) return false;
+    geom_point first;
+    if (!geom_affine_map_point(user_inverse, document->edges[first_edge].a,
+                               &first)) return false;
+    bounds[0] = bounds[2] = first.x;
+    bounds[1] = bounds[3] = first.y;
+    for (size_t i = first_edge; i < first_edge + edge_count; ++i) {
+        geom_point points[2] = {document->edges[i].a, document->edges[i].b};
+        for (size_t j = 0U; j < 2U; ++j) {
+            geom_point local;
+            if (!geom_affine_map_point(user_inverse, points[j], &local))
+                return false;
+            if (local.x < bounds[0]) bounds[0] = local.x;
+            if (local.y < bounds[1]) bounds[1] = local.y;
+            if (local.x > bounds[2]) bounds[2] = local.x;
+            if (local.y > bounds[3]) bounds[3] = local.y;
+        }
+    }
+    return true;
+}
+
+bool svg_clip_apply_group(svg_shape_document *document,
+                          size_t first_shape, size_t end_shape,
+                          svg_shape_clip *clip)
+{
+    if (document == NULL || clip == NULL || first_shape > end_shape ||
+        end_shape > document->shape_count) return false;
+    for (size_t i = first_shape; i < end_shape; ++i) {
+        svg_shape_clip *root = document->clips[i];
+        if (root == NULL) {
+            if (!clip_retain(clip)) return false;
+            document->clips[i] = clip;
+            continue;
+        }
+        svg_shape_clip *tail = root;
+        while (true) {
+            if (tail == clip) break;
+            if (tail->parent == NULL) {
+                if (!clip_retain(clip)) return false;
+                tail->parent = clip;
+                break;
+            }
+            tail = tail->parent;
+        }
+    }
+    return true;
 }

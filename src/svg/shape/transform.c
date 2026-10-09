@@ -3,6 +3,23 @@
 #include <math.h>
 #include <string.h>
 
+bool svg_shape_affine_inverse(geom_affine matrix, geom_affine *inverse)
+{
+    double determinant = matrix.a * matrix.d - matrix.b * matrix.c;
+    if (inverse == NULL || !geom_affine_valid(matrix) || !isfinite(determinant) ||
+        fabs(determinant) < 1e-15) return false;
+    double reciprocal = 1.0 / determinant;
+    geom_affine result = {
+        matrix.d * reciprocal, -matrix.b * reciprocal,
+        -matrix.c * reciprocal, matrix.a * reciprocal, 0.0, 0.0
+    };
+    result.e = -(result.a * matrix.e + result.c * matrix.f);
+    result.f = -(result.b * matrix.e + result.d * matrix.f);
+    if (!geom_affine_valid(result)) return false;
+    *inverse = result;
+    return true;
+}
+
 typedef svg_shape_number_reader number_reader;
 
 static void fail(svg_shape_diagnostic *diagnostic, svg_shape_error category,

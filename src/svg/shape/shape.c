@@ -21,21 +21,6 @@ static bool point_bounded(geom_point point)
     return geom_finite_point(point) && fabs(point.x) <= SHAPE_MAX_COORD &&
            fabs(point.y) <= SHAPE_MAX_COORD;
 }
-static bool affine_inverse(geom_affine matrix, geom_affine *inverse)
-{
-    double determinant = matrix.a * matrix.d - matrix.b * matrix.c;
-    if (inverse == NULL || !geom_affine_valid(matrix) || !isfinite(determinant) || fabs(determinant) < 1e-15) return false;
-    double reciprocal = 1.0 / determinant;
-    geom_affine result = {
-        matrix.d * reciprocal, -matrix.b * reciprocal,
-        -matrix.c * reciprocal, matrix.a * reciprocal, 0.0, 0.0
-    };
-    result.e = -(result.a * matrix.e + result.c * matrix.f);
-    result.f = -(result.b * matrix.e + result.d * matrix.f);
-    if (!geom_affine_valid(result)) return false;
-    *inverse = result;
-    return true;
-}
 static double transformed_flatness_tolerance(const builder *b)
 {
     double row_norm=fmax(fabs(b->transform.a)+fabs(b->transform.c),
@@ -191,14 +176,14 @@ static bool add_edge(builder *b, geom_point a, geom_point z)
         size_t next = b->edge_capacity == 0 ? 64U : b->edge_capacity * 2U;
         if (next > SVG_SHAPE_MAX_EDGES) next = SVG_SHAPE_MAX_EDGES;
         if (next > SIZE_MAX / sizeof(*b->doc->edges)) { fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset); return false; }
-        geom_edge *edges = realloc(b->doc->edges, next * sizeof(*edges));
+        geom_edge *edges = svg_shape_realloc(b->doc->edges, next * sizeof(*edges));
         if (edges == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->edges = edges;
-        uint8_t *colors = realloc(b->doc->colors, next * 4U);
+        uint8_t *colors = svg_shape_realloc(b->doc->colors, next * 4U);
         if (colors == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->colors = colors;
         if (next > SIZE_MAX / sizeof(*b->doc->shape_ids)) { fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset); return false; }
-        uint32_t *shape_ids = realloc(b->doc->shape_ids, next * sizeof(*shape_ids));
+        uint32_t *shape_ids = svg_shape_realloc(b->doc->shape_ids, next * sizeof(*shape_ids));
         if (shape_ids == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_ids = shape_ids;
         b->edge_capacity = next;
@@ -226,37 +211,37 @@ static bool begin_shape(builder *b, bool evenodd)
             fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset);
             return false;
         }
-        bool *rules = realloc(b->doc->shape_evenodd, next * sizeof(*rules));
+        bool *rules = svg_shape_realloc(b->doc->shape_evenodd, next * sizeof(*rules));
         if (rules == NULL) {
             fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
             return false;
         }
         b->doc->shape_evenodd = rules;
-        bool *filled = realloc(b->doc->shape_filled, next * sizeof(*filled));
+        bool *filled = svg_shape_realloc(b->doc->shape_filled, next * sizeof(*filled));
         if (filled == NULL) {
             fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
             return false;
         }
         b->doc->shape_filled = filled;
-        bool *closed = realloc(b->doc->shape_stroke_closed, next * sizeof(*closed));
+        bool *closed = svg_shape_realloc(b->doc->shape_stroke_closed, next * sizeof(*closed));
         if (closed == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_stroke_closed = closed;
-        size_t *starts = realloc(b->doc->shape_edge_start, next * sizeof(*starts));
+        size_t *starts = svg_shape_realloc(b->doc->shape_edge_start, next * sizeof(*starts));
         if (starts == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_edge_start = starts;
-        size_t *counts = realloc(b->doc->shape_edge_count, next * sizeof(*counts));
+        size_t *counts = svg_shape_realloc(b->doc->shape_edge_count, next * sizeof(*counts));
         if (counts == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_edge_count = counts;
-        svg_shape_stroke *strokes = realloc(b->doc->strokes, next * sizeof(*strokes));
+        svg_shape_stroke *strokes = svg_shape_realloc(b->doc->strokes, next * sizeof(*strokes));
         if (strokes == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->strokes = strokes;
-        svg_shape_paint *paints = realloc(b->doc->paints, next * sizeof(*paints));
+        svg_shape_paint *paints = svg_shape_realloc(b->doc->paints, next * sizeof(*paints));
         if (paints == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->paints = paints;
-        svg_shape_clip **clips = realloc(b->doc->clips, next * sizeof(*clips));
+        svg_shape_clip **clips = svg_shape_realloc(b->doc->clips, next * sizeof(*clips));
         if (clips == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->clips = clips;
-        geom_affine *inverses = realloc(b->doc->shape_stroke_inverse, next * sizeof(*inverses));
+        geom_affine *inverses = svg_shape_realloc(b->doc->shape_stroke_inverse, next * sizeof(*inverses));
         if (inverses == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_stroke_inverse = inverses;
         b->shape_capacity = next;
@@ -268,7 +253,7 @@ static bool begin_shape(builder *b, bool evenodd)
     b->doc->shape_edge_start[b->shape_index] = b->doc->edge_count;
     b->doc->shape_edge_count[b->shape_index] = 0U;
     b->doc->shape_stroke_inverse[b->shape_index] = geom_affine_identity();
-    (void)affine_inverse(b->transform, &b->doc->shape_stroke_inverse[b->shape_index]);
+    (void)svg_shape_affine_inverse(b->transform, &b->doc->shape_stroke_inverse[b->shape_index]);
     b->doc->strokes[b->shape_index] = (svg_shape_stroke){
         .width = 1.0, .miter_limit = 4.0, .cap = SVG_SHAPE_CAP_BUTT,
         .join = SVG_SHAPE_JOIN_MITER
@@ -583,11 +568,12 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
                    svg_css_keyword_equals(source, rule, "evenodd");
     if (!begin_shape(builder, evenodd)) return false;
     size_t before = out->edge_count;
+    geom_affine user_inverse = geom_affine_identity();
+    bool invertible = svg_shape_affine_inverse(transform, &user_inverse);
+    if (invertible) out->shape_stroke_inverse[builder->shape_index] = user_inverse;
     if (!parse_stroke(source, &out->strokes[builder->shape_index], style,
                       builder->diag)) return false;
-    if (out->strokes[builder->shape_index].rgba[3] != 0U &&
-        !affine_inverse(transform,
-                        &out->shape_stroke_inverse[builder->shape_index])) {
+    if (out->strokes[builder->shape_index].rgba[3] != 0U && !invertible) {
         svg_xml_span stroke_span = {0};
         (void)svg_css_paint_value(style, SVG_CSS_STROKE, &stroke_span);
         fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
@@ -777,9 +763,14 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
     out->shape_edge_start[builder->shape_index] = before;
     out->shape_edge_count[builder->shape_index] = out->edge_count - before;
     if (gradient_fill) {
+        if (!invertible) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, fill.offset);
+            return false;
+        }
         svg_shape_error result = svg_paint_resolve_fill(
-            source, tokens, token_count, fill, out->edges + before,
-            out->edge_count - before, out->view_width, out->view_height,
+            source, tokens, token_count, builder->references, builder->css, fill,
+            out->edges + before, out->edge_count - before, user_inverse,
+            out->view_width, out->view_height,
             &out->paints[builder->shape_index], &out->paint_stops,
             &out->paint_stop_count, builder->diag);
         if (result != SVG_SHAPE_ERROR_NONE) return false;
@@ -787,9 +778,20 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
     svg_xml_span clip_value;
     if (svg_css_paint_value(style, SVG_CSS_CLIP_PATH, &clip_value) &&
         !svg_css_keyword_equals(source, clip_value, "none")) {
+        if (!invertible) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, clip_value.offset);
+            return false;
+        }
+        double local_bounds[4];
+        if (!svg_clip_local_bounds(out, before, out->edge_count - before,
+                                   user_inverse, local_bounds)) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, clip_value.offset);
+            return false;
+        }
         svg_shape_error result = svg_clip_resolve(
-            source, tokens, token_count, clip_value, out, &out->clip_bytes,
-            builder->shape_index, &out->clips[builder->shape_index],
+            source, tokens, token_count, builder->references, clip_value,
+            out, &out->clip_bytes, user_inverse, local_bounds,
+            &out->clips[builder->shape_index],
             builder->diag);
         if (result != SVG_SHAPE_ERROR_NONE) return false;
     }

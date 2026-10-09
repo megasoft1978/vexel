@@ -1,18 +1,20 @@
 # Blockers
 
-No implementation blocker remains for AC-9. Full machine acceptance is still
-open because this host session cannot provide the offscreen Metal device or
-queue required by the existing `index-replay` CTest. The fresh read-only review
-also could not start: local Codex CLI app-server initialization returned
-`Operation not permitted` before any reviewer verdict was produced.
+The review repairs and requested local evidence are complete in the worktree,
+but focused commits could not be created. The sandbox denied writes to the
+shared worktree Git metadata: `git add` could not create `index.lock`, and
+staging through a temporary index still left `git commit` unable to open
+`COMMIT_EDITMSG`. No commit or branch update was made. See
+`artifacts/WO-M4-06/commit-blocked.txt`.
 
-## Resolved: WO-M4-06 revision 2 acceptance block
+The frozen Debug, ASan, UBSan, and `./dev verify` CTest runs each report 11/12;
+the only CTest failure is `index-replay`, which cannot acquire an offscreen
+Metal device or queue in this sandbox. The separate full Python run reports
+189/199, with process-policy failures and native LaunchServices/Metal failures;
+the required focused `tests.test_shape_render` suite passes 16/16. Exact
+transcripts are in `artifacts/WO-M4-06/`.
 
-Revision 2's source-copy restriction was resolved by the planner amendment and
-later frozen revisions. The current AC-9 repair replaces the former bounded
-copy path with direct traversal of original tokens; 64 KiB per-reference and
-1 MiB per-job source-span limits remain as traversal-work bounds. It also
-retains depth 16, a 65,536-use cap, and fixed ID-index allocation. The source
-and allocation evidence is in `artifacts/WO-M4-06/reference-matrix.json`.
-The review attempt and exact startup error are recorded in
-`artifacts/WO-M4-06/fresh-verifier-attempt.json`.
+The user explicitly prohibited launching nested `codex exec`. The supplied
+review findings were repaired and the requested tests were run, but no new
+independent review was attempted. Do not mark the work order complete or merge
+until commits and a full authorized verification/review run are available.

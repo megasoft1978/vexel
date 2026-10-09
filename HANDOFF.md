@@ -1,9 +1,42 @@
 # WO-M4-06 handoff
 
-The AC-9 repair is implemented in source commit `d6dba56184d3a7530ca0dcc0186d9c9b1f45d657` on `wo/WO-M4-06`. Live `<use>` instances traverse the original XML token array at their source position; the full-document rewrite, `<use>` subtree copies, second tokenization, and source map are removed. The 64 KiB per-reference and 1 MiB per-job values bound repeated use-span traversal. The separate clip decoder retains its bounded 64 KiB child / 512 KiB per-job scratch path with at most 198 bytes of generated wrapper syntax. The decoder retains only its pre-existing source-sized token array plus a fixed 512 KiB ID index for live-use decoding. Tests verify the allocation formula on small and 128 KiB padded live-use documents, original source pointer/length, and SHA-256 preservation. The userSpaceOnUse radial default and its discriminating librsvg fixture were already fixed at `7420fad` and were not redone.
+The supplied review findings have been repaired in the dirty worktree based on
+`2a484b195f8264b7b71632ef8eed6ea6cb881331`. The `<use>` composition now applies
+the use transform before `x`/`y` and symbol viewBox mapping. Gradient and clip
+resolution receive the current inverse affine and local bounds. Stop styles
+use the CSS cascade and unsupported stop styling returns `unsupported`.
+`clip-path` is applied at the declaring element; group/use clips use the whole
+subtree bounds, resolve once, and intersect with nested clips. Paint and clip
+reference resolution use the fixed ID index. A test allocator hook records
+real total/peak allocation, fixed index, clip scratch, and bounded output
+allocation during decode+render.
 
-Evidence: Debug/ASan/UBSan shape tests pass; `python3 -m unittest tests.test_shape_render` passes 16/16; all 39 librsvg fixtures pass unchanged thresholds; the ASan+UBSan shape fuzz run completes 1,000,000 cases with zero crashes, reports, or invariant failures; Release configure/build and corpus run/check pass. The 58-file corpus has 2 successful previews, 56 unsupported, 0 limits, and 0 crashes. All five paint workloads have 21 stable-output trials, compared honestly with frozen base `81f2008`; no speed claim is made.
+Boundary tests pass: use and clip source spans of exactly 64 KiB are accepted
+and 64 KiB plus one returns `limit`; clip scratch of exactly 512 KiB is
+accepted and one additional copy returns `limit`; 65,536 uses are accepted and
+65,537 returns `limit`. The source SHA-256 remains unchanged for live-use,
+paint-server, and clip documents. Group clip scratch is unchanged between one
+and 16 descendant shapes. `shape.c` is 799 lines.
 
-The full Debug, ASan, UBSan, and `./dev verify` CTest runs each pass 11/12. Their only failure is `index-replay`, which reports that the host session cannot acquire an offscreen Metal device or queue. A fresh read-only review was attempted against candidate `20ed36c3158d0b56142ef442e6261d136c042876`, but `codex exec` failed before launching the reviewer because in-process app-server initialization returned `Operation not permitted`; see `fresh-verifier-stderr.txt` and `fresh-verifier-attempt.json`. The full work-order gate and fresh review remain pending; do not mark the order complete or merge from this handoff. Exact transcripts and updated matrix are in `artifacts/WO-M4-06/`.
+Evidence: Debug/ASan/UBSan shape tests pass; focused Python renderer tests pass
+16/16; all 46 `rsvg-convert` fixtures pass with unchanged thresholds, zero
+interior differences, max shared RGB delta 1, and max edge difference 88. The
+ASan+UBSan fuzzer completed 1,000,000 cases with zero crashes, reports, or
+invariant failures. Release configure/build, 5 x 21 paint benchmark trials,
+and corpus run/check pass. The 58-file corpus has 2 successful previews, 56
+unsupported, 0 limits, and 0 crashes.
 
-After acceptance, continue with WO-M4-06b to wire the renderer into the viewer and corpus harness, then M4-07 (skip the bake-off if it costs more than one WO) and M4-08 fidelity gate packet.
+Full Debug, ASan, UBSan, and `./dev verify` CTest runs each report 11/12; only
+`index-replay` fails because this sandbox lacks offscreen Metal. The optional
+full Python suite reports 189/199 due process-policy and native
+LaunchServices/Metal restrictions; the focused Python suite passes. The
+user prohibited nested `codex exec`, so a new independent review was not run.
+
+No focused commits could be written because the sandbox denies changes to the
+shared Git metadata. `git add` failed creating `index.lock`; temporary-index
+staging succeeded, but `git commit` failed opening `COMMIT_EDITMSG`. The changes
+remain uncommitted and no merge was made. See `BLOCKERS.md` and
+`artifacts/WO-M4-06/commit-blocked.txt`.
+
+The matrix and full command transcripts are under `artifacts/WO-M4-06/`.
+Protected `tests/oracle/**` and `tests/golden/**` have an empty diff.

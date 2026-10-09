@@ -1,0 +1,69 @@
+## wo/WO-M4-06
+ M BLOCKERS.md
+ M CMakeLists.txt
+ M HANDOFF.md
+ M LEDGER.md
+ M STATE.md
+ M artifacts/WO-M4-06/ac9-repair-report-json.txt
+ M artifacts/WO-M4-06/ac9-repair-report.json
+ M artifacts/WO-M4-06/asan.txt
+ M artifacts/WO-M4-06/benchmark-json.txt
+ M artifacts/WO-M4-06/corpus-run.txt
+ M artifacts/WO-M4-06/debug-configure.txt
+ M artifacts/WO-M4-06/debug-ctest.txt
+ M artifacts/WO-M4-06/full-checks.txt
+ M artifacts/WO-M4-06/fuzz-report.json
+ M artifacts/WO-M4-06/fuzz-run.txt
+ M artifacts/WO-M4-06/head-to-head-json.txt
+ M artifacts/WO-M4-06/ledger-validation.txt
+ M artifacts/WO-M4-06/paint-benchmark.json
+ M artifacts/WO-M4-06/path-guard-json.txt
+ M artifacts/WO-M4-06/path-guard.json
+ M artifacts/WO-M4-06/python-full-final.txt
+ M artifacts/WO-M4-06/python-shape-render.txt
+ M artifacts/WO-M4-06/reference-comparison.json
+ M artifacts/WO-M4-06/reference-matrix-json.txt
+ M artifacts/WO-M4-06/reference-matrix.json
+ M artifacts/WO-M4-06/release-build.txt
+ M artifacts/WO-M4-06/ubsan.txt
+ M artifacts/WO-M4-06/verify.txt
+ M bench/results/WO-M4-06.json
+ M docs/PERF.md
+ M ledger.jsonl
+ M reports/M4/head-to-head.json
+ M reports/M4/head-to-head.md
+ M src/raster/shape_render.c
+ M src/svg/clip/README.md
+ M src/svg/clip/clip.c
+ M src/svg/clip/clip.h
+ M src/svg/css/README.md
+ M src/svg/css/css.c
+ M src/svg/css/css.h
+ M src/svg/paint/README.md
+ M src/svg/paint/paint.c
+ M src/svg/paint/paint.h
+ M src/svg/reference/reference.c
+ M src/svg/reference/reference.h
+ M src/svg/shape/README.md
+ M src/svg/shape/document.c
+ M src/svg/shape/shape.c
+ M src/svg/shape/shape_internal.h
+ M src/svg/shape/transform.c
+ M src/svg/shape/traverse-README.md
+ M src/svg/shape/traverse.c
+ M tests/svg/shape/test_reference.c
+ M tests/svg/shape/test_shape.c
+ M tests/test_shape_render.py
+?? artifacts/WO-M4-06/commit-blocked.txt
+?? artifacts/WO-M4-06/fuzz-report-json.txt
+?? artifacts/WO-M4-06/protected-path-diff.txt
+?? artifacts/WO-M4-06/worktree-status.txt
+?? src/svg/shape/shape_alloc.c
+?? src/svg/shape/shape_alloc.h
+?? tests/svg/shape/fixtures/clip-group-object-bbox.svg
+?? tests/svg/shape/fixtures/clip-nested-intersection.svg
+?? tests/svg/shape/fixtures/object-bbox-transform.svg
+?? tests/svg/shape/fixtures/stop-style-class.svg
+?? tests/svg/shape/fixtures/use-transform-order.svg
+?? tests/svg/shape/fixtures/use-user-space-transform.svg
+?? tests/svg/shape/fixtures/user-space-transform.svg

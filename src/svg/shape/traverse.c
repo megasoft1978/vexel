@@ -120,6 +120,38 @@ static bool compute_style(shape_traversal *traversal, size_t element,
     return false;
 }
 
+static bool apply_declared_clip(shape_traversal *traversal,
+                                svg_xml_span value, size_t first_shape,
+                                size_t first_edge, geom_affine transform)
+{
+    svg_shape_document *document = traversal->builder.doc;
+    size_t end_shape = document->shape_count;
+    if (first_shape == end_shape) return true;
+    geom_affine inverse;
+    double bounds[4];
+    if (!svg_shape_affine_inverse(transform, &inverse) ||
+        first_edge > document->edge_count ||
+        !svg_clip_local_bounds(document, first_edge,
+                               document->edge_count - first_edge,
+                               inverse, bounds)) {
+        fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
+        return false;
+    }
+    svg_shape_clip *clip = NULL;
+    svg_shape_error result = svg_clip_resolve(
+        traversal->source, traversal->tokens, traversal->token_count,
+        &traversal->references, value, document, &document->clip_bytes,
+        inverse, bounds, &clip, traversal->diagnostic);
+    if (result != SVG_SHAPE_ERROR_NONE) return false;
+    bool applied = svg_clip_apply_group(document, first_shape, end_shape, clip);
+    svg_clip_destroy(clip);
+    if (!applied) {
+        fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, value.offset);
+        return false;
+    }
+    return true;
+}
+
 static bool root_viewport(shape_traversal *traversal, size_t element)
 {
     base_bytes source = traversal->source;
@@ -372,7 +404,7 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
             fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, offset);
             return false;
         }
-        if (!geom_affine_compose(local_transform, use_transform,
+        if (!geom_affine_compose(use_transform, local_transform,
                                  &local_transform)) {
             fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER,
                  use_token->name.offset);
@@ -380,7 +412,7 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
         }
     } else {
         geom_affine translation = {1.0, 0.0, 0.0, 1.0, x, y};
-        if (!geom_affine_compose(translation, use_transform,
+        if (!geom_affine_compose(use_transform, translation,
                                  &local_transform)) {
             fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER,
                  use_token->name.offset);
@@ -402,6 +434,8 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     }
     traversal->element_visits++;
 
+    size_t first_shape = traversal->builder.doc->shape_count;
+    size_t first_edge = traversal->builder.doc->edge_count;
     traversal->active_references[traversal->reference_depth++] = target;
     bool ok;
     if (symbol) {
@@ -431,6 +465,12 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
         }
     }
     traversal->reference_depth--;
+    svg_xml_span clip_value;
+    if (ok && svg_css_paint_value(&use_style, SVG_CSS_CLIP_PATH,
+                                  &clip_value) &&
+        !svg_css_keyword_equals(traversal->source, clip_value, "none"))
+        ok = apply_declared_clip(traversal, clip_value, first_shape,
+                                 first_edge, instance_transform);
     return ok;
 }
 
@@ -494,8 +534,17 @@ static bool render_node(shape_traversal *traversal, size_t element,
                                        current)) return false;
 
     if (end == element) return true;
-    return walk_range(traversal, element + 1U, end, current, &style,
-                      render_depth + 1U);
+    size_t first_shape = traversal->builder.doc->shape_count;
+    size_t first_edge = traversal->builder.doc->edge_count;
+    if (!walk_range(traversal, element + 1U, end, current, &style,
+                    render_depth + 1U)) return false;
+    svg_xml_span clip_value;
+    if ((root || element_name(traversal->source, token, "g")) &&
+        svg_css_paint_value(&style, SVG_CSS_CLIP_PATH, &clip_value) &&
+        !svg_css_keyword_equals(traversal->source, clip_value, "none"))
+        return apply_declared_clip(traversal, clip_value, first_shape,
+                                   first_edge, current);
+    return true;
 }
 
 static bool walk_range(shape_traversal *traversal, size_t first, size_t limit,
@@ -600,17 +649,16 @@ svg_shape_error svg_shape_decode_source_with_bounds(
         fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, 0U);
         return SVG_SHAPE_ERROR_LIMIT;
     }
-    if (memory_bounds != NULL)
-        memory_bounds->token_array_bytes = capacity * sizeof(svg_xml_token);
-    svg_xml_token *tokens = calloc(capacity, sizeof(*tokens));
+    svg_xml_token *tokens = svg_shape_calloc(capacity, sizeof(*tokens));
     if (tokens == NULL) {
         fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
         return SVG_SHAPE_ERROR_OOM;
     }
+    (void)svg_shape_alloc_set_tag(tokens, SVG_SHAPE_ALLOC_TAG_TOKEN_ARRAY);
     svg_xml_result xml = svg_xml_tokenize(source, svg_xml_default_options(),
                                           tokens, capacity);
     if (xml.diagnostic.category != SVG_XML_ERROR_NONE) {
-        free(tokens);
+        svg_shape_free(tokens);
         fail(diagnostic, SVG_SHAPE_ERROR_XML, xml.diagnostic.offset);
         return SVG_SHAPE_ERROR_XML;
     }
@@ -637,6 +685,8 @@ svg_shape_error svg_shape_decode_source_with_bounds(
     }
     traversal.builder = (svg_shape_builder){
         .doc = out,
+        .references = &traversal.references,
+        .css = traversal.css,
         .diag = diagnostic,
         .transform = geom_affine_identity()
     };
@@ -646,6 +696,9 @@ svg_shape_error svg_shape_decode_source_with_bounds(
         error = diagnostic->category;
         goto cleanup;
     }
+    if (memory_bounds != NULL)
+        memory_bounds->reference_lookup_probes =
+            svg_reference_index_lookup_probes(&traversal.references);
     if (!traversal.root_seen) {
         fail(diagnostic, SVG_SHAPE_ERROR_VIEWPORT, 0U);
         error = SVG_SHAPE_ERROR_VIEWPORT;
@@ -656,7 +709,7 @@ svg_shape_error svg_shape_decode_source_with_bounds(
 cleanup:
     svg_css_sheet_destroy(traversal.css);
     svg_reference_index_destroy(&traversal.references);
-    free(tokens);
+    svg_shape_free(tokens);
     if (error != SVG_SHAPE_ERROR_NONE) svg_shape_document_destroy(out);
     return error;
 }

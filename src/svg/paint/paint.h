@@ -2,6 +2,8 @@
 #define VEXEL_SVG_PAINT_H
 
 #include "shape.h"
+#include "reference.h"
+#include "css.h"
 
 #define SVG_PAINT_MAX_STOPS 65536U
 #define SVG_PAINT_MAX_GRADIENT_STOPS 256U
@@ -22,6 +24,7 @@ struct svg_shape_paint {
     bool object_bounding_box;
     double coordinates[6];
     double bounds[4];
+    geom_affine user_inverse;
     size_t first_stop;
     size_t stop_count;
 };
@@ -31,9 +34,12 @@ struct svg_shape_paint {
 svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        const svg_xml_token *tokens,
                                        size_t token_count,
+                                       svg_reference_index *references,
+                                       svg_css_sheet *css,
                                        svg_xml_span fill,
                                        const geom_edge *edges,
                                        size_t edge_count,
+                                       geom_affine user_inverse,
                                        double viewport_width,
                                        double viewport_height,
                                        svg_shape_paint *paint,

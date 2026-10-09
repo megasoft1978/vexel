@@ -15,9 +15,19 @@ the tokenizer's established source-length formula. The ID table has a fixed
 131,072 `uint32_t` slots (512 KiB) when any IDs exist and supports at most
 65,536 unique IDs. Each referenced source span is at most 64 KiB and repeated
 reference spans total at most 1 MiB per decode; these bounds cap `<use>`
-traversal work and do not authorize use-subtree copying. Other rendering bounds are 64 XML/instance tree
-levels, reference depth 16, 65,536 use instances, 4,194,304 active element
-visits, and 4,096 transform operations per decode.
+traversal work and do not authorize use-subtree copying. The aggregate byte
+budget makes all 65,536 instances reachable only when each target span is at
+most 16 bytes. Other rendering bounds are 64 XML/instance tree levels,
+reference depth 16, 65,536 use instances, 4,194,304 active element visits, and
+4,096 transform operations per decode.
+
+`<use>` composes the use transform before its `x`/`y` translation and, for a
+symbol, before the symbol viewBox mapping. Paint and clip sampling receive the
+referencing element's current inverse affine. Singular transforms with a
+gradient or clip fail with a stable `unsupported` diagnostic. `clip-path` is
+applied where declared: group and use declarations use the whole instantiated
+subtree's local AABB, resolve one clip record, and intersect it with clips on
+descendant shapes. It is not inherited into each child style.
 
 Malformed or external references and cycles return `unsupported`; exhausted
 depth, instance, visit, ID, or transform bounds return `limit`. Diagnostics
