@@ -53,6 +53,11 @@
       "case": 4,
       "category": "duplicate_attribute",
       "offset": 17
+    },
+    {
+      "case": 5,
+      "category": "malformed_syntax",
+      "offset": 5
     }
   ]
 }

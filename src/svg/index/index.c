@@ -28,6 +28,7 @@ struct svg_index_session {
     bool complete;
     bool preview;
     svg_xml_diagnostic diagnostic;
+    svg_xml_diagnostic reader_diagnostic;
     validation_payload validation;
     svg_xml_token *tokens;
     size_t token_count;
@@ -102,10 +103,13 @@ static void harvest_validation(svg_index_session *s)
         s->validation_complete = true;
         s->tokens = s->validation.tokens;
         s->token_count = s->validation.token_count;
+        s->validation.tokens = NULL;
         if (s->validation.diagnostic.category != SVG_XML_ERROR_NONE)
             s->diagnostic = s->validation.diagnostic;
         else if (!result.succeeded)
             set_error(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, 0U);
+        else if (s->reader_diagnostic.category != SVG_XML_ERROR_NONE)
+            s->diagnostic = s->reader_diagnostic;
     }
 }
 
@@ -158,7 +162,7 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
         s->elements[top.record].source_length = tag->source.offset + tag->source.length -
                                                 s->elements[top.record].source_offset;
         s->elements[top.record].closed = true;
-        if (s->depth == 1U && preview_root_is_svg(s) &&
+        if (!s->preview && s->depth == 1U && preview_root_is_svg(s) &&
             s->elements[top.record].support != SVG_INDEX_UNSUPPORTED)
             { s->preview = true; s->preview_record = top.record; }
         return;
@@ -244,8 +248,14 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
                                                                index_reader_tag, s);
     svg_xml_reader_progress reader_progress = svg_xml_reader_get_progress(s->reader);
     if (reader_progress.diagnostic.category != SVG_XML_ERROR_NONE)
-        s->diagnostic = reader_progress.diagnostic;
-    if (reader_status == SVG_XML_READER_MALFORMED) return SVG_INDEX_MALFORMED;
+        s->reader_diagnostic = reader_progress.diagnostic;
+    if (reader_status == SVG_XML_READER_MALFORMED) {
+        harvest_validation(s);
+        if (!s->validation_complete) return SVG_INDEX_OK;
+        if (s->diagnostic.category == SVG_XML_ERROR_NONE)
+            s->diagnostic = s->reader_diagnostic;
+        return SVG_INDEX_MALFORMED;
+    }
     if (reader_status == SVG_XML_READER_COMPLETE) {
         if (s->depth != 0U || s->root_count != 1U)
             set_error(s, SVG_XML_ERROR_INCOMPLETE_DOCUMENT, s->source.len);
@@ -333,5 +343,5 @@ void svg_index_destroy(svg_index_session *s)
     platform_task_shutdown(s->validation_queue);
     platform_task_destroy(s->validation_queue);
     svg_xml_reader_destroy(s->reader);
-    free(s->tokens); free(s->elements); free(s);
+    free(s->tokens); free(s->validation.tokens); free(s->elements); free(s);
 }

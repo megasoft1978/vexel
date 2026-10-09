@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include "index_replay.h"
 
 #include "index.h"
@@ -61,6 +63,19 @@ static bool wait_for_worker(const preview_job *job)
         if ((now.tv_sec - start.tv_sec) > 5) return false;
         sched_yield();
     } while (true);
+}
+
+static uint64_t clock_ns(void)
+{
+    struct timespec value = {0};
+    (void)timespec_get(&value, TIME_UTC);
+    return (uint64_t)value.tv_sec * 1000000000U + (uint64_t)value.tv_nsec;
+}
+
+static void yield_owner(void)
+{
+    const struct timespec delay = {0, 1000000L};
+    (void)nanosleep(&delay, NULL);
 }
 
 static bool read_svg(const char *path, uint8_t **out_bytes, size_t *out_length)
@@ -180,10 +195,12 @@ int app_run_index_replay(const char *path)
     bool submitted = false, task_finished = false, presented = false, okay = true;
     bool preview_before_complete = false;
     unsigned last_mark = 0U;
+    uint64_t max_owner_step_ns = 0U;
     while (status == SVG_INDEX_OK && !view.failed) {
         size_t budget = length / 10U;
         if (budget == 0U) budget = 1U;
         if (budget > SVG_INDEX_MAX_STEP_BYTES) budget = SVG_INDEX_MAX_STEP_BYTES;
+        uint64_t step_started = clock_ns();
         status = svg_index_step(session, budget);
         svg_index_progress progress = svg_index_get_progress(session);
         if (!progress.complete && atomic_load_explicit(&job.tile_ready, memory_order_acquire))
@@ -208,8 +225,11 @@ int app_run_index_replay(const char *path)
                 okay = okay && presented;
             }
         }
+        uint64_t elapsed = clock_ns() - step_started;
+        if (elapsed > max_owner_step_ns) max_owner_step_ns = elapsed;
     }
     while (submitted && !task_finished) {
+        uint64_t step_started = clock_ns();
         platform_task_result result;
         if (platform_task_poll(render_queue, &result)) {
             task_finished = true;
@@ -217,13 +237,17 @@ int app_run_index_replay(const char *path)
                 presented = verify_preview_with_metal(&job);
             okay = okay && result.succeeded && presented;
         }
+        if (!task_finished) yield_owner();
+        uint64_t elapsed = clock_ns() - step_started;
+        if (elapsed > max_owner_step_ns) max_owner_step_ns = elapsed;
     }
     platform_task_shutdown(render_queue);
     platform_task_destroy(render_queue);
     bool complete = status == SVG_INDEX_COMPLETE && svg_index_get_progress(session).complete;
-    (void)printf("index replay: complete=%s preview=%s before_complete=%s percent=%u\n",
+    (void)printf("index replay: complete=%s preview=%s before_complete=%s percent=%u max_owner_step_ns=%llu\n",
                  complete ? "true" : "false", presented ? "presented" : "none",
-                 preview_before_complete ? "true" : "false", view.percent);
+                 preview_before_complete ? "true" : "false", view.percent,
+                 (unsigned long long)max_owner_step_ns);
     svg_index_destroy(session);
     release_preview(&job);
     free(bytes);
@@ -235,5 +259,6 @@ int app_run_index_replay(const char *path)
     (void)printf("preview_state: submitted=%s finished=%s ready=%s\n",
         submitted ? "true" : "false", task_finished ? "true" : "false",
         atomic_load_explicit(&job.tile_ready, memory_order_acquire) ? "true" : "false");
-    return okay && complete && first_preview_gate && stale_rejected && canceled_rejected ? EXIT_SUCCESS : EXIT_FAILURE;
+    return okay && complete && first_preview_gate && stale_rejected && canceled_rejected &&
+        max_owner_step_ns < 100000000U ? EXIT_SUCCESS : EXIT_FAILURE;
 }

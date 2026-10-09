@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include "index.h"
 #include "index_progress.h"
 
@@ -5,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <time.h>
 
 static int fail(const char *message)
@@ -130,7 +133,8 @@ static bool check_diagnostic_equivalence(void)
         "<svg><rect width=1/></svg>",
         "<svg><!-- -- --></svg>",
         "<!DOCTYPE svg><svg/>",
-        "<svg><rect x='1' x='2'/></svg>"
+        "<svg><rect x='1' x='2'/></svg>",
+        "<svg><rect"
     };
     (void)printf("{\"status\":\"passed\",\"diagnostic_exact_offsets\":[");
     for (size_t i = 0U; i < sizeof(malformed) / sizeof(malformed[0]); ++i) {
@@ -234,6 +238,25 @@ int main(int argc, char **argv)
     svg_index_destroy(session);
     if (!equivalent) return fail("chunk-boundary XML token stream mismatch");
 
+    static const uint8_t first_preview[] =
+        "<svg width='2' height='2'><rect width='1' height='1'></rect>"
+        "<path d='M0 0'></path></svg>";
+    if (svg_index_start((base_bytes){first_preview, sizeof(first_preview) - 1U}, 1U, &session) != SVG_INDEX_OK)
+        return fail("first preview session start failed");
+    step = SVG_INDEX_OK;
+    while (step == SVG_INDEX_OK) step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+    base_mut_bytes first_preview_source = {0};
+    static const char expected_first_preview[] =
+        "<svg width='2' height='2'><rect width='1' height='1'></rect></svg>";
+    bool preserved_first = step == SVG_INDEX_COMPLETE &&
+        svg_index_make_preview_source(session, &first_preview_source) &&
+        first_preview_source.len == sizeof(expected_first_preview) - 1U &&
+        memcmp(first_preview_source.ptr, expected_first_preview,
+               sizeof(expected_first_preview) - 1U) == 0;
+    free(first_preview_source.ptr);
+    svg_index_destroy(session);
+    if (!preserved_first) return fail("later shape replaced the first supported preview");
+
     static const uint8_t malformed[] = "<svg><rect/></broken>";
     if (svg_index_start((base_bytes){malformed, sizeof(malformed) - 1U}, 1U, &session) != SVG_INDEX_OK)
         return fail("malformed session start failed");
@@ -267,6 +290,21 @@ int main(int argc, char **argv)
                     cancel_at_percent(long_source, long_length, 90U);
     free(long_source);
     if (!canceled) return fail("10/50/90 cancellation failed");
+
+    size_t validation_length = 1024U * 1024U;
+    uint8_t *validation_source = malloc(validation_length);
+    if (validation_source == NULL) return fail("validation cleanup fixture allocation failed");
+    static const char validation_prefix[] = "<svg/>";
+    memset(validation_source, ' ', validation_length);
+    memcpy(validation_source, validation_prefix, sizeof(validation_prefix) - 1U);
+    if (svg_index_start((base_bytes){validation_source, validation_length}, 1U, &session) != SVG_INDEX_OK) {
+        free(validation_source);
+        return fail("validation cleanup session start failed");
+    }
+    const struct timespec settle = {0, 100000000L};
+    (void)nanosleep(&settle, NULL);
+    svg_index_destroy(session);
+    free(validation_source);
 
     static const uint8_t bad_large[] = "<svg width=1 height=1><rect/></svg>";
     size_t bad_length = 70U * 1024U;

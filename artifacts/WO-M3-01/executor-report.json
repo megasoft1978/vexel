@@ -13,31 +13,33 @@
   ],
   "verified": {
     "debug_ctest": "7/7 passed",
-    "focused_python_tests": "2/2 passed; 24 pinned fixtures and 5 exact diagnostic offsets",
+    "focused_python_tests": "2/2 passed; 24 pinned fixtures and 6 exact diagnostic offsets",
     "full_python_suite": "175/175 passed",
     "asan_ctest": "7/7 passed",
     "ubsan_ctest": "7/7 passed",
     "benchmark": "15 trials per workload; latency, owner-step, and RSS gates passed",
-    "native_index_replay": "10/50/90/100 progress; Metal readback before completion; stale and canceled workers rejected",
+    "native_index_replay": "10/50/90/100 progress; Metal readback before completion; max owner-loop interval 16.864 ms; stale and canceled workers rejected",
     "ready_work_order_validation": "passed",
     "ledger_validation": "passed",
     "diff_check": "passed"
   },
   "metrics": {
     "10MiB": {
-      "first_preview_median_ns": 208583,
-      "first_preview_p95_ns": 219208,
-      "complete_index_median_ns": 177399125,
-      "max_step_latency_ns": 213292,
+      "source_bytes": 10485760,
+      "first_preview_median_ns": 210416,
+      "first_preview_p95_ns": 231292,
+      "complete_index_median_ns": 176782416,
+      "max_step_latency_ns": 207541,
       "peak_child_rss_bytes": 60456960,
       "index_bytes": 5600112
     },
     "100MiB": {
-      "first_preview_median_ns": 137125,
-      "first_preview_p95_ns": 147417,
-      "complete_index_median_ns": 636215458,
-      "max_step_latency_ns": 216500,
-      "peak_child_rss_bytes": 143228928,
+      "source_bytes": 104857600,
+      "first_preview_median_ns": 134875,
+      "first_preview_p95_ns": 157333,
+      "complete_index_median_ns": 619183542,
+      "max_step_latency_ns": 718541,
+      "peak_child_rss_bytes": 143245312,
       "index_bytes": 5600112
     }
   },
@@ -45,5 +47,6 @@
     "full XML token records become queryable after the cancellable background validation completes; the resumable owner reader emits complete tag spans",
     "progressive replay is headless; visible AppKit teardown previously reproduced a crash while separate native Metal smoke passes"
   ],
-  "decision": "Candidate updated after correcting preview readiness and adding full fixture, diagnostic, cancellation, and stale-generation evidence; fresh read-only review pending."
+  "decision": "Candidate corrected after fresh review; all four findings addressed; next fresh read-only review pending.",
+  "release_binary_bytes": 151232
 }
