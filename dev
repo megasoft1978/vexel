@@ -4,13 +4,14 @@ set -eu
 usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
+    printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
     printf '%s\n' '       ./dev tsan'
     printf '%s\n' '       ./dev wo-help'
 }
 
 command_name=${1:-help}
-if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ]; then
+if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ]; then
     usage >&2
     exit 2
 fi
@@ -20,7 +21,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|index-bench|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
+    build|test-fast|test|verify|index-bench|perf-gate|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -108,5 +109,9 @@ case "$command_name" in
         cmake --preset mac-release
         cmake --build --preset mac-release --target svg_index_bench
         python3 bench/generate/index_bench.py "$@"
+        ;;
+    perf-gate)
+        shift
+        python3 scripts/perf_gate.py "$@"
         ;;
 esac

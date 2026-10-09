@@ -1,0 +1,388 @@
+#!/usr/bin/env python3
+"""Strict local macOS performance report and repeated-violation gate."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import math
+import platform
+import statistics
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+BASELINE_PATH = ROOT / "bench/results/perf-gate-baseline.json"
+M301_REPORT = ROOT / "bench/results/WO-M3-01.json"
+METRICS = {
+    "10MiB.first_preview_p95_ns": ("10MiB", "first_preview_p95_ns"),
+    "100MiB.first_preview_p95_ns": ("100MiB", "first_preview_p95_ns"),
+    "100MiB.max_step_ns": ("100MiB", "max_step_ns"),
+    "100MiB.peak_rss_bytes": ("100MiB", "peak_rss_bytes"),
+}
+STRETCH = {
+    "cached_pan_zoom_p95_ns": 33_000_000,
+    "single_arch_stripped_executable_bytes": 10 * 1024 * 1024,
+    "app_bundle_bytes": 25 * 1024 * 1024,
+}
+
+
+class GateError(ValueError):
+    pass
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def exact_keys(obj: Any, expected: set[str], label: str) -> dict[str, Any]:
+    if not isinstance(obj, dict):
+        raise GateError(f"{label} must be an object")
+    missing, extra = expected - set(obj), set(obj) - expected
+    if missing or extra:
+        raise GateError(f"{label} fields invalid (missing={sorted(missing)}, unknown={sorted(extra)})")
+    return obj
+
+
+def finite_nonnegative(value: Any, label: str) -> float:
+    if type(value) is int:
+        if value < 0 or value > (1 << 63) - 1:
+            raise GateError(f"{label} must be a finite non-negative 64-bit value")
+        return value
+    if type(value) is not float or not math.isfinite(value) or value < 0:
+        raise GateError(f"{label} must be a finite non-negative number")
+    return value
+
+
+def load_json(path: Path, label: str) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"), parse_constant=lambda v: (_ for _ in ()).throw(GateError(f"{label} contains non-finite {v}")))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise GateError(f"cannot read {label}: {exc}") from exc
+
+
+def validate_baseline(value: Any) -> dict[str, Any]:
+    exact_keys(value, {"schema_version", "source_work_order", "source_commit", "source_report", "source_report_sha256", "host_toolchain", "limits", "regression_tolerances", "cases", "stretch_targets"}, "baseline")
+    if value["schema_version"] != 1 or value["source_work_order"] != "WO-M3-01":
+        raise GateError("baseline schema or provenance is invalid")
+    for name in ("source_commit", "source_report_sha256"):
+        if not isinstance(value[name], str) or not value[name]:
+            raise GateError(f"baseline {name} is invalid")
+    exact_keys(value["host_toolchain"], {"machine_model", "chip", "memory_bytes", "architecture", "os", "compiler"}, "baseline host_toolchain")
+    exact_keys(value["limits"], set(METRICS), "baseline limits")
+    exact_keys(value["regression_tolerances"], set(METRICS), "baseline regression_tolerances")
+    exact_keys(value["cases"], {"10MiB", "100MiB"}, "baseline cases")
+    for case in ("10MiB", "100MiB"):
+        exact_keys(value["cases"][case], {"input_sha256", "first_preview_median_ns", "first_preview_p95_ns", "max_step_ns", "peak_rss_bytes", "index_bytes"}, f"baseline {case}")
+        if not isinstance(value["cases"][case]["input_sha256"], str) or len(value["cases"][case]["input_sha256"]) != 64:
+            raise GateError(f"baseline {case} input hash is invalid")
+        for key, item in value["cases"][case].items():
+            if key != "input_sha256":
+                finite_nonnegative(item, f"baseline {case}.{key}")
+    exact_keys(value["stretch_targets"], set(STRETCH), "baseline stretch_targets")
+    for key, item in value["limits"].items():
+        finite_nonnegative(item, f"baseline limits.{key}")
+    for key, item in value["regression_tolerances"].items():
+        if type(item) is int:
+            valid = 0 <= item <= 1
+        else:
+            valid = type(item) is float and math.isfinite(item) and 0 <= item <= 1
+        if not valid:
+            raise GateError(f"baseline regression tolerance {key} must be finite and from 0 to 1")
+    for key, item in value["stretch_targets"].items():
+        finite_nonnegative(item, f"baseline stretch_targets.{key}")
+    report_path = ROOT / value["source_report"]
+    if not report_path.is_file() or sha256(report_path) != value["source_report_sha256"]:
+        raise GateError("pinned M3-01 report is missing or its SHA-256 changed")
+    if value["source_commit"] != "159c7e761ce87862e85742cd25fb61a9aef01da4" or value["source_report"] != "bench/results/WO-M3-01.json":
+        raise GateError("baseline source commit or report path is not the frozen M3-01 source")
+    source = load_json(report_path, "pinned M3-01 report")
+    expected_host = {
+        "machine_model": source["machine_model"], "chip": source["chip"],
+        "memory_bytes": source["memory_bytes"], "architecture": source["architecture"],
+        "os": "macOS " + source["machine"].split("macOS-", 1)[1].split("-", 1)[0],
+        "compiler": source["compiler"],
+    }
+    if value["host_toolchain"] != expected_host:
+        raise GateError("baseline host/toolchain fields do not match the pinned M3-01 report")
+    source_fields = {
+        "input_sha256": "source_sha256", "first_preview_median_ns": "first_preview_median_ns",
+        "first_preview_p95_ns": "first_preview_p95_ns", "max_step_ns": "max_step_latency_ns",
+        "peak_rss_bytes": "peak_child_rss_bytes", "index_bytes": "index_bytes",
+    }
+    for case in ("10MiB", "100MiB"):
+        for target, field in source_fields.items():
+            if value["cases"][case][target] != source["cases"][case][field]:
+                raise GateError(f"baseline {case}.{target} does not match the pinned M3-01 report")
+    return value
+
+
+def validate_history(history: Any) -> dict[str, Any]:
+    exact_keys(history, {"schema_version", "metrics"}, "history")
+    if history["schema_version"] != 1:
+        raise GateError("history schema_version must be 1")
+    exact_keys(history["metrics"], set(METRICS), "history.metrics")
+    for metric, record in history["metrics"].items():
+        exact_keys(record, {"streak", "last_status", "last_value"}, f"history.metrics.{metric}")
+        if type(record["streak"]) is not int or record["streak"] not in (0, 1, 2):
+            raise GateError(f"history {metric}.streak must be 0, 1, or 2")
+        if record["last_status"] not in ("none", "healthy", "violation"):
+            raise GateError(f"history {metric}.last_status is invalid")
+        if ((record["streak"] == 0 and record["last_status"] == "violation") or
+                (record["streak"] > 0 and record["last_status"] != "violation")):
+            raise GateError(f"history {metric} streak/status combination is invalid")
+        if record["last_value"] is not None:
+            finite_nonnegative(record["last_value"], f"history {metric}.last_value")
+    return history
+
+
+def empty_history() -> dict[str, Any]:
+    return {"schema_version": 1, "metrics": {name: {"streak": 0, "last_status": "none", "last_value": None} for name in METRICS}}
+
+
+def evaluate(metrics: dict[str, float | None], limits: dict[str, float], baselines: dict[str, float], tolerances: dict[str, float], history: dict[str, Any], comparable: bool, noisy: set[str] | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+    validate_history(history)
+    noisy = noisy or set()
+    if any(set(values) != set(METRICS) for values in (metrics, limits, baselines, tolerances)):
+        raise GateError("metric set does not match the frozen gate contract")
+    results: dict[str, Any] = {}
+    updated = json.loads(json.dumps(history))
+    if not comparable:
+        for metric, value in metrics.items():
+            if value is not None:
+                finite_nonnegative(value, metric)
+            results[metric] = {"value": value, "absolute_limit": limits[metric], "baseline_value": baselines[metric], "status": "incomparable", "consecutive_violations": history["metrics"][metric]["streak"]}
+        return results, updated
+    for metric, value in metrics.items():
+        finite_nonnegative(limits[metric], f"limit {metric}")
+        finite_nonnegative(baselines[metric], f"baseline {metric}")
+        tolerance = tolerances[metric]
+        if type(tolerance) is int:
+            valid_tolerance = 0 <= tolerance <= 1
+        else:
+            valid_tolerance = type(tolerance) is float and math.isfinite(tolerance) and 0 <= tolerance <= 1
+        if not valid_tolerance:
+            raise GateError(f"tolerance {metric} must be finite and from 0 to 1")
+        record = updated["metrics"][metric]
+        if value is None:
+            results[metric] = {"value": None, "absolute_limit": limits[metric], "baseline_value": baselines[metric], "status": "unavailable", "reason": "required measurement is unavailable", "consecutive_violations": record["streak"]}
+            continue
+        finite_nonnegative(value, metric)
+        if metric in noisy:
+            results[metric] = {"value": value, "absolute_limit": limits[metric], "baseline_value": baselines[metric], "status": "noisy", "reason": "trial coefficient of variation exceeds 10 percent", "consecutive_violations": record["streak"]}
+            continue
+        regression_limit = baselines[metric] * (1.0 + tolerance)
+        effective_limit = min(limits[metric], regression_limit)
+        if value > effective_limit:
+            record["streak"] = min(2, record["streak"] + 1)
+            record["last_status"] = "violation"
+            record["last_value"] = value
+            status = "fail" if record["streak"] >= 2 else "warning"
+        else:
+            record.update(streak=0, last_status="healthy", last_value=value)
+            status = "pass"
+        results[metric] = {"value": value, "absolute_limit": limits[metric], "regression_limit": regression_limit, "effective_limit": effective_limit, "baseline_value": baselines[metric], "tolerance_fraction": tolerance, "status": status, "consecutive_violations": record["streak"]}
+    return results, updated
+
+
+def identity_from_hardware(hardware: dict[str, Any]) -> dict[str, Any]:
+    return {key: hardware[key] for key in ("machine_model", "chip", "memory_bytes", "architecture", "os", "compiler")}
+
+
+def comparison_reason(baseline: dict[str, Any], hardware: dict[str, Any], cases: dict[str, Any]) -> list[str]:
+    reasons = []
+    if identity_from_hardware(hardware) != baseline["host_toolchain"]:
+        reasons.append("host/toolchain identity differs from pinned M3-01 baseline")
+    for case in ("10MiB", "100MiB"):
+        if cases[case]["input_sha256"] != baseline["cases"][case]["input_sha256"]:
+            reasons.append(f"{case} workload input hash differs from pinned baseline")
+    return reasons
+
+
+def percentile(values: list[int], fraction: float) -> int:
+    ordered = sorted(values)
+    return ordered[max(1, math.ceil(len(ordered) * fraction)) - 1]
+
+
+def variability(values: list[int]) -> dict[str, float]:
+    mean = statistics.fmean(values)
+    deviation = statistics.stdev(values) if len(values) > 1 else 0.0
+    return {"mean": mean, "sample_standard_deviation": deviation,
+            "coefficient_of_variation": deviation / mean if mean else 0.0}
+
+
+def run_checked(argv: list[str]) -> str:
+    completed = subprocess.run(argv, cwd=ROOT, text=True, capture_output=True, check=False)
+    if completed.returncode:
+        raise GateError(f"command failed ({completed.returncode}): {' '.join(argv)}\n{completed.stderr.strip()}")
+    return completed.stdout
+
+
+def hardware_now() -> dict[str, Any]:
+    from bench.generate.index_bench import hardware_metadata
+    return hardware_metadata()
+
+
+def under_cache(path: Path) -> Path:
+    resolved = (ROOT / path).resolve() if not path.is_absolute() else path.resolve()
+    cache = (ROOT / ".cache").resolve()
+    if resolved != cache and cache not in resolved.parents:
+        raise GateError("result and history paths must be under repository .cache/")
+    return resolved
+
+
+def collect(output: Path, history_path: Path, baseline_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    if platform.system() != "Darwin" or platform.machine() != "arm64":
+        raise GateError("perf-gate requires Apple Silicon macOS")
+    baseline = validate_baseline(load_json(baseline_path, "baseline"))
+    try:
+        commit = run_checked(["git", "rev-parse", "HEAD"]).strip()
+        working_tree_dirty = bool(run_checked(["git", "status", "--porcelain"]).strip())
+        source_diff = subprocess.run(["git", "diff", "HEAD", "--binary"], cwd=ROOT,
+                                     capture_output=True, check=True).stdout
+        source_tree_sha256 = hashlib.sha256(source_diff).hexdigest()
+    except GateError:
+        commit = "unknown"
+        working_tree_dirty = True
+        source_tree_sha256 = "unavailable"
+    run_checked(["cmake", "--preset", "mac-release"])
+    run_checked(["cmake", "--build", "--preset", "mac-release", "--target", "svg_index_bench", "svgworkbench"])
+    raw_path = ROOT / ".cache/perf-gate/raw-observations.json"
+    raw_path.parent.mkdir(parents=True, exist_ok=True)
+    raw_rel = raw_path.relative_to(ROOT)
+    run_checked([sys.executable, "bench/generate/index_bench.py", "--sizes", "10MiB,100MiB", "--cold-trials", "5", "--warm-trials", "10", "--seed", "20261009", "--output", str(raw_rel)])
+    raw = load_json(raw_path, "raw benchmark observations")
+    exact_keys(raw, {"schema_version", "seed", "machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler", "build", "cache_caveat", "cases"}, "raw observations")
+    if raw["schema_version"] != 1 or raw["seed"] != 20261009 or set(raw["cases"]) != {"10MiB", "100MiB"}:
+        raise GateError("raw benchmark header does not match frozen campaign")
+    hardware = {key: raw[key] for key in ("machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler")}
+    cases: dict[str, Any] = {}
+    noisy_metrics: set[str] = set()
+    for label in ("10MiB", "100MiB"):
+        data = raw["cases"][label]
+        exact_keys(data, {"source_bytes", "source_sha256", "workload", "cold_trials", "warm_trials", "source_read_median_ns", "source_read_p95_ns", "first_preview_median_ns", "first_preview_p95_ns", "complete_index_median_ns", "max_step_latency_ns", "progressive_replay", "peak_child_rss_bytes", "index_bytes"}, f"raw {label}")
+        if len(data["cold_trials"]) != 5 or len(data["warm_trials"]) != 10:
+            raise GateError(f"{label} must contain exactly five cold-order and ten warm-order trials")
+        trials = data["cold_trials"] + data["warm_trials"]
+        if len(trials) != 15:
+            raise GateError(f"{label} trial count invalid")
+        for idx, trial in enumerate(trials):
+            exact_keys(trial, {"source_bytes", "read_ns", "first_preview_ns", "complete_index_ns", "max_step_ns", "preview_before_index_complete", "progress_10_50_90_complete", "element_count", "index_bytes", "peak_rss_bytes", "process_elapsed_ns"}, f"{label} trial {idx}")
+            for key, val in trial.items():
+                if key not in ("preview_before_index_complete", "progress_10_50_90_complete"):
+                    finite_nonnegative(val, f"{label} trial {idx}.{key}")
+        summary = {
+            "source_read_median_ns": percentile([t["read_ns"] for t in trials], .5),
+            "source_read_p95_ns": percentile([t["read_ns"] for t in trials], .95),
+            "first_preview_median_ns": percentile([t["first_preview_ns"] for t in trials], .5),
+            "first_preview_p95_ns": percentile([t["first_preview_ns"] for t in trials], .95),
+            "complete_index_median_ns": percentile([t["complete_index_ns"] for t in trials], .5),
+            "complete_index_p95_ns": percentile([t["complete_index_ns"] for t in trials], .95),
+            "max_step_ns": max(t["max_step_ns"] for t in trials),
+            "peak_rss_bytes": max(t["peak_rss_bytes"] for t in trials),
+            "index_bytes": max(t["index_bytes"] for t in trials),
+        }
+        trial_variability = {
+            "first_preview_ns": variability([t["first_preview_ns"] for t in trials]),
+            "max_step_ns": variability([t["max_step_ns"] for t in trials]),
+            "peak_rss_bytes": variability([t["peak_rss_bytes"] for t in trials]),
+        }
+        for metric, case_name, trial_key in (
+            ("10MiB.first_preview_p95_ns", "10MiB", "first_preview_ns"),
+            ("100MiB.first_preview_p95_ns", "100MiB", "first_preview_ns"),
+            ("100MiB.max_step_ns", "100MiB", "max_step_ns"),
+            ("100MiB.peak_rss_bytes", "100MiB", "peak_rss_bytes"),
+        ):
+            if label == case_name and trial_variability[trial_key]["coefficient_of_variation"] > 0.10:
+                noisy_metrics.add(metric)
+        cases[label] = {
+            "input_bytes": data["source_bytes"], "input_sha256": data["source_sha256"],
+            "workload": data["workload"], "cold_order_trials": data["cold_trials"], "warm_order_trials": data["warm_trials"],
+            "summary": summary, "trial_variability": trial_variability,
+        }
+    binary = ROOT / "build/mac-release/bin/svgworkbench"
+    linked = run_checked(["otool", "-L", str(binary)])
+    dependencies = []
+    for line in linked.splitlines()[1:]:
+        identity = line.strip()
+        if identity:
+            dependencies.append({"install_name": identity.split(" (compatibility version", 1)[0], "identity": identity})
+    metrics = {
+        "10MiB.first_preview_p95_ns": cases["10MiB"]["summary"]["first_preview_p95_ns"],
+        "100MiB.first_preview_p95_ns": cases["100MiB"]["summary"]["first_preview_p95_ns"],
+        "100MiB.max_step_ns": cases["100MiB"]["summary"]["max_step_ns"],
+        "100MiB.peak_rss_bytes": cases["100MiB"]["summary"]["peak_rss_bytes"],
+    }
+    comparison_reasons = comparison_reason(baseline, hardware, cases)
+    comparable = not comparison_reasons
+    if history_path.exists():
+        history = validate_history(load_json(history_path, "history"))
+    else:
+        history = empty_history()
+    baseline_fields = {
+        "10MiB.first_preview_p95_ns": ("10MiB", "first_preview_p95_ns"),
+        "100MiB.first_preview_p95_ns": ("100MiB", "first_preview_p95_ns"),
+        "100MiB.max_step_ns": ("100MiB", "max_step_ns"),
+        "100MiB.peak_rss_bytes": ("100MiB", "peak_rss_bytes"),
+    }
+    baseline_metrics = {metric: baseline["cases"][case][field]
+                        for metric, (case, field) in baseline_fields.items()}
+    gate_metrics, next_history = evaluate(metrics, baseline["limits"], baseline_metrics,
+                                          baseline["regression_tolerances"], history, comparable,
+                                          noisy_metrics)
+    for metric, result in gate_metrics.items():
+        prior = baseline_metrics[metric]
+        result["delta_from_baseline"] = None if result["value"] is None else result["value"] - prior
+    gate_status = "incomparable" if not comparable else ("fail" if any(x["status"] == "fail" for x in gate_metrics.values()) else "warning" if any(x["status"] == "warning" for x in gate_metrics.values()) else "noisy" if any(x["status"] == "noisy" for x in gate_metrics.values()) else "pass")
+    executable_size = binary.stat().st_size
+    benchmark_binary = ROOT / "build/mac-release/bin/svg_index_bench"
+    bundle = {"bytes": None, "status": "unavailable", "reason": "no macOS app-bundle packaging target exists in this work order"}
+    payload = {
+        "schema_version": 1,
+        "run_timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "build_sha": commit,
+        "build": {"configuration": "Release", "executable": str(binary.relative_to(ROOT)), "executable_sha256": sha256(binary), "executable_bytes": executable_size, "benchmark_executable": str(benchmark_binary.relative_to(ROOT)), "benchmark_executable_sha256": sha256(benchmark_binary), "benchmark_executable_bytes": benchmark_binary.stat().st_size, "dependencies": dependencies, "source_commit": commit, "working_tree_dirty": working_tree_dirty, "source_diff_sha256": source_tree_sha256},
+        "hardware_toolchain": hardware,
+        "seed": 20261009,
+        "trial_protocol": {"cold_order_trials": 5, "warm_order_trials": 10, "cache_caveat": raw["cache_caveat"]},
+        "cases": cases,
+        "baseline_provenance": {"work_order": baseline["source_work_order"], "commit": baseline["source_commit"], "report": baseline["source_report"], "report_sha256": baseline["source_report_sha256"]},
+        "comparison": {"status": "comparable" if comparable else "incomparable", "reasons": comparison_reasons, "baseline_values": {c: baseline["cases"][c] for c in ("10MiB", "100MiB")}},
+        "gate": {"status": gate_status, "metrics": gate_metrics, "absolute_limits": baseline["limits"], "regression_tolerances": baseline["regression_tolerances"]},
+        "stretch_targets": {"targets": baseline["stretch_targets"], "executable_bytes": executable_size, "executable_status": "report_only", "executable_reason": "measured Release output is not separately stripped; 10 MiB stripped-binary target is aspirational", "app_bundle": bundle, "pan_zoom_event_to_present_p95_ns": {"value": None, "status": "unavailable", "reason": "navigation test validates event behavior but does not time presentation"}},
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    history_path.parent.mkdir(parents=True, exist_ok=True)
+    history_path.write_text(json.dumps(next_history, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
+    return payload, next_history
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Build and run the macOS Release index performance gate (5 cold-order + 10 warm-order trials per case).")
+    parser.add_argument("--output", type=Path, default=Path(".cache/perf-gate/result.json"), help="result JSON path under .cache/ (default: .cache/perf-gate/result.json)")
+    parser.add_argument("--history", type=Path, default=Path(".cache/perf-gate/history.json"), help="per-metric streak JSON path under .cache/")
+    parser.add_argument("--baseline", type=Path, default=BASELINE_PATH, help="pinned baseline JSON")
+    args = parser.parse_args()
+    try:
+        output = under_cache(args.output)
+        history = under_cache(args.history)
+        baseline = args.baseline if args.baseline.is_absolute() else ROOT / args.baseline
+        payload, _ = collect(output, history, baseline)
+        print(json.dumps({"status": payload["gate"]["status"], "comparison": payload["comparison"]["status"], "output": str(output.relative_to(ROOT))}, sort_keys=True))
+        return 1 if payload["gate"]["status"] == "fail" else 0
+    except (GateError, OSError, KeyError, TypeError) as exc:
+        print(f"perf-gate: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

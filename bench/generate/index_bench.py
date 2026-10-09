@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import platform
+import re
 import subprocess
 import sys
 import time
@@ -13,6 +14,42 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SEED = 20261009
+
+
+def sysctl(name: str) -> str:
+    result = subprocess.run(["sysctl", "-n", name], capture_output=True,
+                            text=True, check=False)
+    return result.stdout.strip() if result.returncode == 0 else "unavailable"
+
+
+def hardware_metadata() -> dict[str, object]:
+    """Read host identity from this macOS machine instead of a frozen host label."""
+    profiler = subprocess.run(["system_profiler", "SPHardwareDataType"],
+                              capture_output=True, text=True, check=False)
+    hardware = {}
+    if profiler.returncode == 0:
+        for line in profiler.stdout.splitlines():
+            match = re.match(r"\s*(Model Name|Model Identifier|Chip|Memory):\s*(.*?)\s*$", line)
+            if match:
+                hardware[match.group(1)] = match.group(2)
+    memory_match = re.fullmatch(r"(\d+)\s*(GB|GiB)", hardware.get("Memory", ""))
+    memory_bytes = int(memory_match.group(1)) * (1024 ** 3) if memory_match else None
+    os_version = subprocess.run(["sw_vers", "-productVersion"], capture_output=True,
+                                text=True, check=False)
+    os_name = subprocess.run(["sw_vers", "-productName"], capture_output=True,
+                             text=True, check=False)
+    compiler = subprocess.run(["clang", "--version"], capture_output=True,
+                              text=True, check=False)
+    return {
+        "machine": platform.platform(),
+        "machine_model": f"{hardware.get('Model Name', 'unavailable')} ({hardware.get('Model Identifier', 'unavailable')})",
+        "chip": hardware.get("Chip", "unavailable"),
+        "memory_bytes": memory_bytes,
+        "architecture": platform.machine(),
+        "os": f"{os_name.stdout.strip()} {os_version.stdout.strip()}".strip()
+            if os_name.returncode == 0 and os_version.returncode == 0 else platform.platform(),
+        "compiler": compiler.stdout.splitlines()[0] if compiler.returncode == 0 else "unavailable",
+    }
 
 
 def generate(path: Path, size: int, count: int, map_like: bool) -> None:
@@ -115,11 +152,8 @@ def main() -> int:
             "peak_child_rss_bytes": max(row["peak_rss_bytes"] for row in all_trials),
             "index_bytes": max(int(row["index_bytes"]) for row in all_trials),
         }
-    clang = subprocess.run(["clang", "--version"], capture_output=True, text=True, check=True).stdout.splitlines()[0]
     payload = {"schema_version": 1, "seed": args.seed,
-               "machine": platform.platform(), "machine_model": "Mac Studio (Mac17,14)",
-               "chip": "Apple M5 Max", "memory_bytes": 68719476736,
-               "architecture": platform.machine(), "compiler": clang, "build": "mac-release",
+               **hardware_metadata(), "build": "mac-release",
                "cache_caveat": "Cold/warm labels are run order only; OS file cache is not flushed.",
                "cases": cases}
     output = args.output if args.output.is_absolute() else ROOT / args.output

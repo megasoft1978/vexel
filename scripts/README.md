@@ -103,6 +103,20 @@ The fetcher uses Python's standard library. It is an explicit corpus
 maintenance command; the SVG application does not call it or retrieve
 document resources.
 
+## Local Release performance gate
+
+`./dev perf-gate` builds the Release index benchmark, runs the fixed five
+cold-order and ten warm-order trials for each 10 MiB and 100 MiB case, and
+writes a report plus per-metric streak history under `.cache/perf-gate/` by
+default. `--output` and `--history` can select other paths under `.cache/`.
+The command validates the pinned M3-01 report hash before use and compares
+only exact host/toolchain and input-hash matches. One comparable breach warns;
+the same metric must breach again on the next comparable observation to fail.
+A healthy measurement resets its own streak; unavailable and incomparable
+observations do not update streaks. The report includes Release executable
+bytes, `otool -L` dependencies, and explicit app-bundle and pan/zoom timing
+unavailability. Binary, bundle, and cached pan targets remain report-only.
+
 ## Golden PNG comparison
 
 `golden_diff.py` compares an actual PNG with one fixture from the frozen
