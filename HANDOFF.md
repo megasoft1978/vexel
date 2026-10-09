@@ -1,7 +1,5 @@
 # Handoff
 
-WO-M4-02 revision 2 is complete and fast-forward merged to `main` at `2d19d27960f524c9ff7fd888185ec7f7b3ca295f`. It adds bounded SVG S/s and T/t path parsing, correct reflected-control resets, equivalence tests, librsvg differential fixtures, smooth-command fuzz coverage, and a manifest-verified real-corpus path-command inventory. Independent read-only review passed with no findings in 58.953 seconds.
+WO-M4-02 revision 2 is complete and fast-forward merged to `main` at `2d19d27960f524c9ff7fd888185ec7f7b3ca295f`. Independent read-only review passed without findings. Its direct verification covers Debug/Release builds, CTest 11/11, Python 192/192, native smoke/replay, ASan/UBSan, one million fuzz cases, ten librsvg fixtures, and the 58-file corpus report. Corpus remains 2/58 previewable and 56 unsupported; the 100 MiB first-preview gate fails. This is open/index evidence, not full-render parity.
 
-Verification: Debug/Release builds, CTest 11/11, Python 192/192, native smoke and 20-frame replay, ASan/UBSan CTest 11/11, 1,000,000 fuzz cases, ten librsvg fixtures, inventory checks, and the corpus report pass. Corpus remains 2/58 previewable, 56 unsupported, no limits/crashes. The 100 MiB first-preview gate still fails; this is open/index evidence, not full-render parity. The initial managed-runner sandbox failure and direct-host pass are both retained in evidence.
-
-Next work order: WO-M4-03, fill rules and deterministic antialiasing. Follow the current roadmap, preserve immutable prior evidence and run the external corpus read-only.
+WO-M4-03 revision 1 is frozen READY at `f95288117b5e0bf3f3c79809c63d3d4cea413c53` (spec SHA-256 `4ab43e23f18206eeb1077eec07dc72f989ca5612e8294d77895b5981ced009b9`). Execute it next: deterministic 4x4 subpixel fill coverage, evenodd/nonzero and compositing tests, librsvg fixtures, same-host raster benchmark, one-million-case fuzz, and corpus/report checks. Keep prior M4 evidence immutable.
