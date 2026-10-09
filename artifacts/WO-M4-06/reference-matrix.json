@@ -1,6 +1,7 @@
 {
-  "work_order": "WO-M4-06 revision 3",
-  "candidate_base": "fb09369fa77475707d8a1e9cde0736f033bf7130",
+  "work_order": "WO-M4-06 revision 4",
+  "candidate_sha": "3396d8109223de9018956104b066d8d0a5255ace",
+  "renderer_source_sha": "e53c760436c0d16afb9b15f7e8adaf6967dc9a2a",
   "result": "pass",
   "reference_copy_bounds": {
     "per_reference_bytes": 65536,
@@ -14,47 +15,25 @@
     "use_over_64k": "pass: deterministic limit diagnostic",
     "use_job_over_512k": "pass: deterministic limit diagnostic",
     "clip_over_64k": "pass: deterministic limit diagnostic",
-    "source_sha256_unchanged": "pass: test harness hashes each fixture before CLI decode+render and checks after",
-    "gradient_endpoints_and_interpolation": "pass: exact RGBA channel samples at first, midpoint, and last pixels",
-    "reference_fixtures": 34,
+    "combined_job_cap": "pass by 512 KiB use + 512 KiB clip sub-budgets",
+    "source_sha256_unchanged": "pass: fixture inputs hashed before and after decode/render",
+    "gradient_endpoints_interpolation": "pass: exact first, midpoint, last user-space samples",
+    "default_stop_color": "pass: absent stop-color renders SVG initial black; librsvg fixture passes",
+    "reference_fixtures": 35,
     "librsvg": "pass: all fixtures meet unchanged raw jointly-covered RGB and edge thresholds"
   },
   "source_contract": "source is borrowed and never modified; decoded document retains original source pointer/length",
-  "paint_workloads": {
-    "basic-solid": {
-      "median_seconds": 0.009825041983276606,
-      "p95_seconds": 0.01102304199594073,
-      "peak_process_rss_bytes_max": 3145728,
-      "stable_output_sha256": "ffe65a8f7763b31122313c05e46b05abadaf438c4fc7d3ec5ed7f93fbcc77418"
-    },
-    "local-use": {
-      "median_seconds": 0.010239915980491787,
-      "p95_seconds": 0.011634958005743101,
-      "peak_process_rss_bytes_max": 3178496,
-      "stable_output_sha256": "ffe65a8f7763b31122313c05e46b05abadaf438c4fc7d3ec5ed7f93fbcc77418"
-    },
-    "linear-gradient": {
-      "median_seconds": 0.010260083014145494,
-      "p95_seconds": 0.011819417006336153,
-      "peak_process_rss_bytes_max": 3178496,
-      "stable_output_sha256": "a28a850bdab22156ec3d3e1f24e7f525bc82b96f450063e3217c452e253b8b3d"
-    },
-    "radial-gradient": {
-      "median_seconds": 0.010880000016186386,
-      "p95_seconds": 0.0119562910113018,
-      "peak_process_rss_bytes_max": 3162112,
-      "stable_output_sha256": "98c192eefc6c8829e957c79b59ab7e61b3fc38878ab5dcddbfe2f6a700888ccd"
-    },
-    "clip-path": {
-      "median_seconds": 0.010160582984099165,
-      "p95_seconds": 0.011508208001032472,
-      "peak_process_rss_bytes_max": 3227648,
-      "stable_output_sha256": "1ebd5eea12b4f8bd113be416d04dda9c417749bfe9ddd8cb4e2d5be3599886a1"
-    }
+  "corpus": {
+    "files": 58,
+    "trials": 116,
+    "previewable": 2,
+    "unsupported": 56,
+    "limit": 0,
+    "crash": 0
   },
   "limitations": [
     "no full-render parity claim",
-    "corpus harness still uses open/index preview path; renderer integration is WO-M4-06b",
-    "token traversal without subtree copies deferred to M5 performance work"
+    "corpus harness remains on the open/index preview path; renderer integration is WO-M4-06b",
+    "token traversal without bounded subtree copies is deferred to M5 performance work"
   ]
 }

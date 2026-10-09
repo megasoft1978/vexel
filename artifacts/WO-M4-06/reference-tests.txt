@@ -1,6 +1,5 @@
 ................
 ----------------------------------------------------------------------
-Ran 16 tests in 1.420s
+Ran 16 tests in 1.507s
 
 OK
-shape decoder and 4x4 antialiased raster checks passed

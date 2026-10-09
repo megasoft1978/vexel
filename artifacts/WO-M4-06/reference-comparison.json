@@ -148,6 +148,17 @@
       "max_alpha_diff": 27
     },
     {
+      "case": "gradient-default-stop-color",
+      "source_sha256": "b1284ef828560f3c1c9f4927d6614d32f69f81ce62fba4550e90690cc143665e",
+      "vexel_sha256": "a5678b182fc1d1552bb63bc48dccd2b9a1fbdc317909780805985e508c940f63",
+      "reference_png_sha256": "f643e868823d5229b66cd4f65d416c7d40bde517357c8db2b3045dc3fff7c3a2",
+      "edge_diff_pixels": 0,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 0,
+      "max_jointly_covered_straight_rgb_diff": 0,
+      "max_alpha_diff": 0
+    },
+    {
       "case": "line",
       "source_sha256": "0dedf26e7589a1338217fbf9cc73d6eb990941d9f635072bd25ddba33d84ec55",
       "vexel_sha256": "4f339b087eb49e81b7734d70c8afc645145d6bdec95b10cacb8c3c1d1bccd41d",

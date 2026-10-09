@@ -2,22 +2,12 @@
 
 No active blockers.
 
-## Resolved: WO-M1-04 shutdown lifetime contract
+## Resolved: WO-M4-06 revision 2 acceptance and revision 4 review findings
 
-WO-M1-04 revision 1's reviewer identified that a raw queue pointer cannot
-protect a caller paused before API admission from a concurrent destroy.
-Planner authority amended the contract to require owner quiescence, defined
-concurrent entry during destroy as undefined behavior, and required a
-debug-assert active-call counter with a deterministic death test. ADR-0006 and
-WO-M1-04 revision 2 record that decision.
-
-Revision 2 then exposed a pre-existing flaky native pointer-down test in both
-the accepted M1-03 binary and its own candidate. The comparison is retained in
-`artifacts/WO-M1-04/baseline-ui-smoke-comparison.json`. Revision 3 added a
-test-only direct dispatch to the target view while preserving the event type,
-coordinate, bounds, and button assertions; ADR-0007 records that change.
-
-WO-M1-04 revision 3 passed all nine frozen commands and two fresh read-only
-reviews, then merged at `91ff611782c843428fb5bdc4ba874e3ccdd37f94`. Final
-verifier evidence is under
-`artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/`.
+Planner authority recorded in ADR-0014 and WO-M4-06 revision 4 allows copied
+reference subtrees up to 64 KiB each and 1 MiB total per render job, with 512
+KiB sub-budgets for `<use>` and clipping. Revision 4 also fixes omitted SVG
+`stop-color` to its initial black value. Candidate-specific Debug/Release,
+ASan/UBSan, 1,000,000-case fuzz, 35 librsvg fixture, 58-file corpus, and
+21-trial benchmark evidence is under `artifacts/WO-M4-06/`. Independent fresh
+review and merge are pending.

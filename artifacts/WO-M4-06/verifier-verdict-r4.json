@@ -1,0 +1,107 @@
+{
+  "wo_id": "WO-M4-06",
+  "verdict": "fail",
+  "base_sha": "fb09369fa77475707d8a1e9cde0736f033bf7130",
+  "head_sha": "dbd5dd203b28b84aa3b4985d665fa6346f414129",
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "result": "not_testable",
+      "evidence": "artifacts/WO-M4-06/verify-r4.txt",
+      "detail": "The available run records 12/12 CTests passing, but the configure/build evidence does not identify the candidate SHA or establish a clean build."
+    },
+    {
+      "id": "AC-2",
+      "result": "not_testable",
+      "evidence": "artifacts/WO-M4-06/reference-matrix.json; artifacts/WO-M4-06/reference-tests.txt",
+      "detail": "The matrix labels itself WO-M4-06 revision 3 and reports 512 KiB use and clip job budgets; it does not establish revision 4's focused test results."
+    },
+    {
+      "id": "AC-3",
+      "result": "not_testable",
+      "evidence": "artifacts/WO-M4-06/reference-comparison.json",
+      "detail": "Differential results are present, including the new gradient-default fixture, but the evidence does not bind them to candidate dbd5dd2."
+    },
+    {
+      "id": "AC-4",
+      "result": "not_testable",
+      "evidence": "artifacts/WO-M4-06/full-checks.txt",
+      "detail": "The full-check record describes earlier candidates and does not verify this revision."
+    },
+    {
+      "id": "AC-5",
+      "result": "fail",
+      "evidence": "artifacts/WO-M4-06/fuzz-report.json:7; artifacts/WO-M4-06/fuzz-run.txt",
+      "detail": "The million-case fuzz report explicitly records source_revision fb09369, the base commit, rather than candidate dbd5dd2. It cannot establish candidate fuzz safety."
+    },
+    {
+      "id": "AC-6",
+      "result": "not_testable",
+      "evidence": "artifacts/WO-M4-06/paint-benchmark.json",
+      "detail": "Benchmark data is present, but the checked-in evidence does not bind the trials and metrics to the exact candidate."
+    },
+    {
+      "id": "AC-7",
+      "result": "not_testable",
+      "evidence": "artifacts/WO-M4-06/corpus-run.txt; reports/M4/head-to-head.json",
+      "detail": "The corpus evidence is not shown to have been produced from this candidate."
+    },
+    {
+      "id": "AC-8",
+      "result": "fail",
+      "evidence": "artifacts/WO-M4-06/work-order-validation.txt:1",
+      "detail": "The recorded validator result is for WO-M4-06 revision 1, not the frozen revision 4. Other required candidate-bound validation evidence is likewise not established."
+    },
+    {
+      "id": "AC-9",
+      "result": "not_testable",
+      "evidence": "src/svg/reference/expand.c:138-147; src/svg/clip/clip.c:152-200; artifacts/WO-M4-06/reference-matrix.json",
+      "detail": "The implementation caps each copied subtree at 64 KiB and reserves at most 512 KiB for use expansion plus 512 KiB for clip copies, so their combined copy budget cannot exceed 1 MiB. The matrix is revision 3 evidence and does not verify these limits, wrappers, over-limit behavior, or unchanged-source hashes for revision 4."
+    },
+    {
+      "id": "gradient-defaults",
+      "result": "fail",
+      "evidence": "src/svg/paint/paint.c:97-107",
+      "detail": "A gradient stop without stop-color is rejected. SVG defaults stop-color to black, so valid gradients relying on that default fail instead of rendering. Apply the default and add a fixture/test."
+    },
+    {
+      "id": "source-immutability",
+      "result": "pass",
+      "evidence": "src/svg/shape/document.c:16-25; src/svg/reference/expand.c:153-170; src/svg/clip/clip.c:165-168",
+      "detail": "Reference and clip handling writes to allocated scratch buffers and retains the borrowed original source; the inspected paths do not write into source bytes."
+    },
+    {
+      "id": "reference-paint-clip-raster-safety",
+      "result": "pass",
+      "evidence": "src/svg/reference/expand.c:138-147,188-190; src/svg/paint/paint.c:84-115,256-290; src/svg/clip/clip.c:152-200,211-226; src/raster/shape_render.c:217-228",
+      "detail": "The inspected paths bound use depth and instances, check copy-budget subtraction before indexing/growing, cap stop and clip counts, guard clip-work arithmetic, and validate clip geometry before containment. No additional crash or out-of-bounds path was found in these areas."
+    }
+  ],
+  "scope_findings": [
+    {
+      "path": "src/svg/paint/paint.c",
+      "finding": "Missing stop-color is rejected instead of receiving SVG's black default; valid gradient inputs are therefore reported unsupported.",
+      "severity": "high"
+    },
+    {
+      "path": "artifacts/WO-M4-06/fuzz-report.json",
+      "finding": "Fuzz report identifies the base SHA, not the candidate SHA, so it is stale evidence for candidate acceptance.",
+      "severity": "high"
+    },
+    {
+      "path": "artifacts/WO-M4-06/reference-matrix.json",
+      "finding": "Matrix identifies revision 3 and documents the prior split budgets; it is stale for revision 4's acceptance evidence.",
+      "severity": "high"
+    },
+    {
+      "path": "artifacts/WO-M4-06/work-order-validation.txt",
+      "finding": "Validator transcript identifies revision 1, not revision 4.",
+      "severity": "high"
+    }
+  ],
+  "risk_flags": [
+    "Candidate-specific AC-5 fuzz evidence is missing; the recorded million-case run is for the base revision.",
+    "Several acceptance artifacts are stale or lack candidate SHA binding, so the full verification claim cannot be confirmed."
+  ],
+  "summary": "Fail: gradient stops that rely on SVG's default black stop-color are rejected, and required evidence is stale for the exact candidate. The amended copy bounds are enforced in code: 64 KiB per subtree, with separate 512 KiB use and clip budgets limiting combined copies to 1 MiB. Source bytes remain borrowed and unchanged in the inspected paths. No additional reference, paint, clip, or raster crash/OOB issue was found."
+}

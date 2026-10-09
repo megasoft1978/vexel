@@ -1,16 +1,13 @@
-Candidate c32a8195bc10cff7d66707dc2979d029f89c8157, macOS 27 arm64, Apple clang 21:
-cmake --build --preset mac-debug: pass
-ctest --test-dir build/mac-debug --output-on-failure: 12/12 pass
-python3 -m unittest: 199/199 pass (./dev verify)
-./dev asan: 12/12 pass; no sanitizer report
-./dev ubsan: 12/12 pass; no sanitizer report
-cmake --preset mac-release && cmake --build --preset mac-release: pass
-python3 -m unittest tests.test_shape_render: 16/16 pass
-./dev shape-fuzz --duration 75 --seed 20261010: 1,000,000 cases; 0 crashes, invariant failures, or sanitizer reports
-./dev bench-corpus --run / --check: 58 manifest files / 116 fresh trials; both pass
-python3 -m json.tool reports/M4/head-to-head.json: pass
-python3 -m json.tool bench/results/WO-M4-06.json: pass
-python3 scripts/ledger.py validate ledger.jsonl: pass (376 entries)
-python3 scripts/wo_validate.py WO-M4-06 --ready: pass
-git diff --check: pass
-Focused fresh verifier of candidate 56ab981fe97b2b8c224022344f0364a66ea9caff: fail. It confirms the depth OOB and nested xlink findings were corrected; it found the fuzz transcript did not match the report, corrected by the fresh matching run recorded in fuzz-run.txt / fuzz-report.json. The no-source-copy/rewrite acceptance finding remains blocking. Full generic review exceeds 250 KB input limit.
+WO-M4-06 revision 4 final machine checks
+Candidate: 3396d8109223de9018956104b066d8d0a5255ace (README-only commit after renderer source e53c760436c0d16afb9b15f7e8adaf6967dc9a2a).
+
+- Debug configure/build + CTest: pass, 12/12 (`debug-configure.txt`, `debug-build.txt`, `debug-ctest.txt`).
+- `./dev verify`: pass, CTest 12/12, Python 199/199, native smoke/replay (`verify.txt`).
+- Focused renderer/CSS tests: pass, 16/16; 35 librsvg differential fixtures pass the unchanged thresholds (`reference-tests.txt`, `reference-comparison.json`).
+- ASan CTest: pass, 12/12; UBSan CTest: pass, 12/12 (`asan.txt`, `ubsan.txt`).
+- Release configure/build: pass (`release-configure.txt`, `release-build.txt`).
+- Shape fuzz: 1,000,000 ASan+UBSan cases, 93.495 s, zero crashes/invariant failures/reports (`fuzz-report.json`, `fuzz-run.txt`).
+- Corpus: 58 files / 116 trials, 2 previewable / 56 unsupported / 0 limit / 0 crash; source manifest and baseline validation pass (`corpus-run.txt`, `corpus-check.txt`).
+- Raster benchmark: five workloads, 21 trials each, stable hashes, RSS 3,112,960–3,211,264 B (`paint-benchmark.json`).
+- Work order revision 4, ledger, JSON, and diff checks pass (`work-order-validation.txt`, `ledger-validation.txt`).
+- Independent read-only review: pending. No merge claim until it passes.

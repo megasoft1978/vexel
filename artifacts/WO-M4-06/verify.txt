@@ -4,7 +4,7 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
 ninja: no work to do.
@@ -33,11 +33,11 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build
       Start 11: spatial-cache
 11/12 Test #11: spatial-cache ....................   Passed    0.02 sec
       Start 12: job-snapshot
-12/12 Test #12: job-snapshot .....................   Passed    0.04 sec
+12/12 Test #12: job-snapshot .....................   Passed    0.05 sec
 
 100% tests passed, 0 tests failed out of 12
 
-Total Test time (real) =   0.48 sec
+Total Test time (real) =   0.51 sec
 usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
@@ -46,14 +46,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 199 tests in 13.358s
+Ran 199 tests in 17.147s
 
-FAILED (failures=1)
+OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.136021
+native smoke elapsed seconds: 0.154587
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.125974
-Ran 199 tests: 198 passed, 1 failed, 0 errors, 0 skipped; 13.396s
+native replay elapsed seconds: 0.148389
+Ran 199 tests: 199 passed, 0 failed, 0 errors, 0 skipped; 17.200s
+valid ledger: 385 entries
