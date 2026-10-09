@@ -180,6 +180,8 @@ class ShapeRenderTests(unittest.TestCase):
             "bad_dash_separator": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1,,2"/></svg>',
             "too_many_dash_values": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"/></svg>',
             "unsupported_stroked_path": '<svg width="16" height="16"><path stroke="red" d="M1 1 L8 8"/></svg>',
+            "unsupported_root_stroke": '<svg width="16" height="16" stroke="red"/>',
+            "unsupported_group_stroke": '<svg width="16" height="16"><g stroke="red"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
         }
         stroke_diagnostic_offsets = {

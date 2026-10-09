@@ -76,7 +76,8 @@ static bool join_hit(geom_point previous, geom_point vertex, geom_point next,
 }
 
 static bool stroke_contains(const svg_shape_document *doc, size_t shape,
-                            const geom_edge *local_edges, double px, double py)
+                            const geom_edge *local_edges, const bool *dash_seams,
+                            double px, double py)
 {
     const svg_shape_stroke *stroke = &doc->strokes[shape];
     size_t first = doc->shape_edge_start[shape], count = doc->shape_edge_count[shape];
@@ -118,6 +119,7 @@ static bool stroke_contains(const svg_shape_document *doc, size_t shape,
         pattern = (pattern + 1U) % expanded_count;
     }
     double remain = stroke->dash[pattern % pattern_count] - phase;
+    bool join_seam = closed && dash_seams != NULL && dash_seams[shape];
     bool joins_from_previous = false;
     for (size_t i = 0; i < count; i++) {
         geom_edge edge = local_edges[first+i];
@@ -132,9 +134,13 @@ static bool stroke_contains(const svg_shape_document *doc, size_t shape,
             if (on) {
                 geom_point a={edge.a.x+dx*(at/length),edge.a.y+dy*(at/length)};
                 geom_point b={edge.a.x+dx*(end/length),edge.a.y+dy*(end/length)};
-                svg_shape_linecap start_cap = at == 0.0 && joins_from_previous
+                bool starts_at_join = at == 0.0 &&
+                    (joins_from_previous || (join_seam && i == 0U));
+                bool ends_at_seam = end == length && join_seam && i + 1U == count;
+                svg_shape_linecap start_cap = starts_at_join
                     ? SVG_SHAPE_CAP_BUTT : stroke->cap;
-                svg_shape_linecap end_cap = continues ? SVG_SHAPE_CAP_BUTT : stroke->cap;
+                svg_shape_linecap end_cap = (continues || ends_at_seam)
+                    ? SVG_SHAPE_CAP_BUTT : stroke->cap;
                 if (segment_hit_caps(a,b,px,py,radius,start_cap,end_cap)) return true;
             }
             if (continues) continues_at_vertex = true;
@@ -151,7 +157,50 @@ static bool stroke_contains(const svg_shape_document *doc, size_t shape,
         }
         joins_from_previous = continues_at_vertex;
     }
+    if (join_seam) {
+        geom_edge previous = local_edges[first+count-1U];
+        geom_edge next = local_edges[first];
+        if (join_hit(previous.a, previous.b, next.b, px, py, radius, stroke)) return true;
+    }
     return false;
+}
+
+static bool dash_joins_closed_seam(const svg_shape_document *doc, size_t shape,
+                                   const geom_edge *edges)
+{
+    const svg_shape_stroke *stroke = &doc->strokes[shape];
+    size_t count = stroke->dash_count;
+    if (count == 0U || !doc->shape_stroke_closed[shape]) return false;
+    size_t expanded = count + (count & 1U ? count : 0U);
+    double period = 0.0;
+    for (size_t i = 0U; i < expanded; i++) period += stroke->dash[i % count];
+    if (!isfinite(period) || period <= 0.0) return false;
+    double phase = fmod(stroke->dash_offset, period);
+    if (phase < 0.0) phase += period;
+    size_t pattern = 0U;
+    while (phase >= stroke->dash[pattern % count]) {
+        phase -= stroke->dash[pattern % count];
+        pattern = (pattern + 1U) % expanded;
+    }
+    bool starts_on = (pattern & 1U) == 0U;
+    double remain = stroke->dash[pattern % count] - phase;
+    bool ends_on = false;
+    size_t first = doc->shape_edge_start[shape];
+    for (size_t i = 0U; i < doc->shape_edge_count[shape]; i++) {
+        geom_edge edge = edges[first+i];
+        double length = hypot(edge.b.x-edge.a.x, edge.b.y-edge.a.y);
+        while (length > 0.0) {
+            double step = fmin(remain, length);
+            ends_on = (pattern & 1U) == 0U;
+            length -= step;
+            remain -= step;
+            if (remain <= 1e-12) {
+                pattern = (pattern + 1U) % expanded;
+                remain = stroke->dash[pattern % count];
+            }
+        }
+    }
+    return starts_on && ends_on;
 }
 
 static bool render_work_is_bounded(const svg_shape_document *doc)
@@ -206,6 +255,7 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
 }
 
 static bool render_sample(const svg_shape_document *doc, const geom_edge *local_edges,
+                          const bool *dash_seams,
                           double sample_x,
                           double sample_y, double scale, double offset_x,
                           double offset_y, uint8_t *sample_rgba,
@@ -243,7 +293,7 @@ static bool render_sample(const svg_shape_document *doc, const geom_edge *local_
         bool inside = doc->shape_evenodd[shape] ? parity[shape] != 0U : winding[shape] != 0;
         const uint8_t *fill = colors + shape * 4U;
         if (inside && fill[3] != 0U) memcpy(sample_rgba, fill, 4U);
-        if (stroke_contains(doc, shape, local_edges, px, py))
+        if (stroke_contains(doc, shape, local_edges, dash_seams, px, py))
             memcpy(sample_rgba, doc->strokes[shape].rgba, 4U);
     }
     return true;
@@ -278,6 +328,7 @@ static bool pixel_may_cross_edge(const svg_shape_document *doc,
 }
 
 static bool render_pixel(const svg_shape_document *doc, const geom_edge *local_edges,
+                         const bool *dash_seams,
                          uint32_t x, uint32_t y,
                          double scale, double offset_x, double offset_y,
                          raster_tile *tile, int32_t *winding,
@@ -299,7 +350,7 @@ static bool render_pixel(const svg_shape_document *doc, const geom_edge *local_e
         double bottom = doc->view_y + ((double)y + 1.0 - offset_y) / scale;
         if (!pixel_may_cross_edge(doc, left, top, right, bottom)) {
             uint8_t center_rgba[4] = {0U, 0U, 0U, 0U};
-            if (!render_sample(doc, local_edges, (double)x + 0.5, (double)y + 0.5,
+            if (!render_sample(doc, local_edges, dash_seams, (double)x + 0.5, (double)y + 0.5,
                                scale, offset_x, offset_y, center_rgba,
                                winding, parity, colors, diag)) return false;
             size_t center_offset = ((size_t)y * doc->width + x) * 4U;
@@ -311,7 +362,7 @@ static bool render_pixel(const svg_shape_document *doc, const geom_edge *local_e
     for (size_t sy = 0; sy < RASTER_SAMPLES_PER_AXIS; sy++) {
         for (size_t sx = 0; sx < RASTER_SAMPLES_PER_AXIS; sx++) {
             uint8_t sample_rgba[4] = {0U, 0U, 0U, 0U};
-            if (!render_sample(doc, local_edges, (double)x + locations[sx],
+            if (!render_sample(doc, local_edges, dash_seams, (double)x + locations[sx],
                                (double)y + locations[sy], scale, offset_x,
                                offset_y, sample_rgba, winding, parity, colors,
                                diag)) return false;
@@ -334,9 +385,11 @@ static bool render_pixel(const svg_shape_document *doc, const geom_edge *local_e
 
 static bool prepare_local_stroke_edges(const svg_shape_document *doc,
                                        geom_edge **out_edges,
+                                       bool **out_dash_seams,
                                        svg_shape_diagnostic *diag)
 {
     *out_edges = NULL;
+    *out_dash_seams = NULL;
     bool needed = false;
     for (size_t i = 0; i < doc->shape_count; i++)
         needed |= doc->strokes[i].rgba[3] != 0U && doc->strokes[i].width > 0.0 &&
@@ -347,7 +400,9 @@ static bool prepare_local_stroke_edges(const svg_shape_document *doc,
         return false;
     }
     geom_edge *edges = malloc(doc->edge_count * sizeof(*edges));
-    if (edges == NULL) {
+    bool *seams = calloc(doc->shape_count, sizeof(*seams));
+    if (edges == NULL || seams == NULL) {
+        free(edges); free(seams);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, 0};
         return false;
     }
@@ -357,12 +412,16 @@ static bool prepare_local_stroke_edges(const svg_shape_document *doc,
         if (doc->strokes[shape].rgba[3] != 0U && doc->strokes[shape].width > 0.0 &&
             (!geom_affine_map_point(doc->shape_stroke_inverse[shape], edges[i].a, &edges[i].a) ||
              !geom_affine_map_point(doc->shape_stroke_inverse[shape], edges[i].b, &edges[i].b))) {
-            free(edges);
+            free(edges); free(seams);
             if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0};
             return false;
         }
     }
+    for (size_t i = 0U; i < doc->shape_count; i++)
+        seams[i] = doc->strokes[i].rgba[3] != 0U &&
+                   dash_joins_closed_seam(doc, i, edges);
     *out_edges = edges;
+    *out_dash_seams = seams;
     return true;
 }
 
@@ -411,17 +470,18 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
         return false;
     }
     geom_edge *local_edges = NULL;
-    if (!prepare_local_stroke_edges(doc, &local_edges, diag)) return false;
+    bool *dash_seams = NULL;
+    if (!prepare_local_stroke_edges(doc, &local_edges, &dash_seams, diag)) return false;
     int32_t *winding = calloc(doc->shape_count, sizeof(*winding));
     uint8_t *parity = calloc(doc->shape_count, sizeof(*parity));
     uint8_t *colors = calloc(doc->shape_count, 4U);
     if (doc->shape_count != 0U && (winding == NULL || parity == NULL || colors == NULL)) {
-        free(winding); free(parity); free(colors); free(local_edges);
+        free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, 0};
         return false;
     }
     if (!raster_tile_create(doc->width, doc->height, out)) {
-        free(winding); free(parity); free(colors); free(local_edges);
+        free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }
@@ -433,14 +493,14 @@ bool raster_shape_render(const svg_shape_document *doc, raster_tile *out,
     double offset_y = ((double)doc->height - doc->view_height * scale) * 0.5;
     for (uint32_t y = 0; y < doc->height; y++) {
         for (uint32_t x = 0; x < doc->width; x++) {
-            if (!render_pixel(doc, local_edges, x, y, scale, offset_x, offset_y, out,
+            if (!render_pixel(doc, local_edges, dash_seams, x, y, scale, offset_x, offset_y, out,
                               winding, parity, colors, diag)) {
-                raster_tile_destroy(out); free(winding); free(parity); free(colors); free(local_edges);
+                raster_tile_destroy(out); free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
                 return false;
             }
         }
     }
-    free(winding); free(parity); free(colors); free(local_edges);
+    free(winding); free(parity); free(colors); free(local_edges); free(dash_seams);
     if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0};
     return true;
 }

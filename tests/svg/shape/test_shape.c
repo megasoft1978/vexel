@@ -230,7 +230,11 @@ static bool stroke_cap_join_and_dash_checks(void)
 
     static const char dashed_join[] = "<svg width=\"16\" height=\"16\"><polyline points=\"4,10 8,6 12,10\" fill=\"none\" stroke=\"red\" stroke-width=\"4\" stroke-linejoin=\"miter\" stroke-dasharray=\"9 20\"/></svg>";
     uint8_t dashed_miter_tip;
-    return alpha_at(dashed_join, 7U, 3U, &dashed_miter_tip) && dashed_miter_tip > 0U;
+    if (!alpha_at(dashed_join, 7U, 3U, &dashed_miter_tip) || dashed_miter_tip == 0U)
+        return false;
+    static const char closed_seam[] = "<svg width=\"16\" height=\"16\"><polygon points=\"8,6 12,10 4,10\" fill=\"none\" stroke=\"black\" stroke-width=\"4\" stroke-linejoin=\"miter\" stroke-dasharray=\"15 2\"/></svg>";
+    uint8_t seam_miter_tip;
+    return alpha_at(closed_seam, 7U, 3U, &seam_miter_tip) && seam_miter_tip > 0U;
 }
 
 int main(void)
