@@ -1,10 +1,10 @@
 Command: python3 tests/bench_shape_raster.py --output artifacts/WO-M4-03/raster-benchmark.json
 Base commit: 6cd61dd6570ab556af7d6a1feb8899d3f849f8af
-Candidate source commit: 6370ecfeadda70ef7b6fe34b2c3d1a05bd7e9740
+Candidate source commit: 26d6b19d38b23be633c0d85642cd637f4ebdba1e
 Candidate source paths dirty before report generation: none
 Workloads: simple 128x128 rectangle; 128x128 cubic fill; 128x128 16 fractional rectangles.
 Trials: two warmups + 21 measured paired trials per workload/revision; base/candidate order alternates; output hashes were stable.
-Median change: simple +12.18%; curved +57.48%; multi-shape +78.79%.
-Candidate throughput: simple 5,992,321 px/s; curved 3,390,407 px/s; multi-shape 2,823,205 px/s.
+Median change: simple +14.34%; curved +63.16%; multi-shape +77.50%.
+Candidate throughput: simple 6,937,963 px/s; curved 3,701,867 px/s; multi-shape 3,004,493 px/s.
 Peak RSS: 2,048,000 B base; 2,031,616 B candidate.
 Full trial samples, medians/p95s, hashes, host/compiler, and RSS method are in raster-benchmark.json.

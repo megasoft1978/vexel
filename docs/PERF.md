@@ -354,28 +354,33 @@ host and Apple clang 21.0.0; the specific hardware model is unavailable in the
 benchmark harness. Each fixed 128x128 workload uses two warmups and
 21 measured trials; results include per-trial latencies, median/p95, throughput,
 peak RSS, and output hashes in `artifacts/WO-M4-03/raster-benchmark.json`. Each
-trial alternates base/candidate order to reduce host clock/load drift. Candidate
-source commit `6370ecfeadda70ef7b6fe34b2c3d1a05bd7e9740` was clean for this campaign.
+trial alternates base/candidate order to reduce host clock/load drift. Raster
+source revision is `26d6b19d38b23be633c0d85642cd637f4ebdba1e`; the harness records
+that source revision so evidence-only commits do not change the identity.
 
 | Workload | Base median / p95 (ms) | Candidate median / p95 (ms) | Median change | Candidate pixels/s |
 |---|---:|---:|---:|---:|
-| Simple rectangle | 2.437 / 2.907 | 2.734 / 3.539 | +12.18% | 5,992,321 |
-| Curved fill | 3.069 / 3.260 | 4.832 / 5.027 | +57.48% | 3,390,407 |
-| 16 fractional rectangles | 3.246 / 3.609 | 5.803 / 5.908 | +78.79% | 2,823,205 |
+| Simple rectangle | 2.065 / 2.167 | 2.361 / 2.496 | +14.34% | 6,937,963 |
+| Curved fill | 2.713 / 3.023 | 4.426 / 4.776 | +63.16% | 3,701,867 |
+| 16 fractional rectangles | 3.072 / 3.431 | 5.453 / 5.923 | +77.50% | 3,004,493 |
 
 The first implementation made the simple workload 75.30% slower. An interior-pixel
 fast path now uses one center sample when no edge bounds cross the pixel, while
-boundary pixels retain all 16 fixed samples. The simple workload is now 12.18%
-slower than base; curved and multi-shape cases remain 57.48% and 78.79% slower
+boundary pixels retain all 16 fixed samples. The latest campaign measures simple
+at 14.34% slower than base; curved and multi-shape are 63.16% and 77.50% slower
 because their more numerous edges make boundary classification more costly.
+Independent verifier and direct reruns varied within +12.18–14.64% simple,
++57.48–66.24% curved, and +77.50–89.65% multi-shape; each record uses 21 paired
+trials and retains per-trial samples. This range reflects short CLI-level measurements,
+including process startup, and is recorded instead of implying one exact timing.
 The sample grid and work cap remain unchanged. Peak process RSS is 2,048,000 bytes
 for base and 2,031,616 bytes for candidate. This is a measured quality/performance
 tradeoff, not a speedup claim. The renderer and harness use 128x128 tiles; CLI
 timing includes SVG decode, process startup, and rasterization.
 
 The 17 librsvg 2.63.2 fixtures pass with zero interior differences, maximum
-alpha delta at most 56, fully covered RGB difference at most 1, and no more than
-58 differing edge pixels per fixture. Fixture source, Vexel RGBA, and librsvg
+alpha delta at most 56, jointly covered raw straight RGB difference at most 1,
+and no more than 58 differing edge pixels per fixture. Fixture source, Vexel RGBA, and librsvg
 PNG hashes are retained in `artifacts/WO-M4-03/reference-comparison.json`.
 The seeded ASan+UBSan raster campaign result is in
 `artifacts/WO-M4-03/fuzz-report.json`; it separately counts generated and
