@@ -106,6 +106,10 @@ int main(void)
     raster_tile_destroy(&tile);svg_shape_document_destroy(&doc);
     static const uint8_t extreme_ellipse[]="<svg width=\"8\" height=\"8\"><circle cx=\"1000000\" cy=\"0\" r=\"1\"/></svg>";
     if(svg_shape_decode((base_bytes){extreme_ellipse,sizeof(extreme_ellipse)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_NUMBER||diagnostic.offset==0U)return 31;
+    static const uint8_t leading_transform_comma[]="<svg width=\"8\" height=\"8\"><rect width=\"1\" height=\"1\" transform=\",translate(1)\"/></svg>";
+    if(svg_shape_decode((base_bytes){leading_transform_comma,sizeof(leading_transform_comma)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_UNSUPPORTED||diagnostic.offset==0U)return 34;
+    static const uint8_t repeated_transform_comma[]="<svg width=\"8\" height=\"8\"><rect width=\"1\" height=\"1\" transform=\"translate(1),,scale(2)\"/></svg>";
+    if(svg_shape_decode((base_bytes){repeated_transform_comma,sizeof(repeated_transform_comma)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_UNSUPPORTED||diagnostic.offset==0U)return 35;
     static const uint8_t zero_shape[]="<svg width=\"8\" height=\"8\"><circle r=\"0\"/><ellipse rx=\"0\" ry=\"2\"/></svg>";
     if(svg_shape_decode((base_bytes){zero_shape,sizeof(zero_shape)-1U},&doc,&diagnostic)!=SVG_SHAPE_ERROR_NONE||doc.edge_count!=0U)return 27;
     svg_shape_document_destroy(&doc);

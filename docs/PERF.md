@@ -349,7 +349,7 @@ The filled-shape differential fixtures passed with librsvg
 source/output hashes and per-case mismatch counts are in
 `artifacts/WO-M4-01/reference-comparison.json`. The final seeded ASan+UBSan
 shape campaign result is retained at `artifacts/WO-M4-01/fuzz-report.json`;
-it completed 1,000,000 cases in 24.867 seconds with no sanitizer reports,
+it completed 1,000,000 cases in 24.984 seconds with no sanitizer reports,
 crashes, or invariant failures. The runner sandbox blocked offscreen Metal
 access during its first verification attempts; the complete Debug, ASan,
 UBSan, and Python suites pass when run directly in the isolated worktree. The sandbox failure transcript and direct host results are retained in the M4 logs.

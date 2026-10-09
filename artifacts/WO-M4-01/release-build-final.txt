@@ -1,14 +1,9 @@
-[1/13] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
-[2/13] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
-[3/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
-[4/13] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[5/13] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
-[6/13] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
-[7/13] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[8/13] Linking C static library libvexel_shape.a
-[9/13] Linking C executable bin/shape_test
-[10/13] Linking C executable bin/shape_render_cli
-[11/13] Linking C executable bin/shape_fuzz
-[12/13] Linking C executable bin/svg_index_bench
-[13/13] Linking C executable bin/svgworkbench
+[1/8] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[2/8] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[3/8] Linking C static library libvexel_shape.a
+[4/8] Linking C executable bin/shape_render_cli
+[5/8] Linking C executable bin/shape_fuzz
+[6/8] Linking C executable bin/shape_test
+[7/8] Linking C executable bin/svg_index_bench
+[8/8] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

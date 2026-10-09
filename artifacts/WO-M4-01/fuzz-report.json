@@ -1,8 +1,8 @@
 {
   "seed": 20261009,
   "cases": 1000000,
-  "duration_seconds": 24.867,
-  "process_cpu_seconds": 24.398,
+  "duration_seconds": 24.984,
+  "process_cpu_seconds": 24.611,
   "binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-asan/bin/shape_fuzz",
   "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
   "sanitizer_stderr": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/artifacts/WO-M4-01/fuzz-report.stderr.txt",

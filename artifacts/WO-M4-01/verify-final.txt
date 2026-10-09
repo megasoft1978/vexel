@@ -7,24 +7,11 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-debug
-[1/13] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
-[2/13] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
-[3/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
-[4/13] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[5/13] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
-[6/13] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
-[7/13] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[8/13] Linking C static library libvexel_shape.a
-[9/13] Linking C executable bin/shape_render_cli
-[10/13] Linking C executable bin/shape_test
-[11/13] Linking C executable bin/svg_index_bench
-[12/13] Linking C executable bin/shape_fuzz
-[13/13] Linking C executable bin/svgworkbench
-ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+ninja: no work to do.
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-debug
       Start  1: cli-version
- 1/11 Test  #1: cli-version ......................   Passed    0.30 sec
+ 1/11 Test  #1: cli-version ......................   Passed    0.00 sec
       Start  2: base-contract
  2/11 Test  #2: base-contract ....................   Passed    0.00 sec
       Start  3: xml-tokenizer
@@ -32,9 +19,9 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build
       Start  4: source-save
  4/11 Test  #4: source-save ......................   Passed    0.00 sec
       Start  5: shape-render
- 5/11 Test  #5: shape-render .....................   Passed    0.18 sec
+ 5/11 Test  #5: shape-render .....................   Passed    0.01 sec
       Start  6: svg-index
- 6/11 Test  #6: svg-index ........................   Passed    0.12 sec
+ 6/11 Test  #6: svg-index ........................   Passed    0.11 sec
       Start  7: viewer-navigation
  7/11 Test  #7: viewer-navigation ................   Passed    0.01 sec
       Start  8: svg-token-stream-budget
@@ -44,11 +31,11 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build
       Start 10: spatial-cache
 10/11 Test #10: spatial-cache ....................   Passed    0.02 sec
       Start 11: job-snapshot
-11/11 Test #11: job-snapshot .....................   Passed    0.05 sec
+11/11 Test #11: job-snapshot .....................   Passed    0.04 sec
 
 100% tests passed, 0 tests failed out of 11
 
-Total Test time (real) =   0.93 sec
+Total Test time (real) =   0.45 sec
 usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
@@ -57,15 +44,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 192 tests in 12.446s
+Ran 192 tests in 22.459s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.127884
+native smoke elapsed seconds: 0.119225
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.099303
-Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 12.523s
+native replay elapsed seconds: 0.120256
+Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 22.536s
 valid ledger: 335 entries

@@ -399,7 +399,7 @@ static bool transform_parse(base_bytes src, svg_xml_span span, geom_affine *out,
     geom_affine result = geom_affine_identity();
     size_t operations = 0U;
     while (true) {
-        skip_path_separators(&r);
+        skip_space(&r);
         if (r.i == r.n) break;
         size_t name = r.i;
         while (r.i < r.n && src.ptr[span.offset+r.i] >= 'a' &&
