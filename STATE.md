@@ -112,4 +112,24 @@
 - WO-M4-02 revision 2 is complete, independently verified, accepted, and fast-forward merged to `main` at `2d19d27960f524c9ff7fd888185ec7f7b3ca295f`. Fresh read-only review passed with no findings in 58.953 s. Direct checks pass: Debug/ASan/UBSan CTest 11/11, `./dev verify` Python 192/192 with native smoke and 20-frame replay, focused tests 9/9, 1,000,000 ASan+UBSan fuzz cases, ten librsvg fixtures, and corpus/inventory checks. Corpus remains 2 previewable, 56 unsupported, no limits/crashes; this is open/index evidence. The initial managed-runner attempt and its sandbox Metal/process-policy failures are retained separately; direct checks pass. Evidence: `artifacts/WO-M4-02/` and `artifacts/runs/WO-M4-02/verify-bb6f216a-27f7-40a3-8a61-45c5a90b2fce/`. Next: WO-M4-03 fill rules and deterministic antialiasing.
 
 - WO-M4-03 revision 3 is complete, independently verified, and fast-forward merged to `main` at `bf006b4833e66533bcf8eaef45dad8119332eb8b`. The final fresh read-only review passed with no findings; all 18 frozen commands pass. Debug/ASan/UBSan CTest each pass 11/11, `./dev verify` reports Python 192/192 with native smoke and 20-frame replay, the 17 librsvg fixtures meet the raw jointly-covered RGB threshold, and ASan+UBSan fuzz completed 1,000,000 cases in 19.081 s. Release paired benchmarks retain all trials and report median changes of +14.34% simple, +63.16% curved, +77.50% multi-shape; candidate peak RSS is 2,031,616 B. Reruns show timing variance, recorded in `docs/PERF.md`. Corpus remains 2/58 previewable and 56 unsupported; the 100 MiB first-preview gate fails, max-step and RSS gates pass. This is open/index evidence, not full-render parity. Evidence: `artifacts/WO-M4-03/`, `artifacts/runs/WO-M4-03/verify-8cc0b01f-0f50-42bb-9623-41d21d18bc69/`, `reports/M4/`.
-- WO-M4-04 revision 1 is READY in `work/WO-M4-04.md` at base `1e9c7b81f1bda074031af4fd165240e8d5eeba09`, frozen spec SHA-256 `ce170da69abd214c90d924655b41d25accf392556e681c8f710c083167333de7`. It adds bounded basic-shape strokes with caps, joins, dash patterns, strict differential fixtures, fuzz and corpus/performance evidence. Active next: execute WO-M4-04.
+- WO-M4-04 revision 1 is complete and fast-forward merged to `main` at
+  `dac63d6e8f8cd08787f3ee7e71099d0655ee258e`. The final candidate
+  `f48c19f017ddf1cbc756e4ff79a9c26d674335fd` passed fresh read-only review
+  `verify-3c3ca13c-0382-4d62-8823-d11408b97fa4` with no findings in 89.518 s;
+  all 18 frozen commands passed. Debug/ASan/UBSan CTest each pass 11/11,
+  `./dev verify` passes 192 Python tests and native smoke/replay, 9 focused
+  tests and the native shape suite pass, 26 librsvg differential fixtures pass,
+  and ASan+UBSan fuzz completes 1,000,000 cases in 21.767 s with zero reports,
+  crashes, or invariants. Evidence: `artifacts/WO-M4-04/`.
+- The final corpus run retains 58 source hashes and 116 fresh trials: 2 preview,
+  56 unsupported, no limits or crashes. T1 first-preview speed and RSS ratios
+  are 42.482x and 33.590x; higher-tier ratios are unavailable. The 100 MiB
+  first-preview gate fails (0/12); maximum owner step is 199,375 ns and all
+  12 RSS checks pass. This is open/index evidence, not full-render parity.
+- Release raster medians are 2.138 ms simple fill, 4.301 ms curved fill,
+  5.331 ms multi-shape fill, 2.501 ms line stroke, 10.735 ms curved stroke,
+  and 78.994 ms dashed stroke. Existing-fill median changes versus the frozen
+  base are +0.73%, +3.86%, and +2.24%; stroke workloads are unsupported by the
+  base. Release `svgworkbench` is 189,328 bytes. Full trials and ratios are in
+  `artifacts/WO-M4-04/raster-benchmark.json` and `reports/M4/`.
+- Active next work order: WO-M4-05, the bounded CSS/style subset.

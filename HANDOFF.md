@@ -1,5 +1,17 @@
 # Handoff
 
-WO-M4-03 revision 3 is complete and fast-forward merged to `main` at `bf006b4833e66533bcf8eaef45dad8119332eb8b`. Final fresh read-only review passed with no findings; all 18 frozen commands pass. Debug/ASan/UBSan CTest 11/11 each, Python 192/192, native smoke/replay, Release, 1M sanitized fuzz, and 17 strict librsvg fixtures pass. Benchmarks record +14.34% simple, +63.16% curved, and +77.50% multi-shape median latency changes, with 2,031,616 B candidate peak RSS. Corpus has 2/58 previewable and 56 unsupported; 100 MiB first-preview fails, max-step and RSS pass. See `artifacts/WO-M4-03/`, `artifacts/runs/WO-M4-03/verify-8cc0b01f-0f50-42bb-9623-41d21d18bc69/`, and `reports/M4/`. This measures open/index and selected-shape rendering evidence, not full SVG parity.
+WO-M4-04 revision 1 is complete and fast-forward merged to `main` at
+`dac63d6e8f8cd08787f3ee7e71099d0655ee258e`. Final candidate
+`f48c19f017ddf1cbc756e4ff79a9c26d674335fd` passed fresh read-only review
+`verify-3c3ca13c-0382-4d62-8823-d11408b97fa4` with no findings in 89.518 s;
+all 18 frozen commands pass. Debug/ASan/UBSan CTest 11/11, Python 192/192,
+native smoke/replay, 9 focused tests, 26 strict librsvg fixtures, and 1M
+ASan+UBSan fuzz pass. The final raster benchmark records 2.138/4.301/5.331 ms
+simple/curved/multi-shape fill and 2.501/10.735/78.994 ms line/curved/dashed
+strokes. The corpus has 2/58 previews and 56 unsupported; the 100 MiB preview
+gate fails, while max-step (0.199 ms) and RSS gates pass. This is open/index and
+selected-shape evidence, not full SVG parity. Detailed results:
+`artifacts/WO-M4-04/`, `reports/M4/head-to-head.md`, and `docs/PERF.md`.
 
-WO-M4-04 revision 1 is READY in `work/WO-M4-04.md` at base `1e9c7b81f1bda074031af4fd165240e8d5eeba09`, spec SHA-256 `ce170da69abd214c90d924655b41d25accf392556e681c8f710c083167333de7`. It scopes bounded cap/join/dash strokes to basic shapes, explicitly rejects stroked paths until subpath boundaries are modeled, and requires strict reference, fuzz, benchmark, and corpus evidence. Continue with the runner on a fresh worktree and honor the M4 feature-frequency order and protected paths.
+Next: prepare and freeze WO-M4-05 for the CSS/style subset, following the M4
+feature priority inventory at `reports/M4/corpus-feature-frequency.md`.
