@@ -27,6 +27,7 @@ struct svg_index_session {
     bool canceled;
     bool complete;
     bool preview;
+    bool preview_root_supported;
     svg_xml_diagnostic diagnostic;
     svg_xml_diagnostic reader_diagnostic;
     validation_payload validation;
@@ -115,6 +116,75 @@ static bool preview_root_is_svg(const svg_index_session *s)
            memcmp(s->source.ptr + root->name_offset, "svg", 3U) == 0;
 }
 
+static bool xml_space(uint8_t byte)
+{
+    return byte == ' ' || byte == '\t' || byte == '\r' || byte == '\n';
+}
+
+static bool attr_is(const svg_index_session *s, size_t start, size_t length,
+                    const char *name)
+{
+    size_t name_length = strlen(name);
+    return length == name_length && memcmp(s->source.ptr + start, name, length) == 0;
+}
+
+static bool preview_attributes_supported(const svg_index_session *s,
+                                         const svg_xml_reader_tag *tag,
+                                         svg_index_support shape)
+{
+    size_t end = tag->source.offset + tag->source.length;
+    size_t at = tag->name.offset + tag->name.length;
+    bool width = false, height = false, data = false;
+    while (at < end) {
+        while (at < end && xml_space(s->source.ptr[at])) ++at;
+        if (at >= end || s->source.ptr[at] == '>' || s->source.ptr[at] == '/') break;
+        size_t name = at;
+        while (at < end && !xml_space(s->source.ptr[at]) &&
+               s->source.ptr[at] != '=' && s->source.ptr[at] != '/' &&
+               s->source.ptr[at] != '>') ++at;
+        size_t name_length = at - name;
+        if (name_length == 0U || memchr(s->source.ptr + name, ':', name_length) != NULL)
+            return false;
+        while (at < end && xml_space(s->source.ptr[at])) ++at;
+        if (at >= end || s->source.ptr[at++] != '=') return false;
+        while (at < end && xml_space(s->source.ptr[at])) ++at;
+        if (at >= end || (s->source.ptr[at] != '\'' && s->source.ptr[at] != '"')) return false;
+        uint8_t quote = s->source.ptr[at++];
+        size_t value = at;
+        while (at < end && s->source.ptr[at] != quote) ++at;
+        if (at >= end) return false;
+        size_t value_length = at - value;
+        bool accepted = false;
+        if (shape == SVG_INDEX_UNSUPPORTED) {
+            accepted = attr_is(s, name, name_length, "xmlns") ||
+                attr_is(s, name, name_length, "version") ||
+                attr_is(s, name, name_length, "width") ||
+                attr_is(s, name, name_length, "height") ||
+                attr_is(s, name, name_length, "viewBox");
+            if (attr_is(s, name, name_length, "width")) width = true;
+            if (attr_is(s, name, name_length, "height")) height = true;
+            if (attr_is(s, name, name_length, "xmlns") &&
+                (value_length != 26U || memcmp(s->source.ptr + value,
+                    "http://www.w3.org/2000/svg", 26U) != 0)) return false;
+        } else if (shape == SVG_INDEX_SUPPORTED_RECT) {
+            accepted = attr_is(s, name, name_length, "fill") ||
+                attr_is(s, name, name_length, "fill-rule") ||
+                attr_is(s, name, name_length, "x") || attr_is(s, name, name_length, "y") ||
+                attr_is(s, name, name_length, "width") || attr_is(s, name, name_length, "height");
+            if (attr_is(s, name, name_length, "width")) width = true;
+            if (attr_is(s, name, name_length, "height")) height = true;
+        } else {
+            accepted = attr_is(s, name, name_length, "fill") ||
+                attr_is(s, name, name_length, "fill-rule") || attr_is(s, name, name_length, "d");
+            if (attr_is(s, name, name_length, "d")) data = true;
+        }
+        if (!accepted) return false;
+        at++;
+    }
+    return shape == SVG_INDEX_UNSUPPORTED ? width && height :
+        shape == SVG_INDEX_SUPPORTED_RECT ? width && height : data;
+}
+
 static bool reserve_element(svg_index_session *s)
 {
     if (s->element_count >= SVG_INDEX_MAX_ELEMENTS) return false;
@@ -150,7 +220,7 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
         s->elements[top.record].source_length = tag->source.offset + tag->source.length -
                                                 s->elements[top.record].source_offset;
         s->elements[top.record].closed = true;
-        if (!s->preview && s->depth == 1U && preview_root_is_svg(s) &&
+        if (!s->preview && s->depth == 1U && s->preview_root_supported &&
             s->elements[top.record].support != SVG_INDEX_UNSUPPORTED)
             { s->preview = true; s->preview_record = top.record; }
         return;
@@ -175,8 +245,15 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
     e->support = equal_name(s, e->name_offset, e->name_length, "rect") ? SVG_INDEX_SUPPORTED_RECT :
                  equal_name(s, e->name_offset, e->name_length, "path") ? SVG_INDEX_SUPPORTED_PATH : SVG_INDEX_UNSUPPORTED;
     e->closed = self_closing;
-    if (s->depth == 0U) s->root_open_length = tag->source.length;
-    if (!s->preview && s->depth == 1U && preview_root_is_svg(s) && self_closing &&
+    if (s->depth == 0U) {
+        s->root_open_length = tag->source.length;
+        s->preview_root_supported = preview_root_is_svg(s) &&
+            preview_attributes_supported(s, tag, SVG_INDEX_UNSUPPORTED);
+    }
+    if (s->depth == 1U && e->support != SVG_INDEX_UNSUPPORTED &&
+        !preview_attributes_supported(s, tag, e->support))
+        e->support = SVG_INDEX_UNSUPPORTED;
+    if (!s->preview && s->depth == 1U && s->preview_root_supported && self_closing &&
         e->support != SVG_INDEX_UNSUPPORTED) {
         s->preview = true; s->preview_record = i;
     }

@@ -40,6 +40,7 @@ typedef struct svg_index_element {
     size_t name_offset;
     size_t name_length;
     size_t depth;
+    /* Supported means the element and attribute names fit the current preview subset. */
     svg_index_support support;
     bool closed;
 } svg_index_element;

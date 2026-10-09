@@ -65,6 +65,7 @@ int main(int argc, char **argv)
     preview_task preview = {0};
     bool submitted = false, rendered = false, task_finished = false;
     bool progress_10 = false, progress_50 = false, progress_90 = false;
+    bool preview_before_index_complete = false;
     uint64_t first_ns = 0U, max_step_ns = 0U;
     svg_index_status status = SVG_INDEX_OK;
     while (status == SVG_INDEX_OK) {
@@ -86,7 +87,10 @@ int main(int argc, char **argv)
         if (!task_finished && platform_task_poll(queue, &task_result)) {
             task_finished = true;
             rendered = task_result.succeeded;
-            if (rendered) first_ns = now_ns() - start;
+            if (rendered) {
+                first_ns = now_ns() - start;
+                preview_before_index_complete = !progress.complete;
+            }
             else status = SVG_INDEX_INVALID;
         }
         uint64_t elapsed = now_ns() - step_start;
@@ -105,6 +109,7 @@ int main(int argc, char **argv)
     }
     platform_task_shutdown(queue);
     if (status != SVG_INDEX_COMPLETE || first_ns == 0U || first_ns > total_ns || !rendered ||
+        !preview_before_index_complete ||
         !progress_10 || !progress_50 || !progress_90) {
         (void)fprintf(stderr, "index failed: status=%d diagnostic=%d offset=%zu\n",
                       (int)status, (int)progress.diagnostic.category,
@@ -124,12 +129,13 @@ int main(int argc, char **argv)
     }
     (void)printf("{\"source_bytes\":%zu,\"read_ns\":%llu,\"first_preview_ns\":%llu,"
                  "\"complete_index_ns\":%llu,\"max_step_ns\":%llu,"
-                 "\"preview_before_index_complete\":true,"
+                 "\"preview_before_index_complete\":%s,"
                  "\"progress_10_50_90_complete\":true,"
                  "\"element_count\":%zu,\"index_bytes\":%zu,\"peak_rss_bytes\":%llu}\n",
                  size, (unsigned long long)(read_end - read_start),
                  (unsigned long long)first_ns, (unsigned long long)total_ns,
-                 (unsigned long long)max_step_ns, progress.element_count,
+                 (unsigned long long)max_step_ns,
+                 preview_before_index_complete ? "true" : "false", progress.element_count,
                  progress.element_count * sizeof(svg_index_element),
                  (unsigned long long)usage.ru_maxrss);
     svg_index_destroy(session); free(bytes);

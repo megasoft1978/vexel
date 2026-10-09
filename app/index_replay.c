@@ -116,7 +116,8 @@ static bool verify_preview_with_metal(const preview_job *job)
 
 static bool verify_stale_worker_rejected(void)
 {
-    static const uint8_t fixture[] = "<svg><rect width='2' height='2'/></svg>";
+    static const uint8_t fixture[] =
+        "<svg width='2' height='2'><rect width='2' height='2'/></svg>";
     svg_index_session *session = NULL;
     if (svg_index_start((base_bytes){fixture, sizeof(fixture) - 1U}, 41U, &session) != SVG_INDEX_OK)
         return false;
@@ -197,7 +198,7 @@ int app_run_index_replay(const char *path)
     unsigned last_mark = 0U;
     uint64_t max_owner_step_ns = 0U;
     while (status == SVG_INDEX_OK && !view.failed) {
-        size_t budget = length / 10U;
+        size_t budget = length / 64U;
         if (budget == 0U) budget = 1U;
         if (budget > SVG_INDEX_MAX_STEP_BYTES) budget = SVG_INDEX_MAX_STEP_BYTES;
         uint64_t step_started = clock_ns();
@@ -222,9 +223,11 @@ int app_run_index_replay(const char *path)
             if (!result.succeeded || !svg_index_preview_generation_is_current(session, job.generation)) okay = false;
             else {
                 presented = verify_preview_with_metal(&job);
+                if (presented) (void)ui_index_progress_publish_preview(&view, job.generation);
                 okay = okay && presented;
             }
         }
+        if (submitted && !task_finished) yield_owner();
         uint64_t elapsed = clock_ns() - step_started;
         if (elapsed > max_owner_step_ns) max_owner_step_ns = elapsed;
     }
@@ -233,8 +236,10 @@ int app_run_index_replay(const char *path)
         platform_task_result result;
         if (platform_task_poll(render_queue, &result)) {
             task_finished = true;
-            if (result.succeeded && svg_index_preview_generation_is_current(session, job.generation))
+            if (result.succeeded && svg_index_preview_generation_is_current(session, job.generation)) {
                 presented = verify_preview_with_metal(&job);
+                if (presented) (void)ui_index_progress_publish_preview(&view, job.generation);
+            }
             okay = okay && result.succeeded && presented;
         }
         if (!task_finished) yield_owner();
@@ -244,14 +249,15 @@ int app_run_index_replay(const char *path)
     platform_task_shutdown(render_queue);
     platform_task_destroy(render_queue);
     bool complete = status == SVG_INDEX_COMPLETE && svg_index_get_progress(session).complete;
-    (void)printf("index replay: complete=%s preview=%s before_complete=%s percent=%u max_owner_step_ns=%llu\n",
+    (void)printf("index replay: complete=%s preview=%s ui_visible=%s before_complete=%s percent=%u max_owner_step_ns=%llu\n",
                  complete ? "true" : "false", presented ? "presented" : "none",
+                 view.preview_visible ? "true" : "false",
                  preview_before_complete ? "true" : "false", view.percent,
                  (unsigned long long)max_owner_step_ns);
     svg_index_destroy(session);
     release_preview(&job);
     free(bytes);
-    bool first_preview_gate = preview_before_complete || length < 1024U * 1024U;
+    bool first_preview_gate = preview_before_complete;
     bool stale_rejected = verify_stale_worker_rejected();
     (void)printf("stale_generation_rejected=%s\n", stale_rejected ? "true" : "false");
     bool canceled_rejected = verify_canceled_worker_rejected();
@@ -259,6 +265,7 @@ int app_run_index_replay(const char *path)
     (void)printf("preview_state: submitted=%s finished=%s ready=%s\n",
         submitted ? "true" : "false", task_finished ? "true" : "false",
         atomic_load_explicit(&job.tile_ready, memory_order_acquire) ? "true" : "false");
-    return okay && complete && first_preview_gate && stale_rejected && canceled_rejected &&
+    return okay && complete && first_preview_gate && presented && view.preview_visible &&
+        stale_rejected && canceled_rejected &&
         max_owner_step_ns < 100000000U ? EXIT_SUCCESS : EXIT_FAILURE;
 }

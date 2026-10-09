@@ -180,7 +180,8 @@ int main(int argc, char **argv)
 {
     if (argc > 1) return check_frozen_fixture_equivalence(argc, argv) ? 0 : 1;
     if (!check_diagnostic_equivalence()) return fail("incremental diagnostic category or offset differs from one-shot tokenizer");
-    static const uint8_t source[] = "<svg><rect width='2'/><custom/><path d='M0 0'/></svg>";
+    static const uint8_t source[] =
+        "<svg width='2' height='2'><rect width='2' height='2'/><custom/><path d='M0 0'/></svg>";
     svg_index_session *session = NULL;
     if (svg_index_start((base_bytes){source, sizeof(source) - 1U}, 7U, &session) != SVG_INDEX_OK)
         return fail("start failed");
@@ -191,7 +192,7 @@ int main(int argc, char **argv)
     p = svg_index_get_progress(session);
     if (step != SVG_INDEX_COMPLETE || !p.complete || !p.first_preview_ready)
         return fail("session did not complete with preview");
-    if (p.element_count != 4U || p.attribute_count != 2U) return fail("count mismatch");
+    if (p.element_count != 4U || p.attribute_count != 5U) return fail("count mismatch");
     svg_xml_token *reference = calloc(sizeof(source), sizeof(*reference));
     if (reference == NULL) return fail("reference token allocation failed");
     svg_xml_result one_shot = svg_xml_tokenize((base_bytes){source, sizeof(source) - 1U},
@@ -206,21 +207,29 @@ int main(int argc, char **argv)
     if (!equivalent) return fail("one-shot token stream mismatch");
     ui_index_progress view = {0};
     if (!ui_index_progress_update(&view, &p) || view.percent != 100U ||
-        !view.preview_visible || view.loading) return fail("progress UI state mismatch");
+        view.preview_visible || view.loading ||
+        !ui_index_progress_publish_preview(&view, 7U) || !view.preview_visible ||
+        ui_index_progress_publish_preview(&view, 6U))
+        return fail("progress UI tile-publication state mismatch");
     svg_index_progress stale = p;
     stale.generation = 6U;
     if (ui_index_progress_update(&view, &stale)) return fail("stale progress was accepted");
     svg_index_element e;
+    size_t rect_offset = sizeof("<svg width='2' height='2'>") - 1U;
+    size_t rect_length = sizeof("<rect width='2' height='2'/>") - 1U;
     if (!svg_index_element_at(session, 1U, &e) || e.support != SVG_INDEX_SUPPORTED_RECT ||
-        e.depth != 1U || e.parent != 0U || !e.closed || e.source_offset != 5U ||
-        e.source_length != 17U || memcmp(source + e.source_offset, "<rect width='2'/>", 17U) != 0)
+        e.depth != 1U || e.parent != 0U || !e.closed || e.source_offset != rect_offset ||
+        e.source_length != rect_length ||
+        memcmp(source + e.source_offset, "<rect width='2' height='2'/>", rect_length) != 0)
         return fail("rect record mismatch");
     if (!svg_index_element_at(session, 2U, &e) || e.support != SVG_INDEX_UNSUPPORTED)
         return fail("unsupported record missing");
     base_mut_bytes preview_source = {0};
+    static const char expected_preview[] =
+        "<svg width='2' height='2'><rect width='2' height='2'/></svg>";
     if (!svg_index_make_preview_source(session, &preview_source) ||
-        preview_source.len != 28U || memcmp(preview_source.ptr,
-        "<svg><rect width='2'/></svg>", 28U) != 0) return fail("preview source mismatch");
+        preview_source.len != sizeof(expected_preview) - 1U || memcmp(preview_source.ptr,
+        expected_preview, sizeof(expected_preview) - 1U) != 0) return fail("preview source mismatch");
     free(preview_source.ptr);
     if (!svg_index_preview_generation_is_current(session, 7U))
         return fail("current preview generation rejected");
@@ -270,7 +279,8 @@ int main(int argc, char **argv)
     svg_index_destroy(session);
     if (!preserved_first) return fail("later shape replaced the first supported preview");
 
-    static const uint8_t malformed[] = "<svg><rect/></broken>";
+    static const uint8_t malformed[] =
+        "<svg width='2' height='2'><rect width='1' height='1'/></broken>";
     if (svg_index_start((base_bytes){malformed, sizeof(malformed) - 1U}, 1U, &session) != SVG_INDEX_OK)
         return fail("malformed session start failed");
     step = SVG_INDEX_OK;
@@ -278,7 +288,8 @@ int main(int argc, char **argv)
     p = svg_index_get_progress(session);
     bool bad_tail = step == SVG_INDEX_MALFORMED && !p.complete && p.first_preview_ready &&
                     p.diagnostic.category == SVG_XML_ERROR_MISMATCHED_TAG &&
-                    p.diagnostic.offset == 12U;
+                    p.diagnostic.offset == (size_t)(strstr((const char *)malformed,
+                        "</broken>") - (const char *)malformed);
     svg_xml_token *malformed_tokens = calloc(sizeof(malformed), sizeof(*malformed_tokens));
     if (malformed_tokens == NULL) { svg_index_destroy(session); return fail("diagnostic reference allocation failed"); }
     svg_xml_result malformed_reference = svg_xml_tokenize((base_bytes){malformed, sizeof(malformed) - 1U},
@@ -348,6 +359,31 @@ int main(int argc, char **argv)
     svg_index_destroy(session);
     free(bad_source);
     if (!bad_attribute) return fail("large malformed source was accepted");
+
+    static const uint8_t transformed_first[] =
+        "<svg width='2' height='2'><rect width='1' height='1' transform='translate(1)'/>"
+        "<rect width='1' height='1'/></svg>";
+    if (svg_index_start((base_bytes){transformed_first, sizeof(transformed_first) - 1U},
+                        1U, &session) != SVG_INDEX_OK)
+        return fail("unsupported-feature preview session start failed");
+    step = SVG_INDEX_OK;
+    while (step == SVG_INDEX_OK) step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+    svg_index_element unsupported_shape = {0}, supported_shape = {0};
+    base_mut_bytes supported_preview = {0};
+    static const char expected_supported_preview[] =
+        "<svg width='2' height='2'><rect width='1' height='1'/></svg>";
+    bool fallback = step == SVG_INDEX_COMPLETE &&
+        svg_index_element_at(session, 1U, &unsupported_shape) &&
+        unsupported_shape.support == SVG_INDEX_UNSUPPORTED &&
+        svg_index_element_at(session, 2U, &supported_shape) &&
+        supported_shape.support == SVG_INDEX_SUPPORTED_RECT &&
+        svg_index_make_preview_source(session, &supported_preview) &&
+        supported_preview.len == sizeof(expected_supported_preview) - 1U &&
+        memcmp(supported_preview.ptr, expected_supported_preview,
+               sizeof(expected_supported_preview) - 1U) == 0;
+    free(supported_preview.ptr);
+    svg_index_destroy(session);
+    if (!fallback) return fail("unsupported transform blocked the next renderable shape");
 
     static const uint8_t non_svg[] = "<g><rect width='2'/></g>";
     if (svg_index_start((base_bytes){non_svg, sizeof(non_svg) - 1U}, 1U, &session) != SVG_INDEX_OK)

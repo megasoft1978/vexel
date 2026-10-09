@@ -20,6 +20,7 @@
   "first_preview_before_index_complete": true,
   "stale_generation_rejected": true,
   "canceled_worker_rejected": true,
-  "max_owner_step_ns": 18280000,
-  "owner_step_limit_ns": 100000000
+  "max_owner_step_ns": 20782000,
+  "owner_step_limit_ns": 100000000,
+  "ui_preview_visible_after_tile_ready": true
 }

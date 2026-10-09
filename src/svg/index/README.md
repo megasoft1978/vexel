@@ -18,3 +18,11 @@ Once a supported depth-one shape has a complete source range,
 `svg_index_make_preview_source` returns an owned minimal SVG consisting of the
 original root opener and shape span. Callers schedule decode/raster work and
 must retain that owned byte buffer through task completion.
+
+The early preview subset requires an SVG root with supported `width` and
+`height` attributes and an unprefixed `rect` or `path` whose attribute names
+are accepted by the current shape decoder. Unsupported attributes such as
+`transform`, element prefixes, and unsupported root attributes keep the source
+record but mark it unsupported, allowing a later eligible shape to be chosen.
+`first_preview_ready` means an eligible source candidate exists; the UI marks a
+preview visible only after the worker has produced its owned raster tile.
