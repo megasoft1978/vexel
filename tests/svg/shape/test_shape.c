@@ -116,8 +116,12 @@ static bool antialias_and_fill_checks(void)
     if (!ok) return false;
 
     svg_shape_document oversize = {0};
-    oversize.width = 5000U; oversize.height = 5000U;
-    oversize.view_width = 16.0; oversize.view_height = 16.0;
+    bool evenodd = false, filled = true;
+    oversize.width = 4096U; oversize.height = 4096U;
+    oversize.view_width = 4096.0; oversize.view_height = 4096.0;
+    oversize.shape_count = 1U;
+    oversize.shape_evenodd = &evenodd;
+    oversize.shape_filled = &filled;
     raster_tile rejected = {0};
     if (raster_shape_render(&oversize, &rejected, &diag) ||
         diag.category != SVG_SHAPE_ERROR_LIMIT || rejected.rgba != NULL) return false;

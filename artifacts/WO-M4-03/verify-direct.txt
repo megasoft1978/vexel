@@ -27,15 +27,15 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03-r2/bu
       Start  8: svg-token-stream-budget
  8/11 Test  #8: svg-token-stream-budget ..........   Passed    0.02 sec
       Start  9: index-replay
- 9/11 Test  #9: index-replay .....................   Passed    0.12 sec
+ 9/11 Test  #9: index-replay .....................   Passed    0.15 sec
       Start 10: spatial-cache
 10/11 Test #10: spatial-cache ....................   Passed    0.02 sec
       Start 11: job-snapshot
-11/11 Test #11: job-snapshot .....................   Passed    0.04 sec
+11/11 Test #11: job-snapshot .....................   Passed    0.05 sec
 
 100% tests passed, 0 tests failed out of 11
 
-Total Test time (real) =   0.42 sec
+Total Test time (real) =   0.45 sec
 usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
@@ -44,15 +44,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 192 tests in 16.577s
+Ran 192 tests in 13.747s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.161452
+native smoke elapsed seconds: 0.130063
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.151822
-Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 16.643s
-valid ledger: 355 entries
+native replay elapsed seconds: 0.097685
+Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 13.825s
+valid ledger: 358 entries

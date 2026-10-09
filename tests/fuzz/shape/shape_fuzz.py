@@ -2,6 +2,7 @@
 """Run a fixed-seed, bounded shape parser/render fuzz campaign."""
 import argparse
 import json
+import platform
 import subprocess
 import time
 from pathlib import Path
@@ -52,9 +53,20 @@ def main():
         raise RuntimeError("fractional geometry and both fill rules were not exercised")
     if min(fractional_renders, evenodd_renders, nonzero_renders) == 0:
         raise RuntimeError("fractional geometry and both fill rules did not reach the rasterizer")
+    compiler = subprocess.run(["clang", "--version"], check=True, capture_output=True,
+                              text=True).stdout.splitlines()[0]
+    source_revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
+                                     check=True, capture_output=True, text=True).stdout.strip()
     report = {"seed": args.seed, "cases": cases, "duration_seconds": round(elapsed, 3),
               "process_cpu_seconds": campaign_seconds,
-              "binary": str(binary), "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+              "renderer": "Vexel scalar 4x4 shape rasterizer",
+              "source_revision": source_revision, "binary": str(binary),
+              "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+              "compiler": compiler,
+              "host": {"platform": platform.platform(), "machine": platform.machine(),
+                       "macos_version": platform.mac_ver()[0] or "unavailable"},
+              "metric_availability": {"peak_rss": "not collected by the bounded fuzz harness"},
+              "peak_rss_bytes": None,
               "sanitizer_stderr": str(stderr_path), "sanitizer_stderr_bytes": len(run.stderr.encode()),
               "random_input_max_bytes": 4096, "cap_exhaustion_cases": cap_exhaustion,
               "cap_exhaustion_input_bytes": cap_case_bytes,

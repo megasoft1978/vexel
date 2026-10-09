@@ -1,10 +1,22 @@
 {
   "seed": 20261009,
   "cases": 1000000,
-  "duration_seconds": 18.832,
-  "process_cpu_seconds": 18.48,
+  "duration_seconds": 19.081,
+  "process_cpu_seconds": 18.758,
+  "renderer": "Vexel scalar 4x4 shape rasterizer",
+  "source_revision": "0a24cef802f68974dd85a1a7532063f2407a5f8f",
   "binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03-r2/build/mac-asan/bin/shape_fuzz",
   "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "host": {
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "machine": "arm64",
+    "macos_version": "27.0"
+  },
+  "metric_availability": {
+    "peak_rss": "not collected by the bounded fuzz harness"
+  },
+  "peak_rss_bytes": null,
   "sanitizer_stderr": "artifacts/WO-M4-03/fuzz-report.stderr.txt",
   "sanitizer_stderr_bytes": 0,
   "random_input_max_bytes": 4096,

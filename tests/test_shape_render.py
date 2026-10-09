@@ -1,6 +1,7 @@
 """Differential and deterministic integration checks for the bounded shape subset."""
 import hashlib
 import json
+import platform
 import shutil
 import struct
 import subprocess
@@ -62,6 +63,11 @@ def png_rgba(data):
     return width, height, b"".join(rows)
 
 
+def reference_solid_colors(rgba):
+    return sorted({tuple(rgba[i:i + 3]) for i in range(0, len(rgba), 4)
+                   if rgba[i + 3] == 255})
+
+
 class ShapeRenderTests(unittest.TestCase):
     def test_decoder_diagnostics_source_retention_and_raster(self):
         self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
@@ -87,8 +93,9 @@ class ShapeRenderTests(unittest.TestCase):
                 width, height = 16, 16
                 self.assertEqual((rw, rh), (width, height))
                 self.assertEqual(len(ours), width * height * 4)
+                solid_colors = reference_solid_colors(reference_rgba)
                 # Renderer antialiasing may affect pixels within one pixel of a
-                # Vexel coverage boundary; every other channel must match exactly.
+                # fill-coverage boundary; every interior channel must match exactly.
                 bad_interior, edge_diffs, max_channel = 0, 0, 0
                 max_alpha_delta, max_rgb_delta = 0, 0
                 for y in range(height):
@@ -96,25 +103,36 @@ class ShapeRenderTests(unittest.TestCase):
                         offset = (y * width + x) * 4
                         delta = max(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(4))
                         max_alpha_delta = max(max_alpha_delta, abs(ours[offset + 3] - reference_rgba[offset + 3]))
-                        # Cairo's PNG writer quantizes straight RGB at low alpha.
-                        # Use shared reference coverage to compare visible color
-                        # while testing coverage separately in the alpha channel.
+                        expected_rgb = tuple(reference_rgba[offset:offset + 3])
+                        # Cairo unpremultiplies boundary PNG pixels with 8-bit
+                        # precision; normalize to the nearest solid reference fill.
+                        if reference_rgba[offset + 3] < 255 and solid_colors:
+                            expected_rgb = min(
+                                solid_colors,
+                                key=lambda color: max(abs(color[channel] - expected_rgb[channel])
+                                                      for channel in range(3)))
                         if ours[offset + 3] != 0 and reference_rgba[offset + 3] != 0:
-                            coverage = reference_rgba[offset + 3]
+                            if not solid_colors:
+                                self.fail(f"no fully covered reference color in {fixture.name}")
                             for channel in range(3):
-                                delta = abs(ours[offset + channel] - reference_rgba[offset + channel])
-                                premultiplied_delta = (delta * coverage + 127) // 255
-                                max_rgb_delta = max(max_rgb_delta, premultiplied_delta)
+                                max_rgb_delta = max(
+                                    max_rgb_delta,
+                                    abs(ours[offset + channel] - expected_rgb[channel]))
                         if not delta:
                             continue
                         max_channel = max(max_channel, delta)
-                        edge = False
+                        alpha_boundary = False
+                        ours_color_boundary = False
+                        reference_color_boundary = False
                         for yy in range(max(0, y - 1), min(height, y + 2)):
                             for xx in range(max(0, x - 1), min(width, x + 2)):
                                 oi = (yy * width + xx) * 4
-                                if (ours[oi:oi + 4] != ours[offset:offset + 4] or
-                                        reference_rgba[oi:oi + 4] != reference_rgba[offset:offset + 4]):
-                                    edge = True
+                                alpha_boundary |= (ours[oi + 3] != ours[offset + 3] or
+                                                   reference_rgba[oi + 3] != reference_rgba[offset + 3])
+                                ours_color_boundary |= ours[oi:oi + 3] != ours[offset:offset + 3]
+                                reference_color_boundary |= (
+                                    reference_rgba[oi:oi + 3] != reference_rgba[offset:offset + 3])
+                        edge = alpha_boundary or (ours_color_boundary and reference_color_boundary)
                         if edge:
                             edge_diffs += 1
                         else:
@@ -126,13 +144,23 @@ class ShapeRenderTests(unittest.TestCase):
                 results.append({"case": fixture.stem, "source_sha256": hashlib.sha256(raw).hexdigest(),
                                 "vexel_sha256": hashlib.sha256(ours).hexdigest(),
                                 "reference_png_sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
+                                "reference_solid_rgb_palette": [list(color) for color in solid_colors],
                                 "edge_diff_pixels": edge_diffs, "interior_diff_pixels": bad_interior,
                                 "max_channel_diff": max_channel,
-                                "max_premultiplied_rgb_diff_at_reference_coverage": max_rgb_delta,
+                                "max_covered_rgb_diff_after_reference_normalization": max_rgb_delta,
                                 "max_alpha_diff": max_alpha_delta})
         OUT.parent.mkdir(parents=True, exist_ok=True)
+        host = {"platform": platform.platform(), "machine": platform.machine(),
+                "macos_version": platform.mac_ver()[0] or "unavailable"}
+        compiler = subprocess.run(["clang", "--version"], check=True, capture_output=True,
+                                  text=True).stdout.splitlines()[0]
         OUT.write_text(json.dumps({"renderer_path": renderer, "renderer_version": version,
-                "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160; covered RGB delta <=1 in premultiplied channels at shared reference coverage; and at most 120 differing pixels per fixture",
+                "reference_renderer": "librsvg via rsvg-convert",
+                "vexel_renderer": "Vexel scalar 4x4 shape rasterizer",
+                "host": host, "compiler": compiler,
+                "metric_availability": {"latency": "not collected by the differential fixture harness",
+                                        "peak_rss": "not collected by the differential fixture harness"},
+                "edge_tolerance": "zero interior differences; within one pixel of a fill-coverage boundary, alpha delta <=160; covered straight RGB delta <=1 after low-alpha reference RGB normalization to the nearest fully covered reference fill; and at most 120 differing pixels per fixture",
                                    "cases": results}, indent=2) + "\n")
 
     def test_bounds_and_stable_diagnostics(self):

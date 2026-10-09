@@ -7,8 +7,10 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03-r2/build/mac-release
-[1/2] Linking C executable bin/svg_index_bench
-[2/2] Linking C executable bin/svgworkbench
+[1/4] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
+[2/4] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
+[3/4] Linking C executable bin/svg_index_bench
+[4/4] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Preset CMake variables:
 

@@ -43,7 +43,7 @@
       "status": "pass",
       "target_ns": 100000000,
       "measured_files": 12,
-      "max_step_ns": 206875
+      "max_step_ns": 674291
     },
     "peak_rss_100_mib": {
       "method": "measured peak RSS <= 3x source bytes + 128 MiB allowance, per WO-M3-01",
@@ -59,7 +59,7 @@
         {
           "id": "generated-cnc_t3",
           "source_bytes": 102580014,
-          "measured_peak_rss_bytes": 296812544,
+          "measured_peak_rss_bytes": 296828928,
           "limit_bytes": 441957770,
           "within_limit": true
         },
@@ -73,14 +73,14 @@
         {
           "id": "generated-giant_path_t3",
           "source_bytes": 91963466,
-          "measured_peak_rss_bytes": 94044160,
+          "measured_peak_rss_bytes": 94027776,
           "limit_bytes": 410108126,
           "within_limit": true
         },
         {
           "id": "generated-inkscape_t3",
           "source_bytes": 100883678,
-          "measured_peak_rss_bytes": 295124992,
+          "measured_peak_rss_bytes": 295141376,
           "limit_bytes": 436868762,
           "within_limit": true
         },
@@ -108,7 +108,7 @@
         {
           "id": "generated-use_t3",
           "source_bytes": 100542256,
-          "measured_peak_rss_bytes": 230998016,
+          "measured_peak_rss_bytes": 230981632,
           "limit_bytes": 435844496,
           "within_limit": true
         },
@@ -144,8 +144,8 @@
       "limit": 0,
       "crash": 0,
       "comparable_successful_files": 2,
-      "inkscape_seconds_over_vexel_first_preview_geomean": 47.65111205607357,
-      "inkscape_rss_over_vexel_rss_geomean": 33.651670217672404,
+      "inkscape_seconds_over_vexel_first_preview_geomean": 48.49891078216753,
+      "inkscape_rss_over_vexel_rss_geomean": 33.59042963877337,
       "rss_comparable_files": 2
     },
     "T2": {
@@ -197,9 +197,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 5964791,
-        "max_step_ns": 109917,
-        "peak_rss_bytes": 15892480
+        "complete_index_ns": 5849584,
+        "max_step_ns": 101500,
+        "peak_rss_bytes": 15876096
       },
       "inkscape": {
         "tier": "T1",
@@ -224,9 +224,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 58361667,
-        "max_step_ns": 196833,
-        "peak_rss_bytes": 120963072
+        "complete_index_ns": 60568458,
+        "max_step_ns": 192167,
+        "peak_rss_bytes": 120979456
       },
       "inkscape": {
         "tier": "T2",
@@ -250,7 +250,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 183958,
+        "max_step_ns": 198125,
         "peak_rss_bytes": 270385152
       },
       "inkscape": {
@@ -276,8 +276,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 4875750,
-        "max_step_ns": 89334,
+        "complete_index_ns": 4841042,
+        "max_step_ns": 89667,
         "peak_rss_bytes": 13352960
       },
       "inkscape": {
@@ -303,8 +303,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 46497875,
-        "max_step_ns": 195334,
+        "complete_index_ns": 46040083,
+        "max_step_ns": 195042,
         "peak_rss_bytes": 93863936
       },
       "inkscape": {
@@ -329,8 +329,8 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 184083,
-        "peak_rss_bytes": 296812544
+        "max_step_ns": 171542,
+        "peak_rss_bytes": 296828928
       },
       "inkscape": {
         "tier": "T3",
@@ -355,8 +355,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 3992458,
-        "max_step_ns": 73042,
+        "complete_index_ns": 3969417,
+        "max_step_ns": 66333,
         "peak_rss_bytes": 8060928
       },
       "inkscape": {
@@ -382,8 +382,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 39447958,
-        "max_step_ns": 189166,
+        "complete_index_ns": 37860125,
+        "max_step_ns": 176583,
         "peak_rss_bytes": 48447488
       },
       "inkscape": {
@@ -408,7 +408,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 166667,
+        "max_step_ns": 164708,
         "peak_rss_bytes": 224428032
       },
       "inkscape": {
@@ -434,8 +434,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 2928375,
-        "max_step_ns": 52000,
+        "complete_index_ns": 2888750,
+        "max_step_ns": 53125,
         "peak_rss_bytes": 2998272
       },
       "inkscape": {
@@ -461,8 +461,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 26491250,
-        "max_step_ns": 53666,
+        "complete_index_ns": 25303291,
+        "max_step_ns": 53833,
         "peak_rss_bytes": 10420224
       },
       "inkscape": {
@@ -486,9 +486,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 282052750,
-        "max_step_ns": 56417,
-        "peak_rss_bytes": 94044160
+        "complete_index_ns": 266583875,
+        "max_step_ns": 52833,
+        "peak_rss_bytes": 94027776
       },
       "inkscape": {
         "tier": "T3",
@@ -511,9 +511,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 2459510084,
-        "max_step_ns": 185166,
-        "peak_rss_bytes": 829734912
+        "complete_index_ns": 2406793042,
+        "max_step_ns": 134417,
+        "peak_rss_bytes": 829718528
       },
       "inkscape": {
         "tier": "T4",
@@ -538,8 +538,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 4763875,
-        "max_step_ns": 180041,
+        "complete_index_ns": 4715791,
+        "max_step_ns": 179292,
         "peak_rss_bytes": 13631488
       },
       "inkscape": {
@@ -565,9 +565,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 47492875,
-        "max_step_ns": 211291,
-        "peak_rss_bytes": 102612992
+        "complete_index_ns": 47054458,
+        "max_step_ns": 188417,
+        "peak_rss_bytes": 102596608
       },
       "inkscape": {
         "tier": "T2",
@@ -591,8 +591,8 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 197917,
-        "peak_rss_bytes": 295124992
+        "max_step_ns": 674291,
+        "peak_rss_bytes": 295141376
       },
       "inkscape": {
         "tier": "T3",
@@ -617,8 +617,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 4684167,
-        "max_step_ns": 58125,
+        "complete_index_ns": 4717417,
+        "max_step_ns": 57000,
         "peak_rss_bytes": 4587520
       },
       "inkscape": {
@@ -644,9 +644,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 47196583,
-        "max_step_ns": 62458,
-        "peak_rss_bytes": 29212672
+        "complete_index_ns": 46650417,
+        "max_step_ns": 65791,
+        "peak_rss_bytes": 29229056
       },
       "inkscape": {
         "tier": "T2",
@@ -669,9 +669,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 470069209,
-        "max_step_ns": 167708,
-        "peak_rss_bytes": 267452416
+        "complete_index_ns": 491239250,
+        "max_step_ns": 158875,
+        "peak_rss_bytes": 267485184
       },
       "inkscape": {
         "tier": "T3",
@@ -697,7 +697,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 71083,
+        "max_step_ns": 69292,
         "peak_rss_bytes": 3178496
       },
       "inkscape": {
@@ -724,7 +724,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 74208,
+        "max_step_ns": 70584,
         "peak_rss_bytes": 11649024
       },
       "inkscape": {
@@ -749,7 +749,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 64584,
+        "max_step_ns": 76833,
         "peak_rss_bytes": 96157696
       },
       "inkscape": {
@@ -775,9 +775,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 5546834,
-        "max_step_ns": 100541,
-        "peak_rss_bytes": 9846784
+        "complete_index_ns": 5467625,
+        "max_step_ns": 94916,
+        "peak_rss_bytes": 9863168
       },
       "inkscape": {
         "tier": "T1",
@@ -802,8 +802,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 56058000,
-        "max_step_ns": 201166,
+        "complete_index_ns": 54637875,
+        "max_step_ns": 186458,
         "peak_rss_bytes": 66912256
       },
       "inkscape": {
@@ -828,7 +828,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 206875,
+        "max_step_ns": 190042,
         "peak_rss_bytes": 268582912
       },
       "inkscape": {
@@ -853,8 +853,8 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 180292,
-        "peak_rss_bytes": 785907712
+        "max_step_ns": 190875,
+        "peak_rss_bytes": 785924096
       },
       "inkscape": {
         "tier": "T4",
@@ -879,8 +879,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 4484083,
-        "max_step_ns": 72958,
+        "complete_index_ns": 4305333,
+        "max_step_ns": 76542,
         "peak_rss_bytes": 10338304
       },
       "inkscape": {
@@ -906,8 +906,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 43365708,
-        "max_step_ns": 184792,
+        "complete_index_ns": 42414750,
+        "max_step_ns": 173542,
         "peak_rss_bytes": 71221248
       },
       "inkscape": {
@@ -932,7 +932,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 174875,
+        "max_step_ns": 169834,
         "peak_rss_bytes": 256737280
       },
       "inkscape": {
@@ -958,8 +958,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 6255834,
-        "max_step_ns": 94959,
+        "complete_index_ns": 6101500,
+        "max_step_ns": 93500,
         "peak_rss_bytes": 16613376
       },
       "inkscape": {
@@ -985,9 +985,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 60802417,
-        "max_step_ns": 193041,
-        "peak_rss_bytes": 126943232
+        "complete_index_ns": 59284417,
+        "max_step_ns": 184625,
+        "peak_rss_bytes": 126959616
       },
       "inkscape": {
         "tier": "T2",
@@ -1011,8 +1011,8 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 187333,
-        "peak_rss_bytes": 230998016
+        "max_step_ns": 174875,
+        "peak_rss_bytes": 230981632
       },
       "inkscape": {
         "tier": "T3",
@@ -1036,7 +1036,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 222083,
+        "max_step_ns": 332084,
         "peak_rss_bytes": 1136050176
       },
       "inkscape": {
@@ -1061,8 +1061,8 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 196583,
-        "peak_rss_bytes": 183713792
+        "max_step_ns": 179750,
+        "peak_rss_bytes": 182091776
       },
       "inkscape": {
         "tier": "T3",
@@ -1087,8 +1087,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 51503500,
-        "max_step_ns": 59250,
+        "complete_index_ns": 51096375,
+        "max_step_ns": 55709,
         "peak_rss_bytes": 25149440
       },
       "inkscape": {
@@ -1112,8 +1112,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 75296208,
-        "max_step_ns": 181791,
+        "complete_index_ns": 72316084,
+        "max_step_ns": 159625,
         "peak_rss_bytes": 44056576
       },
       "inkscape": {
@@ -1139,8 +1139,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 48107334,
-        "max_step_ns": 65333,
+        "complete_index_ns": 46509375,
+        "max_step_ns": 63375,
         "peak_rss_bytes": 18481152
       },
       "inkscape": {
@@ -1166,8 +1166,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 59323334,
-        "max_step_ns": 251042,
+        "complete_index_ns": 55187292,
+        "max_step_ns": 73542,
         "peak_rss_bytes": 41172992
       },
       "inkscape": {
@@ -1191,8 +1191,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 72888167,
-        "max_step_ns": 199416,
+        "complete_index_ns": 67489041,
+        "max_step_ns": 174875,
         "peak_rss_bytes": 60063744
       },
       "inkscape": {
@@ -1217,7 +1217,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 31792,
+        "max_step_ns": 7291,
         "peak_rss_bytes": 22822912
       },
       "inkscape": {
@@ -1241,8 +1241,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 89408250,
-        "max_step_ns": 114167,
+        "complete_index_ns": 82648917,
+        "max_step_ns": 88625,
         "peak_rss_bytes": 47316992
       },
       "inkscape": {
@@ -1266,8 +1266,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 152758834,
-        "max_step_ns": 462958,
+        "complete_index_ns": 136949834,
+        "max_step_ns": 83833,
         "peak_rss_bytes": 57016320
       },
       "inkscape": {
@@ -1294,7 +1294,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 28333,
+        "max_step_ns": 16375,
         "peak_rss_bytes": 18743296
       },
       "inkscape": {
@@ -1318,8 +1318,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 136099584,
-        "max_step_ns": 106459,
+        "complete_index_ns": 141108167,
+        "max_step_ns": 56125,
         "peak_rss_bytes": 55984128
       },
       "inkscape": {
@@ -1345,8 +1345,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 49594041,
-        "max_step_ns": 75209,
+        "complete_index_ns": 48357209,
+        "max_step_ns": 61709,
         "peak_rss_bytes": 30015488
       },
       "inkscape": {
@@ -1370,8 +1370,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 87354167,
-        "max_step_ns": 60792,
+        "complete_index_ns": 85619875,
+        "max_step_ns": 67750,
         "peak_rss_bytes": 45891584
       },
       "inkscape": {
@@ -1395,8 +1395,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 290717833,
-        "max_step_ns": 194792,
+        "complete_index_ns": 295937375,
+        "max_step_ns": 179458,
         "peak_rss_bytes": 174227456
       },
       "inkscape": {
@@ -1420,8 +1420,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 88695583,
-        "max_step_ns": 221125,
+        "complete_index_ns": 87692916,
+        "max_step_ns": 192875,
         "peak_rss_bytes": 53198848
       },
       "inkscape": {
@@ -1448,7 +1448,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 12958,
+        "max_step_ns": 16583,
         "peak_rss_bytes": 21544960
       },
       "inkscape": {
@@ -1475,7 +1475,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 10458,
+        "max_step_ns": 14625,
         "peak_rss_bytes": 18808832
       },
       "inkscape": {
@@ -1499,9 +1499,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 71165167,
-        "max_step_ns": 177416,
-        "peak_rss_bytes": 56197120
+        "complete_index_ns": 67489334,
+        "max_step_ns": 163250,
+        "peak_rss_bytes": 56213504
       },
       "inkscape": {
         "tier": "T3",
@@ -1525,7 +1525,7 @@
       "metrics": {
         "first_preview_ns": null,
         "complete_index_ns": null,
-        "max_step_ns": 8167,
+        "max_step_ns": 15167,
         "peak_rss_bytes": 28524544
       },
       "inkscape": {
@@ -1549,9 +1549,9 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 87532584,
-        "max_step_ns": 172208,
-        "peak_rss_bytes": 103792640
+        "complete_index_ns": 86629917,
+        "max_step_ns": 167625,
+        "peak_rss_bytes": 103809024
       },
       "inkscape": {
         "tier": "T3",
@@ -1574,8 +1574,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 246583583,
-        "max_step_ns": 177708,
+        "complete_index_ns": 261415833,
+        "max_step_ns": 163084,
         "peak_rss_bytes": 146030592
       },
       "inkscape": {
@@ -1599,8 +1599,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 269121166,
-        "max_step_ns": 77375,
+        "complete_index_ns": 271480833,
+        "max_step_ns": 64125,
         "peak_rss_bytes": 100646912
       },
       "inkscape": {
@@ -1624,8 +1624,8 @@
       ],
       "metrics": {
         "first_preview_ns": null,
-        "complete_index_ns": 282652541,
-        "max_step_ns": 91958,
+        "complete_index_ns": 296229583,
+        "max_step_ns": 83875,
         "peak_rss_bytes": 112082944
       },
       "inkscape": {
@@ -1650,10 +1650,10 @@
         "ok"
       ],
       "metrics": {
-        "first_preview_ns": 7857959,
-        "complete_index_ns": 896625,
-        "max_step_ns": 57750,
-        "peak_rss_bytes": 4489216
+        "first_preview_ns": 7728833,
+        "complete_index_ns": 864125,
+        "max_step_ns": 49292,
+        "peak_rss_bytes": 4505600
       },
       "inkscape": {
         "tier": "T1",
@@ -1677,9 +1677,9 @@
         "ok"
       ],
       "metrics": {
-        "first_preview_ns": 7954208,
-        "complete_index_ns": 993625,
-        "max_step_ns": 60917,
+        "first_preview_ns": 7806833,
+        "complete_index_ns": 971333,
+        "max_step_ns": 62042,
         "peak_rss_bytes": 4669440
       },
       "inkscape": {
