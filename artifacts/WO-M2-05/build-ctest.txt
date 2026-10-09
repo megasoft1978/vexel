@@ -9,8 +9,8 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05/build
     Start 4: source-save
 4/5 Test #4: source-save ......................   Passed    0.00 sec
     Start 5: shape-render
-5/5 Test #5: shape-render .....................   Passed    0.31 sec
+5/5 Test #5: shape-render .....................   Passed    0.17 sec
 
 100% tests passed, 0 tests failed out of 5
 
-Total Test time (real) =   0.39 sec
+Total Test time (real) =   0.24 sec

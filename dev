@@ -89,7 +89,7 @@ case "$command_name" in
         shift
         cmake --preset mac-asan
         cmake --build --preset mac-asan --target shape_fuzz
-        python3 scripts/shape_fuzz.py --binary build/mac-asan/bin/shape_fuzz "$@"
+        python3 tests/fuzz/shape/shape_fuzz.py --binary build/mac-asan/bin/shape_fuzz "$@"
         ;;
     verify)
         "$repo_root/dev" build

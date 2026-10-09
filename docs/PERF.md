@@ -181,7 +181,7 @@ per-case pixel differences are recorded in
 `artifacts/WO-M2-05/reference-comparison.json`.
 
 The fixed-seed ASan+UBSan campaign (`20261009`) completed 1,000,000 cases in
-6.695 s wall time (6.478 s process CPU time), with zero sanitizer reports,
+6.661 s wall time (6.458 s process CPU time), with zero sanitizer reports,
 crashes, or invariant failures. Inputs were at most 4,096 bytes. The result is
 in `artifacts/WO-M2-05/fuzz-report.json`. Release sizes on Apple Silicon macOS
 27.0 with Apple Clang 21.0.0 (`clang-2100.3.34.2`) are recorded in

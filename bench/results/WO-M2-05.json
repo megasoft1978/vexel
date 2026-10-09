@@ -1,7 +1,7 @@
 {
   "work_order": "WO-M2-05",
-  "revision": 1,
-  "base_sha": "d45060bb7211a67dd62b83c156f0a9775a85c55a",
+  "revision": 2,
+  "base_sha": "5619a8cb828db7a792b3bd086c83a431dd4b4509",
   "acceptance_status": "candidate_ready_for_fresh_review",
   "machine": "Apple Silicon arm64, macOS 27.0",
   "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
@@ -40,8 +40,8 @@
   "fuzz": {
     "seed": 20261009,
     "cases": 1000000,
-    "wall_seconds": 6.695,
-    "process_cpu_seconds": 6.478,
+    "wall_seconds": 6.661,
+    "process_cpu_seconds": 6.458,
     "input_max_bytes": 4096,
     "sanitizers": [
       "AddressSanitizer",
@@ -99,5 +99,6 @@
     "sanitizers": "artifacts/WO-M2-05/asan.txt and artifacts/WO-M2-05/ubsan.txt",
     "release": "artifacts/WO-M2-05/release.txt",
     "render_benchmark": "artifacts/WO-M2-05/render-benchmark.json"
-  }
+  },
+  "spec_sha256": "35d71223cc2beb5818d10747a0e7483ba388e428e3fb1c6482192839093da73a"
 }

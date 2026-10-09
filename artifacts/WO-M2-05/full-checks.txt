@@ -3,7 +3,7 @@ WO-M2-05 final machine checks (2026-10-09)
 PASS ./dev build
 PASS ctest --test-dir build/mac-debug --output-on-failure (5/5)
 PASS python3 -m unittest tests.test_shape_render (5/5)
-PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 cases; 6.695 s; ASan+UBSan clean)
+PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 cases; 6.661 s; ASan+UBSan clean)
 PASS python3 -m json.tool artifacts/WO-M2-05/reference-comparison.json (7/7 fixture comparisons)
 PASS ./dev verify (170 Python tests, 0 failed/errors/skips; Debug CTest 5/5; native smoke and 20-frame Metal replay pass)
 PASS ./dev asan (CTest 5/5)
