@@ -21,9 +21,9 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build
       Start  5: shape-render
  5/11 Test  #5: shape-render .....................   Passed    0.01 sec
       Start  6: svg-index
- 6/11 Test  #6: svg-index ........................   Passed    0.11 sec
+ 6/11 Test  #6: svg-index ........................   Passed    0.12 sec
       Start  7: viewer-navigation
- 7/11 Test  #7: viewer-navigation ................   Passed    0.01 sec
+ 7/11 Test  #7: viewer-navigation ................   Passed    0.02 sec
       Start  8: svg-token-stream-budget
  8/11 Test  #8: svg-token-stream-budget ..........   Passed    0.02 sec
       Start  9: index-replay
@@ -31,11 +31,11 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build
       Start 10: spatial-cache
 10/11 Test #10: spatial-cache ....................   Passed    0.02 sec
       Start 11: job-snapshot
-11/11 Test #11: job-snapshot .....................   Passed    0.04 sec
+11/11 Test #11: job-snapshot .....................   Passed    0.05 sec
 
 100% tests passed, 0 tests failed out of 11
 
-Total Test time (real) =   0.45 sec
+Total Test time (real) =   0.46 sec
 usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
@@ -44,15 +44,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 192 tests in 22.459s
+Ran 192 tests in 17.870s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.119225
+native smoke elapsed seconds: 0.114674
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.120256
-Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 22.536s
+native replay elapsed seconds: 0.102689
+Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 17.941s
 valid ledger: 335 entries

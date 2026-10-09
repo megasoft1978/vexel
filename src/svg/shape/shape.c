@@ -83,7 +83,7 @@ static bool next_number_separator(number_reader *r)
         return r->i < r->n && r->p[r->i] != ',';
     }
     if (had_space) return r->i < r->n;
-    return r->i < r->n && (r->p[r->i] == '+' || r->p[r->i] == '-');
+    return false;
 }
 
 /* Decimal conversion is byte-based and independent of the process locale. */
@@ -621,7 +621,7 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg
                         if(nr.i<nr.n&&nr.p[nr.i]==','){
                             nr.i++;skip_space(&nr);
                             if(nr.i==nr.n||nr.p[nr.i]==','){fail(diagnostic,SVG_SHAPE_ERROR_PATH,points.offset+nr.i);goto bad;}
-                        }else if(nr.i<nr.n&&!had_space&&nr.p[nr.i]!='+'&&nr.p[nr.i]!='-'){
+                        }else if(nr.i<nr.n&&!had_space){
                             fail(diagnostic,SVG_SHAPE_ERROR_PATH,points.offset+nr.i);goto bad;
                         }
                     }

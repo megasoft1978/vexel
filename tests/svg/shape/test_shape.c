@@ -110,6 +110,10 @@ int main(void)
     if(svg_shape_decode((base_bytes){leading_transform_comma,sizeof(leading_transform_comma)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_UNSUPPORTED||diagnostic.offset==0U)return 34;
     static const uint8_t repeated_transform_comma[]="<svg width=\"8\" height=\"8\"><rect width=\"1\" height=\"1\" transform=\"translate(1),,scale(2)\"/></svg>";
     if(svg_shape_decode((base_bytes){repeated_transform_comma,sizeof(repeated_transform_comma)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_UNSUPPORTED||diagnostic.offset==0U)return 35;
+    static const uint8_t adjacent_transform_numbers[]="<svg width=\"8\" height=\"8\"><rect width=\"1\" height=\"1\" transform=\"translate(1-2)\"/></svg>";
+    if(svg_shape_decode((base_bytes){adjacent_transform_numbers,sizeof(adjacent_transform_numbers)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_UNSUPPORTED||diagnostic.offset==0U)return 36;
+    static const uint8_t adjacent_point_numbers[]="<svg width=\"8\" height=\"8\"><polygon points=\"1,1-2,2\"/></svg>";
+    if(svg_shape_decode((base_bytes){adjacent_point_numbers,sizeof(adjacent_point_numbers)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_PATH||diagnostic.offset==0U)return 37;
     static const uint8_t zero_shape[]="<svg width=\"8\" height=\"8\"><circle r=\"0\"/><ellipse rx=\"0\" ry=\"2\"/></svg>";
     if(svg_shape_decode((base_bytes){zero_shape,sizeof(zero_shape)-1U},&doc,&diagnostic)!=SVG_SHAPE_ERROR_NONE||doc.edge_count!=0U)return 27;
     svg_shape_document_destroy(&doc);
