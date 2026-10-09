@@ -119,6 +119,8 @@ add_library(vexel_shape STATIC
     src/svg/shape/document.c
     src/svg/shape/shape_alloc.c
     src/raster/shape_render.c
+    src/raster/shape_render_sample.c
+    src/raster/shape_render_stroke.c
     src/raster/shape_bounds.c
     src/raster/shape_scanline.c
     src/raster/tile.c

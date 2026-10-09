@@ -17,6 +17,19 @@ typedef struct raster_shape_work_stats {
     uint64_t total_work;
 } raster_shape_work_stats;
 
+/* Private raster helpers shared by the render orchestration and sample modules. */
+void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
+                               const uint32_t *active_edges, size_t active_count,
+                               const geom_edge *local_edges,
+                               const bool *dash_seams, double px, double py,
+                               bool scalar_oracle_alpha,
+                               uint8_t sample_rgba[4]);
+bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
+                                  const geom_edge *local_edges,
+                                  const bool *dash_seams, double px, double py);
+bool raster_shape_dash_joins_closed_seam(const svg_shape_document *doc,
+                                         size_t shape, const geom_edge *edges);
+
 /* Internal measurement entry point used by deterministic tests and benchmarks. */
 bool raster_shape_render_with_stats(const svg_shape_document *document,
                                     raster_tile *out_tile,

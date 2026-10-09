@@ -48,6 +48,21 @@ one row wide, and scanline events are at most two per edge. Rendering remains
 single-threaded and deterministic. Output ownership passes to the caller only
 on success, who releases it with `raster_tile_destroy`.
 
+## Raster modules
+
+- `shape_render.c` validates the document, builds bounds and scanline state,
+  enforces the existing checked work cap, and coordinates deterministic sample
+  traversal and RGBA output.
+- `shape_render_sample.c` evaluates one fill sample, applies clip membership and
+  paint-server sampling, then composites the fill and stroke with the existing
+  integer source-over operation. It preserves the test-only scalar alpha mode.
+- `shape_render_stroke.c` tests local stroke geometry, caps, joins, miter limits,
+  dash segments, and closed-path dash seams using the precomputed local edges.
+- `shape_bounds.c` owns conservative device-space shape boxes and the boundary
+  mask; `shape_scanline.c` owns row events and active-edge ordering.
+- `shape_render_internal.h` carries private measurement and helper contracts;
+  the public `shape_render.h` API is unchanged.
+
 ## Tile cache
 
 `raster_tile_cache` is mutable from one owner thread and has no platform or shape-decoding dependencies. Its explicit byte cap is nonzero and at most 256 MiB. Accounted bytes include the complete preallocated entry array and every occupied tile's RGBA payload; creation rejects a slot array larger than the cap. LRU ties use stable slot order; a two-part monotonic tick preserves recency across tick rollover. Cache keys are caller supplied. Changing generation or integer scale bucket through `raster_tile_cache_set_epoch` clears all entries. A successful put transfers the tile's malloc-owned RGBA allocation and clears the caller's tile; a failed put leaves the caller's tile owned and unchanged. Lookup returns a borrowed tile valid until the next cache call that mutates LRU/cache state or destruction.
