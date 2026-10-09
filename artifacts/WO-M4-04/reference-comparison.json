@@ -214,6 +214,17 @@
       "max_alpha_diff": 12
     },
     {
+      "case": "stroke-dash-join",
+      "source_sha256": "cd6910af92f16b0d71eda3866f21cd055768eed0f6a9ab82b05f8bbd4dc7f13d",
+      "vexel_sha256": "f09fd5fcd66e7b3693595613b43330c50bf61fa7283b90fd3b257501cb824625",
+      "reference_png_sha256": "d398a25a2c8d5a1cd315dd0ff96ad59764c0bd4228011fd011f35601143e515f",
+      "edge_diff_pixels": 33,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 40,
+      "max_jointly_covered_straight_rgb_diff": 0,
+      "max_alpha_diff": 40
+    },
+    {
       "case": "stroke-dashes",
       "source_sha256": "f0f2fbdcc1572d2fef775671281a8280078fcdd3d34c798921d9708ff7971439",
       "vexel_sha256": "c03d4c174ef3845ee6c20c07b377ce70f65f5182398d37a5d3cb46ed6dd9db2e",
