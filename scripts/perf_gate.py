@@ -52,6 +52,30 @@ def exact_keys(obj: Any, expected: set[str], label: str) -> dict[str, Any]:
     return obj
 
 
+def strict_string(value: Any, label: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise GateError(f"{label} must be a non-empty string")
+    return value
+
+
+def strict_hash(value: Any, label: str) -> str:
+    if not isinstance(value, str) or len(value) != 64 or any(c not in "0123456789abcdef" for c in value):
+        raise GateError(f"{label} must be a lowercase SHA-256")
+    return value
+
+
+def strict_positive_int(value: Any, label: str) -> int:
+    if type(value) is not int or value <= 0 or value > (1 << 63) - 1:
+        raise GateError(f"{label} must be a positive 64-bit integer")
+    return value
+
+
+def strict_bool(value: Any, label: str) -> bool:
+    if type(value) is not bool:
+        raise GateError(f"{label} must be a boolean")
+    return value
+
+
 def finite_nonnegative(value: Any, label: str) -> float:
     if type(value) is int:
         if value < 0 or value > (1 << 63) - 1:
@@ -71,7 +95,7 @@ def load_json(path: Path, label: str) -> Any:
 
 def validate_baseline(value: Any) -> dict[str, Any]:
     exact_keys(value, {"schema_version", "source_work_order", "source_commit", "source_report", "source_report_sha256", "host_toolchain", "limits", "regression_tolerances", "cases", "stretch_targets"}, "baseline")
-    if value["schema_version"] != 1 or value["source_work_order"] != "WO-M3-01":
+    if type(value["schema_version"]) is not int or value["schema_version"] != 1 or value["source_work_order"] != "WO-M3-01":
         raise GateError("baseline schema or provenance is invalid")
     for name in ("source_commit", "source_report_sha256"):
         if not isinstance(value[name], str) or not value[name]:
@@ -127,7 +151,7 @@ def validate_baseline(value: Any) -> dict[str, Any]:
 
 def validate_history(history: Any) -> dict[str, Any]:
     exact_keys(history, {"schema_version", "metrics"}, "history")
-    if history["schema_version"] != 1:
+    if type(history["schema_version"]) is not int or history["schema_version"] != 1:
         raise GateError("history schema_version must be 1")
     exact_keys(history["metrics"], set(METRICS), "history.metrics")
     for metric, record in history["metrics"].items():
@@ -231,6 +255,183 @@ def hardware_now() -> dict[str, Any]:
     return hardware_metadata()
 
 
+def validate_raw(raw: Any) -> dict[str, Any]:
+    exact_keys(raw, {"schema_version", "seed", "machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler", "build", "cache_caveat", "cases"}, "raw observations")
+    if type(raw["schema_version"]) is not int or raw["schema_version"] != 1:
+        raise GateError("raw schema_version must be integer 1")
+    if type(raw["seed"]) is not int or raw["seed"] != 20261009:
+        raise GateError("raw seed does not match frozen campaign")
+    for name in ("machine", "machine_model", "chip", "architecture", "os", "compiler", "cache_caveat"):
+        strict_string(raw[name], f"raw {name}")
+    strict_positive_int(raw["memory_bytes"], "raw memory_bytes")
+    if raw["build"] != "mac-release":
+        raise GateError("raw build must be mac-release")
+    cases = exact_keys(raw["cases"], {"10MiB", "100MiB"}, "raw cases")
+    case_keys = {"source_bytes", "source_sha256", "workload", "cold_trials", "warm_trials", "source_read_median_ns", "source_read_p95_ns", "first_preview_median_ns", "first_preview_p95_ns", "complete_index_median_ns", "max_step_latency_ns", "progressive_replay", "peak_child_rss_bytes", "index_bytes"}
+    trial_keys = {"source_bytes", "read_ns", "first_preview_ns", "complete_index_ns", "max_step_ns", "preview_before_index_complete", "progress_10_50_90_complete", "element_count", "index_bytes", "peak_rss_bytes", "process_elapsed_ns"}
+    for label, data in cases.items():
+        exact_keys(data, case_keys, f"raw {label}")
+        strict_positive_int(data["source_bytes"], f"raw {label}.source_bytes")
+        strict_hash(data["source_sha256"], f"raw {label}.source_sha256")
+        strict_string(data["workload"], f"raw {label}.workload")
+        replay = exact_keys(data["progressive_replay"], {"events", "first_preview_before_index_complete", "worker_render_completed"}, f"raw {label}.progressive_replay")
+        if replay["events"] != [10, 50, 90, 100]:
+            raise GateError(f"raw {label}.progressive_replay.events is invalid")
+        strict_bool(replay["first_preview_before_index_complete"], f"raw {label}.progressive_replay.first_preview_before_index_complete")
+        strict_bool(replay["worker_render_completed"], f"raw {label}.progressive_replay.worker_render_completed")
+        for field in ("source_read_median_ns", "source_read_p95_ns", "first_preview_median_ns", "first_preview_p95_ns", "complete_index_median_ns", "max_step_latency_ns", "peak_child_rss_bytes", "index_bytes"):
+            finite_nonnegative(data[field], f"raw {label}.{field}")
+        for group, count in (("cold_trials", 5), ("warm_trials", 10)):
+            trials = data[group]
+            if not isinstance(trials, list) or len(trials) != count:
+                raise GateError(f"raw {label}.{group} must contain exactly {count} trials")
+            for idx, trial in enumerate(trials):
+                exact_keys(trial, trial_keys, f"raw {label}.{group}[{idx}]")
+                for key in trial_keys - {"preview_before_index_complete", "progress_10_50_90_complete"}:
+                    finite_nonnegative(trial[key], f"raw {label}.{group}[{idx}].{key}")
+                strict_bool(trial["preview_before_index_complete"], f"raw {label}.{group}[{idx}].preview_before_index_complete")
+                strict_bool(trial["progress_10_50_90_complete"], f"raw {label}.{group}[{idx}].progress_10_50_90_complete")
+    return raw
+
+
+def validate_result_build(result: dict[str, Any]) -> None:
+    build = exact_keys(result["build"], {"configuration", "executable", "executable_sha256", "executable_bytes", "benchmark_executable", "benchmark_executable_sha256", "benchmark_executable_bytes", "dependencies", "source_commit", "working_tree_dirty", "source_diff_sha256"}, "result build")
+    for name in ("configuration", "executable", "benchmark_executable"):
+        strict_string(build[name], f"result build.{name}")
+    for name in ("executable_sha256", "benchmark_executable_sha256", "source_diff_sha256"):
+        strict_hash(build[name], f"result build.{name}")
+    for name in ("executable_bytes", "benchmark_executable_bytes"):
+        strict_positive_int(build[name], f"result build.{name}")
+    strict_bool(build["working_tree_dirty"], "result build.working_tree_dirty")
+    if build["source_commit"] != result["build_sha"]:
+        raise GateError("result source_commit and build_sha differ")
+    if not isinstance(build["dependencies"], list):
+        raise GateError("result build.dependencies must be a list")
+    for idx, item in enumerate(build["dependencies"]):
+        item = exact_keys(item, {"install_name", "identity"}, f"result dependency {idx}")
+        strict_string(item["install_name"], f"result dependency {idx}.install_name")
+        strict_string(item["identity"], f"result dependency {idx}.identity")
+
+
+def validate_result_case(label: str, case: Any) -> None:
+    exact_keys(case, {"input_bytes", "input_sha256", "workload", "cold_order_trials", "warm_order_trials", "summary", "trial_variability"}, f"result {label}")
+    strict_positive_int(case["input_bytes"], f"result {label}.input_bytes")
+    strict_hash(case["input_sha256"], f"result {label}.input_sha256")
+    strict_string(case["workload"], f"result {label}.workload")
+    trial_keys = {"source_bytes", "read_ns", "first_preview_ns", "complete_index_ns", "max_step_ns", "preview_before_index_complete", "progress_10_50_90_complete", "element_count", "index_bytes", "peak_rss_bytes", "process_elapsed_ns"}
+    for group, count in (("cold_order_trials", 5), ("warm_order_trials", 10)):
+        if not isinstance(case[group], list) or len(case[group]) != count:
+            raise GateError(f"result {label}.{group} must contain {count} trials")
+        for idx, trial in enumerate(case[group]):
+            exact_keys(trial, trial_keys, f"result {label}.{group}[{idx}]")
+            for key, value in trial.items():
+                if key in ("preview_before_index_complete", "progress_10_50_90_complete"):
+                    strict_bool(value, f"result {label}.{group}[{idx}].{key}")
+                else:
+                    finite_nonnegative(value, f"result {label}.{group}[{idx}].{key}")
+    summary = exact_keys(case["summary"], {"source_read_median_ns", "source_read_p95_ns", "first_preview_median_ns", "first_preview_p95_ns", "complete_index_median_ns", "complete_index_p95_ns", "max_step_ns", "peak_rss_bytes", "index_bytes"}, f"result {label}.summary")
+    for key, value in summary.items():
+        finite_nonnegative(value, f"result {label}.summary.{key}")
+    variability = exact_keys(case["trial_variability"], {"first_preview_ns", "max_step_ns", "peak_rss_bytes"}, f"result {label}.trial_variability")
+    for key, stats in variability.items():
+        stats = exact_keys(stats, {"mean", "sample_standard_deviation", "coefficient_of_variation"}, f"result {label}.trial_variability.{key}")
+        for stat, value in stats.items():
+            finite_nonnegative(value, f"result {label}.trial_variability.{key}.{stat}")
+
+
+def validate_result_gate(gate: Any) -> None:
+    gate = exact_keys(gate, {"status", "metrics", "absolute_limits", "regression_tolerances"}, "result gate")
+    if gate["status"] not in ("incomparable", "fail", "warning", "noisy", "pass"):
+        raise GateError("result gate status is invalid")
+    for field in ("metrics", "absolute_limits", "regression_tolerances"):
+        exact_keys(gate[field], set(METRICS), f"result gate.{field}")
+    for metric, item in gate["metrics"].items():
+        if not isinstance(item, dict) or item.get("status") not in ("incomparable", "unavailable", "noisy", "pass", "warning", "fail"):
+            raise GateError(f"result gate metric {metric} is malformed")
+        validate_gate_metric(metric, item)
+    for metric, value in gate["absolute_limits"].items():
+        finite_nonnegative(value, f"result gate.absolute_limits.{metric}")
+    for metric, value in gate["regression_tolerances"].items():
+        if type(value) not in (int, float) or not math.isfinite(value) or not 0 <= value <= 1:
+            raise GateError(f"result gate.regression_tolerances.{metric} is invalid")
+
+
+def validate_gate_metric(metric: str, item: dict[str, Any]) -> None:
+    status = item["status"]
+    expected = {"value", "absolute_limit", "baseline_value", "status", "consecutive_violations", "delta_from_baseline"}
+    if status in ("pass", "warning", "fail"):
+        expected |= {"regression_limit", "effective_limit", "tolerance_fraction"}
+    if status in ("unavailable", "noisy"):
+        expected.add("reason")
+    exact_keys(item, expected, f"result gate metric {metric}")
+    for key in ("value", "delta_from_baseline"):
+        if item[key] is not None:
+            finite_nonnegative(item[key], f"result gate metric {metric}.{key}")
+    for key in expected - {"status", "reason", "value", "consecutive_violations", "delta_from_baseline"}:
+        finite_nonnegative(item[key], f"result gate metric {metric}.{key}")
+    if type(item["consecutive_violations"]) is not int or item["consecutive_violations"] not in (0, 1, 2):
+        raise GateError(f"result gate metric {metric}.consecutive_violations is invalid")
+    if "reason" in item:
+        strict_string(item["reason"], f"result gate metric {metric}.reason")
+
+
+def validate_result_stretch(stretch: Any) -> None:
+    stretch = exact_keys(stretch, {"targets", "executable_bytes", "executable_status", "executable_reason", "app_bundle", "pan_zoom_event_to_present_p95_ns"}, "result stretch_targets")
+    targets = exact_keys(stretch["targets"], set(STRETCH), "result stretch_targets.targets")
+    for key, value in targets.items():
+        finite_nonnegative(value, f"result stretch_targets.targets.{key}")
+    finite_nonnegative(stretch["executable_bytes"], "result stretch_targets.executable_bytes")
+    strict_string(stretch["executable_status"], "result stretch_targets.executable_status")
+    strict_string(stretch["executable_reason"], "result stretch_targets.executable_reason")
+    bundle = exact_keys(stretch["app_bundle"], {"bytes", "status", "reason"}, "result stretch_targets.app_bundle")
+    if bundle["bytes"] is not None:
+        finite_nonnegative(bundle["bytes"], "result stretch_targets.app_bundle.bytes")
+    strict_string(bundle["status"], "result stretch_targets.app_bundle.status")
+    strict_string(bundle["reason"], "result stretch_targets.app_bundle.reason")
+    pan = exact_keys(stretch["pan_zoom_event_to_present_p95_ns"], {"value", "status", "reason"}, "result stretch_targets.pan_zoom_event_to_present_p95_ns")
+    if pan["value"] is not None:
+        finite_nonnegative(pan["value"], "result stretch_targets.pan_zoom_event_to_present_p95_ns.value")
+    strict_string(pan["status"], "result stretch_targets.pan_zoom_event_to_present_p95_ns.status")
+    strict_string(pan["reason"], "result stretch_targets.pan_zoom_event_to_present_p95_ns.reason")
+
+
+def validate_result(result: Any) -> dict[str, Any]:
+    """Reject unknown and malformed nested fields before a report is retained."""
+    exact_keys(result, {"schema_version", "run_timestamp_utc", "build_sha", "build", "hardware_toolchain", "seed", "trial_protocol", "cases", "baseline_provenance", "comparison", "gate", "stretch_targets"}, "result")
+    if type(result["schema_version"]) is not int or result["schema_version"] != 1:
+        raise GateError("result schema_version must be integer 1")
+    strict_string(result["run_timestamp_utc"], "result run_timestamp_utc")
+    if not isinstance(result["build_sha"], str) or len(result["build_sha"]) != 40 or any(c not in "0123456789abcdef" for c in result["build_sha"]):
+        raise GateError("result build_sha must be a lowercase git SHA-1")
+    if type(result["seed"]) is not int or result["seed"] != 20261009:
+        raise GateError("result seed does not match frozen campaign")
+    validate_result_build(result)
+    hardware = exact_keys(result["hardware_toolchain"], {"machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler"}, "result hardware_toolchain")
+    for name, value in hardware.items():
+        strict_positive_int(value, f"result hardware_toolchain.{name}") if name == "memory_bytes" else strict_string(value, f"result hardware_toolchain.{name}")
+    protocol = exact_keys(result["trial_protocol"], {"cold_order_trials", "warm_order_trials", "cache_caveat"}, "result trial_protocol")
+    if type(protocol["cold_order_trials"]) is not int or protocol["cold_order_trials"] != 5 or type(protocol["warm_order_trials"]) is not int or protocol["warm_order_trials"] != 10:
+        raise GateError("result trial protocol does not match frozen campaign")
+    strict_string(protocol["cache_caveat"], "result trial_protocol.cache_caveat")
+    cases = exact_keys(result["cases"], {"10MiB", "100MiB"}, "result cases")
+    for label, case in cases.items():
+        validate_result_case(label, case)
+    exact_keys(result["baseline_provenance"], {"work_order", "commit", "report", "report_sha256"}, "result baseline_provenance")
+    strict_hash(result["baseline_provenance"]["report_sha256"], "result baseline_provenance.report_sha256")
+    comparison = exact_keys(result["comparison"], {"status", "reasons", "baseline_values"}, "result comparison")
+    if comparison["status"] not in ("comparable", "incomparable") or not isinstance(comparison["reasons"], list) or any(not isinstance(x, str) for x in comparison["reasons"]):
+        raise GateError("result comparison is malformed")
+    exact_keys(comparison["baseline_values"], {"10MiB", "100MiB"}, "result comparison.baseline_values")
+    for label, case in comparison["baseline_values"].items():
+        exact_keys(case, {"input_sha256", "first_preview_median_ns", "first_preview_p95_ns", "max_step_ns", "peak_rss_bytes", "index_bytes"}, f"result comparison.baseline_values.{label}")
+        strict_hash(case["input_sha256"], f"result comparison.baseline_values.{label}.input_sha256")
+        for key, value in case.items():
+            if key != "input_sha256":
+                finite_nonnegative(value, f"result comparison.baseline_values.{label}.{key}")
+    validate_result_gate(result["gate"])
+    validate_result_stretch(result["stretch_targets"])
+    return result
+
 def under_cache(path: Path) -> Path:
     resolved = (ROOT / path).resolve() if not path.is_absolute() else path.resolve()
     cache = (ROOT / ".cache").resolve()
@@ -260,6 +461,7 @@ def collect(output: Path, history_path: Path, baseline_path: Path) -> tuple[dict
     raw_rel = raw_path.relative_to(ROOT)
     run_checked([sys.executable, "bench/generate/index_bench.py", "--sizes", "10MiB,100MiB", "--cold-trials", "5", "--warm-trials", "10", "--seed", "20261009", "--output", str(raw_rel)])
     raw = load_json(raw_path, "raw benchmark observations")
+    validate_raw(raw)
     exact_keys(raw, {"schema_version", "seed", "machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler", "build", "cache_caveat", "cases"}, "raw observations")
     if raw["schema_version"] != 1 or raw["seed"] != 20261009 or set(raw["cases"]) != {"10MiB", "100MiB"}:
         raise GateError("raw benchmark header does not match frozen campaign")
@@ -359,6 +561,7 @@ def collect(output: Path, history_path: Path, baseline_path: Path) -> tuple[dict
         "gate": {"status": gate_status, "metrics": gate_metrics, "absolute_limits": baseline["limits"], "regression_tolerances": baseline["regression_tolerances"]},
         "stretch_targets": {"targets": baseline["stretch_targets"], "executable_bytes": executable_size, "executable_status": "report_only", "executable_reason": "measured Release output is not separately stripped; 10 MiB stripped-binary target is aspirational", "app_bundle": bundle, "pan_zoom_event_to_present_p95_ns": {"value": None, "status": "unavailable", "reason": "navigation test validates event behavior but does not time presentation"}},
     }
+    validate_result(payload)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     history_path.parent.mkdir(parents=True, exist_ok=True)

@@ -9,6 +9,37 @@ import unittest
 from scripts import perf_gate as gate
 
 
+def valid_raw_report() -> dict[str, object]:
+    trial = {
+        "source_bytes": 10, "read_ns": 1, "first_preview_ns": 2,
+        "complete_index_ns": 3, "max_step_ns": 1,
+        "preview_before_index_complete": True,
+        "progress_10_50_90_complete": True, "element_count": 2,
+        "index_bytes": 8, "peak_rss_bytes": 16, "process_elapsed_ns": 4,
+    }
+    case = {
+        "source_bytes": 10, "source_sha256": "a" * 64,
+        "workload": "test workload", "cold_trials": [copy.deepcopy(trial) for _ in range(5)],
+        "warm_trials": [copy.deepcopy(trial) for _ in range(10)],
+        "source_read_median_ns": 1, "source_read_p95_ns": 1,
+        "first_preview_median_ns": 2, "first_preview_p95_ns": 2,
+        "complete_index_median_ns": 3, "max_step_latency_ns": 1,
+        "progressive_replay": {"events": [10, 50, 90, 100],
+                               "first_preview_before_index_complete": True,
+                               "worker_render_completed": True},
+        "peak_child_rss_bytes": 16, "index_bytes": 8,
+    }
+    return {
+        "schema_version": 1, "seed": 20261009,
+        "machine": "macOS-test", "machine_model": "test model",
+        "chip": "test chip", "memory_bytes": 1024,
+        "architecture": "arm64", "os": "macOS test",
+        "compiler": "clang test", "build": "mac-release",
+        "cache_caveat": "run order only",
+        "cases": {"10MiB": copy.deepcopy(case), "100MiB": copy.deepcopy(case)},
+    }
+
+
 class PerfGateTests(unittest.TestCase):
     def setUp(self) -> None:
         self.baseline = gate.validate_baseline(gate.load_json(gate.BASELINE_PATH, "baseline"))
@@ -116,6 +147,30 @@ class PerfGateTests(unittest.TestCase):
         malformed_baseline["unexpected"] = 1
         with self.assertRaises(gate.GateError):
             gate.validate_baseline(malformed_baseline)
+
+    def test_raw_and_generated_report_reject_nested_unknowns_and_bool_versions(self) -> None:
+        raw = valid_raw_report()
+        gate.validate_raw(raw)
+        malformed_raw = copy.deepcopy(raw)
+        malformed_raw["schema_version"] = True
+        with self.assertRaises(gate.GateError):
+            gate.validate_raw(malformed_raw)
+        malformed_raw = copy.deepcopy(raw)
+        malformed_raw["cases"]["10MiB"]["progressive_replay"]["surprise"] = 1
+        with self.assertRaises(gate.GateError):
+            gate.validate_raw(malformed_raw)
+
+        result_path = gate.ROOT / "artifacts/WO-BOOT-08/perf-gate.json"
+        result = gate.load_json(result_path, "test result report")
+        gate.validate_result(result)
+        malformed_result = copy.deepcopy(result)
+        malformed_result["schema_version"] = True
+        with self.assertRaises(gate.GateError):
+            gate.validate_result(malformed_result)
+        malformed_result = copy.deepcopy(result)
+        malformed_result["cases"]["100MiB"]["summary"]["surprise"] = 1
+        with self.assertRaises(gate.GateError):
+            gate.validate_result(malformed_result)
 
     def test_deterministic_serialization_and_stretch_targets_are_report_only(self) -> None:
         results, _ = gate.evaluate(self.metrics, self.limits, self.baselines,
