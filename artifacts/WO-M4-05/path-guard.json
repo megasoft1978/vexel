@@ -3,7 +3,7 @@
   "revision": 1,
   "spec_sha256": "9d685bb1f3277b7dd31e3a59add24ff7acdacfdb73ed3b9ebf3b2f80fa3700af",
   "base_sha": "5fe97cdf3dbe955638d9c5f0d54956ecc1fc2f0c",
-  "head_sha": "276e1af2cd3ae9940578e25192983c73b9f62513",
+  "head_sha": "65157aa484fa97634e3ca197da08723d97ab71c7",
   "allowed": true,
   "changed_paths": [
     "CMakeLists.txt",
@@ -55,6 +55,7 @@
     "artifacts/WO-M4-05/test-fast.txt",
     "artifacts/WO-M4-05/ubsan.txt",
     "artifacts/WO-M4-05/verify.txt",
+    "artifacts/WO-M4-05/work-order-validation.txt",
     "bench/results/WO-M4-05.json",
     "docs/PERF.md",
     "ledger.jsonl",

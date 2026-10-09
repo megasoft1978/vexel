@@ -15,7 +15,7 @@
   ],
   "coverage": {
     "specificity": "ID > class > type; presentation attributes at zero specificity",
-    "priority": "inline normal > stylesheet normal; important > normal; inline important > stylesheet important",
+    "priority": "inline normal > stylesheet normal; important > normal; inline important beats stylesheet important",
     "source_order": "last same-priority declaration wins",
     "selector_lists": true,
     "class_token_boundaries": ".bar does not match an element whose token is foobar",
@@ -53,6 +53,15 @@
         "-R",
         "shape-render|css-cascade",
         "--output-on-failure"
+      ],
+      "exit_code": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_shape_render"
       ],
       "exit_code": 0
     }
@@ -131,5 +140,6 @@
       "passed": true
     }
   ],
-  "focused_python_tests": 14
+  "focused_python_tests": 16,
+  "comments_whitespace": "Comments containing semicolons and braces do not terminate declarations or stylesheet rules."
 }

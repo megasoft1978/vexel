@@ -1,12 +1,11 @@
-Frozen verification command summary (final working-tree source):
+Corrected candidate verification on native Apple Silicon macOS:
 
-cmake --preset mac-debug: PASS, exit 0 (debug-configure.txt)
-cmake --build --preset mac-debug: PASS, exit 0 (debug-build.txt)
-ctest --test-dir build/mac-debug --output-on-failure: FAIL, exit 8; 11/12 passed. index-replay reports "offscreen Metal device or queue unavailable" (debug-ctest.txt).
-./dev asan: FAIL, exit 8 only at same index-replay environment requirement; no sanitizer report (asan.txt).
-./dev ubsan: FAIL, exit 8 only at same index-replay environment requirement; no sanitizer report (ubsan.txt).
-cmake --preset mac-release: PASS, exit 0 (release-configure.txt)
-cmake --build --preset mac-release: PASS, exit 0 (release-build.txt)
-./dev verify: FAIL, exit 8 only at same index-replay environment requirement (verify.txt).
-
-The full acceptance gate is not green in this host environment. No test or oracle threshold was changed.
+- `./dev verify`: PASS; CTest 12/12, Python 199/199, native smoke and 20-frame Metal replay pass.
+- `./dev asan`: PASS; CTest 12/12, no sanitizer reports.
+- `./dev ubsan`: PASS; CTest 12/12, no sanitizer reports.
+- mac-release configure/build: PASS.
+- Focused shape/CSS tests: PASS; 16 Python reference tests and CSS property matrix.
+- Seeded ASan+UBSan shape fuzz: PASS; 1,000,000 cases, 0 crashes/reports/invariant failures (23.622 s).
+- Corpus run/check: PASS; 58 files, 116 trials, 2 previews, 56 unsupported, 0 limit/crash; inputs/baselines unchanged.
+- The host's offscreen Metal path was available; no skips were reported.
+Detailed output: `verify.txt`, `asan.txt`, `ubsan.txt`, `release-build.txt`, `reference-tests.txt`, `fuzz-report.json`, and `corpus-run.txt`.

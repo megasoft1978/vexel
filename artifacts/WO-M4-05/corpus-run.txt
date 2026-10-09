@@ -7,7 +7,12 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-05/build/mac-release
-ninja: no work to do.
+[1/5] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
+[2/5] Linking C static library libvexel_shape.a
+[3/5] Linking C executable bin/svg_index_bench
+[4/5] Linking C executable bin/shape_render_cli
+[5/5] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Preset CMake variables:
 
   CMAKE_BUILD_TYPE="Debug"

@@ -8,20 +8,18 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-05/build/mac-ubsan
-[1/10] Building C object CMakeFiles/css_test.dir/tests/svg/css/test_css.c.o
-[2/10] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
-[3/10] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[4/10] Linking C static library libvexel_shape.a
-[5/10] Linking C executable bin/css_test
-[6/10] Linking C executable bin/shape_fuzz
-[7/10] Linking C executable bin/shape_render_cli
-[8/10] Linking C executable bin/shape_test
-[9/10] Linking C executable bin/svg_index_bench
-[10/10] Linking C executable bin/svgworkbench
+[1/8] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
+[2/8] Linking C static library libvexel_shape.a
+[3/8] Linking C executable bin/shape_test
+[4/8] Linking C executable bin/svg_index_bench
+[5/8] Linking C executable bin/shape_fuzz
+[6/8] Linking C executable bin/css_test
+[7/8] Linking C executable bin/shape_render_cli
+[8/8] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-05/build/mac-ubsan
       Start  1: cli-version
- 1/12 Test  #1: cli-version ......................   Passed    0.19 sec
+ 1/12 Test  #1: cli-version ......................   Passed    0.22 sec
       Start  2: base-contract
  2/12 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
@@ -29,9 +27,9 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-05/build
       Start  4: source-save
  4/12 Test  #4: source-save ......................   Passed    0.00 sec
       Start  5: shape-render
- 5/12 Test  #5: shape-render .....................   Passed    0.24 sec
+ 5/12 Test  #5: shape-render .....................   Passed    0.27 sec
       Start  6: css-cascade
- 6/12 Test  #6: css-cascade ......................   Passed    0.19 sec
+ 6/12 Test  #6: css-cascade ......................   Passed    0.21 sec
       Start  7: svg-index
  7/12 Test  #7: svg-index ........................   Passed    0.14 sec
       Start  8: viewer-navigation
@@ -47,4 +45,4 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-05/build
 
 100% tests passed, 0 tests failed out of 12
 
-Total Test time (real) =   1.27 sec
+Total Test time (real) =   1.34 sec

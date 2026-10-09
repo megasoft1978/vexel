@@ -1,1 +1,3 @@
-CSS bounded cascade and nine-property matrix passed
+build/mac-debug/bin/css_test: PASS
+python3 -m unittest tests.test_shape_render: PASS, 16 tests
+Regression: comments containing semicolons and closing braces remain inert; inline !important overrides stylesheet !important.
