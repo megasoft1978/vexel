@@ -4,8 +4,8 @@
 #include <string.h>
 
 #define ENTRY_METADATA_BYTES (sizeof(cache_entry))
-typedef struct cache_entry { uint64_t key, last_used; raster_tile tile; bool occupied; } cache_entry;
-struct raster_tile_cache { size_t cap, max_entries, count, accounted; uint64_t generation, clock; uint32_t scale; cache_entry *entries; };
+typedef struct cache_entry { uint64_t key, last_used_epoch, last_used; raster_tile tile; bool occupied; } cache_entry;
+struct raster_tile_cache { size_t cap, max_entries, count, accounted; uint64_t generation, clock_epoch, clock; uint32_t scale; cache_entry *entries; };
 
 static void destroy_tile(raster_tile *tile) { free(tile->rgba); memset(tile, 0, sizeof(*tile)); }
 static void remove_entry(raster_tile_cache *cache, size_t index) {
@@ -28,31 +28,36 @@ static size_t lru_slot(const raster_tile_cache *cache) {
     size_t selected = cache->max_entries;
     for (size_t i = 0; i < cache->max_entries; ++i) {
         if (!cache->entries[i].occupied) continue;
-        if (selected == cache->max_entries || cache->entries[i].last_used < cache->entries[selected].last_used) selected = i;
+        if (selected == cache->max_entries ||
+            cache->entries[i].last_used_epoch < cache->entries[selected].last_used_epoch ||
+            (cache->entries[i].last_used_epoch == cache->entries[selected].last_used_epoch &&
+             cache->entries[i].last_used < cache->entries[selected].last_used)) selected = i;
     }
     return selected;
 }
 static uint64_t next_tick(raster_tile_cache *cache) {
     if (cache->clock == UINT64_MAX) {
-        uint64_t oldest = UINT64_MAX;
-        for (size_t i = 0; i < cache->max_entries; ++i)
-            if (cache->entries[i].occupied && cache->entries[i].last_used < oldest)
-                oldest = cache->entries[i].last_used;
-        if (oldest == UINT64_MAX) cache->clock = 0;
-        else {
-            /* Subtracting the oldest live tick preserves order without a sort buffer. */
-            uint64_t offset = oldest - 1;
-            for (size_t i = 0; i < cache->max_entries; ++i)
-                if (cache->entries[i].occupied) cache->entries[i].last_used -= offset;
-            cache->clock -= offset;
-        }
+        cache->clock = 0;
+        cache->clock_epoch++;
     }
     return ++cache->clock;
 }
 
 #ifdef VEXEL_TESTING
 void raster_tile_cache_test_set_clock(raster_tile_cache *cache, uint64_t clock) {
-    if (cache != NULL) cache->clock = clock;
+    if (cache == NULL) return;
+    cache->clock = clock;
+    if (clock == UINT64_MAX) {
+        size_t newest = cache->max_entries;
+        for (size_t i = 0; i < cache->max_entries; ++i) {
+            if (!cache->entries[i].occupied) continue;
+            if (newest == cache->max_entries ||
+                cache->entries[i].last_used_epoch > cache->entries[newest].last_used_epoch ||
+                (cache->entries[i].last_used_epoch == cache->entries[newest].last_used_epoch &&
+                 cache->entries[i].last_used > cache->entries[newest].last_used)) newest = i;
+        }
+        if (newest < cache->max_entries) cache->entries[newest].last_used = clock;
+    }
 }
 #endif
 
@@ -82,7 +87,9 @@ const raster_tile *raster_tile_cache_get(raster_tile_cache *cache, uint64_t key)
     if (cache == NULL) return NULL;
     size_t slot = find_key(cache, key);
     if (slot == cache->max_entries) return NULL;
-    cache->entries[slot].last_used = next_tick(cache);
+    uint64_t tick = next_tick(cache);
+    cache->entries[slot].last_used_epoch = cache->clock_epoch;
+    cache->entries[slot].last_used = tick;
     return &cache->entries[slot].tile;
 }
 bool raster_tile_cache_put(raster_tile_cache *cache, uint64_t key, raster_tile *tile) {
@@ -105,7 +112,9 @@ bool raster_tile_cache_put(raster_tile_cache *cache, uint64_t key, raster_tile *
     else slot = free_slot(cache);
     if (slot == cache->max_entries) return false;
     cache_entry *entry = &cache->entries[slot];
-    entry->key = key; entry->tile = *tile; entry->occupied = true; entry->last_used = next_tick(cache);
+    uint64_t tick = next_tick(cache);
+    entry->key = key; entry->tile = *tile; entry->occupied = true;
+    entry->last_used_epoch = cache->clock_epoch; entry->last_used = tick;
     cache->count++; cache->accounted += charge;
     memset(tile, 0, sizeof(*tile));
     return true;
@@ -114,7 +123,7 @@ bool raster_tile_cache_set_epoch(raster_tile_cache *cache, uint64_t generation, 
     if (cache == NULL) return false;
     if (cache->generation == generation && cache->scale == scale_bucket) return true;
     for (size_t i = 0; i < cache->max_entries; ++i) remove_entry(cache, i);
-    cache->generation = generation; cache->scale = scale_bucket; cache->clock = 0;
+    cache->generation = generation; cache->scale = scale_bucket; cache->clock_epoch = 0; cache->clock = 0;
     return true;
 }
 bool raster_tile_cache_get_stats(const raster_tile_cache *cache, raster_tile_cache_stats *out_stats) {
