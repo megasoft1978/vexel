@@ -17,12 +17,17 @@ static bool cancel_at_percent(const uint8_t *source, size_t length, unsigned tar
     svg_index_session *session = NULL;
     if (svg_index_start((base_bytes){source, length}, target, &session) != SVG_INDEX_OK) return false;
     svg_index_progress p = svg_index_get_progress(session);
+    ui_index_progress view = {0};
     while (p.bytes_read < length && p.bytes_read * 100U / length < target) {
         if (svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES) != SVG_INDEX_OK) {
             svg_index_destroy(session);
             return false;
         }
         p = svg_index_get_progress(session);
+        if (!ui_index_progress_update(&view, &p)) {
+            svg_index_destroy(session);
+            return false;
+        }
     }
     bool reached = p.bytes_read * 100U / length >= target && !p.complete;
     svg_index_cancel(session);
@@ -31,6 +36,16 @@ static bool cancel_at_percent(const uint8_t *source, size_t length, unsigned tar
     reached = reached && p.canceled;
     svg_index_destroy(session);
     return reached;
+}
+
+static bool same_token(svg_xml_token a, svg_xml_token b)
+{
+    return a.kind == b.kind && a.depth == b.depth &&
+           a.source.offset == b.source.offset && a.source.length == b.source.length &&
+           a.name.offset == b.name.offset && a.name.length == b.name.length &&
+           a.value.offset == b.value.offset && a.value.length == b.value.length &&
+           a.prefix.offset == b.prefix.offset && a.prefix.length == b.prefix.length &&
+           a.local_name.offset == b.local_name.offset && a.local_name.length == b.local_name.length;
 }
 
 int main(void)
@@ -47,6 +62,18 @@ int main(void)
     if (step != SVG_INDEX_COMPLETE || !p.complete || !p.first_preview_ready)
         return fail("session did not complete with preview");
     if (p.element_count != 4U || p.attribute_count != 2U) return fail("count mismatch");
+    svg_xml_token *reference = calloc(sizeof(source), sizeof(*reference));
+    if (reference == NULL) return fail("reference token allocation failed");
+    svg_xml_result one_shot = svg_xml_tokenize((base_bytes){source, sizeof(source) - 1U},
+        svg_xml_default_options(), reference, sizeof(source));
+    bool equivalent = one_shot.diagnostic.category == SVG_XML_ERROR_NONE &&
+                      one_shot.token_count == p.token_count;
+    for (size_t i = 0U; equivalent && i < p.token_count; ++i) {
+        svg_xml_token token;
+        equivalent = svg_index_token_at(session, i, &token) && same_token(token, reference[i]);
+    }
+    free(reference);
+    if (!equivalent) return fail("one-shot token stream mismatch");
     ui_index_progress view = {0};
     if (!ui_index_progress_update(&view, &p) || view.percent != 100U ||
         !view.preview_visible || view.loading) return fail("progress UI state mismatch");
@@ -63,9 +90,34 @@ int main(void)
         preview_source.len != 28U || memcmp(preview_source.ptr,
         "<svg><rect width='2'/></svg>", 28U) != 0) return fail("preview source mismatch");
     free(preview_source.ptr);
+    if (!svg_index_preview_generation_is_current(session, 7U))
+        return fail("current preview generation rejected");
     if (svg_index_advance_generation(session, 8U) != SVG_INDEX_OK ||
-        svg_index_get_progress(session).first_preview_ready) return fail("generation invalidation failed");
+        svg_index_get_progress(session).first_preview_ready ||
+        svg_index_preview_generation_is_current(session, 7U))
+        return fail("generation invalidation failed");
     svg_index_destroy(session);
+
+    static const uint8_t rich[] = "<?xml version='1.0' encoding=\"UTF-8\"?>\r\n<!--c--><?p data?><a:root xmlns:a='urn:x' a:k=\"v&amp;x\">x\r\ny<![CDATA[z]]><a:child/></a:root>";
+    if (svg_index_start((base_bytes){rich, sizeof(rich) - 1U}, 3U, &session) != SVG_INDEX_OK)
+        return fail("rich XML session start failed");
+    step = SVG_INDEX_OK;
+    while (step == SVG_INDEX_OK) step = svg_index_step(session, 3U);
+    p = svg_index_get_progress(session);
+    size_t rich_capacity = sizeof(rich);
+    svg_xml_token *rich_reference = calloc(rich_capacity, sizeof(*rich_reference));
+    if (rich_reference == NULL) { svg_index_destroy(session); return fail("rich token allocation failed"); }
+    one_shot = svg_xml_tokenize((base_bytes){rich, sizeof(rich) - 1U},
+        svg_xml_default_options(), rich_reference, rich_capacity);
+    equivalent = step == SVG_INDEX_COMPLETE && one_shot.diagnostic.category == SVG_XML_ERROR_NONE &&
+                 p.token_count == one_shot.token_count;
+    for (size_t i = 0U; equivalent && i < p.token_count; ++i) {
+        svg_xml_token token;
+        equivalent = svg_index_token_at(session, i, &token) && same_token(token, rich_reference[i]);
+    }
+    free(rich_reference);
+    svg_index_destroy(session);
+    if (!equivalent) return fail("chunk-boundary XML token stream mismatch");
 
     static const uint8_t malformed[] = "<svg><rect/></broken>";
     if (svg_index_start((base_bytes){malformed, sizeof(malformed) - 1U}, 1U, &session) != SVG_INDEX_OK)
@@ -93,6 +145,26 @@ int main(void)
     free(long_source);
     if (!canceled) return fail("10/50/90 cancellation failed");
 
+    static const uint8_t bad_large[] = "<svg width=1 height=1><rect/></svg>";
+    size_t bad_length = 70U * 1024U;
+    uint8_t *bad_source = malloc(bad_length);
+    if (bad_source == NULL) return fail("large diagnostic fixture allocation failed");
+    memcpy(bad_source, bad_large, sizeof(bad_large) - 1U);
+    memset(bad_source + sizeof(bad_large) - 1U, ' ',
+           bad_length - (sizeof(bad_large) - 1U));
+    if (svg_index_start((base_bytes){bad_source, bad_length}, 1U, &session) != SVG_INDEX_OK) {
+        free(bad_source);
+        return fail("large malformed session start failed");
+    }
+    step = SVG_INDEX_OK;
+    while (step == SVG_INDEX_OK) step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+    p = svg_index_get_progress(session);
+    bool bad_attribute = step == SVG_INDEX_MALFORMED &&
+        p.diagnostic.category == SVG_XML_ERROR_MALFORMED_SYNTAX && !p.complete;
+    svg_index_destroy(session);
+    free(bad_source);
+    if (!bad_attribute) return fail("large malformed source was accepted");
+
     session = NULL;
     if (svg_index_start((base_bytes){NULL, SVG_INDEX_MAX_SOURCE_BYTES + 1U}, 1U, &session) != SVG_INDEX_LIMIT ||
         session != NULL) return fail("oversized source was not rejected before dereference");
@@ -101,6 +173,6 @@ int main(void)
     svg_index_cancel(session);
     if (svg_index_step(session, 64U) != SVG_INDEX_CANCELED) return fail("cancel failed");
     svg_index_destroy(session);
-    (void)printf("{\"status\":\"passed\",\"checks\":[\"progressive first supported element\",\"preview precedes completion\",\"10 percent cancel\",\"50 percent cancel\",\"90 percent cancel\",\"stale generation\",\"unsupported element retained\",\"oversized source rejected before dereference\"]}\n");
+    (void)printf("{\"status\":\"passed\",\"checks\":[\"progressive first supported element\",\"preview precedes completion\",\"10 percent cancel\",\"50 percent cancel\",\"90 percent cancel\",\"stale generation\",\"unsupported element retained\",\"oversized source rejected before dereference\"],\"cancel_percentages\":[10,50,90]}\n");
     return 0;
 }

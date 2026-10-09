@@ -29,7 +29,7 @@ if(VEXEL_SANITIZER)
     endif()
 endif()
 
-add_executable(svgworkbench app/main.c app/test_driver/native_task_tests.c src/raster/tile.c
+add_executable(svgworkbench app/main.c app/index_replay.c app/test_driver/native_task_tests.c src/raster/tile.c
     src/platform/macos/platform_task.c src/platform/macos/platform_window.m
     src/platform/macos/platform_metal.m)
 target_include_directories(svgworkbench PRIVATE src app)
@@ -46,15 +46,19 @@ add_library(vexel_base STATIC src/base/base.c)
 add_library(vexel_xml STATIC
     src/svg/xml/xml_chars.c
     src/svg/xml/xml_tokenizer.c
-    src/svg/index/index.c
 )
-target_include_directories(vexel_xml PUBLIC src/svg/xml src/svg/index src/base)
+target_include_directories(vexel_xml PUBLIC src/svg/xml src/base)
 target_link_libraries(vexel_xml PUBLIC vexel_base)
 set_target_properties(vexel_xml PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 
+add_library(vexel_index STATIC src/svg/index/index.c src/platform/macos/platform_task.c)
+target_include_directories(vexel_index PUBLIC src src/svg/index src/svg/xml src/base)
+target_link_libraries(vexel_index PUBLIC vexel_xml Threads::Threads)
+set_target_properties(vexel_index PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+
 add_library(vexel_ui_state STATIC src/ui/index_progress.c)
-target_include_directories(vexel_ui_state PUBLIC src/ui src/svg/index src/svg/xml src/base)
-target_link_libraries(vexel_ui_state PUBLIC vexel_xml)
+target_include_directories(vexel_ui_state PUBLIC src/ui src/svg/index src src/svg/xml src/base)
+target_link_libraries(vexel_ui_state PUBLIC vexel_index)
 set_target_properties(vexel_ui_state PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 
 add_library(vexel_document STATIC
@@ -74,6 +78,7 @@ add_library(vexel_shape STATIC
 target_include_directories(vexel_shape PUBLIC src src/geom src/svg/shape src/raster src/svg/xml src/base)
 target_link_libraries(vexel_shape PUBLIC vexel_xml vexel_base)
 set_target_properties(vexel_shape PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_state)
 
 add_executable(shape_render_cli tests/svg/shape/shape_render_cli.c)
 target_link_libraries(shape_render_cli PRIVATE vexel_shape)
@@ -99,8 +104,8 @@ set_target_properties(xml_tokenizer_fuzz PROPERTIES C_STANDARD 17 C_STANDARD_REQ
 add_executable(svg_index_test tests/svg/index/test_index.c)
 target_link_libraries(svg_index_test PRIVATE vexel_xml vexel_ui_state)
 set_target_properties(svg_index_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-add_executable(svg_index_bench app/index_bench.c src/platform/macos/platform_task.c)
-target_link_libraries(svg_index_bench PRIVATE vexel_shape Threads::Threads)
+add_executable(svg_index_bench app/index_bench.c)
+target_link_libraries(svg_index_bench PRIVATE vexel_shape vexel_index Threads::Threads)
 set_target_properties(svg_index_bench PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_executable(source_save_test tests/document/test_source_save.c)
@@ -145,6 +150,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(svgworkbench PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_base PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_xml PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(vexel_index PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_ui_state PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -169,6 +175,8 @@ if(VEXEL_SANITIZER)
     target_compile_options(base_contract_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(base_contract_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_xml PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(vexel_index PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_index PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_ui_state PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_ui_state PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
@@ -189,4 +197,6 @@ if(BUILD_TESTING)
     add_test(NAME source-save COMMAND source_save_test)
     add_test(NAME shape-render COMMAND shape_test)
     add_test(NAME svg-index COMMAND svg_index_test)
+    add_test(NAME index-replay COMMAND svgworkbench --index-replay
+        "${CMAKE_SOURCE_DIR}/tests/svg/shape/fixtures/rect.svg")
 endif()

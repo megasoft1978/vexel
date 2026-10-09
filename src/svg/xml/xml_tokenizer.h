@@ -83,6 +83,9 @@ typedef struct svg_xml_result {
 svg_xml_options svg_xml_default_options(void);
 svg_xml_result svg_xml_tokenize(base_bytes input, svg_xml_options options,
                                 svg_xml_token *tokens, size_t token_capacity);
+/* Same grammar and non-input limits as the default API; allows up to 1 GiB input. */
+svg_xml_result svg_xml_tokenize_large(base_bytes input, svg_xml_token *tokens,
+                                      size_t token_capacity);
 const char *svg_xml_error_name(svg_xml_error error);
 
 #endif

@@ -7,7 +7,13 @@ Mutable session state belongs to one owner thread. Cancellation and generation
 changes are also owner-thread operations. A canceled session cannot be resumed.
 
 The large-input path has independent limits (1 GiB source, depth 256, one
-million elements and attributes, 256 MiB record storage). It recognizes XML
-lexical boundaries and keeps unsupported element records. The existing
-one-shot tokenizer remains the authority for its original <=16 MiB API and
-does not change defaults.
+million elements and attributes, 256 MiB token storage). Index records are
+owner-thread-only. A bounded task validates the complete source with the same
+XML grammar and exposes its token spans after completion; worker allocations
+are capped before retrying token output. The existing one-shot tokenizer
+remains capped at 16 MiB and its defaults do not change.
+
+Once a supported depth-one shape has a complete source range,
+`svg_index_make_preview_source` returns an owned minimal SVG consisting of the
+original root opener and shape span. Callers schedule decode/raster work and
+must retain that owned byte buffer through task completion.

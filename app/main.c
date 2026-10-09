@@ -10,6 +10,7 @@
 #include "raster/tile.h"
 #include "test_driver/native_injection.h"
 #include "test_driver/native_task_tests.h"
+#include "index_replay.h"
 
 #define NATIVE_COMMAND_LIMIT 64U
 
@@ -423,6 +424,9 @@ static int native_metal_replay_smoke(void)
 
 int main(int argc, char *argv[])
 {
+    if (argc == 3 && strcmp(argv[1], "--index-replay") == 0) {
+        return app_run_index_replay(argv[2]);
+    }
     if (argc == 5 && strcmp(argv[1], "--native-task-smoke") == 0 && strcmp(argv[2], "--cycles") == 0) {
         uint32_t cycles = 0U;
         if (!parse_integer(argv[3], 10000U, &cycles) || cycles == 0U || strcmp(argv[4], "--run") != 0) {

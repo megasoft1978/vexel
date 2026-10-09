@@ -1,6 +1,8 @@
 {
-  "status": "partial",
+  "status": "passed for exercised fixtures",
   "one_shot_defaults_changed": false,
-  "small_document_validation": "delegates to unchanged svg_xml_tokenize for sources up to 64 KiB",
-  "incremental_token_stream_equivalence": "not exposed or verified"
+  "incremental_session_tokens_available_after_validation": true,
+  "fixtures": ["empty and attributes", "XML declaration, comment, PI, QName, entity spelling, text, CDATA"],
+  "comparison": "token kind, depth, and every source/name/value/prefix/local-name span compared field-by-field",
+  "coverage_limit": "This focused check does not enumerate every XML tokenizer fixture up to 16 MiB."
 }

@@ -1,1 +1,14 @@
-{"status":"passed","checks":["progressive first supported element","preview precedes completion","10 percent cancel","50 percent cancel","90 percent cancel","stale generation","unsupported element retained","oversized source rejected before dereference"]}
+{
+  "status": "passed",
+  "source": "10MiB deterministic index benchmark input",
+  "progress_events": [
+    10,
+    50,
+    90,
+    100
+  ],
+  "first_preview": "worker shape decode and raster; Metal offscreen readback verified",
+  "preview_tile_ready_before_index_complete": true,
+  "complete": true,
+  "transcript": "progressive-replay.log"
+}

@@ -25,6 +25,12 @@ element, comment, PI, in-element text run, or CDATA run. XML declaration is
 not a node. Whitespace outside the document element is tokenized but does not
 count as a node.
 
+`svg_xml_tokenize_large` uses the same grammar, token layout, and non-input
+limits while permitting a source up to 1 GiB. It still writes into caller-owned
+token storage and reports output exhaustion normally. The bounded index module
+uses it on a validation worker; this does not change the 16 MiB cap or
+allocation-free behavior of `svg_xml_tokenize`.
+
 Accepted syntax includes XML 1.0 documents encoded as UTF-8 with an optional
 leading BOM, XML declaration,
 PI, comments, element and empty-element tags, quoted attributes, character

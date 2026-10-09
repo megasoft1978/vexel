@@ -1,10 +1,17 @@
 #include "index.h"
+#include "platform/platform_task.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum scan_mode { SCAN_TEXT, SCAN_TAG, SCAN_COMMENT, SCAN_CDATA, SCAN_PI } scan_mode;
+typedef enum scan_mode { SCAN_TEXT, SCAN_PROBE, SCAN_TAG, SCAN_COMMENT, SCAN_CDATA, SCAN_PI } scan_mode;
+typedef enum probe_kind { PROBE_NONE, PROBE_COMMENT, PROBE_CDATA } probe_kind;
 typedef struct open_element { size_t record; size_t name_offset; size_t name_length; } open_element;
+typedef struct validation_payload {
+    svg_xml_diagnostic diagnostic;
+    svg_xml_token *tokens;
+    size_t token_count;
+} validation_payload;
 
 struct svg_index_session {
     base_bytes source;
@@ -23,6 +30,10 @@ struct svg_index_session {
     uint64_t generation;
     scan_mode mode;
     bool closing_tag;
+    bool tag_name_complete;
+    bool pending_slash;
+    probe_kind probe;
+    size_t probe_position;
     bool self_closing;
     bool in_quote;
     uint8_t quote;
@@ -30,14 +41,72 @@ struct svg_index_session {
     bool complete;
     bool preview;
     svg_xml_diagnostic diagnostic;
+    validation_payload validation;
+    svg_xml_token *tokens;
+    size_t token_count;
+    platform_task_queue *validation_queue;
+    bool validation_complete;
+    bool source_scanned;
     open_element stack[SVG_INDEX_MAX_DEPTH];
 };
+
+#define SVG_INDEX_MAX_TOKENS (SVG_INDEX_MAX_STORAGE_BYTES / sizeof(svg_xml_token))
 
 static void set_error(svg_index_session *s, svg_xml_error code, size_t at)
 {
     if (s->diagnostic.category == SVG_XML_ERROR_NONE) {
         s->diagnostic.category = code;
         s->diagnostic.offset = at;
+    }
+}
+
+static bool validate_document(void *opaque, const platform_task_cancel_token *token,
+                              int64_t *out_value)
+{
+    svg_index_session *s = opaque;
+    size_t capacity = s->source.len / 512U + 32U;
+    if (capacity > SVG_INDEX_MAX_TOKENS) capacity = SVG_INDEX_MAX_TOKENS;
+    if (capacity == 0U) capacity = 1U;
+    svg_xml_token *tokens = NULL;
+    for (;;) {
+        if (atomic_load_explicit(&token->canceled, memory_order_acquire)) {
+            free(tokens);
+            return false;
+        }
+        size_t bytes = 0U;
+        if (!base_size_mul(capacity, sizeof(*tokens), &bytes) ||
+            bytes > SVG_INDEX_MAX_STORAGE_BYTES) { free(tokens); return false; }
+        svg_xml_token *next = realloc(tokens, bytes);
+        if (next == NULL) { free(tokens); return false; }
+        tokens = next;
+        svg_xml_result result = svg_xml_tokenize_large(s->source, tokens, capacity);
+        if (result.diagnostic.category == SVG_XML_ERROR_OUTPUT_EXHAUSTED &&
+            capacity < SVG_INDEX_MAX_TOKENS) {
+            size_t doubled = 0U;
+            if (!base_size_mul(capacity, 2U, &doubled)) { free(tokens); return false; }
+            capacity = doubled > SVG_INDEX_MAX_TOKENS ? SVG_INDEX_MAX_TOKENS : doubled;
+            continue;
+        }
+        s->validation.diagnostic = result.diagnostic;
+        s->validation.token_count = result.token_count;
+        s->validation.tokens = tokens;
+        *out_value = (int64_t)result.diagnostic.category;
+        return result.diagnostic.category == SVG_XML_ERROR_NONE;
+    }
+}
+
+static void harvest_validation(svg_index_session *s)
+{
+    if (s->validation_complete) return;
+    platform_task_result result;
+    if (platform_task_poll(s->validation_queue, &result)) {
+        s->validation_complete = true;
+        s->tokens = s->validation.tokens;
+        s->token_count = s->validation.token_count;
+        if (s->validation.diagnostic.category != SVG_XML_ERROR_NONE)
+            s->diagnostic = s->validation.diagnostic;
+        else if (!result.succeeded)
+            set_error(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, 0U);
     }
 }
 
@@ -117,26 +186,6 @@ static void finish_open_tag(svg_index_session *s, size_t end)
     }
 }
 
-static void validate_small_document(svg_index_session *s)
-{
-    if (s->source.len > 64U * 1024U || s->diagnostic.category != SVG_XML_ERROR_NONE) return;
-    size_t capacity = s->source.len + 1U;
-    if (capacity > SIZE_MAX / sizeof(svg_xml_token)) {
-        set_error(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, 0U);
-        return;
-    }
-    svg_xml_token *tokens = calloc(capacity, sizeof(*tokens));
-    if (tokens == NULL) { set_error(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, 0U); return; }
-    svg_xml_result result = svg_xml_tokenize(s->source, svg_xml_default_options(),
-                                              tokens, capacity);
-    free(tokens);
-    if (result.diagnostic.category != SVG_XML_ERROR_NONE)
-        s->diagnostic = result.diagnostic;
-    else if (result.element_count != s->element_count) {
-        set_error(s, SVG_XML_ERROR_MALFORMED_SYNTAX, 0U);
-    }
-}
-
 svg_index_status svg_index_start(base_bytes source, uint64_t generation,
                                  svg_index_session **out_session)
 {
@@ -149,26 +198,18 @@ svg_index_status svg_index_start(base_bytes source, uint64_t generation,
     s->source = source;
     s->generation = generation;
     s->mode = SCAN_TEXT;
+    platform_task_config config = {1U, 1U, NULL, NULL, NULL};
+    if (platform_task_queue_create(&config, &s->validation_queue) != PLATFORM_TASK_OK ||
+        platform_task_submit(s->validation_queue, 1U, 1U, validate_document, s) != PLATFORM_TASK_OK) {
+        if (s->validation_queue != NULL) {
+            platform_task_shutdown(s->validation_queue);
+            platform_task_destroy(s->validation_queue);
+        }
+        free(s);
+        return SVG_INDEX_OOM;
+    }
     *out_session = s;
     return SVG_INDEX_OK;
-}
-
-static void begin_tag(svg_index_session *s, size_t at)
-{
-    s->mode = SCAN_TAG;
-    s->token_start = at;
-    s->closing_tag = false;
-    s->self_closing = false;
-    s->in_quote = false;
-    s->tag_name_offset = at + 1U;
-    if (s->tag_name_offset < s->source.len && s->source.ptr[s->tag_name_offset] == '/') {
-        s->closing_tag = true;
-        ++s->tag_name_offset;
-    }
-    size_t p = s->tag_name_offset;
-    while (p < s->source.len && p - s->tag_name_offset < 4096U &&
-           name_byte(s->source.ptr[p])) ++p;
-    s->tag_name_length = p - s->tag_name_offset;
 }
 
 svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
@@ -176,6 +217,8 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
     if (s == NULL || byte_budget == 0) return SVG_INDEX_INVALID;
     if (s->canceled) return SVG_INDEX_CANCELED;
     if (s->complete) return SVG_INDEX_COMPLETE;
+    harvest_validation(s);
+    if (s->diagnostic.category != SVG_XML_ERROR_NONE) return SVG_INDEX_MALFORMED;
     if (byte_budget > SVG_INDEX_MAX_STEP_BYTES) byte_budget = SVG_INDEX_MAX_STEP_BYTES;
     size_t end = s->bytes_read + byte_budget;
     if (end < s->bytes_read || end > s->source.len) end = s->source.len;
@@ -184,21 +227,58 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
         uint8_t c = s->source.ptr[at];
         if (s->mode == SCAN_TEXT) {
             if (c == '<') {
-                if (at + 4U <= s->source.len && memcmp(s->source.ptr + at, "<!--", 4U) == 0) {
-                    s->mode = SCAN_COMMENT; s->token_start = at;
-                }
-                if (at + 9U <= s->source.len && memcmp(s->source.ptr + at, "<![CDATA[", 9U) == 0) {
-                    s->mode = SCAN_CDATA; s->token_start = at;
-                }
-                if (at + 2U <= s->source.len && s->source.ptr[at + 1U] == '?') {
-                    s->mode = SCAN_PI; s->token_start = at;
-                }
-                if (s->mode == SCAN_TEXT && at + 2U <= s->source.len && s->source.ptr[at + 1U] == '!') {
-                    set_error(s, SVG_XML_ERROR_UNSUPPORTED_DTD, at); break;
-                }
-                if (s->mode == SCAN_TEXT) begin_tag(s, at);
+                s->mode = SCAN_PROBE;
+                s->token_start = at;
+                s->probe = PROBE_NONE;
+                s->probe_position = 0U;
+                ++s->bytes_read;
+                continue;
+            }
+        } else if (s->mode == SCAN_PROBE) {
+            if (s->probe_position == 0U) {
+                if (c == '?') s->mode = SCAN_PI;
+                else if (c == '/') {
+                    s->mode = SCAN_TAG; s->closing_tag = true;
+                    s->tag_name_offset = at + 1U; s->tag_name_length = 0U;
+                    s->tag_name_complete = false; s->pending_slash = false;
+                } else if (c == '!') s->probe_position = 1U;
+                else if (name_byte(c)) {
+                    s->mode = SCAN_TAG; s->closing_tag = false;
+                    s->tag_name_offset = at; s->tag_name_length = 1U;
+                    s->tag_name_complete = false; s->pending_slash = false;
+                } else set_error(s, SVG_XML_ERROR_INVALID_NAME, at);
+            } else if (s->probe == PROBE_NONE) {
+                if (c == '-') { s->probe = PROBE_COMMENT; s->probe_position = 1U; }
+                else if (c == '[') { s->probe = PROBE_CDATA; s->probe_position = 1U; }
+                else set_error(s, SVG_XML_ERROR_UNSUPPORTED_DTD, s->token_start);
+            } else if (s->probe == PROBE_COMMENT) {
+                if (c != '-') set_error(s, SVG_XML_ERROR_MALFORMED_SYNTAX, s->token_start);
+                else s->mode = SCAN_COMMENT;
+            } else {
+                static const char cdata_tail[] = "CDATA[";
+                if (s->probe_position > sizeof(cdata_tail) - 1U ||
+                    c != (uint8_t)cdata_tail[s->probe_position - 1U])
+                    set_error(s, SVG_XML_ERROR_MALFORMED_SYNTAX, s->token_start);
+                else if (s->probe_position == sizeof(cdata_tail) - 1U) s->mode = SCAN_CDATA;
+                else ++s->probe_position;
             }
         } else if (s->mode == SCAN_TAG) {
+            if (!s->tag_name_complete) {
+                if (name_byte(c)) {
+                    if (s->tag_name_length == 4096U) {
+                        set_error(s, SVG_XML_ERROR_INVALID_NAME, s->tag_name_offset);
+                        break;
+                    }
+                    ++s->tag_name_length;
+                    ++s->bytes_read;
+                    continue;
+                }
+                if (s->tag_name_length == 0U) {
+                    set_error(s, SVG_XML_ERROR_INVALID_NAME, s->tag_name_offset);
+                    break;
+                }
+                s->tag_name_complete = true;
+            }
             if (s->in_quote) {
                 if (c == s->quote) s->in_quote = false;
             } else if (c == '\'' || c == '"') {
@@ -206,13 +286,14 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
                 if (s->attribute_count >= SVG_INDEX_MAX_ATTRIBUTES)
                     set_error(s, SVG_XML_ERROR_ATTRIBUTE_LIMIT, at);
                 else ++s->attribute_count;
-            } else if (c == '/' && at + 1U < s->source.len && s->source.ptr[at + 1U] == '>') {
-                s->self_closing = true;
+            } else if (c == '/') {
+                s->pending_slash = true;
             } else if (c == '>') {
+                s->self_closing = s->pending_slash;
                 finish_open_tag(s, at + 1U);
                 s->mode = SCAN_TEXT;
-            } else if ((c == '\'' || c == '"') && s->attribute_count < SVG_INDEX_MAX_ATTRIBUTES) {
-                ++s->attribute_count;
+            } else {
+                s->pending_slash = false;
             }
         } else if (s->mode == SCAN_COMMENT && c == '>' && at >= 2U &&
                    s->source.ptr[at - 1U] == '-' && s->source.ptr[at - 2U] == '-') {
@@ -229,11 +310,11 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
     if (s->bytes_read == s->source.len) {
         if (s->mode != SCAN_TEXT || s->depth != 0 || s->root_count != 1U)
             set_error(s, SVG_XML_ERROR_INCOMPLETE_DOCUMENT, s->source.len);
-        else {
-            validate_small_document(s);
-            s->complete = s->diagnostic.category == SVG_XML_ERROR_NONE;
-        }
+        else s->source_scanned = true;
     }
+    harvest_validation(s);
+    if (s->diagnostic.category != SVG_XML_ERROR_NONE) return SVG_INDEX_MALFORMED;
+    if (s->source_scanned && s->validation_complete) s->complete = true;
     return s->diagnostic.category == SVG_XML_ERROR_NONE ?
            (s->complete ? SVG_INDEX_COMPLETE : SVG_INDEX_OK) : SVG_INDEX_MALFORMED;
 }
@@ -244,6 +325,7 @@ svg_index_progress svg_index_get_progress(const svg_index_session *s)
     if (s == NULL) return p;
     p.bytes_read = s->bytes_read; p.source_bytes = s->source.len;
     p.element_count = s->element_count; p.attribute_count = s->attribute_count;
+    p.token_count = s->token_count;
     p.generation = s->generation; p.diagnostic = s->diagnostic;
     p.complete = s->complete; p.canceled = s->canceled; p.first_preview_ready = s->preview;
     return p;
@@ -256,12 +338,30 @@ svg_index_status svg_index_advance_generation(svg_index_session *s, uint64_t gen
     return SVG_INDEX_OK;
 }
 
-void svg_index_cancel(svg_index_session *s) { if (s != NULL) s->canceled = true; }
+bool svg_index_preview_generation_is_current(const svg_index_session *s,
+                                             uint64_t generation)
+{
+    return s != NULL && !s->canceled && s->preview && generation == s->generation;
+}
+
+void svg_index_cancel(svg_index_session *s)
+{
+    if (s == NULL) return;
+    s->canceled = true;
+    (void)platform_task_cancel(s->validation_queue, 1U);
+}
 
 bool svg_index_element_at(const svg_index_session *s, size_t index, svg_index_element *out)
 {
     if (s == NULL || out == NULL || index >= s->element_count) return false;
     *out = s->elements[index]; return true;
+}
+
+bool svg_index_token_at(const svg_index_session *s, size_t index, svg_xml_token *out)
+{
+    if (s == NULL || out == NULL || !s->complete || index >= s->token_count) return false;
+    *out = s->tokens[index];
+    return true;
 }
 
 bool svg_index_make_preview_source(const svg_index_session *s, base_mut_bytes *out)
@@ -290,5 +390,7 @@ bool svg_index_make_preview_source(const svg_index_session *s, base_mut_bytes *o
 void svg_index_destroy(svg_index_session *s)
 {
     if (s == NULL) return;
-    free(s->elements); free(s);
+    platform_task_shutdown(s->validation_queue);
+    platform_task_destroy(s->validation_queue);
+    free(s->tokens); free(s->elements); free(s);
 }

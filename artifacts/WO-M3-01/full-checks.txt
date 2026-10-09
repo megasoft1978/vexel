@@ -7,26 +7,27 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
-[1/2] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
-[2/2] Linking C executable bin/svg_index_bench
+ninja: no work to do.
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
     Start 1: cli-version
-1/6 Test #1: cli-version ......................   Passed    0.00 sec
+1/7 Test #1: cli-version ......................   Passed    0.00 sec
     Start 2: base-contract
-2/6 Test #2: base-contract ....................   Passed    0.00 sec
+2/7 Test #2: base-contract ....................   Passed    0.00 sec
     Start 3: xml-tokenizer
-3/6 Test #3: xml-tokenizer ....................   Passed    0.06 sec
+3/7 Test #3: xml-tokenizer ....................   Passed    0.06 sec
     Start 4: source-save
-4/6 Test #4: source-save ......................   Passed    0.00 sec
+4/7 Test #4: source-save ......................   Passed    0.00 sec
     Start 5: shape-render
-5/6 Test #5: shape-render .....................   Passed    0.01 sec
+5/7 Test #5: shape-render .....................   Passed    0.01 sec
     Start 6: svg-index
-6/6 Test #6: svg-index ........................   Passed    0.00 sec
+6/7 Test #6: svg-index ........................   Passed    0.03 sec
+    Start 7: index-replay
+7/7 Test #7: index-replay .....................   Passed    0.02 sec
 
-100% tests passed, 0 tests failed out of 6
+100% tests passed, 0 tests failed out of 7
 
-Total Test time (real) =   0.08 sec
+Total Test time (real) =   0.14 sec
 usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
@@ -35,15 +36,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 174 tests in 20.341s
+Ran 174 tests in 20.793s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.141824
+native smoke elapsed seconds: 0.143350
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.089409
-Ran 174 tests: 174 passed, 0 failed, 0 errors, 0 skipped; 20.373s
+native replay elapsed seconds: 0.088958
+Ran 174 tests: 174 passed, 0 failed, 0 errors, 0 skipped; 20.828s
 valid ledger: 222 entries

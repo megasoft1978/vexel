@@ -7,15 +7,17 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
-[1/2] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
-[2/2] Linking C executable bin/svg_index_bench
+[1/4] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
+[2/4] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
+[3/4] Linking C static library libvexel_index.a
+[4/4] Linking C executable bin/svg_index_bench
 {
   "10MiB": {
-    "first_preview_median_ns": 170958,
-    "max_step_latency_ns": 268417
+    "first_preview_median_ns": 216417,
+    "max_step_latency_ns": 307500
   },
   "100MiB": {
-    "first_preview_median_ns": 86792,
-    "max_step_latency_ns": 185000
+    "first_preview_median_ns": 154333,
+    "max_step_latency_ns": 204125
   }
 }

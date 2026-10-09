@@ -26,3 +26,10 @@ at 256x256, then records source/PNG hashes and renderer/license/environment
 metadata. Later runs verify that lock and its bytes without rendering or
 rewriting goldens. The committed lock is checked offline by the normal test
 suite; no renderer is needed by builds or tests.
+
+`index_bench.py`, dispatched by `./dev index-bench`, generates separate 10 MiB
+simple-element and 100 MiB map-like inputs under `.cache/index-bench/`. It runs
+five first-use and ten warm trials through `svg_index_bench`, records source
+read, first worker-rendered preview, full validation/index time, maximum owner
+step, record bytes, RSS, raw trial values, toolchain metadata, and input hashes.
+The cold/warm labels do not flush the macOS filesystem cache.

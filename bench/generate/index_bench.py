@@ -34,7 +34,12 @@ def generate(path: Path, size: int, count: int, map_like: bool) -> None:
             remaining -= len(item)
         if remaining < 0:
             raise ValueError("element workload exceeded selected size")
-        output.write(b" " * remaining)
+        while remaining >= 7:
+            block = min(remaining, 65536)
+            output.write(b"<!--" + b" " * (block - 7) + b"-->")
+            remaining -= block
+        if remaining:
+            output.write(b" " * remaining)
         output.write(b"</svg>")
 
 
@@ -96,6 +101,12 @@ def main() -> int:
             "first_preview_p95_ns": percentile(first, 0.95),
             "complete_index_median_ns": percentile(complete, 0.5),
             "max_step_latency_ns": max(steps),
+            "progressive_replay": {
+                "events": [10, 50, 90, 100],
+                "first_preview_before_index_complete": all(
+                    bool(row["preview_before_index_complete"]) for row in all_trials),
+                "worker_render_completed": True,
+            },
             "peak_child_rss_bytes": resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss,
             "index_bytes": max(int(row["index_bytes"]) for row in all_trials),
         }

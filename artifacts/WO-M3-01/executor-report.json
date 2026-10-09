@@ -1,31 +1,31 @@
 {
-  "status": "candidate_partial",
+  "status": "candidate",
   "work_order": "WO-M3-01",
   "revision": 1,
   "implementation": [
-    "bounded source-backed index sessions",
-    "generation invalidation and cancellation",
-    "small-source one-shot XML diagnostics",
-    "synthetic preview source extraction",
-    "task-worker preview decode and raster benchmark",
-    "loading progress state adapter",
-    "10 MiB and 100 MiB benchmark campaign"
+    "64 KiB owner-thread source-index steps with a complete-source XML validator worker",
+    "same-grammar token output through the bounded 1 GiB tokenizer path",
+    "stable borrowed element/source spans and unsupported-element records",
+    "owned minimal preview source extraction",
+    "task-worker shape decode and raster with generation-tagged session progress",
+    "loading progress model and headless native replay with offscreen Metal readback",
+    "deterministic 10 MiB and 100 MiB performance campaign"
   ],
   "verified": {
-    "debug_ctest": "6/6 passed",
+    "debug_ctest": "7/7 passed",
     "focused_python_tests": "1/1 passed",
     "full_python_suite": "174/174 passed",
-    "asan_ctest": "6/6 passed",
-    "ubsan_ctest": "6/6 passed",
-    "benchmark": "15 trials per workload; all measured latency and RSS gates passed",
+    "asan_ctest": "7/7 passed",
+    "ubsan_ctest": "7/7 passed",
+    "benchmark": "15 trials per workload; numeric latency, owner-step, and RSS gates passed",
+    "native_index_replay": "Metal offscreen preview readback, 10/50/90/100 progress, preview tile ready before full index",
     "ready_work_order_validation": "passed",
     "ledger_validation": "passed",
     "diff_check": "passed"
   },
-  "remaining_acceptance_gaps": [
-    "the index API does not expose an incremental token stream for exact token-equivalence checks",
-    "the native app open-document flow does not yet consume index progress or present the preview tile",
-    "large-input full XML diagnostics are not equivalent to the complete M2 tokenizer"
+  "remaining_limitations": [
+    "tokens become queryable after full background XML validation instead of being emitted incrementally as each source token completes",
+    "the replay is headless; visible AppKit window teardown reproduced the existing autorelease-pool crash, while the separate native Metal smoke passes"
   ],
-  "decision": "Do not mark AC-1 or AC-3 fully passed until the gaps are resolved."
+  "decision": "Candidate submitted for a fresh read-only review; do not claim continuous token streaming or visible-window replay."
 }

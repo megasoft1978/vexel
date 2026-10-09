@@ -500,6 +500,20 @@ svg_xml_result svg_xml_tokenize(base_bytes input, svg_xml_options options,
     return s.result;
 }
 
+svg_xml_result svg_xml_tokenize_large(base_bytes input, svg_xml_token *tokens,
+                                      size_t token_capacity)
+{
+    svg_xml_options options = svg_xml_default_options();
+    options.limits.input_bytes = 1024U * 1024U * 1024U;
+    xml_scanner s = {0};
+    s.input = input; s.options = options; s.tokens = tokens; s.capacity = token_capacity;
+    s.result.diagnostic.category = SVG_XML_ERROR_NONE;
+    if (tokenize(&s)) return s.result;
+    s.result.token_count = 0U;
+    s.result.element_count = 0U; s.result.attribute_count = 0U; s.result.node_count = 0U;
+    return s.result;
+}
+
 const char *svg_xml_error_name(svg_xml_error error)
 {
     static const char *const names[]={"none","invalid_argument","input_limit","invalid_utf8","invalid_character","unsupported_encoding","invalid_name","malformed_syntax","duplicate_attribute","mismatched_tag","depth_limit","node_limit","attribute_limit","text_limit","output_exhausted","unsupported_dtd","multiple_roots","incomplete_document"};

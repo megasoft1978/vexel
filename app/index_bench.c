@@ -51,6 +51,7 @@ int main(int argc, char **argv)
     uint64_t read_end = now_ns();
     (void)fclose(file);
     if (read_count != size) { free(bytes); return 2; }
+    uint64_t start = now_ns();
     svg_index_session *session = NULL;
     if (svg_index_start((base_bytes){bytes, size}, 1U, &session) != SVG_INDEX_OK) {
         free(bytes); return 2;
@@ -62,13 +63,18 @@ int main(int argc, char **argv)
     }
     preview_task preview = {0};
     bool submitted = false, rendered = false, task_finished = false;
+    bool progress_10 = false, progress_50 = false, progress_90 = false;
     uint64_t first_ns = 0U, max_step_ns = 0U;
-    uint64_t start = now_ns();
     svg_index_status status = SVG_INDEX_OK;
     while (status == SVG_INDEX_OK) {
         uint64_t step_start = now_ns();
         status = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
         svg_index_progress progress = svg_index_get_progress(session);
+        size_t percent = progress.source_bytes == 0U ? 0U :
+                         progress.bytes_read * 100U / progress.source_bytes;
+        progress_10 = progress_10 || percent >= 10U;
+        progress_50 = progress_50 || percent >= 50U;
+        progress_90 = progress_90 || percent >= 90U;
         if (!submitted && progress.first_preview_ready) {
             if (!svg_index_make_preview_source(session, &preview.source) ||
                 platform_task_submit(queue, 1U, 1U, render_preview, &preview) != PLATFORM_TASK_OK) {
@@ -97,7 +103,8 @@ int main(int argc, char **argv)
         }
     }
     platform_task_shutdown(queue);
-    if (status != SVG_INDEX_COMPLETE || first_ns == 0U || !rendered) {
+    if (status != SVG_INDEX_COMPLETE || first_ns == 0U || first_ns > total_ns || !rendered ||
+        !progress_10 || !progress_50 || !progress_90) {
         (void)fprintf(stderr, "index failed: status=%d diagnostic=%d offset=%zu\n",
                       (int)status, (int)progress.diagnostic.category,
                       progress.diagnostic.offset);
@@ -108,6 +115,8 @@ int main(int argc, char **argv)
     }
     (void)printf("{\"source_bytes\":%zu,\"read_ns\":%llu,\"first_preview_ns\":%llu,"
                  "\"complete_index_ns\":%llu,\"max_step_ns\":%llu,"
+                 "\"preview_before_index_complete\":true,"
+                 "\"progress_10_50_90_complete\":true,"
                  "\"element_count\":%zu,\"index_bytes\":%zu}\n",
                  size, (unsigned long long)(read_end - read_start),
                  (unsigned long long)first_ns, (unsigned long long)total_ns,

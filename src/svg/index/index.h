@@ -49,6 +49,7 @@ typedef struct svg_index_progress {
     size_t source_bytes;
     size_t element_count;
     size_t attribute_count;
+    size_t token_count;
     uint64_t generation;
     svg_xml_diagnostic diagnostic;
     bool complete;
@@ -62,9 +63,14 @@ svg_index_status svg_index_step(svg_index_session *session, size_t byte_budget);
 svg_index_progress svg_index_get_progress(const svg_index_session *session);
 svg_index_status svg_index_advance_generation(svg_index_session *session,
                                                uint64_t generation);
+bool svg_index_preview_generation_is_current(const svg_index_session *session,
+                                             uint64_t generation);
 void svg_index_cancel(svg_index_session *session);
 bool svg_index_element_at(const svg_index_session *session, size_t index,
                           svg_index_element *out_element);
+/* Token storage is available only after full validation completes. */
+bool svg_index_token_at(const svg_index_session *session, size_t index,
+                        svg_xml_token *out_token);
 /* On a completed supported child, returns an owned synthetic preview SVG. */
 bool svg_index_make_preview_source(const svg_index_session *session,
                                   base_mut_bytes *out_source);
