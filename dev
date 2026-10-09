@@ -120,7 +120,9 @@ case "$command_name" in
         if [ "$#" -eq 0 ]; then set -- --run; fi
         if [ "${1:-}" = --run ]; then
             cmake --preset mac-release
-            cmake --build --preset mac-release --target svg_index_bench
+            cmake --build --preset mac-release --target svg_index_bench svgworkbench shape_render_cli
+            cmake --preset mac-debug
+            cmake --build --preset mac-debug --target svgworkbench shape_render_cli
         fi
         python3 reports/M4/head_to_head.py "$@"
         ;;

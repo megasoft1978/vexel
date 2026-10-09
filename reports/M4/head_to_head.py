@@ -31,6 +31,18 @@ def load_harness():
 def render(harness, raw: dict) -> tuple[str, str]:
     report = harness.aggregate(raw)
     report["environment"]["binary_path"] = "build/mac-release/bin/svg_index_bench"
+    size_paths = {
+        "debug_svgworkbench": ROOT / "build/mac-debug/bin/svgworkbench",
+        "release_svgworkbench": ROOT / "build/mac-release/bin/svgworkbench",
+        "release_svg_index_bench": ROOT / "build/mac-release/bin/svg_index_bench",
+        "debug_shape_render_cli": ROOT / "build/mac-debug/bin/shape_render_cli",
+        "release_shape_render_cli": ROOT / "build/mac-release/bin/shape_render_cli",
+        "debug_libvexel_shape": ROOT / "build/mac-debug/libvexel_shape.a",
+        "release_libvexel_shape": ROOT / "build/mac-release/libvexel_shape.a",
+    }
+    report["binary_sizes_bytes"] = {
+        name: path.stat().st_size for name, path in size_paths.items()
+    }
     markdown = harness.render_markdown(report)
     report["results"] = [
         {

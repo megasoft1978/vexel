@@ -323,7 +323,9 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 Debug and Release sizes on arm64 macOS 27.0, Apple M5 Max, Apple Clang 21.0.0
 (`clang-2100.3.34.2`) are: `svgworkbench` 265,312 / 172,464 bytes,
 `svg_index_bench` 107,552 bytes in Release, `shape_render_cli` 149,040 /
-87,904 bytes, and `libvexel_shape.a` 106,888 / 37,960 bytes.
+87,904 bytes, and `libvexel_shape.a` 106,632 / 37,832 bytes. The same sizes
+are recorded in `reports/M4/head-to-head.json` and checked by
+`./dev bench-corpus --check`.
 
 `./dev bench-corpus` now reruns the established fresh-process progressive index
 workload, verifies every external manifest hash, and writes M4-specific reports
@@ -331,16 +333,16 @@ without changing the frozen M3 report. The 58-file report records 2 previewable,
 56 unsupported, no limits, and no crashes. Both previewable files are Natural
 Earth T1 maps, so geometry support alone has not increased whole-file coverage;
 common class CSS, stroke and local references remain future work. For those two
-successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 91.875x
+successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 72.926x
 and the RSS ratio is 33.832x. T2–T4 ratios are unavailable because Vexel has no
 successful outcomes there. These are directional open/index task comparisons
 against the supplied Inkscape CLI baseline, not full-render parity.
 
 The 100 MiB preview gate fails because 0/12 eligible T3 files produced a
-preview. The maximum measured main-thread index step was 0.215 ms, under 100 ms;
+preview. The maximum measured main-thread index step was 0.200 ms, under 100 ms;
 all 12 eligible files passed the existing per-file RSS allowance. The two T1
-first-preview measurements were 4.218 and 3.986 ms; full-index measurements
-were 0.851 and 0.879 ms. Host, binary hash, per-file aggregate results and
+first-preview measurements were 5.195 and 5.137 ms; full-index measurements
+were 0.837 and 0.906 ms. Host, binary hash, per-file aggregate results and
 ratios are in `reports/M4/head-to-head.json` and `.md`; raw per-trial data and
 the external manifest pointer stay in ignored `.cache/M4/`.
 
