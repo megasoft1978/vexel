@@ -7,6 +7,21 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-release
+[1/5] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[2/5] Linking C static library libvexel_shape.a
+[3/5] Linking C executable bin/svg_index_bench
+[4/5] Linking C executable bin/shape_render_cli
+[5/5] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-debug
 ninja: no work to do.
 generated-cad_t1: unsupported,unsupported,unsupported
 generated-cad_t2: unsupported,unsupported,unsupported

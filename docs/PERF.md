@@ -328,10 +328,10 @@ Debug/Release `shape_render_cli`: 149040 / 87904 bytes; Debug/Release `libvexel_
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-For 2 comparable successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 72.926x and RSS ratio is 33.832x. T2–T4 ratios are unavailable because Vexel has no successful outcomes there.
+For 2 comparable successful T1 rows, the Inkscape/Vexel first-preview geometric mean is 71.119x and RSS ratio is 33.832x. T2–T4 ratios are unavailable because Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.200 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 5.195 ms, full index 0.837 ms; natural-earth-world-map-countries: first preview 5.137 ms, full index 0.906 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 3.763 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 5.318 ms, full index 0.890 ms; natural-earth-world-map-countries: first preview 5.276 ms, full index 1.008 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 

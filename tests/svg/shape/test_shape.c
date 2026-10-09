@@ -6,6 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+static double segment_distance(geom_point p, geom_edge edge)
+{
+    double dx=edge.b.x-edge.a.x, dy=edge.b.y-edge.a.y;
+    double length=dx*dx+dy*dy;
+    double t=((p.x-edge.a.x)*dx+(p.y-edge.a.y)*dy)/length;
+    if(t<0.0)t=0.0;else if(t>1.0)t=1.0;
+    return hypot(p.x-(edge.a.x+t*dx),p.y-(edge.a.y+t*dy));
+}
+
 int main(void)
 {
     geom_affine translate={1,0,0,1,10,20}, scale={2,0,0,3,0,0}, composed;
@@ -106,6 +115,19 @@ int main(void)
     raster_tile_destroy(&tile);svg_shape_document_destroy(&doc);
     static const uint8_t extreme_ellipse[]="<svg width=\"8\" height=\"8\"><circle cx=\"1000000\" cy=\"0\" r=\"1\"/></svg>";
     if(svg_shape_decode((base_bytes){extreme_ellipse,sizeof(extreme_ellipse)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_NUMBER||diagnostic.offset==0U)return 31;
+    static const uint8_t eccentric_ellipse[]="<svg width=\"8\" height=\"8\"><ellipse cx=\"100000\" cy=\"100000\" rx=\"100000\" ry=\"1000\"/></svg>";
+    if(svg_shape_decode((base_bytes){eccentric_ellipse,sizeof(eccentric_ellipse)-1U},&doc,&diagnostic)!=SVG_SHAPE_ERROR_NONE||doc.edge_count>4096U)return 38;
+    double max_ellipse_error=0.0;
+    for(size_t edge=0U;edge<doc.edge_count;edge++){
+        for(size_t sample=1U;sample<8U;sample++){
+            double angle=6.283185307179586*((double)edge+(double)sample/8.0)/(double)doc.edge_count;
+            geom_point point={100000.0+100000.0*cos(angle),100000.0+1000.0*sin(angle)};
+            double error=segment_distance(point,doc.edges[edge]);
+            if(error>max_ellipse_error)max_ellipse_error=error;
+        }
+    }
+    if(max_ellipse_error>0.250001)return 39;
+    svg_shape_document_destroy(&doc);
     static const uint8_t leading_transform_comma[]="<svg width=\"8\" height=\"8\"><rect width=\"1\" height=\"1\" transform=\",translate(1)\"/></svg>";
     if(svg_shape_decode((base_bytes){leading_transform_comma,sizeof(leading_transform_comma)-1U},&doc,&diagnostic)==SVG_SHAPE_ERROR_NONE||diagnostic.category!=SVG_SHAPE_ERROR_UNSUPPORTED||diagnostic.offset==0U)return 34;
     static const uint8_t repeated_transform_comma[]="<svg width=\"8\" height=\"8\"><rect width=\"1\" height=\"1\" transform=\"translate(1),,scale(2)\"/></svg>";

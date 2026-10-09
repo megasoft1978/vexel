@@ -492,6 +492,9 @@ static bool transformed_node(base_bytes src, svg_xml_token *tokens, size_t count
 static bool ellipse_edges(builder *b, double cx, double cy, double rx, double ry)
 {
     if (rx == 0.0 || ry == 0.0) return true;
+    /* The ellipse is a diagonal affine image of the unit circle. Its maximum
+       axis scales the circle's chord sagitta conservatively; the active matrix
+       is already bounded by transformed_flatness_tolerance. */
     double radius=fmax(rx,ry);
     double tolerance=transformed_flatness_tolerance(b);
     double angle=radius<=tolerance?6.283185307179586:
