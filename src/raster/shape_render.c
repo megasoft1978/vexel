@@ -197,7 +197,8 @@ static bool render_work_preflight(const svg_shape_document *doc,
             const raster_pixel_bounds *box = &bounds->shapes[shape].pixels;
             if (!box->visible || y < box->y_first || y > box->y_last) return false;
             size_t sample_aux_work = 0U;
-            if (doc->clips != NULL &&
+            if (doc->has_clips && doc->clips != NULL &&
+                doc->clips[shape] != NULL &&
                 !checked_add_size(sample_aux_work,
                                   svg_clip_work_units(doc->clips[shape]),
                                   &sample_aux_work)) return false;

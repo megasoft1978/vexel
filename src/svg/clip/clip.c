@@ -114,7 +114,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
                                  svg_reference_index *references,
                                  svg_css_sheet *css,
                                  svg_xml_span value,
-                                 const svg_shape_document *document,
+                                 svg_shape_document *document,
                                  size_t *document_clip_bytes,
                                  geom_affine user_inverse,
                                  const double local_bounds[4],
@@ -223,6 +223,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     }
     if (clip->geometry.edge_count > CLIP_MAX_EDGES) { svg_clip_destroy(clip); goto limit; }
     *document_clip_bytes += allocation_bytes;
+    document->has_clips = true;
     *out = clip;
     return SVG_SHAPE_ERROR_NONE;
 limit:
@@ -304,12 +305,31 @@ bool svg_clip_visit_boundary_edges(const svg_shape_clip *clip,
     return true;
 }
 
+bool svg_clip_boundary_work_counts(const svg_shape_clip *clip,
+                                   svg_clip_work_counts *out)
+{
+    if (out == NULL) return false;
+    *out = (svg_clip_work_counts){0};
+    for (const svg_shape_clip *current = clip; current != NULL;
+         current = current->parent) {
+        if (out->chain_elements == SIZE_MAX ||
+            current->geometry.shape_count > SIZE_MAX - out->child_shapes ||
+            current->geometry.edge_count > SIZE_MAX - out->edges) return false;
+        out->chain_elements++;
+        out->child_shapes += current->geometry.shape_count;
+        out->edges += current->geometry.edge_count;
+    }
+    return true;
+}
+
 size_t svg_clip_work_units(const svg_shape_clip *clip)
 {
-    if (clip == NULL) return 0U;
-    size_t own = clip->geometry.edge_count + clip->geometry.shape_count;
-    size_t parent = svg_clip_work_units(clip->parent);
-    return parent > SIZE_MAX - own ? SIZE_MAX : own + parent;
+    svg_clip_work_counts counts;
+    if (!svg_clip_boundary_work_counts(clip, &counts) ||
+        counts.child_shapes > SIZE_MAX - counts.chain_elements) return SIZE_MAX;
+    size_t units = counts.chain_elements + counts.child_shapes;
+    if (counts.edges > SIZE_MAX - units) return SIZE_MAX;
+    return units + counts.edges;
 }
 
 void svg_clip_destroy(svg_shape_clip *clip)

@@ -7,6 +7,11 @@
 
 typedef struct svg_shape_clip svg_shape_clip;
 typedef bool (*svg_clip_boundary_edge_visitor)(void *context, geom_edge edge);
+typedef struct svg_clip_work_counts {
+    size_t chain_elements;
+    size_t child_shapes;
+    size_t edges;
+} svg_clip_work_counts;
 
 svg_shape_error svg_clip_resolve(base_bytes source,
                                  const svg_xml_token *tokens,
@@ -14,7 +19,7 @@ svg_shape_error svg_clip_resolve(base_bytes source,
                                  svg_reference_index *references,
                                  svg_css_sheet *css,
                                  svg_xml_span value,
-                                 const svg_shape_document *document,
+                                 svg_shape_document *document,
                                  size_t *document_clip_bytes,
                                  geom_affine user_inverse,
                                  const double local_bounds[4],
@@ -33,6 +38,9 @@ bool svg_clip_contains(const svg_shape_clip *clip, double x, double y);
 bool svg_clip_visit_boundary_edges(const svg_shape_clip *clip,
                                    svg_clip_boundary_edge_visitor visitor,
                                    void *context, bool *mapping_valid);
+/* Counts clip-chain entries, child shapes and edges without visiting geometry. */
+bool svg_clip_boundary_work_counts(const svg_shape_clip *clip,
+                                   svg_clip_work_counts *out);
 size_t svg_clip_work_units(const svg_shape_clip *clip);
 void svg_clip_destroy(svg_shape_clip *clip);
 

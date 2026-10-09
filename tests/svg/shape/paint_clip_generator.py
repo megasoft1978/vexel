@@ -61,4 +61,3 @@ def random_paint_clip_document(rng, index):
                '</g></g></g>')
     return (f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
             f'{defs}{underlay}{content}</svg>')
-

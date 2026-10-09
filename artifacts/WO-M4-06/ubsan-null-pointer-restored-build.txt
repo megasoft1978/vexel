@@ -1,0 +1,3 @@
+[1/3] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[2/3] Linking C static library libvexel_shape.a
+[3/3] Linking C executable bin/shape_test

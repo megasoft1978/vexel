@@ -403,6 +403,36 @@ static bool add_clip_edge_work(clip_boundary_context *context, size_t amount)
     return true;
 }
 
+static bool preflight_clip_boundary_visits(const svg_shape_document *doc,
+                                           raster_boundary_mask *boundary)
+{
+    size_t work = boundary->mark_work;
+    size_t outer_shape_scans;
+    if (!checked_mul_size(doc->shape_count, 3U, &outer_shape_scans) ||
+        !checked_add_size(work, outer_shape_scans, &work)) {
+        boundary->mark_work = SIZE_MAX;
+        return false;
+    }
+    for (size_t shape = 0U; shape < doc->shape_count; shape++) {
+        if (doc->clips[shape] == NULL) continue;
+        svg_clip_work_counts counts;
+        size_t visit_units, both_passes, preflight_units, total_units;
+        if (!svg_clip_boundary_work_counts(doc->clips[shape], &counts) ||
+            !checked_add_size(counts.chain_elements, counts.child_shapes,
+                              &visit_units) ||
+            !checked_mul_size(visit_units, 2U, &both_passes) ||
+            !checked_add_size(counts.chain_elements, both_passes,
+                              &preflight_units) ||
+            !checked_add_size(work, preflight_units, &total_units)) {
+            boundary->mark_work = SIZE_MAX;
+            return false;
+        }
+        work = total_units;
+    }
+    boundary->mark_work = work;
+    return work <= RASTER_BOUNDARY_WORK_LIMIT;
+}
+
 static bool visit_clip_boundary_edge(void *opaque, geom_edge edge)
 {
     clip_boundary_context *context = opaque;
@@ -452,7 +482,8 @@ bool raster_shape_bounds_mark_clip_boundaries(
     if (doc == NULL || boundary == NULL || boundary->bits == NULL ||
         !isfinite(scale) || scale <= 0.0 ||
         !isfinite(offset_x) || !isfinite(offset_y)) return false;
-    if (doc->clips == NULL) return true;
+    if (!doc->has_clips || doc->clips == NULL) return true;
+    if (!preflight_clip_boundary_visits(doc, boundary)) return false;
     clip_boundary_context context = {
         .document = doc,
         .boundary = boundary,
@@ -465,12 +496,11 @@ bool raster_shape_bounds_mark_clip_boundaries(
         if (doc->clips[shape] == NULL) continue;
         bool mapping_valid = true;
         if (!svg_clip_visit_boundary_edges(doc->clips[shape],
-                visit_clip_boundary_edge, &context, &mapping_valid)) return false;
+                visit_clip_boundary_edge, &context, &mapping_valid)) {
+            boundary->mark_work = context.work;
+            return false;
+        }
         if (!mapping_valid) {
-            size_t units = svg_clip_work_units(doc->clips[shape]);
-            size_t fallback_work;
-            if (!checked_mul_size(units, 2U, &fallback_work) ||
-                !add_clip_edge_work(&context, fallback_work)) return false;
             context.force_full_mask = true;
             break;
         }
@@ -487,7 +517,10 @@ bool raster_shape_bounds_mark_clip_boundaries(
         if (doc->clips[shape] == NULL) continue;
         bool mapping_valid = true;
         if (!svg_clip_visit_boundary_edges(doc->clips[shape],
-                visit_clip_boundary_edge, &context, &mapping_valid)) return false;
+                visit_clip_boundary_edge, &context, &mapping_valid)) {
+            boundary->mark_work = context.work;
+            return false;
+        }
         if (!mapping_valid || context.force_full_mask) {
             if (!mark_full_boundary_mask(&context)) return false;
             boundary->mark_work = context.work;

@@ -32,6 +32,12 @@ struct svg_shape_paint {
     size_t stop_count;
 };
 
+/* Returns an edge pointer only for a nonempty in-range span; formed reports
+ * whether pointer arithmetic was used, for deterministic safety tests. */
+const geom_edge *svg_paint_edge_span(const svg_shape_document *document,
+                                     size_t first_edge, size_t edge_count,
+                                     bool *formed);
+
 /* Resolves only supported local linear/radial paint servers. The document owns
  * appended stops; failure leaves both document and paint unchanged. */
 svg_shape_error svg_paint_resolve_fill(base_bytes source,

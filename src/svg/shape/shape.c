@@ -768,7 +768,7 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
         svg_shape_error result = svg_paint_resolve_fill(source, tokens, token_count,
             builder->references, builder->css,
             builder->paint_cache, builder->paint_token_visits, fill,
-            out->edge_count == before ? NULL : &out->edges[before], out->edge_count - before,
+            svg_paint_edge_span(out, before, out->edge_count - before, NULL), out->edge_count - before,
             user_inverse, out->view_width, out->view_height,
             &out->paints[builder->shape_index], &out->paint_stops,
             &out->paint_stop_count, builder->diag);

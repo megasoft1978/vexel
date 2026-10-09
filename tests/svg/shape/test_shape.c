@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+bool clip_boundary_accounting_check(void);
+bool paint_edge_span_check(void);
+
 static double segment_distance(geom_point p, geom_edge edge)
 {
     double dx=edge.b.x-edge.a.x, dy=edge.b.y-edge.a.y;
@@ -600,6 +603,12 @@ int main(void)
     if (!gradient_checks()) { fprintf(stderr, "gradient rendering failed\n"); return 50; }
     if (!clip_checks()) { fprintf(stderr, "clip rendering failed\n"); return 51; }
     if (!clip_work_budget_check()) { fprintf(stderr, "clip work budget failed\n"); return 52; }
+    if (!clip_boundary_accounting_check()) {
+        fprintf(stderr, "clip boundary accounting failed\n"); return 54;
+    }
+    if (!paint_edge_span_check()) {
+        fprintf(stderr, "paint edge span safety failed\n"); return 55;
+    }
     static const uint8_t zero_area_gradient[] =
         "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\">"
         "<stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/>"
@@ -613,7 +622,7 @@ int main(void)
             sizeof(zero_area_gradient) - 1U}, &zero_doc, &zero_diag) !=
                 SVG_SHAPE_ERROR_UNSUPPORTED ||
         zero_diag.offset != (size_t)(zero_fill - (const char *)zero_area_gradient) ||
-        zero_doc.edge_count != 0U) {
+        zero_doc.edge_count != 0U || zero_doc.edges != NULL) {
         svg_shape_document_destroy(&zero_doc);
         return 53;
     }

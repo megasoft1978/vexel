@@ -63,6 +63,7 @@ typedef struct svg_shape_document {
     svg_paint_stop *paint_stops;
     size_t paint_stop_count;
     svg_shape_clip **clips;
+    bool has_clips;
     size_t clip_bytes;
     base_bytes source; /* borrowed; caller keeps source alive with document */
 } svg_shape_document;

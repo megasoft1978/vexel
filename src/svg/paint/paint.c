@@ -31,6 +31,18 @@ void svg_paint_cache_destroy(svg_paint_cache *cache)
     svg_shape_free(cache);
 }
 
+const geom_edge *svg_paint_edge_span(const svg_shape_document *document,
+                                     size_t first_edge, size_t edge_count,
+                                     bool *formed)
+{
+    if (formed != NULL) *formed = false;
+    if (edge_count == 0U || document == NULL || document->edges == NULL ||
+        first_edge > document->edge_count ||
+        edge_count > document->edge_count - first_edge) return NULL;
+    if (formed != NULL) *formed = true;
+    return &document->edges[first_edge];
+}
+
 static size_t cache_hash(uint32_t token_index)
 {
     uint32_t value = token_index;

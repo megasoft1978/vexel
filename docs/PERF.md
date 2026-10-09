@@ -323,15 +323,15 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## M4 cumulative shape and corpus workload
 
 Measured on arm64 macOS 27.0, unavailable, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 464368 / 280512 bytes; Release `svg_index_bench`: 179552 bytes;
-Debug/Release `shape_render_cli`: 270864 / 159936 bytes; Debug/Release `libvexel_shape.a`: 444784 / 137472 bytes.
+Debug/Release `svgworkbench`: 464736 / 280672 bytes; Release `svg_index_bench`: 179744 bytes;
+Debug/Release `shape_render_cli`: 271232 / 160128 bytes; Debug/Release `libvexel_shape.a`: 449072 / 137872 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 45.110x and RSS ratio of 31.565x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 45.553x and RSS ratio of 31.826x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.211 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 8.297 ms, full index 0.875 ms; natural-earth-world-map-countries: first preview 8.406 ms, full index 0.965 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.587 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 8.236 ms, full index 0.868 ms; natural-earth-world-map-countries: first preview 8.304 ms, full index 0.969 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
