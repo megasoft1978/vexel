@@ -136,3 +136,16 @@
 
 - WO-M4-05 revision 1 is implemented in candidate `9209ae3b670911470100e97b9538daf83dfa509d`; a fresh read-only review passes with no findings after fixes for CSS comment delimiters, inline-important coverage, and stale verification text. All 19 frozen acceptance commands pass in a fresh clean worktree after the three verifier build prerequisites. Debug/ASan/UBSan CTest 12/12 each; Python 199/199; native smoke and 20-frame Metal replay; 16 focused reference tests; 1,000,000 sanitized fuzz cases with zero reports; Release build; and 58-file corpus run/check (2 previews, 56 unsupported, 0 limit/crash). CSS benchmarks: 21 trials/workload, 27.890/29.662 ms stylesheet median/p95 and 27.483/29.013 ms inline; 2,113,536/2,146,304 B RSS; stable shared output SHA. Open/index evidence only; no comparable pre-WO CSS benchmark. 100 MiB first-preview gate still fails for 0/12 files; maximum main-thread step 0.199 ms and RSS gate pass. The standard verifier's fixed 250 KB diff cap required a focused manual read-only review after it completed all frozen commands. Evidence: `artifacts/WO-M4-05/`, including `verifier-round-02.json` and its clean-worktree command summary.
 - Active work order: WO-M4-06 revision 1 is frozen READY against `cd0eb044213dff02f3cff3290d0f414250a9633d` (spec SHA-256 `e3a8b6dc33c470f4306abc227ba2af985b075c551503a79efbc83ac8a1434e56`). It targets bounded local `<use>`/`<symbol>` references, linear/radial gradients, and clipping, ordered by the 58-file feature inventory. Next: execute it on `wo/WO-M4-06`.
+
+
+- Update 2026-10-09: WO-M4-06 revision 2 is active and blocked. ADR-0013
+  narrowly permits synthetic-only scratch buffers up to 4 KiB, independent of
+  document size; source intervals may not be copied into generated SVG. The
+  rebased candidate `fb09369fa77475707d8a1e9cde0736f033bf7130` passes all 18
+  frozen commands, 12/12 CTests, 199/199 Python tests, sanitizers, Release,
+  and a fresh 1,000,000-case sanitized fuzz run (73.008 s, zero reports).
+  A fresh read-only review still fails AC-9 and identifies SVG gradient
+  default/fidelity evidence gaps; see `artifacts/WO-M4-06/manual-review-r2/`
+  and `BLOCKERS.md`. M4-06b and later work remain pending until a source-token
+  traversal replaces both generated-document paths and the spec/evidence gaps
+  are closed.
