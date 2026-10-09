@@ -33,3 +33,4 @@ Interpretation
 Review round 1 correction evidence
 - The independent verifier caught three genuine report issues: unsupported rows were included in RSS geometric means, compiler metadata was missing, and live sysctl lookup made `--check` nondeterministic. Fixed by restricting both ratios to successful rows, recording compiler and all host metadata in retained raw campaign data, and checking only the pinned metadata/binary hash. T2–T4 ratios are now correctly unavailable.
 - PASS `python3 reports/M3/head_to_head.py --check` after regenerating the pinned report (58 files / 116 trials).
+- PASS compact final report diff is below the fresh verifier's 250,000-byte input cap: `head-to-head.json` 145,074 bytes; `head-to-head.md` 17,470 bytes. Per-trial timings, RSS, outcome/status/diagnostic fields remain; duplicated stdout and full `/usr/bin/time -l` text were removed after parsing.

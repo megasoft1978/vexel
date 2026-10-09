@@ -114,8 +114,7 @@ def run_one(path: Path) -> dict:
     row = {"elapsed_ns": elapsed, "exit_code": result.returncode,
            "timed_out": timed_out, "timeout_seconds": TIMEOUT_SECONDS,
            "peak_rss_bytes": int(rss_match.group(1)) if rss_match else None,
-           "rss_unavailable_reason": None if rss_match else "macOS time -l emitted no maximum resident set size",
-           "stdout": stdout.strip(), "diagnostic": stderr.strip()[-12000:],
+           "diagnostic": stderr.strip()[-2000:],
            "outcome": classify(subprocess.CompletedProcess(result.args, result.returncode,
                                                            stdout, stderr), timed_out)}
     try:
@@ -125,12 +124,18 @@ def run_one(path: Path) -> dict:
             "index_complete", "status_code", "diagnostic_category", "diagnostic_offset",
             "preview_before_index_complete", "progress_10_50_90_complete",
             "element_count", "index_bytes", "peak_rss_bytes")})
+        row["diagnostic"] = ""
         if row["outcome"] == "ok" and measured.get("outcome") != "ok":
             row["outcome"] = "crash"
     except (json.JSONDecodeError, TypeError):
         if row["outcome"] == "ok":
             row["outcome"] = "crash"
-            row["diagnostic"] += "\ninvalid benchmark JSON or missing metrics"
+            row["diagnostic"] = (row["diagnostic"] + "\ninvalid benchmark JSON or missing metrics")[-2000:]
+        row["stdout_excerpt"] = stdout.strip()[:1000]
+    if row.get("peak_rss_bytes") is not None:
+        row.pop("rss_unavailable_reason", None)
+    else:
+        row["rss_unavailable_reason"] = "macOS time -l emitted no maximum resident set size"
     if row["outcome"] != "ok":
         row["full_index_ns"] = None
         if row.get("complete_index_ns") is not None:
