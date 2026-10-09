@@ -87,6 +87,7 @@ target_link_libraries(ui_core_test PRIVATE vexel_ui_core)
 set_target_properties(ui_core_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_library(vexel_document STATIC
+    src/document/document_model.c
     src/document/source_save.c
     src/platform/macos/platform_atomic_file.c
 )
@@ -169,6 +170,10 @@ set_target_properties(svg_index_bench PROPERTIES C_STANDARD 17 C_STANDARD_REQUIR
 add_executable(source_save_test tests/document/test_source_save.c)
 target_link_libraries(source_save_test PRIVATE vexel_document)
 set_target_properties(source_save_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+add_executable(document_model_test tests/document/test_document_model.c)
+target_link_libraries(document_model_test PRIVATE vexel_document)
+set_target_properties(document_model_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 target_include_directories(vexel_base PUBLIC src/base)
 set_target_properties(vexel_base PROPERTIES
     C_STANDARD 17
@@ -224,6 +229,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(svg_index_bench PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(base_contract_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(source_save_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(document_model_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(css_test PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -256,7 +262,7 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target ui_demo_render ui_core_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test svg_token_stream_test svg_index_bench source_save_test shape_render_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target ui_demo_render ui_core_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test svg_token_stream_test svg_index_bench source_save_test document_model_test shape_render_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -275,6 +281,7 @@ if(BUILD_TESTING)
     add_test(NAME base-contract COMMAND base_contract_test)
     add_test(NAME xml-tokenizer COMMAND xml_tokenizer_test)
     add_test(NAME source-save COMMAND source_save_test)
+    add_test(NAME document-model COMMAND document_model_test)
     add_test(NAME shape-render COMMAND shape_test)
     add_test(NAME css-cascade COMMAND css_test)
     add_test(NAME svg-index COMMAND svg_index_test)

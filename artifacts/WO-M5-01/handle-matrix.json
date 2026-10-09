@@ -1,0 +1,10 @@
+{
+  "exact_ranges": true,
+  "foreign_rejections": 1,
+  "input_limit": true,
+  "malformed_xml": true,
+  "source_unchanged": true,
+  "stable_handles": true,
+  "stale_rejections": 6,
+  "token_storage_limit": true
+}
