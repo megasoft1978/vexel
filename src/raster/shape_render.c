@@ -11,24 +11,33 @@
 
 static bool edge_crosses_right(geom_edge edge, double px, double py);
 
-static bool segment_hit(geom_point a, geom_point b, double px, double py,
-                        double radius, svg_shape_linecap cap)
+static bool segment_hit_caps(geom_point a, geom_point b, double px, double py,
+                             double radius, svg_shape_linecap start_cap,
+                             svg_shape_linecap end_cap)
 {
     double dx = b.x-a.x, dy = b.y-a.y, length = hypot(dx,dy);
     if (length == 0.0) {
-        if (cap == SVG_SHAPE_CAP_ROUND) return hypot(px-a.x,py-a.y) <= radius;
-        if (cap == SVG_SHAPE_CAP_SQUARE)
+        if (start_cap == SVG_SHAPE_CAP_ROUND || end_cap == SVG_SHAPE_CAP_ROUND)
+            return hypot(px-a.x,py-a.y) <= radius;
+        if (start_cap == SVG_SHAPE_CAP_SQUARE || end_cap == SVG_SHAPE_CAP_SQUARE)
             return fabs(px-a.x)<=radius && fabs(py-a.y)<=radius;
         return false;
     }
     double along = ((px-a.x)*dx + (py-a.y)*dy) / length;
     double across = fabs((px-a.x)*dy - (py-a.y)*dx) / length;
     double low = 0.0, high = length;
-    if (cap == SVG_SHAPE_CAP_SQUARE) { low -= radius; high += radius; }
+    if (start_cap == SVG_SHAPE_CAP_SQUARE) low -= radius;
+    if (end_cap == SVG_SHAPE_CAP_SQUARE) high += radius;
     if (along >= low && along <= high && across <= radius) return true;
-    if (cap == SVG_SHAPE_CAP_ROUND &&
-        (hypot(px-a.x,py-a.y) <= radius || hypot(px-b.x,py-b.y) <= radius)) return true;
+    if (start_cap == SVG_SHAPE_CAP_ROUND && hypot(px-a.x,py-a.y) <= radius) return true;
+    if (end_cap == SVG_SHAPE_CAP_ROUND && hypot(px-b.x,py-b.y) <= radius) return true;
     return false;
+}
+
+static bool segment_hit(geom_point a, geom_point b, double px, double py,
+                        double radius, svg_shape_linecap cap)
+{
+    return segment_hit_caps(a, b, px, py, radius, cap, cap);
 }
 
 static bool in_triangle(double px, double py, geom_point a, geom_point b, geom_point c)
@@ -109,18 +118,26 @@ static bool stroke_contains(const svg_shape_document *doc, size_t shape,
         pattern = (pattern + 1U) % expanded_count;
     }
     double remain = stroke->dash[pattern % pattern_count] - phase;
+    bool joins_from_previous = false;
     for (size_t i = 0; i < count; i++) {
         geom_edge edge = local_edges[first+i];
         double dx=edge.b.x-edge.a.x, dy=edge.b.y-edge.a.y, length=hypot(dx,dy), at=0.0;
         if (length == 0.0) continue;
+        bool continues_at_vertex = false;
         while (at < length) {
             double step = fmin(remain, length - at);
             double end = at + step;
-            if ((pattern & 1U) == 0U) {
+            bool on = (pattern & 1U) == 0U;
+            bool continues = on && end == length && remain - step > 1e-12;
+            if (on) {
                 geom_point a={edge.a.x+dx*(at/length),edge.a.y+dy*(at/length)};
                 geom_point b={edge.a.x+dx*(end/length),edge.a.y+dy*(end/length)};
-                if (segment_hit(a,b,px,py,radius,stroke->cap)) return true;
+                svg_shape_linecap start_cap = at == 0.0 && joins_from_previous
+                    ? SVG_SHAPE_CAP_BUTT : stroke->cap;
+                svg_shape_linecap end_cap = continues ? SVG_SHAPE_CAP_BUTT : stroke->cap;
+                if (segment_hit_caps(a,b,px,py,radius,start_cap,end_cap)) return true;
             }
+            if (continues) continues_at_vertex = true;
             at=end;
             remain -= step;
             if (remain <= 1e-12) {
@@ -128,6 +145,11 @@ static bool stroke_contains(const svg_shape_document *doc, size_t shape,
                 remain=stroke->dash[pattern % pattern_count];
             }
         }
+        if (continues_at_vertex && i + 1U < count) {
+            geom_edge next = local_edges[first+i+1U];
+            if (join_hit(edge.a, edge.b, next.b, px, py, radius, stroke)) return true;
+        }
+        joins_from_previous = continues_at_vertex;
     }
     return false;
 }

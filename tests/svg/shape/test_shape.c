@@ -58,6 +58,16 @@ static uint8_t pixel_alpha(const raster_tile *tile, uint32_t x, uint32_t y)
     return tile->rgba[((size_t)y * tile->width + x) * 4U + 3U];
 }
 
+static bool alpha_at(const char *source, uint32_t x, uint32_t y, uint8_t *alpha)
+{
+    raster_tile tile = {0}; svg_shape_document doc = {0};
+    svg_shape_diagnostic diag;
+    if (!render_source(source, &tile, &doc, &diag)) return false;
+    *alpha = pixel_alpha(&tile, x, y);
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    return true;
+}
+
 static bool antialias_and_fill_checks(void)
 {
     static const char same_nonzero[] = "<svg width=\"16\" height=\"16\"><path fill=\"red\" d=\"M1 1 H15 V15 H1 Z M5 5 H11 V11 H5 Z\"/></svg>";
@@ -189,10 +199,45 @@ static bool stroke_decode_and_render_checks(void)
     return true;
 }
 
+static bool stroke_cap_join_and_dash_checks(void)
+{
+    static const char butt[] = "<svg width=\"16\" height=\"16\"><line x1=\"4\" y1=\"8\" x2=\"12\" y2=\"8\" stroke=\"red\" stroke-width=\"2\" stroke-linecap=\"butt\"/></svg>";
+    static const char square[] = "<svg width=\"16\" height=\"16\"><line x1=\"4\" y1=\"8\" x2=\"12\" y2=\"8\" stroke=\"red\" stroke-width=\"2\" stroke-linecap=\"square\"/></svg>";
+    static const char round[] = "<svg width=\"16\" height=\"16\"><line x1=\"4\" y1=\"8\" x2=\"12\" y2=\"8\" stroke=\"red\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>";
+    uint8_t butt_alpha, square_alpha, round_alpha;
+    if (!alpha_at(butt, 3U, 7U, &butt_alpha) || !alpha_at(square, 3U, 7U, &square_alpha) ||
+        !alpha_at(round, 3U, 7U, &round_alpha) || butt_alpha != 0U ||
+        square_alpha == 0U || round_alpha == 0U) return false;
+
+    static const char miter[] = "<svg width=\"16\" height=\"16\"><polyline points=\"4,10 8,6 12,10\" fill=\"none\" stroke=\"red\" stroke-width=\"4\" stroke-linejoin=\"miter\"/></svg>";
+    static const char bevel[] = "<svg width=\"16\" height=\"16\"><polyline points=\"4,10 8,6 12,10\" fill=\"none\" stroke=\"red\" stroke-width=\"4\" stroke-linejoin=\"bevel\"/></svg>";
+    static const char fallback[] = "<svg width=\"16\" height=\"16\"><polyline points=\"4,10 8,6 12,10\" fill=\"none\" stroke=\"red\" stroke-width=\"4\" stroke-linejoin=\"miter\" stroke-miterlimit=\"1\"/></svg>";
+    uint8_t miter_tip, bevel_tip, fallback_tip, bevel_join;
+    if (!alpha_at(miter, 7U, 3U, &miter_tip) || !alpha_at(bevel, 7U, 3U, &bevel_tip) ||
+        !alpha_at(fallback, 7U, 3U, &fallback_tip) || !alpha_at(bevel, 8U, 5U, &bevel_join) ||
+        miter_tip == 0U || bevel_tip != 0U || fallback_tip != 0U || bevel_join == 0U) return false;
+
+    static const char odd_dash[] = "<svg width=\"16\" height=\"16\"><line x1=\"1\" y1=\"8\" x2=\"15\" y2=\"8\" stroke=\"red\" stroke-width=\"2\" stroke-dasharray=\"3 2 1\"/></svg>";
+    static const char phase_dash[] = "<svg width=\"16\" height=\"16\"><line x1=\"1\" y1=\"8\" x2=\"15\" y2=\"8\" stroke=\"red\" stroke-width=\"2\" stroke-dasharray=\"3 2 1\" stroke-dashoffset=\"1\"/></svg>";
+    uint8_t odd_on_first, odd_off_first, odd_on_second, odd_off_second;
+    uint8_t shifted_first_boundary, shifted_on_second;
+    if (!alpha_at(odd_dash, 2U, 8U, &odd_on_first) || !alpha_at(odd_dash, 4U, 8U, &odd_off_first) ||
+        !alpha_at(odd_dash, 6U, 8U, &odd_on_second) || !alpha_at(odd_dash, 8U, 8U, &odd_off_second) ||
+        !alpha_at(odd_dash, 3U, 8U, &shifted_first_boundary) ||
+        !alpha_at(phase_dash, 3U, 8U, &shifted_on_second) || odd_on_first == 0U ||
+        odd_off_first != 0U || odd_on_second == 0U || odd_off_second != 0U ||
+        shifted_first_boundary == 0U || shifted_on_second != 0U) return false;
+
+    static const char dashed_join[] = "<svg width=\"16\" height=\"16\"><polyline points=\"4,10 8,6 12,10\" fill=\"none\" stroke=\"red\" stroke-width=\"4\" stroke-linejoin=\"miter\" stroke-dasharray=\"9 20\"/></svg>";
+    uint8_t dashed_miter_tip;
+    return alpha_at(dashed_join, 7U, 3U, &dashed_miter_tip) && dashed_miter_tip > 0U;
+}
+
 int main(void)
 {
     if (!antialias_and_fill_checks()) { fprintf(stderr, "antialias/fill checks failed\n"); return 45; }
     if (!stroke_decode_and_render_checks()) { fprintf(stderr, "stroke checks failed\n"); return 46; }
+    if (!stroke_cap_join_and_dash_checks()) { fprintf(stderr, "stroke cap/join/dash checks failed\n"); return 47; }
     const bool smooth_checks[] = {
         paths_equivalent("M1 1 C2 1 3 2 4 2 S6 3 7 4", "M1 1 C2 1 3 2 4 2 C5 2 6 3 7 4"),
         paths_equivalent("M1 1 c1 0 2 1 3 1 s2 1 3 2 2 1 3 2", "M1 1 c1 0 2 1 3 1 c1 0 2 1 3 2 c1 1 2 1 3 2"),
