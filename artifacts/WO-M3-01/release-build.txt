@@ -4,19 +4,23 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.1s)
+-- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
-[1/11] Linking C executable bin/xml_tokenizer_fuzz
-[2/11] Linking C executable bin/source_save_test
-[3/11] Linking C executable bin/shape_test
-[4/11] Linking C executable bin/shape_render_cli
-[5/11] Linking C executable bin/shape_fuzz
-[6/11] Linking C executable bin/xml_tokenizer_cli
-[7/11] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
-[8/11] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
-[9/11] Linking C executable bin/svg_index_test
+[1/15] Building C object CMakeFiles/svg_token_stream_test.dir/tests/svg/index/test_token_stream.c.o
+[2/15] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
+[3/15] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o
+[4/15] Linking C static library libvexel_xml.a
+[5/15] Linking C executable bin/shape_test
+[6/15] Linking C executable bin/xml_tokenizer_test
+[7/15] Linking C executable bin/svg_index_bench
+[8/15] Linking C executable bin/svg_index_test
 ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
-[10/11] Linking C executable bin/xml_tokenizer_test
-[11/11] Linking C executable bin/svgworkbench
+[9/15] Linking C executable bin/source_save_test
+[10/15] Linking C executable bin/shape_fuzz
+[11/15] Linking C executable bin/svg_token_stream_test
+[12/15] Linking C executable bin/xml_tokenizer_cli
+[13/15] Linking C executable bin/xml_tokenizer_fuzz
+[14/15] Linking C executable bin/shape_render_cli
+[15/15] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

@@ -14,11 +14,11 @@
     "streaming token validation resumes long text, comment, CDATA, and PI scanning within byte budgets"
   ],
   "verified": {
-    "debug_ctest": "7/7 passed",
+    "debug_ctest": "8/8 passed",
     "focused_python_tests": "2/2 passed; resumable token stream matches 24 pinned fixtures; 6 diagnostic offsets match",
     "full_python_suite": "175/175 passed",
-    "asan_ctest": "7/7 passed",
-    "ubsan_ctest": "7/7 passed",
+    "asan_ctest": "8/8 passed",
+    "ubsan_ctest": "8/8 passed",
     "benchmark": "15 trials per workload; latency, owner-step, and RSS gates passed",
     "native_index_replay": "10/50/90/100 progress; 10 MiB Metal readback and UI visibility after tile publication; 19.970 ms max owner step; stale/canceled workers rejected",
     "ready_work_order_validation": "passed",
@@ -26,7 +26,7 @@
     "diff_check": "passed",
     "benchmark_preview_gate": "all 15 trials per input observed tile completion before indexing completion",
     "prefix_validation": "malformed-prefix test rejects preview with exact XML error offset; later malformed tail preserves a preview over its validated prefix",
-    "token_stream_budget": "512 KiB mixed long-token fixture preserves one-shot token equivalence and asserts <=1 KiB advancement on every step"
+    "token_stream_budget": "512 KiB mixed long-token fixture preserves one-shot token equivalence and asserts <=1 KiB advancement on every step in the WO-allowed svg-token-stream-budget CTest"
   },
   "metrics": {
     "10MiB": {
