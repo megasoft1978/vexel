@@ -246,10 +246,13 @@ blocker. No general SVG throughput or performance advantage is claimed.
 The Release worker test ran exactly 1,000 scheduler create/submit/cancel/join
 cycles with one worker. Latest total elapsed time was 0.018880 s; maximum measured
 destroy/join time was 0.000110 s, with 1,000 accepted cancellation requests.
-The test binary was 70,288 bytes, built with AppleClang 21.0.0
+The final reviewed test binary is 70,368 bytes, built with AppleClang 21.0.0
 (`clang-2100.3.34.2`) for arm64 on macOS 27.0, model Mac17,14. The scan is
 bounded deterministic test work, not SVG rendering throughput. Exact metadata
-is in `artifacts/WO-M3-03/schedule-benchmark.json`.
+is in `artifacts/WO-M3-03/schedule-benchmark.json` and
+`bench/results/WO-M3-03.json`. After adding deterministic scheduler-capacity
+and generation-drain accounting checks, the final 1,000-cycle benchmark took
+0.012423 s with a 0.000041 s maximum join.
 
 The focused snapshot/scheduler test passes Debug, ASan+UBSan, UBSan, and TSan.
 The first isolated executor pass saw transient offscreen Metal and Python

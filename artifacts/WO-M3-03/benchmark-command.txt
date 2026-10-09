@@ -1,0 +1,3 @@
+./build/mac-release/bin/job_snapshot_test --benchmark --output artifacts/WO-M3-03/schedule-benchmark.json
+
+Final reviewed-source result: 1,000 cycles, elapsed 0.012423 s, maximum join 0.000041 s, 1,000 cancellations, Release test binary 70,368 bytes.
