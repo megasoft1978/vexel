@@ -18,10 +18,10 @@ feature priority inventory at `reports/M4/corpus-feature-frequency.md`.
 
 ## WO-M4-05 closeout
 
-Candidate `9209ae3b670911470100e97b9538daf83dfa509d` implements the bounded CSS paint cascade and passes a fresh read-only review with no findings. The review fixed comment delimiter parsing, added an integration regression proving inline `!important` beats stylesheet `!important`, and replaced stale failure text. In a fresh clean worktree, `./dev build`, Release configure/build, and all 19 frozen commands passed: Debug/ASan/UBSan CTest 12/12, Python 199/199, native smoke/replay, 16 focused reference tests, 1,000,000 ASan+UBSan fuzz cases, 58-file corpus run/check, and Release builds.
+WO-M4-05 is fast-forward merged to `main` at `81f2008311e886d3b8dc8da262fe3f40f2f9b14b`; reviewed candidate `9209ae3b670911470100e97b9538daf83dfa509d` implements the bounded CSS paint cascade and passes a fresh read-only review with no findings. The review fixed comment delimiter parsing, added an integration regression proving inline `!important` beats stylesheet `!important`, and replaced stale failure text. In a fresh clean worktree, `./dev build`, Release configure/build, and all 19 frozen commands passed: Debug/ASan/UBSan CTest 12/12, Python 199/199, native smoke/replay, 16 focused reference tests, 1,000,000 ASan+UBSan fuzz cases, 58-file corpus run/check, and Release builds.
 
 The corpus remains 2/58 previewable, 56 unsupported, with no limit/crash results. The 100 MiB first-preview gate fails (0/12 eligible files), while max main-thread step is 0.199 ms and RSS gate passes. CSS workloads have 21 fresh-process trials, median/p95 27.890/29.662 ms stylesheet and 27.483/29.013 ms inline; peak RSS 2,113,536/2,146,304 B and stable shared output hash. There is no comparable pre-WO CSS workload. Evidence is in `artifacts/WO-M4-05/`; this is open/index and selected-shape evidence, not full-render parity.
 
 The standard verifier completed its frozen commands but its fixed 250 KB prompt cap rejected the complete artifact diff. The follow-up used a clean worktree, reran every frozen command, and performed a fresh read-only review of the focused implementation/test diff.
 
-Next: fast-forward merge WO-M4-05 to `main`, record the merge event, then prepare WO-M4-06 from the roadmap.
+Next: prepare and freeze WO-M4-06 (gradients, clipping, and local references) from the roadmap and corpus feature inventory.
