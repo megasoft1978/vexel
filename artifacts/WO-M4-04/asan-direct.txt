@@ -1,0 +1,51 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-asan
+[1/13] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
+[2/13] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
+[3/13] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
+[4/13] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
+[5/13] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[6/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[7/13] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[8/13] Linking C static library libvexel_shape.a
+[9/13] Linking C executable bin/shape_render_cli
+[10/13] Linking C executable bin/shape_test
+[11/13] Linking C executable bin/shape_fuzz
+[12/13] Linking C executable bin/svg_index_bench
+[13/13] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-asan
+      Start  1: cli-version
+ 1/11 Test  #1: cli-version ......................   Passed    0.36 sec
+      Start  2: base-contract
+ 2/11 Test  #2: base-contract ....................   Passed    0.01 sec
+      Start  3: xml-tokenizer
+ 3/11 Test  #3: xml-tokenizer ....................   Passed    0.22 sec
+      Start  4: source-save
+ 4/11 Test  #4: source-save ......................   Passed    0.01 sec
+      Start  5: shape-render
+ 5/11 Test  #5: shape-render .....................   Passed    0.26 sec
+      Start  6: svg-index
+ 6/11 Test  #6: svg-index ........................   Passed    0.15 sec
+      Start  7: viewer-navigation
+ 7/11 Test  #7: viewer-navigation ................   Passed    0.04 sec
+      Start  8: svg-token-stream-budget
+ 8/11 Test  #8: svg-token-stream-budget ..........   Passed    0.08 sec
+      Start  9: index-replay
+ 9/11 Test  #9: index-replay .....................   Passed    0.16 sec
+      Start 10: spatial-cache
+10/11 Test #10: spatial-cache ....................   Passed    0.09 sec
+      Start 11: job-snapshot
+11/11 Test #11: job-snapshot .....................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Total Test time (real) =   1.45 sec
