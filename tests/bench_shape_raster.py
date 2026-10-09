@@ -51,6 +51,14 @@ def build_revision(root):
     return root / "build/mac-release/bin/shape_render_cli"
 
 
+def source_dirty_paths(root):
+    result = run(["git", "-C", str(root), "status", "--porcelain", "--untracked-files=all"], capture=True)
+    paths = [line[3:].split(" -> ")[-1] for line in result.stdout.splitlines()]
+    roots = ("src/", "cmake/", "tests/bench_shape_raster.py")
+    exact = {"CMakeLists.txt", "CMakePresets.json", "tests/svg/shape/shape_render_cli.c"}
+    return sorted(path for path in paths if path in exact or path.startswith(roots))
+
+
 def percentile95(values):
     ordered = sorted(values)
     return ordered[max(0, (95 * len(ordered) + 99) // 100 - 1)]
@@ -74,32 +82,42 @@ def validate_payload(payload):
                 raise ValueError(f"invalid measured trial data: {name}/{revision}")
 
 
-def measure(binary, source, temp, label):
+def measure_pair(base_binary, candidate_binary, source, temp, label):
     input_path = temp / f"{label}.svg"
     output_path = temp / f"{label}.rgba"
     input_path.write_text(source, encoding="utf-8")
-    timings, hashes, rss = [], [], []
+    samples = {"base": {"timings": [], "hashes": [], "rss": []},
+               "candidate": {"timings": [], "hashes": [], "rss": []}}
+    binaries = {"base": base_binary, "candidate": candidate_binary}
     for index in range(WARMUPS + TRIALS):
-        start = time.perf_counter_ns()
-        result = run([str(binary), "--metrics", str(input_path), str(output_path)], capture=True)
-        elapsed = time.perf_counter_ns() - start
-        if index >= WARMUPS:
-            raw = output_path.read_bytes()
-            timings.append(elapsed)
-            hashes.append(hashlib.sha256(raw).hexdigest())
-            for line in result.stdout.splitlines():
-                if line.startswith("peak_rss_bytes="):
-                    rss.append(int(line.split("=", 1)[1]))
-    if len(set(hashes)) != 1:
-        raise RuntimeError(f"nondeterministic output from {binary}: {hashes}")
-    median_ns = int(statistics.median(timings))
-    pixels = 128 * 128
-    return {"warmups": WARMUPS, "trials": TRIALS, "trial_latency_ns": timings,
+        order = ("base", "candidate") if index % 2 == 0 else ("candidate", "base")
+        for revision in order:
+            binary = binaries[revision]
+            started = time.perf_counter_ns()
+            result = run([str(binary), "--metrics", str(input_path), str(output_path)], capture=True)
+            elapsed = time.perf_counter_ns() - started
+            if index >= WARMUPS:
+                sample = samples[revision]
+                sample["timings"].append(elapsed)
+                sample["hashes"].append(hashlib.sha256(output_path.read_bytes()).hexdigest())
+                for line in result.stdout.splitlines():
+                    if line.startswith("peak_rss_bytes="):
+                        sample["rss"].append(int(line.split("=", 1)[1]))
+    results = {}
+    for revision, sample in samples.items():
+        if len(set(sample["hashes"])) != 1:
+            raise RuntimeError(f"nondeterministic output from {binaries[revision]}: {sample['hashes']}")
+        timings, hashes, rss = sample["timings"], sample["hashes"], sample["rss"]
+        median_ns = int(statistics.median(timings))
+        results[revision] = {
+            "warmups": WARMUPS, "trials": TRIALS, "trial_latency_ns": timings,
             "median_latency_ns": median_ns, "p95_latency_ns": percentile95(timings),
-            "pixels": pixels, "pixels_per_second": round(pixels * 1_000_000_000 / median_ns, 2),
+            "pixels": 128 * 128,
+            "pixels_per_second": round(128 * 128 * 1_000_000_000 / median_ns, 2),
             "output_sha256": hashes[0], "trial_output_sha256": hashes,
             "peak_rss_bytes": max(rss) if rss else None,
             "peak_rss_status": "available via getrusage on macOS" if rss else "unavailable"}
+    return results
 
 
 def main():
@@ -121,22 +139,24 @@ def main():
         candidate_binary = build_revision(ROOT)
         results = {}
         for name, source in workloads.items():
+            pair = measure_pair(base_binary, candidate_binary, source, temp, name)
             results[name] = {"description": f"fixed {name} SVG, 128x128 viewport; deterministic geometry and colors",
                              "input_sha256": hashlib.sha256(source.encode()).hexdigest(),
-                             "base": measure(base_binary, source, temp, f"{name}-base"),
-                             "candidate": measure(candidate_binary, source, temp, f"{name}-candidate")}
+                             **pair}
             old = results[name]["base"]["median_latency_ns"]
             new = results[name]["candidate"]["median_latency_ns"]
             results[name]["median_change_percent"] = round((new - old) * 100.0 / old, 2)
+        dirty_paths = source_dirty_paths(ROOT)
         payload = {"schema_version": 1, "base_sha": BASE_SHA,
                    "candidate_sha": run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture=True).stdout.strip(),
-                   "candidate_worktree_dirty": bool(run(["git", "-C", str(ROOT), "status", "--porcelain"], capture=True).stdout.strip()),
+                   "candidate_source_dirty": bool(dirty_paths),
+                   "candidate_source_dirty_paths": dirty_paths,
                    "host": {"platform": platform.platform(), "machine": platform.machine(),
                             "macos_version": platform.mac_ver()[0],
                             "hardware_model": "unavailable: model query is not part of the benchmark harness",
                             "compiler": compiler},
                    "renderer": "Vexel shape_render_cli", "measurement": "end-to-end process, SVG decode, and raster; Release build",
-                   "baseline_method": "isolated temporary clone with detached git worktree at base_sha",
+                   "baseline_method": "isolated temporary clone with detached git worktree at base_sha; paired trials alternate base/candidate order",
                    "warmups": WARMUPS, "measured_trials": TRIALS,
                    "rss_method": "shape_render_cli getrusage(RUSAGE_SELF), ru_maxrss bytes on macOS",
                    "workloads": results}

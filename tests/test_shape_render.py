@@ -96,11 +96,15 @@ class ShapeRenderTests(unittest.TestCase):
                         offset = (y * width + x) * 4
                         delta = max(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(4))
                         max_alpha_delta = max(max_alpha_delta, abs(ours[offset + 3] - reference_rgba[offset + 3]))
-                        # Cairo's PNG writer stores quantized straight RGB in
-                        # low-alpha boundary pixels; compare RGB on fully
-                        # covered pixels and alpha on the boundary.
-                        if ours[offset + 3] == 255 and reference_rgba[offset + 3] == 255:
-                            max_rgb_delta = max(max_rgb_delta, *(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(3)))
+                        # Cairo's PNG writer quantizes straight RGB at low alpha.
+                        # Use shared reference coverage to compare visible color
+                        # while testing coverage separately in the alpha channel.
+                        if ours[offset + 3] != 0 and reference_rgba[offset + 3] != 0:
+                            coverage = reference_rgba[offset + 3]
+                            for channel in range(3):
+                                delta = abs(ours[offset + channel] - reference_rgba[offset + channel])
+                                premultiplied_delta = (delta * coverage + 127) // 255
+                                max_rgb_delta = max(max_rgb_delta, premultiplied_delta)
                         if not delta:
                             continue
                         max_channel = max(max_channel, delta)
@@ -123,11 +127,12 @@ class ShapeRenderTests(unittest.TestCase):
                                 "vexel_sha256": hashlib.sha256(ours).hexdigest(),
                                 "reference_png_sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
                                 "edge_diff_pixels": edge_diffs, "interior_diff_pixels": bad_interior,
-                                "max_channel_diff": max_channel, "max_rgb_diff_when_fully_covered": max_rgb_delta,
+                                "max_channel_diff": max_channel,
+                                "max_premultiplied_rgb_diff_at_reference_coverage": max_rgb_delta,
                                 "max_alpha_diff": max_alpha_delta})
         OUT.parent.mkdir(parents=True, exist_ok=True)
         OUT.write_text(json.dumps({"renderer_path": renderer, "renderer_version": version,
-                "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160; fully covered RGB delta <=1; and at most 120 differing pixels per fixture",
+                "edge_tolerance": "zero interior differences; within one pixel of either coverage boundary, alpha delta <=160; covered RGB delta <=1 in premultiplied channels at shared reference coverage; and at most 120 differing pixels per fixture",
                                    "cases": results}, indent=2) + "\n")
 
     def test_bounds_and_stable_diagnostics(self):
