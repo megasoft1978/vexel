@@ -13,35 +13,37 @@
   ],
   "verified": {
     "debug_ctest": "7/7 passed",
-    "focused_python_tests": "1/1 passed",
-    "full_python_suite": "174/174 passed",
+    "focused_python_tests": "2/2 passed; 24 pinned fixtures and 5 exact diagnostic offsets",
+    "full_python_suite": "175/175 passed",
     "asan_ctest": "7/7 passed",
     "ubsan_ctest": "7/7 passed",
     "benchmark": "15 trials per workload; latency, owner-step, and RSS gates passed",
-    "native_index_replay": "Metal offscreen readback and progress 10/50/90/100 passed; preview before completion",
+    "native_index_replay": "10/50/90/100 progress; Metal readback before completion; stale and canceled workers rejected",
     "ready_work_order_validation": "passed",
     "ledger_validation": "passed",
     "diff_check": "passed"
   },
   "metrics": {
     "10MiB": {
-      "first_preview_median_ns": 217125,
-      "first_preview_p95_ns": 344459,
-      "complete_index_median_ns": 178230291,
-      "max_step_latency_ns": 266833,
-      "peak_child_rss_bytes": 60456960
+      "first_preview_median_ns": 208583,
+      "first_preview_p95_ns": 219208,
+      "complete_index_median_ns": 177399125,
+      "max_step_latency_ns": 213292,
+      "peak_child_rss_bytes": 60456960,
+      "index_bytes": 5600112
     },
     "100MiB": {
-      "first_preview_median_ns": 148458,
-      "first_preview_p95_ns": 179292,
-      "complete_index_median_ns": 635839292,
-      "max_step_latency_ns": 294958,
-      "peak_child_rss_bytes": 143245312
+      "first_preview_median_ns": 137125,
+      "first_preview_p95_ns": 147417,
+      "complete_index_median_ns": 636215458,
+      "max_step_latency_ns": 216500,
+      "peak_child_rss_bytes": 143228928,
+      "index_bytes": 5600112
     }
   },
   "remaining_limitations": [
-    "the resumable reader emits tag spans while full XML token records become queryable only after complete background validation",
-    "replay is headless; visible AppKit teardown previously reproduced a crash while separate native Metal smoke passes"
+    "full XML token records become queryable after the cancellable background validation completes; the resumable owner reader emits complete tag spans",
+    "progressive replay is headless; visible AppKit teardown previously reproduced a crash while separate native Metal smoke passes"
   ],
-  "decision": "Candidate submitted for fresh read-only review; no continuous full-token streaming or visible-window replay is claimed."
+  "decision": "Candidate updated after correcting preview readiness and adding full fixture, diagnostic, cancellation, and stale-generation evidence; fresh read-only review pending."
 }

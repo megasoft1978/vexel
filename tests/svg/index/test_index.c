@@ -61,8 +61,108 @@ static bool same_token(svg_xml_token a, svg_xml_token b)
            a.local_name.offset == b.local_name.offset && a.local_name.length == b.local_name.length;
 }
 
-int main(void)
+static bool equivalent_file(const char *path)
 {
+    FILE *file = fopen(path, "rb");
+    if (file == NULL || fseek(file, 0L, SEEK_END) != 0) {
+        if (file != NULL) (void)fclose(file);
+        return false;
+    }
+    long end = ftell(file);
+    if (end <= 0L || (unsigned long)end > 16UL * 1024UL * 1024UL ||
+        fseek(file, 0L, SEEK_SET) != 0) {
+        (void)fclose(file);
+        return false;
+    }
+    size_t length = (size_t)end;
+    uint8_t *source = malloc(length);
+    svg_xml_token *reference = calloc(length, sizeof(*reference));
+    if (source == NULL || reference == NULL || fread(source, 1U, length, file) != length) {
+        free(source); free(reference); (void)fclose(file); return false;
+    }
+    (void)fclose(file);
+    svg_xml_result expected = svg_xml_tokenize((base_bytes){source, length},
+        svg_xml_default_options(), reference, length);
+    svg_index_session *session = NULL;
+    bool okay = expected.diagnostic.category == SVG_XML_ERROR_NONE &&
+        svg_index_start((base_bytes){source, length}, 1U, &session) == SVG_INDEX_OK;
+    svg_index_status status = SVG_INDEX_OK;
+    while (okay && status == SVG_INDEX_OK)
+        status = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+    svg_index_progress progress = svg_index_get_progress(session);
+    okay = okay && status == SVG_INDEX_COMPLETE && progress.token_count == expected.token_count;
+    for (size_t i = 0U; okay && i < expected.token_count; ++i) {
+        svg_xml_token actual;
+        okay = svg_index_token_at(session, i, &actual) && same_token(actual, reference[i]);
+    }
+    svg_index_destroy(session);
+    free(reference); free(source);
+    return okay;
+}
+
+static bool equivalent_diagnostic(const uint8_t *source, size_t length,
+                                  svg_xml_diagnostic *expected_out,
+                                  svg_xml_diagnostic *actual_out)
+{
+    svg_xml_token *tokens = calloc(length, sizeof(*tokens));
+    if (tokens == NULL) return false;
+    svg_xml_result expected = svg_xml_tokenize((base_bytes){source, length},
+        svg_xml_default_options(), tokens, length);
+    free(tokens);
+    svg_index_session *session = NULL;
+    if (svg_index_start((base_bytes){source, length}, 1U, &session) != SVG_INDEX_OK) return false;
+    svg_index_status status = SVG_INDEX_OK;
+    while (status == SVG_INDEX_OK) status = svg_index_step(session, 3U);
+    svg_xml_diagnostic actual = svg_index_get_progress(session).diagnostic;
+    if (expected_out != NULL) *expected_out = expected.diagnostic;
+    if (actual_out != NULL) *actual_out = actual;
+    bool okay = status == SVG_INDEX_MALFORMED &&
+        actual.category == expected.diagnostic.category &&
+        actual.offset == expected.diagnostic.offset;
+    svg_index_destroy(session);
+    return okay;
+}
+
+static bool check_diagnostic_equivalence(void)
+{
+    static const char *const malformed[] = {
+        "<svg><rect/></bad>",
+        "<svg><rect width=1/></svg>",
+        "<svg><!-- -- --></svg>",
+        "<!DOCTYPE svg><svg/>",
+        "<svg><rect x='1' x='2'/></svg>"
+    };
+    (void)printf("{\"status\":\"passed\",\"diagnostic_exact_offsets\":[");
+    for (size_t i = 0U; i < sizeof(malformed) / sizeof(malformed[0]); ++i) {
+        size_t length = strlen(malformed[i]);
+        svg_xml_diagnostic expected = {0}, actual = {0};
+        if (!equivalent_diagnostic((const uint8_t *)malformed[i], length,
+                                   &expected, &actual)) return false;
+        (void)printf("%s{\"case\":%zu,\"category\":\"%s\",\"offset\":%zu}",
+                     i == 0U ? "" : ",", i, svg_xml_error_name(expected.category), expected.offset);
+    }
+    (void)puts("]}");
+    return true;
+}
+
+static bool check_frozen_fixture_equivalence(int argc, char **argv)
+{
+    if (argc < 3 || strcmp(argv[1], "--equivalence") != 0) return false;
+    for (int i = 2; i < argc; ++i) {
+        if (!equivalent_file(argv[i])) {
+            (void)fprintf(stderr, "token equivalence failed: %s\n", argv[i]);
+            return false;
+        }
+    }
+    (void)printf("{\"status\":\"passed\",\"fixture_count\":%d,\"comparison\":\"incremental index tokens vs one-shot token kinds and spans\"}\n",
+                 argc - 2);
+    return true;
+}
+
+int main(int argc, char **argv)
+{
+    if (argc > 1) return check_frozen_fixture_equivalence(argc, argv) ? 0 : 1;
+    if (!check_diagnostic_equivalence()) return fail("incremental diagnostic category or offset differs from one-shot tokenizer");
     static const uint8_t source[] = "<svg><rect width='2'/><custom/><path d='M0 0'/></svg>";
     svg_index_session *session = NULL;
     if (svg_index_start((base_bytes){source, sizeof(source) - 1U}, 7U, &session) != SVG_INDEX_OK)
@@ -197,6 +297,19 @@ int main(void)
     svg_index_destroy(session);
     free(bad_source);
     if (!bad_attribute) return fail("large malformed source was accepted");
+
+    static const uint8_t non_svg[] = "<g><rect width='2'/></g>";
+    if (svg_index_start((base_bytes){non_svg, sizeof(non_svg) - 1U}, 1U, &session) != SVG_INDEX_OK)
+        return fail("non-SVG session start failed");
+    step = SVG_INDEX_OK;
+    while (step == SVG_INDEX_OK) step = svg_index_step(session, SVG_INDEX_MAX_STEP_BYTES);
+    p = svg_index_get_progress(session);
+    base_mut_bytes non_svg_preview = {0};
+    bool non_svg_rejected = step == SVG_INDEX_COMPLETE && !p.first_preview_ready &&
+        !svg_index_make_preview_source(session, &non_svg_preview);
+    free(non_svg_preview.ptr);
+    svg_index_destroy(session);
+    if (!non_svg_rejected) return fail("non-SVG root advertised a preview");
 
     session = NULL;
     if (svg_index_start((base_bytes){NULL, SVG_INDEX_MAX_SOURCE_BYTES + 1U}, 1U, &session) != SVG_INDEX_LIMIT ||

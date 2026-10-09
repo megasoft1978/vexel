@@ -115,6 +115,14 @@ static bool equal_name(const svg_index_session *s, size_t at, size_t n, const ch
     return n == length && memcmp(s->source.ptr + at, text, n) == 0;
 }
 
+static bool preview_root_is_svg(const svg_index_session *s)
+{
+    if (s->element_count == 0U) return false;
+    const svg_index_element *root = &s->elements[0];
+    return root->depth == 0U && root->name_length == 3U &&
+           memcmp(s->source.ptr + root->name_offset, "svg", 3U) == 0;
+}
+
 static bool reserve_element(svg_index_session *s)
 {
     if (s->element_count >= SVG_INDEX_MAX_ELEMENTS) return false;
@@ -150,7 +158,8 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
         s->elements[top.record].source_length = tag->source.offset + tag->source.length -
                                                 s->elements[top.record].source_offset;
         s->elements[top.record].closed = true;
-        if (s->depth == 1U && s->elements[top.record].support != SVG_INDEX_UNSUPPORTED)
+        if (s->depth == 1U && preview_root_is_svg(s) &&
+            s->elements[top.record].support != SVG_INDEX_UNSUPPORTED)
             { s->preview = true; s->preview_record = top.record; }
         return;
     }
@@ -175,7 +184,7 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
                  equal_name(s, e->name_offset, e->name_length, "path") ? SVG_INDEX_SUPPORTED_PATH : SVG_INDEX_UNSUPPORTED;
     e->closed = self_closing;
     if (s->depth == 0U) s->root_open_length = tag->source.length;
-    if (!s->preview && s->depth == 1U && self_closing &&
+    if (!s->preview && s->depth == 1U && preview_root_is_svg(s) && self_closing &&
         e->support != SVG_INDEX_UNSUPPORTED) {
         s->preview = true; s->preview_record = i;
     }

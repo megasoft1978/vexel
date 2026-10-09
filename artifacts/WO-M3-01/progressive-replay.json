@@ -10,5 +10,14 @@
   "first_preview": "worker shape decode and raster; Metal offscreen readback verified",
   "preview_tile_ready_before_index_complete": true,
   "complete": true,
-  "transcript": "progressive-replay.log"
+  "transcript": "progressive-replay.log",
+  "events": [
+    10,
+    50,
+    90,
+    100
+  ],
+  "first_preview_before_index_complete": true,
+  "stale_generation_rejected": true,
+  "canceled_worker_rejected": true
 }
