@@ -181,14 +181,17 @@ def _validate_commands(commands: list[dict[str, Any]]) -> None:
         elif name == "index_progress":
             generation = _integer(command["generation"], "generation", 0, 0xFFFFFFFFFFFFFFFF)
             _integer(command["percent"], "percent", 0, 100)
-            if generation < nav_generation or command["phase"] not in {"active", "complete", "canceled", "failed"}:
+            phase = command["phase"]
+            if generation < nav_generation or not isinstance(phase, str) or phase not in {
+                "active", "complete", "canceled", "failed"
+            }:
                 raise DriverError("progress generation or phase is invalid")
-            if generation == nav_generation and nav_phase in {"complete", "canceled", "failed"} and command["phase"] != nav_phase:
+            if generation == nav_generation and nav_phase in {"complete", "canceled", "failed"} and phase != nav_phase:
                 raise DriverError("terminal progress generation cannot be reopened")
-            if command["phase"] == "active" and command["percent"] >= 100:
+            if phase == "active" and command["percent"] >= 100:
                 raise DriverError("active progress must be below 100 percent")
             nav_generation = generation
-            nav_phase = command["phase"]
+            nav_phase = phase
             _string(command["label"], "label", 95, empty=True)
         elif name == "cancel":
             pass
