@@ -18,6 +18,8 @@ bool svg_reference_attributes_supported(base_bytes source, const svg_xml_token *
 /* Validate bounded local IDs and reference syntax before expansion. */
 svg_shape_error svg_reference_validate(base_bytes source, const svg_xml_token *tokens,
                                        size_t count, svg_shape_diagnostic *diagnostic);
+bool svg_reference_xlink_is_bound(base_bytes source, const svg_xml_token *tokens,
+                                  size_t count);
 
 /* Creates an owned, bounded SVG source with local use instances expanded. */
 svg_shape_error svg_reference_expand(base_bytes source, base_bytes *expanded,

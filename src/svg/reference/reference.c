@@ -46,7 +46,8 @@ static bool attr_value(base_bytes source, const svg_xml_token *tokens, size_t co
     return false;
 }
 
-static bool xlink_is_bound(base_bytes source, const svg_xml_token *tokens, size_t count)
+bool svg_reference_xlink_is_bound(base_bytes source, const svg_xml_token *tokens,
+                                  size_t count)
 {
     for (size_t i = 0; i < count; ++i) {
         if (tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT || tokens[i].depth != 0U) continue;
@@ -128,7 +129,7 @@ svg_shape_error svg_reference_validate(base_bytes source, const svg_xml_token *t
         svg_xml_span href;
         bool plain = attr_value(source, tokens, count, i, "href", NULL, &href);
         bool xlink = attr_value(source, tokens, count, i, "href", "xlink", &href);
-        if (plain == xlink || (xlink && !xlink_is_bound(source, tokens, count)) ||
+        if (plain == xlink || (xlink && !svg_reference_xlink_is_bound(source, tokens, count)) ||
             href.length < 2U || source.ptr[href.offset] != '#') {
             free(table);
             set_failure(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, tokens[i].name.offset);

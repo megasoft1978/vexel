@@ -128,7 +128,7 @@ static bool expand_use(expander *e,size_t use,size_t use_end)
 {
     if (!e->have_first_use) { e->first_use_offset=e->tokens[use].name.offset; e->have_first_use=true; }
     svg_xml_span href={0};bool plain=attr(e,use,"href",NULL,&href),xl=attr(e,use,"href","xlink",&href);
-    if(plain==xl||href.length<2U||e->src.ptr[href.offset]!='#'){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,e->tokens[use].name.offset);return false;}
+    if(plain==xl||(xl&&!svg_reference_xlink_is_bound(e->src,e->tokens,e->count))||href.length<2U||e->src.ptr[href.offset]!='#'){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,e->tokens[use].name.offset);return false;}
     size_t target=find_id(e,(svg_xml_span){href.offset+1U,href.length-1U});
     if(target==SIZE_MAX){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,href.offset);return false;}
     for(size_t i=0;i<e->stack_len;i++)if(e->stack[i]==target){error_at(e,SVG_SHAPE_ERROR_UNSUPPORTED,href.offset);return false;}
@@ -174,7 +174,7 @@ svg_shape_error svg_reference_expand_mapped(base_bytes source,base_bytes *expand
     expander e={.src=source,.tokens=tokens,.count=xr.token_count,.diag=diagnostic,.map=map};e.ids=calloc(EXPAND_MAX_IDS,sizeof(*e.ids));e.id_slots=calloc(EXPAND_ID_TABLE,sizeof(*e.id_slots));if(!e.ids||!e.id_slots){free(e.ids);free(e.id_slots);free(tokens);error_at(&e,SVG_SHAPE_ERROR_OOM,0);return SVG_SHAPE_ERROR_OOM;}
     for(size_t i=0;i<e.count;i++)if(tokens[i].kind==SVG_XML_TOKEN_START_ELEMENT||tokens[i].kind==SVG_XML_TOKEN_EMPTY_ELEMENT){svg_xml_span id;if(attr(&e,i,"id",NULL,&id)){if(e.id_count==EXPAND_MAX_IDS){error_at(&e,SVG_SHAPE_ERROR_LIMIT,id.offset);goto fail;}size_t index=e.id_count++;e.ids[index]=(reference_id){id,i};uint64_t hash=UINT64_C(1469598103934665603);for(size_t j=0U;j<id.length;j++){hash^=source.ptr[id.offset+j];hash*=UINT64_C(1099511628211);}size_t slot=(size_t)hash&(EXPAND_ID_TABLE-1U);while(e.id_slots[slot]!=0U)slot=(slot+1U)&(EXPAND_ID_TABLE-1U);e.id_slots[slot]=index+1U;}}
     /* Keep source byte-for-byte when there is no live use; validation still runs in decode. */
-    bool any=false,hidden[65]={false};for(size_t i=0U;i<e.count;i++){svg_xml_token *t=&tokens[i];if(t->kind!=SVG_XML_TOKEN_START_ELEMENT&&t->kind!=SVG_XML_TOKEN_EMPTY_ELEMENT)continue;size_t d=t->depth;bool parent_hidden=d>0U&&d<65U?hidden[d-1U]:false;bool is_definition=t->prefix.length==0U&&(eq(source,t->local_name,"defs")||eq(source,t->local_name,"symbol"));hidden[d]=parent_hidden||is_definition;if(!hidden[d]&&t->prefix.length==0U&&eq(source,t->local_name,"use"))any=true;}
+    bool any=false,hidden[65]={false};for(size_t i=0U;i<e.count;i++){svg_xml_token *t=&tokens[i];if(t->kind!=SVG_XML_TOKEN_START_ELEMENT&&t->kind!=SVG_XML_TOKEN_EMPTY_ELEMENT)continue;size_t d=t->depth;if(d>=sizeof(hidden)/sizeof(hidden[0])){error_at(&e,SVG_SHAPE_ERROR_LIMIT,t->name.offset);goto fail;}bool parent_hidden=d>0U?hidden[d-1U]:false;bool is_definition=t->prefix.length==0U&&(eq(source,t->local_name,"defs")||eq(source,t->local_name,"symbol"));hidden[d]=parent_hidden||is_definition;if(!hidden[d]&&t->prefix.length==0U&&eq(source,t->local_name,"use"))any=true;}
     if(!any){free(e.id_slots);free(e.ids);free(tokens);*expanded=source;return SVG_SHAPE_ERROR_NONE;}
     if(!emit_interval(&e,0,source.len,0,e.count,true)){if(diagnostic&&diagnostic->category==SVG_SHAPE_ERROR_NONE)error_at(&e,SVG_SHAPE_ERROR_LIMIT,e.first_use_offset);goto fail;}
     if (map != NULL) map->fallback_offset = e.first_use_offset;

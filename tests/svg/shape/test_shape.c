@@ -78,6 +78,28 @@ static bool reference_rejection_checks(void)
     svg_shape_diagnostic diag = {0};
     if (svg_shape_decode((base_bytes){(const uint8_t *)unbound, strlen(unbound)}, &doc, &diag) !=
         SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char nested_unbound[] = "<svg width=\"8\" height=\"8\"><defs><g id=\"x\"><use xlink:href=\"#y\"/></g><rect id=\"y\" width=\"1\" height=\"1\"/></defs><use href=\"#x\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)nested_unbound, strlen(nested_unbound)}, &doc, &diag) !=
+        SVG_SHAPE_ERROR_UNSUPPORTED || diag.offset >= strlen(nested_unbound)) return false;
+    char too_deep[1024];
+    size_t deep_length = 0U;
+    for (size_t i = 0U; i < 66U; ++i) {
+        memcpy(too_deep + deep_length, "<g>", 3U);
+        deep_length += 3U;
+    }
+    for (size_t i = 0U; i < 66U; ++i) {
+        memcpy(too_deep + deep_length, "</g>", 4U);
+        deep_length += 4U;
+    }
+    static const char depth_prefix[] = "<svg width=\"8\" height=\"8\">";
+    static const char depth_suffix[] = "</svg>";
+    memmove(too_deep + sizeof(depth_prefix) - 1U, too_deep, deep_length);
+    memcpy(too_deep, depth_prefix, sizeof(depth_prefix) - 1U);
+    deep_length += sizeof(depth_prefix) - 1U;
+    memcpy(too_deep + deep_length, depth_suffix, sizeof(depth_suffix) - 1U);
+    deep_length += sizeof(depth_suffix) - 1U;
+    if (svg_shape_decode((base_bytes){(const uint8_t *)too_deep, deep_length}, &doc, &diag) !=
+        SVG_SHAPE_ERROR_LIMIT || diag.category != SVG_SHAPE_ERROR_LIMIT) return false;
     static const char xlink[] = "<svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"8\" height=\"8\"><use xlink:href=\"#x\" fill=\"red\"/><rect id=\"x\" x=\"1\" y=\"1\" width=\"3\" height=\"3\"/></svg>";
     raster_tile use_tile = {0};
     if (!render_source(xlink, &use_tile, &doc, &diag) ||
