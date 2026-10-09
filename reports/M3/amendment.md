@@ -8,3 +8,8 @@ Revision 2 narrowly permits benchmark-only JSON output changes in `app/index_ben
 ## Revision 3 scope grammar correction
 
 The first independent verifier stopped at scope preflight because the explicit benchmark path appeared in both allowed and protected lists. Revision 3 removes that duplicate protected rule. `app/index_bench.c` remains allowed only by the exact allowlist entry; every other application path stays excluded by the allowlist. No implementation or evidence values changed.
+
+
+## Revision 4 incremental review base
+
+The initial full-scope review was run on candidate `1769326ec1b1756d98c0fa371da374059abca82e`. It validated all 58 manifest inputs and 116 trials, then returned three report-correctness findings. Those findings were corrected and committed at `a7fcda909b11d5e44901745fd8542d81bc927282`; report compaction and corrected checks were committed at `6c0e3086ef074f3df28143afc657c7a9546b5268`. The runner then stopped before another model review because its 250 KB diff-input limit was exceeded. Revision 4 uses `6c0e308` as the incremental review base so the reviewer receives only the compact corrective report/code delta; the full original diff, scope-check results, and failed first verdict remain in `.git` history and `artifacts/runs/WO-M3-06/`.
