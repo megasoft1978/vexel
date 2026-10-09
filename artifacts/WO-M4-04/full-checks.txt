@@ -11,7 +11,7 @@ ninja: no work to do.
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-debug
       Start  1: cli-version
- 1/11 Test  #1: cli-version ......................   Passed    0.20 sec
+ 1/11 Test  #1: cli-version ......................   Passed    0.21 sec
       Start  2: base-contract
  2/11 Test  #2: base-contract ....................   Passed    0.00 sec
       Start  3: xml-tokenizer
@@ -21,7 +21,7 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build
       Start  5: shape-render
  5/11 Test  #5: shape-render .....................   Passed    0.02 sec
       Start  6: svg-index
- 6/11 Test  #6: svg-index ........................   Passed    0.12 sec
+ 6/11 Test  #6: svg-index ........................   Passed    0.11 sec
       Start  7: viewer-navigation
  7/11 Test  #7: viewer-navigation ................   Passed    0.01 sec
       Start  8: svg-token-stream-budget
@@ -31,7 +31,7 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build
       Start 10: spatial-cache
 10/11 Test #10: spatial-cache ....................   Passed    0.02 sec
       Start 11: job-snapshot
-11/11 Test #11: job-snapshot .....................   Passed    0.05 sec
+11/11 Test #11: job-snapshot .....................   Passed    0.04 sec
 
 100% tests passed, 0 tests failed out of 11
 
@@ -44,15 +44,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 192 tests in 16.766s
+Ran 192 tests in 20.603s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.119503
+native smoke elapsed seconds: 0.118591
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.108046
-Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 16.802s
+native replay elapsed seconds: 0.100107
+Ran 192 tests: 192 passed, 0 failed, 0 errors, 0 skipped; 20.639s
 valid ledger: 364 entries

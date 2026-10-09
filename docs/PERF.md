@@ -323,15 +323,15 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## M4 cumulative shape and corpus workload
 
 Measured on arm64 macOS 27.0, Apple M5 Max, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 283120 / 189328 bytes; Release `svg_index_bench`: 124416 bytes;
-Debug/Release `shape_render_cli`: 166832 / 88256 bytes; Debug/Release `libvexel_shape.a`: 146768 / 51416 bytes.
+Debug/Release `svgworkbench`: 283216 / 189328 bytes; Release `svg_index_bench`: 124416 bytes;
+Debug/Release `shape_render_cli`: 166944 / 88256 bytes; Debug/Release `libvexel_shape.a`: 151008 / 52408 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 43.955x and RSS ratio of 33.590x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 42.482x and RSS ratio of 33.590x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.222 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 8.517 ms, full index 0.833 ms; natural-earth-world-map-countries: first preview 8.625 ms, full index 0.964 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.199 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 8.816 ms, full index 0.866 ms; natural-earth-world-map-countries: first preview 8.920 ms, full index 0.950 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
@@ -339,28 +339,28 @@ WO-M4-04 corpus follow-up retains 58 unchanged source hashes and all 116 trials.
 Only `natural-earth-world-map-blank` and `natural-earth-world-map-countries`
 produce a preview (T1: 2/12); T2 has 0/17, T3 0/26, and T4 0/3. Where
 complete-index samples are available, median / p95 and median peak RSS by tier
-are: T1 4.412 / 6.141 ms and 8,945,664 B (11 time samples, 12 RSS samples);
-T2 47.762 / 59.880 ms and 29,999,104 B (13 / 17); T3 128.817 / 489.183 ms
-and 102,211,584 B (15 / 26); T4 2,326.242 / 2,326.242 ms and 829,718,528 B
+are: T1 4.549 / 6.138 ms and 8,945,664 B (11 time samples, 12 RSS samples);
+T2 46.967 / 61.978 ms and 29,999,104 B (13 / 17); T3 126.351 / 489.044 ms
+and 102,211,584 B (15 / 26); T4 2,377.215 / 2,377.215 ms and 829,718,528 B
 (1 / 3). Missing timing rows are unavailable because indexing stopped before a
 complete-index result. The 100 MiB preview wedge remains `fail_no_preview`
-(0/12 eligible T3 files); maximum owner step is 0.222 ms and the per-file RSS
+(0/12 eligible T3 files); maximum owner step is 0.199 ms and the per-file RSS
 gate passes 12/12. These are open/index results, not full-render parity.
 
 The WO-M4-04 Release raster benchmark ran 21 trials per fixed workload against
 base `1e9c7b81f1bda074031af4fd165240e8d5eeba09`; source revision
-`3a8a792c80ba9fb052a65d49f63d491458550350` was clean during measurement.
-Existing simple, curved, and multi-shape medians changed +2.88%, +3.36%, and
-+1.77%, respectively. New stroke workloads measured line 2.749 ms median /
-2.915 ms p95, curved circle 11.331 / 11.538 ms, and dashed polyline 80.679 /
-81.339 ms. The frozen base
+`b60ef4189f0a20fd5a61cad9e7169a6f49db21d7` was clean during measurement.
+Existing simple, curved, and multi-shape medians changed +0.73%, +3.86%, and
++2.24%, respectively. New stroke workloads measured line 2.501 ms median /
+2.756 ms p95, curved circle 10.735 / 10.897 ms, and dashed polyline 78.994 /
+79.926 ms. The frozen base
 rejects direct stroke attributes, so comparative base timings for those three
 are unavailable. Candidate output hashes, throughput, RSS (2,031,616–2,048,000
 B), toolchain, and all trial values are in
 `artifacts/WO-M4-04/raster-benchmark.json`; host model is unavailable from the
 benchmark harness. Caching inverse-mapped edge endpoints once per render
 keeps inverse transforms out of the per-sample, per-edge loop; the clean-source
-measurements above include the finalized dash-join behavior.
+measurements above include interior and closed-outline dash-join behavior.
 
 
 The filled-shape differential fixtures passed with librsvg

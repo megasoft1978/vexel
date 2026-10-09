@@ -1,10 +1,10 @@
 {
   "seed": 20261009,
   "cases": 1000000,
-  "duration_seconds": 22.245,
-  "process_cpu_seconds": 22.143,
+  "duration_seconds": 21.767,
+  "process_cpu_seconds": 21.466,
   "renderer": "Vexel scalar 4x4 shape rasterizer",
-  "source_revision": "3a8a792c80ba9fb052a65d49f63d491458550350",
+  "source_revision": "b60ef4189f0a20fd5a61cad9e7169a6f49db21d7",
   "binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-asan/bin/shape_fuzz",
   "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
   "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",

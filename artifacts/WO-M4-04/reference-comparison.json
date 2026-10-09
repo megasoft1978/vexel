@@ -214,6 +214,17 @@
       "max_alpha_diff": 12
     },
     {
+      "case": "stroke-dash-closed-seam",
+      "source_sha256": "99b7e9c0afbf8030b76542b6bfd8223aa505cae29ba452cb414224e9400fd579",
+      "vexel_sha256": "cb6ac30700a2d822f34c37e37200dbb91b543a20b8cc5dc15ae61113d74db8d5",
+      "reference_png_sha256": "eed4ad96409f39baf916257dbecdf4dc4ddd83f0bbfed25f122f28e76860f386",
+      "edge_diff_pixels": 33,
+      "interior_diff_pixels": 0,
+      "max_channel_diff": 23,
+      "max_jointly_covered_straight_rgb_diff": 0,
+      "max_alpha_diff": 23
+    },
+    {
       "case": "stroke-dash-join",
       "source_sha256": "cd6910af92f16b0d71eda3866f21cd055768eed0f6a9ab82b05f8bbd4dc7f13d",
       "vexel_sha256": "f09fd5fcd66e7b3693595613b43330c50bf61fa7283b90fd3b257501cb824625",
