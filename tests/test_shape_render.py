@@ -2,6 +2,7 @@
 import hashlib
 import json
 import platform
+import random
 import shutil
 import struct
 import subprocess
@@ -15,6 +16,8 @@ TEMP_ROOT = ROOT / ".cache"
 TEMP_ROOT.mkdir(exist_ok=True)
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
+REFERENCE_CLI = ROOT / "build/mac-debug/bin/shape_render_reference_cli"
+STATS_CLI = ROOT / "build/mac-debug/bin/shape_render_stats_cli"
 OUT = ROOT / "artifacts/WO-M4-05/reference-comparison.json"
 
 
@@ -63,6 +66,69 @@ def png_rgba(data):
         rows.append(row)
         previous = row
     return width, height, b"".join(rows)
+
+
+def random_shape_document(rng, index):
+    sizes = ((16, 16), (24, 16), (24, 24), (32, 24), (48, 32), (64, 40))
+    width, height = sizes[index % len(sizes)]
+    fills = ("red", "blue", "green", "#a050d0", "#3080b0")
+    caps = ("butt", "square", "round")
+    joins = ("miter", "bevel", "round")
+    dash_patterns = ("", ' stroke-dasharray="3 2"',
+                     ' stroke-dasharray="3 2 1"')
+    fragments = []
+    for shape_index in range(7):
+        x = rng.uniform(1.0, max(2.0, width - 4.0))
+        y = rng.uniform(1.0, max(2.0, height - 4.0))
+        w = rng.uniform(2.0, max(2.1, min(width / 2.0, 14.0)))
+        h = rng.uniform(2.0, max(2.1, min(height / 2.0, 12.0)))
+        fill = fills[rng.randrange(len(fills))]
+        fill_rule = "evenodd" if (shape_index + index) % 2 else "nonzero"
+        kind = (index + shape_index) % 6
+        if kind == 0:
+            geometry = f'<rect x="{x:.3f}" y="{y:.3f}" width="{w:.3f}" height="{h:.3f}"'
+        elif kind == 1:
+            geometry = f'<circle cx="{x:.3f}" cy="{y:.3f}" r="{min(w, h) / 2.0:.3f}"'
+        elif kind == 2:
+            geometry = f'<ellipse cx="{x:.3f}" cy="{y:.3f}" rx="{w / 2.0:.3f}" ry="{h / 2.0:.3f}"'
+        elif kind == 3:
+            geometry = (f'<polygon points="{x:.3f},{y:.3f} {x+w:.3f},{y+0.5:.3f} '
+                        f'{x+w-1:.3f},{y+h:.3f} {x+0.5:.3f},{y+h-1:.3f}"')
+        elif kind == 4:
+            geometry = (f'<polyline points="{x:.3f},{y+h:.3f} {x+w/2:.3f},{y:.3f} '
+                        f'{x+w:.3f},{y+h:.3f}"')
+        else:
+            d = (f'M {x:.3f} {y+h:.3f} C {x+1:.3f} {y:.3f} {x+w/2:.3f} {y+h:.3f} '
+                 f'{x+w/2:.3f} {y:.3f} Q {x+w:.3f} {y-1:.3f} {x+w:.3f} {y+h/2:.3f} '
+                 f'A {max(1.0,w/4):.3f} {max(1.0,h/3):.3f} 17 0 1 {x+1:.3f} {y+h/2:.3f} Z')
+            geometry = f'<path d="{d}"'
+        attrs = f' fill="{fill}" fill-rule="{fill_rule}"'
+        if kind == 4:
+            attrs = f' fill="none"'
+        if shape_index == 0:
+            combo = index % 27
+            cap = caps[combo % 3]
+            join = joins[(combo // 3) % 3]
+            dash = dash_patterns[combo // 9]
+            attrs += (f' stroke="#000000" stroke-width="{rng.uniform(0.5, 3.5):.3f}"'
+                      f' stroke-linecap="{cap}" stroke-linejoin="{join}"'
+                      f' stroke-miterlimit="{rng.uniform(1.0, 6.0):.3f}"'
+                      f' stroke-dashoffset="{rng.uniform(-2.0, 2.0):.3f}"{dash}')
+        element = geometry + attrs + '/>'
+        if shape_index % 2 == 0:
+            tx, ty = rng.uniform(-2.0, 2.0), rng.uniform(-2.0, 2.0)
+            angle = rng.uniform(-25.0, 25.0)
+            sx, sy = rng.uniform(0.7, 1.3), rng.uniform(0.7, 1.3)
+            element = (f'<g transform="translate({tx:.3f} {ty:.3f}) rotate({angle:.3f}) '
+                       f'scale({sx:.3f} {sy:.3f})">{element}</g>')
+        fragments.append(element)
+    # Guaranteed overlap exercises later-shape replacement with varying alpha.
+    fragments.extend((
+        '<rect x="4" y="4" width="11" height="9" fill="#d03030"/>',
+        '<rect x="8" y="6" width="10" height="9" fill="#2050d0"/>',
+    ))
+    return (f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
+            + ''.join(fragments) + '</svg>')
 
 
 class ShapeRenderTests(unittest.TestCase):
@@ -467,6 +533,85 @@ class ShapeRenderTests(unittest.TestCase):
         self.assertNotEqual(run.returncode, 0)
         self.assertEqual(category, "unsupported")
         self.assertEqual(int(offset), source.index(b"skewX"))
+
+    def test_culled_renderer_matches_reference_for_fixtures_and_random_documents(self):
+        self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
+        self.assertTrue(REFERENCE_CLI.is_file(), "reference renderer must be built for differential tests")
+        self.assertTrue(STATS_CLI.is_file(), "stats renderer must be built for differential tests")
+        seed = 20261011
+        generated_count = 200
+        rng = random.Random(seed)
+        sources = [path.read_bytes() for path in sorted(FIXTURES.glob("*.svg"))]
+        sources.extend(path.read_bytes()
+                       for path in sorted((ROOT / "tests/viewer/fixtures").glob("*.svg")))
+        generated = [random_shape_document(rng, index).encode("utf-8")
+                     for index in range(generated_count)]
+        print(f"raster differential seed={seed} generated={generated_count} "
+              "tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40")
+        with tempfile.TemporaryDirectory(prefix="vexel-culling-diff-", dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            for index, source in enumerate(sources + generated):
+                input_path = directory / f"case-{index}.svg"
+                optimized_path = directory / f"case-{index}.optimized.rgba"
+                reference_path = directory / f"case-{index}.reference.rgba"
+                input_path.write_bytes(source)
+                is_generated = index >= len(sources)
+                if is_generated:
+                    optimized = subprocess.run(
+                        [str(STATS_CLI), "--translucent", str(input_path), str(optimized_path)],
+                        capture_output=True, text=True)
+                    reference = subprocess.run(
+                        [str(REFERENCE_CLI), "--translucent", str(input_path), str(reference_path)],
+                        capture_output=True, text=True)
+                    case = f"seed={seed} document={index-len(sources)}"
+                else:
+                    optimized = subprocess.run(
+                        [str(CLI), str(input_path), str(optimized_path)],
+                        capture_output=True, text=True)
+                    reference = subprocess.run(
+                        [str(REFERENCE_CLI), str(input_path), str(reference_path)],
+                        capture_output=True, text=True)
+                    case = input_path.name
+                with self.subTest(case=case):
+                    self.assertEqual(optimized.returncode, reference.returncode,
+                                     f"renderer status differs: {optimized.stderr!r} / {reference.stderr!r}")
+                    if optimized.returncode == 0:
+                        self.assertEqual(optimized_path.read_bytes(), reference_path.read_bytes())
+                    else:
+                        optimized_error = optimized.stderr.splitlines()[0] if optimized.stderr else ""
+                        reference_error = reference.stderr.splitlines()[0] if reference.stderr else ""
+                        self.assertEqual(optimized_error, reference_error)
+
+    def test_culling_renders_large_shapes_under_the_existing_work_cap(self):
+        self.assertTrue(STATS_CLI.is_file(), "run ./dev build before the focused shape tests")
+        circle_sources = (
+            '<svg width="640" height="400"><circle cx="170" cy="200" r="110" fill="red"/></svg>',
+            '<svg width="640" height="400"><circle cx="170" cy="200" r="150" fill="red"/></svg>',
+        )
+        many_shapes = ''.join(
+            f'<rect x="{(index % 100) * 18 + 2}" y="{(index // 100) * 20 + 2}" '
+            'width="5" height="5" fill="#336699"/>'
+            for index in range(5000))
+        circle_sources += (f'<svg width="1920" height="1080">{many_shapes}</svg>',)
+        with tempfile.TemporaryDirectory(prefix="vexel-culling-large-", dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            for index, source in enumerate(circle_sources):
+                input_path = directory / f"large-{index}.svg"
+                output_path = directory / f"large-{index}.rgba"
+                input_path.write_text(source)
+                result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(output_path.stat().st_size,
+                                 (640 * 400 * 4) if index < 2 else (1920 * 1080 * 4))
+                counters = {key: int(value) for key, value in
+                            (line.split("=", 1) for line in result.stderr.splitlines())}
+                self.assertGreater(counters["shape_pixels"], 0)
+                self.assertGreater(counters["fill_edge_tests"], 0)
+                self.assertLess(counters["total_work"], 200_000_000)
+                if index == 2:
+                    self.assertLess(counters["shape_pixels"], 1_000_000)
+                    self.assertLess(counters["shape_row_visits"], 100_000)
 
     def test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr(self):
         script = ROOT / "tests/fuzz/shape/shape_fuzz.py"

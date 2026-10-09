@@ -436,3 +436,28 @@ counts are 2/12, 0/17, 0/26, and 0/3. T1 geomean Inkscape/Vexel ratios are
 42.437x first-preview time and 33.471x peak RSS; higher-tier comparisons are
 unavailable because no files preview. This remains open/index evidence, not
 full-render parity.
+
+## Raster shape culling
+
+The fixed Release benchmark compares clean base `bb3d5acd870af36b3bd200e96b4946d809f45a7c`
+with the candidate source in this worktree. It ran two warmups and 21 fresh
+process trials for each workload on arm64 macOS 27.0 with Apple clang
+21.0.0.21000334. Candidate latency includes process startup, SVG decoding,
+rasterization, and RGBA output writing; peak RSS is the maximum child
+`getrusage(RUSAGE_SELF)` measurement. Output hashes matched across all trials.
+All four base probes returned `limit:0`, so no base latency or percentage
+comparison is available. The candidate's measured time is evidence that the
+same inputs now render; it is not a timing speedup claim.
+
+| Workload | Base | Candidate median / p95 (ms) | Peak RSS | Work / shape-row visits |
+|---|---|---:|---:|---:|
+| 640x400 circle, r=110 | `limit:0` | 4.706 / 5.087 | 3,112,960 B | 726,337 / 222 |
+| 1920x1080, 5,000 5x5 filled rectangles | `limit:0` | 36.683 / 37.481 | 15,400,960 B | 16,518,600 / 35,000 |
+| 1920x1080, 12 long dashed round strokes | `limit:0` | 284.143 / 300.596 | 10,764,288 B | 89,712,072 / 120 |
+| 4096x2048, one filled rectangle | `limit:0` | 94.617 / 100.146 | 36,962,304 B | 37,307,101 / 1,794 |
+
+Raw trial latencies, stable output hashes, work counters, and input hashes are
+in [`bench/results/raster-culling.json`](../bench/results/raster-culling.json);
+the deterministic runner is `tests/bench_raster_culling.py`. The test-only
+unculled reference renderer and seeded fixture/random-document comparisons
+check byte identity independently of these performance measurements.

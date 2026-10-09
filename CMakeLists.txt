@@ -112,6 +112,8 @@ add_library(vexel_shape STATIC
     src/svg/css/css.c
     src/svg/shape/shape.c
     src/raster/shape_render.c
+    src/raster/shape_bounds.c
+    src/raster/shape_scanline.c
     src/raster/tile.c
 )
 target_include_directories(vexel_shape PUBLIC src src/geom src/svg/shape src/svg/css src/raster src/svg/xml src/base)
@@ -137,6 +139,16 @@ set_target_properties(shape_render_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUI
 add_executable(shape_test tests/svg/shape/test_shape.c)
 target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(shape_render_reference_cli
+    tests/svg/shape/shape_render_reference_cli.c
+    tests/svg/shape/shape_render_reference.c)
+target_link_libraries(shape_render_reference_cli PRIVATE vexel_shape)
+set_target_properties(shape_render_reference_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(shape_render_stats_cli
+    tests/svg/shape/shape_render_stats_cli.c
+    tests/svg/shape/shape_render_reference.c)
+target_link_libraries(shape_render_stats_cli PRIVATE vexel_shape)
+set_target_properties(shape_render_stats_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(css_test tests/svg/css/test_css.c)
 target_link_libraries(css_test PRIVATE vexel_shape)
 set_target_properties(css_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -251,6 +263,8 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(source_save_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(document_model_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(shape_render_reference_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(shape_render_stats_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(css_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -282,7 +296,7 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test shape_render_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
