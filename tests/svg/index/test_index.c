@@ -262,6 +262,29 @@ int main(int argc, char **argv)
     svg_index_destroy(session);
     if (!spans_retained) return fail("root or non-empty parent source span was not retained");
 
+    static const uint8_t malformed_prefix[] =
+        "<svg width='2' height='2'>bad & raw<rect width='2' height='2'/></svg>";
+    if (svg_index_start((base_bytes){malformed_prefix, sizeof(malformed_prefix) - 1U},
+                        2U, &session) != SVG_INDEX_OK)
+        return fail("malformed-prefix session start failed");
+    step = SVG_INDEX_OK;
+    bool malformed_prefix_previewed = false;
+    while (step == SVG_INDEX_OK) {
+        step = svg_index_step(session, 1U);
+        p = svg_index_get_progress(session);
+        malformed_prefix_previewed = malformed_prefix_previewed || p.first_preview_ready ||
+            svg_index_preview_generation_is_current(session, 2U);
+    }
+    bool malformed_prefix_rejected = step == SVG_INDEX_MALFORMED &&
+        !malformed_prefix_previewed &&
+        svg_index_get_progress(session).diagnostic.category == SVG_XML_ERROR_MALFORMED_SYNTAX &&
+        svg_index_get_progress(session).diagnostic.offset ==
+            (size_t)(strstr((const char *)malformed_prefix, "&") -
+                     (const char *)malformed_prefix);
+    svg_index_destroy(session);
+    if (!malformed_prefix_rejected)
+        return fail("preview was published before malformed prefix validation");
+
     static const uint8_t rich[] = "<?xml version='1.0' encoding=\"UTF-8\"?>\r\n<!--c--><?p data?><a:root xmlns:a='urn:x' a:k=\"v&amp;x\">x\r\ny<![CDATA[z]]><a:child/></a:root>";
     if (svg_index_start((base_bytes){rich, sizeof(rich) - 1U}, 3U, &session) != SVG_INDEX_OK)
         return fail("rich XML session start failed");

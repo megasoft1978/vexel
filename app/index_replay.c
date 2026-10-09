@@ -121,7 +121,14 @@ static bool verify_stale_worker_rejected(void)
     svg_index_session *session = NULL;
     if (svg_index_start((base_bytes){fixture, sizeof(fixture) - 1U}, 41U, &session) != SVG_INDEX_OK)
         return false;
-    svg_index_status status = svg_index_step(session, sizeof(fixture));
+    svg_index_status status = SVG_INDEX_OK;
+    svg_index_progress progress = {0};
+    for (size_t attempt = 0U; attempt < 10000U && status == SVG_INDEX_OK; ++attempt) {
+        status = svg_index_step(session, sizeof(fixture));
+        progress = svg_index_get_progress(session);
+        if (progress.first_preview_ready || progress.complete) break;
+        sched_yield();
+    }
     preview_job job = {0};
     atomic_init(&job.tile_ready, false);
     atomic_init(&job.worker_started, false);
@@ -129,7 +136,7 @@ static bool verify_stale_worker_rejected(void)
     platform_task_config config = {1U, 1U, NULL, NULL, NULL};
     platform_task_queue *queue = NULL;
     bool okay = status == SVG_INDEX_COMPLETE ||
-        (status == SVG_INDEX_OK && svg_index_get_progress(session).first_preview_ready);
+        (status == SVG_INDEX_OK && progress.first_preview_ready);
     okay = okay && svg_index_make_preview_source(session, &job.source);
     uint64_t old_generation = svg_index_get_progress(session).generation;
     job.generation = old_generation;
@@ -202,7 +209,8 @@ int app_run_index_replay(const char *path)
         if (budget == 0U) budget = 1U;
         if (budget > SVG_INDEX_MAX_STEP_BYTES) budget = SVG_INDEX_MAX_STEP_BYTES;
         uint64_t step_started = clock_ns();
-        status = svg_index_step(session, budget);
+        if (!(submitted && !atomic_load_explicit(&job.tile_ready, memory_order_acquire)))
+            status = svg_index_step(session, budget);
         svg_index_progress progress = svg_index_get_progress(session);
         if (!progress.complete && atomic_load_explicit(&job.tile_ready, memory_order_acquire))
             preview_before_complete = true;
@@ -227,7 +235,7 @@ int app_run_index_replay(const char *path)
                 okay = okay && presented;
             }
         }
-        if (submitted && !task_finished) yield_owner();
+        if ((submitted && !task_finished) || !progress.first_preview_ready) yield_owner();
         uint64_t elapsed = clock_ns() - step_started;
         if (elapsed > max_owner_step_ns) max_owner_step_ns = elapsed;
     }

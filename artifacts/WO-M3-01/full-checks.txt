@@ -4,25 +4,14 @@ Preset CMake variables:
   CMAKE_OSX_ARCHITECTURES="arm64"
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
 
--- Configuring done (0.0s)
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
-[1/10] Building C object CMakeFiles/vexel_ui_state.dir/src/ui/index_progress.c.o
-[2/10] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
-[3/10] Building C object CMakeFiles/svg_index_bench.dir/app/index_bench.c.o
-[4/10] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
-[5/10] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
-[6/10] Linking C static library libvexel_index.a
-[7/10] Linking C executable bin/svg_index_bench
-[8/10] Linking C static library libvexel_ui_state.a
-[9/10] Linking C executable bin/svg_index_test
-ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
-[10/10] Linking C executable bin/svgworkbench
-ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+ninja: no work to do.
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
     Start 1: cli-version
-1/7 Test #1: cli-version ......................   Passed    0.21 sec
+1/7 Test #1: cli-version ......................   Passed    0.03 sec
     Start 2: base-contract
 2/7 Test #2: base-contract ....................   Passed    0.00 sec
     Start 3: xml-tokenizer
@@ -32,13 +21,13 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build
     Start 5: shape-render
 5/7 Test #5: shape-render .....................   Passed    0.01 sec
     Start 6: svg-index
-6/7 Test #6: svg-index ........................   Passed    0.31 sec
+6/7 Test #6: svg-index ........................   Passed    0.11 sec
     Start 7: index-replay
-7/7 Test #7: index-replay .....................   Passed    0.03 sec
+7/7 Test #7: index-replay .....................   Passed    0.15 sec
 
 100% tests passed, 0 tests failed out of 7
 
-Total Test time (real) =   0.64 sec
+Total Test time (real) =   0.39 sec
 usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
@@ -47,15 +36,15 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 175 tests in 14.001s
+Ran 175 tests in 14.004s
 
 OK
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.147735
+native smoke elapsed seconds: 0.157904
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.123490
-Ran 175 tests: 175 passed, 0 failed, 0 errors, 0 skipped; 14.057s
+native replay elapsed seconds: 0.095305
+Ran 175 tests: 175 passed, 0 failed, 0 errors, 0 skipped; 14.085s
 valid ledger: 222 entries

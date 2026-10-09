@@ -40,6 +40,10 @@ is checked during character scanning and parsing. A failed stream exposes its
 stable diagnostic but cannot transfer a partial token vector. The index uses
 this API on its worker so `token_at` data is produced by resumable scanning,
 independently of the owner's progressive element reader.
+`svg_xml_token_stream_bytes_read` reports the grammar-parser frontier (after
+character validation) so other threads can safely determine whether an early
+source span has been validated. If validation fails, the error offset bounds
+which earlier spans remain valid.
 
 `svg_xml_reader` is a resumable source scanner for large documents. It borrows
 the immutable source, retains lexical state across calls, and advances no more

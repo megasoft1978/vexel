@@ -14,15 +14,20 @@ with the same XML grammar and exposes its token spans after completion; worker
 allocations are capped before retrying token output. The existing one-shot
 tokenizer remains capped at 16 MiB and its defaults do not change.
 
-Once a supported depth-one shape has a complete source range,
-`svg_index_make_preview_source` returns an owned minimal SVG consisting of the
-original root opener and shape span. Callers schedule decode/raster work and
-must retain that owned byte buffer through task completion.
+Once a supported depth-one shape has a complete source range and the background
+token stream has validated all bytes through that range, `first_preview_ready`
+becomes true. The owner pauses element scanning while that prefix validation
+catches up. An error before or inside the candidate span blocks publication; a
+later malformed tail still allows the already validated preview while the
+session reports failure. `svg_index_make_preview_source` returns an owned
+minimal SVG consisting of the original root opener and shape span. Callers
+schedule decode/raster work and must retain that owned byte buffer through task
+completion.
 
 The early preview subset requires an SVG root with supported `width` and
 `height` attributes and an unprefixed `rect` or `path` whose attribute names
 are accepted by the current shape decoder. Unsupported attributes such as
 `transform`, element prefixes, and unsupported root attributes keep the source
 record but mark it unsupported, allowing a later eligible shape to be chosen.
-`first_preview_ready` means an eligible source candidate exists; the UI marks a
-preview visible only after the worker has produced its owned raster tile.
+The UI marks a preview visible only after the worker has produced its owned
+raster tile.

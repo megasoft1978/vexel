@@ -644,6 +644,11 @@ svg_xml_result svg_xml_token_stream_result(const svg_xml_token_stream *stream)
     return stream->scanner.result;
 }
 
+size_t svg_xml_token_stream_bytes_read(const svg_xml_token_stream *stream)
+{
+    return stream == NULL ? 0U : stream->scanner.cursor;
+}
+
 bool svg_xml_token_stream_take(svg_xml_token_stream *stream, svg_xml_token **out_tokens,
                                size_t *out_token_count)
 {

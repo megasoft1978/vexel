@@ -7,13 +7,11 @@ Preset CMake variables:
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
-[1/2] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
-[2/2] Linking C executable bin/svg_index_test
-ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
+ninja: no work to do.
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-debug
     Start 1: cli-version
-1/7 Test #1: cli-version ......................   Passed    0.00 sec
+1/7 Test #1: cli-version ......................   Passed    0.07 sec
     Start 2: base-contract
 2/7 Test #2: base-contract ....................   Passed    0.00 sec
     Start 3: xml-tokenizer
@@ -23,10 +21,10 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build
     Start 5: shape-render
 5/7 Test #5: shape-render .....................   Passed    0.01 sec
     Start 6: svg-index
-6/7 Test #6: svg-index ........................   Passed    0.62 sec
+6/7 Test #6: svg-index ........................   Passed    0.11 sec
     Start 7: index-replay
-7/7 Test #7: index-replay .....................   Passed    0.03 sec
+7/7 Test #7: index-replay .....................   Passed    0.15 sec
 
 100% tests passed, 0 tests failed out of 7
 
-Total Test time (real) =   0.73 sec
+Total Test time (real) =   0.43 sec

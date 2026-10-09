@@ -2,7 +2,7 @@ first preview rendered and read back by Metal
 progress: 10%
 progress: 50%
 progress: 90%
-index replay: complete=true preview=presented ui_visible=true before_complete=true percent=100 max_owner_step_ns=20782000
+index replay: complete=true preview=presented ui_visible=true before_complete=true percent=100 max_owner_step_ns=36626000
 stale_generation_rejected=true
 canceled_worker_rejected=true
 preview_state: submitted=true finished=true ready=true

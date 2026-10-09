@@ -104,6 +104,8 @@ svg_xml_stream_status svg_xml_token_stream_start(base_bytes input, size_t max_st
 /* Resumes character validation/token emission; budget is capped at 64 KiB. */
 svg_xml_stream_status svg_xml_token_stream_step(svg_xml_token_stream *stream, size_t byte_budget);
 svg_xml_result svg_xml_token_stream_result(const svg_xml_token_stream *stream);
+/* Grammar-validated source prefix; safe to query between worker steps. */
+size_t svg_xml_token_stream_bytes_read(const svg_xml_token_stream *stream);
 /* Transfers the completed vector to the caller; destroy frees it otherwise. */
 bool svg_xml_token_stream_take(svg_xml_token_stream *stream, svg_xml_token **out_tokens,
                                size_t *out_token_count);

@@ -6,20 +6,20 @@ Build: mac-release; seed: 20261009
 Cache caveat: Cold/warm labels are run order only; OS file cache is not flushed.
 Trials: five first-use + ten warm per workload.
 
-10MiB (100000 simple rectangles):
-  read median: 1053333 ns
-  first preview median / p95: 217125 / 344459 ns
-  full index median: 178230291 ns
-  max owner step: 266833 ns
-  peak child RSS: 60456960 bytes
-  index capacity bytes: 5600112
-  source SHA-256: e31223e83bcda33d21a59027c7306b63c3b9d556ee0534649b19b33b537b27bf
+10MiB (100000 simple rectangles including preview):
+  read median / p95: 923709 / 1075083 ns
+  validated first preview median / p95: 22132625 / 23994334 ns
+  full index median: 42534875 ns
+  max owner step: 302667 ns
+  peak child RSS: 37896192 bytes
+  index bytes: 5600056
+  source SHA-256: 016758c1f6e01ad6fe79a0053b9c92ad8651e8bfdaabeec949a3553bf38a9156
 
-100MiB (100000 map-like grouped records):
-  read median: 10530375 ns
-  first preview median / p95: 148458 / 179292 ns
-  full index median: 635839292 ns
-  max owner step: 294958 ns
-  peak child RSS: 143245312 bytes
-  index capacity bytes: 5600112
+100MiB (100000 map-like grouped records plus one preview rectangle):
+  read median / p95: 10081000 / 12865000 ns
+  validated first preview median / p95: 218462833 / 226002417 ns
+  full index median: 343374541 ns
+  max owner step: 254791 ns
+  peak child RSS: 129400832 bytes
+  index bytes: 5600112
   source SHA-256: 0acabf47c6f2fc2f747042adbb33e19d3901d75c22d8e7d90b77984626171f65

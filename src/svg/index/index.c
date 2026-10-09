@@ -3,6 +3,7 @@
 #include "platform/platform_task.h"
 
 #include <stdlib.h>
+#include <stdatomic.h>
 #include <string.h>
 
 typedef struct open_element { size_t record; size_t name_offset; size_t name_length; } open_element;
@@ -10,6 +11,9 @@ typedef struct validation_payload {
     svg_xml_diagnostic diagnostic;
     svg_xml_token *tokens;
     size_t token_count;
+    atomic_size_t bytes_read;
+    atomic_size_t error_offset;
+    atomic_bool failed;
 } validation_payload;
 
 struct svg_index_session {
@@ -27,6 +31,7 @@ struct svg_index_session {
     bool canceled;
     bool complete;
     bool preview;
+    bool preview_candidate;
     bool preview_root_supported;
     svg_xml_diagnostic diagnostic;
     svg_xml_diagnostic reader_diagnostic;
@@ -62,8 +67,17 @@ static bool validate_document(void *opaque, const platform_task_cancel_token *to
     svg_xml_stream_status status = svg_xml_token_stream_start(s->source,
         SVG_INDEX_MAX_COMPONENT_BYTES, task_is_canceled, (void *)token, &stream);
     while (status == SVG_XML_STREAM_OK &&
-           !atomic_load_explicit(&token->canceled, memory_order_acquire))
+           !atomic_load_explicit(&token->canceled, memory_order_acquire)) {
         status = svg_xml_token_stream_step(stream, SVG_INDEX_MAX_STEP_BYTES);
+        svg_xml_result partial = svg_xml_token_stream_result(stream);
+        if (partial.diagnostic.category != SVG_XML_ERROR_NONE) {
+            atomic_store_explicit(&s->validation.error_offset,
+                partial.diagnostic.offset, memory_order_relaxed);
+            atomic_store_explicit(&s->validation.failed, true, memory_order_release);
+        }
+        atomic_store_explicit(&s->validation.bytes_read,
+            svg_xml_token_stream_bytes_read(stream), memory_order_release);
+    }
     if (atomic_load_explicit(&token->canceled, memory_order_acquire) ||
         status == SVG_XML_STREAM_CANCELED) {
         svg_xml_token_stream_destroy(stream);
@@ -220,9 +234,9 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
         s->elements[top.record].source_length = tag->source.offset + tag->source.length -
                                                 s->elements[top.record].source_offset;
         s->elements[top.record].closed = true;
-        if (!s->preview && s->depth == 1U && s->preview_root_supported &&
+        if (!s->preview_candidate && !s->preview && s->depth == 1U && s->preview_root_supported &&
             s->elements[top.record].support != SVG_INDEX_UNSUPPORTED)
-            { s->preview = true; s->preview_record = top.record; }
+            { s->preview_candidate = true; s->preview_record = top.record; }
         return;
     }
     if (tag->name.length == 0U || tag->name.length == 4096U) {
@@ -253,9 +267,9 @@ static void finish_open_tag(svg_index_session *s, const svg_xml_reader_tag *tag)
     if (s->depth == 1U && e->support != SVG_INDEX_UNSUPPORTED &&
         !preview_attributes_supported(s, tag, e->support))
         e->support = SVG_INDEX_UNSUPPORTED;
-    if (!s->preview && s->depth == 1U && s->preview_root_supported && self_closing &&
+    if (!s->preview_candidate && !s->preview && s->depth == 1U && s->preview_root_supported && self_closing &&
         e->support != SVG_INDEX_UNSUPPORTED) {
-        s->preview = true; s->preview_record = i;
+        s->preview_candidate = true; s->preview_record = i;
     }
     if (!self_closing) {
         s->stack[s->depth].record = i;
@@ -271,6 +285,19 @@ static bool index_reader_tag(void *context, const svg_xml_reader_tag *tag)
     return true;
 }
 
+static void publish_validated_preview(svg_index_session *s)
+{
+    if (!s->preview_candidate || s->preview) return;
+    const svg_index_element *shape = &s->elements[s->preview_record];
+    size_t span_end = shape->source_offset + shape->source_length;
+    bool failed = atomic_load_explicit(&s->validation.failed, memory_order_acquire);
+    size_t validated_end = failed ?
+        atomic_load_explicit(&s->validation.error_offset, memory_order_relaxed) :
+        atomic_load_explicit(&s->validation.bytes_read, memory_order_acquire);
+    if (validated_end >= span_end)
+        s->preview = true;
+}
+
 svg_index_status svg_index_start(base_bytes source, uint64_t generation,
                                  svg_index_session **out_session)
 {
@@ -281,6 +308,9 @@ svg_index_status svg_index_start(base_bytes source, uint64_t generation,
     svg_index_session *s = calloc(1, sizeof(*s));
     if (s == NULL) return SVG_INDEX_OOM;
     s->source = source;
+    atomic_init(&s->validation.bytes_read, 0U);
+    atomic_init(&s->validation.error_offset, 0U);
+    atomic_init(&s->validation.failed, false);
     s->generation = generation;
     svg_xml_reader_status reader_status = svg_xml_reader_start(source, &s->reader);
     if (reader_status != SVG_XML_READER_OK) {
@@ -308,7 +338,10 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
     if (s->canceled) return SVG_INDEX_CANCELED;
     if (s->complete) return SVG_INDEX_COMPLETE;
     harvest_validation(s);
-    if (s->diagnostic.category != SVG_XML_ERROR_NONE) return SVG_INDEX_MALFORMED;
+    publish_validated_preview(s);
+    if (s->diagnostic.category != SVG_XML_ERROR_NONE)
+        return s->validation_complete ? SVG_INDEX_MALFORMED : SVG_INDEX_OK;
+    if (s->preview_candidate && !s->preview) return SVG_INDEX_OK;
     svg_xml_reader_status reader_status = svg_xml_reader_step(s->reader, byte_budget,
                                                                index_reader_tag, s);
     svg_xml_reader_progress reader_progress = svg_xml_reader_get_progress(s->reader);
@@ -316,6 +349,7 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
         s->reader_diagnostic = reader_progress.diagnostic;
     if (reader_status == SVG_XML_READER_MALFORMED) {
         harvest_validation(s);
+        publish_validated_preview(s);
         if (!s->validation_complete) return SVG_INDEX_OK;
         if (s->diagnostic.category == SVG_XML_ERROR_NONE)
             s->diagnostic = s->reader_diagnostic;
@@ -327,7 +361,9 @@ svg_index_status svg_index_step(svg_index_session *s, size_t byte_budget)
         else s->source_scanned = true;
     }
     harvest_validation(s);
-    if (s->diagnostic.category != SVG_XML_ERROR_NONE) return SVG_INDEX_MALFORMED;
+    publish_validated_preview(s);
+    if (s->diagnostic.category != SVG_XML_ERROR_NONE)
+        return s->validation_complete ? SVG_INDEX_MALFORMED : SVG_INDEX_OK;
     if (s->source_scanned && s->validation_complete) s->complete = true;
     return s->diagnostic.category == SVG_XML_ERROR_NONE ?
            (s->complete ? SVG_INDEX_COMPLETE : SVG_INDEX_OK) : SVG_INDEX_MALFORMED;
@@ -349,7 +385,7 @@ svg_index_progress svg_index_get_progress(const svg_index_session *s)
 svg_index_status svg_index_advance_generation(svg_index_session *s, uint64_t generation)
 {
     if (s == NULL || generation <= s->generation) return SVG_INDEX_INVALID;
-    s->generation = generation; s->preview = false;
+    s->generation = generation; s->preview = false; s->preview_candidate = false;
     return SVG_INDEX_OK;
 }
 
