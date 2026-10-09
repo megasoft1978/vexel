@@ -117,6 +117,9 @@ noisy observations do not update streaks. Trial CV above 10% marks that metric
 noisy per the benchmark protocol. The report includes Release executable
 bytes, `otool -L` dependencies, and explicit app-bundle and pan/zoom timing
 unavailability. Binary, bundle, and cached pan targets remain report-only.
+Raw observations and generated result reports use exact nested schemas: unknown
+fields, non-finite or negative measurements, wrong trial counts, and boolean
+schema versions are rejected before a result is written.
 
 ## Golden PNG comparison
 

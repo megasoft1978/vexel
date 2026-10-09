@@ -440,134 +440,132 @@ def under_cache(path: Path) -> Path:
     return resolved
 
 
-def collect(output: Path, history_path: Path, baseline_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    if platform.system() != "Darwin" or platform.machine() != "arm64":
-        raise GateError("perf-gate requires Apple Silicon macOS")
-    baseline = validate_baseline(load_json(baseline_path, "baseline"))
+def source_metadata() -> tuple[str, bool, str]:
     try:
         commit = run_checked(["git", "rev-parse", "HEAD"]).strip()
-        working_tree_dirty = bool(run_checked(["git", "status", "--porcelain"]).strip())
-        source_diff = subprocess.run(["git", "diff", "HEAD", "--binary"], cwd=ROOT,
-                                     capture_output=True, check=True).stdout
-        source_tree_sha256 = hashlib.sha256(source_diff).hexdigest()
-    except GateError:
-        commit = "unknown"
-        working_tree_dirty = True
-        source_tree_sha256 = "unavailable"
+        dirty = bool(run_checked(["git", "status", "--porcelain"]).strip())
+        diff = subprocess.run(["git", "diff", "HEAD", "--binary"], cwd=ROOT,
+                              capture_output=True, check=True).stdout
+        return commit, dirty, hashlib.sha256(diff).hexdigest()
+    except (GateError, subprocess.CalledProcessError):
+        return "unknown", True, "unavailable"
+
+
+def run_raw_campaign() -> dict[str, Any]:
     run_checked(["cmake", "--preset", "mac-release"])
     run_checked(["cmake", "--build", "--preset", "mac-release", "--target", "svg_index_bench", "svgworkbench"])
     raw_path = ROOT / ".cache/perf-gate/raw-observations.json"
     raw_path.parent.mkdir(parents=True, exist_ok=True)
-    raw_rel = raw_path.relative_to(ROOT)
-    run_checked([sys.executable, "bench/generate/index_bench.py", "--sizes", "10MiB,100MiB", "--cold-trials", "5", "--warm-trials", "10", "--seed", "20261009", "--output", str(raw_rel)])
-    raw = load_json(raw_path, "raw benchmark observations")
-    validate_raw(raw)
-    exact_keys(raw, {"schema_version", "seed", "machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler", "build", "cache_caveat", "cases"}, "raw observations")
-    if raw["schema_version"] != 1 or raw["seed"] != 20261009 or set(raw["cases"]) != {"10MiB", "100MiB"}:
-        raise GateError("raw benchmark header does not match frozen campaign")
-    hardware = {key: raw[key] for key in ("machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler")}
+    run_checked([sys.executable, "bench/generate/index_bench.py", "--sizes", "10MiB,100MiB", "--cold-trials", "5", "--warm-trials", "10", "--seed", "20261009", "--output", str(raw_path.relative_to(ROOT))])
+    return validate_raw(load_json(raw_path, "raw benchmark observations"))
+
+
+def summarize_case(label: str, data: dict[str, Any]) -> tuple[dict[str, Any], set[str]]:
+    trials = data["cold_trials"] + data["warm_trials"]
+    summary = {
+        "source_read_median_ns": percentile([t["read_ns"] for t in trials], .5),
+        "source_read_p95_ns": percentile([t["read_ns"] for t in trials], .95),
+        "first_preview_median_ns": percentile([t["first_preview_ns"] for t in trials], .5),
+        "first_preview_p95_ns": percentile([t["first_preview_ns"] for t in trials], .95),
+        "complete_index_median_ns": percentile([t["complete_index_ns"] for t in trials], .5),
+        "complete_index_p95_ns": percentile([t["complete_index_ns"] for t in trials], .95),
+        "max_step_ns": max(t["max_step_ns"] for t in trials),
+        "peak_rss_bytes": max(t["peak_rss_bytes"] for t in trials),
+        "index_bytes": max(t["index_bytes"] for t in trials),
+    }
+    keys = ("first_preview_ns", "max_step_ns", "peak_rss_bytes")
+    stats = {key: variability([t[key] for t in trials]) for key in keys}
+    metric_keys = {"10MiB": ("10MiB.first_preview_p95_ns",),
+                   "100MiB": ("100MiB.first_preview_p95_ns", "100MiB.max_step_ns", "100MiB.peak_rss_bytes")}
+    trial_keys = {"10MiB": ("first_preview_ns",),
+                  "100MiB": ("first_preview_ns", "max_step_ns", "peak_rss_bytes")}
+    noisy = {metric for metric, trial_key in zip(metric_keys[label], trial_keys[label])
+             if stats[trial_key]["coefficient_of_variation"] > 0.10}
+    result = {"input_bytes": data["source_bytes"], "input_sha256": data["source_sha256"],
+              "workload": data["workload"], "cold_order_trials": data["cold_trials"],
+              "warm_order_trials": data["warm_trials"], "summary": summary,
+              "trial_variability": stats}
+    return result, noisy
+
+
+def summarize_cases(raw: dict[str, Any]) -> tuple[dict[str, Any], set[str]]:
     cases: dict[str, Any] = {}
-    noisy_metrics: set[str] = set()
-    for label in ("10MiB", "100MiB"):
-        data = raw["cases"][label]
-        exact_keys(data, {"source_bytes", "source_sha256", "workload", "cold_trials", "warm_trials", "source_read_median_ns", "source_read_p95_ns", "first_preview_median_ns", "first_preview_p95_ns", "complete_index_median_ns", "max_step_latency_ns", "progressive_replay", "peak_child_rss_bytes", "index_bytes"}, f"raw {label}")
-        if len(data["cold_trials"]) != 5 or len(data["warm_trials"]) != 10:
-            raise GateError(f"{label} must contain exactly five cold-order and ten warm-order trials")
-        trials = data["cold_trials"] + data["warm_trials"]
-        if len(trials) != 15:
-            raise GateError(f"{label} trial count invalid")
-        for idx, trial in enumerate(trials):
-            exact_keys(trial, {"source_bytes", "read_ns", "first_preview_ns", "complete_index_ns", "max_step_ns", "preview_before_index_complete", "progress_10_50_90_complete", "element_count", "index_bytes", "peak_rss_bytes", "process_elapsed_ns"}, f"{label} trial {idx}")
-            for key, val in trial.items():
-                if key not in ("preview_before_index_complete", "progress_10_50_90_complete"):
-                    finite_nonnegative(val, f"{label} trial {idx}.{key}")
-        summary = {
-            "source_read_median_ns": percentile([t["read_ns"] for t in trials], .5),
-            "source_read_p95_ns": percentile([t["read_ns"] for t in trials], .95),
-            "first_preview_median_ns": percentile([t["first_preview_ns"] for t in trials], .5),
-            "first_preview_p95_ns": percentile([t["first_preview_ns"] for t in trials], .95),
-            "complete_index_median_ns": percentile([t["complete_index_ns"] for t in trials], .5),
-            "complete_index_p95_ns": percentile([t["complete_index_ns"] for t in trials], .95),
-            "max_step_ns": max(t["max_step_ns"] for t in trials),
-            "peak_rss_bytes": max(t["peak_rss_bytes"] for t in trials),
-            "index_bytes": max(t["index_bytes"] for t in trials),
-        }
-        trial_variability = {
-            "first_preview_ns": variability([t["first_preview_ns"] for t in trials]),
-            "max_step_ns": variability([t["max_step_ns"] for t in trials]),
-            "peak_rss_bytes": variability([t["peak_rss_bytes"] for t in trials]),
-        }
-        for metric, case_name, trial_key in (
-            ("10MiB.first_preview_p95_ns", "10MiB", "first_preview_ns"),
-            ("100MiB.first_preview_p95_ns", "100MiB", "first_preview_ns"),
-            ("100MiB.max_step_ns", "100MiB", "max_step_ns"),
-            ("100MiB.peak_rss_bytes", "100MiB", "peak_rss_bytes"),
-        ):
-            if label == case_name and trial_variability[trial_key]["coefficient_of_variation"] > 0.10:
-                noisy_metrics.add(metric)
-        cases[label] = {
-            "input_bytes": data["source_bytes"], "input_sha256": data["source_sha256"],
-            "workload": data["workload"], "cold_order_trials": data["cold_trials"], "warm_order_trials": data["warm_trials"],
-            "summary": summary, "trial_variability": trial_variability,
-        }
-    binary = ROOT / "build/mac-release/bin/svgworkbench"
-    linked = run_checked(["otool", "-L", str(binary)])
-    dependencies = []
-    for line in linked.splitlines()[1:]:
+    noisy: set[str] = set()
+    for label, data in raw["cases"].items():
+        cases[label], case_noisy = summarize_case(label, data)
+        noisy.update(case_noisy)
+    return cases, noisy
+
+
+def gate_report(baseline: dict[str, Any], cases: dict[str, Any], hardware: dict[str, Any], history_path: Path, noisy: set[str]) -> tuple[dict[str, Any], dict[str, Any], bool, list[str], str]:
+    reasons = comparison_reason(baseline, hardware, cases)
+    history = validate_history(load_json(history_path, "history")) if history_path.exists() else empty_history()
+    fields = {"10MiB.first_preview_p95_ns": ("10MiB", "first_preview_p95_ns"),
+              "100MiB.first_preview_p95_ns": ("100MiB", "first_preview_p95_ns"),
+              "100MiB.max_step_ns": ("100MiB", "max_step_ns"),
+              "100MiB.peak_rss_bytes": ("100MiB", "peak_rss_bytes")}
+    metrics = {name: cases[case]["summary"][field] for name, (case, field) in fields.items()}
+    baseline_values = {name: baseline["cases"][case][field] for name, (case, field) in fields.items()}
+    values, next_history = evaluate(metrics, baseline["limits"], baseline_values,
+                                    baseline["regression_tolerances"], history,
+                                    not reasons, noisy)
+    for name, item in values.items():
+        item["delta_from_baseline"] = None if item["value"] is None else item["value"] - baseline_values[name]
+    status = "incomparable" if reasons else (
+        "fail" if any(x["status"] == "fail" for x in values.values()) else
+        "warning" if any(x["status"] == "warning" for x in values.values()) else
+        "noisy" if any(x["status"] == "noisy" for x in values.values()) else "pass")
+    return values, next_history, not reasons, reasons, status
+
+
+def build_dependencies(binary: Path) -> list[dict[str, str]]:
+    output = run_checked(["otool", "-L", str(binary)])
+    rows = []
+    for line in output.splitlines()[1:]:
         identity = line.strip()
         if identity:
-            dependencies.append({"install_name": identity.split(" (compatibility version", 1)[0], "identity": identity})
-    metrics = {
-        "10MiB.first_preview_p95_ns": cases["10MiB"]["summary"]["first_preview_p95_ns"],
-        "100MiB.first_preview_p95_ns": cases["100MiB"]["summary"]["first_preview_p95_ns"],
-        "100MiB.max_step_ns": cases["100MiB"]["summary"]["max_step_ns"],
-        "100MiB.peak_rss_bytes": cases["100MiB"]["summary"]["peak_rss_bytes"],
-    }
-    comparison_reasons = comparison_reason(baseline, hardware, cases)
-    comparable = not comparison_reasons
-    if history_path.exists():
-        history = validate_history(load_json(history_path, "history"))
-    else:
-        history = empty_history()
-    baseline_fields = {
-        "10MiB.first_preview_p95_ns": ("10MiB", "first_preview_p95_ns"),
-        "100MiB.first_preview_p95_ns": ("100MiB", "first_preview_p95_ns"),
-        "100MiB.max_step_ns": ("100MiB", "max_step_ns"),
-        "100MiB.peak_rss_bytes": ("100MiB", "peak_rss_bytes"),
-    }
-    baseline_metrics = {metric: baseline["cases"][case][field]
-                        for metric, (case, field) in baseline_fields.items()}
-    gate_metrics, next_history = evaluate(metrics, baseline["limits"], baseline_metrics,
-                                          baseline["regression_tolerances"], history, comparable,
-                                          noisy_metrics)
-    for metric, result in gate_metrics.items():
-        prior = baseline_metrics[metric]
-        result["delta_from_baseline"] = None if result["value"] is None else result["value"] - prior
-    gate_status = "incomparable" if not comparable else ("fail" if any(x["status"] == "fail" for x in gate_metrics.values()) else "warning" if any(x["status"] == "warning" for x in gate_metrics.values()) else "noisy" if any(x["status"] == "noisy" for x in gate_metrics.values()) else "pass")
-    executable_size = binary.stat().st_size
-    benchmark_binary = ROOT / "build/mac-release/bin/svg_index_bench"
-    bundle = {"bytes": None, "status": "unavailable", "reason": "no macOS app-bundle packaging target exists in this work order"}
-    payload = {
+            rows.append({"install_name": identity.split(" (compatibility version", 1)[0], "identity": identity})
+    return rows
+
+
+def make_result(commit: str, dirty: bool, source_hash: str, raw: dict[str, Any], baseline: dict[str, Any], cases: dict[str, Any], gate_values: dict[str, Any], comparable: bool, reasons: list[str], gate_status: str) -> dict[str, Any]:
+    binary = ROOT / "build/mac-release/bin/svgworkbench"
+    bench_binary = ROOT / "build/mac-release/bin/svg_index_bench"
+    size = binary.stat().st_size
+    limits = baseline["limits"]
+    return {
         "schema_version": 1,
         "run_timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "build_sha": commit,
-        "build": {"configuration": "Release", "executable": str(binary.relative_to(ROOT)), "executable_sha256": sha256(binary), "executable_bytes": executable_size, "benchmark_executable": str(benchmark_binary.relative_to(ROOT)), "benchmark_executable_sha256": sha256(benchmark_binary), "benchmark_executable_bytes": benchmark_binary.stat().st_size, "dependencies": dependencies, "source_commit": commit, "working_tree_dirty": working_tree_dirty, "source_diff_sha256": source_tree_sha256},
-        "hardware_toolchain": hardware,
+        "build": {"configuration": "Release", "executable": str(binary.relative_to(ROOT)), "executable_sha256": sha256(binary), "executable_bytes": size, "benchmark_executable": str(bench_binary.relative_to(ROOT)), "benchmark_executable_sha256": sha256(bench_binary), "benchmark_executable_bytes": bench_binary.stat().st_size, "dependencies": build_dependencies(binary), "source_commit": commit, "working_tree_dirty": dirty, "source_diff_sha256": source_hash},
+        "hardware_toolchain": {key: raw[key] for key in ("machine", "machine_model", "chip", "memory_bytes", "architecture", "os", "compiler")},
         "seed": 20261009,
         "trial_protocol": {"cold_order_trials": 5, "warm_order_trials": 10, "cache_caveat": raw["cache_caveat"]},
         "cases": cases,
         "baseline_provenance": {"work_order": baseline["source_work_order"], "commit": baseline["source_commit"], "report": baseline["source_report"], "report_sha256": baseline["source_report_sha256"]},
-        "comparison": {"status": "comparable" if comparable else "incomparable", "reasons": comparison_reasons, "baseline_values": {c: baseline["cases"][c] for c in ("10MiB", "100MiB")}},
-        "gate": {"status": gate_status, "metrics": gate_metrics, "absolute_limits": baseline["limits"], "regression_tolerances": baseline["regression_tolerances"]},
-        "stretch_targets": {"targets": baseline["stretch_targets"], "executable_bytes": executable_size, "executable_status": "report_only", "executable_reason": "measured Release output is not separately stripped; 10 MiB stripped-binary target is aspirational", "app_bundle": bundle, "pan_zoom_event_to_present_p95_ns": {"value": None, "status": "unavailable", "reason": "navigation test validates event behavior but does not time presentation"}},
+        "comparison": {"status": "comparable" if comparable else "incomparable", "reasons": reasons, "baseline_values": {case: baseline["cases"][case] for case in ("10MiB", "100MiB")}},
+        "gate": {"status": gate_status, "metrics": gate_values, "absolute_limits": limits, "regression_tolerances": baseline["regression_tolerances"]},
+        "stretch_targets": {"targets": baseline["stretch_targets"], "executable_bytes": size, "executable_status": "report_only", "executable_reason": "measured Release output is not separately stripped; 10 MiB stripped-binary target is aspirational", "app_bundle": {"bytes": None, "status": "unavailable", "reason": "no macOS app-bundle packaging target exists in this work order"}, "pan_zoom_event_to_present_p95_ns": {"value": None, "status": "unavailable", "reason": "navigation test validates event behavior but does not time presentation"}},
     }
+
+
+def collect(output: Path, history_path: Path, baseline_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
+    if platform.system() != "Darwin" or platform.machine() != "arm64":
+        raise GateError("perf-gate requires Apple Silicon macOS")
+    baseline = validate_baseline(load_json(baseline_path, "baseline"))
+    commit, dirty, source_hash = source_metadata()
+    raw = run_raw_campaign()
+    cases, noisy = summarize_cases(raw)
+    gate_values, next_history, comparable, reasons, status = gate_report(
+        baseline, cases, raw, history_path, noisy)
+    payload = make_result(commit, dirty, source_hash, raw, baseline, cases,
+                          gate_values, comparable, reasons, status)
     validate_result(payload)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(payload, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     history_path.parent.mkdir(parents=True, exist_ok=True)
     history_path.write_text(json.dumps(next_history, indent=2, sort_keys=True, allow_nan=False) + "\n", encoding="utf-8")
     return payload, next_history
-
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Build and run the macOS Release index performance gate (5 cold-order + 10 warm-order trials per case).")
