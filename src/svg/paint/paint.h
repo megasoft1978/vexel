@@ -7,6 +7,9 @@
 
 #define SVG_PAINT_MAX_STOPS 65536U
 #define SVG_PAINT_MAX_GRADIENT_STOPS 256U
+#define SVG_PAINT_CACHE_MAX_GRADIENTS 32768U
+
+typedef struct svg_paint_cache svg_paint_cache;
 
 typedef enum svg_shape_paint_kind {
     SVG_SHAPE_PAINT_SOLID = 0,
@@ -36,6 +39,8 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        size_t token_count,
                                        svg_reference_index *references,
                                        svg_css_sheet *css,
+                                       svg_paint_cache **cache,
+                                       size_t *token_visits,
                                        svg_xml_span fill,
                                        const geom_edge *edges,
                                        size_t edge_count,
@@ -46,6 +51,8 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        svg_paint_stop **stops,
                                        size_t *stop_count,
                                        svg_shape_diagnostic *diagnostic);
+
+void svg_paint_cache_destroy(svg_paint_cache *cache);
 
 void svg_paint_sample(const svg_shape_paint *paint,
                       const svg_paint_stop *stops,

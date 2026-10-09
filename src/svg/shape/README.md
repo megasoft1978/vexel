@@ -26,7 +26,9 @@ needed; singular transforms fail with `unsupported`. Clip paths support local
 `url(#id)`, `userSpaceOnUse` (the default) or `objectBoundingBox`, and union of
 up to 64 basic shape/path children. Group/use clips use the whole subtree AABB,
 resolve once per declaration, and intersect with descendant clips. Nested
-clip declarations inside clip geometry and external references fail closed.
+clip declarations inside clip geometry, clip declarations on `<symbol>`, and
+external references fail closed. Symbol `clip-path` attributes and CSS values
+receive a stable unsupported diagnostic rather than being dropped.
 Raster work is bounded by the document edge and clip-edge budgets.
 
 CSS retains source spans and supports the nine fill/stroke paint properties,

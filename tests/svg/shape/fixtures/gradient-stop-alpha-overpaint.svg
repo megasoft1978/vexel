@@ -1,0 +1,8 @@
+<svg width="10" height="10">
+  <rect x="1" y="1" width="8" height="8" fill="red"/>
+  <defs><linearGradient id="g">
+    <stop stop-color="blue" stop-opacity="0.5"/>
+    <stop offset="1" stop-color="blue" stop-opacity="0.5"/>
+  </linearGradient></defs>
+  <rect x="1" y="1" width="8" height="8" fill="url(#g)"/>
+</svg>

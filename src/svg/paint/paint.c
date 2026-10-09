@@ -5,6 +5,121 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define SVG_PAINT_CACHE_SLOT_COUNT (SVG_PAINT_CACHE_MAX_GRADIENTS * 2U)
+
+typedef struct svg_cached_gradient {
+    uint32_t token_index;
+    svg_shape_paint_kind kind;
+    bool object_bounding_box;
+    double coordinates[6];
+    size_t first_stop;
+    size_t stop_count;
+} svg_cached_gradient;
+
+struct svg_paint_cache {
+    uint32_t *slots;
+    svg_cached_gradient *entries;
+    size_t entry_count;
+    size_t entry_capacity;
+};
+
+void svg_paint_cache_destroy(svg_paint_cache *cache)
+{
+    if (cache == NULL) return;
+    svg_shape_free(cache->slots);
+    svg_shape_free(cache->entries);
+    svg_shape_free(cache);
+}
+
+static size_t cache_hash(uint32_t token_index)
+{
+    uint32_t value = token_index;
+    value ^= value >> 16U;
+    value *= UINT32_C(0x7feb352d);
+    value ^= value >> 15U;
+    value *= UINT32_C(0x846ca68b);
+    value ^= value >> 16U;
+    return (size_t)value & (SVG_PAINT_CACHE_SLOT_COUNT - 1U);
+}
+
+static svg_shape_error cache_create(svg_paint_cache **out)
+{
+    if (out == NULL) return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
+    if (*out != NULL) return SVG_SHAPE_ERROR_NONE;
+    if (SVG_PAINT_CACHE_SLOT_COUNT > SIZE_MAX / sizeof(uint32_t))
+        return SVG_SHAPE_ERROR_LIMIT;
+    svg_paint_cache *cache = svg_shape_calloc(1U, sizeof(*cache));
+    if (cache == NULL) return SVG_SHAPE_ERROR_OOM;
+    cache->slots = svg_shape_calloc(SVG_PAINT_CACHE_SLOT_COUNT,
+                                    sizeof(*cache->slots));
+    if (cache->slots == NULL) {
+        svg_shape_free(cache);
+        return SVG_SHAPE_ERROR_OOM;
+    }
+    *out = cache;
+    return SVG_SHAPE_ERROR_NONE;
+}
+
+static svg_cached_gradient *cache_find(svg_paint_cache *cache,
+                                       uint32_t token_index)
+{
+    if (cache == NULL || cache->slots == NULL) return NULL;
+    size_t slot = cache_hash(token_index);
+    for (size_t probes = 0U; probes < SVG_PAINT_CACHE_SLOT_COUNT; ++probes) {
+        uint32_t stored = cache->slots[slot];
+        if (stored == 0U) return NULL;
+        size_t entry = (size_t)(stored - 1U);
+        if (entry < cache->entry_count &&
+            cache->entries[entry].token_index == token_index)
+            return &cache->entries[entry];
+        slot = (slot + 1U) & (SVG_PAINT_CACHE_SLOT_COUNT - 1U);
+    }
+    return NULL;
+}
+
+static svg_shape_error cache_reserve_entry(svg_paint_cache *cache)
+{
+    if (cache->entry_count >= SVG_PAINT_CACHE_MAX_GRADIENTS ||
+        cache->entry_count >= UINT32_MAX) return SVG_SHAPE_ERROR_LIMIT;
+    if (cache->entry_count == cache->entry_capacity) {
+        size_t capacity = cache->entry_capacity == 0U ? 16U :
+                          cache->entry_capacity * 2U;
+        if (capacity < cache->entry_capacity) return SVG_SHAPE_ERROR_LIMIT;
+        if (capacity > SVG_PAINT_CACHE_MAX_GRADIENTS)
+            capacity = SVG_PAINT_CACHE_MAX_GRADIENTS;
+        if (capacity > SIZE_MAX / sizeof(*cache->entries))
+            return SVG_SHAPE_ERROR_LIMIT;
+        svg_cached_gradient *grown = svg_shape_realloc(
+            cache->entries, capacity * sizeof(*cache->entries));
+        if (grown == NULL) return SVG_SHAPE_ERROR_OOM;
+        cache->entries = grown;
+        cache->entry_capacity = capacity;
+    }
+    return SVG_SHAPE_ERROR_NONE;
+}
+
+static svg_shape_error cache_insert(svg_paint_cache *cache,
+                                    const svg_cached_gradient *gradient,
+                                    svg_cached_gradient **out)
+{
+    if (cache->entry_count >= cache->entry_capacity ||
+        cache->entry_count >= SVG_PAINT_CACHE_MAX_GRADIENTS ||
+        cache->entry_count >= UINT32_MAX) return SVG_SHAPE_ERROR_LIMIT;
+    size_t entry = cache->entry_count;
+    cache->entries[entry] = *gradient;
+    size_t slot = cache_hash(gradient->token_index);
+    for (size_t probes = 0U; probes < SVG_PAINT_CACHE_SLOT_COUNT; ++probes) {
+        if (cache->slots[slot] == 0U) {
+            cache->slots[slot] = (uint32_t)(entry + 1U);
+            cache->entry_count++;
+            *out = &cache->entries[entry];
+            return SVG_SHAPE_ERROR_NONE;
+        }
+        slot = (slot + 1U) & (SVG_PAINT_CACHE_SLOT_COUNT - 1U);
+    }
+    return SVG_SHAPE_ERROR_LIMIT;
+}
+
 static bool eq(base_bytes source, svg_xml_span span, const char *text)
 {
     size_t length = strlen(text);
@@ -25,14 +140,55 @@ static bool attr(base_bytes source, const svg_xml_token *tokens, size_t count,
     return false;
 }
 
-static size_t element_end(const svg_xml_token *tokens, size_t count, size_t start)
+static bool gradient_href_attribute(base_bytes source,
+                                    const svg_xml_token *tokens, size_t count,
+                                    size_t element, size_t *offset)
 {
-    if (tokens[start].kind == SVG_XML_TOKEN_EMPTY_ELEMENT) return start;
-    for (size_t i = start + 1U; i < count; ++i) {
-        if (tokens[i].kind == SVG_XML_TOKEN_END_ELEMENT &&
-            tokens[i].depth == tokens[start].depth) return i;
+    for (size_t i = element + 1U;
+         i < count && tokens[i].kind == SVG_XML_TOKEN_ATTRIBUTE; ++i) {
+        if (!eq(source, tokens[i].local_name, "href")) continue;
+        if (tokens[i].prefix.length == 0U) {
+            *offset = tokens[i].name.offset;
+            return true;
+        }
+        if (eq(source, tokens[i].prefix, "xlink")) {
+            if (!svg_reference_xlink_is_bound(source, tokens, count)) {
+                *offset = tokens[i].name.offset;
+                return true;
+            }
+            /* Bound xlink references are unsupported gradient inheritance. */
+            *offset = tokens[i].name.offset;
+            return true;
+        }
     }
-    return start;
+    return false;
+}
+
+static bool count_token_visit(size_t *token_visits)
+{
+    if (token_visits == NULL) return true;
+    if (*token_visits == SIZE_MAX) return false;
+    (*token_visits)++;
+    return true;
+}
+
+static bool element_end(const svg_xml_token *tokens, size_t count, size_t start,
+                        size_t *token_visits, size_t *end)
+{
+    if (tokens[start].kind == SVG_XML_TOKEN_EMPTY_ELEMENT) {
+        *end = start;
+        return true;
+    }
+    for (size_t i = start + 1U; i < count; ++i) {
+        if (!count_token_visit(token_visits)) return false;
+        if (tokens[i].kind == SVG_XML_TOKEN_END_ELEMENT &&
+            tokens[i].depth == tokens[start].depth) {
+            *end = i;
+            return true;
+        }
+    }
+    *end = start;
+    return true;
 }
 
 static bool number(base_bytes source, svg_xml_span span, double *out)
@@ -108,15 +264,23 @@ static bool supported_stop_inline_style(base_bytes source, svg_xml_span style)
 
 static bool parse_stops(svg_css_sheet *css, base_bytes source,
                         const svg_xml_token *tokens, size_t count,
-                        size_t gradient,
+                        size_t gradient, size_t *token_visits,
                         svg_paint_stop stops[SVG_PAINT_MAX_GRADIENT_STOPS],
                         size_t *stop_count, bool *hit_limit, bool *hit_oom)
 {
     *hit_limit = false;
     *hit_oom = false;
-    size_t end = element_end(tokens, count, gradient);
+    size_t end = gradient;
+    if (!element_end(tokens, count, gradient, token_visits, &end)) {
+        *hit_limit = true;
+        return false;
+    }
     size_t n = 0U;
     for (size_t i = gradient + 1U; i < end; ++i) {
+        if (!count_token_visit(token_visits)) {
+            *hit_limit = true;
+            return false;
+        }
         if ((tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT &&
              tokens[i].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) ||
             tokens[i].depth != tokens[gradient].depth + 1U) continue;
@@ -157,7 +321,14 @@ static bool parse_stops(svg_css_sheet *css, base_bytes source,
         stops[n].offset = position;
         stops[n].rgba[3] = (uint8_t)lround(alpha * 255.0);
         ++n;
-        if (tokens[i].kind == SVG_XML_TOKEN_START_ELEMENT) i = element_end(tokens, count, i);
+        if (tokens[i].kind == SVG_XML_TOKEN_START_ELEMENT) {
+            size_t stop_end = i;
+            if (!element_end(tokens, count, i, token_visits, &stop_end)) {
+                *hit_limit = true;
+                return false;
+            }
+            i = stop_end;
+        }
     }
     if (n < 2U) return false;
     *stop_count = n;
@@ -221,6 +392,8 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        size_t token_count,
                                        svg_reference_index *references,
                                        svg_css_sheet *css,
+                                       svg_paint_cache **cache,
+                                       size_t *token_visits,
                                        svg_xml_span fill,
                                        const geom_edge *edges, size_t edge_count,
                                        geom_affine user_inverse,
@@ -230,6 +403,12 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
                                        size_t *stop_count,
                                        svg_shape_diagnostic *diagnostic)
 {
+    if (cache == NULL || stops == NULL || stop_count == NULL || paint == NULL) {
+        if (diagnostic != NULL)
+            *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT,
+                                                 fill.offset};
+        return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
+    }
     if (fill.length < 7U || fill.offset > source.len ||
         fill.length > source.len - fill.offset ||
         memcmp(source.ptr + fill.offset, "url(#", 5U) != 0 ||
@@ -238,34 +417,91 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
     size_t target;
     if (!svg_reference_index_find(source, tokens, token_count, references,
                                   target_id, &target)) goto unsupported;
-    svg_shape_paint result = {0};
-    result.user_inverse = user_inverse;
-    if (eq(source, tokens[target].local_name, "linearGradient")) result.kind = SVG_SHAPE_PAINT_LINEAR;
-    else if (eq(source, tokens[target].local_name, "radialGradient")) result.kind = SVG_SHAPE_PAINT_RADIAL;
-    else goto unsupported;
-    if (tokens[target].prefix.length != 0U) goto unsupported;
-    result.object_bounding_box = true;
-    svg_xml_span value;
-    if (attr(source, tokens, token_count, target, "gradientUnits", &value)) {
-        if (eq(source, value, "userSpaceOnUse")) result.object_bounding_box = false;
-        else if (!eq(source, value, "objectBoundingBox")) goto unsupported;
-    }
-    if (attr(source, tokens, token_count, target, "spreadMethod", &value) && !eq(source, value, "pad")) goto unsupported;
-    if (attr(source, tokens, token_count, target, "gradientTransform", &value) ||
-        attr(source, tokens, token_count, target, "href", &value)) goto unsupported;
-    if (!gradient_coordinates(source, tokens, token_count, target,
-                              result.object_bounding_box, viewport_width,
-                              viewport_height, &result)) goto unsupported;
-    svg_paint_stop local[SVG_PAINT_MAX_GRADIENT_STOPS];
-    size_t local_count = 0U;
-    bool stop_limit = false, stop_oom = false;
-    if (!parse_stops(css, source, tokens, token_count, target, local,
-                     &local_count, &stop_limit, &stop_oom)) {
-        if (stop_limit) goto limit;
-        if (stop_oom) goto oom;
+    if (target > UINT32_MAX) goto limit;
+    bool linear = eq(source, tokens[target].local_name, "linearGradient");
+    bool radial = eq(source, tokens[target].local_name, "radialGradient");
+    if ((!linear && !radial) || tokens[target].prefix.length != 0U)
         goto unsupported;
+
+    svg_cached_gradient *cached = cache_find(*cache, (uint32_t)target);
+    if (cached == NULL) {
+        svg_shape_error cache_error = cache_create(cache);
+        if (cache_error == SVG_SHAPE_ERROR_LIMIT) goto limit;
+        if (cache_error != SVG_SHAPE_ERROR_NONE) goto oom;
+
+        svg_shape_paint definition = {0};
+        definition.kind = linear ? SVG_SHAPE_PAINT_LINEAR :
+                                   SVG_SHAPE_PAINT_RADIAL;
+        definition.object_bounding_box = true;
+        svg_xml_span value;
+        if (attr(source, tokens, token_count, target, "gradientUnits", &value)) {
+            if (eq(source, value, "userSpaceOnUse"))
+                definition.object_bounding_box = false;
+            else if (!eq(source, value, "objectBoundingBox"))
+                goto unsupported;
+        }
+        if (attr(source, tokens, token_count, target, "spreadMethod", &value) &&
+            !eq(source, value, "pad")) goto unsupported;
+        if (attr(source, tokens, token_count, target, "gradientTransform", &value))
+            goto unsupported;
+        size_t href_offset = 0U;
+        if (gradient_href_attribute(source, tokens, token_count, target,
+                                    &href_offset)) {
+            if (diagnostic != NULL)
+                *diagnostic = (svg_shape_diagnostic){
+                    SVG_SHAPE_ERROR_UNSUPPORTED, href_offset};
+            return SVG_SHAPE_ERROR_UNSUPPORTED;
+        }
+        if (!gradient_coordinates(source, tokens, token_count, target,
+                                  definition.object_bounding_box,
+                                  viewport_width, viewport_height, &definition))
+            goto unsupported;
+
+        svg_paint_stop local[SVG_PAINT_MAX_GRADIENT_STOPS];
+        size_t local_count = 0U;
+        bool stop_limit = false, stop_oom = false;
+        if (!parse_stops(css, source, tokens, token_count, target,
+                         token_visits, local, &local_count, &stop_limit,
+                         &stop_oom)) {
+            if (stop_limit) goto limit;
+            if (stop_oom) goto oom;
+            goto unsupported;
+        }
+        if (*stop_count > SVG_PAINT_MAX_STOPS ||
+            local_count > SVG_PAINT_MAX_STOPS - *stop_count) goto limit;
+        cache_error = cache_reserve_entry(*cache);
+        if (cache_error == SVG_SHAPE_ERROR_LIMIT) goto limit;
+        if (cache_error != SVG_SHAPE_ERROR_NONE) goto oom;
+        size_t new_stop_count = *stop_count + local_count;
+        if (new_stop_count > SIZE_MAX / sizeof(**stops)) goto limit;
+        svg_paint_stop *grown = svg_shape_realloc(
+            *stops, new_stop_count * sizeof(**stops));
+        if (grown == NULL) goto oom;
+        size_t first_stop = *stop_count;
+        memcpy(grown + first_stop, local, local_count * sizeof(*local));
+        *stops = grown;
+        *stop_count = new_stop_count;
+
+        svg_cached_gradient pending = {0};
+        pending.token_index = (uint32_t)target;
+        pending.kind = definition.kind;
+        pending.object_bounding_box = definition.object_bounding_box;
+        memcpy(pending.coordinates, definition.coordinates,
+               sizeof(pending.coordinates));
+        pending.first_stop = first_stop;
+        pending.stop_count = local_count;
+        cache_error = cache_insert(*cache, &pending, &cached);
+        if (cache_error == SVG_SHAPE_ERROR_LIMIT) goto limit;
+        if (cache_error != SVG_SHAPE_ERROR_NONE) goto oom;
     }
-    if (local_count > SVG_PAINT_MAX_STOPS - *stop_count) goto limit;
+
+    svg_shape_paint result = {0};
+    result.kind = cached->kind;
+    result.object_bounding_box = cached->object_bounding_box;
+    memcpy(result.coordinates, cached->coordinates, sizeof(result.coordinates));
+    result.first_stop = cached->first_stop;
+    result.stop_count = cached->stop_count;
+    result.user_inverse = user_inverse;
     if (edge_count == 0U) goto unsupported;
     geom_point first_local;
     if (!geom_affine_map_point(user_inverse, edges[0].a, &first_local))
@@ -287,16 +523,6 @@ svg_shape_error svg_paint_resolve_fill(base_bytes source,
     result.bounds[0] = min_x; result.bounds[1] = min_y;
     result.bounds[2] = max_x; result.bounds[3] = max_y;
     if (result.object_bounding_box && (max_x <= min_x || max_y <= min_y)) goto unsupported;
-    svg_paint_stop *grown = svg_shape_realloc(*stops, (*stop_count + local_count) * sizeof(**stops));
-    if (grown == NULL) {
-        if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, fill.offset};
-        return SVG_SHAPE_ERROR_OOM;
-    }
-    memcpy(grown + *stop_count, local, local_count * sizeof(*local));
-    result.first_stop = *stop_count;
-    result.stop_count = local_count;
-    *stops = grown;
-    *stop_count += local_count;
     *paint = result;
     return SVG_SHAPE_ERROR_NONE;
 limit:

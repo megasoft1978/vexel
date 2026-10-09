@@ -22,6 +22,7 @@ typedef struct shape_traversal {
     svg_xml_token *tokens;
     size_t token_count;
     svg_css_sheet *css;
+    svg_paint_cache *paint_cache;
     svg_reference_index references;
     svg_shape_builder builder;
     svg_shape_diagnostic *diagnostic;
@@ -30,6 +31,7 @@ typedef struct shape_traversal {
     size_t use_instances;
     size_t reference_bytes;
     size_t element_visits;
+    size_t paint_token_visits;
     size_t transform_operations;
     bool root_seen;
 } shape_traversal;
@@ -140,7 +142,8 @@ static bool apply_declared_clip(shape_traversal *traversal,
     svg_shape_clip *clip = NULL;
     svg_shape_error result = svg_clip_resolve(
         traversal->source, traversal->tokens, traversal->token_count,
-        &traversal->references, value, document, &document->clip_bytes,
+        &traversal->references, traversal->css, value, document,
+        &document->clip_bytes,
         inverse, bounds, &clip, traversal->diagnostic);
     if (result != SVG_SHAPE_ERROR_NONE) return false;
     bool applied = svg_clip_apply_group(document, first_shape, end_shape, clip);
@@ -213,28 +216,37 @@ static bool root_viewport(shape_traversal *traversal, size_t element)
 }
 
 static bool symbol_attributes_supported(shape_traversal *traversal,
-                                        size_t element)
+                                        size_t element,
+                                        size_t *unsupported_offset)
 {
     base_bytes source = traversal->source;
     for (size_t i = element + 1U;
          i < traversal->token_count &&
          traversal->tokens[i].kind == SVG_XML_TOKEN_ATTRIBUTE; ++i) {
         svg_xml_span name = traversal->tokens[i].local_name;
-        if (traversal->tokens[i].prefix.length != 0U) return false;
+        if (traversal->tokens[i].prefix.length != 0U) {
+            if (unsupported_offset != NULL)
+                *unsupported_offset = traversal->tokens[i].name.offset;
+            return false;
+        }
         bool supported = span_eq(source, name, "id") ||
             span_eq(source, name, "class") || span_eq(source, name, "style") ||
             span_eq(source, name, "viewBox") ||
             span_eq(source, name, "preserveAspectRatio") ||
             span_eq(source, name, "width") || span_eq(source, name, "height") ||
             span_eq(source, name, "fill") || span_eq(source, name, "fill-rule") ||
-            span_eq(source, name, "clip-path") || span_eq(source, name, "stroke") ||
+            span_eq(source, name, "stroke") ||
             span_eq(source, name, "stroke-width") ||
             span_eq(source, name, "stroke-linecap") ||
             span_eq(source, name, "stroke-linejoin") ||
             span_eq(source, name, "stroke-miterlimit") ||
             span_eq(source, name, "stroke-dasharray") ||
             span_eq(source, name, "stroke-dashoffset");
-        if (!supported) return false;
+        if (!supported) {
+            if (unsupported_offset != NULL)
+                *unsupported_offset = traversal->tokens[i].name.offset;
+            return false;
+        }
     }
     return true;
 }
@@ -394,8 +406,14 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
 
     geom_affine local_transform;
     if (symbol) {
-        if (!symbol_attributes_supported(traversal, target) ||
-            !symbol_mapping(traversal, target, use, &local_transform)) {
+        size_t unsupported_offset = 0U;
+        if (!symbol_attributes_supported(traversal, target,
+                                         &unsupported_offset)) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
+                 unsupported_offset);
+            return false;
+        }
+        if (!symbol_mapping(traversal, target, use, &local_transform)) {
             svg_xml_span preserve;
             size_t offset = attr(traversal->source, traversal->tokens,
                                  traversal->token_count, use,
@@ -438,16 +456,29 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     size_t first_edge = traversal->builder.doc->edge_count;
     traversal->active_references[traversal->reference_depth++] = target;
     bool ok;
+    svg_css_paint symbol_style = {0};
     if (symbol) {
         if (render_depth + 1U > SHAPE_MAX_XML_DEPTH) {
             fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
                  target_token->name.offset);
             ok = false;
         } else {
-            svg_css_paint symbol_style;
-            ok = compute_style(traversal, target, &use_style, &symbol_style) &&
-                 walk_range(traversal, target + 1U, target_end,
-                            instance_transform, &symbol_style, render_depth + 1U);
+            ok = compute_style(traversal, target, &use_style, &symbol_style);
+            if (ok) {
+                svg_xml_span symbol_clip;
+                if (svg_css_paint_value(&symbol_style, SVG_CSS_CLIP_PATH,
+                                        &symbol_clip) &&
+                    !svg_css_keyword_equals(traversal->source, symbol_clip,
+                                            "none")) {
+                    fail(traversal->diagnostic,
+                         SVG_SHAPE_ERROR_UNSUPPORTED, symbol_clip.offset);
+                    ok = false;
+                } else {
+                    ok = walk_range(traversal, target + 1U, target_end,
+                                    instance_transform, &symbol_style,
+                                    render_depth + 1U);
+                }
+            }
         }
     } else {
         ok = false;
@@ -687,6 +718,8 @@ svg_shape_error svg_shape_decode_source_with_bounds(
         .doc = out,
         .references = &traversal.references,
         .css = traversal.css,
+        .paint_cache = &traversal.paint_cache,
+        .paint_token_visits = &traversal.paint_token_visits,
         .diag = diagnostic,
         .transform = geom_affine_identity()
     };
@@ -699,6 +732,8 @@ svg_shape_error svg_shape_decode_source_with_bounds(
     if (memory_bounds != NULL)
         memory_bounds->reference_lookup_probes =
             svg_reference_index_lookup_probes(&traversal.references);
+    if (memory_bounds != NULL)
+        memory_bounds->paint_token_visits = traversal.paint_token_visits;
     if (!traversal.root_seen) {
         fail(diagnostic, SVG_SHAPE_ERROR_VIEWPORT, 0U);
         error = SVG_SHAPE_ERROR_VIEWPORT;
@@ -707,6 +742,7 @@ svg_shape_error svg_shape_decode_source_with_bounds(
     error = SVG_SHAPE_ERROR_NONE;
 
 cleanup:
+    svg_paint_cache_destroy(traversal.paint_cache);
     svg_css_sheet_destroy(traversal.css);
     svg_reference_index_destroy(&traversal.references);
     svg_shape_free(tokens);

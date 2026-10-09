@@ -5,6 +5,7 @@
 #include "shape_alloc.h"
 #include "css.h"
 #include "reference.h"
+#include "../paint/paint.h"
 
 typedef struct svg_shape_number_reader {
     const uint8_t *p;
@@ -15,6 +16,8 @@ typedef struct svg_shape_builder {
     svg_shape_document *doc;
     svg_reference_index *references;
     svg_css_sheet *css;
+    svg_paint_cache **paint_cache;
+    size_t *paint_token_visits;
     size_t edge_capacity;
     size_t shape_capacity;
     size_t shape_index;
@@ -28,6 +31,7 @@ typedef struct svg_shape_builder {
 typedef struct svg_shape_decode_memory_bounds {
     size_t reference_index_bytes;
     size_t reference_lookup_probes;
+    size_t paint_token_visits;
 } svg_shape_decode_memory_bounds;
 
 svg_shape_error svg_shape_decode_source(base_bytes source,

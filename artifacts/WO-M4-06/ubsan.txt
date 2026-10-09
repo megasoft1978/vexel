@@ -5,66 +5,128 @@ Preset CMake variables:
   CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
   VEXEL_SANITIZER="ubsan"
 
--- Configuring done (0.1s)
+-- Configuring done (0.0s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
-[1/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
-[2/17] Building C object CMakeFiles/css_test.dir/tests/svg/css/test_css.c.o
-[3/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
-[4/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
-[5/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
-[6/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
-[7/17] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
-[8/17] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
-[9/17] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
-[10/17] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[11/17] Linking C static library libvexel_shape.a
-[12/17] Linking C executable bin/shape_fuzz
-[13/17] Linking C executable bin/css_test
-[14/17] Linking C executable bin/shape_test
-[15/17] Linking C executable bin/shape_render_cli
-[16/17] Linking C executable bin/svg_index_bench
-[17/17] Linking C executable bin/svgworkbench
+[1/55] Building C object CMakeFiles/vexel_ui_core.dir/src/ui/ui_widgets.c.o
+[2/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
+[3/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
+[4/55] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
+[5/55] Building C object CMakeFiles/svgworkbench.dir/src/app/viewer_load.c.o
+[6/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/clip/clip.c.o
+[7/55] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
+[8/55] Building C object CMakeFiles/svgworkbench.dir/src/app/render_frame_cli.c.o
+[9/55] Building C object CMakeFiles/vexel_document.dir/src/document/document_model.c.o
+[10/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
+[11/55] Building C object CMakeFiles/ui_demo_render.dir/app/ui_demo_render.c.o
+[12/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
+[13/55] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline.c.o
+[14/55] Building C object CMakeFiles/svgworkbench.dir/src/app/frame_compose.c.o
+[15/55] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[16/55] Building C object CMakeFiles/vexel_ui_core.dir/src/ui/ui_core.c.o
+[17/55] Building C object CMakeFiles/svgworkbench.dir/src/app/viewer.c.o
+[18/55] Building C object CMakeFiles/ui_demo_render.dir/app/ui_demo.c.o
+[19/55] Building C object CMakeFiles/ui_demo_interaction_test.dir/app/ui_demo.c.o
+[20/55] Building C object CMakeFiles/ui_interaction_test.dir/tests/ui/ui_interaction_test.c.o
+[21/55] Building C object CMakeFiles/ui_demo_interaction_test.dir/tests/ui/ui_demo_interaction_test.c.o
+[22/55] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[23/55] Building C object CMakeFiles/ui_focus_bench.dir/app/ui_focus_bench.c.o
+[24/55] Building C object CMakeFiles/ui_core_test.dir/tests/ui/ui_core_test.c.o
+[25/55] Linking C static library libvexel_document.a
+[26/55] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference_cli.c.o
+[27/55] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_stats_cli.c.o
+[28/55] Building C object CMakeFiles/viewer_frame_test.dir/tests/app/viewer_frame_test.c.o
+[29/55] Building C object CMakeFiles/document_model_test.dir/tests/document/test_document_model.c.o
+[30/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[31/55] Building C object CMakeFiles/viewer_frame_test.dir/src/app/frame_compose.c.o
+[32/55] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
+[33/55] Linking C executable bin/source_save_test
+[34/55] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[35/55] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[36/55] Linking C executable bin/document_model_test
+[37/55] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[38/55] Linking C static library libvexel_shape.a
+[39/55] Linking C static library libvexel_ui_core.a
+[40/55] Linking C executable bin/shape_render_cli
+[41/55] Linking C executable bin/shape_render_reference_cli
+[42/55] Linking C executable bin/shape_render_stats_cli
+[43/55] Linking C executable bin/viewer_frame_test
+[44/55] Linking C executable bin/css_test
+[45/55] Linking C executable bin/svg_index_bench
+[46/55] Linking C executable bin/shape_test
+[47/55] Linking C executable bin/shape_fuzz
+[48/55] Linking C executable bin/ui_interaction_test
+[49/55] Linking C executable bin/ui_demo_render
+[50/55] Linking C executable bin/ui_demo_interaction_test
+[51/55] Linking C executable bin/ui_focus_bench
+[52/55] Linking C executable bin/ui_core_test
+[53/55] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o
+[54/55] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o
+[55/55] Linking C executable bin/svgworkbench
 ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
       Start  1: cli-version
- 1/12 Test  #1: cli-version ......................   Passed    0.18 sec
+ 1/20 Test  #1: cli-version ......................   Passed    0.20 sec
       Start  2: base-contract
- 2/12 Test  #2: base-contract ....................   Passed    0.01 sec
+ 2/20 Test  #2: base-contract ....................   Passed    0.01 sec
       Start  3: xml-tokenizer
- 3/12 Test  #3: xml-tokenizer ....................   Passed    0.18 sec
+ 3/20 Test  #3: xml-tokenizer ....................   Passed    0.16 sec
       Start  4: source-save
- 4/12 Test  #4: source-save ......................   Passed    0.01 sec
-      Start  5: shape-render
- 5/12 Test  #5: shape-render .....................   Passed    0.59 sec
-      Start  6: css-cascade
- 6/12 Test  #6: css-cascade ......................   Passed    0.18 sec
-      Start  7: svg-index
- 7/12 Test  #7: svg-index ........................   Passed    0.13 sec
-      Start  8: viewer-navigation
- 8/12 Test  #8: viewer-navigation ................   Passed    0.03 sec
-      Start  9: svg-token-stream-budget
- 9/12 Test  #9: svg-token-stream-budget ..........   Passed    0.06 sec
-      Start 10: index-replay
-10/12 Test #10: index-replay .....................***Failed    0.12 sec
+ 4/20 Test  #4: source-save ......................   Passed    0.18 sec
+      Start  5: document-model
+ 5/20 Test  #5: document-model ...................   Passed    0.50 sec
+      Start  6: shape-render
+ 6/20 Test  #6: shape-render .....................   Passed    0.58 sec
+      Start  7: css-cascade
+ 7/20 Test  #7: css-cascade ......................   Passed    0.35 sec
+      Start  8: svg-index
+ 8/20 Test  #8: svg-index ........................   Passed    0.14 sec
+      Start  9: viewer-navigation
+ 9/20 Test  #9: viewer-navigation ................   Passed    0.03 sec
+      Start 10: viewer-composition
+10/20 Test #10: viewer-composition ...............   Passed    0.22 sec
+      Start 11: viewer-frame
+11/20 Test #11: viewer-frame .....................   Passed    0.18 sec
+      Start 12: native-viewer-smoke
+12/20 Test #12: native-viewer-smoke ..............***Failed    7.48 sec
+2026-10-09 22:08:27.412 svgworkbench[42574:3478922] Failure on line 688 in function id scheduleApplicationNotification(LSNotificationCode, NSWorkspaceNotificationCenter *): noErr == _LSModifyNotification(notificationID, 1, &code, 0, NULL, NULL, NULL)
+2026-10-09 22:08:27.494 svgworkbench[42574:3478924] Connection Invalid error for service com.apple.hiservices-xpcservice.
+2026-10-09 22:08:27.494 svgworkbench[42574:3478922] Error received in message reply handler: Connection invalid
+viewer: viewport at byte 0
+native viewer smoke: timed out waiting for viewer events
+native viewer smoke: failed after 0 presented frames
+
+      Start 13: ui-core
+13/20 Test #13: ui-core ..........................   Passed    0.19 sec
+      Start 14: ui-interaction
+14/20 Test #14: ui-interaction ...................   Passed    0.22 sec
+      Start 15: ui-demo-semantics
+15/20 Test #15: ui-demo-semantics ................   Passed    0.19 sec
+      Start 16: ui-editor-chrome
+16/20 Test #16: ui-editor-chrome .................   Passed    0.44 sec
+      Start 17: svg-token-stream-budget
+17/20 Test #17: svg-token-stream-budget ..........   Passed    0.06 sec
+      Start 18: index-replay
+18/20 Test #18: index-replay .....................***Failed    0.15 sec
 index replay preview: offscreen Metal device or queue unavailable
 progress: 10%
 progress: 50%
 progress: 90%
-index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=8952000
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=13088000
 stale_generation_rejected=true
 canceled_worker_rejected=true
 preview_state: submitted=true finished=true ready=true
 
-      Start 11: spatial-cache
-11/12 Test #11: spatial-cache ....................   Passed    0.06 sec
-      Start 12: job-snapshot
-12/12 Test #12: job-snapshot .....................   Passed    0.05 sec
+      Start 19: spatial-cache
+19/20 Test #19: spatial-cache ....................   Passed    0.06 sec
+      Start 20: job-snapshot
+20/20 Test #20: job-snapshot .....................   Passed    0.05 sec
 
-92% tests passed, 1 tests failed out of 12
+90% tests passed, 2 tests failed out of 20
 
-Total Test time (real) =   1.62 sec
+Total Test time (real) =  11.39 sec
 
 The following tests FAILED:
-	 10 - index-replay (Failed)
+	 12 - native-viewer-smoke (Failed)
+	 18 - index-replay (Failed)
 Errors while running CTest

@@ -6,6 +6,11 @@ document, and tests point membership as a union. The rasterizer intersects that
 union with each covered fill sample. The decoded clip and its temporary source
 are owned by the parent shape document and released with it.
 
+Before copying clip-child source, the resolver computes each definition and
+child style through the document CSS cascade. Nested `clip-path` declarations
+and other matched paint properties are rejected with a stable `unsupported`
+diagnostic, including declarations supplied by class selectors.
+
 `clipPathUnits` supports `userSpaceOnUse` (the SVG default) and
 `objectBoundingBox`. User-space clips are sampled in the declaring element's
 user space, including ancestor and `<use>` transforms. Object bounding boxes

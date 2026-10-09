@@ -586,7 +586,6 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
         fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
         return false;
     }
-
     if (span_eq(source, tokens[element].local_name, "rect")) {
         double q[4] = {0.0, 0.0, 0.0, 0.0};
         const char *names[4] = {"x", "y", "width", "height"};
@@ -757,7 +756,6 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
         if (span_eq(source, tokens[element].local_name, "polyline"))
             out->shape_stroke_closed[builder->shape_index] = false;
     }
-
     for (size_t k = before; k < out->edge_count; ++k)
         memcpy(out->colors + k * 4U, color, 4U);
     out->shape_edge_start[builder->shape_index] = before;
@@ -767,8 +765,9 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
             fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, fill.offset);
             return false;
         }
-        svg_shape_error result = svg_paint_resolve_fill(
-            source, tokens, token_count, builder->references, builder->css, fill,
+        svg_shape_error result = svg_paint_resolve_fill(source, tokens, token_count,
+            builder->references, builder->css,
+            builder->paint_cache, builder->paint_token_visits, fill,
             out->edges + before, out->edge_count - before, user_inverse,
             out->view_width, out->view_height,
             &out->paints[builder->shape_index], &out->paint_stops,
@@ -788,8 +787,9 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
             fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, clip_value.offset);
             return false;
         }
-        svg_shape_error result = svg_clip_resolve(
-            source, tokens, token_count, builder->references, clip_value,
+        svg_shape_error result = svg_clip_resolve(source, tokens, token_count,
+            builder->references, builder->css,
+            clip_value,
             out, &out->clip_bytes, user_inverse, local_bounds,
             &out->clips[builder->shape_index],
             builder->diag);

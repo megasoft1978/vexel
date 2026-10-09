@@ -29,6 +29,10 @@ applied where declared: group and use declarations use the whole instantiated
 subtree's local AABB, resolve one clip record, and intersect it with clips on
 descendant shapes. It is not inherited into each child style.
 
+A `clip-path` on a `<symbol>` is rejected at its source attribute or computed
+CSS value. The local librsvg reference renderer ignores that declaration on a
+symbol, so the decoder does not claim the clipped rendering is supported.
+
 Malformed or external references and cycles return `unsupported`; exhausted
 depth, instance, visit, ID, or transform bounds return `limit`. Diagnostics
 point directly into the original source. Use-site paint is passed as the

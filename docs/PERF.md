@@ -323,15 +323,15 @@ The Release `svgworkbench` executable is 172,032 bytes; the `svg_index_bench` ha
 ## M4 cumulative shape and corpus workload
 
 Measured on arm64 macOS 27.0, unavailable, Apple clang version 21.0.0 (clang-2100.3.34.2).
-Debug/Release `svgworkbench`: 346448 / 225888 bytes; Release `svg_index_bench`: 161040 bytes;
-Debug/Release `shape_render_cli`: 230240 / 141472 bytes; Debug/Release `libvexel_shape.a`: 334104 / 111984 bytes.
+Debug/Release `svgworkbench`: 446672 / 280064 bytes; Release `svg_index_bench`: 179104 bytes;
+Debug/Release `shape_render_cli`: 269680 / 142992 bytes; Debug/Release `libvexel_shape.a`: 424688 / 131800 bytes.
 Binary sizes are also present in the JSON report and verified by `./dev bench-corpus --check`.
 
 The 58-file run produced 2 previewable, 56 unsupported, 0 limit, and 0 crash outcomes.
-The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 38.742x and RSS ratio of 33.115x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
+The 2 comparable successful T1 rows have an Inkscape/Vexel first-preview geometric mean of 48.653x and RSS ratio of 31.617x. T2–T4 ratios are unavailable when Vexel has no successful outcomes there.
 These are directional open/index comparisons against the supplied Inkscape CLI baseline, not full-render parity.
-The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.352 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
-Successful T1 measurements: natural-earth-world-map-blank: first preview 9.817 ms, full index 0.848 ms; natural-earth-world-map-countries: first preview 9.632 ms, full index 0.973 ms
+The 100 MiB first-preview gate is fail_no_preview (0/12 eligible files); maximum main-thread step is 0.252 ms (pass); 100 MiB RSS gate is pass (12/12 within the per-file allowance).
+Successful T1 measurements: natural-earth-world-map-blank: first preview 7.694 ms, full index 0.849 ms; natural-earth-world-map-countries: first preview 7.793 ms, full index 0.928 ms
 Per-file results and aggregate timings are in `reports/M4/head-to-head.json` and `.md`; raw trials and the external manifest pointer stay in ignored `.cache/M4/`.
 <!-- M4-01 generated report end -->
 
@@ -449,37 +449,71 @@ full-render parity.
 
 ## WO-M4-06 bounded references, gradients, and clipping
 
-The Release paint benchmark ran five 512×512 workloads with 21 fresh-process
-trials each on arm64 macOS 27.0 using Apple clang 21.0.0. Candidate median/p95
-latencies were 7.539/8.861 ms for solid fill, 8.059/8.934 ms for local `<use>`,
-8.952/12.499 ms for linear gradients, 8.489/9.201 ms for radial gradients,
-and 8.150/9.383 ms for clipping. Maximum process RSS ranged from 3,047,424 to
-3,129,344 bytes and every output hash was stable. A separate frozen-base
-`81f2008` solid workload measured 7.222/10.649 ms median/p95; its peak RSS is
-unavailable because that CLI has no metrics option. The measurements include
-process startup, decode, rasterization, and output. They do not support a
-performance claim. Full trial values and hashes are in
-`artifacts/WO-M4-06/paint-benchmark.json` and `bench/results/WO-M4-06.json`.
+The Release paint benchmark was rerun after integrating the raster-culling
+merge. It covers five 512×512 workloads with 21 fresh-process trials each
+on arm64 macOS 27.0 using Apple clang 21.0.0.21000334. Candidate
+median/p95 times were 7.043/8.885 ms for solid fill, 6.996/7.587 ms for
+local `<use>`, 8.995/9.451 ms for linear gradients, 9.747/11.491 ms for
+radial gradients, and 8.946/11.343 ms for clipping. Median throughput was
+37.22, 37.47, 29.14, 26.90, and 29.30 million pixels/s respectively.
+Maximum process RSS ranged from 3,162,112 to 3,276,800 bytes; all trial
+output hashes were stable. The frozen-base basic-solid workload measured
+7.591/8.110 ms median/p95 with a stable matching output hash; base RSS is
+unavailable because its CLI has no metrics option. The other four workloads
+were unsupported at the frozen base, so they have no comparable timings.
+These measurements do not support a general performance claim. Raw trials
+and hashes are in `artifacts/WO-M4-06/paint-benchmark.json` and
+`bench/results/WO-M4-06.json`.
 
-The differential set contains 39 fixtures rendered with librsvg
+The differential set contains 47 fixtures rendered with librsvg
 `rsvg-convert 2.63.2`. All pass the unchanged thresholds: zero interior
-differences, maximum jointly covered straight-RGB delta 1, and at most 120 edge
-difference pixels. It covers nested and CSS-inherited `<use>`, symbol viewBox
-mapping, use of gradient/clip definitions, gradients and their defaults, and
-clipping. The source/output hashes are in
+differences, maximum jointly covered straight-RGB delta 1, and at most 120
+edge difference pixels. The new `gradient-stop-alpha-overpaint` fixture has
+no interior or edge differences. The source/output hashes are in
 `artifacts/WO-M4-06/reference-comparison.json`.
 
 The 58-file corpus run retained the supplied manifest and Inkscape baseline
-hashes across 116 trials. It produced 2 successful open/index previews and 56
+hashes across 116 trials. It produced two successful previews and 56
 unsupported outcomes (T1 2/12; T2 0/17; T3 0/26; T4 0/3), with no limits or
-crashes. The 100 MiB first-preview gate remains unmet; maximum main-thread step
-and the per-file RSS gates pass. This is open/index evidence, not full-render
-parity.
+crashes. No new previewable file was added. The 100 MiB first-preview wedge
+remains unmet; maximum main-thread step and the per-file RSS gates pass.
+This is open/index evidence, not full-render parity.
 
-The focused shape test passes in Debug, ASan+UBSan, and UBSan builds; the 16
-focused Python render tests and all 39 differential fixtures pass. Full Debug,
-ASan, UBSan, and `./dev verify` CTest runs each report 11/12 because this host
-session cannot create an offscreen Metal device or queue for `index-replay`.
-The sanitized million-case shape fuzz run completed with zero crashes,
-sanitizer reports, or invariant failures. Exact transcripts are in
+The focused Python render suite passes 18/18, including 200 seeded
+culling comparisons, and all 47 librsvg fixtures pass. `shape_test` passes.
+Debug, ASan, UBSan, and `./dev verify` CTest runs each report 18/20:
+`native-viewer-smoke` cannot connect to LaunchServices/Hiservices and
+presents zero frames; `index-replay` cannot create an offscreen Metal device
+or queue. The sanitized million-case shape fuzz run completed with zero
+crashes, sanitizer reports, or invariant failures. Exact transcripts are in
 `artifacts/WO-M4-06/`.
+
+The requested `main` merge is present in the worktree from merge commit
+`10a98782c43bbdb0174ea0485a7539c62b9fe90f` (second parent `ae2b673`). Git
+cannot stage the resolved conflict paths because it cannot create the shared
+worktree `index.lock`; the merge remains for the maintainer to finalize.
+The post-merge path guard and an independent follow-up review were not run.
+## Raster shape culling
+
+The fixed Release benchmark compares clean base `bb3d5acd870af36b3bd200e96b4946d809f45a7c`
+with the candidate source in this worktree. It ran two warmups and 21 fresh
+process trials for each workload on arm64 macOS 27.0 with Apple clang
+21.0.0.21000334. Candidate latency includes process startup, SVG decoding,
+rasterization, and RGBA output writing; peak RSS is the maximum child
+`getrusage(RUSAGE_SELF)` measurement. Output hashes matched across all trials.
+All four base probes returned `limit:0`, so no base latency or percentage
+comparison is available. The candidate's measured time is evidence that the
+same inputs now render; it is not a timing speedup claim.
+
+| Workload | Base | Candidate median / p95 (ms) | Peak RSS | Work / shape-row visits |
+|---|---|---:|---:|---:|
+| 640x400 circle, r=110 | `limit:0` | 4.706 / 5.087 | 3,112,960 B | 726,337 / 222 |
+| 1920x1080, 5,000 5x5 filled rectangles | `limit:0` | 36.683 / 37.481 | 15,400,960 B | 16,518,600 / 35,000 |
+| 1920x1080, 12 long dashed round strokes | `limit:0` | 284.143 / 300.596 | 10,764,288 B | 89,712,072 / 120 |
+| 4096x2048, one filled rectangle | `limit:0` | 94.617 / 100.146 | 36,962,304 B | 37,307,101 / 1,794 |
+
+Raw trial latencies, stable output hashes, work counters, and input hashes are
+in [`bench/results/raster-culling.json`](../bench/results/raster-culling.json);
+the deterministic runner is `tests/bench_raster_culling.py`. The test-only
+unculled reference renderer and seeded fixture/random-document comparisons
+check byte identity independently of these performance measurements.

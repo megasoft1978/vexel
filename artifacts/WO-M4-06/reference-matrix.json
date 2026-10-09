@@ -2,7 +2,7 @@
   "work_order": "WO-M4-06 revision 4",
   "tested_worktree_base_commit": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
   "tested_changes_committed": false,
-  "status": "review-finding repairs implemented; verification evidence refreshed; commit and full acceptance remain incomplete in this sandbox",
+  "status": "five P2 findings repaired; merge content resolved in worktree; acceptance incomplete due sandbox CTest services and Git index lock",
   "review_finding_repairs": {
     "use_transform_order": "fixed composition to use.transform \u00b7 translate(x,y) \u00b7 symbol viewBox mapping; non-commuting scale/rotate/symbol regression and rsvg fixture pass",
     "transformed_paint_and_clip_units": "current inverse affine is passed through resolution/sampling; userSpaceOnUse maps samples to element user space; objectBoundingBox uses untransformed local bounds; singular transforms return unsupported",
@@ -79,7 +79,7 @@
   },
   "differential_fixtures": {
     "renderer": "rsvg-convert version 2.63.2",
-    "fixture_count": 46,
+    "fixture_count": 47,
     "new_fixtures": [
       "use-transform-order",
       "user-space-transform",
@@ -87,36 +87,37 @@
       "use-user-space-transform",
       "stop-style-class",
       "clip-group-object-bbox",
-      "clip-nested-intersection"
+      "clip-nested-intersection",
+      "gradient-stop-alpha-overpaint"
     ],
     "interior_differences": 0,
     "max_jointly_covered_straight_rgb_delta": 1,
-    "max_edge_diff_pixels": 88,
+    "max_edge_diff_pixels": 96,
     "edge_threshold_pixels": 120,
     "frozen_thresholds_changed": false,
-    "status": "all fixtures pass"
+    "status": "47/47 fixtures pass"
   },
   "shape_checks": {
     "debug_configure_build": "pass",
-    "debug_ctest": "11/12; only index-replay fails because offscreen Metal device/queue is unavailable in this sandbox",
-    "asan_ctest": "11/12; same Metal limitation",
-    "ubsan_ctest": "11/12; same Metal limitation",
+    "debug_build": "pass",
+    "debug_ctest": "18/20; native-viewer-smoke failed on LaunchServices/Hiservices, index-replay lacks offscreen Metal",
+    "focused_python_shape_render": "18/18 pass; includes 200 seeded culling comparisons",
     "debug_shape_test": "pass",
-    "asan_shape_test": "pass",
-    "ubsan_shape_test": "pass",
-    "focused_python_shape_render": "16/16 pass",
-    "full_python_suite": "189/199 passed; 8 failures and 2 errors from sandbox process-policy/native LaunchServices/Metal limits; see python-full-final.txt",
+    "asan_ctest": "18/20; same two environment failures",
+    "ubsan_ctest": "18/20; same two environment failures",
     "release_configure_build": "pass",
-    "verify": "11/12 CTest; same Metal limitation"
+    "verify": "Debug build passes; CTest 18/20 and exits nonzero on same two environment failures",
+    "full_python_suite": "not part of this brief verification command list; not rerun"
   },
   "fuzz": {
     "cases": 1000000,
-    "duration_seconds": 34.39,
+    "duration_seconds": 31.433,
     "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
     "crashes": 0,
     "sanitizer_reports": 0,
     "invariant_failures": 0,
-    "result": "pass"
+    "result": "pass",
+    "source_revision": "0732b8e; worktree changes uncommitted"
   },
   "corpus": {
     "files": 58,
@@ -129,52 +130,108 @@
     "baseline_sha256": "3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba",
     "first_preview_100_mib_gate": "fail_no_preview",
     "maximum_main_thread_step": "pass",
-    "peak_rss_100_mib_gate": "pass"
+    "peak_rss_100_mib_gate": "pass",
+    "supported_previews": 2,
+    "tier_summary": {
+      "T1": "2/12 supported",
+      "T2": "0/17 supported",
+      "T3": "0/26 supported",
+      "T4": "0/3 supported"
+    },
+    "new_supported_files_vs_frozen_baseline": 0
   },
   "benchmark": {
     "status": "complete",
     "trials_per_workload": 21,
     "performance_claim": false,
+    "frozen_base_comparison": "basic-solid has a separate frozen-base measurement; new reference and paint workloads have no comparable base",
+    "frozen_base_basic_solid": {
+      "median_seconds": 0.007590667000840767,
+      "p95_seconds": 0.008109917000183486,
+      "stable_output": true,
+      "peak_process_rss": "unavailable: frozen-base CLI does not support --metrics"
+    },
     "workloads": [
       {
         "name": "basic-solid",
-        "median_seconds": 0.009485374999712803,
-        "p95_seconds": 0.014390875001481618,
-        "peak_process_rss_bytes_max": 3112960,
-        "stable_hash": true
+        "median_seconds": 0.0070427919999929145,
+        "p95_seconds": 0.008884750001016073,
+        "throughput_pixels_per_second_median": 37221601.88747073,
+        "peak_process_rss_bytes_max": 3162112,
+        "stable_hash": true,
+        "frozen_base_comparison": "same workload measured only for basic-solid"
       },
       {
         "name": "local-use",
-        "median_seconds": 0.011058207999667502,
-        "p95_seconds": 0.011850125001728884,
-        "peak_process_rss_bytes_max": 3129344,
-        "stable_hash": true
+        "median_seconds": 0.0069962910001777345,
+        "p95_seconds": 0.007587250000142376,
+        "throughput_pixels_per_second_median": 37468996.07139561,
+        "peak_process_rss_bytes_max": 3194880,
+        "stable_hash": true,
+        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
       },
       {
         "name": "linear-gradient",
-        "median_seconds": 0.012583707999510807,
-        "p95_seconds": 0.014455541999268462,
-        "peak_process_rss_bytes_max": 3112960,
-        "stable_hash": true
+        "median_seconds": 0.0089947079995909,
+        "p95_seconds": 0.009451374999116524,
+        "throughput_pixels_per_second_median": 29144247.930218846,
+        "peak_process_rss_bytes_max": 3227648,
+        "stable_hash": true,
+        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
       },
       {
         "name": "radial-gradient",
-        "median_seconds": 0.011971249999987776,
-        "p95_seconds": 0.016959667000264744,
-        "peak_process_rss_bytes_max": 3112960,
-        "stable_hash": true
+        "median_seconds": 0.009746584000822622,
+        "p95_seconds": 0.011490708000565064,
+        "throughput_pixels_per_second_median": 26895987.350837458,
+        "peak_process_rss_bytes_max": 3244032,
+        "stable_hash": true,
+        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
       },
       {
         "name": "clip-path",
-        "median_seconds": 0.012944500000230619,
-        "p95_seconds": 0.017792624999856343,
-        "peak_process_rss_bytes_max": 3178496,
-        "stable_hash": true
+        "median_seconds": 0.008946457999627455,
+        "p95_seconds": 0.011342709000018658,
+        "throughput_pixels_per_second_median": 29301428.566580884,
+        "peak_process_rss_bytes_max": 3276800,
+        "stable_hash": true,
+        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
       }
     ]
   },
-  "path_scope": "all 68 modified/untracked paths pass frozen work-order allow/protect matcher; tests/oracle and tests/golden diff is empty",
-  "commit_status": "No focused commits could be written: the sandbox rejected writes to the shared worktree git metadata. Changes remain uncommitted.",
+  "path_scope": "Pre-merge 68-path allow/protect audit passed; post-merge guard not rerun. Protected oracle/golden diff remains empty.",
+  "commit_status": "No commit created; git staging failed to create .git/worktrees/WO-M4-06/index.lock. Resolved merge contents are in the worktree.",
   "independent_review": "not rerun; user prohibited launching nested codex exec",
-  "overall_gate_note": "Implementation and requested local evidence are refreshed. Work remains incomplete because focused commits cannot be created in this sandbox, full CTest/verify cannot acquire offscreen Metal, full Python tests hit sandbox process/native failures, and the independent review was not rerun."
+  "overall_gate_note": "Five requested P2 repairs and merge conflict content are present. Work remains incomplete because two platform-dependent CTests fail in this sandbox, the merge cannot be staged, and the post-merge path guard is unverified.",
+  "merge_target": {
+    "merge_commit": "10a98782c43bbdb0174ea0485a7539c62b9fe90f",
+    "requested_raster_commit": "ae2b67329550d0126e7ea5e8bd50fc842047aaea",
+    "requested_commit_is_second_parent": true,
+    "worktree_conflicts_resolved": true,
+    "git_index_staged": false,
+    "reason": "Git cannot create .git/worktrees/WO-M4-06/index.lock in this sandbox"
+  },
+  "review_findings_brief_3": {
+    "symbol_clip_path": "stable unsupported diagnostic; attribute and CSS cases tested",
+    "gradient_href": "plain href and bound/unbound xlink:href rejected at attribute offset",
+    "clip_child_css_clip_path": "clipPath child style uses stylesheet and inline cascade; nested clip diagnosed",
+    "gradient_source_over": "opaque base plus stop-opacity 0.5 pixel test; independent librsvg fixture passes",
+    "gradient_cache_and_work": "bounded per-decode cache keyed by gradient token index; token visits counted; 512 shapes and thousands of comments bounded linearly"
+  },
+  "brief_3_verification": {
+    "debug_configure_build": "pass",
+    "debug_ctest": "18/20; native-viewer-smoke LaunchServices/Hiservices unavailable, index-replay offscreen Metal unavailable",
+    "focused_python": "18/18 pass; includes 200 seeded culling comparisons",
+    "shape_test": "pass",
+    "asan_ctest": "18/20; same two environment failures",
+    "ubsan_ctest": "18/20; same two environment failures",
+    "release_configure_build": "pass",
+    "verify": "Debug build passes; CTest 18/20 and exits nonzero on same two environment failures",
+    "fuzz": "1,000,000 ASan+UBSan cases, 31.433 s, zero crashes/invariants/reports",
+    "corpus": "58 files / 116 trials, 2 supported previews, 56 unsupported, 0 limit/crash; run and check pass",
+    "librsvg_fixture_count": 47,
+    "oracle_golden_diff": "empty; thresholds unchanged",
+    "shape_c_lines": 799,
+    "post_merge_path_guard": "not rerun; pre-merge artifact is stale"
+  }
 }

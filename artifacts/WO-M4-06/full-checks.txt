@@ -1,36 +1,39 @@
-WO-M4-06 revision 4 — final verification record
+WO-M4-06 revision 4 — review-repair brief 3 verification record
 
 Frozen verification commands
 - cmake --preset mac-debug: PASS.
 - cmake --build --preset mac-debug: PASS.
-- ctest --test-dir build/mac-debug --output-on-failure: 11/12 passed; index-replay failed because the sandbox has no offscreen Metal device/queue. This is the only CTest failure.
-- python3 -m unittest tests.test_shape_render: PASS, 16/16.
+- ctest --test-dir build/mac-debug --output-on-failure: 18/20 passed. `native-viewer-smoke` failed to connect to LaunchServices/Hiservices and presented 0 frames; `index-replay` reports no offscreen Metal device/queue.
+- python3 -m unittest tests.test_shape_render: PASS, 18/18; includes 200 seeded renderer/scalar culling comparisons.
 - build/mac-debug/bin/shape_test: PASS.
-- ./dev shape-fuzz --duration 90 --seed 20261010 --output artifacts/WO-M4-06/fuzz-report.json: PASS, 1,000,000 ASan+UBSan cases in 34.39s; 0 crashes, 0 sanitizer reports, 0 invariant failures.
-- ./dev asan: 11/12 CTests; only index-replay unavailable for offscreen Metal. Focused ASan shape_test: PASS; no sanitizer reports.
-- ./dev ubsan: 11/12 CTests; only index-replay unavailable for offscreen Metal. Focused UBSan shape_test: PASS; no sanitizer reports.
+- ./dev shape-fuzz --duration 90 --seed 20261010 --output artifacts/WO-M4-06/fuzz-report.json: PASS, 1,000,000 ASan+UBSan cases in 31.433 s; 0 crashes, 0 sanitizer reports, 0 invariant failures. The report records source_revision 0732b8e because the changes are uncommitted.
+- ./dev asan: 18/20 CTests; only native-viewer-smoke (LaunchServices/Hiservices) and index-replay (offscreen Metal) fail.
+- ./dev ubsan: 18/20 CTests; same two environment failures.
 - cmake --preset mac-release: PASS.
 - cmake --build --preset mac-release: PASS.
-- ./dev verify: 11/12 CTests; only index-replay unavailable for offscreen Metal.
-- ./dev bench-corpus --run: PASS, 58 files / 116 trials; 2 successful previews, 56 unsupported, 0 limit, 0 crash.
-- ./dev bench-corpus --check: PASS.
+- ./dev verify: Debug build passes, CTest 18/20; same two environment failures, so the command exits nonzero at CTest.
+- ./dev bench-corpus --run: PASS, 58 files / 116 fresh trials; 2 supported previews (T1 2/12; T2 0/17; T3 0/26; T4 0/3), 56 unsupported, 0 limit, 0 crash; no new previewable files.
+- ./dev bench-corpus --check: PASS, checked 58 files / 116 fresh trials.
 - python3 -m json.tool reports/M4/head-to-head.json: PASS.
 - python3 -m json.tool bench/results/WO-M4-06.json: PASS.
-- python3 scripts/ledger.py validate ledger.jsonl: PASS, 392 entries.
+- python3 scripts/ledger.py validate ledger.jsonl: PASS, valid ledger with 400 entries.
 - python3 scripts/wo_validate.py WO-M4-06 --ready: PASS, revision 4 SHA-256 4a8c2d66deca8a65c51f8e61007f6b118a193a6aa68079a214250267065775a3.
-- git diff --check: PASS.
+- git diff --check: PASS, no whitespace errors.
 
-Additional acceptance evidence
-- rsvg-convert differential: 46/46 fixtures pass; 0 interior differences, maximum jointly covered RGB delta 1, maximum edge difference 88 against the unchanged threshold 120.
-- Paint benchmark: 5 workloads x 21 trials; output hashes stable. No general speed claim; new feature workloads lack a frozen-base comparison.
-- AC-9: allocator instrumentation, source SHA-256 immutability, reference/clip byte boundaries, 65,536/65,537 instance boundary, and indexed late-gradient lookup work-count checks pass in the focused shape suite.
+Renderer/reference evidence
+- Independent rsvg-convert fixture suite: 47/47 pass; gradient-stop-alpha-overpaint has zero interior differences and zero edge differences. Existing thresholds are unchanged.
+- Main culling differential: the 200 seeded raster comparisons pass. Paint/clip documents are checked against librsvg fixtures because the frozen scalar oracle does not model those features.
+- Release paint benchmark rerun: PASS, five 512×512 workloads × 21 trials; stable hashes. Candidate median/p95 ms: solid 7.043/8.885, use 6.996/7.587, linear 8.995/9.451, radial 9.747/11.491, clip 8.946/11.343. Frozen-base solid 7.591/8.110 ms; other four are unsupported at base. No performance claim.
+- tests/oracle, tests/golden, and tests/golden/manifest.lock diff: empty; fixture thresholds unchanged.
 - src/svg/shape/shape.c: 799 lines.
-- git diff -- tests/oracle tests/golden: empty; protected-path-diff.txt is 0 bytes.
-- Work-order path audit: all 68 modified/untracked paths match the frozen allow/protect lists; no protected path changes.
 
-Additional environment-limited suite
-- python3 -m unittest: 189/199 passed; 8 failures and 2 errors. Failures are process-policy/fake-adapter/stream/timeout checks affected by sandbox process restrictions; two Metal tests cannot create an offscreen device; the native 100-cycle smoke also hit a LaunchServices crash in this environment. Details are in python-full-final.txt.
+Merge and path scope
+- `main` content came from merge commit 10a98782c43bbdb0174ea0485a7539c62b9fe90f, whose second parent is the requested ae2b67329550d0126e7ea5e8bd50fc842047aaea.
+- The worktree contains the conflict resolutions, retaining culling/scanline code and paint/clip sampling; no conflict marker lines remain in the resolved files. `git add -A` failed with `fatal: Unable to create .../index.lock: Operation not permitted`; no commit was created.
+- The frozen path matcher artifact predates the main merge. The post-merge path guard was not rerun; merged main paths are visible in worktree-status.txt and changed-files.json.
+- JSON validation passed for the head-to-head report, WO benchmark, reference matrix, path-guard record, paint benchmark, and changed-files inventory. Protected oracle/golden diff is empty.
+- No independent review was run because the brief prohibits nested codex exec.
 
 Completion limitations
-- Focused commits could not be created. git add was denied while creating .git/worktrees/WO-M4-06/index.lock; a temporary index staged successfully, but git commit was denied opening .git/worktrees/WO-M4-06/COMMIT_EDITMSG. Changes remain uncommitted; no merge was attempted.
-- No follow-up independent review was launched; the brief prohibits nested codex exec, and the supplied independent review findings were the repair targets.
+- Debug, ASan, UBSan, and ./dev verify are not fully green because the sandbox lacks working LaunchServices/Hiservices presentation and offscreen Metal.
+- Merge staging/finalization and the post-merge path guard remain for the maintainer.

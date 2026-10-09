@@ -51,6 +51,33 @@ static size_t element_end(const svg_xml_token *tokens, size_t count, size_t star
     return start;
 }
 
+static svg_shape_error check_clip_child_style(
+    svg_css_sheet *css, base_bytes source, const svg_xml_token *tokens,
+    size_t token_count, size_t element, svg_shape_diagnostic *diagnostic)
+{
+    svg_css_paint style;
+    svg_css_error css_error = svg_css_compute(css, source, tokens, token_count,
+                                              element, NULL, &style);
+    if (css_error != SVG_CSS_OK) {
+        svg_shape_error error = css_error == SVG_CSS_LIMIT ?
+            SVG_SHAPE_ERROR_LIMIT : css_error == SVG_CSS_OOM ?
+            SVG_SHAPE_ERROR_OOM : SVG_SHAPE_ERROR_UNSUPPORTED;
+        if (diagnostic != NULL)
+            *diagnostic = (svg_shape_diagnostic){error, tokens[element].name.offset};
+        return error;
+    }
+    for (size_t property = 0U; property < SVG_CSS_PROPERTY_COUNT; ++property) {
+        if (style.values[property].present) {
+            if (diagnostic != NULL)
+                *diagnostic = (svg_shape_diagnostic){
+                    SVG_SHAPE_ERROR_UNSUPPORTED,
+                    style.values[property].span.offset};
+            return SVG_SHAPE_ERROR_UNSUPPORTED;
+        }
+    }
+    return SVG_SHAPE_ERROR_NONE;
+}
+
 static bool parse_reference(base_bytes source, svg_xml_span value,
                             svg_xml_span *id)
 {
@@ -84,6 +111,7 @@ static bool point_inside(const svg_shape_document *doc, size_t shape,
 svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
                                  size_t token_count,
                                  svg_reference_index *references,
+                                 svg_css_sheet *css,
                                  svg_xml_span value,
                                  const svg_shape_document *document,
                                  size_t *document_clip_bytes,
@@ -93,6 +121,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
                                  svg_shape_diagnostic *diagnostic)
 {
     if (out == NULL || document == NULL || document_clip_bytes == NULL ||
+        css == NULL ||
         local_bounds == NULL) {
         if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_INVALID_ARGUMENT, value.offset};
         return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
@@ -120,8 +149,10 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     for (size_t i = target + 1U; i < end_token; ++i) {
         if (tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT &&
             tokens[i].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) continue;
-        if (attr(source, tokens, token_count, i, "clip-path", &id) ||
-            attr(source, tokens, token_count, i, "style", &id) ||
+        svg_shape_error style_error = check_clip_child_style(
+            css, source, tokens, token_count, i, diagnostic);
+        if (style_error != SVG_SHAPE_ERROR_NONE) return style_error;
+        if (attr(source, tokens, token_count, i, "style", &id) ||
             (eq(source, tokens[i].local_name, "style") && tokens[i].source.length != 0U))
             goto unsupported;
     }

@@ -720,6 +720,59 @@ static bool indexed_paint_lookup_check(void)
     return ok;
 }
 
+static bool cached_gradient_scan_check(void)
+{
+    static const char prefix[] =
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\">"
+        "<stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/>";
+    static const char comment[] = "<!-- padding -->";
+    static const char middle[] = "</linearGradient></defs>";
+    static const char shape[] = "<rect width=\"1\" height=\"1\" fill=\"url(#g)\"/>";
+    static const char suffix[] = "</svg>";
+    const size_t comment_count = 4096U;
+    const size_t shape_count = 512U;
+    size_t length = sizeof(prefix) - 1U;
+    if (comment_count > (SIZE_MAX - length) / (sizeof(comment) - 1U)) return false;
+    length += comment_count * (sizeof(comment) - 1U);
+    if (sizeof(middle) - 1U > SIZE_MAX - length) return false;
+    length += sizeof(middle) - 1U;
+    if (shape_count > (SIZE_MAX - length) / (sizeof(shape) - 1U)) return false;
+    length += shape_count * (sizeof(shape) - 1U);
+    if (sizeof(suffix) - 1U > SIZE_MAX - length) return false;
+    length += sizeof(suffix) - 1U;
+    uint8_t *source = malloc(length);
+    if (source == NULL) return false;
+    size_t cursor = 0U;
+    memcpy(source + cursor, prefix, sizeof(prefix) - 1U);
+    cursor += sizeof(prefix) - 1U;
+    for (size_t i = 0U; i < comment_count; ++i) {
+        memcpy(source + cursor, comment, sizeof(comment) - 1U);
+        cursor += sizeof(comment) - 1U;
+    }
+    memcpy(source + cursor, middle, sizeof(middle) - 1U);
+    cursor += sizeof(middle) - 1U;
+    for (size_t i = 0U; i < shape_count; ++i) {
+        memcpy(source + cursor, shape, sizeof(shape) - 1U);
+        cursor += sizeof(shape) - 1U;
+    }
+    memcpy(source + cursor, suffix, sizeof(suffix) - 1U);
+    cursor += sizeof(suffix) - 1U;
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    svg_shape_decode_memory_bounds bounds = {0};
+    bool ok = cursor == length && svg_shape_decode_source_with_bounds(
+        (base_bytes){source, length}, &document, &diagnostic, &bounds) ==
+            SVG_SHAPE_ERROR_NONE &&
+        document.shape_count == shape_count &&
+        document.paint_stop_count == 2U &&
+        bounds.paint_token_visits >= comment_count &&
+        bounds.paint_token_visits <= 8U *
+            (comment_count + shape_count + 64U);
+    svg_shape_document_destroy(&document);
+    free(source);
+    return ok;
+}
+
 bool svg_shape_reference_tests(void)
 {
     if (!source_bytes_unchanged_check()) { fprintf(stderr, "source preservation failed\n"); return false; }
@@ -729,5 +782,6 @@ bool svg_shape_reference_tests(void)
     if (!reference_rejection_checks()) { fprintf(stderr, "reference rejection failed\n"); return false; }
     if (!use_transform_order_check()) { fprintf(stderr, "use transform failed\n"); return false; }
     if (!indexed_paint_lookup_check()) { fprintf(stderr, "indexed lookup failed\n"); return false; }
+    if (!cached_gradient_scan_check()) { fprintf(stderr, "gradient cache scan work failed\n"); return false; }
     return true;
 }

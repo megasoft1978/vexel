@@ -3,6 +3,7 @@ set -eu
 
 usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
+    printf '%s\n' '       ./dev run <file.svg>'
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
@@ -12,7 +13,12 @@ usage() {
 }
 
 command_name=${1:-help}
-if [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ]; then
+if [ "$command_name" = run ]; then
+    if [ "$#" -ne 2 ]; then
+        usage >&2
+        exit 2
+    fi
+elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ]; then
     usage >&2
     exit 2
 fi
@@ -22,7 +28,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
+    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
         ;;
     *)
         usage >&2
@@ -31,6 +37,7 @@ case "$command_name" in
 esac
 
 repo_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+run_cwd=$PWD
 cd "$repo_root"
 
 if [ "$(uname -s)" != "Darwin" ]; then
@@ -46,6 +53,12 @@ case "$command_name" in
     build)
         cmake --preset mac-debug
         cmake --build --preset mac-debug
+        ;;
+    run)
+        cmake --preset mac-release
+        cmake --build --preset mac-release
+        cd "$run_cwd"
+        exec "$repo_root/build/mac-release/bin/svgworkbench" "$2"
         ;;
     test-fast|test)
         PYTHONDONTWRITEBYTECODE=1 python3 scripts/test_runner.py --output .cache/test-results/latest.json

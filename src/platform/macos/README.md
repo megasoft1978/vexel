@@ -21,6 +21,12 @@ compares every byte of the uploaded shared texture. Diagnostics name only the
 first differing byte. The native Metal smoke presents once, clears the layer,
 resizes the AppKit window, and validates a second frame.
 
+The interactive viewer uses `platform_metal_present`, a main-thread
+presentation path that lazily creates and reuses its device, command queue,
+shader pipeline, and dimension-matched shared texture. It submits without
+readback verification. `platform_metal_reset` releases those cached resources
+and detaches the layer before the caller destroys the window.
+
 Repeated native replay uses the separate headless
 `platform_metal_copy_and_hash` entry point. It blits the bounded shared input
 texture to a second Metal texture, waits for completion with the same five-

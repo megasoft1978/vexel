@@ -3,6 +3,7 @@
 
 #include "shape.h"
 #include "reference.h"
+#include "css.h"
 
 typedef struct svg_shape_clip svg_shape_clip;
 
@@ -10,6 +11,7 @@ svg_shape_error svg_clip_resolve(base_bytes source,
                                  const svg_xml_token *tokens,
                                  size_t token_count,
                                  svg_reference_index *references,
+                                 svg_css_sheet *css,
                                  svg_xml_span value,
                                  const svg_shape_document *document,
                                  size_t *document_clip_bytes,
