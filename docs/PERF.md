@@ -353,18 +353,20 @@ archive with this 4x4 coverage implementation on the same arm64 macOS 27.0
 host and Apple clang 21.0.0; the specific hardware model is unavailable in the
 benchmark harness. Each fixed 128x128 workload uses two warmups and
 21 measured trials; results include per-trial latencies, median/p95, throughput,
-peak RSS, and output hashes in `artifacts/WO-M4-03/raster-benchmark.json`.
+peak RSS, and output hashes in `artifacts/WO-M4-03/raster-benchmark.json`. The
+candidate code commit is `26d6b19d38b23be633c0d85642cd637f4ebdba1e`; the source
+tree was clean for this campaign.
 
 | Workload | Base median / p95 (ms) | Candidate median / p95 (ms) | Median change | Candidate pixels/s |
 |---|---:|---:|---:|---:|
-| Simple rectangle | 2.528 / 2.743 | 2.674 / 2.898 | +5.79% | 6,126,484 |
-| Curved fill | 3.103 / 3.361 | 4.989 / 5.225 | +60.82% | 3,283,696 |
-| 16 fractional rectangles | 3.324 / 3.506 | 5.964 / 6.154 | +79.44% | 2,746,958 |
+| Simple rectangle | 3.681 / 4.376 | 3.998 / 4.892 | +8.61% | 4,098,091 |
+| Curved fill | 4.810 / 5.525 | 7.190 / 7.969 | +49.50% | 2,278,575 |
+| 16 fractional rectangles | 4.698 / 5.599 | 8.266 / 10.505 | +75.95% | 1,982,155 |
 
 The first implementation made the simple workload 75.30% slower. An interior-pixel
 fast path now uses one center sample when no edge bounds cross the pixel, while
-boundary pixels retain all 16 fixed samples. The simple workload is now 5.79%
-slower than base; curved and multi-shape cases remain 60.82% and 79.44% slower
+boundary pixels retain all 16 fixed samples. The simple workload is now 8.61%
+slower than base; curved and multi-shape cases remain 49.50% and 75.95% slower
 because their more numerous edges make boundary classification more costly.
 The sample grid and work cap remain unchanged. Peak process RSS is 2,048,000 bytes
 for base and 2,031,616 bytes for candidate. This is a measured quality/performance

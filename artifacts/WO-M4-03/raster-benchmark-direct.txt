@@ -1,50 +1,10 @@
-Cloning into '/var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/vexel-m4-03-bench-in6vv0uv/benchmark-repository'...
-done.
-Preparing worktree (detached HEAD 6cd61dd)
-HEAD is now at 6cd61dd docs: record WO-M4-02 acceptance
-Preset CMake variables:
-
-  CMAKE_BUILD_TYPE="Release"
-  CMAKE_OSX_ARCHITECTURES="arm64"
-  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
-
--- The C compiler identification is AppleClang 21.0.0.21000334
--- The OBJC compiler identification is AppleClang 21.0.0.21000334
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Detecting OBJC compiler ABI info
--- Detecting OBJC compiler ABI info - done
--- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
--- Found Threads: TRUE
--- Configuring done (0.4s)
--- Generating done (0.0s)
--- Build files have been written to: /private/var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/vexel-m4-03-bench-in6vv0uv/base-worktree/build/mac-release
-[1/13] Building C object CMakeFiles/shape_render_cli.dir/tests/svg/shape/shape_render_cli.c.o
-[2/13] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o
-[3/13] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
-[4/13] Building C object CMakeFiles/vexel_shape.dir/src/geom/geometry.c.o
-[5/13] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_reader.c.o
-[6/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
-[7/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/tile.c.o
-[8/13] Linking C static library libvexel_base.a
-[9/13] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o
-[10/13] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
-[11/13] Linking C static library libvexel_xml.a
-[12/13] Linking C static library libvexel_shape.a
-[13/13] Linking C executable bin/shape_render_cli
-Preset CMake variables:
-
-  CMAKE_BUILD_TYPE="Release"
-  CMAKE_OSX_ARCHITECTURES="arm64"
-  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
-
--- Configuring done (0.0s)
--- Generating done (0.0s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03-r2/build/mac-release
-ninja: no work to do.
-{"curved": 60.82, "multi_shape": 79.44, "simple": 5.79}
+Command: python3 tests/bench_shape_raster.py --output artifacts/WO-M4-03/raster-benchmark.json
+Base commit: 6cd61dd6570ab556af7d6a1feb8899d3f849f8af
+Candidate source commit: 26d6b19d38b23be633c0d85642cd637f4ebdba1e
+Source tree before report generation: clean
+Workloads: simple 128x128 rectangle; 128x128 cubic fill; 128x128 16 fractional rectangles.
+Trials: two warmups + 21 measured trials per workload/revision; output hashes were stable.
+Median change: simple +8.61%; curved +49.50%; multi-shape +75.95%.
+Candidate throughput: simple 4,098,091 px/s; curved 2,278,575 px/s; multi-shape 1,982,155 px/s.
+Peak RSS: 2,048,000 B base; 2,031,616 B candidate.
+Full trial samples, medians/p95s, hashes, host/compiler, and RSS method are in raster-benchmark.json.
