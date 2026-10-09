@@ -63,11 +63,6 @@ def png_rgba(data):
     return width, height, b"".join(rows)
 
 
-def reference_solid_colors(rgba):
-    return sorted({tuple(rgba[i:i + 3]) for i in range(0, len(rgba), 4)
-                   if rgba[i + 3] == 255})
-
-
 class ShapeRenderTests(unittest.TestCase):
     def test_decoder_diagnostics_source_retention_and_raster(self):
         self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
@@ -93,7 +88,6 @@ class ShapeRenderTests(unittest.TestCase):
                 width, height = 16, 16
                 self.assertEqual((rw, rh), (width, height))
                 self.assertEqual(len(ours), width * height * 4)
-                solid_colors = reference_solid_colors(reference_rgba)
                 # Renderer antialiasing may affect pixels within one pixel of a
                 # fill-coverage boundary; every interior channel must match exactly.
                 bad_interior, edge_diffs, max_channel = 0, 0, 0
@@ -103,21 +97,11 @@ class ShapeRenderTests(unittest.TestCase):
                         offset = (y * width + x) * 4
                         delta = max(abs(ours[offset + c] - reference_rgba[offset + c]) for c in range(4))
                         max_alpha_delta = max(max_alpha_delta, abs(ours[offset + 3] - reference_rgba[offset + 3]))
-                        expected_rgb = tuple(reference_rgba[offset:offset + 3])
-                        # Cairo unpremultiplies boundary PNG pixels with 8-bit
-                        # precision; normalize to the nearest solid reference fill.
-                        if reference_rgba[offset + 3] < 255 and solid_colors:
-                            expected_rgb = min(
-                                solid_colors,
-                                key=lambda color: max(abs(color[channel] - expected_rgb[channel])
-                                                      for channel in range(3)))
                         if ours[offset + 3] != 0 and reference_rgba[offset + 3] != 0:
-                            if not solid_colors:
-                                self.fail(f"no fully covered reference color in {fixture.name}")
                             for channel in range(3):
                                 max_rgb_delta = max(
                                     max_rgb_delta,
-                                    abs(ours[offset + channel] - expected_rgb[channel]))
+                                    abs(ours[offset + channel] - reference_rgba[offset + channel]))
                         if not delta:
                             continue
                         max_channel = max(max_channel, delta)
@@ -144,10 +128,9 @@ class ShapeRenderTests(unittest.TestCase):
                 results.append({"case": fixture.stem, "source_sha256": hashlib.sha256(raw).hexdigest(),
                                 "vexel_sha256": hashlib.sha256(ours).hexdigest(),
                                 "reference_png_sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
-                                "reference_solid_rgb_palette": [list(color) for color in solid_colors],
                                 "edge_diff_pixels": edge_diffs, "interior_diff_pixels": bad_interior,
                                 "max_channel_diff": max_channel,
-                                "max_covered_rgb_diff_after_reference_normalization": max_rgb_delta,
+                                "max_jointly_covered_straight_rgb_diff": max_rgb_delta,
                                 "max_alpha_diff": max_alpha_delta})
         OUT.parent.mkdir(parents=True, exist_ok=True)
         host = {"platform": platform.platform(), "machine": platform.machine(),
@@ -160,7 +143,7 @@ class ShapeRenderTests(unittest.TestCase):
                 "host": host, "compiler": compiler,
                 "metric_availability": {"latency": "not collected by the differential fixture harness",
                                         "peak_rss": "not collected by the differential fixture harness"},
-                "edge_tolerance": "zero interior differences; within one pixel of a fill-coverage boundary, alpha delta <=160; covered straight RGB delta <=1 after low-alpha reference RGB normalization to the nearest fully covered reference fill; and at most 120 differing pixels per fixture",
+                "edge_tolerance": "zero interior differences; within one pixel of a fill-coverage boundary, alpha delta <=160; raw straight RGB delta <=1 for every jointly covered pixel; and at most 120 differing pixels per fixture",
                                    "cases": results}, indent=2) + "\n")
 
     def test_bounds_and_stable_diagnostics(self):
