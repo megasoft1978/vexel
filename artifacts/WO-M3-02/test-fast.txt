@@ -1,0 +1,12 @@
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 175 tests in 8.329s
+
+FAILED (failures=8, errors=2)
+Ran 175 tests: 165 passed, 8 failed, 2 errors, 0 skipped; 8.399s

@@ -1,0 +1,196 @@
+=== ready work-order validation ===
+valid WO-M3-02 revision 2 sha256 52ab6889f4084320f1016fb17474e2272507263f1183dced9d59ec40f49c5d83
+=== ./dev build ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
+ninja: no work to do.
+=== Debug CTest ===
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
+    Start 1: cli-version
+1/9 Test #1: cli-version ......................   Passed    0.00 sec
+    Start 2: base-contract
+2/9 Test #2: base-contract ....................   Passed    0.00 sec
+    Start 3: xml-tokenizer
+3/9 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+    Start 4: source-save
+4/9 Test #4: source-save ......................   Passed    0.00 sec
+    Start 5: shape-render
+5/9 Test #5: shape-render .....................   Passed    0.01 sec
+    Start 6: svg-index
+6/9 Test #6: svg-index ........................   Passed    0.11 sec
+    Start 7: svg-token-stream-budget
+7/9 Test #7: svg-token-stream-budget ..........   Passed    0.02 sec
+    Start 8: index-replay
+8/9 Test #8: index-replay .....................   Passed    0.13 sec
+    Start 9: spatial-cache
+9/9 Test #9: spatial-cache ....................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   0.37 sec
+=== focused spatial/cache native test ===
+{"insertions":10000,"entry_count":100,"accounted_bytes":5200,"byte_cap":8192,"max_accounted_bytes":5200,"max_entries":100,"ownership_success":true,"ownership_failure":true,"deterministic_lru":true,"generation_invalidation":true,"scale_invalidation":true}
+spatial and tile-cache deterministic checks passed
+=== focused Python wrapper ===
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.021s
+
+OK
+=== Release build ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-release
+ninja: no work to do.
+=== deterministic benchmark ===
+entries=100000 queries=1000 build_seconds=0.008071 p50_ms=0.000 p95_ms=0.002 max_ms=0.006
+=== ./dev verify ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-debug
+    Start 1: cli-version
+1/9 Test #1: cli-version ......................   Passed    0.00 sec
+    Start 2: base-contract
+2/9 Test #2: base-contract ....................   Passed    0.00 sec
+    Start 3: xml-tokenizer
+3/9 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+    Start 4: source-save
+4/9 Test #4: source-save ......................   Passed    0.00 sec
+    Start 5: shape-render
+5/9 Test #5: shape-render .....................   Passed    0.01 sec
+    Start 6: svg-index
+6/9 Test #6: svg-index ........................   Passed    0.11 sec
+    Start 7: svg-token-stream-budget
+7/9 Test #7: svg-token-stream-budget ..........   Passed    0.02 sec
+    Start 8: index-replay
+8/9 Test #8: index-replay .....................   Passed    0.13 sec
+    Start 9: spatial-cache
+9/9 Test #9: spatial-cache ....................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   0.37 sec
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 176 tests in 14.643s
+
+OK
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.150892
+20 frames with identical readback hashes and stable offscreen frame order
+readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
+native replay elapsed seconds: 0.125405
+Ran 176 tests: 176 passed, 0 failed, 0 errors, 0 skipped; 14.684s
+valid ledger: 233 entries
+=== ./dev asan ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-asan
+ninja: no work to do.
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-asan
+    Start 1: cli-version
+1/9 Test #1: cli-version ......................   Passed    0.01 sec
+    Start 2: base-contract
+2/9 Test #2: base-contract ....................   Passed    0.02 sec
+    Start 3: xml-tokenizer
+3/9 Test #3: xml-tokenizer ....................   Passed    0.23 sec
+    Start 4: source-save
+4/9 Test #4: source-save ......................   Passed    0.01 sec
+    Start 5: shape-render
+5/9 Test #5: shape-render .....................   Passed    0.05 sec
+    Start 6: svg-index
+6/9 Test #6: svg-index ........................   Passed    0.15 sec
+    Start 7: svg-token-stream-budget
+7/9 Test #7: svg-token-stream-budget ..........   Passed    0.09 sec
+    Start 8: index-replay
+8/9 Test #8: index-replay .....................   Passed    0.15 sec
+    Start 9: spatial-cache
+9/9 Test #9: spatial-cache ....................   Passed    0.08 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   0.78 sec
+=== ./dev ubsan ===
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-ubsan
+ninja: no work to do.
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02/build/mac-ubsan
+    Start 1: cli-version
+1/9 Test #1: cli-version ......................   Passed    0.01 sec
+    Start 2: base-contract
+2/9 Test #2: base-contract ....................   Passed    0.01 sec
+    Start 3: xml-tokenizer
+3/9 Test #3: xml-tokenizer ....................   Passed    0.16 sec
+    Start 4: source-save
+4/9 Test #4: source-save ......................   Passed    0.01 sec
+    Start 5: shape-render
+5/9 Test #5: shape-render .....................   Passed    0.03 sec
+    Start 6: svg-index
+6/9 Test #6: svg-index ........................   Passed    0.13 sec
+    Start 7: svg-token-stream-budget
+7/9 Test #7: svg-token-stream-budget ..........   Passed    0.06 sec
+    Start 8: index-replay
+8/9 Test #8: index-replay .....................   Passed    0.13 sec
+    Start 9: spatial-cache
+9/9 Test #9: spatial-cache ....................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) =   0.57 sec
+=== spatial index Python regression ===
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.114s
+
+OK
+=== ledger validation ===
+valid ledger: 233 entries
+=== benchmark JSON validation ===
+=== diff check ===
+all recorded checks passed
