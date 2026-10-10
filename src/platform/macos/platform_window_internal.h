@@ -1,0 +1,15 @@
+#ifndef VEXEL_PLATFORM_MACOS_WINDOW_INTERNAL_H
+#define VEXEL_PLATFORM_MACOS_WINDOW_INTERNAL_H
+
+#include "platform/platform_window.h"
+
+bool platform_window_dispatch_file_open(platform_window *window, const char *path, size_t length);
+void platform_window_dispatch_action(platform_window *window, platform_viewer_action action);
+void platform_macos_menus_init(void);
+void platform_macos_menus_set_owner(platform_window *window);
+void platform_macos_menus_clear_owner(platform_window *window);
+bool platform_macos_menus_add_recent(const char *path, size_t length);
+bool platform_macos_menus_set_option_state(platform_window *window,
+                                           platform_viewer_action action, bool enabled);
+
+#endif

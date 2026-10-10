@@ -45,6 +45,18 @@ find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
 find_package(Threads REQUIRED)
 target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK} Threads::Threads)
 
+# lane: viewer2
+target_sources(svgworkbench PRIVATE src/app/viewer_quality.c src/app/viewer_events.c
+    src/app/viewer_render.c src/platform/macos/platform_menus.m)
+set_source_files_properties(src/platform/macos/platform_menus.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+find_library(UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK UniformTypeIdentifiers REQUIRED)
+target_link_libraries(svgworkbench PRIVATE ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
+add_executable(viewer_quality_test tests/viewer/viewer_quality_test.c src/app/viewer_quality.c)
+target_include_directories(viewer_quality_test PRIVATE src)
+target_link_libraries(viewer_quality_test PRIVATE vexel_ui_state)
+set_target_properties(viewer_quality_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 add_library(vexel_base STATIC src/base/base.c)
 
 add_library(vexel_jobs STATIC src/jobs/source_snapshot.c src/jobs/job_scheduler.c
@@ -271,6 +283,8 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(svg_token_stream_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(svg_index_bench PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(base_contract_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    # lane: viewer2
+    target_compile_options(viewer_quality_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(source_save_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(document_model_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -311,6 +325,9 @@ if(VEXEL_SANITIZER)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
+    # lane: viewer2
+    target_compile_options(viewer_quality_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_quality_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
 endif()
 
 if(VEXEL_SANITIZER)
@@ -332,6 +349,8 @@ if(BUILD_TESTING)
     add_test(NAME svg-index COMMAND svg_index_test)
     add_test(NAME viewer-navigation COMMAND viewer_navigation_test)
     add_test(NAME viewer-composition COMMAND viewer_frame_test)
+    # lane: viewer2
+    add_test(NAME viewer-quality COMMAND viewer_quality_test)
     add_test(NAME viewer-frame COMMAND ${CMAKE_COMMAND} -E env
         VEXEL_BINARY=$<TARGET_FILE:svgworkbench>
         python3 ${CMAKE_SOURCE_DIR}/tests/test_viewer_frame.py)
