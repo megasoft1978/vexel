@@ -36,3 +36,28 @@ allocation failures report `DOCUMENT_MODEL_OUT_OF_MEMORY`.
 counts, child iteration, exact tag and attribute slices, and slot-range paging.
 Ranges return stable rows without constructing a second tree. The mutable model
 is single-owner; readers must be quiescent during subtree removal or destroy.
+
+`document_edit.h` adds a headless source-preserving edit engine. It stores the
+borrowed original source as the first piece and records inserted bytes in a
+bounded piece table. Attribute changes replace only the value span, retain the
+original quote, and escape XML metacharacters. Structural commands retain the
+exact element bytes; text content is escaped and replaces the element's content.
+Template insertion is limited to `rect`, `circle`, `ellipse`, `line`, `path`,
+and `g`, with a 64 KiB serialized-template limit.
+
+The command log defaults to 1,000 commands and 64 MiB of before/after command
+bytes. Consecutive sets of the same attribute coalesce. A successful edit,
+undo, redo, or save invalidates the current inspector snapshot; query again for
+fresh handles. Handles from earlier snapshots fail with the stable
+`stale_handle` error. The piece table does not copy the document when it applies
+a splice. Inspector snapshots and affected-region validation use temporary
+contiguous bytes because the current XML tokenizer accepts a contiguous slice.
+
+Each operation validates its changed start tag, element, parent subtree, or
+document before committing. The tokenizer continues to preserve UTF-8 BOMs,
+line endings, whitespace, comments, CDATA, entity spellings, unknown elements,
+and namespace prefixes outside the edited spans. Query helpers expose source
+spans, decoded text/attribute values, element paths, ID lookup, and
+source-offset-to-element mapping. `document_edit_save_as` uses the existing
+atomic `source_save` adapter and therefore replaces an existing regular file;
+creating a brand-new destination is outside that adapter's current contract.

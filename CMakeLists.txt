@@ -213,6 +213,16 @@ set_target_properties(source_save_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUI
 add_executable(document_model_test tests/document/test_document_model.c)
 target_link_libraries(document_model_test PRIVATE vexel_document)
 set_target_properties(document_model_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# lane: editcore
+target_sources(vexel_document PRIVATE
+    src/document/document_edit.c
+    src/document/document_edit_ops.c
+    src/document/document_edit_piece_table.c
+)
+add_executable(document_edit_test tests/edit/test_document_edit.c)
+target_link_libraries(document_edit_test PRIVATE vexel_document)
+set_target_properties(document_edit_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 target_include_directories(vexel_base PUBLIC src/base)
 set_target_properties(vexel_base PROPERTIES
     C_STANDARD 17
@@ -273,6 +283,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(base_contract_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(source_save_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(document_model_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(document_edit_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_reference_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_stats_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -307,7 +318,7 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -327,6 +338,8 @@ if(BUILD_TESTING)
     add_test(NAME xml-tokenizer COMMAND xml_tokenizer_test)
     add_test(NAME source-save COMMAND source_save_test)
     add_test(NAME document-model COMMAND document_model_test)
+    # lane: editcore
+    add_test(NAME document-edit COMMAND document_edit_test)
     add_test(NAME shape-render COMMAND shape_test)
     add_test(NAME css-cascade COMMAND css_test)
     add_test(NAME svg-index COMMAND svg_index_test)
