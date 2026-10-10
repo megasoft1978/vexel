@@ -253,7 +253,7 @@ class McpStdioEndToEndTests(unittest.TestCase):
         self.assertFalse(self.save_new_path.exists())
         saved_new = self.call_tool("save_as", {"documentId": other_id,
             "path": str(self.save_new_path)})["structuredContent"]
-        self.assertEqual(saved_new["path"], str(self.save_new_path))
+        self.assertEqual(os.path.realpath(saved_new["path"]), os.path.realpath(self.save_new_path))
         self.assertTrue(self.save_new_path.is_file())
         self.assertTrue(self.save_new_path.read_text(encoding="utf-8").startswith("<svg"))
         self.assertTrue(self.call_tool("document_close", {"documentId": other_id})
