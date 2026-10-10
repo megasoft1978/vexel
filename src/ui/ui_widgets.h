@@ -18,6 +18,7 @@ typedef struct ui_widget_spec {
     size_t label_len;
     const char *value;
     size_t value_len;
+    ui_icon_kind icon;
 } ui_widget_spec;
 
 bool ui_widget_add_button(ui_tree *tree, const ui_widget_spec *spec);

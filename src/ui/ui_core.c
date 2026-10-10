@@ -15,18 +15,73 @@ static uint32_t ui_color(uint8_t red, uint8_t green, uint8_t blue)
            ((uint32_t)blue << 8U) | 255U;
 }
 
-static ui_tokens ui_theme_tokens(ui_theme theme)
+ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast)
 {
     if (theme == UI_THEME_LIGHT) {
-        return (ui_tokens){ui_color(242, 244, 247), ui_color(255, 255, 255),
-            ui_color(232, 236, 242), ui_color(250, 251, 253), ui_color(30, 36, 45),
-            ui_color(105, 115, 128), ui_color(45, 111, 219), ui_color(211, 217, 225),
-            8U, 6U, 13U};
+        uint32_t secondary = increased_contrast ? ui_color(58, 70, 86) :
+            ui_color(82, 97, 113);
+        uint32_t separator = increased_contrast ? ui_color(151, 160, 172) :
+            ui_color(201, 208, 218);
+        uint32_t edge = increased_contrast ? ui_color(71, 82, 99) :
+            ui_color(124, 135, 151);
+        ui_tokens tokens = {
+            .window = ui_color(242, 244, 247), .panel = ui_color(255, 255, 255),
+            .panel_raised = ui_color(237, 240, 244), .canvas_well = ui_color(231, 235, 240),
+            .text_primary = ui_color(31, 39, 50), .text_secondary = secondary,
+            .separator = separator, .control_edge = edge, .accent = ui_color(24, 95, 197),
+            .selection_fill = ui_color(220, 234, 255), .focus_ring = ui_color(0, 95, 204),
+            .error = ui_color(180, 35, 24), .spacing = 8U, .radius = 6U, .font_px = 13U
+        };
+        tokens.panel_alt = tokens.panel_raised;
+        tokens.canvas = tokens.canvas_well;
+        tokens.text = tokens.text_primary;
+        tokens.muted = tokens.text_secondary;
+        tokens.border = tokens.separator;
+        return tokens;
     }
-    return (ui_tokens){ui_color(25, 28, 34), ui_color(35, 39, 47),
-        ui_color(44, 49, 59), ui_color(21, 24, 30), ui_color(233, 237, 244),
-        ui_color(148, 157, 171), ui_color(105, 159, 255), ui_color(55, 61, 72),
-        8U, 6U, 13U};
+    uint32_t secondary = increased_contrast ? ui_color(222, 228, 236) :
+        ui_color(185, 194, 207);
+    uint32_t separator = increased_contrast ? ui_color(89, 98, 111) :
+        ui_color(59, 65, 75);
+    uint32_t edge = increased_contrast ? ui_color(166, 177, 191) :
+        ui_color(116, 128, 145);
+    ui_tokens tokens = {
+        .window = ui_color(23, 26, 32), .panel = ui_color(32, 36, 43),
+        .panel_raised = ui_color(41, 46, 55), .canvas_well = ui_color(17, 21, 27),
+        .text_primary = ui_color(241, 244, 248), .text_secondary = secondary,
+        .separator = separator, .control_edge = edge, .accent = ui_color(131, 180, 255),
+        .selection_fill = ui_color(38, 60, 88), .focus_ring = ui_color(156, 197, 255),
+        .error = ui_color(255, 142, 134), .spacing = 8U, .radius = 6U, .font_px = 13U
+    };
+    tokens.panel_alt = tokens.panel_raised;
+    tokens.canvas = tokens.canvas_well;
+    tokens.text = tokens.text_primary;
+    tokens.muted = tokens.text_secondary;
+    tokens.border = tokens.separator;
+    return tokens;
+}
+
+static ui_tokens ui_legacy_theme_tokens(ui_theme theme)
+{
+    ui_tokens tokens = {0};
+    if (theme == UI_THEME_LIGHT) {
+        tokens.window = ui_color(242, 244, 247); tokens.panel = ui_color(255, 255, 255);
+        tokens.panel_alt = ui_color(232, 236, 242); tokens.canvas = ui_color(250, 251, 253);
+        tokens.text = ui_color(30, 36, 45); tokens.muted = ui_color(105, 115, 128);
+        tokens.accent = ui_color(45, 111, 219); tokens.border = ui_color(211, 217, 225);
+    } else {
+        tokens.window = ui_color(25, 28, 34); tokens.panel = ui_color(35, 39, 47);
+        tokens.panel_alt = ui_color(44, 49, 59); tokens.canvas = ui_color(21, 24, 30);
+        tokens.text = ui_color(233, 237, 244); tokens.muted = ui_color(148, 157, 171);
+        tokens.accent = ui_color(105, 159, 255); tokens.border = ui_color(55, 61, 72);
+    }
+    tokens.panel_raised = tokens.panel_alt; tokens.canvas_well = tokens.canvas;
+    tokens.text_primary = tokens.text; tokens.text_secondary = tokens.muted;
+    tokens.separator = tokens.border; tokens.control_edge = tokens.border;
+    tokens.selection_fill = tokens.panel_alt; tokens.focus_ring = tokens.accent;
+    tokens.error = theme == UI_THEME_DARK ? ui_color(255, 142, 134) : ui_color(180, 35, 24);
+    tokens.spacing = 8U; tokens.radius = 6U; tokens.font_px = 13U;
+    return tokens;
 }
 
 static uint16_t ui_index(const ui_tree *tree, uint32_t id)
@@ -50,7 +105,26 @@ bool ui_tree_init(ui_tree *tree, ui_theme theme)
 {
     if (tree == NULL || (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT)) return false;
     memset(tree, 0, sizeof(*tree));
-    tree->tokens = ui_theme_tokens(theme);
+    tree->tokens = ui_legacy_theme_tokens(theme);
+    tree->theme = theme;
+    ui_node_spec root = {0};
+    root.id = UI_ROOT_ID;
+    root.axis = UI_AXIS_VERTICAL;
+    root.color = tree->tokens.window;
+    root.role = UI_ROLE_WINDOW;
+    root.label = "Editor";
+    root.label_len = 6U;
+    return ui_tree_add(tree, &root);
+}
+
+bool ui_tree_init_accessible(ui_tree *tree, ui_theme theme, bool increased_contrast)
+{
+    if (tree == NULL || (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT)) return false;
+    memset(tree, 0, sizeof(*tree));
+    tree->tokens = ui_theme_tokens(theme, increased_contrast);
+    tree->theme = theme;
+    tree->increased_contrast = increased_contrast;
+    tree->semantic_style = true;
     ui_node_spec root = {0};
     root.id = UI_ROOT_ID;
     root.axis = UI_AXIS_VERTICAL;
@@ -93,13 +167,17 @@ static bool ui_utf8_valid(const char *text, size_t length)
 
 bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec)
 {
-    if (tree == NULL || spec == NULL || tree->laid_out || tree->count >= UI_MAX_NODES ||
+    if (tree == NULL || spec == NULL || tree->text_bytes_used > UI_TEXT_TOTAL_MAX_BYTES ||
+        tree->laid_out || tree->count >= UI_MAX_NODES ||
         spec->id == 0U || spec->axis > UI_AXIS_VERTICAL ||
+        spec->icon > UI_ICON_ZOOM ||
         spec->preferred_width > RASTER_TILE_MAX_AXIS ||
         spec->preferred_height > RASTER_TILE_MAX_AXIS ||
         spec->padding > RASTER_TILE_MAX_AXIS || spec->gap > RASTER_TILE_MAX_AXIS ||
-        (spec->role < UI_ROLE_NONE || spec->role > UI_ROLE_STATUS) || spec->label_len > UI_TEXT_MAX_BYTES ||
-        spec->value_len > UI_TEXT_MAX_BYTES ||
+        (spec->role < UI_ROLE_NONE || spec->role > UI_ROLE_STATUS) ||
+        spec->label_len > UI_TEXT_TOTAL_MAX_BYTES || spec->value_len > UI_TEXT_TOTAL_MAX_BYTES ||
+        spec->label_len > UI_TEXT_TOTAL_MAX_BYTES - tree->text_bytes_used ||
+        spec->value_len > UI_TEXT_TOTAL_MAX_BYTES - tree->text_bytes_used - spec->label_len ||
         !ui_utf8_valid(spec->label, spec->label_len) ||
         !ui_utf8_valid(spec->value, spec->value_len) ||
         ui_index(tree, spec->id) != UI_NO_NODE) {
@@ -114,13 +192,32 @@ bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec)
     }
     uint16_t added = (uint16_t)tree->count;
     ui_node *new_node = &tree->nodes[added];
+    size_t label_preview_len = spec->label_len < UI_TEXT_MAX_BYTES - 1U ?
+        spec->label_len : UI_TEXT_MAX_BYTES - 1U;
+    while (label_preview_len > 0U && spec->label_len > label_preview_len &&
+           spec->label != NULL && (((uint8_t)spec->label[label_preview_len] & 0xc0U) == 0x80U))
+        label_preview_len--;
+    size_t value_preview_len = spec->value_len < UI_TEXT_MAX_BYTES - 1U ?
+        spec->value_len : UI_TEXT_MAX_BYTES - 1U;
+    while (value_preview_len > 0U && spec->value_len > value_preview_len &&
+           spec->value != NULL && (((uint8_t)spec->value[value_preview_len] & 0xc0U) == 0x80U))
+        value_preview_len--;
+    size_t label_offset = tree->text_bytes_used;
+    size_t value_offset = label_offset + spec->label_len;
     *new_node = (ui_node){.spec = *spec, .first_child = UI_NO_NODE,
-        .next_sibling = UI_NO_NODE, .occupied = true};
+        .next_sibling = UI_NO_NODE, .occupied = true,
+        .full_label_len = spec->label_len, .full_value_len = spec->value_len,
+        .label_offset = label_offset, .value_offset = value_offset};
     new_node->spec.label = NULL;
     new_node->spec.value = NULL;
+    new_node->spec.label_len = label_preview_len;
+    new_node->spec.value_len = value_preview_len;
     new_node->spec.state &= ~(uint32_t)UI_STATE_FOCUSED;
-    if (spec->label_len > 0U) memcpy(new_node->label, spec->label, spec->label_len);
-    if (spec->value_len > 0U) memcpy(new_node->value, spec->value, spec->value_len);
+    if (spec->label_len > 0U) memcpy(tree->text_storage + label_offset, spec->label, spec->label_len);
+    if (spec->value_len > 0U) memcpy(tree->text_storage + value_offset, spec->value, spec->value_len);
+    if (label_preview_len > 0U) memcpy(new_node->label, spec->label, label_preview_len);
+    if (value_preview_len > 0U) memcpy(new_node->value, spec->value, value_preview_len);
+    tree->text_bytes_used += spec->label_len + spec->value_len;
     tree->count++;
     if (parent != UI_NO_NODE) {
         ui_node *owner = &tree->nodes[parent];
@@ -280,7 +377,7 @@ bool ui_tree_render(const ui_tree *tree, raster_tile *out_tile)
         if ((node->spec.color & 255U) == 0U) continue;
         if (!ui_render_node(node, out_tile) ||
             ((node->spec.state & UI_STATE_FOCUSED) != 0U &&
-             !ui_render_focus_ring(node, tree->tokens.accent, out_tile))) {
+        !ui_render_focus_ring(node, tree->tokens.focus_ring, out_tile))) {
             raster_tile_destroy(out_tile);
             return false;
         }
@@ -324,23 +421,62 @@ bool ui_focus_next(ui_tree *tree, bool reverse)
 
 bool ui_semantics_snapshot_build(const ui_tree *tree, ui_semantics_snapshot *out_snapshot)
 {
-    if (tree == NULL || out_snapshot == NULL || tree->count > UI_MAX_NODES) return false;
+    if (tree == NULL || out_snapshot == NULL || tree->count > UI_MAX_NODES ||
+        tree->text_bytes_used > UI_TEXT_TOTAL_MAX_BYTES) return false;
     memset(out_snapshot, 0, sizeof(*out_snapshot));
     for (size_t index = 0U; index < tree->count; index++) {
         const ui_node *source = &tree->nodes[index];
         if (!source->occupied || source->spec.label_len > UI_TEXT_MAX_BYTES ||
-            source->spec.value_len > UI_TEXT_MAX_BYTES) return false;
+            source->spec.value_len > UI_TEXT_MAX_BYTES ||
+            source->full_label_len > UI_TEXT_TOTAL_MAX_BYTES ||
+            source->full_value_len > UI_TEXT_TOTAL_MAX_BYTES ||
+            source->label_offset > tree->text_bytes_used ||
+            source->full_label_len > tree->text_bytes_used - source->label_offset ||
+            source->value_offset > tree->text_bytes_used ||
+            source->full_value_len > tree->text_bytes_used - source->value_offset) return false;
         ui_semantics_node *node = &out_snapshot->nodes[index];
         node->id = source->spec.id;
         node->parent_id = source->spec.parent_id;
         node->role = source->spec.role;
         node->state = source->spec.state;
+        node->command_id = source->spec.command_id;
         node->label_len = source->spec.label_len;
         node->value_len = source->spec.value_len;
+        node->label_full_len = source->full_label_len;
+        node->value_full_len = source->full_value_len;
+        node->frame = source->bounds;
         memcpy(node->label, source->label, node->label_len);
         memcpy(node->value, source->value, node->value_len);
+        if (node->label_full_len > UI_TEXT_TOTAL_MAX_BYTES - out_snapshot->text_bytes_used ||
+            node->value_full_len > UI_TEXT_TOTAL_MAX_BYTES - out_snapshot->text_bytes_used -
+                node->label_full_len) return false;
+        node->label_offset = out_snapshot->text_bytes_used;
+        if (node->label_full_len > 0U)
+            memcpy(out_snapshot->text_storage + node->label_offset,
+                tree->text_storage + source->label_offset, node->label_full_len);
+        node->value_offset = node->label_offset + node->label_full_len;
+        if (node->value_full_len > 0U)
+            memcpy(out_snapshot->text_storage + node->value_offset,
+                tree->text_storage + source->value_offset, node->value_full_len);
+        out_snapshot->text_bytes_used += node->label_full_len + node->value_full_len;
     }
     out_snapshot->count = tree->count;
+    return true;
+}
+
+bool ui_semantics_text(const ui_semantics_snapshot *snapshot,
+                       const ui_semantics_node *node, bool value,
+                       const char **out_text, size_t *out_length)
+{
+    if (snapshot == NULL || node == NULL || out_text == NULL || out_length == NULL ||
+        snapshot->count > UI_MAX_NODES || snapshot->text_bytes_used > UI_TEXT_TOTAL_MAX_BYTES)
+        return false;
+    size_t offset = value ? node->value_offset : node->label_offset;
+    size_t length = value ? node->value_full_len : node->label_full_len;
+    if (offset > snapshot->text_bytes_used || length > snapshot->text_bytes_used - offset)
+        return false;
+    *out_text = snapshot->text_storage + offset;
+    *out_length = length;
     return true;
 }
 

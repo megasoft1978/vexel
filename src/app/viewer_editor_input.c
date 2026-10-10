@@ -251,6 +251,18 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         if (character == 'r') return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_RELOAD;
         return 0U;
     }
+    if (text_len > 0U && (text[0] == 'v' || text[0] == 'V')) {
+        (void)viewer_editor_set_tool(editor, UI_ICON_SELECT);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 'h' || text[0] == 'H')) {
+        (void)viewer_editor_set_tool(editor, UI_ICON_PAN);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 'z' || text[0] == 'Z')) {
+        (void)viewer_editor_set_tool(editor, UI_ICON_ZOOM);
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 48U) {
         if (!editor->tree_ready) editor_build_tree(editor);
         if (ui_focus_next(&editor->tree, shift)) {
@@ -289,7 +301,5 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return editor_reorder(editor, true) ?
             VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED : VIEWER_EDITOR_HANDLED;
     }
-    if (text_len > 0U && (text[0] == 'z' || text[0] == 'Z'))
-        return VIEWER_EDITOR_HANDLED;
     return 0U;
 }

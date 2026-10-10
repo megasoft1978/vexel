@@ -1,6 +1,9 @@
 #include "viewer_editor_internal.h"
 
 #include "document_model.h"
+#include "viewer_chrome.h"
+#include "platform/macos/platform_accessibility.h"
+#include "platform/platform_text_ui.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -402,8 +405,76 @@ bool editor_reorder(viewer_editor *editor, bool forward)
     return result == DOCUMENT_EDIT_OK;
 }
 
+static void editor_preferences_changed(ui_theme theme, bool increased_contrast,
+                                       bool reduced_motion, void *context)
+{
+    viewer_editor *editor = context;
+    if (editor != NULL)
+        (void)viewer_editor_set_appearance(editor, theme, increased_contrast,
+                                           reduced_motion);
+}
+
+static void editor_view_menu_changed(bool structure_visible,
+                                     bool inspector_visible, void *context)
+{
+    viewer_editor *editor = context;
+    (void)viewer_editor_set_sidebar_visibility(editor, structure_visible,
+                                               inspector_visible);
+}
+
+static bool editor_accessibility_command(uint32_t command_id, void *context)
+{
+    viewer_editor *editor = context;
+    if (editor == NULL) return false;
+    if (command_id == EDITOR_BUTTON_TOOL_SELECT)
+        return viewer_editor_set_tool(editor, UI_ICON_SELECT) ||
+            editor->active_tool == UI_ICON_SELECT;
+    if (command_id == EDITOR_BUTTON_TOOL_PAN)
+        return viewer_editor_set_tool(editor, UI_ICON_PAN) ||
+            editor->active_tool == UI_ICON_PAN;
+    if (command_id == EDITOR_BUTTON_TOOL_ZOOM)
+        return viewer_editor_set_tool(editor, UI_ICON_ZOOM) ||
+            editor->active_tool == UI_ICON_ZOOM;
+    if (command_id == EDITOR_BUTTON_TOGGLE_STRUCTURE ||
+        command_id == EDITOR_BUTTON_HIDE_STRUCTURE) {
+        (void)viewer_editor_set_sidebar_visibility(editor,
+            !editor->want_structure, editor->want_inspector);
+        return true;
+    }
+    if (command_id == EDITOR_BUTTON_TOGGLE_INSPECTOR ||
+        command_id == EDITOR_BUTTON_HIDE_INSPECTOR) {
+        (void)viewer_editor_set_sidebar_visibility(editor,
+            editor->want_structure, !editor->want_inspector);
+        return true;
+    }
+    if (command_id >= EDITOR_OUTLINE_ROW_BASE &&
+        command_id < EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) {
+        size_t index = editor->outline_start + command_id - EDITOR_OUTLINE_ROW_BASE;
+        return editor_select_outline_index(editor, index);
+    }
+    if (command_id >= EDITOR_ATTRIBUTE_ROW_BASE &&
+        command_id < EDITOR_ATTRIBUTE_ROW_BASE + 2048U) {
+        size_t index = command_id - EDITOR_ATTRIBUTE_ROW_BASE;
+        if (index >= document_edit_attribute_count(editor->edit, editor->selected)) return false;
+        editor->selected_attribute = index;
+        if (!editor_begin_field(editor, EDITOR_FIELD_ATTRIBUTE, index)) return false;
+        editor->focus_id = command_id;
+        editor->tree_ready = false;
+        return true;
+    }
+    return false;
+}
+
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
                                     uint32_t width, uint32_t height)
+{
+    return viewer_editor_create_styled(source, theme, width, height,
+        platform_text_ui_app_is_active());
+}
+
+viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
+                                           uint32_t width, uint32_t height,
+                                           bool modern_style)
 {
     if (source.ptr == NULL || source.len == 0U || width == 0U || height == 0U ||
         (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT)) return NULL;
@@ -416,9 +487,17 @@ viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
     }
     editor->edit = created.edit;
     editor->theme = theme;
+    editor->modern_style = modern_style;
+    editor->active_tool = UI_ICON_SELECT;
+    editor->want_structure = true;
+    editor->want_inspector = true;
     editor->width = width;
     editor->height = height;
     editor->backing_scale = 1.0;
+    if (modern_style) {
+        (void)platform_text_ui_get_preferences(&editor->theme,
+            &editor->increased_contrast, &editor->reduced_motion);
+    }
     editor_status_ok(editor, "Ready");
     if (!document_edit_root(editor->edit, &editor->selected)) {
         viewer_editor_destroy(editor);
@@ -426,14 +505,72 @@ viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
     }
     editor_capture_selection_identity(editor);
     editor_refresh_outline(editor);
+    if (modern_style)
+        (void)platform_text_ui_watch_preferences(editor_preferences_changed, editor);
+    if (modern_style) {
+        platform_accessibility_set_view_callback(editor_view_menu_changed, editor,
+            editor->want_structure, editor->want_inspector);
+        platform_accessibility_set_command_callback(editor_accessibility_command, editor);
+    }
     return editor;
 }
 
 void viewer_editor_destroy(viewer_editor *editor)
 {
     if (editor == NULL) return;
+    platform_text_ui_unwatch_preferences(editor);
+    platform_accessibility_clear_view_callback(editor);
+    platform_accessibility_set_command_callback(NULL, NULL);
     document_edit_destroy(editor->edit);
     free(editor);
+}
+
+bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
+                                   bool increased_contrast, bool reduced_motion)
+{
+    if (editor == NULL || (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT)) return false;
+    if (!editor->modern_style) return true;
+    if (editor->theme == theme && editor->increased_contrast == increased_contrast &&
+        editor->reduced_motion == reduced_motion) return false;
+    editor->theme = theme;
+    editor->increased_contrast = increased_contrast;
+    editor->reduced_motion = reduced_motion;
+    editor->tree_ready = false;
+    return true;
+}
+
+bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
+                                          bool structure_visible,
+                                          bool inspector_visible)
+{
+    if (editor == NULL) return false;
+    if (editor->want_structure == structure_visible &&
+        editor->want_inspector == inspector_visible) return false;
+    editor->want_structure = structure_visible;
+    editor->want_inspector = inspector_visible;
+    editor->tree_ready = false;
+    if (editor->modern_style)
+        platform_accessibility_set_view_callback(editor_view_menu_changed, editor,
+            structure_visible, inspector_visible);
+    return true;
+}
+
+bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool)
+{
+    if (editor == NULL || tool < UI_ICON_SELECT || tool > UI_ICON_ZOOM) return false;
+    if (editor->active_tool == tool) return false;
+    editor->active_tool = tool;
+    editor->tree_ready = false;
+    return true;
+}
+
+bool viewer_editor_get_chrome_layout(viewer_editor *editor,
+                                     struct viewer_chrome_layout *out_layout)
+{
+    if (editor == NULL || out_layout == NULL) return false;
+    return viewer_chrome_layout_compute(editor->width, editor->height,
+        editor->backing_scale, editor->want_structure, editor->want_inspector,
+        (viewer_chrome_layout *)out_layout);
 }
 
 bool viewer_editor_is_dirty(const viewer_editor *editor)

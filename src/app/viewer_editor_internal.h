@@ -6,7 +6,7 @@
 #define EDITOR_OUTLINE_CAP 1024U
 #define EDITOR_OUTLINE_VISIBLE 20U
 #define EDITOR_ATTRIBUTE_VISIBLE 10U
-#define EDITOR_FIELD_CAP 1024U
+#define EDITOR_FIELD_CAP (64U * 1024U)
 #define EDITOR_NAME_CAP 128U
 #define EDITOR_STATUS_CAP 192U
 #define EDITOR_DEPTH_CAP 256U
@@ -14,6 +14,7 @@
 #define EDITOR_STATUS_HEIGHT 24U
 #define EDITOR_LEFT_WIDTH 232U
 #define EDITOR_RIGHT_WIDTH 320U
+#define EDITOR_TOOL_RAIL_WIDTH 44U
 
 enum {
     EDITOR_NODE_TOOLBAR = 2U,
@@ -25,6 +26,12 @@ enum {
     EDITOR_NODE_INSPECTOR_TITLE,
     EDITOR_NODE_SELECTED_TAG,
     EDITOR_NODE_STATUS,
+    EDITOR_NODE_OPTIONS = 20U,
+    EDITOR_NODE_TOOL_RAIL,
+    EDITOR_NODE_CANVAS_HUD,
+    EDITOR_NODE_CANVAS_TILE_STATUS,
+    EDITOR_NODE_OUTLINE_HEADER,
+    EDITOR_NODE_INSPECTOR_HEADER,
     EDITOR_BUTTON_SAVE = 100U,
     EDITOR_BUTTON_UNDO,
     EDITOR_BUTTON_REDO,
@@ -35,6 +42,13 @@ enum {
     EDITOR_BUTTON_SAVE_AS,
     EDITOR_BUTTON_ADD_ATTRIBUTE,
     EDITOR_BUTTON_REMOVE_ATTRIBUTE,
+    EDITOR_BUTTON_TOOL_SELECT = 300U,
+    EDITOR_BUTTON_TOOL_PAN,
+    EDITOR_BUTTON_TOOL_ZOOM,
+    EDITOR_BUTTON_TOGGLE_STRUCTURE,
+    EDITOR_BUTTON_TOGGLE_INSPECTOR,
+    EDITOR_BUTTON_HIDE_STRUCTURE,
+    EDITOR_BUTTON_HIDE_INSPECTOR,
     EDITOR_OUTLINE_ROW_BASE = 1000U,
     EDITOR_ATTRIBUTE_ROW_BASE = 10000U,
     EDITOR_TEXT_FIELD_ID = 20000U,
@@ -83,16 +97,34 @@ struct viewer_editor {
     size_t new_value_length;
     uint32_t focus_id;
     ui_theme theme;
+    ui_icon_kind active_tool;
     uint32_t width;
     uint32_t height;
     double backing_scale;
     ui_tree tree;
     char status[EDITOR_STATUS_CAP];
+    char display_text[EDITOR_FIELD_CAP + 1U];
     bool tree_ready;
     bool outline_truncated;
+    bool modern_style;
+    bool increased_contrast;
+    bool reduced_motion;
+    bool want_structure;
+    bool want_inspector;
+    bool effective_structure;
+    bool effective_inspector;
 };
 
 void editor_set_text(char *target, size_t capacity, const char *source);
+size_t editor_copy_slice(char *destination, size_t capacity, base_bytes bytes);
+bool editor_add_node(viewer_editor *editor, uint32_t id, uint32_t parent,
+                     ui_axis axis, uint32_t width, uint32_t height,
+                     uint32_t padding, uint32_t gap, uint32_t color,
+                     ui_role role, const char *label, size_t label_len,
+                     const char *value, size_t value_len, uint32_t state,
+                     uint32_t command_id);
+size_t editor_format_outline(const viewer_editor *editor, size_t index,
+                             char out[UI_TEXT_MAX_BYTES]);
 size_t editor_utf8_prefix(const uint8_t *bytes, size_t length, size_t maximum);
 bool editor_same_handle(document_handle left, document_handle right);
 const document_model *editor_model(const viewer_editor *editor);
@@ -120,5 +152,6 @@ uint32_t editor_commit_field(viewer_editor *editor);
 void editor_cancel_field(viewer_editor *editor);
 uint32_t editor_history(viewer_editor *editor, bool redo);
 void editor_build_tree(viewer_editor *editor);
+void editor_build_tree_modern(viewer_editor *editor);
 
 #endif

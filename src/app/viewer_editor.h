@@ -10,6 +10,7 @@
 #include <stdint.h>
 
 typedef struct viewer_editor viewer_editor;
+struct viewer_chrome_layout;
 
 enum {
     VIEWER_EDITOR_HANDLED = 1U << 0U,
@@ -23,6 +24,10 @@ enum {
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
                                     uint32_t width, uint32_t height);
+/* Explicit style constructor used by deterministic and preference-injection tests. */
+viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
+                                           uint32_t width, uint32_t height,
+                                           bool modern_style);
 void viewer_editor_destroy(viewer_editor *editor);
 bool viewer_editor_is_dirty(const viewer_editor *editor);
 const char *viewer_editor_status(const viewer_editor *editor);
@@ -31,6 +36,9 @@ void viewer_editor_resize(viewer_editor *editor, uint32_t width, uint32_t height
                           double backing_scale);
 void viewer_editor_paint(viewer_editor *editor, uint8_t *rgba, size_t capacity,
                          size_t stride);
+/* Stable scalar text path for hash-pinned artwork; app display uses CoreText. */
+void viewer_editor_paint_scalar(viewer_editor *editor, uint8_t *rgba,
+                                size_t capacity, size_t stride);
 
 /* Events are plain values so the edit state machine can be tested headlessly. */
 uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
@@ -49,5 +57,13 @@ bool viewer_editor_selection_span(viewer_editor *editor,
                                   document_source_span *out_span);
 bool viewer_editor_semantics(viewer_editor *editor,
                              ui_semantics_snapshot *out_snapshot);
+bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
+                                  bool increased_contrast, bool reduced_motion);
+bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
+                                          bool structure_visible,
+                                          bool inspector_visible);
+bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool);
+bool viewer_editor_get_chrome_layout(viewer_editor *editor,
+                                     struct viewer_chrome_layout *out_layout);
 
 #endif

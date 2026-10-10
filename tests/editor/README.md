@@ -14,3 +14,8 @@ Review both images before using `--update` to replace them.
 attribute, saves, and verifies the exact resulting source bytes. Run it from a
 maintainer's interactive macOS desktop with `./dev editor-smoke`; the headless
 environment does not run this AppKit automation.
+
+`viewer_chrome_test.c` checks 64+ byte attribute semantics, injected appearance
+changes, error state, panel visibility, inspector-first narrow collapse, and 2×
+backing-scale geometry. `viewer_chrome_layout_fuzz` exercises 200,000 seeded
+window/scale combinations in the UI test suite.
