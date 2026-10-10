@@ -798,3 +798,47 @@ if(BUILD_TESTING)
         --binary $<TARGET_FILE:editor_selection_render>)
     add_test(NAME viewer-canvas-geometry COMMAND viewer_canvas_geometry_test)
 endif()
+
+# lane: w7-uikit
+target_sources(vexel_ui_core PRIVATE
+    src/ui/ui_icon_paths.c
+    src/ui/ui_icons_legacy.c
+    src/ui/ui_widget_input.c
+    src/ui/ui_widget_paint.c)
+add_executable(ui_kit_test tests/ui/ui_kit_test.c)
+target_link_libraries(ui_kit_test PRIVATE vexel_ui_core m)
+set_target_properties(ui_kit_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(ui_widget_fuzz tests/ui/ui_widget_fuzz.c)
+target_link_libraries(ui_widget_fuzz PRIVATE vexel_ui_core m)
+set_target_properties(ui_widget_fuzz PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(ui_gallery tests/ui/ui_gallery.c)
+target_link_libraries(ui_gallery PRIVATE vexel_ui_core)
+set_target_properties(ui_gallery PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(ui_icon_gallery tests/ui/ui_icon_gallery.c)
+target_link_libraries(ui_icon_gallery PRIVATE vexel_ui_core)
+set_target_properties(ui_icon_gallery PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+foreach(w7_uikit_target ui_kit_test ui_widget_fuzz ui_gallery ui_icon_gallery)
+    target_compile_options(${w7_uikit_target} PRIVATE ${VEXEL_STRICT_WARNINGS})
+endforeach()
+if(VEXEL_SANITIZER)
+    foreach(w7_uikit_target ui_kit_test ui_widget_fuzz ui_gallery ui_icon_gallery)
+        target_compile_options(${w7_uikit_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+        target_link_options(${w7_uikit_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    endforeach()
+endif()
+if(BUILD_TESTING)
+    add_test(NAME ui-widget-kit COMMAND ui_kit_test)
+    add_test(NAME ui-widget-parser-fuzz COMMAND ui_widget_fuzz 200000 20261010)
+    add_test(NAME ui-kit-gallery COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/ui/verify_uikit_gallery.py"
+        --binary $<TARGET_FILE:ui_gallery>
+        --icon-binary $<TARGET_FILE:ui_icon_gallery>)
+endif()

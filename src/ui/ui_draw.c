@@ -1,4 +1,5 @@
 #include "ui_core.h"
+#include "ui_draw.h"
 #include "ui_icons.h"
 
 #include <limits.h>
@@ -232,7 +233,7 @@ static bool ui_paint_node(const ui_tree *tree, const ui_node *node, uint8_t *rgb
         color = tree->tokens.accent;
     if (node->spec.icon != UI_ICON_NONE) {
         if ((node->spec.state & UI_STATE_CHECKED) != 0U) color = tree->tokens.accent;
-        return ui_icon_paint_into(node->spec.icon, tree->theme,
+        return ui_icon_paint_legacy_into(node->spec.icon, tree->theme,
             tree->backing_scale > 0.0 ? tree->backing_scale : 1.0,
             node->bounds, color, rgba, width, height, stride);
     }
@@ -287,4 +288,50 @@ bool ui_tree_paint_backgrounds_into(const ui_tree *tree, uint8_t *rgba,
                                     size_t capacity, size_t stride)
 {
     return ui_tree_paint_internal(tree, rgba, capacity, stride, false);
+}
+
+bool ui_scalar_text_draw(const char *text, size_t length, ui_rect clip,
+    uint32_t font_size_px, uint32_t color, uint8_t *rgba,
+    uint32_t width, uint32_t height, size_t stride)
+{
+    if ((length > 0U && text == NULL) || length > UI_TEXT_TOTAL_MAX_BYTES ||
+        font_size_px == 0U || rgba == NULL || width == 0U || height == 0U ||
+        (size_t)width > SIZE_MAX / 4U || stride < (size_t)width * 4U ||
+        (size_t)height > SIZE_MAX / stride || clip.x > width || clip.y > height ||
+        clip.width > width - clip.x || clip.height > height - clip.y) return false;
+    uint32_t scale = font_size_px / 13U + (font_size_px % 13U != 0U ? 1U : 0U);
+    if (scale == 0U) scale = 1U;
+    if (scale > 16U) scale = 16U;
+    uint32_t glyph_height = 7U * scale;
+    uint32_t y_origin = clip.y + (clip.height > glyph_height ?
+        (clip.height - glyph_height) / 2U : 0U);
+    uint32_t cursor = clip.x;
+    uint32_t right = clip.x + clip.width;
+    uint32_t bottom = clip.y + clip.height;
+    for (size_t index = 0U; index < length; ++index) {
+        uint8_t character = (uint8_t)text[index];
+        if (character >= 0x80U) {
+            if ((character & 0xc0U) == 0x80U) continue;
+            character = '?';
+        }
+        if (cursor > right || right - cursor < 5U * scale) break;
+        for (size_t row = 0U; row < 7U; ++row) {
+            for (size_t column = 0U; column < 5U; ++column) {
+                if ((ui_glyph_row(character, row) & (1U << (4U - column))) == 0U) continue;
+                for (uint32_t sy = 0U; sy < scale; ++sy) {
+                    for (uint32_t sx = 0U; sx < scale; ++sx) {
+                        uint32_t px = cursor + (uint32_t)column * scale + sx;
+                        uint32_t py = y_origin + (uint32_t)row * scale + sy;
+                        if (px >= clip.x && py >= clip.y && px < right && py < bottom &&
+                            px < width && py < height)
+                            ui_blend_pixel(rgba + (size_t)py * stride + (size_t)px * 4U, color);
+                    }
+                }
+            }
+        }
+        uint32_t advance = 6U * scale;
+        if (cursor > UINT32_MAX - advance) break;
+        cursor += advance;
+    }
+    return true;
 }

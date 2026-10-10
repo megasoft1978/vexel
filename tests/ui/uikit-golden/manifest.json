@@ -1,0 +1,69 @@
+{
+  "images": {
+    "components-dark-1x.png": {
+      "height": 1392,
+      "scale": 1,
+      "sha256": "d4888b6a943f4dcb25e39e121ed55d0bbc49e0149f2fa599fc80b64d1f0e8c55",
+      "sheet": "components",
+      "theme": "dark",
+      "width": 1284
+    },
+    "components-dark-2x.png": {
+      "height": 2784,
+      "scale": 2,
+      "sha256": "d83aafe4541760603192ff5a7d4f1d25a4e3c5f7d477b19d7ee698c4529ec872",
+      "sheet": "components",
+      "theme": "dark",
+      "width": 2568
+    },
+    "components-light-1x.png": {
+      "height": 1392,
+      "scale": 1,
+      "sha256": "6ecc9cdb6c370a74bb5275ae57fff754e49c554d0e414675673eafa2fb9fc793",
+      "sheet": "components",
+      "theme": "light",
+      "width": 1284
+    },
+    "components-light-2x.png": {
+      "height": 2784,
+      "scale": 2,
+      "sha256": "8ee2b3a1028290d16356f02cd7fe619988f8778bff649a891f372e8823f7382f",
+      "sheet": "components",
+      "theme": "light",
+      "width": 2568
+    },
+    "icons-dark-1x.png": {
+      "height": 534,
+      "scale": 1,
+      "sha256": "88a113a4d051c3b4f4157cac12728b5e340b1198147779e774f29f4cc36fa688",
+      "sheet": "icons",
+      "theme": "dark",
+      "width": 462
+    },
+    "icons-dark-2x.png": {
+      "height": 1068,
+      "scale": 2,
+      "sha256": "c1bd04f782102b45e0237b771813ae4135c305851f58d68f46d058802ecf9f56",
+      "sheet": "icons",
+      "theme": "dark",
+      "width": 924
+    },
+    "icons-light-1x.png": {
+      "height": 534,
+      "scale": 1,
+      "sha256": "0332b205b793dde6a77a0a27a2e3f55ea6d7e3264fa3b02247776a060ef0e899",
+      "sheet": "icons",
+      "theme": "light",
+      "width": 462
+    },
+    "icons-light-2x.png": {
+      "height": 1068,
+      "scale": 2,
+      "sha256": "c7182ea2ae2930b78c654817bf8405af864ce967409ccadd2ef16f5160857238",
+      "sheet": "icons",
+      "theme": "light",
+      "width": 924
+    }
+  },
+  "version": 1
+}

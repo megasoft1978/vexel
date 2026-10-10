@@ -18,3 +18,18 @@ uses the scalar glyph painter so the PNG hashes do not depend on system font
 revisions; `platform_text_ui_test` checks native CoreText output structurally.
 Review the images before updating them with
 `python3 tests/ui/verify_style_goldens.py --update`.
+
+The UIKit has separate deterministic component and icon sheets in
+`uikit-golden/`. `ui_gallery` renders 24 widgets in seven control states at 1×
+and 2× in both appearances; `ui_icon_gallery` renders all 45 authored paths at
+24 pt and 48 pt. The human-review PNGs are in `docs/ui/`. Run the gallery
+verifier through CTest as `ui-kit-gallery`, or run it directly with the two
+renderer paths. Do not replace the older style or chrome fixtures with the
+UIKit sheets.
+
+`ui_kit_test` validates token contrast across light/dark and standard/high-
+contrast profiles, icon path commands and bounds, keyboard/pointer state
+machines, and paint bounds independent of viewport size. Its
+`--contrast-report` mode generates `docs/ui/uikit-contrast-report.json`.
+`ui_widget_fuzz` fuzzes number and hex-color parsing with a reproducible seed;
+CTest runs 200,000 cases by default.

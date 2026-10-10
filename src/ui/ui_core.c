@@ -18,20 +18,32 @@ static uint32_t ui_color(uint8_t red, uint8_t green, uint8_t blue)
 ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast)
 {
     if (theme == UI_THEME_LIGHT) {
-        uint32_t secondary = increased_contrast ? ui_color(58, 70, 86) :
-            ui_color(82, 97, 113);
-        uint32_t separator = increased_contrast ? ui_color(151, 160, 172) :
-            ui_color(201, 208, 218);
-        uint32_t edge = increased_contrast ? ui_color(71, 82, 99) :
-            ui_color(124, 135, 151);
+        uint32_t secondary = increased_contrast ? ui_color(58, 70, 86) : ui_color(82, 97, 113);
+        uint32_t tertiary = increased_contrast ? ui_color(70, 82, 99) : ui_color(116, 128, 146);
+        uint32_t disabled = increased_contrast ? ui_color(80, 91, 108) : ui_color(137, 147, 162);
+        uint32_t separator = increased_contrast ? ui_color(151, 160, 172) : ui_color(201, 208, 218);
+        uint32_t edge = increased_contrast ? ui_color(71, 82, 99) : ui_color(124, 135, 151);
         ui_tokens tokens = {
             .window = ui_color(242, 244, 247), .panel = ui_color(255, 255, 255),
             .panel_raised = ui_color(237, 240, 244), .canvas_well = ui_color(231, 235, 240),
+            .panel_hover = ui_color(245, 247, 250), .pressed_fill = ui_color(220, 234, 255),
             .text_primary = ui_color(31, 39, 50), .text_secondary = secondary,
+            .text_tertiary = tertiary, .disabled_text = disabled,
             .separator = separator, .control_edge = edge, .accent = ui_color(24, 95, 197),
-            .selection_fill = ui_color(220, 234, 255), .focus_ring = ui_color(0, 95, 204),
-            .error = ui_color(180, 35, 24), .spacing = 8U, .radius = 6U, .font_px = 13U
+            .selection_fill = ui_color(220, 234, 255), .selection_edge = ui_color(24, 95, 197),
+            .focus_ring = increased_contrast ? ui_color(0, 73, 156) : ui_color(0, 95, 204),
+            .checker_a = ui_color(224, 228, 234), .checker_b = ui_color(243, 245, 247),
+            .guide = ui_color(208, 0, 168), .success = ui_color(20, 122, 83),
+            .warning = ui_color(138, 90, 0), .error = ui_color(180, 35, 24),
+            .popover_shadow = UINT32_C(0x00000024),
+            .spacing = 8U, .radius = 6U, .font_px = 13U,
+            .spacing_4 = 4U, .spacing_8 = 8U, .spacing_12 = 12U,
+            .spacing_16 = 16U, .spacing_24 = 24U, .spacing_32 = 32U,
+            .radius_small = 4U, .radius_control = 6U, .radius_large = 10U
         };
+        tokens.success = increased_contrast ? ui_color(13, 101, 65) : tokens.success;
+        tokens.warning = increased_contrast ? ui_color(107, 67, 0) : tokens.warning;
+        tokens.error = increased_contrast ? ui_color(153, 28, 18) : tokens.error;
         tokens.panel_alt = tokens.panel_raised;
         tokens.canvas = tokens.canvas_well;
         tokens.text = tokens.text_primary;
@@ -39,19 +51,29 @@ ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast)
         tokens.border = tokens.separator;
         return tokens;
     }
-    uint32_t secondary = increased_contrast ? ui_color(222, 228, 236) :
-        ui_color(185, 194, 207);
-    uint32_t separator = increased_contrast ? ui_color(89, 98, 111) :
-        ui_color(59, 65, 75);
-    uint32_t edge = increased_contrast ? ui_color(166, 177, 191) :
-        ui_color(116, 128, 145);
+    if (theme != UI_THEME_DARK) return (ui_tokens){0};
+    uint32_t secondary = increased_contrast ? ui_color(222, 228, 236) : ui_color(185, 194, 207);
+    uint32_t tertiary = increased_contrast ? ui_color(207, 215, 225) : ui_color(144, 153, 166);
+    uint32_t disabled = increased_contrast ? ui_color(191, 200, 211) : ui_color(124, 134, 148);
+    uint32_t separator = increased_contrast ? ui_color(89, 98, 111) : ui_color(59, 65, 75);
+    uint32_t edge = increased_contrast ? ui_color(166, 177, 191) : ui_color(116, 128, 145);
     ui_tokens tokens = {
         .window = ui_color(23, 26, 32), .panel = ui_color(32, 36, 43),
         .panel_raised = ui_color(41, 46, 55), .canvas_well = ui_color(17, 21, 27),
+        .panel_hover = ui_color(48, 54, 64), .pressed_fill = ui_color(38, 60, 88),
         .text_primary = ui_color(241, 244, 248), .text_secondary = secondary,
+        .text_tertiary = tertiary, .disabled_text = disabled,
         .separator = separator, .control_edge = edge, .accent = ui_color(131, 180, 255),
-        .selection_fill = ui_color(38, 60, 88), .focus_ring = ui_color(156, 197, 255),
-        .error = ui_color(255, 142, 134), .spacing = 8U, .radius = 6U, .font_px = 13U
+        .selection_fill = ui_color(38, 60, 88), .selection_edge = ui_color(131, 180, 255),
+        .focus_ring = increased_contrast ? ui_color(190, 218, 255) : ui_color(156, 197, 255),
+        .checker_a = ui_color(41, 46, 54), .checker_b = ui_color(32, 36, 43),
+        .guide = ui_color(255, 90, 200), .success = ui_color(102, 214, 164),
+        .warning = ui_color(244, 193, 93), .error = ui_color(255, 142, 134),
+        .popover_shadow = UINT32_C(0x0000006b),
+        .spacing = 8U, .radius = 6U, .font_px = 13U,
+        .spacing_4 = 4U, .spacing_8 = 8U, .spacing_12 = 12U,
+        .spacing_16 = 16U, .spacing_24 = 24U, .spacing_32 = 32U,
+        .radius_small = 4U, .radius_control = 6U, .radius_large = 10U
     };
     tokens.panel_alt = tokens.panel_raised;
     tokens.canvas = tokens.canvas_well;
@@ -59,6 +81,24 @@ ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast)
     tokens.muted = tokens.text_secondary;
     tokens.border = tokens.separator;
     return tokens;
+}
+
+ui_type_scale ui_theme_type_scale(void)
+{
+    return (ui_type_scale){.document_title_pt = 14U, .panel_heading_pt = 14U,
+        .section_heading_pt = 13U, .body_pt = 13U, .secondary_pt = 12U,
+        .metadata_pt = 11U, .geometry_pt = 12U, .empty_heading_pt = 22U,
+        .geometry_family = UI_FONT_MONOSPACED, .title_weight = UI_FONT_SEMIBOLD,
+        .section_weight = UI_FONT_SEMIBOLD, .empty_heading_weight = UI_FONT_SEMIBOLD};
+}
+
+ui_metrics ui_design_metrics(void)
+{
+    return (ui_metrics){.toolbar_height = 40U, .context_height = 32U,
+        .tool_rail_width = 44U, .structure_width = 232U, .inspector_width = 320U,
+        .status_height = 24U, .tree_row_height = 26U, .section_header_height = 32U,
+        .field_height = 30U, .icon_button_target = 28U, .icon_button_glyph = 17U,
+        .control_radius = 6U};
 }
 
 static ui_tokens ui_legacy_theme_tokens(ui_theme theme)
@@ -170,7 +210,7 @@ bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec)
     if (tree == NULL || spec == NULL || tree->text_bytes_used > UI_TEXT_TOTAL_MAX_BYTES ||
         tree->laid_out || tree->count >= UI_MAX_NODES ||
         spec->id == 0U || spec->axis > UI_AXIS_VERTICAL ||
-        spec->icon > UI_ICON_ZOOM ||
+        spec->icon >= UI_ICON_COUNT ||
         spec->preferred_width > RASTER_TILE_MAX_AXIS ||
         spec->preferred_height > RASTER_TILE_MAX_AXIS ||
         spec->padding > RASTER_TILE_MAX_AXIS || spec->gap > RASTER_TILE_MAX_AXIS ||
