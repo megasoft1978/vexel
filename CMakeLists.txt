@@ -185,6 +185,40 @@ target_link_libraries(editor_state_test PRIVATE vexel_editor_ui)
 set_target_properties(editor_state_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
     C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# lane: w4-mcp
+add_library(vexel_mcp STATIC
+    src/mcp/mcp_json.c
+    src/mcp/mcp_tools.c
+    src/mcp/mcp_protocol.c
+    src/mcp/mcp_socket.c
+    src/mcp/mcp_access.c
+    src/mcp/mcp_broker.c
+    src/mcp/mcp_broker_tools.c
+    src/mcp/mcp_broker_docs.c
+    src/mcp/mcp_broker_edit.c
+    src/mcp/mcp_broker_render.c
+)
+target_include_directories(vexel_mcp PUBLIC src src/mcp)
+target_link_libraries(vexel_mcp PUBLIC vexel_document vexel_shape)
+set_target_properties(vexel_mcp PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_sources(svgworkbench PRIVATE src/app/mcp_broker_hook.c)
+target_link_libraries(svgworkbench PRIVATE vexel_mcp)
+add_executable(vexel-mcp app/vexel_mcp_main.c)
+target_link_libraries(vexel-mcp PRIVATE vexel_mcp)
+target_include_directories(vexel-mcp PRIVATE src)
+set_target_properties(vexel-mcp PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(mcp_protocol_test tests/mcp/mcp_protocol_test.c)
+target_link_libraries(mcp_protocol_test PRIVATE vexel_mcp)
+add_executable(mcp_fuzz tests/mcp/mcp_fuzz.c)
+target_link_libraries(mcp_fuzz PRIVATE vexel_mcp)
+add_executable(mcp_headless_broker tests/mcp/mcp_headless_broker.c)
+target_link_libraries(mcp_headless_broker PRIVATE vexel_mcp)
+foreach(mcp_target mcp_protocol_test mcp_fuzz mcp_headless_broker)
+    set_target_properties(${mcp_target} PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+        C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+endforeach()
+
 add_executable(shape_render_cli tests/svg/shape/shape_render_cli.c)
 target_link_libraries(shape_render_cli PRIVATE vexel_shape)
 set_target_properties(shape_render_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -318,6 +352,12 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(ui_interaction_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(ui_demo_interaction_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_STRICT_WARNINGS})
+    # lane: w4-mcp
+    target_compile_options(vexel_mcp PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(vexel-mcp PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(mcp_protocol_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(mcp_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(mcp_headless_broker PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(xml_tokenizer_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(xml_tokenizer_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -368,6 +408,13 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    # lane: w4-mcp
+    target_compile_options(vexel_mcp PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_mcp PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    foreach(mcp_target vexel-mcp mcp_protocol_test mcp_fuzz mcp_headless_broker)
+        target_compile_options(${mcp_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+        target_link_options(${mcp_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    endforeach()
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
@@ -412,6 +459,12 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING)
+    # lane: w4-mcp
+    add_test(NAME mcp-protocol COMMAND mcp_protocol_test)
+    add_test(NAME mcp-fuzz COMMAND mcp_fuzz 200000 12648430)
+    add_test(NAME mcp-stdio-e2e COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/mcp/test_e2e.py -v)
+    set_tests_properties(mcp-stdio-e2e PROPERTIES
+        SKIP_REGULAR_EXPRESSION "execution sandbox denies Unix-domain socket bind")
     add_test(NAME cli-version COMMAND svgworkbench --version)
     add_test(NAME base-contract COMMAND base_contract_test)
     add_test(NAME xml-tokenizer COMMAND xml_tokenizer_test)

@@ -10,6 +10,8 @@ usage() {
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
+    # lane: w4-mcp
+    printf '%s\n' '       ./dev mcp-fuzz [cases [seed]]'
     printf '%s\n' 'usage: ./dev bench-corpus [--run|--check]'
     printf '%s\n' '       ./dev tsan'
     printf '%s\n' '       ./dev e2e [--seed N] [--documents N] [--timeout-seconds N]'
@@ -31,7 +33,7 @@ if [ "$command_name" = run ]; then
         usage >&2
         exit 2
     fi
-elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ] && [ "${1:-}" != viewer-smoke ] && [ "${1:-}" != editor-smoke ]; then
+elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != mcp-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ] && [ "${1:-}" != viewer-smoke ] && [ "${1:-}" != editor-smoke ]; then
     usage >&2
     exit 2
 fi
@@ -41,7 +43,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|viewer-smoke|editor-smoke|wo-help|doctor|bundle|dmg|e2e|soak)
+    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|mcp-fuzz|viewer-smoke|editor-smoke|wo-help|doctor|bundle|dmg|e2e|soak)
         ;;
     *)
         usage >&2
@@ -159,6 +161,13 @@ case "$command_name" in
         cmake --preset mac-asan
         cmake --build --preset mac-asan --target shape_fuzz
         python3 tests/fuzz/shape/shape_fuzz.py --binary build/mac-asan/bin/shape_fuzz "$@"
+        ;;
+    # lane: w4-mcp
+    mcp-fuzz)
+        shift
+        cmake --preset mac-asan
+        cmake --build --preset mac-asan --target mcp_fuzz
+        build/mac-asan/bin/mcp_fuzz "$@"
         ;;
     verify)
         "$repo_root/dev" build

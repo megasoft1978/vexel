@@ -5,6 +5,7 @@
 #include "viewer_internal.h"
 
 #include "frame_compose.h"
+#include "mcp_broker_hook.h"
 #include "platform/platform_metal.h"
 #include "platform/platform_task.h"
 #include "platform/platform_window.h"
@@ -612,6 +613,7 @@ static void destroy_viewer(viewer_app *app)
     viewer_tile_cache_destroy(&app->sharp_cache);
     free(app->frame);
     app->frame = NULL;
+    mcp_broker_hook_shutdown(app);
     viewer_editor_destroy(app->editor);
     app->editor = NULL;
     viewer_loaded_document_destroy(&app->document);
@@ -674,6 +676,7 @@ static int run_viewer(const char *path, bool smoke_mode)
             if (!app.running) break;
         }
         if (!app.running) break;
+        mcp_broker_hook_poll(&app);
         service_job(&app);
         if (app.pending_open && app.job == NULL) start_pending_load(&app);
         if (app.editor_render_requested && app.job == NULL) start_editor_render(&app);
