@@ -24,6 +24,7 @@ typedef struct svg_shape_builder {
     size_t path_segment_capacity;
     size_t path_number_capacity;
     size_t shape_index;
+    size_t transform_node;
     size_t command_count;
     size_t point_count;
     size_t decoded_image_pixels;
@@ -127,6 +128,7 @@ bool svg_shape_nested_viewport(base_bytes source,
                                double parent_width, double parent_height,
                                geom_affine element_transform,
                                geom_affine *child_transform,
+                               geom_affine *viewport_transform,
                                geom_point clip_points[4],
                                double *child_width, double *child_height,
                                bool *empty,
@@ -212,6 +214,7 @@ bool svg_shape_apply_declared_clip(base_bytes source,
                                    svg_shape_document *document,
                                    svg_xml_span value,
                                    size_t first_shape, size_t first_edge,
+                                   size_t owner_node,
                                    geom_affine transform,
                                    svg_shape_diagnostic *diagnostic);
 bool svg_shape_filter_parse(base_bytes source,

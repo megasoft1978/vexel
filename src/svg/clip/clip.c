@@ -11,10 +11,15 @@
 #define CLIP_MAX_REFERENCE_BYTES (64U * 1024U)
 #define CLIP_MAX_JOB_REFERENCE_BYTES (512U * 1024U)
 #define CLIP_MAX_EDGES 65536U
+#define CLIP_CLONE_MAX_DEPTH 64U
+#define CLIP_CLONE_MAX_BYTES (64U * 1024U * 1024U)
 
 struct svg_shape_clip {
     svg_shape_document geometry;
     uint8_t *source;
+    size_t source_length;
+    size_t owner_node;
+    bool owner_before_suffix;
     size_t references;
     struct svg_shape_clip *parent;
     bool object_bounding_box;
@@ -118,6 +123,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
                                  size_t *document_clip_bytes,
                                  geom_affine user_inverse,
                                  const double local_bounds[4],
+                                 size_t owner_node,
                                  svg_shape_clip **out,
                                  svg_shape_diagnostic *diagnostic)
 {
@@ -202,6 +208,8 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     memcpy(scratch + prefix_length + child_length, suffix, sizeof(suffix) - 1U);
     scratch[total] = 0U;
     clip->source = scratch;
+    clip->source_length = total;
+    clip->owner_node = owner_node;
     clip->references = 1U;
     clip->object_bounding_box = object_box;
     clip->user_inverse = user_inverse;
@@ -244,6 +252,8 @@ bool svg_clip_contains(const svg_shape_clip *clip, double x, double y)
     x = local.x;
     y = local.y;
     if (clip->object_bounding_box) {
+        if (clip->bounds[2] <= clip->bounds[0] ||
+            clip->bounds[3] <= clip->bounds[1]) return false;
         x = (x - clip->bounds[0]) / (clip->bounds[2] - clip->bounds[0]);
         y = (y - clip->bounds[1]) / (clip->bounds[3] - clip->bounds[1]);
     }
@@ -343,11 +353,123 @@ void svg_clip_destroy(svg_shape_clip *clip)
     svg_clip_destroy(parent);
 }
 
-static bool clip_retain(svg_shape_clip *clip)
+bool svg_clip_retain(svg_shape_clip *clip)
 {
     if (clip == NULL || clip->references == SIZE_MAX) return false;
     clip->references++;
     return true;
+}
+
+static bool clone_bytes(size_t count, size_t stride, size_t *bytes)
+{
+    if (count != 0U && stride > SIZE_MAX / count) return false;
+    *bytes = count * stride;
+    return true;
+}
+
+static bool clone_array(const void *source, size_t count, size_t stride,
+                        size_t *total, bool *limit, void **out)
+{
+    size_t bytes = 0U;
+    if (!clone_bytes(count, stride, &bytes) ||
+        bytes > CLIP_CLONE_MAX_BYTES - *total) {
+        *limit = true;
+        return false;
+    }
+    if (bytes == 0U) {
+        *out = NULL;
+        return true;
+    }
+    void *copy = svg_shape_malloc(bytes);
+    if (copy == NULL) return false;
+    memcpy(copy, source, bytes);
+    *total += bytes;
+    *out = copy;
+    return true;
+}
+
+static svg_shape_clip *clone_clip_chain(const svg_shape_clip *source,
+                                        size_t depth, size_t *total,
+                                        bool *limit)
+{
+    if (source == NULL || total == NULL || limit == NULL ||
+        depth >= CLIP_CLONE_MAX_DEPTH) {
+        if (limit != NULL) *limit = true;
+        return NULL;
+    }
+    if (sizeof(svg_shape_clip) > CLIP_CLONE_MAX_BYTES - *total) {
+        *limit = true;
+        return NULL;
+    }
+    svg_shape_clip *copy = svg_shape_calloc(1U, sizeof(*copy));
+    if (copy == NULL) return NULL;
+    *total += sizeof(*copy);
+    copy->references = 1U;
+    copy->owner_node = source->owner_node;
+    copy->owner_before_suffix = source->owner_before_suffix;
+    copy->object_bounding_box = source->object_bounding_box;
+    copy->user_inverse = source->user_inverse;
+    memcpy(copy->bounds, source->bounds, sizeof(copy->bounds));
+    if (!clone_array(source->source, source->source_length, 1U, total, limit,
+                     (void **)&copy->source)) goto fail;
+    copy->source_length = source->source_length;
+    svg_shape_document *dst = &copy->geometry;
+    const svg_shape_document *src = &source->geometry;
+    dst->shape_count = src->shape_count;
+    dst->edge_count = src->edge_count;
+    if (!clone_array(src->edges, src->edge_count, sizeof(*src->edges), total, limit,
+                     (void **)&dst->edges) ||
+        !clone_array(src->shape_evenodd, src->shape_count,
+                     sizeof(*src->shape_evenodd), total, limit,
+                     (void **)&dst->shape_evenodd) ||
+        !clone_array(src->shape_filled, src->shape_count,
+                     sizeof(*src->shape_filled), total, limit,
+                     (void **)&dst->shape_filled) ||
+        !clone_array(src->shape_edge_start, src->shape_count,
+                     sizeof(*src->shape_edge_start), total, limit,
+                     (void **)&dst->shape_edge_start) ||
+        !clone_array(src->shape_edge_count, src->shape_count,
+                     sizeof(*src->shape_edge_count), total, limit,
+                     (void **)&dst->shape_edge_count)) goto fail;
+    if (source->parent != NULL) {
+        copy->parent = clone_clip_chain(source->parent, depth + 1U, total,
+                                        limit);
+        if (copy->parent == NULL) goto fail;
+    }
+    return copy;
+fail:
+    svg_clip_destroy(copy);
+    return NULL;
+}
+
+svg_shape_clip *svg_clip_clone(const svg_shape_clip *clip,
+                               size_t *total_bytes, bool *limit)
+{
+    if (total_bytes == NULL || limit == NULL) return NULL;
+    *limit = false;
+    return clone_clip_chain(clip, 0U, total_bytes, limit);
+}
+
+void svg_clip_update_owner(svg_shape_clip *clip, size_t owner_node,
+                           geom_affine user_inverse,
+                           geom_affine attribute_inverse,
+                           const double local_bounds[4])
+{
+    size_t depth = 0U;
+    for (svg_shape_clip *current = clip; current != NULL &&
+         depth++ < CLIP_CLONE_MAX_DEPTH; current = current->parent) {
+        if (current->owner_node != owner_node) continue;
+        geom_affine inverse = current->owner_before_suffix ?
+                              attribute_inverse : user_inverse;
+        if (!geom_affine_valid(inverse)) continue;
+        current->user_inverse = inverse;
+        if (local_bounds != NULL && current->object_bounding_box &&
+            isfinite(local_bounds[0]) && isfinite(local_bounds[1]) &&
+            isfinite(local_bounds[2]) && isfinite(local_bounds[3]) &&
+            local_bounds[2] >= local_bounds[0] &&
+            local_bounds[3] >= local_bounds[1])
+            memcpy(current->bounds, local_bounds, sizeof(current->bounds));
+    }
 }
 
 bool svg_clip_local_bounds(const svg_shape_document *document,
@@ -386,7 +508,7 @@ bool svg_clip_apply_group(svg_shape_document *document,
     for (size_t i = first_shape; i < end_shape; ++i) {
         svg_shape_clip *root = document->clips[i];
         if (root == NULL) {
-            if (!clip_retain(clip)) return false;
+            if (!svg_clip_retain(clip)) return false;
             document->clips[i] = clip;
             continue;
         }
@@ -394,7 +516,7 @@ bool svg_clip_apply_group(svg_shape_document *document,
         while (true) {
             if (tail == clip) break;
             if (tail->parent == NULL) {
-                if (!clip_retain(clip)) return false;
+                if (!svg_clip_retain(clip)) return false;
                 tail->parent = clip;
                 break;
             }
@@ -405,7 +527,9 @@ bool svg_clip_apply_group(svg_shape_document *document,
 }
 
 svg_shape_clip *svg_clip_create_rect(geom_point p0, geom_point p1,
-                                    geom_point p2, geom_point p3)
+                                    geom_point p2, geom_point p3,
+                                    geom_affine user_inverse,
+                                    size_t owner_node)
 {
     const geom_point points[4] = {p0, p1, p2, p3};
     for (size_t i = 0U; i < 4U; ++i)
@@ -431,6 +555,8 @@ svg_shape_clip *svg_clip_create_rect(geom_point p0, geom_point p1,
     geometry->shape_edge_count[0] = 4U;
     geometry->shape_filled[0] = true;
     clip->references = 1U;
-    clip->user_inverse = geom_affine_identity();
+    clip->user_inverse = user_inverse;
+    clip->owner_node = owner_node;
+    clip->owner_before_suffix = true;
     return clip;
 }

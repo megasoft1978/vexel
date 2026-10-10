@@ -20,12 +20,20 @@ earlier opaque fills at each subpixel before coverage is resolved. A
 tile must be empty when passed in.
 
 `raster_shape_render_at` evaluates the document's bounded SMIL overlay at a
-caller-supplied time. It clones only the mutable geometry/color/stroke arrays
-needed for that frame, leaves source and decoded arrays unchanged, and reuses
-the regular deterministic scalar renderer. Numeric leaf geometry, solid fill
-and stroke color, opacity, transform, and line motion are applied. Animated
-path morphing currently returns an unsupported diagnostic because the scene
-stores flattened path edges.
+caller-supplied time. It clones the mutable geometry/color/stroke/transform
+arrays needed for that frame, leaves source and decoded arrays unchanged, and
+reuses the regular deterministic scalar renderer. Each rendered element has a
+bounded transform-frame chain, including the authored transform, `<use>` or
+symbol placement, and nested viewport mapping. Animated transforms replace the
+authored transform by default, `additive="sum"` post-composes, and multiple
+transform tracks compose in document order. Motion and numeric geometry are
+applied in the target's user space before the same ancestor chain. Object-box
+gradient bounds and per-instance clip transforms/bounds are refreshed on the
+overlay; shared decoded clips are copied within a 64 MiB frame cap. Animated
+path morphing returns `unsupported` because the scene stores flattened path
+edges. Geometry or transform animation inside a filtered or masked opacity
+group also returns `unsupported`; those effects need their own animated
+coordinate update.
 
 Embedded PNG/JPEG image fills sample provider-owned premultiplied RGBA8 with
 bilinear interpolation in inverse-transformed local coordinates. Sampling is

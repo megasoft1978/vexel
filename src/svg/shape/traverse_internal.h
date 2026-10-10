@@ -9,6 +9,7 @@
 #define SHAPE_MAX_USE_INSTANCES 65536U
 #define SHAPE_MAX_TRAVERSAL_VISITS 4194304U
 #define SHAPE_MAX_TRANSFORM_OPERATIONS 4096U
+#define SHAPE_MAX_TRANSFORM_NODES 4194304U
 #define SHAPE_MAX_REFERENCE_BYTES (64U * 1024U)
 #define SHAPE_MAX_JOB_REFERENCE_BYTES (1024U * 1024U)
 
@@ -49,6 +50,8 @@ typedef struct shape_traversal {
     size_t opacity_group_stack[SHAPE_MAX_XML_DEPTH + 1U];
     size_t opacity_group_depth;
     size_t opacity_group_capacity;
+    size_t transform_node_stack[SHAPE_MAX_XML_DEPTH + 1U];
+    size_t transform_node_capacity;
     double viewport_width;
     double viewport_height;
     bool root_seen;
@@ -70,6 +73,10 @@ size_t svg_shape_traverse_matching_end(const shape_traversal *traversal,
                                        size_t element);
 bool svg_shape_traverse_account_transform(shape_traversal *traversal,
                                           size_t count, size_t offset);
+bool svg_shape_traverse_push_transform_node(
+    shape_traversal *traversal, size_t source_offset, size_t render_depth,
+    size_t parent, geom_affine attribute, geom_affine suffix,
+    size_t *out_node);
 bool svg_shape_traverse_compute_style(shape_traversal *traversal,
                                       size_t element,
                                       const svg_css_paint *parent,

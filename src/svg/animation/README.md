@@ -23,6 +23,11 @@ diagnostic kinds and byte offsets. `<animate attributeName="d">` is parsed only
 when each key has the same path command/number structure; the current raster
 overlay reports it unsupported because changing flattened curve topology is
 not yet implemented. The renderer applies numeric and color overlays to leaf
-shapes, and transform/motion overlays to flattened descendants. It does not
-yet reconstruct hierarchy for animated group opacity or preserve source-local
-transforms in every nested viewport/use combination.
+shapes and composes transform/motion overlays through a bounded per-render-
+instance ancestry chain. This includes groups, `<use>`/symbol placement, and
+nested viewport mappings; animated transform replacement and additive sum are
+kept distinct, and multiple transform tracks compose in document order.
+Object-box gradients and clips update with animated bounds. Filtered/masked
+opacity groups, active path morphing, geometry changes under patterns, and
+group opacity animation still return stable unsupported results when their
+flattened scene data cannot represent the update.

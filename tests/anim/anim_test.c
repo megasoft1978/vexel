@@ -187,11 +187,62 @@ static bool motion_and_mpath(void)
     return okay;
 }
 
+static bool animated_object_clip_stays_overlay_local(void)
+{
+    static const char source[] =
+        "<svg width='16' height='12'><defs><clipPath id='c' "
+        "clipPathUnits='objectBoundingBox'><rect x='0' y='0' width='.5' "
+        "height='1'/></clipPath></defs><rect x='1' y='1' width='8' height='8' "
+        "fill='red' clip-path='url(#c)'><animate attributeName='width' "
+        "from='8' to='4' dur='2s' fill='freeze'/></rect></svg>";
+    char source_snapshot[sizeof(source)];
+    memcpy(source_snapshot, source, sizeof(source));
+    svg_shape_document document = {0};
+    if (!decode(source, &document)) return false;
+    size_t edge_bytes = document.edge_count * sizeof(*document.edges);
+    size_t frame_bytes = document.transform_node_count *
+                         sizeof(*document.transform_nodes);
+    geom_edge *edges = edge_bytes == 0U ? NULL : malloc(edge_bytes);
+    svg_shape_transform_frame *frames = frame_bytes == 0U ? NULL :
+        malloc(frame_bytes);
+    if ((edge_bytes != 0U && edges == NULL) ||
+        (frame_bytes != 0U && frames == NULL)) {
+        free(edges);
+        free(frames);
+        svg_shape_document_destroy(&document);
+        return false;
+    }
+    if (edge_bytes != 0U) memcpy(edges, document.edges, edge_bytes);
+    if (frame_bytes != 0U) memcpy(frames, document.transform_nodes, frame_bytes);
+    uint8_t animated_before[4], static_middle[4], animated_after[4];
+    bool okay = pixel(&document, 1.0, 4U, 3U, animated_before) &&
+        pixel(&document, 0.0, 4U, 3U, static_middle) &&
+        pixel(&document, 1.0, 4U, 3U, animated_after) &&
+        animated_before[3] == 0U && static_middle[3] == 255U &&
+        animated_after[3] == 0U &&
+        memcmp(animated_before, animated_after, sizeof(animated_before)) == 0 &&
+        memcmp(source, source_snapshot, sizeof(source)) == 0 &&
+        (edge_bytes == 0U || memcmp(edges, document.edges, edge_bytes) == 0) &&
+        (frame_bytes == 0U ||
+         memcmp(frames, document.transform_nodes, frame_bytes) == 0);
+    if (!okay) (void)fprintf(stderr,
+        "clip overlay pixels=%u/%u/%u source=%d edges=%d frames=%d\n",
+        animated_before[3], static_middle[3], animated_after[3],
+        memcmp(source, source_snapshot, sizeof(source)) == 0,
+        edge_bytes == 0U || memcmp(edges, document.edges, edge_bytes) == 0,
+        frame_bytes == 0U ||
+            memcmp(frames, document.transform_nodes, frame_bytes) == 0);
+    free(edges);
+    free(frames);
+    svg_shape_document_destroy(&document);
+    return okay;
+}
+
 int main(void)
 {
     if (!numeric_render_and_immutability() || !color_opacity_and_discrete() ||
         !repeat_sync_and_transform() || !diagnostics_and_limits() ||
-        !motion_and_mpath()) {
+        !motion_and_mpath() || !animated_object_clip_stays_overlay_local()) {
         (void)fputs("animation checks failed\n", stderr);
         return EXIT_FAILURE;
     }

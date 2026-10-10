@@ -216,12 +216,14 @@ bool svg_shape_nested_viewport(base_bytes source,
                                double parent_width, double parent_height,
                                geom_affine element_transform,
                                geom_affine *child_transform,
+                               geom_affine *viewport_transform,
                                geom_point clip_points[4],
                                double *child_width, double *child_height,
                                bool *empty,
                                svg_shape_diagnostic *diagnostic)
 {
-    if (tokens == NULL || child_transform == NULL || clip_points == NULL ||
+    if (tokens == NULL || child_transform == NULL ||
+        viewport_transform == NULL || clip_points == NULL ||
         child_width == NULL || child_height == NULL || empty == NULL ||
         element >= token_count) {
         fail(diagnostic, SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0U);
@@ -303,6 +305,7 @@ bool svg_shape_nested_viewport(base_bytes source,
         fail(diagnostic, SVG_SHAPE_ERROR_NUMBER, tokens[element].name.offset);
         return false;
     }
+    *viewport_transform = viewport;
     return true;
 }
 

@@ -16,6 +16,13 @@ nested `<svg>`, and symbol viewports; `document.c` owns public cleanup and
 traversal while their target/keyframe source spans and stable diagnostics stay
 available for timeline enumeration and explicit-time evaluation.
 
+Traversal records a parent-linked transform frame for each rendered instance.
+Frames keep the authored transform separate from `<use>`/symbol placement and
+nested viewport mapping, so animation evaluation can replace or compose a
+local transform without flattening away its ancestors. Frame indices are
+instance-specific even when several `<use>` elements render the same source
+element. Decoded source bytes and the static geometry remain unchanged.
+
 Supported geometry includes all SVG path commands (`M/L/H/V/C/S/Q/T/A/Z`,
 absolute and relative), `<line>`, `<polyline>`, `<polygon>`, `<circle>`,
 `<ellipse>`, and `<rect>`. Paths retain subpath and closed-stroke metadata so

@@ -88,6 +88,7 @@ void svg_shape_document_destroy(svg_shape_document *document)
     svg_shape_free(document->path_segments);
     svg_shape_free(document->path_numbers);
     svg_shape_free(document->shape_sources);
+    svg_shape_free(document->transform_nodes);
     svg_shape_free(document->images);
     svg_shape_free(document->opacity_groups);
     svg_shape_free(document->filters);

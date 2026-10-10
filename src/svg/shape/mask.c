@@ -347,6 +347,7 @@ bool svg_shape_traverse_attach_mask(shape_traversal *traversal,
     traversal->mask_instances++;
     shape_traversal nested = *traversal;
     nested.root_seen = true;
+    nested.transform_node_capacity = 0U;
     nested.selection_element = SIZE_MAX;
     nested.opacity_group_depth = 0U;
     nested.opacity_group_capacity = 0U;
@@ -360,6 +361,7 @@ bool svg_shape_traverse_attach_mask(shape_traversal *traversal,
     nested.builder.path_segment_capacity = 0U;
     nested.builder.path_number_capacity = 0U;
     nested.builder.shape_index = 0U;
+    nested.builder.transform_node = SVG_SHAPE_NO_TRANSFORM_NODE;
     nested.builder.transform = content_transform;
     nested.builder.viewport_width = traversal->viewport_width;
     nested.builder.viewport_height = traversal->viewport_height;

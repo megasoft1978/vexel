@@ -126,6 +126,22 @@ static bool assign_shape_source(shape_traversal *traversal,
                                    end_shape, offset, length);
 }
 
+static bool authored_transform(shape_traversal *traversal, size_t element,
+                               geom_affine *out)
+{
+    *out = geom_affine_identity();
+    svg_xml_span value;
+    if (!svg_shape_traverse_attr(traversal->source, traversal->tokens,
+            traversal->token_count, element, "transform", NULL, &value))
+        return true;
+    size_t operations = 0U;
+    if (svg_shape_transform_parse(traversal->source, value, out, &operations))
+        return true;
+    svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
+                            value.offset);
+    return false;
+}
+
 bool svg_shape_traverse_account_transform(shape_traversal *traversal, size_t count,
                               size_t offset)
 {
@@ -135,6 +151,61 @@ bool svg_shape_traverse_account_transform(shape_traversal *traversal, size_t cou
         return false;
     }
     traversal->transform_operations += count;
+    return true;
+}
+
+bool svg_shape_traverse_push_transform_node(
+    shape_traversal *traversal, size_t source_offset, size_t render_depth,
+    size_t parent, geom_affine attribute, geom_affine suffix,
+    size_t *out_node)
+{
+    if (traversal == NULL || out_node == NULL ||
+        render_depth > SHAPE_MAX_XML_DEPTH ||
+        (parent != SVG_SHAPE_NO_TRANSFORM_NODE &&
+         parent >= traversal->builder.doc->transform_node_count) ||
+        !geom_affine_valid(attribute) || !geom_affine_valid(suffix)) {
+        svg_shape_traverse_fail(traversal == NULL ? NULL : traversal->diagnostic,
+                                SVG_SHAPE_ERROR_INVALID_ARGUMENT, source_offset);
+        return false;
+    }
+    svg_shape_document *document = traversal->builder.doc;
+    if (document->transform_node_count >= SHAPE_MAX_TRANSFORM_NODES) {
+        svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
+                                source_offset);
+        return false;
+    }
+    if (document->transform_node_count == traversal->transform_node_capacity) {
+        size_t next = traversal->transform_node_capacity == 0U ? 64U :
+                      traversal->transform_node_capacity;
+        if (next > SHAPE_MAX_TRANSFORM_NODES / 2U)
+            next = SHAPE_MAX_TRANSFORM_NODES;
+        else next *= 2U;
+        if (next <= document->transform_node_count ||
+            next > SIZE_MAX / sizeof(*document->transform_nodes)) {
+            svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
+                                    source_offset);
+            return false;
+        }
+        svg_shape_transform_frame *nodes = svg_shape_realloc(
+            document->transform_nodes, next * sizeof(*nodes));
+        if (nodes == NULL) {
+            svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_OOM,
+                                    source_offset);
+            return false;
+        }
+        document->transform_nodes = nodes;
+        traversal->transform_node_capacity = next;
+    }
+    size_t index = document->transform_node_count++;
+    document->transform_nodes[index] = (svg_shape_transform_frame){
+        .source_offset = source_offset,
+        .parent = parent,
+        .attribute = attribute,
+        .suffix = suffix,
+        .motion = geom_affine_identity()
+    };
+    traversal->transform_node_stack[render_depth] = index;
+    *out_node = index;
     return true;
 }
 
@@ -382,15 +453,29 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
     double child_width = traversal->viewport_width;
     double child_height = traversal->viewport_height;
     bool viewport_empty = false;
+    geom_affine viewport_transform = geom_affine_identity();
+    geom_affine viewport_owner_transform = current;
     if (nested_svg) {
         if (!svg_shape_nested_viewport(
                 traversal->source, traversal->tokens,
                 traversal->token_count, element, traversal->viewport_width,
-                traversal->viewport_height, current, &current, viewport_clip,
-                &child_width, &child_height, &viewport_empty,
+                traversal->viewport_height, current, &current,
+                &viewport_transform, viewport_clip, &child_width, &child_height,
+                &viewport_empty,
                 traversal->diagnostic)) return false;
         if (viewport_empty) return true;
     }
+
+    geom_affine local_attribute;
+    size_t transform_parent = render_depth == 0U ?
+        SVG_SHAPE_NO_TRANSFORM_NODE :
+        traversal->transform_node_stack[render_depth - 1U];
+    size_t transform_node = SVG_SHAPE_NO_TRANSFORM_NODE;
+    if (!authored_transform(traversal, element, &local_attribute) ||
+        !svg_shape_traverse_push_transform_node(
+            traversal, token->source.offset, render_depth, transform_parent,
+            local_attribute, viewport_transform, &transform_node)) return false;
+    traversal->builder.transform_node = transform_node;
 
     size_t opacity_group = SVG_SHAPE_NO_GROUP;
     if (!svg_shape_traverse_begin_opacity_group(traversal, &style, &opacity_group)) return false;
@@ -495,6 +580,10 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
             }
         }
     }
+    for (size_t shape = direct_first_shape;
+         shape < traversal->builder.doc->shape_count; ++shape)
+        traversal->builder.doc->shape_sources[shape].transform_node =
+            transform_node;
 
     if (end == element) {
         if (text_container && traversal->text_depth != 0U) {
@@ -549,9 +638,29 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
         return false;
     }
     if (nested_svg && traversal->builder.doc->shape_count != first_shape) {
+        geom_affine viewport_owner_inverse;
+        geom_point local_clip[4];
+        if (!svg_shape_affine_inverse(viewport_owner_transform,
+                                      &viewport_owner_inverse)) {
+            svg_shape_traverse_fail(traversal->diagnostic,
+                SVG_SHAPE_ERROR_UNSUPPORTED, token->name.offset);
+            svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
+            return false;
+        }
+        for (size_t point = 0U; point < 4U; ++point) {
+            if (!geom_affine_map_point(viewport_owner_inverse,
+                                       viewport_clip[point],
+                                       &local_clip[point])) {
+                svg_shape_traverse_fail(traversal->diagnostic,
+                    SVG_SHAPE_ERROR_UNSUPPORTED, token->name.offset);
+                svg_shape_traverse_finish_opacity_group(traversal,
+                                                        opacity_group);
+                return false;
+            }
+        }
         svg_shape_clip *viewport = svg_clip_create_rect(
-            viewport_clip[0], viewport_clip[1], viewport_clip[2],
-            viewport_clip[3]);
+            local_clip[0], local_clip[1], local_clip[2], local_clip[3],
+            viewport_owner_inverse, transform_node);
         if (viewport == NULL) {
             svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_OOM,
                  token->name.offset);
@@ -578,7 +687,7 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
         bool clipped = svg_shape_apply_declared_clip(traversal->source, traversal->tokens,
             traversal->token_count, &traversal->references, traversal->css,
             traversal->builder.doc, clip_value, first_shape, first_edge,
-            current, traversal->diagnostic);
+            transform_node, current, traversal->diagnostic);
         bool masked = clipped && svg_shape_traverse_attach_mask(
             traversal, element, opacity_group, &style, current);
         svg_shape_traverse_finish_opacity_group(traversal, opacity_group);

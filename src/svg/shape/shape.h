@@ -129,7 +129,17 @@ typedef struct svg_shape_source_map {
     size_t offset;
     size_t length;
     geom_affine transform;
+    size_t transform_node;
 } svg_shape_source_map;
+
+#define SVG_SHAPE_NO_TRANSFORM_NODE SIZE_MAX
+typedef struct svg_shape_transform_frame {
+    size_t source_offset;
+    size_t parent;
+    geom_affine attribute;
+    geom_affine suffix;
+    geom_affine motion;
+} svg_shape_transform_frame;
 
 typedef struct svg_shape_path_number {
     size_t offset;
@@ -209,6 +219,8 @@ struct svg_shape_document {
     svg_shape_path_number *path_numbers;
     size_t path_number_count;
     svg_shape_source_map *shape_sources;
+    svg_shape_transform_frame *transform_nodes;
+    size_t transform_node_count;
     svg_shape_image *images; /* one optional provider-owned image per shape */
     void *media_context;
     svg_shape_image_release_fn release_image;
