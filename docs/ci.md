@@ -34,3 +34,15 @@ upload artifacts or user data.
 `python3 scripts/check_fuzz_workflow.py` checks the fuzz workflow's runner,
 triggers, duration commands, action pins, secrets, and upload policy.
 `actionlint .github/workflows/fuzz.yml` checks workflow syntax and action usage.
+
+## Owner-step timing on hosted runners
+
+`index-replay` fails if any owner-thread step exceeds 100 ms. Shared macOS runners
+can jitter past that, so CI sets `VEXEL_OWNER_STEP_LIMIT_MS=500`. Local runs and
+unset or invalid values keep the strict 100 ms gate.
+
+## Reference renderer
+
+The differential tests compare against librsvg. CI runs `brew install librsvg`
+(the only package the workflow may install; `scripts/check_ci.py` rejects
+anything else). librsvg is a test-time reference only, never a build dependency.

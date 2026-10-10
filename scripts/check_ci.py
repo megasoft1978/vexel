@@ -30,7 +30,9 @@ def check_policy(text: str) -> None:
         raise PolicyError("workflow must grant contents: read explicitly")
     if re.search(r"\$\{\{\s*secrets\.", text, flags=re.IGNORECASE):
         raise PolicyError("workflow must not reference secrets")
-    if re.search(r"actions/cache|brew\s+install|apt-get|choco\s+install", text, flags=re.IGNORECASE):
+    # The only permitted install is the pinned-purpose reference renderer used by differential tests.
+    policy_text = re.sub(r"brew\s+install\s+librsvg\b", "", text)
+    if re.search(r"actions/cache|brew\s+install|apt-get|choco\s+install", policy_text, flags=re.IGNORECASE):
         raise PolicyError("workflow must not install packages or configure a cache")
 
     action_lines = []

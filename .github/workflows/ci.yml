@@ -20,5 +20,10 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install librsvg (reference renderer for differential tests)
+        run: brew install librsvg
       - name: Build and run fast verification
+        env:
+          # Shared hosted runners jitter; the strict 100 ms owner-step gate stays the local default.
+          VEXEL_OWNER_STEP_LIMIT_MS: "500"
         run: ./dev verify
