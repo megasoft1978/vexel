@@ -4,6 +4,7 @@
 #include "document_model.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 static size_t editor_full_attribute_value(viewer_editor *editor,
@@ -126,9 +127,41 @@ void editor_build_tree_modern(viewer_editor *editor)
     okay = okay && editor_add_node(editor, EDITOR_NODE_OPTIONS, UI_ROOT_ID,
         UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_OPTIONS_POINTS, 8U, 8U,
         tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
-    const char *tool_hint = editor->active_tool == UI_ICON_PAN ?
-        "Pan · drag the canvas" : editor->active_tool == UI_ICON_ZOOM ?
+    const char *tool_hint = editor->draw_tool == VIEWER_EDITOR_TOOL_RECT ?
+        "Rectangle · drag to draw · R" :
+        editor->draw_tool == VIEWER_EDITOR_TOOL_ELLIPSE ?
+        "Ellipse · drag to draw · O" :
+        editor->draw_tool == VIEWER_EDITOR_TOOL_LINE ?
+        "Line · drag to draw · L" : editor->active_tool == UI_ICON_PAN ?
+        "Pan · drag the canvas · Space" : editor->active_tool == UI_ICON_ZOOM ?
         "Zoom · scroll over the canvas" : "Select · choose structure rows or edit properties";
+    char canvas_hud[UI_TEXT_MAX_BYTES] = "Zoom · fit and actual size are in View";
+    char tile_status[UI_TEXT_MAX_BYTES] = "Preview retained · visible tile rendering";
+    if (editor->canvas_document_width > 0U && editor->canvas_document_height > 0U) {
+        int amount;
+        if (editor->canvas_pointer_valid) {
+            amount = snprintf(canvas_hud, sizeof(canvas_hud),
+                "%.0f%% · %.1f, %.1f · %u × %u",
+                editor->canvas_zoom * 100.0, editor->canvas_pointer_x,
+                editor->canvas_pointer_y, editor->canvas_document_width,
+                editor->canvas_document_height);
+        } else {
+            amount = snprintf(canvas_hud, sizeof(canvas_hud), "%.0f%% · —, — · %u × %u",
+                editor->canvas_zoom * 100.0, editor->canvas_document_width,
+                editor->canvas_document_height);
+        }
+        if (amount < 0 || (size_t)amount >= sizeof(canvas_hud))
+            (void)snprintf(canvas_hud, sizeof(canvas_hud), "Canvas status unavailable");
+        if (editor->canvas_tiles_total > 0U) {
+            amount = snprintf(tile_status, sizeof(tile_status), "Tiles %zu / %zu%s",
+                editor->canvas_tiles_done, editor->canvas_tiles_total,
+                editor->canvas_tiles_active ? " · rendering" : "");
+            if (amount < 0 || (size_t)amount >= sizeof(tile_status))
+                (void)snprintf(tile_status, sizeof(tile_status), "Tile progress unavailable");
+        } else if (!editor->canvas_tiles_active) {
+            (void)snprintf(tile_status, sizeof(tile_status), "Preview ready · no sharp tiles pending");
+        }
+    }
     okay = okay && editor_add_node(editor, EDITOR_NODE_OPTIONS + 100U,
         EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
         UI_ROLE_TEXT, tool_hint, strlen(tool_hint), NULL, 0U, 0U, 0U) &&
@@ -195,12 +228,10 @@ void editor_build_tree_modern(viewer_editor *editor)
                 UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
             editor_add_node(editor, EDITOR_NODE_CANVAS_HUD + 100U,
                 EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
-                0U, UI_ROLE_TEXT, "Zoom · fit and actual size are in View",
-                strlen("Zoom · fit and actual size are in View"), NULL, 0U, 0U, 0U) &&
+                0U, UI_ROLE_TEXT, canvas_hud, strlen(canvas_hud), NULL, 0U, 0U, 0U) &&
             editor_add_node(editor, EDITOR_NODE_CANVAS_TILE_STATUS, EDITOR_NODE_CANVAS,
                 UI_AXIS_HORIZONTAL, 0U, 28U, 8U, 0U, tokens->panel_raised,
-                UI_ROLE_STATUS, "Preview retained · visible tile rendering",
-                strlen("Preview retained · visible tile rendering"), NULL, 0U, 0U, 0U);
+                UI_ROLE_STATUS, tile_status, strlen(tile_status), NULL, 0U, 0U, 0U);
     }
     if (okay && layout.inspector_visible) {
         okay = editor_add_node(editor, EDITOR_NODE_INSPECTOR, EDITOR_NODE_WORKSPACE,

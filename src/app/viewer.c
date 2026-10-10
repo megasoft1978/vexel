@@ -13,6 +13,8 @@
 #include "test_driver/native_injection.h"
 #include "viewer_load.h"
 #include "viewer_quality.h"
+#include "viewer_chrome.h"
+#include "viewer_canvas_geometry.h"
 
 #include <math.h>
 #include <stdatomic.h>
@@ -154,6 +156,48 @@ bool viewer_bump_generation(viewer_app *app)
     return true;
 }
 
+bool viewer_sync_canvas_geometry(viewer_app *app, bool refit)
+{
+    if (app == NULL) return false;
+    ui_rect next = {0U, 0U, app->width, app->height};
+    viewer_chrome_layout layout;
+    if (app->editor != NULL && viewer_editor_get_chrome_layout(app->editor, &layout))
+        next = layout.canvas;
+    if (next.width == 0U || next.height == 0U) return false;
+    ui_rect previous = app->navigation_canvas;
+    bool changed = memcmp(&previous, &next, sizeof(next)) != 0;
+    if (!changed) return false;
+    if (app->navigation_ready) {
+        if (!viewer_canvas_navigation_resize(&app->navigation,
+                (double)next.width, (double)next.height,
+                refit || !app->navigation_user_zoomed)) return false;
+        viewer_navigation_clamp(&app->navigation);
+    }
+    app->navigation_canvas = next;
+    if (app->navigation_ready) {
+        viewer_navigation_clamp(&app->navigation);
+        if (!viewer_bump_generation(app)) {
+            app->fatal_error = true;
+            app->running = false;
+            return false;
+        }
+        viewer_refresh_sharp_plan(app);
+    }
+    return true;
+}
+
+ui_viewer_navigation viewer_navigation_for_frame(const viewer_app *app)
+{
+    ui_viewer_navigation navigation = {0};
+    if (app == NULL) return navigation;
+    navigation = app->navigation;
+    navigation.pan_x += (double)app->navigation_canvas.x;
+    navigation.pan_y += (double)app->navigation_canvas.y;
+    navigation.viewport_width = (double)app->width;
+    navigation.viewport_height = (double)app->height;
+    return navigation;
+}
+
 static uint64_t sharp_work_per_pixel(const viewer_app *app)
 {
     uint64_t shapes = (uint64_t)app->document.shape.shape_count;
@@ -164,9 +208,10 @@ static uint64_t sharp_work_per_pixel(const viewer_app *app)
 
 void viewer_refresh_sharp_plan(viewer_app *app)
 {
+    ui_viewer_navigation frame_navigation = viewer_navigation_for_frame(app);
     app->sharp_plan_ready = app->document_visible && app->navigation_ready &&
         viewer_tile_plan_init(&app->sharp_plan, app->width, app->height,
-                              app->generation, &app->navigation);
+                              app->generation, &frame_navigation);
     app->frame_dirty = true;
 }
 
@@ -287,6 +332,7 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
     app->load_status = VIEWER_LOAD_CANCELED;
     app->document_visible = false;
     app->navigation_ready = false;
+    app->navigation_user_zoomed = false;
     app->pointer_valid = false;
     app->load_ms = 0.0;
     app->render_ms = 0.0;
@@ -352,12 +398,16 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         app->editor = viewer_editor_create((base_bytes){app->document.source,
             app->document.source_length}, UI_THEME_DARK, app->width, app->height);
     viewer_editor_resize(app->editor, app->width, app->height, app->backing_scale);
+    (void)viewer_sync_canvas_geometry(app, true);
     if (app->load_status == VIEWER_LOAD_OK &&
-        ui_viewer_navigation_init(&app->navigation, (double)app->width,
-            (double)app->height, (double)app->document.tile.width,
+        ui_viewer_navigation_init(&app->navigation,
+            (double)app->navigation_canvas.width,
+            (double)app->navigation_canvas.height,
+            (double)app->document.tile.width,
             (double)app->document.tile.height) &&
         ui_viewer_navigation_fit(&app->navigation)) {
         app->navigation_ready = true;
+        app->navigation_user_zoomed = false;
         app->document_visible = true;
         viewer_navigation_clamp(&app->navigation);
         (void)ui_viewer_progress_update(&app->progress, app->generation, 100U,
@@ -431,8 +481,10 @@ static void service_job(viewer_app *app)
         app->load_status = VIEWER_LOAD_OK;
         app->load_result_handled = true;
         if (!app->navigation_ready &&
-            ui_viewer_navigation_init(&app->navigation, (double)app->width,
-                (double)app->height, (double)app->document.tile.width,
+            ui_viewer_navigation_init(&app->navigation,
+                (double)app->navigation_canvas.width,
+                (double)app->navigation_canvas.height,
+                (double)app->document.tile.width,
                 (double)app->document.tile.height) &&
             ui_viewer_navigation_fit(&app->navigation)) {
             app->navigation_ready = true;
@@ -478,7 +530,7 @@ static void start_next_sharp_tile(viewer_app *app)
     job->kind = VIEWER_JOB_SHARP_TILE;
     job->generation = app->generation;
     job->sharp_tile.region = region;
-    job->navigation = app->navigation;
+    job->navigation = viewer_navigation_for_frame(app);
     if (!submit_job(app, job)) {
         viewer_job_destroy(job);
         app->sharp_plan_ready = false;
@@ -681,6 +733,7 @@ static int run_viewer(const char *path, bool smoke_mode)
         if (app.pending_open && app.job == NULL) start_pending_load(&app);
         if (app.editor_render_requested && app.job == NULL) start_editor_render(&app);
         if (!app.close_requested) start_next_sharp_tile(&app);
+        if (viewer_editor_take_redraw_request(app.editor)) app.frame_dirty = true;
         if (!viewer_compose_and_present(&app)) {
             app.fatal_error = true;
             app.running = false;

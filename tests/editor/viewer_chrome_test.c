@@ -66,9 +66,56 @@ int main(void)
     if (!has_selected_outline_row) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 10;
     }
+    (void)viewer_editor_take_redraw_request(editor);
+    viewer_editor_set_canvas_status(editor, 1.25, true, 10.5, 20.5,
+        64U, 64U, 2U, 4U, true);
+    if (!viewer_editor_take_redraw_request(editor) ||
+        !viewer_editor_semantics(editor, snapshot) ||
+        find_label(snapshot, "125% · 10.5, 20.5 · 64 × 64") == NULL ||
+        find_label(snapshot, "Tiles 2 / 4 · rendering") == NULL) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 15;
+    }
     if (!viewer_editor_set_appearance(editor, UI_THEME_LIGHT, true, true) ||
         !viewer_editor_set_tool(editor, UI_ICON_PAN)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 4;
+    }
+    if (!viewer_editor_take_redraw_request(editor) ||
+        !viewer_editor_semantics(editor, snapshot)) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 16;
+    }
+    const ui_semantics_node *pan_tool = find_label(snapshot, "Pan tool");
+    if (pan_tool == NULL) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 17;
+    }
+    uint32_t pan_x = pan_tool->frame.x + pan_tool->frame.width / 2U;
+    uint32_t pan_y = pan_tool->frame.y + pan_tool->frame.height / 2U;
+    viewer_editor_pointer_move(editor, pan_x, pan_y);
+    if (!viewer_editor_take_redraw_request(editor) ||
+        !viewer_editor_semantics(editor, snapshot)) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 18;
+    }
+    pan_tool = find_label(snapshot, "Pan tool");
+    if (pan_tool == NULL || (pan_tool->state & UI_STATE_HOVERED) == 0U) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 19;
+    }
+    uint32_t pressed = viewer_editor_pointer_down(editor, pan_x, pan_y, 0U);
+    if ((pressed & VIEWER_EDITOR_HANDLED) == 0U ||
+        !viewer_editor_take_redraw_request(editor) ||
+        !viewer_editor_semantics(editor, snapshot)) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 20;
+    }
+    pan_tool = find_label(snapshot, "Pan tool");
+    if (pan_tool == NULL || (pan_tool->state & UI_STATE_PRESSED) == 0U) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 21;
+    }
+    viewer_editor_pointer_up(editor);
+    if (!viewer_editor_take_redraw_request(editor) ||
+        !viewer_editor_semantics(editor, snapshot)) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 22;
+    }
+    pan_tool = find_label(snapshot, "Pan tool");
+    if (pan_tool == NULL || (pan_tool->state & UI_STATE_PRESSED) != 0U) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 23;
     }
     memset(pixels, 242, pixel_bytes);
     for (size_t at = 3U; at < pixel_bytes; at += 4U) pixels[at] = 255U;

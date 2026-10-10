@@ -3,7 +3,9 @@
 
 #include "document_edit.h"
 #include "platform/platform_window.h"
+#include "svg/shape/shape.h"
 #include "ui/ui_core.h"
+#include "ui/viewer_controls.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -11,6 +13,20 @@
 
 typedef struct viewer_editor viewer_editor;
 struct viewer_chrome_layout;
+
+typedef enum viewer_editor_draw_tool {
+    VIEWER_EDITOR_TOOL_SELECT,
+    VIEWER_EDITOR_TOOL_RECT,
+    VIEWER_EDITOR_TOOL_ELLIPSE,
+    VIEWER_EDITOR_TOOL_LINE
+} viewer_editor_draw_tool;
+
+typedef struct viewer_editor_canvas_overlay_state {
+    svg_shape_rect bounds; /* decoded document tile pixels */
+    double rotation_radians;
+    bool visible;
+    bool drawing_preview;
+} viewer_editor_canvas_overlay_state;
 
 enum {
     VIEWER_EDITOR_HANDLED = 1U << 0U,
@@ -63,6 +79,37 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
                                           bool structure_visible,
                                           bool inspector_visible);
 bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool);
+ui_icon_kind viewer_editor_get_tool(const viewer_editor *editor);
+bool viewer_editor_text_input_active(const viewer_editor *editor);
+bool viewer_editor_set_draw_tool(viewer_editor *editor,
+                                 viewer_editor_draw_tool tool);
+viewer_editor_draw_tool viewer_editor_get_draw_tool(const viewer_editor *editor);
+/* Pointer coordinates and navigation use backing pixels relative to canvas origin. */
+uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y, uint32_t modifiers);
+uint32_t viewer_editor_canvas_pointer_move(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y);
+uint32_t viewer_editor_canvas_pointer_up(viewer_editor *editor,
+    const svg_shape_document *document);
+uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor);
+uint32_t viewer_editor_nudge_selection(viewer_editor *editor,
+                                       double dx, double dy);
+bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
+    const svg_shape_document *document,
+    viewer_editor_canvas_overlay_state *out_overlay);
+void viewer_editor_paint_canvas_overlay(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas, uint8_t *rgba, uint32_t width, uint32_t height,
+    size_t stride);
+void viewer_editor_set_canvas_status(viewer_editor *editor, double zoom,
+    bool pointer_valid, double pointer_x, double pointer_y,
+    uint32_t document_width, uint32_t document_height,
+    size_t tiles_done, size_t tiles_total, bool tiles_active);
+bool viewer_editor_take_redraw_request(viewer_editor *editor);
+void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y);
+void viewer_editor_pointer_up(viewer_editor *editor);
 bool viewer_editor_get_chrome_layout(viewer_editor *editor,
                                      struct viewer_chrome_layout *out_layout);
 

@@ -62,6 +62,7 @@ struct viewer_app {
     uint32_t height;
     double backing_scale;
     ui_viewer_navigation navigation;
+    ui_rect navigation_canvas;
     ui_viewer_progress progress;
     viewer_tile_cache sharp_cache;
     viewer_tile_plan sharp_plan;
@@ -85,6 +86,8 @@ struct viewer_app {
     bool pixel_grid;
     bool pointer_valid;
     bool navigation_ready;
+    bool navigation_user_zoomed;
+    bool space_down;
     bool document_visible;
     bool frame_dirty;
     bool pending_open;
@@ -112,5 +115,7 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial);
 void viewer_request_close(viewer_app *app);
 void viewer_process_event(viewer_app *app, const platform_event *event);
 bool viewer_compose_and_present(viewer_app *app);
+bool viewer_sync_canvas_geometry(viewer_app *app, bool refit);
+ui_viewer_navigation viewer_navigation_for_frame(const viewer_app *app);
 
 #endif

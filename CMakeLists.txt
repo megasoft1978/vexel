@@ -678,3 +678,48 @@ if(BUILD_TESTING)
         "${CMAKE_SOURCE_DIR}/tests/ui/verify_style_goldens.py"
         --binary $<TARGET_FILE:viewer_chrome_render>)
 endif()
+
+# lane: w5-editor
+target_sources(svgworkbench PRIVATE src/app/viewer_canvas_geometry.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_canvas.c
+    src/app/viewer_editor_overlay.c)
+target_link_libraries(vexel_editor_ui PUBLIC vexel_shape vexel_ui_state)
+target_compile_options(vexel_editor_ui PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(editor_canvas_test tests/editor/editor_canvas_test.c)
+target_link_libraries(editor_canvas_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_canvas_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_canvas_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(editor_selection_render tests/editor/editor_selection_render.c)
+target_link_libraries(editor_selection_render PRIVATE vexel_editor_ui)
+set_target_properties(editor_selection_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_selection_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(viewer_canvas_geometry_test
+    tests/app/viewer_canvas_geometry_test.c src/app/viewer_canvas_geometry.c)
+target_include_directories(viewer_canvas_geometry_test PRIVATE src/app)
+target_link_libraries(viewer_canvas_geometry_test PRIVATE vexel_ui_state)
+set_target_properties(viewer_canvas_geometry_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_canvas_geometry_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_canvas_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_canvas_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_selection_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_selection_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(viewer_canvas_geometry_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_canvas_geometry_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-canvas COMMAND editor_canvas_test)
+    add_test(NAME editor-selection-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/editor/verify_selection_goldens.py"
+        --binary $<TARGET_FILE:editor_selection_render>)
+    add_test(NAME viewer-canvas-geometry COMMAND viewer_canvas_geometry_test)
+endif()

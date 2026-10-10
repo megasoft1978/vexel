@@ -64,6 +64,14 @@ typedef enum editor_field_kind {
     EDITOR_FIELD_NEW_VALUE
 } editor_field_kind;
 
+typedef enum editor_canvas_gesture_kind {
+    EDITOR_CANVAS_GESTURE_NONE,
+    EDITOR_CANVAS_GESTURE_MOVE,
+    EDITOR_CANVAS_GESTURE_RESIZE,
+    EDITOR_CANVAS_GESTURE_ROTATE,
+    EDITOR_CANVAS_GESTURE_DRAW
+} editor_canvas_gesture_kind;
+
 typedef struct editor_outline_frame {
     document_handle node;
     document_handle child;
@@ -98,6 +106,24 @@ struct viewer_editor {
     uint32_t focus_id;
     ui_theme theme;
     ui_icon_kind active_tool;
+    viewer_editor_draw_tool draw_tool;
+    editor_canvas_gesture_kind canvas_gesture;
+    svg_shape_selection canvas_selection;
+    svg_shape_rect canvas_preview_bounds;
+    double gesture_start_x;
+    double gesture_start_y;
+    double gesture_start_device_x;
+    double gesture_start_device_y;
+    double gesture_current_x;
+    double gesture_current_y;
+    double gesture_scale_x;
+    double gesture_scale_y;
+    double gesture_rotation;
+    double gesture_pivot_x;
+    double gesture_pivot_y;
+    uint32_t hovered_id;
+    uint32_t pressed_id;
+    uint8_t resize_handle;
     uint32_t width;
     uint32_t height;
     double backing_scale;
@@ -109,10 +135,22 @@ struct viewer_editor {
     bool modern_style;
     bool increased_contrast;
     bool reduced_motion;
+    bool redraw_requested;
+    bool canvas_selection_valid;
+    bool canvas_gesture_moved;
     bool want_structure;
     bool want_inspector;
     bool effective_structure;
     bool effective_inspector;
+    double canvas_zoom;
+    double canvas_pointer_x;
+    double canvas_pointer_y;
+    uint32_t canvas_document_width;
+    uint32_t canvas_document_height;
+    size_t canvas_tiles_done;
+    size_t canvas_tiles_total;
+    bool canvas_pointer_valid;
+    bool canvas_tiles_active;
 };
 
 void editor_set_text(char *target, size_t capacity, const char *source);

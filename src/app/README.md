@@ -39,18 +39,38 @@ and a distinct error image when a frame can be written.
 
 The retained editor session in `viewer_editor.*` borrows the loaded source for
 `document_edit`, builds a bounded structure/inspector chrome, and routes every
-edit through the source-preserving edit API. Edited source snapshots are decoded
-and rasterized on the existing worker queue with generation cancellation. A
-failed edited preview leaves the last good canvas visible and reports the
-decoder diagnostic in the editor status bar. The selection outline currently
-has a source-offset hook; shape source offsets and bounding boxes are not exposed
-by the renderer yet.
+edit through the source-preserving edit API. The canvas uses a separate
+navigation viewport that fits on open and continues to refit on resize until
+the user changes zoom. After a user zoom, resizing preserves the document point
+at the canvas center. The HUD reports zoom, pointer coordinates in rendered
+document pixels, decoded dimensions, and visible sharp-tile progress.
+
+`viewer_editor_canvas.c` maps hit-tested rendered shapes to source offsets and
+keeps selection in sync with the structure and inspector. Move, resize, and
+rotate previews do not modify source bytes; release commits one bounded
+`transform` attribute edit, and undo restores exact prior bytes. The overlay
+draws a clipped selection box, eight resize handles, a rotate handle, and a
+shape-drawing preview. Rect, ellipse, and line tools insert bounded templates
+into the selected `<g>` or the SVG root. The select, pan, zoom, rect, ellipse,
+and line shortcuts are V, H, Z, R, O, and L; Space temporarily pans. Arrow keys
+nudge a canvas selection by one document unit, and Shift+Arrow uses ten units.
+Escape cancels an active gesture.
+
+Edited source snapshots are decoded and rasterized on the existing worker queue
+with generation cancellation. A failed edited preview leaves the last good
+canvas visible and reports the decoder diagnostic in the editor status bar.
 
 Save, undo/redo, element delete/duplicate/group/ungroup/reorder, editable
-attribute rows, and text content edits are wired into the viewer. Save As,
-dirty-file confirmation dialogs, system appearance changes, clipboard access,
-and IME marked text require additions to the `platform/` interface. Until those
-services land, dirty open/close/reload requests are blocked and an external file
-change is checked again before saving to prevent overwriting the changed path.
-The UI uses the dark theme by default. SVGZ remains unsupported; rendering is
-limited to the subset accepted by the current decoder and rasterizer.
+attribute rows, and text content edits remain wired into the viewer. Multi-
+selection and group transforms, polygon/polyline and path-pen creation, path
+node editing, snapping, SVG clipboard exchange, and PNG export remain future
+work. Transform handles currently use rendered axis-aligned bounds; transforms
+are serialized by adding or prepending an SVG `transform` attribute so unknown
+geometry and authored coordinates remain intact.
+
+Save As, dirty-file confirmation dialogs, clipboard access, and IME marked text
+still need platform services. Dirty open/close/reload requests are blocked and
+external file changes are checked before overwrite. System appearance changes
+invalidate the editor and trigger the next viewer-loop presentation. SVGZ
+remains unsupported; rendering is limited to the subset accepted by the current
+decoder and rasterizer.

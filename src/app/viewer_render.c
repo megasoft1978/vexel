@@ -50,6 +50,17 @@ bool viewer_compose_and_present(viewer_app *app)
     }
     char status[VIEWER_STATUS_CAP] = {0};
     bool has_status = make_status_text(app, status);
+    ui_viewer_navigation frame_navigation = viewer_navigation_for_frame(app);
+    size_t total_tiles = app->sharp_plan.columns > 0U && app->sharp_plan.rows > 0U ?
+        (size_t)app->sharp_plan.columns * app->sharp_plan.rows : 0U;
+    size_t done_tiles = app->sharp_cache.count;
+    if (total_tiles > 0U && done_tiles > total_tiles) done_tiles = total_tiles;
+    bool tiles_active = app->sharp_plan_ready ||
+        (app->job != NULL && app->job->kind == VIEWER_JOB_SHARP_TILE);
+    viewer_editor_set_canvas_status(app->editor, app->navigation.scale,
+        app->pointer_valid, app->pointer_doc_x, app->pointer_doc_y,
+        app->document.tile.width, app->document.tile.height,
+        done_tiles, total_tiles, tiles_active);
     viewer_frame_options options = {
         .checkerboard = app->checkerboard,
         .background_index = app->background_index,
@@ -59,13 +70,19 @@ bool viewer_compose_and_present(viewer_app *app)
         .sharp_tile_count = tile_count,
         .status_text = has_status ? status : NULL
     };
-    if (!viewer_compose_frame_ex(tile, navigation, &app->progress, kind, message,
+    const ui_viewer_navigation *paint_navigation = kind == VIEWER_FRAME_DOCUMENT ?
+        &frame_navigation : navigation;
+    if (!viewer_compose_frame_ex(tile, paint_navigation, &app->progress, kind, message,
             &options, app->frame, app->frame_bytes, app->width, app->height)) {
         (void)fputs("viewer: frame composition failed\n", stderr);
         return false;
     }
     viewer_editor_paint(app->editor, app->frame, app->frame_bytes,
         (size_t)app->width * 4U);
+    if (app->editor != NULL && kind == VIEWER_FRAME_DOCUMENT)
+        viewer_editor_paint_canvas_overlay(app->editor, &app->document.shape,
+            &app->navigation, app->navigation_canvas, app->frame,
+            app->width, app->height, (size_t)app->width * 4U);
     app->frame_dirty = false;
     if (!platform_metal_present(app->window, app->frame, app->frame_bytes,
             app->width, app->height, app->diagnostic, sizeof(app->diagnostic))) {

@@ -35,6 +35,44 @@ static void navigation_changed(viewer_app *app, const ui_viewer_navigation *prev
     (void)viewer_set_window_title(app);
 }
 
+static bool canvas_contains(const viewer_app *app, double x, double y)
+{
+    const ui_rect canvas = app->navigation_canvas;
+    return x >= (double)canvas.x && y >= (double)canvas.y &&
+        x - (double)canvas.x < (double)canvas.width &&
+        y - (double)canvas.y < (double)canvas.height;
+}
+
+static bool event_canvas_point(const viewer_app *app, const platform_event *event,
+                               double *out_x, double *out_y)
+{
+    if (app == NULL || event == NULL || out_x == NULL || out_y == NULL ||
+        !isfinite(app->backing_scale) || !(app->backing_scale > 0.0)) return false;
+    double screen_x = (double)event->logical_x * app->backing_scale;
+    double screen_y = (double)event->logical_y * app->backing_scale;
+    *out_x = screen_x - (double)app->navigation_canvas.x;
+    *out_y = screen_y - (double)app->navigation_canvas.y;
+    return isfinite(*out_x) && isfinite(*out_y);
+}
+
+static void apply_navigation_fit(viewer_app *app, platform_viewer_action action)
+{
+    if (!app->navigation_ready || !app->document_visible) return;
+    ui_viewer_navigation previous = app->navigation;
+    bool changed = false;
+    if (action == PLATFORM_ACTION_FIT_WINDOW) {
+        changed = ui_viewer_navigation_fit(&app->navigation);
+        if (changed) app->navigation_user_zoomed = false;
+    } else if (action == PLATFORM_ACTION_FIT_WIDTH) {
+        changed = ui_viewer_navigation_fit_width(&app->navigation);
+        if (changed) app->navigation_user_zoomed = true;
+    } else if (action == PLATFORM_ACTION_ACTUAL_SIZE) {
+        changed = ui_viewer_navigation_actual_size(&app->navigation);
+        if (changed) app->navigation_user_zoomed = true;
+    }
+    if (changed) navigation_changed(app, &previous);
+}
+
 static void apply_pan_delta(viewer_app *app, double dx, double dy, double scale)
 {
     if (!app->navigation_ready || !isfinite(dx) || !isfinite(dy) ||
@@ -52,7 +90,12 @@ static void apply_navigation_key(viewer_app *app, ui_viewer_key key)
 {
     if (!app->navigation_ready || !app->document_visible) return;
     ui_viewer_navigation previous = app->navigation;
-    if (ui_viewer_navigation_key(&app->navigation, key)) navigation_changed(app, &previous);
+    if (ui_viewer_navigation_key(&app->navigation, key)) {
+        if (key == UI_VIEWER_KEY_FIT) app->navigation_user_zoomed = false;
+        else if (key == UI_VIEWER_KEY_ZOOM_IN || key == UI_VIEWER_KEY_ZOOM_OUT)
+            app->navigation_user_zoomed = true;
+        navigation_changed(app, &previous);
+    }
 }
 
 static void toggle_checkerboard(viewer_app *app)
@@ -130,6 +173,7 @@ static void process_editor_result(viewer_app *app, uint32_t result)
     if ((result & VIEWER_EDITOR_QUIT) != 0U) viewer_request_close(app);
     if ((result & VIEWER_EDITOR_HANDLED) != 0U) {
         app->frame_dirty = true;
+        (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
         (void)viewer_set_window_title(app);
     }
 }
@@ -141,20 +185,8 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
         case PLATFORM_ACTION_TOGGLE_CHECKERBOARD: toggle_checkerboard(app); break;
         case PLATFORM_ACTION_CYCLE_BACKGROUND: cycle_background(app); break;
         case PLATFORM_ACTION_FIT_WIDTH:
-            if (app->navigation_ready) {
-                ui_viewer_navigation previous = app->navigation;
-                (void)ui_viewer_navigation_fit_width(&app->navigation);
-                navigation_changed(app, &previous);
-            }
-            break;
-        case PLATFORM_ACTION_FIT_WINDOW: apply_navigation_key(app, UI_VIEWER_KEY_FIT); break;
-        case PLATFORM_ACTION_ACTUAL_SIZE:
-            if (app->navigation_ready) {
-                ui_viewer_navigation previous = app->navigation;
-                (void)ui_viewer_navigation_actual_size(&app->navigation);
-                navigation_changed(app, &previous);
-            }
-            break;
+        case PLATFORM_ACTION_FIT_WINDOW:
+        case PLATFORM_ACTION_ACTUAL_SIZE: apply_navigation_fit(app, action); break;
         case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: toggle_pixel_grid(app); break;
         case PLATFORM_ACTION_QUIT: viewer_request_close(app); break;
         case PLATFORM_ACTION_NONE: default: break;
@@ -163,6 +195,11 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
 
 static void apply_key(viewer_app *app, const platform_event *event)
 {
+    if (event->key_code == 53U && app->navigation_ready &&
+        app->navigation.dragging) {
+        (void)ui_viewer_navigation_drag_end(&app->navigation);
+        app->frame_dirty = true;
+    }
     uint32_t editor_result = viewer_editor_key(app->editor, event->key_code,
         event->modifiers, event->text, event->text_len);
     if (editor_result != 0U) {
@@ -182,7 +219,23 @@ static void apply_key(viewer_app *app, const platform_event *event)
         (void)platform_window_open_panel(app->window);
         return;
     }
-    if (command) return;
+    if (command && strcmp(event->text, "0") == 0) {
+        apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
+        return;
+    }
+    if (command && strcmp(event->text, "1") == 0) {
+        apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
+        return;
+    }
+    if (command && (strcmp(event->text, "+") == 0 ||
+            strcmp(event->text, "=") == 0)) {
+        apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
+        return;
+    }
+    if (command && strcmp(event->text, "-") == 0) {
+        apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
+        return;
+    }
     if (strcmp(event->text, "t") == 0 || strcmp(event->text, "T") == 0) {
         toggle_checkerboard(app);
         return;
@@ -223,8 +276,10 @@ static void update_pointer_status(viewer_app *app, const platform_event *event)
         !isfinite(app->backing_scale) || !(app->backing_scale > 0.0)) return;
     double screen_x = (double)event->logical_x * app->backing_scale;
     double screen_y = (double)event->logical_y * app->backing_scale;
-    double x = (screen_x - app->navigation.pan_x) / app->navigation.scale;
-    double y = (screen_y - app->navigation.pan_y) / app->navigation.scale;
+    double x = (screen_x - (double)app->navigation_canvas.x -
+        app->navigation.pan_x) / app->navigation.scale;
+    double y = (screen_y - (double)app->navigation_canvas.y -
+        app->navigation.pan_y) / app->navigation.scale;
     if (!isfinite(x) || !isfinite(y) || x < 0.0 || y < 0.0 ||
         x >= app->navigation.document_width || y >= app->navigation.document_height) return;
     app->pointer_doc_x = x;
@@ -254,14 +309,9 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                     app->running = false;
                     return;
                 }
-                if (app->navigation_ready) {
-                    ui_viewer_navigation previous = app->navigation;
-                    if (ui_viewer_navigation_resize(&app->navigation,
-                            (double)app->width, (double)app->height))
-                        navigation_changed(app, &previous);
-                }
             }
             viewer_editor_resize(app->editor, app->width, app->height, app->backing_scale);
+            (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
             if (prior_scale != app->backing_scale) app->frame_dirty = true;
             return;
         }
@@ -278,26 +328,70 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                     return;
                 }
             }
-            if (app->navigation_ready && event->button == 0U)
-                (void)ui_viewer_navigation_drag_begin_scaled(&app->navigation,
-                    (double)event->logical_x, (double)event->logical_y, app->backing_scale);
+            double local_x, local_y;
+            if (event->button != 0U || !app->navigation_ready ||
+                !canvas_contains(app, pixel_x, pixel_y) ||
+                !event_canvas_point(app, event, &local_x, &local_y)) return;
+            if (app->space_down || viewer_editor_get_tool(app->editor) == UI_ICON_PAN) {
+                (void)ui_viewer_navigation_drag_begin(&app->navigation, local_x, local_y);
+                return;
+            }
+            if (viewer_editor_get_tool(app->editor) == UI_ICON_ZOOM) {
+                ui_viewer_navigation previous = app->navigation;
+                if (ui_viewer_navigation_zoom(&app->navigation, 1.25, local_x, local_y)) {
+                    app->navigation_user_zoomed = true;
+                    navigation_changed(app, &previous);
+                }
+                return;
+            }
+            uint32_t result = viewer_editor_canvas_pointer_down(app->editor,
+                &app->document.shape, &app->navigation, local_x, local_y,
+                event->modifiers);
+            if (result != 0U) process_editor_result(app, result);
             return;
         }
         case PLATFORM_EVENT_POINTER_MOVE:
             update_pointer_status(app, event);
             app->frame_dirty = true;
+            if (app->editor != NULL) {
+                double px = (double)event->logical_x * app->backing_scale;
+                double py = (double)event->logical_y * app->backing_scale;
+                if (isfinite(px) && isfinite(py) && px >= 0.0 && py >= 0.0 &&
+                    px <= (double)UINT32_MAX && py <= (double)UINT32_MAX)
+                    viewer_editor_pointer_move(app->editor, (uint32_t)px, (uint32_t)py);
+            }
             if (app->navigation_ready && app->navigation.dragging) {
                 ui_viewer_navigation previous = app->navigation;
-                if (ui_viewer_navigation_drag_scaled(&app->navigation,
-                        (double)event->logical_x, (double)event->logical_y,
-                        app->backing_scale)) navigation_changed(app, &previous);
+                double px = (double)event->logical_x * app->backing_scale -
+                    (double)app->navigation_canvas.x;
+                double py = (double)event->logical_y * app->backing_scale -
+                    (double)app->navigation_canvas.y;
+                if (ui_viewer_navigation_drag(&app->navigation, px, py))
+                    navigation_changed(app, &previous);
+            } else if (app->navigation_ready && app->editor != NULL) {
+                double local_x, local_y;
+                if (event_canvas_point(app, event, &local_x, &local_y)) {
+                    uint32_t result = viewer_editor_canvas_pointer_move(app->editor,
+                        &app->document.shape, &app->navigation, local_x, local_y);
+                    if (result != 0U) process_editor_result(app, result);
+                }
             }
             return;
         case PLATFORM_EVENT_POINTER_UP:
-            if (app->navigation_ready && app->navigation.dragging)
+            viewer_editor_pointer_up(app->editor);
+            if (app->navigation_ready && app->navigation.dragging) {
                 (void)ui_viewer_navigation_drag_end(&app->navigation);
+                app->frame_dirty = true;
+                return;
+            }
+            if (app->editor != NULL) {
+                uint32_t result = viewer_editor_canvas_pointer_up(app->editor,
+                    &app->document.shape);
+                if (result != 0U) process_editor_result(app, result);
+                else app->frame_dirty = true;
+            }
             return;
-        case PLATFORM_EVENT_SCROLL:
+        case PLATFORM_EVENT_SCROLL: {
             if (app->editor != NULL) {
                 double pixel_x = event->precise_x * event->backing_scale;
                 if (isfinite(pixel_x) && pixel_x >= 0.0 && pixel_x <= (double)UINT32_MAX &&
@@ -307,22 +401,50 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 }
             }
             if (!app->navigation_ready) return;
-            if ((event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL)) != 0U) {
+            double scale = isfinite(event->backing_scale) && event->backing_scale > 0.0 ?
+                event->backing_scale : app->backing_scale;
+            double screen_x = event->precise_x * scale;
+            double screen_y = event->precise_y * scale;
+            if (!canvas_contains(app, screen_x, screen_y)) return;
+            double local_x = event->precise_x -
+                (double)app->navigation_canvas.x / scale;
+            double local_y = event->precise_y -
+                (double)app->navigation_canvas.y / scale;
+            if ((event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL)) != 0U ||
+                viewer_editor_get_tool(app->editor) == UI_ICON_ZOOM) {
                 ui_viewer_navigation previous = app->navigation;
                 if (ui_viewer_navigation_wheel_scaled(&app->navigation, event->delta_y,
-                        event->precise_x, event->precise_y, event->backing_scale))
+                        local_x, local_y, scale)) {
+                    app->navigation_user_zoomed = true;
                     navigation_changed(app, &previous);
-            } else apply_pan_delta(app, event->delta_x, event->delta_y, event->backing_scale);
+                }
+            } else apply_pan_delta(app, event->delta_x, event->delta_y, scale);
             return;
+        }
         case PLATFORM_EVENT_MAGNIFY:
             if (app->navigation_ready) {
+                double scale = isfinite(event->backing_scale) && event->backing_scale > 0.0 ?
+                    event->backing_scale : app->backing_scale;
+                double screen_x = event->precise_x * scale;
+                double screen_y = event->precise_y * scale;
+                if (!canvas_contains(app, screen_x, screen_y)) return;
+                double local_x = event->precise_x -
+                    (double)app->navigation_canvas.x / scale;
+                double local_y = event->precise_y -
+                    (double)app->navigation_canvas.y / scale;
                 ui_viewer_navigation previous = app->navigation;
                 if (ui_viewer_navigation_pinch_scaled(&app->navigation,
-                        event->magnification, event->precise_x, event->precise_y,
-                        event->backing_scale)) navigation_changed(app, &previous);
+                        event->magnification, local_x, local_y, scale)) {
+                    app->navigation_user_zoomed = true;
+                    navigation_changed(app, &previous);
+                }
             }
             return;
-        case PLATFORM_EVENT_KEY_DOWN: apply_key(app, event); return;
+        case PLATFORM_EVENT_KEY_DOWN:
+            if (event->key_code == 49U &&
+                !viewer_editor_text_input_active(app->editor)) app->space_down = true;
+            apply_key(app, event);
+            return;
         case PLATFORM_EVENT_ACTION: apply_action(app, event->action); return;
         case PLATFORM_EVENT_FILE_OPEN:
             if (event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP)
@@ -330,8 +452,10 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             return;
         case PLATFORM_EVENT_CLOSE_REQUEST: viewer_request_close(app); return;
         case PLATFORM_EVENT_OPEN:
-        case PLATFORM_EVENT_NONE:
-        case PLATFORM_EVENT_KEY_UP: default: return;
+        case PLATFORM_EVENT_KEY_UP:
+            if (event->key_code == 49U) app->space_down = false;
+            return;
+        case PLATFORM_EVENT_NONE: default: return;
     }
 }
 
