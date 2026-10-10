@@ -9,6 +9,7 @@
 #define MCP_TEMPLATE_ATTRIBUTE_CAP 64U
 #define MCP_TEMPLATE_NAME_CAP 128U
 #define MCP_TEMPLATE_VALUE_CAP 1024U
+#define MCP_XML_FRAGMENT_CAP DOCUMENT_EDIT_XML_FRAGMENT_LIMIT
 
 typedef struct template_args {
     document_edit_template_attribute attributes[MCP_TEMPLATE_ATTRIBUTE_CAP];
@@ -41,6 +42,7 @@ static bool template_from_string(const char *name, document_edit_template_kind *
     else if (strcmp(name, "line") == 0) *out = DOCUMENT_EDIT_TEMPLATE_LINE;
     else if (strcmp(name, "path") == 0) *out = DOCUMENT_EDIT_TEMPLATE_PATH;
     else if (strcmp(name, "g") == 0) *out = DOCUMENT_EDIT_TEMPLATE_GROUP;
+    else if (strcmp(name, "text") == 0) *out = DOCUMENT_EDIT_TEMPLATE_TEXT;
     else return false;
     return true;
 }
@@ -114,6 +116,26 @@ static document_edit_error apply_template(mcp_broker_document *document,
         template_value.attributes, template_value.count, out_inserted);
 }
 
+static document_edit_error apply_fragment(mcp_broker_document *document,
+    const mcp_json_doc *request, size_t args, document_handle *out_inserted)
+{
+    char parent_id[256];
+    size_t parent_length = 0U;
+    char fragment[MCP_XML_FRAGMENT_CAP + 1U];
+    size_t fragment_length = 0U;
+    if (!get_string(request, args, "parentId", parent_id, sizeof(parent_id),
+            &parent_length) ||
+        !get_string(request, args, "xml", fragment, sizeof(fragment),
+            &fragment_length)) return DOCUMENT_EDIT_INVALID_ARGUMENT;
+    if (memchr(fragment, '\0', fragment_length) != NULL)
+        return DOCUMENT_EDIT_INVALID_ARGUMENT;
+    document_handle parent;
+    if (!mcp_broker_resolve_element(document, parent_id, parent_length, &parent))
+        return DOCUMENT_EDIT_NOT_FOUND;
+    return document_edit_insert_xml_fragment(document->edit, parent,
+        (base_bytes){(const uint8_t *)fragment, fragment_length}, out_inserted);
+}
+
 static document_edit_error apply_simple_operation(mcp_broker_document *document,
                                                   const mcp_json_doc *request, size_t args,
                                                   const char *operation,
@@ -123,6 +145,11 @@ static document_edit_error apply_simple_operation(mcp_broker_document *document,
     document_edit_error error = DOCUMENT_EDIT_INVALID_OPERATION;
     if (strcmp(operation, "element_add") == 0) {
         error = apply_template(document, request, args, &result);
+        if (error == DOCUMENT_EDIT_OK) *out_selection = result;
+        return error;
+    }
+    if (strcmp(operation, "element_add_fragment") == 0) {
+        error = apply_fragment(document, request, args, &result);
         if (error == DOCUMENT_EDIT_OK) *out_selection = result;
         return error;
     }
@@ -199,7 +226,9 @@ static bool direct_edit(mcp_broker *broker, const mcp_json_doc *request,
         !mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) ||
         !mcp_json_buffer_literal(&out->structured_json, ",\"elementId\":" ) ||
         !mcp_broker_element_id(document, selection, &out->structured_json)) return false;
-    if (strcmp(operation, "element_add") == 0 || strcmp(operation, "element_duplicate") == 0)
+    if (strcmp(operation, "element_add") == 0 ||
+        strcmp(operation, "element_add_fragment") == 0 ||
+        strcmp(operation, "element_duplicate") == 0)
         if (!mcp_json_buffer_literal(&out->structured_json, ",\"created\":true")) return false;
     return mcp_json_buffer_literal(&out->structured_json, "}" );
 }
@@ -212,6 +241,7 @@ static bool transaction_key_allowed(const mcp_json_doc *doc, size_t object,
         strcmp(operation, "text_set") == 0 ? "op;elementId;text" :
         strcmp(operation, "element_delete") == 0 ? "op;elementId" :
         strcmp(operation, "element_add") == 0 ? "op;parentId;template;attributes" :
+        strcmp(operation, "element_add_fragment") == 0 ? "op;parentId;xml" :
         strcmp(operation, "element_duplicate") == 0 || strcmp(operation, "element_group") == 0 ||
         strcmp(operation, "element_ungroup") == 0 ? "op;elementId" :
         strcmp(operation, "element_reorder") == 0 ? "op;elementId;targetId;before" : "";
@@ -240,6 +270,7 @@ static bool transaction_key_allowed(const mcp_json_doc *doc, size_t object,
         strcmp(operation, "attribute_remove") == 0 ? "op;elementId;name" :
         strcmp(operation, "text_set") == 0 ? "op;elementId;text" :
         strcmp(operation, "element_add") == 0 ? "op;parentId;template" :
+        strcmp(operation, "element_add_fragment") == 0 ? "op;parentId;xml" :
         strcmp(operation, "element_reorder") == 0 ? "op;elementId;targetId;before" : "op;elementId";
     for (const char *cursor = required; *cursor != '\0';) {
         const char *end = strchr(cursor, ';');

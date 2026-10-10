@@ -11,7 +11,12 @@ unsupported input, zoom boundaries, pan parsing, bounded source regions, and
 out-of-range region errors. CTest registers both suites as `viewer-quality`
 and `viewer-frame`.
 
-`native_smoke.sh` uses System Events to exercise the AppKit Open panel, reload,
-zoom, display toggle, file selection, actual size, and quit. It is intended for
-a maintainer's interactive macOS session and needs Accessibility permission
-and a functioning Metal device.
+`native_smoke.sh` delegates to the bounded `native_smoke.py` runner. System
+Events exercises the AppKit Open sheet, reload, zoom, display toggle, file
+selection, actual size, and quit. The runner bounds startup, automation, and
+shutdown, reports process and viewer-log diagnostics on failure, and kills
+both process groups during cleanup. It is intended for an interactive macOS
+session and needs Accessibility permission and a functioning Metal device.
+`repeat_native_smoke.sh` runs `./dev viewer-smoke` 20 times by default, logs
+each run and a pass/fail summary, and continues after failures so maintainers
+can inspect the full repeated-run result.

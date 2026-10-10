@@ -228,7 +228,7 @@ static int test_structural_operations(void)
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
 
     static const char *const template_names[] = {
-        "rect", "circle", "ellipse", "line", "path", "g"
+        "rect", "circle", "ellipse", "line", "path", "g", "text"
     };
     for (size_t kind = 0U; kind < sizeof(template_names) / sizeof(template_names[0]); ++kind) {
         CHECK(find_id(edit, "layer", &changed));
@@ -239,6 +239,19 @@ static int test_structural_operations(void)
               memcmp(tag.ptr, template_names[kind], tag.len) == 0);
         CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     }
+
+    CHECK(find_id(edit, "layer", &changed));
+    document_edit_template_attribute text_attribute = {
+        {(const uint8_t *)"id", 2U}, {(const uint8_t *)"new-text", 8U}
+    };
+    CHECK(document_edit_insert_template(edit, changed, DOCUMENT_EDIT_TEMPLATE_TEXT,
+        &text_attribute, 1U, &c) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_set_text_content(edit, c,
+        (base_bytes){(const uint8_t *)"A<&>", 4U}) == DOCUMENT_EDIT_OK);
+    CHECK(materialize(edit, output, sizeof(output), &bytes) &&
+          contains(bytes, "<text id=\"new-text\">A&lt;&amp;&gt;</text>"));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
 
     static const uint8_t self_closing[] = "<svg/>";
     document_edit_destroy(edit);
@@ -251,6 +264,67 @@ static int test_structural_operations(void)
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &bytes) &&
           equal_bytes(bytes, (base_bytes){self_closing, sizeof(self_closing) - 1U}));
+    document_edit_destroy(edit);
+    return 0;
+}
+
+static int test_empty_text_and_xml_fragment(void)
+{
+    static const uint8_t text_source[] = "<svg><text id='empty'/></svg>";
+    document_edit *edit = create_edit((base_bytes){text_source,
+        sizeof(text_source) - 1U});
+    CHECK(edit != NULL);
+    document_handle text_node;
+    CHECK(find_id(edit, "empty", &text_node));
+    CHECK(document_edit_set_text_content(edit, text_node,
+        (base_bytes){(const uint8_t *)"inserted", 8U}) == DOCUMENT_EDIT_OK);
+    CHECK(find_id(edit, "empty", &text_node));
+    CHECK(document_edit_set_text_content(edit, text_node,
+        (base_bytes){NULL, 0U}) == DOCUMENT_EDIT_OK);
+    CHECK(find_id(edit, "empty", &text_node));
+    uint8_t text_buffer[16];
+    size_t text_length = 99U;
+    CHECK(document_edit_text_content(edit, text_node, text_buffer,
+        sizeof(text_buffer), &text_length) && text_length == 0U);
+    document_edit_destroy(edit);
+
+    static const uint8_t source[] = "<svg/>";
+    base_bytes original = {source, sizeof(source) - 1U};
+    edit = create_edit(original);
+    CHECK(edit != NULL);
+    document_handle root, inserted, nested;
+    CHECK(document_edit_root(edit, &root));
+    static const uint8_t fragment[] =
+        "<!--lead--><g id='fragment'><text id='nested'>old</text></g><!--tail-->";
+    CHECK(document_edit_insert_xml_fragment(edit, root,
+        (base_bytes){fragment, sizeof(fragment) - 1U}, &inserted) == DOCUMENT_EDIT_OK);
+    base_bytes tag;
+    CHECK(document_edit_tag_name(edit, inserted, &tag) && tag.len == 1U && tag.ptr[0] == 'g');
+    CHECK(find_id(edit, "nested", &nested));
+    CHECK(document_edit_set_text_content(edit, nested,
+        (base_bytes){(const uint8_t *)"changed & safe", 14U}) == DOCUMENT_EDIT_OK);
+    uint8_t output[512];
+    base_bytes current;
+    CHECK(materialize(edit, output, sizeof(output), &current) && tokenize(current) &&
+          contains(current, "<text id='nested'>changed &amp; safe</text>"));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
+    CHECK(materialize(edit, output, sizeof(output), &current) && equal_bytes(current, original));
+
+    static const uint8_t malformed[] = "<g><text></g>";
+    CHECK(document_edit_root(edit, &root));
+    CHECK(document_edit_insert_xml_fragment(edit, root,
+        (base_bytes){malformed, sizeof(malformed) - 1U}, &inserted) ==
+        DOCUMENT_EDIT_MALFORMED_XML);
+    static const uint8_t multiple[] = "<rect/><circle/>";
+    CHECK(document_edit_insert_xml_fragment(edit, root,
+        (base_bytes){multiple, sizeof(multiple) - 1U}, &inserted) ==
+        DOCUMENT_EDIT_INVALID_OPERATION);
+    uint8_t oversized[DOCUMENT_EDIT_XML_FRAGMENT_LIMIT + 1U];
+    memset(oversized, 'x', sizeof(oversized));
+    CHECK(document_edit_insert_xml_fragment(edit, root,
+        (base_bytes){oversized, sizeof(oversized)}, &inserted) == DOCUMENT_EDIT_LIMIT);
+    CHECK(!document_edit_is_dirty(edit) && document_edit_byte_length(edit) == original.len);
     document_edit_destroy(edit);
     return 0;
 }
@@ -304,6 +378,27 @@ static int test_history_and_save(void)
     CHECK(read_length > 0 && close(fd) == 0);
     CHECK(contains((base_bytes){saved_bytes, (size_t)read_length}, "x='3'"));
     CHECK(unlink(path) == 0);
+
+    char directory_template[] = "/tmp/vexel-edit-new-XXXXXX";
+    char *directory = mkdtemp(directory_template);
+    CHECK(directory != NULL);
+    char new_path[256];
+    int path_length = snprintf(new_path, sizeof(new_path), "%s/new.svg", directory);
+    CHECK(path_length > 0 && (size_t)path_length < sizeof(new_path));
+    CHECK(find_id(edit, "r", &rect));
+    CHECK(document_edit_set_attribute(edit, rect,
+        (base_bytes){(const uint8_t *)"x", 1U},
+        (base_bytes){(const uint8_t *)"4", 1U}) == DOCUMENT_EDIT_OK);
+    saved = document_edit_save_as(edit,
+        (base_bytes){(const uint8_t *)new_path, (size_t)path_length}, NULL);
+    CHECK(saved.error == DOCUMENT_EDIT_OK && saved.source_result.file_result.renamed &&
+          !document_edit_is_dirty(edit));
+    fd = open(new_path, O_RDONLY);
+    CHECK(fd >= 0);
+    read_length = read(fd, saved_bytes, sizeof(saved_bytes));
+    CHECK(read_length > 0 && close(fd) == 0);
+    CHECK(contains((base_bytes){saved_bytes, (size_t)read_length}, "x='4'"));
+    CHECK(unlink(new_path) == 0 && rmdir(directory) == 0);
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK && document_edit_is_dirty(edit));
     document_edit_destroy(edit);
     return 0;
@@ -442,14 +537,81 @@ static int test_randomized_history(void)
     return 0;
 }
 
+static uint32_t next_fragment_random(uint32_t *state)
+{
+    uint32_t value = *state;
+    value ^= value << 13U;
+    value ^= value >> 17U;
+    value ^= value << 5U;
+    *state = value;
+    return value;
+}
+
+static int test_randomized_xml_fragments(void)
+{
+    static const uint8_t source[] = "<svg/>";
+    base_bytes original = {source, sizeof(source) - 1U};
+    document_edit *edit = create_edit(original);
+    CHECK(edit != NULL);
+    uint32_t random = UINT32_C(0x57465835);
+    size_t accepted = 0U, malformed_count = 0U, shape_rejected = 0U;
+    for (size_t iteration = 0U; iteration < 200000U; ++iteration) {
+        uint32_t choice = next_fragment_random(&random) % 5U;
+        uint32_t value = next_fragment_random(&random);
+        char markup[128];
+        int amount;
+        document_edit_error expected;
+        if (choice == 0U) {
+            amount = snprintf(markup, sizeof(markup), "<rect data-v='%u'/>", value);
+            expected = DOCUMENT_EDIT_OK;
+        } else if (choice == 1U) {
+            amount = snprintf(markup, sizeof(markup), "<!--c--><circle id='r%u'/>", value);
+            expected = DOCUMENT_EDIT_OK;
+        } else if (choice == 2U) {
+            amount = snprintf(markup, sizeof(markup), "<g><text>%u</text></g>", value);
+            expected = DOCUMENT_EDIT_OK;
+        } else if (choice == 3U) {
+            amount = snprintf(markup, sizeof(markup), "<rect><circle>%u</rect>", value);
+            expected = DOCUMENT_EDIT_MALFORMED_XML;
+        } else {
+            memcpy(markup, "<rect/><circle/>", sizeof("<rect/><circle/>"));
+            amount = (int)(sizeof("<rect/><circle/>") - 1U);
+            expected = DOCUMENT_EDIT_INVALID_OPERATION;
+        }
+        CHECK(amount > 0 && (size_t)amount < sizeof(markup));
+        document_handle root, inserted;
+        CHECK(document_edit_root(edit, &root));
+        document_edit_error actual = document_edit_insert_xml_fragment(edit, root,
+            (base_bytes){(const uint8_t *)markup, (size_t)amount}, &inserted);
+        CHECK(actual == expected);
+        if (actual == DOCUMENT_EDIT_OK) {
+            accepted++;
+            CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
+        } else if (actual == DOCUMENT_EDIT_MALFORMED_XML) malformed_count++;
+        else shape_rejected++;
+        CHECK(document_edit_byte_length(edit) == original.len &&
+              !document_edit_is_dirty(edit));
+    }
+    uint8_t output[16];
+    base_bytes final;
+    CHECK(materialize(edit, output, sizeof(output), &final) && equal_bytes(final, original));
+    CHECK(accepted > 0U && malformed_count > 0U && shape_rejected > 0U);
+    document_edit_destroy(edit);
+    (void)printf("fragment fuzz: 200000 seeded cases, seed 0x57465835, accepted=%zu malformed=%zu rejected=%zu\n",
+        accepted, malformed_count, shape_rejected);
+    return 0;
+}
+
 int main(void)
 {
     CHECK(test_queries_and_attributes() == 0);
     CHECK(test_structural_operations() == 0);
+    CHECK(test_empty_text_and_xml_fragment() == 0);
     CHECK(test_history_and_save() == 0);
     CHECK(test_history_bounds() == 0);
     CHECK(test_invalid_source() == 0);
     CHECK(test_randomized_history() == 0);
-    (void)puts("{\"edit_ops\":true,\"byte_preservation\":true,\"undo_redo_sequences\":200000,\"final_round_trip\":true,\"bounded_history\":true}");
+    CHECK(test_randomized_xml_fragments() == 0);
+    (void)puts("{\"edit_ops\":true,\"byte_preservation\":true,\"undo_redo_sequences\":200000,\"xml_fragments\":200000,\"final_round_trip\":true,\"bounded_history\":true}");
     return 0;
 }

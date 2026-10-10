@@ -87,6 +87,7 @@ bool platform_init(void);
 bool platform_window_create(const platform_window_config *config, platform_window **out_window);
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points);
 bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
+/* Starts a non-blocking macOS Open sheet; selection arrives as a later file event. */
 bool platform_window_open_panel(platform_window *window);
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,

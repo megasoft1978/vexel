@@ -382,8 +382,8 @@ static bool save_document(mcp_broker *broker, const mcp_json_doc *request,
         char requested[MCP_BROKER_PATH_CAP];
         size_t length = 0U;
         if (!mcp_broker_string_arg(request, args, "path", requested, sizeof(requested), &length) ||
-            !mcp_access_path_allowed(requested) || !mcp_access_resolve_existing(requested, save_path))
-            return mcp_broker_set_error(out, "path_not_granted", "Save As path must exist inside a user-granted directory");
+            !mcp_access_resolve_save_path(requested, save_path))
+            return mcp_broker_set_error(out, "path_not_granted", "Save As path must be inside a user-granted directory and have an existing parent directory");
     }
     document_edit_save_result saved = document_edit_save_as(document->edit,
         (base_bytes){(const uint8_t *)save_path, strlen(save_path)}, NULL);

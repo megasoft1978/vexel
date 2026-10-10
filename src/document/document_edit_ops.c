@@ -566,9 +566,10 @@ static bool template_tag(document_edit_template_kind kind, base_bytes *out_tag)
     static const uint8_t *const names[] = {
         (const uint8_t *)"rect", (const uint8_t *)"circle",
         (const uint8_t *)"ellipse", (const uint8_t *)"line",
-        (const uint8_t *)"path", (const uint8_t *)"g"
+        (const uint8_t *)"path", (const uint8_t *)"g",
+        (const uint8_t *)"text"
     };
-    static const size_t lengths[] = {4U, 6U, 7U, 4U, 4U, 1U};
+    static const size_t lengths[] = {4U, 6U, 7U, 4U, 4U, 1U, 4U};
     if ((unsigned)kind >= sizeof(lengths) / sizeof(lengths[0])) return false;
     *out_tag = (base_bytes){names[(size_t)kind], lengths[(size_t)kind]};
     return true;
@@ -672,6 +673,103 @@ document_edit_error document_edit_insert_template(document_edit *edit,
         parent_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
     size_t inserted_offset = patch_offset + (parent_was_empty ? 1U : 0U);
     free(replacement);
+    if (result != DOCUMENT_EDIT_OK) return result;
+    return document_edit_element_at_offset(edit, inserted_offset, out_inserted)
+        ? DOCUMENT_EDIT_OK : DOCUMENT_EDIT_INVALID_OPERATION;
+}
+
+static document_edit_error fragment_root_offset(base_bytes fragment,
+                                                size_t *out_offset)
+{
+    static const uint8_t prefix[] = "<probe>";
+    static const uint8_t suffix[] = "</probe>";
+    if (out_offset == NULL || !base_bytes_valid(fragment) || fragment.len == 0U ||
+        fragment.len > DOCUMENT_EDIT_XML_FRAGMENT_LIMIT)
+        return DOCUMENT_EDIT_INVALID_ARGUMENT;
+    size_t wrapped_length;
+    if (!base_size_add(sizeof(prefix) - 1U, fragment.len, &wrapped_length) ||
+        !base_size_add(wrapped_length, sizeof(suffix) - 1U, &wrapped_length))
+        return DOCUMENT_EDIT_LIMIT;
+    uint8_t *wrapped = malloc(wrapped_length);
+    if (wrapped == NULL) return DOCUMENT_EDIT_OUT_OF_MEMORY;
+    memcpy(wrapped, prefix, sizeof(prefix) - 1U);
+    memcpy(wrapped + sizeof(prefix) - 1U, fragment.ptr, fragment.len);
+    memcpy(wrapped + sizeof(prefix) - 1U + fragment.len,
+           suffix, sizeof(suffix) - 1U);
+    document_model_result parsed = document_model_parse(
+        (base_bytes){wrapped, wrapped_length});
+    free(wrapped);
+    if (parsed.error != DOCUMENT_MODEL_OK || parsed.model == NULL) {
+        return parsed.error == DOCUMENT_MODEL_OUT_OF_MEMORY ?
+            DOCUMENT_EDIT_OUT_OF_MEMORY : DOCUMENT_EDIT_MALFORMED_XML;
+    }
+    document_handle wrapper, first, next;
+    document_source_span span;
+    bool one_element = document_model_root(parsed.model, &wrapper) &&
+        document_model_first_child(parsed.model, wrapper, &first) &&
+        !document_model_next_sibling(parsed.model, first, &next) &&
+        document_model_source_span(parsed.model, first, &span) &&
+        span.offset >= sizeof(prefix) - 1U &&
+        span.offset - (sizeof(prefix) - 1U) < fragment.len;
+    if (one_element) *out_offset = span.offset - (sizeof(prefix) - 1U);
+    document_model_destroy(parsed.model);
+    return one_element ? DOCUMENT_EDIT_OK : DOCUMENT_EDIT_INVALID_OPERATION;
+}
+
+document_edit_error document_edit_insert_xml_fragment(document_edit *edit,
+    document_handle parent_handle, base_bytes fragment,
+    document_handle *out_inserted)
+{
+    if (edit == NULL || out_inserted == NULL || !base_bytes_valid(fragment) ||
+        fragment.len == 0U) return DOCUMENT_EDIT_INVALID_ARGUMENT;
+    if (fragment.len > DOCUMENT_EDIT_XML_FRAGMENT_LIMIT) return DOCUMENT_EDIT_LIMIT;
+    document_edit_node_info *parent = NULL;
+    if (!document_edit_handle_info(edit, parent_handle, &parent))
+        return DOCUMENT_EDIT_STALE_HANDLE;
+    size_t child_offset = 0U;
+    document_edit_error root_error = fragment_root_offset(fragment, &child_offset);
+    if (root_error != DOCUMENT_EDIT_OK) return root_error;
+
+    size_t patch_offset = parent->close.offset;
+    size_t remove_length = 0U;
+    const uint8_t *replacement = fragment.ptr;
+    size_t replacement_length = fragment.len;
+    uint8_t *owned_replacement = NULL;
+    if (parent->empty) {
+        base_bytes parent_tag;
+        if (!document_model_tag_name(edit->model, parent_handle, &parent_tag))
+            return DOCUMENT_EDIT_STALE_HANDLE;
+        size_t total;
+        if (!base_size_add(1U, fragment.len, &total) ||
+            !base_size_add(total, parent_tag.len, &total) ||
+            !base_size_add(total, 3U, &total) ||
+            total > DOCUMENT_EDIT_XML_FRAGMENT_LIMIT + 4096U)
+            return DOCUMENT_EDIT_LIMIT;
+        owned_replacement = malloc(total);
+        if (owned_replacement == NULL) return DOCUMENT_EDIT_OUT_OF_MEMORY;
+        size_t cursor = 0U;
+        owned_replacement[cursor++] = '>';
+        memcpy(owned_replacement + cursor, fragment.ptr, fragment.len);
+        cursor += fragment.len;
+        owned_replacement[cursor++] = '<';
+        owned_replacement[cursor++] = '/';
+        memcpy(owned_replacement + cursor, parent_tag.ptr, parent_tag.len);
+        cursor += parent_tag.len;
+        owned_replacement[cursor++] = '>';
+        replacement = owned_replacement;
+        replacement_length = cursor;
+        patch_offset = parent->open.offset + parent->open.length - 2U;
+        remove_length = 2U;
+    }
+    bool valid = document_edit_validate_replace(edit, parent->span.offset,
+        parent->span.length, patch_offset, remove_length, replacement,
+        replacement_length, false, false);
+    size_t inserted_offset = patch_offset +
+        (parent->empty ? 1U : 0U) + child_offset;
+    document_edit_error result = valid ? document_edit_commit_replace(edit,
+        patch_offset, remove_length, replacement, replacement_length,
+        parent_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+    free(owned_replacement);
     if (result != DOCUMENT_EDIT_OK) return result;
     return document_edit_element_at_offset(edit, inserted_offset, out_inserted)
         ? DOCUMENT_EDIT_OK : DOCUMENT_EDIT_INVALID_OPERATION;

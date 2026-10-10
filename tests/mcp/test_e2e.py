@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import struct
 import tempfile
 import time
 import unittest
@@ -27,11 +28,16 @@ class McpStdioEndToEndTests(unittest.TestCase):
         self.current_path = self.granted / "current.svg"
         self.other_path = self.granted / "other.svg"
         self.save_path = self.granted / "save-target.svg"
+        self.save_new_path = self.granted / "save-new.svg"
+        image_data = self._tiny_png_data_uri()
         self.current_path.write_text(
             '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
             '<rect id="r1" x="4" y="5" width="20" height="12" fill="red"/>'
             '<circle id="c1" cx="60" cy="40" r="8" fill="blue"/>'
-            '<title id="title">Old</title></svg>', encoding="utf-8")
+            '<title id="title">Old</title>'
+            '<text id="media-text" x="3" y="55" font-size="12">Media</text>'
+            f'<image id="media-image" x="70" y="70" width="8" height="8" href="{image_data}"/>'
+            '</svg>', encoding="utf-8")
         self.other_path.write_text(
             '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20">'
             '<rect id="other" width="10" height="10" fill="green"/></svg>', encoding="utf-8")
@@ -118,7 +124,7 @@ class McpStdioEndToEndTests(unittest.TestCase):
         expected = {
             "document_open", "document_close", "document_list", "document_info", "tree_get",
             "element_get", "element_query", "attribute_set", "attribute_remove", "text_set",
-            "element_add", "element_delete", "element_duplicate", "element_reorder",
+            "element_add", "element_add_fragment", "element_delete", "element_duplicate", "element_reorder",
             "element_group", "element_ungroup", "transaction", "undo", "redo", "save",
             "save_as", "render_png", "selection_get", "selection_set", "export_svg",
         }
@@ -186,8 +192,23 @@ class McpStdioEndToEndTests(unittest.TestCase):
         ]}, "transaction_rolled_back")
         self.call_tool("undo", {"documentId": document_id})
         self.call_tool("redo", {"documentId": document_id})
-        self.expect_tool_error("element_add", {"documentId": document_id, "parentId": root_id,
-            "template": "text", "attributes": {"id": "unsupported"}}, "invalid_operation")
+        added_text = self.call_tool("element_add", {"documentId": document_id,
+            "parentId": root_id, "template": "text",
+            "attributes": {"id": "new-text", "x": "2", "y": "80"}})["structuredContent"]
+        self.assertEqual(added_text["elementId"], "new-text")
+        self.call_tool("text_set", {"documentId": document_id,
+            "elementId": "new-text", "text": "MCP <&>"})
+        added_fragment = self.call_tool("element_add_fragment", {
+            "documentId": document_id, "parentId": root_id,
+            "xml": "<g id='fragment'><text id='fragment-text'>Fragment</text></g>"
+        })["structuredContent"]
+        self.assertEqual(added_fragment["elementId"], "fragment")
+        self.expect_tool_error("element_add_fragment", {
+            "documentId": document_id, "parentId": root_id,
+            "xml": "<g><text></g>"}, "malformed_xml")
+        self.expect_tool_error("element_add_fragment", {
+            "documentId": document_id, "parentId": root_id,
+            "xml": "<rect/><circle/>"}, "invalid_operation")
         self.expect_tool_error("element_delete", {"documentId": document_id,
             "elementId": root_id}, "root_delete")
 
@@ -202,6 +223,8 @@ class McpStdioEndToEndTests(unittest.TestCase):
         exported = self.call_tool("export_svg", {"documentId": document_id})["structuredContent"]["svg"]
         self.assertIn('id="r1"', exported)
         self.assertIn("Updated &amp; safe", exported)
+        self.assertIn("MCP &lt;&amp;&gt;", exported)
+        self.assertIn("<text id='fragment-text'>Fragment</text>", exported)
         resources = self.rpc("resources/list", {})["result"]["resources"]
         self.assertEqual(len(resources), 3)
         source_resource = self.rpc("resources/read", {"uri": resources[0]["uri"]})["result"]["contents"][0]
@@ -223,9 +246,18 @@ class McpStdioEndToEndTests(unittest.TestCase):
                                           "name": "stroke", "value": "black"})
         self.expect_tool_error("document_close", {"documentId": other_id}, "unsaved_changes")
         self.call_tool("undo", {"documentId": other_id})
+        self.expect_tool_error("save_as", {"documentId": other_id,
+            "path": str(self.root / "outside-new.svg")}, "path_not_granted")
         self.call_tool("save_as", {"documentId": other_id, "path": str(self.save_path)})
         self.assertTrue(self.save_path.read_text(encoding="utf-8").startswith("<svg"))
-        self.call_tool("document_close", {"documentId": other_id})
+        self.assertFalse(self.save_new_path.exists())
+        saved_new = self.call_tool("save_as", {"documentId": other_id,
+            "path": str(self.save_new_path)})["structuredContent"]
+        self.assertEqual(saved_new["path"], str(self.save_new_path))
+        self.assertTrue(self.save_new_path.is_file())
+        self.assertTrue(self.save_new_path.read_text(encoding="utf-8").startswith("<svg"))
+        self.assertTrue(self.call_tool("document_close", {"documentId": other_id})
+                        ["structuredContent"]["closed"])
         self.expect_tool_error("document_info", {"documentId": other_id}, "document_not_found")
         self.expect_tool_error("document_close", {"documentId": document_id}, "active_document")
         self.call_tool("save", {"documentId": document_id})
@@ -270,6 +302,19 @@ class McpStdioEndToEndTests(unittest.TestCase):
             if kind == b"IEND":
                 break
         return bytes(result)
+
+    @staticmethod
+    def _tiny_png_data_uri() -> str:
+        def chunk(kind: bytes, payload: bytes) -> bytes:
+            content = kind + payload
+            return (struct.pack(">I", len(payload)) + content +
+                    struct.pack(">I", zlib.crc32(content) & 0xFFFFFFFF))
+
+        png = (b"\x89PNG\r\n\x1a\n" +
+               chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 6, 0, 0, 0)) +
+               chunk(b"IDAT", zlib.compress(b"\x00\xff\x00\x00\xff")) +
+               chunk(b"IEND", b""))
+        return "data:image/png;base64," + base64.b64encode(png).decode("ascii")
 
 
 if __name__ == "__main__":

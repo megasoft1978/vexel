@@ -2,6 +2,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "mcp_broker_internal.h"
+#include "svg/shape/media.h"
 
 #include "raster/shape_render.h"
 #include "raster/tile.h"
@@ -12,6 +13,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+svg_shape_media_providers svg_app_media_providers(void);
 
 #define MCP_RENDER_MAX_AXIS 512U
 #define MCP_RENDER_PNG_LIMIT (2U * 1024U * 1024U)
@@ -223,7 +226,9 @@ bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
     }
     svg_shape_document shape = {0};
     svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
-    svg_shape_error decode_error = svg_shape_decode((base_bytes){source, source_length}, &shape, &diagnostic);
+    svg_shape_media_providers providers = svg_app_media_providers();
+    svg_shape_error decode_error = svg_shape_decode_with_media(
+        (base_bytes){source, source_length}, &providers, &shape, &diagnostic);
     if (decode_error != SVG_SHAPE_ERROR_NONE) {
         free(source);
         return mcp_broker_set_error(out, "render_decode_failed", svg_shape_error_name(decode_error));

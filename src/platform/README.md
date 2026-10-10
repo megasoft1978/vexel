@@ -18,4 +18,7 @@ pending event queue is capped at 256 entries.
 
 This initial platform module supports Apple Silicon macOS 13+. No unsupported
 platform implementation or stub is provided. See `macos/README.md` for the
-AppKit adapter and smoke command.
+AppKit adapter and smoke command. The macOS dialog API provides a Save panel
+that suggests an `.svg` filename, a Save / Don't Save / Cancel unsaved-changes
+alert, and an error alert. All dialog calls are main-thread-only; tests install
+an injected response backend so unit coverage does not open GUI panels.

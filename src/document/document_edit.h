@@ -45,8 +45,11 @@ typedef enum document_edit_template_kind {
     DOCUMENT_EDIT_TEMPLATE_ELLIPSE,
     DOCUMENT_EDIT_TEMPLATE_LINE,
     DOCUMENT_EDIT_TEMPLATE_PATH,
-    DOCUMENT_EDIT_TEMPLATE_GROUP
+    DOCUMENT_EDIT_TEMPLATE_GROUP,
+    DOCUMENT_EDIT_TEMPLATE_TEXT
 } document_edit_template_kind;
+
+#define DOCUMENT_EDIT_XML_FRAGMENT_LIMIT (64U * 1024U)
 
 typedef struct document_edit_template_attribute {
     base_bytes name;
@@ -117,6 +120,11 @@ document_edit_error document_edit_insert_template(document_edit *edit,
     document_handle parent, document_edit_template_kind kind,
     const document_edit_template_attribute *attributes, size_t attribute_count,
     document_handle *out_inserted);
+/* Insert one bounded XML fragment containing exactly one top-level element.
+ * The fragment is borrowed for the call and must be well-formed in the
+ * destination parent's context. The returned handle identifies that element. */
+document_edit_error document_edit_insert_xml_fragment(document_edit *edit,
+    document_handle parent, base_bytes fragment, document_handle *out_inserted);
 
 document_edit_error document_edit_undo(document_edit *edit);
 document_edit_error document_edit_redo(document_edit *edit);
