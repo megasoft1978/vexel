@@ -296,6 +296,7 @@ static bool decode_pattern_content(shape_traversal *traversal,
     }
     shape_traversal nested = *traversal;
     nested.root_seen = true;
+    nested.transform_node_capacity = 0U;
     nested.selection_element = SIZE_MAX;
     nested.opacity_group_depth = 0U;
     nested.opacity_group_capacity = 0U;
@@ -311,6 +312,7 @@ static bool decode_pattern_content(shape_traversal *traversal,
     nested.builder.path_segment_capacity = 0U;
     nested.builder.path_number_capacity = 0U;
     nested.builder.shape_index = 0U;
+    nested.builder.transform_node = SVG_SHAPE_NO_TRANSFORM_NODE;
     nested.builder.transform = content_transform;
     nested.builder.viewport_width = tile_width;
     nested.builder.viewport_height = tile_height;

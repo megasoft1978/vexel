@@ -126,8 +126,9 @@ static bool parse_track(base_bytes source, const svg_xml_token *tokens,
                        tag->name.offset);
         return false;
     }
-    if ((out->kind == SVG_ANIM_KIND_TRANSFORM || out->attribute == SVG_ANIM_ATTR_D) &&
-        (out->additive_sum || out->accumulate)) {
+    if ((out->kind == SVG_ANIM_KIND_TRANSFORM && out->accumulate) ||
+        (out->attribute == SVG_ANIM_ATTR_D &&
+         (out->additive_sum || out->accumulate))) {
         add_diagnostic(document, SVG_ANIM_DIAG_UNSUPPORTED_COMPOSITION,
                        tag->name.offset);
         return false;

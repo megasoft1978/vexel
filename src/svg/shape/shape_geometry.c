@@ -152,7 +152,8 @@ bool svg_shape_builder_begin_shape(builder *b, bool evenodd)
     b->doc->shape_stroke_inverse[b->shape_index] = geom_affine_identity();
     (void)svg_shape_affine_inverse(b->transform, &b->doc->shape_stroke_inverse[b->shape_index]);
     b->doc->shape_sources[b->shape_index] = (svg_shape_source_map){
-        .transform = b->transform
+        .transform = b->transform,
+        .transform_node = SVG_SHAPE_NO_TRANSFORM_NODE
     };
     b->doc->images[b->shape_index] = (svg_shape_image){0};
     b->doc->strokes[b->shape_index] = (svg_shape_stroke){
@@ -595,6 +596,7 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
             builder->references, builder->css,
             clip_value,
             out, &out->clip_bytes, user_inverse, local_bounds,
+            builder->transform_node,
             &out->clips[builder->shape_index],
             builder->diag);
         if (result != SVG_SHAPE_ERROR_NONE) return false;

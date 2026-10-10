@@ -137,7 +137,8 @@ bool svg_shape_builder_add_custom_element(
         svg_shape_error error = svg_clip_resolve(
             source, tokens, token_count, builder->references, builder->css,
             clip, builder->doc, &builder->doc->clip_bytes, inverse,
-            local_bounds, &builder->doc->clips[shape], builder->diag);
+            local_bounds, builder->transform_node,
+            &builder->doc->clips[shape], builder->diag);
         if (error != SVG_SHAPE_ERROR_NONE) return false;
     }
     return true;

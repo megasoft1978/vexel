@@ -119,6 +119,7 @@ bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
         return false;
     }
 
+    geom_affine suffix_transform;
     geom_affine local_transform;
     if (symbol) {
         size_t unsupported_offset = 0U;
@@ -133,7 +134,7 @@ bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
                 traversal->source, traversal->tokens,
                 traversal->token_count, target, use,
                 traversal->viewport_width, traversal->viewport_height,
-                &local_transform)) {
+                &suffix_transform)) {
             svg_xml_span preserve;
             size_t offset = svg_shape_traverse_attr(traversal->source, traversal->tokens,
                                  traversal->token_count, use,
@@ -142,15 +143,15 @@ bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
             svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, offset);
             return false;
         }
-        if (!geom_affine_compose(use_transform, local_transform,
+        if (!geom_affine_compose(use_transform, suffix_transform,
                                  &local_transform)) {
             svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER,
                  use_token->name.offset);
             return false;
         }
     } else {
-        geom_affine translation = {1.0, 0.0, 0.0, 1.0, x, y};
-        if (!geom_affine_compose(use_transform, translation,
+        suffix_transform = (geom_affine){1.0, 0.0, 0.0, 1.0, x, y};
+        if (!geom_affine_compose(use_transform, suffix_transform,
                                  &local_transform)) {
             svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER,
                  use_token->name.offset);
@@ -164,6 +165,14 @@ bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
              use_token->name.offset);
         return false;
     }
+
+    size_t transform_parent = render_depth == 0U ?
+        SVG_SHAPE_NO_TRANSFORM_NODE :
+        traversal->transform_node_stack[render_depth - 1U];
+    size_t use_transform_node = SVG_SHAPE_NO_TRANSFORM_NODE;
+    if (!svg_shape_traverse_push_transform_node(
+            traversal, use_token->source.offset, render_depth, transform_parent,
+            use_transform, suffix_transform, &use_transform_node)) return false;
 
     if (traversal->element_visits >= SHAPE_MAX_TRAVERSAL_VISITS) {
         svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
@@ -188,7 +197,13 @@ bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
                  target_token->name.offset);
             ok = false;
         } else {
-            ok = svg_shape_traverse_compute_style(traversal, target, &use_style, &symbol_style);
+            size_t symbol_transform_node = SVG_SHAPE_NO_TRANSFORM_NODE;
+            ok = svg_shape_traverse_push_transform_node(
+                    traversal, target_token->source.offset, render_depth,
+                    use_transform_node, geom_affine_identity(),
+                    geom_affine_identity(), &symbol_transform_node) &&
+                 svg_shape_traverse_compute_style(traversal, target, &use_style,
+                                                  &symbol_style);
             if (ok) {
                 double previous_width = traversal->viewport_width;
                 double previous_height = traversal->viewport_height;
@@ -247,7 +262,8 @@ bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
         ok = svg_shape_apply_declared_clip(traversal->source, traversal->tokens,
             traversal->token_count, &traversal->references, traversal->css,
             traversal->builder.doc, clip_value, first_shape, first_edge,
-            instance_transform, traversal->diagnostic);
+            use_transform_node, instance_transform,
+            traversal->diagnostic);
     svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
     return ok;
 }

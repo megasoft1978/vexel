@@ -122,6 +122,7 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         .paint_token_visits = &traversal.paint_token_visits,
         .diag = diagnostic,
         .transform = geom_affine_identity(),
+        .transform_node = SVG_SHAPE_NO_TRANSFORM_NODE,
         .media = providers,
         .text_cache = traversal.text_cache,
         .traversal = &traversal

@@ -148,6 +148,8 @@ add_library(vexel_shape STATIC
     src/svg/shape/shape_alloc.c
     src/raster/shape_render.c
     src/raster/shape_render_animation.c
+    # lane: w7-animfix — animation clip ownership updates
+    src/raster/shape_render_animation_clips.c
     # lane: decode — bounded isolated opacity layers
     src/raster/shape_render_group.c
     src/raster/shape_render_sample.c

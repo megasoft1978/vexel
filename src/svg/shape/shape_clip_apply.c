@@ -17,6 +17,7 @@ bool svg_shape_apply_declared_clip(base_bytes source,
                                    svg_shape_document *document,
                                    svg_xml_span value,
                                    size_t first_shape, size_t first_edge,
+                                   size_t owner_node,
                                    geom_affine transform,
                                    svg_shape_diagnostic *diagnostic)
 {
@@ -39,7 +40,8 @@ bool svg_shape_apply_declared_clip(base_bytes source,
     svg_shape_clip *clip = NULL;
     svg_shape_error result = svg_clip_resolve(
         source, tokens, token_count, references, css, value, document,
-        &document->clip_bytes, inverse, bounds, &clip, diagnostic);
+        &document->clip_bytes, inverse, bounds, owner_node, &clip,
+        diagnostic);
     if (result != SVG_SHAPE_ERROR_NONE) return false;
     bool applied = svg_clip_apply_group(document, first_shape, end_shape, clip);
     svg_clip_destroy(clip);

@@ -23,6 +23,7 @@ svg_shape_error svg_clip_resolve(base_bytes source,
                                  size_t *document_clip_bytes,
                                  geom_affine user_inverse,
                                  const double local_bounds[4],
+                                 size_t owner_node,
                                  svg_shape_clip **out,
                                  svg_shape_diagnostic *diagnostic);
 bool svg_clip_local_bounds(const svg_shape_document *document,
@@ -32,7 +33,16 @@ bool svg_clip_apply_group(svg_shape_document *document,
                           size_t first_shape, size_t end_shape,
                           svg_shape_clip *clip);
 svg_shape_clip *svg_clip_create_rect(geom_point p0, geom_point p1,
-                                    geom_point p2, geom_point p3);
+                                    geom_point p2, geom_point p3,
+                                    geom_affine user_inverse,
+                                    size_t owner_node);
+svg_shape_clip *svg_clip_clone(const svg_shape_clip *clip,
+                               size_t *total_bytes, bool *limit);
+bool svg_clip_retain(svg_shape_clip *clip);
+void svg_clip_update_owner(svg_shape_clip *clip, size_t owner_node,
+                           geom_affine user_inverse,
+                           geom_affine attribute_inverse,
+                           const double local_bounds[4]);
 bool svg_clip_contains(const svg_shape_clip *clip, double x, double y);
 /* Visits every filled child edge in this clip and its parent chain, mapped back
  * into the painted document's user space. mapping_valid is false when a clip
