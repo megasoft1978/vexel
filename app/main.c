@@ -467,6 +467,9 @@ int main(int argc, char *argv[])
     if (argc >= 2 && strcmp(argv[1], "--render-animation") == 0) {
         return app_run_render_animation(argc, argv);
     }
+    if (argc == 2 && strcmp(argv[1], "--native-viewer-smoke") == 0) {
+        return app_run_native_viewer_smoke(NULL);
+    }
     if (argc == 3 && strcmp(argv[1], "--native-viewer-smoke") == 0) {
         return app_run_native_viewer_smoke(argv[2]);
     }
@@ -518,6 +521,7 @@ int main(int argc, char *argv[])
 
     (void)fputs("usage: svgworkbench [<file.svg>]\n"
                 "       svgworkbench --version\n"
+                "       svgworkbench --native-viewer-smoke [<file.svg>]\n"
                 "       svgworkbench --render-frame <file.svg> --size WxH --out <file.ppm> "
                 "[--zoom N] [--pan X,Y] [--region X,Y,W,H] [--time seconds]\n"
                 "       svgworkbench --render-animation <file.svg> --fps N --duration D --out <dir/>\n", stderr);

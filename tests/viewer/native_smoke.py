@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bounded native viewer interaction smoke for an interactive macOS session."""
+"""Run the bounded, UI-script-free native viewer interaction smoke."""
 
 from __future__ import annotations
 
@@ -13,77 +13,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_BINARY = ROOT / "build/mac-debug/bin/svgworkbench"
-DEFAULT_FIRST = ROOT / "tests/viewer/fixtures/simple-shape.svg"
-DEFAULT_SECOND = ROOT / "tests/viewer/fixtures/unsupported.svg"
-APPLE_SCRIPT = r'''on run argv
-    set targetPid to (item 1 of argv) as integer
-    set secondDocument to item 2 of argv
-    set waitAttempts to (item 3 of argv) as integer
-    tell application "System Events"
-        set targetProcess to missing value
-        repeat waitAttempts times
-            try
-                set targetProcess to first process whose unix id is targetPid
-                if (count of windows of targetProcess) > 0 then exit repeat
-            end try
-            delay 0.1
-        end repeat
-        if targetProcess is missing value then error "viewer process did not become visible"
-        tell targetProcess
-            set frontmost to true
-            if (count of windows) = 0 then error "viewer window did not open"
-
-            keystroke "r" using {command down}
-            delay 0.3
-            keystroke "+"
-            delay 0.3
-            keystroke "t"
-            delay 0.3
-            keystroke "o" using {command down}
-
-            set openPanelReady to false
-            repeat 100 times
-                try
-                    if exists sheet 1 of window 1 then
-                        set openPanelReady to true
-                        exit repeat
-                    end if
-                end try
-                delay 0.1
-            end repeat
-            if not openPanelReady then error "Open panel sheet did not appear"
-
-            keystroke "g" using {command down, shift down}
-            delay 0.3
-            keystroke secondDocument
-            key code 36
-            delay 0.4
-            key code 36
-
-            set panelClosed to false
-            repeat 100 times
-                try
-                    if not (exists sheet 1 of window 1) then
-                        set panelClosed to true
-                        exit repeat
-                    end if
-                on error
-                    set panelClosed to true
-                    exit repeat
-                end try
-                delay 0.1
-            end repeat
-            if not panelClosed then error "Open panel sheet did not close after selection"
-
-            set frontmost to true
-            delay 0.2
-            keystroke "1"
-            delay 0.3
-            keystroke "q" using {command down}
-        end tell
-    end tell
-end run
-'''
+DEFAULT_OPEN = ROOT / "tests/viewer/fixtures/simple-shape.svg"
 
 
 class SmokeFailure(RuntimeError):
@@ -110,25 +40,22 @@ def process_state(process: subprocess.Popen[bytes] | None) -> str:
     return "running" if status is None else f"exited {status}"
 
 
-def diagnostic_dump(viewer: subprocess.Popen[bytes] | None,
-                    automation: subprocess.Popen[bytes] | None,
-                    log_path: Path, phase: str, automation_output: str = "") -> str:
+def diagnostic_dump(process: subprocess.Popen[bytes] | None, log_path: Path,
+                    phase: str) -> str:
     details = [
         f"native viewer smoke diagnostic: phase={phase}",
-        f"viewer pid={viewer.pid if viewer is not None else 'none'} state={process_state(viewer)}",
-        f"osascript pid={automation.pid if automation is not None else 'none'} state={process_state(automation)}",
+        f"viewer pid={process.pid if process is not None else 'none'} "
+        f"state={process_state(process)}",
     ]
-    if viewer is not None or automation is not None:
-        pids = [str(process.pid) for process in (viewer, automation) if process is not None]
+    if process is not None:
         try:
-            ps = subprocess.run(["/bin/ps", "-o", "pid,ppid,state,etime,command", "-p",
-                                 ",".join(pids)], capture_output=True, text=True,
-                                check=False, timeout=2.0)
+            ps = subprocess.run(
+                ["/bin/ps", "-o", "pid,ppid,state,etime,command", "-p", str(process.pid)],
+                capture_output=True, text=True, check=False, timeout=2.0,
+            )
             details.append("process table:\n" + (ps.stdout or ps.stderr).strip())
         except (OSError, subprocess.TimeoutExpired) as error:
             details.append(f"process table unavailable: {error}")
-    if automation_output:
-        details.append("osascript output:\n" + automation_output[-8000:])
     try:
         log = log_path.read_text(encoding="utf-8", errors="replace")
         details.append("viewer log tail:\n" + "\n".join(log.splitlines()[-80:]))
@@ -139,7 +66,7 @@ def diagnostic_dump(viewer: subprocess.Popen[bytes] | None,
 
 
 def stop_process_group(process: subprocess.Popen[bytes] | None) -> None:
-    if process is None or process.poll() is not None:
+    if process is None:
         return
     try:
         os.killpg(process.pid, signal.SIGTERM)
@@ -156,83 +83,71 @@ def stop_process_group(process: subprocess.Popen[bytes] | None) -> None:
             process.wait(timeout=2.0)
         except subprocess.TimeoutExpired:
             pass
+    else:
+        # The group leader may exit while a child process is still alive.
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
 
 
-def run_smoke(binary: Path, first: Path, second: Path) -> None:
-    startup_limit = timeout_seconds("VEXEL_VIEWER_SMOKE_START_TIMEOUT", 15.0)
-    automation_limit = timeout_seconds("VEXEL_VIEWER_SMOKE_AUTOMATION_TIMEOUT", 35.0)
-    quit_limit = timeout_seconds("VEXEL_VIEWER_SMOKE_QUIT_TIMEOUT", 10.0)
-    for name, path in (("viewer binary", binary), ("first SVG", first), ("second SVG", second)):
-        if not path.is_file():
-            raise SmokeFailure(f"{name} does not exist: {path}")
+def run_smoke(binary: Path, document: Path) -> None:
+    limit = timeout_seconds("VEXEL_VIEWER_SMOKE_TIMEOUT", 30.0)
+    encoded_path = os.fsencode(document)
+    if not encoded_path or len(encoded_path) >= 4096:
+        raise SmokeFailure("test-open SVG path must be between 1 and 4095 bytes")
+    if not binary.is_file():
+        raise SmokeFailure(f"viewer binary does not exist: {binary}")
+    if not document.is_file():
+        raise SmokeFailure(f"test-open SVG does not exist: {document}")
+    if document.suffix.lower() != ".svg":
+        raise SmokeFailure(f"test-open path must end in .svg: {document}")
 
     descriptor, raw_log_path = tempfile.mkstemp(prefix="vexel-viewer-smoke-", suffix=".log")
     os.close(descriptor)
     log_path = Path(raw_log_path)
-    viewer: subprocess.Popen[bytes] | None = None
-    automation: subprocess.Popen[bytes] | None = None
-    automation_output = ""
+    environment = os.environ.copy()
+    environment["VEXEL_TEST_OPEN"] = str(document)
+    process: subprocess.Popen[bytes] | None = None
     phase = "launch"
     try:
         with log_path.open("wb") as log:
-            viewer = subprocess.Popen([str(binary), str(first)], stdout=log,
-                                      stderr=subprocess.STDOUT, start_new_session=True)
-            if viewer.poll() is not None:
-                raise SmokeFailure("viewer exited before automation began")
-
-            phase = "automation"
-            automation = subprocess.Popen(["/usr/bin/osascript", "-", str(viewer.pid),
-                str(second), str(max(1, int(startup_limit * 10.0)))],
-                stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT, start_new_session=True)
+            process = subprocess.Popen(
+                [str(binary), "--native-viewer-smoke"],
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                env=environment,
+                start_new_session=True,
+            )
+            phase = "native interaction"
             try:
-                output, _ = automation.communicate(APPLE_SCRIPT.encode("utf-8"),
-                    timeout=startup_limit + automation_limit)
-                automation_output = output.decode("utf-8", errors="replace")
-            except subprocess.TimeoutExpired as timeout:
-                partial = timeout.output or b""
-                automation_output = partial.decode("utf-8", errors="replace")
-                raise SmokeFailure("osascript automation timed out")
-            if automation.returncode != 0:
-                raise SmokeFailure(f"osascript exited with status {automation.returncode}")
-            if viewer.poll() is not None:
-                raise SmokeFailure("viewer exited before Cmd+Q completed")
-
-            phase = "quit"
-            try:
-                exit_status = viewer.wait(timeout=quit_limit)
+                status = process.wait(timeout=limit)
             except subprocess.TimeoutExpired as error:
-                raise SmokeFailure("viewer did not quit after Cmd+Q") from error
-            if exit_status != 0:
-                raise SmokeFailure(f"viewer exited with status {exit_status}")
+                raise SmokeFailure(f"native viewer smoke timed out after {limit:g} seconds") from error
+            if status != 0:
+                raise SmokeFailure(f"native viewer smoke exited with status {status}")
     except BaseException as error:
-        report = diagnostic_dump(viewer, automation, log_path, phase,
-                                 automation_output)
-        stop_process_group(automation)
-        stop_process_group(viewer)
+        report = diagnostic_dump(process, log_path, phase)
+        stop_process_group(process)
         if isinstance(error, KeyboardInterrupt):
             raise
         raise SmokeFailure(f"{error}\n{report}") from error
     else:
-        if automation is not None and automation.poll() is None:
-            stop_process_group(automation)
         try:
             log_path.unlink()
         except OSError:
             pass
-        print("native viewer smoke: open panel, reload, zoom, actual size, quit passed")
+        print("native viewer smoke: test-open, reload, zoom, fit, actual size, and quit passed")
 
 
 def main(arguments: list[str]) -> int:
-    if len(arguments) > 3:
-        print("usage: native_smoke.sh [<binary> [<first.svg> [<second.svg>]]]", file=sys.stderr)
+    if len(arguments) > 2:
+        print("usage: native_smoke.sh [<binary> [<file.svg>]]", file=sys.stderr)
         return 2
-    paths = [Path(value).expanduser().resolve() for value in arguments]
-    binary = paths[0] if len(paths) >= 1 else DEFAULT_BINARY
-    first = paths[1] if len(paths) >= 2 else DEFAULT_FIRST
-    second = paths[2] if len(paths) >= 3 else DEFAULT_SECOND
+    binary = Path(arguments[0]).expanduser().resolve() if arguments else DEFAULT_BINARY
+    document = Path(arguments[1]).expanduser().resolve() if len(arguments) == 2 else DEFAULT_OPEN
     try:
-        run_smoke(binary, first, second)
+        run_smoke(binary, document)
     except SmokeFailure as error:
         print(str(error), file=sys.stderr)
         return 1

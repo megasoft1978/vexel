@@ -6,7 +6,7 @@ runs=${1:-20}
 if [ "$#" -gt 0 ]; then shift; fi
 case "$runs" in
     ''|*[!0-9]*)
-        printf '%s\n' 'usage: repeat_native_smoke.sh [runs [<binary> [<first.svg> [<second.svg>]]]]' >&2
+        printf '%s\n' 'usage: repeat_native_smoke.sh [runs [<binary> [<file.svg>]]]' >&2
         exit 2
         ;;
 esac

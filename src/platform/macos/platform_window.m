@@ -128,6 +128,25 @@ bool platform_window_dispatch_file_open(platform_window *window, const char *pat
     return platform_emit(window, &value);
 }
 
+static bool platform_queue_test_open_from_environment(void)
+{
+    const char *path = getenv("VEXEL_TEST_OPEN");
+    if (path == NULL || path[0] == '\0') return true;
+    size_t length = strnlen(path, PLATFORM_PATH_CAP);
+    if (length == 0U || length >= PLATFORM_PATH_CAP ||
+        !platform_path_supported(path, length)) {
+        (void)fprintf(stderr,
+            "platform: VEXEL_TEST_OPEN must be a UTF-8 .svg path shorter than %u bytes\n",
+            PLATFORM_PATH_CAP);
+        return false;
+    }
+    if (!platform_window_dispatch_file_open(NULL, path, length)) {
+        (void)fputs("platform: could not queue VEXEL_TEST_OPEN file event\n", stderr);
+        return false;
+    }
+    return true;
+}
+
 void platform_window_dispatch_action(platform_window *window, platform_viewer_action action)
 {
     if (window != NULL) {
@@ -346,7 +365,7 @@ bool platform_init(void)
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     platform_macos_menus_init();
     [NSApp finishLaunching];
-    return true;
+    return platform_queue_test_open_from_environment();
 }
 
 bool platform_window_create(const platform_window_config *config, platform_window **out_window)
