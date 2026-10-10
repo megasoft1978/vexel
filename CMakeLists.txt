@@ -677,4 +677,56 @@ if(BUILD_TESTING)
     add_test(NAME editor-style-goldens COMMAND python3
         "${CMAKE_SOURCE_DIR}/tests/ui/verify_style_goldens.py"
         --binary $<TARGET_FILE:viewer_chrome_render>)
+
+# lane: w5-fixes
+target_sources(vexel_document PRIVATE src/platform/macos/platform_atomic_new_file.c)
+target_sources(vexel_mcp PRIVATE src/app/media_providers.c)
+target_link_libraries(vexel_mcp PUBLIC vexel_platform_media)
+
+add_executable(mcp_features_test tests/mcp/mcp_features_test.c)
+target_include_directories(mcp_features_test PRIVATE src src/mcp)
+target_link_libraries(mcp_features_test PRIVATE vexel_mcp)
+set_target_properties(mcp_features_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(mcp_features_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(mcp_features_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(mcp_features_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME mcp-features COMMAND mcp_features_test)
+endif()
+
+add_library(vexel_platform_dialog STATIC src/platform/macos/platform_dialog.m)
+target_include_directories(vexel_platform_dialog PUBLIC src/platform/macos)
+target_link_libraries(vexel_platform_dialog PUBLIC ${COCOA_FRAMEWORK}
+    ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
+target_compile_definitions(vexel_platform_dialog PRIVATE PLATFORM_DIALOG_TESTING)
+set_source_files_properties(src/platform/macos/platform_dialog.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(vexel_platform_dialog PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO)
+target_compile_options(vexel_platform_dialog PRIVATE ${VEXEL_STRICT_WARNINGS})
+
+add_executable(platform_dialog_test tests/platform/platform_dialog_test.m)
+target_include_directories(platform_dialog_test PRIVATE src/platform/macos)
+target_link_libraries(platform_dialog_test PRIVATE vexel_platform_dialog Threads::Threads)
+target_compile_definitions(platform_dialog_test PRIVATE PLATFORM_DIALOG_TESTING)
+set_source_files_properties(tests/platform/platform_dialog_test.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(platform_dialog_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(platform_dialog_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(vexel_platform_dialog PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_platform_dialog PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(platform_dialog_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(platform_dialog_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME platform-dialog COMMAND platform_dialog_test)
 endif()

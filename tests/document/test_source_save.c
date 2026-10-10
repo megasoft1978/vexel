@@ -1,4 +1,5 @@
 #include "source_save.h"
+#include "platform_atomic_new_file.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -88,7 +89,8 @@ static size_t temp_count(const char *directory)
     size_t count = 0;
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL)
-        if (strncmp(entry->d_name, ".vexel-save-", 12) == 0) count++;
+        if (strncmp(entry->d_name, ".vexel-save-", 12) == 0 ||
+            strncmp(entry->d_name, ".vexel-new-", 11) == 0) count++;
     (void)closedir(dir);
     return count;
 }
@@ -149,8 +151,34 @@ static bool test_save_and_failures(const char *directory)
     CHECK(written > 0 && (size_t)written < sizeof(missing_target));
     base_bytes missing_path = {(const uint8_t *)missing_target, strlen(missing_target)};
     saved = source_save_noop(source, missing_path, tokens, 128, NULL);
-    CHECK(saved.error == SOURCE_SAVE_DESTINATION);
-    CHECK(saved.file_result.error == PLATFORM_ATOMIC_FILE_NOT_FOUND);
+    CHECK(saved.error == SOURCE_SAVE_OK && saved.file_result.renamed &&
+          saved.file_result.file_fsynced && saved.file_result.directory_fsynced);
+    CHECK(target_is(missing_target, fixture, sizeof(fixture) - 1U, 0600));
+    platform_atomic_new_file_result duplicate = platform_atomic_file_create_new(
+        missing_path, (base_bytes){old_bytes, sizeof(old_bytes) - 1U}, NULL);
+    CHECK(duplicate.error == PLATFORM_ATOMIC_NEW_FILE_EXISTS && !duplicate.published);
+    CHECK(target_is(missing_target, fixture, sizeof(fixture) - 1U, 0600));
+    CHECK(temp_count(directory) == 0U);
+
+    char malformed_target[1024];
+    written = snprintf(malformed_target, sizeof(malformed_target),
+        "%s/malformed.svg", directory);
+    CHECK(written > 0 && (size_t)written < sizeof(malformed_target));
+    saved = source_save_noop(bad,
+        (base_bytes){(const uint8_t *)malformed_target, strlen(malformed_target)},
+        tokens, 128, NULL);
+    CHECK(saved.error == SOURCE_SAVE_TOKENIZER &&
+        access(malformed_target, F_OK) != 0 && temp_count(directory) == 0U);
+
+    char failed_target[1024];
+    written = snprintf(failed_target, sizeof(failed_target), "%s/failed.svg", directory);
+    CHECK(written > 0 && (size_t)written < sizeof(failed_target));
+    state = (struct injected){.fail_write = true};
+    saved = source_save_noop(source,
+        (base_bytes){(const uint8_t *)failed_target, strlen(failed_target)},
+        tokens, 128, &hooks);
+    CHECK(saved.error == SOURCE_SAVE_DESTINATION && access(failed_target, F_OK) != 0);
+    CHECK(temp_count(directory) == 0U);
     base_bytes directory_path = {(const uint8_t *)directory, strlen(directory)};
     saved = source_save_noop(source, directory_path, tokens, 128, NULL);
     CHECK(saved.error == SOURCE_SAVE_DESTINATION);
@@ -211,9 +239,18 @@ int main(int argc, char **argv)
     bool passed = test_save_and_failures(directory);
     char target[1024];
     (void)snprintf(target, sizeof(target), "%s/document.svg", directory);
+    char missing_target[1024];
+    (void)snprintf(missing_target, sizeof(missing_target), "%s/missing.svg", directory);
+    char failed_target[1024];
+    (void)snprintf(failed_target, sizeof(failed_target), "%s/failed.svg", directory);
+    char malformed_target[1024];
+    (void)snprintf(malformed_target, sizeof(malformed_target), "%s/malformed.svg", directory);
     (void)unlink(target);
+    (void)unlink(missing_target);
+    (void)unlink(failed_target);
+    (void)unlink(malformed_target);
     (void)rmdir(directory);
     if (!passed) return 1;
-    (void)puts("source-save C tests passed; byte equality, permission preservation, pre-commit failure atomicity, and cleanup verified");
+    (void)puts("source-save C tests passed; byte equality, permission preservation, atomic create, no-replace collision, and cleanup verified");
     return 0;
 }

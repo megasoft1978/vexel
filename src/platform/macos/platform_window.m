@@ -17,8 +17,12 @@ typedef struct platform_event_node {
     struct platform_event_node *next;
 } platform_event_node;
 
+@class VexelOpenPanelRequest;
+
 struct platform_window {
     __strong NSWindow *native;
+    __strong NSOpenPanel *open_panel;
+    __strong VexelOpenPanelRequest *open_panel_request;
     platform_event_node *first;
     platform_event_node *last;
     uint32_t last_pixel_width;
@@ -26,6 +30,14 @@ struct platform_window {
     double last_scale;
     size_t pending_count;
 };
+
+@interface VexelOpenPanelRequest : NSObject
+@property(nonatomic, assign) platform_window *owner;
+@property(nonatomic, strong) NSOpenPanel *panel;
+@end
+
+@implementation VexelOpenPanelRequest
+@end
 
 #define PLATFORM_EVENT_QUEUE_CAP 256U
 
@@ -412,6 +424,7 @@ bool platform_window_create(const platform_window_config *config, platform_windo
 bool platform_window_open_panel(platform_window *window)
 {
     if (!platform_on_main_thread() || window == NULL) return false;
+    if (window->open_panel_request != nil) return true;
     @autoreleasepool {
         NSOpenPanel *panel = [NSOpenPanel openPanel];
         UTType *svg_type = [UTType typeWithFilenameExtension:@"svg"];
@@ -421,11 +434,25 @@ bool platform_window_open_panel(platform_window *window)
         panel.canChooseDirectories = NO;
         panel.allowsMultipleSelection = NO;
         panel.resolvesAliases = YES;
-        if ([panel runModal] != NSModalResponseOK || panel.URL == nil || !panel.URL.isFileURL)
-            return true;
-        const char *path = panel.URL.path.fileSystemRepresentation;
-        size_t length = path == NULL ? 0U : strnlen(path, PLATFORM_PATH_CAP);
-        return platform_window_dispatch_file_open(window, path, length);
+        VexelOpenPanelRequest *request = [[VexelOpenPanelRequest alloc] init];
+        request.owner = window;
+        request.panel = panel;
+        window->open_panel = panel;
+        window->open_panel_request = request;
+        [panel beginSheetModalForWindow:window->native
+            completionHandler:^(NSModalResponse response) {
+                platform_window *owner = request.owner;
+                if (owner == NULL || owner->open_panel_request != request) return;
+                owner->open_panel = nil;
+                owner->open_panel_request = nil;
+                request.owner = NULL;
+                if (response != NSModalResponseOK || panel.URL == nil ||
+                    !panel.URL.isFileURL) return;
+                const char *path = panel.URL.path.fileSystemRepresentation;
+                size_t length = path == NULL ? 0U : strnlen(path, PLATFORM_PATH_CAP);
+                (void)platform_window_dispatch_file_open(owner, path, length);
+            }];
+        return true;
     }
 }
 
@@ -629,6 +656,18 @@ void platform_window_destroy(platform_window *window)
         return;
     }
     @autoreleasepool {
+        VexelOpenPanelRequest *request = window->open_panel_request;
+        if (request != nil) {
+            request.owner = NULL;
+            if (window->open_panel != nil) {
+                if (window->native.attachedSheet == window->open_panel)
+                    [NSApp endSheet:window->open_panel
+                        returnCode:NSModalResponseCancel];
+                [window->open_panel orderOut:nil];
+            }
+            window->open_panel = nil;
+            window->open_panel_request = nil;
+        }
         [window->native orderOut:nil];
         window->native.delegate = nil;
         [(VexelView *)window->native.contentView setOwner:NULL];

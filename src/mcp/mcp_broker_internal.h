@@ -33,6 +33,8 @@ struct mcp_broker {
 
 bool mcp_access_path_allowed(const char *path);
 bool mcp_access_resolve_existing(const char *path, char out[MCP_BROKER_PATH_CAP]);
+bool mcp_access_resolve_save_path(const char *path,
+                                  char out[MCP_BROKER_PATH_CAP]);
 bool mcp_broker_call_tool(void *context, const mcp_json_doc *request,
                           size_t arguments, const char *tool_name,
                           mcp_tool_response *out);

@@ -3,9 +3,18 @@
 `platform_window.m` implements the C platform contract with AppKit. The
 Objective-C file is built with ARC; the public C interface contains no Cocoa
 types. Native window creation, event pumping, resize, and destruction are
-main-thread-only. `platform_window_destroy` clears delegate/view back-references,
-closes the native window, frees queued events, and releases its strong window
-reference before freeing the opaque handle.
+main-thread-only. Open uses a non-blocking sheet with a completion handler, so
+the viewer's event polling continues while the file picker is visible. The
+request clears its owner before window destruction dismisses an outstanding
+sheet; a late completion then cannot dereference the freed window handle.
+`platform_window_destroy` clears delegate/view back-references, closes the
+native window, frees queued events, and releases its strong window reference
+before freeing the opaque handle.
+
+`platform_dialog.h` exposes main-thread-only Save, unsaved-changes, and error
+dialogs without Cocoa types in the C contract. Save suggests an `.svg` name and
+returns a bounded UTF-8 path. The testing backend injects Save, Save / Don't
+Save / Cancel, and error-alert responses without displaying native UI.
 
 The smoke-only injection declarations are private to `app/test_driver/` and
 invoke the target view's event handlers directly. This keeps synthetic pointer
@@ -42,11 +51,13 @@ viewer polls size and modification time every 250 ms for auto-reload. The event
 queue coalesces pointer movement and window size/scale notifications and caps
 all queued events at 256.
 
-`tests/viewer/native_smoke.sh` exercises reload, zoom, checkerboard, Open, file
-selection, actual size, and quit through System Events. It requires an
-interactive macOS session, Accessibility permission for `osascript`, and a
-working Metal device; a headless or Metal-less environment cannot verify the
-native presentation path.
+`tests/viewer/native_smoke.sh` runs `native_smoke.py`, which exercises reload,
+zoom, checkerboard, Open, file selection, actual size, and quit through System
+Events. Automation and viewer shutdown each have bounded timeouts; on failure
+the harness records process state and the viewer log, then terminates both
+process groups. The smoke needs an interactive macOS session, Accessibility
+permission for `osascript`, and a working Metal device; a headless or Metal-less
+environment cannot verify the native presentation path.
 
 `platform_task.c` implements the opaque C worker queue with pthreads. It accepts
 capacity 1–64 and 1–4 workers, and uses caller-provided allocation functions for

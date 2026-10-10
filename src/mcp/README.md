@@ -16,12 +16,19 @@ batches operate on a clone and replace the document only after all edits pass.
 
 The broker supports at most eight open documents, each at most 64 MiB. Tree and
 query pages contain at most 512 elements; transactions contain at most 64
-operations. Render output is limited to 512 pixels on either axis. MCP-opened
-documents can only be closed when clean. The app's active document cannot be
-closed by MCP. `save_as` currently requires an existing regular file because
-that is the contract of the public save API. The public template API supports
-`rect`, `circle`, `ellipse`, `line`, `path`, and `g`; the advertised `text`
-template returns `invalid_operation` until the edit API can create text nodes.
+operations. Render output is limited to 512 pixels on either axis. A clean
+MCP-opened document can be closed while the app-owned active document stays
+open. `save_as` accepts an existing regular file or a new destination inside
+the granted directories; new files are published atomically without replacing
+a path that appears concurrently. `element_add` supports `rect`, `circle`,
+`ellipse`, `line`, `path`, `g`, and an empty `text` template; `text_set` can then
+insert or remove escaped text content. `element_add_fragment` accepts one
+well-formed top-level XML element up to 64 KiB and validates the resulting
+parent subtree before committing.
+
+`render_png` decodes with the app's CoreText and ImageIO media providers, so
+bounded text and embedded raster images follow the same platform implementation
+as viewer rendering. Network-loaded media remains unsupported.
 
 `mcp_access` resolves real paths and permits opens only inside canonical
 directories listed in `VEXEL_MCP_ALLOWED_DIRS` or

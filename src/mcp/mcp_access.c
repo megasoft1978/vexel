@@ -4,6 +4,7 @@
 #include "mcp_broker_internal.h"
 
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -113,4 +114,63 @@ bool mcp_access_path_allowed(const char *path)
     char canonical[MCP_BROKER_PATH_CAP];
     if (!mcp_access_resolve_existing(path, canonical)) return false;
     return path_is_granted_by_env(canonical) || path_is_granted_by_config(canonical);
+}
+
+bool mcp_access_resolve_save_path(const char *path,
+                                  char out[MCP_BROKER_PATH_CAP])
+{
+    if (path == NULL || out == NULL || path[0] == '\0') return false;
+    size_t length = strnlen(path, MCP_BROKER_PATH_CAP);
+    if (length == 0U || length >= MCP_BROKER_PATH_CAP) return false;
+
+    struct stat status;
+    if (lstat(path, &status) == 0) {
+        char canonical[MCP_BROKER_PATH_CAP];
+        if (!mcp_access_resolve_existing(path, canonical) ||
+            (!path_is_granted_by_env(canonical) &&
+             !path_is_granted_by_config(canonical))) return false;
+        memcpy(out, canonical, strlen(canonical) + 1U);
+        return true;
+    }
+    if (errno != ENOENT) return false;
+
+    const char *slash = strrchr(path, '/');
+    const char *name = slash == NULL ? path : slash + 1;
+    size_t name_length = length - (size_t)(name - path);
+    if (name_length == 0U ||
+        (name_length == 1U && name[0] == '.') ||
+        (name_length == 2U && name[0] == '.' && name[1] == '.')) return false;
+    char parent[MCP_BROKER_PATH_CAP];
+    if (slash == NULL) {
+        memcpy(parent, ".", 2U);
+    } else if (slash == path) {
+        memcpy(parent, "/", 2U);
+    } else {
+        size_t parent_length = (size_t)(slash - path);
+        if (parent_length >= sizeof(parent)) return false;
+        memcpy(parent, path, parent_length);
+        parent[parent_length] = '\0';
+    }
+    char *canonical_parent = realpath(parent, NULL);
+    if (canonical_parent == NULL) return false;
+    struct stat parent_status;
+    size_t canonical_length = strlen(canonical_parent);
+    size_t separator = canonical_length > 0U &&
+        canonical_parent[canonical_length - 1U] == '/' ? 0U : 1U;
+    size_t output_length;
+    bool okay = stat(canonical_parent, &parent_status) == 0 &&
+        S_ISDIR(parent_status.st_mode) &&
+        base_size_add(canonical_length, separator, &output_length) &&
+        base_size_add(output_length, name_length, &output_length) &&
+        output_length < MCP_BROKER_PATH_CAP;
+    if (okay) {
+        memcpy(out, canonical_parent, canonical_length);
+        size_t cursor = canonical_length;
+        if (separator != 0U) out[cursor++] = '/';
+        memcpy(out + cursor, name, name_length);
+        out[output_length] = '\0';
+        okay = path_is_granted_by_env(out) || path_is_granted_by_config(out);
+    }
+    free(canonical_parent);
+    return okay;
 }
