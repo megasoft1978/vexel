@@ -68,6 +68,8 @@ def main(argv: list[str] | None = None) -> int:
     suite = unittest.defaultTestLoader.discover(str(ROOT / "tests"), pattern="test_*.py", top_level_dir=str(ROOT))
     result = Result()
     unittest.TextTestRunner(stream=sys.stderr, verbosity=2, resultclass=lambda *a, **k: result).run(suite)
+    for test, trace in result.failures + result.errors:
+        print(f"FAILED {test.id()}\n{trace}", file=sys.stderr)
     ended_at = utc_now()
     statuses = [item["status"] for item in result.tests]
     counts = {key: statuses.count(key) for key in ("passed", "failed", "error", "skipped", "expected_failure", "unexpected_success")}
