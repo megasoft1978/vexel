@@ -268,6 +268,7 @@ void editor_capture_selection_identity(viewer_editor *editor)
 void editor_select_handle(viewer_editor *editor, document_handle selected)
 {
     editor->selected = selected;
+    editor->selection_active = true;
     editor->selected_attribute = 0U;
     editor->attribute_start = 0U;
     editor_capture_selection_identity(editor);
@@ -295,6 +296,7 @@ void editor_rebind_after_change(viewer_editor *editor, size_t old_offset,
         (void)document_edit_element_at_offset(editor->edit, old_offset + 1U, &next);
     if (next.document_id == 0U) (void)document_edit_root(editor->edit, &next);
     editor->selected = next;
+    editor->selection_active = true;
     editor->field_kind = EDITOR_FIELD_NONE;
     editor->field_length = editor->cursor = editor->anchor = 0U;
     editor->selected_attribute_name[0] = '\0';

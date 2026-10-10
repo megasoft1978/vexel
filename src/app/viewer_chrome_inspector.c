@@ -94,53 +94,82 @@ static bool editor_add_section(viewer_editor *editor, uint32_t parent,
         0U, 0U);
 }
 
+static bool editor_add_collapsible_section(viewer_editor *editor, uint32_t id,
+                                           const char *title, bool expanded)
+{
+    return editor_add_widget_node(editor, id, EDITOR_NODE_INSPECTOR,
+        UI_AXIS_HORIZONTAL, 0U, 24U, 0U, 0U, 0U, UI_ROLE_BUTTON,
+        UI_WIDGET_SECTION_HEADER, UI_ICON_NONE, title, strlen(title), NULL, 0U,
+        expanded ? UI_STATE_EXPANDED : 0U,
+        EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES);
+}
+
 static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *tokens)
 {
     size_t count = document_edit_attribute_count(editor->edit, editor->selected);
     size_t start = editor->attribute_start;
     if (start > count) start = count;
     size_t visible = 0U;
-    bool has_section = false;
-    uint8_t prior_section = UINT8_MAX;
     uint32_t section_sequence = 0U;
-    for (size_t attribute_index = start;
-         attribute_index < count && visible < EDITOR_ATTRIBUTE_VISIBLE;
-         ++attribute_index) {
-        document_edit_attribute attribute;
-        base_bytes name;
-        char label[UI_TEXT_MAX_BYTES] = {0};
-        const char *value = NULL;
-        size_t value_length = 0U;
-        if (!document_edit_attribute_at(editor->edit, editor->selected,
-                attribute_index, &attribute) ||
-            !document_edit_span_bytes(editor->edit, attribute.name, &name)) return false;
-        if (editor_is_identity_attribute(name)) continue;
-        uint8_t section = editor_attribute_section(name);
-        if (!has_section || section != prior_section) {
-            if (!editor_add_section(editor, EDITOR_NODE_INSPECTOR,
-                    EDITOR_INSPECTOR_SECTION_BASE + section_sequence++,
-                    section_title(section))) return false;
-            prior_section = section;
-            has_section = true;
+    for (uint8_t section = 0U; section < 3U; ++section) {
+        bool has_section = false;
+        for (size_t index = 0U; index < count; ++index) {
+            document_edit_attribute attribute;
+            base_bytes name;
+            if (!document_edit_attribute_at(editor->edit, editor->selected,
+                    index, &attribute) ||
+                !document_edit_span_bytes(editor->edit, attribute.name, &name)) return false;
+            if (!editor_is_identity_attribute(name) &&
+                editor_attribute_section(name) == section) {
+                has_section = true;
+                break;
+            }
         }
-        size_t label_length = editor_attribute_label(name, label);
-        if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE &&
-            editor->field_attribute == attribute_index) {
-            value = editor->field;
-            value_length = editor->field_length;
-        } else value_length = editor_full_attribute_value(editor, attribute.value, &value);
-        uint32_t state = attribute_index == editor->selected_attribute ?
-            UI_STATE_CHECKED : 0U;
-        if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE &&
-            editor->field_attribute == attribute_index) state |= UI_STATE_FOCUSED;
-        uint32_t color = attribute_index == editor->selected_attribute ?
-            tokens->selection_fill : tokens->panel;
-        if (!editor_add_node(editor, EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index,
-                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
-                color, UI_ROLE_TEXT_FIELD, label, label_length, value,
-                value_length, state,
-                EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index)) return false;
-        ++visible;
+        if (!has_section) continue;
+        if (section == 2U) {
+            bool expanded = editor->inspector_other_attributes_expanded;
+            if (!editor_add_collapsible_section(editor,
+                    EDITOR_INSPECTOR_SECTION_BASE + section_sequence++,
+                    section_title(section), expanded)) return false;
+            if (!expanded) continue;
+        } else if (!editor_add_section(editor, EDITOR_NODE_INSPECTOR,
+                EDITOR_INSPECTOR_SECTION_BASE + section_sequence++,
+                section_title(section))) return false;
+        if (visible >= EDITOR_ATTRIBUTE_VISIBLE) continue;
+
+        for (size_t attribute_index = start;
+             attribute_index < count && visible < EDITOR_ATTRIBUTE_VISIBLE;
+             ++attribute_index) {
+            document_edit_attribute attribute;
+            base_bytes name;
+            char label[UI_TEXT_MAX_BYTES] = {0};
+            const char *value = NULL;
+            size_t value_length = 0U;
+            if (!document_edit_attribute_at(editor->edit, editor->selected,
+                    attribute_index, &attribute) ||
+                !document_edit_span_bytes(editor->edit, attribute.name, &name)) return false;
+            if (editor_is_identity_attribute(name) ||
+                editor_attribute_section(name) != section) continue;
+            size_t label_length = editor_attribute_label(name, label);
+            if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE &&
+                editor->field_attribute == attribute_index) {
+                value = editor->field;
+                value_length = editor->field_length;
+            } else value_length = editor_full_attribute_value(editor, attribute.value, &value);
+            uint32_t state = attribute_index == editor->selected_attribute ?
+                UI_STATE_CHECKED : 0U;
+            if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE &&
+                editor->field_attribute == attribute_index) state |= UI_STATE_FOCUSED;
+            uint32_t color = attribute_index == editor->selected_attribute ?
+                tokens->selection_fill : tokens->panel;
+            if (!editor_add_node(editor,
+                    EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index,
+                    EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                    color, UI_ROLE_TEXT_FIELD, label, label_length, value,
+                    value_length, state,
+                    EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index)) return false;
+            ++visible;
+        }
     }
     return true;
 }
@@ -156,18 +185,23 @@ static size_t selected_type_label(viewer_editor *editor, char out[UI_TEXT_MAX_BY
     if (tag.len == 3U && memcmp(tag.ptr, "svg", 3U) == 0) {
         memcpy(out, "Document", 8U); out[8] = '\0'; return 8U;
     }
-    if (tag.len == 4U && memcmp(tag.ptr, "rect", 4U) == 0) {
-        memcpy(out, "Rectangle", 9U); out[9] = '\0'; return 9U;
-    }
-    if (tag.len == 4U && memcmp(tag.ptr, "path", 4U) == 0) {
-        memcpy(out, "Path", 4U); out[4] = '\0'; return 4U;
-    }
-    if (tag.len == 4U && memcmp(tag.ptr, "text", 4U) == 0) {
-        memcpy(out, "Text", 4U); out[4] = '\0'; return 4U;
-    }
-    if ((tag.len == 6U && memcmp(tag.ptr, "circle", 6U) == 0) ||
-        (tag.len == 6U && memcmp(tag.ptr, "ellipse", 6U) == 0)) {
-        memcpy(out, "Ellipse", 7U); out[7] = '\0'; return 7U;
+    static const struct { const char *tag; const char *title; } names[] = {
+        {"svg", "Document"}, {"g", "Group"}, {"defs", "Definitions"},
+        {"rect", "Rectangle"}, {"circle", "Circle"}, {"ellipse", "Ellipse"},
+        {"line", "Line"}, {"path", "Path"}, {"text", "Text"},
+        {"tspan", "Text Span"}, {"image", "Image"}, {"polygon", "Polygon"},
+        {"polyline", "Polyline"}, {"stop", "Stop"},
+        {"linearGradient", "Linear Gradient"},
+        {"radialGradient", "Radial Gradient"}, {"clipPath", "Clip Path"},
+        {"mask", "Mask"}, {"use", "Use"}, {"symbol", "Symbol"}
+    };
+    for (size_t index = 0U; index < sizeof(names) / sizeof(names[0]); ++index) {
+        size_t tag_length = strlen(names[index].tag);
+        if (tag.len != tag_length || memcmp(tag.ptr, names[index].tag, tag_length) != 0)
+            continue;
+        size_t length = strlen(names[index].title);
+        memcpy(out, names[index].title, length + 1U);
+        return length;
     }
     size_t length = editor_utf8_prefix(tag.ptr, tag.len, UI_TEXT_MAX_BYTES - 1U);
     if (length > 0U) memcpy(out, tag.ptr, length);
@@ -194,6 +228,14 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
             "Hide inspector panel", 20U, NULL, 0U, 0U,
             EDITOR_BUTTON_HIDE_INSPECTOR);
     if (!okay) return false;
+    if (!editor->selection_active) {
+        static const char title[] = "No layer selected";
+        static const char message[] = "Select a layer to edit its properties";
+        return editor_add_widget_node(editor, 23000U, EDITOR_NODE_INSPECTOR,
+            UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
+            UI_WIDGET_EMPTY_STATE, UI_ICON_LAYERS, title, sizeof(title) - 1U,
+            message, sizeof(message) - 1U, 0U, 0U);
+    }
     char type[UI_TEXT_MAX_BYTES] = {0};
     size_t type_length = selected_type_label(editor, type);
     if (!editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,

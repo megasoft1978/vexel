@@ -16,16 +16,18 @@ static bool editor_add_icon(viewer_editor *editor, uint32_t id, uint32_t parent,
 }
 
 static bool editor_add_divider(viewer_editor *editor, uint32_t id, uint32_t parent,
-                               uint32_t height)
+                               uint32_t width, uint32_t height)
 {
     return editor_add_widget_node(editor, id, parent, UI_AXIS_VERTICAL,
-        1U, height, 0U, 0U, 0U, UI_ROLE_NONE, UI_WIDGET_DIVIDER,
+        width, height, 0U, 0U, 0U, UI_ROLE_NONE, UI_WIDGET_DIVIDER,
         UI_ICON_NONE, NULL, 0U, NULL, 0U, 0U, 0U);
 }
 
 static bool editor_draw_tool_selected(viewer_editor *editor,
                                       viewer_editor_draw_tool tool)
 {
+    if (tool == VIEWER_EDITOR_TOOL_PEN)
+        return editor->draw_tool == tool && !editor->node_edit_active;
     return editor->draw_tool == tool;
 }
 
@@ -41,18 +43,18 @@ static const char *editor_tool_hint(viewer_editor *editor)
         case VIEWER_EDITOR_TOOL_TEXT: return "Text tool · click to place text · T";
         case VIEWER_EDITOR_TOOL_SELECT: break;
     }
-    if (editor->active_tool == UI_ICON_PAN) return "Pan tool · drag the canvas · Space";
+    if (editor->active_tool == UI_ICON_PAN)
+        return "Pan tool · drag the canvas · H / Space";
     if (editor->active_tool == UI_ICON_ZOOM) return "Zoom tool · scroll over the canvas · Z";
     return "Selection tool · choose a layer or edit it on the canvas · V";
 }
 
 static void editor_canvas_status(viewer_editor *editor,
-                                 char hud[UI_TEXT_MAX_BYTES],
-                                 char detail[UI_TEXT_MAX_BYTES])
+                                 char hud[UI_TEXT_MAX_BYTES])
 {
     int amount;
     if (editor->canvas_pointer_valid) {
-        amount = snprintf(hud, UI_TEXT_MAX_BYTES, "%.0f%%  ·  %.1f, %.1f",
+        amount = snprintf(hud, UI_TEXT_MAX_BYTES, "%.0f%% · %.1f, %.1f",
             editor->canvas_zoom * 100.0, editor->canvas_pointer_x,
             editor->canvas_pointer_y);
     } else {
@@ -61,13 +63,24 @@ static void editor_canvas_status(viewer_editor *editor,
     }
     if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
         (void)snprintf(hud, UI_TEXT_MAX_BYTES, "Canvas ready");
-    if (editor->canvas_document_width > 0U && editor->canvas_document_height > 0U) {
-        amount = snprintf(detail, UI_TEXT_MAX_BYTES, "%u × %u",
+    size_t used = strlen(hud);
+    if (editor->canvas_document_width > 0U && editor->canvas_document_height > 0U &&
+        used < UI_TEXT_MAX_BYTES - 1U) {
+        amount = snprintf(hud + used, UI_TEXT_MAX_BYTES - used, " · %u × %u",
             editor->canvas_document_width, editor->canvas_document_height);
-        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
-            (void)snprintf(detail, UI_TEXT_MAX_BYTES, "Document size unavailable");
-    } else {
-        (void)snprintf(detail, UI_TEXT_MAX_BYTES, "No document size");
+        if (amount > 0 && (size_t)amount < UI_TEXT_MAX_BYTES - used)
+            used += (size_t)amount;
+    }
+    if (used < UI_TEXT_MAX_BYTES - 1U) {
+        if (editor->canvas_tiles_total > 0U) {
+            amount = snprintf(hud + used, UI_TEXT_MAX_BYTES - used,
+                editor->canvas_tiles_active ? " · Rendering %zu/%zu" : " · Sharp %zu/%zu",
+                editor->canvas_tiles_done, editor->canvas_tiles_total);
+        } else {
+            amount = snprintf(hud + used, UI_TEXT_MAX_BYTES - used, " · Sharp ready");
+        }
+        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES - used)
+            (void)snprintf(hud + used, UI_TEXT_MAX_BYTES - used, " · Sharp");
     }
 }
 
@@ -118,16 +131,16 @@ void editor_build_tree_modern(viewer_editor *editor)
     editor->tree.tokens.spacing = (uint32_t)ceil(8.0 * editor->backing_scale);
     const ui_tokens *tokens = &editor->tree.tokens;
     bool okay = editor_add_node(editor, EDITOR_NODE_TOOLBAR, UI_ROOT_ID,
-            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_TOOLBAR_POINTS, 6U, 4U,
+            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_TOOLBAR_POINTS, 6U, 6U,
             tokens->panel, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_SAVE, EDITOR_NODE_TOOLBAR,
             UI_ICON_SAVE, "Save · Command-S", 0U) &&
-        editor_add_divider(editor, 30U, EDITOR_NODE_TOOLBAR, 22U) &&
+        editor_add_divider(editor, 30U, EDITOR_NODE_TOOLBAR, 1U, 32U) &&
         editor_add_icon(editor, EDITOR_BUTTON_UNDO, EDITOR_NODE_TOOLBAR,
             UI_ICON_UNDO, "Undo · Command-Z", 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_REDO, EDITOR_NODE_TOOLBAR,
             UI_ICON_REDO, "Redo · Shift-Command-Z", 0U) &&
-        editor_add_divider(editor, 31U, EDITOR_NODE_TOOLBAR, 22U) &&
+        editor_add_divider(editor, 31U, EDITOR_NODE_TOOLBAR, 1U, 32U) &&
         editor_add_icon(editor, EDITOR_BUTTON_DUPLICATE, EDITOR_NODE_TOOLBAR,
             UI_ICON_DUPLICATE, "Duplicate · Command-D", 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_GROUP, EDITOR_NODE_TOOLBAR,
@@ -156,7 +169,7 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_TOOL_RAIL, EDITOR_NODE_WORKSPACE,
-            UI_AXIS_VERTICAL, EDITOR_TOOL_RAIL_WIDTH, 0U, 6U, 4U,
+            UI_AXIS_VERTICAL, EDITOR_TOOL_RAIL_WIDTH, 0U, 6U, 6U,
             tokens->panel, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
     if (!okay) return;
     ui_control_state select_state = editor->draw_tool == VIEWER_EDITOR_TOOL_SELECT &&
@@ -164,12 +177,12 @@ void editor_build_tree_modern(viewer_editor *editor)
     okay = editor_add_icon(editor, EDITOR_BUTTON_TOOL_SELECT, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_SELECT, "Selection tool · V", select_state) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_PAN, EDITOR_NODE_TOOL_RAIL,
-            UI_ICON_PAN, "Pan tool · Space", editor->active_tool == UI_ICON_PAN ?
+            UI_ICON_PAN, "Pan tool · H / Space", editor->active_tool == UI_ICON_PAN ?
                 UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_ZOOM, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_ZOOM_IN, "Zoom tool · Z", editor->active_tool == UI_ICON_ZOOM ?
                 UI_STATE_CHECKED : 0U) &&
-        editor_add_divider(editor, 33U, EDITOR_NODE_TOOL_RAIL, 1U) &&
+        editor_add_divider(editor, 33U, EDITOR_NODE_TOOL_RAIL, 32U, 1U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_RECTANGLE, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_RECTANGLE, "Rectangle tool · R",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_RECT) ? UI_STATE_CHECKED : 0U) &&
@@ -179,12 +192,19 @@ void editor_build_tree_modern(viewer_editor *editor)
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_LINE, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_LINE, "Line tool · L",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_LINE) ? UI_STATE_CHECKED : 0U) &&
+        editor_add_icon(editor, EDITOR_BUTTON_TOOL_POLYGON, EDITOR_NODE_TOOL_RAIL,
+            UI_ICON_PEN, "Polygon tool · Y",
+            editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_POLYGON) ? UI_STATE_CHECKED : 0U) &&
+        editor_add_icon(editor, EDITOR_BUTTON_TOOL_POLYLINE, EDITOR_NODE_TOOL_RAIL,
+            UI_ICON_LINE, "Polyline tool · U",
+            editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_POLYLINE) ? UI_STATE_CHECKED : 0U) &&
+        editor_add_divider(editor, 34U, EDITOR_NODE_TOOL_RAIL, 32U, 1U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_PEN, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_PEN, "Pen tool · P",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_PEN) ? UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_NODE, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_NODE_EDIT, "Edit path nodes · P",
-            0U) &&
+            editor->node_edit_active ? UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_TEXT, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_TEXT, "Text tool · T",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_TEXT) ? UI_STATE_CHECKED : 0U);
@@ -194,34 +214,21 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U);
     if (!okay) return;
-    char hud[UI_TEXT_MAX_BYTES] = {0}, document_size[UI_TEXT_MAX_BYTES] = {0};
-    char detail[UI_TEXT_MAX_BYTES] = {0};
-    editor_canvas_status(editor, hud, document_size);
-    if (editor->canvas_tiles_total > 0U) {
-        int amount = snprintf(detail, sizeof(detail),
-            editor->canvas_tiles_active ? "Rendering sharp detail · %zu of %zu" :
-                "Sharp detail ready · %zu of %zu",
-            editor->canvas_tiles_done, editor->canvas_tiles_total);
-        if (amount < 0 || (size_t)amount >= sizeof(detail))
-            editor_set_text(detail, sizeof(detail), "Rendering sharp detail");
-    } else {
-        editor_set_text(detail, sizeof(detail), "Sharp detail ready");
-    }
+    char hud[UI_TEXT_MAX_BYTES] = {0};
+    editor_canvas_status(editor, hud);
+    double scale = editor->backing_scale > 0.0 ? editor->backing_scale : 1.0;
+    uint32_t canvas_points = (uint32_t)((double)layout.canvas.width / scale);
+    uint32_t hud_width = (uint32_t)(strlen(hud) * 7U + 20U);
+    uint32_t hud_max_width = canvas_points > 8U ? canvas_points - 8U : canvas_points;
+    if (hud_width > hud_max_width) hud_width = hud_max_width;
+    if (hud_width == 0U) hud_width = 1U;
     okay = editor_add_node(editor, EDITOR_NODE_CANVAS_HUD, EDITOR_NODE_CANVAS,
-            UI_AXIS_HORIZONTAL, 0U, 32U, 8U, 8U, 0U, UI_ROLE_GROUP,
+            UI_AXIS_HORIZONTAL, 0U, 36U, 4U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_CANVAS_HUD + 100U,
-            EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, 0U, 28U,
+            EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, hud_width, 28U,
             0U, 0U, 0U, UI_ROLE_STATUS, UI_WIDGET_HUD_PILL, UI_ICON_NONE,
-            hud, strlen(hud), NULL, 0U, 0U, 0U) &&
-        editor_add_widget_node(editor, EDITOR_NODE_CANVAS_HUD + 101U,
-            EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, 0U, 28U,
-            0U, 0U, 0U, UI_ROLE_STATUS, UI_WIDGET_HUD_PILL, UI_ICON_NONE,
-            document_size, strlen(document_size), NULL, 0U, 0U, 0U) &&
-        editor_add_widget_node(editor, EDITOR_NODE_CANVAS_TILE_STATUS,
-            EDITOR_NODE_CANVAS, UI_AXIS_HORIZONTAL, 0U, 24U, 8U, 0U,
-            0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
-            detail, strlen(detail), NULL, 0U, 0U, 0U);
+            hud, strlen(hud), NULL, 0U, 0U, 0U);
     if (!okay) return;
     if (editor->outline_count <= 1U) {
         okay = editor_add_widget_node(editor, EDITOR_NODE_CANVAS + 100U,
@@ -239,7 +246,7 @@ void editor_build_tree_modern(viewer_editor *editor)
         strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
         strncmp(editor->status, "Unsupported SVG content", 23U) == 0;
     okay = editor_add_node(editor, EDITOR_NODE_STATUS, UI_ROOT_ID,
-            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_STATUS_POINTS, 8U, 8U,
+            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_STATUS_POINTS, 4U, 8U,
             tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS + 100U,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,

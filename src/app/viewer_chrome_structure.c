@@ -9,16 +9,78 @@ static ui_icon_kind layer_icon(viewer_editor *editor, size_t index)
     base_bytes tag;
     if (!document_edit_tag_name(editor->edit, editor->outline[index], &tag))
         return UI_ICON_LAYERS;
-    if ((tag.len == 3U && memcmp(tag.ptr, "svg", 3U) == 0) ||
-        (tag.len == 1U && tag.ptr[0] == 'g')) return UI_ICON_GROUP;
+    if (tag.len == 3U && memcmp(tag.ptr, "svg", 3U) == 0) return UI_ICON_FIT;
+    if (tag.len == 1U && tag.ptr[0] == 'g') return UI_ICON_GROUP;
+    if (tag.len == 4U && memcmp(tag.ptr, "defs", 4U) == 0) return UI_ICON_LAYERS;
     if (tag.len == 4U && memcmp(tag.ptr, "rect", 4U) == 0) return UI_ICON_RECTANGLE;
-    if ((tag.len == 6U && memcmp(tag.ptr, "circle", 6U) == 0) ||
-        (tag.len == 6U && memcmp(tag.ptr, "ellipse", 6U) == 0)) return UI_ICON_ELLIPSE;
+    if (tag.len == 6U && (memcmp(tag.ptr, "circle", 6U) == 0 ||
+        memcmp(tag.ptr, "ellipse", 6U) == 0)) return UI_ICON_ELLIPSE;
     if (tag.len == 4U && memcmp(tag.ptr, "line", 4U) == 0) return UI_ICON_LINE;
     if (tag.len == 4U && memcmp(tag.ptr, "path", 4U) == 0) return UI_ICON_PEN;
+    if (tag.len == 8U && memcmp(tag.ptr, "polyline", 8U) == 0) return UI_ICON_LINE;
+    if (tag.len == 7U && memcmp(tag.ptr, "polygon", 7U) == 0) return UI_ICON_PEN;
     if (tag.len == 4U && memcmp(tag.ptr, "text", 4U) == 0) return UI_ICON_TEXT;
-    if (tag.len == 5U && memcmp(tag.ptr, "image", 5U) == 0) return UI_ICON_LAYERS;
+    if (tag.len == 5U && memcmp(tag.ptr, "image", 5U) == 0) return UI_ICON_GRID;
+    if (tag.len == 14U && memcmp(tag.ptr, "linearGradient", 14U) == 0)
+        return UI_ICON_GRADIENT;
+    if (tag.len == 14U && memcmp(tag.ptr, "radialGradient", 14U) == 0)
+        return UI_ICON_GRADIENT;
+    if (tag.len == 4U && memcmp(tag.ptr, "stop", 4U) == 0) return UI_ICON_ELLIPSE;
     return UI_ICON_LAYERS;
+}
+
+static size_t layer_type_label(base_bytes tag, char out[UI_TEXT_MAX_BYTES])
+{
+    static const struct { const char *tag; const char *title; } names[] = {
+        {"svg", "Document"}, {"g", "Group"}, {"defs", "Definitions"},
+        {"rect", "Rectangle"}, {"circle", "Circle"}, {"ellipse", "Ellipse"},
+        {"line", "Line"}, {"path", "Path"}, {"text", "Text"},
+        {"tspan", "Text Span"}, {"image", "Image"}, {"polygon", "Polygon"},
+        {"polyline", "Polyline"}, {"stop", "Stop"},
+        {"linearGradient", "Linear Gradient"},
+        {"radialGradient", "Radial Gradient"}, {"clipPath", "Clip Path"},
+        {"mask", "Mask"}, {"use", "Use"}, {"symbol", "Symbol"}
+    };
+    for (size_t index = 0U; index < sizeof(names) / sizeof(names[0]); ++index) {
+        size_t source_length = strlen(names[index].tag);
+        if (tag.len != source_length || memcmp(tag.ptr, names[index].tag, source_length) != 0)
+            continue;
+        size_t length = strlen(names[index].title);
+        if (length >= UI_TEXT_MAX_BYTES) length = UI_TEXT_MAX_BYTES - 1U;
+        memcpy(out, names[index].title, length);
+        out[length] = '\0';
+        return length;
+    }
+    static const char ellipsis[] = "\xe2\x80\xa6";
+    size_t at = 0U;
+    bool word_start = true;
+    uint8_t prior = 0U;
+    for (size_t index = 0U; index < tag.len && at < UI_TEXT_MAX_BYTES - 1U; ++index) {
+        uint8_t byte = tag.ptr[index];
+        if (byte == '-' || byte == '_' || byte == ':') {
+            if (at > 0U && out[at - 1U] != ' ' && at < UI_TEXT_MAX_BYTES - 1U)
+                out[at++] = ' ';
+            word_start = true;
+            prior = byte;
+            continue;
+        }
+        if (byte >= 'A' && byte <= 'Z' && prior >= 'a' && prior <= 'z' &&
+            at + 1U < UI_TEXT_MAX_BYTES - 1U) {
+            out[at++] = ' ';
+            word_start = true;
+        }
+        if (word_start && byte >= 'a' && byte <= 'z') byte -= 'a' - 'A';
+        else if (!word_start && byte >= 'A' && byte <= 'Z') byte += 'a' - 'A';
+        out[at++] = (char)byte;
+        word_start = false;
+        prior = tag.ptr[index];
+    }
+    if (at < tag.len && at + sizeof(ellipsis) <= UI_TEXT_MAX_BYTES) {
+        memcpy(out + at, ellipsis, sizeof(ellipsis) - 1U);
+        at += sizeof(ellipsis) - 1U;
+    }
+    out[at] = '\0';
+    return at;
 }
 
 static size_t layer_label(viewer_editor *editor, size_t index,
@@ -28,39 +90,7 @@ static size_t layer_label(viewer_editor *editor, size_t index,
     base_bytes tag = {0};
     size_t used = 0U;
     if (document_edit_tag_name(editor->edit, editor->outline[index], &tag)) {
-        const char *known = NULL;
-        size_t known_length = 0U;
-        if (tag.len == 3U && memcmp(tag.ptr, "svg", 3U) == 0) {
-            known = "Document"; known_length = 8U;
-        } else if (tag.len == 1U && tag.ptr[0] == 'g') {
-            known = "Group"; known_length = 5U;
-        } else if (tag.len == 4U && memcmp(tag.ptr, "rect", 4U) == 0) {
-            known = "Rectangle"; known_length = 9U;
-        } else if ((tag.len == 6U && memcmp(tag.ptr, "circle", 6U) == 0) ||
-                   (tag.len == 6U && memcmp(tag.ptr, "ellipse", 6U) == 0)) {
-            known = "Ellipse"; known_length = 7U;
-        } else if (tag.len == 4U && memcmp(tag.ptr, "line", 4U) == 0) {
-            known = "Line"; known_length = 4U;
-        } else if (tag.len == 4U && memcmp(tag.ptr, "path", 4U) == 0) {
-            known = "Path"; known_length = 4U;
-        } else if (tag.len == 4U && memcmp(tag.ptr, "text", 4U) == 0) {
-            known = "Text"; known_length = 4U;
-        } else if (tag.len == 5U && memcmp(tag.ptr, "image", 5U) == 0) {
-            known = "Image"; known_length = 5U;
-        }
-        if (known != NULL) {
-            memcpy(out, known, known_length);
-            used = known_length;
-        } else if (tag.len > 0U) {
-            size_t take = editor_utf8_prefix(tag.ptr, tag.len,
-                UI_TEXT_MAX_BYTES - sizeof(ellipsis));
-            if (take > 0U) memcpy(out, tag.ptr, take);
-            used = take;
-            if (take < tag.len && used + sizeof(ellipsis) <= UI_TEXT_MAX_BYTES) {
-                memcpy(out + used, ellipsis, sizeof(ellipsis) - 1U);
-                used += sizeof(ellipsis) - 1U;
-            }
-        }
+        used = layer_type_label(tag, out);
     }
     size_t attribute_count = document_edit_attribute_count(editor->edit,
         editor->outline[index]);
@@ -162,7 +192,8 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
             row_state_length += 6U;
         }
         row_state[row_state_length] = '\0';
-        uint32_t state = item == editor->selected_index ? UI_STATE_CHECKED : 0U;
+        uint32_t state = editor->selection_active &&
+            item == editor->selected_index ? UI_STATE_CHECKED : 0U;
         if (children && !editor_outline_is_collapsed(editor, item))
             state |= UI_STATE_EXPANDED;
         okay = editor_add_widget_node(editor, EDITOR_OUTLINE_ROW_BASE + (uint32_t)row,

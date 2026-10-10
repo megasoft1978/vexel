@@ -57,6 +57,9 @@ enum {
     EDITOR_BUTTON_TOOL_PEN,
     EDITOR_BUTTON_TOOL_NODE,
     EDITOR_BUTTON_TOOL_TEXT,
+    EDITOR_BUTTON_TOOL_POLYGON,
+    EDITOR_BUTTON_TOOL_POLYLINE,
+    EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES = 500U,
     EDITOR_OUTLINE_ROW_BASE = 1000U,
     EDITOR_ATTRIBUTE_ROW_BASE = 10000U,
     EDITOR_TEXT_FIELD_ID = 20000U,
@@ -138,6 +141,9 @@ struct viewer_editor {
     char new_value[EDITOR_FIELD_CAP];
     size_t new_value_length;
     uint32_t focus_id;
+    bool selection_active;
+    bool node_edit_active;
+    bool inspector_other_attributes_expanded;
     ui_theme theme;
     ui_icon_kind active_tool;
     viewer_editor_draw_tool draw_tool;

@@ -103,6 +103,7 @@ bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
     bool added = ui_tree_add(&editor->tree, &(ui_node_spec){.id = id, .parent_id = parent,
         .axis = axis, .preferred_width = width, .preferred_height = height,
         .padding = padding, .gap = gap, .color = color, .role = role,
+        .widget = widget, .icon = icon,
         .label = label, .label_len = label_len, .value = value,
         .value_len = value_len, .state = state, .command_id = command_id});
     return added;
@@ -427,8 +428,23 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
         (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_LINE);
         return VIEWER_EDITOR_HANDLED;
     }
-    if (action == EDITOR_BUTTON_TOOL_PEN || action == EDITOR_BUTTON_TOOL_NODE) {
+    if (action == EDITOR_BUTTON_TOOL_PEN) {
         (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_NODE) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
+        editor->node_edit_active = true;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_POLYGON) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_POLYGON);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_POLYLINE) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_POLYLINE);
         return VIEWER_EDITOR_HANDLED;
     }
     if (action == EDITOR_BUTTON_TOOL_TEXT) {
@@ -443,6 +459,13 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
     if (action == EDITOR_BUTTON_TOGGLE_INSPECTOR || action == EDITOR_BUTTON_HIDE_INSPECTOR) {
         (void)viewer_editor_set_sidebar_visibility(editor,
             editor->want_structure, !editor->want_inspector);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES) {
+        editor->inspector_other_attributes_expanded =
+            !editor->inspector_other_attributes_expanded;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
         return VIEWER_EDITOR_HANDLED;
     }
     if (action == EDITOR_BUTTON_DELETE || action == EDITOR_BUTTON_DUPLICATE ||
@@ -518,8 +541,7 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
             editor->backing_scale : 1.0);
         size_t action_start = hit->bounds.x + hit->bounds.width -
             (hit->bounds.width > 34U * scale ? 34U * scale : hit->bounds.width);
-        if (editor->modern_style && x >= action_start &&
-            (hit->spec.state & (UI_STATE_CHECKED | UI_STATE_HOVERED)) != 0U) {
+        if (editor->modern_style && x >= action_start) {
             if ((size_t)x < action_start + 16U * scale)
                 (void)editor_outline_toggle_visibility(editor, index);
             else

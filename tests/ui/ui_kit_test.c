@@ -152,8 +152,8 @@ static int test_tokens(bool quiet)
         metrics.tool_rail_width != 44U || metrics.structure_width != 232U ||
         metrics.inspector_width != 320U || metrics.status_height != 24U ||
         metrics.tree_row_height != 28U || metrics.section_header_height != 24U ||
-        metrics.field_height != 30U || metrics.icon_button_target != 28U ||
-        metrics.icon_button_glyph != 17U || metrics.control_radius != 6U) return 5;
+        metrics.field_height != 30U || metrics.icon_button_target != 32U ||
+        metrics.icon_button_glyph != 22U || metrics.control_radius != 6U) return 5;
     if (!quiet)
         (void)printf("token contrast matrix passed: light/dark x normal/increased; text >= 4.5, controls >= 3\n");
     return 0;

@@ -205,11 +205,13 @@ static bool ui_paint_node(const ui_tree *tree, const ui_node *node, uint8_t *rgb
             ui_paint_rounded_rect(node, fill, tree->tokens.radius, rgba, stride, width, height);
         else ui_paint_rect(node, fill, rgba, stride, width, height);
     }
-    if (tree->semantic_style && (node->spec.role == UI_ROLE_BUTTON ||
-            node->spec.role == UI_ROLE_TEXT_FIELD))
+    if (tree->semantic_style && (node->spec.role == UI_ROLE_TEXT_FIELD ||
+            (node->spec.role == UI_ROLE_BUTTON &&
+                node->spec.widget != UI_WIDGET_ICON_BUTTON)))
         ui_paint_control_outline(node, tree->tokens.control_edge,
             tree->tokens.radius, rgba, stride, width, height);
     if ((node->spec.state & UI_STATE_FOCUSED) != 0U &&
+        node->spec.widget != UI_WIDGET_TREE_ROW &&
         node->bounds.width > 1U && node->bounds.height > 1U) {
         ui_node edge = *node;
         edge.bounds.height = 1U;

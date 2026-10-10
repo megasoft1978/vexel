@@ -30,13 +30,15 @@ static const char *node_text(const viewer_editor *editor, const ui_node *node,
 static ui_control_state node_state(const ui_node *node)
 {
     uint32_t state = node->spec.state;
+    bool tree_row = node->spec.widget == UI_WIDGET_TREE_ROW ||
+        node->spec.role == UI_ROLE_ROW;
     if ((state & UI_STATE_INVALID) != 0U) return UI_CONTROL_INVALID;
     if ((state & UI_STATE_DISABLED) != 0U) return UI_CONTROL_DISABLED;
+    if (tree_row && (state & UI_STATE_CHECKED) != 0U) return UI_CONTROL_SELECTED;
     if ((state & UI_STATE_PRESSED) != 0U) return UI_CONTROL_PRESSED;
-    if ((state & UI_STATE_FOCUSED) != 0U) return UI_CONTROL_FOCUS;
-    if ((state & (UI_STATE_CHECKED | UI_STATE_EXPANDED)) != 0U)
-        return UI_CONTROL_SELECTED;
+    if ((state & UI_STATE_CHECKED) != 0U) return UI_CONTROL_SELECTED;
     if ((state & UI_STATE_HOVERED) != 0U) return UI_CONTROL_HOVER;
+    if (!tree_row && (state & UI_STATE_FOCUSED) != 0U) return UI_CONTROL_FOCUS;
     return UI_CONTROL_REST;
 }
 
@@ -140,7 +142,8 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
         .icon = node->spec.icon, .label = label, .label_length = label_length,
         .value = value, .value_length = value_length, .font_size_pt = 13U,
         .font_family = UI_FONT_SYSTEM, .font_weight = UI_FONT_REGULAR,
-        .tone = UI_WIDGET_TONE_NEUTRAL, .visible = true};
+        .tone = UI_WIDGET_TONE_NEUTRAL, .visible = true,
+        .expanded = (node->spec.state & UI_STATE_EXPANDED) != 0U};
     if (kind == UI_WIDGET_LABEL && node->spec.id == EDITOR_NODE_STATUS)
         spec.font_size_pt = 12U;
     if ((node->spec.id == EDITOR_NODE_SELECTED_TAG ||
@@ -180,8 +183,7 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
                 !editor_outline_is_collapsed(editor, item);
             spec.visible = !editor_node_hidden(editor, editor->outline[item]);
             spec.locked = editor_outline_is_locked(editor, editor->outline[item]);
-            spec.show_row_actions = (node->spec.state & (UI_STATE_HOVERED |
-                UI_STATE_CHECKED | UI_STATE_FOCUSED)) != 0U;
+            spec.show_row_actions = true;
         }
     } else if (kind == UI_WIDGET_SCRUB_LABEL) {
         char name[EDITOR_NAME_CAP] = {0};
@@ -218,7 +220,7 @@ static const char *tooltip_for_id(uint32_t id)
         case EDITOR_BUTTON_UNGROUP: return "Ungroup  ⇧⌘G";
         case EDITOR_BUTTON_SAVE_AS: return "Save as";
         case EDITOR_BUTTON_TOOL_SELECT: return "Select  V";
-        case EDITOR_BUTTON_TOOL_PAN: return "Pan  Space";
+        case EDITOR_BUTTON_TOOL_PAN: return "Pan  H / Space";
         case EDITOR_BUTTON_TOOL_ZOOM: return "Zoom  Z";
         case EDITOR_BUTTON_TOGGLE_STRUCTURE: return "Layers panel";
         case EDITOR_BUTTON_TOGGLE_INSPECTOR: return "Inspector panel";
@@ -230,7 +232,28 @@ static const char *tooltip_for_id(uint32_t id)
         case EDITOR_BUTTON_TOOL_PEN: return "Pen  P";
         case EDITOR_BUTTON_TOOL_NODE: return "Edit path nodes  P";
         case EDITOR_BUTTON_TOOL_TEXT: return "Text  T";
+        case EDITOR_BUTTON_TOOL_POLYGON: return "Polygon  Y";
+        case EDITOR_BUTTON_TOOL_POLYLINE: return "Polyline  U";
         default: return NULL;
+    }
+}
+
+static bool tooltip_is_tool_rail_command(uint32_t id)
+{
+    switch (id) {
+        case EDITOR_BUTTON_TOOL_SELECT:
+        case EDITOR_BUTTON_TOOL_PAN:
+        case EDITOR_BUTTON_TOOL_ZOOM:
+        case EDITOR_BUTTON_TOOL_RECTANGLE:
+        case EDITOR_BUTTON_TOOL_ELLIPSE:
+        case EDITOR_BUTTON_TOOL_LINE:
+        case EDITOR_BUTTON_TOOL_POLYGON:
+        case EDITOR_BUTTON_TOOL_POLYLINE:
+        case EDITOR_BUTTON_TOOL_PEN:
+        case EDITOR_BUTTON_TOOL_NODE:
+        case EDITOR_BUTTON_TOOL_TEXT:
+            return true;
+        default: return false;
     }
 }
 
@@ -281,7 +304,10 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
                 if (tooltip_width > 240U) tooltip_width = 240U;
                 if (tooltip_width > canvas.width / scale)
                     tooltip_width = canvas.width / scale;
-                uint32_t x = bounds.x;
+                uint32_t x = tooltip_is_tool_rail_command(node->spec.id) ?
+                    EDITOR_TOOL_RAIL_WIDTH +
+                        (editor->effective_structure ? EDITOR_LEFT_WIDTH : 0U) + 8U :
+                    bounds.x;
                 if (x + tooltip_width > canvas.width / scale)
                     x = canvas.width / scale > tooltip_width ?
                         canvas.width / scale - tooltip_width : 0U;

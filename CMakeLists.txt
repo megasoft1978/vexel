@@ -857,7 +857,8 @@ target_sources(vexel_ui_core PRIVATE
     src/ui/ui_icons_legacy.c
     src/ui/ui_widget_input.c
     src/ui/ui_widget_canvas.c
-    src/ui/ui_widget_paint.c)
+    src/ui/ui_widget_paint.c
+    src/ui/ui_widget_chrome_paint.c)
 add_executable(ui_kit_test tests/ui/ui_kit_test.c)
 target_link_libraries(ui_kit_test PRIVATE vexel_ui_core m)
 set_target_properties(ui_kit_test PROPERTIES

@@ -369,6 +369,13 @@ static bool editor_accessibility_command(uint32_t command_id, void *context)
             editor->want_structure, !editor->want_inspector);
         return true;
     }
+    if (command_id == EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES) {
+        editor->inspector_other_attributes_expanded =
+            !editor->inspector_other_attributes_expanded;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return true;
+    }
     if (command_id >= EDITOR_OUTLINE_ROW_BASE &&
         command_id < EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) {
         size_t index = editor->outline_start + command_id - EDITOR_OUTLINE_ROW_BASE;
@@ -492,6 +499,7 @@ bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool)
     editor->active_tool = tool;
     if (editor_canvas_path_active(editor)) editor_canvas_path_cancel(editor);
     editor->draw_tool = VIEWER_EDITOR_TOOL_SELECT;
+    editor->node_edit_active = false;
     editor->tree_ready = false;
     editor->redraw_requested = true;
     return true;
@@ -512,7 +520,15 @@ bool viewer_editor_set_draw_tool(viewer_editor *editor,
 {
     if (editor == NULL || tool < VIEWER_EDITOR_TOOL_SELECT ||
         tool > VIEWER_EDITOR_TOOL_TEXT) return false;
-    if (editor->draw_tool == tool) return false;
+    bool node_mode_changed = editor->node_edit_active;
+    editor->node_edit_active = false;
+    if (editor->draw_tool == tool) {
+        if (node_mode_changed) {
+            editor->tree_ready = false;
+            editor->redraw_requested = true;
+        }
+        return node_mode_changed;
+    }
     if (editor_canvas_path_active(editor)) editor_canvas_path_cancel(editor);
     editor->draw_tool = tool;
     editor->active_tool = UI_ICON_SELECT;
