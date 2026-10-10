@@ -231,7 +231,7 @@ void raster_shape_bounds_destroy(raster_shape_bounds_set *bounds)
 }
 
 static bool edge_stroke_radius(const svg_shape_document *doc, size_t shape,
-                               double *radius)
+                               bool include_miter, double *radius)
 {
     *radius = 0.0;
     const svg_shape_stroke *stroke = &doc->strokes[shape];
@@ -243,11 +243,67 @@ static bool edge_stroke_radius(const svg_shape_document *doc, size_t shape,
     double c = -inverse.c / determinant;
     double d = inverse.a / determinant;
     double scale_bound = sqrt(a*a + b*b + c*c + d*d);
-    double join_bound = stroke->join == SVG_SHAPE_JOIN_MITER ? stroke->miter_limit : 1.0;
+    double join_bound = include_miter && stroke->join == SVG_SHAPE_JOIN_MITER ?
+                        stroke->miter_limit : 1.0;
     double cap_bound = !doc->shape_stroke_closed[shape] &&
                        stroke->cap == SVG_SHAPE_CAP_SQUARE ? sqrt(2.0) : 1.0;
     *radius = stroke->width * 0.5 * scale_bound * fmax(join_bound, cap_bound);
     return isfinite(*radius);
+}
+
+static bool boundary_pixel_range(double low, double high, uint32_t extent,
+                                 uint32_t *first, uint32_t *last);
+
+static bool point_boundary_bounds(const svg_shape_document *doc,
+                                  geom_point point, double scale_x,
+                                  double scale_y, double offset_x,
+                                  double offset_y, double radius,
+                                  raster_pixel_bounds *out)
+{
+    double x = offset_x + (point.x - doc->view_x) * scale_x;
+    double y = offset_y + (point.y - doc->view_y) * scale_y;
+    double padding_x = radius * scale_x;
+    double padding_y = radius * scale_y;
+    double epsilon = fmax(1.0, fmax(fabs(x), fabs(y))) * DBL_EPSILON * 8.0;
+    uint32_t x_first, x_last, y_first, y_last;
+    bool valid = isfinite(x) && isfinite(y) && isfinite(padding_x) &&
+                 isfinite(padding_y) && isfinite(epsilon);
+    if (!valid) return false;
+    bool x_visible = boundary_pixel_range(x - padding_x - epsilon,
+        x + padding_x + epsilon, doc->width, &x_first, &x_last);
+    bool y_visible = boundary_pixel_range(y - padding_y - epsilon,
+        y + padding_y + epsilon, doc->height, &y_first, &y_last);
+    if (x_visible && y_visible)
+        *out = (raster_pixel_bounds){x_first, x_last, y_first, y_last, true};
+    else
+        *out = (raster_pixel_bounds){0};
+    return true;
+}
+
+static void mark_pixel(raster_boundary_mask *mask, size_t index);
+
+static bool add_boundary_box_work(size_t *mark_work,
+                                  const raster_pixel_bounds *box)
+{
+    if (!box->visible) return true;
+    size_t width = (size_t)box->x_last - box->x_first + 1U;
+    size_t height = (size_t)box->y_last - box->y_first + 1U;
+    size_t area;
+    return checked_mul_size(width, height, &area) &&
+        checked_add_size(*mark_work, area, mark_work) &&
+        *mark_work <= RASTER_BOUNDARY_WORK_LIMIT;
+}
+
+static void mark_boundary_box(raster_boundary_mask *mask,
+                              const raster_pixel_bounds *box,
+                              uint32_t width)
+{
+    if (!box->visible) return;
+    for (uint32_t y = box->y_first; y <= box->y_last; ++y) {
+        size_t row = (size_t)y * width;
+        for (uint32_t x = box->x_first; x <= box->x_last; ++x)
+            mark_pixel(mask, row + x);
+    }
 }
 
 static bool boundary_pixel_range(double low, double high, uint32_t extent,
@@ -302,7 +358,7 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
         size_t shape = doc->shape_ids[i];
         geom_edge edge = doc->edges[i];
         double radius;
-        if (!edge_stroke_radius(doc, shape, &radius)) {
+        if (!edge_stroke_radius(doc, shape, false, &radius)) {
             edge_pixels[i] = (raster_pixel_bounds){0U, doc->width - 1U,
                                                    0U, doc->height - 1U, true};
         } else {
@@ -330,15 +386,27 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
                                                        y_last, true};
             }
         }
-        if (edge_pixels[i].visible) {
-            size_t width = (size_t)edge_pixels[i].x_last - edge_pixels[i].x_first + 1U;
-            size_t height = (size_t)edge_pixels[i].y_last - edge_pixels[i].y_first + 1U;
-            size_t area;
-            if (!checked_mul_size(width, height, &area) ||
-                !checked_add_size(mark_work, area, &mark_work) ||
-                mark_work > RASTER_BOUNDARY_WORK_LIMIT) {
+        if (!add_boundary_box_work(&mark_work, &edge_pixels[i])) {
+            free(edge_pixels);
+            return false;
+        }
+        const svg_shape_stroke *stroke = &doc->strokes[shape];
+        if (stroke->rgba[3] != 0U && stroke->width > 0.0 &&
+            stroke->join == SVG_SHAPE_JOIN_MITER) {
+            double join_radius;
+            if (!edge_stroke_radius(doc, shape, true, &join_radius)) {
                 free(edge_pixels);
                 return false;
+            }
+            const geom_point vertices[2] = {edge.a, edge.b};
+            for (size_t endpoint = 0U; endpoint < 2U; ++endpoint) {
+                raster_pixel_bounds join_box = {0};
+                if (!point_boundary_bounds(doc, vertices[endpoint], scale_x,
+                        scale_y, offset_x, offset_y, join_radius, &join_box) ||
+                    !add_boundary_box_work(&mark_work, &join_box)) {
+                    free(edge_pixels);
+                    return false;
+                }
             }
         }
     }
@@ -352,12 +420,28 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
     out->bits = bits;
     out->bit_count = pixels;
     for (size_t i = 0U; i < doc->edge_count; i++) {
-        raster_pixel_bounds box = edge_pixels[i];
-        if (!box.visible) continue;
-        for (uint32_t y = box.y_first; y <= box.y_last; y++) {
-            size_t row = (size_t)y * doc->width;
-            for (uint32_t x = box.x_first; x <= box.x_last; x++)
-                mark_pixel(out, row + x);
+        mark_boundary_box(out, &edge_pixels[i], doc->width);
+        size_t shape = doc->shape_ids[i];
+        const svg_shape_stroke *stroke = &doc->strokes[shape];
+        if (stroke->rgba[3] != 0U && stroke->width > 0.0 &&
+            stroke->join == SVG_SHAPE_JOIN_MITER) {
+            double join_radius;
+            if (!edge_stroke_radius(doc, shape, true, &join_radius)) {
+                raster_boundary_mask_destroy(out);
+                free(edge_pixels);
+                return false;
+            }
+            const geom_point vertices[2] = {doc->edges[i].a, doc->edges[i].b};
+            for (size_t endpoint = 0U; endpoint < 2U; ++endpoint) {
+                raster_pixel_bounds join_box = {0};
+                if (!point_boundary_bounds(doc, vertices[endpoint], scale_x,
+                        scale_y, offset_x, offset_y, join_radius, &join_box)) {
+                    raster_boundary_mask_destroy(out);
+                    free(edge_pixels);
+                    return false;
+                }
+                mark_boundary_box(out, &join_box, doc->width);
+            }
         }
     }
     out->mark_work = mark_work;

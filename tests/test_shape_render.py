@@ -4,14 +4,14 @@ import json
 import platform
 import random
 import shutil
-import struct
 import subprocess
 import tempfile
+import time
 import unittest
-import zlib
 from pathlib import Path
 
 from tests.svg.shape.paint_clip_generator import random_paint_clip_document
+from tests.svg.shape.png_utils import png_rgba
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".cache"
@@ -21,62 +21,6 @@ CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
 REFERENCE_CLI = ROOT / "build/mac-debug/bin/shape_render_reference_cli"
 STATS_CLI = ROOT / "build/mac-debug/bin/shape_render_stats_cli"
 OUT = Path("/private/tmp/w2-decode-reference-comparison.json")
-
-
-def png_rgba(data):
-    if data[:8] != b"\x89PNG\r\n\x1a\n":
-        raise ValueError("not PNG")
-    pos, compressed, width, height, bpp = 8, bytearray(), 0, 0, 0
-    while pos < len(data):
-        size = struct.unpack(">I", data[pos:pos + 4])[0]
-        kind = data[pos + 4:pos + 8]
-        payload = data[pos + 8:pos + 8 + size]
-        if kind == b"IHDR":
-            width, height, depth, color, comp, filt, interlace = struct.unpack(">IIBBBBB", payload)
-            if depth != 8 or color not in (2, 6) or interlace != 0:
-                raise ValueError("reference PNG must be noninterlaced RGB8 or RGBA8")
-            bpp = 3 if color == 2 else 4
-        elif kind == b"IDAT":
-            compressed.extend(payload)
-        elif kind == b"IEND":
-            break
-        pos += size + 12
-    raw = zlib.decompress(compressed)
-    stride = width * bpp
-    rows, previous, off = [], bytearray(stride), 0
-    for _ in range(height):
-        f = raw[off]
-        row = bytearray(raw[off + 1:off + 1 + stride])
-        off += stride + 1
-        for i in range(stride):
-            a = row[i - bpp] if i >= bpp else 0
-            b = previous[i]
-            c = previous[i - bpp] if i >= bpp else 0
-            if f == 1:
-                row[i] = (row[i] + a) & 255
-            elif f == 2:
-                row[i] = (row[i] + b) & 255
-            elif f == 3:
-                row[i] = (row[i] + ((a + b) // 2)) & 255
-            elif f == 4:
-                p = a + b - c
-                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
-                predictor = a if pa <= pb and pa <= pc else b if pb <= pc else c
-                row[i] = (row[i] + predictor) & 255
-            elif f != 0:
-                raise ValueError("unknown PNG filter")
-        rows.append(row)
-        previous = row
-    pixels = b"".join(rows)
-    if bpp == 4:
-        return width, height, pixels
-    rgba = bytearray(width * height * 4)
-    for pixel in range(width * height):
-        source = pixel * 3
-        target = pixel * 4
-        rgba[target:target + 3] = pixels[source:source + 3]
-        rgba[target + 3] = 255
-    return width, height, bytes(rgba)
 
 
 def random_shape_document(rng, index):
@@ -178,6 +122,49 @@ class ShapeRenderTests(unittest.TestCase):
         neighbor = (15 * 32 + 14) * 4
         self.assertEqual(rgba[center:center + 4], bytes((220, 32, 35, 98)))
         self.assertNotEqual(rgba[center:center + 4], rgba[neighbor:neighbor + 4])
+
+    def test_dashed_cubic_stays_under_work_cap(self):
+        self.assertTrue(STATS_CLI.is_file(), "run ./dev build before the focused shape tests")
+        source = ('<svg width="640" height="400" viewBox="0 0 640 400">'
+                  '<path d="M280 150 C 320 20, 420 20, 460 150 '
+                  'S 560 280, 600 150" fill="none" stroke="darkgreen" '
+                  'stroke-width="8" stroke-linecap="round" '
+                  'stroke-dasharray="20 10"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-dashed-cubic-",
+                                         dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            input_path = directory / "dashed-cubic.svg"
+            output_path = directory / "dashed-cubic.rgba"
+            input_path.write_text(source, encoding="utf-8")
+            result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            counters = {key: int(value) for key, value in
+                        (line.split("=", 1) for line in result.stderr.splitlines())}
+            self.assertGreater(counters["stroke_tests"], 0)
+            self.assertLess(counters["total_work"], 200_000_000)
+            self.assertEqual(output_path.stat().st_size, 640 * 400 * 4)
+
+    def test_sparse_compound_stroke_uses_local_candidates(self):
+        self.assertTrue(STATS_CLI.is_file(), "run ./dev build before the focused shape tests")
+        source = ('<svg width="1280" height="800" viewBox="0 0 320 200">'
+                  '<path d="M16 18V180H304" fill="none" stroke="#111" '
+                  'stroke-width="2"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-sparse-stroke-",
+                                         dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            input_path = directory / "sparse-stroke.svg"
+            output_path = directory / "sparse-stroke.rgba"
+            input_path.write_text(source, encoding="utf-8")
+            result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            counters = {key: int(value) for key, value in
+                        (line.split("=", 1) for line in result.stderr.splitlines())}
+            self.assertLess(counters["stroke_tests"],
+                            counters["shape_samples"] * 3 // 2)
+            self.assertLess(counters["total_work"], 200_000_000)
+            self.assertEqual(output_path.stat().st_size, 1280 * 800 * 4)
 
     def test_user_space_clip_half_pixel_edge_uses_4x4_samples(self):
         source = ('<svg width="32" height="8"><defs>'

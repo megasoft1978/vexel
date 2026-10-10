@@ -32,8 +32,10 @@ compute inherited `font-size`. Fill/stroke opacity and isolated element/group
 opacity are supported. Opacity group rendering uses bounded tile scratch and
 returns `limit` if nested layers exceed 64 MiB.
 
-`<defs>`, `<title>`, `<desc>`, and `<metadata>` are non-rendering; metadata
-subtrees are structurally tokenized and then skipped. `<symbol>` is
+`<defs>`, `<title>`, `<desc>`, `<metadata>`, and Inkscape's
+`sodipodi:namedview` are non-rendering; metadata subtrees are structurally
+tokenized and then skipped. Unknown prefixed export attributes are ignored
+without changing their borrowed source bytes. `<symbol>` is
 non-rendering unless reached by a live `<use>`. Local `href="#id"` and
 root-bound `xlink:href="#id"` references
 traverse the original token array at the use position. The ID table supports up

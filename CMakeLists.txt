@@ -145,6 +145,8 @@ add_library(vexel_shape STATIC
     src/raster/shape_render_group.c
     src/raster/shape_render_sample.c
     src/raster/shape_render_stroke.c
+    # lane: decode2 — bounded stroke candidate grid
+    src/raster/shape_render_stroke_grid.c
     src/raster/shape_bounds.c
     src/raster/shape_scanline.c
     src/raster/tile.c
