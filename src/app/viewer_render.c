@@ -64,6 +64,8 @@ bool viewer_compose_and_present(viewer_app *app)
         (void)fputs("viewer: frame composition failed\n", stderr);
         return false;
     }
+    viewer_editor_paint(app->editor, app->frame, app->frame_bytes,
+        (size_t)app->width * 4U);
     app->frame_dirty = false;
     if (!platform_metal_present(app->window, app->frame, app->frame_bytes,
             app->width, app->height, app->diagnostic, sizeof(app->diagnostic))) {

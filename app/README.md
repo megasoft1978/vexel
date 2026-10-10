@@ -11,3 +11,8 @@ and raster work, then verifies the tile through offscreen Metal readback. The
 offscreen replay keeps progress and determinism checks independent of AppKit
 window activation; visible window presentation remains covered by the native
 Metal smoke command.
+
+`editor_chrome_render.c` is the headless dark/light editor chrome golden
+renderer. The native editor itself remains part of `svgworkbench`; its scripted
+interactive save smoke is `tests/editor/native_smoke.sh`, exposed through
+`./dev editor-smoke` for a maintainer-run desktop session.

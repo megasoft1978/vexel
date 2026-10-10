@@ -4,6 +4,7 @@
 #include "platform/platform_task.h"
 #include "platform/platform_window.h"
 #include "ui/viewer_controls.h"
+#include "viewer_editor.h"
 #include "viewer_load.h"
 #include "viewer_quality.h"
 
@@ -23,13 +24,17 @@
 #define VIEWER_AUTORELOAD_INTERVAL_MS 250.0
 
 typedef struct viewer_app viewer_app;
-typedef enum viewer_job_kind { VIEWER_JOB_LOAD, VIEWER_JOB_SHARP_TILE } viewer_job_kind;
+typedef enum viewer_job_kind {
+    VIEWER_JOB_LOAD, VIEWER_JOB_SHARP_TILE, VIEWER_JOB_EDIT_RENDER
+} viewer_job_kind;
 
 typedef struct viewer_job {
     viewer_app *app;
     viewer_job_kind kind;
     uint64_t generation;
     char path[PLATFORM_PATH_CAP];
+    uint8_t *source_snapshot;
+    size_t source_snapshot_length;
     viewer_loaded_document loaded;
     viewer_load_status load_status;
     viewer_sharp_tile sharp_tile;
@@ -49,6 +54,8 @@ struct viewer_app {
     platform_window *window;
     platform_task_queue *tasks;
     viewer_loaded_document document;
+    viewer_editor *editor;
+    uint8_t *render_source;
     viewer_job *job;
     uint64_t generation;
     uint32_t width;
@@ -65,6 +72,7 @@ struct viewer_app {
     char display_name[256];
     char title[VIEWER_TITLE_CAP];
     char diagnostic[192];
+    char editor_render_error[192];
     double load_ms;
     double render_ms;
     double pointer_doc_x;
@@ -83,6 +91,8 @@ struct viewer_app {
     bool load_result_handled;
     bool sharp_plan_ready;
     bool close_requested;
+    bool editor_render_requested;
+    bool external_change_pending;
     bool running;
     bool fatal_error;
     bool smoke_mode;
@@ -93,6 +103,8 @@ struct viewer_app {
 
 const char *viewer_error_reason(const viewer_app *app);
 bool viewer_set_window_title(viewer_app *app);
+void viewer_update_file_stamp(viewer_app *app);
+bool viewer_file_changed_on_disk(viewer_app *app);
 bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height);
 bool viewer_bump_generation(viewer_app *app);
 void viewer_refresh_sharp_plan(viewer_app *app);

@@ -1,0 +1,53 @@
+#ifndef VEXEL_APP_VIEWER_EDITOR_H
+#define VEXEL_APP_VIEWER_EDITOR_H
+
+#include "document_edit.h"
+#include "platform/platform_window.h"
+#include "ui/ui_core.h"
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+typedef struct viewer_editor viewer_editor;
+
+enum {
+    VIEWER_EDITOR_HANDLED = 1U << 0U,
+    VIEWER_EDITOR_MUTATED = 1U << 1U,
+    VIEWER_EDITOR_SAVE = 1U << 2U,
+    VIEWER_EDITOR_SAVE_AS = 1U << 3U,
+    VIEWER_EDITOR_OPEN = 1U << 4U,
+    VIEWER_EDITOR_QUIT = 1U << 5U,
+    VIEWER_EDITOR_RELOAD = 1U << 6U
+};
+
+viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
+                                    uint32_t width, uint32_t height);
+void viewer_editor_destroy(viewer_editor *editor);
+bool viewer_editor_is_dirty(const viewer_editor *editor);
+const char *viewer_editor_status(const viewer_editor *editor);
+void viewer_editor_set_status(viewer_editor *editor, const char *message);
+void viewer_editor_resize(viewer_editor *editor, uint32_t width, uint32_t height,
+                          double backing_scale);
+void viewer_editor_paint(viewer_editor *editor, uint8_t *rgba, size_t capacity,
+                         size_t stride);
+
+/* Events are plain values so the edit state machine can be tested headlessly. */
+uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
+                           uint32_t modifiers, const char *text, size_t text_len);
+uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t y,
+                                    uint8_t button);
+bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y);
+
+size_t viewer_editor_byte_length(const viewer_editor *editor);
+bool viewer_editor_materialize(viewer_editor *editor, uint8_t *buffer,
+                               size_t capacity, size_t *out_length);
+document_edit_save_result viewer_editor_save(viewer_editor *editor,
+                                             base_bytes path);
+bool viewer_editor_select_at_source_offset(viewer_editor *editor, size_t offset);
+bool viewer_editor_selection_span(viewer_editor *editor,
+                                  document_source_span *out_span);
+bool viewer_editor_semantics(viewer_editor *editor,
+                             ui_semantics_snapshot *out_snapshot);
+
+#endif

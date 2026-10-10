@@ -88,7 +88,7 @@ target_include_directories(vexel_ui_state PUBLIC src/ui src/svg/index src src/sv
 target_link_libraries(vexel_ui_state PUBLIC vexel_index)
 set_target_properties(vexel_ui_state PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 
-add_library(vexel_ui_core STATIC src/ui/ui_core.c src/ui/ui_widgets.c)
+add_library(vexel_ui_core STATIC src/ui/ui_core.c src/ui/ui_widgets.c src/ui/ui_draw.c)
 target_include_directories(vexel_ui_core PUBLIC src src/ui src/raster src/svg/shape src/svg/css src/geom src/svg/xml src/base)
 target_link_libraries(vexel_ui_core PUBLIC vexel_shape)
 set_target_properties(vexel_ui_core PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -153,6 +153,23 @@ target_include_directories(vexel_tile_cache_test PUBLIC src/raster)
 target_compile_definitions(vexel_tile_cache_test PRIVATE VEXEL_TESTING)
 set_target_properties(vexel_tile_cache_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_state)
+
+# lane: w3-editor
+add_library(vexel_editor_ui STATIC src/app/viewer_editor.c
+    src/app/viewer_editor_view.c src/app/viewer_editor_input.c)
+target_include_directories(vexel_editor_ui PUBLIC src src/app src/ui src/document)
+target_link_libraries(vexel_editor_ui PUBLIC vexel_document vexel_ui_core)
+set_target_properties(vexel_editor_ui PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO)
+target_link_libraries(svgworkbench PRIVATE vexel_editor_ui)
+add_executable(editor_chrome_render app/editor_chrome_render.c)
+target_link_libraries(editor_chrome_render PRIVATE vexel_editor_ui)
+set_target_properties(editor_chrome_render PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(editor_state_test tests/editor/editor_state_test.c)
+target_link_libraries(editor_state_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_state_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_executable(shape_render_cli tests/svg/shape/shape_render_cli.c)
 target_link_libraries(shape_render_cli PRIVATE vexel_shape)
@@ -277,6 +294,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(vexel_index PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_ui_state PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_ui_core PRIVATE ${VEXEL_STRICT_WARNINGS})
+    # lane: w3-editor
+    target_compile_options(vexel_editor_ui PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(editor_chrome_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(editor_state_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(ui_demo_render PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(ui_core_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(ui_focus_bench PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -328,11 +349,14 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_ui_state PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_ui_core PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_ui_core PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    # lane: w3-editor
+    target_compile_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -397,6 +421,10 @@ if(BUILD_TESTING)
     add_test(NAME ui-interaction COMMAND ui_interaction_test)
     add_test(NAME ui-demo-semantics COMMAND ui_demo_interaction_test)
     add_test(NAME ui-editor-chrome COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/ui/verify_chrome.py --binary $<TARGET_FILE:ui_demo_render>)
+    # lane: w3-editor
+    add_test(NAME editor-state COMMAND editor_state_test)
+    add_test(NAME editor-chrome COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/editor/verify_chrome.py
+        --binary $<TARGET_FILE:editor_chrome_render>)
     add_test(NAME svg-token-stream-budget COMMAND svg_token_stream_test)
     add_test(NAME index-replay COMMAND svgworkbench --index-replay
         "${CMAKE_SOURCE_DIR}/tests/svg/shape/fixtures/rect.svg")
