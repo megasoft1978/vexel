@@ -27,17 +27,6 @@ static ui_tree timeline_accessibility_tree;
 static ui_semantics_snapshot editor_semantics_scratch;
 static ui_semantics_snapshot timeline_semantics_scratch;
 
-static bool core_text_draw(void *context, const char *text, size_t length,
-    ui_rect bounds, ui_theme theme, uint32_t font_size_px, uint32_t color,
-    ui_font_family family, ui_font_weight weight, uint8_t *rgba,
-    uint32_t width, uint32_t height, size_t stride)
-{
-    (void)context;
-    (void)weight;
-    return platform_text_ui_draw(text, length, family == UI_FONT_MONOSPACED,
-        false, theme, font_size_px, color, rgba, width, height, stride, bounds);
-}
-
 static uint32_t widget_scale_for(double backing_scale)
 {
     long scale = lround(backing_scale);
@@ -293,7 +282,7 @@ bool viewer_timeline_paint(viewer_timeline *timeline, viewer_editor *editor,
     uint32_t widget_scale = widget_scale_for(backing_scale);
     ui_widget_canvas canvas;
     if (!ui_widget_canvas_init(&canvas, rgba, capacity, width, height, stride,
-            widget_scale, theme, increased_contrast, core_text_draw, NULL)) return false;
+            widget_scale, theme, increased_contrast, platform_text_ui_draw_widget, NULL)) return false;
     paint_panel_background(&canvas, layout.panel);
 
     ui_rect header = {layout.panel.x + 12U * widget_scale,
