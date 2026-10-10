@@ -250,8 +250,35 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
     }
 }
 
+static bool editor_alignment_shortcut(const platform_event *event,
+                                     viewer_editor_alignment *out_alignment)
+{
+    const uint32_t required = PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_OPTION;
+    if (event == NULL || out_alignment == NULL ||
+        (event->modifiers & required) != required ||
+        (event->modifiers & PLATFORM_MODIFIER_CONTROL) != 0U) return false;
+    switch (event->key_code) {
+        case 123U: *out_alignment = VIEWER_EDITOR_ALIGN_LEFT; return true;
+        case 124U: *out_alignment = VIEWER_EDITOR_ALIGN_RIGHT; return true;
+        case 126U: *out_alignment = VIEWER_EDITOR_ALIGN_TOP; return true;
+        case 125U: *out_alignment = VIEWER_EDITOR_ALIGN_BOTTOM; return true;
+        case 4U: *out_alignment = VIEWER_EDITOR_ALIGN_HORIZONTAL_CENTER; return true;
+        case 9U: *out_alignment = VIEWER_EDITOR_ALIGN_VERTICAL_CENTER; return true;
+        default: return false;
+    }
+}
+
 static void apply_key(viewer_app *app, const platform_event *event)
 {
+    viewer_editor_alignment alignment;
+    if (app->document_visible && app->editor != NULL &&
+        !viewer_editor_text_input_active(app->editor) &&
+        editor_alignment_shortcut(event, &alignment)) {
+        uint32_t result = viewer_editor_align_selection(app->editor,
+            &app->document.shape, alignment);
+        process_editor_result(app, result);
+        return;
+    }
     if (event->key_code == 53U && app->navigation_ready &&
         app->navigation.dragging) {
         (void)ui_viewer_navigation_drag_end(&app->navigation);
@@ -301,8 +328,8 @@ static void apply_key(viewer_app *app, const platform_event *event)
             platform_clipboard_result clipboard_result = platform_clipboard_read_svg(
                 clipboard, PLATFORM_CLIPBOARD_SVG_LIMIT, &pasted_length);
             if (clipboard_result == PLATFORM_CLIPBOARD_OK) {
-                editor_result |= viewer_editor_paste_svg(app->editor, clipboard,
-                    pasted_length,
+                editor_result |= viewer_editor_paste_svg_from_clipboard(
+                    app->editor, clipboard, pasted_length,
                     (request & VIEWER_EDITOR_PASTE_IN_PLACE) != 0U);
             } else {
                 viewer_editor_set_status(app->editor,

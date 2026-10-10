@@ -153,6 +153,9 @@ bool viewer_editor_copy_selection(viewer_editor *editor, uint8_t *buffer,
 uint32_t viewer_editor_cut_selection(viewer_editor *editor);
 uint32_t viewer_editor_paste_svg(viewer_editor *editor,
     const uint8_t *bytes, size_t length, bool paste_in_place);
+/* System clipboard paste makes colliding element IDs unique before insertion. */
+uint32_t viewer_editor_paste_svg_from_clipboard(viewer_editor *editor,
+    const uint8_t *bytes, size_t length, bool paste_in_place);
 bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
     const svg_shape_document *document,
     viewer_editor_canvas_overlay_state *out_overlay);
