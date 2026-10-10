@@ -32,7 +32,9 @@ class McpStdioEndToEndTests(unittest.TestCase):
         image_data = self._tiny_png_data_uri()
         self.current_path.write_text(
             '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">'
-            '<rect id="r1" x="4" y="5" width="20" height="12" fill="red"/>'
+            '<rect id="r1" x="4" y="5" width="20" height="12" fill="red">'
+            '<animate id="grow" attributeName="width" from="20" to="40" dur="2s" fill="freeze"/>'
+            '</rect>'
             '<circle id="c1" cx="60" cy="40" r="8" fill="blue"/>'
             '<title id="title">Old</title>'
             '<text id="media-text" x="3" y="55" font-size="12">Media</text>'
@@ -126,7 +128,8 @@ class McpStdioEndToEndTests(unittest.TestCase):
             "element_get", "element_query", "attribute_set", "attribute_remove", "text_set",
             "element_add", "element_add_fragment", "element_delete", "element_duplicate", "element_reorder",
             "element_group", "element_ungroup", "transaction", "undo", "redo", "save",
-            "save_as", "render_png", "selection_get", "selection_set", "export_svg",
+            "save_as", "render_png", "animation_list", "animation_add", "animation_set",
+            "animation_remove", "export_animation", "selection_get", "selection_set", "export_svg",
         }
         self.assertEqual(tool_names, expected)
         for tool in listed:
@@ -154,6 +157,23 @@ class McpStdioEndToEndTests(unittest.TestCase):
         query = self.call_tool("element_query", {"documentId": document_id,
                                                     "tag": "circle"})["structuredContent"]
         self.assertEqual(query["elements"][0]["elementId"], "c1")
+
+        animations = self.call_tool("animation_list", {"documentId": document_id})["structuredContent"]
+        self.assertEqual(animations["tracks"][0]["animationId"], "grow")
+        self.assertEqual(animations["tracks"][0]["targetId"], "r1")
+        self.assertEqual(animations["tracks"][0]["attribute"], "width")
+        self.assertGreater(animations["tracks"][0]["sourceSpan"]["length"], 0)
+
+        self.call_tool("animation_set", {"documentId": document_id,
+            "animationId": "grow", "name": "to", "value": "50"})
+        changed = self.call_tool("animation_list", {"documentId": document_id})["structuredContent"]
+        self.assertEqual(changed["tracks"][0]["keys"][-1]["value"]["value"], 50)
+
+        rendered = self.call_tool("render_png", {"documentId": document_id,
+            "region": {"x": 0, "y": 0, "width": 100, "height": 100}, "scale": 1, "time": 1})
+        image_block = next(item for item in rendered["content"] if item["type"] == "image")
+        png = base64.b64decode(image_block["data"], validate=True)
+        self.assertEqual(png[:8], b"\x89PNG\r\n\x1a\n")
 
         self.call_tool("selection_set", {"documentId": document_id, "elementId": "r1"})
         self.assertEqual(self.call_tool("selection_get", {"documentId": document_id})

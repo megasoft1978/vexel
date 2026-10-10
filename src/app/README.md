@@ -33,9 +33,19 @@ error frames allocation-free. `render_frame_cli.c` is a synchronous headless
 path that writes binary P6 PPM. Frame dimensions are bounded to 1..8192,
 `--zoom` to 0.001..1000, and pan offsets to +/-10,000,000 pixels. `--region`
 selects a source tile-pixel rectangle and rerenders it at the requested zoom;
-its output raster is limited to 4096 pixels per axis. Malformed, unsupported,
+its output raster is limited to 4096 pixels per axis. `--time` selects a bounded
+SMIL animation sample in seconds and defaults to the static document render.
+Malformed, unsupported,
 missing, unreadable, oversized, and out-of-range inputs produce a clear error
 and a distinct error image when a frame can be written.
+
+`--render-animation <file.svg> --fps N --duration D --out <existing-dir>` writes
+`frame-0000.ppm` and subsequent frames using one decoded document and explicit
+sample times. FPS is 1..60, duration is at most one hour, and the sequence is
+capped at 300 frames. PPM frames flatten transparency over white. Both CLI
+paths use the same deterministic animation renderer; this lane does not add
+timeline controls or frame caching to the interactive viewer. A 32-million
+total-frame-pixel budget is checked before rendering begins.
 
 The retained editor session in `viewer_editor.*` borrows the loaded source for
 `document_edit`, builds a bounded structure/inspector chrome, and routes every

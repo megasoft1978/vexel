@@ -13,6 +13,12 @@ top-row-first, premultiplied RGBA8. Decoding performs no file or network access.
 The URI helper accepts the exact `data:image/png;base64,` prefix and strict
 canonical Base64. The bilinear scaler accepts and returns premultiplied RGBA8.
 
+`platform_animation_encode_gif` encodes borrowed, same-sized premultiplied RGBA
+frames into a looping GIF using ImageIO. It accepts at most 120 frames, 60 fps,
+4096 pixels per dimension, 32 million aggregate frame pixels, and 128 MiB of
+encoded output. Returned bytes are owned by the caller and released with
+`platform_animation_bytes_destroy`; this API performs no path access.
+
 Public limits are 64 KiB of text, 16,384 glyphs, 262,144 path commands, 32 MiB
 of encoded image input, 64 million pixels, and 16,384 pixels per dimension.
 Multi-frame images are rejected with `animated`; static GIF input decodes its

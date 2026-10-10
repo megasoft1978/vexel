@@ -14,6 +14,10 @@ bool mcp_broker_call_tool(void *context, const mcp_json_doc *request,
         if (document == NULL) return mcp_broker_set_error(out, "document_not_found", "documentId is not open");
         return mcp_broker_render_png(broker, document, request, arguments, out);
     }
+    if (strcmp(tool_name, "animation_list") == 0 || strcmp(tool_name, "animation_add") == 0 ||
+        strcmp(tool_name, "animation_set") == 0 || strcmp(tool_name, "animation_remove") == 0 ||
+        strcmp(tool_name, "export_animation") == 0)
+        return mcp_broker_animation_call(broker, request, arguments, tool_name, out);
     if (strcmp(tool_name, "document_list") == 0 || strcmp(tool_name, "document_open") == 0 ||
         strcmp(tool_name, "document_close") == 0 || strcmp(tool_name, "document_info") == 0 ||
         strcmp(tool_name, "tree_get") == 0 || strcmp(tool_name, "element_get") == 0 ||

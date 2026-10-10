@@ -3,6 +3,7 @@
 
 #include "mcp_broker.h"
 #include "mcp_json.h"
+#include "platform/media/platform_image.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -125,6 +126,58 @@ static bool file_contains(const char *path, const char *needle)
     return okay && strstr(content, needle) != NULL;
 }
 
+static uint64_t buffer_hash(const mcp_json_buffer *buffer)
+{
+    uint64_t value = UINT64_C(1469598103934665603);
+    if (buffer == NULL || buffer->data == NULL) return 0U;
+    for (size_t index = 0U; index < buffer->length; index++) {
+        value ^= (uint8_t)buffer->data[index];
+        value *= UINT64_C(1099511628211);
+    }
+    return value;
+}
+
+static bool gif_has_frames_and_delay(const char *path, size_t expected_frames,
+                                     uint16_t expected_delay_centiseconds)
+{
+    FILE *file = fopen(path, "rb");
+    if (file == NULL || fseek(file, 0L, SEEK_END) != 0) {
+        if (file != NULL) (void)fclose(file);
+        return false;
+    }
+    long raw_length = ftell(file);
+    bool okay = raw_length >= 13L && raw_length <= 2L * 1024L * 1024L &&
+        fseek(file, 0L, SEEK_SET) == 0;
+    size_t length = okay ? (size_t)raw_length : 0U;
+    uint8_t *bytes = okay ? malloc(length) : NULL;
+    if (bytes == NULL) okay = false;
+    if (okay) okay = fread(bytes, 1U, length, file) == length;
+    if (fclose(file) != 0) okay = false;
+    if (!okay) { free(bytes); return false; }
+
+    bool signature = memcmp(bytes, "GIF89a", 6U) == 0 ||
+        memcmp(bytes, "GIF87a", 6U) == 0;
+    bool loop_extension = false;
+    size_t frame_count = 0U;
+    for (size_t index = 0U; index < length; index++) {
+        if (index + 11U <= length &&
+            memcmp(bytes + index, "NETSCAPE2.0", 11U) == 0) loop_extension = true;
+        if (index + 8U >= length) break;
+        if (bytes[index] != 0x21U || bytes[index + 1U] != 0xf9U ||
+            bytes[index + 2U] != 4U || bytes[index + 7U] != 0U) continue;
+        uint16_t delay = (uint16_t)bytes[index + 4U] |
+            (uint16_t)((uint16_t)bytes[index + 5U] << 8U);
+        if (delay != expected_delay_centiseconds) { okay = false; break; }
+        frame_count++;
+    }
+    platform_image decoded = PLATFORM_IMAGE_INIT;
+    platform_media_status decode_status = platform_image_decode(bytes, length, &decoded);
+    platform_image_destroy(&decoded);
+    free(bytes);
+    return signature && loop_extension && okay && frame_count == expected_frames &&
+        decode_status == PLATFORM_MEDIA_ANIMATED;
+}
+
 int main(void)
 {
     char directory_template[] = "/tmp/vexel-mcp-features-XXXXXX";
@@ -132,16 +185,26 @@ int main(void)
     CHECK(directory != NULL);
     CHECK(setenv("VEXEL_MCP_ALLOWED_DIRS", directory, 1) == 0);
     char current_path[1024], other_path[1024], save_path[1024], outside_path[1024];
+    char gif_path[1024], frame_zero[1024], frame_one[1024];
     int current_length = snprintf(current_path, sizeof(current_path), "%s/current.svg", directory);
     int other_length = snprintf(other_path, sizeof(other_path), "%s/other.svg", directory);
     int save_length = snprintf(save_path, sizeof(save_path), "%s/new.svg", directory);
     int outside_length = snprintf(outside_path, sizeof(outside_path), "%s-outside.svg", directory);
+    int gif_length = snprintf(gif_path, sizeof(gif_path), "%s/animation.gif", directory);
+    int frame_zero_length = snprintf(frame_zero, sizeof(frame_zero), "%s/frame-0000.png", directory);
+    int frame_one_length = snprintf(frame_one, sizeof(frame_one), "%s/frame-0001.png", directory);
     CHECK(current_length > 0 && (size_t)current_length < sizeof(current_path));
     CHECK(other_length > 0 && (size_t)other_length < sizeof(other_path));
     CHECK(save_length > 0 && (size_t)save_length < sizeof(save_path));
     CHECK(outside_length > 0 && (size_t)outside_length < sizeof(outside_path));
+    CHECK(gif_length > 0 && (size_t)gif_length < sizeof(gif_path));
+    CHECK(frame_zero_length > 0 && (size_t)frame_zero_length < sizeof(frame_zero));
+    CHECK(frame_one_length > 0 && (size_t)frame_one_length < sizeof(frame_one));
     static const char source[] =
         "<svg width='100' height='100'><text id='media' x='1' y='20'>Media</text>"
+        "<rect id='animated' x='2' y='3' width='20' height='10' fill='red'>"
+        "<animate id='grow' attributeName='width' from='20' to='40' dur='2s'/>"
+        "</rect>"
         "<image x='50' y='50' width='10' height='10' "
         "href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ"
         "AAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg=='/></svg>";
@@ -198,6 +261,38 @@ int main(void)
     CHECK(call_tool(&backend, "element_add_fragment", arguments, &response) &&
         !response.is_error);
     response_destroy(&response);
+
+    amount = snprintf(arguments, sizeof(arguments), "{\"documentId\":\"%s\"}", document_id);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "animation_list", arguments, &response));
+    CHECK(!response.is_error && strstr(response.structured_json.data,
+        "\"animationId\":\"grow\"") != NULL &&
+        strstr(response.structured_json.data, "\"targetId\":\"animated\"") != NULL &&
+        strstr(response.structured_json.data, "\"sourceSpan\"") != NULL);
+    response_destroy(&response);
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"animationId\":\"grow\","
+        "\"name\":\"to\",\"value\":\"50\"}", document_id);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "animation_set", arguments, &response) && !response.is_error);
+    response_destroy(&response);
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"targetId\":\"animated\","
+        "\"xml\":\"<animate id='fade' attributeName='opacity' from='1' to='0' dur='1s'/>\"}",
+        document_id);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "animation_add", arguments, &response) && !response.is_error);
+    response_destroy(&response);
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"animationId\":\"fade\"}", document_id);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "animation_remove", arguments, &response) && !response.is_error);
+    response_destroy(&response);
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"animationId\":\"fade\"}", document_id);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(expect_error(&backend, "animation_remove", arguments, "animation_not_found"));
+
     amount = snprintf(arguments, sizeof(arguments),
         "{\"documentId\":\"%s\",\"parentId\":\"%s\","
         "\"xml\":\"<g><text></g>\"}", document_id, root_id);
@@ -207,12 +302,49 @@ int main(void)
 
     amount = snprintf(arguments, sizeof(arguments),
         "{\"documentId\":\"%s\",\"region\":{\"x\":0,\"y\":0,"
-        "\"width\":100,\"height\":100}}", document_id);
+        "\"width\":100,\"height\":100},\"time\":1}", document_id);
     CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
     CHECK(call_tool(&backend, "render_png", arguments, &response));
     CHECK(!response.is_error && response.content_json.data != NULL &&
         strstr(response.content_json.data, "\"type\":\"image\"") != NULL);
+    uint64_t timed_render_hash = buffer_hash(&response.content_json);
     response_destroy(&response);
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"region\":{\"x\":0,\"y\":0,"
+        "\"width\":100,\"height\":100}}", document_id);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "render_png", arguments, &response) &&
+        !response.is_error && buffer_hash(&response.content_json) != timed_render_hash);
+    response_destroy(&response);
+
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"path\":\"%s\",\"format\":\"frames\","
+        "\"fps\":2,\"duration\":1}", document_id, directory);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "export_animation", arguments, &response) &&
+        !response.is_error && strstr(response.structured_json.data, "\"frames\":2") != NULL);
+    response_destroy(&response);
+    FILE *frame = fopen(frame_zero, "rb");
+    CHECK(frame != NULL);
+    uint8_t png_signature[8] = {0};
+    CHECK(fread(png_signature, 1U, sizeof(png_signature), frame) == sizeof(png_signature));
+    CHECK(fclose(frame) == 0);
+    static const uint8_t expected_png[8] = {137U, 80U, 78U, 71U, 13U, 10U, 26U, 10U};
+    CHECK(memcmp(png_signature, expected_png, sizeof(expected_png)) == 0);
+    CHECK(access(frame_one, F_OK) == 0);
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"path\":\"%s\",\"format\":\"frames\","
+        "\"fps\":2,\"duration\":1}", document_id, outside_path);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(expect_error(&backend, "export_animation", arguments, "path_not_granted"));
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"path\":\"%s\",\"format\":\"gif\","
+        "\"fps\":2,\"duration\":1}", document_id, gif_path);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(call_tool(&backend, "export_animation", arguments, &response) &&
+        !response.is_error && strstr(response.structured_json.data, "\"format\":\"gif\"") != NULL);
+    response_destroy(&response);
+    CHECK(gif_has_frames_and_delay(gif_path, 2U, 50U));
 
     amount = snprintf(arguments, sizeof(arguments),
         "{\"documentId\":\"%s\",\"path\":\"%s\"}",
@@ -220,6 +352,12 @@ int main(void)
     CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
     CHECK(call_tool(&backend, "save_as", arguments, &response) && !response.is_error);
     response_destroy(&response);
+    CHECK(file_contains(save_path, "MCP &lt;&amp;&gt;"));
+    amount = snprintf(arguments, sizeof(arguments),
+        "{\"documentId\":\"%s\",\"path\":\"%s\",\"format\":\"gif\","
+        "\"fps\":2,\"duration\":1}", document_id, save_path);
+    CHECK(amount > 0 && (size_t)amount < sizeof(arguments));
+    CHECK(expect_error(&backend, "export_animation", arguments, "animation_export_failed"));
     CHECK(file_contains(save_path, "MCP &lt;&amp;&gt;"));
     amount = snprintf(arguments, sizeof(arguments),
         "{\"documentId\":\"%s\",\"path\":\"%s\"}",
@@ -253,8 +391,10 @@ int main(void)
     response_destroy(&response);
 
     mcp_broker_destroy(broker);
-    CHECK(unlink(save_path) == 0 && unlink(current_path) == 0 && unlink(other_path) == 0);
+    CHECK(unlink(save_path) == 0 && unlink(gif_path) == 0 &&
+        unlink(frame_zero) == 0 && unlink(frame_one) == 0 &&
+        unlink(current_path) == 0 && unlink(other_path) == 0);
     CHECK(rmdir(directory) == 0);
-    (void)puts("MCP feature tests passed: media render, text/fragment edits, atomic Save As, and non-active close");
+    (void)puts("MCP feature tests passed: animation edits, PNG/GIF export, media render, atomic Save As, and document close");
     return 0;
 }

@@ -174,3 +174,16 @@ bool mcp_access_resolve_save_path(const char *path,
     free(canonical_parent);
     return okay;
 }
+
+bool mcp_access_resolve_granted_directory(const char *path,
+                                         char out[MCP_BROKER_PATH_CAP])
+{
+    if (path == NULL || out == NULL || path[0] == '\0' ||
+        strnlen(path, MCP_BROKER_PATH_CAP) >= MCP_BROKER_PATH_CAP) return false;
+    char canonical[MCP_BROKER_PATH_CAP];
+    if (!copy_canonical_directory(path, canonical) ||
+        (!path_is_granted_by_env(canonical) &&
+         !path_is_granted_by_config(canonical))) return false;
+    memcpy(out, canonical, strlen(canonical) + 1U);
+    return true;
+}

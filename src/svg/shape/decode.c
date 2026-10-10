@@ -146,6 +146,14 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         error = SVG_SHAPE_ERROR_VIEWPORT;
         goto cleanup;
     }
+    size_t animation_error_offset = 0U;
+    if (!svg_anim_parse(source, tokens, xml.token_count, &out->animation,
+                        &animation_error_offset)) {
+        error = animation_error_offset == 0U ? SVG_SHAPE_ERROR_OOM :
+                                               SVG_SHAPE_ERROR_LIMIT;
+        svg_shape_traverse_fail(diagnostic, error, animation_error_offset);
+        goto cleanup;
+    }
     error = SVG_SHAPE_ERROR_NONE;
 
 cleanup:
