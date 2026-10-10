@@ -502,3 +502,37 @@ frozen-base comparator because that feature was unsupported there. Detailed
 trials for all six paint workloads are in
 [`bench/results/WO-M4-06.json`](../bench/results/WO-M4-06.json). These
 measurements are not a public performance claim.
+
+## W8 huge-file raster path
+
+The final Release `./dev bench-corpus` run produced 116 fresh trials for 58
+inputs: 2 previewable (`natural-earth-world-map-blank` and
+`natural-earth-world-map-countries`), 56 unsupported, 0 work limits, and 0
+crashes. Its preview count measures index/open preview coverage; it does not
+run the full rasterizer. The raster work in this lane therefore leaves the
+honest count at 2/58.
+
+The `map-mosaic-2000.svg` raster profile identified repeated fill-edge tests as
+the largest measured cost. At 3072×3072, the pre-change renderer recorded
+191,961,695 work units, including 109,871,984 fill-edge tests and 58,721,155
+shape samples. The optimized renderer recorded 118,891,388 work units, 949,140
+fill-edge visits, 51,886,613 interval/range tests, and 28,774,119 shape samples.
+These are deterministic work counters, not wall-clock speed claims. At
+4096×4096 the real-world map now renders at 189,245,433 estimated work units,
+within the existing 200,000,000 cap.
+
+The fast path builds sorted scanline fill intervals for eligible uniform fills,
+then visits only sample x-ranges inside those intervals. Reusable row runs keep
+center-only pixels on the single-sample path and boundary pixels on the existing
+4×4 path. Gradient and clip paint logic runs only for covered samples. Shapes
+with strokes, mixed edge colors, more than 4096 edges, or workspaces above the
+8 MiB run cap keep using the existing renderer.
+
+Pixel output is unchanged: `./dev pixdiff` reports zero differing pixels, and
+the pre-change and optimized Release 3072×3072 RGBA buffers are byte-identical
+with SHA-256
+`9692e96270ed3c227f901cc2f2207475327d2cc3118a75ddf5e66fac085c3b65`. The
+regression test also pins the original 512×512 map output SHA-256 to
+`9e0af1a5d014af710fabb39fa152733f50c662ae1f2dc4bfe4a1d7cb3a3433a4`. The new
+4K work regression failed before the optimization with `limit:0` and zero work
+recorded, then passed after the change.

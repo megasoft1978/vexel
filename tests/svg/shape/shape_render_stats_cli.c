@@ -92,6 +92,8 @@ int main(int argc, char **argv)
         fprintf(stderr, "shape_pixels=%" PRIu64 "\n", work.shape_pixels);
         fprintf(stderr, "shape_samples=%" PRIu64 "\n", work.shape_samples);
         fprintf(stderr, "fill_edge_tests=%" PRIu64 "\n", work.fill_edge_tests);
+        fprintf(stderr, "fill_interval_tests=%" PRIu64 "\n",
+                work.fill_interval_tests);
         fprintf(stderr, "stroke_tests=%" PRIu64 "\n", work.stroke_tests);
         fprintf(stderr, "scanline_edge_entries=%" PRIu64 "\n", work.scanline_edge_entries);
         fprintf(stderr, "shape_row_visits=%" PRIu64 "\n", work.shape_row_visits);

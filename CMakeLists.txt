@@ -1012,3 +1012,25 @@ if(BUILD_TESTING)
     add_test(NAME editor-followups COMMAND editor_followups_test)
     add_test(NAME editor-media-providers COMMAND editor_media_provider_test)
 endif()
+# lane: w8-perf — 4K real-world raster work regression
+target_sources(vexel_shape PRIVATE
+    src/raster/shape_scanline_fill.c
+    src/raster/shape_render_fill.c
+    src/raster/shape_render_preflight.c)
+add_executable(raster_large_render_test tests/svg/shape/raster_large_render_test.c)
+target_include_directories(raster_large_render_test PRIVATE src/raster src/svg/shape)
+target_link_libraries(raster_large_render_test PRIVATE vexel_shape)
+target_compile_definitions(raster_large_render_test PRIVATE
+    VEXEL_W8_FIXTURE_PATH="${CMAKE_CURRENT_SOURCE_DIR}/tests/realworld/fixtures/maps/map-mosaic-2000.svg")
+set_target_properties(raster_large_render_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(raster_large_render_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(raster_large_render_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(raster_large_render_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME shape-render-large-work COMMAND raster_large_render_test)
+endif()
+# end lane: w8-perf

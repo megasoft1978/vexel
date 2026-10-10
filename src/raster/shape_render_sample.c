@@ -193,31 +193,15 @@ static void paint_stroke_sample(const svg_shape_document *document,
     }
 }
 
-void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
-                               const uint32_t *active_edges, size_t active_count,
-                               const geom_edge *local_edges,
-                               const bool *dash_seams,
-                               const raster_shape_dash_cache *dash_cache,
-                               double px, double py,
-                               double paint_x, double paint_y,
-                               bool scalar_oracle_alpha,
-                               uint8_t sample_rgba[4])
+static void paint_sample_result(const svg_shape_document *doc, size_t shape,
+                                const geom_edge *local_edges,
+                                const bool *dash_seams,
+                                const raster_shape_dash_cache *dash_cache,
+                                double px, double py,
+                                double paint_x, double paint_y,
+                                bool scalar_oracle_alpha, bool inside,
+                                const uint8_t fill[4], uint8_t sample_rgba[4])
 {
-    int32_t winding = 0;
-    uint8_t parity = 0U;
-    uint8_t fill[4] = {0U, 0U, 0U, 0U};
-    for (size_t i = 0U; i < active_count; i++) {
-        size_t edge_index = active_edges != NULL ? active_edges[i] :
-                            doc->shape_edge_start[shape] + i;
-        geom_edge edge = doc->edges[edge_index];
-        bool upward = edge.a.y <= py && edge.b.y > py;
-        bool downward = edge.b.y <= py && edge.a.y > py;
-        if ((!upward && !downward) || !edge_crosses_right(edge, px, py)) continue;
-        winding += upward ? 1 : -1;
-        parity ^= 1U;
-        memcpy(fill, doc->colors + edge_index * 4U, sizeof(fill));
-    }
-    bool inside = doc->shape_evenodd[shape] ? parity != 0U : winding != 0;
     bool allowed = doc->clips == NULL || svg_clip_contains(doc->clips[shape], px, py);
     bool stroke_first = doc->strokes != NULL &&
                         doc->strokes[shape].paint_order == 1U;
@@ -258,4 +242,47 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
     if (!stroke_first)
         paint_stroke_sample(doc, shape, local_edges, dash_seams, dash_cache,
                             allowed, px, py, scalar_oracle_alpha, sample_rgba);
+}
+
+void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
+                               const uint32_t *active_edges, size_t active_count,
+                               const geom_edge *local_edges,
+                               const bool *dash_seams,
+                               const raster_shape_dash_cache *dash_cache,
+                               double px, double py,
+                               double paint_x, double paint_y,
+                               bool scalar_oracle_alpha,
+                               uint8_t sample_rgba[4])
+{
+    int32_t winding = 0;
+    uint8_t parity = 0U;
+    uint8_t fill[4] = {0U, 0U, 0U, 0U};
+    for (size_t i = 0U; i < active_count; i++) {
+        size_t edge_index = active_edges != NULL ? active_edges[i] :
+                            doc->shape_edge_start[shape] + i;
+        geom_edge edge = doc->edges[edge_index];
+        bool upward = edge.a.y <= py && edge.b.y > py;
+        bool downward = edge.b.y <= py && edge.a.y > py;
+        if ((!upward && !downward) || !edge_crosses_right(edge, px, py)) continue;
+        winding += upward ? 1 : -1;
+        parity ^= 1U;
+        memcpy(fill, doc->colors + edge_index * 4U, sizeof(fill));
+    }
+    bool inside = doc->shape_evenodd[shape] ? parity != 0U : winding != 0;
+    paint_sample_result(doc, shape, local_edges, dash_seams, dash_cache,
+                        px, py, paint_x, paint_y, scalar_oracle_alpha,
+                        inside, fill, sample_rgba);
+}
+
+void raster_shape_paint_sample_inside(
+    const svg_shape_document *doc, size_t shape, const uint8_t fill_rgba[4],
+    const geom_edge *local_edges, const bool *dash_seams,
+    const raster_shape_dash_cache *dash_cache, double px, double py,
+    double paint_x, double paint_y, bool scalar_oracle_alpha,
+    uint8_t sample_rgba[4])
+{
+    if (fill_rgba == NULL) return;
+    paint_sample_result(doc, shape, local_edges, dash_seams, dash_cache,
+                        px, py, paint_x, paint_y, scalar_oracle_alpha,
+                        true, fill_rgba, sample_rgba);
 }
