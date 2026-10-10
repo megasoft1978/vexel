@@ -121,7 +121,7 @@ static bool render_sample(const svg_shape_document *doc,
     for (size_t shape = 0U; shape < doc->shape_count; shape++) {
         raster_shape_paint_sample(doc, shape, NULL,
                                   doc->shape_edge_count[shape], local_edges,
-                                  dash_seams, px, py, paint_x, paint_y, true,
+                                  dash_seams, NULL, px, py, paint_x, paint_y, true,
                                   sample_rgba);
     }
     return true;

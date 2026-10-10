@@ -225,10 +225,10 @@ bool svg_reference_attributes_supported(base_bytes source,
 {
     for (size_t i = element + 1U;
          i < count && tokens[i].kind == SVG_XML_TOKEN_ATTRIBUTE; ++i) {
-        bool namespace_attribute = root &&
-            name_is(source, tokens[i].prefix, "xmlns") &&
-            name_is(source, tokens[i].local_name, "xlink");
-        if (tokens[i].prefix.length != 0U && !namespace_attribute) return false;
+        bool namespace_declaration = root &&
+            name_is(source, tokens[i].prefix, "xmlns");
+        bool xlink_href = name_is(source, tokens[i].prefix, "xlink") &&
+                          name_is(source, tokens[i].local_name, "href");
         svg_xml_span n = tokens[i].local_name;
         bool common = name_is(source,n,"fill") || name_is(source,n,"fill-rule") ||
             name_is(source,n,"transform") || name_is(source,n,"clip-path") ||
@@ -248,8 +248,15 @@ bool svg_reference_attributes_supported(base_bytes source,
             name_is(source,n,"points");
         bool metadata = name_is(source,n,"id") || name_is(source,n,"class") ||
                         name_is(source,n,"style");
+        if (tokens[i].prefix.length != 0U && !namespace_declaration) {
+            /* Foreign export labels are preserved by the source document but
+             * have no effect on the supported SVG subset. Keep namespaced
+             * spellings of SVG paint/geometry properties fail-closed. */
+            if (common || shape || xlink_href) return false;
+            continue;
+        }
         bool ok = root ? (metadata || common || name_is(source,n,"xmlns") ||
-                          namespace_attribute || name_is(source,n,"version") ||
+                          namespace_declaration || name_is(source,n,"version") ||
                           name_is(source,n,"width") || name_is(source,n,"height") ||
                           name_is(source,n,"viewBox") ||
                           name_is(source,n,"preserveAspectRatio")) :

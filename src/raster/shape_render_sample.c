@@ -33,7 +33,9 @@ static void composite_source_over(uint8_t destination[4], const uint8_t source[4
 void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
                                const uint32_t *active_edges, size_t active_count,
                                const geom_edge *local_edges,
-                               const bool *dash_seams, double px, double py,
+                               const bool *dash_seams,
+                               const raster_shape_dash_cache *dash_cache,
+                               double px, double py,
                                double paint_x, double paint_y,
                                bool scalar_oracle_alpha,
                                uint8_t sample_rgba[4])
@@ -69,7 +71,7 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
         } else composite_source_over(sample_rgba, sampled_fill);
     }
     if (allowed && raster_shape_stroke_contains(doc, shape, local_edges,
-                                               dash_seams, px, py)) {
+                                               dash_seams, dash_cache, px, py)) {
         if (scalar_oracle_alpha)
             memcpy(sample_rgba, doc->strokes[shape].rgba, 4U);
         else composite_source_over(sample_rgba, doc->strokes[shape].rgba);

@@ -23,6 +23,16 @@ After each element's fill, bounded strokes are tested against the same 4x4
 sample grid. The stroke decoder stores each element's ordered edge range,
 literal RGBA color, local width, inverse element transform, cap/join policy,
 and bounded dash state.
+Before rasterization, stroke intervals and joins are materialized once. A
+conservative local-space grid narrows each sample to nearby stroke pieces;
+segments include cap reach and joins include the miter-limit reach. Grid cells
+are at least 1 user unit wide, each axis is at most 128 cells, and all shapes
+share caps of 65,536 cells, 1,000,000 references, and 16 MiB of cache storage.
+The dash builder is capped at 65,536 pieces per array and 1,000,000 build steps.
+If a shape cannot be indexed within those bounds, it uses the bounded linear
+stroke scan and the work preflight accounts for every piece tested. The
+preflight also charges grid lookups and candidate pieces per sample, so sparse
+paths no longer pay for every edge inside the path's full bounding rectangle.
 The renderer computes a conservative device-space box for each shape's fill and
 stroke. Stroke boxes include the transformed half-width, miter-limit reach,
 square-cap reach, and a small floating-point margin. The box maps to every tile
@@ -76,8 +86,10 @@ returns a limit diagnostic instead of painting a partial frame.
 - `shape_render_sample.c` evaluates one fill sample, applies clip membership and
   paint-server sampling, then composites the fill and stroke with the existing
   integer source-over operation. It preserves the test-only scalar alpha mode.
-- `shape_render_stroke.c` tests local stroke geometry, caps, joins, miter limits,
-  dash segments, and closed-path dash seams using the precomputed local edges.
+- `shape_render_stroke.c` materializes local stroke segments and tests caps,
+  joins, miter limits, dash intervals, and closed-path dash seams.
+- `shape_render_stroke_grid.c` builds and queries the bounded local-space stroke
+  grid; the scalar reference remains an unindexed comparison path.
 - `shape_render_group.c` renders isolated opacity subtrees using bounded tile
   scratch and composites each layer with source-over alpha.
 - `shape_bounds.c` owns conservative device-space shape boxes and the boundary

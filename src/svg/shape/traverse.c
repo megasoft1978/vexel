@@ -94,7 +94,10 @@ static bool metadata_element(base_bytes source, const svg_xml_token *token)
 {
     return element_name(source, token, "title") ||
            element_name(source, token, "desc") ||
-           element_name(source, token, "metadata");
+           element_name(source, token, "metadata") ||
+           (token->prefix.length != 0U &&
+            span_eq(source, token->prefix, "sodipodi") &&
+            span_eq(source, token->local_name, "namedview"));
 }
 
 static size_t matching_end(const shape_traversal *traversal, size_t element)

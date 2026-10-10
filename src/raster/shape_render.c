@@ -42,7 +42,7 @@ static bool checked_mul_size(size_t left, size_t right, size_t *out)
 }
 
 static bool compute_stroke_work(const svg_shape_document *doc,
-                                const geom_edge *local_edges,
+                                const raster_shape_dash_cache *dash_cache,
                                 size_t *per_sample)
 {
     for (size_t shape = 0U; shape < doc->shape_count; shape++) {
@@ -50,36 +50,11 @@ static bool compute_stroke_work(const svg_shape_document *doc,
         const svg_shape_stroke *stroke = &doc->strokes[shape];
         if (stroke->rgba[3] == 0U || stroke->width <= 0.0) continue;
         if (stroke->dash_count > SVG_SHAPE_MAX_DASH_VALUES) return false;
-        size_t count = doc->shape_edge_count[shape];
-        if (!doc->shape_stroke_closed[shape] && doc->shape_filled[shape] && count > 0U)
-            count--;
-        if (count > SIZE_MAX / 2U) return false;
-        size_t cost = count * 2U;
-        if (stroke->dash_count != 0U) {
-            size_t expanded_count = stroke->dash_count +
-                (stroke->dash_count & 1U ? stroke->dash_count : 0U);
-            size_t pattern_work;
-            if (count != 0U &&
-                (!checked_mul_size(expanded_count, 2U, &pattern_work) ||
-                 !checked_add_size(cost, pattern_work, &cost))) return false;
-            double min_dash = stroke->dash[0];
-            for (size_t d = 0U; d < stroke->dash_count; d++) {
-                if (!isfinite(stroke->dash[d]) || stroke->dash[d] <= 0.0) return false;
-                if (stroke->dash[d] < min_dash) min_dash = stroke->dash[d];
-            }
-            size_t first = doc->shape_edge_start[shape];
-            for (size_t edge = 0U; edge < count; edge++) {
-                geom_edge local = local_edges[first + edge];
-                double spans = ceil(hypot(local.b.x-local.a.x,
-                                          local.b.y-local.a.y) / min_dash);
-                if (!isfinite(spans) || spans > (double)RASTER_MAX_TESTS ||
-                    spans > (double)(SIZE_MAX - cost - 2U)) return false;
-                size_t span_count = (size_t)spans;
-                if (span_count > SIZE_MAX - cost - 2U) return false;
-                cost += span_count + 2U;
-            }
-        }
-        per_sample[shape] = cost;
+        if (dash_cache == NULL || dash_cache->shapes == NULL ||
+            shape >= dash_cache->shape_count) return false;
+        const raster_dash_shape_range *range = &dash_cache->shapes[shape];
+        if (!checked_add_size(range->segment_count, range->join_count,
+                              &per_sample[shape])) return false;
     }
     return true;
 }
@@ -131,6 +106,7 @@ static bool render_work_preflight(const svg_shape_document *doc,
                                   size_t active_edge_capacity,
                                   uint32_t *active_shapes,
                                   const size_t *stroke_cost,
+                                  const raster_shape_dash_cache *dash_cache,
                                   double scale_x, double scale_y,
                                   double offset_x,
                                   double offset_y,
@@ -158,6 +134,14 @@ static bool render_work_preflight(const svg_shape_document *doc,
     for (size_t shape = 0U; shape < doc->shape_count; shape++)
         if (!checked_add_size(stroke_setup_work, stroke_cost[shape],
                               &stroke_setup_work)) return false;
+    if (dash_cache != NULL &&
+        !checked_add_size(stroke_setup_work, dash_cache->build_steps,
+                          &stroke_setup_work)) return false;
+    if (dash_cache != NULL &&
+        (!checked_add_size(stroke_setup_work, dash_cache->grid_cell_count,
+                           &stroke_setup_work) ||
+         !checked_add_size(stroke_setup_work, dash_cache->grid_ref_count,
+                           &stroke_setup_work))) return false;
     if (!checked_add_size(scanlines->event_count, scanlines->shape_event_count,
                           &event_count) ||
         !checked_mul_size(levels, 6U, &event_factor) ||
@@ -217,14 +201,33 @@ static bool render_work_preflight(const svg_shape_document *doc,
                                                           offset_x, offset_y) &&
                                    !raster_boundary_mask_test(boundary, pixel);
                 if (center_only) {
+                    double sample_x = (double)x + 0.5;
+                    double sample_y = (double)y + 0.5;
                     size_t edge_count = active_count_for(shape_offsets, stride, 2U, shape);
                     size_t sample_work;
+                    bool stroke_indexed = false;
+                    bool stroke_candidates = false;
+                    size_t sample_stroke_work = raster_shape_stroke_sample_work(
+                        doc, shape, dash_cache,
+                        doc->view_x + (sample_x - offset_x) / scale_x,
+                        doc->view_y + (sample_y - offset_y) / scale_y,
+                        &stroke_indexed, &stroke_candidates);
+                    if (!doc->shape_filled[shape] && stroke_indexed &&
+                        !stroke_candidates) {
+                        if (!checked_add_size(stroke_tests, sample_stroke_work,
+                                              &stroke_tests) ||
+                            !work_add(&total, sample_stroke_work)) return false;
+                        continue;
+                    }
+                    if (!doc->shape_filled[shape] && stroke_indexed &&
+                        !checked_add_size(sample_stroke_work, 1U,
+                                          &sample_stroke_work)) return false;
                     if (!checked_add_size(1U, edge_count, &sample_work) ||
-                        !checked_add_size(sample_work, stroke_cost[shape], &sample_work) ||
+                        !checked_add_size(sample_work, sample_stroke_work, &sample_work) ||
                         !checked_add_size(sample_work, sample_aux_work, &sample_work) ||
                         !checked_add_size(shape_samples, 1U, &shape_samples) ||
                         !checked_add_size(fill_edge_tests, edge_count, &fill_edge_tests) ||
-                        !checked_add_size(stroke_tests, stroke_cost[shape], &stroke_tests) ||
+                        !checked_add_size(stroke_tests, sample_stroke_work, &stroke_tests) ||
                         !work_add(&total, sample_work)) return false;
                     continue;
                 }
@@ -239,13 +242,30 @@ static bool render_work_preflight(const svg_shape_document *doc,
                                                scale_x, scale_y,
                                                offset_x, offset_y)) continue;
                         size_t sample_work;
+                        bool stroke_indexed = false;
+                        bool stroke_candidates = false;
+                        size_t sample_stroke_work = raster_shape_stroke_sample_work(
+                            doc, shape, dash_cache,
+                            doc->view_x + (sample_x - offset_x) / scale_x,
+                            doc->view_y + (sample_y - offset_y) / scale_y,
+                            &stroke_indexed, &stroke_candidates);
+                        if (!doc->shape_filled[shape] && stroke_indexed &&
+                            !stroke_candidates) {
+                            if (!checked_add_size(stroke_tests, sample_stroke_work,
+                                                  &stroke_tests) ||
+                                !work_add(&total, sample_stroke_work)) return false;
+                            continue;
+                        }
+                        if (!doc->shape_filled[shape] && stroke_indexed &&
+                            !checked_add_size(sample_stroke_work, 1U,
+                                              &sample_stroke_work)) return false;
                         if (!checked_add_size(1U, edge_count, &sample_work) ||
-                            !checked_add_size(sample_work, stroke_cost[shape], &sample_work) ||
+                            !checked_add_size(sample_work, sample_stroke_work, &sample_work) ||
                             !checked_add_size(sample_work, sample_aux_work, &sample_work) ||
                             !checked_add_size(shape_samples, 1U, &shape_samples) ||
                             !checked_add_size(fill_edge_tests, edge_count,
                                               &fill_edge_tests) ||
-                            !checked_add_size(stroke_tests, stroke_cost[shape],
+                            !checked_add_size(stroke_tests, sample_stroke_work,
                                               &stroke_tests) ||
                             !work_add(&total, sample_work)) return false;
                     }
@@ -417,11 +437,14 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
     uint32_t *active_shapes = NULL;
     uint8_t *center_samples = NULL;
     uint8_t *subpixel_samples = NULL;
+    raster_shape_dash_cache dash_cache = {0};
     raster_shape_bounds_set bounds = {0};
     raster_boundary_mask boundary = {0};
     raster_scanline_index scanlines = {0};
 
-    if (!prepare_local_stroke_edges(doc, &local_edges, &dash_seams, diag)) goto cleanup;
+    if (!prepare_local_stroke_edges(doc, &local_edges, &dash_seams, diag) ||
+        !raster_shape_dash_cache_create(doc, local_edges, dash_seams,
+                                        &dash_cache, diag)) goto cleanup;
     if (!raster_shape_bounds_build(doc, scale_x, scale_y, offset_x, offset_y,
                                    &bounds, diag))
         goto cleanup;
@@ -443,7 +466,7 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
             goto cleanup;
         }
     }
-    if (!compute_stroke_work(doc, local_edges, stroke_cost)) {
+    if (!compute_stroke_work(doc, &dash_cache, stroke_cost)) {
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         goto cleanup;
     }
@@ -480,7 +503,8 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
     raster_shape_work_stats measured = {0};
     if (!render_work_preflight(doc, &bounds, &boundary, &scanlines,
                                shape_offsets, active_edges, edge_slot_count,
-                               active_shapes, stroke_cost, scale_x, scale_y,
+                               active_shapes, stroke_cost, &dash_cache,
+                               scale_x, scale_y,
                                offset_x, offset_y,
                                &measured)) {
         if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
@@ -535,13 +559,22 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
                                            offset_x, offset_y)) continue;
                     double px = doc->view_x + (sample_x - offset_x) / scale_x;
                     double py = doc->view_y + (sample_y - offset_y) / scale_y;
+                    if (!doc->shape_filled[shape]) {
+                        bool stroke_indexed = false;
+                        bool stroke_candidates = false;
+                        (void)raster_shape_stroke_sample_work(doc, shape,
+                            &dash_cache, px, py, &stroke_indexed,
+                            &stroke_candidates);
+                        if (stroke_indexed && !stroke_candidates) continue;
+                    }
                     double paint_x = px;
                     double paint_y = py;
                     size_t count = active_count_for(shape_offsets, stride, 2U, shape);
                     const uint32_t *edges = active_edges_for(shape_offsets, active_edges,
                                                               stride, 2U, shape);
                     raster_shape_paint_sample(doc, shape, edges, count, local_edges,
-                                       dash_seams, px, py, paint_x, paint_y,
+                                       dash_seams, &dash_cache, px, py,
+                                       paint_x, paint_y,
                                        scalar_oracle_alpha,
                                        center_samples + (size_t)x * 4U);
                     continue;
@@ -569,10 +602,18 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
                                                offset_x, offset_y)) continue;
                         double px = doc->view_x + (sample_x - offset_x) / scale_x;
                         double py = doc->view_y + (sample_y - offset_y) / scale_y;
+                        if (!doc->shape_filled[shape]) {
+                            bool stroke_indexed = false;
+                            bool stroke_candidates = false;
+                            (void)raster_shape_stroke_sample_work(doc, shape,
+                                &dash_cache, px, py, &stroke_indexed,
+                                &stroke_candidates);
+                            if (stroke_indexed && !stroke_candidates) continue;
+                        }
                         size_t sample_index = (size_t)x * RASTER_SAMPLE_COUNT +
                                               sy * RASTER_SAMPLES_PER_AXIS + sx;
                         raster_shape_paint_sample(doc, shape, edges, count, local_edges,
-                            dash_seams, px, py, paint_x, paint_y,
+                            dash_seams, &dash_cache, px, py, paint_x, paint_y,
                             scalar_oracle_alpha,
                             subpixel_samples + sample_index * 4U);
                     }
@@ -620,6 +661,7 @@ cleanup:
     }
     free(local_edges);
     free(dash_seams);
+    raster_shape_dash_cache_destroy(&dash_cache);
     free(stroke_cost);
     free(shape_offsets);
     free(active_edges);
