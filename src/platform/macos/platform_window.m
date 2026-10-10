@@ -243,6 +243,7 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.modifiers = (uint32_t)event.modifierFlags;
     (void)platform_emit(self.owner, &value);
 }
+- (void)mouseDragged:(NSEvent *)event { [self mouseMoved:event]; }
 - (void)mouseDown:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_DOWN]; }
 - (void)mouseUp:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_UP]; }
 - (void)scrollWheel:(NSEvent *)event

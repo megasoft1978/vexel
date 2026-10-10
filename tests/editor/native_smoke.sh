@@ -25,6 +25,9 @@ SVG
 viewer_pid=$!
 sleep 1
 
+keys() {
+    osascript -e 'tell application "System Events" to tell process "svgworkbench" to '"$1"
+}
 osascript <<'APPLESCRIPT'
 tell application "System Events"
     tell process "svgworkbench"
@@ -32,23 +35,24 @@ tell application "System Events"
         delay 0.5
         set position of window 1 to {20, 40}
         delay 0.5
-        set {windowX, windowY} to position of window 1
-        set contentTop to windowY + 28
-        click at {windowX + 447, contentTop + 232}
-        drag from {windowX + 447, contentTop + 232} to {windowX + 468, contentTop + 253}
-        delay 1
-        drag from {windowX + 554, contentTop + 317} to {windowX + 565, contentTop + 328}
-        delay 1
-        keystroke "r"
-        drag from {windowX + 590, contentTop + 400} to {windowX + 640, contentTop + 450}
-        delay 0.4
-        keystroke "z" using {command down}
-        keystroke "s" using {command down}
-        delay 0.5
-        keystroke "q" using {command down}
     end tell
 end tell
 APPLESCRIPT
+mouse="$repo_root/tests/editor/mouse.py"
+window_x=20
+content_top=68
+python3 "$mouse" click $((window_x + 447)) $((content_top + 232))
+python3 "$mouse" drag $((window_x + 447)) $((content_top + 232)) $((window_x + 468)) $((content_top + 253))
+sleep 1
+python3 "$mouse" drag $((window_x + 554)) $((content_top + 317)) $((window_x + 565)) $((content_top + 328))
+sleep 1
+keys 'keystroke "r"'
+python3 "$mouse" drag $((window_x + 590)) $((content_top + 400)) $((window_x + 640)) $((content_top + 450))
+sleep 0.4
+keys 'keystroke "z" using {command down}'
+keys 'keystroke "s" using {command down}'
+sleep 0.5
+keys 'keystroke "q" using {command down}'
 
 if ! wait "$viewer_pid"; then
     cat "$log_file" >&2
@@ -56,6 +60,7 @@ if ! wait "$viewer_pid"; then
 fi
 viewer_pid=
 
+[ -z "${VEXEL_SMOKE_KEEP:-}" ] || cp "$document" "$VEXEL_SMOKE_KEEP"
 python3 - "$document" <<'PY'
 from pathlib import Path
 import re
