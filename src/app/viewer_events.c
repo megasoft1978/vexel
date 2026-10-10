@@ -401,6 +401,11 @@ static void update_pointer_status(viewer_app *app, const platform_event *event)
 
 void viewer_process_event(viewer_app *app, const platform_event *event)
 {
+    if (viewer_timeline_process_event(&app->timeline, event, app->editor,
+            app->width, app->height, app->backing_scale)) {
+        app->frame_dirty = true;
+        return;
+    }
     switch (event->type) {
         case PLATFORM_EVENT_RESIZE:
         case PLATFORM_EVENT_SCALE: {

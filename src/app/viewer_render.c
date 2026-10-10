@@ -26,6 +26,8 @@ static bool make_status_text(const viewer_app *app, char out[VIEWER_STATUS_CAP])
 
 bool viewer_compose_and_present(viewer_app *app)
 {
+    if (app->document_visible && viewer_timeline_tick(&app->timeline))
+        app->frame_dirty = true;
     if (!app->frame_dirty || app->frame == NULL || app->width == 0U || app->height == 0U)
         return true;
     viewer_frame_kind kind = app->path[0] == '\0' && !app->pending_open && app->job == NULL ?
@@ -41,12 +43,21 @@ bool viewer_compose_and_present(viewer_app *app)
         tile = &app->document.tile;
         navigation = &app->navigation;
     }
+    bool animation_tracks = kind == VIEWER_FRAME_DOCUMENT &&
+        viewer_timeline_track_count(&app->timeline) > 0U;
+    if (animation_tracks) {
+        const raster_tile *animated = viewer_timeline_prepare_frame(&app->timeline);
+        if (animated != NULL) tile = animated;
+        else animation_tracks = false;
+    }
     viewer_sharp_tile frame_tiles[VIEWER_SHARP_CACHE_ENTRIES];
     size_t tile_count = 0U;
-    for (size_t index = 0U; index < VIEWER_SHARP_CACHE_ENTRIES; index++) {
-        const viewer_sharp_tile *cached = &app->sharp_cache.entries[index].tile;
-        if (cached->rgba != NULL && cached->region.generation == app->generation)
-            frame_tiles[tile_count++] = *cached;
+    if (!animation_tracks) {
+        for (size_t index = 0U; index < VIEWER_SHARP_CACHE_ENTRIES; index++) {
+            const viewer_sharp_tile *cached = &app->sharp_cache.entries[index].tile;
+            if (cached->rgba != NULL && cached->region.generation == app->generation)
+                frame_tiles[tile_count++] = *cached;
+        }
     }
     char status[VIEWER_STATUS_CAP] = {0};
     bool has_status = make_status_text(app, status);
@@ -83,6 +94,10 @@ bool viewer_compose_and_present(viewer_app *app)
         viewer_editor_paint_canvas_overlay(app->editor, &app->document.shape,
             &app->navigation, app->navigation_canvas, app->frame,
             app->width, app->height, (size_t)app->width * 4U);
+    if (app->editor != NULL && kind == VIEWER_FRAME_DOCUMENT)
+        (void)viewer_timeline_paint(&app->timeline, app->editor, app->frame,
+            app->frame_bytes, app->width, app->height,
+            (size_t)app->width * 4U, app->backing_scale);
     app->frame_dirty = false;
     if (!platform_metal_present(app->window, app->frame, app->frame_bytes,
             app->width, app->height, app->diagnostic, sizeof(app->diagnostic))) {

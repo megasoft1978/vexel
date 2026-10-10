@@ -952,3 +952,25 @@ if(BUILD_TESTING)
     add_test(NAME viewer-png-export COMMAND viewer_export_test)
     add_test(NAME editor-canvas-fuzz COMMAND editor_canvas_fuzz_test)
 endif()
+
+# lane: w8-timeline
+target_sources(svgworkbench PRIVATE
+    src/app/viewer_timeline.c
+    src/app/viewer_timeline_ui.c)
+add_executable(viewer_timeline_test
+    tests/app/viewer_timeline_test.c
+    src/app/viewer_timeline.c
+    src/app/viewer_timeline_ui.c)
+target_include_directories(viewer_timeline_test PRIVATE src src/app)
+target_link_libraries(viewer_timeline_test PRIVATE vexel_shape vexel_editor_ui)
+set_target_properties(viewer_timeline_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_timeline_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_timeline_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_timeline_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-timeline COMMAND viewer_timeline_test)
+endif()
