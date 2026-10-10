@@ -1,14 +1,17 @@
 #!/bin/sh
 set -eu
 
+# lane: w2-bundle
 usage() {
-    printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help}'
+    printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help|doctor|bundle|dmg|e2e|soak}'
     printf '%s\n' '       ./dev run <file.svg>'
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
     printf '%s\n' 'usage: ./dev bench-corpus [--run|--check]'
     printf '%s\n' '       ./dev tsan'
+    printf '%s\n' '       ./dev e2e [--seed N] [--documents N] [--timeout-seconds N]'
+    printf '%s\n' '       ./dev soak [--minutes N] [--seed N] [--output PATH]'
     printf '%s\n' '       ./dev wo-help'
 }
 
@@ -18,7 +21,7 @@ if [ "$command_name" = run ]; then
         usage >&2
         exit 2
     fi
-elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ]; then
+elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ]; then
     usage >&2
     exit 2
 fi
@@ -28,7 +31,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help)
+    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|wo-help|doctor|bundle|dmg|e2e|soak)
         ;;
     *)
         usage >&2
@@ -49,6 +52,26 @@ case "$command_name" in
     wo-help)
         "$repo_root/scripts/wo-run.sh" --help
         "$repo_root/scripts/wo-verify.sh" --help
+        ;;
+    # lane: w2-bundle
+    doctor)
+        python3 scripts/doctor.py
+        ;;
+    bundle)
+        python3 packaging/vexel_packaging.py bundle
+        ;;
+    dmg)
+        python3 packaging/vexel_packaging.py dmg
+        ;;
+    e2e)
+        shift
+        cmake --preset mac-release
+        cmake --build --preset mac-release --target svgworkbench
+        python3 scripts/e2e_svg.py "$@"
+        ;;
+    soak)
+        shift
+        python3 scripts/soak.py "$@"
         ;;
     build)
         cmake --preset mac-debug
