@@ -67,6 +67,7 @@ typedef struct raster_shape_work_stats {
     uint64_t shape_pixels;
     uint64_t shape_samples;
     uint64_t fill_edge_tests;
+    uint64_t fill_interval_tests;
     uint64_t stroke_tests;
     uint64_t scanline_edge_entries;
     uint64_t shape_row_visits;
@@ -84,6 +85,12 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
                                double paint_x, double paint_y,
                                bool scalar_oracle_alpha,
                                uint8_t sample_rgba[4]);
+void raster_shape_paint_sample_inside(
+    const svg_shape_document *doc, size_t shape, const uint8_t fill_rgba[4],
+    const geom_edge *local_edges, const bool *dash_seams,
+    const raster_shape_dash_cache *dash_cache, double px, double py,
+    double paint_x, double paint_y, bool scalar_oracle_alpha,
+    uint8_t sample_rgba[4]);
 bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
                                   const geom_edge *local_edges,
                                   const bool *dash_seams,
