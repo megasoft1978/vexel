@@ -88,7 +88,8 @@ target_include_directories(vexel_ui_state PUBLIC src/ui src/svg/index src src/sv
 target_link_libraries(vexel_ui_state PUBLIC vexel_index)
 set_target_properties(vexel_ui_state PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 
-add_library(vexel_ui_core STATIC src/ui/ui_core.c src/ui/ui_widgets.c src/ui/ui_draw.c)
+add_library(vexel_ui_core STATIC src/ui/ui_core.c src/ui/ui_widgets.c src/ui/ui_draw.c
+    src/ui/ui_icons.c)
 target_include_directories(vexel_ui_core PUBLIC src src/ui src/raster src/svg/shape src/svg/css src/geom src/svg/xml src/base)
 target_link_libraries(vexel_ui_core PUBLIC vexel_shape)
 set_target_properties(vexel_ui_core PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -184,7 +185,8 @@ target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_stat
 
 # lane: w3-editor
 add_library(vexel_editor_ui STATIC src/app/viewer_editor.c
-    src/app/viewer_editor_view.c src/app/viewer_editor_input.c)
+    src/app/viewer_editor_view.c src/app/viewer_editor_input.c
+    src/app/viewer_chrome.c)
 target_include_directories(vexel_editor_ui PUBLIC src src/app src/ui src/document)
 target_link_libraries(vexel_editor_ui PUBLIC vexel_document vexel_ui_core)
 set_target_properties(vexel_editor_ui PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
@@ -601,4 +603,78 @@ if(BUILD_TESTING)
     set_tests_properties(platform-media-python PROPERTIES
         ENVIRONMENT "VEXEL_MEDIA_PROBE=$<TARGET_FILE:media_probe>"
         FIXTURES_REQUIRED platform-media-generated-fixtures)
+endif()
+
+# lane: w4-ui
+target_sources(vexel_editor_ui PRIVATE src/app/viewer_chrome_editor.c)
+add_library(vexel_platform_text_ui STATIC
+    src/platform/platform_text_ui.m
+    src/platform/macos/platform_accessibility.m)
+target_include_directories(vexel_platform_text_ui PUBLIC src)
+target_link_libraries(vexel_platform_text_ui PUBLIC vexel_platform_media ${COCOA_FRAMEWORK})
+set_source_files_properties(
+    src/platform/platform_text_ui.m
+    src/platform/macos/platform_accessibility.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(vexel_platform_text_ui PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO)
+target_link_libraries(vexel_editor_ui PUBLIC vexel_platform_text_ui)
+
+add_executable(viewer_chrome_layout_fuzz
+    tests/ui/viewer_chrome_layout_fuzz.c src/app/viewer_chrome.c)
+target_include_directories(viewer_chrome_layout_fuzz PRIVATE src src/app)
+set_target_properties(viewer_chrome_layout_fuzz PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+add_executable(ui_tokens_contrast_test tests/ui/ui_tokens_contrast_test.c)
+target_link_libraries(ui_tokens_contrast_test PRIVATE vexel_ui_core m)
+set_target_properties(ui_tokens_contrast_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+add_executable(viewer_chrome_test tests/editor/viewer_chrome_test.c)
+target_include_directories(viewer_chrome_test PRIVATE src/app)
+target_link_libraries(viewer_chrome_test PRIVATE vexel_editor_ui)
+set_target_properties(viewer_chrome_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+add_executable(platform_text_ui_test tests/ui/platform_text_ui_test.c)
+target_link_libraries(platform_text_ui_test PRIVATE vexel_platform_text_ui)
+set_target_properties(platform_text_ui_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+add_executable(viewer_chrome_render src/app/viewer_chrome_render.c)
+target_include_directories(viewer_chrome_render PRIVATE src/app)
+target_link_libraries(viewer_chrome_render PRIVATE vexel_editor_ui)
+set_target_properties(viewer_chrome_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+foreach(w4_ui_target vexel_platform_text_ui viewer_chrome_layout_fuzz
+        ui_tokens_contrast_test viewer_chrome_test platform_text_ui_test
+        viewer_chrome_render)
+    target_compile_options(${w4_ui_target} PRIVATE ${VEXEL_STRICT_WARNINGS})
+endforeach()
+
+if(VEXEL_SANITIZER)
+    foreach(w4_ui_target vexel_platform_text_ui viewer_chrome_layout_fuzz
+            ui_tokens_contrast_test viewer_chrome_test platform_text_ui_test
+            viewer_chrome_render)
+        target_compile_options(${w4_ui_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+        target_link_options(${w4_ui_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    endforeach()
+endif()
+
+if(BUILD_TESTING)
+    add_test(NAME ui-token-contrast COMMAND ui_tokens_contrast_test)
+    add_test(NAME viewer-chrome-layout-fuzz COMMAND viewer_chrome_layout_fuzz)
+    add_test(NAME viewer-chrome-style COMMAND viewer_chrome_test)
+    add_test(NAME platform-text-ui COMMAND platform_text_ui_test)
+    add_test(NAME editor-style-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/ui/verify_style_goldens.py"
+        --binary $<TARGET_FILE:viewer_chrome_render>)
 endif()

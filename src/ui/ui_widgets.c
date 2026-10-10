@@ -19,6 +19,7 @@ static bool ui_widget_add(ui_tree *tree, const ui_widget_spec *spec, ui_role rol
     node.label_len = spec->label_len;
     node.value = spec->value;
     node.value_len = spec->value_len;
+    node.icon = spec->icon;
     return ui_tree_add(tree, &node);
 }
 

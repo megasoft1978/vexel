@@ -1,22 +1,19 @@
 # UI lane
 
-The editor chrome demo is composed from a retained widget tree and uses
-logical pixels for layout. Interactive roles own bounded UTF-8 labels/values;
-focus traversal wraps through enabled buttons, checkboxes, text fields, and
-sliders. Command bindings are unique key/modifier pairs. Semantic snapshots
-copy stable node and parent IDs, role, labels, values, and state flags. The
-current golden fixture checks deterministic 1280x800 screenshots for dark and
-light themes. Regenerate only after visual review with
-`python3 tests/ui/verify_chrome.py --update`.
+See [the w4-ui style implementation](../lanes/ui-style.md) for the production
+editor palette, layout, CoreText path, accessibility bridge, computed contrast
+report, new 1×/2× style goldens, and remaining integration limits.
+
+The retained tree keeps stable node and parent IDs, full UTF-8 semantic text,
+and focus/selection/invalid state. Legacy demo fixtures remain on the scalar
+path and are kept separate from the modern macOS editor rendering path.
 
 M6-02 adds widget constructors for buttons, checkboxes, text fields, sliders, and
 rows. Tab/Shift-Tab move focus through enabled interactive controls; Enter/Space
 activate commands, and Space toggles checkboxes. Stable semantic snapshots copy
 node IDs, parent IDs, roles, labels, values, and disabled/checked/focused states.
 
-The editor composes the toolbar, scrollable structure outline, inspector
-attribute rows, text editor, and status bar from the same retained tree. Its
-semantic snapshot is stable for a given document and viewport. The editor's
-scalar paint path writes into the viewer's existing frame buffer and uses
-bounded caller storage; dark and light 1280x800 editor chrome goldens live in
-`tests/editor/chrome-golden/`.
+The editor composes its toolbar, virtualized structure outline, inspector
+attribute rows, text field, and status bar from the retained tree. The existing
+`tests/editor/chrome-golden/` screenshots remain unchanged; new style fixtures
+live under `tests/ui/style-golden/`.

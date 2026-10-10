@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "method": "WCAG relative luminance contrast ratio from sRGB token pairs",
+  "normal_text_pairs": {
+    "light_primary_on_panel": {"ratio": 15.059, "research_target": 14.0, "pass": true},
+    "light_secondary_on_raised_panel": {"ratio": 5.555, "research_target": 5.5, "pass": true},
+    "dark_primary_on_panel": {"ratio": 14.115, "research_target": 14.0, "pass": true},
+    "dark_secondary_on_raised_panel": {"ratio": 7.584, "research_target": 5.5, "pass": true}
+  },
+  "increase_contrast_secondary_pairs": {
+    "light_secondary_on_raised_panel": {"ratio": 8.387, "greater_than_normal": true},
+    "dark_secondary_on_raised_panel": {"ratio": 10.657, "greater_than_normal": true}
+  },
+  "icon_mask_hashes": {
+    "dark_1x": "3380fc5fdcded516",
+    "light_1x": "3380fc5fdcded516",
+    "dark_2x": "2f20022cc0d68e4e"
+  },
+  "reproduce": "build/mac-debug/bin/ui_tokens_contrast_test"
+}
