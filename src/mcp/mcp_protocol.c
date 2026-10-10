@@ -53,8 +53,9 @@ static bool append_response_prefix(mcp_json_buffer *out, const mcp_json_doc *doc
 static bool append_server_meta(mcp_json_buffer *out, bool modern)
 {
     if (!modern) return true;
-    return mcp_json_buffer_literal(out,
-        ",\"_meta\":{\"io.modelcontextprotocol/serverInfo\":{\"name\":\"Vexel\",\"version\":\"0.1.0\"}}" );
+    bool empty_body = out->length > 0U && out->data[out->length - 1U] == '{';
+    return mcp_json_buffer_literal(out, empty_body ? "" : ",") && mcp_json_buffer_literal(out,
+        "\"_meta\":{\"io.modelcontextprotocol/serverInfo\":{\"name\":\"Vexel\",\"version\":\"0.1.0\"}}" );
 }
 
 static bool append_response_suffix(mcp_json_buffer *out, bool modern)
