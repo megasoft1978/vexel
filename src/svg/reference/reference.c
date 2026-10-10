@@ -232,12 +232,15 @@ bool svg_reference_attributes_supported(base_bytes source,
         svg_xml_span n = tokens[i].local_name;
         bool common = name_is(source,n,"fill") || name_is(source,n,"fill-rule") ||
             name_is(source,n,"transform") || name_is(source,n,"clip-path") ||
+            name_is(source,n,"fill-opacity") || name_is(source,n,"stroke-opacity") ||
+            name_is(source,n,"opacity") || name_is(source,n,"visibility") ||
+            name_is(source,n,"display") || name_is(source,n,"color") ||
             name_is(source,n,"stroke") || name_is(source,n,"stroke-width") ||
             name_is(source,n,"stroke-linecap") || name_is(source,n,"stroke-linejoin") ||
             name_is(source,n,"stroke-miterlimit") || name_is(source,n,"stroke-dasharray") ||
             name_is(source,n,"stroke-dashoffset");
         bool shape = name_is(source,kind,"rect") ?
-            (name_is(source,n,"x")||name_is(source,n,"y")||name_is(source,n,"width")||name_is(source,n,"height")) :
+            (name_is(source,n,"x")||name_is(source,n,"y")||name_is(source,n,"width")||name_is(source,n,"height")||name_is(source,n,"rx")||name_is(source,n,"ry")) :
             name_is(source,kind,"path") ? name_is(source,n,"d") :
             name_is(source,kind,"circle") ? (name_is(source,n,"cx")||name_is(source,n,"cy")||name_is(source,n,"r")) :
             name_is(source,kind,"ellipse") ? (name_is(source,n,"cx")||name_is(source,n,"cy")||name_is(source,n,"rx")||name_is(source,n,"ry")) :
@@ -248,8 +251,14 @@ bool svg_reference_attributes_supported(base_bytes source,
         bool ok = root ? (metadata || common || name_is(source,n,"xmlns") ||
                           namespace_attribute || name_is(source,n,"version") ||
                           name_is(source,n,"width") || name_is(source,n,"height") ||
-                          name_is(source,n,"viewBox")) :
+                          name_is(source,n,"viewBox") ||
+                          name_is(source,n,"preserveAspectRatio")) :
             name_is(source,kind,"g") ? (metadata || common) :
+            name_is(source,kind,"svg") ? (metadata || common ||
+                name_is(source,n,"x") || name_is(source,n,"y") ||
+                name_is(source,n,"width") || name_is(source,n,"height") ||
+                name_is(source,n,"viewBox") ||
+                name_is(source,n,"preserveAspectRatio")) :
             (metadata || common || shape);
         if (!ok) return false;
     }
@@ -276,6 +285,10 @@ bool svg_reference_use_attributes_supported(base_bytes source,
             name_is(source,name,"width") || name_is(source,name,"height") ||
             name_is(source,name,"preserveAspectRatio") ||
             name_is(source,name,"fill") || name_is(source,name,"fill-rule") ||
+            name_is(source,name,"fill-opacity") ||
+            name_is(source,name,"stroke-opacity") ||
+            name_is(source,name,"opacity") || name_is(source,name,"visibility") ||
+            name_is(source,name,"display") || name_is(source,name,"color") ||
             name_is(source,name,"transform") || name_is(source,name,"clip-path") ||
             name_is(source,name,"stroke") || name_is(source,name,"stroke-width") ||
             name_is(source,name,"stroke-linecap") || name_is(source,name,"stroke-linejoin") ||

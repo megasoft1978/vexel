@@ -30,6 +30,19 @@ bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
                                   const bool *dash_seams, double px, double py);
 bool raster_shape_dash_joins_closed_seam(const svg_shape_document *doc,
                                          size_t shape, const geom_edge *edges);
+bool raster_shape_dash_subpath_joins_closed_seam(
+    const svg_shape_document *doc, size_t shape, size_t subpath,
+    const geom_edge *edges);
+bool raster_shape_render_flat(const svg_shape_document *document,
+                              raster_tile *out_tile,
+                              svg_shape_diagnostic *diagnostic,
+                              raster_shape_work_stats *work,
+                              bool scalar_oracle_alpha);
+bool raster_shape_render_grouped(const svg_shape_document *document,
+                                 raster_tile *out_tile,
+                                 svg_shape_diagnostic *diagnostic,
+                                 raster_shape_work_stats *work,
+                                 bool scalar_oracle_alpha);
 
 /* Internal measurement entry point used by deterministic tests and benchmarks. */
 bool raster_shape_render_with_stats(const svg_shape_document *document,

@@ -31,6 +31,8 @@ bool svg_clip_local_bounds(const svg_shape_document *document,
 bool svg_clip_apply_group(svg_shape_document *document,
                           size_t first_shape, size_t end_shape,
                           svg_shape_clip *clip);
+svg_shape_clip *svg_clip_create_rect(geom_point p0, geom_point p1,
+                                    geom_point p2, geom_point p3);
 bool svg_clip_contains(const svg_shape_clip *clip, double x, double y);
 /* Visits every filled child edge in this clip and its parent chain, mapped back
  * into the painted document's user space. mapping_valid is false when a clip

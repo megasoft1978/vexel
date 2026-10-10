@@ -66,12 +66,13 @@ static bool join_hit(geom_point previous, geom_point vertex, geom_point next,
     return in_triangle(px,py,vertex,p1,miter)||in_triangle(px,py,vertex,miter,p2);
 }
 
-bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
+static bool stroke_range_contains(const svg_shape_document *doc, size_t shape,
+                                  size_t first, size_t count, bool closed,
+                                  bool implicit_close, bool dash_seam,
                                   const geom_edge *local_edges,
-                                  const bool *dash_seams, double px, double py)
+                                  double px, double py)
 {
     const svg_shape_stroke *stroke = &doc->strokes[shape];
-    size_t first = doc->shape_edge_start[shape], count = doc->shape_edge_count[shape];
     if (stroke->rgba[3] == 0U || stroke->width <= 0.0 || count == 0U) return false;
     if (local_edges == NULL) return false;
     geom_affine inverse = doc->shape_stroke_inverse[shape];
@@ -80,8 +81,8 @@ bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
     px = local_sample.x;
     py = local_sample.y;
     double radius = stroke->width * 0.5;
-    bool closed = doc->shape_stroke_closed[shape];
-    if (!closed && doc->shape_filled[shape] && count > 0U) count--;
+    if (!closed && implicit_close && count > 0U) count--;
+    if (count == 0U) return false;
     size_t pattern_count = stroke->dash_count;
     if (pattern_count == 0U) {
         for (size_t i = 0; i < count; i++) {
@@ -110,7 +111,7 @@ bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
         pattern = (pattern + 1U) % expanded_count;
     }
     double remain = stroke->dash[pattern % pattern_count] - phase;
-    bool join_seam = closed && dash_seams != NULL && dash_seams[shape];
+    bool join_seam = closed && dash_seam;
     bool joins_from_previous = false;
     for (size_t i = 0; i < count; i++) {
         geom_edge edge = local_edges[first+i];
@@ -156,29 +157,55 @@ bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
     return false;
 }
 
-bool raster_shape_dash_joins_closed_seam(const svg_shape_document *doc, size_t shape,
-                                         const geom_edge *edges)
+bool raster_shape_stroke_contains(const svg_shape_document *doc, size_t shape,
+                                  const geom_edge *local_edges,
+                                  const bool *dash_seams, double px, double py)
 {
-    const svg_shape_stroke *stroke = &doc->strokes[shape];
-    size_t count = stroke->dash_count;
-    if (count == 0U || !doc->shape_stroke_closed[shape]) return false;
-    size_t expanded = count + (count & 1U ? count : 0U);
+    size_t subpath_count = doc->shape_subpath_count == NULL ? 0U :
+                           doc->shape_subpath_count[shape];
+    if (subpath_count != 0U) {
+        size_t first_subpath = doc->shape_subpath_start[shape];
+        for (size_t i = 0U; i < subpath_count; ++i) {
+            size_t subpath_index = first_subpath + i;
+            const svg_shape_path_subpath *path = &doc->path_subpaths[subpath_index];
+            bool seam = dash_seams != NULL &&
+                        dash_seams[doc->shape_count + subpath_index];
+            if (stroke_range_contains(doc, shape, path->first_edge,
+                                      path->edge_count, path->closed, true,
+                                      seam, local_edges, px, py)) return true;
+        }
+        return false;
+    }
+    bool seam = dash_seams != NULL && dash_seams[shape];
+    return stroke_range_contains(doc, shape, doc->shape_edge_start[shape],
+        doc->shape_edge_count[shape], doc->shape_stroke_closed[shape],
+        doc->shape_filled[shape], seam,
+        local_edges, px, py);
+}
+
+static bool dash_range_joins_seam(const svg_shape_stroke *stroke,
+                                  const geom_edge *edges, size_t first,
+                                  size_t count)
+{
+    if (stroke->dash_count == 0U || count == 0U) return false;
+    size_t expanded = stroke->dash_count +
+        (stroke->dash_count & 1U ? stroke->dash_count : 0U);
     double period = 0.0;
-    for (size_t i = 0U; i < expanded; i++) period += stroke->dash[i % count];
+    for (size_t i = 0U; i < expanded; ++i)
+        period += stroke->dash[i % stroke->dash_count];
     if (!isfinite(period) || period <= 0.0) return false;
     double phase = fmod(stroke->dash_offset, period);
     if (phase < 0.0) phase += period;
     size_t pattern = 0U;
-    while (phase >= stroke->dash[pattern % count]) {
-        phase -= stroke->dash[pattern % count];
+    while (phase >= stroke->dash[pattern % stroke->dash_count]) {
+        phase -= stroke->dash[pattern % stroke->dash_count];
         pattern = (pattern + 1U) % expanded;
     }
     bool starts_on = (pattern & 1U) == 0U;
-    double remain = stroke->dash[pattern % count] - phase;
+    double remain = stroke->dash[pattern % stroke->dash_count] - phase;
     bool ends_on = false;
-    size_t first = doc->shape_edge_start[shape];
-    for (size_t i = 0U; i < doc->shape_edge_count[shape]; i++) {
-        geom_edge edge = edges[first+i];
+    for (size_t i = 0U; i < count; ++i) {
+        geom_edge edge = edges[first + i];
         double length = hypot(edge.b.x-edge.a.x, edge.b.y-edge.a.y);
         while (length > 0.0) {
             double step = fmin(remain, length);
@@ -187,9 +214,40 @@ bool raster_shape_dash_joins_closed_seam(const svg_shape_document *doc, size_t s
             remain -= step;
             if (remain <= 1e-12) {
                 pattern = (pattern + 1U) % expanded;
-                remain = stroke->dash[pattern % count];
+                remain = stroke->dash[pattern % stroke->dash_count];
             }
         }
     }
     return starts_on && ends_on;
+}
+
+bool raster_shape_dash_subpath_joins_closed_seam(
+    const svg_shape_document *doc, size_t shape, size_t subpath,
+    const geom_edge *edges)
+{
+    const svg_shape_stroke *stroke = &doc->strokes[shape];
+    if (doc->shape_subpath_count == NULL ||
+        subpath >= doc->shape_subpath_count[shape]) return false;
+    const svg_shape_path_subpath *path = &doc->path_subpaths[
+        doc->shape_subpath_start[shape] + subpath];
+    if (!path->closed) return false;
+    return dash_range_joins_seam(stroke, edges, path->first_edge,
+                                 path->edge_count);
+}
+
+bool raster_shape_dash_joins_closed_seam(const svg_shape_document *doc, size_t shape,
+                                         const geom_edge *edges)
+{
+    const svg_shape_stroke *stroke = &doc->strokes[shape];
+    size_t subpath_count = doc->shape_subpath_count == NULL ? 0U :
+                           doc->shape_subpath_count[shape];
+    if (subpath_count != 0U) {
+        for (size_t i = 0U; i < subpath_count; ++i)
+            if (raster_shape_dash_subpath_joins_closed_seam(doc, shape, i, edges))
+                return true;
+        return false;
+    }
+    if (!doc->shape_stroke_closed[shape]) return false;
+    return dash_range_joins_seam(stroke, edges, doc->shape_edge_start[shape],
+                                 doc->shape_edge_count[shape]);
 }

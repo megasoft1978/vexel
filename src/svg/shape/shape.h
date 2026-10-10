@@ -25,6 +25,25 @@ typedef struct svg_shape_stroke {
     svg_shape_linecap cap;
     svg_shape_linejoin join;
 } svg_shape_stroke;
+typedef struct svg_shape_path_subpath {
+    size_t first_edge;
+    size_t edge_count; /* includes the implicit fill-closing edge */
+    bool closed;       /* whether closepath explicitly closes the stroke path */
+} svg_shape_path_subpath;
+typedef struct svg_shape_opacity_group {
+    size_t first_shape;
+    size_t end_shape;
+    size_t parent;
+    double opacity;
+} svg_shape_opacity_group;
+#define SVG_SHAPE_NO_GROUP SIZE_MAX
+typedef struct svg_shape_aspect {
+    double align_x;
+    double align_y;
+    bool none;
+    bool slice;
+    bool set;
+} svg_shape_aspect;
 
 typedef struct svg_shape_paint svg_shape_paint;
 typedef struct svg_paint_stop svg_paint_stop;
@@ -47,6 +66,7 @@ typedef struct svg_shape_document {
     uint32_t width;
     uint32_t height;
     double view_x, view_y, view_width, view_height;
+    svg_shape_aspect preserve_aspect;
     size_t edge_count;
     geom_edge *edges;
     uint8_t *colors; /* one owned RGBA color per edge */
@@ -57,6 +77,12 @@ typedef struct svg_shape_document {
     bool *shape_stroke_closed;
     size_t *shape_edge_start;
     size_t *shape_edge_count;
+    size_t *shape_subpath_start;
+    size_t *shape_subpath_count;
+    svg_shape_path_subpath *path_subpaths;
+    size_t path_subpath_count;
+    svg_shape_opacity_group *opacity_groups;
+    size_t opacity_group_count;
     geom_affine *shape_stroke_inverse;
     svg_shape_stroke *strokes;
     svg_shape_paint *paints;

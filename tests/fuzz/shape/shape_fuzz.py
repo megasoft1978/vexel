@@ -47,6 +47,13 @@ def main():
     nonzero_renders = int(fields.get("nonzero_renders", "0"))
     stroke_cases = int(fields.get("stroke_cases", "0"))
     stroke_renders = int(fields.get("stroke_renders", "0"))
+    feature_names = ("path_stroke", "rounded_rect", "colors", "transforms", "opacity",
+                     "nested_viewport", "gradients", "css_selectors", "length_units")
+    feature_coverage = {
+        name: {"cases": int(fields.get(f"feature_{name}_cases", "0")),
+               "renders": int(fields.get(f"feature_{name}_renders", "0"))}
+        for name in feature_names
+    }
     if cases < 1_000_000 and campaign_seconds < args.duration:
         raise RuntimeError("campaign did not reach either required floor")
     if cap_exhaustion != 1 or cap_case_bytes < 1 or cap_case_bytes > 16 * 1024 * 1024:
@@ -57,6 +64,9 @@ def main():
         raise RuntimeError("fractional geometry and both fill rules did not reach the rasterizer")
     if stroke_cases == 0 or stroke_renders == 0:
         raise RuntimeError("stroke cases did not reach the rasterizer")
+    if any(values["cases"] == 0 or values["renders"] == 0
+           for values in feature_coverage.values()):
+        raise RuntimeError("one or more new SVG feature classes missed parse/render coverage")
     compiler = subprocess.run(["clang", "--version"], check=True, capture_output=True,
                               text=True).stdout.splitlines()[0]
     source_revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
@@ -78,6 +88,7 @@ def main():
               "nonzero_cases": nonzero_cases, "fractional_renders": fractional_renders,
               "evenodd_renders": evenodd_renders, "nonzero_renders": nonzero_renders,
               "stroke_cases": stroke_cases, "stroke_renders": stroke_renders,
+              "feature_coverage": feature_coverage,
               "input_max_bytes": max(4096, cap_case_bytes),
               "crashes": 0, "sanitizer_reports": 0,
               "invariant_failures": 0, "result": "pass"}

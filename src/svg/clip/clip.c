@@ -403,3 +403,34 @@ bool svg_clip_apply_group(svg_shape_document *document,
     }
     return true;
 }
+
+svg_shape_clip *svg_clip_create_rect(geom_point p0, geom_point p1,
+                                    geom_point p2, geom_point p3)
+{
+    const geom_point points[4] = {p0, p1, p2, p3};
+    for (size_t i = 0U; i < 4U; ++i)
+        if (!geom_finite_point(points[i])) return NULL;
+    svg_shape_clip *clip = svg_shape_calloc(1U, sizeof(*clip));
+    if (clip == NULL) return NULL;
+    svg_shape_document *geometry = &clip->geometry;
+    geometry->edges = svg_shape_calloc(4U, sizeof(*geometry->edges));
+    geometry->shape_evenodd = svg_shape_calloc(1U, sizeof(*geometry->shape_evenodd));
+    geometry->shape_filled = svg_shape_calloc(1U, sizeof(*geometry->shape_filled));
+    geometry->shape_edge_start = svg_shape_calloc(1U, sizeof(*geometry->shape_edge_start));
+    geometry->shape_edge_count = svg_shape_calloc(1U, sizeof(*geometry->shape_edge_count));
+    if (geometry->edges == NULL || geometry->shape_evenodd == NULL ||
+        geometry->shape_filled == NULL || geometry->shape_edge_start == NULL ||
+        geometry->shape_edge_count == NULL) {
+        svg_clip_destroy(clip);
+        return NULL;
+    }
+    for (size_t i = 0U; i < 4U; ++i)
+        geometry->edges[i] = (geom_edge){points[i], points[(i + 1U) % 4U]};
+    geometry->shape_count = 1U;
+    geometry->edge_count = 4U;
+    geometry->shape_edge_count[0] = 4U;
+    geometry->shape_filled[0] = true;
+    clip->references = 1U;
+    clip->user_inverse = geom_affine_identity();
+    return clip;
+}

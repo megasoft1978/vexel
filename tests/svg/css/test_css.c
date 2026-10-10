@@ -1,8 +1,69 @@
 #include "css.h"
+#include "color.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+static bool color_is(const char *value, const uint8_t expected[4]) {
+    base_bytes source = {(const uint8_t *)value, strlen(value)};
+    uint8_t actual[4] = {0U};
+    return svg_css_parse_color(source, (svg_xml_span){0U, source.len}, actual) &&
+           memcmp(actual, expected, sizeof(actual)) == 0;
+}
+
+static bool color_parser_checks(void) {
+    static const char names[] =
+        "aliceblue antiquewhite aqua aquamarine azure beige bisque black "
+        "blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse "
+        "chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan "
+        "darkgoldenrod darkgray darkgreen darkgrey darkkhaki darkmagenta "
+        "darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen "
+        "darkslateblue darkslategray darkslategrey darkturquoise darkviolet "
+        "deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite "
+        "forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green "
+        "greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender "
+        "lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan "
+        "lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon "
+        "lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue "
+        "lightyellow lime limegreen linen magenta maroon mediumaquamarine "
+        "mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue "
+        "mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream "
+        "mistyrose moccasin navajowhite navy oldlace olive olivedrab orange "
+        "orangered orchid palegoldenrod palegreen paleturquoise palevioletred "
+        "papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red "
+        "rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna "
+        "silver skyblue slateblue slategray slategrey snow springgreen steelblue "
+        "tan teal thistle tomato turquoise violet wheat white whitesmoke yellow "
+        "yellowgreen";
+    base_bytes source = {(const uint8_t *)names, sizeof(names) - 1U};
+    size_t count = 0U, offset = 0U;
+    while (offset < source.len) {
+        while (offset < source.len && source.ptr[offset] == ' ') offset++;
+        if (offset == source.len) break;
+        size_t start = offset;
+        while (offset < source.len && source.ptr[offset] != ' ') offset++;
+        uint8_t rgba[4];
+        if (!svg_css_parse_color(source, (svg_xml_span){start, offset - start}, rgba) ||
+            rgba[3] != 255U) return false;
+        count++;
+    }
+    static const uint8_t red[4] = {255U, 0U, 0U, 255U};
+    static const uint8_t half_blue[4] = {0U, 0U, 255U, 128U};
+    static const uint8_t lime[4] = {0U, 255U, 0U, 255U};
+    static const uint8_t quarter_blue[4] = {0U, 0U, 255U, 64U};
+    static const uint8_t short_alpha[4] = {0U, 255U, 0U, 136U};
+    static const uint8_t long_alpha[4] = {51U, 102U, 153U, 128U};
+    static const uint8_t clear[4] = {0U, 0U, 0U, 0U};
+    return count == 148U && color_is(" ReBeccAPurple ", (uint8_t[4]){102U, 51U, 153U, 255U}) &&
+        color_is("rgb(100% 0% 0%)", red) &&
+        color_is("rgba(0, 0, 255, 0.5)", half_blue) &&
+        color_is("hsl(120,100%,50%)", lime) &&
+        color_is("hsla(240 100% 50% / 25%)", quarter_blue) &&
+        color_is("#0f08", short_alpha) && color_is("#33669980", long_alpha) &&
+        color_is("transparent", clear) &&
+        !color_is("currentColor", clear) && !color_is("#12", clear);
+}
 
 static bool check_value(base_bytes source, const svg_css_paint *paint, svg_css_property property,
                         const char *expected) {
@@ -21,10 +82,13 @@ int main(void) {
         "blue /* trailing */; "
         "stroke-width: 2; stroke-linecap: round; stroke-linejoin: bevel; "
         "stroke-miterlimit: 5; stroke-dasharray: 2 3; stroke-dashoffset: 4; }"
+        "svg g rect.descendant { clip-path:none; stop-color:currentColor; "
+        "stop-opacity:1; fill-opacity:50%; stroke-opacity:.25; opacity:.75; "
+        "visibility:hidden; display:inline; color:hsl(240,100%,50%); }"
         "#target.paint { fill: green !important; } .other { fill: white; }"
-        "</style><rect id=\"target\" class=\"paint otherish\" fill=\"white\" "
+        "</style><g><rect id=\"target\" class=\"paint otherish descendant\" fill=\"white\" "
         "style=\"fill: blue; stroke-dashoffset: 7\" width=\"2\" "
-        "height=\"2\"/></svg>";
+        "height=\"2\"/></g></svg>";
     base_bytes source = {(const uint8_t *)text, sizeof(text) - 1U};
     size_t capacity = source.len / 2U + 2U;
     svg_xml_token *tokens = calloc(capacity, sizeof(*tokens));
@@ -58,7 +122,16 @@ int main(void) {
          check_value(source, &computed, SVG_CSS_STROKE_LINEJOIN, "bevel") &&
          check_value(source, &computed, SVG_CSS_STROKE_MITERLIMIT, "5") &&
          check_value(source, &computed, SVG_CSS_STROKE_DASHARRAY, "2 3") &&
-         check_value(source, &computed, SVG_CSS_STROKE_DASHOFFSET, "7");
+         check_value(source, &computed, SVG_CSS_STROKE_DASHOFFSET, "7") &&
+         check_value(source, &computed, SVG_CSS_CLIP_PATH, "none") &&
+         check_value(source, &computed, SVG_CSS_STOP_COLOR, "currentColor") &&
+         check_value(source, &computed, SVG_CSS_STOP_OPACITY, "1") &&
+         check_value(source, &computed, SVG_CSS_FILL_OPACITY, "50%") &&
+         check_value(source, &computed, SVG_CSS_STROKE_OPACITY, ".25") &&
+         check_value(source, &computed, SVG_CSS_OPACITY, ".75") &&
+         check_value(source, &computed, SVG_CSS_VISIBILITY, "hidden") &&
+         check_value(source, &computed, SVG_CSS_DISPLAY, "inline") &&
+         check_value(source, &computed, SVG_CSS_COLOR, "hsl(240,100%,50%)");
     svg_css_paint initial = svg_css_initial_paint();
     for (size_t i = 0; i < SVG_CSS_PROPERTY_COUNT; i++)
         ok = ok && !initial.values[i].present;
@@ -68,6 +141,10 @@ int main(void) {
         fprintf(stderr, "CSS cascade/property matrix failed\n");
         return 4;
     }
-    puts("CSS bounded cascade and nine-property matrix passed");
+    if (!color_parser_checks()) {
+        fprintf(stderr, "CSS named and functional color checks failed\n");
+        return 5;
+    }
+    puts("CSS bounded cascade, descendant selectors, 18 properties, and colors passed");
     return 0;
 }
