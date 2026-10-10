@@ -283,6 +283,8 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.logical_x = (int32_t)point.x;
     value.logical_y = (int32_t)(NSHeight(self.bounds) - point.y);
     value.button = (uint8_t)event.buttonNumber;
+    NSInteger clicks = event.clickCount;
+    value.click_count = clicks < 0 ? 0U : clicks > 255 ? 255U : (uint8_t)clicks;
     value.modifiers = platform_modifiers(event.modifierFlags);
     (void)platform_emit(self.owner, &value);
 }

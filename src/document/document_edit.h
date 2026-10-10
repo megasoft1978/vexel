@@ -125,6 +125,19 @@ document_edit_error document_edit_insert_template(document_edit *edit,
  * destination parent's context. The returned handle identifies that element. */
 document_edit_error document_edit_insert_xml_fragment(document_edit *edit,
     document_handle parent, base_bytes fragment, document_handle *out_inserted);
+/* Insert one text element with escaped attributes and text in a single undo step. */
+document_edit_error document_edit_insert_text_element(document_edit *edit,
+    document_handle parent, const document_edit_template_attribute *attributes,
+    size_t attribute_count, base_bytes text, document_handle *out_inserted);
+/* Replace a bounded contiguous sequence of child bytes under parent with one
+ * validated XML fragment. Bytes outside region remain unchanged, and the
+ * replacement is recorded as one undoable command. */
+document_edit_error document_edit_replace_xml_region(document_edit *edit,
+    document_handle parent, document_source_span region, base_bytes replacement);
+/* Replace one small raw source span, validating the complete resulting XML.
+ * Used for byte-local edits such as changing retained path number tokens. */
+document_edit_error document_edit_replace_source_span(document_edit *edit,
+    document_source_span span, base_bytes replacement);
 
 document_edit_error document_edit_undo(document_edit *edit);
 document_edit_error document_edit_redo(document_edit *edit);

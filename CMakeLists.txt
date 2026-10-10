@@ -746,7 +746,6 @@ if(BUILD_TESTING)
 endif()
 
 # lane: w5-editor
-target_sources(svgworkbench PRIVATE src/app/viewer_canvas_geometry.c)
 target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_editor_canvas.c
     src/app/viewer_editor_overlay.c)
@@ -788,4 +787,79 @@ if(BUILD_TESTING)
         "${CMAKE_SOURCE_DIR}/tests/editor/verify_selection_goldens.py"
         --binary $<TARGET_FILE:editor_selection_render>)
     add_test(NAME viewer-canvas-geometry COMMAND viewer_canvas_geometry_test)
+endif()
+
+# lane: w6-editor2
+target_sources(vexel_document PRIVATE
+    src/document/document_edit_region.c
+    src/document/document_edit_text_insert.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_canvas_draw.c
+    src/app/viewer_editor_transform.c
+    src/app/viewer_editor_selection.c
+    src/app/viewer_editor_path.c
+    src/app/viewer_editor_path_nodes.c
+    src/app/viewer_editor_clipboard.c
+    src/app/viewer_editor_text.c
+    src/app/viewer_editor_snap.c)
+target_sources(svgworkbench PRIVATE
+    src/app/viewer_canvas_geometry.c
+    src/app/viewer_export.c
+    src/platform/macos/platform_clipboard.m)
+set_source_files_properties(src/platform/macos/platform_clipboard.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+
+add_library(vexel_platform_png STATIC src/platform/macos/platform_png.m)
+target_include_directories(vexel_platform_png PUBLIC src/platform/macos)
+target_link_libraries(vexel_platform_png PUBLIC ${COREGRAPHICS_FRAMEWORK}
+    ${IMAGEIO_FRAMEWORK})
+set_target_properties(vexel_platform_png PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO)
+target_compile_options(vexel_platform_png PRIVATE ${VEXEL_STRICT_WARNINGS})
+target_link_libraries(svgworkbench PRIVATE vexel_platform_dialog
+    vexel_platform_media vexel_platform_png)
+
+add_executable(platform_png_test tests/platform/platform_png_test.c)
+target_include_directories(platform_png_test PRIVATE src)
+target_link_libraries(platform_png_test PRIVATE vexel_platform_png vexel_platform_media)
+set_target_properties(platform_png_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(platform_png_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(viewer_export_test
+    tests/platform/viewer_export_test.c
+    src/app/viewer_export.c
+    src/app/media_providers.c
+    src/platform/macos/platform_clipboard.m)
+target_include_directories(viewer_export_test PRIVATE src src/app src/platform/macos)
+target_link_libraries(viewer_export_test PRIVATE vexel_editor_ui vexel_document
+    vexel_shape vexel_platform_media vexel_platform_png vexel_platform_dialog
+    ${COCOA_FRAMEWORK})
+target_compile_definitions(viewer_export_test PRIVATE PLATFORM_DIALOG_TESTING)
+set_target_properties(viewer_export_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_export_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(editor_canvas_fuzz_test tests/editor/editor_canvas_fuzz_test.c)
+target_link_libraries(editor_canvas_fuzz_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_canvas_fuzz_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_canvas_fuzz_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(vexel_platform_png PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_platform_png PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(platform_png_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(platform_png_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(viewer_export_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_export_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_canvas_fuzz_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_canvas_fuzz_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME platform-png COMMAND platform_png_test)
+    add_test(NAME viewer-png-export COMMAND viewer_export_test)
+    add_test(NAME editor-canvas-fuzz COMMAND editor_canvas_fuzz_test)
 endif()

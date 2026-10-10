@@ -173,9 +173,12 @@ static void editor_begin_gesture(viewer_editor *editor,
     editor->gesture_pivot_x = user.x;
     editor->gesture_pivot_y = user.y;
     editor->resize_handle = 0U;
+    editor->snap_guide_x_visible = false;
+    editor->snap_guide_y_visible = false;
     if (kind == EDITOR_CANVAS_GESTURE_MOVE) {
         editor->canvas_preview_bounds = editor->canvas_selection.device_bounds;
-    } else if (kind == EDITOR_CANVAS_GESTURE_DRAW) {
+    } else if (kind == EDITOR_CANVAS_GESTURE_DRAW ||
+               kind == EDITOR_CANVAS_GESTURE_MARQUEE) {
         editor->canvas_preview_bounds = (svg_shape_rect){device.x, device.y, 0.0, 0.0};
     }
     (void)navigation;
@@ -189,6 +192,31 @@ static bool canvas_update_selection_preview(viewer_editor *editor,
 {
     geom_point device;
     if (!canvas_device_at(document, user, &device)) return false;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_MOVE ||
+        editor->canvas_gesture == EDITOR_CANVAS_GESTURE_RESIZE) {
+        canvas_view_transform view;
+        if (canvas_view_transform_get(document, &view)) {
+            double scale = navigation->scale * fmin(view.scale_x, view.scale_y);
+            double tolerance = scale > 0.0 ?
+                6.0 * editor->backing_scale / scale : 0.0;
+            if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_MOVE &&
+                tolerance > 0.0) {
+                double dx = user.x - editor->gesture_start_x;
+                double dy = user.y - editor->gesture_start_y;
+                editor_canvas_snap_translation(editor, document, tolerance,
+                    &dx, &dy);
+                user.x = editor->gesture_start_x + dx;
+                user.y = editor->gesture_start_y + dy;
+            } else if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_RESIZE &&
+                       tolerance > 0.0) {
+                user = editor_canvas_snap_point(editor, document, user, tolerance);
+            }
+            if (!canvas_device_at(document, user, &device)) return false;
+        }
+    } else {
+        editor->snap_guide_x_visible = false;
+        editor->snap_guide_y_visible = false;
+    }
     editor->gesture_current_x = user.x;
     editor->gesture_current_y = user.y;
     double screen_dx = (device.x - editor->gesture_start_device_x) * navigation->scale;
@@ -196,7 +224,8 @@ static bool canvas_update_selection_preview(viewer_editor *editor,
     double threshold = 2.0 * editor->backing_scale;
     editor->canvas_gesture_moved = editor->canvas_gesture_moved ||
         fabs(screen_dx) > threshold || fabs(screen_dy) > threshold;
-    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_DRAW) {
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_DRAW ||
+        editor->canvas_gesture == EDITOR_CANVAS_GESTURE_MARQUEE) {
         editor->canvas_preview_bounds = (svg_shape_rect){
             fmin(editor->gesture_start_device_x, device.x),
             fmin(editor->gesture_start_device_y, device.y),
@@ -308,202 +337,18 @@ static bool canvas_update_selection_preview(viewer_editor *editor,
     return false;
 }
 
-static uint32_t editor_commit_transform(viewer_editor *editor,
-    double translate_x, double translate_y, double scale_x, double scale_y,
-    double rotate_radians, double pivot_x, double pivot_y)
-{
-    if (editor == NULL || editor->edit == NULL ||
-        !isfinite(translate_x) || !isfinite(translate_y) ||
-        !isfinite(scale_x) || !isfinite(scale_y) ||
-        !isfinite(rotate_radians) || !isfinite(pivot_x) || !isfinite(pivot_y) ||
-        !(scale_x > 0.0) || !(scale_y > 0.0)) return VIEWER_EDITOR_HANDLED;
-    char prefix[256];
-    int prefix_length;
-    if (rotate_radians != 0.0) {
-        double degrees = rotate_radians * (180.0 / 3.14159265358979323846);
-        prefix_length = snprintf(prefix, sizeof(prefix),
-            "translate(%.9g %.9g) rotate(%.9g) translate(%.9g %.9g)",
-            pivot_x, pivot_y, degrees, -pivot_x, -pivot_y);
-    } else if (scale_x != 1.0 || scale_y != 1.0) {
-        prefix_length = snprintf(prefix, sizeof(prefix),
-            "translate(%.9g %.9g) scale(%.9g %.9g) translate(%.9g %.9g)",
-            pivot_x, pivot_y, scale_x, scale_y, -pivot_x, -pivot_y);
-    } else {
-        prefix_length = snprintf(prefix, sizeof(prefix), "translate(%.9g %.9g)",
-            translate_x, translate_y);
-    }
-    if (prefix_length < 0 || (size_t)prefix_length >= sizeof(prefix)) {
-        editor_status_ok(editor, "Transform exceeds the editor limit");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    uint8_t *old_transform = malloc(EDITOR_FIELD_CAP);
-    if (old_transform == NULL) {
-        editor_status_ok(editor, "Transform allocation failed");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    size_t old_length = 0U;
-    size_t attribute_count = document_edit_attribute_count(editor->edit,
-        editor->selected);
-    for (size_t index = 0U; index < attribute_count; ++index) {
-        document_edit_attribute attribute;
-        base_bytes name;
-        if (!document_edit_attribute_at(editor->edit, editor->selected, index,
-                &attribute) || !document_edit_span_bytes(editor->edit,
-                attribute.name, &name)) continue;
-        if (name.len == 9U && memcmp(name.ptr, "transform", 9U) == 0) {
-            if (!document_edit_decode_span(editor->edit, attribute.value,
-                    old_transform, EDITOR_FIELD_CAP, &old_length)) {
-                free(old_transform);
-                editor_status_ok(editor, "Existing transform exceeds the editor limit");
-                return VIEWER_EDITOR_HANDLED;
-            }
-            break;
-        }
-    }
-    size_t prefix_size = (size_t)prefix_length;
-    size_t separator = old_length == 0U ? 0U : 1U;
-    if (prefix_size > EDITOR_FIELD_CAP - separator ||
-        old_length > EDITOR_FIELD_CAP - separator - prefix_size) {
-        free(old_transform);
-        editor_status_ok(editor, "Transform exceeds the editor limit");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    size_t value_length = prefix_size + separator + old_length;
-    uint8_t *value = malloc(value_length == 0U ? 1U : value_length);
-    if (value == NULL) {
-        free(old_transform);
-        editor_status_ok(editor, "Transform allocation failed");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    memcpy(value, prefix, prefix_size);
-    if (old_length > 0U) {
-        value[prefix_size] = ' ';
-        memcpy(value + prefix_size + 1U, old_transform, old_length);
-    }
-    free(old_transform);
-    size_t old_offset = editor->selected_offset;
-    char old_id[EDITOR_NAME_CAP];
-    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
-        editor->selected_id : "");
-    document_edit_error error = document_edit_set_attribute(editor->edit,
-        editor->selected, (base_bytes){(const uint8_t *)"transform", 9U},
-        (base_bytes){value, value_length});
-    free(value);
-    if (error != DOCUMENT_EDIT_OK)
-        return editor_apply_result(editor, error, old_offset, old_id,
-            (document_handle){0});
-    editor_status_ok(editor, "Transform committed · preview updating");
-    return editor_apply_result(editor, DOCUMENT_EDIT_OK, old_offset, old_id,
-        (document_handle){0});
-}
-
-static bool format_number(char out[64], double value)
-{
-    if (out == NULL || !isfinite(value) || fabs(value) > 1000000.0) return false;
-    int amount = snprintf(out, 64U, "%.9g", value);
-    return amount > 0 && amount < 64;
-}
-
-static uint32_t editor_insert_drawn_shape(viewer_editor *editor,
-    const svg_shape_document *document, geom_point start, geom_point end)
-{
-    if (editor == NULL || document == NULL) return VIEWER_EDITOR_HANDLED;
-    double left = fmin(start.x, end.x), top = fmin(start.y, end.y);
-    double width = fabs(end.x - start.x), height = fabs(end.y - start.y);
-    if (editor->draw_tool != VIEWER_EDITOR_TOOL_LINE &&
-        (!(width >= 0.5) || !(height >= 0.5))) {
-        editor_status_ok(editor, "Drag farther to create a shape");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    if (editor->draw_tool == VIEWER_EDITOR_TOOL_LINE &&
-        width < 0.5 && height < 0.5) {
-        editor_status_ok(editor, "Drag farther to create a line");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    char values[8][64] = {{0}};
-    const char *names[8] = {0};
-    size_t name_lengths[8] = {0U};
-    size_t count = 0U;
-    document_edit_template_kind kind;
-    if (editor->draw_tool == VIEWER_EDITOR_TOOL_RECT) {
-        kind = DOCUMENT_EDIT_TEMPLATE_RECT;
-        names[count] = "x"; name_lengths[count] = 1U;
-        if (!format_number(values[count++], left)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "y"; name_lengths[count] = 1U;
-        if (!format_number(values[count++], top)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "width"; name_lengths[count] = 5U;
-        if (!format_number(values[count++], width)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "height"; name_lengths[count] = 6U;
-        if (!format_number(values[count++], height)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "fill"; name_lengths[count] = 4U;
-        memcpy(values[count++], "#4f7cff", 8U);
-        names[count] = "stroke"; name_lengths[count] = 6U;
-        memcpy(values[count++], "#172033", 8U);
-        names[count] = "stroke-width"; name_lengths[count] = 12U;
-        memcpy(values[count++], "1", 2U);
-    } else if (editor->draw_tool == VIEWER_EDITOR_TOOL_ELLIPSE) {
-        kind = DOCUMENT_EDIT_TEMPLATE_ELLIPSE;
-        names[count] = "cx"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], (start.x + end.x) * 0.5)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "cy"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], (start.y + end.y) * 0.5)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "rx"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], width * 0.5)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "ry"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], height * 0.5)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "fill"; name_lengths[count] = 4U;
-        memcpy(values[count++], "#4f7cff", 8U);
-        names[count] = "stroke"; name_lengths[count] = 6U;
-        memcpy(values[count++], "#172033", 8U);
-        names[count] = "stroke-width"; name_lengths[count] = 12U;
-        memcpy(values[count++], "1", 2U);
-    } else {
-        kind = DOCUMENT_EDIT_TEMPLATE_LINE;
-        names[count] = "x1"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], start.x)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "y1"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], start.y)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "x2"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], end.x)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "y2"; name_lengths[count] = 2U;
-        if (!format_number(values[count++], end.y)) return VIEWER_EDITOR_HANDLED;
-        names[count] = "fill"; name_lengths[count] = 4U;
-        memcpy(values[count++], "none", 5U);
-        names[count] = "stroke"; name_lengths[count] = 6U;
-        memcpy(values[count++], "#172033", 8U);
-        names[count] = "stroke-width"; name_lengths[count] = 12U;
-        memcpy(values[count++], "2", 2U);
-    }
-    document_edit_template_attribute attributes[8];
-    for (size_t index = 0U; index < count; ++index) {
-        attributes[index] = (document_edit_template_attribute){
-            .name = {(const uint8_t *)names[index], name_lengths[index]},
-            .value = {(const uint8_t *)values[index], strlen(values[index])}
-        };
-    }
-    document_handle parent = {0U}, root = {0U}, inserted = {0U};
-    if (!document_edit_root(editor->edit, &root)) return VIEWER_EDITOR_HANDLED;
-    parent = root;
-    base_bytes parent_tag = {0};
-    if (document_edit_tag_name(editor->edit, editor->selected, &parent_tag) &&
-        parent_tag.len == 1U && parent_tag.ptr[0] == 'g') parent = editor->selected;
-    size_t old_offset = editor->selected_offset;
-    char old_id[EDITOR_NAME_CAP];
-    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
-        editor->selected_id : "");
-    document_edit_error error = document_edit_insert_template(editor->edit,
-        parent, kind, attributes, count, &inserted);
-    if (error != DOCUMENT_EDIT_OK)
-        return editor_apply_result(editor, error, old_offset, old_id,
-            (document_handle){0U});
-    editor->canvas_selection_valid = false;
-    editor_status_ok(editor, "Shape created · preview updating");
-    return editor_apply_result(editor, error, old_offset, old_id, inserted);
-}
 
 uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
     double x, double y, uint32_t modifiers)
+{
+    return viewer_editor_canvas_pointer_down_click_count(editor, document,
+        navigation, x, y, modifiers, 1U);
+}
+
+uint32_t viewer_editor_canvas_pointer_down_click_count(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y, uint32_t modifiers, uint8_t click_count)
 {
     if (editor == NULL || document == NULL || navigation == NULL ||
         !isfinite(x) || !isfinite(y)) return 0U;
@@ -515,6 +360,32 @@ uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
     }
     geom_point user;
     if (!canvas_user_at(document, navigation, x, y, &user)) return prior;
+    if (editor->draw_tool == VIEWER_EDITOR_TOOL_TEXT)
+        return prior | editor_canvas_text_place(editor, document, user);
+    if (editor->draw_tool == VIEWER_EDITOR_TOOL_PEN) {
+        canvas_view_transform view;
+        double tolerance = 0.0;
+        if (canvas_view_transform_get(document, &view)) {
+            double scale = navigation->scale * fmin(view.scale_x, view.scale_y);
+            if (isfinite(scale) && scale > 0.0)
+                tolerance = 8.0 * editor->backing_scale / scale;
+        }
+        if (tolerance > 0.0 && editor_canvas_path_node_begin(editor,
+                document, user, tolerance)) {
+            editor->redraw_requested = true;
+            return prior | VIEWER_EDITOR_HANDLED;
+        }
+        if (click_count >= 2U && tolerance > 0.0) {
+            uint32_t inserted = editor_canvas_path_add_node(editor, document,
+                user, tolerance);
+            if (inserted != 0U) return prior | inserted;
+        }
+    }
+    if (editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON ||
+        editor->draw_tool == VIEWER_EDITOR_TOOL_POLYLINE ||
+        editor->draw_tool == VIEWER_EDITOR_TOOL_PEN)
+        return prior | editor_canvas_path_pointer_down(editor, user, x, y,
+            click_count == 0U ? 1U : click_count);
     editor_reset_canvas_gesture(editor);
     if (editor->draw_tool != VIEWER_EDITOR_TOOL_SELECT) {
         editor_begin_gesture(editor, EDITOR_CANVAS_GESTURE_DRAW,
@@ -524,7 +395,8 @@ uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
     }
     if (editor->canvas_selection_valid) {
         svg_shape_selection current_selection;
-        if (editor_selected_shape(editor, document, &current_selection))
+        if (editor_canvas_selection_bounds(editor, document, &current_selection) ||
+            editor_selected_shape(editor, document, &current_selection))
             editor->canvas_selection = current_selection;
         size_t handle = selection_handle_at(editor, &editor->canvas_selection,
             navigation, x, y);
@@ -543,21 +415,33 @@ uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
     geom_point hit_user;
     if (!editor_hit_canvas_shape(editor, document, navigation, x, y,
             &selection, &hit_user)) {
-        editor->canvas_selection_valid = false;
+        bool shift = (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U;
+        if (!shift) editor_canvas_selection_clear(editor);
+        editor->marquee_preserve_selection = shift && editor->canvas_selection_valid;
+        editor_begin_gesture(editor, EDITOR_CANVAS_GESTURE_MARQUEE,
+            document, navigation, user, x, y);
         editor->redraw_requested = true;
         return prior | VIEWER_EDITOR_HANDLED;
     }
     if ((modifiers & PLATFORM_MODIFIER_SHIFT) != 0U) {
-        editor_status_ok(editor, "Canvas multi-selection is not available yet");
+        if (!editor->canvas_selection_valid) editor_canvas_selection_clear(editor);
+        (void)editor_canvas_selection_toggle(editor, selection.source_offset);
+        editor_status_ok(editor, editor->canvas_selection_count > 1U ?
+            "Elements selected" : "Element selected");
         return prior | VIEWER_EDITOR_HANDLED;
     }
-    if (!viewer_editor_select_at_source_offset(editor, selection.source_offset))
-        return prior | VIEWER_EDITOR_HANDLED;
-    editor->canvas_selection = selection;
+    if (!editor_canvas_selection_contains(editor, selection.source_offset) ||
+        !editor->canvas_selection_valid) {
+        if (!viewer_editor_select_at_source_offset(editor, selection.source_offset))
+            return prior | VIEWER_EDITOR_HANDLED;
+    }
+    svg_shape_selection selected_bounds;
+    editor->canvas_selection = editor_canvas_selection_bounds(editor, document,
+        &selected_bounds) ? selected_bounds : selection;
     editor->canvas_selection_valid = true;
     editor_begin_gesture(editor, EDITOR_CANVAS_GESTURE_MOVE,
         document, navigation, hit_user, x, y);
-    editor->canvas_preview_bounds = selection.device_bounds;
+    editor->canvas_preview_bounds = editor->canvas_selection.device_bounds;
     editor_status_ok(editor, "Selected canvas element");
     editor->redraw_requested = true;
     return prior | VIEWER_EDITOR_HANDLED;
@@ -571,6 +455,10 @@ uint32_t viewer_editor_canvas_pointer_move(viewer_editor *editor,
         editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE) return 0U;
     geom_point user;
     if (!canvas_user_at(document, navigation, x, y, &user)) return 0U;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH)
+        return editor_canvas_path_pointer_move(editor, user, x, y);
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH_NODE)
+        return editor_canvas_path_node_pointer_move(editor, document, user);
     if (!canvas_update_selection_preview(editor, document, navigation, user))
         return VIEWER_EDITOR_HANDLED;
     editor->redraw_requested = true;
@@ -583,24 +471,42 @@ uint32_t viewer_editor_canvas_pointer_up(viewer_editor *editor,
     if (editor == NULL || document == NULL) return 0U;
     editor_canvas_gesture_kind gesture = editor->canvas_gesture;
     bool moved = editor->canvas_gesture_moved;
+    if (gesture == EDITOR_CANVAS_GESTURE_PATH)
+        return editor_canvas_path_pointer_up(editor);
+    if (gesture == EDITOR_CANVAS_GESTURE_PATH_NODE)
+        return editor_canvas_path_node_pointer_up(editor, document);
     uint32_t result = VIEWER_EDITOR_HANDLED;
     if (gesture == EDITOR_CANVAS_GESTURE_DRAW && moved) {
         geom_point start = {editor->gesture_start_x, editor->gesture_start_y};
         geom_point end = {editor->gesture_current_x, editor->gesture_current_y};
         result = editor_insert_drawn_shape(editor, document, start, end);
+    } else if (gesture == EDITOR_CANVAS_GESTURE_MARQUEE) {
+        if (moved)
+            (void)editor_canvas_selection_marquee(editor, document,
+                editor->canvas_preview_bounds, editor->marquee_preserve_selection);
     } else if (moved && gesture == EDITOR_CANVAS_GESTURE_MOVE) {
-        result = editor_commit_transform(editor,
-            editor->gesture_current_x - editor->gesture_start_x,
-            editor->gesture_current_y - editor->gesture_start_y,
-            1.0, 1.0, 0.0, 0.0, 0.0);
+        double dx = editor->gesture_current_x - editor->gesture_start_x;
+        double dy = editor->gesture_current_y - editor->gesture_start_y;
+        result = editor->canvas_selection_count > 1U ?
+            editor_canvas_multi_transform(editor, dx, dy, 1.0, 1.0,
+                0.0, 0.0, 0.0) :
+            editor_commit_transform(editor, dx, dy, 1.0, 1.0, 0.0, 0.0, 0.0);
     } else if (moved && gesture == EDITOR_CANVAS_GESTURE_RESIZE) {
-        result = editor_commit_transform(editor, 0.0, 0.0,
-            editor->gesture_scale_x, editor->gesture_scale_y, 0.0,
-            editor->gesture_pivot_x, editor->gesture_pivot_y);
+        result = editor->canvas_selection_count > 1U ?
+            editor_canvas_multi_transform(editor, 0.0, 0.0,
+                editor->gesture_scale_x, editor->gesture_scale_y, 0.0,
+                editor->gesture_pivot_x, editor->gesture_pivot_y) :
+            editor_commit_transform(editor, 0.0, 0.0,
+                editor->gesture_scale_x, editor->gesture_scale_y, 0.0,
+                editor->gesture_pivot_x, editor->gesture_pivot_y);
     } else if (moved && gesture == EDITOR_CANVAS_GESTURE_ROTATE) {
-        result = editor_commit_transform(editor, 0.0, 0.0, 1.0, 1.0,
-            editor->gesture_rotation, editor->gesture_pivot_x,
-            editor->gesture_pivot_y);
+        result = editor->canvas_selection_count > 1U ?
+            editor_canvas_multi_transform(editor, 0.0, 0.0, 1.0, 1.0,
+                editor->gesture_rotation, editor->gesture_pivot_x,
+                editor->gesture_pivot_y) :
+            editor_commit_transform(editor, 0.0, 0.0, 1.0, 1.0,
+                editor->gesture_rotation, editor->gesture_pivot_x,
+                editor->gesture_pivot_y);
     }
     editor_reset_canvas_gesture(editor);
     editor->redraw_requested = true;
@@ -611,6 +517,10 @@ uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor)
 {
     if (editor == NULL || editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE)
         return 0U;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH)
+        editor_canvas_path_cancel(editor);
+    else if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH_NODE)
+        editor->path_node_segment = SIZE_MAX;
     editor_reset_canvas_gesture(editor);
     editor->redraw_requested = true;
     editor_status_ok(editor, "Canvas gesture canceled");
@@ -625,6 +535,9 @@ uint32_t viewer_editor_nudge_selection(viewer_editor *editor, double dx, double 
         editor_status_ok(editor, "Select a rendered shape before nudging");
         return VIEWER_EDITOR_HANDLED;
     }
+    if (editor->canvas_selection_count > 1U)
+        return editor_canvas_multi_transform(editor, dx, dy, 1.0, 1.0,
+            0.0, 0.0, 0.0);
     return editor_commit_transform(editor, dx, dy, 1.0, 1.0, 0.0, 0.0, 0.0);
 }
 
@@ -634,7 +547,42 @@ bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
 {
     if (editor == NULL || document == NULL || out_overlay == NULL) return false;
     *out_overlay = (viewer_editor_canvas_overlay_state){0};
+    out_overlay->snap_guide_x_visible = editor->snap_guide_x_visible;
+    out_overlay->snap_guide_y_visible = editor->snap_guide_y_visible;
+    out_overlay->snap_guide_x = editor->snap_guide_x;
+    out_overlay->snap_guide_y = editor->snap_guide_y;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH &&
+        editor->path_anchor_count > 0U) {
+        size_t count = editor->path_anchor_count;
+        if (!editor->path_anchor_dragging && count < VIEWER_EDITOR_PATH_POINT_CAP &&
+            (editor->path_current_x != editor->path_anchors[count - 1U].x ||
+             editor->path_current_y != editor->path_anchors[count - 1U].y)) ++count;
+        if (count > VIEWER_EDITOR_PATH_POINT_CAP) count = VIEWER_EDITOR_PATH_POINT_CAP;
+        out_overlay->path_point_count = count;
+        out_overlay->visible = true;
+        out_overlay->drawing_preview = true;
+        out_overlay->path_closed_preview = editor->path_close_preview;
+        for (size_t index = 0U; index < editor->path_anchor_count; ++index) {
+            const editor_path_anchor *anchor = &editor->path_anchors[index];
+            out_overlay->path_points[index] = (geom_point){anchor->x, anchor->y};
+            out_overlay->path_handles[index] = (geom_point){
+                anchor->x + anchor->handle_x, anchor->y + anchor->handle_y};
+            out_overlay->path_has_handles[index] = anchor->has_handle;
+        }
+        if (count > editor->path_anchor_count)
+            out_overlay->path_points[count - 1U] = (geom_point){
+                editor->path_current_x, editor->path_current_y};
+        return true;
+    }
+    if (editor_canvas_path_nodes_overlay(editor, document, out_overlay)) return true;
     if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_DRAW) {
+        if (!rect_valid(editor->canvas_preview_bounds)) return false;
+        out_overlay->bounds = editor->canvas_preview_bounds;
+        out_overlay->visible = true;
+        out_overlay->drawing_preview = true;
+        return true;
+    }
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_MARQUEE) {
         if (!rect_valid(editor->canvas_preview_bounds)) return false;
         out_overlay->bounds = editor->canvas_preview_bounds;
         out_overlay->visible = true;
@@ -643,7 +591,8 @@ bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
     }
     if (!editor->canvas_selection_valid) return false;
     svg_shape_selection selection;
-    if (!editor_selected_shape(editor, document, &selection)) {
+    if (!editor_canvas_selection_bounds(editor, document, &selection) &&
+        !editor_selected_shape(editor, document, &selection)) {
         if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE) return false;
         selection = editor->canvas_selection;
     }

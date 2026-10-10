@@ -18,14 +18,32 @@ typedef enum viewer_editor_draw_tool {
     VIEWER_EDITOR_TOOL_SELECT,
     VIEWER_EDITOR_TOOL_RECT,
     VIEWER_EDITOR_TOOL_ELLIPSE,
-    VIEWER_EDITOR_TOOL_LINE
+    VIEWER_EDITOR_TOOL_LINE,
+    VIEWER_EDITOR_TOOL_POLYGON,
+    VIEWER_EDITOR_TOOL_POLYLINE,
+    VIEWER_EDITOR_TOOL_PEN,
+    VIEWER_EDITOR_TOOL_TEXT
 } viewer_editor_draw_tool;
+
+#define VIEWER_EDITOR_PATH_POINT_CAP 128U
 
 typedef struct viewer_editor_canvas_overlay_state {
     svg_shape_rect bounds; /* decoded document tile pixels */
     double rotation_radians;
     bool visible;
     bool drawing_preview;
+    size_t path_point_count;
+    geom_point path_points[VIEWER_EDITOR_PATH_POINT_CAP];
+    geom_point path_handles[VIEWER_EDITOR_PATH_POINT_CAP];
+    geom_point path_in_handles[VIEWER_EDITOR_PATH_POINT_CAP];
+    bool path_has_handles[VIEWER_EDITOR_PATH_POINT_CAP];
+    bool path_has_in_handles[VIEWER_EDITOR_PATH_POINT_CAP];
+    bool path_closed_preview;
+    bool path_nodes_only;
+    bool snap_guide_x_visible;
+    bool snap_guide_y_visible;
+    double snap_guide_x;
+    double snap_guide_y;
 } viewer_editor_canvas_overlay_state;
 
 enum {
@@ -35,7 +53,15 @@ enum {
     VIEWER_EDITOR_SAVE_AS = 1U << 3U,
     VIEWER_EDITOR_OPEN = 1U << 4U,
     VIEWER_EDITOR_QUIT = 1U << 5U,
-    VIEWER_EDITOR_RELOAD = 1U << 6U
+    VIEWER_EDITOR_RELOAD = 1U << 6U,
+    VIEWER_EDITOR_SELECT_ALL = 1U << 7U,
+    VIEWER_EDITOR_DELETE_PATH_NODE = 1U << 8U,
+    VIEWER_EDITOR_COPY = 1U << 9U,
+    VIEWER_EDITOR_CUT = 1U << 10U,
+    VIEWER_EDITOR_PASTE = 1U << 11U,
+    VIEWER_EDITOR_PASTE_IN_PLACE = 1U << 12U,
+    VIEWER_EDITOR_EXPORT_PNG = 1U << 13U,
+    VIEWER_EDITOR_COPY_PNG = 1U << 14U
 };
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
@@ -69,6 +95,8 @@ bool viewer_editor_materialize(viewer_editor *editor, uint8_t *buffer,
 document_edit_save_result viewer_editor_save(viewer_editor *editor,
                                              base_bytes path);
 bool viewer_editor_select_at_source_offset(viewer_editor *editor, size_t offset);
+bool viewer_editor_select_all(viewer_editor *editor,
+                              const svg_shape_document *document);
 bool viewer_editor_selection_span(viewer_editor *editor,
                                   document_source_span *out_span);
 bool viewer_editor_semantics(viewer_editor *editor,
@@ -88,6 +116,9 @@ viewer_editor_draw_tool viewer_editor_get_draw_tool(const viewer_editor *editor)
 uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
     double x, double y, uint32_t modifiers);
+uint32_t viewer_editor_canvas_pointer_down_click_count(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y, uint32_t modifiers, uint8_t click_count);
 uint32_t viewer_editor_canvas_pointer_move(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
     double x, double y);
@@ -96,9 +127,18 @@ uint32_t viewer_editor_canvas_pointer_up(viewer_editor *editor,
 uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor);
 uint32_t viewer_editor_nudge_selection(viewer_editor *editor,
                                        double dx, double dy);
+uint32_t viewer_editor_delete_selected_path_node(viewer_editor *editor,
+    const svg_shape_document *document);
+bool viewer_editor_copy_selection(viewer_editor *editor, uint8_t *buffer,
+    size_t capacity, size_t *out_length);
+uint32_t viewer_editor_cut_selection(viewer_editor *editor);
+uint32_t viewer_editor_paste_svg(viewer_editor *editor,
+    const uint8_t *bytes, size_t length, bool paste_in_place);
 bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
     const svg_shape_document *document,
     viewer_editor_canvas_overlay_state *out_overlay);
+bool viewer_editor_get_selection_bounds(viewer_editor *editor,
+    const svg_shape_document *document, svg_shape_rect *out_bounds);
 void viewer_editor_paint_canvas_overlay(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
     ui_rect canvas, uint8_t *rgba, uint32_t width, uint32_t height,

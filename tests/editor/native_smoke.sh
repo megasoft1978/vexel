@@ -50,6 +50,13 @@ keys 'keystroke "r"'
 python3 "$mouse" drag $((window_x + 590)) $((content_top + 400)) $((window_x + 640)) $((content_top + 450))
 sleep 0.4
 keys 'keystroke "z" using {command down}'
+keys 'keystroke "y"'
+python3 "$mouse" click $((window_x + 600)) $((content_top + 400))
+python3 "$mouse" click $((window_x + 650)) $((content_top + 400))
+python3 "$mouse" click $((window_x + 625)) $((content_top + 450))
+keys 'key code 36'
+sleep 0.4
+keys 'keystroke "z" using {command down}'
 keys 'keystroke "s" using {command down}'
 sleep 0.5
 keys 'keystroke "q" using {command down}'
@@ -80,9 +87,9 @@ rectangles = root.findall("{http://www.w3.org/2000/svg}rect")
 if len(rectangles) != 1:
     raise SystemExit("the draw/undo smoke did not leave exactly one rectangle")
 transform = rectangles[0].get("transform", "")
-if "scale(" not in transform or transform.count("translate(") < 2:
-    raise SystemExit("move and resize transforms were not both saved")
-print("native editor smoke: select, move, resize, draw, undo, and exact save passed")
+if not transform.startswith("matrix(") or transform.count("matrix(") != 1:
+    raise SystemExit("move and resize were not composed into one transform matrix")
+print("native editor smoke: select, move, resize, rectangle and polygon draw/undo, and exact save passed")
 PY
 
 trap - EXIT HUP INT TERM

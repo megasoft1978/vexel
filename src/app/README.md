@@ -47,30 +47,46 @@ document pixels, decoded dimensions, and visible sharp-tile progress.
 
 `viewer_editor_canvas.c` maps hit-tested rendered shapes to source offsets and
 keeps selection in sync with the structure and inspector. Move, resize, and
-rotate previews do not modify source bytes; release commits one bounded
-`transform` attribute edit, and undo restores exact prior bytes. The overlay
-draws a clipped selection box, eight resize handles, a rotate handle, and a
-shape-drawing preview. Rect, ellipse, and line tools insert bounded templates
-into the selected `<g>` or the SVG root. The select, pan, zoom, rect, ellipse,
-and line shortcuts are V, H, Z, R, O, and L; Space temporarily pans. Arrow keys
-nudge a canvas selection by one document unit, and Shift+Arrow uses ten units.
-Escape cancels an active gesture.
+rotate previews leave source bytes unchanged; release commits one bounded
+`transform` edit, and undo restores exact prior bytes. The selection overlay
+draws a clipped bounding box, eight resize handles, a rotate handle, path
+anchors and handles, and snapping guides. Rect, ellipse, line, polygon,
+polyline, pen, and text tools commit one undoable edit when finished. V, H, Z,
+R, O, L, Y, U, P, and T select those tools; Space temporarily pans. Arrow keys
+nudge by one document unit and Shift+Arrow by ten units. Escape cancels an
+active gesture or draft.
 
 Edited source snapshots are decoded and rasterized on the existing worker queue
 with generation cancellation. A failed edited preview leaves the last good
 canvas visible and reports the decoder diagnostic in the editor status bar.
 
-Save, undo/redo, element delete/duplicate/group/ungroup/reorder, editable
-attribute rows, and text content edits remain wired into the viewer. Multi-
-selection and group transforms, polygon/polyline and path-pen creation, path
-node editing, snapping, SVG clipboard exchange, and PNG export remain future
-work. Transform handles currently use rendered axis-aligned bounds; transforms
-are serialized by adding or prepending an SVG `transform` attribute so unknown
-geometry and authored coordinates remain intact.
+The editor supports Shift-click, marquee, and Cmd+A selection, up to 128
+rendered elements. Group move, resize, rotate, nudge, delete, duplicate, and
+z-order edits work for selected siblings under one parent and one bounded
+64 KiB source region. Cmd+[ / Cmd+] reorder one element; Cmd+Shift+[ / ] send it
+to the back or front. Move and resize transforms are composed into a matrix
+while retaining any authored transform suffix.
 
-Save As, dirty-file confirmation dialogs, clipboard access, and IME marked text
-still need platform services. Dirty open/close/reload requests are blocked and
-external file changes are checked before overwrite. System appearance changes
-invalidate the editor and trigger the next viewer-loop presentation. SVGZ
-remains unsupported; rendering is limited to the subset accepted by the current
-decoder and rasterizer.
+Polygon and polyline tools collect clicked points. The pen tool creates straight
+and cubic segments and closes on the first anchor. Return or double-click
+finishes; Escape cancels. The path tool exposes anchors and cubic controls for
+supported `M`, `L`, `H`, `V`, `C`, `S`, `Q`, `T`, and `A` commands. Node drags
+replace only the affected number tokens. Double-click inserts a node on a line
+segment; Delete removes a noninitial node. Snapping to a one-unit grid and
+rendered element edges/centers is enabled by default; Cmd+' toggles it.
+
+The text tool places an inline draft and commits one escaped `<text>` element
+when Return is pressed. New text starts at 16 units in `#172033`; the ordinary
+attribute inspector exposes `font-size` and `fill` for editing. Cmd+C/X/V copy,
+cut, and paste SVG fragments; Cmd+Shift+V pastes in place. Multi-selection is
+copied as one `<g>` fragment. Pasted input must be a well-formed, single-root
+fragment no larger than 64 KiB. Cmd+Shift+E exports PNG with a scale and
+document/selection chooser; Cmd+Option+C copies PNG. Export is bounded to 4096
+pixels per axis and 16 million pixels.
+
+Save As and dirty open/close/quit choices use native dialogs. Save failures and
+external-file conflicts show native error alerts. SVGZ remains unsupported;
+rendering is limited to the subset accepted by the current decoder and
+rasterizer. The editor native smoke covers pointer selection, move, resize,
+rectangle and polygon creation/undo, and exact save when run in an interactive
+macOS session.

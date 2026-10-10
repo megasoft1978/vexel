@@ -92,6 +92,123 @@ static void paint_handle(uint8_t *rgba, uint32_t width, uint32_t height,
     }
 }
 
+static bool overlay_user_to_screen(const svg_shape_document *document,
+    const ui_viewer_navigation *navigation, ui_rect canvas, geom_point user,
+    geom_point *out)
+{
+    if (document == NULL || navigation == NULL || out == NULL ||
+        document->width == 0U || document->height == 0U ||
+        !(document->view_width > 0.0) || !(document->view_height > 0.0) ||
+        !(navigation->scale > 0.0)) return false;
+    double scale_x = (double)document->width / document->view_width;
+    double scale_y = (double)document->height / document->view_height;
+    double offset_x = 0.0, offset_y = 0.0;
+    svg_shape_aspect aspect = document->preserve_aspect;
+    if (!aspect.set) aspect = (svg_shape_aspect){0.5, 0.5, false, false, true};
+    if (!aspect.none) {
+        double scale = aspect.slice ? fmax(scale_x, scale_y) : fmin(scale_x, scale_y);
+        scale_x = scale;
+        scale_y = scale;
+        offset_x = ((double)document->width - document->view_width * scale) * aspect.align_x;
+        offset_y = ((double)document->height - document->view_height * scale) * aspect.align_y;
+    }
+    double device_x = offset_x + (user.x - document->view_x) * scale_x;
+    double device_y = offset_y + (user.y - document->view_y) * scale_y;
+    out->x = (double)canvas.x + navigation->pan_x + device_x * navigation->scale;
+    out->y = (double)canvas.y + navigation->pan_y + device_y * navigation->scale;
+    return isfinite(out->x) && isfinite(out->y);
+}
+
+static geom_point cubic_point(geom_point start, geom_point control1,
+    geom_point control2, geom_point end, double t)
+{
+    double inverse = 1.0 - t;
+    double a = inverse * inverse * inverse;
+    double b = 3.0 * inverse * inverse * t;
+    double c = 3.0 * inverse * t * t;
+    double d = t * t * t;
+    return (geom_point){a * start.x + b * control1.x + c * control2.x + d * end.x,
+        a * start.y + b * control1.y + c * control2.y + d * end.y};
+}
+
+static void paint_path_preview(const viewer_editor_canvas_overlay_state *overlay,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas, uint8_t *rgba, uint32_t width, uint32_t height, size_t stride,
+    double backing_scale)
+{
+    if (overlay == NULL || overlay->path_point_count == 0U ||
+        overlay->path_point_count > VIEWER_EDITOR_PATH_POINT_CAP) return;
+    geom_point screen[VIEWER_EDITOR_PATH_POINT_CAP];
+    for (size_t index = 0U; index < overlay->path_point_count; ++index)
+        if (!overlay_user_to_screen(document, navigation, canvas,
+                overlay->path_points[index], &screen[index])) return;
+    for (size_t index = 1U; !overlay->path_nodes_only &&
+         index < overlay->path_point_count; ++index) {
+        geom_point from = screen[index - 1U], to = screen[index];
+        bool curve = overlay->path_has_handles[index - 1U] ||
+            (index < overlay->path_point_count - 1U &&
+             overlay->path_has_handles[index]);
+        if (!curve) {
+            paint_line(rgba, width, height, stride, canvas, from, to,
+                UINT32_C(0x246bdaff));
+            continue;
+        }
+        geom_point control1 = from, control2 = to;
+        if (overlay->path_has_handles[index - 1U] &&
+            !overlay_user_to_screen(document, navigation, canvas,
+                overlay->path_handles[index - 1U], &control1)) return;
+        if (index < overlay->path_point_count - 1U &&
+            overlay->path_has_handles[index]) {
+            geom_point vector = {
+                overlay->path_handles[index].x - overlay->path_points[index].x,
+                overlay->path_handles[index].y - overlay->path_points[index].y};
+            geom_point incoming = {overlay->path_points[index].x - vector.x,
+                overlay->path_points[index].y - vector.y};
+            if (!overlay_user_to_screen(document, navigation, canvas,
+                    incoming, &control2)) return;
+        }
+        geom_point previous = from;
+        for (size_t step = 1U; step <= 16U; ++step) {
+            geom_point next = cubic_point(from, control1, control2, to,
+                (double)step / 16.0);
+            paint_line(rgba, width, height, stride, canvas, previous, next,
+                UINT32_C(0x246bdaff));
+            previous = next;
+        }
+    }
+    if (!overlay->path_nodes_only && overlay->path_closed_preview &&
+        overlay->path_point_count > 2U)
+        paint_line(rgba, width, height, stride, canvas,
+            screen[overlay->path_point_count - 1U], screen[0], UINT32_C(0x246bdaff));
+    uint32_t node_size = (uint32_t)ceil(6.0 * fmax(backing_scale, 1.0));
+    if (node_size < 4U) node_size = 4U;
+    for (size_t index = 0U; index < overlay->path_point_count; ++index) {
+        if (index < VIEWER_EDITOR_PATH_POINT_CAP && overlay->path_has_handles[index]) {
+            geom_point control;
+            if (overlay_user_to_screen(document, navigation, canvas,
+                    overlay->path_handles[index], &control)) {
+                paint_line(rgba, width, height, stride, canvas, screen[index], control,
+                    UINT32_C(0x4a8cefff));
+                paint_handle(rgba, width, height, stride, canvas, control,
+                    node_size, true);
+            }
+        }
+        if (index < VIEWER_EDITOR_PATH_POINT_CAP &&
+            overlay->path_has_in_handles[index]) {
+            geom_point control;
+            if (overlay_user_to_screen(document, navigation, canvas,
+                    overlay->path_in_handles[index], &control)) {
+                paint_line(rgba, width, height, stride, canvas, screen[index], control,
+                    UINT32_C(0x4a8cefff));
+                paint_handle(rgba, width, height, stride, canvas, control,
+                    node_size, true);
+            }
+        }
+        paint_handle(rgba, width, height, stride, canvas, screen[index],
+            node_size, false);
+    }
+}
+
 static geom_point rotate_screen_point(geom_point point, geom_point center,
                                       double angle)
 {
@@ -111,7 +228,28 @@ void viewer_editor_paint_canvas_overlay(viewer_editor *editor,
         !(navigation->scale > 0.0) || stride < (size_t)width * 4U) return;
     viewer_editor_canvas_overlay_state overlay;
     if (!viewer_editor_get_canvas_overlay(editor, document, &overlay) ||
-        !overlay_rect_valid(overlay.bounds)) return;
+        (overlay.path_point_count == 0U && !overlay_rect_valid(overlay.bounds))) return;
+    if (overlay.snap_guide_x_visible) {
+        geom_point guide;
+        if (overlay_user_to_screen(document, navigation, canvas,
+                (geom_point){overlay.snap_guide_x, document->view_y}, &guide))
+            paint_line(rgba, width, height, stride, canvas, guide,
+                (geom_point){guide.x, (double)canvas.y + canvas.height},
+                UINT32_C(0x12a99aff));
+    }
+    if (overlay.snap_guide_y_visible) {
+        geom_point guide;
+        if (overlay_user_to_screen(document, navigation, canvas,
+                (geom_point){document->view_x, overlay.snap_guide_y}, &guide))
+            paint_line(rgba, width, height, stride, canvas, guide,
+                (geom_point){(double)canvas.x + canvas.width, guide.y},
+                UINT32_C(0x12a99aff));
+    }
+    if (overlay.path_point_count > 0U) {
+        paint_path_preview(&overlay, document, navigation, canvas, rgba,
+            width, height, stride, editor->backing_scale);
+        return;
+    }
     geom_point center = {
         (double)canvas.x + navigation->pan_x +
             (overlay.bounds.x + overlay.bounds.width * 0.5) * navigation->scale,

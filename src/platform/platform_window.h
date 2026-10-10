@@ -66,6 +66,7 @@ typedef struct platform_event {
     double precise_x;
     double precise_y;
     uint16_t key_code;
+    uint8_t click_count;
     uint32_t modifiers;
     uint8_t button;
     platform_viewer_action action;

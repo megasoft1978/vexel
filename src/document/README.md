@@ -65,3 +65,11 @@ and namespace prefixes outside the edited spans. Query helpers expose source
 spans, decoded text/attribute values, element paths, ID lookup, and
 source-offset-to-element mapping. `document_edit_save_as` saves to either an
 existing regular file or a new destination using the atomic macOS adapters.
+
+The edit engine also provides `document_edit_replace_xml_region` for replacing
+a bounded child region with one validated fragment in one command, and
+`document_edit_replace_source_span` for byte-local edits that validate the
+complete resulting XML. The latter keeps path node edits limited to their
+retained numeric tokens. `document_edit_insert_text_element` escapes attribute
+values and text, validates the resulting element in its parent context, and
+inserts it as one undoable command.

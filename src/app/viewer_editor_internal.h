@@ -10,6 +10,7 @@
 #define EDITOR_NAME_CAP 128U
 #define EDITOR_STATUS_CAP 192U
 #define EDITOR_DEPTH_CAP 256U
+#define EDITOR_CANVAS_SELECTION_CAP 128U
 #define EDITOR_TOOLBAR_HEIGHT 40U
 #define EDITOR_STATUS_HEIGHT 24U
 #define EDITOR_LEFT_WIDTH 232U
@@ -69,7 +70,10 @@ typedef enum editor_canvas_gesture_kind {
     EDITOR_CANVAS_GESTURE_MOVE,
     EDITOR_CANVAS_GESTURE_RESIZE,
     EDITOR_CANVAS_GESTURE_ROTATE,
-    EDITOR_CANVAS_GESTURE_DRAW
+    EDITOR_CANVAS_GESTURE_DRAW,
+    EDITOR_CANVAS_GESTURE_MARQUEE,
+    EDITOR_CANVAS_GESTURE_PATH,
+    EDITOR_CANVAS_GESTURE_PATH_NODE
 } editor_canvas_gesture_kind;
 
 typedef struct editor_outline_frame {
@@ -78,6 +82,14 @@ typedef struct editor_outline_frame {
     size_t depth;
     bool entered;
 } editor_outline_frame;
+
+typedef struct editor_path_anchor {
+    double x;
+    double y;
+    double handle_x;
+    double handle_y;
+    bool has_handle;
+} editor_path_anchor;
 
 struct viewer_editor {
     document_edit *edit;
@@ -108,7 +120,32 @@ struct viewer_editor {
     ui_icon_kind active_tool;
     viewer_editor_draw_tool draw_tool;
     editor_canvas_gesture_kind canvas_gesture;
+    editor_path_anchor path_anchors[VIEWER_EDITOR_PATH_POINT_CAP];
+    size_t path_anchor_count;
+    double path_current_x;
+    double path_current_y;
+    bool path_anchor_dragging;
+    bool path_closed;
+    bool path_close_preview;
+    size_t path_node_segment;
+    size_t path_node_number_x;
+    size_t path_node_number_y;
+    size_t path_selected_node_segment;
+    size_t path_node_anchor_segment;
+    uint8_t path_node_handle_kind;
+    double path_node_origin_x;
+    double path_node_origin_y;
+    double path_node_current_x;
+    double path_node_current_y;
+    bool path_node_has_x;
+    bool path_node_has_y;
+    bool path_node_relative;
+    bool text_draft_active;
+    double text_draft_x;
+    double text_draft_y;
     svg_shape_selection canvas_selection;
+    size_t canvas_selection_offsets[EDITOR_CANVAS_SELECTION_CAP];
+    size_t canvas_selection_count;
     svg_shape_rect canvas_preview_bounds;
     double gesture_start_x;
     double gesture_start_y;
@@ -137,7 +174,13 @@ struct viewer_editor {
     bool reduced_motion;
     bool redraw_requested;
     bool canvas_selection_valid;
+    bool marquee_preserve_selection;
     bool canvas_gesture_moved;
+    bool snap_enabled;
+    bool snap_guide_x_visible;
+    bool snap_guide_y_visible;
+    double snap_guide_x;
+    double snap_guide_y;
     bool want_structure;
     bool want_inspector;
     bool effective_structure;
@@ -184,6 +227,53 @@ uint32_t editor_apply_result(viewer_editor *editor, document_edit_error result,
                              document_handle preferred);
 uint32_t editor_apply_button(viewer_editor *editor, uint32_t id);
 bool editor_reorder(viewer_editor *editor, bool forward);
+bool editor_reorder_to_edge(viewer_editor *editor, bool front);
+bool editor_canvas_selection_contains(const viewer_editor *editor, size_t offset);
+bool editor_canvas_selection_bounds(viewer_editor *editor,
+    const svg_shape_document *document, svg_shape_selection *out_selection);
+bool editor_canvas_selection_toggle(viewer_editor *editor, size_t source_offset);
+void editor_canvas_selection_clear(viewer_editor *editor);
+bool editor_canvas_selection_marquee(viewer_editor *editor,
+    const svg_shape_document *document, svg_shape_rect bounds, bool preserve);
+uint32_t editor_canvas_multi_transform(viewer_editor *editor,
+    double translate_x, double translate_y, double scale_x, double scale_y,
+    double rotate_radians, double pivot_x, double pivot_y);
+uint32_t editor_canvas_multi_delete(viewer_editor *editor);
+uint32_t editor_canvas_multi_duplicate(viewer_editor *editor);
+uint32_t editor_commit_transform(viewer_editor *editor,
+    double translate_x, double translate_y, double scale_x, double scale_y,
+    double rotate_radians, double pivot_x, double pivot_y);
+uint32_t editor_insert_drawn_shape(viewer_editor *editor,
+    const svg_shape_document *document, geom_point start, geom_point end);
+uint32_t editor_canvas_text_place(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user);
+uint32_t editor_commit_text_draft(viewer_editor *editor);
+bool editor_canvas_path_active(const viewer_editor *editor);
+uint32_t editor_canvas_path_pointer_down(viewer_editor *editor, geom_point user,
+    double screen_x, double screen_y, uint8_t click_count);
+uint32_t editor_canvas_path_pointer_move(viewer_editor *editor, geom_point user,
+    double screen_x, double screen_y);
+uint32_t editor_canvas_path_pointer_up(viewer_editor *editor);
+uint32_t editor_canvas_path_finish(viewer_editor *editor, bool closed);
+void editor_canvas_path_cancel(viewer_editor *editor);
+bool editor_canvas_path_node_begin(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user, double tolerance);
+uint32_t editor_canvas_path_node_pointer_move(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user);
+uint32_t editor_canvas_path_node_pointer_up(viewer_editor *editor,
+    const svg_shape_document *document);
+bool editor_canvas_path_nodes_overlay(viewer_editor *editor,
+    const svg_shape_document *document,
+    viewer_editor_canvas_overlay_state *out_overlay);
+uint32_t editor_canvas_path_node_delete(viewer_editor *editor,
+    const svg_shape_document *document);
+uint32_t editor_canvas_path_add_node(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user, double tolerance);
+void editor_canvas_snap_translation(viewer_editor *editor,
+    const svg_shape_document *document, double tolerance,
+    double *translate_x, double *translate_y);
+geom_point editor_canvas_snap_point(viewer_editor *editor,
+    const svg_shape_document *document, geom_point point, double tolerance);
 size_t editor_utf8_next(const char *text, size_t length, size_t cursor);
 void editor_selection_range(const viewer_editor *editor, size_t *start, size_t *end);
 uint32_t editor_commit_field(viewer_editor *editor);

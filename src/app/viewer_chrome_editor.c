@@ -132,9 +132,19 @@ void editor_build_tree_modern(viewer_editor *editor)
         editor->draw_tool == VIEWER_EDITOR_TOOL_ELLIPSE ?
         "Ellipse · drag to draw · O" :
         editor->draw_tool == VIEWER_EDITOR_TOOL_LINE ?
-        "Line · drag to draw · L" : editor->active_tool == UI_ICON_PAN ?
+        "Line · drag to draw · L" :
+        editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON ?
+        "Polygon · click points, Enter to finish · Y" :
+        editor->draw_tool == VIEWER_EDITOR_TOOL_POLYLINE ?
+        "Polyline · click points, Enter to finish · U" :
+        editor->draw_tool == VIEWER_EDITOR_TOOL_PEN ?
+        "Pen · click or drag anchors, Enter to finish · P" :
+        editor->draw_tool == VIEWER_EDITOR_TOOL_TEXT ?
+        "Text · click to place and type · T" :
+        editor->active_tool == UI_ICON_PAN ?
         "Pan · drag the canvas · Space" : editor->active_tool == UI_ICON_ZOOM ?
-        "Zoom · scroll over the canvas" : "Select · choose structure rows or edit properties";
+        "Zoom · scroll over the canvas" :
+        "Select · choose structure rows or edit properties";
     char canvas_hud[UI_TEXT_MAX_BYTES] = "Zoom · fit and actual size are in View";
     char tile_status[UI_TEXT_MAX_BYTES] = "Preview retained · visible tile rendering";
     if (editor->canvas_document_width > 0U && editor->canvas_document_height > 0U) {

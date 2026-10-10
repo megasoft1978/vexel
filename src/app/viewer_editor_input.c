@@ -88,6 +88,8 @@ static bool editor_delete_selection(viewer_editor *editor)
 
 uint32_t editor_commit_field(viewer_editor *editor)
 {
+    if (editor->field_kind == EDITOR_FIELD_TEXT && editor->text_draft_active)
+        return editor_commit_text_draft(editor);
     if (editor->field_kind == EDITOR_FIELD_NEW_NAME ||
         editor->field_kind == EDITOR_FIELD_NEW_VALUE) {
         editor_field_kind old_kind = editor->field_kind;
@@ -123,6 +125,7 @@ uint32_t editor_commit_field(viewer_editor *editor)
 
 void editor_cancel_field(viewer_editor *editor)
 {
+    editor->text_draft_active = false;
     if (editor->field_kind == EDITOR_FIELD_NEW_NAME ||
         editor->field_kind == EDITOR_FIELD_NEW_VALUE) {
         editor->new_name[0] = '\0'; editor->new_name_length = 0U;
@@ -177,7 +180,7 @@ static uint32_t editor_key_field(viewer_editor *editor, uint16_t key_code,
             uint32_t result = editor_commit_field(editor);
             if ((kind == EDITOR_FIELD_ATTRIBUTE || kind == EDITOR_FIELD_TEXT) &&
                 (result & VIEWER_EDITOR_MUTATED) == 0U) return VIEWER_EDITOR_HANDLED;
-            return result | VIEWER_EDITOR_SAVE;
+            return result | (shift ? VIEWER_EDITOR_SAVE_AS : VIEWER_EDITOR_SAVE);
         }
     }
     if (key_code == 53U) { editor_cancel_field(editor); return VIEWER_EDITOR_HANDLED; }
@@ -235,10 +238,44 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return viewer_editor_cancel_canvas_gesture(editor);
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
+    if (editor_canvas_path_active(editor) && (key_code == 36U || key_code == 76U))
+        return editor_canvas_path_finish(editor,
+            editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON || editor->path_close_preview);
     bool command = (modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
     bool shift = (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U;
+    bool option = (modifiers & PLATFORM_MODIFIER_OPTION) != 0U;
     int character = text_len > 0U ? tolower((unsigned char)text[0]) : -1;
+    if (command && (character == '\'' || key_code == 39U)) {
+        editor->snap_enabled = !editor->snap_enabled;
+        editor->snap_guide_x_visible = false;
+        editor->snap_guide_y_visible = false;
+        editor_status_ok(editor, editor->snap_enabled ? "Snapping on" : "Snapping off");
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (command) {
+        if (shift && character == 'e')
+            return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_EXPORT_PNG;
+        if (option && character == 'c')
+            return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_COPY_PNG;
+        if (character == 'a') return VIEWER_EDITOR_HANDLED |
+            VIEWER_EDITOR_SELECT_ALL;
+        if (character == 'c') return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_COPY;
+        if (character == 'x') return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_CUT;
+        if (character == 'v') return VIEWER_EDITOR_HANDLED |
+            (shift ? VIEWER_EDITOR_PASTE_IN_PLACE : VIEWER_EDITOR_PASTE);
+        if (character == ']' || character == '}' || key_code == 30U) {
+            bool moved = shift ? editor_reorder_to_edge(editor, true) :
+                editor_reorder(editor, true);
+            return moved ? VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED :
+                VIEWER_EDITOR_HANDLED;
+        }
+        if (character == '[' || character == '{' || key_code == 33U) {
+            bool moved = shift ? editor_reorder_to_edge(editor, false) :
+                editor_reorder(editor, false);
+            return moved ? VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED :
+                VIEWER_EDITOR_HANDLED;
+        }
         if (character == 's') return VIEWER_EDITOR_HANDLED |
             (shift ? VIEWER_EDITOR_SAVE_AS : VIEWER_EDITOR_SAVE);
         if (character == 'z') return editor_history(editor, shift);
@@ -277,6 +314,22 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_LINE);
         return VIEWER_EDITOR_HANDLED;
     }
+    if (text_len > 0U && (text[0] == 'y' || text[0] == 'Y')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_POLYGON);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 'u' || text[0] == 'U')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_POLYLINE);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 'p' || text[0] == 'P')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 't' || text[0] == 'T')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_TEXT);
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 48U) {
         if (!editor->tree_ready) editor_build_tree(editor);
         if (ui_focus_next(&editor->tree, shift)) {
@@ -311,6 +364,10 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     if (key_code == 125U) { (void)editor_select_delta(editor, 1); return VIEWER_EDITOR_HANDLED; }
     if (key_code == 123U) { (void)editor_select_parent(editor); return VIEWER_EDITOR_HANDLED; }
     if (key_code == 124U) { (void)editor_select_child(editor); return VIEWER_EDITOR_HANDLED; }
+    if ((key_code == 51U || key_code == 117U) &&
+        editor->draw_tool == VIEWER_EDITOR_TOOL_PEN &&
+        editor->path_selected_node_segment != SIZE_MAX)
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_DELETE_PATH_NODE;
     if (key_code == 51U || key_code == 117U)
         return editor_apply_button(editor, EDITOR_BUTTON_DELETE);
     if (text_len > 0U && text[0] == '[') {

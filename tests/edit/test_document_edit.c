@@ -329,6 +329,112 @@ static int test_empty_text_and_xml_fragment(void)
     return 0;
 }
 
+static int test_replace_xml_region(void)
+{
+    static const uint8_t source[] =
+        "<svg><!--keep--><g id='group'>  <rect id='a'/><!--middle-->"
+        "<ellipse id='b'/></g><path id='tail'/></svg>";
+    document_edit *edit = create_edit((base_bytes){source, sizeof(source) - 1U});
+    CHECK(edit != NULL);
+    document_handle group, first, second;
+    CHECK(find_id(edit, "group", &group) && find_id(edit, "a", &first) &&
+        find_id(edit, "b", &second));
+    document_source_span first_span, second_span;
+    CHECK(document_edit_source_span(edit, first, &first_span) &&
+        document_edit_source_span(edit, second, &second_span));
+    size_t end = second_span.offset + second_span.length;
+    static const uint8_t replacement[] = "<circle id='replacement'/>";
+    CHECK(document_edit_replace_xml_region(edit, group,
+        (document_source_span){first_span.offset, end - first_span.offset},
+        (base_bytes){replacement, sizeof(replacement) - 1U}) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_history_count(edit) == 1U);
+    uint8_t output[512];
+    base_bytes current;
+    CHECK(materialize(edit, output, sizeof(output), &current) && tokenize(current));
+    CHECK(contains(current, "<g id='group'>  <circle id='replacement'/></g>"));
+    CHECK(contains(current, "<!--keep-->") && contains(current, "<path id='tail'/>") &&
+        !contains(current, "id='a'") && !contains(current, "id='b'"));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        equal_bytes(current, (base_bytes){source, sizeof(source) - 1U}));
+
+    static const uint8_t malformed[] = "<circle><rect></circle>";
+    CHECK(find_id(edit, "group", &group) && find_id(edit, "a", &first) &&
+        find_id(edit, "b", &second));
+    CHECK(document_edit_source_span(edit, first, &first_span) &&
+        document_edit_source_span(edit, second, &second_span));
+    CHECK(document_edit_replace_xml_region(edit, group,
+        (document_source_span){first_span.offset,
+            second_span.offset + second_span.length - first_span.offset},
+        (base_bytes){malformed, sizeof(malformed) - 1U}) ==
+        DOCUMENT_EDIT_MALFORMED_XML);
+    CHECK(!document_edit_is_dirty(edit) && document_edit_history_count(edit) == 1U);
+    document_edit_destroy(edit);
+    return 0;
+}
+
+static int test_replace_source_span(void)
+{
+    static const uint8_t source[] = "<svg><path d=\"M 1 2 L 3 4\"/></svg>";
+    document_edit *edit = create_edit((base_bytes){source, sizeof(source) - 1U});
+    CHECK(edit != NULL);
+    size_t number_offset = sizeof("<svg><path d=\"M ") - 1U;
+    static const uint8_t number[] = "10";
+    CHECK(document_edit_replace_source_span(edit,
+        (document_source_span){number_offset, 1U},
+        (base_bytes){number, sizeof(number) - 1U}) == DOCUMENT_EDIT_OK);
+    uint8_t output[128];
+    base_bytes current;
+    static const uint8_t expected[] = "<svg><path d=\"M 10 2 L 3 4\"/></svg>";
+    CHECK(document_edit_history_count(edit) == 1U &&
+        materialize(edit, output, sizeof(output), &current) &&
+        equal_bytes(current, (base_bytes){expected, sizeof(expected) - 1U}));
+    static const uint8_t invalid[] = "<";
+    CHECK(document_edit_replace_source_span(edit,
+        (document_source_span){number_offset, 2U},
+        (base_bytes){invalid, sizeof(invalid) - 1U}) ==
+        DOCUMENT_EDIT_MALFORMED_XML);
+    CHECK(document_edit_history_count(edit) == 1U && document_edit_undo(edit) ==
+        DOCUMENT_EDIT_OK);
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        equal_bytes(current, (base_bytes){source, sizeof(source) - 1U}));
+    document_edit_destroy(edit);
+    return 0;
+}
+
+static int test_insert_text_element(void)
+{
+    static const uint8_t source[] = "<svg/>";
+    document_edit *edit = create_edit((base_bytes){source, sizeof(source) - 1U});
+    CHECK(edit != NULL);
+    document_handle root, inserted;
+    CHECK(document_edit_root(edit, &root));
+    document_edit_template_attribute attributes[2] = {
+        {{(const uint8_t *)"x", 1U}, {(const uint8_t *)"12", 2U}},
+        {{(const uint8_t *)"fill", 4U}, {(const uint8_t *)"#ffffff", 7U}}
+    };
+    CHECK(document_edit_insert_text_element(edit, root, attributes, 2U,
+        (base_bytes){(const uint8_t *)"A<&>", 4U}, &inserted) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_history_count(edit) == 1U);
+    static const uint8_t expected[] =
+        "<svg><text x=\"12\" fill=\"#ffffff\">A&lt;&amp;&gt;</text></svg>";
+    uint8_t output[256];
+    base_bytes current;
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        equal_bytes(current, (base_bytes){expected, sizeof(expected) - 1U}));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK &&
+        materialize(edit, output, sizeof(output), &current) &&
+        equal_bytes(current, (base_bytes){source, sizeof(source) - 1U}));
+    CHECK(document_edit_root(edit, &root));
+    attributes[1].name = attributes[0].name;
+    CHECK(document_edit_insert_text_element(edit, root, attributes, 2U,
+        (base_bytes){(const uint8_t *)"duplicate", 9U}, &inserted) ==
+        DOCUMENT_EDIT_DUPLICATE_ATTRIBUTE);
+    CHECK(document_edit_history_count(edit) == 1U);
+    document_edit_destroy(edit);
+    return 0;
+}
+
 static int test_history_and_save(void)
 {
     static const uint8_t source[] = "<svg><rect id='r' x='0'/></svg>";
@@ -607,6 +713,9 @@ int main(void)
     CHECK(test_queries_and_attributes() == 0);
     CHECK(test_structural_operations() == 0);
     CHECK(test_empty_text_and_xml_fragment() == 0);
+    CHECK(test_replace_xml_region() == 0);
+    CHECK(test_replace_source_span() == 0);
+    CHECK(test_insert_text_element() == 0);
     CHECK(test_history_and_save() == 0);
     CHECK(test_history_bounds() == 0);
     CHECK(test_invalid_source() == 0);

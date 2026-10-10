@@ -307,11 +307,100 @@ done:
     return result;
 }
 
+static int test_save_as_shortcut_flags(void)
+{
+    viewer_editor *editor = viewer_editor_create(
+        (base_bytes){source, sizeof(source) - 1U}, UI_THEME_DARK, 1280U, 800U);
+    int result = 1;
+    CHECK(editor != NULL);
+    uint32_t flags = viewer_editor_key(editor, 0U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "s", 1U);
+    CHECK((flags & (VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_SAVE_AS)) ==
+        (VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_SAVE_AS));
+    CHECK((flags & VIEWER_EDITOR_SAVE) == 0U);
+
+    (void)viewer_editor_key(editor, 124U, 0U, NULL, 0U);
+    (void)viewer_editor_key(editor, 0U, 0U, "e", 1U);
+    (void)viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "a", 1U);
+    (void)viewer_editor_key(editor, 0U, 0U, "11", 2U);
+    flags = viewer_editor_key(editor, 0U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "s", 1U);
+    CHECK((flags & (VIEWER_EDITOR_MUTATED | VIEWER_EDITOR_SAVE_AS)) ==
+        (VIEWER_EDITOR_MUTATED | VIEWER_EDITOR_SAVE_AS));
+    CHECK((flags & VIEWER_EDITOR_SAVE) == 0U);
+    CHECK(well_formed(editor));
+    result = 0;
+done:
+    viewer_editor_destroy(editor);
+    return result;
+}
+
+static int test_png_shortcut_flags(void)
+{
+    viewer_editor *editor = viewer_editor_create(
+        (base_bytes){source, sizeof(source) - 1U}, UI_THEME_DARK, 1280U, 800U);
+    int result = 1;
+    CHECK(editor != NULL);
+    uint32_t flags = viewer_editor_key(editor, 0U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "e", 1U);
+    CHECK((flags & (VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_EXPORT_PNG)) ==
+        (VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_EXPORT_PNG));
+    flags = viewer_editor_key(editor, 0U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_OPTION, "c", 1U);
+    CHECK((flags & (VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_COPY_PNG)) ==
+        (VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_COPY_PNG));
+    result = 0;
+done:
+    viewer_editor_destroy(editor);
+    return result;
+}
+
+static int test_z_order_shortcuts(void)
+{
+    static const uint8_t ordered[] =
+        "<svg><rect id='one'/><ellipse id='two'/><line id='three'/></svg>";
+    viewer_editor *editor = viewer_editor_create((base_bytes){ordered,
+        sizeof(ordered) - 1U}, UI_THEME_DARK, 1280U, 800U);
+    uint8_t bytes[512];
+    size_t length = 0U;
+    int result = 1;
+    CHECK(editor != NULL);
+    (void)viewer_editor_key(editor, 124U, 0U, NULL, 0U);
+    uint32_t flags = viewer_editor_key(editor, 30U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "]", 1U);
+    CHECK((flags & VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, bytes, sizeof(bytes), &length));
+    CHECK(bytes_contain(bytes, length,
+        "<ellipse id='two'/><line id='three'/><rect id='one'/>") );
+    CHECK(well_formed(editor));
+    flags = viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U);
+    CHECK((flags & VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, bytes, sizeof(bytes), &length));
+    CHECK(bytes_equal(bytes, length, ordered, sizeof(ordered) - 1U));
+
+    size_t last_shape_offset = sizeof("<svg><rect id='one'/><ellipse id='two'/>") - 1U;
+    CHECK(viewer_editor_select_at_source_offset(editor, last_shape_offset + 2U));
+    flags = viewer_editor_key(editor, 33U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "[", 1U);
+    CHECK((flags & VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, bytes, sizeof(bytes), &length));
+    CHECK(bytes_contain(bytes, length,
+        "<line id='three'/><rect id='one'/><ellipse id='two'/>") );
+    CHECK(well_formed(editor));
+    result = 0;
+done:
+    viewer_editor_destroy(editor);
+    return result;
+}
+
 int main(void)
 {
     if (test_edit_save_and_semantics() != 0) return 1;
     if (test_structure_and_attribute_controls() != 0) return 1;
     if (test_navigation_commands_commit_active_field() != 0) return 1;
+    if (test_save_as_shortcut_flags() != 0) return 1;
+    if (test_png_shortcut_flags() != 0) return 1;
+    if (test_z_order_shortcuts() != 0) return 1;
     if (test_randomized_events() != 0) return 1;
     (void)puts("editor state: structural edits, save, semantics, and 200000 randomized events passed");
     return 0;

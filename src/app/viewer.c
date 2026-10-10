@@ -315,11 +315,8 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
 {
     size_t length = bounded_length(path, PLATFORM_PATH_CAP - 1U);
     if (length == 0U || length >= PLATFORM_PATH_CAP) return false;
-    if (!initial && viewer_editor_is_dirty(app->editor)) {
-        viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before opening another file");
-        app->frame_dirty = true;
-        return false;
-    }
+    if (!initial && !viewer_confirm_unsaved_changes(app, "Unsaved Changes",
+            "Save changes before opening another document?")) return false;
     viewer_editor_destroy(app->editor);
     app->editor = NULL;
     app->editor_render_requested = false;
@@ -346,6 +343,20 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
     app->frame_dirty = true;
     (void)viewer_set_window_title(app);
     return true;
+}
+
+bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_length)
+{
+    if (app == NULL || path == NULL || path_length == 0U ||
+        path_length >= sizeof(app->path) || memchr(path, '\0', path_length) != NULL)
+        return false;
+    memcpy(app->path, path, path_length);
+    app->path[path_length] = '\0';
+    copy_display_name(app->path, app->display_name);
+    viewer_update_file_stamp(app);
+    app->frame_dirty = true;
+    (void)platform_window_recent_add(app->window, path, path_length);
+    return viewer_set_window_title(app);
 }
 
 static void start_pending_load(viewer_app *app)
@@ -539,11 +550,8 @@ static void start_next_sharp_tile(viewer_app *app)
 
 void viewer_request_close(viewer_app *app)
 {
-    if (viewer_editor_is_dirty(app->editor)) {
-        viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before closing");
-        app->frame_dirty = true;
-        return;
-    }
+    if (!viewer_confirm_unsaved_changes(app, "Unsaved Changes",
+            "Save changes before closing?")) return;
     app->close_requested = true;
     app->pending_open = false;
     app->pending_path[0] = '\0';
@@ -785,7 +793,6 @@ int app_run_viewer(const char *path)
 {
     return run_viewer(path, false);
 }
-
 int app_run_native_viewer_smoke(const char *path)
 {
     return run_viewer(path, true);
