@@ -371,6 +371,11 @@ void viewer_editor_paint(viewer_editor *editor, uint8_t *rgba, size_t capacity,
             const ui_node *node = &editor->tree.nodes[index];
             if (node->bounds.width == 0U || node->bounds.height == 0U ||
                 node->spec.icon != UI_ICON_NONE) continue;
+            if (node->spec.role != UI_ROLE_BUTTON &&
+                node->spec.role != UI_ROLE_TEXT_FIELD &&
+                node->spec.role != UI_ROLE_ROW &&
+                node->spec.role != UI_ROLE_TEXT &&
+                node->spec.role != UI_ROLE_STATUS) continue;
             uint32_t color = (node->spec.state & UI_STATE_INVALID) != 0U ?
                 editor->tree.tokens.error :
                 (node->spec.state & UI_STATE_DISABLED) != 0U ?
@@ -496,6 +501,9 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     }
     if (hit == NULL || hit->spec.id == EDITOR_NODE_CANVAS ||
         hit->spec.id == EDITOR_NODE_WORKSPACE || hit->spec.id == UI_ROOT_ID) return 0U;
+    editor->pressed_id = hit->spec.id;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
     uint32_t prior = 0U;
     if (editor->field_kind != EDITOR_FIELD_NONE && hit->spec.id != editor->focus_id) {
         if (editor->field_kind == EDITOR_FIELD_NEW_NAME ||
@@ -632,4 +640,12 @@ void editor_build_tree(viewer_editor *editor)
     if (editor == NULL) return;
     if (editor->modern_style) editor_build_tree_modern(editor);
     else editor_build_tree_legacy(editor);
+    if (!editor->tree_ready) return;
+    for (size_t index = 0U; index < editor->tree.count; ++index) {
+        ui_node *node = &editor->tree.nodes[index];
+        if (node->spec.id == editor->hovered_id)
+            node->spec.state |= UI_STATE_HOVERED;
+        if (node->spec.id == editor->pressed_id)
+            node->spec.state |= UI_STATE_PRESSED;
+    }
 }

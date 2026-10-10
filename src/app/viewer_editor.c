@@ -161,6 +161,7 @@ void editor_status_error(viewer_editor *editor, document_edit_error error)
     if (amount < 0 || (size_t)amount >= sizeof(editor->status))
         editor_set_text(editor->status, sizeof(editor->status), "Edit rejected");
     editor->tree_ready = false;
+    editor->redraw_requested = true;
 }
 
 void editor_status_ok(viewer_editor *editor, const char *message)
@@ -168,6 +169,7 @@ void editor_status_ok(viewer_editor *editor, const char *message)
     if (message == NULL || message[0] == '\0') message = "Ready";
     editor_set_text(editor->status, sizeof(editor->status), message);
     editor->tree_ready = false;
+    editor->redraw_requested = true;
 }
 
 bool editor_select_outline_index(viewer_editor *editor, size_t index)
@@ -536,6 +538,7 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
     editor->increased_contrast = increased_contrast;
     editor->reduced_motion = reduced_motion;
     editor->tree_ready = false;
+    editor->redraw_requested = true;
     return true;
 }
 
@@ -549,6 +552,7 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
     editor->want_structure = structure_visible;
     editor->want_inspector = inspector_visible;
     editor->tree_ready = false;
+    editor->redraw_requested = true;
     if (editor->modern_style)
         platform_accessibility_set_view_callback(editor_view_menu_changed, editor,
             structure_visible, inspector_visible);
@@ -558,10 +562,41 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
 bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool)
 {
     if (editor == NULL || tool < UI_ICON_SELECT || tool > UI_ICON_ZOOM) return false;
-    if (editor->active_tool == tool) return false;
+    if (editor->active_tool == tool &&
+        editor->draw_tool == VIEWER_EDITOR_TOOL_SELECT) return false;
     editor->active_tool = tool;
+    editor->draw_tool = VIEWER_EDITOR_TOOL_SELECT;
     editor->tree_ready = false;
+    editor->redraw_requested = true;
     return true;
+}
+
+ui_icon_kind viewer_editor_get_tool(const viewer_editor *editor)
+{
+    return editor == NULL ? UI_ICON_SELECT : editor->active_tool;
+}
+
+bool viewer_editor_text_input_active(const viewer_editor *editor)
+{
+    return editor != NULL && editor->field_kind != EDITOR_FIELD_NONE;
+}
+
+bool viewer_editor_set_draw_tool(viewer_editor *editor,
+                                 viewer_editor_draw_tool tool)
+{
+    if (editor == NULL || tool < VIEWER_EDITOR_TOOL_SELECT ||
+        tool > VIEWER_EDITOR_TOOL_LINE) return false;
+    if (editor->draw_tool == tool) return false;
+    editor->draw_tool = tool;
+    editor->active_tool = UI_ICON_SELECT;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+viewer_editor_draw_tool viewer_editor_get_draw_tool(const viewer_editor *editor)
+{
+    return editor == NULL ? VIEWER_EDITOR_TOOL_SELECT : editor->draw_tool;
 }
 
 bool viewer_editor_get_chrome_layout(viewer_editor *editor,
@@ -622,6 +657,15 @@ void viewer_editor_resize(viewer_editor *editor, uint32_t width, uint32_t height
     editor->height = height;
     editor->backing_scale = backing_scale;
     editor->tree_ready = false;
+    editor->redraw_requested = true;
+}
+
+bool viewer_editor_take_redraw_request(viewer_editor *editor)
+{
+    if (editor == NULL) return false;
+    bool requested = editor->redraw_requested;
+    editor->redraw_requested = false;
+    return requested;
 }
 
 size_t viewer_editor_byte_length(const viewer_editor *editor)

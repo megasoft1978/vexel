@@ -231,6 +231,8 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len)
 {
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
+    if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
+        return viewer_editor_cancel_canvas_gesture(editor);
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
     bool command = (modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
@@ -263,6 +265,18 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         (void)viewer_editor_set_tool(editor, UI_ICON_ZOOM);
         return VIEWER_EDITOR_HANDLED;
     }
+    if (text_len > 0U && (text[0] == 'r' || text[0] == 'R')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_RECT);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 'o' || text[0] == 'O')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_ELLIPSE);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (text_len > 0U && (text[0] == 'l' || text[0] == 'L')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_LINE);
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 48U) {
         if (!editor->tree_ready) editor_build_tree(editor);
         if (ui_focus_next(&editor->tree, shift)) {
@@ -286,6 +300,12 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
             editor_status_ok(editor, "Attribute draft cleared");
         }
         return VIEWER_EDITOR_HANDLED;
+    }
+    if (key_code >= 123U && key_code <= 126U && editor->canvas_selection_valid) {
+        double step = shift ? 10.0 : 1.0;
+        double dx = key_code == 123U ? -step : key_code == 124U ? step : 0.0;
+        double dy = key_code == 126U ? -step : key_code == 125U ? step : 0.0;
+        return viewer_editor_nudge_selection(editor, dx, dy);
     }
     if (key_code == 126U) { (void)editor_select_delta(editor, -1); return VIEWER_EDITOR_HANDLED; }
     if (key_code == 125U) { (void)editor_select_delta(editor, 1); return VIEWER_EDITOR_HANDLED; }

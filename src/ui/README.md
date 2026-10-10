@@ -15,6 +15,11 @@ the visible control and caps rendered strings at 16,384 code points; full
 values remain available to VoiceOver up to the editor's 64 KiB per-field limit.
 Icon masks use a small static 24×24 geometry set cached by theme and scale.
 
+Semantic group and list labels remain available to accessibility clients but
+are not painted as visible text. Their child text nodes supply the panel titles.
+Hover and pressed node state is carried through the viewer's pointer bridge and
+invalidates the next frame immediately.
+
 The legacy `ui_tree_paint_into` path keeps its scalar ASCII glyph painter so
 existing deterministic demo goldens remain stable. Production labels use
 `platform_text_ui_draw` through CoreText and accept Unicode input. Both paths
