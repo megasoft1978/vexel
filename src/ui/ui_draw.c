@@ -232,6 +232,7 @@ static bool ui_paint_node(const ui_tree *tree, const ui_node *node, uint8_t *rgb
     if (node->spec.role == UI_ROLE_ROW && (node->spec.state & UI_STATE_CHECKED) != 0U)
         color = tree->tokens.accent;
     if (node->spec.icon != UI_ICON_NONE) {
+        if (!draw_text) return true;
         if ((node->spec.state & UI_STATE_CHECKED) != 0U) color = tree->tokens.accent;
         return ui_icon_paint_legacy_into(node->spec.icon, tree->theme,
             tree->backing_scale > 0.0 ? tree->backing_scale : 1.0,

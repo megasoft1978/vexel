@@ -18,8 +18,9 @@ int main(int argc, char **argv)
         "<g id='layer'><rect id='selected' x='8' y='8' width='40' height='24' fill='#6b9eff'/>"
         "<circle id='dot' cx='32' cy='48' r='8' fill='#ef8354'/></g></svg>";
     ui_theme theme = strcmp(argv[1], "light") == 0 ? UI_THEME_LIGHT : UI_THEME_DARK;
-    viewer_editor *editor = viewer_editor_create((base_bytes){source, sizeof(source) - 1U},
-        theme, EDITOR_SNAPSHOT_WIDTH, EDITOR_SNAPSHOT_HEIGHT);
+    viewer_editor *editor = viewer_editor_create_styled(
+        (base_bytes){source, sizeof(source) - 1U}, theme,
+        EDITOR_SNAPSHOT_WIDTH, EDITOR_SNAPSHOT_HEIGHT, true);
     size_t bytes = (size_t)EDITOR_SNAPSHOT_WIDTH * EDITOR_SNAPSHOT_HEIGHT * 4U;
     uint8_t *rgba = malloc(bytes);
     if (editor == NULL || rgba == NULL) {
@@ -36,7 +37,10 @@ int main(int argc, char **argv)
         rgba[at + 2U] = blue;
         rgba[at + 3U] = 255U;
     }
-    (void)viewer_editor_key(editor, 124U, 0U, NULL, 0U);
+    (void)viewer_editor_key(editor, 125U, 0U, NULL, 0U);
+    (void)viewer_editor_key(editor, 125U, 0U, NULL, 0U);
+    viewer_editor_set_canvas_status(editor, 1.0, false, 0.0, 0.0,
+        64U, 64U, 0U, 0U, false);
     viewer_editor_paint(editor, rgba, bytes, (size_t)EDITOR_SNAPSHOT_WIDTH * 4U);
     bool okay = fwrite(rgba, 1U, bytes, stdout) == bytes;
     viewer_editor_destroy(editor);

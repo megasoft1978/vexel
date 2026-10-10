@@ -6,9 +6,12 @@ and removal, text/structural edits, save, undo/redo, source well-formedness, and
 that undo-all restores the original bytes after a deterministic 200,000-event
 sequence.
 
-`verify_chrome.py` runs `editor_chrome_render` and compares deterministic
-1280x800 dark and light PNGs against the new fixtures in `chrome-golden/`.
-Review both images before using `--update` to replace them.
+`verify_chrome.py` runs `editor_chrome_render` through the modern editor chrome
+path and compares 1280x800 dark and light PNGs in `chrome-golden/`. The renderer
+injects the CoreText callback and explicit theme; it captures editor chrome,
+not the native Metal canvas. Review both images before using `--update` to
+replace them. The deterministic scalar style fixtures remain in
+`tests/ui/style-golden/`.
 
 `native_smoke.sh` opens a temporary SVG in the native viewer, exercises canvas
 selection and transforms, draws and undoes a rectangle and polygon, saves, and

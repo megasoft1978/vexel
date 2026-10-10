@@ -5,6 +5,7 @@
 
 #define EDITOR_OUTLINE_CAP 1024U
 #define EDITOR_OUTLINE_VISIBLE 20U
+#define EDITOR_OUTLINE_FILTER_CAP 64U
 #define EDITOR_ATTRIBUTE_VISIBLE 10U
 #define EDITOR_FIELD_CAP (64U * 1024U)
 #define EDITOR_NAME_CAP 128U
@@ -50,11 +51,19 @@ enum {
     EDITOR_BUTTON_TOGGLE_INSPECTOR,
     EDITOR_BUTTON_HIDE_STRUCTURE,
     EDITOR_BUTTON_HIDE_INSPECTOR,
+    EDITOR_BUTTON_TOOL_RECTANGLE = 400U,
+    EDITOR_BUTTON_TOOL_ELLIPSE,
+    EDITOR_BUTTON_TOOL_LINE,
+    EDITOR_BUTTON_TOOL_PEN,
+    EDITOR_BUTTON_TOOL_NODE,
+    EDITOR_BUTTON_TOOL_TEXT,
     EDITOR_OUTLINE_ROW_BASE = 1000U,
     EDITOR_ATTRIBUTE_ROW_BASE = 10000U,
     EDITOR_TEXT_FIELD_ID = 20000U,
     EDITOR_NEW_NAME_ID,
-    EDITOR_NEW_VALUE_ID
+    EDITOR_NEW_VALUE_ID,
+    EDITOR_OUTLINE_SEARCH_ID = 21000U,
+    EDITOR_RENAME_ID
 };
 
 typedef enum editor_field_kind {
@@ -62,7 +71,9 @@ typedef enum editor_field_kind {
     EDITOR_FIELD_ATTRIBUTE,
     EDITOR_FIELD_TEXT,
     EDITOR_FIELD_NEW_NAME,
-    EDITOR_FIELD_NEW_VALUE
+    EDITOR_FIELD_NEW_VALUE,
+    EDITOR_FIELD_SEARCH,
+    EDITOR_FIELD_RENAME
 } editor_field_kind;
 
 typedef enum editor_canvas_gesture_kind {
@@ -96,9 +107,20 @@ struct viewer_editor {
     document_handle selected;
     document_handle outline[EDITOR_OUTLINE_CAP];
     uint16_t outline_depth[EDITOR_OUTLINE_CAP];
+    uint16_t outline_visible[EDITOR_OUTLINE_CAP];
+    document_handle collapsed_handles[EDITOR_OUTLINE_CAP];
+    document_handle locked_handles[EDITOR_OUTLINE_CAP];
+    char outline_filter[EDITOR_OUTLINE_FILTER_CAP];
+    char outline_filter_original[EDITOR_OUTLINE_FILTER_CAP];
+    size_t outline_filter_length;
+    size_t outline_filter_original_length;
+    size_t outline_visible_count;
+    size_t collapsed_count;
+    size_t locked_count;
     size_t outline_count;
     size_t selected_index;
     size_t outline_start;
+    size_t outline_visible_start;
     size_t attribute_start;
     size_t selected_attribute;
     size_t selected_offset;
@@ -204,6 +226,13 @@ bool editor_add_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                      ui_role role, const char *label, size_t label_len,
                      const char *value, size_t value_len, uint32_t state,
                      uint32_t command_id);
+bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
+                     ui_axis axis, uint32_t width, uint32_t height,
+                     uint32_t padding, uint32_t gap, uint32_t color,
+                     ui_role role, ui_widget_kind widget, ui_icon_kind icon,
+                     const char *label, size_t label_len,
+                     const char *value, size_t value_len, uint32_t state,
+                     uint32_t command_id);
 size_t editor_format_outline(const viewer_editor *editor, size_t index,
                              char out[UI_TEXT_MAX_BYTES]);
 size_t editor_utf8_prefix(const uint8_t *bytes, size_t length, size_t maximum);
@@ -212,6 +241,18 @@ const document_model *editor_model(const viewer_editor *editor);
 void editor_status_error(viewer_editor *editor, document_edit_error error);
 void editor_status_ok(viewer_editor *editor, const char *message);
 void editor_refresh_outline(viewer_editor *editor);
+void editor_capture_selection_identity(viewer_editor *editor);
+void editor_rebuild_visible_outline(viewer_editor *editor);
+bool editor_outline_visible_model_index(const viewer_editor *editor, size_t row,
+                                        size_t *out_index);
+bool editor_outline_is_collapsed(const viewer_editor *editor, size_t index);
+bool editor_outline_toggle_collapsed(viewer_editor *editor, size_t index);
+bool editor_outline_toggle_visibility(viewer_editor *editor, size_t index);
+bool editor_outline_toggle_lock(viewer_editor *editor, size_t index);
+bool editor_outline_is_locked(const viewer_editor *editor, document_handle handle);
+bool editor_canvas_selection_is_locked(viewer_editor *editor);
+void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens);
+bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens);
 void editor_select_handle(viewer_editor *editor, document_handle selected);
 void editor_rebind_after_change(viewer_editor *editor, size_t old_offset,
                                 const char *old_id, document_handle preferred);
@@ -281,5 +322,7 @@ void editor_cancel_field(viewer_editor *editor);
 uint32_t editor_history(viewer_editor *editor, bool redo);
 void editor_build_tree(viewer_editor *editor);
 void editor_build_tree_modern(viewer_editor *editor);
+void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
+                          size_t capacity, size_t stride);
 
 #endif

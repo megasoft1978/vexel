@@ -1,33 +1,33 @@
 {
   "images": {
     "components-dark-1x.png": {
-      "height": 1392,
+      "height": 1444,
       "scale": 1,
-      "sha256": "d4888b6a943f4dcb25e39e121ed55d0bbc49e0149f2fa599fc80b64d1f0e8c55",
+      "sha256": "80bcc9fbc1e74ce3c95c8a664cc628a5b2c7ab28902e81a6b7224949be919710",
       "sheet": "components",
       "theme": "dark",
       "width": 1284
     },
     "components-dark-2x.png": {
-      "height": 2784,
+      "height": 2888,
       "scale": 2,
-      "sha256": "d83aafe4541760603192ff5a7d4f1d25a4e3c5f7d477b19d7ee698c4529ec872",
+      "sha256": "84ab05c86265ce11a40092e9ab6dad2f155426f15e241c054db74c66d738bfe7",
       "sheet": "components",
       "theme": "dark",
       "width": 2568
     },
     "components-light-1x.png": {
-      "height": 1392,
+      "height": 1444,
       "scale": 1,
-      "sha256": "6ecc9cdb6c370a74bb5275ae57fff754e49c554d0e414675673eafa2fb9fc793",
+      "sha256": "b466e7a683ef12d3253461ef982bfaad1f0084f57f46c2f7e0f6a73b9fb716cd",
       "sheet": "components",
       "theme": "light",
       "width": 1284
     },
     "components-light-2x.png": {
-      "height": 2784,
+      "height": 2888,
       "scale": 2,
-      "sha256": "8ee2b3a1028290d16356f02cd7fe619988f8778bff649a891f372e8823f7382f",
+      "sha256": "b2af2a8d251617ea6122b9acfc46a65c89e86f69e412833d032c9a6821aa4757",
       "sheet": "components",
       "theme": "light",
       "width": 2568
@@ -35,7 +35,7 @@
     "icons-dark-1x.png": {
       "height": 534,
       "scale": 1,
-      "sha256": "88a113a4d051c3b4f4157cac12728b5e340b1198147779e774f29f4cc36fa688",
+      "sha256": "c45c794fe9b5f1e634304ff11a251ebc0c25658195414bd4c711e5375ec87904",
       "sheet": "icons",
       "theme": "dark",
       "width": 462
@@ -43,7 +43,7 @@
     "icons-dark-2x.png": {
       "height": 1068,
       "scale": 2,
-      "sha256": "c1bd04f782102b45e0237b771813ae4135c305851f58d68f46d058802ecf9f56",
+      "sha256": "91983e081e6a48b816b06176ea5e9d4e60233ab0829cf763335b0e1560906c0c",
       "sheet": "icons",
       "theme": "dark",
       "width": 924
@@ -51,7 +51,7 @@
     "icons-light-1x.png": {
       "height": 534,
       "scale": 1,
-      "sha256": "0332b205b793dde6a77a0a27a2e3f55ea6d7e3264fa3b02247776a060ef0e899",
+      "sha256": "645d48a68eedcc093e4e4b482ef9ba5f4705ae196b919f26ecb96b2cf7952eb2",
       "sheet": "icons",
       "theme": "light",
       "width": 462
@@ -59,7 +59,7 @@
     "icons-light-2x.png": {
       "height": 1068,
       "scale": 2,
-      "sha256": "c7182ea2ae2930b78c654817bf8405af864ce967409ccadd2ef16f5160857238",
+      "sha256": "c9e3fa216bbce2c806262d92e0c56d828daffdbae02d714ef6e952d5d62c6e77",
       "sheet": "icons",
       "theme": "light",
       "width": 924

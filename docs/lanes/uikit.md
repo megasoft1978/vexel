@@ -1,8 +1,10 @@
 # W7 UIKit
 
 This lane adds the reusable UI kit for the token/surface/icon portion of
-WO-UI-01 and the widget primitives from WO-UI-03. The app toolbar and inspector
-remain on the frozen painter until the integration lane adopts these APIs.
+WO-UI-01 and the widget primitives from WO-UI-03. The w8-chrome integration
+uses these APIs for the application toolbar, searchable layer tree, inspector,
+canvas HUD, and status bar; the original scalar painter remains for deterministic
+legacy fixtures.
 
 ## Delivered
 
@@ -58,9 +60,9 @@ remain on the frozen painter until the integration lane adopts these APIs.
 
 ## Limits
 
-- The component gallery uses the deterministic scalar label callback. Runtime
-  clients provide their platform text callback; these primitives are not yet
-  wired into the editor chrome.
+- The component gallery uses the deterministic scalar label callback. The
+  application chrome injects the CoreText callback and draws SF Pro Text or SF
+  Mono through the modern widget painter.
 - Text edits are bounded to 127 UTF-8 bytes and semantic labels to 63 bytes.
   Number and hex fields validate and commit values but do not own app document
   commands.

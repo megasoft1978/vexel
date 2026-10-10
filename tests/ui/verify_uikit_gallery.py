@@ -16,7 +16,7 @@ GOLDENS = ROOT / "tests/ui/uikit-golden"
 DOCS = ROOT / "docs/ui"
 THEMES = ("light", "dark")
 SCALES = (1, 2)
-SHEETS = {"components": (1284, 1392), "icons": (462, 534)}
+SHEETS = {"components": (1284, 1444), "icons": (462, 534)}
 
 
 def png_chunk(kind: bytes, data: bytes) -> bytes:

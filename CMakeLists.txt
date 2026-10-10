@@ -665,7 +665,12 @@ if(BUILD_TESTING)
 endif()
 
 # lane: w4-ui
-target_sources(vexel_editor_ui PRIVATE src/app/viewer_chrome_editor.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_chrome_editor.c
+    src/app/viewer_chrome_structure.c
+    src/app/viewer_chrome_inspector.c
+    src/app/viewer_editor_structure.c
+    src/app/viewer_editor_widget_paint.c)
 add_library(vexel_platform_text_ui STATIC
     src/platform/platform_text_ui.m
     src/platform/macos/platform_accessibility.m)
@@ -840,6 +845,7 @@ target_sources(vexel_ui_core PRIVATE
     src/ui/ui_icon_paths.c
     src/ui/ui_icons_legacy.c
     src/ui/ui_widget_input.c
+    src/ui/ui_widget_canvas.c
     src/ui/ui_widget_paint.c)
 add_executable(ui_kit_test tests/ui/ui_kit_test.c)
 target_link_libraries(ui_kit_test PRIVATE vexel_ui_core m)

@@ -85,8 +85,8 @@ ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast)
 
 ui_type_scale ui_theme_type_scale(void)
 {
-    return (ui_type_scale){.document_title_pt = 14U, .panel_heading_pt = 14U,
-        .section_heading_pt = 13U, .body_pt = 13U, .secondary_pt = 12U,
+    return (ui_type_scale){.document_title_pt = 14U, .panel_heading_pt = 13U,
+        .section_heading_pt = 12U, .body_pt = 13U, .secondary_pt = 12U,
         .metadata_pt = 11U, .geometry_pt = 12U, .empty_heading_pt = 22U,
         .geometry_family = UI_FONT_MONOSPACED, .title_weight = UI_FONT_SEMIBOLD,
         .section_weight = UI_FONT_SEMIBOLD, .empty_heading_weight = UI_FONT_SEMIBOLD};
@@ -96,7 +96,7 @@ ui_metrics ui_design_metrics(void)
 {
     return (ui_metrics){.toolbar_height = 40U, .context_height = 32U,
         .tool_rail_width = 44U, .structure_width = 232U, .inspector_width = 320U,
-        .status_height = 24U, .tree_row_height = 26U, .section_header_height = 32U,
+        .status_height = 24U, .tree_row_height = 28U, .section_header_height = 24U,
         .field_height = 30U, .icon_button_target = 28U, .icon_button_glyph = 17U,
         .control_radius = 6U};
 }
