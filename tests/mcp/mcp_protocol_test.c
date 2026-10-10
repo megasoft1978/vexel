@@ -78,6 +78,16 @@ int main(void)
     const char *validation_error = NULL;
     CHECK(mcp_tool_validate(&doc, doc.root, "attribute_set", &validation_error));
     mcp_json_doc_destroy(&doc);
+    const char *animation_args =
+        "{\"documentId\":\"doc\",\"animationId\":\"pulse\",\"name\":\"dur\",\"value\":\"2s\"}";
+    CHECK(mcp_json_parse((const uint8_t *)animation_args, strlen(animation_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root, "animation_set", &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *export_args =
+        "{\"documentId\":\"doc\",\"path\":\"/tmp/out.gif\",\"format\":\"gif\",\"fps\":12,\"duration\":1.5}";
+    CHECK(mcp_json_parse((const uint8_t *)export_args, strlen(export_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root, "export_animation", &validation_error));
+    mcp_json_doc_destroy(&doc);
     const char *bad_args = "{\"documentId\":\"doc\",\"elementId\":\"rect\",\"name\":4,\"value\":\"red\",\"extra\":true}";
     CHECK(mcp_json_parse((const uint8_t *)bad_args, strlen(bad_args), &doc));
     CHECK(!mcp_tool_validate(&doc, doc.root, "attribute_set", &validation_error));

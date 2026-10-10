@@ -160,6 +160,7 @@ bool raster_shape_bounds_build(const svg_shape_document *doc,
     }
     for (size_t i = 0U; i < doc->edge_count; i++) {
         size_t shape = doc->shape_ids[i];
+        if (shape >= doc->shape_count) continue;
         if (doc->shape_filled[shape]) {
             bounds_include(&fills[shape], doc->edges[i].a);
             bounds_include(&fills[shape], doc->edges[i].b);

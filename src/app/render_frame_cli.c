@@ -9,10 +9,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define VIEWER_CLI_PATH_MAX 4096U
 #define VIEWER_CLI_NUMBER_MAX 63U
 #define VIEWER_CLI_PAN_MAX 10000000.0
+#define ANIMATION_CLI_TOTAL_FRAME_PIXELS 32000000ULL
+
+static void report_load_failure(const char *path,
+                                const viewer_loaded_document *document);
 
 typedef struct render_options {
     const char *input_path;
@@ -22,6 +27,7 @@ typedef struct render_options {
     double zoom;
     double pan_x;
     double pan_y;
+    double time_seconds;
     uint32_t region_x;
     uint32_t region_y;
     uint32_t region_width;
@@ -29,6 +35,7 @@ typedef struct render_options {
     bool has_zoom;
     bool has_pan;
     bool has_region;
+    bool has_time;
 } render_options;
 
 static size_t bounded_length(const char *text, size_t limit)
@@ -192,6 +199,11 @@ static bool parse_options(int argc, char *argv[], render_options *options)
             if (!parse_region(value, &options->region_x, &options->region_y,
                               &options->region_width, &options->region_height)) return false;
             options->has_region = true;
+        } else if (strcmp(option, "--time") == 0 && !options->has_time) {
+            if (!parse_number(value, &options->time_seconds) ||
+                options->time_seconds < 0.0 || options->time_seconds > 3600.0)
+                return false;
+            options->has_time = true;
         } else {
             return false;
         }
@@ -233,7 +245,9 @@ static bool render_region_tile(const viewer_loaded_document *document,
     if (!isfinite(view.view_x) || !isfinite(view.view_y) ||
         !isfinite(view.view_width) || !isfinite(view.view_height) ||
         !(view.view_width > 0.0) || !(view.view_height > 0.0)) return false;
-    return raster_shape_render(&view, out_tile, out_diagnostic);
+    return options->has_time ?
+        raster_shape_render_at(&view, options->time_seconds, out_tile, out_diagnostic) :
+        raster_shape_render(&view, out_tile, out_diagnostic);
 }
 
 static bool write_ppm(const char *path, const uint8_t *rgba, uint32_t width, uint32_t height)
@@ -259,6 +273,140 @@ static bool write_ppm(const char *path, const uint8_t *rgba, uint32_t width, uin
     return okay;
 }
 
+static bool write_tile_ppm(const char *path, const raster_tile *tile)
+{
+    if (path == NULL || tile == NULL || tile->rgba == NULL || tile->width == 0U ||
+        tile->height == 0U || tile->width > 8192U || tile->height > 8192U) return false;
+    FILE *file = fopen(path, "wb");
+    if (file == NULL) return false;
+    char header[64];
+    int header_length = snprintf(header, sizeof(header), "P6\n%u %u\n255\n",
+                                 tile->width, tile->height);
+    bool okay = header_length > 0 && (size_t)header_length < sizeof(header) &&
+        fwrite(header, 1U, (size_t)header_length, file) == (size_t)header_length;
+    uint8_t row[8192U * 3U];
+    size_t pixel_count = (size_t)tile->width * tile->height;
+    if (pixel_count > tile->byte_count / 4U) okay = false;
+    for (uint32_t y = 0U; okay && y < tile->height; y++) {
+        for (uint32_t x = 0U; x < tile->width; x++) {
+            size_t source_offset = ((size_t)y * tile->width + x) * 4U;
+            size_t output_offset = (size_t)x * 3U;
+            uint32_t alpha = tile->rgba[source_offset + 3U];
+            for (size_t channel = 0U; channel < 3U; channel++) {
+                uint32_t value = tile->rgba[source_offset + channel] + 255U - alpha;
+                row[output_offset + channel] = (uint8_t)(value > 255U ? 255U : value);
+            }
+        }
+        okay = fwrite(row, 1U, (size_t)tile->width * 3U, file) ==
+            (size_t)tile->width * 3U;
+    }
+    if (fclose(file) != 0) okay = false;
+    return okay;
+}
+
+static bool parse_animation_cli(int argc, char *argv[], const char **input,
+                                char output_directory[VIEWER_CLI_PATH_MAX + 1U],
+                                uint32_t *fps, double *duration, size_t *frame_count)
+{
+    if (argc < 9 || argv == NULL || strcmp(argv[1], "--render-animation") != 0)
+        return false;
+    size_t input_length = bounded_length(argv[2], VIEWER_CLI_PATH_MAX);
+    if (input_length == 0U || input_length > VIEWER_CLI_PATH_MAX) return false;
+    *input = argv[2];
+    bool has_fps = false, has_duration = false, has_output = false;
+    uint32_t parsed_fps = 0U;
+    double parsed_duration = 0.0;
+    for (int index = 3; index < argc; index++) {
+        if (index + 1 >= argc) return false;
+        const char *option = argv[index++];
+        const char *value = argv[index];
+        if (strcmp(option, "--fps") == 0 && !has_fps) {
+            if (!parse_positive_integer(value, 60U, &parsed_fps)) return false;
+            has_fps = true;
+        } else if (strcmp(option, "--duration") == 0 && !has_duration) {
+            if (!parse_number(value, &parsed_duration) || parsed_duration <= 0.0 ||
+                parsed_duration > SVG_ANIM_MAX_TIMELINE_SECONDS) return false;
+            has_duration = true;
+        } else if (strcmp(option, "--out") == 0 && !has_output) {
+            size_t output_length = bounded_length(value, VIEWER_CLI_PATH_MAX);
+            if (output_length == 0U || output_length > VIEWER_CLI_PATH_MAX) return false;
+            memcpy(output_directory, value, output_length);
+            output_directory[output_length] = '\0';
+            has_output = true;
+        } else return false;
+    }
+    if (!has_fps || !has_duration || !has_output) return false;
+    double requested = ceil((double)parsed_fps * parsed_duration);
+    if (!isfinite(requested) || requested < 1.0 || requested > 300.0) return false;
+    *fps = parsed_fps;
+    *duration = parsed_duration;
+    *frame_count = (size_t)requested;
+    return true;
+}
+
+int app_run_render_animation(int argc, char *argv[])
+{
+    const char *input = NULL;
+    char output_directory[VIEWER_CLI_PATH_MAX + 1U] = {0};
+    uint32_t fps = 0U;
+    double duration = 0.0;
+    size_t frame_count = 0U;
+    if (!parse_animation_cli(argc, argv, &input, output_directory, &fps,
+                             &duration, &frame_count)) {
+        (void)fputs("render-animation: expected <file.svg> --fps 1..60 --duration 0..3600 "
+                    "--out <existing-directory> (at most 300 frames)\n", stderr);
+        return 2;
+    }
+    struct stat directory_status;
+    if (stat(output_directory, &directory_status) != 0 || !S_ISDIR(directory_status.st_mode)) {
+        (void)fprintf(stderr, "render-animation: output directory is missing: %s\n",
+                      output_directory);
+        return 2;
+    }
+    viewer_loaded_document document = {0};
+    viewer_load_status status = viewer_load_document(input, NULL, &document);
+    if (status != VIEWER_LOAD_OK) {
+        report_load_failure(input, &document);
+        viewer_loaded_document_destroy(&document);
+        return 1;
+    }
+    uint64_t frame_pixels = (uint64_t)document.shape.width * document.shape.height;
+    if (frame_pixels == 0U || frame_pixels > ANIMATION_CLI_TOTAL_FRAME_PIXELS / frame_count) {
+        viewer_loaded_document_destroy(&document);
+        (void)fputs("render-animation: total frame pixel budget exceeded\n", stderr);
+        return 2;
+    }
+    bool okay = true;
+    for (size_t frame_index = 0U; okay && frame_index < frame_count; frame_index++) {
+        double time_seconds = (double)frame_index / (double)fps;
+        raster_tile tile = {0};
+        svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
+        okay = raster_shape_render_at(&document.shape, time_seconds, &tile, &diagnostic);
+        char path[VIEWER_CLI_PATH_MAX + 1U];
+        size_t directory_length = strlen(output_directory);
+        bool has_separator = directory_length > 0U &&
+            output_directory[directory_length - 1U] == '/';
+        int path_length = snprintf(path, sizeof(path), "%s%sframe-%04zu.ppm",
+            output_directory, has_separator ? "" : "/", frame_index);
+        okay = okay && path_length > 0 && (size_t)path_length < sizeof(path) &&
+            write_tile_ppm(path, &tile);
+        raster_tile_destroy(&tile);
+        if (!okay && diagnostic.category != SVG_SHAPE_ERROR_NONE) {
+            const char *name = svg_shape_error_name(diagnostic.category);
+            (void)fprintf(stderr, "render-animation: frame %zu failed: %s at byte %zu\n",
+                frame_index, name == NULL ? "render failed" : name, diagnostic.offset);
+        }
+    }
+    viewer_loaded_document_destroy(&document);
+    if (!okay) {
+        (void)fputs("render-animation: frame rendering or writing failed\n", stderr);
+        return 1;
+    }
+    (void)printf("render-animation: wrote %zu PPM frames at %u fps over %.6g seconds\n",
+                 frame_count, fps, duration);
+    return 0;
+}
+
 static void report_load_failure(const char *path, const viewer_loaded_document *document)
 {
     if (document->shape_error != SVG_SHAPE_ERROR_NONE) {
@@ -278,6 +426,7 @@ int app_run_render_frame(int argc, char *argv[])
     if (!parse_options(argc, argv, &options)) {
         (void)fputs("render-frame: expected <file.svg> --size WxH --out <file.ppm> "
                     "[--zoom N] [--pan X,Y] [--region X,Y,W,H] "
+                    "[--time seconds] "
                     "(size 1..8192, zoom 0.001..1000, source region in document pixels)\n",
                     stderr);
         return 2;
@@ -287,6 +436,19 @@ int app_run_render_frame(int argc, char *argv[])
     const raster_tile *display_tile = NULL;
     viewer_load_status load_status = viewer_load_document(options.input_path, NULL, &document);
     bool loaded = load_status == VIEWER_LOAD_OK;
+    if (loaded && options.has_time && !options.has_region) {
+        raster_tile animated = {0};
+        svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
+        if (!raster_shape_render_at(&document.shape, options.time_seconds,
+                                    &animated, &diagnostic)) {
+            document.shape_error = diagnostic.category;
+            document.error_offset = diagnostic.offset;
+            loaded = false;
+        } else {
+            raster_tile_destroy(&document.tile);
+            document.tile = animated;
+        }
+    }
     if (loaded && options.has_region) {
         svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
         if (!render_region_tile(&document, &options, &region_tile, &diagnostic)) {

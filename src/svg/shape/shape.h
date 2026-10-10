@@ -4,6 +4,7 @@
 #include "base.h"
 #include "geometry.h"
 #include "media.h"
+#include "../animation/animation.h"
 #include "xml_tokenizer.h"
 
 #include <stdbool.h>
@@ -232,6 +233,7 @@ struct svg_shape_document {
     svg_shape_clip **clips;
     bool has_clips;
     size_t clip_bytes;
+    svg_anim_document animation;
     base_bytes source; /* borrowed; caller keeps source alive with document */
 };
 

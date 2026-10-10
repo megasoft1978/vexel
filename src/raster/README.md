@@ -19,6 +19,14 @@ earlier opaque fills at each subpixel before coverage is resolved. A
 `fill="none"` element is parsed but does not erase earlier pixels. The output
 tile must be empty when passed in.
 
+`raster_shape_render_at` evaluates the document's bounded SMIL overlay at a
+caller-supplied time. It clones only the mutable geometry/color/stroke arrays
+needed for that frame, leaves source and decoded arrays unchanged, and reuses
+the regular deterministic scalar renderer. Numeric leaf geometry, solid fill
+and stroke color, opacity, transform, and line motion are applied. Animated
+path morphing currently returns an unsupported diagnostic because the scene
+stores flattened path edges.
+
 Embedded PNG/JPEG image fills sample provider-owned premultiplied RGBA8 with
 bilinear interpolation in inverse-transformed local coordinates. Sampling is
 bounded by the image viewport, source pixel dimensions, and clip chain; image
