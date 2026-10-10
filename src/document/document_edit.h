@@ -69,8 +69,8 @@ document_edit_result document_edit_create(base_bytes source, document_edit_limit
 void document_edit_destroy(document_edit *edit);
 
 /* The model, slices, and source spans are borrowed until the next successful
- * edit, undo, redo, save-as, or destroy. Handles from an earlier snapshot are
- * rejected after any state change. */
+ * edit, undo, redo, or destroy. Saving the unchanged snapshot preserves them.
+ * Handles from an earlier snapshot are rejected after any source state change. */
 const document_model *document_edit_model(document_edit *edit);
 bool document_edit_root(document_edit *edit, document_handle *out);
 bool document_edit_find_id(document_edit *edit, base_bytes id, document_handle *out);

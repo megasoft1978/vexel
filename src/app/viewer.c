@@ -15,6 +15,7 @@
 #include "viewer_quality.h"
 #include "viewer_chrome.h"
 #include "viewer_canvas_geometry.h"
+#include "viewer_editor_test_layout.h"
 
 #include <math.h>
 #include <stdatomic.h>
@@ -37,6 +38,60 @@ static double monotonic_ms(void)
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0.0;
     return (double)now.tv_sec * 1000.0 + (double)now.tv_nsec / 1000000.0;
+}
+
+static bool viewer_test_layout_dump(viewer_app *app)
+{
+    const char *path = getenv("VEXEL_TEST_LAYOUT_DUMP");
+    if (path == NULL || path[0] == '\0' || app == NULL || app->editor == NULL ||
+        !app->navigation_ready || !app->document_visible) return true;
+    double now = monotonic_ms();
+    if (now - app->test_layout_last_write_ms < 100.0) return true;
+    app->test_layout_last_write_ms = now;
+
+    size_t path_length = bounded_length(path, PLATFORM_PATH_CAP - 1U);
+    double origin_x = 0.0, origin_y = 0.0;
+    char temporary[PLATFORM_PATH_CAP + 8U];
+    if (path_length == 0U || path_length >= PLATFORM_PATH_CAP ||
+        path_length + sizeof(".tmp") > sizeof(temporary) ||
+        !platform_window_content_screen_origin(app->window, &origin_x, &origin_y)) {
+        if (!app->test_layout_dump_failed)
+            (void)fputs("viewer: invalid VEXEL_TEST_LAYOUT_DUMP target or window origin\n",
+                stderr);
+        app->test_layout_dump_failed = true;
+        return false;
+    }
+    memcpy(temporary, path, path_length);
+    memcpy(temporary + path_length, ".tmp", sizeof(".tmp"));
+    FILE *stream = fopen(temporary, "wb");
+    if (stream == NULL) goto failed;
+    double translate_x = (double)app->navigation_canvas.x + app->navigation.pan_x;
+    double translate_y = (double)app->navigation_canvas.y + app->navigation.pan_y;
+    bool okay = fprintf(stream,
+        "{\"window_content_origin\":{\"x\":%.9g,\"y\":%.9g},"
+        "\"backing_scale\":%.9g,\"window\":{\"width\":%u,\"height\":%u},"
+        "\"canvas\":{\"x\":%u,\"y\":%u,\"width\":%u,\"height\":%u},"
+        "\"document\":{\"width\":%u,\"height\":%u},"
+        "\"view\":{\"scale\":%.9g,\"translate_x\":%.9g,\"translate_y\":%.9g},"
+        "\"nodes\":",
+        origin_x, origin_y, app->backing_scale, app->width, app->height,
+        app->navigation_canvas.x, app->navigation_canvas.y,
+        app->navigation_canvas.width, app->navigation_canvas.height,
+        app->document.tile.width, app->document.tile.height,
+        app->navigation.scale, translate_x, translate_y) >= 0 &&
+        viewer_editor_test_layout_write_nodes(app->editor, stream) &&
+        fputs("}\n", stream) != EOF;
+    if (fclose(stream) != 0) okay = false;
+    if (!okay || rename(temporary, path) != 0) goto failed;
+    return true;
+
+failed:
+    if (!app->test_layout_dump_failed)
+        (void)fprintf(stderr, "viewer: could not write VEXEL_TEST_LAYOUT_DUMP: %s\n",
+            path);
+    app->test_layout_dump_failed = true;
+    (void)remove(temporary);
+    return false;
 }
 
 static void copy_display_name(const char *path, char out[256])
@@ -607,14 +662,16 @@ static void start_editor_render(viewer_app *app)
 {
     if (!app->editor_render_requested || app->job != NULL || app->editor == NULL ||
         app->close_requested) return;
+    const size_t source_limit = (size_t)1024U * 1024U * 1024U;
     size_t length = viewer_editor_byte_length(app->editor);
-    if (length == 0U || length > (size_t)1024U * 1024U * 1024U) {
+    if (length == 0U || length > source_limit - VIEWER_EDITOR_PREVIEW_EXTRA_BYTES) {
         viewer_editor_set_status(app->editor, "Edited document exceeds the render source limit");
         app->editor_render_requested = false;
         app->frame_dirty = true;
         return;
     }
-    uint8_t *source = malloc(length);
+    size_t capacity = length + VIEWER_EDITOR_PREVIEW_EXTRA_BYTES;
+    uint8_t *source = malloc(capacity);
     if (source == NULL) {
         viewer_editor_set_status(app->editor, "Preview update failed: source allocation failed");
         app->editor_render_requested = false;
@@ -622,8 +679,8 @@ static void start_editor_render(viewer_app *app)
         return;
     }
     size_t materialized = 0U;
-    if (!viewer_editor_materialize(app->editor, source, length, &materialized) ||
-        materialized != length) {
+    if (!viewer_editor_materialize_preview(app->editor, source, capacity,
+            &materialized) || materialized == 0U || materialized > source_limit) {
         free(source);
         viewer_editor_set_status(app->editor, "Preview update failed: source snapshot unavailable");
         app->editor_render_requested = false;
@@ -642,7 +699,7 @@ static void start_editor_render(viewer_app *app)
     job->kind = VIEWER_JOB_EDIT_RENDER;
     job->generation = app->generation;
     job->source_snapshot = source;
-    job->source_snapshot_length = length;
+    job->source_snapshot_length = materialized;
     if (!submit_job(app, job)) {
         viewer_job_destroy(job);
         viewer_editor_set_status(app->editor, "Preview update failed: worker queue unavailable");
@@ -754,6 +811,7 @@ static int run_viewer(const char *path, bool smoke_mode)
             app.running = false;
             break;
         }
+        (void)viewer_test_layout_dump(&app);
         if (app.smoke_mode && !app.smoke_scripted && app.document_visible &&
             app.presented_frames > 0U) {
             if (!script_native_smoke(&app)) {

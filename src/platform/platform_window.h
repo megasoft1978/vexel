@@ -87,6 +87,9 @@ typedef struct platform_window_config {
 bool platform_init(void);
 bool platform_window_create(const platform_window_config *config, platform_window **out_window);
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points);
+/* Content-view top-left in the global point coordinates accepted by CGEvent. */
+bool platform_window_content_screen_origin(platform_window *window,
+                                           double *out_x, double *out_y);
 bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
 /* Starts a non-blocking macOS Open sheet; selection arrives as a later file event. */
 bool platform_window_open_panel(platform_window *window);

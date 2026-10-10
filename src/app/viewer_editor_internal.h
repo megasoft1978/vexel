@@ -12,6 +12,9 @@
 #define EDITOR_STATUS_CAP 192U
 #define EDITOR_DEPTH_CAP 256U
 #define EDITOR_CANVAS_SELECTION_CAP 128U
+#define EDITOR_VISIBILITY_OVERRIDE_CAP EDITOR_OUTLINE_CAP
+#define EDITOR_OUTLINE_ACTION_WIDTH_POINTS 34U
+#define EDITOR_OUTLINE_VISIBILITY_WIDTH_POINTS 16U
 #define EDITOR_TOOLBAR_HEIGHT 40U
 #define EDITOR_STATUS_HEIGHT 24U
 #define EDITOR_LEFT_WIDTH 232U
@@ -113,6 +116,8 @@ struct viewer_editor {
     uint16_t outline_visible[EDITOR_OUTLINE_CAP];
     document_handle collapsed_handles[EDITOR_OUTLINE_CAP];
     document_handle locked_handles[EDITOR_OUTLINE_CAP];
+    document_handle visibility_handles[EDITOR_VISIBILITY_OVERRIDE_CAP];
+    bool visibility_values[EDITOR_VISIBILITY_OVERRIDE_CAP];
     char outline_filter[EDITOR_OUTLINE_FILTER_CAP];
     char outline_filter_original[EDITOR_OUTLINE_FILTER_CAP];
     size_t outline_filter_length;
@@ -120,6 +125,7 @@ struct viewer_editor {
     size_t outline_visible_count;
     size_t collapsed_count;
     size_t locked_count;
+    size_t visibility_count;
     size_t outline_count;
     size_t selected_index;
     size_t outline_start;
@@ -254,6 +260,8 @@ bool editor_outline_visible_model_index(const viewer_editor *editor, size_t row,
 bool editor_outline_is_collapsed(const viewer_editor *editor, size_t index);
 bool editor_outline_toggle_collapsed(viewer_editor *editor, size_t index);
 bool editor_outline_toggle_visibility(viewer_editor *editor, size_t index);
+bool editor_outline_is_visible(viewer_editor *editor, document_handle handle);
+void editor_outline_visibility_reset(viewer_editor *editor);
 bool editor_outline_toggle_lock(viewer_editor *editor, size_t index);
 bool editor_outline_is_locked(const viewer_editor *editor, document_handle handle);
 bool editor_canvas_selection_is_locked(viewer_editor *editor);

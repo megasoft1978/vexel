@@ -787,7 +787,6 @@ document_edit_save_result document_edit_save_as(document_edit *edit,
     if (result.source_result.error == SOURCE_SAVE_OK ||
         result.source_result.file_result.renamed) {
         edit->saved_state_id = edit->state_id;
-        document_edit_invalidate_index(edit);
     }
     result.error = result.source_result.error == SOURCE_SAVE_OK ? DOCUMENT_EDIT_OK :
         DOCUMENT_EDIT_SAVE_FAILED;

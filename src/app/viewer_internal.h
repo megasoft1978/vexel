@@ -78,6 +78,7 @@ struct viewer_app {
     char editor_render_error[192];
     double load_ms;
     double render_ms;
+    double test_layout_last_write_ms;
     double pointer_doc_x;
     double pointer_doc_y;
     struct timespec last_file_poll;
@@ -103,6 +104,7 @@ struct viewer_app {
     bool smoke_mode;
     bool smoke_scripted;
     bool smoke_passed;
+    bool test_layout_dump_failed;
     unsigned presented_frames;
 };
 

@@ -40,6 +40,7 @@ typedef enum viewer_editor_distribution {
 } viewer_editor_distribution;
 
 #define VIEWER_EDITOR_PATH_POINT_CAP 128U
+#define VIEWER_EDITOR_PREVIEW_EXTRA_BYTES (1024U * 32U)
 
 typedef struct viewer_editor_canvas_overlay_state {
     svg_shape_rect bounds; /* decoded document tile pixels */
@@ -75,7 +76,8 @@ enum {
     VIEWER_EDITOR_PASTE = 1U << 11U,
     VIEWER_EDITOR_PASTE_IN_PLACE = 1U << 12U,
     VIEWER_EDITOR_EXPORT_PNG = 1U << 13U,
-    VIEWER_EDITOR_COPY_PNG = 1U << 14U
+    VIEWER_EDITOR_COPY_PNG = 1U << 14U,
+    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U
 };
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
@@ -106,6 +108,10 @@ bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y);
 size_t viewer_editor_byte_length(const viewer_editor *editor);
 bool viewer_editor_materialize(viewer_editor *editor, uint8_t *buffer,
                                size_t capacity, size_t *out_length);
+/* Materializes a render-only source snapshot with UI visibility overrides.
+ * It never changes the editable source or dirty state. */
+bool viewer_editor_materialize_preview(viewer_editor *editor, uint8_t *buffer,
+                                       size_t capacity, size_t *out_length);
 document_edit_save_result viewer_editor_save(viewer_editor *editor,
                                              base_bytes path);
 bool viewer_editor_select_at_source_offset(viewer_editor *editor, size_t offset);

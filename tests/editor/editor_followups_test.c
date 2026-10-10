@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define CHECK(condition) do { if (!(condition)) { \
     (void)fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #condition); \
@@ -420,6 +421,97 @@ done:
     return result == 0;
 }
 
+static bool test_layer_visibility_is_preview_only(void)
+{
+    viewer_editor *editor = NULL;
+    svg_shape_document preview_document = {0};
+    uint8_t materialized[8192], preview[8192];
+    size_t length = 0U, layer_index = SIZE_MAX;
+    size_t preview_length = 0U;
+    document_handle layer = {0};
+    int result = 1;
+    editor = viewer_editor_create_styled((base_bytes){multi_source,
+        sizeof(multi_source) - 1U}, UI_THEME_DARK, 640U, 640U, true);
+    CHECK(editor != NULL && document_edit_find_id(editor->edit,
+        (base_bytes){(const uint8_t *)"first", 5U}, &layer));
+    for (size_t index = 0U; index < editor->outline_count; ++index) {
+        if (editor_same_handle(editor->outline[index], layer)) {
+            layer_index = index;
+            break;
+        }
+    }
+    CHECK(layer_index != SIZE_MAX);
+    CHECK(materialize(editor, materialized, sizeof(materialized), &length));
+    CHECK(length == sizeof(multi_source) - 1U &&
+        memcmp(materialized, multi_source, length) == 0);
+    CHECK(!viewer_editor_is_dirty(editor));
+    CHECK(editor_outline_toggle_visibility(editor, layer_index));
+    CHECK(!viewer_editor_is_dirty(editor));
+    CHECK(materialize(editor, materialized, sizeof(materialized), &length));
+    CHECK(length == sizeof(multi_source) - 1U &&
+        memcmp(materialized, multi_source, length) == 0);
+    CHECK(viewer_editor_materialize_preview(editor, preview, sizeof(preview),
+        &preview_length));
+    CHECK(preview_length > length && decode(preview, preview_length,
+        &preview_document));
+    CHECK(preview_document.shape_count == 1U);
+    svg_shape_document_destroy(&preview_document);
+    CHECK(editor_outline_toggle_visibility(editor, layer_index));
+    CHECK(!viewer_editor_is_dirty(editor));
+    CHECK(materialize(editor, materialized, sizeof(materialized), &length));
+    CHECK(length == sizeof(multi_source) - 1U &&
+        memcmp(materialized, multi_source, length) == 0);
+    CHECK(viewer_editor_materialize_preview(editor, preview, sizeof(preview),
+        &preview_length));
+    CHECK(preview_length == sizeof(multi_source) - 1U &&
+        memcmp(preview, multi_source, preview_length) == 0);
+    result = 0;
+done:
+    svg_shape_document_destroy(&preview_document);
+    viewer_editor_destroy(editor);
+    return result == 0;
+}
+
+static bool test_outline_handles_survive_save(void)
+{
+    viewer_editor *editor = NULL;
+    char path[] = "/tmp/vexel-editor-outline-save.XXXXXX";
+    int fd = -1;
+    size_t rectangle_offset = (size_t)(strstr((const char *)multi_source,
+        "<rect") - (const char *)multi_source);
+    char label[UI_TEXT_MAX_BYTES] = {0};
+    document_source_span selection = {0};
+    int result = 1;
+    editor = viewer_editor_create_styled((base_bytes){multi_source,
+        sizeof(multi_source) - 1U}, UI_THEME_DARK, 640U, 640U, true);
+    CHECK(editor != NULL && viewer_editor_select_at_source_offset(editor,
+        rectangle_offset));
+    CHECK(editor->outline_count == 3U);
+    CHECK(editor_format_outline(editor, 1U, label) > 0U);
+    CHECK(strstr(label, "<rect>") != NULL && strstr(label, "#first") != NULL);
+    size_t visibility_index = 1U;
+    CHECK(editor_outline_toggle_visibility(editor, visibility_index));
+    CHECK(!editor_outline_is_visible(editor, editor->outline[visibility_index]));
+    fd = mkstemp(path);
+    CHECK(fd >= 0 && close(fd) == 0);
+    fd = -1;
+    document_edit_save_result saved = viewer_editor_save(editor,
+        (base_bytes){(const uint8_t *)path, strlen(path)});
+    CHECK(saved.error == DOCUMENT_EDIT_OK && !viewer_editor_is_dirty(editor));
+    memset(label, 0, sizeof(label));
+    CHECK(editor_format_outline(editor, 1U, label) > 0U);
+    CHECK(strstr(label, "<rect>") != NULL && strstr(label, "#first") != NULL);
+    CHECK(viewer_editor_selection_span(editor, &selection) &&
+        selection.offset == rectangle_offset);
+    CHECK(!editor_outline_is_visible(editor, editor->outline[1U]));
+    result = 0;
+done:
+    if (fd >= 0) (void)close(fd);
+    (void)unlink(path);
+    viewer_editor_destroy(editor);
+    return result == 0;
+}
+
 int main(void)
 {
     if (!test_curve_node_round_trip()) return 1;
@@ -429,6 +521,9 @@ int main(void)
     if (!test_multiselect_cap()) return 1;
     if (!test_multigroup_ungroup_round_trip()) return 1;
     if (!test_shift_nudge_shortcut()) return 1;
-    (void)puts("editor follow-ups: curve nodes, arrangement, grouping, and nudging passed");
+    if (!test_layer_visibility_is_preview_only()) return 1;
+    if (!test_outline_handles_survive_save()) return 1;
+    (void)puts("editor follow-ups: curve nodes, arrangement, grouping, nudging, "
+        "visibility, and save stability passed");
     return 0;
 }

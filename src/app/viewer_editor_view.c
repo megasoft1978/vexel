@@ -540,12 +540,17 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
         size_t scale = (size_t)ceil(editor->backing_scale > 0.0 ?
             editor->backing_scale : 1.0);
         size_t action_start = hit->bounds.x + hit->bounds.width -
-            (hit->bounds.width > 34U * scale ? 34U * scale : hit->bounds.width);
+            (hit->bounds.width > EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale ?
+                EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale : hit->bounds.width);
         if (editor->modern_style && x >= action_start) {
-            if ((size_t)x < action_start + 16U * scale)
-                (void)editor_outline_toggle_visibility(editor, index);
-            else
+            if ((size_t)x < action_start +
+                    EDITOR_OUTLINE_VISIBILITY_WIDTH_POINTS * scale) {
+                bool changed = editor_outline_toggle_visibility(editor, index);
+                return prior | VIEWER_EDITOR_HANDLED |
+                    (changed ? VIEWER_EDITOR_PREVIEW_CHANGED : 0U);
+            } else {
                 (void)editor_outline_toggle_lock(editor, index);
+            }
             return prior | VIEWER_EDITOR_HANDLED;
         }
         if (editor->modern_style) {

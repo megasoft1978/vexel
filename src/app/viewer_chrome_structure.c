@@ -159,23 +159,7 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
         size_t length = layer_label(editor, item, label);
         bool children = document_model_first_child(editor_model(editor),
             editor->outline[item], &(document_handle){0});
-        bool hidden = false;
-        size_t attribute_count = document_edit_attribute_count(editor->edit,
-            editor->outline[item]);
-        for (size_t attribute_index = 0U; attribute_index < attribute_count; ++attribute_index) {
-            document_edit_attribute attribute;
-            base_bytes name;
-            uint8_t value[16];
-            size_t value_length = 0U;
-            if (!document_edit_attribute_at(editor->edit, editor->outline[item],
-                    attribute_index, &attribute) ||
-                !document_edit_span_bytes(editor->edit, attribute.name, &name) ||
-                name.len != 7U || memcmp(name.ptr, "display", 7U) != 0 ||
-                !document_edit_decode_span(editor->edit, attribute.value, value,
-                    sizeof(value), &value_length)) continue;
-            hidden = value_length == 4U && memcmp(value, "none", 4U) == 0;
-            break;
-        }
+        bool hidden = !editor_outline_is_visible(editor, editor->outline[item]);
         bool locked = editor_outline_is_locked(editor, editor->outline[item]);
         char row_state[24] = {0};
         size_t row_state_length = 0U;

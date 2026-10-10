@@ -491,6 +491,33 @@ bool platform_window_set_option_state(platform_window *window, platform_viewer_a
     return platform_macos_menus_set_option_state(window, action, enabled);
 }
 
+bool platform_window_content_screen_origin(platform_window *window,
+                                           double *out_x, double *out_y)
+{
+    if (!platform_on_main_thread() || window == NULL || window->native == nil ||
+        out_x == NULL || out_y == NULL) return false;
+    @autoreleasepool {
+        NSView *content = window->native.contentView;
+        NSScreen *screen = window->native.screen;
+        if (content == nil || screen == nil) return false;
+        NSNumber *screen_number = screen.deviceDescription[@"NSScreenNumber"];
+        if (screen_number == nil) return false;
+        CGDirectDisplayID display = (CGDirectDisplayID)screen_number.unsignedIntValue;
+        CGRect quartz_bounds = CGDisplayBounds(display);
+        NSRect cocoa_bounds = screen.frame;
+        NSRect content_in_window = [content convertRect:content.bounds toView:nil];
+        NSRect content_on_screen = [window->native convertRectToScreen:content_in_window];
+        double x = CGRectGetMinX(quartz_bounds) + NSMinX(content_on_screen) -
+            NSMinX(cocoa_bounds);
+        double y = CGRectGetMinY(quartz_bounds) + NSMaxY(cocoa_bounds) -
+            NSMaxY(content_on_screen);
+        if (!isfinite(x) || !isfinite(y)) return false;
+        *out_x = x;
+        *out_y = y;
+        return true;
+    }
+}
+
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points)
 {
     if (!platform_on_main_thread() || window == NULL ||

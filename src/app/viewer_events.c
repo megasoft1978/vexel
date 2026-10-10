@@ -207,7 +207,9 @@ static void process_editor_result(viewer_app *app, uint32_t result)
 {
     if ((result & VIEWER_EDITOR_SELECT_ALL) != 0U && app->document_visible)
         (void)viewer_editor_select_all(app->editor, &app->document.shape);
-    if ((result & VIEWER_EDITOR_MUTATED) != 0U) {
+    bool document_mutated = (result & VIEWER_EDITOR_MUTATED) != 0U;
+    bool preview_changed = (result & VIEWER_EDITOR_PREVIEW_CHANGED) != 0U;
+    if (document_mutated || preview_changed) {
         if (!viewer_bump_generation(app)) {
             app->fatal_error = true;
             app->running = false;
@@ -215,7 +217,7 @@ static void process_editor_result(viewer_app *app, uint32_t result)
         }
         app->editor_render_requested = true;
         app->frame_dirty = true;
-        (void)viewer_set_window_title(app);
+        if (document_mutated) (void)viewer_set_window_title(app);
     }
     if ((result & VIEWER_EDITOR_SAVE) != 0U) {
         (void)save_document(app, false);

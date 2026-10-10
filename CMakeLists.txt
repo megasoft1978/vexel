@@ -672,7 +672,9 @@ target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_chrome_structure.c
     src/app/viewer_chrome_inspector.c
     src/app/viewer_editor_structure.c
-    src/app/viewer_editor_widget_paint.c)
+    src/app/viewer_editor_widget_paint.c
+    src/app/viewer_editor_preview.c
+    src/app/viewer_editor_test_layout.c)
 add_library(vexel_platform_text_ui STATIC
     src/platform/platform_text_ui.m
     src/platform/macos/platform_accessibility.m)

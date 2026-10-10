@@ -139,28 +139,62 @@ bool editor_outline_toggle_visibility(viewer_editor *editor, size_t index)
 {
     if (editor == NULL || index >= editor->outline_count) return false;
     document_handle handle = editor->outline[index];
-    document_edit_attribute attribute;
-    bool hidden = false;
-    bool has_display = find_display_attribute(editor, handle, &attribute, &hidden);
-    document_edit_error result;
-    size_t old_offset = editor->selected_offset;
-    char old_id[EDITOR_NAME_CAP];
-    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
-        editor->selected_id : "");
-    if (has_display && hidden) {
-        result = document_edit_remove_attribute(editor->edit, handle,
-            (base_bytes){(const uint8_t *)"display", 7U});
-    } else {
-        result = document_edit_set_attribute(editor->edit, handle,
-            (base_bytes){(const uint8_t *)"display", 7U},
-            (base_bytes){(const uint8_t *)"none", 4U});
+    bool next_visible = !editor_outline_is_visible(editor, handle);
+    bool source_hidden = false;
+    document_edit_attribute attribute = {0};
+    (void)find_display_attribute(editor, handle, &attribute, &source_hidden);
+    bool source_visible = !source_hidden;
+    size_t override = editor->visibility_count;
+    for (size_t current = 0U; current < editor->visibility_count; ++current) {
+        if (editor_same_handle(editor->visibility_handles[current], handle)) {
+            override = current;
+            break;
+        }
     }
-    if (result != DOCUMENT_EDIT_OK) {
-        editor_status_error(editor, result);
+    if (next_visible == source_visible) {
+        if (override < editor->visibility_count) {
+            size_t remaining = editor->visibility_count - override - 1U;
+            if (remaining > 0U) {
+                memmove(editor->visibility_handles + override,
+                    editor->visibility_handles + override + 1U,
+                    remaining * sizeof(editor->visibility_handles[0]));
+                memmove(editor->visibility_values + override,
+                    editor->visibility_values + override + 1U,
+                    remaining * sizeof(editor->visibility_values[0]));
+            }
+            editor->visibility_count--;
+        }
+    } else if (override < editor->visibility_count) {
+        editor->visibility_values[override] = next_visible;
+    } else if (editor->visibility_count < EDITOR_VISIBILITY_OVERRIDE_CAP) {
+        editor->visibility_handles[editor->visibility_count] = handle;
+        editor->visibility_values[editor->visibility_count++] = next_visible;
+    } else {
+        editor_status_ok(editor, "Visibility override limit reached");
         return false;
     }
-    (void)editor_apply_result(editor, result, old_offset, old_id, handle);
+    editor_status_ok(editor, next_visible ? "Layer visible" : "Layer hidden");
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
     return true;
+}
+
+bool editor_outline_is_visible(viewer_editor *editor, document_handle handle)
+{
+    if (editor == NULL || handle.document_id == 0U) return true;
+    for (size_t index = 0U; index < editor->visibility_count; ++index)
+        if (editor_same_handle(editor->visibility_handles[index], handle))
+            return editor->visibility_values[index];
+    document_edit_attribute attribute = {0};
+    bool hidden = false;
+    (void)find_display_attribute(editor, handle, &attribute, &hidden);
+    return !hidden;
+}
+
+void editor_outline_visibility_reset(viewer_editor *editor)
+{
+    if (editor == NULL) return;
+    editor->visibility_count = 0U;
 }
 
 bool editor_outline_toggle_lock(viewer_editor *editor, size_t index)
@@ -282,6 +316,7 @@ void editor_select_handle(viewer_editor *editor, document_handle selected)
 void editor_rebind_after_change(viewer_editor *editor, size_t old_offset,
                                 const char *old_id, document_handle preferred)
 {
+    editor_outline_visibility_reset(editor);
     document_handle next = {0};
     if (preferred.document_id != 0U) {
         document_source_span preferred_span;

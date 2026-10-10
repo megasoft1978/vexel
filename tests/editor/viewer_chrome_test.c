@@ -159,13 +159,33 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
     viewer_editor_pointer_up(editor);
     size_t source_length = 0U;
     uint8_t *source_copy = copy_editor_source(editor, &source_length);
-    if (source_copy == NULL || strstr((const char *)source_copy, "display=\"none\"") == NULL)
+    uint8_t preview[sizeof(source) + 4096U];
+    size_t preview_length = 0U;
+    if (source_copy == NULL || source_length != sizeof(source) - 1U ||
+        memcmp(source_copy, source, source_length) != 0 ||
+        viewer_editor_is_dirty(editor) ||
+        !viewer_editor_materialize_preview(editor, preview, sizeof(preview),
+            &preview_length) || preview_length >= sizeof(preview))
+        { free(source_copy); return 38; }
+    preview[preview_length] = '\0';
+    if (strstr((const char *)preview, "display=\"none\"") == NULL)
         { free(source_copy); return 38; }
     free(source_copy);
-    if ((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
-            VIEWER_EDITOR_HANDLED) == 0U) return 39;
+
+    if (!viewer_editor_semantics(editor, snapshot)) return 39;
+    definitions = find_role_label(snapshot, UI_ROLE_ROW, "Definitions");
+    if (definitions == NULL || !click_node(editor, definitions,
+            definitions->frame.width - 27U)) return 39;
+    viewer_editor_pointer_up(editor);
     source_copy = copy_editor_source(editor, &source_length);
-    if (source_copy == NULL || strstr((const char *)source_copy, "display=\"none\"") != NULL)
+    if (source_copy == NULL || source_length != sizeof(source) - 1U ||
+        memcmp(source_copy, source, source_length) != 0 ||
+        viewer_editor_is_dirty(editor) ||
+        !viewer_editor_materialize_preview(editor, preview, sizeof(preview),
+            &preview_length) || preview_length >= sizeof(preview))
+        { free(source_copy); return 40; }
+    preview[preview_length] = '\0';
+    if (strstr((const char *)preview, "display=\"none\"") != NULL)
         { free(source_copy); return 40; }
     free(source_copy);
 
@@ -222,13 +242,22 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
             VIEWER_EDITOR_HANDLED) == 0U) return 51;
     viewer_editor_pointer_up(editor);
     source_copy = copy_editor_source(editor, &source_length);
-    if (source_copy == NULL || strstr((const char *)source_copy, "display=\"none\"") == NULL)
+    if (source_copy == NULL || strstr((const char *)source_copy,
+            "id='renamed-shape'") == NULL ||
+        strstr((const char *)source_copy, "display=\"none\"") != NULL ||
+        viewer_editor_is_dirty(editor) == false)
         { free(source_copy); return 52; }
     free(source_copy);
-    if ((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
-            VIEWER_EDITOR_HANDLED) == 0U) return 53;
+
+    if (!viewer_editor_semantics(editor, snapshot)) return 53;
+    rectangle = find_role_label(snapshot, UI_ROLE_ROW, "Rectangle #renamed-shape");
+    if (rectangle == NULL || !click_node(editor, rectangle,
+            rectangle->frame.width - 27U)) return 53;
+    viewer_editor_pointer_up(editor);
     source_copy = copy_editor_source(editor, &source_length);
-    if (source_copy == NULL || strstr((const char *)source_copy, "display=\"none\"") != NULL)
+    if (source_copy == NULL || strstr((const char *)source_copy,
+            "id='renamed-shape'") == NULL ||
+        strstr((const char *)source_copy, "display=\"none\"") != NULL)
         { free(source_copy); return 54; }
     free(source_copy);
     if (!viewer_editor_semantics(editor, snapshot)) return 55;
