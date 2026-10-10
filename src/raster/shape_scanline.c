@@ -241,6 +241,7 @@ bool raster_scanline_index_create(const svg_shape_document *doc,
     size_t event_count = 0U;
     for (size_t edge_index = 0U; edge_index < doc->edge_count; edge_index++) {
         size_t shape = doc->shape_ids[edge_index];
+        if (shape >= doc->shape_count) continue;
         geom_edge edge = doc->edges[edge_index];
         if (!doc->shape_filled[shape] || isnan(edge.a.y) || isnan(edge.b.y) ||
             edge.a.y == edge.b.y) continue;

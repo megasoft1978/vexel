@@ -451,12 +451,17 @@ bool mcp_json_buffer_append(mcp_json_buffer *buffer, const char *data, size_t le
             capacity *= 2U;
         }
         if (capacity == SIZE_MAX) return false;
+        /* The source may alias our own storage: remember its offset across realloc. */
+        bool aliased = length > 0U && buffer->data != NULL && data >= buffer->data &&
+                       data < buffer->data + buffer->capacity + 1U;
+        size_t source_offset = aliased ? (size_t)(data - buffer->data) : 0U;
         char *grown = realloc(buffer->data, capacity + 1U);
         if (grown == NULL) return false;
         buffer->data = grown;
         buffer->capacity = capacity;
+        if (aliased) data = buffer->data + source_offset;
     }
-    if (length > 0U) memcpy(buffer->data + buffer->length, data, length);
+    if (length > 0U) memmove(buffer->data + buffer->length, data, length);
     buffer->length = needed;
     if (buffer->data != NULL) buffer->data[buffer->length] = '\0';
     return true;

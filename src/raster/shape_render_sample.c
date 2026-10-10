@@ -112,8 +112,12 @@ static bool pattern_sample(const svg_shape_document *document, size_t shape,
     if (pattern_index >= document->pattern_count) return false;
     const svg_shape_pattern *pattern = &document->patterns[pattern_index];
     if (pattern->rgba == NULL || pattern->width == 0U ||
-        pattern->height == 0U || pattern->byte_count !=
-            (size_t)pattern->width * pattern->height * 4U) return false;
+        pattern->height == 0U) return false;
+    size_t pattern_pixels = 0U;
+    if (pattern->width > SIZE_MAX / pattern->height) return false;
+    pattern_pixels = (size_t)pattern->width * pattern->height;
+    if (pattern_pixels > SIZE_MAX / 4U ||
+        pattern->byte_count != pattern_pixels * 4U) return false;
     geom_point local, tile;
     if (!geom_affine_map_point(document->shape_stroke_inverse[shape],
                                (geom_point){x, y}, &local) ||

@@ -170,6 +170,11 @@ target_sources(vexel_shape PRIVATE
     src/svg/shape/selection.c
     src/svg/shape/shape_custom.c
     src/svg/shape/traverse_use.c)
+add_executable(svg_marker_realloc_test tests/svg/shape/marker_realloc_test.c)
+target_link_libraries(svg_marker_realloc_test PRIVATE vexel_shape)
+set_target_properties(svg_marker_realloc_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(svg_text_image_test tests/svg/shape/text_image_test.c)
 target_link_libraries(svg_text_image_test PRIVATE vexel_shape)
 set_target_properties(svg_text_image_test PROPERTIES
@@ -436,6 +441,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(animation_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     # lane: w4-text
     target_compile_options(svg_text_image_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(svg_marker_realloc_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(css_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_spatial PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -483,6 +489,8 @@ if(VEXEL_SANITIZER)
     # lane: w4-text
     target_compile_options(svg_text_image_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(svg_text_image_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(svg_marker_realloc_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(svg_marker_realloc_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     # lane: viewer2
     target_compile_options(viewer_quality_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(viewer_quality_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
@@ -543,6 +551,7 @@ if(BUILD_TESTING)
         ${CMAKE_SOURCE_DIR}/tests/anim/test_render_reference.py)
     # lane: w4-text
     add_test(NAME svg-text-image COMMAND svg_text_image_test)
+    add_test(NAME svg-marker-realloc COMMAND svg_marker_realloc_test)
     add_test(NAME css-cascade COMMAND css_test)
     add_test(NAME svg-index COMMAND svg_index_test)
     add_test(NAME viewer-navigation COMMAND viewer_navigation_test)
