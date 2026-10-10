@@ -155,6 +155,20 @@ target_include_directories(vexel_shape PUBLIC src src/geom src/svg/shape src/svg
 target_link_libraries(vexel_shape PUBLIC vexel_xml vexel_base)
 set_target_properties(vexel_shape PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 
+# lane: w4-text
+target_sources(vexel_shape PRIVATE
+    src/svg/shape/text.c
+    src/svg/shape/text_cache.c
+    src/svg/shape/image.c
+    src/svg/shape/selection.c
+    src/svg/shape/shape_custom.c
+    src/svg/shape/traverse_use.c)
+add_executable(svg_text_image_test tests/svg/shape/text_image_test.c)
+target_link_libraries(svg_text_image_test PRIVATE vexel_shape)
+set_target_properties(svg_text_image_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
 add_library(vexel_spatial STATIC src/spatial/index.c)
 target_include_directories(vexel_spatial PUBLIC src/spatial)
 set_target_properties(vexel_spatial PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -377,6 +391,8 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(shape_render_reference_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_stats_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    # lane: w4-text
+    target_compile_options(svg_text_image_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(css_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_spatial PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -421,6 +437,9 @@ if(VEXEL_SANITIZER)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
+    # lane: w4-text
+    target_compile_options(svg_text_image_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(svg_text_image_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     # lane: viewer2
     target_compile_options(viewer_quality_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(viewer_quality_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
@@ -473,6 +492,8 @@ if(BUILD_TESTING)
     # lane: editcore
     add_test(NAME document-edit COMMAND document_edit_test)
     add_test(NAME shape-render COMMAND shape_test)
+    # lane: w4-text
+    add_test(NAME svg-text-image COMMAND svg_text_image_test)
     add_test(NAME css-cascade COMMAND css_test)
     add_test(NAME svg-index COMMAND svg_index_test)
     add_test(NAME viewer-navigation COMMAND viewer_navigation_test)
@@ -522,6 +543,26 @@ set_target_properties(vexel_platform_media PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO)
 target_compile_options(vexel_platform_media PRIVATE ${VEXEL_STRICT_WARNINGS})
+
+# lane: w4-text
+target_sources(svgworkbench PRIVATE src/app/media_providers.c)
+target_link_libraries(svgworkbench PRIVATE vexel_platform_media)
+target_sources(render_soak_driver PRIVATE src/app/media_providers.c)
+target_link_libraries(render_soak_driver PRIVATE vexel_platform_media)
+
+add_executable(shape_media_render_cli
+    tests/svg/shape/media_render_cli.c
+    src/app/media_providers.c)
+target_include_directories(shape_media_render_cli PRIVATE src)
+target_link_libraries(shape_media_render_cli PRIVATE vexel_shape vexel_platform_media)
+set_target_properties(shape_media_render_cli PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(shape_media_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(shape_media_render_cli PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(shape_media_render_cli PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
 
 add_executable(platform_media_test tests/platform_media/platform_media_test.c)
 target_link_libraries(platform_media_test PRIVATE vexel_platform_media)

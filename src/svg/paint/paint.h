@@ -14,7 +14,8 @@ typedef struct svg_paint_cache svg_paint_cache;
 typedef enum svg_shape_paint_kind {
     SVG_SHAPE_PAINT_SOLID = 0,
     SVG_SHAPE_PAINT_LINEAR,
-    SVG_SHAPE_PAINT_RADIAL
+    SVG_SHAPE_PAINT_RADIAL,
+    SVG_SHAPE_PAINT_IMAGE
 } svg_shape_paint_kind;
 typedef enum svg_shape_spread_method {
     SVG_SHAPE_SPREAD_PAD,

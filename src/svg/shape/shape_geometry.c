@@ -47,6 +47,12 @@ static bool add_edge(builder *b, geom_point a, geom_point z)
     return true;
 }
 
+bool svg_shape_builder_add_edge(svg_shape_builder *builder, geom_point from,
+                                geom_point to)
+{
+    return add_edge(builder, from, to);
+}
+
 static bool record_path_subpath(builder *b, size_t first_edge, bool closed)
 {
     size_t count = b->doc->edge_count - first_edge;
@@ -77,7 +83,7 @@ static bool record_path_subpath(builder *b, size_t first_edge, bool closed)
         (svg_shape_path_subpath){first_edge, count, closed};
     return true;
 }
-static bool begin_shape(builder *b, bool evenodd)
+bool svg_shape_builder_begin_shape(builder *b, bool evenodd)
 {
     if (b->doc->shape_count >= SVG_SHAPE_MAX_EDGES ||
         b->doc->shape_count > UINT32_MAX) {
@@ -132,6 +138,25 @@ static bool begin_shape(builder *b, bool evenodd)
         geom_affine *inverses = svg_shape_realloc(b->doc->shape_stroke_inverse, next * sizeof(*inverses));
         if (inverses == NULL) { svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_stroke_inverse = inverses;
+        if (next > SIZE_MAX / sizeof(*b->doc->shape_sources) ||
+            next > SIZE_MAX / sizeof(*b->doc->images)) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset);
+            return false;
+        }
+        svg_shape_source_map *sources = svg_shape_realloc(
+            b->doc->shape_sources, next * sizeof(*sources));
+        if (sources == NULL) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
+            return false;
+        }
+        b->doc->shape_sources = sources;
+        svg_shape_image *images = svg_shape_realloc(
+            b->doc->images, next * sizeof(*images));
+        if (images == NULL) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
+            return false;
+        }
+        b->doc->images = images;
         b->shape_capacity = next;
     }
     b->shape_index = b->doc->shape_count++;
@@ -144,6 +169,10 @@ static bool begin_shape(builder *b, bool evenodd)
     b->doc->shape_subpath_count[b->shape_index] = 0U;
     b->doc->shape_stroke_inverse[b->shape_index] = geom_affine_identity();
     (void)svg_shape_affine_inverse(b->transform, &b->doc->shape_stroke_inverse[b->shape_index]);
+    b->doc->shape_sources[b->shape_index] = (svg_shape_source_map){
+        .transform = b->transform
+    };
+    b->doc->images[b->shape_index] = (svg_shape_image){0};
     b->doc->strokes[b->shape_index] = (svg_shape_stroke){
         .width = 1.0, .miter_limit = 4.0, .cap = SVG_SHAPE_CAP_BUTT,
         .join = SVG_SHAPE_JOIN_MITER
@@ -177,6 +206,13 @@ static bool add_curve_recursive(builder *b,geom_point p0,geom_point p1,geom_poin
 static bool add_curve(builder *b,geom_point p0,geom_point p1,geom_point p2,geom_point p3)
 {
     return add_curve_recursive(b,p0,p1,p2,p3,0U);
+}
+
+bool svg_shape_builder_add_curve(svg_shape_builder *builder, geom_point from,
+                                 geom_point control1, geom_point control2,
+                                 geom_point to)
+{
+    return add_curve(builder, from, control1, control2, to);
 }
 static bool add_quad_recursive(builder *b,geom_point p0,geom_point p1,geom_point p2,unsigned depth)
 {
@@ -231,6 +267,75 @@ static bool add_arc(builder *b, geom_point from, double rx, double ry, double ro
     }
     return true;
 }
+
+static bool record_path_segment(builder *builder, char command,
+                                size_t source_offset, size_t source_length,
+                                size_t command_offset,
+                                const svg_shape_path_number *numbers,
+                                size_t number_count)
+{
+    svg_shape_document *document = builder->doc;
+    if (document->path_segment_count >= SVG_SHAPE_MAX_COMMANDS ||
+        number_count > SVG_SHAPE_MAX_PATH_NUMBERS -
+                       document->path_number_count) {
+        svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT, source_offset);
+        return false;
+    }
+    if (document->path_segment_count == builder->path_segment_capacity) {
+        size_t next = builder->path_segment_capacity == 0U ? 32U :
+                      builder->path_segment_capacity * 2U;
+        if (next < builder->path_segment_capacity ||
+            next > SVG_SHAPE_MAX_COMMANDS) next = SVG_SHAPE_MAX_COMMANDS;
+        if (next > SIZE_MAX / sizeof(*document->path_segments)) {
+            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT, source_offset);
+            return false;
+        }
+        svg_shape_path_segment *grown = svg_shape_realloc(
+            document->path_segments, next * sizeof(*grown));
+        if (grown == NULL) {
+            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_OOM, source_offset);
+            return false;
+        }
+        document->path_segments = grown;
+        builder->path_segment_capacity = next;
+    }
+    size_t required_numbers = document->path_number_count + number_count;
+    if (required_numbers > builder->path_number_capacity) {
+        size_t next = builder->path_number_capacity == 0U ? 64U :
+                      builder->path_number_capacity;
+        while (next < required_numbers) {
+            if (next > SVG_SHAPE_MAX_PATH_NUMBERS / 2U) {
+                next = SVG_SHAPE_MAX_PATH_NUMBERS;
+                break;
+            }
+            next *= 2U;
+        }
+        if (next > SIZE_MAX / sizeof(*document->path_numbers)) {
+            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT, source_offset);
+            return false;
+        }
+        svg_shape_path_number *grown = svg_shape_realloc(
+            document->path_numbers, next * sizeof(*grown));
+        if (grown == NULL) {
+            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_OOM, source_offset);
+            return false;
+        }
+        document->path_numbers = grown;
+        builder->path_number_capacity = next;
+    }
+    size_t first_number = document->path_number_count;
+    if (number_count != 0U) {
+        memcpy(document->path_numbers + first_number, numbers,
+               number_count * sizeof(*numbers));
+        document->path_number_count += number_count;
+    }
+    document->path_segments[document->path_segment_count++] =
+        (svg_shape_path_segment){command, source_offset, source_length,
+                                 command_offset, first_number, number_count,
+                                 builder->shape_index};
+    return true;
+}
+
 static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
 {
     size_t shape_subpath_start = b->doc->path_subpath_count;
@@ -252,13 +357,16 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
     bool previous_number=false, previous_arc_flag=false;
     while (r.i < r.n) {
         size_t gap_start=r.i;svg_shape_skip_path_separators(&r);bool had_separator=r.i!=gap_start;if(r.i>=r.n)break;
-        if ((r.p[r.i] >= 'A'&&r.p[r.i]<='Z')||(r.p[r.i]>='a'&&r.p[r.i]<='z')) {cmd=(char)r.p[r.i++];previous_number=false;previous_arc_flag=false;}
+        size_t segment_start = r.i;
+        size_t command_offset = SIZE_MAX;
+        if ((r.p[r.i] >= 'A'&&r.p[r.i]<='Z')||(r.p[r.i]>='a'&&r.p[r.i]<='z')) {command_offset=span.offset+r.i;cmd=(char)r.p[r.i++];previous_number=false;previous_arc_flag=false;}
         else if(cmd==0 || cmd=='Z' || cmd=='z') { svg_shape_fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i); return false; }
         else {
             if(previous_number&&!had_separator&&!(r.p[r.i]=='+'||r.p[r.i]=='-')) {svg_shape_fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i);return false;}
             previous_number=false;previous_arc_flag=false;
         }
         if (++b->command_count > SHAPE_MAX_COMMANDS) { svg_shape_fail(b->diag,SVG_SHAPE_ERROR_LIMIT,span.offset+r.i); return false; }
+        char segment_command = cmd;
         bool rel=cmd>='a'&&cmd<='z'; char upper=rel?(char)(cmd-'a'+'A'):cmd;
         if(path_first&&upper!='M'){svg_shape_fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i-1U);return false;}
         path_first=false;
@@ -266,17 +374,27 @@ static bool path_decode(builder *b, base_bytes src, svg_xml_span span)
             if (open && (!add_edge(b,current,first) ||
                          !record_path_subpath(b,current_subpath_edge,true)))
                 return false;
+            if (!record_path_segment(b, segment_command,
+                    span.offset + segment_start, r.i - segment_start,
+                    command_offset, NULL, 0U)) return false;
             current=first;open=false;cmd=0;cubic_reflect=false;quad_reflect=false;continue;
         }
         if(upper!='M'&&upper!='L'&&upper!='H'&&upper!='V'&&upper!='C'&&upper!='S'&&upper!='Q'&&upper!='T'&&upper!='A') { svg_shape_fail(b->diag,SVG_SHAPE_ERROR_UNSUPPORTED,span.offset+r.i-1U);return false; }
         double v[7]={0}; unsigned count=upper=='H'||upper=='V'?1U:upper=='C'?6U:(upper=='S'||upper=='Q')?4U:upper=='T'?2U:upper=='A'?7U:2U;
         size_t group_start=r.i; b->offset=span.offset+group_start;
+        svg_shape_path_number source_numbers[7] = {{0}};
         for(unsigned i=0;i<count;i++){
             if(!svg_shape_path_operand_boundary(&r,previous_number,previous_arc_flag,upper,i)){svg_shape_fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+r.i);return false;}
+            size_t number_start = r.i;
             bool ok=upper=='A'&&(i==3U||i==4U)?svg_shape_read_arc_flag(&r,&v[i]):svg_shape_read_number_value(&r,&v[i]);
             if(!ok){svg_shape_fail(b->diag,SVG_SHAPE_ERROR_PATH,span.offset+group_start);return false;}
+            source_numbers[i] = (svg_shape_path_number){
+                span.offset + number_start, r.i - number_start, v[i]};
             previous_number=true;previous_arc_flag=upper=='A'&&(i==3U||i==4U);
         }
+        if (!record_path_segment(b, segment_command,
+                span.offset + segment_start, r.i - segment_start,
+                command_offset, source_numbers, count)) return false;
         geom_point p=current; bool drawn=false;
         if(upper=='H')p.x=rel?current.x+v[0]:v[0];
         else if(upper=='V')p.y=rel?current.y+v[0]:v[0];
@@ -392,7 +510,7 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
     }
     bool evenodd = svg_css_paint_value(style, SVG_CSS_FILL_RULE, &rule) &&
                    svg_css_keyword_equals(source, rule, "evenodd");
-    if (!begin_shape(builder, evenodd)) return false;
+    if (!svg_shape_builder_begin_shape(builder, evenodd)) return false;
     size_t before = out->edge_count;
     svg_xml_span fill_opacity_span;
     if (svg_css_paint_value(style, SVG_CSS_FILL_OPACITY, &fill_opacity_span)) {

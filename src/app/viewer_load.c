@@ -11,6 +11,8 @@
 #include <string.h>
 #include <sys/types.h>
 
+svg_shape_media_providers svg_app_media_providers(void);
+
 #define VIEWER_LOAD_CHUNK_BYTES (1024U * 1024U)
 
 static bool is_canceled(const platform_task_cancel_token *token)
@@ -89,8 +91,10 @@ static viewer_load_status decode_document_source(
 {
     if (is_canceled(token)) return VIEWER_LOAD_CANCELED;
     svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
-    svg_shape_error error = svg_shape_decode(
-        (base_bytes){out->source, out->source_length}, &out->shape, &diagnostic);
+    svg_shape_media_providers providers = svg_app_media_providers();
+    svg_shape_error error = svg_shape_decode_with_media(
+        (base_bytes){out->source, out->source_length}, &providers,
+        &out->shape, &diagnostic);
     if (error != SVG_SHAPE_ERROR_NONE) {
         out->shape_error = error;
         out->error_offset = diagnostic.offset;

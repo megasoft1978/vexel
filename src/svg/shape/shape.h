@@ -3,6 +3,7 @@
 
 #include "base.h"
 #include "geometry.h"
+#include "media.h"
 #include "xml_tokenizer.h"
 
 #include <stdbool.h>
@@ -12,6 +13,7 @@
 #define SVG_SHAPE_MAX_EDGES 262144U
 #define SVG_SHAPE_MAX_COMMANDS 65536U
 #define SVG_SHAPE_MAX_DASH_VALUES 16U
+#define SVG_SHAPE_MAX_PATH_NUMBERS (SVG_SHAPE_MAX_COMMANDS * 7U)
 
 typedef enum svg_shape_linecap { SVG_SHAPE_CAP_BUTT, SVG_SHAPE_CAP_SQUARE, SVG_SHAPE_CAP_ROUND } svg_shape_linecap;
 typedef enum svg_shape_linejoin { SVG_SHAPE_JOIN_MITER, SVG_SHAPE_JOIN_BEVEL, SVG_SHAPE_JOIN_ROUND } svg_shape_linejoin;
@@ -49,6 +51,45 @@ typedef struct svg_shape_paint svg_shape_paint;
 typedef struct svg_paint_stop svg_paint_stop;
 typedef struct svg_shape_clip svg_shape_clip;
 
+typedef struct svg_shape_source_map {
+    size_t offset;
+    size_t length;
+    geom_affine transform;
+} svg_shape_source_map;
+
+typedef struct svg_shape_path_number {
+    size_t offset;
+    size_t length;
+    double value;
+} svg_shape_path_number;
+
+typedef struct svg_shape_path_segment {
+    char command; /* authored command, including relative/absolute case */
+    size_t source_offset;
+    size_t source_length;
+    size_t command_offset; /* SIZE_MAX for an implicit repeated command */
+    size_t first_number;
+    size_t number_count;
+    size_t shape_index;
+} svg_shape_path_segment;
+
+typedef struct svg_shape_image {
+    const uint8_t *rgba; /* provider-owned premultiplied RGBA8 */
+    size_t byte_count;
+    size_t row_stride;
+    uint32_t pixel_width;
+    uint32_t pixel_height;
+    void *owner;
+    double x;
+    double y;
+    double width;
+    double height;
+    double draw_x;
+    double draw_y;
+    double draw_width;
+    double draw_height;
+} svg_shape_image;
+
 typedef enum svg_shape_error {
     SVG_SHAPE_ERROR_NONE = 0,
     SVG_SHAPE_ERROR_INVALID_ARGUMENT,
@@ -81,6 +122,14 @@ typedef struct svg_shape_document {
     size_t *shape_subpath_count;
     svg_shape_path_subpath *path_subpaths;
     size_t path_subpath_count;
+    svg_shape_path_segment *path_segments;
+    size_t path_segment_count;
+    svg_shape_path_number *path_numbers;
+    size_t path_number_count;
+    svg_shape_source_map *shape_sources;
+    svg_shape_image *images; /* one optional provider-owned image per shape */
+    void *media_context;
+    svg_shape_image_release_fn release_image;
     svg_shape_opacity_group *opacity_groups;
     size_t opacity_group_count;
     geom_affine *shape_stroke_inverse;
@@ -97,8 +146,39 @@ typedef struct svg_shape_document {
 /* out owns decoded arrays and borrows source until document_destroy. Failure leaves out empty. */
 svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out,
                                  svg_shape_diagnostic *diagnostic);
+/* Additive media-aware decode entry point. The document retains decoded image
+ * buffers through the provider's release callback and borrows source bytes. */
+svg_shape_error svg_shape_decode_with_media(
+    base_bytes source, const svg_shape_media_providers *providers,
+    svg_shape_document *out, svg_shape_diagnostic *diagnostic);
 /* Releases only owned arrays; the borrowed source remains caller-owned. */
 void svg_shape_document_destroy(svg_shape_document *document);
 const char *svg_shape_error_name(svg_shape_error error);
+
+typedef struct svg_shape_rect {
+    double x;
+    double y;
+    double width;
+    double height;
+} svg_shape_rect;
+
+typedef struct svg_shape_selection {
+    size_t shape_index;
+    size_t source_offset;
+    size_t source_length;
+    svg_shape_rect user_bounds;
+    svg_shape_rect device_bounds;
+    geom_affine transform;
+} svg_shape_selection;
+
+/* Hit-test coordinates and tolerance use decoded document units. */
+bool svg_shape_bounds_query(const svg_shape_document *document, size_t shape,
+                            svg_shape_selection *out_selection);
+bool svg_shape_hit_test(const svg_shape_document *document, double x, double y,
+                        double tolerance, svg_shape_selection *out_selection);
+/* Resolves an editor byte offset to the most specific rendered source element. */
+bool svg_shape_element_at_offset(const svg_shape_document *document,
+                                 size_t source_offset,
+                                 svg_shape_selection *out_selection);
 
 #endif

@@ -2,10 +2,14 @@
 
 The shape module turns borrowed SVG bytes and XML tokens into owned flattened
 edges, per-shape fill and stroke state, gradients, clips, and opacity groups.
-`traverse.c` owns bounded token traversal, inherited style/transform contexts,
-and live `<use>` instances. `transform.c` parses affine transforms;
-`shape_geometry.c` decodes the supported geometry; `viewport.c` resolves root,
-nested `<svg>`, and symbol viewports; `document.c` owns public cleanup.
+`traverse.c` owns bounded token traversal and inherited contexts;
+`traverse_use.c` resolves live `<use>` instances. `transform.c` parses affine
+transforms; `shape_geometry.c` decodes paths and basic geometry; `shape_custom.c`
+shares style, paint, stroke, and clip setup with text/image geometry. `text.c`
+lays out text runs, `text_cache.c` bounds and owns shaped runs, and `image.c`
+decodes embedded data through the injected provider. `viewport.c` resolves root,
+nested `<svg>`, and symbol viewports; `document.c` owns public cleanup and
+`selection.c` provides editor mapping, bounds, and hit tests.
 
 Supported geometry includes all SVG path commands (`M/L/H/V/C/S/Q/T/A/Z`,
 absolute and relative), `<line>`, `<polyline>`, `<polygon>`, `<circle>`,
@@ -28,9 +32,34 @@ Root and nested `<svg>` viewports support viewBox transforms and
 `preserveAspectRatio` alignment, `meet`, `slice`, and `none`. Nested viewports
 clip their descendants. Shape lengths accept percentages and `px`, `pt`, `mm`,
 `cm`, `in`, and `em`; `em` currently resolves to 16 user units and does not
-compute inherited `font-size`. Fill/stroke opacity and isolated element/group
-opacity are supported. Opacity group rendering uses bounded tile scratch and
-returns `limit` if nested layers exceed 64 MiB.
+compute inherited `font-size` outside text layout. Fill/stroke opacity and
+isolated element/group opacity are supported. Opacity group rendering uses
+bounded tile scratch and returns `limit` if nested layers exceed 64 MiB.
+
+An additive media-aware entry point accepts injected text and image providers;
+the core decoder does not link to platform frameworks. `<text>` and `<tspan>`
+inherit font family, size, weight, style, anchor, and spacing from the CSS
+cascade. They accept x/y/dx/dy coordinate lists, decode the five XML named
+entities and numeric entities, collapse whitespace by default, and honor
+`xml:space="preserve"`. CoreText glyph outlines are converted into the regular
+shape edge pipeline. Text is capped at 64 KiB, 16,384 glyphs, and 262,144
+provider path commands per document; repeated identical runs use a bounded
+decode-local cache. `<textPath>` returns a stable unsupported diagnostic.
+
+`<image>` accepts strict Base64 `data:image/png` and `data:image/jpeg` URIs,
+local x/y/width/height, transforms, opacity, clip paths, and
+`preserveAspectRatio` meet/slice/none. The injected ImageIO provider decodes
+premultiplied RGBA with a 32 MiB encoded-input cap and a 64-million-pixel
+aggregate budget per document. The scalar rasterizer samples bilinearly.
+External image references and SVG data URIs remain unsupported; no filesystem
+or network resource is loaded.
+
+Each rendered shape carries its borrowed-source element byte range and
+transform. Additive queries expose user-space and device-space bounds, resolve
+a source byte offset to the most specific rendered element, and hit-test in
+reverse paint order with fill, stroke tolerance, and clip membership. Every
+decoded path also retains command-group and numeric-literal byte spans for
+node-editing correspondence. The source bytes remain borrowed and unchanged.
 
 `<defs>`, `<title>`, `<desc>`, `<metadata>`, and Inkscape's
 `sodipodi:namedview` are non-rendering; metadata subtrees are structurally
@@ -51,7 +80,10 @@ references retain their fixed budgets; unsupported XML/CSS semantics return
 stable diagnostics rather than dropping source or fetching resources.
 
 The deterministic scalar 4×4 rasterizer is compared with librsvg using small
-fixtures. This is selected-feature differential evidence, not full SVG parity.
+fixtures. Text uses structural, ink-bound, and ink-area tolerances because
+CoreText and Pango may resolve different sans-serif faces and rasterize glyph
+edges differently. This is selected-feature differential evidence, not full
+SVG parity.
 SVG semantics follow W3C SVG 2 Shapes, Paths, CSS, Paint Servers, Document
 Structure, and Clipping specs (consulted 2026-10-09). No SVG editor source is
 used.

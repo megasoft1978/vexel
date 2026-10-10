@@ -7,6 +7,10 @@ deterministic in the scalar rasterizer and maps pixel coordinates back through
 the referencing element's inverse transform. `objectBoundingBox` coordinates
 use the element's untransformed local bounds.
 
+The shape paint tag also has an image variant. Embedded image storage and URI
+validation belong to shape decoding; raster image sampling is handled by
+`src/raster/shape_render_sample.c`, not by this gradient resolver.
+
 Linear and radial gradients support 2–256 monotone finite stops, stop opacity,
 `objectBoundingBox` and `userSpaceOnUse`, and `pad`, `reflect`, or `repeat`
 spread. Invertible affine `gradientTransform` values are supported. Radial

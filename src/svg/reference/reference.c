@@ -238,17 +238,44 @@ bool svg_reference_attributes_supported(base_bytes source,
             name_is(source,n,"stroke") || name_is(source,n,"stroke-width") ||
             name_is(source,n,"stroke-linecap") || name_is(source,n,"stroke-linejoin") ||
             name_is(source,n,"stroke-miterlimit") || name_is(source,n,"stroke-dasharray") ||
-            name_is(source,n,"stroke-dashoffset");
+            name_is(source,n,"stroke-dashoffset") ||
+            name_is(source,n,"font-family") || name_is(source,n,"font-size") ||
+            name_is(source,n,"font-weight") || name_is(source,n,"font-style") ||
+            name_is(source,n,"text-anchor") || name_is(source,n,"letter-spacing") ||
+            name_is(source,n,"word-spacing");
         bool shape = name_is(source,kind,"rect") ?
-            (name_is(source,n,"x")||name_is(source,n,"y")||name_is(source,n,"width")||name_is(source,n,"height")||name_is(source,n,"rx")||name_is(source,n,"ry")) :
+            (name_is(source,n,"x") || name_is(source,n,"y") ||
+             name_is(source,n,"width") || name_is(source,n,"height") ||
+             name_is(source,n,"rx") || name_is(source,n,"ry")) :
             name_is(source,kind,"path") ? name_is(source,n,"d") :
-            name_is(source,kind,"circle") ? (name_is(source,n,"cx")||name_is(source,n,"cy")||name_is(source,n,"r")) :
-            name_is(source,kind,"ellipse") ? (name_is(source,n,"cx")||name_is(source,n,"cy")||name_is(source,n,"rx")||name_is(source,n,"ry")) :
-            name_is(source,kind,"line") ? (name_is(source,n,"x1")||name_is(source,n,"y1")||name_is(source,n,"x2")||name_is(source,n,"y2")) :
-            name_is(source,n,"points");
+            name_is(source,kind,"circle") ?
+                (name_is(source,n,"cx") || name_is(source,n,"cy") ||
+                 name_is(source,n,"r")) :
+            name_is(source,kind,"ellipse") ?
+                (name_is(source,n,"cx") || name_is(source,n,"cy") ||
+                 name_is(source,n,"rx") || name_is(source,n,"ry")) :
+            name_is(source,kind,"line") ?
+                (name_is(source,n,"x1") || name_is(source,n,"y1") ||
+                 name_is(source,n,"x2") || name_is(source,n,"y2")) :
+            (name_is(source,kind,"polygon") ||
+             name_is(source,kind,"polyline")) ? name_is(source,n,"points") :
+            name_is(source,kind,"image") ?
+                (name_is(source,n,"x") || name_is(source,n,"y") ||
+                 name_is(source,n,"width") || name_is(source,n,"height") ||
+                 name_is(source,n,"href") ||
+                 name_is(source,n,"preserveAspectRatio")) :
+            (name_is(source,kind,"text") || name_is(source,kind,"tspan")) ?
+                (name_is(source,n,"x") || name_is(source,n,"y") ||
+                 name_is(source,n,"dx") || name_is(source,n,"dy")) : false;
+        bool xml_space = name_is(source,tokens[i].prefix,"xml") &&
+                         name_is(source,n,"space") &&
+                         (name_is(source,kind,"text") ||
+                          name_is(source,kind,"tspan"));
         bool metadata = name_is(source,n,"id") || name_is(source,n,"class") ||
                         name_is(source,n,"style");
-        if (tokens[i].prefix.length != 0U && !namespace_declaration) {
+        bool image_xlink = xlink_href && name_is(source,kind,"image");
+        if (tokens[i].prefix.length != 0U && !namespace_declaration &&
+            !xml_space && !image_xlink) {
             /* Foreign export labels are preserved by the source document but
              * have no effect on the supported SVG subset. Keep namespaced
              * spellings of SVG paint/geometry properties fail-closed. */
@@ -266,7 +293,7 @@ bool svg_reference_attributes_supported(base_bytes source,
                 name_is(source,n,"width") || name_is(source,n,"height") ||
                 name_is(source,n,"viewBox") ||
                 name_is(source,n,"preserveAspectRatio")) :
-            (metadata || common || shape);
+            (metadata || common || shape || xml_space);
         if (!ok) return false;
     }
     return true;
@@ -300,7 +327,11 @@ bool svg_reference_use_attributes_supported(base_bytes source,
             name_is(source,name,"stroke") || name_is(source,name,"stroke-width") ||
             name_is(source,name,"stroke-linecap") || name_is(source,name,"stroke-linejoin") ||
             name_is(source,name,"stroke-miterlimit") || name_is(source,name,"stroke-dasharray") ||
-            name_is(source,name,"stroke-dashoffset");
+            name_is(source,name,"stroke-dashoffset") ||
+            name_is(source,name,"font-family") || name_is(source,name,"font-size") ||
+            name_is(source,name,"font-weight") || name_is(source,name,"font-style") ||
+            name_is(source,name,"text-anchor") || name_is(source,name,"letter-spacing") ||
+            name_is(source,name,"word-spacing");
         if (!allowed) return false;
     }
     return true;
