@@ -104,6 +104,9 @@ bool ui_tree_add(ui_tree *tree, const ui_node_spec *spec);
 bool ui_tree_layout(ui_tree *tree, uint32_t width, uint32_t height);
 /* Renders node fills and focused-control rings via the public scalar SVG raster API. */
 bool ui_tree_render(const ui_tree *tree, raster_tile *out_tile);
+/* Paints fills, labels, and values directly into caller storage without a viewport-sized scratch tile. */
+bool ui_tree_paint_into(const ui_tree *tree, uint8_t *rgba, size_t capacity,
+                        size_t stride);
 const ui_node *ui_tree_find(const ui_tree *tree, uint32_t id);
 /* Snapshots are caller-owned, zero-filled, and ordered by retained-tree insertion. */
 bool ui_semantics_snapshot_build(const ui_tree *tree, ui_semantics_snapshot *out_snapshot);

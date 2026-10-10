@@ -65,16 +65,17 @@ bool viewer_set_window_title(viewer_app *app)
 {
     char next[VIEWER_TITLE_CAP];
     int amount;
+    const char *dirty = viewer_editor_is_dirty(app->editor) ? "*" : "";
     if (app->load_result_handled && app->load_status != VIEWER_LOAD_OK) {
-        amount = snprintf(next, sizeof(next), "vexel — %s — error: %s",
-                          app->display_name, viewer_error_reason(app));
+        amount = snprintf(next, sizeof(next), "vexel — %s%s — error: %s",
+                          app->display_name, dirty, viewer_error_reason(app));
     } else if (app->pending_open || (app->job != NULL && app->job->kind == VIEWER_JOB_LOAD)) {
-        amount = snprintf(next, sizeof(next), "vexel — %s — Loading…", app->display_name);
+        amount = snprintf(next, sizeof(next), "vexel — %s%s — Loading…", app->display_name, dirty);
     } else if (app->navigation_ready && app->document_visible) {
-        amount = snprintf(next, sizeof(next), "vexel — %s — %.0f%%",
-                          app->display_name, app->navigation.scale * 100.0);
+        amount = snprintf(next, sizeof(next), "vexel — %s%s — %.0f%%",
+                          app->display_name, dirty, app->navigation.scale * 100.0);
     } else {
-        amount = snprintf(next, sizeof(next), "vexel — %s", app->display_name);
+        amount = snprintf(next, sizeof(next), "vexel — %s%s", app->display_name, dirty);
     }
     if (amount < 0 || (size_t)amount >= sizeof(next)) return false;
     if (strcmp(next, app->title) == 0) return true;
@@ -119,6 +120,26 @@ static bool file_stamp_equal(const viewer_file_stamp *left, const viewer_file_st
     return left->valid && right->valid && left->size == right->size &&
         left->modified.tv_sec == right->modified.tv_sec &&
         left->modified.tv_nsec == right->modified.tv_nsec;
+}
+
+void viewer_update_file_stamp(viewer_app *app)
+{
+    if (app == NULL) return;
+    app->file_stamp = (viewer_file_stamp){0};
+    if (app->path[0] != '\0') (void)file_stamp_read(app->path, &app->file_stamp);
+    app->external_change_pending = false;
+}
+
+bool viewer_file_changed_on_disk(viewer_app *app)
+{
+    if (app == NULL) return false;
+    if (app->external_change_pending) return true;
+    viewer_file_stamp current = {0};
+    (void)file_stamp_read(app->path, &current);
+    bool changed = current.valid != app->file_stamp.valid ||
+        (current.valid && !file_stamp_equal(&current, &app->file_stamp));
+    if (changed) app->external_change_pending = true;
+    return changed;
 }
 
 bool viewer_bump_generation(viewer_app *app)
@@ -202,8 +223,14 @@ static bool viewer_job_callback(void *context, const platform_task_cancel_token 
     if (job->kind == VIEWER_JOB_LOAD) {
         job->load_status = viewer_load_document(job->path, token, &job->loaded);
         succeeded = job->load_status != VIEWER_LOAD_CANCELED;
-    } else {
+    } else if (job->kind == VIEWER_JOB_SHARP_TILE) {
         succeeded = render_sharp_region(job, token);
+    } else {
+        uint8_t *source = job->source_snapshot;
+        job->source_snapshot = NULL;
+        job->load_status = viewer_decode_owned_source(source,
+            job->source_snapshot_length, token, &job->loaded);
+        succeeded = job->load_status == VIEWER_LOAD_OK;
     }
     double ended = monotonic_ms();
     job->elapsed_ms = ended >= started ? ended - started : 0.0;
@@ -222,6 +249,7 @@ static void viewer_job_destroy(viewer_job *job)
 {
     if (job == NULL) return;
     viewer_loaded_document_destroy(&job->loaded);
+    free(job->source_snapshot);
     free(job->sharp_tile.rgba);
     free(job);
 }
@@ -241,6 +269,15 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
 {
     size_t length = bounded_length(path, PLATFORM_PATH_CAP - 1U);
     if (length == 0U || length >= PLATFORM_PATH_CAP) return false;
+    if (!initial && viewer_editor_is_dirty(app->editor)) {
+        viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before opening another file");
+        app->frame_dirty = true;
+        return false;
+    }
+    viewer_editor_destroy(app->editor);
+    app->editor = NULL;
+    app->editor_render_requested = false;
+    app->external_change_pending = false;
     if (!initial && !viewer_bump_generation(app)) return false;
     memcpy(app->path, path, length + 1U);
     memcpy(app->pending_path, path, length + 1U);
@@ -302,10 +339,18 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
 {
     app->load_result_handled = true;
     app->load_status = worker_succeeded ? job->load_status : VIEWER_LOAD_FAILED;
+    viewer_editor_destroy(app->editor);
+    app->editor = NULL;
     viewer_loaded_document_destroy(&app->document);
+    free(app->render_source);
+    app->render_source = NULL;
     app->document = job->loaded;
     job->loaded = (viewer_loaded_document){0};
     app->load_ms = job->elapsed_ms;
+    if (app->document.source != NULL && app->document.source_length > 0U)
+        app->editor = viewer_editor_create((base_bytes){app->document.source,
+            app->document.source_length}, UI_THEME_DARK, app->width, app->height);
+    viewer_editor_resize(app->editor, app->width, app->height, app->backing_scale);
     if (app->load_status == VIEWER_LOAD_OK &&
         ui_viewer_navigation_init(&app->navigation, (double)app->width,
             (double)app->height, (double)app->document.tile.width,
@@ -367,6 +412,48 @@ static void service_job(viewer_app *app)
         if (job->diagnostic[0] != '\0')
             (void)fprintf(stderr, "viewer: sharp preview stopped: %s\n", job->diagnostic);
         app->frame_dirty = true;
+    } else if (current && succeeded && job->kind == VIEWER_JOB_EDIT_RENDER) {
+        svg_shape_document_destroy(&app->document.shape);
+        raster_tile_destroy(&app->document.tile);
+        free(app->render_source);
+        app->render_source = job->loaded.source;
+        job->loaded.source = NULL;
+        app->document.shape = job->loaded.shape;
+        job->loaded.shape = (svg_shape_document){0};
+        app->document.tile = job->loaded.tile;
+        job->loaded.tile = (raster_tile){0};
+        app->document.shape_error = SVG_SHAPE_ERROR_NONE;
+        app->document.error_offset = 0U;
+        app->document.load_error[0] = '\0';
+        app->render_ms = job->elapsed_ms;
+        app->editor_render_error[0] = '\0';
+        app->load_status = VIEWER_LOAD_OK;
+        app->load_result_handled = true;
+        if (!app->navigation_ready &&
+            ui_viewer_navigation_init(&app->navigation, (double)app->width,
+                (double)app->height, (double)app->document.tile.width,
+                (double)app->document.tile.height) &&
+            ui_viewer_navigation_fit(&app->navigation)) {
+            app->navigation_ready = true;
+            app->document_visible = true;
+            (void)ui_viewer_progress_update(&app->progress, app->generation, 100U,
+                UI_PROGRESS_COMPLETE, "Ready", 5U);
+        }
+        viewer_editor_set_status(app->editor, "Preview updated");
+        viewer_refresh_sharp_plan(app);
+        app->frame_dirty = true;
+        (void)viewer_set_window_title(app);
+    } else if (current && job->kind == VIEWER_JOB_EDIT_RENDER) {
+        const char *reason = job->loaded.load_error[0] != '\0' ?
+            job->loaded.load_error : svg_shape_error_name(job->loaded.shape_error);
+        if (reason == NULL || reason[0] == '\0') reason = "edited SVG is unsupported";
+        int amount = snprintf(app->editor_render_error, sizeof(app->editor_render_error),
+            "Preview unavailable: %.120s at byte %zu", reason, job->loaded.error_offset);
+        if (amount < 0 || (size_t)amount >= sizeof(app->editor_render_error))
+            (void)snprintf(app->editor_render_error, sizeof(app->editor_render_error),
+                "Preview unavailable: edited SVG is unsupported");
+        viewer_editor_set_status(app->editor, app->editor_render_error);
+        app->frame_dirty = true;
     }
     viewer_job_destroy(job);
 }
@@ -399,6 +486,11 @@ static void start_next_sharp_tile(viewer_app *app)
 
 void viewer_request_close(viewer_app *app)
 {
+    if (viewer_editor_is_dirty(app->editor)) {
+        viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before closing");
+        app->frame_dirty = true;
+        return;
+    }
     app->close_requested = true;
     app->pending_open = false;
     app->pending_path[0] = '\0';
@@ -432,8 +524,67 @@ static void poll_file_changes(viewer_app *app)
     bool changed = current.valid != app->file_stamp.valid ||
         (current.valid && !file_stamp_equal(&current, &app->file_stamp));
     if (changed) {
+        if (viewer_editor_is_dirty(app->editor)) {
+            if (!app->external_change_pending) {
+                viewer_editor_set_status(app->editor,
+                    "File changed on disk; save your edits before reloading");
+                app->frame_dirty = true;
+            }
+            app->external_change_pending = true;
+            return;
+        }
         (void)viewer_request_open(app, app->path, false);
     }
+}
+
+static void start_editor_render(viewer_app *app)
+{
+    if (!app->editor_render_requested || app->job != NULL || app->editor == NULL ||
+        app->close_requested) return;
+    size_t length = viewer_editor_byte_length(app->editor);
+    if (length == 0U || length > (size_t)1024U * 1024U * 1024U) {
+        viewer_editor_set_status(app->editor, "Edited document exceeds the render source limit");
+        app->editor_render_requested = false;
+        app->frame_dirty = true;
+        return;
+    }
+    uint8_t *source = malloc(length);
+    if (source == NULL) {
+        viewer_editor_set_status(app->editor, "Preview update failed: source allocation failed");
+        app->editor_render_requested = false;
+        app->frame_dirty = true;
+        return;
+    }
+    size_t materialized = 0U;
+    if (!viewer_editor_materialize(app->editor, source, length, &materialized) ||
+        materialized != length) {
+        free(source);
+        viewer_editor_set_status(app->editor, "Preview update failed: source snapshot unavailable");
+        app->editor_render_requested = false;
+        app->frame_dirty = true;
+        return;
+    }
+    viewer_job *job = calloc(1U, sizeof(*job));
+    if (job == NULL) {
+        free(source);
+        viewer_editor_set_status(app->editor, "Preview update failed: worker allocation failed");
+        app->editor_render_requested = false;
+        app->frame_dirty = true;
+        return;
+    }
+    job->app = app;
+    job->kind = VIEWER_JOB_EDIT_RENDER;
+    job->generation = app->generation;
+    job->source_snapshot = source;
+    job->source_snapshot_length = length;
+    if (!submit_job(app, job)) {
+        viewer_job_destroy(job);
+        viewer_editor_set_status(app->editor, "Preview update failed: worker queue unavailable");
+        app->frame_dirty = true;
+        app->editor_render_requested = false;
+        return;
+    }
+    app->editor_render_requested = false;
 }
 
 static void idle_sleep(void)
@@ -461,7 +612,11 @@ static void destroy_viewer(viewer_app *app)
     viewer_tile_cache_destroy(&app->sharp_cache);
     free(app->frame);
     app->frame = NULL;
+    viewer_editor_destroy(app->editor);
+    app->editor = NULL;
     viewer_loaded_document_destroy(&app->document);
+    free(app->render_source);
+    app->render_source = NULL;
     platform_shutdown();
 }
 
@@ -475,6 +630,7 @@ static int run_viewer(const char *path, bool smoke_mode)
     app.generation = VIEWER_GENERATION;
     app.running = true;
     app.smoke_mode = smoke_mode;
+    app.backing_scale = 1.0;
     app.checkerboard = true;
     app.pixel_grid = true;
     app.load_status = VIEWER_LOAD_CANCELED;
@@ -520,6 +676,7 @@ static int run_viewer(const char *path, bool smoke_mode)
         if (!app.running) break;
         service_job(&app);
         if (app.pending_open && app.job == NULL) start_pending_load(&app);
+        if (app.editor_render_requested && app.job == NULL) start_editor_render(&app);
         if (!app.close_requested) start_next_sharp_tile(&app);
         if (!viewer_compose_and_present(&app)) {
             app.fatal_error = true;

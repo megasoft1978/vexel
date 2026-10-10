@@ -37,6 +37,20 @@ its output raster is limited to 4096 pixels per axis. Malformed, unsupported,
 missing, unreadable, oversized, and out-of-range inputs produce a clear error
 and a distinct error image when a frame can be written.
 
-This remains a viewer, not an editor. It has no editing tools, SVG text,
-accessibility tree, or SVGZ support. Rendering is limited to the subset accepted
-by the current decoder and rasterizer; unsupported SVG content is reported.
+The retained editor session in `viewer_editor.*` borrows the loaded source for
+`document_edit`, builds a bounded structure/inspector chrome, and routes every
+edit through the source-preserving edit API. Edited source snapshots are decoded
+and rasterized on the existing worker queue with generation cancellation. A
+failed edited preview leaves the last good canvas visible and reports the
+decoder diagnostic in the editor status bar. The selection outline currently
+has a source-offset hook; shape source offsets and bounding boxes are not exposed
+by the renderer yet.
+
+Save, undo/redo, element delete/duplicate/group/ungroup/reorder, editable
+attribute rows, and text content edits are wired into the viewer. Save As,
+dirty-file confirmation dialogs, system appearance changes, clipboard access,
+and IME marked text require additions to the `platform/` interface. Until those
+services land, dirty open/close/reload requests are blocked and an external file
+change is checked again before saving to prevent overwriting the changed path.
+The UI uses the dark theme by default. SVGZ remains unsupported; rendering is
+limited to the subset accepted by the current decoder and rasterizer.

@@ -80,8 +80,58 @@ static void toggle_pixel_grid(viewer_app *app)
 
 static void request_reload_or_open(viewer_app *app)
 {
+    if (viewer_editor_is_dirty(app->editor)) {
+        viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before reloading");
+        app->frame_dirty = true;
+        return;
+    }
     if (app->path[0] != '\0') (void)viewer_request_open(app, app->path, false);
     else (void)platform_window_open_panel(app->window);
+}
+
+static void process_editor_result(viewer_app *app, uint32_t result)
+{
+    if ((result & VIEWER_EDITOR_MUTATED) != 0U) {
+        if (!viewer_bump_generation(app)) {
+            app->fatal_error = true;
+            app->running = false;
+            return;
+        }
+        app->editor_render_requested = true;
+        app->frame_dirty = true;
+        (void)viewer_set_window_title(app);
+    }
+    if ((result & VIEWER_EDITOR_SAVE) != 0U) {
+        if (app->path[0] == '\0') {
+            viewer_editor_set_status(app->editor, "Save As needs the native save panel");
+        } else if (viewer_file_changed_on_disk(app)) {
+            viewer_editor_set_status(app->editor,
+                "File changed externally; resolve the conflict before saving over it");
+        } else {
+            size_t path_length = event_path_length(app->path, PLATFORM_PATH_CAP - 1U);
+            document_edit_save_result saved = viewer_editor_save(app->editor,
+                (base_bytes){(const uint8_t *)app->path, path_length});
+            if (saved.error == DOCUMENT_EDIT_OK) viewer_update_file_stamp(app);
+            (void)viewer_set_window_title(app);
+        }
+        app->frame_dirty = true;
+    }
+    if ((result & VIEWER_EDITOR_SAVE_AS) != 0U) {
+        viewer_editor_set_status(app->editor, "Save As needs the native save panel");
+        app->frame_dirty = true;
+    }
+    if ((result & VIEWER_EDITOR_OPEN) != 0U) {
+        if (viewer_editor_is_dirty(app->editor)) {
+            viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before opening another file");
+            app->frame_dirty = true;
+        } else (void)platform_window_open_panel(app->window);
+    }
+    if ((result & VIEWER_EDITOR_RELOAD) != 0U) request_reload_or_open(app);
+    if ((result & VIEWER_EDITOR_QUIT) != 0U) viewer_request_close(app);
+    if ((result & VIEWER_EDITOR_HANDLED) != 0U) {
+        app->frame_dirty = true;
+        (void)viewer_set_window_title(app);
+    }
 }
 
 static void apply_action(viewer_app *app, platform_viewer_action action)
@@ -113,6 +163,12 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
 
 static void apply_key(viewer_app *app, const platform_event *event)
 {
+    uint32_t editor_result = viewer_editor_key(app->editor, event->key_code,
+        event->modifiers, event->text, event->text_len);
+    if (editor_result != 0U) {
+        process_editor_result(app, editor_result);
+        return;
+    }
     bool command = (event->modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
     if (command && (strcmp(event->text, "q") == 0 || strcmp(event->text, "Q") == 0)) {
         viewer_request_close(app);
@@ -205,14 +261,28 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                         navigation_changed(app, &previous);
                 }
             }
+            viewer_editor_resize(app->editor, app->width, app->height, app->backing_scale);
             if (prior_scale != app->backing_scale) app->frame_dirty = true;
             return;
         }
-        case PLATFORM_EVENT_POINTER_DOWN:
+        case PLATFORM_EVENT_POINTER_DOWN: {
+            double pixel_x = (double)event->logical_x * app->backing_scale;
+            double pixel_y = (double)event->logical_y * app->backing_scale;
+            if (app->editor != NULL && isfinite(pixel_x) && isfinite(pixel_y) &&
+                pixel_x >= 0.0 && pixel_y >= 0.0 && pixel_x <= (double)UINT32_MAX &&
+                pixel_y <= (double)UINT32_MAX) {
+                uint32_t result = viewer_editor_pointer_down(app->editor,
+                    (uint32_t)pixel_x, (uint32_t)pixel_y, event->button);
+                if (result != 0U) {
+                    process_editor_result(app, result);
+                    return;
+                }
+            }
             if (app->navigation_ready && event->button == 0U)
                 (void)ui_viewer_navigation_drag_begin_scaled(&app->navigation,
                     (double)event->logical_x, (double)event->logical_y, app->backing_scale);
             return;
+        }
         case PLATFORM_EVENT_POINTER_MOVE:
             update_pointer_status(app, event);
             app->frame_dirty = true;
@@ -228,6 +298,14 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 (void)ui_viewer_navigation_drag_end(&app->navigation);
             return;
         case PLATFORM_EVENT_SCROLL:
+            if (app->editor != NULL) {
+                double pixel_x = event->precise_x * event->backing_scale;
+                if (isfinite(pixel_x) && pixel_x >= 0.0 && pixel_x <= (double)UINT32_MAX &&
+                    viewer_editor_scroll(app->editor, (uint32_t)pixel_x, event->delta_y)) {
+                    app->frame_dirty = true;
+                    return;
+                }
+            }
             if (!app->navigation_ready) return;
             if ((event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL)) != 0U) {
                 ui_viewer_navigation previous = app->navigation;

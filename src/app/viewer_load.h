@@ -29,6 +29,9 @@ typedef struct viewer_loaded_document {
 viewer_load_status viewer_load_document(const char *path,
                                         const platform_task_cancel_token *token,
                                         viewer_loaded_document *out);
+/* Takes ownership of `source` and decodes it on the caller's worker thread. */
+viewer_load_status viewer_decode_owned_source(uint8_t *source, size_t source_length,
+    const platform_task_cancel_token *token, viewer_loaded_document *out);
 void viewer_loaded_document_destroy(viewer_loaded_document *document);
 
 #endif

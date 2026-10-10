@@ -1,0 +1,15 @@
+{
+  "screenshots": {
+    "editor-chrome-dark.png": {
+      "height": 800,
+      "sha256": "06d96a1a77bb1b77b79ae85e61670b10ba6e0a611c48ae6dc073084b16944329",
+      "width": 1280
+    },
+    "editor-chrome-light.png": {
+      "height": 800,
+      "sha256": "b8daf2b1d90a01ceb89063fed6e266563e76f539edd12fe81aab198a385e2150",
+      "width": 1280
+    }
+  },
+  "version": 1
+}

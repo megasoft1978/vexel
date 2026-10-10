@@ -6,6 +6,7 @@ usage() {
     printf '%s\n' 'usage: ./dev {build|test-fast|test|verify|help|doctor|bundle|dmg|e2e|soak}'
     printf '%s\n' '       ./dev run <file.svg>'
     printf '%s\n' '       ./dev viewer-smoke [<binary> [<first.svg> [<second.svg>]]]'
+    printf '%s\n' '       ./dev editor-smoke [<binary>]'
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
     printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
@@ -21,12 +22,16 @@ if [ "$command_name" = viewer-smoke ] && [ "$#" -gt 4 ]; then
     usage >&2
     exit 2
 fi
+if [ "$command_name" = editor-smoke ] && [ "$#" -gt 2 ]; then
+    usage >&2
+    exit 2
+fi
 if [ "$command_name" = run ]; then
     if [ "$#" -ne 2 ]; then
         usage >&2
         exit 2
     fi
-elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ] && [ "${1:-}" != viewer-smoke ]; then
+elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ] && [ "${1:-}" != viewer-smoke ] && [ "${1:-}" != editor-smoke ]; then
     usage >&2
     exit 2
 fi
@@ -36,7 +41,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|viewer-smoke|wo-help|doctor|bundle|dmg|e2e|soak)
+    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|viewer-smoke|editor-smoke|wo-help|doctor|bundle|dmg|e2e|soak)
         ;;
     *)
         usage >&2
@@ -94,6 +99,13 @@ case "$command_name" in
         cmake --preset mac-debug
         cmake --build --preset mac-debug
         "$repo_root/tests/viewer/native_smoke.sh" "$@"
+        ;;
+    editor-smoke)
+        # lane: w3-editor
+        shift
+        cmake --preset mac-debug
+        cmake --build --preset mac-debug
+        "$repo_root/tests/editor/native_smoke.sh" "$@"
         ;;
     test-fast|test)
         PYTHONDONTWRITEBYTECODE=1 python3 scripts/test_runner.py --output .cache/test-results/latest.json
