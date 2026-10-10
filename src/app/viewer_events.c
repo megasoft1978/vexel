@@ -1,9 +1,12 @@
 #include "viewer_internal.h"
 
 #include "frame_compose.h"
+#include "platform/macos/platform_clipboard.h"
+#include "platform/macos/platform_dialog.h"
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static size_t event_path_length(const char *path, size_t limit)
@@ -123,17 +126,87 @@ static void toggle_pixel_grid(viewer_app *app)
 
 static void request_reload_or_open(viewer_app *app)
 {
-    if (viewer_editor_is_dirty(app->editor)) {
-        viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before reloading");
-        app->frame_dirty = true;
-        return;
-    }
     if (app->path[0] != '\0') (void)viewer_request_open(app, app->path, false);
     else (void)platform_window_open_panel(app->window);
 }
 
+static void show_save_error(viewer_app *app, const char *title, const char *message)
+{
+    if (app->editor != NULL) viewer_editor_set_status(app->editor, message);
+    (void)platform_dialog_show_error(title, strlen(title), message, strlen(message));
+    app->frame_dirty = true;
+}
+
+static bool save_document(viewer_app *app, bool force_save_as)
+{
+    if (app == NULL || app->editor == NULL) return false;
+    char chosen_path[PLATFORM_DIALOG_PATH_CAP] = {0};
+    size_t chosen_length = 0U;
+    const char *path = app->path;
+    size_t path_length = event_path_length(path, PLATFORM_PATH_CAP - 1U);
+    bool save_as = force_save_as || path_length == 0U || path_length >= PLATFORM_PATH_CAP;
+    if (save_as) {
+        size_t name_length = event_path_length(app->display_name, sizeof(app->display_name) - 1U);
+        platform_dialog_status choice = platform_dialog_save_svg(app->display_name,
+            name_length, chosen_path, sizeof(chosen_path), &chosen_length);
+        if (choice != PLATFORM_DIALOG_ACCEPT) {
+            if (choice == PLATFORM_DIALOG_ERROR)
+                show_save_error(app, "Save Failed", "The save panel could not provide a valid SVG path.");
+            return false;
+        }
+        path = chosen_path;
+        path_length = chosen_length;
+        size_t current_length = event_path_length(app->path, PLATFORM_PATH_CAP - 1U);
+        if (app->path[0] != '\0' && path_length == current_length &&
+            memcmp(path, app->path, path_length) == 0 && viewer_file_changed_on_disk(app)) {
+            show_save_error(app, "File Changed on Disk",
+                "The selected file changed outside Vexel. Save As to a different path to keep both versions.");
+            return false;
+        }
+    } else if (viewer_file_changed_on_disk(app)) {
+        show_save_error(app, "File Changed on Disk",
+            "The file changed outside Vexel. Use Save As to keep both versions.");
+        return false;
+    }
+    document_edit_save_result saved = viewer_editor_save(app->editor,
+        (base_bytes){(const uint8_t *)path, path_length});
+    if (saved.error != DOCUMENT_EDIT_OK) {
+        const char *status = viewer_editor_status(app->editor);
+        show_save_error(app, "Save Failed",
+            status == NULL ? "The SVG could not be saved." : status);
+        return false;
+    }
+    if (save_as && !viewer_update_active_path(app, path, path_length)) {
+        show_save_error(app, "Save Failed",
+            "The file was saved, but Vexel could not update its document path.");
+        return false;
+    }
+    viewer_update_file_stamp(app);
+    app->frame_dirty = true;
+    (void)viewer_set_window_title(app);
+    return true;
+}
+
+bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
+                                    const char *message)
+{
+    if (app == NULL || !viewer_editor_is_dirty(app->editor)) return true;
+    platform_unsaved_choice choice = platform_dialog_unsaved_changes(title,
+        strlen(title), message, strlen(message));
+    if (choice == PLATFORM_UNSAVED_DONT_SAVE) return true;
+    if (choice == PLATFORM_UNSAVED_SAVE) return save_document(app, false);
+    if (app->editor != NULL) {
+        viewer_editor_set_status(app->editor, choice == PLATFORM_UNSAVED_CANCEL ?
+            "Action canceled" : "Could not show the unsaved-changes dialog");
+    }
+    app->frame_dirty = true;
+    return false;
+}
+
 static void process_editor_result(viewer_app *app, uint32_t result)
 {
+    if ((result & VIEWER_EDITOR_SELECT_ALL) != 0U && app->document_visible)
+        (void)viewer_editor_select_all(app->editor, &app->document.shape);
     if ((result & VIEWER_EDITOR_MUTATED) != 0U) {
         if (!viewer_bump_generation(app)) {
             app->fatal_error = true;
@@ -145,29 +218,13 @@ static void process_editor_result(viewer_app *app, uint32_t result)
         (void)viewer_set_window_title(app);
     }
     if ((result & VIEWER_EDITOR_SAVE) != 0U) {
-        if (app->path[0] == '\0') {
-            viewer_editor_set_status(app->editor, "Save As needs the native save panel");
-        } else if (viewer_file_changed_on_disk(app)) {
-            viewer_editor_set_status(app->editor,
-                "File changed externally; resolve the conflict before saving over it");
-        } else {
-            size_t path_length = event_path_length(app->path, PLATFORM_PATH_CAP - 1U);
-            document_edit_save_result saved = viewer_editor_save(app->editor,
-                (base_bytes){(const uint8_t *)app->path, path_length});
-            if (saved.error == DOCUMENT_EDIT_OK) viewer_update_file_stamp(app);
-            (void)viewer_set_window_title(app);
-        }
-        app->frame_dirty = true;
+        (void)save_document(app, false);
     }
     if ((result & VIEWER_EDITOR_SAVE_AS) != 0U) {
-        viewer_editor_set_status(app->editor, "Save As needs the native save panel");
-        app->frame_dirty = true;
+        (void)save_document(app, true);
     }
     if ((result & VIEWER_EDITOR_OPEN) != 0U) {
-        if (viewer_editor_is_dirty(app->editor)) {
-            viewer_editor_set_status(app->editor, "Unsaved changes: save or discard before opening another file");
-            app->frame_dirty = true;
-        } else (void)platform_window_open_panel(app->window);
+        (void)platform_window_open_panel(app->window);
     }
     if ((result & VIEWER_EDITOR_RELOAD) != 0U) request_reload_or_open(app);
     if ((result & VIEWER_EDITOR_QUIT) != 0U) viewer_request_close(app);
@@ -202,6 +259,61 @@ static void apply_key(viewer_app *app, const platform_event *event)
     }
     uint32_t editor_result = viewer_editor_key(app->editor, event->key_code,
         event->modifiers, event->text, event->text_len);
+    if ((editor_result & VIEWER_EDITOR_DELETE_PATH_NODE) != 0U) {
+        editor_result &= ~(uint32_t)VIEWER_EDITOR_DELETE_PATH_NODE;
+        editor_result |= viewer_editor_delete_selected_path_node(app->editor,
+            &app->document.shape);
+    }
+    uint32_t png_flags = (uint32_t)VIEWER_EDITOR_EXPORT_PNG |
+        (uint32_t)VIEWER_EDITOR_COPY_PNG;
+    if ((editor_result & png_flags) != 0U) {
+        bool copy_png = (editor_result & VIEWER_EDITOR_COPY_PNG) != 0U;
+        editor_result &= ~png_flags;
+        (void)viewer_export_png(app, copy_png);
+        editor_result |= VIEWER_EDITOR_HANDLED;
+    }
+    uint32_t clipboard_flags = (uint32_t)VIEWER_EDITOR_COPY |
+        (uint32_t)VIEWER_EDITOR_CUT | (uint32_t)VIEWER_EDITOR_PASTE |
+        (uint32_t)VIEWER_EDITOR_PASTE_IN_PLACE;
+    if ((editor_result & clipboard_flags) != 0U) {
+        uint32_t request = editor_result & clipboard_flags;
+        editor_result &= ~clipboard_flags;
+        uint8_t *clipboard = malloc(PLATFORM_CLIPBOARD_SVG_LIMIT);
+        if (clipboard == NULL) {
+            viewer_editor_set_status(app->editor, "Clipboard allocation failed");
+        } else if ((request & VIEWER_EDITOR_COPY) != 0U ||
+                   (request & VIEWER_EDITOR_CUT) != 0U) {
+            size_t copied_length = 0U;
+            if (!viewer_editor_copy_selection(app->editor, clipboard,
+                    PLATFORM_CLIPBOARD_SVG_LIMIT, &copied_length) ||
+                !platform_clipboard_write_svg(clipboard, copied_length)) {
+                viewer_editor_set_status(app->editor,
+                    "Could not copy the selected SVG fragment");
+                editor_result |= VIEWER_EDITOR_HANDLED;
+            } else if ((request & VIEWER_EDITOR_CUT) != 0U) {
+                editor_result |= viewer_editor_cut_selection(app->editor);
+            } else {
+                viewer_editor_set_status(app->editor, "SVG copied to clipboard");
+                editor_result |= VIEWER_EDITOR_HANDLED;
+            }
+        } else {
+            size_t pasted_length = 0U;
+            platform_clipboard_result clipboard_result = platform_clipboard_read_svg(
+                clipboard, PLATFORM_CLIPBOARD_SVG_LIMIT, &pasted_length);
+            if (clipboard_result == PLATFORM_CLIPBOARD_OK) {
+                editor_result |= viewer_editor_paste_svg(app->editor, clipboard,
+                    pasted_length,
+                    (request & VIEWER_EDITOR_PASTE_IN_PLACE) != 0U);
+            } else {
+                viewer_editor_set_status(app->editor,
+                    clipboard_result == PLATFORM_CLIPBOARD_LIMIT ?
+                        "Clipboard SVG exceeds the 64 KiB limit" :
+                        "Clipboard does not contain an SVG fragment");
+                editor_result |= VIEWER_EDITOR_HANDLED;
+            }
+        }
+        free(clipboard);
+    }
     if (editor_result != 0U) {
         process_editor_result(app, editor_result);
         return;
@@ -344,9 +456,9 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 }
                 return;
             }
-            uint32_t result = viewer_editor_canvas_pointer_down(app->editor,
+            uint32_t result = viewer_editor_canvas_pointer_down_click_count(app->editor,
                 &app->document.shape, &app->navigation, local_x, local_y,
-                event->modifiers);
+                event->modifiers, event->click_count);
             if (result != 0U) process_editor_result(app, result);
             return;
         }

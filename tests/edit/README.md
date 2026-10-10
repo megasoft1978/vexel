@@ -10,6 +10,10 @@ test validates every current document, confirms untouched prefix/suffix bytes,
 and round-trips undo and redo. A second seeded 200,000-case campaign exercises
 successful, malformed, and multi-root fragment inputs.
 
+The editor also uses `document_edit_replace_xml_region` for atomic multi-sibling
+edits, `document_edit_replace_source_span` for path number changes, and
+`document_edit_insert_text_element` for escaped one-command text creation.
+
 Build and run with:
 
 ```sh

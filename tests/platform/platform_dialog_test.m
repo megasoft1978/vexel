@@ -15,6 +15,7 @@ typedef struct stub_state {
     platform_unsaved_choice unsaved_choice;
     bool error_result;
     size_t save_calls;
+    size_t save_png_calls;
     size_t unsaved_calls;
     size_t error_calls;
     char suggested_name[128];
@@ -33,6 +34,25 @@ static platform_dialog_status stub_save(void *context, const char *name,
     static const char path[] = "/tmp/chosen.svg";
     memcpy(out_path, path, sizeof(path));
     *out_length = sizeof(path) - 1U;
+    return PLATFORM_DIALOG_ACCEPT;
+}
+
+static platform_dialog_status stub_save_png(void *context, const char *name,
+    size_t name_length, uint8_t maximum_scale, char *out_path, size_t capacity,
+    size_t *out_length, uint8_t *out_scale, bool *selection_only)
+{
+    stub_state *state = context;
+    state->save_png_calls++;
+    if (name_length >= sizeof(state->suggested_name) ||
+        capacity < sizeof("/tmp/chosen.png")) return PLATFORM_DIALOG_ERROR;
+    memcpy(state->suggested_name, name, name_length);
+    state->suggested_name[name_length] = '\0';
+    if (state->save_status != PLATFORM_DIALOG_ACCEPT) return state->save_status;
+    static const char path[] = "/tmp/chosen.png";
+    memcpy(out_path, path, sizeof(path));
+    *out_length = sizeof(path) - 1U;
+    *out_scale = maximum_scale >= 2U ? 2U : 1U;
+    *selection_only = true;
     return PLATFORM_DIALOG_ACCEPT;
 }
 
@@ -89,6 +109,7 @@ int main(void)
     platform_dialog_test_hooks hooks = {
         .context = &state,
         .save_svg = stub_save,
+        .save_png = stub_save_png,
         .unsaved_changes = stub_unsaved,
         .show_error = stub_error
     };
@@ -102,6 +123,13 @@ int main(void)
     CHECK(strcmp(state.suggested_name, "Draft.svg") == 0);
     CHECK(path_length == strlen("/tmp/chosen.svg") &&
         strcmp(path, "/tmp/chosen.svg") == 0);
+
+    uint8_t scale = 0U;
+    bool selection_only = false;
+    CHECK(platform_dialog_save_png("Draft.svg", 9U, 4U, path, sizeof(path),
+        &path_length, &scale, &selection_only) == PLATFORM_DIALOG_ACCEPT);
+    CHECK(strcmp(state.suggested_name, "Draft.png") == 0 && scale == 2U &&
+        selection_only && strcmp(path, "/tmp/chosen.png") == 0);
 
     static const char other_name[] = "image.png";
     CHECK(platform_dialog_save_svg(other_name, sizeof(other_name) - 1U,
@@ -141,7 +169,8 @@ int main(void)
     CHECK(pthread_join(thread, NULL) == 0 && !thread_result.shown &&
         thread_result.save_status == PLATFORM_DIALOG_ERROR &&
         thread_result.unsaved_choice == PLATFORM_UNSAVED_ERROR);
-    CHECK(state.save_calls == 4U && state.unsaved_calls == 3U &&
+    CHECK(state.save_calls == 4U && state.save_png_calls == 1U &&
+        state.unsaved_calls == 3U &&
         state.error_calls == 1U);
     CHECK(platform_dialog_set_test_hooks(NULL));
     (void)puts("platform dialog tests passed: SVG suggestion, injected responses, and main-thread enforcement");

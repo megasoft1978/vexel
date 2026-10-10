@@ -112,8 +112,12 @@ bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height);
 bool viewer_bump_generation(viewer_app *app);
 void viewer_refresh_sharp_plan(viewer_app *app);
 bool viewer_request_open(viewer_app *app, const char *path, bool initial);
+bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_length);
+bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
+                                    const char *message);
 void viewer_request_close(viewer_app *app);
 void viewer_process_event(viewer_app *app, const platform_event *event);
+bool viewer_export_png(viewer_app *app, bool copy_to_clipboard);
 bool viewer_compose_and_present(viewer_app *app);
 bool viewer_sync_canvas_geometry(viewer_app *app, bool refit);
 ui_viewer_navigation viewer_navigation_for_frame(const viewer_app *app);

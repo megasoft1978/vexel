@@ -35,6 +35,8 @@ bool mcp_access_path_allowed(const char *path);
 bool mcp_access_resolve_existing(const char *path, char out[MCP_BROKER_PATH_CAP]);
 bool mcp_access_resolve_save_path(const char *path,
                                   char out[MCP_BROKER_PATH_CAP]);
+bool mcp_access_resolve_granted_directory(const char *path,
+                                         char out[MCP_BROKER_PATH_CAP]);
 bool mcp_broker_call_tool(void *context, const mcp_json_doc *request,
                           size_t arguments, const char *tool_name,
                           mcp_tool_response *out);
@@ -62,6 +64,12 @@ void mcp_broker_after_edit(mcp_broker *broker, mcp_broker_document *document,
 bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
                            const mcp_json_doc *request, size_t args,
                            mcp_tool_response *out);
+bool mcp_broker_animation_call(mcp_broker *broker, const mcp_json_doc *request,
+                               size_t args, const char *tool,
+                               mcp_tool_response *out);
+bool mcp_broker_export_animation(mcp_broker_document *document,
+                                 const mcp_json_doc *request, size_t args,
+                                 mcp_tool_response *out);
 bool mcp_broker_documents_call(mcp_broker *broker, const mcp_json_doc *request,
                                size_t args, const char *tool_name,
                                mcp_tool_response *out);

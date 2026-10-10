@@ -11,6 +11,11 @@ decodes embedded data through the injected provider. `viewport.c` resolves root,
 nested `<svg>`, and symbol viewports; `document.c` owns public cleanup and
 `selection.c` provides editor mapping, bounds, and hit tests.
 
+`svg_shape_decode` also attaches a bounded, source-backed SMIL model on
+`svg_shape_document.animation`. Animation elements are omitted from static
+traversal while their target/keyframe source spans and stable diagnostics stay
+available for timeline enumeration and explicit-time evaluation.
+
 Supported geometry includes all SVG path commands (`M/L/H/V/C/S/Q/T/A/Z`,
 absolute and relative), `<line>`, `<polyline>`, `<polygon>`, `<circle>`,
 `<ellipse>`, and `<rect>`. Paths retain subpath and closed-stroke metadata so

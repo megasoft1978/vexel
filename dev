@@ -16,10 +16,61 @@ usage() {
     printf '%s\n' '       ./dev tsan'
     printf '%s\n' '       ./dev e2e [--seed N] [--documents N] [--timeout-seconds N]'
     printf '%s\n' '       ./dev soak [--minutes N] [--seed N] [--output PATH]'
+    printf '%s\n' '       ./dev t [-k PATTERN | --all | --list]   fast tests for changed files (inner loop)'
+    printf '%s\n' '       ./dev shot <file.svg> [--size WxH] [--zoom N] [--out FILE.png]   render and print a PNG path'
+    printf '%s\n' '       ./dev pixdiff A B [--out diff.png] [--tolerance N]   precise image diff'
+    printf '%s\n' '       ./dev final   full gate: verify + asan + ubsan + native smokes + e2e + soak + fuzz'
     printf '%s\n' '       ./dev wo-help'
 }
 
 command_name=${1:-help}
+
+case "$command_name" in
+    t|shot|pixdiff|final)
+        repo_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+        cd "$repo_root"
+        shift
+        case "$command_name" in
+            t) exec python3 scripts/quick_test.py "$@" ;;
+            pixdiff) exec python3 scripts/pixdiff.py "$@" ;;
+            shot)
+                [ "$#" -ge 1 ] || { usage >&2; exit 2; }
+                input=$1; shift
+                size=1280x800; out=${TMPDIR:-/tmp}/vexel-shot.png; extra=
+                while [ "$#" -gt 0 ]; do
+                    case "$1" in
+                        --size) size=$2; shift 2 ;;
+                        --out) out=$2; shift 2 ;;
+                        --zoom) extra="$extra --zoom $2"; shift 2 ;;
+                        *) usage >&2; exit 2 ;;
+                    esac
+                done
+                cmake --preset mac-debug >/dev/null && cmake --build --preset mac-debug --target svgworkbench >/dev/null
+                ppm=${out%.png}.ppm
+                # shellcheck disable=SC2086
+                build/mac-debug/bin/svgworkbench --render-frame "$input" --size "$size" --out "$ppm" $extra || true
+                sips -s format png "$ppm" --out "$out" >/dev/null && rm -f "$ppm"
+                printf '%s\n' "$out"
+                exit 0
+                ;;
+            final)
+                started=$(date +%s)
+                step() { printf '\n==> %s\n' "$*"; }
+                step "verify (debug+release, ctest, python)"; "$repo_root/dev" verify
+                step "asan"; "$repo_root/dev" asan
+                step "ubsan"; "$repo_root/dev" ubsan
+                step "shape fuzz"; "$repo_root/dev" shape-fuzz
+                step "mcp fuzz"; "$repo_root/dev" mcp-fuzz
+                step "e2e (render matrix, mutations)"; "$repo_root/dev" e2e
+                step "soak (1 minute)"; "$repo_root/dev" soak --minutes 1
+                step "native editor smoke (real window, real mouse)"; "$repo_root/dev" editor-smoke
+                step "native viewer smoke (real window)"; "$repo_root/dev" viewer-smoke
+                printf '\nFINAL GATE PASSED in %ss\n' "$(( $(date +%s) - started ))"
+                exit 0
+                ;;
+        esac
+        ;;
+esac
 if [ "$command_name" = viewer-smoke ] && [ "$#" -gt 4 ]; then
     usage >&2
     exit 2

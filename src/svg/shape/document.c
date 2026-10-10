@@ -48,6 +48,7 @@ svg_shape_error svg_shape_decode_with_media(
 void svg_shape_document_destroy(svg_shape_document *document)
 {
     if (document == NULL) return;
+    svg_anim_document_destroy(&document->animation);
     if (document->release_image != NULL && document->images != NULL) {
         for (size_t i = 0U; i < document->shape_count; ++i) {
             svg_shape_image *stored = &document->images[i];

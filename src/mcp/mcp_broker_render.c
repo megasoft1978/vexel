@@ -2,6 +2,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include "mcp_broker_internal.h"
+#include "platform/media/platform_animation.h"
 #include "svg/shape/media.h"
 
 #include "raster/shape_render.h"
@@ -9,15 +10,18 @@
 #include "shape.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 svg_shape_media_providers svg_app_media_providers(void);
 
 #define MCP_RENDER_MAX_AXIS 512U
 #define MCP_RENDER_PNG_LIMIT (2U * 1024U * 1024U)
+#define MCP_ANIMATION_TOTAL_FRAME_PIXELS 16000000ULL
 
 static bool buffer_byte(mcp_json_buffer *out, uint8_t value)
 {
@@ -212,10 +216,17 @@ bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
 {
     if (broker == NULL || document == NULL || request == NULL || out == NULL) return false;
     double scale = 1.0;
+    double time_seconds = 0.0;
+    bool has_time = false;
     size_t scale_token = mcp_json_object_get(request, args, "scale");
     if (scale_token != MCP_JSON_NO_TOKEN &&
         (!parse_double_token(request, scale_token, &scale) || scale < 0.01 || scale > 16.0))
         return mcp_broker_set_error(out, "invalid_scale", "render scale must be between 0.01 and 16");
+    size_t time_token = mcp_json_object_get(request, args, "time");
+    has_time = time_token != MCP_JSON_NO_TOKEN;
+    if (has_time && (!parse_double_token(request, time_token, &time_seconds) ||
+                     time_seconds < 0.0 || time_seconds > 3600.0))
+        return mcp_broker_set_error(out, "invalid_time", "render time must be between 0 and 3600 seconds");
     size_t source_length = document_edit_byte_length(document->edit);
     if (source_length == 0U || source_length > 64U * 1024U * 1024U)
         return mcp_broker_set_error(out, "render_source_limit", "document source is empty or exceeds the 64 MiB render limit");
@@ -239,7 +250,10 @@ bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
         return mcp_broker_set_error(out, "invalid_region", "render region is malformed or exceeds the 512 pixel axis limit");
     }
     raster_tile tile = {0};
-    if (!raster_shape_render(&shape, &tile, &diagnostic)) {
+    bool rendered = has_time ?
+        raster_shape_render_at(&shape, time_seconds, &tile, &diagnostic) :
+        raster_shape_render(&shape, &tile, &diagnostic);
+    if (!rendered) {
         const char *message = svg_shape_error_name(diagnostic.category);
         svg_shape_document_destroy(&shape);
         free(source);
@@ -274,4 +288,232 @@ bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
         mcp_json_buffer_literal(&out->content_json, "[{\"type\":\"image\",\"data\":" ) &&
         mcp_json_buffer_quoted(&out->content_json, base64, base64_length) &&
         mcp_json_buffer_literal(&out->content_json, ",\"mimeType\":\"image/png\"}]" );
+}
+
+static bool write_all(int descriptor, const uint8_t *bytes, size_t length)
+{
+    size_t offset = 0U;
+    while (offset < length) {
+        ssize_t amount = write(descriptor, bytes + offset, length - offset);
+        if (amount < 0 && errno == EINTR) continue;
+        if (amount <= 0) return false;
+        offset += (size_t)amount;
+    }
+    return true;
+}
+
+static bool split_output_path(const char *path, char directory[MCP_BROKER_PATH_CAP],
+                              const char **name)
+{
+    if (path == NULL || directory == NULL || name == NULL) return false;
+    const char *slash = strrchr(path, '/');
+    if (slash == NULL || slash == path || slash[1] == '\0') return false;
+    size_t directory_length = (size_t)(slash - path);
+    if (directory_length >= MCP_BROKER_PATH_CAP) return false;
+    memcpy(directory, path, directory_length);
+    directory[directory_length] = '\0';
+    *name = slash + 1;
+    return true;
+}
+
+static bool write_new_granted_file(const char *canonical_path,
+                                   const uint8_t *bytes, size_t length)
+{
+    char directory[MCP_BROKER_PATH_CAP];
+    const char *name = NULL;
+    if (!split_output_path(canonical_path, directory, &name)) return false;
+    int directory_fd = open(directory, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+    if (directory_fd < 0) return false;
+    int file_fd = openat(directory_fd, name,
+        O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+    bool okay = file_fd >= 0 && write_all(file_fd, bytes, length) && fsync(file_fd) == 0;
+    if (file_fd >= 0 && close(file_fd) != 0) okay = false;
+    if (!okay && file_fd >= 0) (void)unlinkat(directory_fd, name, 0);
+    if (close(directory_fd) != 0) okay = false;
+    return okay;
+}
+
+static bool parse_export_fps(const mcp_json_doc *request, size_t args,
+                             uint32_t *out_fps)
+{
+    size_t token = mcp_json_object_get(request, args, "fps");
+    uint64_t fps = 0U;
+    if (token == MCP_JSON_NO_TOKEN || !mcp_json_uint(request, token, &fps) ||
+        fps == 0U || fps > 30U) return false;
+    *out_fps = (uint32_t)fps;
+    return true;
+}
+
+static bool parse_export_animation(const mcp_json_doc *request, size_t args,
+                                   char path[MCP_BROKER_PATH_CAP], char format[16],
+                                   uint32_t *fps, double *duration,
+                                   size_t *frame_count)
+{
+    size_t path_length = 0U, format_length = 0U;
+    if (!mcp_broker_string_arg(request, args, "path", path,
+            MCP_BROKER_PATH_CAP, &path_length) || path_length == 0U ||
+        !mcp_broker_string_arg(request, args, "format", format, 16U,
+            &format_length) ||
+        (strcmp(format, "gif") != 0 && strcmp(format, "frames") != 0) ||
+        !parse_export_fps(request, args, fps)) return false;
+    size_t duration_token = mcp_json_object_get(request, args, "duration");
+    if (!parse_double_token(request, duration_token, duration) ||
+        *duration <= 0.0 || *duration > 3600.0) return false;
+    double requested_frames = ceil((double)*fps * *duration);
+    if (!isfinite(requested_frames) || requested_frames < 1.0 ||
+        requested_frames > PLATFORM_ANIMATION_MAX_FRAMES) return false;
+    *frame_count = (size_t)requested_frames;
+    return true;
+}
+
+static bool write_png_frame(int directory_fd, size_t frame_index,
+                            const raster_tile *tile, char filename[32])
+{
+    char name[32];
+    int name_length = snprintf(name, sizeof(name), "frame-%04zu.png", frame_index);
+    if (name_length <= 0 || (size_t)name_length >= sizeof(name)) return false;
+    mcp_json_buffer png = {0};
+    if (!mcp_json_buffer_init(&png, 4096U, MCP_RENDER_PNG_LIMIT) ||
+        !encode_png(tile, &png)) {
+        mcp_json_buffer_destroy(&png);
+        return false;
+    }
+    int descriptor = openat(directory_fd, name,
+        O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW, 0600);
+    bool okay = descriptor >= 0 && write_all(descriptor,
+        (const uint8_t *)png.data, png.length) && fsync(descriptor) == 0;
+    if (descriptor >= 0 && close(descriptor) != 0) okay = false;
+    if (!okay && descriptor >= 0) (void)unlinkat(directory_fd, name, 0);
+    mcp_json_buffer_destroy(&png);
+    if (okay) memcpy(filename, name, strlen(name) + 1U);
+    return okay;
+}
+
+bool mcp_broker_export_animation(mcp_broker_document *document,
+                                 const mcp_json_doc *request, size_t args,
+                                 mcp_tool_response *out)
+{
+    if (document == NULL || request == NULL || out == NULL)
+        return mcp_broker_set_error(out, "invalid_arguments", "animation export request is invalid");
+    char path[MCP_BROKER_PATH_CAP], format[16];
+    uint32_t fps = 0U;
+    double duration = 0.0;
+    size_t frame_count = 0U;
+    if (!parse_export_animation(request, args, path, format, &fps, &duration,
+                                &frame_count))
+        return mcp_broker_set_error(out, "invalid_animation_export", "format, fps, duration, or frame count is outside its limit");
+
+    char canonical_path[MCP_BROKER_PATH_CAP];
+    int output_directory_fd = -1;
+    if (strcmp(format, "frames") == 0) {
+        if (!mcp_access_resolve_granted_directory(path, canonical_path))
+            return mcp_broker_set_error(out, "path_not_granted", "frame output directory is not granted");
+        output_directory_fd = open(canonical_path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+        if (output_directory_fd < 0)
+            return mcp_broker_set_error(out, "export_open_failed", "frame output directory could not be opened");
+    } else if (!mcp_access_resolve_save_path(path, canonical_path)) {
+        return mcp_broker_set_error(out, "path_not_granted", "GIF output path is not inside a granted directory");
+    }
+
+    size_t source_length = document_edit_byte_length(document->edit);
+    if (source_length == 0U || source_length > 16U * 1024U * 1024U) {
+        if (output_directory_fd >= 0) (void)close(output_directory_fd);
+        return mcp_broker_set_error(out, "animation_source_limit", "document exceeds the 16 MiB animation export source limit");
+    }
+    uint8_t *source = malloc(source_length);
+    if (source == NULL || !document_edit_materialize(document->edit, source,
+            source_length, &source_length)) {
+        free(source);
+        if (output_directory_fd >= 0) (void)close(output_directory_fd);
+        return mcp_broker_set_error(out, "source_unavailable", "document source could not be materialized");
+    }
+    svg_shape_document shape = {0};
+    svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
+    svg_shape_media_providers providers = svg_app_media_providers();
+    svg_shape_error decode_error = svg_shape_decode_with_media(
+        (base_bytes){source, source_length}, &providers, &shape, &diagnostic);
+    free(source);
+    if (decode_error != SVG_SHAPE_ERROR_NONE) {
+        if (output_directory_fd >= 0) (void)close(output_directory_fd);
+        return mcp_broker_set_error(out, "animation_decode_failed", svg_shape_error_name(decode_error));
+    }
+    double scale = fmin(1.0, fmin((double)MCP_RENDER_MAX_AXIS / shape.width,
+                                  (double)MCP_RENDER_MAX_AXIS / shape.height));
+    uint32_t width = (uint32_t)ceil((double)shape.width * scale);
+    uint32_t height = (uint32_t)ceil((double)shape.height * scale);
+    if (width == 0U || height == 0U || width > MCP_RENDER_MAX_AXIS ||
+        height > MCP_RENDER_MAX_AXIS) {
+        svg_shape_document_destroy(&shape);
+        if (output_directory_fd >= 0) (void)close(output_directory_fd);
+        return mcp_broker_set_error(out, "animation_dimensions", "animation frame dimensions are invalid");
+    }
+    uint64_t frame_pixels = (uint64_t)width * height;
+    if (frame_pixels == 0U || frame_pixels >
+        MCP_ANIMATION_TOTAL_FRAME_PIXELS / frame_count) {
+        svg_shape_document_destroy(&shape);
+        if (output_directory_fd >= 0) (void)close(output_directory_fd);
+        return mcp_broker_set_error(out, "animation_work_limit", "total animation export pixel work exceeds its 16 million pixel limit");
+    }
+    svg_shape_document frame_shape = shape;
+    frame_shape.width = width;
+    frame_shape.height = height;
+    platform_animation_frame gif_frames[PLATFORM_ANIMATION_MAX_FRAMES] = {0};
+    char written_names[PLATFORM_ANIMATION_MAX_FRAMES][32] = {{0}};
+    bool okay = true;
+    for (size_t index = 0U; okay && index < frame_count; index++) {
+        raster_tile tile = {0};
+        double time_seconds = (double)index / (double)fps;
+        okay = raster_shape_render_at(&frame_shape, time_seconds, &tile, &diagnostic);
+        if (okay && strcmp(format, "gif") == 0) {
+            gif_frames[index] = (platform_animation_frame){
+                .rgba = tile.rgba, .byte_count = tile.byte_count,
+                .width = tile.width, .height = tile.height};
+            tile.rgba = NULL;
+            tile.byte_count = 0U;
+        } else if (okay) {
+            okay = write_png_frame(output_directory_fd, index, &tile,
+                                   written_names[index]);
+        }
+        raster_tile_destroy(&tile);
+    }
+    svg_shape_document_destroy(&shape);
+    if (output_directory_fd >= 0 && close(output_directory_fd) != 0) okay = false;
+
+    char result_path[MCP_BROKER_PATH_CAP] = {0};
+    if (okay && strcmp(format, "gif") == 0) {
+        platform_animation_bytes gif = {0};
+        platform_media_status status = platform_animation_encode_gif(
+            gif_frames, frame_count, fps, &gif);
+        if (status != PLATFORM_MEDIA_OK) okay = false;
+        if (okay) okay = write_new_granted_file(canonical_path, gif.bytes, gif.length);
+        platform_animation_bytes_destroy(&gif);
+        if (okay) memcpy(result_path, canonical_path, strlen(canonical_path) + 1U);
+    } else if (okay) {
+        memcpy(result_path, canonical_path, strlen(canonical_path) + 1U);
+    }
+    for (size_t index = 0U; index < frame_count; index++) free((void *)gif_frames[index].rgba);
+    if (!okay) {
+        if (strcmp(format, "frames") == 0) {
+            int cleanup_fd = open(canonical_path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+            if (cleanup_fd >= 0) {
+                for (size_t index = 0U; index < frame_count; index++)
+                    if (written_names[index][0] != '\0')
+                        (void)unlinkat(cleanup_fd, written_names[index], 0);
+                (void)close(cleanup_fd);
+            }
+        }
+        return mcp_broker_set_error(out, "animation_export_failed", "frame rendering or export failed within the configured limits");
+    }
+    char numeric[64];
+    int numeric_length = snprintf(numeric, sizeof(numeric), "%zu,\"width\":%u,\"height\":%u}",
+                                  frame_count, width, height);
+    return numeric_length > 0 && (size_t)numeric_length < sizeof(numeric) &&
+        mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
+        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_literal(&out->structured_json, ",\"format\":" ) &&
+        mcp_json_buffer_quoted(&out->structured_json, format, strlen(format)) &&
+        mcp_json_buffer_literal(&out->structured_json, ",\"path\":" ) &&
+        mcp_json_buffer_quoted(&out->structured_json, result_path, strlen(result_path)) &&
+        mcp_json_buffer_literal(&out->structured_json, ",\"frames\":" ) &&
+        mcp_json_buffer_append(&out->structured_json, numeric, (size_t)numeric_length);
 }

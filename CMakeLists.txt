@@ -122,6 +122,11 @@ set_target_properties(vexel_document PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRE
 
 add_library(vexel_shape STATIC
     src/geom/geometry.c
+    # lane: w6-anim — bounded SMIL model and deterministic timing evaluator
+    src/svg/animation/smil.c
+    src/svg/animation/smil_tracks.c
+    src/svg/animation/evaluate.c
+    src/svg/animation/motion_path.c
     # lane: decode — bounded CSS color parser
     src/svg/css/color.c
     src/svg/css/css.c
@@ -142,6 +147,7 @@ add_library(vexel_shape STATIC
     src/svg/shape/document.c
     src/svg/shape/shape_alloc.c
     src/raster/shape_render.c
+    src/raster/shape_render_animation.c
     # lane: decode — bounded isolated opacity layers
     src/raster/shape_render_group.c
     src/raster/shape_render_sample.c
@@ -248,6 +254,24 @@ add_executable(shape_test tests/svg/shape/test_shape.c tests/svg/shape/test_refe
 target_include_directories(shape_test PRIVATE src/svg/paint)
 target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+# lane: w6-anim
+target_sources(vexel_mcp PRIVATE src/mcp/mcp_broker_animation.c)
+add_executable(svg_anim_test tests/anim/anim_test.c)
+target_link_libraries(svg_anim_test PRIVATE vexel_shape)
+set_target_properties(svg_anim_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(animation_eval_cli tests/anim/animation_eval_cli.c)
+target_link_libraries(animation_eval_cli PRIVATE vexel_shape)
+set_target_properties(animation_eval_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(animation_fuzz tests/anim/animation_fuzz.c)
+target_link_libraries(animation_fuzz PRIVATE vexel_shape)
+set_target_properties(animation_fuzz PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(animation_render_cli tests/anim/animation_render_cli.c)
+target_link_libraries(animation_render_cli PRIVATE vexel_shape)
+set_target_properties(animation_render_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 # lane: w5-filters
 target_sources(vexel_shape PRIVATE
@@ -411,6 +435,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(shape_render_reference_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_stats_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(svg_anim_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(animation_eval_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(animation_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(animation_render_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     # lane: w4-text
     target_compile_options(svg_text_image_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(svg_marker_realloc_test PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -454,7 +482,7 @@ if(VEXEL_SANITIZER)
     endforeach()
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test svg_anim_test animation_eval_cli animation_fuzz animation_render_cli css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -515,6 +543,12 @@ if(BUILD_TESTING)
     # lane: editcore
     add_test(NAME document-edit COMMAND document_edit_test)
     add_test(NAME shape-render COMMAND shape_test)
+    # lane: w6-anim
+    add_test(NAME svg-animation COMMAND svg_anim_test)
+    add_test(NAME svg-animation-python-reference COMMAND python3
+        ${CMAKE_SOURCE_DIR}/tests/anim/test_animation.py)
+    add_test(NAME svg-animation-rsvg-reference COMMAND python3
+        ${CMAKE_SOURCE_DIR}/tests/anim/test_render_reference.py)
     # lane: w4-text
     add_test(NAME svg-text-image COMMAND svg_text_image_test)
     add_test(NAME svg-marker-realloc COMMAND svg_marker_realloc_test)
@@ -548,7 +582,9 @@ endif()
 add_library(vexel_platform_media STATIC
     src/platform/media/platform_media.c
     src/platform/media/platform_text.m
-    src/platform/media/platform_image.m)
+    src/platform/media/platform_image.m
+    # lane: w6-anim — bounded ImageIO GIF encoder
+    src/platform/media/platform_animation.m)
 target_include_directories(vexel_platform_media PUBLIC src)
 find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
 find_library(COREGRAPHICS_FRAMEWORK CoreGraphics REQUIRED)
@@ -562,6 +598,7 @@ target_link_libraries(vexel_platform_media PUBLIC
 set_source_files_properties(
     src/platform/media/platform_text.m
     src/platform/media/platform_image.m
+    src/platform/media/platform_animation.m
     PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 set_target_properties(vexel_platform_media PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
@@ -755,7 +792,6 @@ if(BUILD_TESTING)
 endif()
 
 # lane: w5-editor
-target_sources(svgworkbench PRIVATE src/app/viewer_canvas_geometry.c)
 target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_editor_canvas.c
     src/app/viewer_editor_overlay.c)
@@ -841,4 +877,78 @@ if(BUILD_TESTING)
         "${CMAKE_SOURCE_DIR}/tests/ui/verify_uikit_gallery.py"
         --binary $<TARGET_FILE:ui_gallery>
         --icon-binary $<TARGET_FILE:ui_icon_gallery>)
+endif()
+# lane: w6-editor2
+target_sources(vexel_document PRIVATE
+    src/document/document_edit_region.c
+    src/document/document_edit_text_insert.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_canvas_draw.c
+    src/app/viewer_editor_transform.c
+    src/app/viewer_editor_selection.c
+    src/app/viewer_editor_path.c
+    src/app/viewer_editor_path_nodes.c
+    src/app/viewer_editor_clipboard.c
+    src/app/viewer_editor_text.c
+    src/app/viewer_editor_snap.c)
+target_sources(svgworkbench PRIVATE
+    src/app/viewer_canvas_geometry.c
+    src/app/viewer_export.c
+    src/platform/macos/platform_clipboard.m)
+set_source_files_properties(src/platform/macos/platform_clipboard.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+
+add_library(vexel_platform_png STATIC src/platform/macos/platform_png.m)
+target_include_directories(vexel_platform_png PUBLIC src/platform/macos)
+target_link_libraries(vexel_platform_png PUBLIC ${COREGRAPHICS_FRAMEWORK}
+    ${IMAGEIO_FRAMEWORK})
+set_target_properties(vexel_platform_png PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO)
+target_compile_options(vexel_platform_png PRIVATE ${VEXEL_STRICT_WARNINGS})
+target_link_libraries(svgworkbench PRIVATE vexel_platform_dialog
+    vexel_platform_media vexel_platform_png)
+
+add_executable(platform_png_test tests/platform/platform_png_test.c)
+target_include_directories(platform_png_test PRIVATE src)
+target_link_libraries(platform_png_test PRIVATE vexel_platform_png vexel_platform_media)
+set_target_properties(platform_png_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(platform_png_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(viewer_export_test
+    tests/platform/viewer_export_test.c
+    src/app/viewer_export.c
+    src/app/media_providers.c
+    src/platform/macos/platform_clipboard.m)
+target_include_directories(viewer_export_test PRIVATE src src/app src/platform/macos)
+target_link_libraries(viewer_export_test PRIVATE vexel_editor_ui vexel_document
+    vexel_shape vexel_platform_media vexel_platform_png vexel_platform_dialog
+    ${COCOA_FRAMEWORK})
+target_compile_definitions(viewer_export_test PRIVATE PLATFORM_DIALOG_TESTING)
+set_target_properties(viewer_export_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_export_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(editor_canvas_fuzz_test tests/editor/editor_canvas_fuzz_test.c)
+target_link_libraries(editor_canvas_fuzz_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_canvas_fuzz_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_canvas_fuzz_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(vexel_platform_png PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(vexel_platform_png PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(platform_png_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(platform_png_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(viewer_export_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_export_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_canvas_fuzz_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_canvas_fuzz_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME platform-png COMMAND platform_png_test)
+    add_test(NAME viewer-png-export COMMAND viewer_export_test)
+    add_test(NAME editor-canvas-fuzz COMMAND editor_canvas_fuzz_test)
 endif()

@@ -71,6 +71,15 @@ static bool metadata_element(base_bytes source, const svg_xml_token *token)
             svg_shape_traverse_span_eq(source, token->local_name, "namedview"));
 }
 
+static bool animation_element(base_bytes source, const svg_xml_token *token)
+{
+    return svg_shape_traverse_element_name(source, token, "animate") ||
+           svg_shape_traverse_element_name(source, token, "animateTransform") ||
+           svg_shape_traverse_element_name(source, token, "animateMotion") ||
+           svg_shape_traverse_element_name(source, token, "animateColor") ||
+           svg_shape_traverse_element_name(source, token, "set");
+}
+
 size_t svg_shape_traverse_matching_end(const shape_traversal *traversal,
                                        size_t element)
 {
@@ -652,6 +661,10 @@ bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first, siz
             continue;
         }
         if (metadata_element(traversal->source, token)) {
+            i = end + 1U;
+            continue;
+        }
+        if (animation_element(traversal->source, token)) {
             i = end + 1U;
             continue;
         }

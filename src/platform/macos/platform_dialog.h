@@ -26,6 +26,10 @@ typedef enum platform_unsaved_choice {
 platform_dialog_status platform_dialog_save_svg(const char *suggested_name_utf8,
     size_t suggested_name_length, char *out_path, size_t out_path_capacity,
     size_t *out_path_length);
+platform_dialog_status platform_dialog_save_png(const char *suggested_name_utf8,
+    size_t suggested_name_length, uint8_t maximum_scale,
+    char *out_path, size_t out_path_capacity, size_t *out_path_length,
+    uint8_t *out_scale, bool *out_selection_only);
 
 /* Main-thread-only. title and message are borrowed UTF-8 slices. */
 platform_unsaved_choice platform_dialog_unsaved_changes(
@@ -43,6 +47,10 @@ typedef struct platform_dialog_test_hooks {
     platform_dialog_status (*save_svg)(void *context,
         const char *suggested_name_utf8, size_t suggested_name_length,
         char *out_path, size_t out_path_capacity, size_t *out_path_length);
+    platform_dialog_status (*save_png)(void *context,
+        const char *suggested_name_utf8, size_t suggested_name_length,
+        uint8_t maximum_scale, char *out_path, size_t out_path_capacity,
+        size_t *out_path_length, uint8_t *out_scale, bool *out_selection_only);
     platform_unsaved_choice (*unsaved_changes)(void *context,
         const char *title_utf8, size_t title_length,
         const char *message_utf8, size_t message_length);

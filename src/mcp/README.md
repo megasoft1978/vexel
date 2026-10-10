@@ -28,7 +28,20 @@ parent subtree before committing.
 
 `render_png` decodes with the app's CoreText and ImageIO media providers, so
 bounded text and embedded raster images follow the same platform implementation
-as viewer rendering. Network-loaded media remains unsupported.
+as viewer rendering. Its optional `time` argument samples the SMIL document
+clock from 0 to 3600 seconds; omitted time keeps the static render. Network-loaded
+media remains unsupported.
+
+The animation tools expose `animation_list` with track IDs, targets, key values,
+diagnostics, and source byte spans; `animation_add` inserts one validated SMIL
+fragment under a target; `animation_set` edits one track attribute; and
+`animation_remove` removes one identified track. Every mutation is an undoable
+document edit. Track listing and mutation are limited to 16 MiB of source and
+supported decoded tracks. `export_animation` writes either PNG frames into an
+existing granted directory or a looping GIF at a new path in a granted
+directory. FPS is capped at 30, frame count at 120, each frame at 512 pixels
+per axis, and cumulative export at 16 million frame pixels. GIF encoding uses
+the ImageIO platform helper. Existing output files are never replaced.
 
 `mcp_access` resolves real paths and permits opens only inside canonical
 directories listed in `VEXEL_MCP_ALLOWED_DIRS` or

@@ -128,6 +128,9 @@ void editor_select_handle(viewer_editor *editor, document_handle selected)
     editor->selected_attribute = 0U;
     editor->attribute_start = 0U;
     editor_capture_selection_identity(editor);
+    editor->canvas_selection_count = 1U;
+    editor->canvas_selection_offsets[0] = editor->selected_offset;
+    editor->path_selected_node_segment = SIZE_MAX;
     editor_refresh_outline(editor);
     editor->tree_ready = false;
 }
@@ -149,6 +152,9 @@ void editor_rebind_after_change(viewer_editor *editor, size_t old_offset,
     editor->field_length = editor->cursor = editor->anchor = 0U;
     editor->selected_attribute_name[0] = '\0';
     editor_capture_selection_identity(editor);
+    editor->canvas_selection_count = 1U;
+    editor->canvas_selection_offsets[0] = editor->selected_offset;
+    editor->path_selected_node_segment = SIZE_MAX;
     editor_refresh_outline(editor);
     editor->tree_ready = false;
 }
@@ -303,6 +309,8 @@ uint32_t editor_apply_button(viewer_editor *editor, uint32_t id)
         return editor_apply_result(editor, error, old_offset, old_id, (document_handle){0});
     }
     if (id == EDITOR_BUTTON_DELETE) {
+        if (editor->canvas_selection_count > 1U)
+            return editor_canvas_multi_delete(editor);
         document_handle parent = {0};
         size_t parent_offset = 0U;
         if (document_model_parent(editor_model(editor), editor->selected, &parent)) {
@@ -316,6 +324,8 @@ uint32_t editor_apply_button(viewer_editor *editor, uint32_t id)
         return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED;
     }
     if (id == EDITOR_BUTTON_DUPLICATE) {
+        if (editor->canvas_selection_count > 1U)
+            return editor_canvas_multi_duplicate(editor);
         document_handle duplicate = {0};
         document_edit_error error = document_edit_duplicate_element(editor->edit,
             editor->selected, &duplicate);
@@ -404,6 +414,31 @@ bool editor_reorder(viewer_editor *editor, bool forward)
     document_edit_error result = document_edit_reorder_sibling(editor->edit,
         editor->selected, previous, true);
     (void)editor_apply_result(editor, result, old_offset, old_id, (document_handle){0});
+    return result == DOCUMENT_EDIT_OK;
+}
+
+bool editor_reorder_to_edge(viewer_editor *editor, bool front)
+{
+    const document_model *model = editor_model(editor);
+    document_handle parent = {0U}, target = {0U}, cursor = {0U};
+    if (model == NULL || !document_model_parent(model, editor->selected, &parent) ||
+        !document_model_first_child(model, parent, &cursor)) return false;
+    if (!front) {
+        if (editor_same_handle(cursor, editor->selected)) return false;
+        target = cursor;
+    } else {
+        target = cursor;
+        while (document_model_next_sibling(model, cursor, &cursor)) target = cursor;
+        if (editor_same_handle(target, editor->selected)) return false;
+    }
+    size_t old_offset = editor->selected_offset;
+    char old_id[EDITOR_NAME_CAP];
+    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
+        editor->selected_id : "");
+    document_edit_error result = document_edit_reorder_sibling(editor->edit,
+        editor->selected, target, !front);
+    (void)editor_apply_result(editor, result, old_offset, old_id,
+        (document_handle){0U});
     return result == DOCUMENT_EDIT_OK;
 }
 
@@ -496,6 +531,8 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->width = width;
     editor->height = height;
     editor->backing_scale = 1.0;
+    editor->path_selected_node_segment = SIZE_MAX;
+    editor->snap_enabled = true;
     if (modern_style) {
         (void)platform_text_ui_get_preferences(&editor->theme,
             &editor->increased_contrast, &editor->reduced_motion);
@@ -565,6 +602,7 @@ bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool)
     if (editor->active_tool == tool &&
         editor->draw_tool == VIEWER_EDITOR_TOOL_SELECT) return false;
     editor->active_tool = tool;
+    if (editor_canvas_path_active(editor)) editor_canvas_path_cancel(editor);
     editor->draw_tool = VIEWER_EDITOR_TOOL_SELECT;
     editor->tree_ready = false;
     editor->redraw_requested = true;
@@ -585,8 +623,9 @@ bool viewer_editor_set_draw_tool(viewer_editor *editor,
                                  viewer_editor_draw_tool tool)
 {
     if (editor == NULL || tool < VIEWER_EDITOR_TOOL_SELECT ||
-        tool > VIEWER_EDITOR_TOOL_LINE) return false;
+        tool > VIEWER_EDITOR_TOOL_TEXT) return false;
     if (editor->draw_tool == tool) return false;
+    if (editor_canvas_path_active(editor)) editor_canvas_path_cancel(editor);
     editor->draw_tool = tool;
     editor->active_tool = UI_ICON_SELECT;
     editor->tree_ready = false;
@@ -712,4 +751,19 @@ bool viewer_editor_selection_span(viewer_editor *editor,
 {
     return editor != NULL && out_span != NULL &&
         document_edit_source_span(editor->edit, editor->selected, out_span);
+}
+
+bool viewer_editor_get_selection_bounds(viewer_editor *editor,
+    const svg_shape_document *document, svg_shape_rect *out_bounds)
+{
+    if (editor == NULL || document == NULL || out_bounds == NULL) return false;
+    svg_shape_selection selection;
+    if (editor_canvas_selection_bounds(editor, document, &selection) ||
+        svg_shape_element_at_offset(document, editor->selected_offset, &selection)) {
+        *out_bounds = selection.device_bounds;
+        return isfinite(out_bounds->x) && isfinite(out_bounds->y) &&
+            isfinite(out_bounds->width) && isfinite(out_bounds->height) &&
+            out_bounds->width >= 0.0 && out_bounds->height >= 0.0;
+    }
+    return false;
 }

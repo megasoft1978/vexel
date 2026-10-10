@@ -15,6 +15,15 @@ before freeing the opaque handle.
 dialogs without Cocoa types in the C contract. Save suggests an `.svg` name and
 returns a bounded UTF-8 path. The testing backend injects Save, Save / Don't
 Save / Cancel, and error-alert responses without displaying native UI.
+The PNG save panel returns a bounded path, 1×/2×/4× scale, and a document or
+selection choice for the editor export flow.
+
+`platform_clipboard.m` reads and writes bounded UTF-8 SVG fragments on the
+general pasteboard and publishes the `public.svg-image` type. It also writes
+PNG bytes to the pasteboard. `platform_png.m` encodes caller-owned RGBA8 pixels
+through ImageIO into an owned PNG blob; input is limited to 4096 pixels per
+axis, 16 million pixels, and 64 MiB of encoded output. It retains no caller
+buffer.
 
 The smoke-only injection declarations are private to `app/test_driver/` and
 invoke the target view's event handlers directly. This keeps synthetic pointer

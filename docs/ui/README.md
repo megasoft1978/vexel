@@ -43,7 +43,8 @@ To intentionally update the newly added PNG fixtures, pass `--update`.
 
 See [editor canvas interaction](editor-interaction.md) for opening fit, live
 canvas status, pan/zoom input, selection, transform handles, shape creation,
-keyboard shortcuts, and current feature limits. The editor selection overlay
+multi-selection, path editing, snapping, clipboard, PNG, text, keyboard
+shortcuts, and current feature limits. The editor selection overlay
 has separate dark/light 1×/2× fixtures under `tests/editor/selection-golden/`;
 the existing style and chrome fixtures remain unchanged.
 

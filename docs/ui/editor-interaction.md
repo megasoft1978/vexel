@@ -19,39 +19,68 @@ pressed state and request a redraw.
 | `R` | Rectangle tool |
 | `O` | Ellipse tool |
 | `L` | Line tool |
+| `Y` | Polygon tool |
+| `U` | Polyline tool |
+| `P` | Pen tool |
+| `T` | Text tool |
 | Drag with Select | Move a hit-tested rendered shape |
 | Drag a selection handle | Resize or rotate |
+| Shift-click | Add or remove an element from the selection |
+| Drag empty canvas | Select elements in a marquee |
+| Cmd+A | Select all rendered elements |
 | Arrow key | Nudge the selected shape by one document unit |
 | Shift+Arrow | Nudge by ten document units |
+| Cmd+[ / Cmd+] | Move the selected element backward or forward |
+| Cmd+Shift+[ / Cmd+Shift+] | Send the selected element to the back or front |
+| Cmd+' | Toggle grid and element snapping |
+| Cmd+C / Cmd+X / Cmd+V | Copy / cut / paste SVG elements |
+| Cmd+Shift+V | Paste in place |
+| Cmd+Shift+E | Export PNG |
+| Cmd+Option+C | Copy as PNG |
 | Cmd+0 | Fit canvas |
 | Cmd+1 | Actual size |
 | Cmd++ / Cmd+- | Zoom in or out |
 | Scroll over canvas | Pan |
 | Cmd/Ctrl+Scroll or pinch | Zoom |
 | Escape | Cancel an active canvas gesture |
+| Return | Finish polygon, polyline, pen, or text input |
 
 Rectangle, ellipse, and line creation begins on pointer down and commits on
-pointer up. During a drag, the overlay previews the shape and source bytes stay
-unchanged. A successful release inserts one bounded shape template as one undo
-command. Created shapes go into the selected `<g>` when the structure selection
-is a group; otherwise they go into the SVG root.
+pointer up. Polygon and polyline collect clicked points; the pen tool makes
+straight and cubic segments and closes when the first anchor is clicked. Return
+or double-click finishes a path. During a gesture, the overlay previews the
+shape and source bytes stay unchanged. A finished drawing is one undo command.
+Created elements go into the selected `<g>` when it is a group; otherwise they
+go into the SVG root. Text creates an inline draft and commits an escaped
+`<text>` element on Return, with editable `font-size` and `fill` attributes in
+the ordinary inspector.
 
 Canvas selection uses rendered hit testing and source offsets, so the outline
-selection and inspector target the same element. Move, resize, and rotate keep
-authored geometry and unknown attributes intact by adding or prepending one SVG
-`transform` attribute. Each release creates one undo command and undo restores
-exact prior bytes. The selection overlay is clipped to the canvas and draws a
-bounding box, eight resize handles, and a rotate handle.
+selection and inspector target the same element. Shift-click, marquee, and
+Cmd+A select up to 128 elements. Group transforms, nudging, delete, duplicate,
+and z-order operations apply to sibling elements with one parent, within a
+64 KiB changed source region. Move, resize, and rotate preserve authored
+geometry and unknown attributes by serializing one composed matrix while
+retaining the original transform suffix. Each release creates one undo command
+and undo restores exact prior bytes. The overlay is clipped to the canvas and
+draws selection bounds, resize and rotate handles, path anchors/handles, and
+snap guides.
+
+Path node editing supports retained numeric commands `M`, `L`, `H`, `V`, `C`,
+`S`, `Q`, `T`, and `A`. It replaces only edited number tokens. Double-click
+adds a node to a line segment; Delete removes a noninitial node. Snapping is on
+by default to a one-unit grid and other rendered element bounds and centers.
+The clipboard uses SVG fragment text and `public.svg-image`; pasted content is
+limited to one validated root element and 64 KiB. PNG export uses the existing
+renderer and ImageIO, allows document or selection output at 1×/2×/4×, and is
+bounded to 4096 pixels per axis and 16 million pixels.
 
 ## Current limits
 
-The current interaction layer supports one selected element at a time and only
-rect, ellipse, and line creation. Polygon/polyline and path pen creation, path
-node editing, snapping, multi-selection and group transforms, SVG clipboard
-exchange, and PNG export are not implemented. Canvas transforms use rendered
-axis-aligned bounds and do not rewrite geometry attributes such as `x`, `y`, or
-`d`. Existing transforms can be extended by another transform edit.
-
-Save As, dirty-file confirmation, clipboard, and IME marked text still depend on
-platform services. Run `./dev editor-smoke` from an interactive macOS desktop
-to exercise click-select, move, resize, rectangle creation, undo, and save.
+Canvas transforms use rendered axis-aligned bounds and do not rewrite geometry
+attributes such as `x`, `y`, or `d`. Group operations require same-parent
+siblings; unsupported selections are rejected. Path node insertion handles
+line segments, and delete keeps the initial move-to node. PNG scale is constrained
+by the output dimensions. Save As and dirty-file choices use native AppKit
+dialogs. Run `./dev editor-smoke` from an interactive macOS desktop to exercise
+pointer selection, move, resize, rectangle and polygon creation/undo, and save.
