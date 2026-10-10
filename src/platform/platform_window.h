@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PLATFORM_PATH_CAP 4096U
+
 /* AppKit window contract. All calls, including destroy and shutdown, must run
  * on the main thread. The opaque window is owned by the caller until destroy.
  * Pointer and precise gesture coordinates are logical points from the view's
@@ -27,8 +29,22 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_POINTER_UP,
     PLATFORM_EVENT_SCROLL,
     PLATFORM_EVENT_MAGNIFY,
-    PLATFORM_EVENT_CLOSE_REQUEST
+    PLATFORM_EVENT_CLOSE_REQUEST,
+    PLATFORM_EVENT_FILE_OPEN,
+    PLATFORM_EVENT_ACTION
 } platform_event_type;
+
+typedef enum platform_viewer_action {
+    PLATFORM_ACTION_NONE,
+    PLATFORM_ACTION_RELOAD,
+    PLATFORM_ACTION_TOGGLE_CHECKERBOARD,
+    PLATFORM_ACTION_CYCLE_BACKGROUND,
+    PLATFORM_ACTION_FIT_WIDTH,
+    PLATFORM_ACTION_FIT_WINDOW,
+    PLATFORM_ACTION_ACTUAL_SIZE,
+    PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
+    PLATFORM_ACTION_QUIT
+} platform_viewer_action;
 
 typedef enum platform_modifier {
     PLATFORM_MODIFIER_COMMAND = 1U << 0,
@@ -52,8 +68,11 @@ typedef struct platform_event {
     uint16_t key_code;
     uint32_t modifiers;
     uint8_t button;
+    platform_viewer_action action;
     char text[256];
     size_t text_len;
+    /* Owned path bytes in this value event, NUL-terminated on file-open events. */
+    char path[PLATFORM_PATH_CAP];
 } platform_event;
 
 typedef struct platform_window_config {
@@ -68,6 +87,10 @@ bool platform_init(void);
 bool platform_window_create(const platform_window_config *config, platform_window **out_window);
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points);
 bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
+bool platform_window_open_panel(platform_window *window);
+bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);
+bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
+                                      bool enabled);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);

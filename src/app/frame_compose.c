@@ -172,6 +172,12 @@ static void draw_text(uint8_t *rgba, uint32_t width, uint32_t height, int64_t x,
         } else if (text[index] == '_') {
             static const uint8_t underscore[7] = {0, 0, 0, 0, 0, 0, 31};
             glyph = underscore;
+        } else if (text[index] == '%') {
+            static const uint8_t percent[7] = {17, 2, 4, 8, 16, 17, 0};
+            glyph = percent;
+        } else if (text[index] == ',') {
+            static const uint8_t comma[7] = {0, 0, 0, 0, 0, 4, 8};
+            glyph = comma;
         }
         if (glyph != NULL) {
             for (uint32_t row = 0U; row < 7U; row++) {
@@ -203,22 +209,34 @@ static void draw_text(uint8_t *rgba, uint32_t width, uint32_t height, int64_t x,
 }
 
 static void fill_background(uint8_t *rgba, uint32_t width, uint32_t height,
-                            viewer_frame_kind kind)
+                            viewer_frame_kind kind, const viewer_frame_options *options)
 {
     for (uint32_t y = 0U; y < height; y++) {
         for (uint32_t x = 0U; x < width; x++) {
             size_t offset = ((size_t)y * width + x) * 4U;
             uint8_t red = 0U, green = 0U, blue = 0U;
             if (kind == VIEWER_FRAME_DOCUMENT) {
-                bool light = ((x / VIEWER_FRAME_CHECKER_SIZE) +
-                              (y / VIEWER_FRAME_CHECKER_SIZE)) % 2U == 0U;
-                red = light ? 224U : 204U;
-                green = light ? 226U : 206U;
-                blue = light ? 230U : 210U;
+                if (options != NULL && options->checkerboard) {
+                    bool light = ((x / VIEWER_FRAME_CHECKER_SIZE) +
+                                  (y / VIEWER_FRAME_CHECKER_SIZE)) % 2U == 0U;
+                    red = light ? 224U : 204U;
+                    green = light ? 226U : 206U;
+                    blue = light ? 230U : 210U;
+                } else if (options != NULL && options->background_index == 1U) {
+                    red = 250U; green = 250U; blue = 250U;
+                } else if (options != NULL && options->background_index == 2U) {
+                    red = 24U; green = 27U; blue = 33U;
+                } else {
+                    red = 56U; green = 60U; blue = 68U;
+                }
             } else if (kind == VIEWER_FRAME_LOADING) {
                 red = 25U;
                 green = 29U;
                 blue = 38U;
+            } else if (kind == VIEWER_FRAME_EMPTY) {
+                red = 28U;
+                green = 34U;
+                blue = 46U;
             } else {
                 red = 67U;
                 green = 21U;
@@ -263,16 +281,118 @@ void viewer_navigation_clamp(ui_viewer_navigation *navigation)
     }
 }
 
-bool viewer_compose_frame(const raster_tile *document,
-                          const ui_viewer_navigation *navigation,
-                          const ui_viewer_progress *progress,
-                          viewer_frame_kind kind, const char *message,
-                          uint8_t *out_rgba, size_t output_capacity,
-                          uint32_t width, uint32_t height)
+static void composite_sharp_tiles(const viewer_frame_options *options, uint8_t *rgba,
+                                  uint32_t width, uint32_t height)
+{
+    if (options == NULL || options->sharp_tiles == NULL) return;
+    size_t count = options->sharp_tile_count;
+    if (count > VIEWER_SHARP_CACHE_ENTRIES) count = VIEWER_SHARP_CACHE_ENTRIES;
+    for (size_t index = 0U; index < count; index++) {
+        const viewer_sharp_tile *tile = &options->sharp_tiles[index];
+        size_t required = 0U;
+        size_t tile_width = (size_t)tile->region.width;
+        size_t tile_height = (size_t)tile->region.height;
+        if (tile->rgba == NULL || tile_width == 0U || tile_height == 0U ||
+            tile_width > VIEWER_SHARP_TILE_AXIS || tile_height > VIEWER_SHARP_TILE_AXIS ||
+            tile_width > SIZE_MAX / tile_height ||
+            tile_width * tile_height > SIZE_MAX / 4U ||
+            (required = tile_width * tile_height * 4U) == 0U ||
+            required != tile->byte_count || tile->region.x > width || tile->region.y > height ||
+            tile->region.width > width - tile->region.x ||
+            tile->region.height > height - tile->region.y) continue;
+        for (uint32_t y = 0U; y < tile->region.height; y++) {
+            for (uint32_t x = 0U; x < tile->region.width; x++) {
+                size_t source = ((size_t)y * tile->region.width + x) * 4U;
+                size_t destination = ((size_t)(tile->region.y + y) * width +
+                                      tile->region.x + x) * 4U;
+                double sample[4];
+                double alpha = (double)tile->rgba[source + 3U] / 255.0;
+                sample[0] = (double)tile->rgba[source] * alpha;
+                sample[1] = (double)tile->rgba[source + 1U] * alpha;
+                sample[2] = (double)tile->rgba[source + 2U] * alpha;
+                sample[3] = (double)tile->rgba[source + 3U];
+                composite_pixel(rgba + destination, rgba[destination],
+                    rgba[destination + 1U], rgba[destination + 2U], sample);
+            }
+        }
+    }
+}
+
+static void apply_pixel_grid(uint8_t *rgba, uint32_t width, uint32_t height,
+                             const ui_viewer_navigation *nav)
+{
+    if (nav == NULL || nav->scale < 8.0 || !isfinite(nav->scale) ||
+        !isfinite(nav->pan_x) || !isfinite(nav->pan_y) ||
+        !isfinite(nav->document_width) || !isfinite(nav->document_height) ||
+        nav->document_width > 1000000.0 || nav->document_height > 1000000.0) return;
+    double document_columns = ceil(nav->document_width);
+    double document_rows = ceil(nav->document_height);
+    double first_column = fmin(document_columns,
+        fmax(0.0, ceil(-nav->pan_x / nav->scale)));
+    double after_column = fmin(document_columns,
+        ceil(((double)width - nav->pan_x) / nav->scale));
+    double first_row = fmin(document_rows,
+        fmax(0.0, ceil(-nav->pan_y / nav->scale)));
+    double after_row = fmin(document_rows,
+        ceil(((double)height - nav->pan_y) / nav->scale));
+    if (!isfinite(first_column) || !isfinite(after_column) || !isfinite(first_row) ||
+        !isfinite(after_row) || after_column <= first_column || after_row <= first_row) return;
+    uint32_t start_column = (uint32_t)first_column;
+    uint32_t end_column = (uint32_t)after_column;
+    uint32_t start_row = (uint32_t)first_row;
+    uint32_t end_row = (uint32_t)after_row;
+    for (uint32_t column = start_column; column <= end_column; column++) {
+        double edge = nav->pan_x + (double)column * nav->scale;
+        if (!isfinite(edge) || edge < 0.0 || edge >= (double)width) continue;
+        uint32_t x = (uint32_t)floor(edge);
+        for (uint32_t y = 0U; y < height; y++) {
+            size_t offset = ((size_t)y * width + x) * 4U;
+            rgba[offset] = (uint8_t)(((uint32_t)rgba[offset] * 3U) / 5U);
+            rgba[offset + 1U] = (uint8_t)(((uint32_t)rgba[offset + 1U] * 3U) / 5U);
+            rgba[offset + 2U] = (uint8_t)(((uint32_t)rgba[offset + 2U] * 3U) / 5U);
+        }
+    }
+    for (uint32_t row = start_row; row <= end_row; row++) {
+        double edge = nav->pan_y + (double)row * nav->scale;
+        if (!isfinite(edge) || edge < 0.0 || edge >= (double)height) continue;
+        uint32_t y = (uint32_t)floor(edge);
+        for (uint32_t x = 0U; x < width; x++) {
+            size_t offset = ((size_t)y * width + x) * 4U;
+            rgba[offset] = (uint8_t)(((uint32_t)rgba[offset] * 3U) / 5U);
+            rgba[offset + 1U] = (uint8_t)(((uint32_t)rgba[offset + 1U] * 3U) / 5U);
+            rgba[offset + 2U] = (uint8_t)(((uint32_t)rgba[offset + 2U] * 3U) / 5U);
+        }
+    }
+}
+
+static void draw_status_line(uint8_t *rgba, uint32_t width, uint32_t height,
+                             const char *text)
+{
+    if (text == NULL || text[0] == '\0' || width < 8U || height < 18U) return;
+    uint32_t bar_height = 18U;
+    for (uint32_t y = height - bar_height; y < height; y++) {
+        for (uint32_t x = 0U; x < width; x++) {
+            size_t offset = ((size_t)y * width + x) * 4U;
+            rgba[offset] = (uint8_t)(((uint32_t)rgba[offset] + 24U) / 2U);
+            rgba[offset + 1U] = (uint8_t)(((uint32_t)rgba[offset + 1U] + 28U) / 2U);
+            rgba[offset + 2U] = (uint8_t)(((uint32_t)rgba[offset + 2U] + 36U) / 2U);
+        }
+    }
+    draw_text(rgba, width, height, 4, (int64_t)height - 16, text,
+              235U, 239U, 246U);
+}
+
+bool viewer_compose_frame_ex(const raster_tile *document,
+                             const ui_viewer_navigation *navigation,
+                             const ui_viewer_progress *progress,
+                             viewer_frame_kind kind, const char *message,
+                             const viewer_frame_options *options,
+                             uint8_t *out_rgba, size_t output_capacity,
+                             uint32_t width, uint32_t height)
 {
     size_t required = 0U;
     if (!frame_size(width, height, &required) || out_rgba == NULL ||
-        output_capacity < required || kind < VIEWER_FRAME_LOADING || kind > VIEWER_FRAME_ERROR) {
+        output_capacity < required || kind < VIEWER_FRAME_LOADING || kind > VIEWER_FRAME_EMPTY) {
         return false;
     }
     if (kind == VIEWER_FRAME_DOCUMENT &&
@@ -285,7 +405,7 @@ bool viewer_compose_frame(const raster_tile *document,
         return false;
     }
 
-    fill_background(out_rgba, width, height, kind);
+    fill_background(out_rgba, width, height, kind, options);
     if (kind == VIEWER_FRAME_DOCUMENT) {
         double right = navigation->pan_x + navigation->document_width * navigation->scale;
         double bottom = navigation->pan_y + navigation->document_height * navigation->scale;
@@ -335,11 +455,14 @@ bool viewer_compose_frame(const raster_tile *document,
             (void)ui_viewer_overlay_rgba(progress, out_rgba, required, width, height,
                                          (size_t)width * 4U);
         }
-    } else {
+    } else if (kind == VIEWER_FRAME_ERROR) {
         static const char heading[] = "SVG ERROR";
         size_t heading_width = (sizeof(heading) - 1U) * 12U;
         int64_t x = width > heading_width ? (int64_t)((width - heading_width) / 2U) : 4;
-        int64_t y = height > 40U ? (int64_t)(height / 2U) - 18 : 0;
+        bool show_hint = options != NULL && options->error_hint;
+        int64_t y = show_hint ?
+            (height > 44U ? (int64_t)(height - 44U) / 2 : 0) :
+            (height > 40U ? (int64_t)(height / 2U) - 18 : 0);
         draw_text(out_rgba, width, height, x, y, heading, 255U, 224U, 228U);
         if (message != NULL) {
             size_t message_length = 0U;
@@ -352,10 +475,47 @@ bool viewer_compose_frame(const raster_tile *document,
                 line[message_length] = '\0';
                 size_t line_width = message_length * 12U;
                 int64_t line_x = width > line_width ? (int64_t)((width - line_width) / 2U) : 4;
-                draw_text(out_rgba, width, height, line_x, y + 24, line,
+                int64_t message_offset = show_hint ? 15 : 24;
+                draw_text(out_rgba, width, height, line_x, y + message_offset, line,
                           255U, 183U, 194U);
             }
         }
+        if (show_hint) {
+            static const char hint[] = "PRESS CMD R TO RETRY";
+            size_t hint_width = (sizeof(hint) - 1U) * 12U;
+            int64_t hint_x = width > hint_width ? (int64_t)((width - hint_width) / 2U) : 4;
+            draw_text(out_rgba, width, height, hint_x, y + 30, hint,
+                      226U, 205U, 210U);
+        }
+    } else {
+        static const char prompt[] = "OPEN SVG OR DROP FILE";
+        size_t prompt_width = (sizeof(prompt) - 1U) * 12U;
+        int64_t prompt_x = width > prompt_width ? (int64_t)((width - prompt_width) / 2U) : 4;
+        int64_t prompt_y = height > 14U ? (int64_t)(height / 2U) - 7 : 0;
+        draw_text(out_rgba, width, height, prompt_x, prompt_y, prompt, 210U, 218U, 232U);
+        static const char shortcut[] = "CMD O TO OPEN";
+        size_t shortcut_width = (sizeof(shortcut) - 1U) * 12U;
+        int64_t shortcut_x = width > shortcut_width ? (int64_t)((width - shortcut_width) / 2U) : 4;
+        draw_text(out_rgba, width, height, shortcut_x, prompt_y + 18, shortcut,
+                  152U, 165U, 185U);
+    }
+    if (kind == VIEWER_FRAME_DOCUMENT || kind == VIEWER_FRAME_LOADING) {
+        composite_sharp_tiles(options, out_rgba, width, height);
+        if (kind == VIEWER_FRAME_DOCUMENT && options != NULL && options->pixel_grid)
+            apply_pixel_grid(out_rgba, width, height, navigation);
+        if (options != NULL) draw_status_line(out_rgba, width, height, options->status_text);
     }
     return true;
+}
+
+bool viewer_compose_frame(const raster_tile *document,
+                          const ui_viewer_navigation *navigation,
+                          const ui_viewer_progress *progress,
+                          viewer_frame_kind kind, const char *message,
+                          uint8_t *out_rgba, size_t output_capacity,
+                          uint32_t width, uint32_t height)
+{
+    const viewer_frame_options defaults = {.checkerboard = true};
+    return viewer_compose_frame_ex(document, navigation, progress, kind, message,
+        &defaults, out_rgba, output_capacity, width, height);
 }

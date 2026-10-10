@@ -33,6 +33,21 @@ texture to a second Metal texture, waits for completion with the same five-
 second bound, then compares and hashes the GPU readback. This path avoids
 AppKit window teardown and does not measure presentation timing.
 
+`platform_menus.m` installs the application, File, View, and Window menus. Its
+File menu supports Open, Reload, and a persistent list of up to twelve recent
+SVG paths. Open panels are restricted to `.svg`; the content view accepts SVG
+file URLs by drag and drop, and the application delegate forwards Finder
+`openFiles`/`openURLs` callbacks through the same bounded event contract. The
+viewer polls size and modification time every 250 ms for auto-reload. The event
+queue coalesces pointer movement and window size/scale notifications and caps
+all queued events at 256.
+
+`tests/viewer/native_smoke.sh` exercises reload, zoom, checkerboard, Open, file
+selection, actual size, and quit through System Events. It requires an
+interactive macOS session, Accessibility permission for `osascript`, and a
+working Metal device; a headless or Metal-less environment cannot verify the
+native presentation path.
+
 `platform_task.c` implements the opaque C worker queue with pthreads. It accepts
 capacity 1–64 and 1–4 workers, and uses caller-provided allocation functions for
 the queue and fixed slot array. The queue never owns task context: callers keep

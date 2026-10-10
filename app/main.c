@@ -458,6 +458,9 @@ static int native_navigation_event_smoke(void)
 
 int main(int argc, char *argv[])
 {
+    if (argc == 1) {
+        return app_run_viewer(NULL);
+    }
     if (argc >= 2 && strcmp(argv[1], "--render-frame") == 0) {
         return app_run_render_frame(argc, argv);
     }
@@ -510,9 +513,9 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    (void)fputs("usage: svgworkbench <file.svg>\n"
+    (void)fputs("usage: svgworkbench [<file.svg>]\n"
                 "       svgworkbench --version\n"
                 "       svgworkbench --render-frame <file.svg> --size WxH --out <file.ppm> "
-                "[--zoom N] [--pan X,Y]\n", stderr);
+                "[--zoom N] [--pan X,Y] [--region X,Y,W,H]\n", stderr);
     return 2;
 }

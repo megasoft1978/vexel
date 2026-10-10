@@ -164,6 +164,37 @@ bool ui_viewer_navigation_fit(ui_viewer_navigation *state)
     return true;
 }
 
+bool ui_viewer_navigation_fit_width(ui_viewer_navigation *state)
+{
+    if (state == NULL || !finite_positive(state->viewport_width) ||
+        !finite_positive(state->viewport_height) || !finite_positive(state->document_width) ||
+        !finite_positive(state->document_height)) return false;
+    double scale = clamp_scale(state->viewport_width / state->document_width);
+    double px = (state->viewport_width - state->document_width * scale) * 0.5;
+    double py = (state->viewport_height - state->document_height * scale) * 0.5;
+    if (!isfinite(scale) || !isfinite(px) || !isfinite(py)) return false;
+    state->scale = scale;
+    state->pan_x = px;
+    state->pan_y = py;
+    state->dragging = false;
+    return true;
+}
+
+bool ui_viewer_navigation_actual_size(ui_viewer_navigation *state)
+{
+    if (state == NULL || !finite_positive(state->viewport_width) ||
+        !finite_positive(state->viewport_height) || !finite_positive(state->document_width) ||
+        !finite_positive(state->document_height)) return false;
+    double px = (state->viewport_width - state->document_width) * 0.5;
+    double py = (state->viewport_height - state->document_height) * 0.5;
+    if (!isfinite(px) || !isfinite(py)) return false;
+    state->scale = 1.0;
+    state->pan_x = px;
+    state->pan_y = py;
+    state->dragging = false;
+    return true;
+}
+
 bool ui_viewer_navigation_key(ui_viewer_navigation *state, ui_viewer_key key)
 {
     if (state == NULL || !isfinite(state->pan_x) || !isfinite(state->pan_y)) return false;

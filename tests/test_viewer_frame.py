@@ -87,6 +87,34 @@ class ViewerFrameTests(unittest.TestCase):
         self.assertIn("xml", result.stderr.lower())
         self.assertTrue((self.output_root / "malformed.ppm").is_file())
 
+    def test_missing_and_oversized_files_are_bounded_errors(self) -> None:
+        missing = self.output_root / "missing.svg"
+        result = self.render(missing, "missing", "48x32")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cannot open", result.stderr.lower())
+        self.assertTrue((self.output_root / "missing.ppm").is_file())
+
+        oversized = self.output_root / "oversized.svg"
+        with oversized.open("wb") as stream:
+            stream.truncate(1024 * 1024 * 1024 + 1)
+        result = self.render(oversized, "oversized", "48x32")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("1 gib", result.stderr.lower())
+        self.assertTrue((self.output_root / "oversized.ppm").is_file())
+
+    @unittest.skipIf(os.geteuid() == 0, "root can read mode-000 files")
+    def test_permission_denied_file_is_a_bounded_error(self) -> None:
+        denied = self.output_root / "denied.svg"
+        denied.write_bytes(SIMPLE_FIXTURE.read_bytes())
+        denied.chmod(0)
+        try:
+            result = self.render(denied, "denied", "48x32")
+        finally:
+            denied.chmod(0o600)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cannot open", result.stderr.lower())
+        self.assertTrue((self.output_root / "denied.ppm").is_file())
+
     def test_argument_boundaries_reject_without_traceback(self) -> None:
         invalid = [
             ("8193x1",),
@@ -94,9 +122,11 @@ class ViewerFrameTests(unittest.TestCase):
             ("1x8193",),
             ("1x1", "--zoom", "nan"),
             ("1x1", "--zoom", "inf"),
-            ("1x1", "--zoom", "64.01"),
+            ("1x1", "--zoom", "1000.01"),
             ("1x1", "--pan", "nan,0"),
             ("1x1", "--pan", "0,10000001"),
+            ("1x1", "--region", "1,2,3"),
+            ("1x1", "--region", "0,0,0,1"),
         ]
         for index, arguments in enumerate(invalid):
             with self.subTest(arguments=arguments):
@@ -120,12 +150,15 @@ class ViewerFrameTests(unittest.TestCase):
         self.assertNotIn("Traceback", result.stderr)
 
     def test_missing_arguments_show_usage_and_exit_two(self) -> None:
-        for arguments in ([], [""], ["--unknown"]):
+        for arguments in (["--render-frame"], [""], ["--unknown"]):
             with self.subTest(arguments=arguments):
                 result = subprocess.run([str(BINARY), *arguments], cwd=ROOT, text=True,
                                         capture_output=True, timeout=10, check=False)
                 self.assertEqual(result.returncode, 2)
-                self.assertIn("usage: svgworkbench", result.stderr)
+                if arguments == ["--render-frame"]:
+                    self.assertIn("render-frame: expected", result.stderr)
+                else:
+                    self.assertIn("usage: svgworkbench", result.stderr)
 
     def test_zoom_and_pan_render(self) -> None:
         result = self.render(SIMPLE_FIXTURE, "zoom-pan", "128x96",
@@ -134,6 +167,33 @@ class ViewerFrameTests(unittest.TestCase):
         header, pixels = read_ppm(self.output_root / "zoom-pan.ppm")
         self.assertIn(b"128 96", header)
         self.assertEqual(len(pixels), 128 * 96 * 3)
+
+    def test_zoom_range_edges_render(self) -> None:
+        for index, zoom in enumerate(("0.001", "1000")):
+            with self.subTest(zoom=zoom):
+                result = self.render(SIMPLE_FIXTURE, f"zoom-edge-{index}", "8x8",
+                                     "--zoom", zoom)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                _, pixels = read_ppm(self.output_root / f"zoom-edge-{index}.ppm")
+                self.assertEqual(len(pixels), 8 * 8 * 3)
+
+    def test_sharp_source_region_renders_at_requested_zoom(self) -> None:
+        result = self.render(SIMPLE_FIXTURE, "sharp-region", "96x72",
+                             "--region", "20,15,20,20", "--zoom", "8")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        header, pixels = read_ppm(self.output_root / "sharp-region.ppm")
+        self.assertIn(b"96 72", header)
+        self.assertEqual(len(pixels), 96 * 72 * 3)
+        self.assertGreater(len(set(pixels[index:index + 3]
+                                   for index in range(0, len(pixels), 3))), 2)
+
+    def test_region_bounds_write_a_friendly_error_frame(self) -> None:
+        result = self.render(SIMPLE_FIXTURE, "region-bounds", "48x32",
+                             "--region", "60,45,8,8")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("limit", result.stderr.lower())
+        _, pixels = read_ppm(self.output_root / "region-bounds.ppm")
+        self.assertEqual(len(pixels), 48 * 32 * 3)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 #import <Cocoa/Cocoa.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include "platform/platform_window.h"
+#include "platform_window_internal.h"
 #include "platform/macos/platform_metal_internal.h"
 #include "test_driver/native_injection.h"
 
@@ -22,7 +24,13 @@ struct platform_window {
     uint32_t last_pixel_width;
     uint32_t last_pixel_height;
     double last_scale;
+    size_t pending_count;
 };
+
+#define PLATFORM_EVENT_QUEUE_CAP 256U
+
+static char platform_startup_path[PLATFORM_PATH_CAP];
+static bool platform_startup_open_pending;
 
 static bool platform_on_main_thread(void)
 {
@@ -57,6 +65,16 @@ static bool platform_emit(platform_window *window, const platform_event *event)
     if (window == NULL || event == NULL) {
         return false;
     }
+    if (event->type == PLATFORM_EVENT_POINTER_MOVE || event->type == PLATFORM_EVENT_RESIZE ||
+        event->type == PLATFORM_EVENT_SCALE) {
+        for (platform_event_node *cursor = window->first; cursor != NULL; cursor = cursor->next) {
+            if (cursor->value.type == event->type) {
+                cursor->value = *event;
+                return true;
+            }
+        }
+    }
+    if (window->pending_count >= PLATFORM_EVENT_QUEUE_CAP) return false;
     platform_event_node *node = malloc(sizeof(*node));
     if (node == NULL) {
         return false;
@@ -69,7 +87,41 @@ static bool platform_emit(platform_window *window, const platform_event *event)
         window->last->next = node;
     }
     window->last = node;
+    window->pending_count++;
     return true;
+}
+
+static bool platform_path_supported(const char *path, size_t length)
+{
+    if (path == NULL || length == 0U || length >= PLATFORM_PATH_CAP ||
+        memchr(path, '\0', length) != NULL) return false;
+    NSString *value = [[NSString alloc] initWithBytes:path length:length
+                                             encoding:NSUTF8StringEncoding];
+    if (value == nil) return false;
+    return [[value.pathExtension lowercaseString] isEqualToString:@"svg"];
+}
+
+bool platform_window_dispatch_file_open(platform_window *window, const char *path, size_t length)
+{
+    if (!platform_path_supported(path, length)) return false;
+    if (window == NULL) {
+        memcpy(platform_startup_path, path, length);
+        platform_startup_path[length] = '\0';
+        platform_startup_open_pending = true;
+        return true;
+    }
+    platform_event value = {.type = PLATFORM_EVENT_FILE_OPEN};
+    memcpy(value.path, path, length);
+    value.path[length] = '\0';
+    return platform_emit(window, &value);
+}
+
+void platform_window_dispatch_action(platform_window *window, platform_viewer_action action)
+{
+    if (window != NULL) {
+        platform_event event = {.type = PLATFORM_EVENT_ACTION, .action = action};
+        (void)platform_emit(window, &event);
+    }
 }
 
 static bool platform_size_event(platform_window *window, platform_event_type type)
@@ -118,6 +170,30 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
 @end
 
 @implementation VexelView
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
+{
+    NSPasteboard *pasteboard = sender.draggingPasteboard;
+    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[[NSURL class]]
+        options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
+    for (NSURL *url in urls) {
+        const char *bytes = url.path.fileSystemRepresentation;
+        size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
+        if (platform_path_supported(bytes, length)) return NSDragOperationCopy;
+    }
+    return NSDragOperationNone;
+}
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
+{
+    NSPasteboard *pasteboard = sender.draggingPasteboard;
+    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[[NSURL class]]
+        options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
+    for (NSURL *url in urls) {
+        const char *bytes = url.path.fileSystemRepresentation;
+        size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
+        if (platform_window_dispatch_file_open(self.owner, bytes, length)) return YES;
+    }
+    return NO;
+}
 - (BOOL)acceptsFirstResponder { return YES; }
 - (void)keyDown:(NSEvent *)event
 {
@@ -253,6 +329,7 @@ bool platform_init(void)
     }
     (void)[NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    platform_macos_menus_init();
     [NSApp finishLaunching];
     return true;
 }
@@ -298,6 +375,7 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         }
         native.releasedWhenClosed = NO;
         window->native = native;
+        platform_macos_menus_set_owner(window);
         native.owner = window;
         native.delegate = native;
         native.acceptsMouseMovedEvents = YES;
@@ -305,6 +383,7 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         VexelView *view = [[VexelView alloc] initWithFrame:NSMakeRect(0.0, 0.0,
             config->width_points, config->height_points)];
         view.owner = window;
+        [view registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
         native.contentView = view;
         view.frame = NSMakeRect(0.0, 0.0, config->width_points, config->height_points);
         [native setContentSize:NSMakeSize(config->width_points, config->height_points)];
@@ -319,9 +398,48 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         }
         (void)platform_size_event(window, PLATFORM_EVENT_RESIZE);
         (void)platform_size_event(window, PLATFORM_EVENT_SCALE);
+        if (platform_startup_open_pending) {
+            (void)platform_window_dispatch_file_open(window, platform_startup_path,
+                strnlen(platform_startup_path, PLATFORM_PATH_CAP));
+            platform_startup_path[0] = '\0';
+            platform_startup_open_pending = false;
+        }
         *out_window = window;
         return true;
     }
+}
+
+bool platform_window_open_panel(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    @autoreleasepool {
+        NSOpenPanel *panel = [NSOpenPanel openPanel];
+        UTType *svg_type = [UTType typeWithFilenameExtension:@"svg"];
+        if (svg_type == nil) return false;
+        panel.allowedContentTypes = @[svg_type];
+        panel.canChooseFiles = YES;
+        panel.canChooseDirectories = NO;
+        panel.allowsMultipleSelection = NO;
+        panel.resolvesAliases = YES;
+        if ([panel runModal] != NSModalResponseOK || panel.URL == nil || !panel.URL.isFileURL)
+            return true;
+        const char *path = panel.URL.path.fileSystemRepresentation;
+        size_t length = path == NULL ? 0U : strnlen(path, PLATFORM_PATH_CAP);
+        return platform_window_dispatch_file_open(window, path, length);
+    }
+}
+
+bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    return platform_macos_menus_add_recent(path, path_len);
+}
+
+bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
+                                      bool enabled)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    return platform_macos_menus_set_option_state(window, action, enabled);
 }
 
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points)
@@ -499,6 +617,7 @@ bool platform_poll_event(platform_window *window, platform_event *out_event)
             window->last = NULL;
         }
         *out_event = node->value;
+        if (window->pending_count > 0U) window->pending_count--;
         free(node);
         return true;
     }
@@ -522,6 +641,8 @@ void platform_window_destroy(platform_window *window)
             free(node);
             node = next;
         }
+        platform_macos_menus_clear_owner(window);
+        window->pending_count = 0U;
         free(window);
     }
 }

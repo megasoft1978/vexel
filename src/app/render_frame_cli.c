@@ -1,6 +1,7 @@
 #include "render_frame_cli.h"
 
 #include "frame_compose.h"
+#include "raster/shape_render.h"
 #include "viewer_load.h"
 
 #include <errno.h>
@@ -21,8 +22,13 @@ typedef struct render_options {
     double zoom;
     double pan_x;
     double pan_y;
+    uint32_t region_x;
+    uint32_t region_y;
+    uint32_t region_width;
+    uint32_t region_height;
     bool has_zoom;
     bool has_pan;
+    bool has_region;
 } render_options;
 
 static size_t bounded_length(const char *text, size_t limit)
@@ -43,6 +49,48 @@ static bool parse_positive_integer(const char *text, uint32_t maximum, uint32_t 
         return false;
     }
     *out = (uint32_t)value;
+    return true;
+}
+
+static bool parse_region_component(const char *text, size_t length, uint32_t maximum,
+                                   bool allow_zero, uint32_t *out)
+{
+    if (text == NULL || out == NULL || length == 0U || length > 8U) return false;
+    char buffer[9] = {0};
+    memcpy(buffer, text, length);
+    if (allow_zero && strcmp(buffer, "0") == 0) {
+        *out = 0U;
+        return true;
+    }
+    return parse_positive_integer(buffer, maximum, out);
+}
+
+static bool parse_region(const char *text, uint32_t *x, uint32_t *y,
+                         uint32_t *width, uint32_t *height)
+{
+    size_t length = bounded_length(text, 35U);
+    if (length == 0U || length > 35U) return false;
+    size_t starts[4] = {0U};
+    size_t sizes[4] = {0U};
+    size_t component = 0U;
+    starts[0] = 0U;
+    for (size_t index = 0U; index < length; index++) {
+        if (text[index] != ',') continue;
+        if (component >= 3U) return false;
+        sizes[component] = index - starts[component];
+        component++;
+        starts[component] = index + 1U;
+    }
+    if (component != 3U) return false;
+    sizes[3] = length - starts[3];
+    uint32_t values[4] = {0U};
+    for (size_t index = 0U; index < 4U; index++) {
+        bool allow_zero = index < 2U;
+        if (!parse_region_component(text + starts[index], sizes[index], 4096U,
+                                    allow_zero, &values[index])) return false;
+    }
+    if (values[2] == 0U || values[3] == 0U) return false;
+    *x = values[0]; *y = values[1]; *width = values[2]; *height = values[3];
     return true;
 }
 
@@ -140,11 +188,52 @@ static bool parse_options(int argc, char *argv[], render_options *options)
         } else if (strcmp(option, "--pan") == 0 && !options->has_pan) {
             if (!parse_pan(value, &options->pan_x, &options->pan_y)) return false;
             options->has_pan = true;
+        } else if (strcmp(option, "--region") == 0 && !options->has_region) {
+            if (!parse_region(value, &options->region_x, &options->region_y,
+                              &options->region_width, &options->region_height)) return false;
+            options->has_region = true;
         } else {
             return false;
         }
     }
     return has_size && has_output;
+}
+
+static bool render_region_tile(const viewer_loaded_document *document,
+                               const render_options *options, raster_tile *out_tile,
+                               svg_shape_diagnostic *out_diagnostic)
+{
+    if (document == NULL || options == NULL || out_tile == NULL || out_diagnostic == NULL ||
+        options->region_width == 0U || options->region_height == 0U ||
+        (uint64_t)options->region_x + options->region_width > document->tile.width ||
+        (uint64_t)options->region_y + options->region_height > document->tile.height) return false;
+    double target_width_value = ceil((double)options->region_width * options->zoom);
+    double target_height_value = ceil((double)options->region_height * options->zoom);
+    if (!isfinite(target_width_value) || !isfinite(target_height_value) ||
+        target_width_value < 1.0 || target_height_value < 1.0 ||
+        target_width_value > RASTER_TILE_MAX_AXIS || target_height_value > RASTER_TILE_MAX_AXIS)
+        return false;
+    uint32_t target_width = (uint32_t)target_width_value;
+    uint32_t target_height = (uint32_t)target_height_value;
+    const svg_shape_document *source = &document->shape;
+    double base_scale = fmin((double)document->tile.width / source->view_width,
+                             (double)document->tile.height / source->view_height);
+    double offset_x = ((double)document->tile.width - source->view_width * base_scale) * 0.5;
+    double offset_y = ((double)document->tile.height - source->view_height * base_scale) * 0.5;
+    double render_scale = base_scale * options->zoom;
+    if (!isfinite(base_scale) || !(base_scale > 0.0) || !isfinite(render_scale) ||
+        !(render_scale > 0.0)) return false;
+    svg_shape_document view = *source;
+    view.width = target_width;
+    view.height = target_height;
+    view.view_x = source->view_x + ((double)options->region_x - offset_x) / base_scale;
+    view.view_y = source->view_y + ((double)options->region_y - offset_y) / base_scale;
+    view.view_width = (double)target_width / render_scale;
+    view.view_height = (double)target_height / render_scale;
+    if (!isfinite(view.view_x) || !isfinite(view.view_y) ||
+        !isfinite(view.view_width) || !isfinite(view.view_height) ||
+        !(view.view_width > 0.0) || !(view.view_height > 0.0)) return false;
+    return raster_shape_render(&view, out_tile, out_diagnostic);
 }
 
 static bool write_ppm(const char *path, const uint8_t *rgba, uint32_t width, uint32_t height)
@@ -188,21 +277,38 @@ int app_run_render_frame(int argc, char *argv[])
     render_options options = {0};
     if (!parse_options(argc, argv, &options)) {
         (void)fputs("render-frame: expected <file.svg> --size WxH --out <file.ppm> "
-                    "[--zoom N] [--pan X,Y] (size 1..8192, zoom 0.05..64, "
-                    "pan within +/-10000000 pixels)\n", stderr);
+                    "[--zoom N] [--pan X,Y] [--region X,Y,W,H] "
+                    "(size 1..8192, zoom 0.001..1000, source region in document pixels)\n",
+                    stderr);
         return 2;
     }
     viewer_loaded_document document = {0};
+    raster_tile region_tile = {0};
+    const raster_tile *display_tile = NULL;
     viewer_load_status load_status = viewer_load_document(options.input_path, NULL, &document);
     bool loaded = load_status == VIEWER_LOAD_OK;
+    if (loaded && options.has_region) {
+        svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
+        if (!render_region_tile(&document, &options, &region_tile, &diagnostic)) {
+            document.shape_error = diagnostic.category == SVG_SHAPE_ERROR_NONE ?
+                SVG_SHAPE_ERROR_LIMIT : diagnostic.category;
+            document.error_offset = diagnostic.offset;
+            loaded = false;
+        } else {
+            display_tile = &region_tile;
+        }
+    }
+    if (display_tile == NULL && loaded) display_tile = &document.tile;
     ui_viewer_navigation navigation = {0};
     if (loaded && (!ui_viewer_navigation_init(&navigation, (double)options.width,
-            (double)options.height, (double)document.tile.width,
-            (double)document.tile.height) || !ui_viewer_navigation_fit(&navigation))) {
+            (double)options.height, (double)display_tile->width,
+            (double)display_tile->height) ||
+            !(options.has_region ? ui_viewer_navigation_actual_size(&navigation) :
+                                   ui_viewer_navigation_fit(&navigation)))) {
         document.shape_error = SVG_SHAPE_ERROR_VIEWPORT;
         loaded = false;
     }
-    if (loaded && options.has_zoom) {
+    if (loaded && options.has_zoom && !options.has_region) {
         double factor = options.zoom / navigation.scale;
         if (!ui_viewer_navigation_zoom(&navigation, factor,
                 (double)options.width * 0.5, (double)options.height * 0.5)) {
@@ -239,13 +345,14 @@ int app_run_render_frame(int argc, char *argv[])
     const char *error_message = document.shape_error != SVG_SHAPE_ERROR_NONE ?
         svg_shape_error_name(document.shape_error) : document.load_error;
     viewer_frame_kind kind = loaded ? VIEWER_FRAME_DOCUMENT : VIEWER_FRAME_ERROR;
-    bool composed = viewer_compose_frame(loaded ? &document.tile : NULL,
+    bool composed = viewer_compose_frame(loaded ? display_tile : NULL,
         loaded ? &navigation : NULL, NULL, kind,
         error_message == NULL || error_message[0] == '\0' ? "Load error" : error_message,
         frame, frame_size, options.width, options.height);
     bool written = composed && write_ppm(options.output_path, frame,
                                          options.width, options.height);
     free(frame);
+    raster_tile_destroy(&region_tile);
     if (!written) {
         viewer_loaded_document_destroy(&document);
         (void)fprintf(stderr, "render-frame: could not compose or write '%s'\n", options.output_path);
