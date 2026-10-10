@@ -3,11 +3,9 @@
 #include "viewer_chrome.h"
 #include "ui_widgets.h"
 #include "platform/macos/platform_accessibility.h"
-#include "platform/media/platform_text.h"
 #include "platform/platform_text_ui.h"
 
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 
 size_t editor_copy_slice(char *destination, size_t capacity, base_bytes bytes)
@@ -66,6 +64,19 @@ bool editor_add_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                             const char *value, size_t value_len, uint32_t state,
                             uint32_t command_id)
 {
+    return editor_add_widget_node(editor, id, parent, axis, width, height,
+        padding, gap, color, role, UI_WIDGET_AUTO, UI_ICON_NONE, label,
+        label_len, value, value_len, state, command_id);
+}
+
+bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
+                            ui_axis axis, uint32_t width, uint32_t height,
+                            uint32_t padding, uint32_t gap, uint32_t color,
+                            ui_role role, ui_widget_kind widget, ui_icon_kind icon,
+                            const char *label, size_t label_len,
+                            const char *value, size_t value_len, uint32_t state,
+                            uint32_t command_id)
+{
     double scale = editor->backing_scale;
     width = width == 0U ? 0U : (uint32_t)ceil((double)width * scale);
     height = height == 0U ? 0U : (uint32_t)ceil((double)height * scale);
@@ -74,24 +85,27 @@ bool editor_add_node(viewer_editor *editor, uint32_t id, uint32_t parent,
     ui_widget_spec spec = {.id = id, .parent_id = parent, .axis = axis,
         .preferred_width = width, .preferred_height = height,
         .padding = padding, .gap = gap, .color = color,
-        .command_id = command_id, .state = state, .label = label,
-        .label_len = label_len, .value = value, .value_len = value_len};
+        .command_id = command_id, .state = state, .widget = widget,
+        .icon = icon, .label = label, .label_len = label_len,
+        .value = value, .value_len = value_len};
     if (id == UI_ROOT_ID) {
         ui_node_spec root = {.id = id, .parent_id = parent, .axis = axis,
             .preferred_width = width, .preferred_height = height, .padding = padding,
             .gap = gap, .color = color, .role = role, .label = label,
             .label_len = label_len, .value = value, .value_len = value_len,
-            .state = state, .command_id = command_id};
+            .state = state, .command_id = command_id, .widget = widget,
+            .icon = icon};
         return ui_tree_add(&editor->tree, &root);
     }
     if (role == UI_ROLE_BUTTON) return ui_widget_add_button(&editor->tree, &spec);
     if (role == UI_ROLE_TEXT_FIELD) return ui_widget_add_text_field(&editor->tree, &spec);
     if (role == UI_ROLE_ROW) return ui_widget_add_row(&editor->tree, &spec);
-    return ui_tree_add(&editor->tree, &(ui_node_spec){.id = id, .parent_id = parent,
+    bool added = ui_tree_add(&editor->tree, &(ui_node_spec){.id = id, .parent_id = parent,
         .axis = axis, .preferred_width = width, .preferred_height = height,
         .padding = padding, .gap = gap, .color = color, .role = role,
         .label = label, .label_len = label_len, .value = value,
         .value_len = value_len, .state = state, .command_id = command_id});
+    return added;
 }
 
 static size_t editor_display_value(viewer_editor *editor, document_source_span span,
@@ -367,50 +381,7 @@ void viewer_editor_paint(viewer_editor *editor, uint8_t *rgba, size_t capacity,
         ui_tree_paint_into(&editor->tree, rgba, capacity, stride);
     if (!painted) return;
     if (editor->modern_style) {
-        for (size_t index = 0U; index < editor->tree.count; ++index) {
-            const ui_node *node = &editor->tree.nodes[index];
-            if (node->bounds.width == 0U || node->bounds.height == 0U ||
-                node->spec.icon != UI_ICON_NONE) continue;
-            if (node->spec.role != UI_ROLE_BUTTON &&
-                node->spec.role != UI_ROLE_TEXT_FIELD &&
-                node->spec.role != UI_ROLE_ROW &&
-                node->spec.role != UI_ROLE_TEXT &&
-                node->spec.role != UI_ROLE_STATUS) continue;
-            uint32_t color = (node->spec.state & UI_STATE_INVALID) != 0U ?
-                editor->tree.tokens.error :
-                (node->spec.state & UI_STATE_DISABLED) != 0U ?
-                    editor->tree.tokens.text_secondary : editor->tree.tokens.text_primary;
-            if (node->spec.role == UI_ROLE_ROW &&
-                (node->spec.state & UI_STATE_CHECKED) != 0U)
-                color = editor->tree.tokens.accent;
-            ui_rect label_clip = node->bounds;
-            uint32_t inset = (uint32_t)ceil(8.0 * editor->backing_scale);
-            if (label_clip.width > inset) {
-                label_clip.x += inset;
-                label_clip.width -= inset;
-            }
-            const char *label = editor->tree.text_storage + node->label_offset;
-            size_t label_length = editor_utf8_prefix((const uint8_t *)label,
-                node->full_label_len, PLATFORM_TEXT_MAX_BYTES);
-            bool centered = node->spec.role == UI_ROLE_BUTTON;
-            if (label_length > 0U &&
-                !platform_text_ui_draw(label, label_length, false,
-                    centered, editor->theme, editor->tree.tokens.font_px, color,
-                    rgba, editor->width, editor->height, stride, label_clip)) return;
-            if (node->spec.role == UI_ROLE_TEXT_FIELD && node->full_value_len > 0U) {
-                ui_rect value_clip = node->bounds;
-                value_clip.x += node->bounds.width / 2U;
-                value_clip.width -= node->bounds.width / 2U;
-                uint32_t value_color = (node->spec.state & UI_STATE_DISABLED) != 0U ?
-                    editor->tree.tokens.text_secondary : editor->tree.tokens.text_primary;
-                const char *value = editor->tree.text_storage + node->value_offset;
-                size_t value_length = editor_utf8_prefix((const uint8_t *)value,
-                    node->full_value_len, PLATFORM_TEXT_MAX_BYTES);
-                if (!platform_text_ui_draw(value, value_length, true,
-                        false, editor->theme, editor->tree.tokens.font_px, value_color,
-                        rgba, editor->width, editor->height, stride, value_clip)) return;
-            }
-        }
+        editor_paint_widgets(editor, rgba, capacity, stride);
         if (platform_text_ui_app_is_active())
             (void)platform_accessibility_update_tree(&editor->tree, editor->width,
                 editor->height, editor->backing_scale);
@@ -442,6 +413,26 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
     }
     if (action == EDITOR_BUTTON_TOOL_ZOOM) {
         (void)viewer_editor_set_tool(editor, UI_ICON_ZOOM);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_RECTANGLE) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_RECT);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_ELLIPSE) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_ELLIPSE);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_LINE) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_LINE);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_PEN || action == EDITOR_BUTTON_TOOL_NODE) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_TOOL_TEXT) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_TEXT);
         return VIEWER_EDITOR_HANDLED;
     }
     if (action == EDITOR_BUTTON_TOGGLE_STRUCTURE || action == EDITOR_BUTTON_HIDE_STRUCTURE) {
@@ -520,6 +511,31 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
         hit->spec.id < EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) {
         size_t row = hit->spec.id - EDITOR_OUTLINE_ROW_BASE;
         size_t index = editor->outline_start + row;
+        if (editor->modern_style &&
+            !editor_outline_visible_model_index(editor,
+                editor->outline_visible_start + row, &index)) return prior | VIEWER_EDITOR_HANDLED;
+        size_t scale = (size_t)ceil(editor->backing_scale > 0.0 ?
+            editor->backing_scale : 1.0);
+        size_t action_start = hit->bounds.x + hit->bounds.width -
+            (hit->bounds.width > 34U * scale ? 34U * scale : hit->bounds.width);
+        if (editor->modern_style && x >= action_start &&
+            (hit->spec.state & (UI_STATE_CHECKED | UI_STATE_HOVERED)) != 0U) {
+            if ((size_t)x < action_start + 16U * scale)
+                (void)editor_outline_toggle_visibility(editor, index);
+            else
+                (void)editor_outline_toggle_lock(editor, index);
+            return prior | VIEWER_EDITOR_HANDLED;
+        }
+        if (editor->modern_style) {
+            size_t indent = editor->outline_depth[index] > 8U ? 8U :
+                editor->outline_depth[index];
+            size_t disclosure_end = hit->bounds.x + (4U + indent * 16U + 18U) * scale;
+            if (x < disclosure_end && document_model_first_child(editor_model(editor),
+                    editor->outline[index], &(document_handle){0})) {
+                (void)editor_outline_toggle_collapsed(editor, index);
+                return prior | VIEWER_EDITOR_HANDLED;
+            }
+        }
         (void)editor_select_outline_index(editor, index);
         editor->tree_ready = false;
         return prior | VIEWER_EDITOR_HANDLED;
@@ -540,6 +556,20 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     if (hit->spec.id == EDITOR_TEXT_FIELD_ID) {
         if (editor->field_kind != EDITOR_FIELD_TEXT)
             (void)editor_begin_field(editor, EDITOR_FIELD_TEXT, 0U);
+        editor_place_cursor(editor, hit, x);
+        return prior | VIEWER_EDITOR_HANDLED;
+    }
+    if (hit->spec.id == EDITOR_OUTLINE_SEARCH_ID) {
+        if (editor->field_kind != EDITOR_FIELD_SEARCH)
+            (void)editor_begin_field(editor, EDITOR_FIELD_SEARCH, 0U);
+        editor->cursor = editor->field_length;
+        editor->anchor = editor->cursor;
+        editor->tree_ready = false;
+        return prior | VIEWER_EDITOR_HANDLED;
+    }
+    if (hit->spec.id == EDITOR_RENAME_ID) {
+        if (editor->field_kind != EDITOR_FIELD_RENAME)
+            (void)editor_begin_field(editor, EDITOR_FIELD_RENAME, 0U);
         editor_place_cursor(editor, hit, x);
         return prior | VIEWER_EDITOR_HANDLED;
     }
@@ -576,15 +606,19 @@ bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y)
             editor->width);
     if (modern && layout.structure_visible && x >= outline_start && x < outline_end) {
         if (delta_y < 0.0) {
-            size_t maximum = editor->outline_count > EDITOR_OUTLINE_VISIBLE ?
-                editor->outline_count - EDITOR_OUTLINE_VISIBLE : 0U;
+            size_t count = editor->modern_style ? editor->outline_visible_count :
+                editor->outline_count;
+            size_t *start = editor->modern_style ? &editor->outline_visible_start :
+                &editor->outline_start;
+            size_t maximum = count > EDITOR_OUTLINE_VISIBLE ?
+                count - EDITOR_OUTLINE_VISIBLE : 0U;
             size_t step = delta_y <= -3.0 ? 3U : 1U;
-            editor->outline_start = editor->outline_start + step > maximum ?
-                maximum : editor->outline_start + step;
+            *start = *start + step > maximum ? maximum : *start + step;
         } else {
+            size_t *start = editor->modern_style ? &editor->outline_visible_start :
+                &editor->outline_start;
             size_t step = delta_y >= 3.0 ? 3U : 1U;
-            editor->outline_start = editor->outline_start > step ?
-                editor->outline_start - step : 0U;
+            *start = *start > step ? *start - step : 0U;
         }
     } else if (modern && layout.inspector_visible && x >= inspector_start) {
         size_t count = document_edit_attribute_count(editor->edit, editor->selected);

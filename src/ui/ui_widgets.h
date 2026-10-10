@@ -7,6 +7,7 @@
 #define UI_WIDGET_LABEL_MAX_BYTES 63U
 #define UI_WIDGET_UNIT_MAX_BYTES 8U
 #define UI_WIDGET_MAX_OPTIONS 16U
+#define UI_WIDGET_MAX_SEGMENTS 8U
 
 typedef enum ui_widget_input_result {
     UI_WIDGET_INPUT_UNHANDLED = 0,
@@ -90,6 +91,7 @@ typedef struct ui_widget_spec {
     uint32_t color;
     uint32_t command_id;
     uint32_t state;
+    ui_widget_kind widget;
     const char *label;
     size_t label_len;
     const char *value;
@@ -170,34 +172,6 @@ typedef struct ui_widget_canvas {
     void *text_context;
 } ui_widget_canvas;
 
-typedef enum ui_widget_kind {
-    UI_WIDGET_ICON_BUTTON = 0,
-    UI_WIDGET_BUTTON_PRIMARY,
-    UI_WIDGET_BUTTON_SECONDARY,
-    UI_WIDGET_BUTTON_GHOST,
-    UI_WIDGET_SEGMENTED,
-    UI_WIDGET_TOGGLE,
-    UI_WIDGET_CHECKBOX,
-    UI_WIDGET_TAB_BAR,
-    UI_WIDGET_TOOLTIP,
-    UI_WIDGET_HUD_PILL,
-    UI_WIDGET_DIVIDER,
-    UI_WIDGET_PANEL_HEADER,
-    UI_WIDGET_SECTION_HEADER,
-    UI_WIDGET_TREE_ROW,
-    UI_WIDGET_EMPTY_STATE,
-    UI_WIDGET_INLINE_ERROR,
-    UI_WIDGET_TOAST,
-    UI_WIDGET_NUMBER_FIELD,
-    UI_WIDGET_SCRUB_LABEL,
-    UI_WIDGET_STEPPER,
-    UI_WIDGET_COLOR_FIELD,
-    UI_WIDGET_SLIDER,
-    UI_WIDGET_DROPDOWN,
-    UI_WIDGET_TEXT_FIELD,
-    UI_WIDGET_KIND_COUNT
-} ui_widget_kind;
-
 typedef struct ui_widget_draw_spec {
     ui_widget_kind kind;
     ui_control_state state;
@@ -213,11 +187,17 @@ typedef struct ui_widget_draw_spec {
     size_t unit_length;
     double numeric_value;
     uint32_t rgba;
+    uint8_t font_size_pt;
+    ui_font_family font_family;
+    ui_font_weight font_weight;
     uint8_t segment_index, segment_count;
+    const char *segment_labels[UI_WIDGET_MAX_SEGMENTS];
+    size_t segment_label_lengths[UI_WIDGET_MAX_SEGMENTS];
     uint8_t indent;
     uint16_t selection_start, selection_length, cursor_byte_offset;
     ui_widget_tone tone;
     bool checked, expanded, invalid, placeholder;
+    bool has_children, visible, locked, show_row_actions;
 } ui_widget_draw_spec;
 
 bool ui_widget_canvas_init(ui_widget_canvas *canvas, uint8_t *rgba,

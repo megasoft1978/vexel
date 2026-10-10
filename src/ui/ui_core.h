@@ -98,6 +98,36 @@ typedef enum ui_control_state {
     UI_CONTROL_SELECTED,
     UI_CONTROL_INVALID
 } ui_control_state;
+/* Presentation intent for retained nodes; AUTO preserves legacy role mapping. */
+typedef enum ui_widget_kind {
+    UI_WIDGET_AUTO = 0,
+    UI_WIDGET_LABEL,
+    UI_WIDGET_ICON_BUTTON,
+    UI_WIDGET_BUTTON_PRIMARY,
+    UI_WIDGET_BUTTON_SECONDARY,
+    UI_WIDGET_BUTTON_GHOST,
+    UI_WIDGET_SEGMENTED,
+    UI_WIDGET_TOGGLE,
+    UI_WIDGET_CHECKBOX,
+    UI_WIDGET_TAB_BAR,
+    UI_WIDGET_TOOLTIP,
+    UI_WIDGET_HUD_PILL,
+    UI_WIDGET_DIVIDER,
+    UI_WIDGET_PANEL_HEADER,
+    UI_WIDGET_SECTION_HEADER,
+    UI_WIDGET_TREE_ROW,
+    UI_WIDGET_EMPTY_STATE,
+    UI_WIDGET_INLINE_ERROR,
+    UI_WIDGET_TOAST,
+    UI_WIDGET_NUMBER_FIELD,
+    UI_WIDGET_SCRUB_LABEL,
+    UI_WIDGET_STEPPER,
+    UI_WIDGET_COLOR_FIELD,
+    UI_WIDGET_SLIDER,
+    UI_WIDGET_DROPDOWN,
+    UI_WIDGET_TEXT_FIELD,
+    UI_WIDGET_KIND_COUNT
+} ui_widget_kind;
 typedef enum ui_font_family { UI_FONT_SYSTEM = 0, UI_FONT_MONOSPACED } ui_font_family;
 typedef enum ui_font_weight { UI_FONT_REGULAR = 0, UI_FONT_SEMIBOLD } ui_font_weight;
 enum {
@@ -153,6 +183,7 @@ typedef struct ui_node_spec {
     uint32_t state;
     uint32_t command_id;
     ui_icon_kind icon;
+    ui_widget_kind widget;
 } ui_node_spec;
 typedef struct ui_node {
     ui_node_spec spec;

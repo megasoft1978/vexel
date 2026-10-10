@@ -30,10 +30,12 @@ int main(void)
     fill(second, 32U, 36U, 43U);
     ui_rect clip = {8U, 6U, WIDTH - 16U, HEIGHT - 12U};
     if (sizeof(text) - 1U <= 64U ||
-        !platform_text_ui_draw(text, sizeof(text) - 1U, false, false,
+        !platform_text_ui_draw(text, sizeof(text) - 1U, UI_FONT_SYSTEM,
+            UI_FONT_REGULAR, false,
             UI_THEME_DARK, 18U, UINT32_C(0xf1f4f8ff), first, WIDTH, HEIGHT,
             (size_t)WIDTH * 4U, clip) ||
-        !platform_text_ui_draw(text, sizeof(text) - 1U, false, false,
+        !platform_text_ui_draw(text, sizeof(text) - 1U, UI_FONT_SYSTEM,
+            UI_FONT_REGULAR, false,
             UI_THEME_DARK, 18U, UINT32_C(0xf1f4f8ff), second, WIDTH, HEIGHT,
             (size_t)WIDTH * 4U, clip) || memcmp(first, second, byte_count) != 0) {
         free(first); free(second); return 2;
@@ -46,8 +48,9 @@ int main(void)
     memset(long_text, 'W', sizeof(long_text) - 1U);
     long_text[sizeof(long_text) - 1U] = '\0';
     fill(first, 32U, 36U, 43U);
-    if (!platform_text_ui_draw(long_text, sizeof(long_text) - 1U, false,
-            false, UI_THEME_DARK, 18U, UINT32_C(0xf1f4f8ff), first,
+    if (!platform_text_ui_draw(long_text, sizeof(long_text) - 1U,
+            UI_FONT_SYSTEM, UI_FONT_SEMIBOLD, false,
+            UI_THEME_DARK, 18U, UINT32_C(0xf1f4f8ff), first,
             WIDTH, HEIGHT, (size_t)WIDTH * 4U, clip)) {
         free(first); free(second); return 4;
     }

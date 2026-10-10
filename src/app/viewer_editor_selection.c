@@ -566,6 +566,10 @@ uint32_t editor_canvas_multi_transform(viewer_editor *editor,
     double translate_x, double translate_y, double scale_x, double scale_y,
     double rotate_radians, double pivot_x, double pivot_y)
 {
+    if (editor_canvas_selection_is_locked(editor)) {
+        editor_status_ok(editor, "Unlock every selected layer to transform them");
+        return VIEWER_EDITOR_HANDLED;
+    }
     editor_selected_node nodes[EDITOR_CANVAS_SELECTION_CAP];
     editor_source_patch patches[EDITOR_CANVAS_SELECTION_CAP] = {{0}};
     size_t count = 0U, start = 0U, end = 0U;
@@ -686,6 +690,10 @@ uint32_t editor_canvas_multi_translate_each(viewer_editor *editor,
 
 uint32_t editor_canvas_multi_delete(viewer_editor *editor)
 {
+    if (editor_canvas_selection_is_locked(editor)) {
+        editor_status_ok(editor, "Unlock every selected layer to delete them");
+        return VIEWER_EDITOR_HANDLED;
+    }
     editor_selected_node nodes[EDITOR_CANVAS_SELECTION_CAP];
     size_t count = 0U, start = 0U, end = 0U;
     if (!nodes_collect(editor, nodes, &count) ||
@@ -739,6 +747,10 @@ uint32_t editor_canvas_multi_delete(viewer_editor *editor)
 
 uint32_t editor_canvas_multi_duplicate(viewer_editor *editor)
 {
+    if (editor_canvas_selection_is_locked(editor)) {
+        editor_status_ok(editor, "Unlock every selected layer to duplicate them");
+        return VIEWER_EDITOR_HANDLED;
+    }
     editor_selected_node nodes[EDITOR_CANVAS_SELECTION_CAP];
     size_t count = 0U, start = 0U, end = 0U;
     if (!nodes_collect(editor, nodes, &count) ||

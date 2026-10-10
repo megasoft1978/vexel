@@ -6,7 +6,7 @@ report, new 1×/2× style goldens, and remaining integration limits.
 
 The w7 UIKit adds a reusable design-token layer, 45 static path icons, bounded
 input state machines, and custom-painted widget primitives. The gallery images
-show all 24 components across seven visual states. Their 2× exports are the
+show all 25 components across seven visual states. Their 2× exports are the
 human-review images; all four combinations of theme and backing scale are
 tracked in `tests/ui/uikit-golden/`.
 
@@ -24,11 +24,12 @@ contract test checks text at 4.5:1 or greater, functional edges at 3:1 or
 greater, and semantic status colors at 4.5:1 or greater.
 
 The gallery renderer uses the deterministic scalar label callback so its PNGs
-are stable in tests. Runtime callers provide their platform text callback;
-numeric values request the monospaced family and headings request semibold.
+are stable in tests. The application chrome uses an injected CoreText callback
+with SF Pro Text and SF Mono, fitted labels, and the component type scale.
+Numeric values request the monospaced family and headings request semibold.
 The gallery is a component showcase, not a screenshot of the application
-chrome; the legacy chrome painter remains active until the integration lane
-adopts these APIs.
+chrome. Modern dark and light editor chrome is covered by
+`tests/editor/chrome-golden/`.
 
 To rebuild and verify the galleries after changing tokens or components:
 
@@ -60,9 +61,9 @@ Semantic group and list labels stay in the accessibility tree without being
 painted over their child titles. Hover and pressed states flow through the
 viewer event bridge and request a frame redraw.
 
-The editor composes its toolbar, virtualized structure outline, inspector
-attribute rows, text field, and status bar from the retained tree. The existing
-`tests/editor/chrome-golden/` screenshots remain unchanged; new style fixtures
-live under `tests/ui/style-golden/`. Canvas interaction tests are headless and
-inject events directly; the separate maintainer smoke script needs a macOS
-desktop session.
+The editor composes its toolbar, searchable layer tree, type-aware inspector,
+text fields, canvas HUD, and status bar from the retained tree. The editor
+chrome golden renderer exercises that modern path with injected CoreText while
+the legacy style fixtures remain separate. Canvas interaction tests are
+headless and inject events directly; the separate maintainer smoke script needs
+a macOS desktop session.

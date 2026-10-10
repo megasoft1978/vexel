@@ -69,6 +69,10 @@ uint32_t editor_commit_transform(viewer_editor *editor,
         !isfinite(scale_x) || !isfinite(scale_y) ||
         !isfinite(rotate_radians) || !isfinite(pivot_x) || !isfinite(pivot_y) ||
         !(scale_x > 0.0) || !(scale_y > 0.0)) return VIEWER_EDITOR_HANDLED;
+    if (editor_canvas_selection_is_locked(editor)) {
+        editor_status_ok(editor, "Unlock the selected layer to transform it");
+        return VIEWER_EDITOR_HANDLED;
+    }
     double cosine = cos(rotate_radians), sine = sin(rotate_radians);
     geom_affine next = {
         cosine * scale_x, sine * scale_x,

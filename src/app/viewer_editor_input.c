@@ -19,6 +19,18 @@ size_t editor_utf8_next(const char *text, size_t length, size_t cursor)
     return next;
 }
 
+static void editor_sync_live_search(viewer_editor *editor)
+{
+    if (editor->field_kind != EDITOR_FIELD_SEARCH) return;
+    size_t length = editor->field_length;
+    if (length >= EDITOR_OUTLINE_FILTER_CAP)
+        length = EDITOR_OUTLINE_FILTER_CAP - 1U;
+    memcpy(editor->outline_filter, editor->field, length);
+    editor->outline_filter[length] = '\0';
+    editor->outline_filter_length = length;
+    editor_rebuild_visible_outline(editor);
+}
+
 static bool editor_word_byte(uint8_t byte)
 {
     return (byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z') ||
@@ -57,8 +69,14 @@ static bool editor_insert_text(viewer_editor *editor, const char *text, size_t l
     size_t start, end;
     editor_selection_range(editor, &start, &end);
     size_t retained = editor->field_length - (end - start);
-    if (length > sizeof(editor->field) - 1U - retained) {
-        editor_status_ok(editor, "Field limit reached");
+    size_t maximum = sizeof(editor->field) - 1U;
+    if (editor->field_kind == EDITOR_FIELD_SEARCH)
+        maximum = EDITOR_OUTLINE_FILTER_CAP - 1U;
+    else if (editor->field_kind == EDITOR_FIELD_RENAME)
+        maximum = EDITOR_NAME_CAP - 1U;
+    if (retained > maximum || length > maximum - retained) {
+        editor_status_ok(editor, editor->field_kind == EDITOR_FIELD_SEARCH ?
+            "Search limit reached" : "Field limit reached");
         return false;
     }
     memmove(editor->field + start + length, editor->field + end,
@@ -68,6 +86,7 @@ static bool editor_insert_text(viewer_editor *editor, const char *text, size_t l
     editor->field[editor->field_length] = '\0';
     editor->cursor = start + length;
     editor->anchor = editor->cursor;
+    editor_sync_live_search(editor);
     editor->tree_ready = false;
     return true;
 }
@@ -82,6 +101,7 @@ static bool editor_delete_selection(viewer_editor *editor)
     editor->field_length -= end - start;
     editor->field[editor->field_length] = '\0';
     editor->cursor = editor->anchor = start;
+    editor_sync_live_search(editor);
     editor->tree_ready = false;
     return true;
 }
@@ -90,6 +110,13 @@ uint32_t editor_commit_field(viewer_editor *editor)
 {
     if (editor->field_kind == EDITOR_FIELD_TEXT && editor->text_draft_active)
         return editor_commit_text_draft(editor);
+    if ((editor->field_kind == EDITOR_FIELD_ATTRIBUTE ||
+         editor->field_kind == EDITOR_FIELD_TEXT ||
+         editor->field_kind == EDITOR_FIELD_RENAME) &&
+        editor_outline_is_locked(editor, editor->selected)) {
+        editor_status_ok(editor, "Unlock the selected layer to edit it");
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (editor->field_kind == EDITOR_FIELD_NEW_NAME ||
         editor->field_kind == EDITOR_FIELD_NEW_VALUE) {
         editor_field_kind old_kind = editor->field_kind;
@@ -104,11 +131,28 @@ uint32_t editor_commit_field(viewer_editor *editor)
         } else editor_status_ok(editor, "Attribute draft ready");
         return VIEWER_EDITOR_HANDLED;
     }
+    if (editor->field_kind == EDITOR_FIELD_SEARCH) {
+        editor_sync_live_search(editor);
+        editor->field_kind = EDITOR_FIELD_NONE;
+        editor->field_length = editor->cursor = editor->anchor = 0U;
+        editor->focus_id = EDITOR_OUTLINE_SEARCH_ID;
+        editor_status_ok(editor, "Layer search updated");
+        return VIEWER_EDITOR_HANDLED;
+    }
     size_t old_offset = editor->selected_offset;
     char old_id[EDITOR_NAME_CAP];
     editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ? editor->selected_id : "");
     document_edit_error result;
-    if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE) {
+    if (editor->field_kind == EDITOR_FIELD_RENAME) {
+        result = document_edit_set_attribute(editor->edit, editor->selected,
+            (base_bytes){(const uint8_t *)"id", 2U},
+            (base_bytes){(const uint8_t *)editor->field, editor->field_length});
+        if (result == DOCUMENT_EDIT_OK) {
+            editor->field_kind = EDITOR_FIELD_NONE;
+            editor->field_length = editor->cursor = editor->anchor = 0U;
+            return editor_apply_result(editor, result, old_offset, old_id, editor->selected);
+        }
+    } else if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE) {
         result = document_edit_set_attribute(editor->edit, editor->selected,
             (base_bytes){(const uint8_t *)editor->selected_attribute_name,
                 strlen(editor->selected_attribute_name)},
@@ -130,6 +174,12 @@ void editor_cancel_field(viewer_editor *editor)
         editor->field_kind == EDITOR_FIELD_NEW_VALUE) {
         editor->new_name[0] = '\0'; editor->new_name_length = 0U;
         editor->new_value[0] = '\0'; editor->new_value_length = 0U;
+    }
+    if (editor->field_kind == EDITOR_FIELD_SEARCH) {
+        memcpy(editor->outline_filter, editor->outline_filter_original,
+            editor->outline_filter_original_length + 1U);
+        editor->outline_filter_length = editor->outline_filter_original_length;
+        editor_rebuild_visible_outline(editor);
     }
     editor->field_kind = EDITOR_FIELD_NONE;
     editor->field_length = editor->cursor = editor->anchor = 0U;
@@ -238,6 +288,10 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return viewer_editor_cancel_canvas_gesture(editor);
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
+    if (key_code == 120U) {
+        (void)editor_begin_field(editor, EDITOR_FIELD_RENAME, 0U);
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (editor_canvas_path_active(editor) && (key_code == 36U || key_code == 76U))
         return editor_canvas_path_finish(editor,
             editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON || editor->path_close_preview);

@@ -45,120 +45,6 @@ const document_model *editor_model(const viewer_editor *editor)
         document_edit_model(editor->edit);
 }
 
-void editor_refresh_outline(viewer_editor *editor)
-{
-    editor->outline_count = 0U;
-    editor->outline_truncated = false;
-    const document_model *model = editor_model(editor);
-    document_handle root;
-    if (model == NULL || !document_model_root(model, &root)) return;
-    editor_outline_frame stack[EDITOR_DEPTH_CAP];
-    size_t depth = 0U;
-    stack[depth++] = (editor_outline_frame){.node = root, .depth = 0U};
-    while (depth > 0U && editor->outline_count < EDITOR_OUTLINE_CAP) {
-        editor_outline_frame *frame = &stack[depth - 1U];
-        if (!frame->entered) {
-            frame->entered = true;
-            editor->outline[editor->outline_count] = frame->node;
-            editor->outline_depth[editor->outline_count] =
-                (uint16_t)(frame->depth > UINT16_MAX ? UINT16_MAX : frame->depth);
-            if (editor_same_handle(frame->node, editor->selected))
-                editor->selected_index = editor->outline_count;
-            editor->outline_count++;
-            (void)document_model_first_child(model, frame->node, &frame->child);
-        }
-        if (frame->child.document_id != 0U) {
-            document_handle child = frame->child;
-            document_handle sibling = {0};
-            (void)document_model_next_sibling(model, child, &sibling);
-            frame->child = sibling;
-            if (depth >= EDITOR_DEPTH_CAP) {
-                editor->outline_truncated = true;
-                break;
-            }
-            stack[depth++] = (editor_outline_frame){.node = child,
-                .depth = frame->depth + 1U};
-        } else {
-            --depth;
-        }
-    }
-    if (depth > 0U || editor->outline_count == EDITOR_OUTLINE_CAP)
-        editor->outline_truncated = true;
-    if (editor->outline_count == 0U) return;
-    if (editor->selected_index >= editor->outline_count ||
-        !editor_same_handle(editor->outline[editor->selected_index], editor->selected)) {
-        editor->selected_index = 0U;
-        editor->selected = editor->outline[0];
-    }
-    if (editor->selected_index < editor->outline_start)
-        editor->outline_start = editor->selected_index;
-    if (editor->selected_index >= editor->outline_start + EDITOR_OUTLINE_VISIBLE)
-        editor->outline_start = editor->selected_index - EDITOR_OUTLINE_VISIBLE + 1U;
-    size_t maximum_start = editor->outline_count > EDITOR_OUTLINE_VISIBLE ?
-        editor->outline_count - EDITOR_OUTLINE_VISIBLE : 0U;
-    if (editor->outline_start > maximum_start) editor->outline_start = maximum_start;
-}
-
-static void editor_capture_selection_identity(viewer_editor *editor)
-{
-    editor->selected_has_id = false;
-    editor->selected_id[0] = '\0';
-    document_source_span span;
-    if (!document_edit_source_span(editor->edit, editor->selected, &span)) return;
-    editor->selected_offset = span.offset;
-    size_t attributes = document_edit_attribute_count(editor->edit, editor->selected);
-    for (size_t index = 0U; index < attributes; ++index) {
-        document_edit_attribute attribute;
-        if (!document_edit_attribute_at(editor->edit, editor->selected, index, &attribute)) continue;
-        base_bytes name;
-        if (!document_edit_span_bytes(editor->edit, attribute.name, &name) ||
-            name.len != 2U || memcmp(name.ptr, "id", 2U) != 0) continue;
-        size_t amount = 0U;
-        if (!document_edit_decode_span(editor->edit, attribute.value,
-                (uint8_t *)editor->selected_id, sizeof(editor->selected_id) - 1U, &amount)) return;
-        editor->selected_id[amount] = '\0';
-        editor->selected_has_id = amount > 0U;
-        return;
-    }
-}
-
-void editor_select_handle(viewer_editor *editor, document_handle selected)
-{
-    editor->selected = selected;
-    editor->selected_attribute = 0U;
-    editor->attribute_start = 0U;
-    editor_capture_selection_identity(editor);
-    editor->canvas_selection_count = 1U;
-    editor->canvas_selection_offsets[0] = editor->selected_offset;
-    editor->path_selected_node_segment = SIZE_MAX;
-    editor_refresh_outline(editor);
-    editor->tree_ready = false;
-}
-
-void editor_rebind_after_change(viewer_editor *editor, size_t old_offset,
-                                      const char *old_id, document_handle preferred)
-{
-    document_handle next = {0};
-    if (preferred.document_id != 0U) next = preferred;
-    else if (old_id != NULL && old_id[0] != '\0') {
-        (void)document_edit_find_id(editor->edit,
-            (base_bytes){(const uint8_t *)old_id, strlen(old_id)}, &next);
-    }
-    if (next.document_id == 0U && old_offset < document_edit_byte_length(editor->edit))
-        (void)document_edit_element_at_offset(editor->edit, old_offset + 1U, &next);
-    if (next.document_id == 0U) (void)document_edit_root(editor->edit, &next);
-    editor->selected = next;
-    editor->field_kind = EDITOR_FIELD_NONE;
-    editor->field_length = editor->cursor = editor->anchor = 0U;
-    editor->selected_attribute_name[0] = '\0';
-    editor_capture_selection_identity(editor);
-    editor->canvas_selection_count = 1U;
-    editor->canvas_selection_offsets[0] = editor->selected_offset;
-    editor->path_selected_node_segment = SIZE_MAX;
-    editor_refresh_outline(editor);
-    editor->tree_ready = false;
-}
-
 void editor_status_error(viewer_editor *editor, document_edit_error error)
 {
     const char *name = document_edit_error_name(error);
@@ -176,43 +62,6 @@ void editor_status_ok(viewer_editor *editor, const char *message)
     editor_set_text(editor->status, sizeof(editor->status), message);
     editor->tree_ready = false;
     editor->redraw_requested = true;
-}
-
-bool editor_select_outline_index(viewer_editor *editor, size_t index)
-{
-    if (index >= editor->outline_count) return false;
-    editor_select_handle(editor, editor->outline[index]);
-    editor->selected_index = index;
-    editor_status_ok(editor, "Ready");
-    return true;
-}
-
-bool editor_select_parent(viewer_editor *editor)
-{
-    document_handle parent;
-    if (!document_model_parent(editor_model(editor), editor->selected, &parent)) return false;
-    for (size_t index = 0U; index < editor->outline_count; ++index)
-        if (editor_same_handle(editor->outline[index], parent)) return editor_select_outline_index(editor, index);
-    return false;
-}
-
-bool editor_select_child(viewer_editor *editor)
-{
-    document_handle child;
-    if (!document_model_first_child(editor_model(editor), editor->selected, &child)) return false;
-    for (size_t index = 0U; index < editor->outline_count; ++index)
-        if (editor_same_handle(editor->outline[index], child)) return editor_select_outline_index(editor, index);
-    return false;
-}
-
-bool editor_select_delta(viewer_editor *editor, int direction)
-{
-    if (direction < 0) {
-        if (editor->selected_index == 0U) return false;
-        return editor_select_outline_index(editor, editor->selected_index - 1U);
-    }
-    if (editor->selected_index + 1U >= editor->outline_count) return false;
-    return editor_select_outline_index(editor, editor->selected_index + 1U);
 }
 
 bool editor_begin_field(viewer_editor *editor, editor_field_kind kind,
@@ -255,6 +104,20 @@ bool editor_begin_field(viewer_editor *editor, editor_field_kind kind,
         }
         editor->field[length] = '\0';
         editor->field_length = length;
+    } else if (kind == EDITOR_FIELD_SEARCH) {
+        if (editor->outline_filter_length >= EDITOR_OUTLINE_FILTER_CAP) return false;
+        memcpy(editor->field, editor->outline_filter, editor->outline_filter_length);
+        editor->field[editor->outline_filter_length] = '\0';
+        editor->field_length = editor->outline_filter_length;
+        memcpy(editor->outline_filter_original, editor->outline_filter,
+            editor->outline_filter_length + 1U);
+        editor->outline_filter_original_length = editor->outline_filter_length;
+    } else if (kind == EDITOR_FIELD_RENAME) {
+        size_t length = editor->selected_has_id ? strlen(editor->selected_id) : 0U;
+        if (length >= sizeof(editor->field)) return false;
+        if (length > 0U) memcpy(editor->field, editor->selected_id, length);
+        editor->field[length] = '\0';
+        editor->field_length = length;
     } else return false;
     editor->cursor = editor->field_length;
     editor->anchor = editor->cursor;
@@ -262,7 +125,9 @@ bool editor_begin_field(viewer_editor *editor, editor_field_kind kind,
     editor->focus_id = kind == EDITOR_FIELD_ATTRIBUTE ?
         EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index :
         kind == EDITOR_FIELD_TEXT ? EDITOR_TEXT_FIELD_ID :
-        kind == EDITOR_FIELD_NEW_NAME ? EDITOR_NEW_NAME_ID : EDITOR_NEW_VALUE_ID;
+        kind == EDITOR_FIELD_NEW_NAME ? EDITOR_NEW_NAME_ID :
+        kind == EDITOR_FIELD_NEW_VALUE ? EDITOR_NEW_VALUE_ID :
+        kind == EDITOR_FIELD_SEARCH ? EDITOR_OUTLINE_SEARCH_ID : EDITOR_RENAME_ID;
     editor->tree_ready = false;
     return true;
 }
@@ -307,6 +172,14 @@ uint32_t editor_apply_button(viewer_editor *editor, uint32_t id)
         document_edit_error error = id == EDITOR_BUTTON_UNDO ?
             document_edit_undo(editor->edit) : document_edit_redo(editor->edit);
         return editor_apply_result(editor, error, old_offset, old_id, (document_handle){0});
+    }
+    if (id == EDITOR_BUTTON_DELETE || id == EDITOR_BUTTON_DUPLICATE ||
+        id == EDITOR_BUTTON_GROUP || id == EDITOR_BUTTON_UNGROUP ||
+        id == EDITOR_BUTTON_ADD_ATTRIBUTE || id == EDITOR_BUTTON_REMOVE_ATTRIBUTE) {
+        if (editor_canvas_selection_is_locked(editor)) {
+            editor_status_ok(editor, "Unlock the selected layer to edit it");
+            return VIEWER_EDITOR_HANDLED;
+        }
     }
     if (id == EDITOR_BUTTON_DELETE) {
         if (editor->canvas_selection_count > 1U)
@@ -391,6 +264,10 @@ uint32_t editor_apply_button(viewer_editor *editor, uint32_t id)
 
 bool editor_reorder(viewer_editor *editor, bool forward)
 {
+    if (editor_canvas_selection_is_locked(editor)) {
+        editor_status_ok(editor, "Unlock the selected layer to reorder it");
+        return false;
+    }
     const document_model *model = editor_model(editor);
     document_handle parent, sibling = {0};
     if (!document_model_parent(model, editor->selected, &parent)) return false;
@@ -423,6 +300,10 @@ bool editor_reorder(viewer_editor *editor, bool forward)
 
 bool editor_reorder_to_edge(viewer_editor *editor, bool front)
 {
+    if (editor_canvas_selection_is_locked(editor)) {
+        editor_status_ok(editor, "Unlock the selected layer to reorder it");
+        return false;
+    }
     const document_model *model = editor_model(editor);
     document_handle parent = {0U}, target = {0U}, cursor = {0U};
     if (model == NULL || !document_model_parent(model, editor->selected, &parent) ||
@@ -491,6 +372,9 @@ static bool editor_accessibility_command(uint32_t command_id, void *context)
     if (command_id >= EDITOR_OUTLINE_ROW_BASE &&
         command_id < EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) {
         size_t index = editor->outline_start + command_id - EDITOR_OUTLINE_ROW_BASE;
+        if (editor->modern_style && !editor_outline_visible_model_index(editor,
+                editor->outline_visible_start + command_id - EDITOR_OUTLINE_ROW_BASE,
+                &index)) return false;
         return editor_select_outline_index(editor, index);
     }
     if (command_id >= EDITOR_ATTRIBUTE_ROW_BASE &&

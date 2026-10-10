@@ -15,6 +15,7 @@ static bool ui_widget_add(ui_tree *tree, const ui_widget_spec *spec, ui_role rol
     node.role = role;
     node.command_id = spec->command_id;
     node.state = spec->state;
+    node.widget = spec->widget;
     node.label = spec->label;
     node.label_len = spec->label_len;
     node.value = spec->value;

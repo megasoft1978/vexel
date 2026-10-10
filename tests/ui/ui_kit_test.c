@@ -143,15 +143,15 @@ static int test_tokens(bool quiet)
         dark_high.control_edge == dark.control_edge) return 4;
     ui_type_scale type = ui_theme_type_scale();
     ui_metrics metrics = ui_design_metrics();
-    if (type.document_title_pt != 14U || type.panel_heading_pt != 14U ||
-        type.section_heading_pt != 13U || type.body_pt != 13U ||
+    if (type.document_title_pt != 14U || type.panel_heading_pt != 13U ||
+        type.section_heading_pt != 12U || type.body_pt != 13U ||
         type.secondary_pt != 12U || type.metadata_pt != 11U ||
         type.geometry_pt != 12U || type.empty_heading_pt != 22U ||
         type.geometry_family != UI_FONT_MONOSPACED || type.title_weight != UI_FONT_SEMIBOLD ||
         metrics.toolbar_height != 40U || metrics.context_height != 32U ||
         metrics.tool_rail_width != 44U || metrics.structure_width != 232U ||
         metrics.inspector_width != 320U || metrics.status_height != 24U ||
-        metrics.tree_row_height != 26U || metrics.section_header_height != 32U ||
+        metrics.tree_row_height != 28U || metrics.section_header_height != 24U ||
         metrics.field_height != 30U || metrics.icon_button_target != 28U ||
         metrics.icon_button_glyph != 17U || metrics.control_radius != 6U) return 5;
     if (!quiet)
@@ -202,6 +202,31 @@ static int test_icons(void)
         ui_icon_path_validate(bad_arc_flags, sizeof(bad_arc_flags) - 1U, NULL) ||
         ui_icon_path_validate(outside_arc, sizeof(outside_arc) - 1U, NULL) ||
         !ui_icon_path_validate("M0 0 C1 1 2 2 3 3", 17U, NULL)) return 17;
+    return 0;
+}
+
+static int test_emphasized_icon_masks(void)
+{
+    static const ui_icon_kind icons[] = {UI_ICON_PEN, UI_ICON_NODE_EDIT,
+        UI_ICON_STROKE, UI_ICON_UNGROUP, UI_ICON_MORE};
+    uint64_t hashes[sizeof(icons) / sizeof(icons[0])] = {0};
+    for (size_t index = 0U; index < sizeof(icons) / sizeof(icons[0]); ++index) {
+        uint8_t rgba[48U * 48U * 4U] = {0};
+        if (!ui_icon_paint_into(icons[index], UI_THEME_LIGHT, 2.0,
+                (ui_rect){0U, 0U, 48U, 48U}, UINT32_C(0x1f2732ff),
+                rgba, 48U, 48U, 48U * 4U)) return 18;
+        uint64_t hash = UINT64_C(1469598103934665603);
+        size_t painted = 0U;
+        for (size_t at = 3U; at < sizeof(rgba); at += 4U) {
+            if (rgba[at] == 0U) continue;
+            ++painted;
+            hash = (hash ^ (uint64_t)(at / 4U)) * UINT64_C(1099511628211);
+        }
+        if (painted < 16U) return 19;
+        hashes[index] = hash;
+        for (size_t prior = 0U; prior < index; ++prior)
+            if (hashes[prior] == hashes[index]) return 20;
+    }
     return 0;
 }
 
@@ -299,6 +324,32 @@ static int test_interactions(void)
     return 0;
 }
 
+typedef struct text_capture {
+    char labels[3][24];
+    size_t count;
+    ui_font_family family[3];
+    ui_font_weight weight[3];
+    uint32_t size[3];
+} text_capture;
+
+static bool capture_text(void *context, const char *text, size_t length,
+    ui_rect bounds, ui_theme theme, uint32_t font_size, uint32_t color_value,
+    ui_font_family family, ui_font_weight weight, uint8_t *pixels,
+    uint32_t width, uint32_t height, size_t stride)
+{
+    (void)bounds; (void)theme; (void)color_value; (void)pixels;
+    (void)width; (void)height; (void)stride;
+    text_capture *probe = context;
+    if (probe->count >= 3U || length >= sizeof(probe->labels[0])) return false;
+    memcpy(probe->labels[probe->count], text, length);
+    probe->labels[probe->count][length] = '\0';
+    probe->family[probe->count] = family;
+    probe->weight[probe->count] = weight;
+    probe->size[probe->count] = font_size;
+    ++probe->count;
+    return true;
+}
+
 static int test_paint_bounds(void)
 {
     const uint32_t small_width = 64U, small_height = 64U;
@@ -333,6 +384,38 @@ static int test_paint_bounds(void)
     if (!ui_widget_paint(&large_canvas, &empty_state)) {
         free(small); free(large); return 45;
     }
+    text_capture capture = {0};
+    ui_widget_canvas text_canvas;
+    if (!ui_widget_canvas_init(&text_canvas, large, large_bytes, large_width,
+            large_height, large_width * 4U, 1U, UI_THEME_LIGHT, false,
+            capture_text, &capture)) {
+        free(small); free(large); return 46;
+    }
+    ui_widget_draw_spec segmented = {.kind = UI_WIDGET_SEGMENTED,
+        .state = UI_CONTROL_REST, .bounds = {64U, 256U, 300U, 36U},
+        .segment_index = 1U, .segment_count = 3U,
+        .segment_labels = {"Select", "Pan", "Zoom"},
+        .segment_label_lengths = {6U, 3U, 4U}};
+    if (!ui_widget_paint(&text_canvas, &segmented) || capture.count != 3U ||
+        strcmp(capture.labels[0], "Select") != 0 ||
+        strcmp(capture.labels[1], "Pan") != 0 || strcmp(capture.labels[2], "Zoom") != 0 ||
+        capture.family[0] != UI_FONT_SYSTEM || capture.family[1] != UI_FONT_SYSTEM ||
+        capture.family[2] != UI_FONT_SYSTEM || capture.weight[0] != UI_FONT_REGULAR ||
+        capture.weight[1] != UI_FONT_SEMIBOLD || capture.weight[2] != UI_FONT_REGULAR ||
+        capture.size[0] != 12U || capture.size[1] != 12U || capture.size[2] != 12U) {
+        free(small); free(large); return 47;
+    }
+    capture.count = 0U;
+    ui_widget_draw_spec number_field = {.kind = UI_WIDGET_NUMBER_FIELD,
+        .state = UI_CONTROL_REST, .bounds = {64U, 304U, 180U, 30U},
+        .value = "64", .value_length = 2U, .unit = "px", .unit_length = 2U};
+    if (!ui_widget_paint(&text_canvas, &number_field) || capture.count != 2U ||
+        strcmp(capture.labels[0], "64") != 0 || strcmp(capture.labels[1], "px") != 0 ||
+        capture.family[0] != UI_FONT_MONOSPACED ||
+        capture.family[1] != UI_FONT_SYSTEM || capture.size[0] != 12U ||
+        capture.size[1] != 11U) {
+        free(small); free(large); return 48;
+    }
     if (ui_widget_paint_scratch_limit() != 0U ||
         ui_widget_canvas_init(&small_canvas, small, small_bytes - 1U,
             small_width, small_height, small_width * 4U, 1U, UI_THEME_LIGHT, false,
@@ -352,6 +435,8 @@ int main(int argc, char **argv)
     int result = test_tokens(false);
     if (result != 0) return result;
     result = test_icons();
+    if (result != 0) return result;
+    result = test_emphasized_icon_masks();
     if (result != 0) return result;
     result = test_interactions();
     if (result != 0) return result;

@@ -17,11 +17,31 @@ static const char *const state_names[] = {
     "REST", "HOVER", "PRESSED", "FOCUS", "DISABLED", "SELECTED", "INVALID"
 };
 static const char *const kind_names[UI_WIDGET_KIND_COUNT] = {
-    "Icon button", "Primary button", "Secondary button", "Ghost button",
-    "Segmented control", "Toggle switch", "Checkbox", "Tab bar", "Tooltip bubble",
-    "HUD pill", "Divider", "Panel header", "Section header", "Tree row",
-    "Empty state", "Inline error", "Toast", "Number field", "Scrub label",
-    "Stepper arrows", "Swatch + hex", "Slider", "Dropdown", "Text field"
+    [UI_WIDGET_LABEL] = "Label",
+    [UI_WIDGET_ICON_BUTTON] = "Icon button",
+    [UI_WIDGET_BUTTON_PRIMARY] = "Primary button",
+    [UI_WIDGET_BUTTON_SECONDARY] = "Secondary button",
+    [UI_WIDGET_BUTTON_GHOST] = "Ghost button",
+    [UI_WIDGET_SEGMENTED] = "Segmented control",
+    [UI_WIDGET_TOGGLE] = "Toggle switch",
+    [UI_WIDGET_CHECKBOX] = "Checkbox",
+    [UI_WIDGET_TAB_BAR] = "Tab bar",
+    [UI_WIDGET_TOOLTIP] = "Tooltip bubble",
+    [UI_WIDGET_HUD_PILL] = "HUD pill",
+    [UI_WIDGET_DIVIDER] = "Divider",
+    [UI_WIDGET_PANEL_HEADER] = "Panel header",
+    [UI_WIDGET_SECTION_HEADER] = "Section header",
+    [UI_WIDGET_TREE_ROW] = "Tree row",
+    [UI_WIDGET_EMPTY_STATE] = "Empty state",
+    [UI_WIDGET_INLINE_ERROR] = "Inline error",
+    [UI_WIDGET_TOAST] = "Toast",
+    [UI_WIDGET_NUMBER_FIELD] = "Number field",
+    [UI_WIDGET_SCRUB_LABEL] = "Scrub label",
+    [UI_WIDGET_STEPPER] = "Stepper arrows",
+    [UI_WIDGET_COLOR_FIELD] = "Swatch + hex",
+    [UI_WIDGET_SLIDER] = "Slider",
+    [UI_WIDGET_DROPDOWN] = "Dropdown",
+    [UI_WIDGET_TEXT_FIELD] = "Text field"
 };
 
 static bool gallery_text(void *context, const char *text, size_t length,
@@ -70,6 +90,9 @@ static ui_widget_draw_spec sample_spec(ui_widget_kind kind, ui_control_state sta
         .segment_count = 3U, .expanded = true,
         .checked = state == UI_CONTROL_SELECTED || state == UI_CONTROL_PRESSED};
     switch (kind) {
+        case UI_WIDGET_AUTO:
+        case UI_WIDGET_LABEL:
+            spec.label = "Selected shape"; spec.label_length = 14U; break;
         case UI_WIDGET_ICON_BUTTON:
             spec.icon = UI_ICON_SAVE; break;
         case UI_WIDGET_BUTTON_PRIMARY: spec.label = "Save"; spec.label_length = 4U; break;
@@ -77,7 +100,14 @@ static ui_widget_draw_spec sample_spec(ui_widget_kind kind, ui_control_state sta
             spec.label = "Duplicate"; spec.label_length = 9U; spec.icon = UI_ICON_DUPLICATE; break;
         case UI_WIDGET_BUTTON_GHOST:
             spec.label = "Undo"; spec.label_length = 4U; spec.icon = UI_ICON_UNDO; break;
-        case UI_WIDGET_SEGMENTED: spec.label = "Move"; spec.label_length = 4U; break;
+        case UI_WIDGET_SEGMENTED:
+            spec.segment_labels[0] = "Move";
+            spec.segment_labels[1] = "Scale";
+            spec.segment_labels[2] = "Rotate";
+            spec.segment_label_lengths[0] = 4U;
+            spec.segment_label_lengths[1] = 5U;
+            spec.segment_label_lengths[2] = 6U;
+            break;
         case UI_WIDGET_TOGGLE: spec.label = "Grid"; spec.label_length = 4U; break;
         case UI_WIDGET_CHECKBOX: spec.label = "Use grid"; spec.label_length = 8U; break;
         case UI_WIDGET_TAB_BAR:
@@ -147,7 +177,7 @@ static bool draw_sheet(ui_widget_canvas *canvas)
         if (!paint_label(canvas, state_names[state], strlen(state_names[state]),
                 (ui_rect){x, 24U, GALLERY_STATE_WIDTH, 18U}, 11U, label_color)) return false;
     }
-    for (uint32_t kind = 0U; kind < UI_WIDGET_KIND_COUNT; ++kind) {
+    for (uint32_t kind = UI_WIDGET_LABEL; kind < UI_WIDGET_KIND_COUNT; ++kind) {
         uint32_t row_height = GALLERY_ROW;
         if (kind == UI_WIDGET_EMPTY_STATE) row_height = 88U;
         if (kind == UI_WIDGET_DROPDOWN) row_height = 102U;
@@ -195,8 +225,9 @@ int main(int argc, char **argv)
         strcmp(argv[1], "dark") == 0 ? UI_THEME_DARK : (ui_theme)99;
     if (theme > UI_THEME_LIGHT || (strcmp(argv[2], "1") != 0 && strcmp(argv[2], "2") != 0)) return 2;
     uint32_t scale = (uint32_t)(argv[2][0] - '0');
-    uint32_t logical_height = GALLERY_TOP + (UI_WIDGET_KIND_COUNT - 2U) * GALLERY_ROW +
-        88U + 102U;
+    uint32_t component_count = UI_WIDGET_KIND_COUNT - UI_WIDGET_LABEL;
+    uint32_t logical_height = GALLERY_TOP + component_count * GALLERY_ROW +
+        (88U - GALLERY_ROW) + (102U - GALLERY_ROW);
     uint32_t width = GALLERY_WIDTH * scale, height = logical_height * scale;
     size_t stride = (size_t)width * 4U, capacity = stride * height;
     uint8_t *rgba = calloc(capacity, 1U);

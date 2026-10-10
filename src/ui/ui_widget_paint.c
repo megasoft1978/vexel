@@ -23,26 +23,6 @@ static bool canvas_valid(const ui_widget_canvas *canvas)
         canvas->capacity >= (size_t)canvas->height * canvas->stride;
 }
 
-bool ui_widget_canvas_init(ui_widget_canvas *canvas, uint8_t *rgba,
-    size_t capacity, uint32_t width, uint32_t height, size_t stride,
-    uint32_t backing_scale, ui_theme theme, bool increased_contrast,
-    ui_widget_text_draw_fn draw_text, void *text_context)
-{
-    if (canvas == NULL || rgba == NULL || width == 0U || height == 0U ||
-        width > UI_WIDGET_MAX_CANVAS_AXIS || height > UI_WIDGET_MAX_CANVAS_AXIS ||
-        backing_scale == 0U || backing_scale > 3U || theme < UI_THEME_DARK ||
-        theme > UI_THEME_LIGHT ||
-        (size_t)width > SIZE_MAX / 4U || stride < (size_t)width * 4U ||
-        (size_t)height > SIZE_MAX / stride || capacity < (size_t)height * stride) return false;
-    *canvas = (ui_widget_canvas){.rgba = rgba, .capacity = capacity,
-        .stride = stride, .width = width, .height = height,
-        .backing_scale = backing_scale, .theme = theme,
-        .increased_contrast = increased_contrast,
-        .tokens = ui_theme_tokens(theme, increased_contrast),
-        .draw_text = draw_text, .text_context = text_context};
-    return true;
-}
-
 static bool scaled_rect(const ui_widget_canvas *canvas, ui_rect logical,
                         ui_rect *out_pixels)
 {
@@ -380,8 +360,27 @@ static bool draw_segmented(const ui_widget_canvas *canvas, const ui_widget_draw_
             1U, spec->bounds.height > 12U ? spec->bounds.height - 12U : 1U};
         paint_rect(canvas, divider, canvas->tokens.separator);
     }
-    return draw_text(canvas, spec->label, spec->label_length, inset(spec->bounds, 8U, 0U, 8U, 0U),
-        state_foreground(canvas, spec->state), UI_FONT_SYSTEM, UI_FONT_REGULAR, UI_POINT_TEXT);
+    for (uint32_t index = 0U; index < count; ++index) {
+        const char *label = spec->segment_labels[index];
+        size_t length = spec->segment_label_lengths[index];
+        if (label == NULL || length == 0U) continue;
+        uint32_t left = spec->bounds.x + segment_width * index + 4U;
+        uint32_t right = spec->bounds.x + segment_width * (index + 1U);
+        uint32_t label_width = (uint32_t)(length > UINT32_MAX / 7U ?
+            UINT32_MAX : length * 7U);
+        uint32_t available = right > left + 4U ? right - left - 4U : 0U;
+        if (label_width < available) left += (available - label_width) / 2U;
+        ui_rect label_bounds = {left, spec->bounds.y + 1U,
+            right > left + 2U ? right - left - 2U : 0U,
+            spec->bounds.height > 2U ? spec->bounds.height - 2U : 1U};
+        ui_font_weight weight = index == selected ? UI_FONT_SEMIBOLD : UI_FONT_REGULAR;
+        if (!draw_text(canvas, label, length, label_bounds,
+                state_foreground(canvas, spec->state), UI_FONT_SYSTEM, weight, 12U)) return false;
+    }
+    if (spec->segment_labels[0] != NULL) return true;
+    return draw_text(canvas, spec->label, spec->label_length,
+        inset(spec->bounds, 8U, 0U, 8U, 0U), state_foreground(canvas, spec->state),
+        UI_FONT_SYSTEM, UI_FONT_REGULAR, UI_POINT_TEXT);
 }
 
 static bool draw_tab_bar(const ui_widget_canvas *canvas, const ui_widget_draw_spec *spec)
@@ -430,26 +429,31 @@ static bool draw_tree_row(const ui_widget_canvas *canvas, const ui_widget_draw_s
         paint_rect(canvas, guide, canvas->tokens.separator);
     }
     uint32_t start = spec->bounds.x + 4U + (uint32_t)spec->indent * 16U;
-    ui_icon_kind disclosure = spec->expanded ? UI_ICON_CHEVRON_DOWN : UI_ICON_CHEVRON_RIGHT;
-    if (!draw_icon(canvas, disclosure, (ui_rect){start, spec->bounds.y + 5U, 16U, 16U},
-            spec->state)) return false;
+    if (spec->has_children) {
+        ui_icon_kind disclosure = spec->expanded ? UI_ICON_CHEVRON_DOWN : UI_ICON_CHEVRON_RIGHT;
+        if (!draw_icon(canvas, disclosure,
+                (ui_rect){start, spec->bounds.y + 5U, 16U, 16U}, spec->state)) return false;
+    }
     start += 18U;
     if (spec->icon != UI_ICON_NONE) {
         if (!draw_icon(canvas, spec->icon, (ui_rect){start, spec->bounds.y + 5U, 16U, 16U},
                 spec->state)) return false;
     }
     start += 20U;
-    uint32_t trailing_width = 36U;
+    uint32_t trailing_width = spec->show_row_actions ? 40U : 8U;
     ui_rect text = {start, spec->bounds.y, spec->bounds.x + spec->bounds.width > start + trailing_width ?
         spec->bounds.x + spec->bounds.width - start - trailing_width : 0U, spec->bounds.height};
     if (!draw_text(canvas, spec->label, spec->label_length, text,
             state_foreground(canvas, spec->state), UI_FONT_SYSTEM, UI_FONT_REGULAR, UI_POINT_TEXT))
         return false;
+    if (!spec->show_row_actions) return true;
     uint32_t trail_x = spec->bounds.x + (spec->bounds.width > 34U ? spec->bounds.width - 34U : 0U);
-    if (!draw_icon(canvas, UI_ICON_EYE, (ui_rect){trail_x, spec->bounds.y + 5U, 14U, 14U},
-            UI_CONTROL_HOVER)) return false;
-    return draw_icon(canvas, UI_ICON_LOCK,
-        (ui_rect){trail_x + 16U, spec->bounds.y + 5U, 14U, 14U}, UI_CONTROL_HOVER);
+    ui_control_state action_state = spec->state == UI_CONTROL_SELECTED ?
+        UI_CONTROL_SELECTED : UI_CONTROL_HOVER;
+    if (!draw_icon(canvas, spec->visible ? UI_ICON_EYE : UI_ICON_EYE_OFF,
+            (ui_rect){trail_x, spec->bounds.y + 5U, 14U, 14U}, action_state)) return false;
+    return draw_icon(canvas, spec->locked ? UI_ICON_LOCK : UI_ICON_UNLOCK,
+        (ui_rect){trail_x + 16U, spec->bounds.y + 5U, 14U, 14U}, action_state);
 }
 
 static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec *spec)
@@ -462,7 +466,8 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
         state_surface(canvas, spec->state, canvas->tokens.panel_raised), edge, 1U);
     if (spec->kind == UI_WIDGET_NUMBER_FIELD || spec->kind == UI_WIDGET_SCRUB_LABEL) {
         uint32_t unit_width = spec->unit_length > 0U ? 36U : 8U;
-        uint32_t value_start = spec->kind == UI_WIDGET_SCRUB_LABEL ? 60U : 8U;
+        uint32_t value_start = spec->kind == UI_WIDGET_SCRUB_LABEL ? 86U :
+            spec->label_length > 0U ? 44U : 8U;
         uint32_t trailing_reserve = unit_width;
         if (spec->kind == UI_WIDGET_NUMBER_FIELD) trailing_reserve += 20U;
         if (spec->kind == UI_WIDGET_SCRUB_LABEL && spec->icon != UI_ICON_NONE)
@@ -474,8 +479,13 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
             spec->bounds.height};
         if (spec->label_length > 0U && spec->kind == UI_WIDGET_SCRUB_LABEL)
             (void)draw_text(canvas, spec->label, spec->label_length,
-                (ui_rect){spec->bounds.x + 24U, spec->bounds.y, 24U, spec->bounds.height},
+                (ui_rect){spec->bounds.x + 24U, spec->bounds.y, 56U, spec->bounds.height},
                 canvas->tokens.text_secondary, UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U);
+        else if (spec->label_length > 0U && spec->kind == UI_WIDGET_NUMBER_FIELD &&
+            !draw_text(canvas, spec->label, spec->label_length,
+                (ui_rect){spec->bounds.x + 8U, spec->bounds.y, 30U, spec->bounds.height},
+                canvas->tokens.text_secondary, UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U))
+            return false;
         if (!draw_text(canvas, spec->value, spec->value_length, value,
                 state_foreground(canvas, spec->state), UI_FONT_MONOSPACED,
                 UI_FONT_REGULAR, 12U)) return false;
@@ -513,7 +523,13 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
         return true;
     }
     if (spec->kind == UI_WIDGET_COLOR_FIELD) {
-        ui_rect swatch = {spec->bounds.x + 4U, spec->bounds.y + 4U, 22U, 22U};
+        bool named = spec->label_length > 0U;
+        if (named && !draw_text(canvas, spec->label, spec->label_length,
+                (ui_rect){spec->bounds.x + 8U, spec->bounds.y, 38U,
+                    spec->bounds.height}, canvas->tokens.text_secondary,
+                UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U)) return false;
+        uint32_t swatch_x = spec->bounds.x + (named ? 50U : 4U);
+        ui_rect swatch = {swatch_x, spec->bounds.y + 4U, 22U, 22U};
         paint_round(canvas, swatch, 4U, canvas->tokens.checker_a, 0U, 0U);
         ui_rect check_half = {swatch.x + 3U, swatch.y + 3U, 8U, 19U};
         paint_rect(canvas, check_half, canvas->tokens.checker_b);
@@ -523,8 +539,9 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
             (ui_rect){spec->bounds.x + spec->bounds.width - 24U,
                 spec->bounds.y + 7U, 16U, 16U}, spec->state);
         return draw_text(canvas, spec->value, spec->value_length,
-            inset(spec->bounds, 34U, 0U, 28U, 0U), state_foreground(canvas, spec->state),
-            UI_FONT_MONOSPACED, UI_FONT_REGULAR, 12U);
+            inset(spec->bounds, named ? 78U : 34U, 0U, 28U, 0U),
+            state_foreground(canvas, spec->state),
+            UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U);
     }
     if (spec->kind == UI_WIDGET_SLIDER) {
         uint32_t track_width = spec->bounds.width > 64U ? spec->bounds.width - 64U : 1U;
@@ -545,7 +562,7 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
         return draw_text(canvas, spec->value, spec->value_length,
             inset(spec->bounds, spec->bounds.width > 56U ? spec->bounds.width - 48U : 8U,
                 0U, 8U, 0U), state_foreground(canvas, spec->state),
-            UI_FONT_MONOSPACED, UI_FONT_REGULAR, 11U);
+            UI_FONT_SYSTEM, UI_FONT_REGULAR, 11U);
     }
     if (spec->kind == UI_WIDGET_DROPDOWN) {
         ui_rect control = spec->bounds;
@@ -584,9 +601,21 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
     }
     uint32_t foreground = spec->placeholder ? canvas->tokens.text_tertiary :
         state_foreground(canvas, spec->state);
-    ui_rect text = inset(spec->bounds, 8U, 0U, 8U, 0U);
+    bool named_field = spec->kind == UI_WIDGET_TEXT_FIELD && spec->label_length > 0U;
+    bool has_icon = spec->kind == UI_WIDGET_TEXT_FIELD && spec->icon != UI_ICON_NONE;
+    ui_rect label_bounds = named_field ? inset(spec->bounds, 8U, 0U,
+        spec->bounds.width / 2U, 0U) : (ui_rect){0};
+    if (has_icon && !draw_icon(canvas, spec->icon,
+            (ui_rect){spec->bounds.x + 8U, spec->bounds.y + 8U, 14U, 14U}, spec->state))
+        return false;
+    ui_rect text = named_field ? inset(spec->bounds, spec->bounds.width / 2U,
+        0U, 8U, 0U) : has_icon ? inset(spec->bounds, 30U, 0U, 8U, 0U) :
+        inset(spec->bounds, 8U, 0U, 8U, 0U);
+    if (named_field && !draw_text(canvas, spec->label, spec->label_length,
+            label_bounds, canvas->tokens.text_secondary, UI_FONT_SYSTEM,
+            UI_FONT_REGULAR, 12U)) return false;
     if (spec->selection_length > 0U) {
-        uint32_t start = spec->bounds.x + 8U +
+        uint32_t start = spec->bounds.x + (has_icon ? 30U : 8U) +
             (uint32_t)spec->selection_start * 7U;
         ui_rect selection = {start, spec->bounds.y + 5U,
             (uint32_t)spec->selection_length * 7U,
@@ -596,7 +625,8 @@ static bool draw_input(const ui_widget_canvas *canvas, const ui_widget_draw_spec
     if (!draw_text(canvas, spec->value, spec->value_length, text, foreground,
             UI_FONT_SYSTEM, UI_FONT_REGULAR, UI_POINT_TEXT)) return false;
     if (spec->state == UI_CONTROL_FOCUS && spec->cursor_byte_offset <= spec->value_length) {
-        uint32_t cursor_x = spec->bounds.x + 8U + (uint32_t)spec->cursor_byte_offset * 7U;
+        uint32_t cursor_x = spec->bounds.x + (has_icon ? 30U : 8U) +
+            (uint32_t)spec->cursor_byte_offset * 7U;
         paint_rect(canvas, (ui_rect){cursor_x, spec->bounds.y + 7U, 1U,
             spec->bounds.height > 14U ? spec->bounds.height - 14U : 1U},
             canvas->tokens.text_primary);
@@ -608,6 +638,11 @@ static bool paint_component(ui_widget_canvas *canvas, const ui_widget_draw_spec 
 {
     uint32_t foreground = state_foreground(canvas, spec->state);
     switch (spec->kind) {
+        case UI_WIDGET_AUTO: return false;
+        case UI_WIDGET_LABEL:
+            return draw_text(canvas, spec->label, spec->label_length, spec->bounds,
+                foreground, spec->font_family, spec->font_weight,
+                spec->font_size_pt == 0U ? 13U : spec->font_size_pt);
         case UI_WIDGET_ICON_BUTTON:
         case UI_WIDGET_BUTTON_GHOST:
             return draw_button(canvas, spec,
@@ -639,7 +674,7 @@ static bool paint_component(ui_widget_canvas *canvas, const ui_widget_draw_spec 
                 canvas->tokens.separator, 1U);
             return draw_text(canvas, spec->label, spec->label_length,
                 inset(spec->bounds, 10U, 0U, 10U, 0U), foreground,
-                UI_FONT_MONOSPACED, UI_FONT_REGULAR, 12U);
+                UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U);
         case UI_WIDGET_DIVIDER: {
             ui_rect line = spec->bounds;
             if (line.height > line.width) line.width = 1U;
@@ -649,18 +684,15 @@ static bool paint_component(ui_widget_canvas *canvas, const ui_widget_draw_spec 
         }
         case UI_WIDGET_PANEL_HEADER:
             return draw_text(canvas, spec->label, spec->label_length,
-                inset(spec->bounds, 12U, 0U, 32U, 0U), canvas->tokens.text_primary,
-                UI_FONT_SYSTEM, UI_FONT_SEMIBOLD, 14U) &&
-                draw_icon(canvas, UI_ICON_MORE,
-                    (ui_rect){spec->bounds.x + spec->bounds.width - 24U,
-                        spec->bounds.y + 8U, 16U, 16U}, spec->state);
+                inset(spec->bounds, 12U, 0U, 8U, 0U), canvas->tokens.text_primary,
+                UI_FONT_SYSTEM, UI_FONT_SEMIBOLD, 13U);
         case UI_WIDGET_SECTION_HEADER: {
             ui_icon_kind disclosure = spec->expanded ? UI_ICON_CHEVRON_DOWN : UI_ICON_CHEVRON_RIGHT;
             return draw_icon(canvas, disclosure,
                     (ui_rect){spec->bounds.x + 8U, spec->bounds.y + 8U, 16U, 16U}, spec->state) &&
                 draw_text(canvas, spec->label, spec->label_length,
                     inset(spec->bounds, 30U, 0U, 8U, 0U), foreground,
-                    UI_FONT_SYSTEM, UI_FONT_SEMIBOLD, 13U);
+                    UI_FONT_SYSTEM, UI_FONT_SEMIBOLD, 12U);
         }
         case UI_WIDGET_TREE_ROW: return draw_tree_row(canvas, spec);
         case UI_WIDGET_EMPTY_STATE: {
@@ -725,7 +757,7 @@ static bool paint_component(ui_widget_canvas *canvas, const ui_widget_draw_spec 
 
 bool ui_widget_paint(ui_widget_canvas *canvas, const ui_widget_draw_spec *spec)
 {
-    if (!canvas_valid(canvas) || spec == NULL || spec->kind < UI_WIDGET_ICON_BUTTON ||
+    if (!canvas_valid(canvas) || spec == NULL || spec->kind < UI_WIDGET_LABEL ||
         spec->kind >= UI_WIDGET_KIND_COUNT || spec->state < UI_CONTROL_REST ||
         spec->state > UI_CONTROL_INVALID || spec->bounds.width == 0U ||
         spec->bounds.height == 0U || spec->bounds.width > UI_WIDGET_MAX_CANVAS_AXIS ||
@@ -738,7 +770,16 @@ bool ui_widget_paint(ui_widget_canvas *canvas, const ui_widget_draw_spec *spec)
         (spec->label_length > 0U && spec->label == NULL) ||
         (spec->value_length > 0U && spec->value == NULL) ||
         (spec->secondary_length > 0U && spec->secondary == NULL) ||
-        (spec->unit_length > 0U && spec->unit == NULL)) return false;
+        (spec->unit_length > 0U && spec->unit == NULL) ||
+        spec->segment_count > UI_WIDGET_MAX_SEGMENTS ||
+        (spec->kind == UI_WIDGET_SEGMENTED &&
+            spec->segment_count > UI_WIDGET_MAX_SEGMENTS)) return false;
+    if (spec->kind == UI_WIDGET_SEGMENTED) {
+        for (size_t index = 0U; index < spec->segment_count; ++index)
+            if (spec->segment_label_lengths[index] > UI_TEXT_TOTAL_MAX_BYTES ||
+                (spec->segment_label_lengths[index] > 0U &&
+                    spec->segment_labels[index] == NULL)) return false;
+    }
     ui_widget_draw_spec adjusted = *spec;
     if (adjusted.kind == UI_WIDGET_TOAST && adjusted.bounds.width > 360U)
         adjusted.bounds.width = 360U;
