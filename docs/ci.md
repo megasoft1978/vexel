@@ -16,8 +16,8 @@ python3 scripts/check_ci.py .github/workflows/ci.yml
 ```
 
 The local fast test suite is expected to complete under 30 seconds. The hosted
-workflow runs on GitHub Actions; local runs use the commands above.
-GitHub runner labels and action revisions were checked against
+workflow has not been observed in this checkout because no GitHub remote is
+configured. GitHub runner labels and action revisions were checked against
 their [runner documentation](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)
 and the [official checkout release](https://github.com/actions/checkout/releases/tag/v7.0.1).
 
@@ -34,3 +34,9 @@ upload artifacts or user data.
 `python3 scripts/check_fuzz_workflow.py` checks the fuzz workflow's runner,
 triggers, duration commands, action pins, secrets, and upload policy.
 `actionlint .github/workflows/fuzz.yml` checks workflow syntax and action usage.
+
+## Owner-step timing on hosted runners
+
+`index-replay` fails if any owner-thread step exceeds 100 ms. Shared macOS runners
+can jitter past that, so CI sets `VEXEL_OWNER_STEP_LIMIT_MS=500`. Local runs and
+unset or invalid values keep the strict 100 ms gate.

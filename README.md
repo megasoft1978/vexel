@@ -3,9 +3,10 @@
 **A native macOS workbench for very large SVG files.**
 Written in C17. No third-party libraries. Your source bytes stay yours.
 
-> **Status: early development (pre-alpha).** vexel is not a usable editor yet.
-> The foundations below are built and tested; editing, saving and broad SVG
-> rendering are still being added. See [Status](#status) for what works today.
+> **Status: early development (pre-alpha).** vexel is a working SVG *viewer*,
+> not an editor yet. It opens and renders a bounded SVG subset in a native
+> window; editing, saving and broad SVG coverage are still being added. See
+> [Status](#status) for what works today.
 
 ## Why vexel
 
@@ -44,7 +45,8 @@ metadata and noisy diffs. vexel is designed around the opposite approach.
 | Spatial index, tile cache, job scheduler | Built |
 | Scalar rasterizer: fills, strokes, dashes, CSS paint cascade | Built (subset) |
 | Metal presentation, custom UI, keyboard focus and semantics | Built |
-| `<use>`, gradients, clipping | In review |
+| Interactive viewer: open, pan, zoom, fit (`svgworkbench file.svg`) | Built |
+| `<use>`/`<symbol>`, linear/radial gradients, `clipPath` | Built (subset) |
 | Attribute edits, minimal-diff save, undo/redo | Planned |
 | Text rendering, accessibility adapters | Planned |
 
@@ -61,6 +63,17 @@ dropped. Measured numbers and their methodology are in
 - CMake 3.25 or later and Ninja
 
 vexel supports macOS on Apple Silicon only for now.
+
+## Usage
+
+```sh
+./dev run path/to/file.svg     # build Release and open the viewer
+```
+
+Drag or scroll to pan, pinch or Cmd+scroll to zoom, `+`/`-` zoom, `0` fits,
+Cmd+Q quits. Unsupported SVG shows an explicit error frame naming the reason.
+`svgworkbench --render-frame file.svg --size 1280x800 --out frame.ppm` renders
+the same frame headlessly.
 
 ## Build and test
 

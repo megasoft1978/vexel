@@ -32,6 +32,6 @@ separate justification, license review, pinned source hash, and adapter boundary
 
 ## Sources
 
-- Project owner directive (platform boundary).
+- Owner-provided `OWNER-DIRECTIVES.md` (platform boundary).
 - `docs/research-r4/05-revised-roadmap.md` (ordered work and gates).
 - Mozilla, [MPL 2.0 license text](https://www.mozilla.org/MPL/2.0/index.txt).

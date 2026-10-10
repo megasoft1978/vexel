@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+  <defs>
+    <linearGradient id="linear" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="8" y2="0">
+      <stop stop-color="#e02020"/><stop offset="1" stop-color="#2040e0"/>
+    </linearGradient>
+    <radialGradient id="radial" gradientUnits="userSpaceOnUse" cx="2" cy="2" r="4">
+      <stop stop-color="white"/><stop offset="1" stop-color="black"/>
+    </radialGradient>
+    <clipPath id="clip" clipPathUnits="userSpaceOnUse"><rect width="4" height="8"/></clipPath>
+  </defs>
+  <g transform="translate(4 0)">
+    <rect width="8" height="8" fill="url(#linear)" clip-path="url(#clip)"/>
+  </g>
+  <g transform="translate(4 12) rotate(90) scale(0.5)">
+    <rect width="8" height="8" fill="url(#linear)" clip-path="url(#clip)"/>
+  </g>
+  <g transform="translate(8 8)"><rect width="4" height="4" fill="url(#radial)"/></g>
+</svg>

@@ -1,10 +1,14 @@
 #include "shape.h"
+#include "test_reference.h"
 #include "shape_render.h"
 
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+
+bool clip_boundary_accounting_check(void);
+bool paint_edge_span_check(void);
 
 static double segment_distance(geom_point p, geom_edge edge)
 {
@@ -138,6 +142,362 @@ static bool antialias_and_fill_checks(void)
     return true;
 }
 
+static bool gradient_checks(void)
+{
+    static const char linear[] = "<svg width=\"16\" height=\"16\"><defs><linearGradient id=\"g\"><stop offset=\"0\" stop-color=\"#ff0000\"/><stop offset=\"1\" stop-color=\"#0000ff\"/></linearGradient></defs><rect width=\"16\" height=\"16\" fill=\"url(#g)\"/></svg>";
+    raster_tile tile = {0}; svg_shape_document doc = {0}; svg_shape_diagnostic diag;
+    if (!render_source(linear, &tile, &doc, &diag)) return false;
+    size_t left = ((size_t)8U * 16U + 1U) * 4U;
+    size_t right = ((size_t)8U * 16U + 14U) * 4U;
+    bool ok = tile.rgba[left] > tile.rgba[left + 2U] &&
+              tile.rgba[right + 2U] > tile.rgba[right] &&
+              tile.rgba[left + 3U] == 255U && tile.rgba[right + 3U] == 255U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char default_stop_color[] = "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\"><stop offset=\"0\"/><stop offset=\"1\" stop-color=\"white\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(default_stop_color, &tile, &doc, &diag)) return false;
+    ok = tile.rgba[0] < 40U && tile.rgba[1] < 40U && tile.rgba[2] < 40U &&
+         tile.rgba[3] == 255U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char radial[] = "<svg width=\"16\" height=\"16\"><defs><radialGradient id=\"g\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\" stop-opacity=\"0\"/></radialGradient></defs><circle cx=\"8\" cy=\"8\" r=\"7\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(radial, &tile, &doc, &diag)) return false;
+    size_t center = ((size_t)8U * 16U + 8U) * 4U;
+    size_t edge = ((size_t)8U * 16U + 14U) * 4U;
+    ok = tile.rgba[center] > tile.rgba[edge] && tile.rgba[center + 3U] > tile.rgba[edge + 3U];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char translucent_gradient_overpaint[] =
+        "<svg width=\"8\" height=\"8\"><rect width=\"8\" height=\"8\" fill=\"red\"/>"
+        "<defs><linearGradient id=\"g\"><stop stop-color=\"blue\" stop-opacity=\"0.5\"/>"
+        "<stop offset=\"1\" stop-color=\"blue\" stop-opacity=\"0.5\"/>"
+        "</linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(translucent_gradient_overpaint, &tile, &doc, &diag)) return false;
+    size_t blended = ((size_t)4U * 8U + 4U) * 4U;
+    ok = tile.rgba[blended] == 127U && tile.rgba[blended + 1U] == 0U &&
+         tile.rgba[blended + 2U] == 128U && tile.rgba[blended + 3U] == 255U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char translucent_solid_overpaint[] =
+        "<svg width=\"8\" height=\"8\"><rect width=\"8\" height=\"8\" fill=\"red\"/>"
+        "<rect width=\"8\" height=\"8\" fill=\"blue\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)translucent_solid_overpaint,
+                                      strlen(translucent_solid_overpaint)},
+                         &doc, &diag) != SVG_SHAPE_ERROR_NONE) return false;
+    for (size_t edge_index = 0U; edge_index < doc.edge_count; ++edge_index)
+        if (doc.shape_ids[edge_index] == 1U)
+            doc.colors[edge_index * 4U + 3U] = 128U;
+    bool solid_rendered = raster_shape_render(&doc, &tile, &diag);
+    size_t solid_blended = ((size_t)4U * 8U + 4U) * 4U;
+    ok = solid_rendered && tile.rgba[solid_blended] == 127U &&
+         tile.rgba[solid_blended + 1U] == 0U &&
+         tile.rgba[solid_blended + 2U] == 128U &&
+         tile.rgba[solid_blended + 3U] == 255U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char user_space[] = "<svg width=\"16\" height=\"16\"><defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"0\" x2=\"16\" y2=\"0\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><style>rect{fill:url(#g)}</style><rect width=\"16\" height=\"16\"/></svg>";
+    if (!render_source(user_space, &tile, &doc, &diag)) return false;
+    left = ((size_t)8U * 16U + 1U) * 4U;
+    right = ((size_t)8U * 16U + 14U) * 4U;
+    ok = tile.rgba[left] > tile.rgba[left + 2U] && tile.rgba[right + 2U] > tile.rgba[right];
+    size_t first = ((size_t)8U * 16U) * 4U;
+    size_t last = ((size_t)8U * 16U + 15U) * 4U;
+    size_t midpoint = ((size_t)8U * 16U + 8U) * 4U;
+    ok = ok && tile.rgba[first] == 247U && tile.rgba[first + 2U] == 8U &&
+         tile.rgba[midpoint] == 120U && tile.rgba[midpoint + 2U] == 135U &&
+         tile.rgba[last] == 8U && tile.rgba[last + 2U] == 247U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char user_space_radial_default[] = "<svg width=\"16\" height=\"16\"><defs><radialGradient id=\"g\" gradientUnits=\"userSpaceOnUse\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></radialGradient></defs><rect x=\"6\" y=\"6\" width=\"4\" height=\"4\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(user_space_radial_default, &tile, &doc, &diag)) return false;
+    size_t radial_edge = ((size_t)6U * 16U + 6U) * 4U;
+    size_t radial_center = ((size_t)8U * 16U + 8U) * 4U;
+    ok = tile.rgba[radial_edge] > 180U && tile.rgba[radial_edge] < 220U &&
+         tile.rgba[radial_center] > 200U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char transformed_user_gradient[] =
+        "<svg width=\"16\" height=\"16\"><defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"0\" x2=\"8\" y2=\"0\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><g transform=\"translate(4 0)\"><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></g></svg>";
+    if (!render_source(transformed_user_gradient, &tile, &doc, &diag)) return false;
+    size_t transformed_left = ((size_t)4U * 16U + 4U) * 4U;
+    size_t transformed_right = ((size_t)4U * 16U + 11U) * 4U;
+    ok = tile.rgba[transformed_left] > tile.rgba[transformed_left + 2U] &&
+         tile.rgba[transformed_right + 2U] > tile.rgba[transformed_right];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char transformed_object_gradient[] =
+        "<svg width=\"16\" height=\"16\"><defs><linearGradient id=\"g\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><g transform=\"translate(12 0) rotate(90)\"><rect width=\"4\" height=\"8\" fill=\"url(#g)\"/></g></svg>";
+    if (!render_source(transformed_object_gradient, &tile, &doc, &diag)) return false;
+    size_t transformed_top = ((size_t)0U * 16U + 8U) * 4U;
+    size_t transformed_bottom = ((size_t)3U * 16U + 8U) * 4U;
+    ok = tile.rgba[transformed_top] > tile.rgba[transformed_top + 2U] &&
+         tile.rgba[transformed_bottom + 2U] > tile.rgba[transformed_bottom];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char transformed_user_radial[] =
+        "<svg width=\"16\" height=\"16\"><defs><radialGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" cx=\"2\" cy=\"2\" r=\"4\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></radialGradient></defs><g transform=\"translate(8 8)\"><rect width=\"4\" height=\"4\" fill=\"url(#g)\"/></g></svg>";
+    if (!render_source(transformed_user_radial, &tile, &doc, &diag)) return false;
+    size_t user_radial_center = ((size_t)10U * 16U + 10U) * 4U;
+    size_t user_radial_edge = ((size_t)8U * 16U + 8U) * 4U;
+    ok = tile.rgba[user_radial_center] > tile.rgba[user_radial_edge];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char transformed_object_radial[] =
+        "<svg width=\"16\" height=\"16\"><defs><radialGradient id=\"g\" cx=\"0.5\" cy=\"0.5\" r=\"1\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></radialGradient></defs><g transform=\"translate(8 8) scale(1.5)\"><rect width=\"4\" height=\"4\" fill=\"url(#g)\"/></g></svg>";
+    if (!render_source(transformed_object_radial, &tile, &doc, &diag)) return false;
+    size_t object_radial_center = ((size_t)11U * 16U + 11U) * 4U;
+    size_t object_radial_edge = ((size_t)8U * 16U + 8U) * 4U;
+    ok = tile.rgba[object_radial_center] > tile.rgba[object_radial_edge];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char singular_gradient[] =
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"4\" height=\"4\" transform=\"scale(0)\" fill=\"url(#g)\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)singular_gradient,
+                                      strlen(singular_gradient)},
+                         &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char styled_stops[] =
+        "<svg width=\"8\" height=\"8\"><style>.end{stop-color:#00f;stop-opacity:1}</style><defs><linearGradient id=\"g\"><stop style=\"stop-color:#f00;stop-opacity:1\"/><stop class=\"end\" offset=\"1\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(styled_stops, &tile, &doc, &diag)) return false;
+    ok = tile.rgba[0] > tile.rgba[2] &&
+         tile.rgba[((size_t)4U * 8U + 7U) * 4U + 2U] >
+             tile.rgba[((size_t)4U * 8U + 7U) * 4U];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char unsupported_stop_style[] =
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\"><stop style=\"stop-color:currentColor\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)unsupported_stop_style,
+                                      strlen(unsupported_stop_style)},
+                         &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char unsupported_stop_stylesheet[] =
+        "<svg width=\"8\" height=\"8\"><style>stop{color:red}</style><defs><linearGradient id=\"g\"><stop/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (svg_shape_decode((base_bytes){
+            (const uint8_t *)unsupported_stop_stylesheet,
+            strlen(unsupported_stop_stylesheet)}, &doc, &diag) !=
+            SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char unresolved_stop_class[] =
+        "<svg width=\"8\" height=\"8\"><style>.used{stop-color:red}</style><defs><linearGradient id=\"g\"><stop class=\"missing\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)unresolved_stop_class,
+                                      strlen(unresolved_stop_class)},
+                         &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char *invalid[] = {
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\" spreadMethod=\"reflect\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"base\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" href=\"#base\"/></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
+        "<svg width=\"8\" height=\"8\"><rect width=\"8\" height=\"8\" fill=\"url(https://example.invalid/g)\"/></svg>",
+    };
+    for (size_t i = 0U; i < sizeof(invalid) / sizeof(invalid[0]); ++i) {
+        if (svg_shape_decode((base_bytes){(const uint8_t *)invalid[i], strlen(invalid[i])},
+                             &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    }
+    static const char *gradient_href_references[] = {
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"base\" x2=\"8\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" href=\"#base\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>",
+        "<svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"8\" height=\"8\"><defs><linearGradient id=\"base\" x2=\"8\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" xlink:href=\"#base\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>"
+    };
+    for (size_t i = 0U; i < sizeof(gradient_href_references) /
+                            sizeof(gradient_href_references[0]); ++i) {
+        const char *source = gradient_href_references[i];
+        const char *attribute = strstr(source, i == 0U ? "href=\"" : "xlink:href");
+        if (attribute == NULL ||
+            svg_shape_decode((base_bytes){(const uint8_t *)source, strlen(source)},
+                             &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED ||
+            diag.category != SVG_SHAPE_ERROR_UNSUPPORTED ||
+            diag.offset != (size_t)(attribute - source)) return false;
+    }
+    static const char percent_user_space[] = "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x2=\"50%\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    if (!render_source(percent_user_space, &tile, &doc, &diag)) return false;
+    first = ((size_t)4U * 8U) * 4U;
+    last = ((size_t)4U * 8U + 7U) * 4U;
+    ok = tile.rgba[first] > tile.rgba[first + 2U] &&
+         tile.rgba[last + 2U] > tile.rgba[last];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    char many[32768];
+    static const char many_prefix[] = "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\">";
+    static const char many_stop[] = "<stop stop-color=\"red\"/>";
+    static const char many_suffix[] = "</linearGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/></svg>";
+    size_t length = sizeof(many_prefix) - 1U;
+    memcpy(many, many_prefix, length);
+    for (size_t i = 0U; i < 257U; ++i) {
+        memcpy(many + length, many_stop, sizeof(many_stop) - 1U);
+        length += sizeof(many_stop) - 1U;
+    }
+    memcpy(many + length, many_suffix, sizeof(many_suffix) - 1U);
+    length += sizeof(many_suffix) - 1U;
+    return svg_shape_decode((base_bytes){(const uint8_t *)many, length}, &doc, &diag) ==
+           SVG_SHAPE_ERROR_LIMIT && diag.category == SVG_SHAPE_ERROR_LIMIT;
+}
+
+static bool clip_checks(void)
+{
+    static const char object_box[] = "<svg width=\"16\" height=\"16\"><defs><clipPath id=\"c\" clipPathUnits=\"objectBoundingBox\"><rect width=\"0.5\" height=\"1\"/></clipPath></defs><rect x=\"2\" y=\"2\" width=\"8\" height=\"8\" fill=\"red\" clip-path=\"url(#c)\"/></svg>";
+    raster_tile tile = {0}; svg_shape_document doc = {0}; svg_shape_diagnostic diag;
+    if (!render_source(object_box, &tile, &doc, &diag)) return false;
+    bool ok = pixel_alpha(&tile, 3U, 3U) == 255U && pixel_alpha(&tile, 7U, 3U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char user_space[] = "<svg width=\"16\" height=\"16\"><defs><clipPath id=\"c\" clipPathUnits=\"userSpaceOnUse\"><rect x=\"4\" y=\"0\" width=\"4\" height=\"16\"/><rect x=\"10\" y=\"0\" width=\"2\" height=\"16\"/></clipPath></defs><style>.target{clip-path:url(#c)}</style><rect class=\"target\" width=\"16\" height=\"16\" fill=\"blue\"/></svg>";
+    if (!render_source(user_space, &tile, &doc, &diag)) return false;
+    ok = pixel_alpha(&tile, 5U, 5U) == 255U && pixel_alpha(&tile, 10U, 5U) == 255U &&
+         pixel_alpha(&tile, 2U, 5U) == 0U && pixel_alpha(&tile, 8U, 5U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char default_units[] = "<svg width=\"16\" height=\"16\"><defs><clipPath id=\"c\"><rect x=\"4\" y=\"0\" width=\"4\" height=\"16\"/></clipPath></defs><rect width=\"16\" height=\"16\" fill=\"red\" clip-path=\"url(#c)\"/></svg>";
+    if (!render_source(default_units, &tile, &doc, &diag)) return false;
+    ok = pixel_alpha(&tile, 5U, 5U) == 255U && pixel_alpha(&tile, 2U, 5U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char symbol_clip[] =
+        "<svg width=\"8\" height=\"8\"><defs>"
+        "<clipPath id=\"c\"><rect width=\"4\" height=\"8\"/></clipPath>"
+        "<symbol id=\"s\" viewBox=\"0 0 8 8\" clip-path=\"url(#c)\">"
+        "<rect width=\"8\" height=\"8\" fill=\"red\"/>"
+        "</symbol></defs><use href=\"#s\" width=\"8\" height=\"8\"/></svg>";
+    const char *symbol_clip_attribute = strstr(symbol_clip, "clip-path");
+    if (symbol_clip_attribute == NULL ||
+        svg_shape_decode((base_bytes){(const uint8_t *)symbol_clip,
+                                      strlen(symbol_clip)}, &doc, &diag) !=
+            SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.offset != (size_t)(symbol_clip_attribute - symbol_clip)) return false;
+    static const char symbol_css_clip[] =
+        "<svg width=\"8\" height=\"8\"><style>symbol{clip-path:url(#c)}</style>"
+        "<defs><clipPath id=\"c\"><rect width=\"4\" height=\"8\"/></clipPath>"
+        "<symbol id=\"s\" viewBox=\"0 0 8 8\"><rect width=\"8\" height=\"8\"/></symbol>"
+        "</defs><use href=\"#s\" width=\"8\" height=\"8\"/></svg>";
+    const char *symbol_css_clip_value = strstr(symbol_css_clip, "url(#c)");
+    if (symbol_css_clip_value == NULL ||
+        svg_shape_decode((base_bytes){(const uint8_t *)symbol_css_clip,
+                                      strlen(symbol_css_clip)}, &doc, &diag) !=
+            SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.offset != (size_t)(symbol_css_clip_value - symbol_css_clip)) return false;
+    static const char transformed_user_clip[] =
+        "<svg width=\"16\" height=\"16\"><defs><clipPath id=\"c\" clipPathUnits=\"userSpaceOnUse\"><rect width=\"4\" height=\"8\"/></clipPath></defs><g transform=\"translate(4 0)\"><rect width=\"8\" height=\"8\" fill=\"red\" clip-path=\"url(#c)\"/></g></svg>";
+    if (!render_source(transformed_user_clip, &tile, &doc, &diag)) return false;
+    ok = pixel_alpha(&tile, 5U, 5U) == 255U && pixel_alpha(&tile, 9U, 5U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char transformed_object_clip[] =
+        "<svg width=\"16\" height=\"16\"><defs><clipPath id=\"c\" clipPathUnits=\"objectBoundingBox\"><rect width=\"0.5\" height=\"1\"/></clipPath></defs><g transform=\"translate(12 0) rotate(90)\"><rect width=\"4\" height=\"4\" fill=\"red\" clip-path=\"url(#c)\"/></g></svg>";
+    if (!render_source(transformed_object_clip, &tile, &doc, &diag)) return false;
+    ok = pixel_alpha(&tile, 10U, 1U) == 255U && pixel_alpha(&tile, 10U, 3U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char use_space_reference[] =
+        "<svg width=\"16\" height=\"16\"><defs><linearGradient id=\"g\" gradientUnits=\"userSpaceOnUse\" x2=\"6\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><clipPath id=\"c\" clipPathUnits=\"userSpaceOnUse\"><rect width=\"3\" height=\"4\"/></clipPath><g id=\"target\"><rect width=\"6\" height=\"4\" fill=\"url(#g)\" clip-path=\"url(#c)\"/></g></defs><use href=\"#target\" x=\"8\" y=\"8\"/></svg>";
+    if (!render_source(use_space_reference, &tile, &doc, &diag)) return false;
+    size_t use_left = ((size_t)9U * 16U + 8U) * 4U;
+    ok = pixel_alpha(&tile, 9U, 9U) == 255U && pixel_alpha(&tile, 12U, 9U) == 0U &&
+         tile.rgba[use_left] > tile.rgba[use_left + 2U];
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char group_bbox_clip[] =
+        "<svg width=\"20\" height=\"10\"><defs><clipPath id=\"c\" clipPathUnits=\"objectBoundingBox\"><rect width=\"0.5\" height=\"1\"/></clipPath></defs><g clip-path=\"url(#c)\"><rect width=\"10\" height=\"10\" fill=\"red\"/><rect x=\"10\" width=\"10\" height=\"10\" fill=\"blue\"/></g></svg>";
+    if (!render_source(group_bbox_clip, &tile, &doc, &diag)) return false;
+    ok = pixel_alpha(&tile, 5U, 5U) == 255U &&
+         pixel_alpha(&tile, 15U, 5U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char nested_group_clips[] =
+        "<svg width=\"20\" height=\"10\"><defs><clipPath id=\"outer\" clipPathUnits=\"userSpaceOnUse\"><rect width=\"10\" height=\"10\"/></clipPath><clipPath id=\"inner\" clipPathUnits=\"userSpaceOnUse\"><rect x=\"5\" width=\"10\" height=\"10\"/></clipPath></defs><g clip-path=\"url(#outer)\"><g clip-path=\"url(#inner)\"><rect width=\"20\" height=\"10\" fill=\"red\"/></g></g></svg>";
+    if (!render_source(nested_group_clips, &tile, &doc, &diag)) return false;
+    ok = pixel_alpha(&tile, 2U, 5U) == 0U &&
+         pixel_alpha(&tile, 7U, 5U) == 255U &&
+         pixel_alpha(&tile, 12U, 5U) == 0U;
+    raster_tile_destroy(&tile); svg_shape_document_destroy(&doc);
+    if (!ok) return false;
+    static const char singular_clip[] =
+        "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\"><rect width=\"1\" height=\"1\"/></clipPath></defs><g transform=\"scale(0)\" clip-path=\"url(#c)\"><rect width=\"4\" height=\"4\" fill=\"red\"/></g></svg>";
+    if (svg_shape_decode((base_bytes){(const uint8_t *)singular_clip,
+                                      strlen(singular_clip)},
+                         &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char *invalid[] = {
+        "<svg width=\"8\" height=\"8\"><rect width=\"8\" height=\"8\" clip-path=\"url(https://example.invalid/c)\"/></svg>",
+        "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\" clipPathUnits=\"object-bounding-box\"><rect width=\"1\" height=\"1\"/></clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>",
+        "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\"><rect width=\"1\" height=\"1\" clip-path=\"url(#c)\"/></clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>",
+        "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\"><rect width=\"1\" height=\"1\" style=\"fill:red\"/></clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>",
+        "<svg width=\"8\" height=\"8\"><style>.k{clip-path:url(#d)}</style><defs><clipPath id=\"d\"><rect width=\"1\" height=\"1\"/></clipPath><clipPath id=\"c\"><rect class=\"k\" width=\"1\" height=\"1\"/></clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>"
+    };
+    for (size_t i = 0U; i < sizeof(invalid) / sizeof(invalid[0]); ++i)
+        if (svg_shape_decode((base_bytes){(const uint8_t *)invalid[i], strlen(invalid[i])},
+                             &doc, &diag) != SVG_SHAPE_ERROR_UNSUPPORTED) return false;
+    static const char css_nested_clip[] =
+        "<svg width=\"8\" height=\"8\"><style>.k{clip-path:url(#d)}</style>"
+        "<defs><clipPath id=\"d\"><rect width=\"1\" height=\"1\"/></clipPath>"
+        "<clipPath id=\"c\"><rect class=\"k\" width=\"1\" height=\"1\"/></clipPath>"
+        "</defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>";
+    const char *nested_clip_value = strstr(css_nested_clip, "url(#d)");
+    if (nested_clip_value == NULL ||
+        svg_shape_decode((base_bytes){(const uint8_t *)css_nested_clip,
+                                      strlen(css_nested_clip)}, &doc, &diag) !=
+            SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.category != SVG_SHAPE_ERROR_UNSUPPORTED ||
+        diag.offset != (size_t)(nested_clip_value - css_nested_clip)) return false;
+    char too_many[32768];
+    static const char clip_prefix[] = "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\">";
+    static const char clip_child[] = "<rect width=\"1\" height=\"1\"/>";
+    static const char clip_suffix[] = "</clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>";
+    size_t length = sizeof(clip_prefix) - 1U;
+    memcpy(too_many, clip_prefix, length);
+    for (size_t i = 0U; i < 65U; ++i) {
+        memcpy(too_many + length, clip_child, sizeof(clip_child) - 1U);
+        length += sizeof(clip_child) - 1U;
+    }
+    memcpy(too_many + length, clip_suffix, sizeof(clip_suffix) - 1U);
+    length += sizeof(clip_suffix) - 1U;
+    if (svg_shape_decode((base_bytes){(const uint8_t *)too_many, length}, &doc, &diag) !=
+        SVG_SHAPE_ERROR_LIMIT || diag.category != SVG_SHAPE_ERROR_LIMIT) return false;
+    size_t large_capacity = 70U * 1024U;
+    char *large = malloc(large_capacity);
+    if (large == NULL) return false;
+    static const char large_prefix[] = "<svg width=\"8\" height=\"8\"><defs><clipPath id=\"c\"><!--";
+    static const char large_suffix[] = "--><rect width=\"8\" height=\"8\"/></clipPath></defs><rect width=\"8\" height=\"8\" clip-path=\"url(#c)\"/></svg>";
+    size_t large_len = sizeof(large_prefix) - 1U;
+    memcpy(large, large_prefix, large_len);
+    memset(large + large_len, 'c', 65U * 1024U);
+    large_len += 65U * 1024U;
+    memcpy(large + large_len, large_suffix, sizeof(large_suffix) - 1U);
+    large_len += sizeof(large_suffix) - 1U;
+    bool limited = svg_shape_decode((base_bytes){(const uint8_t *)large, large_len},
+                                    &doc, &diag) == SVG_SHAPE_ERROR_LIMIT &&
+                   diag.category == SVG_SHAPE_ERROR_LIMIT;
+    free(large);
+    return limited;
+}
+
+static bool clip_work_budget_check(void)
+{
+    size_t capacity = 256U * 1024U;
+    char *source = malloc(capacity);
+    if (source == NULL) return false;
+    static const char prefix[] = "<svg width=\"1024\" height=\"1024\"><defs><clipPath id=\"c\" clipPathUnits=\"userSpaceOnUse\"><path d=\"M0 0";
+    static const char command[] = " L1 0";
+    static const char suffix[] = " L1 1 L0 1 Z\"/></clipPath></defs><rect width=\"1024\" height=\"1024\" clip-path=\"url(#c)\"/></svg>";
+    size_t length = sizeof(prefix) - 1U;
+    memcpy(source, prefix, length);
+    for (size_t i = 0U; i < 1000U; ++i) {
+        memcpy(source + length, command, sizeof(command) - 1U);
+        length += sizeof(command) - 1U;
+    }
+    memcpy(source + length, suffix, sizeof(suffix) - 1U);
+    length += sizeof(suffix) - 1U;
+    svg_shape_document doc = {0};
+    svg_shape_diagnostic diag = {0};
+    bool ok = svg_shape_decode((base_bytes){(const uint8_t *)source, length},
+                               &doc, &diag) == SVG_SHAPE_ERROR_NONE;
+    raster_tile tile = {0};
+    if (ok) ok = !raster_shape_render(&doc, &tile, &diag) &&
+                 diag.category == SVG_SHAPE_ERROR_LIMIT && tile.rgba == NULL;
+    raster_tile_destroy(&tile);
+    svg_shape_document_destroy(&doc);
+    free(source);
+    return ok;
+}
+
 static bool stroke_decode_and_render_checks(void)
 {
     static const char defaults[] = "<svg width=\"8\" height=\"8\"><line x1=\"1\" y1=\"1\" x2=\"7\" y2=\"1\"/></svg>";
@@ -239,6 +599,43 @@ static bool stroke_cap_join_and_dash_checks(void)
 
 int main(void)
 {
+    if (!svg_shape_reference_tests()) { fprintf(stderr, "reference checks failed\n"); return 49; }
+    if (!gradient_checks()) { fprintf(stderr, "gradient rendering failed\n"); return 50; }
+    if (!clip_checks()) { fprintf(stderr, "clip rendering failed\n"); return 51; }
+    if (!clip_work_budget_check()) { fprintf(stderr, "clip work budget failed\n"); return 52; }
+    if (!clip_boundary_accounting_check()) {
+        fprintf(stderr, "clip boundary accounting failed\n"); return 54;
+    }
+    if (!paint_edge_span_check()) {
+        fprintf(stderr, "paint edge span safety failed\n"); return 55;
+    }
+    static const uint8_t zero_area_gradient[] =
+        "<svg width=\"8\" height=\"8\"><defs><linearGradient id=\"g\">"
+        "<stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/>"
+        "</linearGradient></defs><rect width=\"0\" height=\"8\" fill=\"url(#g)\"/>"
+        "<rect width=\"4\" height=\"4\" fill=\"red\"/></svg>";
+    svg_shape_document zero_doc = {0};
+    svg_shape_diagnostic zero_diag = {0};
+    const char *zero_fill = strstr((const char *)zero_area_gradient, "url(#g)");
+    if (zero_fill == NULL ||
+        svg_shape_decode((base_bytes){zero_area_gradient,
+            sizeof(zero_area_gradient) - 1U}, &zero_doc, &zero_diag) !=
+                SVG_SHAPE_ERROR_UNSUPPORTED ||
+        zero_diag.offset != (size_t)(zero_fill - (const char *)zero_area_gradient) ||
+        zero_doc.edge_count != 0U || zero_doc.edges != NULL) {
+        svg_shape_document_destroy(&zero_doc);
+        return 53;
+    }
+    svg_shape_document_destroy(&zero_doc);
+    static const uint8_t definitions[] = "<svg width=\"8\" height=\"8\"><defs><rect width=\"2\" height=\"2\"/><symbol id=\"unused\"><circle r=\"1\"/></symbol></defs><rect x=\"3\" width=\"2\" height=\"2\"/></svg>";
+    svg_shape_document definition_doc = {0};
+    svg_shape_diagnostic definition_diag;
+    if (svg_shape_decode((base_bytes){definitions, sizeof(definitions)-1U},
+                         &definition_doc, &definition_diag) != SVG_SHAPE_ERROR_NONE ||
+        definition_doc.shape_count != 1U || definition_doc.edge_count != 4U ||
+        definition_doc.source.ptr != definitions ||
+        definition_doc.source.len != sizeof(definitions)-1U) return 48;
+    svg_shape_document_destroy(&definition_doc);
     if (!antialias_and_fill_checks()) { fprintf(stderr, "antialias/fill checks failed\n"); return 45; }
     if (!stroke_decode_and_render_checks()) { fprintf(stderr, "stroke checks failed\n"); return 46; }
     if (!stroke_cap_join_and_dash_checks()) { fprintf(stderr, "stroke cap/join/dash checks failed\n"); return 47; }

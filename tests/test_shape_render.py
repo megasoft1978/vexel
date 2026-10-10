@@ -2,6 +2,7 @@
 import hashlib
 import json
 import platform
+import random
 import shutil
 import struct
 import subprocess
@@ -10,12 +11,16 @@ import unittest
 import zlib
 from pathlib import Path
 
+from tests.svg.shape.paint_clip_generator import random_paint_clip_document
+
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".cache"
 TEMP_ROOT.mkdir(exist_ok=True)
 FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
-OUT = ROOT / "artifacts/WO-M4-05/reference-comparison.json"
+REFERENCE_CLI = ROOT / "build/mac-debug/bin/shape_render_reference_cli"
+STATS_CLI = ROOT / "build/mac-debug/bin/shape_render_stats_cli"
+OUT = ROOT / "artifacts/WO-M4-06/reference-comparison.json"
 
 
 def png_rgba(data):
@@ -65,7 +70,140 @@ def png_rgba(data):
     return width, height, b"".join(rows)
 
 
+def random_shape_document(rng, index):
+    sizes = ((16, 16), (24, 16), (24, 24), (32, 24), (48, 32), (64, 40))
+    width, height = sizes[index % len(sizes)]
+    fills = ("red", "blue", "green", "#a050d0", "#3080b0")
+    caps = ("butt", "square", "round")
+    joins = ("miter", "bevel", "round")
+    dash_patterns = ("", ' stroke-dasharray="3 2"',
+                     ' stroke-dasharray="3 2 1"')
+    fragments = []
+    for shape_index in range(7):
+        x = rng.uniform(1.0, max(2.0, width - 4.0))
+        y = rng.uniform(1.0, max(2.0, height - 4.0))
+        w = rng.uniform(2.0, max(2.1, min(width / 2.0, 14.0)))
+        h = rng.uniform(2.0, max(2.1, min(height / 2.0, 12.0)))
+        fill = fills[rng.randrange(len(fills))]
+        fill_rule = "evenodd" if (shape_index + index) % 2 else "nonzero"
+        kind = (index + shape_index) % 6
+        if kind == 0:
+            geometry = f'<rect x="{x:.3f}" y="{y:.3f}" width="{w:.3f}" height="{h:.3f}"'
+        elif kind == 1:
+            geometry = f'<circle cx="{x:.3f}" cy="{y:.3f}" r="{min(w, h) / 2.0:.3f}"'
+        elif kind == 2:
+            geometry = f'<ellipse cx="{x:.3f}" cy="{y:.3f}" rx="{w / 2.0:.3f}" ry="{h / 2.0:.3f}"'
+        elif kind == 3:
+            geometry = (f'<polygon points="{x:.3f},{y:.3f} {x+w:.3f},{y+0.5:.3f} '
+                        f'{x+w-1:.3f},{y+h:.3f} {x+0.5:.3f},{y+h-1:.3f}"')
+        elif kind == 4:
+            geometry = (f'<polyline points="{x:.3f},{y+h:.3f} {x+w/2:.3f},{y:.3f} '
+                        f'{x+w:.3f},{y+h:.3f}"')
+        else:
+            d = (f'M {x:.3f} {y+h:.3f} C {x+1:.3f} {y:.3f} {x+w/2:.3f} {y+h:.3f} '
+                 f'{x+w/2:.3f} {y:.3f} Q {x+w:.3f} {y-1:.3f} {x+w:.3f} {y+h/2:.3f} '
+                 f'A {max(1.0,w/4):.3f} {max(1.0,h/3):.3f} 17 0 1 {x+1:.3f} {y+h/2:.3f} Z')
+            geometry = f'<path d="{d}"'
+        attrs = f' fill="{fill}" fill-rule="{fill_rule}"'
+        if kind == 4:
+            attrs = f' fill="none"'
+        if shape_index == 0:
+            combo = index % 27
+            cap = caps[combo % 3]
+            join = joins[(combo // 3) % 3]
+            dash = dash_patterns[combo // 9]
+            attrs += (f' stroke="#000000" stroke-width="{rng.uniform(0.5, 3.5):.3f}"'
+                      f' stroke-linecap="{cap}" stroke-linejoin="{join}"'
+                      f' stroke-miterlimit="{rng.uniform(1.0, 6.0):.3f}"'
+                      f' stroke-dashoffset="{rng.uniform(-2.0, 2.0):.3f}"{dash}')
+        element = geometry + attrs + '/>'
+        if shape_index % 2 == 0:
+            tx, ty = rng.uniform(-2.0, 2.0), rng.uniform(-2.0, 2.0)
+            angle = rng.uniform(-25.0, 25.0)
+            sx, sy = rng.uniform(0.7, 1.3), rng.uniform(0.7, 1.3)
+            element = (f'<g transform="translate({tx:.3f} {ty:.3f}) rotate({angle:.3f}) '
+                       f'scale({sx:.3f} {sy:.3f})">{element}</g>')
+        fragments.append(element)
+    # Guaranteed overlap exercises later-shape replacement with varying alpha.
+    fragments.extend((
+        '<rect x="4" y="4" width="11" height="9" fill="#d03030"/>',
+        '<rect x="8" y="6" width="10" height="9" fill="#2050d0"/>',
+    ))
+    return (f'<svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">'
+            + ''.join(fragments) + '</svg>')
+
+
 class ShapeRenderTests(unittest.TestCase):
+    def _assert_matches_unculled_reference(self, source, name):
+        self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
+        self.assertTrue(REFERENCE_CLI.is_file(), "reference renderer must be built for differential tests")
+        with tempfile.TemporaryDirectory(prefix=f"vexel-{name}-", dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            input_path = directory / "case.svg"
+            optimized_path = directory / "optimized.rgba"
+            reference_path = directory / "reference.rgba"
+            input_path.write_text(source, encoding="utf-8")
+            optimized = subprocess.run([str(CLI), str(input_path), str(optimized_path)],
+                                       capture_output=True, text=True)
+            reference = subprocess.run([str(REFERENCE_CLI), str(input_path), str(reference_path)],
+                                       capture_output=True, text=True)
+            self.assertEqual(optimized.returncode, reference.returncode,
+                             f"{optimized.stderr!r} / {reference.stderr!r}")
+            if optimized.returncode == 0:
+                self.assertEqual(optimized_path.read_bytes(), reference_path.read_bytes())
+            else:
+                self.assertEqual(optimized.stderr.splitlines()[0],
+                                 reference.stderr.splitlines()[0])
+            return optimized_path.read_bytes() if optimized.returncode == 0 else b""
+
+    def test_gradient_full_tile_radial_interior_uses_center_sample(self):
+        source = ('<svg width="32" height="32"><defs>'
+                  '<radialGradient id="g" cx="0.5" cy="0.5" r="0.16">'
+                  '<stop offset="0" stop-color="#ff2000" stop-opacity="0.3"/>'
+                  '<stop offset="1" stop-color="#0020ff" stop-opacity="0.9"/>'
+                  '</radialGradient></defs>'
+                  '<rect width="32" height="32" fill="url(#g)"/></svg>')
+        rgba = self._assert_matches_unculled_reference(source, "radial-subsamples")
+        self.assertTrue(rgba)
+        center = (15 * 32 + 15) * 4
+        neighbor = (15 * 32 + 14) * 4
+        self.assertEqual(rgba[center:center + 4], bytes((220, 32, 35, 98)))
+        self.assertNotEqual(rgba[center:center + 4], rgba[neighbor:neighbor + 4])
+
+    def test_user_space_clip_half_pixel_edge_uses_4x4_samples(self):
+        source = ('<svg width="32" height="8"><defs>'
+                  '<clipPath id="c" clipPathUnits="userSpaceOnUse">'
+                  '<rect x="0" y="0" width="20.5" height="8"/>'
+                  '</clipPath></defs><rect width="21" height="8" fill="red" '
+                  'clip-path="url(#c)"/></svg>')
+        rgba = self._assert_matches_unculled_reference(source, "half-pixel-clip")
+        pixel = lambda x, y: rgba[(y * 32 + x) * 4:(y * 32 + x) * 4 + 4]
+        self.assertEqual(pixel(19, 4), bytes((255, 0, 0, 255)))
+        self.assertEqual(pixel(20, 4), bytes((255, 0, 0, 128)))
+        self.assertEqual(pixel(21, 4), bytes((0, 0, 0, 0)))
+
+    def test_clip_half_pixel_edge_matches_librsvg_at_fractional_boundary(self):
+        renderer = shutil.which("rsvg-convert")
+        self.assertIsNotNone(renderer, "rsvg-convert is required by this work order")
+        fixture = FIXTURES / "clip-half-pixel-edge.svg"
+        with tempfile.TemporaryDirectory(prefix="vexel-clip-edge-", dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            output = directory / "ours.rgba"
+            reference = directory / "reference.png"
+            subprocess.run([str(CLI), str(fixture), str(output)], check=True,
+                           capture_output=True, text=True)
+            subprocess.run([renderer, "--format", "png", "--output", str(reference),
+                            str(fixture)], check=True, capture_output=True, text=True)
+            width, height, expected = png_rgba(reference.read_bytes())
+            self.assertEqual((width, height), (40, 24))
+            offset = (4 * width + 20) * 4
+            actual_pixel = output.read_bytes()[offset:offset + 4]
+            expected_pixel = expected[offset:offset + 4]
+            self.assertEqual(expected_pixel, bytes((124, 0, 131, 128)))
+            self.assertLessEqual(abs(actual_pixel[3] - 128), 1)
+            self.assertLessEqual(max(abs(actual_pixel[channel] - expected_pixel[channel])
+                                     for channel in range(3)), 1)
+
     def test_css_cascade_inheritance_and_source_preservation(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         source = (b'<svg width="16" height="8" fill="green"><style>/* keep */\n'
@@ -232,20 +370,34 @@ class ShapeRenderTests(unittest.TestCase):
     def test_reference_comparison_and_repeatability(self):
         renderer = shutil.which("rsvg-convert")
         self.assertIsNotNone(renderer, "rsvg-convert is required by this work order")
+        self.assertTrue(REFERENCE_CLI.is_file(), "reference renderer must be built for differential tests")
         version = subprocess.run([renderer, "--version"], check=True, capture_output=True, text=True).stdout.strip()
+        scalar_identity_cases = {
+            "clip-union", "object-bbox-transform", "user-space-transform",
+            "gradient-stop-alpha-overpaint",
+        }
         results = []
+        failed_fixtures = []
         with tempfile.TemporaryDirectory(prefix="vexel-shape-", dir=TEMP_ROOT) as temp:
             temp_path = Path(temp)
             for fixture in sorted(FIXTURES.glob("*.svg")):
                 raw = fixture.read_bytes()
+                source_hash = hashlib.sha256(raw).digest()
                 first, second, reference = (temp_path / f"{fixture.stem}-{i}.rgba" for i in range(3))
                 subprocess.run([str(CLI), str(fixture), str(first)], check=True, capture_output=True)
                 subprocess.run([str(CLI), str(fixture), str(second)], check=True, capture_output=True)
                 self.assertEqual(first.read_bytes(), second.read_bytes(), fixture.name)
+                if fixture.stem in scalar_identity_cases:
+                    scalar_reference = temp_path / f"{fixture.stem}-unculled.rgba"
+                    subprocess.run([str(REFERENCE_CLI), str(fixture), str(scalar_reference)],
+                                   check=True, capture_output=True)
+                    self.assertEqual(first.read_bytes(), scalar_reference.read_bytes(),
+                                     f"culled and unculled renderers diverged for {fixture.name}")
                 subprocess.run([renderer, "--format", "png", "--output", str(reference), str(fixture)], check=True, capture_output=True)
+                self.assertEqual(source_hash, hashlib.sha256(fixture.read_bytes()).digest(), fixture.name)
                 rw, rh, reference_rgba = png_rgba(reference.read_bytes())
                 ours = first.read_bytes()
-                width, height = 16, 16
+                width, height = rw, rh
                 self.assertEqual((rw, rh), (width, height))
                 self.assertEqual(len(ours), width * height * 4)
                 # Renderer antialiasing may affect pixels within one pixel of a
@@ -281,17 +433,26 @@ class ShapeRenderTests(unittest.TestCase):
                             edge_diffs += 1
                         else:
                             bad_interior += 1
-                self.assertEqual(bad_interior, 0, fixture.name)
-                self.assertLessEqual(edge_diffs, 120, fixture.name)
-                self.assertLessEqual(max_alpha_delta, 160, fixture.name)
-                self.assertLessEqual(max_rgb_delta, 1, fixture.name)
+                failures = []
+                if bad_interior != 0:
+                    failures.append(f"interior_diff_pixels={bad_interior} (limit 0)")
+                if edge_diffs > 120:
+                    failures.append(f"edge_diff_pixels={edge_diffs} (limit 120)")
+                if max_alpha_delta > 160:
+                    failures.append(f"max_alpha_diff={max_alpha_delta} (limit 160)")
+                if max_rgb_delta > 1:
+                    failures.append(f"max_jointly_covered_straight_rgb_diff={max_rgb_delta} (limit 1)")
+                if failures:
+                    failed_fixtures.append({"case": fixture.stem, "failures": failures})
                 results.append({"case": fixture.stem, "source_sha256": hashlib.sha256(raw).hexdigest(),
                                 "vexel_sha256": hashlib.sha256(ours).hexdigest(),
                                 "reference_png_sha256": hashlib.sha256(reference.read_bytes()).hexdigest(),
                                 "edge_diff_pixels": edge_diffs, "interior_diff_pixels": bad_interior,
                                 "max_channel_diff": max_channel,
                                 "max_jointly_covered_straight_rgb_diff": max_rgb_delta,
-                                "max_alpha_diff": max_alpha_delta})
+                                "max_alpha_diff": max_alpha_delta,
+                                "threshold_status": "fail" if failures else "pass",
+                                "threshold_failures": failures})
         OUT.parent.mkdir(parents=True, exist_ok=True)
         host = {"platform": platform.platform(), "machine": platform.machine(),
                 "macos_version": platform.mac_ver()[0] or "unavailable"}
@@ -304,7 +465,10 @@ class ShapeRenderTests(unittest.TestCase):
                 "metric_availability": {"latency": "not collected by the differential fixture harness",
                                         "peak_rss": "not collected by the differential fixture harness"},
                 "edge_tolerance": "zero interior differences; within one pixel of a fill-coverage boundary, alpha delta <=160; raw straight RGB delta <=1 for every jointly covered pixel; and at most 120 differing pixels per fixture",
-                                   "cases": results}, indent=2) + "\n")
+                "cases": results, "failed_fixtures": failed_fixtures,
+                "status": "fail" if failed_fixtures else "pass"}, indent=2) + "\n")
+        self.assertEqual(failed_fixtures, [],
+                         "librsvg fixture threshold failures are recorded in " + str(OUT))
 
     def test_bounds_and_stable_diagnostics(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
@@ -467,6 +631,124 @@ class ShapeRenderTests(unittest.TestCase):
         self.assertNotEqual(run.returncode, 0)
         self.assertEqual(category, "unsupported")
         self.assertEqual(int(offset), source.index(b"skewX"))
+
+    def test_culled_renderer_matches_reference_for_fixtures_and_random_documents(self):
+        self.assertTrue(CLI.is_file(), "run ./dev build before the focused shape tests")
+        self.assertTrue(REFERENCE_CLI.is_file(), "reference renderer must be built for differential tests")
+        self.assertTrue(STATS_CLI.is_file(), "stats renderer must be built for differential tests")
+        seed = 20261011
+        feature_seed = 20261013
+        generated_count = 200
+        feature_generated_count = 160
+        rng = random.Random(seed)
+        feature_rng = random.Random(feature_seed)
+        oracle_sources = list(sorted(FIXTURES.glob("*.svg")))
+        oracle_sources.extend(sorted((ROOT / "tests/viewer/fixtures").glob("*.svg")))
+        sources = [path.read_bytes() for path in oracle_sources]
+        generated = [random_shape_document(rng, index).encode("utf-8")
+                     for index in range(generated_count)]
+        feature_generated = [random_paint_clip_document(feature_rng, index).encode("utf-8")
+                             for index in range(feature_generated_count)]
+        print(f"raster differential seed={seed} generated={generated_count} "
+              f"paint-clip-seed={feature_seed} paint-clip-generated={feature_generated_count} "
+              "tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40")
+        with tempfile.TemporaryDirectory(prefix="vexel-culling-diff-", dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            for index, source in enumerate(sources + generated + feature_generated):
+                input_path = directory / f"case-{index}.svg"
+                optimized_path = directory / f"case-{index}.optimized.rgba"
+                reference_path = directory / f"case-{index}.reference.rgba"
+                input_path.write_bytes(source)
+                is_generated = index >= len(sources)
+                is_feature_generated = index >= len(sources) + generated_count
+                if is_generated and not is_feature_generated:
+                    optimized = subprocess.run(
+                        [str(STATS_CLI), "--translucent", str(input_path), str(optimized_path)],
+                        capture_output=True, text=True)
+                    reference = subprocess.run(
+                        [str(REFERENCE_CLI), "--translucent", str(input_path), str(reference_path)],
+                        capture_output=True, text=True)
+                    case = f"seed={seed} document={index-len(sources)}"
+                elif is_feature_generated:
+                    optimized = subprocess.run(
+                        [str(STATS_CLI), str(input_path), str(optimized_path)],
+                        capture_output=True, text=True)
+                    reference = subprocess.run(
+                        [str(REFERENCE_CLI), str(input_path), str(reference_path)],
+                        capture_output=True, text=True)
+                    case = (f"paint-clip-seed={feature_seed} document="
+                            f"{index-len(sources)-generated_count}")
+                else:
+                    optimized = subprocess.run(
+                        [str(CLI), str(input_path), str(optimized_path)],
+                        capture_output=True, text=True)
+                    reference = subprocess.run(
+                        [str(REFERENCE_CLI), str(input_path), str(reference_path)],
+                        capture_output=True, text=True)
+                    case = input_path.name
+                with self.subTest(case=case):
+                    self.assertEqual(optimized.returncode, reference.returncode,
+                                     f"renderer status differs: {optimized.stderr!r} / {reference.stderr!r}")
+                    if optimized.returncode == 0:
+                        self.assertEqual(optimized_path.read_bytes(), reference_path.read_bytes())
+                    else:
+                        optimized_error = optimized.stderr.splitlines()[0] if optimized.stderr else ""
+                        reference_error = reference.stderr.splitlines()[0] if reference.stderr else ""
+                        self.assertEqual(optimized_error, reference_error)
+
+    def test_culling_renders_large_shapes_under_the_existing_work_cap(self):
+        self.assertTrue(STATS_CLI.is_file(), "run ./dev build before the focused shape tests")
+        circle_sources = (
+            '<svg width="640" height="400"><circle cx="170" cy="200" r="110" fill="red"/></svg>',
+            '<svg width="640" height="400"><circle cx="170" cy="200" r="150" fill="red"/></svg>',
+        )
+        many_shapes = ''.join(
+            f'<rect x="{(index % 100) * 18 + 2}" y="{(index // 100) * 20 + 2}" '
+            'width="5" height="5" fill="#336699"/>'
+            for index in range(5000))
+        circle_sources += (f'<svg width="1920" height="1080">{many_shapes}</svg>',)
+        with tempfile.TemporaryDirectory(prefix="vexel-culling-large-", dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            for index, source in enumerate(circle_sources):
+                input_path = directory / f"large-{index}.svg"
+                output_path = directory / f"large-{index}.rgba"
+                input_path.write_text(source)
+                result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(output_path.stat().st_size,
+                                 (640 * 400 * 4) if index < 2 else (1920 * 1080 * 4))
+                counters = {key: int(value) for key, value in
+                            (line.split("=", 1) for line in result.stderr.splitlines())}
+                self.assertGreater(counters["shape_pixels"], 0)
+                self.assertGreater(counters["fill_edge_tests"], 0)
+                self.assertLess(counters["total_work"], 200_000_000)
+                if index == 2:
+                    self.assertLess(counters["shape_pixels"], 1_000_000)
+                    self.assertLess(counters["shape_row_visits"], 100_000)
+
+            clipped = ('<svg width="64" height="40"><defs>'
+                       '<clipPath id="left"><rect width="20" height="40"/></clipPath>'
+                       '<linearGradient id="half-blue">'
+                       '<stop stop-color="blue" stop-opacity="0.5"/>'
+                       '<stop offset="1" stop-color="blue" stop-opacity="0.5"/>'
+                       '</linearGradient></defs>'
+                       '<rect width="64" height="40" fill="red"/>'
+                       '<rect width="64" height="40" fill="url(#half-blue)" '
+                       'clip-path="url(#left)"/></svg>')
+            input_path, output_path = directory / "clipped-gradient.svg", directory / "clipped-gradient.rgba"
+            input_path.write_text(clipped)
+            result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            counters = {key: int(value) for key, value in
+                        (line.split("=", 1) for line in result.stderr.splitlines())}
+            self.assertEqual(counters["shape_pixels"], 2 * 64 * 40)
+            self.assertLess(counters["total_work"], 200_000_000)
+            pixels = output_path.read_bytes()
+            pixel = lambda x, y: pixels[(y * 64 + x) * 4:(y * 64 + x) * 4 + 4]
+            self.assertEqual(pixel(10, 20), bytes((127, 0, 128, 255)))
+            self.assertEqual(pixel(40, 20), bytes((255, 0, 0, 255)))
 
     def test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr(self):
         script = ROOT / "tests/fuzz/shape/shape_fuzz.py"

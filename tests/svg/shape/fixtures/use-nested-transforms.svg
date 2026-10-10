@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+  <defs>
+    <g id="target" transform="translate(1 0)">
+      <g transform="translate(1 0)">
+        <rect width="2" height="2"/>
+      </g>
+    </g>
+  </defs>
+  <g transform="translate(2 1)">
+    <use href="#target" x="1" y="2" transform="translate(1 0)" fill="#ee2211"/>
+  </g>
+</svg>

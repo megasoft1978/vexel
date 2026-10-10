@@ -30,6 +30,13 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_CLOSE_REQUEST
 } platform_event_type;
 
+typedef enum platform_modifier {
+    PLATFORM_MODIFIER_COMMAND = 1U << 0,
+    PLATFORM_MODIFIER_CONTROL = 1U << 1,
+    PLATFORM_MODIFIER_SHIFT = 1U << 2,
+    PLATFORM_MODIFIER_OPTION = 1U << 3
+} platform_modifier;
+
 typedef struct platform_event {
     platform_event_type type;
     int32_t logical_x;
@@ -60,6 +67,7 @@ typedef struct platform_window_config {
 bool platform_init(void);
 bool platform_window_create(const platform_window_config *config, platform_window **out_window);
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points);
+bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);

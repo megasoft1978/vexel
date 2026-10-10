@@ -1,25 +1,15 @@
 #include "shape.h"
 #include "css.h"
-
+#include "../paint/paint.h"
+#include "../clip/clip.h"
+#include "shape_internal.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#define SHAPE_MAX_BYTES (16U * 1024U * 1024U)
 #define SHAPE_MAX_COMMANDS 65536U
 #define SHAPE_MAX_COORD 1000000.0
-
-typedef struct number_reader { const uint8_t *p; size_t n, i, base; } number_reader;
-typedef struct builder {
-    svg_shape_document *doc;
-    size_t edge_capacity;
-    size_t shape_capacity;
-    size_t shape_index;
-    size_t command_count;
-    size_t point_count;
-    size_t offset;
-    svg_shape_diagnostic *diag;
-    geom_affine transform;
-} builder;
+typedef svg_shape_number_reader number_reader;
+typedef svg_shape_builder builder;
 static bool span_eq(base_bytes s, svg_xml_span span, const char *literal)
 {
     size_t n = strlen(literal);
@@ -30,21 +20,6 @@ static bool point_bounded(geom_point point)
 {
     return geom_finite_point(point) && fabs(point.x) <= SHAPE_MAX_COORD &&
            fabs(point.y) <= SHAPE_MAX_COORD;
-}
-static bool affine_inverse(geom_affine matrix, geom_affine *inverse)
-{
-    double determinant = matrix.a * matrix.d - matrix.b * matrix.c;
-    if (inverse == NULL || !geom_affine_valid(matrix) || !isfinite(determinant) || fabs(determinant) < 1e-15) return false;
-    double reciprocal = 1.0 / determinant;
-    geom_affine result = {
-        matrix.d * reciprocal, -matrix.b * reciprocal,
-        -matrix.c * reciprocal, matrix.a * reciprocal, 0.0, 0.0
-    };
-    result.e = -(result.a * matrix.e + result.c * matrix.f);
-    result.f = -(result.b * matrix.e + result.d * matrix.f);
-    if (!geom_affine_valid(result)) return false;
-    *inverse = result;
-    return true;
 }
 static double transformed_flatness_tolerance(const builder *b)
 {
@@ -130,6 +105,18 @@ static bool read_number(number_reader *r, double *out)
     *out = value;
     return true;
 }
+void svg_shape_skip_number_space(svg_shape_number_reader *reader)
+{
+    skip_space(reader);
+}
+bool svg_shape_next_number_separator(svg_shape_number_reader *reader)
+{
+    return next_number_separator(reader);
+}
+bool svg_shape_read_number_value(svg_shape_number_reader *reader, double *out)
+{
+    return read_number(reader, out);
+}
 static bool read_arc_flag(number_reader *r, double *out)
 {
     skip_space(r);
@@ -137,8 +124,36 @@ static bool read_arc_flag(number_reader *r, double *out)
     *out = (double)(r->p[r->i++] - '0');
     return true;
 }
-static bool read_dimension(base_bytes source, svg_xml_span span, double *out)
+bool svg_shape_read_number(base_bytes source, svg_xml_span span, double *out)
 {
+    if (out == NULL || span.offset > source.len ||
+        span.length > source.len - span.offset) return false;
+    number_reader reader = {source.ptr + span.offset, span.length, 0U,
+                            span.offset};
+    if (!read_number(&reader, out)) return false;
+    skip_space(&reader);
+    return reader.i == reader.n;
+}
+
+bool svg_shape_read_number_list(base_bytes source, svg_xml_span span,
+                                double *values, size_t count)
+{
+    if (values == NULL || count == 0U || span.offset > source.len ||
+        span.length > source.len - span.offset) return false;
+    number_reader reader = {source.ptr + span.offset, span.length, 0U,
+                            span.offset};
+    for (size_t i = 0U; i < count; ++i) {
+        if (i != 0U && !next_number_separator(&reader)) return false;
+        if (!read_number(&reader, &values[i])) return false;
+    }
+    skip_space(&reader);
+    return reader.i == reader.n;
+}
+
+bool svg_shape_read_dimension(base_bytes source, svg_xml_span span, double *out)
+{
+    if (out == NULL || span.offset > source.len ||
+        span.length > source.len - span.offset) return false;
     number_reader r={source.ptr+span.offset,span.length,0,span.offset};
     if(!read_number(&r,out))return false;
     skip_space(&r);
@@ -161,14 +176,14 @@ static bool add_edge(builder *b, geom_point a, geom_point z)
         size_t next = b->edge_capacity == 0 ? 64U : b->edge_capacity * 2U;
         if (next > SVG_SHAPE_MAX_EDGES) next = SVG_SHAPE_MAX_EDGES;
         if (next > SIZE_MAX / sizeof(*b->doc->edges)) { fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset); return false; }
-        geom_edge *edges = realloc(b->doc->edges, next * sizeof(*edges));
+        geom_edge *edges = svg_shape_realloc(b->doc->edges, next * sizeof(*edges));
         if (edges == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->edges = edges;
-        uint8_t *colors = realloc(b->doc->colors, next * 4U);
+        uint8_t *colors = svg_shape_realloc(b->doc->colors, next * 4U);
         if (colors == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->colors = colors;
         if (next > SIZE_MAX / sizeof(*b->doc->shape_ids)) { fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset); return false; }
-        uint32_t *shape_ids = realloc(b->doc->shape_ids, next * sizeof(*shape_ids));
+        uint32_t *shape_ids = svg_shape_realloc(b->doc->shape_ids, next * sizeof(*shape_ids));
         if (shape_ids == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_ids = shape_ids;
         b->edge_capacity = next;
@@ -196,31 +211,37 @@ static bool begin_shape(builder *b, bool evenodd)
             fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset);
             return false;
         }
-        bool *rules = realloc(b->doc->shape_evenodd, next * sizeof(*rules));
+        bool *rules = svg_shape_realloc(b->doc->shape_evenodd, next * sizeof(*rules));
         if (rules == NULL) {
             fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
             return false;
         }
         b->doc->shape_evenodd = rules;
-        bool *filled = realloc(b->doc->shape_filled, next * sizeof(*filled));
+        bool *filled = svg_shape_realloc(b->doc->shape_filled, next * sizeof(*filled));
         if (filled == NULL) {
             fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
             return false;
         }
         b->doc->shape_filled = filled;
-        bool *closed = realloc(b->doc->shape_stroke_closed, next * sizeof(*closed));
+        bool *closed = svg_shape_realloc(b->doc->shape_stroke_closed, next * sizeof(*closed));
         if (closed == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_stroke_closed = closed;
-        size_t *starts = realloc(b->doc->shape_edge_start, next * sizeof(*starts));
+        size_t *starts = svg_shape_realloc(b->doc->shape_edge_start, next * sizeof(*starts));
         if (starts == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_edge_start = starts;
-        size_t *counts = realloc(b->doc->shape_edge_count, next * sizeof(*counts));
+        size_t *counts = svg_shape_realloc(b->doc->shape_edge_count, next * sizeof(*counts));
         if (counts == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_edge_count = counts;
-        svg_shape_stroke *strokes = realloc(b->doc->strokes, next * sizeof(*strokes));
+        svg_shape_stroke *strokes = svg_shape_realloc(b->doc->strokes, next * sizeof(*strokes));
         if (strokes == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->strokes = strokes;
-        geom_affine *inverses = realloc(b->doc->shape_stroke_inverse, next * sizeof(*inverses));
+        svg_shape_paint *paints = svg_shape_realloc(b->doc->paints, next * sizeof(*paints));
+        if (paints == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
+        b->doc->paints = paints;
+        svg_shape_clip **clips = svg_shape_realloc(b->doc->clips, next * sizeof(*clips));
+        if (clips == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
+        b->doc->clips = clips;
+        geom_affine *inverses = svg_shape_realloc(b->doc->shape_stroke_inverse, next * sizeof(*inverses));
         if (inverses == NULL) { fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->shape_stroke_inverse = inverses;
         b->shape_capacity = next;
@@ -232,11 +253,13 @@ static bool begin_shape(builder *b, bool evenodd)
     b->doc->shape_edge_start[b->shape_index] = b->doc->edge_count;
     b->doc->shape_edge_count[b->shape_index] = 0U;
     b->doc->shape_stroke_inverse[b->shape_index] = geom_affine_identity();
-    (void)affine_inverse(b->transform, &b->doc->shape_stroke_inverse[b->shape_index]);
+    (void)svg_shape_affine_inverse(b->transform, &b->doc->shape_stroke_inverse[b->shape_index]);
     b->doc->strokes[b->shape_index] = (svg_shape_stroke){
         .width = 1.0, .miter_limit = 4.0, .cap = SVG_SHAPE_CAP_BUTT,
         .join = SVG_SHAPE_JOIN_MITER
     };
+    b->doc->paints[b->shape_index] = (svg_shape_paint){.kind = SVG_SHAPE_PAINT_SOLID};
+    b->doc->clips[b->shape_index] = NULL;
     return true;
 }
 static geom_point midpoint(geom_point a, geom_point z)
@@ -477,109 +500,6 @@ static bool number_attr(base_bytes src, svg_xml_token *tokens, size_t count,
     skip_space(&reader);
     return reader.i == reader.n;
 }
-static bool read_transform_args(number_reader *r, double *values, size_t count)
-{
-    for (size_t i=0U;i<count;i++) {
-        if (i != 0U && !next_number_separator(r)) return false;
-        if (!read_number(r, &values[i])) return false;
-    }
-    return true;
-}
-static bool transform_parse(base_bytes src, svg_xml_span span, geom_affine *out,
-                            size_t *operation_count)
-{
-    number_reader r = {src.ptr + span.offset, span.length, 0U, span.offset};
-    geom_affine result = geom_affine_identity();
-    size_t operations = 0U;
-    while (true) {
-        skip_space(&r);
-        if (r.i == r.n) break;
-        size_t name = r.i;
-        while (r.i < r.n && src.ptr[span.offset+r.i] >= 'a' &&
-               src.ptr[span.offset+r.i] <= 'z') r.i++;
-        if (r.i == name || r.i >= r.n || src.ptr[span.offset+r.i++] != '(') return false;
-        size_t name_len = r.i - name - 1U;
-        double v[6] = {0};
-        size_t n = 0U;
-        geom_affine op = geom_affine_identity();
-        if (name_len == 6U && memcmp(src.ptr+span.offset+name, "matrix", 6U) == 0) {
-            n=6U;
-        } else if (name_len == 9U && memcmp(src.ptr+span.offset+name, "translate", 9U) == 0) {
-            n=2U;
-        } else if (name_len == 5U && memcmp(src.ptr+span.offset+name, "scale", 5U) == 0) {
-            n=2U;
-        } else if (name_len == 6U && memcmp(src.ptr+span.offset+name, "rotate", 6U) == 0) {
-            n=3U;
-        } else return false;
-        skip_space(&r);
-        if (n == 2U && (name_len == 9U || name_len == 5U)) {
-            if (!read_number(&r, &v[0])) return false;
-            size_t before = r.i;
-            skip_space(&r);
-            if (r.i < r.n && src.ptr[span.offset+r.i] != ')') {
-                r.i = before;
-                if (!next_number_separator(&r)) return false;
-                if (!read_number(&r, &v[1])) return false;
-            } else {
-                v[1] = name_len == 5U ? v[0] : 0.0;
-            }
-        } else if (n == 3U) {
-            if (!read_number(&r, &v[0])) return false;
-            size_t before = r.i;
-            skip_space(&r);
-            if (r.i < r.n && src.ptr[span.offset+r.i] != ')') {
-                r.i = before;
-                if (!next_number_separator(&r)) return false;
-                if (!read_number(&r, &v[1]) || !next_number_separator(&r) ||
-                    !read_number(&r, &v[2])) return false;
-            } else {
-                v[1] = 0.0;
-                v[2] = 0.0;
-            }
-        } else if (!read_transform_args(&r, v, n)) return false;
-        skip_space(&r);
-        if (r.i >= r.n || src.ptr[span.offset+r.i++] != ')') return false;
-        if (name_len == 6U && n == 6U) op=(geom_affine){v[0],v[1],v[2],v[3],v[4],v[5]};
-        else if (name_len == 9U) op.e=v[0],op.f=v[1];
-        else if (name_len == 5U) op.a=v[0],op.d=v[1];
-        else {
-            double angle=v[0]*0.017453292519943295, cs=cos(angle), sn=sin(angle);
-            op=(geom_affine){cs,sn,-sn,cs,0.0,0.0};
-            if (n == 3U) { op.e=v[1]-cs*v[1]+sn*v[2]; op.f=v[2]-sn*v[1]-cs*v[2]; }
-        }
-        if (++operations > 64U || !geom_affine_valid(op) ||
-            !geom_affine_compose(result, op, &result)) return false;
-        size_t after_close=r.i;
-        skip_space(&r);
-        bool had_space=r.i!=after_close;
-        if (r.i < r.n && src.ptr[span.offset+r.i] == ',') {
-            r.i++;
-            skip_space(&r);
-            if (r.i==r.n) return false;
-        } else if (r.i < r.n && !had_space) return false;
-    }
-    *out=result;
-    *operation_count=operations;
-    return true;
-}
-static bool transformed_node(base_bytes src, svg_xml_token *tokens, size_t count,
-                             size_t element, geom_affine parent, geom_affine *out,
-                             size_t *operations, svg_shape_diagnostic *diag)
-{
-    svg_xml_span span;
-    geom_affine local=geom_affine_identity();
-    *operations=0U;
-    if (attr(src,tokens,count,element,"transform",&span) &&
-        !transform_parse(src,span,&local,operations)) {
-        fail(diag,SVG_SHAPE_ERROR_UNSUPPORTED,span.offset);
-        return false;
-    }
-    if (!geom_affine_compose(parent,local,out)) {
-        fail(diag,SVG_SHAPE_ERROR_NUMBER,tokens[element].name.offset);
-        return false;
-    }
-    return true;
-}
 static bool ellipse_edges(builder *b, double cx, double cy, double rx, double ry)
 {
     if (rx == 0.0 || ry == 0.0) return true;
@@ -611,189 +531,269 @@ static bool ellipse_edges(builder *b, double cx, double cy, double rx, double ry
     }
     return true;
 }
-static bool attributes_supported(base_bytes source,svg_xml_token *tokens,size_t count,size_t element,bool root,svg_xml_span kind)
+bool svg_shape_builder_add_element(svg_shape_builder *builder,
+                                   base_bytes source,
+                                   svg_xml_token *tokens, size_t token_count,
+                                   size_t element,
+                                   const svg_css_paint *style,
+                                   geom_affine transform)
 {
-    for(size_t i=element+1U;i<count&&tokens[i].kind==SVG_XML_TOKEN_ATTRIBUTE;i++){
-        if(tokens[i].prefix.length!=0U)return false;
-        svg_xml_span n=tokens[i].local_name;
-        bool common=span_eq(source,n,"fill")||span_eq(source,n,"fill-rule")||span_eq(source,n,"transform")||
-            span_eq(source,n,"stroke")||span_eq(source,n,"stroke-width")||span_eq(source,n,"stroke-linecap")||
-            span_eq(source,n,"stroke-linejoin")||span_eq(source,n,"stroke-miterlimit")||
-            span_eq(source,n,"stroke-dasharray")||span_eq(source,n,"stroke-dashoffset");
-        bool shape=span_eq(source,kind,"rect") ? (span_eq(source,n,"x")||span_eq(source,n,"y")||span_eq(source,n,"width")||span_eq(source,n,"height")) :
-            span_eq(source,kind,"path") ? span_eq(source,n,"d") :
-            span_eq(source,kind,"circle") ? (span_eq(source,n,"cx")||span_eq(source,n,"cy")||span_eq(source,n,"r")) :
-            span_eq(source,kind,"ellipse") ? (span_eq(source,n,"cx")||span_eq(source,n,"cy")||span_eq(source,n,"rx")||span_eq(source,n,"ry")) :
-            span_eq(source,kind,"line") ? (span_eq(source,n,"x1")||span_eq(source,n,"y1")||span_eq(source,n,"x2")||span_eq(source,n,"y2")) :
-            (span_eq(source,n,"points"));
-        bool metadata=span_eq(source,n,"id")||span_eq(source,n,"class")||span_eq(source,n,"style");
-        bool paint=span_eq(source,n,"fill")||span_eq(source,n,"fill-rule")||span_eq(source,n,"stroke")||
-            span_eq(source,n,"stroke-width")||span_eq(source,n,"stroke-linecap")||span_eq(source,n,"stroke-linejoin")||
-            span_eq(source,n,"stroke-miterlimit")||span_eq(source,n,"stroke-dasharray")||span_eq(source,n,"stroke-dashoffset");
-        bool ok=root?(metadata||paint||span_eq(source,n,"xmlns")||span_eq(source,n,"version")||span_eq(source,n,"width")||span_eq(source,n,"height")||span_eq(source,n,"viewBox")||span_eq(source,n,"transform")):
-            span_eq(source,kind,"g") ? (metadata||paint||span_eq(source,n,"transform")) : (metadata||common||shape);
-        if(!ok)return false;
+    if (builder == NULL || builder->doc == NULL || tokens == NULL ||
+        style == NULL || element >= token_count) {
+        fail(builder == NULL ? NULL : builder->diag,
+             SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0U);
+        return false;
+    }
+    builder->offset = tokens[element].name.offset;
+    builder->transform = transform;
+    svg_shape_document *out = builder->doc;
+    uint8_t color[4] = {0U, 0U, 0U, 255U};
+    svg_xml_span fill = {0};
+    bool has_fill = svg_css_paint_value(style, SVG_CSS_FILL, &fill);
+    bool gradient_fill = has_fill && fill.length >= 5U &&
+        fill.offset <= source.len && fill.length <= source.len - fill.offset &&
+        memcmp(source.ptr + fill.offset, "url(#", 5U) == 0;
+    if (has_fill && !gradient_fill && !parse_color(source, fill, color)) {
+        fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, fill.offset);
+        return false;
+    }
+    svg_xml_span rule = {0};
+    if (svg_css_paint_value(style, SVG_CSS_FILL_RULE, &rule) &&
+        !svg_css_keyword_equals(source, rule, "evenodd") &&
+        !svg_css_keyword_equals(source, rule, "nonzero")) {
+        fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, rule.offset);
+        return false;
+    }
+    bool evenodd = svg_css_paint_value(style, SVG_CSS_FILL_RULE, &rule) &&
+                   svg_css_keyword_equals(source, rule, "evenodd");
+    if (!begin_shape(builder, evenodd)) return false;
+    size_t before = out->edge_count;
+    geom_affine user_inverse = geom_affine_identity();
+    bool invertible = svg_shape_affine_inverse(transform, &user_inverse);
+    if (invertible) out->shape_stroke_inverse[builder->shape_index] = user_inverse;
+    if (!parse_stroke(source, &out->strokes[builder->shape_index], style,
+                      builder->diag)) return false;
+    if (out->strokes[builder->shape_index].rgba[3] != 0U && !invertible) {
+        svg_xml_span stroke_span = {0};
+        (void)svg_css_paint_value(style, SVG_CSS_STROKE, &stroke_span);
+        fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
+        return false;
+    }
+    if (span_eq(source, tokens[element].local_name, "path") &&
+        out->strokes[builder->shape_index].rgba[3] != 0U) {
+        svg_xml_span stroke_span = {0};
+        (void)svg_css_paint_value(style, SVG_CSS_STROKE, &stroke_span);
+        fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
+        return false;
+    }
+    if (span_eq(source, tokens[element].local_name, "rect")) {
+        double q[4] = {0.0, 0.0, 0.0, 0.0};
+        const char *names[4] = {"x", "y", "width", "height"};
+        bool has_width = false, has_height = false;
+        for (size_t k = 0U; k < 4U; ++k) {
+            svg_xml_span value;
+            if (!attr(source, tokens, token_count, element, names[k], &value))
+                continue;
+            if (k == 2U) has_width = true;
+            if (k == 3U) has_height = true;
+            number_reader reader = {source.ptr + value.offset, value.length,
+                                    0U, value.offset};
+            if (!read_number(&reader, &q[k])) {
+                fail(builder->diag, SVG_SHAPE_ERROR_NUMBER, value.offset);
+                return false;
+            }
+            skip_space(&reader);
+            if (reader.i != reader.n) {
+                fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
+                return false;
+            }
+        }
+        if (!has_width || !has_height) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED,
+                 tokens[element].name.offset);
+            return false;
+        }
+        if (q[2] < 0.0 || q[3] < 0.0) {
+            fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                 tokens[element].name.offset);
+            return false;
+        }
+        if (q[2] > 0.0 && q[3] > 0.0) {
+            geom_point points[4] = {{q[0], q[1]}, {q[0] + q[2], q[1]},
+                                    {q[0] + q[2], q[1] + q[3]},
+                                    {q[0], q[1] + q[3]}};
+            for (size_t k = 0U; k < 4U; ++k) {
+                if (!geom_finite_point(points[k]) ||
+                    fabs(points[k].x) > SHAPE_MAX_COORD ||
+                    fabs(points[k].y) > SHAPE_MAX_COORD) {
+                    fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                         tokens[element].name.offset);
+                    return false;
+                }
+            }
+            for (size_t k = 0U; k < 4U; ++k)
+                if (!add_edge(builder, points[k], points[(k + 1U) % 4U]))
+                    return false;
+        }
+    } else if (span_eq(source, tokens[element].local_name, "path")) {
+        svg_xml_span data;
+        if (!attr(source, tokens, token_count, element, "d", &data)) {
+            fail(builder->diag, SVG_SHAPE_ERROR_PATH,
+                 tokens[element].name.offset);
+            return false;
+        }
+        if (!path_decode(builder, source, data)) return false;
+    } else if (span_eq(source, tokens[element].local_name, "circle") ||
+               span_eq(source, tokens[element].local_name, "ellipse")) {
+        double cx = 0.0, cy = 0.0, rx = 0.0, ry = 0.0;
+        if (!number_attr(source, tokens, token_count, element, "cx", &cx) ||
+            !number_attr(source, tokens, token_count, element, "cy", &cy)) {
+            fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                 tokens[element].name.offset);
+            return false;
+        }
+        if (span_eq(source, tokens[element].local_name, "circle")) {
+            if (!number_attr(source, tokens, token_count, element, "r", &rx)) {
+                fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                     tokens[element].name.offset);
+                return false;
+            }
+            ry = rx;
+        } else if (!number_attr(source, tokens, token_count, element, "rx", &rx) ||
+                   !number_attr(source, tokens, token_count, element, "ry", &ry)) {
+            fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                 tokens[element].name.offset);
+            return false;
+        }
+        if (rx < 0.0 || ry < 0.0 || !point_bounded((geom_point){cx, cy}) ||
+            rx > SHAPE_MAX_COORD || ry > SHAPE_MAX_COORD) {
+            fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                 tokens[element].name.offset);
+            return false;
+        }
+        if (!ellipse_edges(builder, cx, cy, rx, ry)) return false;
+    } else if (span_eq(source, tokens[element].local_name, "line")) {
+        double xy[4] = {0.0, 0.0, 0.0, 0.0};
+        const char *names[4] = {"x1", "y1", "x2", "y2"};
+        for (size_t k = 0U; k < 4U; ++k) {
+            if (!number_attr(source, tokens, token_count, element, names[k],
+                             &xy[k])) {
+                fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                     tokens[element].name.offset);
+                return false;
+            }
+        }
+        if (!point_bounded((geom_point){xy[0], xy[1]}) ||
+            !point_bounded((geom_point){xy[2], xy[3]})) {
+            fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                 tokens[element].name.offset);
+            return false;
+        }
+        out->shape_filled[builder->shape_index] = false;
+        out->shape_stroke_closed[builder->shape_index] = false;
+        if (!add_edge(builder, (geom_point){xy[0], xy[1]},
+                      (geom_point){xy[2], xy[3]})) return false;
+    } else {
+        svg_xml_span points;
+        if (!attr(source, tokens, token_count, element, "points", &points)) {
+            fail(builder->diag, SVG_SHAPE_ERROR_PATH,
+                 tokens[element].name.offset);
+            return false;
+        }
+        number_reader reader = {source.ptr + points.offset, points.length, 0U,
+                                points.offset};
+        geom_point first = {0.0, 0.0}, previous = {0.0, 0.0};
+        size_t point_count = 0U;
+        while (true) {
+            size_t before_separator = reader.i;
+            skip_space(&reader);
+            bool had_space = reader.i != before_separator;
+            if (point_count != 0U) {
+                if (reader.i < reader.n && reader.p[reader.i] == ',') {
+                    reader.i++;
+                    skip_space(&reader);
+                    if (reader.i == reader.n || reader.p[reader.i] == ',') {
+                        fail(builder->diag, SVG_SHAPE_ERROR_PATH,
+                             points.offset + reader.i);
+                        return false;
+                    }
+                } else if (reader.i < reader.n && !had_space) {
+                    fail(builder->diag, SVG_SHAPE_ERROR_PATH,
+                         points.offset + reader.i);
+                    return false;
+                }
+            }
+            if (reader.i == reader.n) break;
+            double x, y;
+            if (!read_number(&reader, &x) || !next_number_separator(&reader) ||
+                !read_number(&reader, &y)) {
+                fail(builder->diag, SVG_SHAPE_ERROR_PATH,
+                     points.offset + reader.i);
+                return false;
+            }
+            geom_point point = {x, y};
+            if (!point_bounded(point)) {
+                fail(builder->diag, SVG_SHAPE_ERROR_NUMBER,
+                     points.offset + reader.i);
+                return false;
+            }
+            if (builder->point_count >= SVG_SHAPE_MAX_COMMANDS) {
+                fail(builder->diag, SVG_SHAPE_ERROR_LIMIT,
+                     points.offset + reader.i);
+                return false;
+            }
+            builder->point_count++;
+            if (point_count == 0U) first = point;
+            else if (!add_edge(builder, previous, point)) return false;
+            previous = point;
+            point_count++;
+        }
+        if (point_count < 2U) {
+            fail(builder->diag, SVG_SHAPE_ERROR_PATH, points.offset);
+            return false;
+        }
+        if (!add_edge(builder, previous, first)) return false;
+        if (span_eq(source, tokens[element].local_name, "polyline"))
+            out->shape_stroke_closed[builder->shape_index] = false;
+    }
+    for (size_t k = before; k < out->edge_count; ++k)
+        memcpy(out->colors + k * 4U, color, 4U);
+    out->shape_edge_start[builder->shape_index] = before;
+    out->shape_edge_count[builder->shape_index] = out->edge_count - before;
+    if (gradient_fill) {
+        if (!invertible) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, fill.offset);
+            return false;
+        }
+        svg_shape_error result = svg_paint_resolve_fill(source, tokens, token_count,
+            builder->references, builder->css,
+            builder->paint_cache, builder->paint_token_visits, fill,
+            svg_paint_edge_span(out, before, out->edge_count - before, NULL), out->edge_count - before,
+            user_inverse, out->view_width, out->view_height,
+            &out->paints[builder->shape_index], &out->paint_stops,
+            &out->paint_stop_count, builder->diag);
+        if (result != SVG_SHAPE_ERROR_NONE) return false;
+    }
+    svg_xml_span clip_value;
+    if (svg_css_paint_value(style, SVG_CSS_CLIP_PATH, &clip_value) &&
+        !svg_css_keyword_equals(source, clip_value, "none")) {
+        if (!invertible) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, clip_value.offset);
+            return false;
+        }
+        double local_bounds[4];
+        if (!svg_clip_local_bounds(out, before, out->edge_count - before,
+                                   user_inverse, local_bounds)) {
+            fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED, clip_value.offset);
+            return false;
+        }
+        svg_shape_error result = svg_clip_resolve(source, tokens, token_count,
+            builder->references, builder->css,
+            clip_value,
+            out, &out->clip_bytes, user_inverse, local_bounds,
+            &out->clips[builder->shape_index],
+            builder->diag);
+        if (result != SVG_SHAPE_ERROR_NONE) return false;
     }
     return true;
-}
-svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out, svg_shape_diagnostic *diagnostic)
-{
-    svg_shape_diagnostic local_diagnostic;
-    if(diagnostic==NULL)diagnostic=&local_diagnostic;
-    if(out==NULL||!base_bytes_valid(source)){fail(diagnostic,SVG_SHAPE_ERROR_INVALID_ARGUMENT,0);return SVG_SHAPE_ERROR_INVALID_ARGUMENT;}
-    *out=(svg_shape_document){0}; if(diagnostic!=NULL)*diagnostic=(svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE,0};
-    if(source.len>SHAPE_MAX_BYTES){fail(diagnostic,SVG_SHAPE_ERROR_LIMIT,SHAPE_MAX_BYTES);return SVG_SHAPE_ERROR_LIMIT;}
-    size_t cap=source.len/2U+2U; if(cap>SIZE_MAX/sizeof(svg_xml_token)){fail(diagnostic,SVG_SHAPE_ERROR_LIMIT,0);return SVG_SHAPE_ERROR_LIMIT;}
-    svg_xml_token *tokens=calloc(cap,sizeof(*tokens));if(tokens==NULL){fail(diagnostic,SVG_SHAPE_ERROR_OOM,0);return SVG_SHAPE_ERROR_OOM;}
-    svg_xml_result xr=svg_xml_tokenize(source,svg_xml_default_options(),tokens,cap);
-    if(xr.diagnostic.category!=SVG_XML_ERROR_NONE){free(tokens);fail(diagnostic,SVG_SHAPE_ERROR_XML,xr.diagnostic.offset);return SVG_SHAPE_ERROR_XML;}
-    svg_css_sheet *css=NULL;
-    svg_css_error css_error=svg_css_sheet_create(source,tokens,xr.token_count,&css);
-    if(css_error!=SVG_CSS_OK){free(tokens);fail(diagnostic,css_error==SVG_CSS_LIMIT?SVG_SHAPE_ERROR_LIMIT:SVG_SHAPE_ERROR_OOM,0);return diagnostic->category;}
-    builder b={.doc=out,.diag=diagnostic,.transform=geom_affine_identity()}; size_t root=SIZE_MAX; svg_xml_span v={0};
-    geom_affine transform_stack[65];
-    svg_css_paint paint_stack[65];
-    size_t transform_ops=0U;
-    bool in_style=false;size_t style_depth=0U;
-    out->source=source;
-    for(size_t i=0;i<xr.token_count;i++){
-        svg_xml_token *t=&tokens[i];
-        if(in_style){if(t->kind==SVG_XML_TOKEN_END_ELEMENT&&t->depth==style_depth)in_style=false;continue;}
-        if(svg_css_is_style_element(source,t)){
-            if(t->kind==SVG_XML_TOKEN_START_ELEMENT){in_style=true;style_depth=t->depth;}continue;
-        }
-        if(t->kind==SVG_XML_TOKEN_PROCESSING_INSTRUCTION){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
-        if(t->kind==SVG_XML_TOKEN_CDATA){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->value.offset);goto bad;}
-        if(t->kind==SVG_XML_TOKEN_TEXT){
-            for(size_t j=0;j<t->value.length;j++){
-                uint8_t c=source.ptr[t->value.offset+j];
-                if(c!=' '&&c!='\t'&&c!='\r'&&c!='\n'){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->value.offset+j);goto bad;}
-            }
-        }
-        if(t->kind!=SVG_XML_TOKEN_START_ELEMENT&&t->kind!=SVG_XML_TOKEN_EMPTY_ELEMENT)continue;
-        bool is_root=t->depth==0;
-        bool is_group=span_eq(source,t->local_name,"g");
-        if(t->depth>64U){fail(diagnostic,SVG_SHAPE_ERROR_LIMIT,t->name.offset);goto bad;}
-        if(is_root){if(!span_eq(source,t->local_name,"svg")||t->prefix.length!=0U){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}root=i;}
-        else if(t->prefix.length!=0U||(!is_group&&!span_eq(source,t->local_name,"rect")&&!span_eq(source,t->local_name,"path")&&!span_eq(source,t->local_name,"circle")&&!span_eq(source,t->local_name,"ellipse")&&!span_eq(source,t->local_name,"line")&&!span_eq(source,t->local_name,"polygon")&&!span_eq(source,t->local_name,"polyline"))){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
-        if(!attributes_supported(source,tokens,xr.token_count,i,is_root,t->local_name)){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
-        const svg_css_paint *parent_paint=t->depth==0U?NULL:&paint_stack[t->depth-1U];
-        svg_css_error paint_error =
-            svg_css_compute(css, source, tokens, xr.token_count, i, parent_paint, &paint_stack[t->depth]);
-        if (paint_error != SVG_CSS_OK) {
-            fail(diagnostic, paint_error == SVG_CSS_LIMIT ? SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_OOM, 0U);
-            goto bad;
-        }
-        geom_affine parent=t->depth==0U?geom_affine_identity():transform_stack[t->depth-1U];
-        geom_affine current; size_t local_ops=0U;
-        if(!transformed_node(source,tokens,xr.token_count,i,parent,&current,&local_ops,diagnostic))goto bad;
-        if(local_ops>4096U-transform_ops){fail(diagnostic,SVG_SHAPE_ERROR_LIMIT,t->name.offset);goto bad;}
-        transform_ops+=local_ops;
-        transform_stack[t->depth]=current;
-        if(is_root){
-            svg_xml_span ns;if(attr(source,tokens,xr.token_count,i,"xmlns",&ns)&&!span_eq(source,ns,"http://www.w3.org/2000/svg")){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,ns.offset);goto bad;}
-            svg_xml_span ws,hs,vs; if(!attr(source,tokens,xr.token_count,i,"width",&ws)||!attr(source,tokens,xr.token_count,i,"height",&hs)){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,t->name.offset);goto bad;}
-            double w,h;if(!read_dimension(source,ws,&w)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,ws.offset);goto bad;}if(!read_dimension(source,hs,&h)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,hs.offset);goto bad;}
-            if(w<1||w>4096){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,ws.offset);goto bad;}if(h<1||h>4096){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,hs.offset);goto bad;}out->width=(uint32_t)ceil(w);out->height=(uint32_t)ceil(h);out->view_x=0;out->view_y=0;out->view_width=w;out->view_height=h;
-            if(attr(source,tokens,xr.token_count,i,"viewBox",&vs)){number_reader vr={source.ptr+vs.offset,vs.length,0,vs.offset};if(!read_number(&vr,&out->view_x)||!next_number_separator(&vr)||!read_number(&vr,&out->view_y)||!next_number_separator(&vr)||!read_number(&vr,&out->view_width)||!next_number_separator(&vr)||!read_number(&vr,&out->view_height)||out->view_width<=0||out->view_height<=0){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}skip_space(&vr);if(vr.i!=vr.n||fabs(out->view_x+out->view_width)>SHAPE_MAX_COORD||fabs(out->view_y+out->view_height)>SHAPE_MAX_COORD){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,vs.offset);goto bad;}}
-        } else if (!is_group) {
-            uint8_t color[4]={0,0,0,255};svg_xml_span fs;if(svg_css_paint_value(&paint_stack[t->depth],SVG_CSS_FILL,&fs)&&!parse_color(source,fs,color)){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,fs.offset);goto bad;}
-            svg_xml_span rule;if(svg_css_paint_value(&paint_stack[t->depth],SVG_CSS_FILL_RULE,&rule)&&!svg_css_keyword_equals(source,rule,"evenodd")&&!svg_css_keyword_equals(source,rule,"nonzero")){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,rule.offset);goto bad;}
-            bool evenodd=false;
-            if(svg_css_paint_value(&paint_stack[t->depth],SVG_CSS_FILL_RULE,&rule))evenodd=svg_css_keyword_equals(source,rule,"evenodd");
-            b.offset=t->name.offset;
-            b.transform=current;
-            if(!begin_shape(&b,evenodd))goto bad;
-            size_t before=out->edge_count;
-            if (!parse_stroke(source, &out->strokes[b.shape_index],
-                              &paint_stack[t->depth], diagnostic)) goto bad;
-            if (out->strokes[b.shape_index].rgba[3] != 0U &&
-                !affine_inverse(current, &out->shape_stroke_inverse[b.shape_index])) {
-                svg_xml_span stroke_span;
-                (void)svg_css_paint_value(&paint_stack[t->depth], SVG_CSS_STROKE, &stroke_span);
-                fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
-                goto bad;
-            }
-            if (span_eq(source, t->local_name, "path") &&
-                out->strokes[b.shape_index].rgba[3] != 0U) {
-                svg_xml_span stroke_span;
-                (void)svg_css_paint_value(&paint_stack[t->depth], SVG_CSS_STROKE, &stroke_span);
-                fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, stroke_span.offset);
-                goto bad;
-            }
-            if(span_eq(source,t->local_name,"rect")){
-                double q[4]={0,0,0,0};const char *names[4]={"x","y","width","height"};bool has_width=false,has_height=false;for(size_t k=0;k<4U;k++)if(attr(source,tokens,xr.token_count,i,names[k],&v)){if(k==2U)has_width=true;if(k==3U)has_height=true;number_reader nr={source.ptr+v.offset,v.length,0,v.offset};if(!read_number(&nr,&q[k])){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,v.offset);goto bad;}skip_space(&nr);if(nr.i!=nr.n){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,v.offset);goto bad;}}
-                if(!has_width||!has_height){fail(diagnostic,SVG_SHAPE_ERROR_UNSUPPORTED,t->name.offset);goto bad;}
-                if(q[2]<0||q[3]<0){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}if(q[2]>0&&q[3]>0){geom_point p[4]={{q[0],q[1]},{q[0]+q[2],q[1]},{q[0]+q[2],q[1]+q[3]},{q[0],q[1]+q[3]}};b.offset=t->name.offset;for(size_t k=0;k<4U;k++)if(!geom_finite_point(p[k])||fabs(p[k].x)>SHAPE_MAX_COORD||fabs(p[k].y)>SHAPE_MAX_COORD){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}for(size_t k=0;k<4U;k++)if(!add_edge(&b,p[k],p[(k+1U)%4U]))goto bad;}
-            }else if(span_eq(source,t->local_name,"path")){svg_xml_span d;if(!attr(source,tokens,xr.token_count,i,"d",&d)){fail(diagnostic,SVG_SHAPE_ERROR_PATH,t->name.offset);goto bad;}if(!path_decode(&b,source,d))goto bad;}
-            else if(span_eq(source,t->local_name,"circle")||span_eq(source,t->local_name,"ellipse")){
-                double cx=0.0,cy=0.0,rx=0.0,ry=0.0;
-                if(!number_attr(source,tokens,xr.token_count,i,"cx",&cx)||!number_attr(source,tokens,xr.token_count,i,"cy",&cy)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
-                if(span_eq(source,t->local_name,"circle")){if(!number_attr(source,tokens,xr.token_count,i,"r",&rx)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}ry=rx;}
-                else if(!number_attr(source,tokens,xr.token_count,i,"rx",&rx)||!number_attr(source,tokens,xr.token_count,i,"ry",&ry)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
-                if(rx<0.0||ry<0.0||!point_bounded((geom_point){cx,cy})||rx>SHAPE_MAX_COORD||ry>SHAPE_MAX_COORD){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
-                if(!ellipse_edges(&b,cx,cy,rx,ry))goto bad;
-            } else if(span_eq(source,t->local_name,"line")){
-                double xy[4]={0};const char *names[4]={"x1","y1","x2","y2"};
-                for(size_t k=0U;k<4U;k++)if(!number_attr(source,tokens,xr.token_count,i,names[k],&xy[k])){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
-                if(!point_bounded((geom_point){xy[0],xy[1]})||!point_bounded((geom_point){xy[2],xy[3]})){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,t->name.offset);goto bad;}
-                out->shape_filled[b.shape_index]=false;
-                out->shape_stroke_closed[b.shape_index]=false;
-                if(!add_edge(&b,(geom_point){xy[0],xy[1]},(geom_point){xy[2],xy[3]}))goto bad;
-            } else {
-                svg_xml_span points;
-                if(!attr(source,tokens,xr.token_count,i,"points",&points)){fail(diagnostic,SVG_SHAPE_ERROR_PATH,t->name.offset);goto bad;}
-                number_reader nr={source.ptr+points.offset,points.length,0U,points.offset};
-                geom_point first={0},previous={0};size_t point_count=0U;
-                while(true){
-                    size_t before_separator=nr.i;
-                    skip_space(&nr);
-                    bool had_space=nr.i!=before_separator;
-                    if(point_count!=0U){
-                        if(nr.i<nr.n&&nr.p[nr.i]==','){
-                            nr.i++;skip_space(&nr);
-                            if(nr.i==nr.n||nr.p[nr.i]==','){fail(diagnostic,SVG_SHAPE_ERROR_PATH,points.offset+nr.i);goto bad;}
-                        }else if(nr.i<nr.n&&!had_space){
-                            fail(diagnostic,SVG_SHAPE_ERROR_PATH,points.offset+nr.i);goto bad;
-                        }
-                    }
-                    if(nr.i==nr.n)break;
-                    double x,y;
-                    if(!read_number(&nr,&x)||!next_number_separator(&nr)||!read_number(&nr,&y)){
-                        fail(diagnostic,SVG_SHAPE_ERROR_PATH,points.offset+nr.i);goto bad;
-                    }
-                    geom_point p={x,y};
-                    if(!point_bounded(p)){fail(diagnostic,SVG_SHAPE_ERROR_NUMBER,points.offset+nr.i);goto bad;}
-                    if(b.point_count>=SVG_SHAPE_MAX_COMMANDS){fail(diagnostic,SVG_SHAPE_ERROR_LIMIT,points.offset+nr.i);goto bad;}
-                    b.point_count++;
-                    if(point_count==0U)first=p;else if(!add_edge(&b,previous,p))goto bad;
-                    previous=p;point_count++;
-                }
-                if(point_count<2U){fail(diagnostic,SVG_SHAPE_ERROR_PATH,points.offset);goto bad;}
-                if(!add_edge(&b,previous,first))goto bad;
-                if (span_eq(source, t->local_name, "polyline"))
-                    out->shape_stroke_closed[b.shape_index] = false;
-            }
-            for(size_t k=before;k<out->edge_count;k++)memcpy(out->colors+k*4U,color,4U);
-            out->shape_edge_start[b.shape_index] = before;
-            out->shape_edge_count[b.shape_index] = out->edge_count - before;
-        }
-    }
-    if(root==SIZE_MAX){fail(diagnostic,SVG_SHAPE_ERROR_VIEWPORT,0);goto bad;}
-    svg_css_sheet_destroy(css);free(tokens);return SVG_SHAPE_ERROR_NONE;
-bad:
-    svg_css_sheet_destroy(css);free(tokens);svg_shape_document_destroy(out);return diagnostic->category;
-}
-void svg_shape_document_destroy(svg_shape_document *document)
-{
-    if (document == NULL) return;
-    free(document->edges); free(document->colors); free(document->shape_ids);
-    free(document->shape_evenodd); free(document->shape_filled); free(document->shape_stroke_closed);
-    free(document->shape_edge_start); free(document->shape_edge_count);
-    free(document->shape_stroke_inverse); free(document->strokes); *document = (svg_shape_document){0};
-}
-const char *svg_shape_error_name(svg_shape_error e)
-{
-    static const char *names[]={"none","invalid-argument","xml","unsupported","number","limit","path","viewport","oom"};
-    return (unsigned)e<sizeof(names)/sizeof(names[0])?names[e]:"invalid-error";
 }

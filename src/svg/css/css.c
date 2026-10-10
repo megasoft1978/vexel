@@ -1,4 +1,5 @@
 #include "css.h"
+#include "../shape/shape_alloc.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +20,7 @@ typedef struct rule {
     rule_decl *decls;
     size_t decl_count;
     uint32_t order;
+    bool has_unsupported_declaration;
 } rule;
 struct svg_css_sheet {
     rule *rules;
@@ -143,7 +145,10 @@ static int property(base_bytes s, svg_xml_span n) {
                                                         "stroke-linejoin",
                                                         "stroke-miterlimit",
                                                         "stroke-dasharray",
-                                                        "stroke-dashoffset"};
+                                                        "stroke-dashoffset",
+                                                        "clip-path",
+                                                        "stop-color",
+                                                        "stop-opacity"};
     for (int i = 0; i < (int)SVG_CSS_PROPERTY_COUNT; i++)
         if (eq_ci(s, n, names[i]))
             return i;
@@ -186,9 +191,12 @@ static bool parse_selector(base_bytes s, size_t a, size_t z, selector *out) {
     *out = q;
     return q.has_element || q.has_id || q.class_count != 0U;
 }
-static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z, rule_decl **out, size_t *count) {
+static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z,
+                        rule_decl **out, size_t *count,
+                        bool *has_unsupported) {
     size_t cap = 0, n = 0;
     rule_decl *v = NULL;
+    *has_unsupported = false;
     size_t i = a;
     while (i < z) {
         skip_ws(sh->source, &i, z);
@@ -222,8 +230,10 @@ static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z, rule_decl **out, 
         /* Comments are permitted between value tokens; preserve full value span. */
         svg_xml_span nm = {ns, ne - ns};
         int p = property(sh->source, nm);
-        if (p < 0)
+        if (p < 0) {
+            *has_unsupported = true;
             continue;
+        }
         bool important = false;
         size_t mark = ve;
         while (mark > vs && ws(sh->source.ptr[mark - 1]))
@@ -247,7 +257,7 @@ static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z, rule_decl **out, 
             continue;
         if (n >= SVG_CSS_MAX_DECLARATIONS) {
             sh->hit_limit = true;
-            free(v);
+            svg_shape_free(v);
             return false;
         }
         if (n == cap) {
@@ -255,12 +265,12 @@ static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z, rule_decl **out, 
             if (nc > SVG_CSS_MAX_DECLARATIONS)
                 nc = SVG_CSS_MAX_DECLARATIONS;
             if (nc > SIZE_MAX / sizeof(*v)) {
-                free(v);
+                svg_shape_free(v);
                 return false;
             }
-            rule_decl *nv = realloc(v, nc * sizeof(*v));
+            rule_decl *nv = svg_shape_realloc(v, nc * sizeof(*v));
             if (!nv) {
-                free(v);
+                svg_shape_free(v);
                 return false;
             }
             v = nv;
@@ -272,7 +282,8 @@ static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z, rule_decl **out, 
     *count = n;
     return true;
 }
-static bool append_rule(svg_css_sheet *sh, selector sel, rule_decl *d, size_t n) {
+static bool append_rule(svg_css_sheet *sh, selector sel, rule_decl *d, size_t n,
+                        bool has_unsupported_declaration) {
     if (sh->count >= SVG_CSS_MAX_RULES || n > SVG_CSS_MAX_DECLARATIONS - sh->declarations) {
         sh->hit_limit = true;
         return false;
@@ -283,7 +294,7 @@ static bool append_rule(svg_css_sheet *sh, selector sel, rule_decl *d, size_t n)
             next = SVG_CSS_MAX_RULES;
         if (next > SIZE_MAX / sizeof(*sh->rules))
             return false;
-        rule *grown = realloc(sh->rules, next * sizeof(*grown));
+        rule *grown = svg_shape_realloc(sh->rules, next * sizeof(*grown));
         if (!grown)
             return false;
         sh->rules = grown;
@@ -291,7 +302,8 @@ static bool append_rule(svg_css_sheet *sh, selector sel, rule_decl *d, size_t n)
     }
     if (n > SIZE_MAX / sizeof(*d))
         return false;
-    sh->rules[sh->count] = (rule){sel, d, n, (uint32_t)sh->count};
+    sh->rules[sh->count] = (rule){sel, d, n, (uint32_t)sh->count,
+                                  has_unsupported_declaration};
     sh->count++;
     sh->declarations += n;
     return true;
@@ -346,7 +358,9 @@ static bool parse_stylesheet(svg_css_sheet *sh, size_t a, size_t z) {
         size_t body_end = end - 1;
         rule_decl *decls = NULL;
         size_t dn = 0;
-        if (!parse_decls(sh, brace + 1, body_end, &decls, &dn))
+        bool has_unsupported_declaration = false;
+        if (!parse_decls(sh, brace + 1, body_end, &decls, &dn,
+                         &has_unsupported_declaration))
             return false;
         size_t p = sel_start;
         while (p < brace) {
@@ -354,26 +368,29 @@ static bool parse_stylesheet(svg_css_sheet *sh, size_t a, size_t z) {
             while (comma < brace && sh->source.ptr[comma] != ',')
                 comma++;
             selector sel;
-            if (parse_selector(sh->source, p, comma, &sel) && dn) {
+            if (parse_selector(sh->source, p, comma, &sel) &&
+                (dn != 0U || has_unsupported_declaration)) {
                 if (dn > SIZE_MAX / sizeof(rule_decl)) {
-                    free(decls);
+                    svg_shape_free(decls);
                     return false;
                 }
-                rule_decl *copy = malloc(dn * sizeof(*copy));
-                if (!copy) {
-                    free(decls);
+                rule_decl *copy = dn == 0U ? NULL :
+                    svg_shape_malloc(dn * sizeof(*copy));
+                if (dn != 0U && copy == NULL) {
+                    svg_shape_free(decls);
                     return false;
                 }
-                memcpy(copy, decls, dn * sizeof(*copy));
-                if (!append_rule(sh, sel, copy, dn)) {
-                    free(copy);
-                    free(decls);
+                if (dn != 0U) memcpy(copy, decls, dn * sizeof(*copy));
+                if (!append_rule(sh, sel, copy, dn,
+                                 has_unsupported_declaration)) {
+                    svg_shape_free(copy);
+                    svg_shape_free(decls);
                     return false;
                 }
             }
             p = comma < brace ? comma + 1 : brace;
         }
-        free(decls);
+        svg_shape_free(decls);
         i = end;
     }
     return true;
@@ -383,7 +400,7 @@ svg_css_error svg_css_sheet_create(base_bytes source, const svg_xml_token *token
     if (!out || !base_bytes_valid(source) || (!tokens && count))
         return SVG_CSS_LIMIT;
     *out = NULL;
-    svg_css_sheet *sh = calloc(1, sizeof(*sh));
+    svg_css_sheet *sh = svg_shape_calloc(1, sizeof(*sh));
     if (!sh)
         return SVG_CSS_OOM;
     sh->source = source;
@@ -409,13 +426,14 @@ svg_css_error svg_css_sheet_create(base_bytes source, const svg_xml_token *token
     *out = sh;
     return SVG_CSS_OK;
 }
+
 void svg_css_sheet_destroy(svg_css_sheet *sh) {
     if (!sh)
         return;
     for (size_t i = 0; i < sh->count; i++)
-        free(sh->rules[i].decls);
-    free(sh->rules);
-    free(sh);
+        svg_shape_free(sh->rules[i].decls);
+    svg_shape_free(sh->rules);
+    svg_shape_free(sh);
 }
 static bool has_class(base_bytes s, svg_xml_span value, svg_xml_span wanted) {
     size_t i = value.offset, end = i + value.length, count = 0;
@@ -460,11 +478,12 @@ static bool declarations(svg_css_sheet *sh, size_t a, size_t z, uint32_t spec, u
                          winner *w) {
     rule_decl *v = NULL;
     size_t n = 0;
-    if (!parse_decls(sh, a, z, &v, &n))
+    bool has_unsupported = false;
+    if (!parse_decls(sh, a, z, &v, &n, &has_unsupported))
         return false;
     for (size_t i = 0; i < n; i++)
         offer(w, &v[i], spec, (*order)++);
-    free(v);
+    svg_shape_free(v);
     return true;
 }
 svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg_xml_token *tokens,
@@ -473,6 +492,9 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
     if (!sheet || !out || element >= count)
         return SVG_CSS_LIMIT;
     *out = parent ? *parent : svg_css_initial_paint();
+    /* clip-path is applied by its declaring element. Ancestors are handled as
+     * enclosing clip intersections by shape traversal. */
+    out->values[SVG_CSS_CLIP_PATH] = (svg_css_value){0};
     winner w[SVG_CSS_PROPERTY_COUNT] = {0};
     const svg_xml_token *t = tokens;
     uint32_t order = 0;
@@ -480,10 +502,15 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
         if (sheet->match_tests >= SVG_CSS_MAX_RULE_MATCHES)
             return SVG_CSS_LIMIT;
         sheet->match_tests++;
-        if (matches(source, &sheet->rules[r].match, t, count, element))
+        if (matches(source, &sheet->rules[r].match, t, count, element)) {
+            if (t[element].prefix.length == 0U &&
+                eq(source, t[element].local_name, "stop") &&
+                sheet->rules[r].has_unsupported_declaration)
+                return SVG_CSS_UNSUPPORTED;
             for (size_t d = 0; d < sheet->rules[r].decl_count; d++)
                 offer(w, &sheet->rules[r].decls[d], sheet->rules[r].match.specificity,
                       sheet->rules[r].order * SVG_CSS_MAX_DECLARATIONS + (uint32_t)d);
+        }
     }
     /* Presentation attributes have zero specificity and source order precedes
      * stylesheet rules. */
@@ -496,7 +523,10 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
                                       "stroke-linejoin",
                                       "stroke-miterlimit",
                                       "stroke-dasharray",
-                                      "stroke-dashoffset"};
+                                      "stroke-dashoffset",
+                                      "clip-path",
+                                      "stop-color",
+                                      "stop-opacity"};
         svg_xml_span v;
         if (span_attr(source, t, count, element, names[p], &v)) {
             rule_decl d = {(svg_css_property)p, v, false};

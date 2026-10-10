@@ -3,6 +3,10 @@
 
 #include "platform/platform_window.h"
 
+/* Main-thread, asynchronous presentation with reusable Metal resources. */
+bool platform_metal_present(platform_window *window, const uint8_t *rgba,
+                            size_t byte_count, uint32_t width, uint32_t height,
+                            char *diagnostic, size_t diagnostic_capacity);
 /* Synchronously upload, draw, wait, and verify exact texture bytes. Caller
  * owns rgba until return; diagnostic is caller-owned and NUL terminated. */
 bool platform_metal_present_and_verify(platform_window *window, const uint8_t *rgba,

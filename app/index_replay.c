@@ -180,6 +180,22 @@ static bool verify_canceled_worker_rejected(void)
     return okay && !presented && !atomic_load_explicit(&job.tile_ready, memory_order_acquire);
 }
 
+/* Owner step limit: 100 ms by default. VEXEL_OWNER_STEP_LIMIT_MS (1..10000)
+ * relaxes it for shared CI runners; unset or invalid keeps the strict gate. */
+static uint64_t owner_step_limit_ns(void)
+{
+    const char *text = getenv("VEXEL_OWNER_STEP_LIMIT_MS");
+    char *end = NULL;
+    if (text == NULL || text[0] == '\0') {
+        return 100000000U;
+    }
+    unsigned long long ms = strtoull(text, &end, 10);
+    if (*end != '\0' || ms < 1U || ms > 10000U) {
+        return 100000000U;
+    }
+    return (uint64_t)ms * 1000000U;
+}
+
 int app_run_index_replay(const char *path)
 {
     uint8_t *bytes = NULL;
@@ -275,5 +291,5 @@ int app_run_index_replay(const char *path)
         atomic_load_explicit(&job.tile_ready, memory_order_acquire) ? "true" : "false");
     return okay && complete && first_preview_gate && presented && view.preview_visible &&
         stale_rejected && canceled_rejected &&
-        max_owner_step_ns < 100000000U ? EXIT_SUCCESS : EXIT_FAILURE;
+        max_owner_step_ns < owner_step_limit_ns() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

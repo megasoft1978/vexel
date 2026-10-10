@@ -26,6 +26,10 @@ typedef struct svg_shape_stroke {
     svg_shape_linejoin join;
 } svg_shape_stroke;
 
+typedef struct svg_shape_paint svg_shape_paint;
+typedef struct svg_paint_stop svg_paint_stop;
+typedef struct svg_shape_clip svg_shape_clip;
+
 typedef enum svg_shape_error {
     SVG_SHAPE_ERROR_NONE = 0,
     SVG_SHAPE_ERROR_INVALID_ARGUMENT,
@@ -55,6 +59,12 @@ typedef struct svg_shape_document {
     size_t *shape_edge_count;
     geom_affine *shape_stroke_inverse;
     svg_shape_stroke *strokes;
+    svg_shape_paint *paints;
+    svg_paint_stop *paint_stops;
+    size_t paint_stop_count;
+    svg_shape_clip **clips;
+    bool has_clips;
+    size_t clip_bytes;
     base_bytes source; /* borrowed; caller keeps source alive with document */
 } svg_shape_document;
 

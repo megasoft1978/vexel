@@ -1,64 +1,45 @@
-# Bounded SVG shape subset
+# SVG shape decoding
 
-`svg_shape_decode` borrows exact source bytes and returns the source slice plus
-owned flattened edges, per-edge RGBA colors, edge-to-element IDs, and bounded
-per-element stroke state. The caller
-keeps source bytes alive until the document is destroyed. The source is never
-modified. Diagnostics are stable
-categories plus a byte offset into that source; XML scanner failures retain the
-scanner offset. Root `svg`, `rect`, `path`, `circle`, `ellipse`, `line`, `polygon`, and `polyline` are supported; fill implicitly closes paths and point lists, while `line` remains invisible without a stroke. Ellipses use deterministic polygonal flattening with at most 0.25 transformed user-unit sagitta and a 4096-segment cap. The bound scales the unit-circle chord error by the larger semiaxis, then by the active affine matrix norm; this remains conservative for eccentric ellipses without treating angular parameter as arc length. Nested groups and shapes support bounded `matrix`, `translate`, `scale`, and `rotate` transforms; skew forms are rejected. Group nesting is capped at 64 and transform operations at 4096 per document. Root viewport
-dimensions are finite unitless or px lengths (positive, at most 4096); tile
-extents round up to integer pixels while preserving the viewport scale, with an
-optional finite positive `viewBox` using the default centered meet mapping. Rectangles accept x/y/width/height; omitted
-x/y are zero and negative dimensions fail. Fill supports none, #RGB, #RRGGBB,
-black, white, red, green and blue. `fill-rule` is nonzero or evenodd,
-independently for each filled element. Elements paint in source order;
-subpaths of one path share its fill rule, and each subpath closes at a later
-moveto or the end of path. Unsupported elements, colors and syntax fail
-without changing source bytes.
+The shape module turns a borrowed SVG source slice into owned flattened edges,
+per-edge solid fallback colors, per-shape fill/stroke state, gradients, and clip
+records. `traverse.c` owns token traversal, inherited style/transform contexts,
+and live `<use>` instances. `transform.c` parses the bounded affine syntax.
+`shape.c` owns supported geometry parsing and flattening. `document.c` owns
+public document cleanup.
 
-Path commands are M/m, L/l, H/h, V/v, C/c, S/s, Q/q, T/t, A/a and Z/z with repeated
-groups. S/s reflect the previous second cubic control point only after C/c or
-S/s; T/t reflect the previous quadratic control point only after Q/q or T/t.
-Every other command, including closepath, resets both reflection contexts.
-Coordinates are limited to absolute value 1,000,000; total path commands
-and point-list vertices across the document are limited to 65,536; flattened edges to 262,144. Cubics
-and quadratics use deterministic De Casteljau subdivision until every control
-point is at most 0.25 transformed user units from the finite endpoint segment;
-recursion depth is capped at 16. Elliptical arcs use endpoint-to-center
-conversion and the same transformed-space sagitta tolerance, with total edges
-bounded by the document cap. Flattening tolerance is conservatively adjusted
-for the active affine matrix. These are user-space flatness bounds, not
-device-pixel guarantees. Arc flags must be
-exactly zero or one. Fill implicitly closes open
-subpaths. Output uses scalar pixel-center point-in-path tests and transparent
-black outside fills. The combined per-pixel edge-plus-shape tests are capped at
-200,000,000 per render.
+`<defs>` is non-rendering and `<symbol>` is non-rendering unless reached by a
+live `<use>`. Local `href="#id"` and root-bound `xlink:href="#id"` references
+traverse the original token array at the use position. The use path allocates
+no source subtree copy, rewritten document, or source map. A fixed-capacity ID table
+supports up to 65,536 unique IDs. Use reference depth is capped at 16, instances
+at 65,536, each traversed reference span at 64 KiB, aggregate reference-span
+visits at 1 MiB, active element visits at 4,194,304, and transform operations
+at 4,096. Diagnostics keep offsets into the original borrowed source.
 
-Direct presentation attributes implement a bounded first stroke subset on
-line, polyline, polygon, rect, circle, and ellipse: literal stroke color, width,
-butt/square/round caps, miter/bevel/round joins with miter-limit fallback, and
-positive dash lists of at most 16 entries with phase continuity along each
-ordered outline. Strokes use local user units and inverse-map samples through
-the element transform, so nonuniform scaling changes stroke thickness correctly.
-Width defaults to 1 user unit; stroke defaults to none, cap to
-butt, join to miter, miter limit to 4, and dashing to solid. Stroke paints
-after fill for each element. Painted paths are explicitly unsupported because
-their subpath boundaries are not represented in the raster document. Widths
-are capped at 1024 user units; miter limits at 64; dash values at 1,000,000.
-Paint style resolves through root `svg`, nested `g`, and supported basic
-shapes. Internal `<style>` blocks and `style` attributes accept the nine paint
-properties listed above. Simple compound selectors support an optional
-element, one ID, and up to 16 class terms; comma lists, importance, specificity,
-source order, and inherited paint are applied deterministically. The stylesheet
-is capped at 1 MiB, 4096 rules, and 16,384 declarations; a selector can match
-at most 256 class tokens. Unsupported selectors, declarations, values,
-gradients, filters, external resources, unsupported units, or unknown shape
-semantics are not interpreted. Source bytes remain borrowed and unchanged.
-This module has no platform or third-party dependency. Transform and shape syntax follows the W3C SVG 2 [Shapes](https://www.w3.org/TR/SVG2/shapes.html) and [Coordinate Systems and Transformations](https://www.w3.org/TR/SVG2/coords.html) specifications (consulted 2026-10-09).
+Linear and centered radial gradients support 2–256 literal-color stops,
+monotone finite offsets, stop opacity, object-bounding-box or user-space units,
+and pad spread. Stop color and opacity use the CSS cascade for attributes,
+inline styles, and supported class selectors. Gradient transforms and inherited
+gradient references are unsupported. Both paint units sample in the
+referencing element's user space and use its untransformed local bounds where
+needed; singular transforms fail with `unsupported`. Clip paths support local
+`url(#id)`, `userSpaceOnUse` (the default) or `objectBoundingBox`, and union of
+up to 64 basic shape/path children. Group/use clips use the whole subtree AABB,
+resolve once per declaration, and intersect with descendant clips. Nested
+clip declarations inside clip geometry, clip declarations on `<symbol>`, and
+external references fail closed. Symbol `clip-path` attributes and CSS values
+receive a stable unsupported diagnostic rather than being dropped.
+Raster work is bounded by the document edge and clip-edge budgets.
 
-The subset grammar and arc endpoint semantics reference the W3C SVG 2
-[Paths](https://www.w3.org/TR/SVG2/paths.html) and
-[Shapes](https://www.w3.org/TR/SVG2/shapes.html) specifications (consulted
-2026-10-09). The C implementation is original project code; no external code
-or SVG editor source was copied.
+CSS retains source spans and supports the nine fill/stroke paint properties,
+`clip-path`, `stop-color`, and `stop-opacity` through presentation attributes,
+stylesheets, and inline styles. Fill/stroke paint is inherited; `clip-path` is
+applied at its declaring element. The stylesheet is
+capped at 1 MiB, 4,096 rules, and 16,384 declarations. Unsupported SVG or CSS
+semantics return stable diagnostics rather than fetching external content.
+
+The renderer uses a deterministic scalar 4×4 coverage rasterizer. Its behavior
+is compared with librsvg using small fixtures; this is selected-feature
+differential evidence, not full SVG parity. SVG semantics follow W3C SVG 2
+Shapes, Paths, CSS, Paint Servers, Document Structure, and Clipping specs
+(consulted 2026-10-09). No SVG editor source is used.
