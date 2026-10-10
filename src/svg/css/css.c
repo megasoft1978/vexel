@@ -159,7 +159,14 @@ static int property(base_bytes s, svg_xml_span n) {
                                                         "opacity",
                                                         "visibility",
                                                         "display",
-                                                        "color"};
+                                                        "color",
+                                                        "font-family",
+                                                        "font-size",
+                                                        "font-weight",
+                                                        "font-style",
+                                                        "text-anchor",
+                                                        "letter-spacing",
+                                                        "word-spacing"};
     for (int i = 0; i < (int)SVG_CSS_PROPERTY_COUNT; i++)
         if (eq_ci(s, n, names[i]))
             return i;
@@ -581,15 +588,22 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
                                       "opacity",
                                       "visibility",
                                       "display",
-                                      "color"};
+                                      "color",
+                                      "font-family",
+                                      "font-size",
+                                      "font-weight",
+                                      "font-style",
+                                      "text-anchor",
+                                      "letter-spacing",
+                                      "word-spacing"};
         svg_xml_span v;
         if (span_attr(source, t, count, element, names[p], &v)) {
             rule_decl d = {(svg_css_property)p, v, false};
             offer(w, &d, 0U, 0U);
         }
     }
-    /* These CSS properties are not inherited; SVG paint opacity and visibility
-     * are inherited and remain in the parent's computed value. */
+    /* These CSS properties are not inherited; text properties and SVG paint
+     * properties inherit by retaining the copied parent values above. */
     out->values[SVG_CSS_OPACITY] = (svg_css_value){0};
     out->values[SVG_CSS_DISPLAY] = (svg_css_value){0};
     svg_xml_span style;

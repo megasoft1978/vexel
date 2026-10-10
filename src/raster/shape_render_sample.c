@@ -2,6 +2,7 @@
 #include "../svg/clip/clip.h"
 #include "../svg/paint/paint.h"
 
+#include <math.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -28,6 +29,70 @@ static void composite_source_over(uint8_t destination[4], const uint8_t source[4
             output_alpha_numerator / 2U) / output_alpha_numerator);
     }
     destination[3] = (uint8_t)((output_alpha_numerator + 127U) / 255U);
+}
+
+static bool image_sample(const svg_shape_document *document, size_t shape,
+                         double x, double y, uint8_t rgba[4])
+{
+    if (document->images == NULL || document->shape_stroke_inverse == NULL)
+        return false;
+    const svg_shape_image *image = &document->images[shape];
+    if (image->rgba == NULL || image->pixel_width == 0U ||
+        image->pixel_height == 0U || image->draw_width <= 0.0 ||
+        image->draw_height <= 0.0) return false;
+    geom_point local;
+    if (!geom_affine_map_point(document->shape_stroke_inverse[shape],
+                               (geom_point){x, y}, &local)) return false;
+    if (local.x < image->x || local.y < image->y ||
+        local.x >= image->x + image->width ||
+        local.y >= image->y + image->height ||
+        local.x < image->draw_x || local.y < image->draw_y ||
+        local.x >= image->draw_x + image->draw_width ||
+        local.y >= image->draw_y + image->draw_height) return false;
+    double u = (local.x - image->draw_x) / image->draw_width;
+    double v = (local.y - image->draw_y) / image->draw_height;
+    double source_x = u * (double)image->pixel_width - 0.5;
+    double source_y = v * (double)image->pixel_height - 0.5;
+    if (source_x < 0.0) source_x = 0.0;
+    if (source_y < 0.0) source_y = 0.0;
+    double max_x = (double)(image->pixel_width - 1U);
+    double max_y = (double)(image->pixel_height - 1U);
+    if (source_x > max_x) source_x = max_x;
+    if (source_y > max_y) source_y = max_y;
+    uint32_t x0 = (uint32_t)floor(source_x);
+    uint32_t y0 = (uint32_t)floor(source_y);
+    uint32_t x1 = x0 + 1U < image->pixel_width ? x0 + 1U : x0;
+    uint32_t y1 = y0 + 1U < image->pixel_height ? y0 + 1U : y0;
+    double fx = source_x - (double)x0;
+    double fy = source_y - (double)y0;
+    const uint8_t *p00 = image->rgba + (size_t)y0 * image->row_stride +
+                         (size_t)x0 * 4U;
+    const uint8_t *p10 = image->rgba + (size_t)y0 * image->row_stride +
+                         (size_t)x1 * 4U;
+    const uint8_t *p01 = image->rgba + (size_t)y1 * image->row_stride +
+                         (size_t)x0 * 4U;
+    const uint8_t *p11 = image->rgba + (size_t)y1 * image->row_stride +
+                         (size_t)x1 * 4U;
+    double channels[4];
+    for (size_t channel = 0U; channel < 4U; ++channel) {
+        double top = (double)p00[channel] * (1.0 - fx) +
+                     (double)p10[channel] * fx;
+        double bottom = (double)p01[channel] * (1.0 - fx) +
+                        (double)p11[channel] * fx;
+        channels[channel] = top * (1.0 - fy) + bottom * fy;
+    }
+    uint8_t alpha = (uint8_t)floor(channels[3] + 0.5);
+    if (alpha == 0U) {
+        memset(rgba, 0, 4U);
+        return true;
+    }
+    for (size_t channel = 0U; channel < 3U; ++channel) {
+        double straight = channels[channel] * 255.0 / channels[3];
+        if (straight > 255.0) straight = 255.0;
+        rgba[channel] = (uint8_t)floor(straight + 0.5);
+    }
+    rgba[3] = alpha;
+    return true;
 }
 
 void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
@@ -57,7 +122,14 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
     bool inside = doc->shape_evenodd[shape] ? parity != 0U : winding != 0;
     bool allowed = doc->clips == NULL || svg_clip_contains(doc->clips[shape], px, py);
     uint8_t sampled_fill[4];
-    if (inside && allowed && fill[3] != 0U) {
+    bool image = doc->paints != NULL &&
+                 doc->paints[shape].kind == SVG_SHAPE_PAINT_IMAGE;
+    if (inside && allowed && image) {
+        uint8_t sampled_image[4];
+        if (image_sample(doc, shape, px, py, sampled_image) &&
+            sampled_image[3] != 0U)
+            composite_source_over(sample_rgba, sampled_image);
+    } else if (inside && allowed && fill[3] != 0U) {
         memcpy(sampled_fill, fill, sizeof(sampled_fill));
         bool gradient = doc->paints != NULL &&
             doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID;

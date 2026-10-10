@@ -19,6 +19,13 @@ earlier opaque fills at each subpixel before coverage is resolved. A
 `fill="none"` element is parsed but does not erase earlier pixels. The output
 tile must be empty when passed in.
 
+Embedded PNG/JPEG image fills sample provider-owned premultiplied RGBA8 with
+bilinear interpolation in inverse-transformed local coordinates. Sampling is
+bounded by the image viewport, source pixel dimensions, and clip chain; image
+opacity is applied through the same isolated opacity groups as vector content.
+Text reaches this renderer as flattened CoreText outline edges, so fill/stroke,
+clips, transforms, and opacity follow the regular shape path.
+
 After each element's fill, bounded strokes are tested against the same 4x4
 sample grid. The stroke decoder stores each element's ordered edge range,
 literal RGBA color, local width, inverse element transform, cap/join policy,

@@ -10,11 +10,12 @@
 
 #define INPUT_CAP 4096U
 #define SHAPE_SOURCE_LIMIT (16U * 1024U * 1024U)
-#define FEATURE_COUNT 9U
+#define FEATURE_COUNT 11U
 
 static const char *const feature_names[FEATURE_COUNT] = {
     "path_stroke", "rounded_rect", "colors", "transforms", "opacity",
-    "nested_viewport", "gradients", "css_selectors", "length_units"
+    "nested_viewport", "gradients", "css_selectors", "length_units",
+    "text", "image"
 };
 
 static void identify_features(const char *shape, bool features[FEATURE_COUNT])
@@ -40,6 +41,80 @@ static void identify_features(const char *shape, bool features[FEATURE_COUNT])
     features[8] = strstr(shape, "em\"") != NULL || strstr(shape, "mm") != NULL ||
                   strstr(shape, "cm\"") != NULL || strstr(shape, "pt\"") != NULL ||
                   strstr(shape, "in\"") != NULL;
+    features[9] = strstr(shape, "<text") != NULL || strstr(shape, "<tspan") != NULL;
+    features[10] = strstr(shape, "<image") != NULL ||
+                   strstr(shape, "data:image/") != NULL;
+}
+
+static svg_shape_media_status fuzz_layout_text(
+    void *context, const svg_shape_text_request *request,
+    svg_shape_text_layout *out)
+{
+    (void)context;
+    if (request == NULL || out == NULL || request->text.len >
+        SVG_SHAPE_MEDIA_MAX_TEXT_BYTES) return SVG_SHAPE_MEDIA_LIMIT;
+    size_t glyph_count = 0U;
+    for (size_t i = 0U; i < request->text.len; ++i)
+        if ((request->text.ptr[i] & 0xC0U) != 0x80U) glyph_count++;
+    if (glyph_count > SVG_SHAPE_MEDIA_MAX_GLYPHS) return SVG_SHAPE_MEDIA_LIMIT;
+    size_t command_count = glyph_count == 0U ? 0U : 5U;
+    svg_shape_text_glyph *glyphs = glyph_count == 0U ? NULL :
+        calloc(glyph_count, sizeof(*glyphs));
+    svg_shape_text_command *commands = command_count == 0U ? NULL :
+        calloc(command_count, sizeof(*commands));
+    if ((glyph_count != 0U && glyphs == NULL) ||
+        (command_count != 0U && commands == NULL)) {
+        free(glyphs);
+        free(commands);
+        return SVG_SHAPE_MEDIA_OOM;
+    }
+    if (command_count != 0U) {
+        commands[0] = (svg_shape_text_command){SVG_SHAPE_TEXT_MOVE, {0.0, 0.0}};
+        commands[1] = (svg_shape_text_command){SVG_SHAPE_TEXT_LINE, {4.0, 0.0}};
+        commands[2] = (svg_shape_text_command){SVG_SHAPE_TEXT_LINE, {4.0, 6.0}};
+        commands[3] = (svg_shape_text_command){SVG_SHAPE_TEXT_LINE, {0.0, 6.0}};
+        commands[4] = (svg_shape_text_command){SVG_SHAPE_TEXT_CLOSE, {0.0}};
+    }
+    for (size_t i = 0U; i < glyph_count; ++i) {
+        glyphs[i] = (svg_shape_text_glyph){
+            .x = (double)i * 5.0, .advance = 5.0,
+            .command_start = i == 0U ? 0U : command_count,
+            .command_count = i == 0U ? command_count : 0U};
+    }
+    *out = (svg_shape_text_layout){
+        .glyphs = glyphs, .glyph_count = glyph_count,
+        .commands = commands, .command_count = command_count,
+        .advance_width = (double)glyph_count * 5.0,
+        .ascent = 6.0, .descent = 1.0};
+    return SVG_SHAPE_MEDIA_OK;
+}
+
+static void fuzz_release_text(void *context, svg_shape_text_layout *layout)
+{
+    (void)context;
+    if (layout == NULL) return;
+    free(layout->glyphs);
+    free(layout->commands);
+    *layout = (svg_shape_text_layout){0};
+}
+
+static const uint8_t fuzz_image_pixels[4] = {40U, 120U, 200U, 255U};
+
+static svg_shape_media_status fuzz_decode_image(
+    void *context, base_bytes encoded, svg_shape_decoded_image *out)
+{
+    (void)context;
+    if (out == NULL || encoded.ptr == NULL || encoded.len == 0U)
+        return SVG_SHAPE_MEDIA_INVALID;
+    *out = (svg_shape_decoded_image){
+        fuzz_image_pixels, sizeof(fuzz_image_pixels), 4U, 1U, 1U, NULL};
+    return SVG_SHAPE_MEDIA_OK;
+}
+
+static void fuzz_release_image(void *context, svg_shape_decoded_image *image)
+{
+    (void)context;
+    if (image != NULL) *image = (svg_shape_decoded_image){0};
 }
 
 static uint32_t next_u32(uint32_t *state)
@@ -112,6 +187,13 @@ int main(int argc, char **argv)
         ,"<defs><linearGradient id=\"base\" gradientUnits=\"userSpaceOnUse\" x2=\"8\" spreadMethod=\"reflect\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" href=\"#base\" gradientTransform=\"translate(2 0)\"/><radialGradient id=\"r\" cx=\"0.4\" cy=\"0.5\" r=\"0.5\" fx=\"0.2\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></radialGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/><circle cx=\"8\" cy=\"8\" r=\"5\" fill=\"url(#r)\"/>"
         ,"<style>svg g.box rect.item{fill:currentColor;opacity:.75}</style><g class=\"box\" color=\"orange\"><rect class=\"item\" x=\"1\" y=\"1\" width=\"6\" height=\"6\"/></g>"
         ,"<rect x=\"2mm\" y=\"3pt\" width=\"1in\" height=\"2em\" fill=\"teal\"/>"
+        ,"<text x=\"1 6\" y=\"8\" font-family=\"sans-serif\" font-size=\"6\" text-anchor=\"middle\">A<tspan dx=\"1\" fill=\"blue\">B</tspan></text>"
+        ,"<text xml:space=\"preserve\" x=\"1\" y=\"8\"> A  B </text>"
+        ,"<text x=\"1\" y=\"8\" font-size=\"bad\">x</text>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/png;base64,AQ==\"/>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/jpeg;base64,AA==\"/>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/png;base64,A===\"/>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"https://example.invalid/image.png\"/>"
     };
     static const char *coverage_cases[] = {
         "<rect x=\"1.125\" y=\"2.375\" width=\"8.5\" height=\"6.25\"/>",
@@ -120,6 +202,11 @@ int main(int argc, char **argv)
     };
     static const char shape_prefix[] = "<svg width=\"16\" height=\"16\">";
     static const char shape_suffix[] = "</svg>";
+    const svg_shape_media_providers providers = {
+        .layout_text = fuzz_layout_text,
+        .release_text = fuzz_release_text,
+        .decode_image = fuzz_decode_image,
+        .release_image = fuzz_release_image};
     unsigned long completed = 0;
     unsigned long fractional_cases = 0, evenodd_cases = 0, nonzero_cases = 0;
     unsigned long fractional_renders = 0, evenodd_renders = 0, nonzero_renders = 0;
@@ -162,7 +249,8 @@ int main(int argc, char **argv)
             memcpy(input+n, suffix, sizeof(suffix)-1U); n += sizeof(suffix)-1U;
         }
         svg_shape_document doc; svg_shape_diagnostic diag;
-        svg_shape_error error = svg_shape_decode((base_bytes){input,n}, &doc, &diag);
+        svg_shape_error error = svg_shape_decode_with_media(
+            (base_bytes){input,n}, &providers, &doc, &diag);
         if (error == SVG_SHAPE_ERROR_NONE) {
             if (doc.width == 0U || doc.width > 4096U || doc.height == 0U || doc.height > 4096U || doc.edge_count > SVG_SHAPE_MAX_EDGES) return 3;
             bool render_case = (mode < 3U && c % 128UL == mode) ||

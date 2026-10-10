@@ -26,9 +26,12 @@ code.
 
 Attribute validation includes stroke-capable paths and basic shapes, rounded
 rectangle `rx`/`ry`, CSS presentation values, and nested `<svg>` viewport
-attributes. Unsupported attributes still fail with the original token's source
-offset. Nested viewBox mappings and viewport clipping are performed by shape
-traversal; this module only indexes and validates local references.
+attributes. Text validation includes `xml:space` and the supported font, text
+anchor, and spacing properties; image hrefs are accepted only by the media-aware
+shape decoder when they use the supported embedded Base64 PNG/JPEG form.
+Unsupported attributes still fail with the original token's source offset.
+Nested viewBox mappings and viewport clipping are performed by shape traversal;
+this module only indexes and validates local references.
 
 Root `xmlns:*` declarations and unknown prefixed export metadata (for example
 Inkscape labels or Illustrator layer tags) are ignored for rendering while the

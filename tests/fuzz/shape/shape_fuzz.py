@@ -48,7 +48,8 @@ def main():
     stroke_cases = int(fields.get("stroke_cases", "0"))
     stroke_renders = int(fields.get("stroke_renders", "0"))
     feature_names = ("path_stroke", "rounded_rect", "colors", "transforms", "opacity",
-                     "nested_viewport", "gradients", "css_selectors", "length_units")
+                     "nested_viewport", "gradients", "css_selectors", "length_units",
+                     "text", "image")
     feature_coverage = {
         name: {"cases": int(fields.get(f"feature_{name}_cases", "0")),
                "renders": int(fields.get(f"feature_{name}_renders", "0"))}

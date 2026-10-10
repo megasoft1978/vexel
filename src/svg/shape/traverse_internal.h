@@ -1,0 +1,86 @@
+#ifndef VEXEL_SVG_SHAPE_TRAVERSE_INTERNAL_H
+#define VEXEL_SVG_SHAPE_TRAVERSE_INTERNAL_H
+
+#include "shape_internal.h"
+
+#define SHAPE_MAX_BYTES (16U * 1024U * 1024U)
+#define SHAPE_MAX_XML_DEPTH 64U
+#define SHAPE_MAX_REFERENCE_DEPTH 16U
+#define SHAPE_MAX_USE_INSTANCES 65536U
+#define SHAPE_MAX_TRAVERSAL_VISITS 4194304U
+#define SHAPE_MAX_TRANSFORM_OPERATIONS 4096U
+#define SHAPE_MAX_REFERENCE_BYTES (64U * 1024U)
+#define SHAPE_MAX_JOB_REFERENCE_BYTES (1024U * 1024U)
+
+typedef struct shape_traversal {
+    base_bytes source;
+    svg_xml_token *tokens;
+    size_t token_count;
+    svg_css_sheet *css;
+    svg_paint_cache *paint_cache;
+    svg_reference_index references;
+    svg_shape_builder builder;
+    svg_shape_diagnostic *diagnostic;
+    size_t active_references[SHAPE_MAX_REFERENCE_DEPTH];
+    size_t reference_depth;
+    size_t use_instances;
+    size_t reference_bytes;
+    size_t element_visits;
+    size_t paint_token_visits;
+    size_t transform_operations;
+    const svg_shape_media_providers *media;
+    svg_shape_text_state *text_state;
+    svg_shape_text_state text_states[SHAPE_MAX_XML_DEPTH + 1U];
+    size_t text_depth;
+    bool text_preserve_stack[SHAPE_MAX_XML_DEPTH + 1U];
+    size_t selection_element;
+    svg_shape_text_cache *text_cache;
+    size_t opacity_group_stack[SHAPE_MAX_XML_DEPTH + 1U];
+    size_t opacity_group_depth;
+    size_t opacity_group_capacity;
+    double viewport_width;
+    double viewport_height;
+    bool root_seen;
+} shape_traversal;
+
+void svg_shape_traverse_fail(svg_shape_diagnostic *diagnostic,
+                             svg_shape_error category, size_t offset);
+bool svg_shape_traverse_span_eq(base_bytes source, svg_xml_span span,
+                                const char *text);
+bool svg_shape_traverse_attr(base_bytes source, svg_xml_token *tokens,
+                             size_t count, size_t element, const char *local,
+                             const char *prefix, svg_xml_span *value);
+bool svg_shape_traverse_element_name(base_bytes source,
+                                     const svg_xml_token *token,
+                                     const char *name);
+bool svg_shape_traverse_basic_shape(base_bytes source,
+                                    const svg_xml_token *token);
+size_t svg_shape_traverse_matching_end(const shape_traversal *traversal,
+                                       size_t element);
+bool svg_shape_traverse_account_transform(shape_traversal *traversal,
+                                          size_t count, size_t offset);
+bool svg_shape_traverse_compute_style(shape_traversal *traversal,
+                                      size_t element,
+                                      const svg_css_paint *parent,
+                                      svg_css_paint *out);
+bool svg_shape_traverse_begin_opacity_group(shape_traversal *traversal,
+                                            const svg_css_paint *style,
+                                            size_t *group);
+void svg_shape_traverse_finish_opacity_group(shape_traversal *traversal,
+                                             size_t group);
+bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,
+                                    geom_affine parent_transform,
+                                    const svg_css_paint *parent_paint,
+                                    size_t render_depth);
+bool svg_shape_traverse_render_node(shape_traversal *traversal,
+                                    size_t element, size_t end,
+                                    geom_affine parent_transform,
+                                    const svg_css_paint *parent_paint,
+                                    size_t render_depth);
+bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first,
+                                   size_t limit,
+                                   geom_affine parent_transform,
+                                   const svg_css_paint *parent_paint,
+                                   size_t render_depth);
+
+#endif

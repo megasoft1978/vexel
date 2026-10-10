@@ -21,15 +21,37 @@ typedef struct svg_shape_builder {
     size_t edge_capacity;
     size_t shape_capacity;
     size_t subpath_capacity;
+    size_t path_segment_capacity;
+    size_t path_number_capacity;
     size_t shape_index;
     size_t command_count;
     size_t point_count;
+    size_t decoded_image_pixels;
+    size_t text_bytes;
+    size_t text_glyphs;
+    size_t text_commands;
     double viewport_width;
     double viewport_height;
     size_t offset;
     svg_shape_diagnostic *diag;
     geom_affine transform;
+    const svg_shape_media_providers *media;
+    struct svg_shape_text_cache *text_cache;
 } svg_shape_builder;
+
+typedef bool (*svg_shape_custom_geometry_fn)(svg_shape_builder *builder,
+                                              void *context);
+
+typedef struct svg_shape_text_state {
+    double cursor_x;
+    double cursor_y;
+    size_t text_bytes;
+    size_t glyph_count;
+    bool pending_space;
+    bool has_position;
+} svg_shape_text_state;
+
+typedef struct svg_shape_text_cache svg_shape_text_cache;
 
 typedef struct svg_shape_decode_memory_bounds {
     size_t reference_index_bytes;
@@ -43,6 +65,13 @@ svg_shape_error svg_shape_decode_source(base_bytes source,
 svg_shape_error svg_shape_decode_source_with_bounds(
     base_bytes source, svg_shape_document *out,
     svg_shape_diagnostic *diagnostic,
+    svg_shape_decode_memory_bounds *memory_bounds);
+svg_shape_error svg_shape_decode_source_with_media(
+    base_bytes source, const svg_shape_media_providers *providers,
+    svg_shape_document *out, svg_shape_diagnostic *diagnostic);
+svg_shape_error svg_shape_decode_source_with_media_and_bounds(
+    base_bytes source, const svg_shape_media_providers *providers,
+    svg_shape_document *out, svg_shape_diagnostic *diagnostic,
     svg_shape_decode_memory_bounds *memory_bounds);
 
 bool svg_shape_transform_node(base_bytes source, svg_xml_token *tokens,
@@ -117,6 +146,41 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
                                    size_t element,
                                    const svg_css_paint *style,
                                    geom_affine transform);
+bool svg_shape_builder_add_custom_element(
+    svg_shape_builder *builder, base_bytes source, svg_xml_token *tokens,
+    size_t token_count, size_t element, const svg_css_paint *style,
+    geom_affine transform, svg_shape_custom_geometry_fn geometry,
+    void *geometry_context);
+bool svg_shape_builder_begin_shape(svg_shape_builder *builder, bool evenodd);
+bool svg_shape_builder_add_edge(svg_shape_builder *builder,
+                                geom_point from, geom_point to);
+bool svg_shape_builder_add_curve(svg_shape_builder *builder,
+                                 geom_point from, geom_point control1,
+                                 geom_point control2, geom_point to);
+bool svg_shape_source_assign(svg_shape_document *document, size_t first_shape,
+                             size_t end_shape, size_t source_offset,
+                             size_t source_length);
+bool svg_shape_builder_add_image_element(
+    svg_shape_builder *builder, base_bytes source, svg_xml_token *tokens,
+    size_t token_count, size_t element, const svg_css_paint *style,
+    geom_affine transform);
+bool svg_shape_text_render_element(
+    svg_shape_builder *builder, base_bytes source, svg_xml_token *tokens,
+    size_t token_count, size_t element, size_t end,
+    const svg_css_paint *style, geom_affine transform,
+    size_t source_offset, size_t source_length,
+    svg_shape_text_state *state, bool parent_preserve_space,
+    bool *out_preserve_space);
+svg_shape_text_cache *svg_shape_text_cache_create(
+    const svg_shape_media_providers *providers);
+void svg_shape_text_cache_destroy(svg_shape_text_cache *cache);
+bool svg_shape_text_layout_run(
+    svg_shape_text_cache *cache, const svg_shape_text_request *request,
+    svg_shape_text_layout *out, bool *cached,
+    svg_shape_diagnostic *diagnostic, size_t error_offset);
+void svg_shape_text_layout_release(
+    const svg_shape_media_providers *providers,
+    svg_shape_text_layout *layout);
 bool svg_shape_parse_style_color(base_bytes source, svg_xml_span value,
                                  const svg_css_paint *style,
                                  uint8_t rgba[4]);
