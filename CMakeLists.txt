@@ -805,6 +805,12 @@ set_target_properties(editor_canvas_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 target_compile_options(editor_canvas_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(editor_clipboard_ids_test tests/editor/editor_clipboard_ids_test.c)
+target_link_libraries(editor_clipboard_ids_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_clipboard_ids_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_clipboard_ids_test PRIVATE ${VEXEL_STRICT_WARNINGS})
 add_executable(editor_selection_render tests/editor/editor_selection_render.c)
 target_link_libraries(editor_selection_render PRIVATE vexel_editor_ui)
 set_target_properties(editor_selection_render PROPERTIES
@@ -824,6 +830,8 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(editor_canvas_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(editor_canvas_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_clipboard_ids_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_clipboard_ids_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(editor_selection_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(editor_selection_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(viewer_canvas_geometry_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
@@ -831,6 +839,7 @@ if(VEXEL_SANITIZER)
 endif()
 if(BUILD_TESTING)
     add_test(NAME editor-canvas COMMAND editor_canvas_test)
+    add_test(NAME editor-clipboard-ids COMMAND editor_clipboard_ids_test)
     add_test(NAME editor-selection-goldens COMMAND python3
         "${CMAKE_SOURCE_DIR}/tests/editor/verify_selection_goldens.py"
         --binary $<TARGET_FILE:editor_selection_render>)

@@ -60,7 +60,7 @@ case "$command_name" in
                 step "verify (debug+release, ctest, python)"; "$repo_root/dev" verify
                 step "asan"; "$repo_root/dev" asan
                 step "ubsan"; "$repo_root/dev" ubsan
-                step "shape fuzz"; "$repo_root/dev" shape-fuzz
+                step "shape fuzz"; "$repo_root/dev" shape-fuzz --seed 20261010 --output "$repo_root/.cache/qa/shape-fuzz-final.json"
                 step "mcp fuzz"; "$repo_root/dev" mcp-fuzz
                 step "e2e (render matrix, mutations)"; "$repo_root/dev" e2e
                 step "soak (1 minute)"; "$repo_root/dev" soak --minutes 1
