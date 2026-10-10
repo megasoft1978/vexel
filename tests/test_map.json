@@ -17,6 +17,7 @@
     {"prefix": "packaging/", "ctest": "cli-version", "python": ["tests.e2e.test_packaging"]},
     {"prefix": "scripts/", "ctest": "cli-version", "python": ["tests.test_dev", "tests.e2e"]},
     {"prefix": "tests/editor/", "ctest": "editor-", "python": []},
+    {"prefix": "tests/app/", "ctest": "viewer-timeline", "python": []},
     {"prefix": "tests/ui/", "ctest": "ui-|editor-|viewer-chrome|platform-text-ui", "python": []},
     {"prefix": "tests/svg/", "ctest": "shape-render|svg-", "python": ["tests.test_shape_render", "tests.svg"]},
     {"prefix": "tests/realworld/", "ctest": "shape-render", "python": ["tests.realworld"]},

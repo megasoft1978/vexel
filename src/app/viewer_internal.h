@@ -7,6 +7,7 @@
 #include "viewer_editor.h"
 #include "viewer_load.h"
 #include "viewer_quality.h"
+#include "viewer_timeline.h"
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -55,6 +56,7 @@ struct viewer_app {
     platform_task_queue *tasks;
     viewer_loaded_document document;
     viewer_editor *editor;
+    viewer_timeline timeline;
     uint8_t *render_source;
     viewer_job *job;
     uint64_t generation;

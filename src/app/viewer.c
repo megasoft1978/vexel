@@ -210,6 +210,7 @@ void viewer_refresh_sharp_plan(viewer_app *app)
 {
     ui_viewer_navigation frame_navigation = viewer_navigation_for_frame(app);
     app->sharp_plan_ready = app->document_visible && app->navigation_ready &&
+        viewer_timeline_track_count(&app->timeline) == 0U &&
         viewer_tile_plan_init(&app->sharp_plan, app->width, app->height,
                               app->generation, &frame_navigation);
     app->frame_dirty = true;
@@ -399,11 +400,13 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     app->load_status = worker_succeeded ? job->load_status : VIEWER_LOAD_FAILED;
     viewer_editor_destroy(app->editor);
     app->editor = NULL;
+    viewer_timeline_reset(&app->timeline, NULL);
     viewer_loaded_document_destroy(&app->document);
     free(app->render_source);
     app->render_source = NULL;
     app->document = job->loaded;
     job->loaded = (viewer_loaded_document){0};
+    viewer_timeline_reset(&app->timeline, &app->document.shape);
     app->load_ms = job->elapsed_ms;
     if (app->document.source != NULL && app->document.source_length > 0U)
         app->editor = viewer_editor_create((base_bytes){app->document.source,
@@ -475,6 +478,7 @@ static void service_job(viewer_app *app)
             (void)fprintf(stderr, "viewer: sharp preview stopped: %s\n", job->diagnostic);
         app->frame_dirty = true;
     } else if (current && succeeded && job->kind == VIEWER_JOB_EDIT_RENDER) {
+        viewer_timeline_reset(&app->timeline, NULL);
         svg_shape_document_destroy(&app->document.shape);
         raster_tile_destroy(&app->document.tile);
         free(app->render_source);
@@ -482,6 +486,7 @@ static void service_job(viewer_app *app)
         job->loaded.source = NULL;
         app->document.shape = job->loaded.shape;
         job->loaded.shape = (svg_shape_document){0};
+        viewer_timeline_reset(&app->timeline, &app->document.shape);
         app->document.tile = job->loaded.tile;
         job->loaded.tile = (raster_tile){0};
         app->document.shape_error = SVG_SHAPE_ERROR_NONE;
@@ -525,7 +530,7 @@ static void service_job(viewer_app *app)
 static void start_next_sharp_tile(viewer_app *app)
 {
     if (!app->sharp_plan_ready || app->job != NULL || !app->document_visible ||
-        app->close_requested) return;
+        app->close_requested || viewer_timeline_track_count(&app->timeline) > 0U) return;
     viewer_tile_region region;
     if (!viewer_tile_plan_next(&app->sharp_plan, &app->sharp_cache,
             sharp_work_per_pixel(app), &region)) {
@@ -676,6 +681,7 @@ static void destroy_viewer(viewer_app *app)
     mcp_broker_hook_shutdown(app);
     viewer_editor_destroy(app->editor);
     app->editor = NULL;
+    viewer_timeline_destroy(&app->timeline);
     viewer_loaded_document_destroy(&app->document);
     free(app->render_source);
     app->render_source = NULL;
@@ -689,6 +695,7 @@ static int run_viewer(const char *path, bool smoke_mode)
         return EXIT_FAILURE;
     }
     viewer_app app = {0};
+    viewer_timeline_init(&app.timeline);
     app.generation = VIEWER_GENERATION;
     app.running = true;
     app.smoke_mode = smoke_mode;
