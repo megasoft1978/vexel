@@ -320,7 +320,31 @@ if(VEXEL_SANITIZER)
     target_link_options(job_snapshot_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
 endif()
 
+# lane: w2-bundle
 include(CTest)
+add_executable(render_soak_driver
+    tests/e2e/render_soak_driver.c
+    src/app/viewer_load.c
+    src/app/frame_compose.c
+)
+target_include_directories(render_soak_driver PRIVATE src)
+target_link_libraries(render_soak_driver PRIVATE vexel_shape vexel_ui_state)
+target_compile_options(render_soak_driver PRIVATE ${VEXEL_STRICT_WARNINGS})
+set_target_properties(render_soak_driver PROPERTIES
+    C_STANDARD 17
+    C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+if(VEXEL_SANITIZER)
+    target_compile_options(render_soak_driver PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(render_soak_driver PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME render-soak-driver-bounds COMMAND render_soak_driver
+        --input "${CMAKE_SOURCE_DIR}/tests/svg/shape/fixtures/rect.svg" --iterations 20)
+endif()
+
 if(BUILD_TESTING)
     add_test(NAME cli-version COMMAND svgworkbench --version)
     add_test(NAME base-contract COMMAND base_contract_test)
