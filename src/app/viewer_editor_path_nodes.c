@@ -469,35 +469,7 @@ bool editor_canvas_path_nodes_overlay(viewer_editor *editor,
 uint32_t editor_canvas_path_node_delete(viewer_editor *editor,
     const svg_shape_document *document)
 {
-    if (editor == NULL || document == NULL ||
-        editor->path_selected_node_segment >= document->path_segment_count)
-        return VIEWER_EDITOR_HANDLED;
-    const svg_shape_path_segment *segment =
-        &document->path_segments[editor->path_selected_node_segment];
-    if (segment->command == 'M' || segment->command == 'm' ||
-        segment->command == 'Z' || segment->command == 'z' ||
-        segment->source_length == 0U) {
-        editor_status_ok(editor, "The first path anchor cannot be deleted");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    document_source_span span = {segment->source_offset, segment->source_length};
-    if (!path_stored_range_current(editor, document, span)) {
-        editor_status_ok(editor, "Path source is stale; wait for preview");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    size_t old_offset = editor->selected_offset;
-    char old_id[EDITOR_NAME_CAP];
-    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
-        editor->selected_id : "");
-    document_edit_error error = document_edit_replace_source_span(editor->edit,
-        span, (base_bytes){NULL, 0U});
-    editor->path_selected_node_segment = SIZE_MAX;
-    if (error != DOCUMENT_EDIT_OK)
-        return editor_apply_result(editor, error, old_offset, old_id,
-            (document_handle){0});
-    editor_status_ok(editor, "Path node deleted · preview updating");
-    return editor_apply_result(editor, DOCUMENT_EDIT_OK, old_offset, old_id,
-        (document_handle){0});
+    return editor_canvas_path_curve_delete_node(editor, document);
 }
 
 uint32_t viewer_editor_delete_selected_path_node(viewer_editor *editor,
@@ -509,66 +481,6 @@ uint32_t viewer_editor_delete_selected_path_node(viewer_editor *editor,
 uint32_t editor_canvas_path_add_node(viewer_editor *editor,
     const svg_shape_document *document, geom_point user, double tolerance)
 {
-    svg_shape_selection selection;
-    if (!path_selected_shape(editor, document, &selection) ||
-        !isfinite(user.x) || !isfinite(user.y) || !isfinite(tolerance) ||
-        !(tolerance > 0.0)) return 0U;
-    path_node_ref nodes[EDITOR_PATH_NODE_RENDER_CAP];
-    size_t node_count = 0U;
-    if (!path_collect_nodes(document, selection.shape_index, nodes, &node_count)) return 0U;
-    double best = tolerance;
-    size_t chosen = SIZE_MAX;
-    geom_point insertion = {0.0, 0.0};
-    for (size_t index = 0U; index < document->path_segment_count; ++index) {
-        const svg_shape_path_segment *segment = &document->path_segments[index];
-        if (segment->shape_index != selection.shape_index ||
-            (segment->command != 'L' && segment->command != 'l') ||
-            segment->number_count != 2U || segment->edge_count == 0U ||
-            segment->first_edge > document->edge_count ||
-            segment->edge_count > document->edge_count - segment->first_edge)
-            continue;
-        for (size_t edge_index = 0U; edge_index < segment->edge_count; ++edge_index) {
-            geom_edge edge = document->edges[segment->first_edge + edge_index];
-            double dx = edge.b.x - edge.a.x, dy = edge.b.y - edge.a.y;
-            double length2 = dx * dx + dy * dy;
-            double t = length2 > 0.0 ? ((user.x - edge.a.x) * dx +
-                (user.y - edge.a.y) * dy) / length2 : 0.0;
-            if (t < 0.05 || t > 0.95) continue;
-            geom_point candidate = {edge.a.x + t * dx, edge.a.y + t * dy};
-            double distance = hypot(user.x - candidate.x, user.y - candidate.y);
-            if (distance < best) { best = distance; chosen = index; insertion = candidate; }
-        }
-    }
-    if (chosen == SIZE_MAX) return 0U;
-    size_t node_index = SIZE_MAX;
-    for (size_t index = 0U; index < node_count; ++index)
-        if (nodes[index].segment_index == chosen) { node_index = index; break; }
-    geom_point local_insert;
-    if (node_index == SIZE_MAX || !path_inverse_map(selection.transform,
-            insertion, &local_insert)) return 0U;
-    const path_node_ref *end = &nodes[node_index];
-    const svg_shape_path_segment *segment = &document->path_segments[chosen];
-    document_source_span span = {segment->source_offset, segment->source_length};
-    if (!path_stored_range_current(editor, document, span)) {
-        editor_status_ok(editor, "Path source is stale; wait for preview");
-        return VIEWER_EDITOR_HANDLED;
-    }
-    char fragment[256];
-    int length = snprintf(fragment, sizeof(fragment), "L %.9g %.9g L %.9g %.9g",
-        local_insert.x, local_insert.y, end->x, end->y);
-    if (length <= 0 || (size_t)length >= sizeof(fragment))
-        return VIEWER_EDITOR_HANDLED;
-    size_t old_offset = editor->selected_offset;
-    char old_id[EDITOR_NAME_CAP];
-    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
-        editor->selected_id : "");
-    document_edit_error error = document_edit_replace_source_span(editor->edit,
-        span, (base_bytes){(const uint8_t *)fragment, (size_t)length});
-    if (error != DOCUMENT_EDIT_OK)
-        return editor_apply_result(editor, error, old_offset, old_id,
-            (document_handle){0});
-    editor_status_ok(editor, "Path node added · preview updating");
-    return editor_apply_result(editor, DOCUMENT_EDIT_OK, old_offset, old_id,
-        (document_handle){0});
+    return editor_canvas_path_curve_add_node(editor, document, user, tolerance);
 }
 

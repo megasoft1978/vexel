@@ -332,12 +332,16 @@ uint32_t editor_apply_button(viewer_editor *editor, uint32_t id)
         return editor_apply_result(editor, error, old_offset, old_id, duplicate);
     }
     if (id == EDITOR_BUTTON_GROUP) {
+        if (editor->canvas_selection_count > 1U)
+            return editor_canvas_multi_group(editor);
         document_handle group = {0};
         document_edit_error error = document_edit_wrap_in_group(editor->edit,
             editor->selected, &group);
         return editor_apply_result(editor, error, old_offset, old_id, group);
     }
     if (id == EDITOR_BUTTON_UNGROUP) {
+        if (editor->canvas_selection_count > 1U)
+            return editor_canvas_multi_ungroup(editor);
         document_handle parent = {0};
         size_t parent_offset = 0U;
         if (document_model_parent(editor_model(editor), editor->selected, &parent)) {

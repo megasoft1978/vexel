@@ -50,6 +50,7 @@ typedef enum document_edit_template_kind {
 } document_edit_template_kind;
 
 #define DOCUMENT_EDIT_XML_FRAGMENT_LIMIT (64U * 1024U)
+#define DOCUMENT_EDIT_GROUP_NODE_LIMIT 128U
 
 typedef struct document_edit_template_attribute {
     base_bytes name;
@@ -116,6 +117,13 @@ document_edit_error document_edit_wrap_in_group(document_edit *edit,
     document_handle node, document_handle *out_group);
 document_edit_error document_edit_ungroup(document_edit *edit,
     document_handle group);
+/* Wrap or unwrap a bounded, consecutive sibling sequence in one source edit.
+ * The APIs preserve every source byte outside inserted/removed <g> wrappers. */
+document_edit_error document_edit_group_siblings(document_edit *edit,
+    const document_handle *nodes, size_t node_count,
+    document_handle *out_group);
+document_edit_error document_edit_ungroup_siblings(document_edit *edit,
+    const document_handle *groups, size_t group_count);
 document_edit_error document_edit_insert_template(document_edit *edit,
     document_handle parent, document_edit_template_kind kind,
     const document_edit_template_attribute *attributes, size_t attribute_count,
