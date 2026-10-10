@@ -13,8 +13,10 @@ typedef enum marker_position_kind {
 } marker_position_kind;
 
 typedef struct marker_subpath {
-    const geom_edge *first;
-    const geom_edge *last;
+    /* Edge values, not pointers: marker emission appends to the document and
+     * may reallocate its edge array. */
+    geom_edge first;
+    geom_edge last;
     bool has_edges;
 } marker_subpath;
 
@@ -394,11 +396,11 @@ static bool flush_path_subpath(shape_traversal *traversal, size_t shape,
 {
     if (!subpath->has_edges) return true;
     bool ok = emit_marker(traversal, shape, style, SVG_CSS_MARKER_START,
-        MARKER_POSITION_START, subpath->first->a,
-        direction_angle(*subpath->first), transform, render_depth) &&
+        MARKER_POSITION_START, subpath->first.a,
+        direction_angle(subpath->first), transform, render_depth) &&
         emit_marker(traversal, shape, style, SVG_CSS_MARKER_END,
-        MARKER_POSITION_END, subpath->last->b,
-        direction_angle(*subpath->last), transform, render_depth);
+        MARKER_POSITION_END, subpath->last.b,
+        direction_angle(subpath->last), transform, render_depth);
     *subpath = (marker_subpath){0};
     return ok;
 }
@@ -431,19 +433,19 @@ static bool path_markers(shape_traversal *traversal, size_t shape,
                  segment->source_offset);
             return false;
         }
-        const geom_edge *first = &document->edges[segment->first_edge];
-        const geom_edge *last = &document->edges[
+        const geom_edge first = document->edges[segment->first_edge];
+        const geom_edge last = document->edges[
             segment->first_edge + segment->edge_count - 1U];
         if (!current.has_edges) {
             current.first = first;
             current.last = last;
             current.has_edges = true;
             if (!emit_marker(traversal, shape, style, SVG_CSS_MARKER_START,
-                    MARKER_POSITION_START, first->a, direction_angle(*first),
+                    MARKER_POSITION_START, first.a, direction_angle(first),
                     transform, render_depth)) return false;
         } else {
-            if (!emit_mid_marker(traversal, shape, style, current.last->b,
-                    *current.last, *first, transform, render_depth)) return false;
+            if (!emit_mid_marker(traversal, shape, style, current.last.b,
+                    current.last, first, transform, render_depth)) return false;
             current.last = last;
         }
         if (command == 'Z' && !flush_path_subpath(
@@ -479,16 +481,20 @@ static bool primitive_markers(shape_traversal *traversal, size_t element,
         return false;
     }
     if (path_edges == 0U) return true;
-    const geom_edge *edges = document->edges + first;
+    /* Re-read edges by index after every emission: it may reallocate the array. */
+    const geom_edge start = document->edges[first];
     if (!emit_marker(traversal, shape, style, SVG_CSS_MARKER_START,
-            MARKER_POSITION_START, edges[0].a, direction_angle(edges[0]),
+            MARKER_POSITION_START, start.a, direction_angle(start),
             transform, render_depth)) return false;
-    for (size_t i = 0U; i + 1U < path_edges; ++i)
-        if (!emit_mid_marker(traversal, shape, style, edges[i].b,
-                edges[i], edges[i + 1U], transform, render_depth)) return false;
+    for (size_t i = 0U; i + 1U < path_edges; ++i) {
+        const geom_edge incoming = document->edges[first + i];
+        const geom_edge outgoing = document->edges[first + i + 1U];
+        if (!emit_mid_marker(traversal, shape, style, incoming.b,
+                incoming, outgoing, transform, render_depth)) return false;
+    }
+    const geom_edge end = document->edges[first + path_edges - 1U];
     return emit_marker(traversal, shape, style, SVG_CSS_MARKER_END,
-        MARKER_POSITION_END, edges[path_edges - 1U].b,
-        direction_angle(edges[path_edges - 1U]), transform, render_depth);
+        MARKER_POSITION_END, end.b, direction_angle(end), transform, render_depth);
 }
 
 bool svg_shape_traverse_attach_markers(shape_traversal *traversal,
