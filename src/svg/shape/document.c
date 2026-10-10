@@ -28,6 +28,10 @@ void svg_shape_document_destroy(svg_shape_document *document)
     svg_shape_free(document->shape_stroke_closed);
     svg_shape_free(document->shape_edge_start);
     svg_shape_free(document->shape_edge_count);
+    svg_shape_free(document->shape_subpath_start);
+    svg_shape_free(document->shape_subpath_count);
+    svg_shape_free(document->path_subpaths);
+    svg_shape_free(document->opacity_groups);
     svg_shape_free(document->shape_stroke_inverse);
     svg_shape_free(document->strokes);
     svg_shape_free(document->paints);

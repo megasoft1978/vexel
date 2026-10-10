@@ -20,7 +20,7 @@ FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
 REFERENCE_CLI = ROOT / "build/mac-debug/bin/shape_render_reference_cli"
 STATS_CLI = ROOT / "build/mac-debug/bin/shape_render_stats_cli"
-OUT = ROOT / "artifacts/WO-M4-06/reference-comparison.json"
+OUT = Path("/private/tmp/w2-decode-reference-comparison.json")
 
 
 def png_rgba(data):
@@ -33,9 +33,9 @@ def png_rgba(data):
         payload = data[pos + 8:pos + 8 + size]
         if kind == b"IHDR":
             width, height, depth, color, comp, filt, interlace = struct.unpack(">IIBBBBB", payload)
-            if depth != 8 or color != 6 or interlace != 0:
-                raise ValueError("reference PNG must be noninterlaced RGBA8")
-            bpp = 4
+            if depth != 8 or color not in (2, 6) or interlace != 0:
+                raise ValueError("reference PNG must be noninterlaced RGB8 or RGBA8")
+            bpp = 3 if color == 2 else 4
         elif kind == b"IDAT":
             compressed.extend(payload)
         elif kind == b"IEND":
@@ -67,7 +67,16 @@ def png_rgba(data):
                 raise ValueError("unknown PNG filter")
         rows.append(row)
         previous = row
-    return width, height, b"".join(rows)
+    pixels = b"".join(rows)
+    if bpp == 4:
+        return width, height, pixels
+    rgba = bytearray(width * height * 4)
+    for pixel in range(width * height):
+        source = pixel * 3
+        target = pixel * 4
+        rgba[target:target + 3] = pixels[source:source + 3]
+        rgba[target + 3] = 255
+    return width, height, bytes(rgba)
 
 
 def random_shape_document(rng, index):
@@ -245,9 +254,9 @@ class ShapeRenderTests(unittest.TestCase):
     def test_css_invalid_values_for_all_nine_paint_properties(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         cases = {
-            "fill": ("magenta", "unsupported"),
+            "fill": ("not-a-css-color", "unsupported"),
             "fill-rule": ("invalid", "unsupported"),
-            "stroke": ("magenta", "unsupported"),
+            "stroke": ("not-a-css-color", "unsupported"),
             "stroke-width": ("-1", "number"),
             "stroke-linecap": ("triangle", "unsupported"),
             "stroke-linejoin": ("invalid", "unsupported"),
@@ -496,14 +505,13 @@ class ShapeRenderTests(unittest.TestCase):
             "trailing_polygon_comma": '<svg width="16" height="16"><polygon points="1 1 2 2,"/></svg>',
             "nan_transform": '<svg width="16" height="16"><g transform="translate(NaN 1)"/></svg>',
             "trailing_transform_comma": '<svg width="16" height="16"><g transform="translate(1,)"/></svg>',
-            "skew_transform": '<svg width="16" height="16"><rect width="1" height="1" transform="skewX(10)"/></svg>',
+            "malformed_skew_transform": '<svg width="16" height="16"><rect width="1" height="1" transform="skewX(nope)"/></svg>',
             "transform_overflow": '<svg width="16" height="16"><rect width="1" height="1" transform="matrix(1e300 0 0 1 0 0)"/></svg>',
             "ellipse_segment_cap": '<svg width="16" height="16"><circle r="1000000"/></svg>',
             "negative_stroke_width": '<svg width="16" height="16"><line stroke="red" stroke-width="-1"/></svg>',
             "invalid_stroke_cap": '<svg width="16" height="16"><line stroke="red" stroke-linecap="triangle"/></svg>',
             "bad_dash_separator": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1,,2"/></svg>',
             "too_many_dash_values": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"/></svg>',
-            "unsupported_stroked_path": '<svg width="16" height="16"><path stroke="red" d="M1 1 L8 8"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
         }
         stroke_diagnostic_offsets = {
@@ -511,7 +519,6 @@ class ShapeRenderTests(unittest.TestCase):
             "invalid_stroke_cap": ("unsupported", "triangle"),
             "bad_dash_separator": ("number", "1,,2"),
             "too_many_dash_values": ("number", "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"),
-            "unsupported_stroked_path": ("unsupported", "red"),
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}
         with tempfile.TemporaryDirectory(prefix="vexel-shape-bounds-", dir=TEMP_ROOT) as temp:
@@ -621,7 +628,7 @@ class ShapeRenderTests(unittest.TestCase):
 
     def test_transform_diagnostic_preserves_attribute_value_offset(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
-        source = b'<svg width="16" height="16"><g transform="skewX(10)"/></svg>'
+        source = b'<svg width="16" height="16"><g transform="skewX(nope)"/></svg>'
         with tempfile.TemporaryDirectory(prefix="vexel-transform-offset-", dir=TEMP_ROOT) as temp:
             input_path = Path(temp) / "offset.svg"
             output_path = Path(temp) / "offset.rgba"
@@ -642,7 +649,14 @@ class ShapeRenderTests(unittest.TestCase):
         feature_generated_count = 160
         rng = random.Random(seed)
         feature_rng = random.Random(feature_seed)
-        oracle_sources = list(sorted(FIXTURES.glob("*.svg")))
+        # These fixtures cover semantics that the deliberately unculled raster
+        # oracle does not model. They remain covered by the librsvg comparison.
+        oracle_exclusions = {
+            "css-composition.svg", "group-opacity-isolation.svg",
+            "root-preserve-aspect.svg",
+        }
+        oracle_sources = [path for path in sorted(FIXTURES.glob("*.svg"))
+                          if path.name not in oracle_exclusions]
         oracle_sources.extend(sorted((ROOT / "tests/viewer/fixtures").glob("*.svg")))
         sources = [path.read_bytes() for path in oracle_sources]
         generated = [random_shape_document(rng, index).encode("utf-8")

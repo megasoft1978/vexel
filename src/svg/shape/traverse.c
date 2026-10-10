@@ -33,6 +33,11 @@ typedef struct shape_traversal {
     size_t element_visits;
     size_t paint_token_visits;
     size_t transform_operations;
+    size_t opacity_group_stack[SHAPE_MAX_XML_DEPTH + 1U];
+    size_t opacity_group_depth;
+    size_t opacity_group_capacity;
+    double viewport_width;
+    double viewport_height;
     bool root_seen;
 } shape_traversal;
 
@@ -85,6 +90,13 @@ static bool basic_shape(base_bytes source, const svg_xml_token *token)
            element_name(source, token, "polyline");
 }
 
+static bool metadata_element(base_bytes source, const svg_xml_token *token)
+{
+    return element_name(source, token, "title") ||
+           element_name(source, token, "desc") ||
+           element_name(source, token, "metadata");
+}
+
 static size_t matching_end(const shape_traversal *traversal, size_t element)
 {
     if (traversal->tokens[element].kind == SVG_XML_TOKEN_EMPTY_ELEMENT)
@@ -117,174 +129,66 @@ static bool compute_style(shape_traversal *traversal, size_t element,
         traversal->token_count, element, parent, out);
     if (result == SVG_CSS_OK) return true;
     fail(traversal->diagnostic,
-         result == SVG_CSS_LIMIT ? SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_OOM,
-         0U);
+         result == SVG_CSS_LIMIT ? SVG_SHAPE_ERROR_LIMIT :
+         result == SVG_CSS_OOM ? SVG_SHAPE_ERROR_OOM :
+         SVG_SHAPE_ERROR_UNSUPPORTED, 0U);
     return false;
 }
 
-static bool apply_declared_clip(shape_traversal *traversal,
-                                svg_xml_span value, size_t first_shape,
-                                size_t first_edge, geom_affine transform)
+static bool begin_opacity_group(shape_traversal *traversal,
+                                const svg_css_paint *style,
+                                size_t *group)
 {
-    svg_shape_document *document = traversal->builder.doc;
-    size_t end_shape = document->shape_count;
-    if (first_shape == end_shape) return true;
-    geom_affine inverse;
-    double bounds[4];
-    if (!svg_shape_affine_inverse(transform, &inverse) ||
-        first_edge > document->edge_count ||
-        !svg_clip_local_bounds(document, first_edge,
-                               document->edge_count - first_edge,
-                               inverse, bounds)) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
+    *group = SVG_SHAPE_NO_GROUP;
+    double opacity = 1.0;
+    svg_xml_span value = {0};
+    if (!svg_shape_style_opacity(traversal->source, style, &opacity, &value)) {
+        fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER, value.offset);
         return false;
     }
-    svg_shape_clip *clip = NULL;
-    svg_shape_error result = svg_clip_resolve(
-        traversal->source, traversal->tokens, traversal->token_count,
-        &traversal->references, traversal->css, value, document,
-        &document->clip_bytes,
-        inverse, bounds, &clip, traversal->diagnostic);
-    if (result != SVG_SHAPE_ERROR_NONE) return false;
-    bool applied = svg_clip_apply_group(document, first_shape, end_shape, clip);
-    svg_clip_destroy(clip);
-    if (!applied) {
+    if (opacity == 1.0) return true;
+    if (traversal->opacity_group_depth >= SHAPE_MAX_XML_DEPTH + 1U ||
+        traversal->builder.doc->opacity_group_count >= SVG_SHAPE_MAX_EDGES) {
         fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, value.offset);
         return false;
     }
-    return true;
-}
-
-static bool root_viewport(shape_traversal *traversal, size_t element)
-{
-    base_bytes source = traversal->source;
-    svg_xml_token *tokens = traversal->tokens;
-    size_t count = traversal->token_count;
     svg_shape_document *document = traversal->builder.doc;
-    svg_xml_span value;
-    if (attr(source, tokens, count, element, "xmlns", NULL, &value) &&
-        !span_eq(source, value, "http://www.w3.org/2000/svg")) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
-        return false;
-    }
-    svg_xml_span width_span, height_span;
-    if (!attr(source, tokens, count, element, "width", NULL, &width_span) ||
-        !attr(source, tokens, count, element, "height", NULL, &height_span)) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_VIEWPORT,
-             tokens[element].name.offset);
-        return false;
-    }
-    double width, height;
-    if (!svg_shape_read_dimension(source, width_span, &width)) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER, width_span.offset);
-        return false;
-    }
-    if (!svg_shape_read_dimension(source, height_span, &height)) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER, height_span.offset);
-        return false;
-    }
-    if (width < 1.0 || width > 4096.0) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_VIEWPORT, width_span.offset);
-        return false;
-    }
-    if (height < 1.0 || height > 4096.0) {
-        fail(traversal->diagnostic, SVG_SHAPE_ERROR_VIEWPORT, height_span.offset);
-        return false;
-    }
-    document->width = (uint32_t)ceil(width);
-    document->height = (uint32_t)ceil(height);
-    document->view_x = 0.0;
-    document->view_y = 0.0;
-    document->view_width = width;
-    document->view_height = height;
-
-    if (attr(source, tokens, count, element, "viewBox", NULL, &value)) {
-        double view_box[4];
-        if (!svg_shape_read_number_list(source, value, view_box, 4U) ||
-            view_box[2] <= 0.0 || view_box[3] <= 0.0 ||
-            fabs(view_box[0] + view_box[2]) > 1000000.0 ||
-            fabs(view_box[1] + view_box[3]) > 1000000.0) {
-            fail(traversal->diagnostic, SVG_SHAPE_ERROR_VIEWPORT, value.offset);
+    if (document->opacity_group_count == traversal->opacity_group_capacity) {
+        size_t next = traversal->opacity_group_capacity == 0U ? 16U :
+                      traversal->opacity_group_capacity * 2U;
+        if (next < traversal->opacity_group_capacity ||
+            next > SVG_SHAPE_MAX_EDGES) next = SVG_SHAPE_MAX_EDGES;
+        if (next > SIZE_MAX / sizeof(*document->opacity_groups)) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, value.offset);
             return false;
         }
-        document->view_x = view_box[0];
-        document->view_y = view_box[1];
-        document->view_width = view_box[2];
-        document->view_height = view_box[3];
+        svg_shape_opacity_group *grown = svg_shape_realloc(
+            document->opacity_groups, next * sizeof(*grown));
+        if (grown == NULL) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_OOM, value.offset);
+            return false;
+        }
+        document->opacity_groups = grown;
+        traversal->opacity_group_capacity = next;
     }
+    size_t index = document->opacity_group_count++;
+    size_t parent = traversal->opacity_group_depth == 0U ? SVG_SHAPE_NO_GROUP :
+        traversal->opacity_group_stack[traversal->opacity_group_depth - 1U];
+    document->opacity_groups[index] = (svg_shape_opacity_group){
+        document->shape_count, document->shape_count, parent, opacity};
+    traversal->opacity_group_stack[traversal->opacity_group_depth++] = index;
+    *group = index;
     return true;
 }
 
-static bool symbol_attributes_supported(shape_traversal *traversal,
-                                        size_t element,
-                                        size_t *unsupported_offset)
+static void finish_opacity_group(shape_traversal *traversal, size_t group)
 {
-    base_bytes source = traversal->source;
-    for (size_t i = element + 1U;
-         i < traversal->token_count &&
-         traversal->tokens[i].kind == SVG_XML_TOKEN_ATTRIBUTE; ++i) {
-        svg_xml_span name = traversal->tokens[i].local_name;
-        if (traversal->tokens[i].prefix.length != 0U) {
-            if (unsupported_offset != NULL)
-                *unsupported_offset = traversal->tokens[i].name.offset;
-            return false;
-        }
-        bool supported = span_eq(source, name, "id") ||
-            span_eq(source, name, "class") || span_eq(source, name, "style") ||
-            span_eq(source, name, "viewBox") ||
-            span_eq(source, name, "preserveAspectRatio") ||
-            span_eq(source, name, "width") || span_eq(source, name, "height") ||
-            span_eq(source, name, "fill") || span_eq(source, name, "fill-rule") ||
-            span_eq(source, name, "stroke") ||
-            span_eq(source, name, "stroke-width") ||
-            span_eq(source, name, "stroke-linecap") ||
-            span_eq(source, name, "stroke-linejoin") ||
-            span_eq(source, name, "stroke-miterlimit") ||
-            span_eq(source, name, "stroke-dasharray") ||
-            span_eq(source, name, "stroke-dashoffset");
-        if (!supported) {
-            if (unsupported_offset != NULL)
-                *unsupported_offset = traversal->tokens[i].name.offset;
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool symbol_mapping(shape_traversal *traversal, size_t target,
-                           size_t use, geom_affine *mapping)
-{
-    svg_xml_span view_span, width_span, height_span, value;
-    if (!attr(traversal->source, traversal->tokens, traversal->token_count,
-              target, "viewBox", NULL, &view_span) ||
-        !attr(traversal->source, traversal->tokens, traversal->token_count,
-              use, "width", NULL, &width_span) ||
-        !attr(traversal->source, traversal->tokens, traversal->token_count,
-              use, "height", NULL, &height_span)) return false;
-    if (attr(traversal->source, traversal->tokens, traversal->token_count,
-             use, "preserveAspectRatio", NULL, &value) &&
-        !span_eq(traversal->source, value, "xMidYMid meet")) return false;
-
-    double view_box[4], width, height, x = 0.0, y = 0.0;
-    if (!svg_shape_read_number_list(traversal->source, view_span, view_box, 4U) ||
-        !svg_shape_read_number(traversal->source, width_span, &width) ||
-        !svg_shape_read_number(traversal->source, height_span, &height) ||
-        view_box[2] <= 0.0 || view_box[3] <= 0.0 ||
-        width <= 0.0 || height <= 0.0) return false;
-    if (attr(traversal->source, traversal->tokens, traversal->token_count,
-             use, "x", NULL, &value) &&
-        !svg_shape_read_number(traversal->source, value, &x)) return false;
-    if (attr(traversal->source, traversal->tokens, traversal->token_count,
-             use, "y", NULL, &value) &&
-        !svg_shape_read_number(traversal->source, value, &y)) return false;
-
-    double scale = fmin(width / view_box[2], height / view_box[3]);
-    double tx = x + (width - view_box[2] * scale) * 0.5 -
-                view_box[0] * scale;
-    double ty = y + (height - view_box[3] * scale) * 0.5 -
-                view_box[1] * scale;
-    *mapping = (geom_affine){scale, 0.0, 0.0, scale, tx, ty};
-    return geom_affine_valid(*mapping);
+    if (group == SVG_SHAPE_NO_GROUP) return;
+    svg_shape_document *document = traversal->builder.doc;
+    document->opacity_groups[group].end_shape = document->shape_count;
+    if (traversal->opacity_group_depth != 0U &&
+        traversal->opacity_group_stack[traversal->opacity_group_depth - 1U] == group)
+        traversal->opacity_group_depth--;
 }
 
 static bool walk_range(shape_traversal *traversal, size_t first, size_t limit,
@@ -310,6 +214,10 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     }
     svg_css_paint use_style;
     if (!compute_style(traversal, use, parent_paint, &use_style)) return false;
+    bool display_none = false;
+    if (!svg_shape_style_display_none(traversal->source, &use_style,
+            use_token->name.offset, &display_none, traversal->diagnostic)) return false;
+    if (display_none) return true;
 
     svg_xml_span href = {0};
     bool plain = attr(traversal->source, traversal->tokens,
@@ -397,8 +305,10 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     bool has_y = attr(traversal->source, traversal->tokens,
                       traversal->token_count, use, "y", NULL, &y_span);
     double x = 0.0, y = 0.0;
-    if ((has_x && !svg_shape_read_number(traversal->source, x_span, &x)) ||
-        (has_y && !svg_shape_read_number(traversal->source, y_span, &y))) {
+    if ((has_x && !svg_shape_read_length(traversal->source, x_span,
+                                         traversal->viewport_width, &x)) ||
+        (has_y && !svg_shape_read_length(traversal->source, y_span,
+                                         traversal->viewport_height, &y))) {
         fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
              has_x ? x_span.offset : y_span.offset);
         return false;
@@ -407,13 +317,18 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     geom_affine local_transform;
     if (symbol) {
         size_t unsupported_offset = 0U;
-        if (!symbol_attributes_supported(traversal, target,
-                                         &unsupported_offset)) {
+        if (!svg_shape_symbol_attributes_supported(
+                traversal->source, traversal->tokens,
+                traversal->token_count, target, &unsupported_offset)) {
             fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
                  unsupported_offset);
             return false;
         }
-        if (!symbol_mapping(traversal, target, use, &local_transform)) {
+        if (!svg_shape_symbol_mapping(
+                traversal->source, traversal->tokens,
+                traversal->token_count, target, use,
+                traversal->viewport_width, traversal->viewport_height,
+                &local_transform)) {
             svg_xml_span preserve;
             size_t offset = attr(traversal->source, traversal->tokens,
                                  traversal->token_count, use,
@@ -452,6 +367,8 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     }
     traversal->element_visits++;
 
+    size_t opacity_group = SVG_SHAPE_NO_GROUP;
+    if (!begin_opacity_group(traversal, &use_style, &opacity_group)) return false;
     size_t first_shape = traversal->builder.doc->shape_count;
     size_t first_edge = traversal->builder.doc->edge_count;
     traversal->active_references[traversal->reference_depth++] = target;
@@ -465,19 +382,37 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
         } else {
             ok = compute_style(traversal, target, &use_style, &symbol_style);
             if (ok) {
+                double previous_width = traversal->viewport_width;
+                double previous_height = traversal->viewport_height;
+                svg_xml_span view_span;
+                double view_box[4];
+                if (!attr(traversal->source, traversal->tokens,
+                          traversal->token_count, target, "viewBox", NULL,
+                          &view_span) ||
+                    !svg_shape_read_number_list(traversal->source, view_span,
+                                                view_box, 4U)) {
+                    fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
+                         target_token->name.offset);
+                    ok = false;
+                } else {
+                    traversal->viewport_width = view_box[2];
+                    traversal->viewport_height = view_box[3];
+                }
                 svg_xml_span symbol_clip;
-                if (svg_css_paint_value(&symbol_style, SVG_CSS_CLIP_PATH,
+                if (ok && svg_css_paint_value(&symbol_style, SVG_CSS_CLIP_PATH,
                                         &symbol_clip) &&
                     !svg_css_keyword_equals(traversal->source, symbol_clip,
                                             "none")) {
                     fail(traversal->diagnostic,
                          SVG_SHAPE_ERROR_UNSUPPORTED, symbol_clip.offset);
                     ok = false;
-                } else {
+                } else if (ok) {
                     ok = walk_range(traversal, target + 1U, target_end,
                                     instance_transform, &symbol_style,
                                     render_depth + 1U);
                 }
+                traversal->viewport_width = previous_width;
+                traversal->viewport_height = previous_height;
             }
         }
     } else {
@@ -500,8 +435,11 @@ static bool resolve_use(shape_traversal *traversal, size_t use,
     if (ok && svg_css_paint_value(&use_style, SVG_CSS_CLIP_PATH,
                                   &clip_value) &&
         !svg_css_keyword_equals(traversal->source, clip_value, "none"))
-        ok = apply_declared_clip(traversal, clip_value, first_shape,
-                                 first_edge, instance_transform);
+        ok = svg_shape_apply_declared_clip(traversal->source, traversal->tokens,
+            traversal->token_count, &traversal->references, traversal->css,
+            traversal->builder.doc, clip_value, first_shape, first_edge,
+            instance_transform, traversal->diagnostic);
+    finish_opacity_group(traversal, opacity_group);
     return ok;
 }
 
@@ -519,6 +457,7 @@ static bool render_node(shape_traversal *traversal, size_t element,
     if (token->prefix.length != 0U ||
         (root && !element_name(traversal->source, token, "svg")) ||
         (!root && !element_name(traversal->source, token, "g") &&
+         !element_name(traversal->source, token, "svg") &&
          !element_name(traversal->source, token, "use") &&
          !basic_shape(traversal->source, token))) {
         fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
@@ -547,6 +486,10 @@ static bool render_node(shape_traversal *traversal, size_t element,
     }
     svg_css_paint style;
     if (!compute_style(traversal, element, parent_paint, &style)) return false;
+    bool display_none = false;
+    if (!svg_shape_style_display_none(traversal->source, &style,
+            token->name.offset, &display_none, traversal->diagnostic)) return false;
+    if (display_none) return true;
 
     geom_affine current;
     size_t local_operations = 0U;
@@ -556,25 +499,99 @@ static bool render_node(shape_traversal *traversal, size_t element,
                                   &local_operations, traversal->diagnostic) ||
         !account_transform(traversal, local_operations, token->name.offset))
         return false;
-    if (root && !root_viewport(traversal, element)) return false;
+    if (root && !svg_shape_root_viewport(
+            traversal->source, traversal->tokens, traversal->token_count,
+            element, traversal->builder.doc, &traversal->viewport_width,
+            &traversal->viewport_height, traversal->diagnostic)) return false;
+
+    bool nested_svg = !root && element_name(traversal->source, token, "svg");
+    geom_point viewport_clip[4] = {{0}};
+    double child_width = traversal->viewport_width;
+    double child_height = traversal->viewport_height;
+    bool viewport_empty = false;
+    if (nested_svg) {
+        if (!svg_shape_nested_viewport(
+                traversal->source, traversal->tokens,
+                traversal->token_count, element, traversal->viewport_width,
+                traversal->viewport_height, current, &current, viewport_clip,
+                &child_width, &child_height, &viewport_empty,
+                traversal->diagnostic)) return false;
+        if (viewport_empty) return true;
+    }
+
+    size_t opacity_group = SVG_SHAPE_NO_GROUP;
+    if (!begin_opacity_group(traversal, &style, &opacity_group)) return false;
+    traversal->builder.viewport_width = traversal->viewport_width;
+    traversal->builder.viewport_height = traversal->viewport_height;
 
     if (!root && !element_name(traversal->source, token, "g") &&
+        !nested_svg &&
         !svg_shape_builder_add_element(&traversal->builder,
                                        traversal->source, traversal->tokens,
                                        traversal->token_count, element, &style,
-                                       current)) return false;
+                                       current)) {
+        finish_opacity_group(traversal, opacity_group);
+        return false;
+    }
 
-    if (end == element) return true;
+    if (end == element) {
+        finish_opacity_group(traversal, opacity_group);
+        return true;
+    }
     size_t first_shape = traversal->builder.doc->shape_count;
     size_t first_edge = traversal->builder.doc->edge_count;
-    if (!walk_range(traversal, element + 1U, end, current, &style,
-                    render_depth + 1U)) return false;
+    double previous_width = traversal->viewport_width;
+    double previous_height = traversal->viewport_height;
+    if (nested_svg) {
+        traversal->viewport_width = child_width;
+        traversal->viewport_height = child_height;
+    }
+    traversal->builder.viewport_width = traversal->viewport_width;
+    traversal->builder.viewport_height = traversal->viewport_height;
+    bool walked = walk_range(traversal, element + 1U, end, current, &style,
+                             render_depth + 1U);
+    traversal->viewport_width = previous_width;
+    traversal->viewport_height = previous_height;
+    traversal->builder.viewport_width = previous_width;
+    traversal->builder.viewport_height = previous_height;
+    if (!walked) {
+        finish_opacity_group(traversal, opacity_group);
+        return false;
+    }
+    if (nested_svg && traversal->builder.doc->shape_count != first_shape) {
+        svg_shape_clip *viewport = svg_clip_create_rect(
+            viewport_clip[0], viewport_clip[1], viewport_clip[2],
+            viewport_clip[3]);
+        if (viewport == NULL) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_OOM,
+                 token->name.offset);
+            finish_opacity_group(traversal, opacity_group);
+            return false;
+        }
+        bool applied = svg_clip_apply_group(
+            traversal->builder.doc, first_shape,
+            traversal->builder.doc->shape_count, viewport);
+        svg_clip_destroy(viewport);
+        if (!applied) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
+                 token->name.offset);
+            finish_opacity_group(traversal, opacity_group);
+            return false;
+        }
+        traversal->builder.doc->has_clips = true;
+    }
     svg_xml_span clip_value;
-    if ((root || element_name(traversal->source, token, "g")) &&
+    if ((root || element_name(traversal->source, token, "g") || nested_svg) &&
         svg_css_paint_value(&style, SVG_CSS_CLIP_PATH, &clip_value) &&
-        !svg_css_keyword_equals(traversal->source, clip_value, "none"))
-        return apply_declared_clip(traversal, clip_value, first_shape,
-                                   first_edge, current);
+        !svg_css_keyword_equals(traversal->source, clip_value, "none")) {
+        bool clipped = svg_shape_apply_declared_clip(traversal->source, traversal->tokens,
+            traversal->token_count, &traversal->references, traversal->css,
+            traversal->builder.doc, clip_value, first_shape, first_edge,
+            current, traversal->diagnostic);
+        finish_opacity_group(traversal, opacity_group);
+        return clipped;
+    }
+    finish_opacity_group(traversal, opacity_group);
     return true;
 }
 
@@ -630,6 +647,10 @@ static bool walk_range(shape_traversal *traversal, size_t first, size_t limit,
         if (svg_reference_definition_end(traversal->source, traversal->tokens,
                                          traversal->token_count, i,
                                          &definition_end)) {
+            i = end + 1U;
+            continue;
+        }
+        if (metadata_element(traversal->source, token)) {
             i = end + 1U;
             continue;
         }

@@ -2,8 +2,10 @@
 
 `raster_shape_render` allocates a caller-owned transparent RGBA tile and fills
 the flattened edges from `svg_shape_document`. Geometry remains in user space;
-the viewBox maps it to the tile with SVG default `xMidYMid meet` sizing and
-centered letterboxing. Each pixel uses a deterministic 4x4 grid at offsets
+the root viewBox maps it to the tile with the parsed `preserveAspectRatio`
+alignment and `meet`, `slice`, or `none` behavior. The default is centered
+`xMidYMid meet`. Nested `<svg>` viewport clips are carried by the shape
+document. Each pixel uses a deterministic 4x4 grid at offsets
 `{0.125, 0.375, 0.625, 0.875}` on each axis. For each shape, a sample is
 covered only when it is inside the shape and inside every clip in its chain.
 Pixel coverage is the rounded fraction of those 16 covered samples. A gradient
@@ -61,6 +63,11 @@ one row wide, and scanline events are at most two per edge. Rendering remains
 single-threaded and deterministic. Output ownership
 passes to the caller only on success, who releases it with `raster_tile_destroy`.
 
+Element/group `opacity` is composited in isolated RGBA layers after the group
+contents have painted. Nested layers composite source-over in document order.
+Scratch tile bytes are checked and capped at 64 MiB; a request above the cap
+returns a limit diagnostic instead of painting a partial frame.
+
 ## Raster modules
 
 - `shape_render.c` validates the document, builds bounds and scanline state,
@@ -71,6 +78,8 @@ passes to the caller only on success, who releases it with `raster_tile_destroy`
   integer source-over operation. It preserves the test-only scalar alpha mode.
 - `shape_render_stroke.c` tests local stroke geometry, caps, joins, miter limits,
   dash segments, and closed-path dash seams using the precomputed local edges.
+- `shape_render_group.c` renders isolated opacity subtrees using bounded tile
+  scratch and composites each layer with source-over alpha.
 - `shape_bounds.c` owns conservative device-space shape boxes and the boundary
   mask; `shape_scanline.c` owns row events and active-edge ordering.
 - `shape_render_internal.h` carries private measurement and helper contracts;

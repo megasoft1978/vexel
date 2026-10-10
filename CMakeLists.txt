@@ -109,16 +109,28 @@ set_target_properties(vexel_document PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRE
 
 add_library(vexel_shape STATIC
     src/geom/geometry.c
+    # lane: decode — bounded CSS color parser
+    src/svg/css/color.c
     src/svg/css/css.c
     src/svg/reference/reference.c
     src/svg/paint/paint.c
     src/svg/clip/clip.c
     src/svg/shape/shape.c
+    # lane: decode — focused geometry decoding and rounded rectangles
+    src/svg/shape/shape_geometry.c
+    # lane: decode — bounded nested SVG viewport mappings
+    src/svg/shape/viewport.c
+    # lane: decode — color and stroke style value parsing
+    src/svg/shape/shape_style.c
+    # lane: decode — bounded group clipping adapter
+    src/svg/shape/shape_clip_apply.c
     src/svg/shape/traverse.c
     src/svg/shape/transform.c
     src/svg/shape/document.c
     src/svg/shape/shape_alloc.c
     src/raster/shape_render.c
+    # lane: decode — bounded isolated opacity layers
+    src/raster/shape_render_group.c
     src/raster/shape_render_sample.c
     src/raster/shape_render_stroke.c
     src/raster/shape_bounds.c

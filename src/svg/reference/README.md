@@ -23,3 +23,9 @@ span-visit budget per decode. These counters bound repeated traversal; they do
 not trigger any source copy. The original source remains borrowed and unchanged. SVG 2 Document
 Structure was consulted 2026-10-09. The implementation is original project
 code.
+
+Attribute validation includes stroke-capable paths and basic shapes, rounded
+rectangle `rx`/`ry`, CSS presentation values, and nested `<svg>` viewport
+attributes. Unsupported attributes still fail with the original token's source
+offset. Nested viewBox mappings and viewport clipping are performed by shape
+traversal; this module only indexes and validates local references.

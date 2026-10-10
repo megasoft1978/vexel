@@ -102,7 +102,7 @@ bool clip_boundary_accounting_check(void)
     size_t expected_work = TEST_PAINTED_SHAPES * per_shape;
     if (ok) {
         bool marked = raster_shape_bounds_mark_clip_boundaries(
-            &doc, 1.0, 0.0, 0.0, &boundary);
+            &doc, 1.0, 1.0, 0.0, 0.0, &boundary);
         ok = !marked && boundary.mark_work == expected_work &&
              boundary.mark_work > 200000000U;
     }

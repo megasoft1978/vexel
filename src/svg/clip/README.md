@@ -31,6 +31,11 @@ empty clips, unsupported child syntax, singular transforms, and external
 references fail with stable diagnostics. The raster work budget includes clip
 edge tests.
 
+The module also exposes an owned four-corner rectangle clip used by nested SVG
+viewports. Shape traversal maps that rectangle through the active viewport
+transform and attaches it to every descendant shape in the viewport range;
+this clip intersects with the shape's other clips during raster sampling.
+
 The 512 KiB budget allows about 1,700 standalone shape clips when each
 generated copy is about 300 bytes. Group clips consume one copy per declaring
 group regardless of its child shape count. Scratch is still charged once per

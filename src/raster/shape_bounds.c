@@ -75,7 +75,8 @@ static void full_tile_bounds(const svg_shape_document *doc,
                                            0U, doc->height - 1U, true};
 }
 
-static bool map_user_box(const svg_shape_document *doc, double scale,
+static bool map_user_box(const svg_shape_document *doc,
+                         double scale_x, double scale_y,
                          double offset_x, double offset_y,
                          geometry_bounds user, raster_shape_bounds *out)
 {
@@ -87,10 +88,10 @@ static bool map_user_box(const svg_shape_document *doc, double scale,
         full_tile_bounds(doc, out);
         return true;
     }
-    double left = offset_x + (user.left - doc->view_x) * scale;
-    double right = offset_x + (user.right - doc->view_x) * scale;
-    double top = offset_y + (user.top - doc->view_y) * scale;
-    double bottom = offset_y + (user.bottom - doc->view_y) * scale;
+    double left = offset_x + (user.left - doc->view_x) * scale_x;
+    double right = offset_x + (user.right - doc->view_x) * scale_x;
+    double top = offset_y + (user.top - doc->view_y) * scale_y;
+    double bottom = offset_y + (user.bottom - doc->view_y) * scale_y;
     if (!isfinite(left) || !isfinite(right) || !isfinite(top) || !isfinite(bottom)) {
         full_tile_bounds(doc, out);
         return true;
@@ -135,7 +136,8 @@ static bool stroke_padding(const svg_shape_document *doc, size_t shape,
     return isfinite(*pad_x) && isfinite(*pad_y);
 }
 
-bool raster_shape_bounds_build(const svg_shape_document *doc, double scale,
+bool raster_shape_bounds_build(const svg_shape_document *doc,
+                               double scale_x, double scale_y,
                                double offset_x, double offset_y,
                                raster_shape_bounds_set *out,
                                svg_shape_diagnostic *diagnostic)
@@ -194,7 +196,8 @@ bool raster_shape_bounds_build(const svg_shape_document *doc, double scale,
                 combined.invalid |= strokes[shape].invalid;
             }
         }
-        if (!map_user_box(doc, scale, offset_x, offset_y, combined, &shapes[shape])) {
+        if (!map_user_box(doc, scale_x, scale_y, offset_x, offset_y,
+                          combined, &shapes[shape])) {
             free(fills); free(strokes); free(shapes);
             return false;
         }
@@ -268,7 +271,8 @@ static void mark_pixel(raster_boundary_mask *mask, size_t index)
 }
 
 bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
-                                         double scale, double offset_x,
+                                         double scale_x, double scale_y,
+                                         double offset_x,
                                          double offset_y,
                                          raster_boundary_mask *out,
                                          svg_shape_diagnostic *diagnostic)
@@ -302,20 +306,22 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
             edge_pixels[i] = (raster_pixel_bounds){0U, doc->width - 1U,
                                                    0U, doc->height - 1U, true};
         } else {
-            double x1 = offset_x + (edge.a.x - doc->view_x) * scale;
-            double x2 = offset_x + (edge.b.x - doc->view_x) * scale;
-            double y1 = offset_y + (edge.a.y - doc->view_y) * scale;
-            double y2 = offset_y + (edge.b.y - doc->view_y) * scale;
-            double padding = radius * scale;
+            double x1 = offset_x + (edge.a.x - doc->view_x) * scale_x;
+            double x2 = offset_x + (edge.b.x - doc->view_x) * scale_x;
+            double y1 = offset_y + (edge.a.y - doc->view_y) * scale_y;
+            double y2 = offset_y + (edge.b.y - doc->view_y) * scale_y;
+            double padding_x = radius * scale_x;
+            double padding_y = radius * scale_y;
             double epsilon = fmax(1.0, fmax(fabs(x1), fmax(fabs(x2),
                                   fmax(fabs(y1), fabs(y2))))) * DBL_EPSILON * 8.0;
             uint32_t x_first, x_last, y_first, y_last;
             bool valid = isfinite(x1) && isfinite(x2) && isfinite(y1) &&
-                         isfinite(y2) && isfinite(padding) && isfinite(epsilon);
-            bool x_visible = valid && boundary_pixel_range(fmin(x1, x2)-padding-epsilon,
-                fmax(x1, x2)+padding+epsilon, doc->width, &x_first, &x_last);
-            bool y_visible = valid && boundary_pixel_range(fmin(y1, y2)-padding-epsilon,
-                fmax(y1, y2)+padding+epsilon, doc->height, &y_first, &y_last);
+                         isfinite(y2) && isfinite(padding_x) &&
+                         isfinite(padding_y) && isfinite(epsilon);
+            bool x_visible = valid && boundary_pixel_range(fmin(x1, x2)-padding_x-epsilon,
+                fmax(x1, x2)+padding_x+epsilon, doc->width, &x_first, &x_last);
+            bool y_visible = valid && boundary_pixel_range(fmin(y1, y2)-padding_y-epsilon,
+                fmax(y1, y2)+padding_y+epsilon, doc->height, &y_first, &y_last);
             if (!valid) {
                 edge_pixels[i] = (raster_pixel_bounds){0U, doc->width - 1U,
                                                        0U, doc->height - 1U, true};
@@ -364,7 +370,8 @@ bool raster_shape_bounds_mark_boundaries(const svg_shape_document *doc,
 typedef struct clip_boundary_context {
     const svg_shape_document *document;
     raster_boundary_mask *boundary;
-    double scale;
+    double scale_x;
+    double scale_y;
     double offset_x;
     double offset_y;
     size_t work;
@@ -377,10 +384,10 @@ static bool clip_edge_pixel_bounds(const clip_boundary_context *context,
                                    raster_pixel_bounds *out)
 {
     const svg_shape_document *doc = context->document;
-    double x1 = context->offset_x + (edge.a.x - doc->view_x) * context->scale;
-    double x2 = context->offset_x + (edge.b.x - doc->view_x) * context->scale;
-    double y1 = context->offset_y + (edge.a.y - doc->view_y) * context->scale;
-    double y2 = context->offset_y + (edge.b.y - doc->view_y) * context->scale;
+    double x1 = context->offset_x + (edge.a.x - doc->view_x) * context->scale_x;
+    double x2 = context->offset_x + (edge.b.x - doc->view_x) * context->scale_x;
+    double y1 = context->offset_y + (edge.a.y - doc->view_y) * context->scale_y;
+    double y2 = context->offset_y + (edge.b.y - doc->view_y) * context->scale_y;
     if (!isfinite(x1) || !isfinite(x2) || !isfinite(y1) || !isfinite(y2))
         return false;
     double epsilon = fmax(1.0, fmax(fabs(x1), fmax(fabs(x2),
@@ -476,18 +483,21 @@ static bool mark_full_boundary_mask(clip_boundary_context *context)
 }
 
 bool raster_shape_bounds_mark_clip_boundaries(
-    const svg_shape_document *doc, double scale, double offset_x,
+    const svg_shape_document *doc, double scale_x, double scale_y,
+    double offset_x,
     double offset_y, raster_boundary_mask *boundary)
 {
     if (doc == NULL || boundary == NULL || boundary->bits == NULL ||
-        !isfinite(scale) || scale <= 0.0 ||
+        !isfinite(scale_x) || scale_x <= 0.0 ||
+        !isfinite(scale_y) || scale_y <= 0.0 ||
         !isfinite(offset_x) || !isfinite(offset_y)) return false;
     if (!doc->has_clips || doc->clips == NULL) return true;
     if (!preflight_clip_boundary_visits(doc, boundary)) return false;
     clip_boundary_context context = {
         .document = doc,
         .boundary = boundary,
-        .scale = scale,
+        .scale_x = scale_x,
+        .scale_y = scale_y,
         .offset_x = offset_x,
         .offset_y = offset_y,
         .work = boundary->mark_work,

@@ -10,23 +10,23 @@ static const double sample_y_offsets[RASTER_SCANLINE_VALUES_PER_ROW] = {
 };
 
 static double user_scanline_y(const svg_shape_document *doc, size_t slot,
-                              double scale, double offset_y)
+                              double scale_y, double offset_y)
 {
     size_t pixel_y = slot / RASTER_SCANLINE_VALUES_PER_ROW;
     size_t sample = slot % RASTER_SCANLINE_VALUES_PER_ROW;
     double device_y = (double)pixel_y + sample_y_offsets[sample];
-    return doc->view_y + (device_y - offset_y) / scale;
+    return doc->view_y + (device_y - offset_y) / scale_y;
 }
 
 static size_t first_scanline_at_or_above(const svg_shape_document *doc,
                                          size_t count, double target,
-                                         double scale, double offset_y)
+                                         double scale_y, double offset_y)
 {
     size_t low = 0U;
     size_t high = count;
     while (low < high) {
         size_t middle = low + (high - low) / 2U;
-        double y = user_scanline_y(doc, middle, scale, offset_y);
+        double y = user_scanline_y(doc, middle, scale_y, offset_y);
         if (y < target) low = middle + 1U;
         else high = middle;
     }
@@ -191,7 +191,7 @@ static bool append_tree_in_order(const raster_scanline_node *nodes, int32_t root
 
 bool raster_scanline_index_create(const svg_shape_document *doc,
                                   const raster_shape_bounds_set *bounds,
-                                  double scale, double offset_y,
+                                  double scale_y, double offset_y,
                                   raster_scanline_index *out,
                                   svg_shape_diagnostic *diagnostic)
 {
@@ -200,7 +200,7 @@ bool raster_scanline_index_create(const svg_shape_document *doc,
     if (out == NULL) return false;
     *out = (raster_scanline_index){0};
     if (doc == NULL || bounds == NULL || bounds->shape_count != doc->shape_count ||
-        !isfinite(scale) || scale <= 0.0 ||
+        !isfinite(scale_y) || scale_y <= 0.0 ||
         (size_t)doc->height > SIZE_MAX / RASTER_SCANLINE_VALUES_PER_ROW ||
         doc->edge_count > SIZE_MAX / 2U || doc->shape_count > SIZE_MAX / 2U ||
         doc->edge_count > INT32_MAX || doc->shape_count > INT32_MAX ||
@@ -247,9 +247,9 @@ bool raster_scanline_index_create(const svg_shape_document *doc,
         double low_y = fmin(edge.a.y, edge.b.y);
         double high_y = fmax(edge.a.y, edge.b.y);
         size_t first = first_scanline_at_or_above(doc, scanline_count, low_y,
-                                                   scale, offset_y);
+                                                   scale_y, offset_y);
         size_t end = first_scanline_at_or_above(doc, scanline_count, high_y,
-                                                 scale, offset_y);
+                                                 scale_y, offset_y);
         if (first >= end || first >= scanline_count) continue;
         if (end > scanline_count) end = scanline_count;
         events[event_count++] = (raster_scanline_event){first,
