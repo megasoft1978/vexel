@@ -26,17 +26,90 @@ typedef struct svg_shape_stroke {
     uint8_t dash_count;
     svg_shape_linecap cap;
     svg_shape_linejoin join;
+    bool paint_server;
+    bool crisp_edges;
+    uint8_t paint_order;
 } svg_shape_stroke;
 typedef struct svg_shape_path_subpath {
     size_t first_edge;
     size_t edge_count; /* includes the implicit fill-closing edge */
     bool closed;       /* whether closepath explicitly closes the stroke path */
 } svg_shape_path_subpath;
+#define SVG_SHAPE_MAX_FILTER_PRIMITIVES 16U
+#define SVG_SHAPE_MAX_FILTER_MERGE_INPUTS 8U
+typedef enum svg_shape_filter_kind {
+    SVG_SHAPE_FILTER_GAUSSIAN_BLUR,
+    SVG_SHAPE_FILTER_OFFSET,
+    SVG_SHAPE_FILTER_FLOOD,
+    SVG_SHAPE_FILTER_BLEND,
+    SVG_SHAPE_FILTER_COMPOSITE,
+    SVG_SHAPE_FILTER_MERGE,
+    SVG_SHAPE_FILTER_COLOR_MATRIX,
+    SVG_SHAPE_FILTER_DROP_SHADOW
+} svg_shape_filter_kind;
+
+#define SVG_SHAPE_FILTER_INPUT_PREVIOUS (-1)
+#define SVG_SHAPE_FILTER_INPUT_GRAPHIC (-2)
+#define SVG_SHAPE_FILTER_INPUT_ALPHA (-3)
+typedef struct svg_shape_filter_primitive {
+    svg_shape_filter_kind kind;
+    int32_t input;
+    int32_t input2;
+    int32_t merge_inputs[SVG_SHAPE_MAX_FILTER_MERGE_INPUTS];
+    uint8_t merge_count;
+    uint8_t mode;
+    uint8_t rgba[4];
+    double values[20];
+    size_t source_offset;
+} svg_shape_filter_primitive;
+
+typedef struct svg_shape_filter {
+    size_t first_primitive;
+    size_t primitive_count;
+    bool linear_rgb;
+    bool filter_units_object_bounding_box;
+    bool primitive_units_object_bounding_box;
+    bool custom_region;
+    double region[4];
+} svg_shape_filter;
+
+typedef struct svg_shape_document svg_shape_document;
+#define SVG_SHAPE_MAX_MASKS 4096U
+#define SVG_SHAPE_NO_MASK SIZE_MAX
+typedef struct svg_shape_mask {
+    svg_shape_document *content;
+    bool luminance;
+    bool region_object_bounding_box;
+    bool custom_region;
+    double region[4];
+    geom_affine region_transform;
+    size_t source_offset;
+} svg_shape_mask;
+
+#define SVG_SHAPE_MAX_PATTERNS 4096U
+#define SVG_SHAPE_MAX_PATTERN_BYTES (16U * 1024U * 1024U)
+#define SVG_SHAPE_NO_PATTERN SIZE_MAX
+typedef struct svg_shape_pattern {
+    uint8_t *rgba;
+    size_t byte_count;
+    uint32_t width;
+    uint32_t height;
+    size_t definition_element;
+    double tile_width;
+    double tile_height;
+    geom_affine content_transform;
+} svg_shape_pattern;
+
+#define SVG_SHAPE_NO_FILTER SIZE_MAX
 typedef struct svg_shape_opacity_group {
     size_t first_shape;
     size_t end_shape;
     size_t parent;
     double opacity;
+    size_t filter_index;
+    size_t mask_index;
+    uint8_t blend_mode;
+    bool isolation;
 } svg_shape_opacity_group;
 #define SVG_SHAPE_NO_GROUP SIZE_MAX
 typedef struct svg_shape_aspect {
@@ -70,6 +143,8 @@ typedef struct svg_shape_path_segment {
     size_t command_offset; /* SIZE_MAX for an implicit repeated command */
     size_t first_number;
     size_t number_count;
+    size_t first_edge;
+    size_t edge_count;
     size_t shape_index;
 } svg_shape_path_segment;
 
@@ -99,11 +174,17 @@ typedef enum svg_shape_error {
     SVG_SHAPE_ERROR_LIMIT,
     SVG_SHAPE_ERROR_PATH,
     SVG_SHAPE_ERROR_VIEWPORT,
-    SVG_SHAPE_ERROR_OOM
+    SVG_SHAPE_ERROR_OOM,
+    SVG_SHAPE_ERROR_UNSUPPORTED_FE_TURBULENCE,
+    SVG_SHAPE_ERROR_UNSUPPORTED_FE_DISPLACEMENT_MAP,
+    SVG_SHAPE_ERROR_UNSUPPORTED_FE_CONVOLVE_MATRIX,
+    SVG_SHAPE_ERROR_UNSUPPORTED_FE_IMAGE,
+    SVG_SHAPE_ERROR_UNSUPPORTED_FE_LIGHTING,
+    SVG_SHAPE_ERROR_UNSUPPORTED_FE_MORPHOLOGY
 } svg_shape_error;
 
 typedef struct svg_shape_diagnostic { svg_shape_error category; size_t offset; } svg_shape_diagnostic;
-typedef struct svg_shape_document {
+struct svg_shape_document {
     uint32_t width;
     uint32_t height;
     double view_x, view_y, view_width, view_height;
@@ -132,20 +213,35 @@ typedef struct svg_shape_document {
     svg_shape_image_release_fn release_image;
     svg_shape_opacity_group *opacity_groups;
     size_t opacity_group_count;
+    svg_shape_filter *filters;
+    size_t filter_count;
+    svg_shape_filter_primitive *filter_primitives;
+    size_t filter_primitive_count;
+    svg_shape_mask *masks;
+    size_t mask_count;
+    svg_shape_pattern *patterns;
+    size_t pattern_count;
+    size_t pattern_bytes;
     geom_affine *shape_stroke_inverse;
     svg_shape_stroke *strokes;
     svg_shape_paint *paints;
+    svg_shape_paint *stroke_paints; /* allocated only for pattern strokes */
+    size_t stroke_paint_capacity;
     svg_paint_stop *paint_stops;
     size_t paint_stop_count;
     svg_shape_clip **clips;
     bool has_clips;
     size_t clip_bytes;
     base_bytes source; /* borrowed; caller keeps source alive with document */
-} svg_shape_document;
+};
 
 /* out owns decoded arrays and borrows source until document_destroy. Failure leaves out empty. */
 svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out,
                                  svg_shape_diagnostic *diagnostic);
+/* Decodes conditional <switch> children for one injected BCP-47 language. */
+svg_shape_error svg_shape_decode_with_system_language(
+    base_bytes source, base_bytes system_language, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic);
 /* Additive media-aware decode entry point. The document retains decoded image
  * buffers through the provider's release callback and borrows source bytes. */
 svg_shape_error svg_shape_decode_with_media(

@@ -14,6 +14,7 @@
 
 typedef struct shape_traversal {
     base_bytes source;
+    base_bytes system_language;
     svg_xml_token *tokens;
     size_t token_count;
     svg_css_sheet *css;
@@ -25,6 +26,16 @@ typedef struct shape_traversal {
     size_t reference_depth;
     size_t use_instances;
     size_t reference_bytes;
+    size_t active_masks[8];
+    size_t active_mask_depth;
+    size_t mask_instances;
+    size_t active_patterns[8];
+    size_t active_pattern_depth;
+    size_t pattern_instances;
+    size_t pattern_bytes;
+    size_t active_markers[8];
+    size_t active_marker_depth;
+    size_t marker_instances;
     size_t element_visits;
     size_t paint_token_visits;
     size_t transform_operations;
@@ -66,6 +77,19 @@ bool svg_shape_traverse_compute_style(shape_traversal *traversal,
 bool svg_shape_traverse_begin_opacity_group(shape_traversal *traversal,
                                             const svg_css_paint *style,
                                             size_t *group);
+bool svg_shape_traverse_attach_mask(shape_traversal *traversal,
+                                    size_t element, size_t group,
+                                    const svg_css_paint *style,
+                                    geom_affine transform);
+bool svg_shape_traverse_select_switch_child(shape_traversal *traversal,
+                                           size_t element, size_t end,
+                                           size_t *child_first,
+                                           size_t *child_limit, bool *found);
+bool svg_shape_traverse_attach_markers(shape_traversal *traversal,
+                                       size_t element, size_t first_shape,
+                                       size_t end_shape,
+                                       const svg_css_paint *style,
+                                       size_t render_depth);
 void svg_shape_traverse_finish_opacity_group(shape_traversal *traversal,
                                              size_t group);
 bool svg_shape_traverse_resolve_use(shape_traversal *traversal, size_t use,

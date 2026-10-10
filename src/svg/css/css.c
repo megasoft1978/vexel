@@ -166,7 +166,20 @@ static int property(base_bytes s, svg_xml_span n) {
                                                         "font-style",
                                                         "text-anchor",
                                                         "letter-spacing",
-                                                        "word-spacing"};
+                                                        "word-spacing",
+                                                        "filter",
+                                                        "mask",
+                                                        "mix-blend-mode",
+                                                        "isolation",
+                                                        "vector-effect",
+                                                        "shape-rendering",
+                                                        "paint-order",
+                                                        "marker",
+                                                        "marker-start",
+                                                        "marker-mid",
+                                                        "marker-end",
+                                                        "mask-type",
+                                                        "color-interpolation-filters"};
     for (int i = 0; i < (int)SVG_CSS_PROPERTY_COUNT; i++)
         if (eq_ci(s, n, names[i]))
             return i;
@@ -550,6 +563,11 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
     /* clip-path is applied by its declaring element. Ancestors are handled as
      * enclosing clip intersections by shape traversal. */
     out->values[SVG_CSS_CLIP_PATH] = (svg_css_value){0};
+    out->values[SVG_CSS_FILTER] = (svg_css_value){0};
+    out->values[SVG_CSS_MASK] = (svg_css_value){0};
+    out->values[SVG_CSS_MIX_BLEND_MODE] = (svg_css_value){0};
+    out->values[SVG_CSS_ISOLATION] = (svg_css_value){0};
+    out->values[SVG_CSS_VECTOR_EFFECT] = (svg_css_value){0};
     winner w[SVG_CSS_PROPERTY_COUNT] = {0};
     const svg_xml_token *t = tokens;
     uint32_t order = 0;
@@ -595,7 +613,20 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
                                       "font-style",
                                       "text-anchor",
                                       "letter-spacing",
-                                      "word-spacing"};
+                                      "word-spacing",
+                                      "filter",
+                                      "mask",
+                                      "mix-blend-mode",
+                                      "isolation",
+                                      "vector-effect",
+                                      "shape-rendering",
+                                      "paint-order",
+                                      "marker",
+                                      "marker-start",
+                                      "marker-mid",
+                                      "marker-end",
+                                      "mask-type",
+                                      "color-interpolation-filters"};
         svg_xml_span v;
         if (span_attr(source, t, count, element, names[p], &v)) {
             rule_decl d = {(svg_css_property)p, v, false};

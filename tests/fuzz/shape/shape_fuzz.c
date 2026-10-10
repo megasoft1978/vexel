@@ -10,12 +10,14 @@
 
 #define INPUT_CAP 4096U
 #define SHAPE_SOURCE_LIMIT (16U * 1024U * 1024U)
-#define FEATURE_COUNT 11U
+#define FEATURE_COUNT 22U
 
 static const char *const feature_names[FEATURE_COUNT] = {
     "path_stroke", "rounded_rect", "colors", "transforms", "opacity",
     "nested_viewport", "gradients", "css_selectors", "length_units",
-    "text", "image"
+    "text", "image", "mask", "pattern", "marker", "filter",
+    "blend_modes", "switch", "anchor", "vector_effect", "paint_order",
+    "crisp_edges", "join_fallbacks"
 };
 
 static void identify_features(const char *shape, bool features[FEATURE_COUNT])
@@ -44,6 +46,24 @@ static void identify_features(const char *shape, bool features[FEATURE_COUNT])
     features[9] = strstr(shape, "<text") != NULL || strstr(shape, "<tspan") != NULL;
     features[10] = strstr(shape, "<image") != NULL ||
                    strstr(shape, "data:image/") != NULL;
+    features[11] = strstr(shape, "<mask") != NULL ||
+                   strstr(shape, "mask=") != NULL;
+    features[12] = strstr(shape, "<pattern") != NULL ||
+                   strstr(shape, "pattern") != NULL;
+    features[13] = strstr(shape, "<marker") != NULL ||
+                   strstr(shape, "marker-") != NULL;
+    features[14] = strstr(shape, "<filter") != NULL ||
+                   strstr(shape, "filter=") != NULL;
+    features[15] = strstr(shape, "mix-blend-mode") != NULL ||
+                   strstr(shape, "isolation") != NULL ||
+                   strstr(shape, "<feBlend") != NULL;
+    features[16] = strstr(shape, "<switch") != NULL;
+    features[17] = strstr(shape, "<a>") != NULL;
+    features[18] = strstr(shape, "vector-effect") != NULL;
+    features[19] = strstr(shape, "paint-order") != NULL;
+    features[20] = strstr(shape, "crispEdges") != NULL;
+    features[21] = strstr(shape, "stroke-linejoin=\"arcs\"") != NULL ||
+                   strstr(shape, "stroke-linejoin=\"miter-clip\"") != NULL;
 }
 
 static svg_shape_media_status fuzz_layout_text(
@@ -194,6 +214,17 @@ int main(int argc, char **argv)
         ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/jpeg;base64,AA==\"/>"
         ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/png;base64,A===\"/>"
         ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"https://example.invalid/image.png\"/>"
+        ,"<defs><mask id=\"m\" mask-type=\"alpha\"><circle cx=\".5\" cy=\".5\" r=\".45\" fill=\"white\"/></mask></defs><rect width=\"16\" height=\"16\" fill=\"red\" mask=\"url(#m)\"/>"
+        ,"<defs><pattern id=\"p\" patternUnits=\"userSpaceOnUse\" width=\"4\" height=\"4\"><rect width=\"2\" height=\"2\" fill=\"blue\"/></pattern></defs><rect width=\"16\" height=\"16\" fill=\"url(#p)\"/>"
+        ,"<defs><marker id=\"m\" markerWidth=\"4\" markerHeight=\"4\" refX=\"2\" refY=\"2\" orient=\"auto\"><path d=\"M0 0L4 2L0 4Z\" fill=\"red\" stroke=\"none\"/></marker></defs><path d=\"M2 8H14\" fill=\"none\" stroke=\"black\" marker-start=\"url(#m)\" marker-mid=\"url(#m)\" marker-end=\"url(#m)\"/>"
+        ,"<defs><filter id=\"f\"><feGaussianBlur stdDeviation=\".5\"/></filter></defs><rect x=\"3\" y=\"3\" width=\"10\" height=\"10\" filter=\"url(#f)\"/>"
+        ,"<g style=\"mix-blend-mode:multiply;isolation:isolate\"><rect width=\"10\" height=\"10\" fill=\"red\"/><circle cx=\"8\" cy=\"8\" r=\"5\" fill=\"blue\"/></g>"
+        ,"<switch><g systemLanguage=\"en\"><rect width=\"12\" height=\"12\" fill=\"green\"/></g><circle cx=\"8\" cy=\"8\" r=\"5\"/></switch>"
+        ,"<a><rect x=\"2\" y=\"2\" width=\"12\" height=\"12\" fill=\"teal\"/></a>"
+        ,"<path d=\"M1 2H15\" fill=\"none\" stroke=\"red\" stroke-width=\"2\" vector-effect=\"non-scaling-stroke\"/>"
+        ,"<path d=\"M2 14L8 2L14 14Z\" fill=\"orange\" stroke=\"black\" stroke-width=\"3\" paint-order=\"stroke fill\"/>"
+        ,"<path d=\"M2 2H14V14H2Z\" fill=\"purple\" shape-rendering=\"crispEdges\"/>"
+        ,"<path d=\"M2 14L8 2L14 14Z\" fill=\"none\" stroke=\"blue\" stroke-width=\"3\" stroke-linejoin=\"arcs\"/>"
     };
     static const char *coverage_cases[] = {
         "<rect x=\"1.125\" y=\"2.375\" width=\"8.5\" height=\"6.25\"/>",

@@ -143,6 +143,18 @@ bool svg_shape_traverse_compute_style(shape_traversal *traversal, size_t element
     return false;
 }
 
+static void apply_marker_shorthand(svg_css_paint *style)
+{
+    svg_xml_span marker = {0};
+    if (!svg_css_paint_value(style, SVG_CSS_MARKER, &marker)) return;
+    const svg_css_property longhands[] = {
+        SVG_CSS_MARKER_START, SVG_CSS_MARKER_MID, SVG_CSS_MARKER_END};
+    for (size_t i = 0U; i < sizeof(longhands) / sizeof(longhands[0]); ++i) {
+        if (!style->values[longhands[i]].present)
+            style->values[longhands[i]] = (svg_css_value){marker, true};
+    }
+}
+
 bool svg_shape_traverse_begin_opacity_group(shape_traversal *traversal,
                                 const svg_css_paint *style,
                                 size_t *group)
@@ -154,7 +166,50 @@ bool svg_shape_traverse_begin_opacity_group(shape_traversal *traversal,
         svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_NUMBER, value.offset);
         return false;
     }
-    if (opacity == 1.0) return true;
+    bool has_filter = false;
+    svg_xml_span filter_value = {0};
+    if (svg_css_paint_value(style, SVG_CSS_FILTER, &filter_value) &&
+        !svg_css_keyword_equals(traversal->source, filter_value, "none"))
+        has_filter = true;
+    bool has_mask = false;
+    svg_xml_span mask_value = {0};
+    if (svg_css_paint_value(style, SVG_CSS_MASK, &mask_value) &&
+        !svg_css_keyword_equals(traversal->source, mask_value, "none"))
+        has_mask = true;
+    uint8_t blend_mode = 0U;
+    svg_xml_span blend_value = {0};
+    if (svg_css_paint_value(style, SVG_CSS_MIX_BLEND_MODE, &blend_value)) {
+        static const char *const names[] = {
+            "normal", "multiply", "screen", "darken", "lighten"};
+        bool found = false;
+        for (size_t i = 0U; i < sizeof(names) / sizeof(names[0]); ++i) {
+            if (svg_shape_span_eq(traversal->source, blend_value, names[i])) {
+                blend_mode = (uint8_t)i;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            svg_shape_traverse_fail(traversal->diagnostic,
+                SVG_SHAPE_ERROR_UNSUPPORTED, blend_value.offset);
+            return false;
+        }
+    }
+    bool isolation = false;
+    svg_xml_span isolation_value = {0};
+    if (svg_css_paint_value(style, SVG_CSS_ISOLATION, &isolation_value)) {
+        if (svg_css_keyword_equals(traversal->source, isolation_value, "isolate"))
+            isolation = true;
+        else if (!svg_css_keyword_equals(traversal->source, isolation_value,
+                                         "auto")) {
+            svg_shape_traverse_fail(traversal->diagnostic,
+                SVG_SHAPE_ERROR_UNSUPPORTED, isolation_value.offset);
+            return false;
+        }
+    }
+    if (opacity == 1.0 && !has_filter && !has_mask &&
+        blend_mode == 0U && !isolation)
+        return true;
     if (traversal->opacity_group_depth >= SHAPE_MAX_XML_DEPTH + 1U ||
         traversal->builder.doc->opacity_group_count >= SVG_SHAPE_MAX_EDGES) {
         svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, value.offset);
@@ -183,7 +238,38 @@ bool svg_shape_traverse_begin_opacity_group(shape_traversal *traversal,
     size_t parent = traversal->opacity_group_depth == 0U ? SVG_SHAPE_NO_GROUP :
         traversal->opacity_group_stack[traversal->opacity_group_depth - 1U];
     document->opacity_groups[index] = (svg_shape_opacity_group){
-        document->shape_count, document->shape_count, parent, opacity};
+        .first_shape = document->shape_count,
+        .end_shape = document->shape_count,
+        .parent = parent,
+        .opacity = opacity,
+        .filter_index = SVG_SHAPE_NO_FILTER,
+        .mask_index = SVG_SHAPE_NO_MASK,
+        .blend_mode = blend_mode,
+        .isolation = isolation};
+    if (has_filter) {
+        size_t filter_index = SVG_SHAPE_NO_FILTER;
+        if (!svg_shape_filter_parse(
+                traversal->source, traversal->tokens,
+                traversal->token_count, &traversal->references, document,
+                filter_value, &filter_index, traversal->diagnostic))
+            return false;
+        svg_xml_span interpolation = {0};
+        if (svg_css_paint_value(style, SVG_CSS_COLOR_INTERPOLATION_FILTERS,
+                                &interpolation)) {
+            if (svg_css_keyword_equals(traversal->source, interpolation,
+                                       "sRGB"))
+                document->filters[filter_index].linear_rgb = false;
+            else if (!svg_css_keyword_equals(traversal->source, interpolation,
+                                              "linearRGB") &&
+                     !svg_css_keyword_equals(traversal->source, interpolation,
+                                              "auto")) {
+                svg_shape_traverse_fail(traversal->diagnostic,
+                    SVG_SHAPE_ERROR_UNSUPPORTED, interpolation.offset);
+                return false;
+            }
+        }
+        document->opacity_groups[index].filter_index = filter_index;
+    }
     traversal->opacity_group_stack[traversal->opacity_group_depth++] = index;
     *group = index;
     return true;
@@ -216,6 +302,8 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
     const svg_xml_token *token = &traversal->tokens[element];
     bool text_element = svg_shape_traverse_element_name(traversal->source, token, "text");
     bool tspan_element = svg_shape_traverse_element_name(traversal->source, token, "tspan");
+    bool link_element = svg_shape_traverse_element_name(traversal->source, token, "a");
+    bool switch_element = svg_shape_traverse_element_name(traversal->source, token, "switch");
     bool text_container = text_element || tspan_element;
     bool root = token->depth == 0U && !traversal->root_seen;
     if (render_depth > SHAPE_MAX_XML_DEPTH) {
@@ -228,6 +316,7 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
         (!root && !svg_shape_traverse_element_name(traversal->source, token, "g") &&
          !svg_shape_traverse_element_name(traversal->source, token, "svg") &&
          !svg_shape_traverse_element_name(traversal->source, token, "use") &&
+         !link_element && !switch_element &&
          !svg_shape_traverse_basic_shape(traversal->source, token))) {
         svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
              token->name.offset);
@@ -260,6 +349,7 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
     }
     svg_css_paint style;
     if (!svg_shape_traverse_compute_style(traversal, element, parent_paint, &style)) return false;
+    apply_marker_shorthand(&style);
     bool display_none = false;
     if (!svg_shape_style_display_none(traversal->source, &style,
             token->name.offset, &display_none, traversal->diagnostic)) return false;
@@ -301,7 +391,7 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
     size_t direct_first_shape = traversal->builder.doc->shape_count;
     size_t direct_first_edge = traversal->builder.doc->edge_count;
     if (!root && !svg_shape_traverse_element_name(traversal->source, token, "g") &&
-        !nested_svg) {
+        !nested_svg && !link_element && !switch_element) {
         if (text_container) {
             svg_shape_text_state *previous_state = traversal->text_state;
             if (traversal->text_depth > SHAPE_MAX_XML_DEPTH) {
@@ -386,7 +476,11 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
                 !assign_shape_source(traversal, first,
                     traversal->builder.doc->shape_count,
                     traversal->selection_element == SIZE_MAX ? element :
-                    traversal->selection_element)) {
+                    traversal->selection_element) ||
+                !svg_shape_traverse_attach_markers(
+                    traversal, element, first,
+                    traversal->builder.doc->shape_count, &style,
+                    render_depth)) {
                 svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
                 return false;
             }
@@ -397,6 +491,11 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
         if (text_container && traversal->text_depth != 0U) {
             traversal->text_depth--;
             if (text_element) traversal->text_state = NULL;
+        }
+        if (!svg_shape_traverse_attach_mask(traversal, element, opacity_group,
+                                             &style, current)) {
+            svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
+            return false;
         }
         svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
         return true;
@@ -413,8 +512,21 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
     }
     traversal->builder.viewport_width = traversal->viewport_width;
     traversal->builder.viewport_height = traversal->viewport_height;
-    bool walked = svg_shape_traverse_walk_range(traversal, element + 1U, end, current, &style,
-                             render_depth + 1U);
+    size_t child_first = element + 1U;
+    size_t child_limit = end;
+    bool selected_child = true;
+    if (switch_element && !svg_shape_traverse_select_switch_child(
+            traversal, element, end, &child_first, &child_limit,
+            &selected_child)) {
+        traversal->viewport_width = previous_width;
+        traversal->viewport_height = previous_height;
+        traversal->builder.viewport_width = previous_width;
+        traversal->builder.viewport_height = previous_height;
+        svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
+        return false;
+    }
+    bool walked = !selected_child || svg_shape_traverse_walk_range(
+        traversal, child_first, child_limit, current, &style, render_depth + 1U);
     traversal->viewport_width = previous_width;
     traversal->viewport_height = previous_height;
     traversal->builder.viewport_width = previous_width;
@@ -451,19 +563,26 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
     }
     svg_xml_span clip_value;
     if ((root || svg_shape_traverse_element_name(traversal->source, token, "g") || nested_svg ||
-         text_container) &&
+         link_element || switch_element || text_container) &&
         svg_css_paint_value(&style, SVG_CSS_CLIP_PATH, &clip_value) &&
         !svg_css_keyword_equals(traversal->source, clip_value, "none")) {
         bool clipped = svg_shape_apply_declared_clip(traversal->source, traversal->tokens,
             traversal->token_count, &traversal->references, traversal->css,
             traversal->builder.doc, clip_value, first_shape, first_edge,
             current, traversal->diagnostic);
+        bool masked = clipped && svg_shape_traverse_attach_mask(
+            traversal, element, opacity_group, &style, current);
         svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
-        return clipped;
+        return clipped && masked;
     }
     if (text_container && traversal->text_depth != 0U) {
         traversal->text_depth--;
         if (text_element) traversal->text_state = NULL;
+    }
+    if (!svg_shape_traverse_attach_mask(traversal, element, opacity_group,
+                                         &style, current)) {
+        svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
+        return false;
     }
     svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
     return true;
@@ -550,139 +669,4 @@ bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first, siz
         i = end + 1U;
     }
     return true;
-}
-
-svg_shape_error svg_shape_decode_source(base_bytes source,
-                                        svg_shape_document *out,
-                                        svg_shape_diagnostic *diagnostic)
-{
-    return svg_shape_decode_source_with_bounds(source, out, diagnostic, NULL);
-}
-
-svg_shape_error svg_shape_decode_source_with_media(
-    base_bytes source, const svg_shape_media_providers *providers,
-    svg_shape_document *out, svg_shape_diagnostic *diagnostic)
-{
-    return svg_shape_decode_source_with_media_and_bounds(
-        source, providers, out, diagnostic, NULL);
-}
-
-svg_shape_error svg_shape_decode_source_with_bounds(
-    base_bytes source, svg_shape_document *out,
-    svg_shape_diagnostic *diagnostic,
-    svg_shape_decode_memory_bounds *memory_bounds)
-{
-    return svg_shape_decode_source_with_media_and_bounds(
-        source, NULL, out, diagnostic, memory_bounds);
-}
-
-svg_shape_error svg_shape_decode_source_with_media_and_bounds(
-    base_bytes source, const svg_shape_media_providers *providers,
-    svg_shape_document *out, svg_shape_diagnostic *diagnostic,
-    svg_shape_decode_memory_bounds *memory_bounds)
-{
-    svg_shape_diagnostic local_diagnostic;
-    if (diagnostic == NULL) diagnostic = &local_diagnostic;
-    if (memory_bounds != NULL)
-        *memory_bounds = (svg_shape_decode_memory_bounds){0};
-    if (out == NULL || !base_bytes_valid(source)) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0U);
-        return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
-    }
-    *out = (svg_shape_document){0};
-    *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0U};
-    if (source.len > SHAPE_MAX_BYTES) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, SHAPE_MAX_BYTES);
-        return SVG_SHAPE_ERROR_LIMIT;
-    }
-    size_t capacity = source.len / 2U + 2U;
-    if (capacity > SIZE_MAX / sizeof(svg_xml_token)) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, 0U);
-        return SVG_SHAPE_ERROR_LIMIT;
-    }
-    svg_xml_token *tokens = svg_shape_calloc(capacity, sizeof(*tokens));
-    if (tokens == NULL) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
-        return SVG_SHAPE_ERROR_OOM;
-    }
-    (void)svg_shape_alloc_set_tag(tokens, SVG_SHAPE_ALLOC_TAG_TOKEN_ARRAY);
-    svg_xml_result xml = svg_xml_tokenize(source, svg_xml_default_options(),
-                                          tokens, capacity);
-    if (xml.diagnostic.category != SVG_XML_ERROR_NONE) {
-        svg_shape_free(tokens);
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_XML, xml.diagnostic.offset);
-        return SVG_SHAPE_ERROR_XML;
-    }
-
-    shape_traversal traversal = {
-        .source = source,
-        .tokens = tokens,
-        .token_count = xml.token_count,
-        .diagnostic = diagnostic,
-        .media = providers,
-        .selection_element = SIZE_MAX
-    };
-    svg_shape_error error = svg_reference_index_create(
-        source, tokens, xml.token_count, &traversal.references, diagnostic);
-    if (error != SVG_SHAPE_ERROR_NONE) goto cleanup;
-    if (memory_bounds != NULL)
-        memory_bounds->reference_index_bytes =
-            svg_reference_index_storage_bytes(&traversal.references);
-    svg_css_error css_error = svg_css_sheet_create(
-        source, tokens, xml.token_count, &traversal.css);
-    if (css_error != SVG_CSS_OK) {
-        error = css_error == SVG_CSS_LIMIT ? SVG_SHAPE_ERROR_LIMIT :
-                                            SVG_SHAPE_ERROR_OOM;
-        svg_shape_traverse_fail(diagnostic, error, 0U);
-        goto cleanup;
-    }
-    if (providers != NULL && providers->layout_text != NULL) {
-        traversal.text_cache = svg_shape_text_cache_create(providers);
-        if (traversal.text_cache == NULL) {
-            svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
-            error = SVG_SHAPE_ERROR_OOM;
-            goto cleanup;
-        }
-    }
-    traversal.builder = (svg_shape_builder){
-        .doc = out,
-        .references = &traversal.references,
-        .css = traversal.css,
-        .paint_cache = &traversal.paint_cache,
-        .paint_token_visits = &traversal.paint_token_visits,
-        .diag = diagnostic,
-        .transform = geom_affine_identity(),
-        .media = providers,
-        .text_cache = traversal.text_cache
-    };
-    out->source = source;
-    if (providers != NULL) {
-        out->media_context = providers->context;
-        out->release_image = providers->release_image;
-    }
-    if (!svg_shape_traverse_walk_range(&traversal, 0U, xml.token_count,
-                    geom_affine_identity(), NULL, 0U)) {
-        error = diagnostic->category;
-        goto cleanup;
-    }
-    if (memory_bounds != NULL)
-        memory_bounds->reference_lookup_probes =
-            svg_reference_index_lookup_probes(&traversal.references);
-    if (memory_bounds != NULL)
-        memory_bounds->paint_token_visits = traversal.paint_token_visits;
-    if (!traversal.root_seen) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_VIEWPORT, 0U);
-        error = SVG_SHAPE_ERROR_VIEWPORT;
-        goto cleanup;
-    }
-    error = SVG_SHAPE_ERROR_NONE;
-
-cleanup:
-    svg_shape_text_cache_destroy(traversal.text_cache);
-    svg_paint_cache_destroy(traversal.paint_cache);
-    svg_css_sheet_destroy(traversal.css);
-    svg_reference_index_destroy(&traversal.references);
-    svg_shape_free(tokens);
-    if (error != SVG_SHAPE_ERROR_NONE) svg_shape_document_destroy(out);
-    return error;
 }

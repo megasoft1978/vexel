@@ -95,6 +95,100 @@ static bool image_sample(const svg_shape_document *document, size_t shape,
     return true;
 }
 
+static uint32_t wrap_index(int64_t index, uint32_t dimension)
+{
+    int64_t wrapped = index % (int64_t)dimension;
+    if (wrapped < 0) wrapped += (int64_t)dimension;
+    return (uint32_t)wrapped;
+}
+
+static bool pattern_sample(const svg_shape_document *document, size_t shape,
+                           size_t pattern_index, geom_affine pattern_inverse,
+                           double pattern_opacity, double x, double y,
+                           uint8_t rgba[4])
+{
+    if (document->patterns == NULL ||
+        document->shape_stroke_inverse == NULL) return false;
+    if (pattern_index >= document->pattern_count) return false;
+    const svg_shape_pattern *pattern = &document->patterns[pattern_index];
+    if (pattern->rgba == NULL || pattern->width == 0U ||
+        pattern->height == 0U || pattern->byte_count !=
+            (size_t)pattern->width * pattern->height * 4U) return false;
+    geom_point local, tile;
+    if (!geom_affine_map_point(document->shape_stroke_inverse[shape],
+                               (geom_point){x, y}, &local) ||
+        !geom_affine_map_point(pattern_inverse, local, &tile) ||
+        !isfinite(tile.x) || !isfinite(tile.y) ||
+        fabs(tile.x) > 1e12 || fabs(tile.y) > 1e12) return false;
+    double sample_x = fmod(tile.x - 0.5, (double)pattern->width);
+    double sample_y = fmod(tile.y - 0.5, (double)pattern->height);
+    if (sample_x < 0.0) sample_x += (double)pattern->width;
+    if (sample_y < 0.0) sample_y += (double)pattern->height;
+    int64_t x0 = (int64_t)floor(sample_x);
+    int64_t y0 = (int64_t)floor(sample_y);
+    uint32_t ix0 = wrap_index(x0, pattern->width);
+    uint32_t iy0 = wrap_index(y0, pattern->height);
+    uint32_t ix1 = wrap_index(x0 + 1, pattern->width);
+    uint32_t iy1 = wrap_index(y0 + 1, pattern->height);
+    double fx = sample_x - floor(sample_x);
+    double fy = sample_y - floor(sample_y);
+    const uint8_t *samples[4] = {
+        pattern->rgba + ((size_t)iy0 * pattern->width + ix0) * 4U,
+        pattern->rgba + ((size_t)iy0 * pattern->width + ix1) * 4U,
+        pattern->rgba + ((size_t)iy1 * pattern->width + ix0) * 4U,
+        pattern->rgba + ((size_t)iy1 * pattern->width + ix1) * 4U};
+    double weights[4] = {(1.0 - fx) * (1.0 - fy), fx * (1.0 - fy),
+                         (1.0 - fx) * fy, fx * fy};
+    double alpha = 0.0, premultiplied[3] = {0.0, 0.0, 0.0};
+    for (size_t i = 0U; i < 4U; ++i) {
+        double a = (double)samples[i][3] / 255.0;
+        alpha += a * weights[i];
+        for (size_t c = 0U; c < 3U; ++c)
+            premultiplied[c] += (double)samples[i][c] / 255.0 * a * weights[i];
+    }
+    double opacity = pattern_opacity;
+    if (!isfinite(opacity) || opacity < 0.0 || opacity > 1.0) return false;
+    alpha *= opacity;
+    if (alpha <= 0.0) {
+        memset(rgba, 0, 4U);
+        return true;
+    }
+    for (size_t c = 0U; c < 3U; ++c) {
+        double color = premultiplied[c] /
+            (opacity == 0.0 ? 1.0 : (alpha / opacity));
+        rgba[c] = (uint8_t)floor(fmin(255.0, fmax(0.0, color * 255.0)) + 0.5);
+    }
+    rgba[3] = (uint8_t)floor(fmin(1.0, alpha) * 255.0 + 0.5);
+    return true;
+}
+
+static void paint_stroke_sample(const svg_shape_document *document,
+                                size_t shape, const geom_edge *local_edges,
+                                const bool *dash_seams,
+                                const raster_shape_dash_cache *dash_cache,
+                                bool allowed, double px, double py,
+                                bool scalar_oracle_alpha,
+                                uint8_t sample_rgba[4])
+{
+    if (!allowed || !raster_shape_stroke_contains(
+            document, shape, local_edges, dash_seams, dash_cache, px, py))
+        return;
+    if (document->stroke_paints != NULL &&
+        document->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN) {
+        uint8_t sampled_stroke[4];
+        if (pattern_sample(document, shape,
+                document->stroke_paints[shape].pattern_index,
+                document->stroke_paints[shape].pattern_inverse,
+                document->stroke_paints[shape].pattern_opacity,
+                px, py, sampled_stroke) && sampled_stroke[3] != 0U)
+            composite_source_over(sample_rgba, sampled_stroke);
+    } else if (scalar_oracle_alpha) {
+        memcpy(sample_rgba, document->strokes[shape].rgba, 4U);
+    } else {
+        composite_source_over(sample_rgba, document->strokes[shape].rgba);
+    }
+}
+
 void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
                                const uint32_t *active_edges, size_t active_count,
                                const geom_edge *local_edges,
@@ -121,14 +215,29 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
     }
     bool inside = doc->shape_evenodd[shape] ? parity != 0U : winding != 0;
     bool allowed = doc->clips == NULL || svg_clip_contains(doc->clips[shape], px, py);
+    bool stroke_first = doc->strokes != NULL &&
+                        doc->strokes[shape].paint_order == 1U;
+    if (stroke_first)
+        paint_stroke_sample(doc, shape, local_edges, dash_seams, dash_cache,
+                            allowed, px, py, scalar_oracle_alpha, sample_rgba);
     uint8_t sampled_fill[4];
     bool image = doc->paints != NULL &&
                  doc->paints[shape].kind == SVG_SHAPE_PAINT_IMAGE;
+    bool pattern = doc->paints != NULL &&
+                   doc->paints[shape].kind == SVG_SHAPE_PAINT_PATTERN;
     if (inside && allowed && image) {
         uint8_t sampled_image[4];
         if (image_sample(doc, shape, px, py, sampled_image) &&
             sampled_image[3] != 0U)
             composite_source_over(sample_rgba, sampled_image);
+    } else if (inside && allowed && pattern) {
+        uint8_t sampled_pattern[4];
+        if (pattern_sample(doc, shape, doc->paints[shape].pattern_index,
+                           doc->paints[shape].pattern_inverse,
+                           doc->paints[shape].pattern_opacity,
+                           px, py, sampled_pattern) &&
+            sampled_pattern[3] != 0U)
+            composite_source_over(sample_rgba, sampled_pattern);
     } else if (inside && allowed && fill[3] != 0U) {
         memcpy(sampled_fill, fill, sizeof(sampled_fill));
         bool gradient = doc->paints != NULL &&
@@ -142,10 +251,7 @@ void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,
             memcpy(sample_rgba, sampled_fill, sizeof(sampled_fill));
         } else composite_source_over(sample_rgba, sampled_fill);
     }
-    if (allowed && raster_shape_stroke_contains(doc, shape, local_edges,
-                                               dash_seams, dash_cache, px, py)) {
-        if (scalar_oracle_alpha)
-            memcpy(sample_rgba, doc->strokes[shape].rgba, 4U);
-        else composite_source_over(sample_rgba, doc->strokes[shape].rgba);
-    }
+    if (!stroke_first)
+        paint_stroke_sample(doc, shape, local_edges, dash_seams, dash_cache,
+                            allowed, px, py, scalar_oracle_alpha, sample_rgba);
 }

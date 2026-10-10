@@ -38,3 +38,12 @@ depth, instance, visit, ID, or transform bounds return `limit`. Diagnostics
 point directly into the original source. Use-site paint is passed as the
 virtual parent paint for a referenced target, and traversal emits its geometry
 before continuing with following siblings so z-order follows the use position.
+
+W5 traversal resolves local mask, pattern, marker, and filter definitions at
+the use site while retaining their original token offsets. `<a>` passes paint
+and transform context to its descendants. `<switch>` walks only its first
+child whose bounded `systemLanguage` list matches the configured language;
+headless decode defaults to `en`, and callers may inject a language tag.
+Recursive mask, pattern, and marker references have explicit depth and instance
+caps. Unsupported filter primitives and `switch` capability requirements
+return stable diagnostics instead of being silently skipped.

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "source": "project-authored deterministic fixtures",
-  "count": 60,
+  "count": 87,
   "cases": [
     {
       "file": "fixtures/charts/bar-chart-01.svg",
@@ -602,6 +602,276 @@
       "height": 96,
       "bytes": 628,
       "sha256": "b3e1396ccb131da7e8d09d5728eda88a9632f4c69c35a050031feec84b52cef3"
+    },
+    {
+      "file": "fixtures/w5/anchor-passthrough.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 262,
+      "sha256": "b7fe62b2dab3ae83629bf2740b959b359ad577170bf2b2b83d9d208abcb701db"
+    },
+    {
+      "file": "fixtures/w5/blend-isolation.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 408,
+      "sha256": "149987e3c5e9ab32bf56d34e6ec5de7bfd062e7a609cd88385af077de244a514"
+    },
+    {
+      "file": "fixtures/w5/crisp-edges.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 288,
+      "sha256": "6fec4e141a1494a0096af7a33f6ce3a635fbac382cbbc47a284687d9610a0bb9"
+    },
+    {
+      "file": "fixtures/w5/filter-blend.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 425,
+      "sha256": "0e0500693286542a0ecb2803e40e405a0c750c0d4e67fcf127448748917a9a80"
+    },
+    {
+      "file": "fixtures/w5/filter-blur-offset.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 491,
+      "sha256": "aaabe57e328f97c27b7b2e62e01f04978a3afb8bf88c4902a0829930917f2109"
+    },
+    {
+      "file": "fixtures/w5/filter-color-matrix.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 365,
+      "sha256": "4db2a9dfeece57a6f4cbfb2b212e238c8061b4732ef38551f26ab66f6b77115a"
+    },
+    {
+      "file": "fixtures/w5/filter-drop-shadow.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 387,
+      "sha256": "f5492fbd3c7c3cd6b99f35a29a0fbe7a2894919e4467246d83e2316dec2d2cd2"
+    },
+    {
+      "file": "fixtures/w5/filter-flood-composite.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 410,
+      "sha256": "c4665ab6ba9b1634c7ed14bcb83ecde863b9b56a3393e18cf63b1c1ffefc268b"
+    },
+    {
+      "file": "fixtures/w5/filter-merge.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 379,
+      "sha256": "3290f0d86104a494cdcf6493f090c97aeb43a7b9768b88655008da87a93318c8"
+    },
+    {
+      "file": "fixtures/w5/filter-morphology-unsupported.svg",
+      "category": "w5",
+      "supported": false,
+      "diagnostic": "unsupported-feMorphology",
+      "width": 96,
+      "height": 64,
+      "bytes": 357,
+      "sha256": "5f73dbb1cab99eda325dc5e0794becfe43d45348f3fa1cd02db9dd6e2716e1f6"
+    },
+    {
+      "file": "fixtures/w5/join-fallbacks.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 383,
+      "sha256": "ff219a96d5082a4b9d18c5dadd29733b2141fc1fccacf0548fc98ad72e61466c"
+    },
+    {
+      "file": "fixtures/w5/marker-path.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 521,
+      "sha256": "73447336bda7ce6fc23cd1fd01c19a6f022446257702ce0c95d8a685ebbc33e1"
+    },
+    {
+      "file": "fixtures/w5/marker-shapes.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 759,
+      "sha256": "be12ca3099aec574604f20c377b986eb5956fad0622a560f8c8bfaaed57498cf"
+    },
+    {
+      "file": "fixtures/w5/marker-start-reverse.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 484,
+      "sha256": "51aa4df0962abf1f6ace51c44a0454576db2c6b415728d1cbea7bb1d38fe8278"
+    },
+    {
+      "file": "fixtures/w5/marker-viewbox.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 497,
+      "sha256": "e439b04a6500d39decc7e7bf45ba90b29cd97340312b7624fa68587732a66f2b"
+    },
+    {
+      "file": "fixtures/w5/mask-alpha.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 434,
+      "sha256": "2b81a0bd0dfb328cd7929369d45811f5010485eddb8b6643c4d280ce269f220c"
+    },
+    {
+      "file": "fixtures/w5/mask-luminance.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 403,
+      "sha256": "a7bb591fad2ce866aa63a4a3cf4d2febd369dbcd7ad3d81cd2997d23dde6f03c"
+    },
+    {
+      "file": "fixtures/w5/mask-nested.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 459,
+      "sha256": "169f3ec538631615a4c26065d0637099f839ba1bc8ca3aa88bcec45c8de05928"
+    },
+    {
+      "file": "fixtures/w5/mask-object-bounds.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 458,
+      "sha256": "1a08a83eb1bd7a2967d0ce497328d9146ca2f3ec91965c09d7e4179d0fd29ff2"
+    },
+    {
+      "file": "fixtures/w5/non-scaling-stroke.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 317,
+      "sha256": "5c2d37649c3b48d85c7b7e15e87ae07180b9e3ca9fa2d98ee0c34c589eb3ba58"
+    },
+    {
+      "file": "fixtures/w5/paint-order.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 288,
+      "sha256": "827a6387b659e7b62c7e8c026cdd40e4e163095b5e58c5c370ad7014c5779691"
+    },
+    {
+      "file": "fixtures/w5/pattern-object-bounds.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 487,
+      "sha256": "78574e07c54ce0e90deeed085bc816e8e70a668f1c03f7e571d3799d96552a65"
+    },
+    {
+      "file": "fixtures/w5/pattern-stroke.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 441,
+      "sha256": "5081f83aa218f837fa5f2571a7da71828f9f884a110f65790bc3a04f244613e1"
+    },
+    {
+      "file": "fixtures/w5/pattern-transform.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 426,
+      "sha256": "8054de1a540c5f3b872c538d869b2fb6cddd050da59b26b97a06e9f1410b4984"
+    },
+    {
+      "file": "fixtures/w5/pattern-user-space.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 419,
+      "sha256": "ecf4c3dfdf10c3496965616a7a818f9e3caf8a945f1170e175d49e9872e85f4f"
+    },
+    {
+      "file": "fixtures/w5/pattern-viewbox.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 438,
+      "sha256": "1cabc1788def22a09ddc5030f5bac9bde8c0cbbdae200642f50658d98a8fd5cb"
+    },
+    {
+      "file": "fixtures/w5/switch-language.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 362,
+      "sha256": "4d61c354518e1fb673e491d3aab994e9ff4a4b78ddb7fe3ef00ccf10f3ed24fc"
     }
   ]
 }

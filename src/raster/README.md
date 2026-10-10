@@ -107,3 +107,12 @@ returns a limit diagnostic instead of painting a partial frame.
 ## Tile cache
 
 `raster_tile_cache` is mutable from one owner thread and has no platform or shape-decoding dependencies. Its explicit byte cap is nonzero and at most 256 MiB. Accounted bytes include the complete preallocated entry array and every occupied tile's RGBA payload; creation rejects a slot array larger than the cap. LRU ties use stable slot order; a two-part monotonic tick preserves recency across tick rollover. Cache keys are caller supplied. Changing generation or integer scale bucket through `raster_tile_cache_set_epoch` clears all entries. A successful put transfers the tile's malloc-owned RGBA allocation and clears the caller's tile; a failed put leaves the caller's tile owned and unchanged. Lookup returns a borrowed tile valid until the next cache call that mutates LRU/cache state or destruction.
+
+Filter primitives run in bounded RGBA surfaces inside isolated group layers.
+Gaussian blur uses separable finite kernels; offsets, flood, blend, composite,
+merge, color matrix, and drop shadow keep deterministic scalar channel
+rounding. `linearRGB` input is converted from sRGB before primitives and
+converted back afterward; `sRGB` bypasses that conversion. Filter evaluation
+is capped at 50 million pixel-primitive work units and 64 MiB of scratch, in
+addition to the enclosing group layer's 64 MiB budget. W5 effect fixtures
+compare selected output with `rsvg-convert`.

@@ -4,7 +4,7 @@ The shape module turns borrowed SVG bytes and XML tokens into owned flattened
 edges, per-shape fill and stroke state, gradients, clips, and opacity groups.
 `traverse.c` owns bounded token traversal and inherited contexts;
 `traverse_use.c` resolves live `<use>` instances. `transform.c` parses affine
-transforms; `shape_geometry.c` decodes paths and basic geometry; `shape_custom.c`
+transforms; `shape_path.c` decodes paths and `shape_geometry.c` decodes basic geometry; `shape_custom.c`
 shares style, paint, stroke, and clip setup with text/image geometry. `text.c`
 lays out text runs, `text_cache.c` bounds and owns shaped runs, and `image.c`
 decodes embedded data through the injected provider. `viewport.c` resolves root,
@@ -87,3 +87,42 @@ SVG parity.
 SVG semantics follow W3C SVG 2 Shapes, Paths, CSS, Paint Servers, Document
 Structure, and Clipping specs (consulted 2026-10-09). No SVG editor source is
 used.
+
+## W5 paint servers and effects
+
+The decoder also resolves local `<mask>`, `<pattern>`, `<marker>`, and
+`<filter>` references. Masks support alpha and luminance sampling, both mask
+coordinate systems, and nested local masks. Patterns support fill and stroke
+paint, user-space and object-bounding-box units, content units, transforms,
+viewBox mapping, and repeat tiling from a decode-local RGBA tile cache. Marker
+start, mid, and end positions work on paths, lines, polylines, and polygons;
+`marker` shorthand, stroke-width or user-space sizing, `auto`,
+`auto-start-reverse`, numeric orientation, reference points, and marker viewBox
+mapping are included.
+
+Filters support bounded `feGaussianBlur`, `feOffset`, `feFlood`, `feBlend`,
+`feComposite`, `feMerge`, `feColorMatrix`, and `feDropShadow` chains. Filter
+and primitive units, regions, named results, `SourceGraphic`, `SourceAlpha`,
+and `color-interpolation-filters` (`linearRGB` or `sRGB`) are handled. Stable
+named unsupported diagnostics cover turbulence, displacement, convolution,
+image, lighting, and morphology primitives. CSS blending supports normal,
+multiply, screen, darken, and lighten with isolated groups. `<switch>` selects
+the first supported `systemLanguage` child; the default language is `en`, and
+`svg_shape_decode_with_system_language` injects another bounded tag. `<a>` is a
+pass-through container. Existing `<symbol>` viewBox traversal also accepts
+the W5 paint properties.
+
+The CSS cascade recognizes 38 properties, including W5 effects, markers,
+masking, blending, paint order, shape rendering, and vector effects. Crisp-edge
+rendering uses the deterministic center sample. Non-scaling strokes currently
+support uniform affine and viewport scales. `stroke-linejoin: arcs` and
+`miter-clip` use stable round and miter fallbacks.
+
+Definitions and scratch stay bounded: masks, patterns, and markers cap
+instances at 1,024 per decode; pattern tiles cap each axis at 4,096 pixels, each tile at 1,048,576
+pixels, and aggregate retained tiles at 16 MiB. Mask, pattern, and marker
+recursion is capped at eight. Filter chains cap at 16 primitives, merges at
+eight inputs, 50 million pixel-primitive work units, and 64 MiB of filter
+scratch. Isolated group scratch remains capped at 64 MiB. Cycles and exhausted
+limits fail with stable diagnostics. External filter, mask, pattern, and marker
+references are not loaded.

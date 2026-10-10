@@ -190,16 +190,23 @@ static bool render_work_preflight(const svg_shape_document *doc,
             if (doc->paints != NULL &&
                 doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID &&
                 !checked_add_size(sample_aux_work,
-                                  doc->paints[shape].stop_count,
-                                  &sample_aux_work)) return false;
+                    doc->paints[shape].stop_count +
+                        (doc->paints[shape].kind == SVG_SHAPE_PAINT_PATTERN ?
+                         4U : 0U), &sample_aux_work)) return false;
+            if (doc->stroke_paints != NULL &&
+                doc->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN &&
+                !checked_add_size(sample_aux_work, 4U, &sample_aux_work))
+                return false;
             for (uint32_t x = box->x_first; x <= box->x_last; x++) {
                 if (!checked_add_size(shape_pixels, 1U, &shape_pixels) ||
                     shape_pixels > bounds->pixel_count) return false;
                 size_t pixel = (size_t)y * doc->width + x;
+                bool crisp_edges = doc->strokes != NULL &&
+                                   doc->strokes[shape].crisp_edges;
                 bool center_only = pixel_is_fully_in_view(doc, x, y, scale_x,
                                                           scale_y,
                                                           offset_x, offset_y) &&
-                                   !raster_boundary_mask_test(boundary, pixel);
+                    (crisp_edges || !raster_boundary_mask_test(boundary, pixel));
                 if (center_only) {
                     double sample_x = (double)x + 0.5;
                     double sample_y = (double)y + 0.5;

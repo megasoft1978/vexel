@@ -7,6 +7,11 @@ deterministic in the scalar rasterizer and maps pixel coordinates back through
 the referencing element's inverse transform. `objectBoundingBox` coordinates
 use the element's untransformed local bounds.
 
+Local `<pattern>` fills and strokes are resolved by the sibling shape pattern
+module. Each definition is rendered once into a bounded RGBA tile and cached
+for the decode; the paint sampler repeats that tile after its unit, content,
+viewBox, and transform mappings.
+
 The shape paint tag also has an image variant. Embedded image storage and URI
 validation belong to shape decoding; raster image sampling is handled by
 `src/raster/shape_render_sample.c`, not by this gradient resolver.
