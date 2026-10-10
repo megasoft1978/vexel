@@ -61,6 +61,22 @@ static bool parse_dasharray(base_bytes src, svg_xml_span span,
     if (stroke->dash_count == 0U) return false;
     return true;
 }
+
+static bool paint_server_value(base_bytes source, svg_xml_span value)
+{
+    if (value.offset > source.len || value.length > source.len - value.offset)
+        return false;
+    size_t i = 0U;
+    while (i < value.length && (source.ptr[value.offset + i] == ' ' ||
+           source.ptr[value.offset + i] == '\t' ||
+           source.ptr[value.offset + i] == '\r' ||
+           source.ptr[value.offset + i] == '\n')) i++;
+    return value.length - i >= 4U &&
+           source.ptr[value.offset + i] == 'u' &&
+           source.ptr[value.offset + i + 1U] == 'r' &&
+           source.ptr[value.offset + i + 2U] == 'l' &&
+           source.ptr[value.offset + i + 3U] == '(';
+}
 bool svg_shape_parse_opacity(base_bytes src, svg_xml_span span, double *out)
 {
     number_reader reader = {src.ptr + span.offset, span.length, 0U, span.offset};
@@ -118,9 +134,16 @@ bool svg_shape_parse_stroke(base_bytes src, svg_shape_stroke *stroke,
                             svg_shape_diagnostic *diag)
 {
     svg_xml_span span;
-    if (svg_css_paint_value(paint, SVG_CSS_STROKE, &span) &&
-        !svg_shape_parse_style_color(src, span, paint, stroke->rgba)) {
-        svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset); return false;
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE, &span)) {
+        if (paint_server_value(src, span)) {
+            stroke->paint_server = true;
+            stroke->rgba[0] = stroke->rgba[1] = stroke->rgba[2] = 0U;
+            stroke->rgba[3] = 255U;
+        } else if (!svg_shape_parse_style_color(src, span, paint,
+                                                stroke->rgba)) {
+            svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset);
+            return false;
+        }
     }
     if (!svg_css_paint_value(paint, SVG_CSS_STROKE, &span)) stroke->rgba[3] = 0U;
     if (svg_css_paint_value(paint, SVG_CSS_STROKE_WIDTH, &span)) {
@@ -151,7 +174,11 @@ bool svg_shape_parse_stroke(base_bytes src, svg_shape_stroke *stroke,
     if (svg_css_paint_value(paint, SVG_CSS_STROKE_LINEJOIN, &span)) {
         if (svg_css_keyword_equals(src, span, "miter")) stroke->join = SVG_SHAPE_JOIN_MITER;
         else if (svg_css_keyword_equals(src, span, "bevel")) stroke->join = SVG_SHAPE_JOIN_BEVEL;
-        else if (svg_css_keyword_equals(src, span, "round")) stroke->join = SVG_SHAPE_JOIN_ROUND;
+        else if (svg_css_keyword_equals(src, span, "round") ||
+                 svg_css_keyword_equals(src, span, "arcs"))
+            stroke->join = SVG_SHAPE_JOIN_ROUND;
+        else if (svg_css_keyword_equals(src, span, "miter-clip"))
+            stroke->join = SVG_SHAPE_JOIN_MITER;
         else { svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset); return false; }
     }
     if (svg_css_paint_value(paint, SVG_CSS_STROKE_DASHARRAY, &span) &&
@@ -166,5 +193,122 @@ bool svg_shape_parse_stroke(base_bytes src, svg_shape_stroke *stroke,
         }
         svg_shape_multiply_alpha(stroke->rgba, opacity);
     }
+    if (svg_css_paint_value(paint, SVG_CSS_PAINT_ORDER, &span)) {
+        if (svg_css_keyword_equals(src, span, "normal")) {
+            stroke->paint_order = 0U;
+        } else {
+            size_t cursor = 0U;
+            bool seen_fill = false, seen_stroke = false, seen_marker = false;
+            bool first_is_stroke = false;
+            size_t item_count = 0U;
+            while (cursor < span.length) {
+                while (cursor < span.length &&
+                       (src.ptr[span.offset + cursor] == ' ' ||
+                        src.ptr[span.offset + cursor] == '\t' ||
+                        src.ptr[span.offset + cursor] == '\r' ||
+                        src.ptr[span.offset + cursor] == '\n')) cursor++;
+                if (cursor == span.length) break;
+                size_t start = cursor;
+                while (cursor < span.length && src.ptr[span.offset + cursor] != ' ' &&
+                       src.ptr[span.offset + cursor] != '\t' &&
+                       src.ptr[span.offset + cursor] != '\r' &&
+                       src.ptr[span.offset + cursor] != '\n') cursor++;
+                svg_xml_span item = {span.offset + start, cursor - start};
+                bool *seen = svg_css_keyword_equals(src, item, "fill") ?
+                    &seen_fill : svg_css_keyword_equals(src, item, "stroke") ?
+                    &seen_stroke : svg_css_keyword_equals(src, item, "markers") ?
+                    &seen_marker : NULL;
+                if (seen == NULL || *seen || item_count >= 3U) {
+                    svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED,
+                                   item.offset);
+                    return false;
+                }
+                if (item_count == 0U)
+                    first_is_stroke = seen == &seen_stroke;
+                *seen = true;
+                item_count++;
+            }
+            if (item_count == 0U) {
+                svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset);
+                return false;
+            }
+            stroke->paint_order = first_is_stroke ? 1U : 0U;
+        }
+    }
+    if (svg_css_paint_value(paint, SVG_CSS_SHAPE_RENDERING, &span)) {
+        if (svg_css_keyword_equals(src, span, "crispEdges"))
+            stroke->crisp_edges = true;
+        else if (!svg_css_keyword_equals(src, span, "auto") &&
+                 !svg_css_keyword_equals(src, span, "optimizeSpeed") &&
+                 !svg_css_keyword_equals(src, span, "geometricPrecision")) {
+            svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset);
+            return false;
+        }
+    }
     return true;
+}
+
+static bool uniform_scale(geom_affine transform, double *scale)
+{
+    if (!isfinite(transform.a) || !isfinite(transform.b) ||
+        !isfinite(transform.c) || !isfinite(transform.d)) return false;
+    double xx = transform.a * transform.a + transform.b * transform.b;
+    double yy = transform.c * transform.c + transform.d * transform.d;
+    double xy = transform.a * transform.c + transform.b * transform.d;
+    double discriminant = hypot(xx - yy, 2.0 * xy);
+    double maximum = sqrt(fmax(0.0, (xx + yy + discriminant) * 0.5));
+    double minimum = sqrt(fmax(0.0, (xx + yy - discriminant) * 0.5));
+    if (!isfinite(maximum) || maximum <= 0.0 ||
+        fabs(maximum - minimum) > maximum * 1e-8) return false;
+    *scale = maximum;
+    return true;
+}
+
+bool svg_shape_apply_vector_effect(base_bytes source,
+                                   const svg_css_paint *style,
+                                   geom_affine transform,
+                                   const svg_shape_document *document,
+                                   svg_shape_stroke *stroke,
+                                   svg_shape_diagnostic *diagnostic,
+                                   size_t fallback_offset)
+{
+    svg_xml_span value = {0};
+    if (!svg_css_paint_value(style, SVG_CSS_VECTOR_EFFECT, &value) ||
+        svg_css_keyword_equals(source, value, "none")) return true;
+    if (!svg_css_keyword_equals(source, value, "non-scaling-stroke")) {
+        svg_shape_fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
+                       value.offset != 0U ? value.offset : fallback_offset);
+        return false;
+    }
+    double element_scale = 0.0;
+    if (document == NULL || stroke == NULL || document->view_width <= 0.0 ||
+        document->view_height <= 0.0 ||
+        !uniform_scale(transform, &element_scale)) {
+        svg_shape_fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
+        return false;
+    }
+    double scale_x = (double)document->width / document->view_width;
+    double scale_y = (double)document->height / document->view_height;
+    svg_shape_aspect aspect = document->preserve_aspect;
+    if (!aspect.set) aspect = (svg_shape_aspect){0.5, 0.5, false, false, true};
+    if (!aspect.none) {
+        double scale = aspect.slice ? fmax(scale_x, scale_y) :
+                                      fmin(scale_x, scale_y);
+        scale_x = scale;
+        scale_y = scale;
+    }
+    double viewport_scale = fmax(scale_x, scale_y);
+    double minimum_scale = fmin(scale_x, scale_y);
+    if (!isfinite(viewport_scale) || viewport_scale <= 0.0 ||
+        fabs(viewport_scale - minimum_scale) > viewport_scale * 1e-8) {
+        svg_shape_fail(diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
+        return false;
+    }
+    double combined = element_scale * viewport_scale;
+    if (!isfinite(combined) || combined <= 0.0) {
+        svg_shape_fail(diagnostic, SVG_SHAPE_ERROR_NUMBER, value.offset);
+        return false;
+    }
+    stroke->width /= combined;
+    return isfinite(stroke->width) && stroke->width >= 0.0;
 }

@@ -1,1 +1,1 @@
-<svg width="40" height="32"><filter id="f"><feGaussianBlur stdDeviation="2"/></filter><rect width="10" height="10" filter="url(#f)"/></svg>
+<svg width="40" height="32"><defs><filter id="f"><feTurbulence baseFrequency="0.1" numOctaves="2"/></filter></defs><rect width="10" height="10" filter="url(#f)"/></svg>

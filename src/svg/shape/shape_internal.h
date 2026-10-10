@@ -37,6 +37,7 @@ typedef struct svg_shape_builder {
     geom_affine transform;
     const svg_shape_media_providers *media;
     struct svg_shape_text_cache *text_cache;
+    struct shape_traversal *traversal;
 } svg_shape_builder;
 
 typedef bool (*svg_shape_custom_geometry_fn)(svg_shape_builder *builder,
@@ -73,6 +74,9 @@ svg_shape_error svg_shape_decode_source_with_media_and_bounds(
     base_bytes source, const svg_shape_media_providers *providers,
     svg_shape_document *out, svg_shape_diagnostic *diagnostic,
     svg_shape_decode_memory_bounds *memory_bounds);
+svg_shape_error svg_shape_decode_source_with_system_language(
+    base_bytes source, base_bytes system_language, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic);
 
 bool svg_shape_transform_node(base_bytes source, svg_xml_token *tokens,
                               size_t count, size_t element,
@@ -157,6 +161,8 @@ bool svg_shape_builder_add_edge(svg_shape_builder *builder,
 bool svg_shape_builder_add_curve(svg_shape_builder *builder,
                                  geom_point from, geom_point control1,
                                  geom_point control2, geom_point to);
+bool svg_shape_path_decode(svg_shape_builder *builder, base_bytes source,
+                           svg_xml_span data);
 bool svg_shape_source_assign(svg_shape_document *document, size_t first_shape,
                              size_t end_shape, size_t source_offset,
                              size_t source_length);
@@ -191,6 +197,13 @@ bool svg_shape_parse_stroke(base_bytes source, svg_shape_stroke *stroke,
                             const svg_css_paint *paint,
                             double percentage_reference,
                             svg_shape_diagnostic *diagnostic);
+bool svg_shape_apply_vector_effect(base_bytes source,
+                                   const svg_css_paint *style,
+                                   geom_affine transform,
+                                   const svg_shape_document *document,
+                                   svg_shape_stroke *stroke,
+                                   svg_shape_diagnostic *diagnostic,
+                                   size_t fallback_offset);
 bool svg_shape_apply_declared_clip(base_bytes source,
                                    const svg_xml_token *tokens,
                                    size_t token_count,
@@ -201,6 +214,18 @@ bool svg_shape_apply_declared_clip(base_bytes source,
                                    size_t first_shape, size_t first_edge,
                                    geom_affine transform,
                                    svg_shape_diagnostic *diagnostic);
+bool svg_shape_filter_parse(base_bytes source,
+                            const svg_xml_token *tokens, size_t token_count,
+                            svg_reference_index *references,
+                            svg_shape_document *document, svg_xml_span value,
+                            size_t *filter_index,
+                            svg_shape_diagnostic *diagnostic);
+bool svg_shape_pattern_resolve(svg_shape_builder *builder, base_bytes source,
+                               const svg_xml_token *tokens,
+                               size_t token_count, svg_xml_span fill,
+                               svg_css_paint style, size_t shape_index,
+                               geom_affine transform, bool stroke_paint,
+                               bool *resolved);
 bool svg_shape_style_opacity(base_bytes source, const svg_css_paint *style,
                              double *opacity, svg_xml_span *value);
 bool svg_shape_style_display_none(base_bytes source,

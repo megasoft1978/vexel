@@ -243,6 +243,19 @@ add_executable(shape_test tests/svg/shape/test_shape.c tests/svg/shape/test_refe
 target_include_directories(shape_test PRIVATE src/svg/paint)
 target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# lane: w5-filters
+target_sources(vexel_shape PRIVATE
+    src/svg/shape/filter.c
+    src/svg/shape/mask.c
+    src/svg/shape/pattern.c
+    src/svg/shape/shape_path.c
+    src/svg/shape/traverse_switch.c
+    src/svg/shape/marker.c
+    src/svg/shape/decode.c
+    src/raster/shape_filter.c)
+target_sources(shape_test PRIVATE tests/svg/shape/w5_reference.c)
+
 add_executable(shape_render_reference_cli
     tests/svg/shape/shape_render_reference_cli.c
     tests/svg/shape/shape_render_reference.c)

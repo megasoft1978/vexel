@@ -85,7 +85,13 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
         if (doc->paints != NULL &&
             doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID &&
             !checked_add_size(auxiliary_per_sample,
-                              doc->paints[shape].stop_count,
+                              doc->paints[shape].stop_count +
+                                  (doc->paints[shape].kind ==
+                                       SVG_SHAPE_PAINT_PATTERN ? 4U : 0U),
+                              &auxiliary_per_sample)) return false;
+        if (doc->stroke_paints != NULL &&
+            doc->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN &&
+            !checked_add_size(auxiliary_per_sample, 4U,
                               &auxiliary_per_sample)) return false;
     }
     size_t stroke_tests, auxiliary_tests;

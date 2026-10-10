@@ -203,7 +203,8 @@ bool svg_reference_definition_end(base_bytes source,
          tokens[start].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) ||
         tokens[start].prefix.length != 0U ||
         (!name_is(source, tokens[start].local_name, "defs") &&
-         !name_is(source, tokens[start].local_name, "symbol"))) return false;
+         !name_is(source, tokens[start].local_name, "symbol") &&
+         !name_is(source, tokens[start].local_name, "marker"))) return false;
     if (tokens[start].kind == SVG_XML_TOKEN_EMPTY_ELEMENT) {
         *end = start;
         return true;
@@ -232,6 +233,16 @@ bool svg_reference_attributes_supported(base_bytes source,
         svg_xml_span n = tokens[i].local_name;
         bool common = name_is(source,n,"fill") || name_is(source,n,"fill-rule") ||
             name_is(source,n,"transform") || name_is(source,n,"clip-path") ||
+            name_is(source,n,"filter") || name_is(source,n,"mask") ||
+            name_is(source,n,"mix-blend-mode") || name_is(source,n,"isolation") ||
+            name_is(source,n,"vector-effect") || name_is(source,n,"shape-rendering") ||
+            name_is(source,n,"paint-order") || name_is(source,n,"marker") ||
+            name_is(source,n,"marker-start") || name_is(source,n,"marker-mid") ||
+            name_is(source,n,"marker-end") || name_is(source,n,"mask-type") ||
+            name_is(source,n,"color-interpolation-filters") ||
+            name_is(source,n,"systemLanguage") ||
+            name_is(source,n,"requiredFeatures") ||
+            name_is(source,n,"requiredExtensions") ||
             name_is(source,n,"fill-opacity") || name_is(source,n,"stroke-opacity") ||
             name_is(source,n,"opacity") || name_is(source,n,"visibility") ||
             name_is(source,n,"display") || name_is(source,n,"color") ||
@@ -274,8 +285,9 @@ bool svg_reference_attributes_supported(base_bytes source,
         bool metadata = name_is(source,n,"id") || name_is(source,n,"class") ||
                         name_is(source,n,"style");
         bool image_xlink = xlink_href && name_is(source,kind,"image");
+        bool anchor_xlink = xlink_href && name_is(source,kind,"a");
         if (tokens[i].prefix.length != 0U && !namespace_declaration &&
-            !xml_space && !image_xlink) {
+            !xml_space && !image_xlink && !anchor_xlink) {
             /* Foreign export labels are preserved by the source document but
              * have no effect on the supported SVG subset. Keep namespaced
              * spellings of SVG paint/geometry properties fail-closed. */
@@ -288,6 +300,9 @@ bool svg_reference_attributes_supported(base_bytes source,
                           name_is(source,n,"viewBox") ||
                           name_is(source,n,"preserveAspectRatio")) :
             name_is(source,kind,"g") ? (metadata || common) :
+            name_is(source,kind,"a") ? (metadata || common ||
+                name_is(source,n,"href")) :
+            name_is(source,kind,"switch") ? (metadata || common) :
             name_is(source,kind,"svg") ? (metadata || common ||
                 name_is(source,n,"x") || name_is(source,n,"y") ||
                 name_is(source,n,"width") || name_is(source,n,"height") ||
@@ -324,6 +339,13 @@ bool svg_reference_use_attributes_supported(base_bytes source,
             name_is(source,name,"opacity") || name_is(source,name,"visibility") ||
             name_is(source,name,"display") || name_is(source,name,"color") ||
             name_is(source,name,"transform") || name_is(source,name,"clip-path") ||
+            name_is(source,name,"filter") || name_is(source,name,"mask") ||
+            name_is(source,name,"mix-blend-mode") || name_is(source,name,"isolation") ||
+            name_is(source,name,"vector-effect") || name_is(source,name,"shape-rendering") ||
+            name_is(source,name,"paint-order") || name_is(source,name,"marker") ||
+            name_is(source,name,"marker-start") || name_is(source,name,"marker-mid") ||
+            name_is(source,name,"marker-end") || name_is(source,name,"mask-type") ||
+            name_is(source,name,"color-interpolation-filters") ||
             name_is(source,name,"stroke") || name_is(source,name,"stroke-width") ||
             name_is(source,name,"stroke-linecap") || name_is(source,name,"stroke-linejoin") ||
             name_is(source,name,"stroke-miterlimit") || name_is(source,name,"stroke-dasharray") ||

@@ -39,3 +39,7 @@ borrowed source remains unchanged. A prefixed spelling of a recognized SVG
 paint or geometry attribute remains unsupported, so foreign metadata cannot
 silently override SVG semantics. `xlink:href` continues to be accepted only
 for validated local references.
+
+W5 local filter, mask, pattern, and marker references resolve through the same
+source-backed ID table. Their definition spans stay in the original token
+array; the resolver does not rewrite source bytes or fetch external resources.

@@ -195,6 +195,70 @@ def build_special(entries):
         entries.append(write_fixture("special", f"{name}.svg", source))
 
 
+def build_w5(entries):
+    samples = [
+        ("mask-alpha", '<rect x="8" y="8" width="80" height="48" fill="#2563eb" mask="url(#mask)"/>',
+         '<mask id="mask" mask-type="alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="96" height="64"><circle cx="48" cy="32" r="24" fill="#fff" fill-opacity=".8"/></mask>'),
+        ("mask-luminance", '<rect x="8" y="8" width="80" height="48" fill="#be123c" mask="url(#mask)"/>',
+         '<mask id="mask" mask-type="luminance"><rect width="1" height="1" fill="#fff"/><circle cx=".5" cy=".5" r=".38" fill="#777"/></mask>'),
+        ("mask-object-bounds", '<rect x="16" y="12" width="64" height="40" fill="#0891b2" mask="url(#mask)"/>',
+         '<mask id="mask" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="0" y="0" width="1" height="1"><rect x=".1" y=".1" width=".8" height=".8" fill="#fff"/></mask>'),
+        ("mask-nested", '<rect x="8" y="8" width="80" height="48" fill="#16a34a" mask="url(#outer)"/>',
+         '<mask id="inner" mask-type="alpha"><circle cx=".5" cy=".5" r=".48" fill="#fff"/></mask><mask id="outer" mask-type="alpha"><rect width="1" height="1" fill="#fff" mask="url(#inner)"/></mask>'),
+        ("pattern-user-space", '<rect width="96" height="64" fill="url(#tile)"/>',
+         '<pattern id="tile" patternUnits="userSpaceOnUse" width="12" height="12"><rect width="6" height="6" fill="#2563eb"/><circle cx="9" cy="9" r="2" fill="#f59e0b"/></pattern>'),
+        ("pattern-object-bounds", '<rect x="8" y="8" width="80" height="48" fill="url(#tile)"/>',
+         '<pattern id="tile" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" width=".25" height=".25"><rect width=".5" height=".5" fill="#7c3aed"/><circle cx=".75" cy=".75" r=".12" fill="#fbbf24"/></pattern>'),
+        ("pattern-transform", '<rect x="4" y="4" width="88" height="56" fill="url(#tile)"/>',
+         '<pattern id="tile" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(20)"><path d="M0 0V16" stroke="#0f766e" stroke-width="4"/></pattern>'),
+        ("pattern-viewbox", '<rect width="96" height="64" fill="url(#tile)"/>',
+         '<pattern id="tile" patternUnits="userSpaceOnUse" width="16" height="12" viewBox="0 0 8 6"><rect width="4" height="3" fill="#ea580c"/><circle cx="6" cy="4.5" r="1.2" fill="#0f172a"/></pattern>'),
+        ("pattern-stroke", '<path d="M10 32H86" fill="none" stroke="url(#tile)" stroke-width="16"/>',
+         '<pattern id="tile" patternUnits="userSpaceOnUse" width="8" height="8"><rect width="4" height="8" fill="#db2777"/><rect x="4" width="4" height="8" fill="#fbcfe8"/></pattern>'),
+        ("marker-path", '<path d="M12 48L48 16L84 48" fill="none" stroke="#334155" stroke-width="4" marker-start="url(#arrow)" marker-mid="url(#arrow)" marker-end="url(#arrow)"/>',
+         '<marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0 0L8 4L0 8Z" fill="#f97316" stroke="none"/></marker>'),
+        ("marker-shapes", '<line x1="10" y1="16" x2="86" y2="16" marker-start="url(#dot)" marker-end="url(#dot)" stroke="#0f766e"/><polyline points="10,32 48,48 86,32" marker-start="url(#dot)" marker-mid="url(#dot)" marker-end="url(#dot)" fill="none" stroke="#0f766e" stroke-width="3"/><polygon points="10,56 48,40 86,56" marker-start="url(#dot)" marker-mid="url(#dot)" marker-end="url(#dot)" fill="none" stroke="#0f766e" stroke-width="3"/>',
+         '<marker id="dot" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><circle cx="3" cy="3" r="2" fill="#7c3aed" stroke="none"/></marker>'),
+        ("marker-viewbox", '<path d="M12 48H84" fill="none" stroke="#1d4ed8" stroke-width="3" marker-end="url(#arrow)"/>',
+         '<marker id="arrow" markerWidth="16" markerHeight="12" viewBox="0 0 10 10" refX="8" refY="5" orient="auto" preserveAspectRatio="xMidYMid meet"><path d="M0 0L10 5L0 10Z" fill="#dc2626" stroke="none"/></marker>'),
+        ("marker-start-reverse", '<path d="M12 32H84" fill="none" stroke="#334155" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)"/>',
+         '<marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#059669" stroke="none"/></marker>'),
+        ("filter-blur-offset", '<rect x="20" y="16" width="40" height="32" rx="5" fill="#2563eb" filter="url(#effect)"/>',
+         '<filter id="effect"><feGaussianBlur in="SourceGraphic" stdDeviation="1" result="soft"/><feOffset in="soft" dx="5" dy="3" result="shift"/><feBlend in="SourceGraphic" in2="shift" mode="screen"/></filter>'),
+        ("filter-flood-composite", '<circle cx="48" cy="32" r="24" fill="#16a34a" filter="url(#effect)"/>',
+         '<filter id="effect"><feFlood flood-color="#facc15" result="color"/><feComposite in="color" in2="SourceGraphic" operator="in"/></filter>'),
+        ("filter-blend", '<g filter="url(#effect)"><rect x="18" y="14" width="40" height="36" fill="#dc2626"/><circle cx="58" cy="38" r="20" fill="#2563eb"/></g>',
+         '<filter id="effect"><feBlend in="SourceGraphic" in2="SourceGraphic" mode="multiply"/></filter>'),
+        ("filter-merge", '<circle cx="48" cy="32" r="18" fill="#7c3aed" filter="url(#effect)"/>',
+         '<filter id="effect"><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'),
+        ("filter-color-matrix", '<rect x="12" y="12" width="72" height="40" rx="8" fill="#0891b2" filter="url(#effect)"/>',
+         '<filter id="effect"><feColorMatrix type="hueRotate" values="45"/></filter>'),
+        ("filter-drop-shadow", '<path d="M18 48L48 12L78 48Z" fill="#ea580c" filter="url(#effect)"/>',
+         '<filter id="effect"><feDropShadow dx="3" dy="4" stdDeviation="2" flood-color="#ea580c" flood-opacity=".65"/></filter>'),
+        ("switch-language", '<switch><g systemLanguage="en"><rect x="12" y="12" width="72" height="40" rx="8" fill="#2563eb"/></g><rect x="12" y="12" width="72" height="40" rx="8" fill="#2563eb"/></switch>', ''),
+        ("blend-isolation", '<rect x="12" y="14" width="40" height="36" fill="#dc2626"/><g style="mix-blend-mode:multiply;isolation:isolate"><circle cx="52" cy="38" r="22" fill="#2563eb"/><rect x="60" y="12" width="24" height="42" fill="#facc15"/></g>', ''),
+        ("paint-order", '<path d="M16 50L48 12L80 50Z" fill="#f97316" stroke="#1e293b" stroke-width="8" paint-order="stroke fill"/>', ''),
+        ("non-scaling-stroke", '<path d="M12 16L84 48" fill="none" stroke="#be123c" stroke-width="5" vector-effect="non-scaling-stroke" transform="scale(1.2)"/>', ''),
+        ("crisp-edges", '<path d="M8 8H88V56H8Z M24 20H72V44H24Z" fill="#0f766e" fill-rule="evenodd" shape-rendering="crispEdges"/>', ''),
+        ("join-fallbacks", '<path d="M16 50L36 14L56 50" fill="none" stroke="none" stroke-width="9" stroke-linejoin="arcs"/><path d="M48 50L68 14L88 50" fill="none" stroke="none" stroke-width="9" stroke-linejoin="miter-clip"/>', ''),
+        ("anchor-passthrough", '<a><rect x="12" y="12" width="72" height="40" rx="8" fill="#0891b2"/></a>', ''),
+    ]
+    for name, body, defs in samples:
+        definitions = f"<defs>{defs}</defs>" if defs else ""
+        source = document(f"W5 rendering sample: {name}", 96, 64, body,
+                          defs=definitions)
+        entries.append(write_fixture("w5", f"{name}.svg", source))
+    unsupported = document(
+        "W5 unsupported filter sample: morphology", 96, 64,
+        '<rect x="16" y="12" width="64" height="40" fill="#2563eb" '
+        'filter="url(#effect)"/>',
+        defs='<defs><filter id="effect"><feMorphology operator="dilate" '
+             'radius="1"/></filter></defs>')
+    entries.append(write_fixture("w5", "filter-morphology-unsupported.svg",
+                                 unsupported, supported=False,
+                                 note="unsupported-feMorphology"))
+
+
 def build_map(entries):
     rng = random.Random(204810)
     palette = ("#dbeafe", "#bfdbfe", "#dcfce7", "#bbf7d0",
@@ -228,9 +292,10 @@ def main():
     build_charts(entries)
     build_logos(entries)
     build_special(entries)
+    build_w5(entries)
     build_map(entries)
     entries.sort(key=lambda item: item["file"])
-    expected = 20 + 12 + 8 + 6 + 5 + 4 + 4 + 1
+    expected = 20 + 12 + 8 + 6 + 5 + 4 + 4 + 1 + 27
     if len(entries) != expected:
         raise SystemExit(f"expected {expected} fixtures, generated {len(entries)}")
     (ROOT / "manifest.json").write_text(

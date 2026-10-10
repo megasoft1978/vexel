@@ -15,6 +15,21 @@ svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out,
     return svg_shape_decode_source(source, out, diagnostic);
 }
 
+svg_shape_error svg_shape_decode_with_system_language(
+    base_bytes source, base_bytes system_language, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic)
+{
+    if (out == NULL || !base_bytes_valid(source) ||
+        !base_bytes_valid(system_language) || system_language.len == 0U) {
+        if (diagnostic != NULL)
+            *diagnostic = (svg_shape_diagnostic){
+                SVG_SHAPE_ERROR_INVALID_ARGUMENT, 0U};
+        return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
+    }
+    return svg_shape_decode_source_with_system_language(
+        source, system_language, out, diagnostic);
+}
+
 svg_shape_error svg_shape_decode_with_media(
     base_bytes source, const svg_shape_media_providers *providers,
     svg_shape_document *out, svg_shape_diagnostic *diagnostic)
@@ -50,6 +65,14 @@ void svg_shape_document_destroy(svg_shape_document *document)
     }
     for (size_t i = 0U; i < document->shape_count; ++i)
         svg_clip_destroy(document->clips == NULL ? NULL : document->clips[i]);
+    for (size_t i = 0U; i < document->mask_count; ++i) {
+        svg_shape_document *content = document->masks[i].content;
+        if (content == NULL) continue;
+        svg_shape_document_destroy(content);
+        svg_shape_free(content);
+    }
+    for (size_t i = 0U; i < document->pattern_count; ++i)
+        svg_shape_free(document->patterns[i].rgba);
     svg_shape_free(document->edges);
     svg_shape_free(document->colors);
     svg_shape_free(document->shape_ids);
@@ -66,9 +89,14 @@ void svg_shape_document_destroy(svg_shape_document *document)
     svg_shape_free(document->shape_sources);
     svg_shape_free(document->images);
     svg_shape_free(document->opacity_groups);
+    svg_shape_free(document->filters);
+    svg_shape_free(document->filter_primitives);
+    svg_shape_free(document->masks);
+    svg_shape_free(document->patterns);
     svg_shape_free(document->shape_stroke_inverse);
     svg_shape_free(document->strokes);
     svg_shape_free(document->paints);
+    svg_shape_free(document->stroke_paints);
     svg_shape_free(document->paint_stops);
     svg_shape_free(document->clips);
     *document = (svg_shape_document){0};
@@ -76,7 +104,11 @@ void svg_shape_document_destroy(svg_shape_document *document)
 
 const char *svg_shape_error_name(svg_shape_error error)
 {
-    static const char *names[] = {"none", "invalid-argument", "xml", "unsupported",
-                                  "number", "limit", "path", "viewport", "oom"};
+    static const char *names[] = {
+        "none", "invalid-argument", "xml", "unsupported", "number", "limit",
+        "path", "viewport", "oom", "unsupported-feTurbulence",
+        "unsupported-feDisplacementMap", "unsupported-feConvolveMatrix",
+        "unsupported-feImage", "unsupported-feLighting",
+        "unsupported-feMorphology"};
     return (unsigned)error < sizeof(names) / sizeof(names[0]) ? names[error] : "invalid-error";
 }

@@ -27,7 +27,7 @@ class RealWorldCorpusTests(unittest.TestCase):
         self.assertIsNotNone(renderer, "rsvg-convert is required by the real-world corpus")
         self.assertTrue(CLI.is_file(), "run ./dev build before the real-world corpus")
         manifest = json.loads(REALWORLD_MANIFEST.read_text(encoding="utf-8"))
-        self.assertEqual(manifest["count"], 60)
+        self.assertEqual(manifest["count"], 87)
         records = []
         failures = []
         with tempfile.TemporaryDirectory(prefix="vexel-realworld-",
@@ -141,7 +141,7 @@ class RealWorldCorpusTests(unittest.TestCase):
             "cases": records, "failures": failures,
             "status": "pass" if not failures else "fail",
         }, indent=2) + "\n", encoding="utf-8")
-        self.assertEqual(len(records), 60, "every manifest fixture must have a result")
+        self.assertEqual(len(records), 87, "every manifest fixture must have a result")
         self.assertEqual(failures, [], "real-world results: " + str(REALWORLD_OUT))
 
 
