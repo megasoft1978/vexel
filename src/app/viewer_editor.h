@@ -25,6 +25,20 @@ typedef enum viewer_editor_draw_tool {
     VIEWER_EDITOR_TOOL_TEXT
 } viewer_editor_draw_tool;
 
+typedef enum viewer_editor_alignment {
+    VIEWER_EDITOR_ALIGN_LEFT = 0,
+    VIEWER_EDITOR_ALIGN_HORIZONTAL_CENTER,
+    VIEWER_EDITOR_ALIGN_RIGHT,
+    VIEWER_EDITOR_ALIGN_TOP,
+    VIEWER_EDITOR_ALIGN_VERTICAL_CENTER,
+    VIEWER_EDITOR_ALIGN_BOTTOM
+} viewer_editor_alignment;
+
+typedef enum viewer_editor_distribution {
+    VIEWER_EDITOR_DISTRIBUTE_HORIZONTAL = 0,
+    VIEWER_EDITOR_DISTRIBUTE_VERTICAL
+} viewer_editor_distribution;
+
 #define VIEWER_EDITOR_PATH_POINT_CAP 128U
 
 typedef struct viewer_editor_canvas_overlay_state {
@@ -127,6 +141,11 @@ uint32_t viewer_editor_canvas_pointer_up(viewer_editor *editor,
 uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor);
 uint32_t viewer_editor_nudge_selection(viewer_editor *editor,
                                        double dx, double dy);
+uint32_t viewer_editor_align_selection(viewer_editor *editor,
+    const svg_shape_document *document, viewer_editor_alignment alignment);
+uint32_t viewer_editor_distribute_selection(viewer_editor *editor,
+    const svg_shape_document *document,
+    viewer_editor_distribution distribution);
 uint32_t viewer_editor_delete_selected_path_node(viewer_editor *editor,
     const svg_shape_document *document);
 bool viewer_editor_copy_selection(viewer_editor *editor, uint8_t *buffer,

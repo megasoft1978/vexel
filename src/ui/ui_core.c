@@ -9,6 +9,8 @@
 #define UI_NO_NODE UINT16_MAX
 #define UI_SVG_CAPACITY 256U
 
+svg_shape_media_providers svg_app_media_providers(void);
+
 static uint32_t ui_color(uint8_t red, uint8_t green, uint8_t blue)
 {
     return ((uint32_t)red << 24U) | ((uint32_t)green << 16U) |
@@ -362,7 +364,9 @@ static bool ui_render_node(const ui_node *node, raster_tile *tile)
     svg_shape_document document = {0};
     svg_shape_diagnostic diagnostic = {0};
     base_bytes bytes = {(const uint8_t *)svg, (size_t)length};
-    if (svg_shape_decode(bytes, &document, &diagnostic) != SVG_SHAPE_ERROR_NONE) return false;
+    svg_shape_media_providers providers = svg_app_media_providers();
+    if (svg_shape_decode_with_media(bytes, &providers, &document,
+            &diagnostic) != SVG_SHAPE_ERROR_NONE) return false;
     raster_tile sample = {0};
     bool okay = raster_shape_render(&document, &sample, &diagnostic);
     svg_shape_document_destroy(&document);

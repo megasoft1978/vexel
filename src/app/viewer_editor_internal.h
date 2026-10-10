@@ -238,8 +238,12 @@ bool editor_canvas_selection_marquee(viewer_editor *editor,
 uint32_t editor_canvas_multi_transform(viewer_editor *editor,
     double translate_x, double translate_y, double scale_x, double scale_y,
     double rotate_radians, double pivot_x, double pivot_y);
+uint32_t editor_canvas_multi_translate_each(viewer_editor *editor,
+    const double *translate_x, const double *translate_y, size_t count);
 uint32_t editor_canvas_multi_delete(viewer_editor *editor);
 uint32_t editor_canvas_multi_duplicate(viewer_editor *editor);
+uint32_t editor_canvas_multi_group(viewer_editor *editor);
+uint32_t editor_canvas_multi_ungroup(viewer_editor *editor);
 uint32_t editor_commit_transform(viewer_editor *editor,
     double translate_x, double translate_y, double scale_x, double scale_y,
     double rotate_radians, double pivot_x, double pivot_y);
@@ -268,6 +272,10 @@ bool editor_canvas_path_nodes_overlay(viewer_editor *editor,
 uint32_t editor_canvas_path_node_delete(viewer_editor *editor,
     const svg_shape_document *document);
 uint32_t editor_canvas_path_add_node(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user, double tolerance);
+uint32_t editor_canvas_path_curve_delete_node(viewer_editor *editor,
+    const svg_shape_document *document);
+uint32_t editor_canvas_path_curve_add_node(viewer_editor *editor,
     const svg_shape_document *document, geom_point user, double tolerance);
 void editor_canvas_snap_translation(viewer_editor *editor,
     const svg_shape_document *document, double tolerance,

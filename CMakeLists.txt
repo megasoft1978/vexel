@@ -952,3 +952,40 @@ if(BUILD_TESTING)
     add_test(NAME viewer-png-export COMMAND viewer_export_test)
     add_test(NAME editor-canvas-fuzz COMMAND editor_canvas_fuzz_test)
 endif()
+
+# lane: w8-edit4 — editor follow-up regressions
+target_sources(vexel_document PRIVATE src/document/document_edit_group.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_arrange.c
+    src/app/viewer_editor_path_curves.c
+    src/app/viewer_editor_selection_groups.c)
+target_sources(vexel_ui_core PRIVATE src/app/media_providers.c)
+target_link_libraries(vexel_ui_core PUBLIC vexel_platform_media)
+
+add_executable(editor_followups_test tests/editor/editor_followups_test.c)
+target_link_libraries(editor_followups_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_followups_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_followups_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+
+add_executable(editor_media_provider_test
+    tests/editor/editor_media_provider_test.c
+    src/app/media_providers.c)
+target_include_directories(editor_media_provider_test PRIVATE src)
+target_link_libraries(editor_media_provider_test PRIVATE vexel_shape
+    vexel_platform_media)
+set_target_properties(editor_media_provider_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_media_provider_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(editor_followups_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_followups_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_media_provider_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_media_provider_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-followups COMMAND editor_followups_test)
+    add_test(NAME editor-media-providers COMMAND editor_media_provider_test)
+endif()

@@ -610,6 +610,80 @@ uint32_t editor_canvas_multi_transform(viewer_editor *editor,
     return result;
 }
 
+uint32_t editor_canvas_multi_translate_each(viewer_editor *editor,
+    const double *translate_x, const double *translate_y, size_t delta_count)
+{
+    editor_selected_node nodes[EDITOR_CANVAS_SELECTION_CAP];
+    editor_source_patch patches[EDITOR_CANVAS_SELECTION_CAP] = {{0}};
+    size_t node_count = 0U, start = 0U, end = 0U, patch_count = 0U;
+    uint8_t operation[256];
+    uint8_t *replacement = NULL;
+    size_t replacement_length = 0U;
+    size_t restored[EDITOR_CANVAS_SELECTION_CAP];
+    if (editor == NULL || translate_x == NULL || translate_y == NULL ||
+        delta_count != editor->canvas_selection_count ||
+        delta_count > EDITOR_CANVAS_SELECTION_CAP ||
+        !nodes_collect(editor, nodes, &node_count) || node_count != delta_count ||
+        !range_for_nodes(nodes, node_count, &start, &end)) {
+        if (editor != NULL)
+            editor_status_ok(editor,
+                "Arrange needs sibling elements within the 64 KiB edit limit");
+        return VIEWER_EDITOR_HANDLED;
+    }
+    for (size_t index = 0U; index < node_count; ++index) {
+        size_t selected_index = 0U;
+        while (selected_index < delta_count &&
+            editor->canvas_selection_offsets[selected_index] !=
+                nodes[index].span.offset) ++selected_index;
+        if (selected_index == delta_count ||
+            !isfinite(translate_x[selected_index]) ||
+            !isfinite(translate_y[selected_index]) ||
+            fabs(translate_x[selected_index]) > 1000000.0 ||
+            fabs(translate_y[selected_index]) > 1000000.0) {
+            patches_destroy(patches, patch_count);
+            editor_status_ok(editor, "Arrange translation exceeds the editor limit");
+            return VIEWER_EDITOR_HANDLED;
+        }
+        if (translate_x[selected_index] == 0.0 &&
+            translate_y[selected_index] == 0.0) continue;
+        size_t operation_length = 0U;
+        if (!format_transform((char *)operation, &operation_length,
+                translate_x[selected_index], translate_y[selected_index],
+                1.0, 1.0, 0.0, 0.0, 0.0) ||
+            !transform_patch(editor, nodes[index].handle, nodes[index].span,
+                (const char *)operation, operation_length,
+                &patches[patch_count])) {
+            patches_destroy(patches, patch_count);
+            editor_status_ok(editor, "Arrange transform could not be encoded");
+            return VIEWER_EDITOR_HANDLED;
+        }
+        ++patch_count;
+    }
+    if (patch_count == 0U) {
+        editor_status_ok(editor, "Selection already has the requested alignment");
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (!build_patch_result(editor->edit, start, end, patches, patch_count,
+            &replacement, &replacement_length)) {
+        patches_destroy(patches, patch_count);
+        editor_status_ok(editor, "Arrange exceeds the 64 KiB source limit");
+        return VIEWER_EDITOR_HANDLED;
+    }
+    for (size_t index = 0U; index < node_count; ++index)
+        restored[index] = map_offset_after_patches(nodes[index].span.offset,
+            patches, patch_count);
+    size_t old_offset = editor->selected_offset;
+    char old_id[EDITOR_NAME_CAP];
+    editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ?
+        editor->selected_id : "");
+    uint32_t result = apply_region_change(editor, nodes[0].parent, start, end,
+        replacement, replacement_length, old_offset, old_id, restored,
+        node_count);
+    free(replacement);
+    patches_destroy(patches, patch_count);
+    return result;
+}
+
 uint32_t editor_canvas_multi_delete(viewer_editor *editor)
 {
     editor_selected_node nodes[EDITOR_CANVAS_SELECTION_CAP];
