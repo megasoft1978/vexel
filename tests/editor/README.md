@@ -31,8 +31,11 @@ commits to the exact input bytes. `verify_selection_goldens.py` checks new
 1280×800 and 2560×1600 selection overlay screenshots in dark and light themes;
 these are separate from the frozen chrome fixtures.
 
-`native_smoke.sh` runs the maintainer's interactive click-select, drag-move,
-resize, rectangle draw/undo, polygon draw/undo, and save flow, then checks that
-saved bytes differ only by the expected transform attribute. Run it with
+`native_smoke.sh` supervises the maintainer's interactive click-select,
+drag-move, resize, rectangle draw/undo, polygon draw/undo, and save flow, then
+checks that saved bytes differ only by the expected transform attribute. The
+supervisor bounds the full run to 120 seconds by default, reports process and
+log diagnostics, and stops the viewer and automation process group on failure.
+Set `VEXEL_EDITOR_SMOKE_TIMEOUT` to override the 1–600 second bound. Run it with
 `./dev editor-smoke` on an interactive macOS desktop with Accessibility access
 enabled.

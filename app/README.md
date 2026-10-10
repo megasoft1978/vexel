@@ -2,7 +2,10 @@
 
 `main.c` dispatches viewer, render-frame, native test, and smoke commands. With
 no file argument it opens the interactive viewer's empty state, which prompts
-for Open or drag and drop. `viewer.c` owns the interactive AppKit viewer;
+for Open or drag and drop. The test-only `VEXEL_TEST_OPEN=<path>` environment
+variable queues a bounded `.svg` file-open event at startup without presenting
+`NSOpenPanel`; `./dev viewer-smoke` uses it. `viewer.c` owns the interactive
+AppKit viewer;
 `render_frame_cli.c` is its headless PPM path with bounded zoom and source-region
 rerendering. `index_replay.c` is a scriptable headless path for a borrowed
 SVG session: it advances the owner index
