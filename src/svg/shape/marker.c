@@ -420,7 +420,10 @@ static bool path_markers(shape_traversal *traversal, size_t shape,
     marker_subpath current = {0};
     for (size_t i = lower; i < document->path_segment_count &&
          document->path_segments[i].shape_index == shape; ++i) {
-        const svg_shape_path_segment *segment = &document->path_segments[i];
+        /* Copy by value: flushing emits markers whose nested paths append to
+         * and may reallocate path_segments. */
+        const svg_shape_path_segment segment_copy = document->path_segments[i];
+        const svg_shape_path_segment *segment = &segment_copy;
         char command = segment->command;
         if (command >= 'a' && command <= 'z') command = (char)(command - 'a' + 'A');
         if (command == 'M' && !flush_path_subpath(

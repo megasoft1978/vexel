@@ -50,6 +50,15 @@ int main(void)
         "</marker></defs><path d=\"M5 10 L50 40 L90 10 L130 40 L170 10 L210 40 Z\" "
         "fill=\"none\" stroke=\"red\" marker-start=\"url(#m)\" marker-mid=\"url(#m)\" "
         "marker-end=\"url(#m)\"/></svg>");
-    if (used >= sizeof polyline || path_used >= sizeof path) return 2;
-    return render_case("polyline", polyline) | render_case("path", path);
+    static char segments[16384];
+    size_t seg_used = (size_t)snprintf(segments, sizeof segments,
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\" viewBox=\"0 0 64 64\">"
+        "<defs><marker id=\"m\" markerWidth=\"1\" markerHeight=\"1\"><path d=\"M0 0 L1 1\"/></marker></defs>"
+        "<path style=\"marker-start:none;marker-mid:none;marker-end:url(#m)\" d=\"M0 0");
+    for (int i = 1; i <= 30; ++i) /* + M0 and the final M = exactly 32 segments */
+        seg_used += (size_t)snprintf(segments + seg_used, sizeof segments - seg_used, " L%d 0", i);
+    seg_used += (size_t)snprintf(segments + seg_used, sizeof segments - seg_used, " M31 0\"/></svg>");
+    if (used >= sizeof polyline || path_used >= sizeof path || seg_used >= sizeof segments) return 2;
+    return render_case("polyline", polyline) | render_case("path", path) |
+           render_case("path-segments", segments);
 }
