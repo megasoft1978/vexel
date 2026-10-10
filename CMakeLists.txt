@@ -360,3 +360,66 @@ if(BUILD_TESTING)
     add_test(NAME spatial-cache COMMAND spatial_cache_test)
     add_test(NAME job-snapshot COMMAND job_snapshot_test)
 endif()
+
+# lane: platform-media
+add_library(vexel_platform_media STATIC
+    src/platform/media/platform_media.c
+    src/platform/media/platform_text.m
+    src/platform/media/platform_image.m)
+target_include_directories(vexel_platform_media PUBLIC src)
+find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
+find_library(COREGRAPHICS_FRAMEWORK CoreGraphics REQUIRED)
+find_library(CORETEXT_FRAMEWORK CoreText REQUIRED)
+find_library(IMAGEIO_FRAMEWORK ImageIO REQUIRED)
+target_link_libraries(vexel_platform_media PUBLIC
+    ${COREFOUNDATION_FRAMEWORK}
+    ${COREGRAPHICS_FRAMEWORK}
+    ${CORETEXT_FRAMEWORK}
+    ${IMAGEIO_FRAMEWORK})
+set_source_files_properties(
+    src/platform/media/platform_text.m
+    src/platform/media/platform_image.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(vexel_platform_media PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO)
+target_compile_options(vexel_platform_media PRIVATE ${VEXEL_STRICT_WARNINGS})
+
+add_executable(platform_media_test tests/platform_media/platform_media_test.c)
+target_link_libraries(platform_media_test PRIVATE vexel_platform_media)
+set_target_properties(platform_media_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(platform_media_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+
+add_executable(media_probe tests/platform_media/media_probe.c)
+target_link_libraries(media_probe PRIVATE vexel_platform_media)
+set_target_properties(media_probe PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(media_probe PRIVATE ${VEXEL_STRICT_WARNINGS})
+
+if(VEXEL_SANITIZER)
+    foreach(media_target vexel_platform_media platform_media_test media_probe)
+        target_compile_options(${media_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+        target_link_options(${media_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    endforeach()
+endif()
+
+if(BUILD_TESTING)
+    set(PLATFORM_MEDIA_FIXTURE_DIR "${CMAKE_BINARY_DIR}/platform-media-fixtures")
+    add_test(NAME platform-media-fixtures COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/platform_media/generate_fixtures.py"
+        --output-dir "${PLATFORM_MEDIA_FIXTURE_DIR}")
+    set_tests_properties(platform-media-fixtures PROPERTIES
+        FIXTURES_SETUP platform-media-generated-fixtures)
+    add_test(NAME platform-media COMMAND platform_media_test
+        "${PLATFORM_MEDIA_FIXTURE_DIR}")
+    set_tests_properties(platform-media PROPERTIES
+        FIXTURES_REQUIRED platform-media-generated-fixtures)
+    add_test(NAME platform-media-python COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/test_platform_media.py")
+    set_tests_properties(platform-media-python PROPERTIES
+        ENVIRONMENT "VEXEL_MEDIA_PROBE=$<TARGET_FILE:media_probe>"
+        FIXTURES_REQUIRED platform-media-generated-fixtures)
+endif()
