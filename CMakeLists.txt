@@ -677,6 +677,7 @@ if(BUILD_TESTING)
     add_test(NAME editor-style-goldens COMMAND python3
         "${CMAKE_SOURCE_DIR}/tests/ui/verify_style_goldens.py"
         --binary $<TARGET_FILE:viewer_chrome_render>)
+endif()
 
 # lane: w5-fixes
 target_sources(vexel_document PRIVATE src/platform/macos/platform_atomic_new_file.c)
