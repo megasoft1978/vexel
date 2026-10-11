@@ -325,3 +325,11 @@
   lifecycle event was added because no W16 frozen work order exists. No live
   window, keyboard/mouse automation, or screenshot was used. Maintainer window
   checks remain listed in `docs/lanes/integrate.md`.
+
+- WO-UI-POLISH-REMOTE-01 revision 1 is complete on `fix/ui-polish-main` at
+  source commit `06d7fe53d39c803853e0257b178b9060d4792e35`, based on GitHub
+  `main` at `c43fa826c0fbc8910e8dc0c09b4139c8aa615995`. Common icon glyphs are
+  15 px instead of 22 px; close glyphs and button bounds are unchanged. The
+  status pill is shorter, narrower, and uses 10 px text. Debug app bundle build
+  and live screenshot review pass; cartoon and two tracks are open. Playback
+  was not confirmed. Evidence: `artifacts/WO-UI-POLISH-REMOTE-01/ui-review.md`.
