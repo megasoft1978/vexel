@@ -117,6 +117,9 @@ struct viewer_app {
 };
 
 const char *viewer_error_reason(const viewer_app *app);
+size_t viewer_bounded_length(const char *text, size_t limit);
+void viewer_copy_display_name(const char *path, char out[256]);
+bool viewer_test_layout_dump(viewer_app *app);
 bool viewer_set_window_title(viewer_app *app);
 void viewer_update_file_stamp(viewer_app *app);
 bool viewer_file_changed_on_disk(viewer_app *app);

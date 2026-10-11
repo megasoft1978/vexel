@@ -24,34 +24,11 @@
 #include <sys/stat.h>
 #include <time.h>
 
-static size_t bounded_length(const char *text, size_t limit)
-{
-    size_t length = 0U;
-    if (text == NULL) return 0U;
-    while (length <= limit && text[length] != '\0') length++;
-    return length;
-}
-
 static double monotonic_ms(void)
 {
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0.0;
     return (double)now.tv_sec * 1000.0 + (double)now.tv_nsec / 1000000.0;
-}
-
-static void copy_display_name(const char *path, char out[256])
-{
-    const char *name = path;
-    for (const char *cursor = path; *cursor != '\0'; cursor++)
-        if (*cursor == '/') name = cursor + 1;
-    if (*name == '\0') name = "Open SVG";
-    size_t length = bounded_length(name, 240U);
-    if (length > 240U) length = 240U;
-    for (size_t index = 0U; index < length; index++) {
-        unsigned char value = (unsigned char)name[index];
-        out[index] = value >= 32U && value < 127U ? (char)value : '?';
-    }
-    out[length] = '\0';
 }
 
 const char *viewer_error_reason(const viewer_app *app)
@@ -314,7 +291,7 @@ static bool submit_job(viewer_app *app, viewer_job *job)
 
 bool viewer_request_open(viewer_app *app, const char *path, bool initial)
 {
-    size_t length = bounded_length(path, PLATFORM_PATH_CAP - 1U);
+    size_t length = viewer_bounded_length(path, PLATFORM_PATH_CAP - 1U);
     if (length == 0U || length >= PLATFORM_PATH_CAP) return false;
     if (!initial && !viewer_confirm_unsaved_changes(app, "Unsaved Changes",
             "Save changes before opening another document?")) return false;
@@ -341,7 +318,7 @@ bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_le
         return false;
     memcpy(app->path, path, path_length);
     app->path[path_length] = '\0';
-    copy_display_name(app->path, app->display_name);
+    viewer_copy_display_name(app->path, app->display_name);
     viewer_update_file_stamp(app);
     app->frame_dirty = true;
     (void)platform_window_recent_add(app->window, path, path_length);
@@ -358,7 +335,7 @@ static void start_pending_load(viewer_app *app)
     job->app = app;
     job->kind = VIEWER_JOB_LOAD;
     job->generation = app->generation;
-    size_t length = bounded_length(app->pending_path, PLATFORM_PATH_CAP - 1U);
+    size_t length = viewer_bounded_length(app->pending_path, PLATFORM_PATH_CAP - 1U);
     if (length == 0U || length >= PLATFORM_PATH_CAP) {
         free(job);
         goto failed;
@@ -370,13 +347,16 @@ static void start_pending_load(viewer_app *app)
     }
     app->pending_open = false;
     app->pending_path[0] = '\0';
+    viewer_tile_cache_clear(&app->sharp_cache, app->generation);
+    app->sharp_plan_ready = false;
     (void)viewer_set_window_title(app);
     return;
 failed:
     app->pending_open = false;
     app->load_status = VIEWER_LOAD_FAILED;
     app->load_result_handled = true;
-    size_t failed_length = bounded_length(app->pending_path, PLATFORM_PATH_CAP - 1U);
+    size_t failed_length = viewer_bounded_length(app->pending_path,
+        PLATFORM_PATH_CAP - 1U);
     if (failed_length < PLATFORM_PATH_CAP)
         memcpy(app->failed_path, app->pending_path, failed_length + 1U);
     app->pending_path[0] = '\0';
@@ -393,7 +373,8 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
 {
     app->load_ms = job->elapsed_ms;
     if (!worker_succeeded || job->load_status != VIEWER_LOAD_OK) {
-        size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
+        size_t path_length = viewer_bounded_length(job->path,
+            PLATFORM_PATH_CAP - 1U);
         if (path_length < PLATFORM_PATH_CAP)
             memcpy(app->failed_path, job->path, path_length + 1U);
         if (job->loaded.load_error[0] != '\0') {
@@ -417,9 +398,24 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         return;
     }
 
+    viewer_timeline next_timeline;
+    viewer_timeline_init(&next_timeline);
+    next_timeline.dock_open = app->timeline.dock_open;
+    next_timeline.dock_state_explicit = app->timeline.dock_state_explicit;
+    next_timeline.dock_height_points = app->timeline.dock_height_points;
+    next_timeline.mode = app->timeline.mode;
+    next_timeline.playback_speed = app->timeline.playback_speed;
+    next_timeline.reduced_motion = app->timeline.reduced_motion;
+    viewer_timeline_reset(&next_timeline, &job->loaded.shape);
     viewer_editor *next_editor = viewer_editor_create((base_bytes){job->loaded.source,
         job->loaded.source_length}, app->theme, app->width, app->height);
-    viewer_editor_resize(next_editor, app->width, app->height, app->backing_scale);
+    if (next_editor != NULL) {
+        (void)viewer_editor_set_timeline_state(next_editor,
+            viewer_timeline_track_count(&next_timeline) > 0U,
+            next_timeline.dock_open, next_timeline.dock_height_points);
+        viewer_editor_resize(next_editor, app->width, app->height,
+            app->backing_scale);
+    }
     viewer_chrome_layout next_layout = {0};
     ui_rect next_canvas = {0};
     ui_viewer_navigation next_navigation = {0};
@@ -431,7 +427,9 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
             (double)job->loaded.tile.height) && ui_viewer_navigation_fit(&next_navigation);
     if (!document_ready) {
         viewer_editor_destroy(next_editor);
-        size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
+        viewer_timeline_destroy(&next_timeline);
+        size_t path_length = viewer_bounded_length(job->path,
+            PLATFORM_PATH_CAP - 1U);
         if (path_length < PLATFORM_PATH_CAP)
             memcpy(app->failed_path, job->path, path_length + 1U);
         (void)snprintf(app->load_error, sizeof(app->load_error),
@@ -450,7 +448,9 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
 
     viewer_editor_destroy(app->editor);
     app->editor = next_editor;
-    viewer_timeline_reset(&app->timeline, NULL);
+    viewer_timeline_destroy(&app->timeline);
+    app->timeline = next_timeline;
+    next_timeline = (viewer_timeline){0};
     viewer_loaded_document_destroy(&app->document);
     free(app->render_source);
     app->render_source = NULL;
@@ -470,16 +470,9 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         PLATFORM_ACTION_TOGGLE_GUIDES, viewer_editor_guides_visible(app->editor));
     (void)platform_window_set_option_state(app->window,
         PLATFORM_ACTION_TOGGLE_GUIDE_LOCK, viewer_editor_guides_locked(app->editor));
-    size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
-    if (path_length < PLATFORM_PATH_CAP) {
-        memcpy(app->path, job->path, path_length + 1U);
-        copy_display_name(job->path, app->display_name);
-        app->file_stamp = (viewer_file_stamp){0};
-        (void)file_stamp_read(app->path, &app->file_stamp);
-        (void)platform_window_recent_add(app->window, app->path, path_length);
-        app->recent_file_count = platform_window_recent_files(app->window,
-            app->recent_files, PLATFORM_RECENT_FILES_MAX);
-    }
+    size_t path_length = viewer_bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
+    if (path_length < PLATFORM_PATH_CAP)
+        (void)viewer_update_active_path(app, job->path, path_length);
     app->failed_path[0] = '\0';
     app->pending_path[0] = '\0';
     app->pending_open = false;
@@ -535,8 +528,13 @@ static void service_job(viewer_app *app)
         app->document.shape = job->loaded.shape;
         job->loaded.shape = (svg_shape_document){0};
         viewer_timeline_reset(&app->timeline, &app->document.shape);
+        if (app->editor != NULL)
+            (void)viewer_editor_set_timeline_state(app->editor,
+                viewer_timeline_track_count(&app->timeline) > 0U,
+                app->timeline.dock_open, app->timeline.dock_height_points);
         app->document.tile = job->loaded.tile;
         job->loaded.tile = (raster_tile){0};
+        (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
         app->document.shape_error = SVG_SHAPE_ERROR_NONE;
         app->document.error_offset = 0U;
         app->document.load_error[0] = '\0';

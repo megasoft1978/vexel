@@ -1,0 +1,25 @@
+{
+  "screenshots": {
+    "timeline-dark-1x.png": {
+      "height": 800,
+      "sha256": "d387634993ad74bae5f529fc70928816a5f263e47dbbb77444bf73b0cdec417d",
+      "width": 1280
+    },
+    "timeline-dark-2x.png": {
+      "height": 1600,
+      "sha256": "99fa34ae9e0debd666094b9404e472e4ee9c676aadb632f04292d1be76167f2c",
+      "width": 2560
+    },
+    "timeline-light-1x.png": {
+      "height": 800,
+      "sha256": "5f7dd55e84e144cc11d14d76af06d4ded95deac8f1fa78f07b35bc91533c16e7",
+      "width": 1280
+    },
+    "timeline-light-2x.png": {
+      "height": 1600,
+      "sha256": "29bc9c1e70845f378a9d7733f2fb7bdd87e675a1c3d8fa4f3513fda2445a4c00",
+      "width": 2560
+    }
+  },
+  "version": 1
+}

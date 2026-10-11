@@ -42,6 +42,7 @@ enum {
     EDITOR_NODE_OUTLINE_HEADER,
     EDITOR_NODE_INSPECTOR_HEADER,
     EDITOR_NODE_CANVAS_ZOOM_MENU = 26U,
+    EDITOR_NODE_TIMELINE_DOCK = 27U,
     EDITOR_BUTTON_SNAPPING = 121U,
     EDITOR_BUTTON_SNAP_GRID,
     EDITOR_BUTTON_SNAP_OBJECTS,
@@ -64,6 +65,7 @@ enum {
     EDITOR_BUTTON_TOOL_ZOOM,
     EDITOR_BUTTON_TOGGLE_STRUCTURE,
     EDITOR_BUTTON_TOGGLE_INSPECTOR,
+    EDITOR_BUTTON_TOGGLE_TIMELINE,
     EDITOR_BUTTON_HIDE_STRUCTURE,
     EDITOR_BUTTON_HIDE_INSPECTOR,
     EDITOR_BUTTON_TOOL_RECTANGLE = 400U,
@@ -348,6 +350,9 @@ struct viewer_editor {
     bool context_pointer_valid;
     bool want_structure;
     bool want_inspector;
+    bool timeline_available;
+    bool timeline_visible;
+    uint16_t timeline_height_points;
     bool effective_structure;
     bool effective_inspector;
     double canvas_zoom;

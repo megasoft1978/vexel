@@ -29,23 +29,6 @@ static size_t runtime_bounded_length(const char *text, size_t limit)
     return length;
 }
 
-static void runtime_display_name(const char *path, char out[256])
-{
-    const char *name = path == NULL ? "Open SVG" : path;
-    if (path != NULL) {
-        for (const char *cursor = path; *cursor != '\0'; ++cursor)
-            if (*cursor == '/') name = cursor + 1;
-    }
-    if (*name == '\0') name = "Open SVG";
-    size_t length = runtime_bounded_length(name, 240U);
-    if (length > 240U) length = 240U;
-    for (size_t index = 0U; index < length; ++index) {
-        unsigned char byte = (unsigned char)name[index];
-        out[index] = byte >= 32U && byte < 127U ? (char)byte : '?';
-    }
-    out[length] = '\0';
-}
-
 static viewer_app *runtime_create_session(viewer_runtime *runtime,
     const char *path, bool initial)
 {
@@ -64,7 +47,8 @@ static viewer_app *runtime_create_session(viewer_runtime *runtime,
     app->pixel_grid = true;
     app->load_status = VIEWER_LOAD_CANCELED;
     app->theme = UI_THEME_DARK;
-    runtime_display_name(path, app->display_name);
+    viewer_copy_display_name(path == NULL ? "Open SVG" : path,
+        app->display_name);
     if (!viewer_tile_cache_init(&app->sharp_cache, app->generation)) goto failed;
 
     platform_task_config task_config = {1U, 1U, NULL, NULL, NULL};

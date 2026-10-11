@@ -1083,6 +1083,32 @@ endif()
 if(BUILD_TESTING)
     add_test(NAME viewer-timeline COMMAND viewer_timeline_test)
 endif()
+# lane: w14-timeline
+target_sources(svgworkbench PRIVATE
+    src/app/viewer_timeline_layout.c
+    src/app/viewer_display_name.c
+    src/app/viewer_test_layout_dump.c)
+target_sources(viewer_timeline_test PRIVATE src/app/viewer_timeline_layout.c)
+add_executable(viewer_timeline_render
+    tests/ui/viewer_timeline_render.c
+    src/app/viewer_timeline.c
+    src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_ui.c)
+target_include_directories(viewer_timeline_render PRIVATE src src/app src/ui)
+target_link_libraries(viewer_timeline_render PRIVATE vexel_shape vexel_editor_ui)
+set_target_properties(viewer_timeline_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_timeline_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_timeline_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_timeline_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME ui-timeline-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/ui/verify_timeline_goldens.py"
+        --binary $<TARGET_FILE:viewer_timeline_render>)
+endif()
 # lane: w8-edit4 — editor follow-up regressions
 target_sources(vexel_document PRIVATE src/document/document_edit_group.c)
 target_sources(vexel_editor_ui PRIVATE

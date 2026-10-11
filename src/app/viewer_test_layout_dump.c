@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include "viewer_internal.h"
 
 #include "viewer_editor_test_layout.h"
@@ -6,14 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-
-static size_t layout_bounded_length(const char *text, size_t limit)
-{
-    size_t length = 0U;
-    if (text == NULL) return 0U;
-    while (length <= limit && text[length] != '\0') length++;
-    return length;
-}
 
 static double layout_monotonic_ms(void)
 {
@@ -31,7 +25,7 @@ bool viewer_test_layout_dump(viewer_app *app)
     if (now - app->test_layout_last_write_ms < 100.0) return true;
     app->test_layout_last_write_ms = now;
 
-    size_t path_length = layout_bounded_length(path, PLATFORM_PATH_CAP - 1U);
+    size_t path_length = viewer_bounded_length(path, PLATFORM_PATH_CAP - 1U);
     double origin_x = 0.0, origin_y = 0.0;
     char temporary[PLATFORM_PATH_CAP + 8U];
     if (path_length == 0U || path_length >= PLATFORM_PATH_CAP ||

@@ -26,6 +26,14 @@ static bool make_status_text(const viewer_app *app, char out[VIEWER_STATUS_CAP])
 
 bool viewer_compose_and_present(viewer_app *app)
 {
+    if (app->editor != NULL && viewer_timeline_track_count(&app->timeline) > 0U) {
+        bool requested_open = viewer_editor_timeline_visible(app->editor);
+        if (requested_open != app->timeline.dock_open)
+            (void)viewer_timeline_dock_set_open(&app->timeline, requested_open);
+        viewer_timeline_set_reduced_motion(&app->timeline,
+            viewer_editor_reduced_motion(app->editor));
+        viewer_timeline_sync_selection(&app->timeline, app->editor);
+    }
     if (app->document_visible && viewer_timeline_tick(&app->timeline))
         app->frame_dirty = true;
     if (!app->frame_dirty || app->frame == NULL || app->width == 0U || app->height == 0U)

@@ -2,6 +2,7 @@
 
 #include "platform/macos/platform_accessibility.h"
 #include "platform/platform_text_ui.h"
+#include "ui/ui_draw.h"
 #include "ui/ui_widgets.h"
 #include "viewer_chrome.h"
 #include "viewer_editor.h"
@@ -18,6 +19,9 @@ enum {
     TIMELINE_A11Y_PLAY,
     TIMELINE_A11Y_SLIDER,
     TIMELINE_A11Y_LOOP,
+    TIMELINE_A11Y_SPEED,
+    TIMELINE_A11Y_FIT,
+    TIMELINE_A11Y_COLLAPSE,
     TIMELINE_A11Y_TRACKS,
     TIMELINE_A11Y_ROW_BASE = VIEWER_TIMELINE_A11Y_BASE + 16U
 };
@@ -26,6 +30,88 @@ enum {
 static ui_tree timeline_accessibility_tree;
 static ui_semantics_snapshot editor_semantics_scratch;
 static ui_semantics_snapshot timeline_semantics_scratch;
+
+static bool paint_widget(ui_widget_canvas *canvas, ui_widget_kind kind,
+    ui_rect pixels, ui_control_state state,
+    const char *label, size_t label_length, const char *value, size_t value_length,
+    double numeric_value, bool checked);
+static size_t utf8_prefix(const char *text, size_t length, size_t maximum);
+
+static bool timeline_is_indefinite(const viewer_timeline *timeline)
+{
+    if (timeline == NULL || timeline->document == NULL) return false;
+    size_t count = viewer_timeline_track_count(timeline);
+    for (size_t index = 0U; index < count; ++index) {
+        const svg_anim_track *track = &timeline->document->animation.tracks[index];
+        if (track->duration_indefinite || track->repeat_indefinite ||
+            track->repeat_duration_indefinite) return true;
+    }
+    return false;
+}
+
+static void scalar_ascii_text(const char *text, size_t length,
+    char *out, size_t capacity, size_t *out_length)
+{
+    if (out_length != NULL) *out_length = 0U;
+    if (text == NULL || out == NULL || out_length == NULL || capacity == 0U) return;
+    size_t input = 0U, output = 0U;
+    while (input < length && output < capacity - 1U) {
+        const uint8_t byte = (uint8_t)text[input];
+        const char *replacement = NULL;
+        size_t consumed = 1U;
+        if (input + 2U < length && byte == 0xe2U &&
+            (uint8_t)text[input + 1U] == 0x88U &&
+            (uint8_t)text[input + 2U] == 0x9eU) {
+            replacement = "INF";
+            consumed = 3U;
+        } else if (input + 2U < length && byte == 0xe2U &&
+            (uint8_t)text[input + 1U] == 0x80U &&
+            ((uint8_t)text[input + 2U] == 0xa2U ||
+                (uint8_t)text[input + 2U] == 0x93U)) {
+            replacement = (uint8_t)text[input + 2U] == 0xa2U ? " " : "-";
+            consumed = 3U;
+        } else if (input + 1U < length && byte == 0xc3U &&
+            (uint8_t)text[input + 1U] == 0x97U) {
+            replacement = "x";
+            consumed = 2U;
+        }
+        if (replacement != NULL) {
+            size_t amount = strlen(replacement);
+            if (amount > capacity - 1U - output) break;
+            memcpy(out + output, replacement, amount);
+            output += amount;
+            input += consumed;
+            continue;
+        }
+        if (byte < 0x80U) {
+            out[output++] = (char)byte;
+            input++;
+            continue;
+        }
+        out[output++] = '?';
+        input++;
+        while (input < length && (((uint8_t)text[input] & 0xc0U) == 0x80U))
+            input++;
+    }
+    out[output] = '\0';
+    *out_length = output;
+}
+
+static bool scalar_timeline_text(void *context, const char *text, size_t length,
+    ui_rect bounds, ui_theme theme, uint32_t font_size_px, uint32_t color,
+    ui_font_family family, ui_font_weight weight, uint8_t *rgba,
+    uint32_t width, uint32_t height, size_t stride)
+{
+    (void)context;
+    (void)theme;
+    (void)family;
+    (void)weight;
+    char ascii[256];
+    size_t ascii_length = 0U;
+    scalar_ascii_text(text, length, ascii, sizeof(ascii), &ascii_length);
+    return ui_scalar_text_draw(ascii, ascii_length, bounds, font_size_px,
+        color, rgba, width, height, stride);
+}
 
 static uint32_t widget_scale_for(double backing_scale)
 {
@@ -84,6 +170,252 @@ static void paint_panel_background(const ui_widget_canvas *canvas, ui_rect panel
                 (size_t)x * 4U, canvas->tokens.panel);
         }
     }
+}
+
+static void paint_hline(const ui_widget_canvas *canvas, uint32_t x,
+                        uint32_t y, uint32_t width, uint32_t color)
+{
+    if (canvas == NULL || y >= canvas->height || x >= canvas->width) return;
+    uint32_t end = width > canvas->width - x ? canvas->width : x + width;
+    for (uint32_t at = x; at < end; ++at)
+        blend_panel_pixel(canvas->rgba + (size_t)y * canvas->stride +
+            (size_t)at * 4U, color);
+}
+
+static void paint_vline(const ui_widget_canvas *canvas, uint32_t x,
+                        uint32_t y, uint32_t height, uint32_t color)
+{
+    if (canvas == NULL || x >= canvas->width || y >= canvas->height) return;
+    uint32_t end = height > canvas->height - y ? canvas->height : y + height;
+    for (uint32_t at = y; at < end; ++at)
+        blend_panel_pixel(canvas->rgba + (size_t)at * canvas->stride +
+            (size_t)x * 4U, color);
+}
+
+static void paint_diamond(const ui_widget_canvas *canvas, int32_t center_x,
+                          int32_t center_y, uint32_t radius, uint32_t color)
+{
+    if (canvas == NULL || radius == 0U) return;
+    int32_t extent = radius > (uint32_t)INT32_MAX ? INT32_MAX : (int32_t)radius;
+    for (int32_t dy = -extent; dy <= extent; ++dy) {
+        int32_t remaining = extent - (dy < 0 ? -dy : dy);
+        for (int32_t dx = -remaining; dx <= remaining; ++dx) {
+            int64_t x = (int64_t)center_x + dx;
+            int64_t y = (int64_t)center_y + dy;
+            if (x < 0 || y < 0 || x >= canvas->width || y >= canvas->height) continue;
+            blend_panel_pixel(canvas->rgba + (size_t)y * canvas->stride +
+                (size_t)x * 4U, color);
+        }
+    }
+}
+
+static void paint_square(const ui_widget_canvas *canvas, int32_t center_x,
+                         int32_t center_y, uint32_t radius, uint32_t color)
+{
+    if (canvas == NULL || radius == 0U) return;
+    int32_t extent = radius > (uint32_t)INT32_MAX ? INT32_MAX : (int32_t)radius;
+    for (int32_t dy = -extent; dy <= extent; ++dy) {
+        for (int32_t dx = -extent; dx <= extent; ++dx) {
+            int64_t x = (int64_t)center_x + dx;
+            int64_t y = (int64_t)center_y + dy;
+            if (x < 0 || y < 0 || x >= canvas->width || y >= canvas->height) continue;
+            blend_panel_pixel(canvas->rgba + (size_t)y * canvas->stride +
+                (size_t)x * 4U, color);
+        }
+    }
+}
+
+static void paint_dashed_hline(const ui_widget_canvas *canvas, uint32_t x,
+                               uint32_t y, uint32_t width, uint32_t color)
+{
+    if (canvas == NULL || y >= canvas->height || x >= canvas->width) return;
+    uint32_t end = width > canvas->width - x ? canvas->width : x + width;
+    for (uint32_t at = x; at < end; ++at)
+        if ((at - x) % 6U < 3U)
+            blend_panel_pixel(canvas->rgba + (size_t)y * canvas->stride +
+                (size_t)at * 4U, color);
+}
+
+static double nice_tick_step(double range, double width, double scale)
+{
+    if (!(range > 0.0) || !(width > 0.0) || !(scale > 0.0)) return 1.0;
+    double target = range / (width / (88.0 * scale));
+    if (!isfinite(target) || target <= 0.0) return 1.0;
+    double magnitude = pow(10.0, floor(log10(target)));
+    if (!isfinite(magnitude) || magnitude <= 0.0) return target;
+    double normalized = target / magnitude;
+    double multiplier = normalized <= 1.0 ? 1.0 :
+        normalized <= 2.0 ? 2.0 : normalized <= 5.0 ? 5.0 : 10.0;
+    return multiplier * magnitude;
+}
+
+static double track_start(const svg_anim_track *track)
+{
+    if (track == NULL || track->has_begin_sync || track->begin_indefinite) return 0.0;
+    return isfinite(track->begin_offset) && track->begin_offset > 0.0 ?
+        track->begin_offset : 0.0;
+}
+
+static double track_end(const svg_anim_track *track)
+{
+    if (track == NULL || !track->supported || track->begin_indefinite) return 0.0;
+    double start = track_start(track);
+    double end = start + track->duration_seconds;
+    if (track->duration_indefinite || track->repeat_indefinite ||
+        track->repeat_duration_indefinite || track->kind == SVG_ANIM_KIND_SET)
+        return start + 5.0;
+    double repeats = isfinite(track->repeat_count) && track->repeat_count > 0.0 ?
+        track->repeat_count : 1.0;
+    end = start + track->duration_seconds * repeats;
+    if (!isfinite(end) || end < start) return start + 5.0;
+    if (isfinite(track->repeat_duration) && track->repeat_duration >= 0.0 &&
+        end - start > track->repeat_duration)
+        end = start + track->repeat_duration;
+    if (track->has_end && !track->end_is_sync && isfinite(track->end_seconds) &&
+        track->end_seconds >= start && track->end_seconds < end)
+        end = track->end_seconds;
+    return end;
+}
+
+static double time_to_x(const viewer_timeline *timeline,
+    const viewer_timeline_layout *layout, double seconds)
+{
+    double span = viewer_timeline_view_duration(timeline);
+    if (!(span > 0.0)) return (double)layout->ruler.x;
+    return (double)layout->ruler.x +
+        ((seconds - timeline->view_start_seconds) / span) * layout->ruler.width;
+}
+
+static void paint_ruler(ui_widget_canvas *canvas, const viewer_timeline *timeline,
+                        const viewer_timeline_layout *layout)
+{
+    ui_rect grid = layout->ruler;
+    paint_hline(canvas, grid.x, grid.y + grid.height - 1U, grid.width,
+        canvas->tokens.separator);
+    double range = viewer_timeline_view_duration(timeline);
+    double step = nice_tick_step(range, (double)grid.width, layout->backing_scale);
+    if (!(step > 0.0) || !isfinite(step)) return;
+    double first = ceil(timeline->view_start_seconds / step) * step;
+    uint32_t ticks = 0U;
+    for (double seconds = first; seconds <= timeline->view_start_seconds + range &&
+            ticks < 64U; seconds += step, ++ticks) {
+        double x_value = time_to_x(timeline, layout, seconds);
+        if (!isfinite(x_value) || x_value < 0.0 || x_value > (double)UINT32_MAX) continue;
+        uint32_t x = (uint32_t)lround(x_value);
+        if (x < grid.x || x >= grid.x + grid.width) continue;
+        paint_vline(canvas, x, grid.y + grid.height / 2U,
+            grid.height / 2U, canvas->tokens.separator);
+        char label[24];
+        int amount = snprintf(label, sizeof(label), step < 1.0 ? "%.1fs" : "%.0fs", seconds);
+        if (amount <= 0 || (size_t)amount >= sizeof(label)) continue;
+        uint32_t label_width = (uint32_t)((size_t)amount * 7U + 8U);
+        ui_rect bounds = {x + 2U, grid.y, label_width, grid.height / 2U};
+        (void)paint_widget(canvas, UI_WIDGET_LABEL, bounds, UI_CONTROL_REST,
+            label, (size_t)amount, NULL, 0U, 0.0, false);
+    }
+}
+
+static void paint_track_lane(ui_widget_canvas *canvas,
+    const viewer_timeline *timeline, const viewer_timeline_layout *layout,
+    size_t row, size_t track_index)
+{
+    const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
+    ui_rect row_rect = layout->track_rows[row];
+    uint32_t row_center = row_rect.y + row_rect.height / 2U;
+    paint_hline(canvas, layout->track_gutter.x, row_rect.y + row_rect.height - 1U,
+        layout->track_gutter.width, canvas->tokens.separator);
+    paint_hline(canvas, layout->time_grid.x, row_rect.y + row_rect.height - 1U,
+        layout->time_grid.width, canvas->tokens.separator);
+    if (track_index > 0U) {
+        const svg_anim_track *previous =
+            &timeline->document->animation.tracks[track_index - 1U];
+        if (previous->target_offset != track->target_offset ||
+            previous->target_length != track->target_length)
+            paint_hline(canvas, row_rect.x, row_rect.y, row_rect.width,
+                canvas->tokens.control_edge);
+    }
+    char label[128] = {0};
+    size_t label_length = 0U;
+    if (viewer_timeline_track_label(timeline, track_index, label,
+            sizeof(label), &label_length)) {
+        ui_control_state state = !track->supported ? UI_CONTROL_DISABLED :
+            track_index == timeline->selected_track ? UI_CONTROL_SELECTED : UI_CONTROL_REST;
+        ui_rect label_bounds = {layout->track_gutter.x, row_rect.y,
+            layout->track_gutter.width, row_rect.height};
+        label_length = utf8_prefix(label, label_length, UI_WIDGET_LABEL_MAX_BYTES);
+        (void)paint_widget(canvas, UI_WIDGET_BUTTON_SECONDARY, label_bounds, state,
+            label, label_length, NULL, 0U, 0.0, false);
+    }
+    if (!track->supported) {
+        uint32_t indicator_radius = (uint32_t)ceil(3.0 * layout->backing_scale);
+        uint32_t inset = indicator_radius * 3U;
+        int32_t indicator_x = (int32_t)(layout->track_gutter.x +
+            (layout->track_gutter.width > inset ?
+                layout->track_gutter.width - inset : 0U));
+        paint_diamond(canvas, indicator_x, (int32_t)row_center,
+            indicator_radius, canvas->tokens.warning);
+        return;
+    }
+    double start = track_start(track);
+    double end = track_end(track);
+    double range_end = timeline->view_start_seconds +
+        viewer_timeline_view_duration(timeline);
+    if (end < timeline->view_start_seconds || start > range_end) return;
+    double clipped_start = start < timeline->view_start_seconds ?
+        timeline->view_start_seconds : start;
+    double clipped_end = end > range_end ? range_end : end;
+    double bar_start = time_to_x(timeline, layout, clipped_start);
+    double bar_end = time_to_x(timeline, layout, clipped_end);
+    if (isfinite(bar_start) && isfinite(bar_end) && bar_end >= bar_start) {
+        uint32_t x0 = bar_start < (double)layout->time_grid.x ? layout->time_grid.x :
+            (uint32_t)lround(bar_start);
+        uint32_t grid_end = layout->time_grid.x + layout->time_grid.width;
+        uint32_t x1 = bar_end > (double)grid_end ? grid_end : (uint32_t)lround(bar_end);
+        if (x1 >= x0) {
+            if (track->calc_mode == SVG_ANIM_CALC_DISCRETE)
+                paint_dashed_hline(canvas, x0, row_center, x1 - x0 + 1U,
+                    canvas->tokens.warning);
+            else paint_hline(canvas, x0, row_center, x1 - x0 + 1U,
+                canvas->tokens.accent);
+        }
+    }
+    uint32_t radius = viewer_timeline_key_hit_radius(layout->backing_scale);
+    if (track->keys == NULL || !(track->duration_seconds > 0.0) ||
+        !isfinite(track->duration_seconds)) return;
+    size_t key_count = track->key_count > SVG_ANIM_MAX_VALUES ?
+        SVG_ANIM_MAX_VALUES : track->key_count;
+    for (size_t key = 0U; key < key_count; ++key) {
+        double seconds = start + track->keys[key].time * track->duration_seconds;
+        if (!isfinite(seconds) || seconds < timeline->view_start_seconds || seconds > range_end)
+            continue;
+        double key_x = time_to_x(timeline, layout, seconds);
+        if (!isfinite(key_x) || key_x < (double)layout->time_grid.x ||
+            key_x >= (double)(layout->time_grid.x + layout->time_grid.width) ||
+            key_x > (double)INT32_MAX) continue;
+        int32_t center_x = (int32_t)lround(key_x);
+        uint32_t color = track->calc_mode == SVG_ANIM_CALC_DISCRETE ?
+            canvas->tokens.warning : canvas->tokens.accent;
+        if (track->calc_mode == SVG_ANIM_CALC_DISCRETE)
+            paint_square(canvas, center_x, (int32_t)row_center, radius, color);
+        else paint_diamond(canvas, center_x, (int32_t)row_center, radius, color);
+    }
+}
+
+static void paint_playhead(ui_widget_canvas *canvas,
+    const viewer_timeline *timeline, const viewer_timeline_layout *layout)
+{
+    double x_value = time_to_x(timeline, layout, timeline->time_seconds);
+    if (!isfinite(x_value) || x_value < (double)layout->time_grid.x ||
+        x_value > (double)(layout->time_grid.x + layout->time_grid.width) ||
+        x_value > (double)UINT32_MAX) return;
+    uint32_t x = (uint32_t)lround(x_value);
+    uint32_t bottom = layout->panel.y + layout->panel.height;
+    uint32_t y = layout->ruler.y;
+    if (bottom <= y) return;
+    paint_vline(canvas, x, y, bottom - y, canvas->tokens.error);
+    uint32_t radius = (uint32_t)ceil(4.0 * layout->backing_scale);
+    paint_diamond(canvas, (int32_t)x, (int32_t)(y + 2U * radius), radius,
+        canvas->tokens.error);
 }
 
 static bool paint_widget(ui_widget_canvas *canvas, ui_widget_kind kind,
@@ -172,44 +504,95 @@ static bool add_timeline_node(ui_tree *tree, uint32_t id, uint32_t parent,
     return true;
 }
 
+static const char *track_diagnostic(const viewer_timeline *timeline,
+                                    const svg_anim_track *track)
+{
+    if (timeline == NULL || timeline->document == NULL || track == NULL) return NULL;
+    const svg_anim_document *animation = &timeline->document->animation;
+    for (size_t index = 0U; index < animation->diagnostic_count &&
+            index < SVG_ANIM_MAX_DIAGNOSTICS; ++index) {
+        const svg_anim_diagnostic *diagnostic = &animation->diagnostics[index];
+        if (diagnostic->offset >= track->element_offset &&
+            diagnostic->offset - track->element_offset <= track->element_length)
+            return svg_anim_diagnostic_name(diagnostic->kind);
+    }
+    return NULL;
+}
+
 static bool build_timeline_tree(viewer_timeline *timeline,
     const viewer_timeline_layout *layout, ui_theme theme,
     bool increased_contrast, size_t row_limit)
 {
     if (!ui_tree_init_accessible(&timeline_accessibility_tree, theme,
             increased_contrast)) return false;
-    char time_value[48];
-    double duration = viewer_timeline_duration(timeline);
-    int time_amount = snprintf(time_value, sizeof(time_value), "%.2f / %.2fs",
-        timeline->time_seconds, duration);
-    if (time_amount < 0 || (size_t)time_amount >= sizeof(time_value)) return false;
     if (!add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_PANEL,
             UI_ROOT_ID, UI_ROLE_GROUP, "Animation timeline", NULL, 0U,
             layout->panel) ||
-        !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_PLAY,
+        !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_COLLAPSE,
             TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON,
-            timeline->playing ? "Pause animation" : "Play animation", NULL, 0U,
-            layout->play_button) ||
-        !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_SLIDER,
-            TIMELINE_A11Y_PANEL, UI_ROLE_SLIDER, "Timeline position",
-            time_value, 0U, layout->scrubber) ||
-        !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_LOOP,
-            TIMELINE_A11Y_PANEL, UI_ROLE_CHECKBOX, "Loop animation", NULL,
-            timeline->loop ? UI_STATE_CHECKED : 0U, layout->loop_toggle) ||
-        !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_TRACKS,
-            TIMELINE_A11Y_PANEL, UI_ROLE_LIST, "Animation tracks", NULL, 0U,
-            layout->panel)) return false;
+            layout->collapsed ? (timeline->dock_open ? "Close timeline" :
+                "Expand timeline") : "Collapse timeline", NULL,
+            0U, layout->collapse_toggle)) return false;
+    if (!layout->collapsed) {
+        char time_value[64];
+        double duration = viewer_timeline_duration(timeline);
+        bool indefinite = timeline_is_indefinite(timeline);
+        int time_amount = indefinite ? snprintf(time_value, sizeof(time_value),
+            "%.2fs; indefinite source; preview 0.00 to %.2fs",
+            timeline->time_seconds, duration) :
+            snprintf(time_value, sizeof(time_value), "%.2f / %.2fs",
+                timeline->time_seconds, duration);
+        if (time_amount < 0 || (size_t)time_amount >= sizeof(time_value)) return false;
+        const char *mode = timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Loop" :
+            timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ? "Ping-Pong" : "One Shot";
+        char speed[16];
+        int speed_amount = snprintf(speed, sizeof(speed), "%.2g×", timeline->playback_speed);
+        if (speed_amount < 0 || (size_t)speed_amount >= sizeof(speed)) return false;
+        if (!add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_PLAY,
+                TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON,
+                timeline->playing ? "Pause animation" : "Play animation", NULL, 0U,
+                layout->play_button) ||
+            !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_SLIDER,
+                TIMELINE_A11Y_PANEL, UI_ROLE_SLIDER, "Timeline position",
+                time_value, 0U, layout->scrubber) ||
+            !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_LOOP,
+                TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON, "Preview mode", mode,
+                0U, layout->mode_button) ||
+            !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_SPEED,
+                TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON, "Preview speed", speed,
+                0U, layout->speed_button) ||
+            !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_FIT,
+                TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON, "Fit timeline to work area",
+                NULL, 0U, layout->fit_button) ||
+            !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_TRACKS,
+                TIMELINE_A11Y_PANEL, UI_ROLE_LIST, "Animation tracks", NULL, 0U,
+                layout->panel)) return false;
+    }
     if (row_limit > layout->visible_track_count) row_limit = layout->visible_track_count;
     for (size_t row = 0U; row < row_limit; ++row) {
-        size_t track_index = timeline->first_track + row;
+        if (layout->collapsed) break;
+        size_t track_index = layout->first_track + row;
         char label[128] = {0};
         size_t label_length = 0U;
         if (!viewer_timeline_track_label(timeline, track_index, label,
                 sizeof(label), &label_length)) return false;
         uint32_t state = track_index == timeline->selected_track ? UI_STATE_CHECKED : 0U;
+        const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
+        char description[192] = {0};
+        const char *value = NULL;
+        if (!track->supported) {
+            state |= UI_STATE_DISABLED;
+            const char *diagnostic = track_diagnostic(timeline, track);
+            int amount = snprintf(description, sizeof(description),
+                "Unsupported animation track%s%s · preview only",
+                diagnostic == NULL ? "" : ": ",
+                diagnostic == NULL ? "" : diagnostic);
+            if (amount < 0 || (size_t)amount >= sizeof(description)) return false;
+            value = description;
+        }
         if (!add_timeline_node(&timeline_accessibility_tree,
                 TIMELINE_A11Y_ROW_BASE + (uint32_t)row, TIMELINE_A11Y_TRACKS,
-                UI_ROLE_ROW, label, NULL, state, layout->track_rows[row])) return false;
+                UI_ROLE_ROW, label, value, state, layout->track_rows[row])) return false;
     }
     return ui_semantics_snapshot_build(&timeline_accessibility_tree,
         &timeline_semantics_scratch);
@@ -237,10 +620,11 @@ static bool publish_merged_accessibility(viewer_timeline *timeline,
     size_t editor_count = editor_semantics_scratch.count;
     if (editor_count == 0U || editor_count > UI_MAX_NODES) return false;
     size_t extras = UI_MAX_NODES - editor_count;
-    bool include_editor = extras >= 5U;
+    size_t fixed_nodes = layout->collapsed ? 2U : 8U;
+    bool include_editor = extras >= fixed_nodes;
     size_t row_limit = 0U;
-    if (include_editor && extras > 5U) {
-        row_limit = extras - 5U;
+    if (include_editor && extras > fixed_nodes) {
+        row_limit = extras - fixed_nodes;
         if (row_limit > layout->visible_track_count)
             row_limit = layout->visible_track_count;
     }
@@ -263,72 +647,123 @@ static bool publish_merged_accessibility(viewer_timeline *timeline,
         backing_scale);
 }
 
-bool viewer_timeline_paint(viewer_timeline *timeline, viewer_editor *editor,
-                           uint8_t *rgba, size_t capacity,
-                           uint32_t width, uint32_t height, size_t stride,
-                           double backing_scale)
+static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
+    viewer_editor *editor, uint8_t *rgba, size_t capacity, uint32_t width,
+    uint32_t height, size_t stride, double backing_scale, ui_theme theme,
+    bool increased_contrast, bool reduced_motion,
+    ui_widget_text_draw_fn text_draw)
 {
     if (timeline == NULL || editor == NULL || rgba == NULL ||
         viewer_timeline_track_count(timeline) == 0U ||
-        !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0)
+        !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0 ||
+        (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT))
         return false;
+    if (viewer_editor_timeline_available(editor)) {
+        bool requested_open = viewer_editor_timeline_visible(editor);
+        if (requested_open != timeline->dock_open)
+            (void)viewer_timeline_dock_set_open(timeline, requested_open);
+    } else {
+        (void)viewer_editor_set_timeline_state(editor, true, timeline->dock_open,
+            timeline->dock_height_points);
+    }
+    viewer_timeline_set_reduced_motion(timeline, reduced_motion);
+    viewer_timeline_sync_selection(timeline, editor);
     viewer_timeline_layout layout;
     if (!viewer_timeline_layout_compute(timeline, width, height,
             backing_scale, &layout)) return false;
-    ui_theme theme = UI_THEME_DARK;
-    bool increased_contrast = false, reduced_motion = false;
-    (void)platform_text_ui_get_preferences(&theme, &increased_contrast, &reduced_motion);
-    (void)reduced_motion;
     uint32_t widget_scale = widget_scale_for(backing_scale);
     ui_widget_canvas canvas;
     if (!ui_widget_canvas_init(&canvas, rgba, capacity, width, height, stride,
-            widget_scale, theme, increased_contrast, platform_text_ui_draw_widget, NULL)) return false;
+            widget_scale, theme, increased_contrast, text_draw, NULL)) return false;
     paint_panel_background(&canvas, layout.panel);
-
-    ui_rect header = {layout.panel.x + 12U * widget_scale,
-        layout.panel.y + 2U * widget_scale,
-        layout.panel.width > 24U * widget_scale ?
-            layout.panel.width - 24U * widget_scale : 0U,
-        22U * widget_scale};
-    (void)paint_widget(&canvas, UI_WIDGET_SECTION_HEADER, header, UI_CONTROL_REST,
+    paint_hline(&canvas, layout.panel.x, layout.panel.y,
+        layout.panel.width, canvas.tokens.control_edge);
+    (void)paint_widget(&canvas, UI_WIDGET_SECTION_HEADER, layout.header, UI_CONTROL_REST,
         "Timeline", sizeof("Timeline") - 1U, NULL, 0U, 0.0, false);
-
-    char time_text[48];
-    double duration = viewer_timeline_duration(timeline);
-    int time_amount = snprintf(time_text, sizeof(time_text), "%.2f / %.2fs",
-        timeline->time_seconds, duration);
-    if (time_amount < 0 || (size_t)time_amount >= sizeof(time_text))
-        (void)snprintf(time_text, sizeof(time_text), "-- / --s");
-    (void)paint_widget(&canvas,
-        timeline->preview_failed ? UI_WIDGET_INLINE_ERROR : UI_WIDGET_HUD_PILL,
-        layout.time_readout, timeline->preview_failed ? UI_CONTROL_INVALID : UI_CONTROL_REST,
-        timeline->preview_failed ? "Preview unavailable" : time_text,
-        timeline->preview_failed ? sizeof("Preview unavailable") - 1U : strlen(time_text),
+    const char *collapse_label = layout.collapsed ?
+        (timeline->dock_open ? "Close" : "Expand") : "Collapse";
+    (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.collapse_toggle,
+        UI_CONTROL_REST, collapse_label, strlen(collapse_label),
         NULL, 0U, 0.0, false);
-    (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY, layout.play_button,
-        UI_CONTROL_REST, timeline->playing ? "Pause" : "Play",
-        timeline->playing ? sizeof("Pause") - 1U : sizeof("Play") - 1U,
-        NULL, 0U, 0.0, false);
-    (void)paint_widget(&canvas, UI_WIDGET_TOGGLE, layout.loop_toggle,
-        UI_CONTROL_REST, "Loop", sizeof("Loop") - 1U, NULL, 0U, 0.0,
-        timeline->loop);
-    double normalized = duration > 0.0 ? timeline->time_seconds / duration : 0.0;
-    (void)paint_widget(&canvas, UI_WIDGET_SLIDER, layout.scrubber,
-        UI_CONTROL_REST, "Timeline position", sizeof("Timeline position") - 1U,
-        time_text, strlen(time_text), normalized, false);
-
-    for (size_t row = 0U; row < layout.visible_track_count; ++row) {
-        size_t track_index = timeline->first_track + row;
-        char label[128] = {0};
-        size_t label_length = 0U;
-        if (!viewer_timeline_track_label(timeline, track_index, label,
-                sizeof(label), &label_length)) continue;
-        ui_control_state state = track_index == timeline->selected_track ?
-            UI_CONTROL_SELECTED : UI_CONTROL_REST;
-        (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY,
-            layout.track_rows[row], state, label, label_length, NULL, 0U, 0.0, false);
+    if (!layout.collapsed) {
+        char time_text[64];
+        double duration = viewer_timeline_duration(timeline);
+        bool indefinite = timeline_is_indefinite(timeline);
+        int time_amount = indefinite ? (layout.compact ?
+            snprintf(time_text, sizeof(time_text), "%.2f/INF", timeline->time_seconds) :
+            snprintf(time_text, sizeof(time_text), "%.2fs / INF", timeline->time_seconds)) :
+            (layout.compact ? snprintf(time_text, sizeof(time_text), "%.2f/%.2fs",
+                timeline->time_seconds, duration) :
+                snprintf(time_text, sizeof(time_text), "%.2f / %.2fs",
+                    timeline->time_seconds, duration));
+        if (time_amount < 0 || (size_t)time_amount >= sizeof(time_text))
+            (void)snprintf(time_text, sizeof(time_text), "-- / --s");
+        const char *mode = layout.compact ?
+            (timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Loop" :
+                timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ? "Bounce" : "Once") :
+            (timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Loop" :
+                timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ? "Ping-Pong" : "One Shot");
+        char speed[16];
+        int speed_amount = snprintf(speed, sizeof(speed), "%.2g×", timeline->playback_speed);
+        if (speed_amount < 0 || (size_t)speed_amount >= sizeof(speed))
+            (void)snprintf(speed, sizeof(speed), "1×");
+        (void)paint_widget(&canvas,
+            timeline->preview_failed ? UI_WIDGET_INLINE_ERROR : UI_WIDGET_HUD_PILL,
+            layout.time_readout, timeline->preview_failed ? UI_CONTROL_INVALID : UI_CONTROL_REST,
+            timeline->preview_failed ? "Preview unavailable" : time_text,
+            timeline->preview_failed ? sizeof("Preview unavailable") - 1U : strlen(time_text),
+            NULL, 0U, 0.0, false);
+        (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY, layout.play_button,
+            UI_CONTROL_REST, timeline->playing ? "Pause" : "Play",
+            timeline->playing ? sizeof("Pause") - 1U : sizeof("Play") - 1U,
+            NULL, 0U, 0.0, false);
+        if (layout.mode_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.mode_button,
+                UI_CONTROL_REST, mode, strlen(mode), NULL, 0U, 0.0, false);
+        if (layout.speed_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.speed_button,
+                UI_CONTROL_REST, speed, strlen(speed), NULL, 0U, 0.0, false);
+        (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.fit_button,
+            UI_CONTROL_REST, "Fit", sizeof("Fit") - 1U, NULL, 0U, 0.0, false);
+        paint_ruler(&canvas, timeline, &layout);
+        for (size_t row = 0U; row < layout.visible_track_count; ++row)
+            paint_track_lane(&canvas, timeline, &layout, row, layout.first_track + row);
+        paint_playhead(&canvas, timeline, &layout);
     }
     (void)publish_merged_accessibility(timeline, editor, &layout, width, height,
         backing_scale, theme, increased_contrast);
     return true;
+}
+
+bool viewer_timeline_paint_appearance(viewer_timeline *timeline,
+    viewer_editor *editor, uint8_t *rgba, size_t capacity, uint32_t width,
+    uint32_t height, size_t stride, double backing_scale, ui_theme theme,
+    bool increased_contrast, bool reduced_motion)
+{
+    return viewer_timeline_paint_with_text(timeline, editor, rgba, capacity,
+        width, height, stride, backing_scale, theme, increased_contrast,
+        reduced_motion, platform_text_ui_draw_widget);
+}
+
+bool viewer_timeline_paint_scalar_appearance(viewer_timeline *timeline,
+    viewer_editor *editor, uint8_t *rgba, size_t capacity, uint32_t width,
+    uint32_t height, size_t stride, double backing_scale, ui_theme theme,
+    bool increased_contrast, bool reduced_motion)
+{
+    return viewer_timeline_paint_with_text(timeline, editor, rgba, capacity,
+        width, height, stride, backing_scale, theme, increased_contrast,
+        reduced_motion, scalar_timeline_text);
+}
+
+bool viewer_timeline_paint(viewer_timeline *timeline, viewer_editor *editor,
+    uint8_t *rgba, size_t capacity, uint32_t width, uint32_t height,
+    size_t stride, double backing_scale)
+{
+    ui_theme theme = UI_THEME_DARK;
+    bool increased_contrast = false, reduced_motion = false;
+    (void)platform_text_ui_get_preferences(&theme, &increased_contrast,
+        &reduced_motion);
+    return viewer_timeline_paint_appearance(timeline, editor, rgba, capacity,
+        width, height, stride, backing_scale, theme, increased_contrast,
+        reduced_motion);
 }
