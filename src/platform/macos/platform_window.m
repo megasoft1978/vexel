@@ -155,6 +155,13 @@ void platform_window_dispatch_action(platform_window *window, platform_viewer_ac
     }
 }
 
+void platform_window_dispatch_command(platform_window *window, uint32_t command_id)
+{
+    if (window == NULL || command_id == 0U) return;
+    platform_event event = {.type = PLATFORM_EVENT_COMMAND, .command_id = command_id};
+    (void)platform_emit(window, &event);
+}
+
 static bool platform_size_event(platform_window *window, platform_event_type type)
 {
     NSWindow *native = window->native;
@@ -489,6 +496,12 @@ bool platform_window_set_option_state(platform_window *window, platform_viewer_a
 {
     if (!platform_on_main_thread() || window == NULL) return false;
     return platform_macos_menus_set_option_state(window, action, enabled);
+}
+
+bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
+                                       bool enabled)
+{
+    return platform_macos_menus_set_command_state(window, command_id, enabled);
 }
 
 bool platform_window_content_screen_origin(platform_window *window,

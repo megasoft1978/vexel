@@ -84,5 +84,7 @@ document_edit_error document_edit_insert_text_element(document_edit *edit,
     document_edit_error result = document_edit_insert_xml_fragment(edit, parent,
         (base_bytes){fragment, used}, out_inserted);
     free(fragment);
+    if (result == DOCUMENT_EDIT_OK)
+        document_edit_history_relabel_latest(edit, DOCUMENT_EDIT_HISTORY_ACTION_ADD_TEXT);
     return result;
 }

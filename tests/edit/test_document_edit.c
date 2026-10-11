@@ -522,7 +522,7 @@ static int test_history_bounds(void)
         CHECK(document_edit_validate_replace(edit, 5U, 13U, 14U, 1U,
             &value, 1U, false, true));
         CHECK(document_edit_commit_replace(edit, 14U, 1U, &value, 1U,
-            1U, false) == DOCUMENT_EDIT_OK);
+            1U, false, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_ATTRIBUTE) == DOCUMENT_EDIT_OK);
     }
     CHECK(document_edit_history_count(edit) == 2U &&
           document_edit_history_cursor(edit) == 2U);
@@ -540,7 +540,7 @@ static int test_history_bounds(void)
     CHECK(document_edit_validate_replace(edit, 5U, 13U, 14U, 1U,
         &changed, 1U, false, true));
     CHECK(document_edit_commit_replace(edit, 14U, 1U, &changed, 1U,
-        1U, false) == DOCUMENT_EDIT_OK);
+        1U, false, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_ATTRIBUTE) == DOCUMENT_EDIT_OK);
     CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_INVALID_OPERATION);
     document_edit_destroy(edit);
 
@@ -607,7 +607,7 @@ static int test_randomized_history(void)
             CHECK(document_edit_validate_replace(edit, 5U, 13U, 14U, 1U,
                 &value, 1U, false, true));
             CHECK(document_edit_commit_replace(edit, 14U, 1U, &value, 1U,
-                1U, false) == DOCUMENT_EDIT_OK);
+                1U, false, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_ATTRIBUTE) == DOCUMENT_EDIT_OK);
         } else if (choice == 1U) {
             CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
         } else {

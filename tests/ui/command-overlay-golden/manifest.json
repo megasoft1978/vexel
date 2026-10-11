@@ -1,0 +1,25 @@
+{
+  "screenshots": {
+    "history-dark.png": {
+      "height": 800,
+      "sha256": "0e83c83ba22220280c44e24026f0f5badc15a4352bbd9d723f86187f02d8eb42",
+      "width": 1280
+    },
+    "history-light.png": {
+      "height": 800,
+      "sha256": "0c20de9d4dcf9684c80d0313555c0dba9282960330faa8dde9d6cdb4fac58ca3",
+      "width": 1280
+    },
+    "palette-dark.png": {
+      "height": 800,
+      "sha256": "e67c3efeab45648d4a58d95dc2685c56a2990606c4f4541ea692790f8737c6f3",
+      "width": 1280
+    },
+    "palette-light.png": {
+      "height": 800,
+      "sha256": "7378d5a62a6638b357fcf3d8f71b67f8828a28dc022803c61aaefdc0575df6d1",
+      "width": 1280
+    }
+  },
+  "version": 1
+}

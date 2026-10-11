@@ -104,8 +104,8 @@ static void apply_navigation_key(viewer_app *app, ui_viewer_key key)
 static void toggle_checkerboard(viewer_app *app)
 {
     app->checkerboard = !app->checkerboard;
-    (void)platform_window_set_option_state(app->window, PLATFORM_ACTION_TOGGLE_CHECKERBOARD,
-                                          app->checkerboard);
+    (void)platform_window_set_command_state(app->window,
+        VIEWER_COMMAND_TOGGLE_CHECKERBOARD, app->checkerboard);
     app->frame_dirty = true;
 }
 
@@ -119,8 +119,8 @@ static void cycle_background(viewer_app *app)
 static void toggle_pixel_grid(viewer_app *app)
 {
     app->pixel_grid = !app->pixel_grid;
-    (void)platform_window_set_option_state(app->window, PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
-                                          app->pixel_grid);
+    (void)platform_window_set_command_state(app->window,
+        VIEWER_COMMAND_TOGGLE_PIXEL_GRID, app->pixel_grid);
     app->frame_dirty = true;
 }
 
@@ -203,8 +203,14 @@ bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
     return false;
 }
 
+static void apply_viewer_command(viewer_app *app, viewer_command_id command);
+
 static void process_editor_result(viewer_app *app, uint32_t result)
 {
+    viewer_command_id selected_command = VIEWER_COMMAND_NONE;
+    bool run_selected_command = (result & VIEWER_EDITOR_COMMAND_SELECTED) != 0U &&
+        viewer_editor_take_pending_command(app->editor, &selected_command);
+    result &= ~(uint32_t)VIEWER_EDITOR_COMMAND_SELECTED;
     if ((result & VIEWER_EDITOR_SELECT_ALL) != 0U && app->document_visible)
         (void)viewer_editor_select_all(app->editor, &app->document.shape);
     bool document_mutated = (result & VIEWER_EDITOR_MUTATED) != 0U;
@@ -235,6 +241,8 @@ static void process_editor_result(viewer_app *app, uint32_t result)
         (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
         (void)viewer_set_window_title(app);
     }
+    if (run_selected_command && !app->fatal_error)
+        apply_viewer_command(app, selected_command);
 }
 
 static void apply_action(viewer_app *app, platform_viewer_action action)
@@ -410,6 +418,139 @@ static void apply_key(viewer_app *app, const platform_event *event)
     }
 }
 
+static void apply_viewer_command_key(viewer_app *app, uint16_t key_code,
+                                     uint32_t modifiers, const char *text,
+                                     size_t text_len)
+{
+    if (text_len >= sizeof(((platform_event *)0)->text)) return;
+    platform_event event = {.type = PLATFORM_EVENT_KEY_DOWN,
+        .key_code = key_code, .modifiers = modifiers, .text_len = text_len};
+    if (text_len > 0U && text != NULL) memcpy(event.text, text, text_len);
+    apply_key(app, &event);
+}
+
+static void apply_viewer_command(viewer_app *app, viewer_command_id command)
+{
+    if (app == NULL || app->editor == NULL || viewer_command_find(command) == NULL)
+        return;
+    switch (command) {
+        case VIEWER_COMMAND_SEARCH:
+            (void)viewer_editor_open_command_palette(app->editor);
+            app->frame_dirty = true;
+            return;
+        case VIEWER_COMMAND_TOOL_SELECT:
+            (void)viewer_editor_set_tool(app->editor, UI_ICON_SELECT); break;
+        case VIEWER_COMMAND_TOOL_PAN:
+            (void)viewer_editor_set_tool(app->editor, UI_ICON_PAN); break;
+        case VIEWER_COMMAND_TOOL_ZOOM:
+            (void)viewer_editor_set_tool(app->editor, UI_ICON_ZOOM); break;
+        case VIEWER_COMMAND_TOOL_RECTANGLE:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_RECT); break;
+        case VIEWER_COMMAND_TOOL_ELLIPSE:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_ELLIPSE); break;
+        case VIEWER_COMMAND_TOOL_LINE:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_LINE); break;
+        case VIEWER_COMMAND_TOOL_POLYGON:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_POLYGON); break;
+        case VIEWER_COMMAND_TOOL_POLYLINE:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_POLYLINE); break;
+        case VIEWER_COMMAND_TOOL_PEN:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_PEN); break;
+        case VIEWER_COMMAND_TOOL_TEXT:
+            (void)viewer_editor_set_draw_tool(app->editor, VIEWER_EDITOR_TOOL_TEXT); break;
+        case VIEWER_COMMAND_TOOL_NODE:
+            apply_viewer_command_key(app, 45U, 0U, "n", 1U); return;
+        case VIEWER_COMMAND_UNDO:
+            apply_viewer_command_key(app, 6U, PLATFORM_MODIFIER_COMMAND, "z", 1U); return;
+        case VIEWER_COMMAND_REDO:
+            apply_viewer_command_key(app, 6U,
+                PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "z", 1U); return;
+        case VIEWER_COMMAND_UNDO_HISTORY:
+            (void)viewer_editor_open_history(app->editor);
+            app->frame_dirty = true;
+            return;
+        case VIEWER_COMMAND_SELECT_ALL:
+            apply_viewer_command_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "a", 1U); return;
+        case VIEWER_COMMAND_COPY:
+            apply_viewer_command_key(app, 8U, PLATFORM_MODIFIER_COMMAND, "c", 1U); return;
+        case VIEWER_COMMAND_CUT:
+            apply_viewer_command_key(app, 7U, PLATFORM_MODIFIER_COMMAND, "x", 1U); return;
+        case VIEWER_COMMAND_PASTE:
+            apply_viewer_command_key(app, 9U, PLATFORM_MODIFIER_COMMAND, "v", 1U); return;
+        case VIEWER_COMMAND_PASTE_IN_PLACE:
+            apply_viewer_command_key(app, 9U,
+                PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "v", 1U); return;
+        case VIEWER_COMMAND_DUPLICATE:
+            apply_viewer_command_key(app, 2U, PLATFORM_MODIFIER_COMMAND, "d", 1U); return;
+        case VIEWER_COMMAND_DELETE:
+            apply_viewer_command_key(app, 51U, 0U, NULL, 0U); return;
+        case VIEWER_COMMAND_GROUP:
+            apply_viewer_command_key(app, 5U, PLATFORM_MODIFIER_COMMAND, "g", 1U); return;
+        case VIEWER_COMMAND_UNGROUP:
+            apply_viewer_command_key(app, 5U,
+                PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "g", 1U); return;
+        case VIEWER_COMMAND_BRING_FORWARD:
+            apply_viewer_command_key(app, 30U, PLATFORM_MODIFIER_COMMAND, "]", 1U); return;
+        case VIEWER_COMMAND_SEND_BACKWARD:
+            apply_viewer_command_key(app, 33U, PLATFORM_MODIFIER_COMMAND, "[", 1U); return;
+        case VIEWER_COMMAND_BRING_TO_FRONT:
+            apply_viewer_command_key(app, 30U,
+                PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "]", 1U); return;
+        case VIEWER_COMMAND_SEND_TO_BACK:
+            apply_viewer_command_key(app, 33U,
+                PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "[", 1U); return;
+        case VIEWER_COMMAND_ALIGN_LEFT:
+        case VIEWER_COMMAND_ALIGN_CENTER:
+        case VIEWER_COMMAND_ALIGN_RIGHT:
+        case VIEWER_COMMAND_ALIGN_TOP:
+        case VIEWER_COMMAND_ALIGN_MIDDLE:
+        case VIEWER_COMMAND_ALIGN_BOTTOM: {
+            viewer_editor_alignment alignment = VIEWER_EDITOR_ALIGN_LEFT;
+            if (command == VIEWER_COMMAND_ALIGN_CENTER)
+                alignment = VIEWER_EDITOR_ALIGN_HORIZONTAL_CENTER;
+            else if (command == VIEWER_COMMAND_ALIGN_RIGHT)
+                alignment = VIEWER_EDITOR_ALIGN_RIGHT;
+            else if (command == VIEWER_COMMAND_ALIGN_TOP)
+                alignment = VIEWER_EDITOR_ALIGN_TOP;
+            else if (command == VIEWER_COMMAND_ALIGN_MIDDLE)
+                alignment = VIEWER_EDITOR_ALIGN_VERTICAL_CENTER;
+            else if (command == VIEWER_COMMAND_ALIGN_BOTTOM)
+                alignment = VIEWER_EDITOR_ALIGN_BOTTOM;
+            process_editor_result(app, viewer_editor_align_selection(app->editor,
+                &app->document.shape, alignment));
+            return;
+        }
+        case VIEWER_COMMAND_DISTRIBUTE_HORIZONTAL:
+        case VIEWER_COMMAND_DISTRIBUTE_VERTICAL:
+            process_editor_result(app, viewer_editor_distribute_selection(app->editor,
+                &app->document.shape, command == VIEWER_COMMAND_DISTRIBUTE_HORIZONTAL ?
+                    VIEWER_EDITOR_DISTRIBUTE_HORIZONTAL : VIEWER_EDITOR_DISTRIBUTE_VERTICAL));
+            return;
+        case VIEWER_COMMAND_FIT_WIDTH: apply_action(app, PLATFORM_ACTION_FIT_WIDTH); return;
+        case VIEWER_COMMAND_FIT_WINDOW: apply_action(app, PLATFORM_ACTION_FIT_WINDOW); return;
+        case VIEWER_COMMAND_ACTUAL_SIZE: apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE); return;
+        case VIEWER_COMMAND_ZOOM_IN: apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN); return;
+        case VIEWER_COMMAND_ZOOM_OUT: apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT); return;
+        case VIEWER_COMMAND_TOGGLE_SNAPPING:
+            (void)viewer_editor_toggle_snapping(app->editor); break;
+        case VIEWER_COMMAND_TOGGLE_CHECKERBOARD:
+            toggle_checkerboard(app); return;
+        case VIEWER_COMMAND_CYCLE_BACKGROUND: cycle_background(app); return;
+        case VIEWER_COMMAND_TOGGLE_PIXEL_GRID: toggle_pixel_grid(app); return;
+        case VIEWER_COMMAND_OPEN: (void)platform_window_open_panel(app->window); return;
+        case VIEWER_COMMAND_SAVE: (void)save_document(app, false); return;
+        case VIEWER_COMMAND_SAVE_AS: (void)save_document(app, true); return;
+        case VIEWER_COMMAND_RELOAD: request_reload_or_open(app); return;
+        case VIEWER_COMMAND_EXPORT_PNG: (void)viewer_export_png(app, false); return;
+        case VIEWER_COMMAND_COPY_PNG: (void)viewer_export_png(app, true); return;
+        case VIEWER_COMMAND_QUIT: viewer_request_close(app); return;
+        case VIEWER_COMMAND_NONE:
+        case VIEWER_COMMAND_COUNT:
+        default: return;
+    }
+    app->frame_dirty = true;
+}
+
 static void update_pointer_status(viewer_app *app, const platform_event *event)
 {
     app->pointer_valid = false;
@@ -539,9 +680,14 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             return;
         case PLATFORM_EVENT_SCROLL: {
             if (app->editor != NULL) {
-                double pixel_x = event->precise_x * event->backing_scale;
-                if (isfinite(pixel_x) && pixel_x >= 0.0 && pixel_x <= (double)UINT32_MAX &&
-                    viewer_editor_scroll(app->editor, (uint32_t)pixel_x, event->delta_y)) {
+                double scale = isfinite(event->backing_scale) && event->backing_scale > 0.0 ?
+                    event->backing_scale : app->backing_scale;
+                double pixel_x = event->precise_x * scale;
+                double pixel_y = event->precise_y * scale;
+                if (isfinite(pixel_x) && isfinite(pixel_y) && pixel_x >= 0.0 &&
+                    pixel_y >= 0.0 && pixel_x <= (double)UINT32_MAX &&
+                    pixel_y <= (double)UINT32_MAX && viewer_editor_scroll_at(app->editor,
+                        (uint32_t)pixel_x, (uint32_t)pixel_y, event->delta_y)) {
                     app->frame_dirty = true;
                     return;
                 }
@@ -592,6 +738,9 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             apply_key(app, event);
             return;
         case PLATFORM_EVENT_ACTION: apply_action(app, event->action); return;
+        case PLATFORM_EVENT_COMMAND:
+            apply_viewer_command(app, (viewer_command_id)event->command_id);
+            return;
         case PLATFORM_EVENT_FILE_OPEN:
             if (event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP)
                 (void)viewer_request_open(app, event->path, false);

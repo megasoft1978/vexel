@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "platform_window_internal.h"
+#include "app/viewer_commands.h"
 
 #include <string.h>
 
@@ -9,6 +10,7 @@
 @interface VexelApplicationDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, assign) platform_window *owner;
 - (void)actionOpenDocument:(id)sender;
+- (void)actionRunCommand:(id)sender;
 - (void)actionReload:(id)sender;
 - (void)actionToggleCheckerboard:(id)sender;
 - (void)actionCycleBackground:(id)sender;
@@ -24,14 +26,80 @@
 static __strong VexelApplicationDelegate *platform_delegate;
 static NSMenu *platform_recent_menu;
 
-static NSMenuItem *platform_menu_item(NSString *title, NSString *key, SEL action,
-                                      NSInteger tag)
+static NSString *platform_command_string(const char *text)
 {
-    NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title action:action keyEquivalent:key];
+    if (text == NULL) return @"";
+    NSString *value = [NSString stringWithUTF8String:text];
+    return value == nil ? @"" : value;
+}
+
+static NSMenuItem *platform_command_menu_item(const viewer_command_descriptor *command)
+{
+    if (command == NULL) return nil;
+    NSString *key = platform_command_string(command->menu_key);
+    NSMenuItem *item = [[NSMenuItem alloc]
+        initWithTitle:platform_command_string(command->title)
+        action:@selector(actionRunCommand:) keyEquivalent:key];
     item.target = platform_delegate;
-    item.tag = tag;
-    item.keyEquivalentModifierMask = NSEventModifierFlagCommand;
+    item.tag = (NSInteger)command->id;
+    NSEventModifierFlags flags = 0U;
+    if ((command->menu_modifiers & VIEWER_COMMAND_MENU_COMMAND) != 0U)
+        flags |= NSEventModifierFlagCommand;
+    if ((command->menu_modifiers & VIEWER_COMMAND_MENU_SHIFT) != 0U)
+        flags |= NSEventModifierFlagShift;
+    if ((command->menu_modifiers & VIEWER_COMMAND_MENU_OPTION) != 0U)
+        flags |= NSEventModifierFlagOption;
+    item.keyEquivalentModifierMask = flags;
     return item;
+}
+
+static void platform_add_command_group(NSMenu *menu, viewer_command_group group)
+{
+    for (size_t index = 0U; index < viewer_command_count(); ++index) {
+        const viewer_command_descriptor *command = viewer_command_at(index);
+        if (command == NULL || command->group != group ||
+            command->id == VIEWER_COMMAND_QUIT || command->id == VIEWER_COMMAND_SEARCH)
+            continue;
+        [menu addItem:platform_command_menu_item(command)];
+    }
+}
+
+static NSString *platform_shortcut_title(const viewer_command_descriptor *command)
+{
+    if (command == NULL) return @"";
+    NSString *title = platform_command_string(command->title);
+    if (command->shortcut[0] == '\0') return title;
+    return [NSString stringWithFormat:@"%@  %@", title,
+        platform_command_string(command->shortcut)];
+}
+
+static void platform_add_shortcut_discovery(NSMenu *menu)
+{
+    static const viewer_command_group groups[] = {
+        VIEWER_COMMAND_GROUP_TOOLS, VIEWER_COMMAND_GROUP_SELECTION,
+        VIEWER_COMMAND_GROUP_CANVAS, VIEWER_COMMAND_GROUP_DOCUMENT
+    };
+    for (size_t group_index = 0U;
+         group_index < sizeof(groups) / sizeof(groups[0]); ++group_index) {
+        NSMenuItem *group_item = [[NSMenuItem alloc]
+            initWithTitle:platform_command_string(
+                viewer_command_group_name(groups[group_index]))
+            action:nil keyEquivalent:@""];
+        NSMenu *submenu = [[NSMenu alloc]
+            initWithTitle:platform_command_string(
+                viewer_command_group_name(groups[group_index]))];
+        for (size_t index = 0U; index < viewer_command_count(); ++index) {
+            const viewer_command_descriptor *command = viewer_command_at(index);
+            if (command == NULL || command->group != groups[group_index]) continue;
+            NSMenuItem *shortcut = [[NSMenuItem alloc]
+                initWithTitle:platform_shortcut_title(command)
+                action:nil keyEquivalent:@""];
+            shortcut.enabled = NO;
+            [submenu addItem:shortcut];
+        }
+        group_item.submenu = submenu;
+        [menu addItem:group_item];
+    }
 }
 
 static bool path_is_svg(const char *path, size_t length)
@@ -86,16 +154,19 @@ void platform_macos_menus_init(void)
     [application_menu addItem:[[NSMenuItem alloc] initWithTitle:@"About vexel"
         action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""]];
     [application_menu addItem:[NSMenuItem separatorItem]];
-    [application_menu addItem:platform_menu_item(@"Quit vexel", @"q",
-        @selector(actionQuit:), PLATFORM_ACTION_QUIT)];
+    [application_menu addItem:platform_command_menu_item(
+        viewer_command_find(VIEWER_COMMAND_QUIT))];
     application.submenu = application_menu;
     [main addItem:application];
 
     NSMenuItem *file = [[NSMenuItem alloc] initWithTitle:@"File" action:nil keyEquivalent:@""];
     NSMenu *file_menu = [[NSMenu alloc] initWithTitle:@"File"];
-    [file_menu addItem:platform_menu_item(@"Open…", @"o", @selector(actionOpenDocument:), 0)];
-    [file_menu addItem:platform_menu_item(@"Reload", @"r",
-        @selector(actionReload:), PLATFORM_ACTION_RELOAD)];
+    for (size_t index = 0U; index < viewer_command_count(); ++index) {
+        const viewer_command_descriptor *command = viewer_command_at(index);
+        if (command != NULL && command->group == VIEWER_COMMAND_GROUP_DOCUMENT &&
+            command->id != VIEWER_COMMAND_QUIT && command->id != VIEWER_COMMAND_SEARCH)
+            [file_menu addItem:platform_command_menu_item(command)];
+    }
     [file_menu addItem:[NSMenuItem separatorItem]];
     NSMenuItem *recent = [[NSMenuItem alloc] initWithTitle:@"Open Recent"
         action:nil keyEquivalent:@""];
@@ -111,25 +182,42 @@ void platform_macos_menus_init(void)
     file.submenu = file_menu;
     [main addItem:file];
 
+    NSMenuItem *edit = [[NSMenuItem alloc] initWithTitle:@"Edit" action:nil keyEquivalent:@""];
+    NSMenu *edit_menu = [[NSMenu alloc] initWithTitle:@"Edit"];
+    [edit_menu addItem:platform_command_menu_item(
+        viewer_command_find(VIEWER_COMMAND_SEARCH))];
+    [edit_menu addItem:[NSMenuItem separatorItem]];
+    platform_add_command_group(edit_menu, VIEWER_COMMAND_GROUP_SELECTION);
+    edit.submenu = edit_menu;
+    [main addItem:edit];
+
+    NSMenuItem *tools = [[NSMenuItem alloc] initWithTitle:@"Tools" action:nil keyEquivalent:@""];
+    NSMenu *tools_menu = [[NSMenu alloc] initWithTitle:@"Tools"];
+    platform_add_command_group(tools_menu, VIEWER_COMMAND_GROUP_TOOLS);
+    tools.submenu = tools_menu;
+    [main addItem:tools];
+
     NSMenuItem *view = [[NSMenuItem alloc] initWithTitle:@"View" action:nil keyEquivalent:@""];
     NSMenu *view_menu = [[NSMenu alloc] initWithTitle:@"View"];
-    NSMenuItem *checker = platform_menu_item(@"Checkerboard", @"t",
-        @selector(actionToggleCheckerboard:), PLATFORM_ACTION_TOGGLE_CHECKERBOARD);
+    platform_add_command_group(view_menu, VIEWER_COMMAND_GROUP_CANVAS);
+    NSMenuItem *checker = nil;
+    for (NSMenuItem *item in view_menu.itemArray)
+        if (item.tag == (NSInteger)VIEWER_COMMAND_TOGGLE_CHECKERBOARD) checker = item;
+    if (checker != nil)
     checker.state = NSControlStateValueOn;
-    [view_menu addItem:checker];
-    [view_menu addItem:platform_menu_item(@"Cycle Background", @"b",
-        @selector(actionCycleBackground:), PLATFORM_ACTION_CYCLE_BACKGROUND)];
-    [view_menu addItem:[NSMenuItem separatorItem]];
-    [view_menu addItem:platform_menu_item(@"Fit Width", @"",
-        @selector(actionFitWidth:), PLATFORM_ACTION_FIT_WIDTH)];
-    [view_menu addItem:platform_menu_item(@"Fit in Window", @"0",
-        @selector(actionFitWindow:), PLATFORM_ACTION_FIT_WINDOW)];
-    [view_menu addItem:platform_menu_item(@"Actual Size", @"1",
-        @selector(actionActualSize:), PLATFORM_ACTION_ACTUAL_SIZE)];
-    [view_menu addItem:platform_menu_item(@"Pixel Grid", @"g",
-        @selector(actionTogglePixelGrid:), PLATFORM_ACTION_TOGGLE_PIXEL_GRID)];
     view.submenu = view_menu;
     [main addItem:view];
+
+    NSMenuItem *help = [[NSMenuItem alloc] initWithTitle:@"Help" action:nil keyEquivalent:@""];
+    NSMenu *help_menu = [[NSMenu alloc] initWithTitle:@"Help"];
+    NSMenuItem *shortcuts = [[NSMenuItem alloc] initWithTitle:@"Keyboard Shortcuts"
+        action:nil keyEquivalent:@""];
+    NSMenu *shortcuts_menu = [[NSMenu alloc] initWithTitle:@"Keyboard Shortcuts"];
+    platform_add_shortcut_discovery(shortcuts_menu);
+    shortcuts.submenu = shortcuts_menu;
+    [help_menu addItem:shortcuts];
+    help.submenu = help_menu;
+    [main addItem:help];
 
     NSMenuItem *window_item = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
     NSMenu *window_menu = [[NSMenu alloc] initWithTitle:@"Window"];
@@ -178,10 +266,22 @@ bool platform_macos_menus_add_recent(const char *path, size_t length)
 bool platform_macos_menus_set_option_state(platform_window *window,
                                            platform_viewer_action action, bool enabled)
 {
-    if (window == NULL || platform_delegate.owner != window) return false;
+    viewer_command_id command = VIEWER_COMMAND_NONE;
+    if (action == PLATFORM_ACTION_TOGGLE_CHECKERBOARD)
+        command = VIEWER_COMMAND_TOGGLE_CHECKERBOARD;
+    else if (action == PLATFORM_ACTION_TOGGLE_PIXEL_GRID)
+        command = VIEWER_COMMAND_TOGGLE_PIXEL_GRID;
+    return platform_macos_menus_set_command_state(window, (uint32_t)command, enabled);
+}
+
+bool platform_macos_menus_set_command_state(platform_window *window,
+                                           uint32_t command_id, bool enabled)
+{
+    if (window == NULL || platform_delegate.owner != window || command_id == 0U)
+        return false;
     NSMenuItem *view = [[NSApp mainMenu] itemWithTitle:@"View"];
     for (NSMenuItem *item in view.submenu.itemArray) {
-        if (item.tag == (NSInteger)action) {
+        if (item.tag == (NSInteger)command_id) {
             item.state = enabled ? NSControlStateValueOn : NSControlStateValueOff;
             return true;
         }
@@ -190,6 +290,13 @@ bool platform_macos_menus_set_option_state(platform_window *window,
 }
 
 @implementation VexelApplicationDelegate
+- (void)actionRunCommand:(id)sender
+{
+    if (![sender isKindOfClass:[NSMenuItem class]]) return;
+    NSInteger tag = [(NSMenuItem *)sender tag];
+    if (tag > 0 && tag < (NSInteger)VIEWER_COMMAND_COUNT)
+        platform_window_dispatch_command(self.owner, (uint32_t)tag);
+}
 - (void)actionOpenDocument:(id)sender
 {
     (void)sender;

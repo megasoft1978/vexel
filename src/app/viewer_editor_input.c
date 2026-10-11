@@ -284,6 +284,12 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len)
 {
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
+    if (editor->command_palette_open || editor->history_popover_open)
+        return editor_overlay_key(editor, key_code, modifiers, text, text_len);
+    bool command = (modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
+    int command_character = text_len > 0U ? tolower((unsigned char)text[0]) : -1;
+    if (command && (command_character == 'k' || key_code == 40U))
+        return viewer_editor_open_command_palette(editor) ? VIEWER_EDITOR_HANDLED : 0U;
     if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
         return viewer_editor_cancel_canvas_gesture(editor);
     if (editor->field_kind != EDITOR_FIELD_NONE)
@@ -295,17 +301,12 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     if (editor_canvas_path_active(editor) && (key_code == 36U || key_code == 76U))
         return editor_canvas_path_finish(editor,
             editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON || editor->path_close_preview);
-    bool command = (modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
+    command = (modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
     bool shift = (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U;
     bool option = (modifiers & PLATFORM_MODIFIER_OPTION) != 0U;
     int character = text_len > 0U ? tolower((unsigned char)text[0]) : -1;
     if (command && (character == '\'' || key_code == 39U)) {
-        editor->snap_enabled = !editor->snap_enabled;
-        editor->snap_guide_x_visible = false;
-        editor->snap_guide_y_visible = false;
-        editor_status_ok(editor, editor->snap_enabled ? "Snapping on" : "Snapping off");
-        editor->redraw_requested = true;
-        return VIEWER_EDITOR_HANDLED;
+        return viewer_editor_toggle_snapping(editor) ? VIEWER_EDITOR_HANDLED : 0U;
     }
     if (command) {
         if (shift && character == 'e')

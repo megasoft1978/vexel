@@ -141,11 +141,17 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
         spec.font_size_pt = 13U;
         spec.font_weight = UI_FONT_SEMIBOLD;
     }
-    if (node->spec.id >= 22000U && node->spec.id < 22100U &&
-        kind == UI_WIDGET_LABEL) {
+    if ((node->spec.id == EDITOR_PALETTE_TITLE ||
+         node->spec.id == EDITOR_HISTORY_TITLE) && kind == UI_WIDGET_LABEL) {
         spec.font_size_pt = 12U;
         spec.font_weight = UI_FONT_SEMIBOLD;
     }
+    if ((node->spec.id == EDITOR_PALETTE_GROUPS ||
+         node->spec.id == EDITOR_PALETTE_FOOTER ||
+         node->spec.id == EDITOR_HISTORY_CURRENT ||
+         node->spec.id == EDITOR_HISTORY_SAVED ||
+         node->spec.id == EDITOR_HISTORY_FOOTER) && kind == UI_WIDGET_LABEL)
+        spec.text_color = editor->tree.tokens.text_secondary;
     if (kind == UI_WIDGET_EMPTY_STATE) {
         spec.secondary = value;
         spec.secondary_length = value_length;
@@ -157,6 +163,16 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
         if (value_length == 0U) {
             spec.value = "Search layers";
             spec.value_length = 13U;
+            spec.placeholder = true;
+        }
+    }
+    if (node->spec.id == EDITOR_PALETTE_SEARCH && kind == UI_WIDGET_TEXT_FIELD) {
+        spec.label = NULL;
+        spec.label_length = 0U;
+        spec.icon = UI_ICON_SEARCH;
+        if (value_length == 0U) {
+            spec.value = "Search commands";
+            spec.value_length = 15U;
             spec.placeholder = true;
         }
     }
@@ -197,17 +213,18 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
     return spec;
 }
 
-static const char *tooltip_for_id(uint32_t id)
+static const char *tooltip_for_id(uint32_t id, char *buffer, size_t capacity)
 {
+    const viewer_command_descriptor *command = viewer_command_for_toolbar(id);
+    if (command != NULL && buffer != NULL && capacity > 0U) {
+        int amount = command->shortcut[0] == '\0' ?
+            snprintf(buffer, capacity, "%s", command->title) :
+            snprintf(buffer, capacity, "%s  %s", command->title,
+                command->shortcut);
+        return amount >= 0 && (size_t)amount < capacity ? buffer : NULL;
+    }
     switch (id) {
-        case EDITOR_BUTTON_SAVE: return "Save  ⌘S";
-        case EDITOR_BUTTON_UNDO: return "Undo  ⌘Z";
-        case EDITOR_BUTTON_REDO: return "Redo  ⇧⌘Z";
-        case EDITOR_BUTTON_DELETE: return "Delete  Delete";
-        case EDITOR_BUTTON_DUPLICATE: return "Duplicate  ⌘D";
-        case EDITOR_BUTTON_GROUP: return "Group  ⌘G";
-        case EDITOR_BUTTON_UNGROUP: return "Ungroup  ⇧⌘G";
-        case EDITOR_BUTTON_SAVE_AS: return "Save as";
+        case EDITOR_BUTTON_HISTORY: return "Undo History";
         case EDITOR_BUTTON_TOOL_SELECT: return "Select  V";
         case EDITOR_BUTTON_TOOL_PAN: return "Pan  H / Space";
         case EDITOR_BUTTON_TOOL_ZOOM: return "Zoom  Z";
@@ -215,14 +232,6 @@ static const char *tooltip_for_id(uint32_t id)
         case EDITOR_BUTTON_TOGGLE_INSPECTOR: return "Show or hide Inspector panel";
         case EDITOR_BUTTON_HIDE_STRUCTURE: return "Collapse Layers panel";
         case EDITOR_BUTTON_HIDE_INSPECTOR: return "Collapse Inspector panel";
-        case EDITOR_BUTTON_TOOL_RECTANGLE: return "Rectangle  R";
-        case EDITOR_BUTTON_TOOL_ELLIPSE: return "Ellipse  O";
-        case EDITOR_BUTTON_TOOL_LINE: return "Line  L";
-        case EDITOR_BUTTON_TOOL_PEN: return "Pen  P";
-        case EDITOR_BUTTON_TOOL_NODE: return "Node edit tool  N";
-        case EDITOR_BUTTON_TOOL_TEXT: return "Text  T";
-        case EDITOR_BUTTON_TOOL_POLYGON: return "Polygon  Y";
-        case EDITOR_BUTTON_TOOL_POLYLINE: return "Polyline  U";
         default: return NULL;
     }
 }
@@ -285,6 +294,18 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
     bool tooltip_ready = false;
     for (size_t index = 1U; index < editor->tree.count; ++index) {
         const ui_node *node = &editor->tree.nodes[index];
+        if (node->spec.id == EDITOR_PALETTE_BACKDROP ||
+            node->spec.id == EDITOR_HISTORY_BACKDROP) {
+            for (uint32_t y = 0U; y < editor->height; ++y) {
+                uint8_t *row = rgba + (size_t)y * stride;
+                for (uint32_t x = 0U; x < editor->width; ++x) {
+                    size_t offset = (size_t)x * 4U;
+                    row[offset] = (uint8_t)(((uint32_t)row[offset] * 58U) / 100U);
+                    row[offset + 1U] = (uint8_t)(((uint32_t)row[offset + 1U] * 58U) / 100U);
+                    row[offset + 2U] = (uint8_t)(((uint32_t)row[offset + 2U] * 58U) / 100U);
+                }
+            }
+        }
         ui_widget_kind kind = node_widget(node);
         if (kind == UI_WIDGET_AUTO || node->bounds.width == 0U ||
             node->bounds.height == 0U) continue;
@@ -310,7 +331,9 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
         ui_widget_draw_spec spec = editor_draw_spec(editor, node, kind);
         if (!ui_widget_paint(&canvas, &spec)) return;
         if ((node->spec.state & UI_STATE_HOVERED) != 0U) {
-            const char *tooltip = tooltip_for_id(node->spec.id);
+            char tooltip_storage[128] = {0};
+            const char *tooltip = tooltip_for_id(node->spec.id,
+                tooltip_storage, sizeof(tooltip_storage));
             if (tooltip == NULL && node->spec.role == UI_ROLE_ROW)
                 tooltip = row_action_tooltip(editor, node);
             if (tooltip != NULL) {

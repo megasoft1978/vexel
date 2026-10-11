@@ -123,6 +123,7 @@ document_edit_error document_edit_group_siblings(document_edit *edit,
         (base_bytes){replacement, replacement_length});
     free(replacement);
     if (error != DOCUMENT_EDIT_OK) return error;
+    document_edit_history_relabel_latest(edit, DOCUMENT_EDIT_HISTORY_ACTION_GROUP);
     return document_edit_element_at_offset(edit, region.offset, out_group) ?
         DOCUMENT_EDIT_OK : DOCUMENT_EDIT_INVALID_OPERATION;
 }
@@ -222,5 +223,7 @@ document_edit_error document_edit_ungroup_siblings(document_edit *edit,
     error = document_edit_replace_xml_region(edit, parent, region,
         (base_bytes){replacement, new_length});
     free(replacement);
+    if (error == DOCUMENT_EDIT_OK)
+        document_edit_history_relabel_latest(edit, DOCUMENT_EDIT_HISTORY_ACTION_UNGROUP);
     return error;
 }

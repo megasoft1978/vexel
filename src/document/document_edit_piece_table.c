@@ -255,9 +255,13 @@ static bool make_piece_copy(document_edit *edit, size_t offset, size_t length,
 
 document_edit_error document_edit_commit_replace(document_edit *edit,
     size_t offset, size_t remove_length, const uint8_t *insert, size_t insert_length,
-    uint32_t target_slot, bool coalescible_attribute)
+    uint32_t target_slot, bool coalescible_attribute,
+    document_edit_history_action action)
 {
+    base_bytes label = document_edit_history_action_label(action);
     if (edit == NULL || (insert_length > 0U && insert == NULL) ||
+        !base_bytes_valid(label) || label.len == 0U ||
+        label.len >= DOCUMENT_EDIT_HISTORY_LABEL_CAP ||
         offset > edit->byte_length || remove_length > edit->byte_length - offset)
         return DOCUMENT_EDIT_INVALID_ARGUMENT;
     size_t next_length = edit->byte_length - remove_length;
@@ -317,12 +321,17 @@ document_edit_error document_edit_commit_replace(document_edit *edit,
         document_edit_blob_release(edit, previous->after);
         previous->after = after;
         previous->after_state = new_state;
+        memcpy(previous->label, label.ptr, label.len);
+        previous->label[label.len] = '\0';
     } else {
         if (edit->command_count == edit->limits.history_commands) drop_oldest_command(edit);
-        edit->commands[edit->command_count++] = (document_edit_command){
-            offset, before, after, target_slot, coalescible_attribute,
-            edit->state_id, new_state
-        };
+        document_edit_command command = {.offset = offset, .before = before,
+            .after = after, .target_slot = target_slot,
+            .coalescible_attribute = coalescible_attribute,
+            .before_state = edit->state_id, .after_state = new_state};
+        memcpy(command.label, label.ptr, label.len);
+        command.label[label.len] = '\0';
+        edit->commands[edit->command_count++] = command;
         edit->command_cursor = edit->command_count;
     }
     release_pieces(edit, edit->pieces, edit->piece_count);

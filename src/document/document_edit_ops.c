@@ -230,7 +230,8 @@ static document_edit_error add_attribute_encoded(document_edit *edit,
     bool valid = document_edit_validate_replace(edit, node->open.offset,
         node->open.length, patch, 0U, attribute, at, false, true);
     document_edit_error result = valid ? document_edit_commit_replace(edit, patch,
-        0U, attribute, at, node_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+        0U, attribute, at, node_handle.slot, false,
+        DOCUMENT_EDIT_HISTORY_ACTION_ADD_ATTRIBUTE) : DOCUMENT_EDIT_MALFORMED_XML;
     free(attribute);
     return result;
 }
@@ -274,7 +275,7 @@ document_edit_error document_edit_set_attribute(document_edit *edit,
         encoded, encoded_length, false, true);
     document_edit_error result = valid ? document_edit_commit_replace(edit,
         attribute->value.offset, attribute->value.length, encoded, encoded_length,
-        node_handle.slot, true) : DOCUMENT_EDIT_MALFORMED_XML;
+        node_handle.slot, true, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_ATTRIBUTE) : DOCUMENT_EDIT_MALFORMED_XML;
     free(encoded);
     return result;
 }
@@ -294,7 +295,8 @@ document_edit_error document_edit_remove_attribute(document_edit *edit,
         NULL, 0U, false, true);
     if (!valid) return DOCUMENT_EDIT_MALFORMED_XML;
     return document_edit_commit_replace(edit, attribute->source.offset,
-        attribute->source.length, NULL, 0U, node_handle.slot, false);
+        attribute->source.length, NULL, 0U, node_handle.slot, false,
+        DOCUMENT_EDIT_HISTORY_ACTION_REMOVE_ATTRIBUTE);
 }
 
 static bool handle_is_root(document_edit *edit, document_handle node)
@@ -353,7 +355,7 @@ document_edit_error document_edit_set_text_content(document_edit *edit,
         replacement_length, false, false);
     document_edit_error result = valid ? document_edit_commit_replace(edit,
         patch_offset, remove_length, replacement, replacement_length,
-        node_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+        node_handle.slot, false, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_TEXT) : DOCUMENT_EDIT_MALFORMED_XML;
     free(replacement);
     return result;
 }
@@ -375,7 +377,7 @@ document_edit_error document_edit_delete_element(document_edit *edit,
             node->span.offset, node->span.length, NULL, 0U, false, false))
         return DOCUMENT_EDIT_MALFORMED_XML;
     return document_edit_commit_replace(edit, node->span.offset, node->span.length,
-        NULL, 0U, node_handle.slot, false);
+        NULL, 0U, node_handle.slot, false, DOCUMENT_EDIT_HISTORY_ACTION_DELETE);
 }
 
 document_edit_error document_edit_duplicate_element(document_edit *edit,
@@ -401,7 +403,8 @@ document_edit_error document_edit_duplicate_element(document_edit *edit,
     bool valid = document_edit_validate_replace(edit, parent_span.offset,
         parent_span.length, insert_at, 0U, copy, node->span.length, false, false);
     document_edit_error result = valid ? document_edit_commit_replace(edit,
-        insert_at, 0U, copy, node->span.length, node_handle.slot, false) :
+        insert_at, 0U, copy, node->span.length, node_handle.slot, false,
+        DOCUMENT_EDIT_HISTORY_ACTION_DUPLICATE) :
         DOCUMENT_EDIT_MALFORMED_XML;
     free(copy);
     if (result != DOCUMENT_EDIT_OK) return result;
@@ -472,7 +475,8 @@ document_edit_error document_edit_reorder_sibling(document_edit *edit,
     bool valid = document_edit_validate_replace(edit, parent_span.offset,
         parent_span.length, start, span_length, new_region, span_length, false, false);
     document_edit_error result = valid ? document_edit_commit_replace(edit, start,
-        span_length, new_region, span_length, node_handle.slot, false) :
+        span_length, new_region, span_length, node_handle.slot, false,
+        DOCUMENT_EDIT_HISTORY_ACTION_MOVE) :
         DOCUMENT_EDIT_MALFORMED_XML;
     free(old_region); free(new_region);
     return result;
@@ -508,7 +512,7 @@ document_edit_error document_edit_wrap_in_group(document_edit *edit,
         new_length, false, false);
     document_edit_error result = valid ? document_edit_commit_replace(edit,
         node_offset, node->span.length, wrapped, new_length,
-        node_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+        node_handle.slot, false, DOCUMENT_EDIT_HISTORY_ACTION_GROUP) : DOCUMENT_EDIT_MALFORMED_XML;
     free(wrapped);
     if (result != DOCUMENT_EDIT_OK) return result;
     return document_edit_element_at_offset(edit, node_offset, out_group)
@@ -556,7 +560,7 @@ document_edit_error document_edit_ungroup(document_edit *edit,
         patch_offset, patch_length, inner, inner_length, fragment, false);
     document_edit_error result = valid ? document_edit_commit_replace(edit,
         patch_offset, patch_length, inner, inner_length,
-        group_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+        group_handle.slot, false, DOCUMENT_EDIT_HISTORY_ACTION_UNGROUP) : DOCUMENT_EDIT_MALFORMED_XML;
     free(inner);
     return result;
 }
@@ -670,7 +674,7 @@ document_edit_error document_edit_insert_template(document_edit *edit,
         replacement_length, false, false);
     document_edit_error result = valid ? document_edit_commit_replace(edit,
         patch_offset, remove_length, replacement, replacement_length,
-        parent_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+        parent_handle.slot, false, document_edit_history_template_action(kind)) : DOCUMENT_EDIT_MALFORMED_XML;
     size_t inserted_offset = patch_offset + (parent_was_empty ? 1U : 0U);
     free(replacement);
     if (result != DOCUMENT_EDIT_OK) return result;
@@ -768,7 +772,7 @@ document_edit_error document_edit_insert_xml_fragment(document_edit *edit,
         (parent->empty ? 1U : 0U) + child_offset;
     document_edit_error result = valid ? document_edit_commit_replace(edit,
         patch_offset, remove_length, replacement, replacement_length,
-        parent_handle.slot, false) : DOCUMENT_EDIT_MALFORMED_XML;
+        parent_handle.slot, false, DOCUMENT_EDIT_HISTORY_ACTION_ADD_SHAPE) : DOCUMENT_EDIT_MALFORMED_XML;
     free(owned_replacement);
     if (result != DOCUMENT_EDIT_OK) return result;
     return document_edit_element_at_offset(edit, inserted_offset, out_inserted)

@@ -782,10 +782,10 @@ static int run_viewer(const char *path, bool smoke_mode)
         destroy_viewer(&app);
         return EXIT_FAILURE;
     }
-    (void)platform_window_set_option_state(app.window,
-        PLATFORM_ACTION_TOGGLE_CHECKERBOARD, app.checkerboard);
-    (void)platform_window_set_option_state(app.window,
-        PLATFORM_ACTION_TOGGLE_PIXEL_GRID, app.pixel_grid);
+    (void)platform_window_set_command_state(app.window,
+        VIEWER_COMMAND_TOGGLE_CHECKERBOARD, app.checkerboard);
+    (void)platform_window_set_command_state(app.window,
+        VIEWER_COMMAND_TOGGLE_PIXEL_GRID, app.pixel_grid);
     (void)snprintf(app.title, sizeof(app.title), "%s", initial_title);
     if (path != NULL && !viewer_request_open(&app, path, true)) {
         (void)fputs("viewer: invalid initial SVG path\n", stderr);

@@ -404,6 +404,8 @@ void viewer_editor_paint_scalar(viewer_editor *editor, uint8_t *rgba,
 
 static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
 {
+    if (action == EDITOR_BUTTON_HISTORY)
+        return viewer_editor_open_history(editor) ? VIEWER_EDITOR_HANDLED : 0U;
     if (action == EDITOR_BUTTON_TOOL_SELECT) {
         (void)viewer_editor_set_tool(editor, UI_ICON_SELECT);
         return VIEWER_EDITOR_HANDLED;
@@ -515,6 +517,9 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     }
     if (hit == NULL || hit->spec.id == EDITOR_NODE_CANVAS ||
         hit->spec.id == EDITOR_NODE_WORKSPACE || hit->spec.id == UI_ROOT_ID) return 0U;
+    uint32_t overlay_result = editor_overlay_pointer_down(editor,
+        hit->spec.id, hit->spec.command_id);
+    if (overlay_result != 0U) return overlay_result;
     if ((hit->spec.state & UI_STATE_DISABLED) != 0U)
         return VIEWER_EDITOR_HANDLED;
     editor->pressed_id = hit->spec.id;
@@ -620,9 +625,11 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     return prior | VIEWER_EDITOR_HANDLED;
 }
 
-bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y)
+bool viewer_editor_scroll_at(viewer_editor *editor, uint32_t x, uint32_t y,
+                             double delta_y)
 {
     if (editor == NULL || delta_y == 0.0) return false;
+    if (editor_overlay_scroll(editor, x, y, delta_y)) return true;
     viewer_chrome_layout layout;
     bool modern = editor->modern_style && viewer_editor_get_chrome_layout(editor, &layout);
     uint32_t outline_start = modern ? layout.structure.x : 0U;
@@ -691,6 +698,11 @@ bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y)
     return true;
 }
 
+bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y)
+{
+    return viewer_editor_scroll_at(editor, x, 0U, delta_y);
+}
+
 bool viewer_editor_semantics(viewer_editor *editor,
                              ui_semantics_snapshot *out_snapshot)
 {
@@ -705,6 +717,8 @@ void editor_build_tree(viewer_editor *editor)
     if (editor->modern_style) editor_build_tree_modern(editor);
     else editor_build_tree_legacy(editor);
     if (!editor->tree_ready) return;
+    editor_overlay_add_nodes(editor);
+    editor_overlay_layout_nodes(editor);
     for (size_t index = 0U; index < editor->tree.count; ++index) {
         ui_node *node = &editor->tree.nodes[index];
         if (node->spec.id == editor->hovered_id)

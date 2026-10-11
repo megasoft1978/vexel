@@ -2,6 +2,7 @@
 #define VEXEL_APP_VIEWER_EDITOR_H
 
 #include "document_edit.h"
+#include "viewer_commands.h"
 #include "platform/platform_window.h"
 #include "svg/shape/shape.h"
 #include "ui/ui_core.h"
@@ -77,7 +78,8 @@ enum {
     VIEWER_EDITOR_PASTE_IN_PLACE = 1U << 12U,
     VIEWER_EDITOR_EXPORT_PNG = 1U << 13U,
     VIEWER_EDITOR_COPY_PNG = 1U << 14U,
-    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U
+    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U,
+    VIEWER_EDITOR_COMMAND_SELECTED = 1U << 16U
 };
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
@@ -104,6 +106,8 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
 uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t y,
                                     uint8_t button);
 bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y);
+bool viewer_editor_scroll_at(viewer_editor *editor, uint32_t x, uint32_t y,
+                             double delta_y);
 
 size_t viewer_editor_byte_length(const viewer_editor *editor);
 bool viewer_editor_materialize(viewer_editor *editor, uint8_t *buffer,
@@ -132,6 +136,13 @@ bool viewer_editor_text_input_active(const viewer_editor *editor);
 bool viewer_editor_set_draw_tool(viewer_editor *editor,
                                  viewer_editor_draw_tool tool);
 viewer_editor_draw_tool viewer_editor_get_draw_tool(const viewer_editor *editor);
+bool viewer_editor_open_command_palette(viewer_editor *editor);
+bool viewer_editor_open_history(viewer_editor *editor);
+bool viewer_editor_command_palette_is_open(const viewer_editor *editor);
+bool viewer_editor_history_is_open(const viewer_editor *editor);
+bool viewer_editor_take_pending_command(viewer_editor *editor,
+                                        viewer_command_id *out_command);
+bool viewer_editor_toggle_snapping(viewer_editor *editor);
 /* Pointer coordinates and navigation use backing pixels relative to canvas origin. */
 uint32_t viewer_editor_canvas_pointer_down(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
