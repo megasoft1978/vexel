@@ -1,0 +1,1094 @@
+/* Toolbar save button label and shortcut. */
+"editor.action.save" = "Save · Command-S";
+
+/* Toolbar undo button label and shortcut. */
+"editor.action.undo" = "Undo · Command-Z";
+
+/* Toolbar redo button label and shortcut. */
+"editor.action.redo" = "Redo · Shift-Command-Z";
+
+/* Toolbar duplicate button label and shortcut. */
+"editor.action.duplicate" = "Duplicate · Command-D";
+
+/* Toolbar group button label and shortcut. */
+"editor.action.group" = "Group · Command-G";
+
+/* Toolbar ungroup button label and shortcut. */
+"editor.action.ungroup" = "Ungroup · Shift-Command-G";
+
+/* Toolbar delete button label and shortcut. */
+"editor.action.delete" = "Delete · Delete";
+
+/* Layers panel toggle accessibility label. */
+"editor.panel.layers" = "Layers panel";
+
+/* Inspector panel toggle accessibility label. */
+"editor.panel.inspector" = "Inspector panel";
+
+/* Selection tool label and shortcut. */
+"editor.tool.select" = "Selection tool · V";
+
+/* Pan tool label and shortcuts. */
+"editor.tool.pan" = "Pan tool · H / Space";
+
+/* Zoom tool label and shortcut. */
+"editor.tool.zoom" = "Zoom tool · Z";
+
+/* Rectangle tool label and shortcut. */
+"editor.tool.rectangle" = "Rectangle tool · R";
+
+/* Ellipse tool label and shortcut. */
+"editor.tool.ellipse" = "Ellipse tool · O";
+
+/* Line tool label and shortcut. */
+"editor.tool.line" = "Line tool · L";
+
+/* Polygon tool label and shortcut. */
+"editor.tool.polygon" = "Polygon tool · Y";
+
+/* Polyline tool label and shortcut. */
+"editor.tool.polyline" = "Polyline tool · U";
+
+/* Pen tool label and shortcut. */
+"editor.tool.pen" = "Pen tool · P";
+
+/* Node edit tool label and shortcut. */
+"editor.tool.node" = "Node edit tool · N";
+
+/* Text tool label and shortcut. */
+"editor.tool.text" = "Text tool · T";
+
+/* Active node-edit tool hint. */
+"editor.hint.node" = "Node edit tool · adjust path anchors · N";
+
+/* Active rectangle tool hint. */
+"editor.hint.rectangle" = "Rectangle tool · drag to draw · R";
+
+/* Active ellipse tool hint. */
+"editor.hint.ellipse" = "Ellipse tool · drag to draw · O";
+
+/* Active line tool hint. */
+"editor.hint.line" = "Line tool · drag to draw · L";
+
+/* Active polygon tool hint. */
+"editor.hint.polygon" = "Polygon tool · click points, then Return · Y";
+
+/* Active polyline tool hint. */
+"editor.hint.polyline" = "Polyline tool · click points, then Return · U";
+
+/* Active pen tool hint. */
+"editor.hint.pen" = "Pen tool · click or drag anchors · P";
+
+/* Active text tool hint. */
+"editor.hint.text" = "Text tool · click to place text · T";
+
+/* Active pan tool hint. */
+"editor.hint.pan" = "Pan tool · drag the canvas · H / Space";
+
+/* Active zoom tool hint. */
+"editor.hint.zoom" = "Zoom tool · scroll over the canvas · Z";
+
+/* Active selection tool hint. */
+"editor.hint.select" = "Selection tool · choose a layer or edit it on the canvas · V";
+
+/* Layers panel heading and tree label. */
+"editor.label.layers" = "Layers";
+
+/* Button that collapses the Layers panel. */
+"editor.label.hide_layers" = "Hide layers panel";
+
+/* Layers filter field label and placeholder. */
+"editor.label.search_layers" = "Search layers";
+
+/* Empty filtered layer list heading. */
+"editor.label.no_layers_found" = "No layers found";
+
+/* Empty layer list heading. */
+"editor.label.no_layers" = "No layers";
+
+/* Empty filtered layer list guidance. */
+"editor.label.try_search" = "Try a different search.";
+
+/* Empty layer list guidance. */
+"editor.label.open_create_svg" = "Open or create an SVG document.";
+
+/* Inspector panel heading and tree label. */
+"editor.label.inspector" = "Inspector";
+
+/* Button that collapses the Inspector panel. */
+"editor.label.hide_inspector" = "Hide inspector panel";
+
+/* Inspector empty state heading. */
+"editor.label.no_layer_selected" = "No layer selected";
+
+/* Inspector empty state guidance. */
+"editor.label.select_layer_properties" = "Select a layer to edit its properties";
+
+/* Fallback selected element type. */
+"editor.label.element" = "Element";
+
+/* SVG document element type. */
+"editor.label.document" = "Document";
+
+/* SVG group element type. */
+"editor.label.group" = "Group";
+
+/* SVG definitions element type. */
+"editor.label.definitions" = "Definitions";
+
+/* SVG rectangle element type. */
+"editor.label.rectangle" = "Rectangle";
+
+/* SVG circle element type. */
+"editor.label.circle" = "Circle";
+
+/* SVG ellipse element type. */
+"editor.label.ellipse" = "Ellipse";
+
+/* SVG path element type. */
+"editor.label.path" = "Path";
+
+/* SVG text element type and inspector section. */
+"editor.label.text" = "Text";
+
+/* SVG text span element type. */
+"editor.label.text_span" = "Text Span";
+
+/* SVG image element type. */
+"editor.label.image" = "Image";
+
+/* SVG polygon element type. */
+"editor.label.polygon" = "Polygon";
+
+/* SVG polyline element type. */
+"editor.label.polyline" = "Polyline";
+
+/* SVG gradient stop element type. */
+"editor.label.stop" = "Stop";
+
+/* SVG linear gradient element type. */
+"editor.label.linear_gradient" = "Linear Gradient";
+
+/* SVG radial gradient element type. */
+"editor.label.radial_gradient" = "Radial Gradient";
+
+/* SVG clip path element type. */
+"editor.label.clip_path" = "Clip Path";
+
+/* SVG mask element type. */
+"editor.label.mask" = "Mask";
+
+/* SVG use element type. */
+"editor.label.use" = "Use";
+
+/* SVG symbol element type. */
+"editor.label.symbol" = "Symbol";
+
+/* Inspector geometry section. */
+"editor.label.geometry" = "Geometry";
+
+/* Inspector appearance section. */
+"editor.label.appearance" = "Appearance";
+
+/* Inspector additional attributes section. */
+"editor.label.other_attributes" = "Other attributes";
+
+/* Inspector additional attributes heading. */
+"editor.label.additional_attributes" = "Additional attributes";
+
+/* Inspector layer name field. */
+"editor.label.name" = "Name";
+
+/* Inspector text content field. */
+"editor.label.content" = "Content";
+
+/* Inspector new attribute name field. */
+"editor.label.attribute" = "Attribute";
+
+/* Inspector new attribute value field. */
+"editor.label.value" = "Value";
+
+/* Inspector add attribute button. */
+"editor.action.add_attribute" = "Add attribute";
+
+/* Inspector remove attribute button. */
+"editor.action.remove_attribute" = "Remove attribute";
+
+/* Inspector X geometry attribute label. */
+"editor.label.x" = "X";
+
+/* Inspector Y geometry attribute label. */
+"editor.label.y" = "Y";
+
+/* Inspector center X geometry attribute label. */
+"editor.label.center_x" = "Center X";
+
+/* Inspector center Y geometry attribute label. */
+"editor.label.center_y" = "Center Y";
+
+/* Inspector width attribute label. */
+"editor.label.width" = "Width";
+
+/* Inspector height attribute label. */
+"editor.label.height" = "Height";
+
+/* Inspector radius attribute label. */
+"editor.label.radius" = "Radius";
+
+/* Inspector radius X attribute label. */
+"editor.label.radius_x" = "Radius X";
+
+/* Inspector radius Y attribute label. */
+"editor.label.radius_y" = "Radius Y";
+
+/* Inspector line start X attribute label. */
+"editor.label.start_x" = "Start X";
+
+/* Inspector line start Y attribute label. */
+"editor.label.start_y" = "Start Y";
+
+/* Inspector line end X attribute label. */
+"editor.label.end_x" = "End X";
+
+/* Inspector line end Y attribute label. */
+"editor.label.end_y" = "End Y";
+
+/* Inspector fill attribute label. */
+"editor.label.fill" = "Fill";
+
+/* Inspector stroke attribute label. */
+"editor.label.stroke" = "Stroke";
+
+/* Inspector stroke width attribute label. */
+"editor.label.stroke_width" = "Stroke width";
+
+/* Inspector opacity attribute label. */
+"editor.label.opacity" = "Opacity";
+
+/* Inspector fill opacity attribute label. */
+"editor.label.fill_opacity" = "Fill opacity";
+
+/* Inspector stroke opacity attribute label. */
+"editor.label.stroke_opacity" = "Stroke opacity";
+
+/* Inspector font size attribute label. */
+"editor.label.font_size" = "Font size";
+
+/* Inspector font family attribute label. */
+"editor.label.font_family" = "Font family";
+
+/* Inspector text anchor attribute label. */
+"editor.label.text_anchor" = "Text anchor";
+
+/* Inspector value that exceeds its display budget. */
+"editor.value.too_long" = "Value exceeds 64 KiB";
+
+/* Inspector value placeholder for a long value. */
+"editor.value.long" = "(long value)";
+
+/* Inspector empty value. */
+"editor.value.none" = "None";
+
+/* Editor ready status. */
+"editor.status.ready" = "Ready";
+
+/* Document saved status. */
+"editor.status.saved" = "Saved";
+
+/* Unsaved document status. */
+"editor.status.unsaved" = "Unsaved changes";
+
+/* Canvas selection status. */
+"editor.status.no_selection" = "No selection";
+
+/* Single canvas selection status. */
+"editor.status.one_layer_selected" = "1 layer selected";
+
+/* Truncated multi-selection status. */
+"editor.status.multiple_layers_selected" = "Multiple layers selected";
+
+/* Plural selected layer count status with a locale-formatted count. */
+"editor.status.layers_selected" = "%@ layers selected";
+
+/* Layer visibility and lock state summary. */
+"editor.status.hidden_locked" = "Hidden · Locked";
+
+/* Empty canvas heading. */
+"editor.status.empty_canvas" = "Empty canvas";
+
+/* Empty canvas guidance. */
+"editor.status.add_shape" = "Add a shape or open an SVG document.";
+
+/* Canvas status when no pointer is active. */
+"editor.status.canvas_ready" = "Canvas ready";
+
+/* Canvas zoom status suffix. */
+"editor.status.zoom" = "zoom";
+
+/* Canvas render status when tiles are current. */
+"editor.status.sharp_ready" = "Sharp ready";
+
+/* Canvas render status fallback. */
+"editor.status.sharp" = "Sharp";
+
+/* Canvas render status prefix. */
+"editor.status.rendering" = "Rendering";
+
+/* Empty Open Recent menu item. */
+"editor.status.no_recent" = "No Recent Files";
+
+/* Open Recent menu clear action. */
+"editor.status.clear_recent" = "Clear Menu";
+
+/* Drawing gesture hint. */
+"editor.status.drag_shape" = "Drag farther to create a shape";
+
+/* Line drawing gesture hint. */
+"editor.status.drag_line" = "Drag farther to create a line";
+
+/* Shape creation status. */
+"editor.status.shape_created" = "Shape created · preview updating";
+
+/* Text tool input prompt. */
+"editor.status.text_prompt" = "Type text, then press Return";
+
+/* Text creation status. */
+"editor.status.text_created" = "Text created · preview updating";
+
+/* Alignment validation message. */
+"editor.status.align_minimum" = "Align needs at least two rendered selections";
+
+/* Alignment coordinate limit message. */
+"editor.status.align_coordinate_limit" = "Align exceeds the editor coordinate limit";
+
+/* Selection alignment status. */
+"editor.status.aligned" = "Selection aligned · preview updating";
+
+/* Distribution validation message. */
+"editor.status.distribute_minimum" = "Distribute needs at least three rendered selections";
+
+/* Selection distribution status. */
+"editor.status.distributed" = "Selection distributed · preview updating";
+
+/* Locked layer edit guidance. */
+"editor.status.unlock_edit" = "Unlock the selected layer to edit it";
+
+/* Inspector field input limit message. */
+"editor.status.field_limit" = "Field limit reached";
+
+/* New attribute value prompt. */
+"editor.status.attribute_prompt" = "Enter the new attribute value";
+
+/* New attribute draft status. */
+"editor.status.attribute_draft" = "Attribute draft ready";
+
+/* Layer search status. */
+"editor.status.search_updated" = "Layer search updated";
+
+/* Canceled inspector edit status. */
+"editor.status.edit_cancelled" = "Edit canceled";
+
+/* Clipboard availability message. */
+"editor.status.clipboard_platform" = "Clipboard needs the platform text service";
+
+/* Snapping enabled status. */
+"editor.status.snapping_on" = "Snapping on";
+
+/* Snapping disabled status. */
+"editor.status.snapping_off" = "Snapping off";
+
+/* Cleared attribute draft status. */
+"editor.status.attribute_cleared" = "Attribute draft cleared";
+
+/* Stale path node guidance. */
+"editor.status.path_stale" = "Path node source is stale; wait for preview";
+
+/* Path node coordinate limit message. */
+"editor.status.path_coordinate_limit" = "Path node exceeds the coordinate limit";
+
+/* Invalid path node spans message. */
+"editor.status.path_spans_invalid" = "Path node number spans are invalid";
+
+/* Path node replacement limit message. */
+"editor.status.path_replace_limit" = "Path node replacement exceeds the editor limit";
+
+/* Path node commit status. */
+"editor.status.path_node_committed" = "Path node committed · preview updating";
+
+/* Path node selection status. */
+"editor.status.path_node_selected" = "Path node selected";
+
+/* Path handle selection status. */
+"editor.status.path_handle_selected" = "Path handle selected";
+
+/* Layer visibility override limit message. */
+"editor.status.visibility_limit" = "Visibility override limit reached";
+
+/* Layer visibility status. */
+"editor.status.layer_visible" = "Layer visible";
+
+/* Layer visibility status. */
+"editor.status.layer_hidden" = "Layer hidden";
+
+/* Layer lock status. */
+"editor.status.layer_locked" = "Layer locked";
+
+/* Layer unlock status. */
+"editor.status.layer_unlocked" = "Layer unlocked";
+
+/* Path point limit message. */
+"editor.status.path_point_limit" = "Path point limit reached";
+
+/* Path geometry limit message. */
+"editor.status.path_point_or_coordinate_limit" = "Path point limit or coordinate limit reached";
+
+/* Path anchor cap message. */
+"editor.status.path_anchor_limit" = "Path point limit reached (128 anchors)";
+
+/* Polygon validation message. */
+"editor.status.polygon_minimum" = "A polygon needs at least three points";
+
+/* Path size limit message. */
+"editor.status.path_byte_limit" = "Path exceeds the 64 KiB editor limit";
+
+/* Path creation status. */
+"editor.status.path_created" = "Path created · preview updating";
+
+/* Canvas selection cap message. */
+"editor.status.selection_limit" = "Selection limit reached (128 elements)";
+
+/* Canvas selection empty status. */
+"editor.status.no_rendered_selection" = "No rendered elements selected";
+
+/* Single element selection status. */
+"editor.status.element_selected" = "Element selected";
+
+/* Multiple element selection status. */
+"editor.status.elements_selected" = "Elements selected";
+
+/* Select All cap message. */
+"editor.status.select_all_limit" = "Select All is limited to 128 rendered elements";
+
+/* Select All empty status. */
+"editor.status.no_rendered_elements" = "No rendered elements to select";
+
+/* Select All status. */
+"editor.status.all_rendered_selected" = "All rendered elements selected";
+
+/* Canvas selection edit status. */
+"editor.status.selection_edit_committed" = "Selection edit committed · preview updating";
+
+/* Locked selection transform guidance. */
+"editor.status.unlock_transform" = "Unlock every selected layer to transform them";
+
+/* Group edit size message. */
+"editor.status.group_edit_limit" = "Group edit needs sibling elements within the 64 KiB edit limit";
+
+/* Group transform error. */
+"editor.status.group_transform_encode" = "Group transform could not be encoded";
+
+/* Group edit source limit message. */
+"editor.status.group_source_limit" = "Group edit exceeds the 64 KiB source limit";
+
+/* Arrange translation limit message. */
+"editor.status.arrange_translation_limit" = "Arrange translation exceeds the editor limit";
+
+/* Arrange transform error. */
+"editor.status.arrange_transform_encode" = "Arrange transform could not be encoded";
+
+/* Selection alignment no-op status. */
+"editor.status.selection_already_aligned" = "Selection already has the requested alignment";
+
+/* Arrange source limit message. */
+"editor.status.arrange_source_limit" = "Arrange exceeds the 64 KiB source limit";
+
+/* Locked selection delete guidance. */
+"editor.status.unlock_delete" = "Unlock every selected layer to delete them";
+
+/* Delete size message. */
+"editor.status.delete_edit_limit" = "Delete needs sibling elements within the 64 KiB edit limit";
+
+/* Delete status. */
+"editor.status.deleted" = "Elements deleted · preview updating";
+
+/* Locked selection duplicate guidance. */
+"editor.status.unlock_duplicate" = "Unlock every selected layer to duplicate them";
+
+/* Duplicate size message. */
+"editor.status.duplicate_edit_limit" = "Duplicate needs sibling elements within the 64 KiB edit limit";
+
+/* Duplicate source limit message. */
+"editor.status.duplicate_source_limit" = "Duplicate exceeds the 64 KiB source limit";
+
+/* Duplicate status. */
+"editor.status.duplicated" = "Elements duplicated · preview updating";
+
+/* Transform limit message. */
+"editor.status.transform_limit" = "Transform exceeds the editor limit";
+
+/* Existing transform limit message. */
+"editor.status.transform_existing_limit" = "Existing transform exceeds the editor limit";
+
+/* Transform allocation error. */
+"editor.status.transform_alloc_failed" = "Transform allocation failed";
+
+/* Existing transform error. */
+"editor.status.transform_unavailable" = "Existing transform is unavailable";
+
+/* Transform composition error. */
+"editor.status.transform_compose_failed" = "Transform composition failed";
+
+/* Transform status. */
+"editor.status.transform_committed" = "Transform committed · preview updating";
+
+/* Canvas element selection status. */
+"editor.status.selected_canvas_element" = "Selected canvas element";
+
+/* Canceled canvas gesture status. */
+"editor.status.gesture_cancelled" = "Canvas gesture canceled";
+
+/* Canvas nudge guidance. */
+"editor.status.nudge_requires_selection" = "Select a rendered shape before nudging";
+
+/* Action that hides a layer. */
+"editor.action.hide_layer" = "Hide layer";
+
+/* Action that shows a layer. */
+"editor.action.show_layer" = "Show layer";
+
+/* Action that locks a layer. */
+"editor.action.lock_layer" = "Lock layer";
+
+/* Action that unlocks a layer. */
+"editor.action.unlock_layer" = "Unlock layer";
+
+/* Current layer visibility value. */
+"editor.accessibility.visible" = "Visible";
+
+/* Current layer visibility value. */
+"editor.accessibility.hidden" = "Hidden";
+
+/* Current layer lock value. */
+"editor.accessibility.locked" = "Locked";
+
+/* Current layer lock value. */
+"editor.accessibility.unlocked" = "Unlocked";
+
+/* Selected object state. */
+"editor.accessibility.selected" = "Selected";
+
+/* Unselected object state. */
+"editor.accessibility.not_selected" = "Not selected";
+
+/* Help for a visible layer's visibility control. */
+"editor.accessibility.press_hide" = "Press to hide this layer.";
+
+/* Help for a hidden layer's visibility control. */
+"editor.accessibility.press_show" = "Press to show this layer.";
+
+/* Help for an unlocked layer's lock control. */
+"editor.accessibility.press_lock" = "Press to lock this layer.";
+
+/* Help for a locked layer's lock control. */
+"editor.accessibility.press_unlock" = "Press to unlock this layer.";
+
+/* VoiceOver label for the layer visibility control. */
+"editor.accessibility.layer_visibility" = "Layer visibility";
+
+/* VoiceOver label for the layer lock control. */
+"editor.accessibility.layer_lock" = "Layer lock";
+
+/* Arrange operation size message. */
+"editor.status.arrange_sibling_limit" = "Arrange needs sibling elements within the 64 KiB edit limit";
+
+/* Inspector attribute became unavailable. */
+"editor.status.attribute_unavailable" = "Attribute is no longer available";
+
+/* Clipboard identifier limit message. */
+"editor.status.clipboard_ids_limit" = "Clipboard SVG IDs could not be made unique within the paste limit";
+
+/* Clipboard SVG size message. */
+"editor.status.clipboard_svg_limit" = "Clipboard SVG is empty or exceeds the 64 KiB limit";
+
+/* Delete status. */
+"editor.status.layer_deleted" = "Deleted · preview updating";
+
+/* Distribution coordinate limit message. */
+"editor.status.distribute_coordinate_limit" = "Distribute exceeds the editor coordinate limit";
+
+/* Inspector edit status. */
+"editor.status.edited" = "Edited · preview updating";
+
+/* Group status. */
+"editor.status.grouped" = "Elements grouped · preview updating";
+
+/* Ungroup status. */
+"editor.status.ungrouped_elements" = "Elements ungrouped · preview updating";
+
+/* New attribute name prompt. */
+"editor.status.attribute_name_prompt" = "Enter an attribute name first";
+
+/* Group operation size message. */
+"editor.status.group_sibling_limit" = "Group needs sibling elements within the 64 KiB edit limit";
+
+/* Path curve data message. */
+"editor.status.path_curve_unavailable" = "Path curve data is unavailable";
+
+/* Path curve source span message. */
+"editor.status.path_curve_spans_invalid" = "Path curve source spans are invalid";
+
+/* Path segment split limit message. */
+"editor.status.path_segment_limit" = "Path segment cannot be split within the editor limits";
+
+/* Stale path source guidance. */
+"editor.status.path_source_stale" = "Path source is stale; wait for preview";
+
+/* Attribute removal prompt. */
+"editor.status.attribute_remove_prompt" = "Select an attribute to remove";
+
+/* Canvas selection status when outline sync is pending. */
+"editor.status.canvas_element_pending" = "Selected from canvas · outline support pending";
+
+/* Text editor input limit message. */
+"editor.status.text_limit" = "Text exceeds the inline editor limit";
+
+/* Path anchor deletion message. */
+"editor.status.path_anchor_delete" = "The first path anchor cannot be deleted";
+
+/* Path curve shape protection message. */
+"editor.status.curve_shape_locked" = "This curve node cannot be removed without changing its shape";
+
+/* Ungroup operation size message. */
+"editor.status.ungroup_sibling_limit" = "Ungroup needs sibling groups within the 64 KiB edit limit";
+
+/* Ungroup status. */
+"editor.status.ungrouped" = "Ungrouped · preview updating";
+
+/* Locked layer reorder guidance. */
+"editor.status.unlock_reorder" = "Unlock the selected layer to reorder it";
+
+/* Locked layer transform guidance. */
+"editor.status.unlock_selected_transform" = "Unlock the selected layer to transform it";
+
+/* Inspector value input limit message. */
+"editor.status.value_limit" = "Value exceeds the inline editor limit";
+
+/* Document edit rejection status with localized error name. */
+"editor.status.edit_rejected" = "Edit rejected: %@";
+
+/* Invalid document edit argument. */
+"editor.error.invalid_argument" = "Invalid argument";
+
+/* Document edit handle is stale. */
+"editor.error.stale_handle" = "Stale layer";
+
+/* Document edit target was not found. */
+"editor.error.not_found" = "Layer not found";
+
+/* Document edit duplicate attribute error. */
+"editor.error.duplicate_attribute" = "Duplicate attribute";
+
+/* Document edit invalid name error. */
+"editor.error.invalid_name" = "Invalid name";
+
+/* Document edit malformed XML error. */
+"editor.error.malformed_xml" = "Malformed XML";
+
+/* Document root deletion error. */
+"editor.error.root_delete" = "Cannot delete the document root";
+
+/* Document edit invalid operation error. */
+"editor.error.invalid_operation" = "Invalid edit operation";
+
+/* Document edit size limit error. */
+"editor.error.limit" = "Edit limit reached";
+
+/* Document undo history limit error. */
+"editor.error.history_limit" = "Undo history limit reached";
+
+/* Document edit allocation error. */
+"editor.error.out_of_memory" = "Not enough memory to edit";
+
+/* Document save error. */
+"editor.error.save_failed" = "Could not save";
+
+/* Unknown document edit error. */
+"editor.error.unknown" = "Unknown edit error";
+
+/* Save failure status with technical detail. */
+"editor.status.save_failed" = "Save failed: %@";
+
+/* Preview failure status with technical detail. */
+"editor.status.preview_failed" = "Preview update failed: %@";
+
+/* Assistant edit status with document label. */
+"editor.status.agent_edited" = "Agent edited — %@";
+
+/* Unsupported SVG content status. */
+"editor.status.unsupported_preview" = "Unsupported SVG content · preview retained";
+
+/* VoiceOver label for canvas selection. */
+"editor.accessibility.canvas_selection" = "Canvas selection";
+
+/* Save toolbar tooltip. */
+"editor.tooltip.save" = "Save  ⌘S";
+
+/* Undo toolbar tooltip. */
+"editor.tooltip.undo" = "Undo  ⌘Z";
+
+/* Redo toolbar tooltip. */
+"editor.tooltip.redo" = "Redo  ⇧⌘Z";
+
+/* Delete toolbar tooltip. */
+"editor.tooltip.delete" = "Delete  Delete";
+
+/* Duplicate toolbar tooltip. */
+"editor.tooltip.duplicate" = "Duplicate  ⌘D";
+
+/* Group toolbar tooltip. */
+"editor.tooltip.group" = "Group  ⌘G";
+
+/* Ungroup toolbar tooltip. */
+"editor.tooltip.ungroup" = "Ungroup  ⇧⌘G";
+
+/* Save As toolbar tooltip. */
+"editor.tooltip.save_as" = "Save as";
+
+/* Selection tool tooltip. */
+"editor.tooltip.select" = "Select  V";
+
+/* Pan tool tooltip. */
+"editor.tooltip.pan" = "Pan  H / Space";
+
+/* Zoom tool tooltip. */
+"editor.tooltip.zoom" = "Zoom  Z";
+
+/* Layers panel toggle tooltip. */
+"editor.tooltip.toggle_layers" = "Show or hide Layers panel";
+
+/* Inspector panel toggle tooltip. */
+"editor.tooltip.toggle_inspector" = "Show or hide Inspector panel";
+
+/* Layers panel collapse tooltip. */
+"editor.tooltip.hide_layers" = "Collapse Layers panel";
+
+/* Inspector panel collapse tooltip. */
+"editor.tooltip.hide_inspector" = "Collapse Inspector panel";
+
+/* Rectangle tool tooltip. */
+"editor.tooltip.rectangle" = "Rectangle  R";
+
+/* Ellipse tool tooltip. */
+"editor.tooltip.ellipse" = "Ellipse  O";
+
+/* Line tool tooltip. */
+"editor.tooltip.line" = "Line  L";
+
+/* Pen tool tooltip. */
+"editor.tooltip.pen" = "Pen  P";
+
+/* Node edit tool tooltip. */
+"editor.tooltip.node" = "Node edit tool  N";
+
+/* Text tool tooltip. */
+"editor.tooltip.text" = "Text  T";
+
+/* Polygon tool tooltip. */
+"editor.tooltip.polygon" = "Polygon  Y";
+
+/* Polyline tool tooltip. */
+"editor.tooltip.polyline" = "Polyline  U";
+
+/* Canvas status suffix after Sharp. */
+"editor.label.ready_lowercase" = "ready";
+
+/* Application menu bar title. */
+"menu.main.title" = "Main Menu";
+
+/* Application menu title. */
+"menu.app.title" = "vexel";
+
+/* About command in the application menu. */
+"menu.app.about" = "About vexel";
+
+/* Quit command in the application menu. */
+"menu.app.quit" = "Quit vexel";
+
+/* File menu title. */
+"menu.file.title" = "File";
+
+/* Open SVG command. */
+"menu.file.open" = "Open…";
+
+/* Reload document command. */
+"menu.file.reload" = "Reload";
+
+/* Open Recent submenu title. */
+"menu.file.open_recent" = "Open Recent";
+
+/* Close window command. */
+"menu.file.close_window" = "Close Window";
+
+/* View menu title. */
+"menu.view.title" = "View";
+
+/* Checkerboard display option. */
+"menu.view.checkerboard" = "Checkerboard";
+
+/* Canvas background command. */
+"menu.view.cycle_background" = "Cycle Background";
+
+/* Fit canvas width command. */
+"menu.view.fit_width" = "Fit Width";
+
+/* Fit canvas in window command. */
+"menu.view.fit_window" = "Fit in Window";
+
+/* Actual size command. */
+"menu.view.actual_size" = "Actual Size";
+
+/* Pixel grid display option. */
+"menu.view.pixel_grid" = "Pixel Grid";
+
+/* Interface text size submenu title. */
+"menu.view.interface_text_size" = "Interface Text Size";
+
+/* Default interface text size. */
+"menu.view.text_size_100" = "100%";
+
+/* Interface text size at 125 percent. */
+"menu.view.text_size_125" = "125%";
+
+/* Interface text size at 150 percent. */
+"menu.view.text_size_150" = "150%";
+
+/* Interface text size at 175 percent. */
+"menu.view.text_size_175" = "175%";
+
+/* Interface text size at 200 percent. */
+"menu.view.text_size_200" = "200%";
+
+/* Show the Layers panel from the View menu. */
+"menu.view.show_layers" = "Show Layers";
+
+/* Show the Inspector panel from the View menu. */
+"menu.view.show_inspector" = "Show Inspector";
+
+/* Empty Open Recent menu item. */
+"menu.file.no_recent" = "No Recent Files";
+
+/* Clear Open Recent menu item. */
+"menu.file.clear_recent" = "Clear Menu";
+
+/* Window menu title. */
+"menu.window.title" = "Window";
+
+/* Minimize window command. */
+"menu.window.minimize" = "Minimize";
+
+/* Bring all windows to front command. */
+"menu.window.bring_front" = "Bring All to Front";
+
+/* PNG export scale field label. */
+"dialog.export.scale" = "Scale";
+
+/* PNG export selection checkbox. */
+"dialog.export.selection_only" = "Selection only";
+
+/* Save button in unsaved changes dialog. */
+"dialog.unsaved.save" = "Save";
+
+/* Discard changes button in unsaved changes dialog. */
+"dialog.unsaved.dont_save" = "Don't Save";
+
+/* Cancel button in a dialog. */
+"dialog.cancel" = "Cancel";
+
+/* Acknowledge button in an error dialog. */
+"dialog.ok" = "OK";
+
+/* Default name for an unsaved SVG file. */
+"dialog.filename.untitled_svg" = "Untitled";
+
+/* Default name for an exported PNG file. */
+"dialog.filename.untitled_png" = "Untitled";
+
+/* Welcome window title. */
+"welcome.title" = "Welcome to Vexel";
+
+/* Welcome window open action. */
+"welcome.open_svg" = "Open SVG…";
+
+/* Welcome window new document action. */
+"welcome.new_svg" = "New Blank SVG";
+
+/* Settings window title. */
+"settings.title" = "Settings";
+
+/* Accessibility text size preference label. */
+"settings.accessibility.text_size" = "Interface Text Size";
+
+/* Accessibility text size preference help. */
+"settings.accessibility.text_size_help" = "Increase the size of interface text without changing canvas zoom.";
+
+/* Empty editor status. */
+"editor.status.open_svg_to_begin" = "Open an SVG to begin";
+
+/* Updated document preview status. */
+"editor.status.preview_updated" = "Preview updated";
+
+/* Canceled application action status. */
+"editor.status.action_cancelled" = "Action canceled";
+
+/* Unsaved changes dialog error status. */
+"editor.status.dialog_unavailable" = "Could not show the unsaved-changes dialog";
+
+/* Clipboard allocation error status. */
+"editor.status.clipboard_allocation" = "Clipboard allocation failed";
+
+/* Clipboard copy error status. */
+"editor.status.clipboard_copy_failed" = "Could not copy the selected SVG fragment";
+
+/* Clipboard copy success status. */
+"editor.status.svg_copied" = "SVG copied to clipboard";
+
+/* Clipboard paste size error status. */
+"editor.status.clipboard_limit" = "Clipboard SVG exceeds the 64 KiB limit";
+
+/* Clipboard content error status. */
+"editor.status.clipboard_invalid" = "Clipboard does not contain an SVG fragment";
+
+/* External document change status. */
+"editor.status.file_changed" = "File changed on disk; save your edits before reloading";
+
+/* Preview source size error status. */
+"editor.status.render_source_limit" = "Edited document exceeds the render source limit";
+
+/* PNG clipboard success status. */
+"editor.status.selection_copied_png" = "Selection copied as PNG";
+
+/* PNG export success status. */
+"editor.status.png_exported" = "PNG exported";
+
+/* Document preview error with technical detail. */
+"editor.status.preview_unavailable" = "Preview unavailable: %@";
+
+/* Assistant document edit status. */
+"editor.status.agent_transaction" = "Agent edited document — transaction committed";
+
+/* SVG export source limit error. */
+"editor.status.export_source_limit" = "The current SVG exceeds the 64 MiB export limit";
+
+/* SVG export allocation error. */
+"editor.status.export_allocation" = "SVG export allocation failed";
+
+/* SVG export source read error. */
+"editor.status.export_read" = "Could not read the current SVG source";
+
+/* SVG export render error. */
+"editor.status.export_render" = "Could not render the current SVG source";
+
+/* PNG export pixel limit error. */
+"editor.status.export_pixel_limit" = "The current SVG exceeds the 16 million PNG pixel limit";
+
+/* PNG export panel error. */
+"editor.status.export_panel" = "Could not open the PNG export panel";
+
+/* PNG selection export guidance. */
+"editor.status.export_selection_required" = "Select a rendered element before exporting the selection";
+
+/* PNG export scale limit error. */
+"editor.status.export_scale_limit" = "The selected PNG scale exceeds the 4096 pixel limit";
+
+/* PNG render error. */
+"editor.status.export_pixels" = "The SVG renderer could not create the PNG pixels";
+
+/* PNG selection bounds error. */
+"editor.status.export_bounds" = "The selected element is outside the PNG export bounds";
+
+/* PNG encode error. */
+"editor.status.export_encode" = "ImageIO could not encode the PNG within its size limit";
+
+/* PNG clipboard write error. */
+"editor.status.export_clipboard" = "Could not write the PNG to the system clipboard";
+
+/* PNG file write error. */
+"editor.status.export_save" = "Could not save the PNG file";
+
+/* SVG save panel error. */
+"editor.status.save_panel_path" = "The save panel could not provide a valid SVG path.";
+
+/* External file change save guidance. */
+"editor.status.selected_file_changed" = "The selected file changed outside Vexel. Save As to a different path to keep both versions.";
+
+/* External file change save guidance. */
+"editor.status.file_changed_save_as" = "The file changed outside Vexel. Use Save As to keep both versions.";
+
+/* SVG save error. */
+"editor.status.svg_save_failed" = "The SVG could not be saved.";
+
+/* Document path update error. */
+"editor.status.saved_path_update_failed" = "The file was saved, but Vexel could not update its document path.";
+
+/* SVG save error dialog title. */
+"dialog.error.save_failed_title" = "Save Failed";
+
+/* External file change dialog title. */
+"dialog.error.file_changed_title" = "File Changed on Disk";
+
+/* PNG export error dialog title. */
+"dialog.error.png_export_title" = "PNG export failed";
+
+/* Unsaved changes dialog title. */
+"dialog.unsaved.title" = "Unsaved Changes";
+
+/* Unsaved changes prompt before opening a document. */
+"dialog.unsaved.open_message" = "Save changes before opening another document?";
+
+/* Unsaved changes prompt before closing. */
+"dialog.unsaved.close_message" = "Save changes before closing?";
+
+/* Legacy editor Save button label. */
+"editor.legacy.save" = "Save";
+
+/* Legacy editor Undo button label. */
+"editor.legacy.undo" = "Undo";
+
+/* Legacy editor Redo button label. */
+"editor.legacy.redo" = "Redo";
+
+/* Legacy editor Delete button label. */
+"editor.legacy.delete" = "Delete";
+
+/* Legacy editor Duplicate button label. */
+"editor.legacy.duplicate" = "Duplicate";
+
+/* Legacy editor Ungroup button label. */
+"editor.legacy.ungroup" = "Ungroup";
+
+/* Legacy editor Save As button label. */
+"editor.legacy.save_as" = "Save As";
+
+/* Legacy editor structure panel heading. */
+"editor.legacy.structure" = "STRUCTURE";
+
+/* Legacy editor inspector panel heading. */
+"editor.legacy.inspector" = "INSPECTOR";
+
+/* Legacy inspector name field label. */
+"editor.legacy.new_name" = "New name";
+
+/* Legacy inspector value field label. */
+"editor.legacy.new_value" = "New value";
+
+/* Canvas selection state for a layer row. */
+"editor.accessibility.canvas_selected" = "Selected on canvas";
+
+/* PNG export scale option. */
+"dialog.export.scale_1" = "1×";
+
+/* PNG export scale option. */
+"dialog.export.scale_2" = "2×";
+
+/* PNG export scale option. */
+"dialog.export.scale_4" = "4×";

@@ -4,6 +4,30 @@
 
 #include <string.h>
 
+static bool append_localized_row_state(char output[PLATFORM_LOCALIZATION_TEXT_CAP],
+    size_t *used, const char *fallback)
+{
+    char localized[128] = {0};
+    size_t length = 0U;
+    if (!editor_localize_slice(fallback, strlen(fallback), localized,
+            sizeof(localized), &length)) {
+        length = strlen(fallback);
+        if (length >= sizeof(localized)) return false;
+        memcpy(localized, fallback, length + 1U);
+    }
+    size_t separator_length = *used == 0U ? 0U : sizeof(" · ") - 1U;
+    size_t remaining = PLATFORM_LOCALIZATION_TEXT_CAP - 1U - *used;
+    if (separator_length > remaining || length > remaining - separator_length) return false;
+    if (separator_length > 0U) {
+        memcpy(output + *used, " · ", separator_length);
+        *used += separator_length;
+    }
+    memcpy(output + *used, localized, length);
+    *used += length;
+    output[*used] = '\0';
+    return true;
+}
+
 static ui_icon_kind layer_icon(viewer_editor *editor, size_t index)
 {
     base_bytes tag;
@@ -29,7 +53,7 @@ static ui_icon_kind layer_icon(viewer_editor *editor, size_t index)
     return UI_ICON_LAYERS;
 }
 
-static size_t layer_type_label(base_bytes tag, char out[UI_TEXT_MAX_BYTES])
+static size_t layer_type_label(base_bytes tag, char out[PLATFORM_LOCALIZATION_TEXT_CAP])
 {
     static const struct { const char *tag; const char *title; } names[] = {
         {"svg", "Document"}, {"g", "Group"}, {"defs", "Definitions"},
@@ -46,26 +70,30 @@ static size_t layer_type_label(base_bytes tag, char out[UI_TEXT_MAX_BYTES])
         if (tag.len != source_length || memcmp(tag.ptr, names[index].tag, source_length) != 0)
             continue;
         size_t length = strlen(names[index].title);
-        if (length >= UI_TEXT_MAX_BYTES) length = UI_TEXT_MAX_BYTES - 1U;
-        memcpy(out, names[index].title, length);
-        out[length] = '\0';
+        size_t localized_length = 0U;
+        if (editor_localize_slice(names[index].title, length, out,
+                PLATFORM_LOCALIZATION_TEXT_CAP, &localized_length))
+            return localized_length;
+        memcpy(out, names[index].title, length + 1U);
         return length;
     }
     static const char ellipsis[] = "\xe2\x80\xa6";
     size_t at = 0U;
     bool word_start = true;
     uint8_t prior = 0U;
-    for (size_t index = 0U; index < tag.len && at < UI_TEXT_MAX_BYTES - 1U; ++index) {
+    for (size_t index = 0U; index < tag.len &&
+         at < PLATFORM_LOCALIZATION_TEXT_CAP - 1U; ++index) {
         uint8_t byte = tag.ptr[index];
         if (byte == '-' || byte == '_' || byte == ':') {
-            if (at > 0U && out[at - 1U] != ' ' && at < UI_TEXT_MAX_BYTES - 1U)
+            if (at > 0U && out[at - 1U] != ' ' &&
+                at < PLATFORM_LOCALIZATION_TEXT_CAP - 1U)
                 out[at++] = ' ';
             word_start = true;
             prior = byte;
             continue;
         }
         if (byte >= 'A' && byte <= 'Z' && prior >= 'a' && prior <= 'z' &&
-            at + 1U < UI_TEXT_MAX_BYTES - 1U) {
+            at + 1U < PLATFORM_LOCALIZATION_TEXT_CAP - 1U) {
             out[at++] = ' ';
             word_start = true;
         }
@@ -75,7 +103,7 @@ static size_t layer_type_label(base_bytes tag, char out[UI_TEXT_MAX_BYTES])
         word_start = false;
         prior = tag.ptr[index];
     }
-    if (at < tag.len && at + sizeof(ellipsis) <= UI_TEXT_MAX_BYTES) {
+    if (at < tag.len && at + sizeof(ellipsis) <= PLATFORM_LOCALIZATION_TEXT_CAP) {
         memcpy(out + at, ellipsis, sizeof(ellipsis) - 1U);
         at += sizeof(ellipsis) - 1U;
     }
@@ -84,7 +112,7 @@ static size_t layer_type_label(base_bytes tag, char out[UI_TEXT_MAX_BYTES])
 }
 
 static size_t layer_label(viewer_editor *editor, size_t index,
-                          char out[UI_TEXT_MAX_BYTES])
+                          char out[PLATFORM_LOCALIZATION_TEXT_CAP])
 {
     static const char ellipsis[] = "\xe2\x80\xa6";
     base_bytes tag = {0};
@@ -105,14 +133,15 @@ static size_t layer_label(viewer_editor *editor, size_t index,
         size_t id_length = 0U;
         if (document_edit_decode_span(editor->edit, attribute.value, id,
                 sizeof(id), &id_length) && id_length > 0U &&
-            used + 3U < UI_TEXT_MAX_BYTES) {
+            used + 3U < PLATFORM_LOCALIZATION_TEXT_CAP) {
             out[used++] = ' ';
             out[used++] = '#';
-            size_t remaining = UI_TEXT_MAX_BYTES - used - 1U;
+            size_t remaining = PLATFORM_LOCALIZATION_TEXT_CAP - used - 1U;
             size_t take = editor_utf8_prefix(id, id_length, remaining);
             if (take > 0U) memcpy(out + used, id, take);
             used += take;
-            if (take < id_length && used + sizeof(ellipsis) <= UI_TEXT_MAX_BYTES) {
+            if (take < id_length && used + sizeof(ellipsis) <=
+                    PLATFORM_LOCALIZATION_TEXT_CAP) {
                 memcpy(out + used, ellipsis, sizeof(ellipsis) - 1U);
                 used += sizeof(ellipsis) - 1U;
             }
@@ -155,29 +184,31 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
         size_t visible_index = editor->outline_visible_start + row;
         size_t item = 0U;
         if (!editor_outline_visible_model_index(editor, visible_index, &item)) break;
-        char label[UI_TEXT_MAX_BYTES] = {0};
+        char label[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
         size_t length = layer_label(editor, item, label);
         bool children = document_model_first_child(editor_model(editor),
             editor->outline[item], &(document_handle){0});
         bool hidden = !editor_outline_is_visible(editor, editor->outline[item]);
         bool locked = editor_outline_is_locked(editor, editor->outline[item]);
-        char row_state[24] = {0};
+        document_source_span item_span = {0U, 0U};
+        bool canvas_selected = editor->canvas_selection_valid &&
+            document_edit_source_span(editor->edit, editor->outline[item], &item_span) &&
+            editor_canvas_selection_contains(editor, item_span.offset);
+        char row_state[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
         size_t row_state_length = 0U;
-        if (hidden) {
-            memcpy(row_state + row_state_length, "Hidden", 6U);
-            row_state_length += 6U;
-        }
-        if (locked) {
-            if (row_state_length > 0U) {
-                memcpy(row_state + row_state_length, " · ", sizeof(" · ") - 1U);
-                row_state_length += sizeof(" · ") - 1U;
-            }
-            memcpy(row_state + row_state_length, "Locked", 6U);
-            row_state_length += 6U;
-        }
-        row_state[row_state_length] = '\0';
+        if (canvas_selected)
+            (void)append_localized_row_state(row_state, &row_state_length,
+                "Selected on canvas");
+        if (hidden)
+            (void)append_localized_row_state(row_state, &row_state_length, "Hidden");
+        if (locked)
+            (void)append_localized_row_state(row_state, &row_state_length, "Locked");
         uint32_t state = editor->selection_active &&
             item == editor->selected_index ? UI_STATE_CHECKED : 0U;
+        if (canvas_selected) state |= UI_STATE_SELECTED;
+        if (children) state |= UI_STATE_HAS_CHILDREN;
+        if (hidden) state |= UI_STATE_HIDDEN;
+        if (locked) state |= UI_STATE_LOCKED;
         if (children && !editor_outline_is_collapsed(editor, item))
             state |= UI_STATE_EXPANDED;
         okay = editor_add_widget_node(editor, EDITOR_OUTLINE_ROW_BASE + (uint32_t)row,

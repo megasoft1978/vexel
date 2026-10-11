@@ -8,11 +8,17 @@
 #include <stdint.h>
 
 typedef void (*platform_text_ui_preferences_callback)(ui_theme appearance,
-    bool increased_contrast, bool reduced_motion, void *context);
+    bool increased_contrast, bool reduced_motion, uint8_t interface_scale_percent,
+    void *context);
+
+#define PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT 100U
+#define PLATFORM_INTERFACE_TEXT_SCALE_MAX 200U
 
 bool platform_text_ui_app_is_active(void);
 bool platform_text_ui_get_preferences(ui_theme *out_appearance,
     bool *out_increased_contrast, bool *out_reduced_motion);
+uint8_t platform_text_ui_get_interface_scale(void);
+bool platform_text_ui_set_interface_scale(uint8_t scale_percent);
 bool platform_text_ui_watch_preferences(platform_text_ui_preferences_callback callback,
                                         void *context);
 void platform_text_ui_unwatch_preferences(void *context);

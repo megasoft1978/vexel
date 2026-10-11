@@ -2,6 +2,7 @@
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include "platform_dialog.h"
+#include "platform/platform_localization.h"
 
 #include <string.h>
 
@@ -34,13 +35,29 @@ static NSString *dialog_string(const char *bytes, size_t length, size_t limit,
         encoding:NSUTF8StringEncoding];
 }
 
+static NSString *dialog_message_string(const char *bytes, size_t length,
+    size_t limit, bool allow_empty)
+{
+    NSString *source = dialog_string(bytes, length, limit, allow_empty);
+    if (source == nil || length == 0U || length > PLATFORM_LOCALIZATION_TEXT_CAP)
+        return source;
+    char localized[PLATFORM_LOCALIZATION_TEXT_CAP + 1U];
+    size_t localized_length = 0U;
+    if (!platform_localization_copy_default(bytes, length, localized,
+            sizeof(localized), &localized_length)) return source;
+    return [[NSString alloc] initWithBytes:localized length:localized_length
+        encoding:NSUTF8StringEncoding];
+}
+
 static NSString *suggested_svg_name(const char *bytes, size_t length)
 {
     NSString *provided = dialog_string(bytes, length, PLATFORM_DIALOG_TEXT_CAP, true);
     if (provided == nil) return nil;
     NSString *name = provided.lastPathComponent;
     if (name.length == 0U || [name isEqualToString:@"."] ||
-        [name isEqualToString:@".."]) name = @"Untitled.svg";
+        [name isEqualToString:@".."]) name = [NSString stringWithFormat:@"%@.svg",
+            platform_localization_string(@"dialog.filename.untitled_svg", @"Untitled",
+                @"Default unsaved SVG filename.")];
     if (![[name.pathExtension lowercaseString] isEqualToString:@"svg"])
         name = [name stringByAppendingPathExtension:@"svg"];
     return name;
@@ -52,7 +69,9 @@ static NSString *suggested_png_name(const char *bytes, size_t length)
     if (provided == nil) return nil;
     NSString *name = provided.lastPathComponent;
     if (name.length == 0U || [name isEqualToString:@"."] ||
-        [name isEqualToString:@".."]) name = @"Untitled.png";
+        [name isEqualToString:@".."]) name = [NSString stringWithFormat:@"%@.png",
+            platform_localization_string(@"dialog.filename.untitled_png", @"Untitled",
+                @"Default exported PNG filename.")];
     if (![[name.pathExtension lowercaseString] isEqualToString:@"png"])
         name = [name.stringByDeletingPathExtension stringByAppendingPathExtension:@"png"];
     return name;
@@ -210,18 +229,26 @@ platform_dialog_status platform_dialog_save_png(const char *suggested_name_utf8,
         panel.canCreateDirectories = YES;
         panel.nameFieldStringValue = name;
         NSView *accessory = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 280, 68)];
-        NSTextField *scale_label = [NSTextField labelWithString:@"Scale"];
+        NSTextField *scale_label = [NSTextField labelWithString:
+            platform_localization_string(@"dialog.export.scale", @"Scale",
+                @"PNG export scale field label.")];
         scale_label.frame = NSMakeRect(0, 40, 50, 22);
         NSPopUpButton *scale_menu = [[NSPopUpButton alloc]
             initWithFrame:NSMakeRect(54, 36, 96, 28) pullsDown:NO];
         uint8_t scales[3] = {1U, 2U, 4U};
         for (size_t index = 0U; index < 3U; ++index) {
-            if (scales[index] <= maximum_scale)
-                [scale_menu addItemWithTitle:[NSString stringWithFormat:@"%ux", scales[index]]];
+            if (scales[index] <= maximum_scale) {
+                NSString *key = [NSString stringWithFormat:@"dialog.export.scale_%u",
+                    scales[index]];
+                NSString *fallback = [NSString stringWithFormat:@"%u×", scales[index]];
+                [scale_menu addItemWithTitle:platform_localization_string(key, fallback,
+                    @"PNG export scale option.")];
+            }
         }
         [scale_menu selectItemAtIndex:0];
-        NSButton *selection = [NSButton checkboxWithTitle:@"Selection only"
-            target:nil action:nil];
+        NSButton *selection = [NSButton checkboxWithTitle:
+            platform_localization_string(@"dialog.export.selection_only", @"Selection only",
+                @"PNG export selection checkbox.") target:nil action:nil];
         selection.frame = NSMakeRect(0, 4, 180, 24);
         [accessory addSubview:scale_label];
         [accessory addSubview:scale_menu];
@@ -247,9 +274,9 @@ platform_unsaved_choice platform_dialog_unsaved_changes(
 {
     if (![NSThread isMainThread]) return PLATFORM_UNSAVED_ERROR;
     @autoreleasepool {
-        NSString *title = dialog_string(title_utf8, title_length,
+        NSString *title = dialog_message_string(title_utf8, title_length,
             PLATFORM_DIALOG_TEXT_CAP, false);
-        NSString *message = dialog_string(message_utf8, message_length,
+        NSString *message = dialog_message_string(message_utf8, message_length,
             PLATFORM_DIALOG_TEXT_CAP, false);
         if (title == nil || message == nil) return PLATFORM_UNSAVED_ERROR;
 #if defined(PLATFORM_DIALOG_TESTING)
@@ -267,9 +294,12 @@ platform_unsaved_choice platform_dialog_unsaved_changes(
         alert.alertStyle = NSAlertStyleWarning;
         alert.messageText = title;
         alert.informativeText = message;
-        [alert addButtonWithTitle:@"Save"];
-        [alert addButtonWithTitle:@"Don't Save"];
-        [alert addButtonWithTitle:@"Cancel"];
+        [alert addButtonWithTitle:platform_localization_string(@"dialog.unsaved.save",
+            @"Save", @"Save changes dialog action.")];
+        [alert addButtonWithTitle:platform_localization_string(@"dialog.unsaved.dont_save",
+            @"Don't Save", @"Discard changes dialog action.")];
+        [alert addButtonWithTitle:platform_localization_string(@"dialog.cancel",
+            @"Cancel", @"Cancel dialog action.")];
         NSModalResponse response = [alert runModal];
         if (response == NSAlertFirstButtonReturn) return PLATFORM_UNSAVED_SAVE;
         if (response == NSAlertFirstButtonReturn + 1) return PLATFORM_UNSAVED_DONT_SAVE;
@@ -283,9 +313,9 @@ bool platform_dialog_show_error(const char *title_utf8, size_t title_length,
 {
     if (![NSThread isMainThread]) return false;
     @autoreleasepool {
-        NSString *title = dialog_string(title_utf8, title_length,
+        NSString *title = dialog_message_string(title_utf8, title_length,
             PLATFORM_DIALOG_TEXT_CAP, false);
-        NSString *message = dialog_string(message_utf8, message_length,
+        NSString *message = dialog_message_string(message_utf8, message_length,
             PLATFORM_DIALOG_TEXT_CAP, false);
         if (title == nil || message == nil) return false;
 #if defined(PLATFORM_DIALOG_TESTING)
@@ -299,7 +329,8 @@ bool platform_dialog_show_error(const char *title_utf8, size_t title_length,
         alert.alertStyle = NSAlertStyleCritical;
         alert.messageText = title;
         alert.informativeText = message;
-        [alert addButtonWithTitle:@"OK"];
+        [alert addButtonWithTitle:platform_localization_string(@"dialog.ok", @"OK",
+            @"Acknowledge error dialog action.")];
         (void)[alert runModal];
         return true;
     }

@@ -1,5 +1,7 @@
 #include "viewer_editor_internal.h"
 
+#include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define EDITOR_INSPECTOR_SECTION_BASE 22000U
@@ -59,6 +61,47 @@ static size_t editor_attribute_label(base_bytes name, char out[UI_TEXT_MAX_BYTES
 static bool editor_is_identity_attribute(base_bytes name)
 {
     return name.len == 2U && memcmp(name.ptr, "id", 2U) == 0;
+}
+
+static bool editor_is_measurement_attribute(base_bytes name)
+{
+    static const char *const names[] = {"x", "y", "width", "height", "cx", "cy",
+        "r", "rx", "ry", "x1", "y1", "x2", "y2", "stroke-width", "font-size"};
+    for (size_t index = 0U; index < sizeof(names) / sizeof(names[0]); ++index)
+        if (strlen(names[index]) == name.len &&
+            memcmp(name.ptr, names[index], name.len) == 0) return true;
+    return false;
+}
+
+static bool editor_format_measurement(base_bytes name, const char *raw,
+    size_t raw_length, char output[128])
+{
+    if (!editor_is_measurement_attribute(name) || raw == NULL || raw_length == 0U ||
+        raw_length >= 128U) return false;
+    char input[128];
+    memcpy(input, raw, raw_length);
+    input[raw_length] = '\0';
+    char *suffix = NULL;
+    double value = strtod(input, &suffix);
+    if (suffix == input || !isfinite(value)) return false;
+    size_t suffix_length = strlen(suffix);
+    if (suffix_length > 8U) return false;
+    static const char *const units[] = {"", "%", "px", "em", "ex", "ch", "rem",
+        "in", "cm", "mm", "pt", "pc"};
+    bool valid_unit = false;
+    for (size_t index = 0U; index < sizeof(units) / sizeof(units[0]); ++index)
+        if (strcmp(units[index], suffix) == 0) { valid_unit = true; break; }
+    if (!valid_unit) return false;
+    char localized[96] = {0};
+    size_t localized_length = 0U;
+    if (!platform_localization_format_number(value, 6U, localized,
+            sizeof(localized), &localized_length) ||
+        localized_length + suffix_length >= 128U) return false;
+    memcpy(output, localized, localized_length);
+    if (suffix_length > 0U)
+        memcpy(output + localized_length, suffix, suffix_length);
+    output[localized_length + suffix_length] = '\0';
+    return true;
 }
 
 static uint8_t editor_attribute_section(base_bytes name)
@@ -143,6 +186,7 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
             document_edit_attribute attribute;
             base_bytes name;
             char label[UI_TEXT_MAX_BYTES] = {0};
+            char localized_measurement[128] = {0};
             const char *value = NULL;
             size_t value_length = 0U;
             if (!document_edit_attribute_at(editor->edit, editor->selected,
@@ -155,7 +199,14 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
                 editor->field_attribute == attribute_index) {
                 value = editor->field;
                 value_length = editor->field_length;
-            } else value_length = editor_full_attribute_value(editor, attribute.value, &value);
+            } else {
+                value_length = editor_full_attribute_value(editor, attribute.value, &value);
+                if (editor_format_measurement(name, value, value_length,
+                        localized_measurement)) {
+                    value = localized_measurement;
+                    value_length = strlen(localized_measurement);
+                }
+            }
             uint32_t state = attribute_index == editor->selected_attribute ?
                 UI_STATE_CHECKED : 0U;
             if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE &&

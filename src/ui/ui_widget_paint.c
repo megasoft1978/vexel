@@ -18,6 +18,8 @@ static bool canvas_valid(const ui_widget_canvas *canvas)
         canvas->height <= UI_WIDGET_MAX_CANVAS_AXIS && canvas->backing_scale >= 1U &&
         canvas->backing_scale <= 3U && canvas->theme >= UI_THEME_DARK &&
         canvas->theme <= UI_THEME_LIGHT &&
+        canvas->text_scale_percent >= 100U && canvas->text_scale_percent <= 200U &&
+        (canvas->text_scale_percent % 25U) == 0U &&
         (size_t)canvas->width <= SIZE_MAX / 4U &&
         canvas->stride >= (size_t)canvas->width * 4U &&
         (size_t)canvas->height <= SIZE_MAX / canvas->stride &&
@@ -168,7 +170,11 @@ bool ui_widget_paint_text(const ui_widget_canvas *canvas, const char *text, size
     if (text == NULL || length == 0U || canvas->draw_text == NULL) return true;
     ui_rect pixels = {0};
     if (!scaled_rect(canvas, bounds, &pixels)) return false;
-    uint32_t font_px = font_points * canvas->backing_scale;
+    uint64_t scaled_points = ((uint64_t)font_points *
+        canvas->text_scale_percent + 99U) / 100U;
+    uint64_t font_px_wide = scaled_points * canvas->backing_scale;
+    if (font_px_wide > UINT32_MAX) return false;
+    uint32_t font_px = (uint32_t)font_px_wide;
     if (font_px == 0U || font_px > 256U) return false;
     return canvas->draw_text(canvas->text_context, text, length, pixels,
         canvas->theme, font_px, color, family, weight, canvas->rgba,

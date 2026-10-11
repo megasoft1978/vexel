@@ -237,12 +237,15 @@ static uint32_t editor_key_field(viewer_editor *editor, uint16_t key_code,
     if (key_code == 36U || key_code == 76U) return editor_commit_field(editor);
     if (key_code == 48U) {
         uint32_t result = editor_commit_field(editor);
-        if ((result & VIEWER_EDITOR_MUTATED) != 0U) return result;
+        if (editor->field_kind != EDITOR_FIELD_NONE)
+            return result | VIEWER_EDITOR_HANDLED;
+        editor->tree_ready = false;
+        editor_build_tree(editor);
         if (ui_focus_next(&editor->tree, shift)) {
             editor->focus_id = editor->tree.focused_id;
             editor->tree_ready = false;
         }
-        return VIEWER_EDITOR_HANDLED;
+        return result | VIEWER_EDITOR_HANDLED;
     }
     size_t next = editor->cursor;
     if (key_code == 123U) next = (modifiers & PLATFORM_MODIFIER_OPTION) != 0U ?
@@ -288,6 +291,9 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return viewer_editor_cancel_canvas_gesture(editor);
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
+    uint32_t focused_result = editor_handle_focused_key(editor, key_code,
+        modifiers, text, text_len);
+    if (focused_result != 0U) return focused_result;
     if (key_code == 120U) {
         (void)editor_begin_field(editor, EDITOR_FIELD_RENAME, 0U);
         return VIEWER_EDITOR_HANDLED;

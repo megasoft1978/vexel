@@ -146,7 +146,12 @@ enum {
     UI_STATE_EXPANDED = 1U << 3U,
     UI_STATE_HOVERED = 1U << 4U,
     UI_STATE_PRESSED = 1U << 5U,
-    UI_STATE_INVALID = 1U << 6U
+    UI_STATE_INVALID = 1U << 6U,
+    UI_STATE_HAS_CHILDREN = 1U << 7U,
+    UI_STATE_ANNOUNCEMENT = 1U << 8U,
+    UI_STATE_HIDDEN = 1U << 9U,
+    UI_STATE_LOCKED = 1U << 10U,
+    UI_STATE_SELECTED = 1U << 11U
 };
 typedef struct ui_rect { uint32_t x, y, width, height; } ui_rect;
 typedef struct ui_tokens {

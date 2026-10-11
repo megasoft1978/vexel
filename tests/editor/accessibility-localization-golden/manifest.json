@@ -1,0 +1,15 @@
+{
+  "screenshots": {
+    "accessibility-chrome-dark-200.png": {
+      "height": 800,
+      "sha256": "7cd274a715374670cd0e95a269f0b2e11c54df16571ffb3b1b940236b9fbabc8",
+      "width": 1280
+    },
+    "accessibility-chrome-light-200.png": {
+      "height": 800,
+      "sha256": "d89048b8f2597a709f02258f98970d8be545e5a6e14d965e674e604967609246",
+      "width": 1280
+    }
+  },
+  "version": 1
+}

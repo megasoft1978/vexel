@@ -1052,3 +1052,40 @@ if(BUILD_TESTING)
     add_test(NAME shape-render-large-work COMMAND raster_large_render_test)
 endif()
 # end lane: w8-perf
+# lane: w15-a11y
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_keyboard.c
+    src/app/viewer_editor_status.c)
+target_sources(vexel_platform_text_ui PRIVATE
+    src/platform/platform_localization_defaults.c
+    src/platform/macos/platform_localization.m)
+set_source_files_properties(src/platform/macos/platform_localization.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+target_link_libraries(vexel_platform_dialog PUBLIC vexel_platform_text_ui)
+target_link_libraries(vexel_editor_ui PUBLIC vexel_platform_text_ui)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/en.lproj")
+configure_file(resources/en.lproj/Localizable.strings
+    "${CMAKE_BINARY_DIR}/bin/en.lproj/Localizable.strings" COPYONLY)
+
+add_executable(editor_accessibility_localization_test
+    tests/editor/accessibility_localization_test.c)
+target_link_libraries(editor_accessibility_localization_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_accessibility_localization_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_accessibility_localization_test PRIVATE
+    ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(editor_accessibility_localization_test PRIVATE
+        ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_accessibility_localization_test PRIVATE
+        ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-accessibility-localization
+        COMMAND editor_accessibility_localization_test)
+    add_test(NAME editor-accessibility-localization-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/editor/verify_accessibility_localization.py"
+        --binary $<TARGET_FILE:editor_chrome_render>)
+endif()
+# end lane: w15-a11y

@@ -40,6 +40,13 @@ static id accessibility_options_observer;
 static bool appearance_kvo_installed;
 static char appearance_kvo_context;
 
+static bool interface_scale_valid(uint8_t scale_percent)
+{
+    return scale_percent >= PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT &&
+        scale_percent <= PLATFORM_INTERFACE_TEXT_SCALE_MAX &&
+        (scale_percent % 25U) == 0U;
+}
+
 static bool ui_text_bytes_valid(const char *bytes, size_t length)
 {
     return length <= PLATFORM_TEXT_MAX_BYTES && (length == 0U || bytes != NULL);
@@ -162,6 +169,32 @@ bool platform_text_ui_get_preferences(ui_theme *out_appearance,
     return true;
 }
 
+uint8_t platform_text_ui_get_interface_scale(void)
+{
+    if (![NSThread isMainThread]) return PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT;
+    NSInteger stored = [[NSUserDefaults standardUserDefaults]
+        integerForKey:@"VexelInterfaceTextScalePercent"];
+    if (stored < (NSInteger)PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT ||
+        stored > (NSInteger)PLATFORM_INTERFACE_TEXT_SCALE_MAX || stored % 25 != 0)
+        return PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT;
+    return (uint8_t)stored;
+}
+
+bool platform_text_ui_set_interface_scale(uint8_t scale_percent)
+{
+    if (![NSThread isMainThread] || !interface_scale_valid(scale_percent)) return false;
+    if (platform_text_ui_get_interface_scale() == scale_percent) return true;
+    [[NSUserDefaults standardUserDefaults] setInteger:(NSInteger)scale_percent
+        forKey:@"VexelInterfaceTextScalePercent"];
+    ui_theme theme = UI_THEME_DARK;
+    bool increased = false, reduced = false;
+    if (preferences_callback != NULL && platform_text_ui_get_preferences(&theme,
+            &increased, &reduced))
+        preferences_callback(theme, increased, reduced, scale_percent,
+            preferences_context);
+    return true;
+}
+
 @interface VexelAppearanceWatcher : NSView
 @property(nonatomic, assign) platform_text_ui_preferences_callback callback;
 @property(nonatomic, assign) void *callbackContext;
@@ -185,7 +218,8 @@ bool platform_text_ui_get_preferences(ui_theme *out_appearance,
     ui_theme theme = UI_THEME_DARK;
     bool increased = false, reduced = false;
     if (platform_text_ui_get_preferences(&theme, &increased, &reduced))
-        self.callback(theme, increased, reduced, self.callbackContext);
+        self.callback(theme, increased, reduced,
+            platform_text_ui_get_interface_scale(), self.callbackContext);
 }
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey, id> *)change

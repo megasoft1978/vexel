@@ -197,34 +197,46 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
     return spec;
 }
 
+static const char *localized_tooltip(const char *fallback)
+{
+    if (fallback == NULL) return NULL;
+    static _Thread_local char localized[PLATFORM_LOCALIZATION_TEXT_CAP];
+    size_t length = 0U;
+    if (editor_localize_slice(fallback, strlen(fallback), localized,
+            sizeof(localized), &length)) return localized;
+    return fallback;
+}
+
 static const char *tooltip_for_id(uint32_t id)
 {
+    const char *fallback = NULL;
     switch (id) {
-        case EDITOR_BUTTON_SAVE: return "Save  ⌘S";
-        case EDITOR_BUTTON_UNDO: return "Undo  ⌘Z";
-        case EDITOR_BUTTON_REDO: return "Redo  ⇧⌘Z";
-        case EDITOR_BUTTON_DELETE: return "Delete  Delete";
-        case EDITOR_BUTTON_DUPLICATE: return "Duplicate  ⌘D";
-        case EDITOR_BUTTON_GROUP: return "Group  ⌘G";
-        case EDITOR_BUTTON_UNGROUP: return "Ungroup  ⇧⌘G";
-        case EDITOR_BUTTON_SAVE_AS: return "Save as";
-        case EDITOR_BUTTON_TOOL_SELECT: return "Select  V";
-        case EDITOR_BUTTON_TOOL_PAN: return "Pan  H / Space";
-        case EDITOR_BUTTON_TOOL_ZOOM: return "Zoom  Z";
-        case EDITOR_BUTTON_TOGGLE_STRUCTURE: return "Show or hide Layers panel";
-        case EDITOR_BUTTON_TOGGLE_INSPECTOR: return "Show or hide Inspector panel";
-        case EDITOR_BUTTON_HIDE_STRUCTURE: return "Collapse Layers panel";
-        case EDITOR_BUTTON_HIDE_INSPECTOR: return "Collapse Inspector panel";
-        case EDITOR_BUTTON_TOOL_RECTANGLE: return "Rectangle  R";
-        case EDITOR_BUTTON_TOOL_ELLIPSE: return "Ellipse  O";
-        case EDITOR_BUTTON_TOOL_LINE: return "Line  L";
-        case EDITOR_BUTTON_TOOL_PEN: return "Pen  P";
-        case EDITOR_BUTTON_TOOL_NODE: return "Node edit tool  N";
-        case EDITOR_BUTTON_TOOL_TEXT: return "Text  T";
-        case EDITOR_BUTTON_TOOL_POLYGON: return "Polygon  Y";
-        case EDITOR_BUTTON_TOOL_POLYLINE: return "Polyline  U";
-        default: return NULL;
+        case EDITOR_BUTTON_SAVE: fallback = "Save  ⌘S"; break;
+        case EDITOR_BUTTON_UNDO: fallback = "Undo  ⌘Z"; break;
+        case EDITOR_BUTTON_REDO: fallback = "Redo  ⇧⌘Z"; break;
+        case EDITOR_BUTTON_DELETE: fallback = "Delete  Delete"; break;
+        case EDITOR_BUTTON_DUPLICATE: fallback = "Duplicate  ⌘D"; break;
+        case EDITOR_BUTTON_GROUP: fallback = "Group  ⌘G"; break;
+        case EDITOR_BUTTON_UNGROUP: fallback = "Ungroup  ⇧⌘G"; break;
+        case EDITOR_BUTTON_SAVE_AS: fallback = "Save as"; break;
+        case EDITOR_BUTTON_TOOL_SELECT: fallback = "Select  V"; break;
+        case EDITOR_BUTTON_TOOL_PAN: fallback = "Pan  H / Space"; break;
+        case EDITOR_BUTTON_TOOL_ZOOM: fallback = "Zoom  Z"; break;
+        case EDITOR_BUTTON_TOGGLE_STRUCTURE: fallback = "Show or hide Layers panel"; break;
+        case EDITOR_BUTTON_TOGGLE_INSPECTOR: fallback = "Show or hide Inspector panel"; break;
+        case EDITOR_BUTTON_HIDE_STRUCTURE: fallback = "Collapse Layers panel"; break;
+        case EDITOR_BUTTON_HIDE_INSPECTOR: fallback = "Collapse Inspector panel"; break;
+        case EDITOR_BUTTON_TOOL_RECTANGLE: fallback = "Rectangle  R"; break;
+        case EDITOR_BUTTON_TOOL_ELLIPSE: fallback = "Ellipse  O"; break;
+        case EDITOR_BUTTON_TOOL_LINE: fallback = "Line  L"; break;
+        case EDITOR_BUTTON_TOOL_PEN: fallback = "Pen  P"; break;
+        case EDITOR_BUTTON_TOOL_NODE: fallback = "Node edit tool  N"; break;
+        case EDITOR_BUTTON_TOOL_TEXT: fallback = "Text  T"; break;
+        case EDITOR_BUTTON_TOOL_POLYGON: fallback = "Polygon  Y"; break;
+        case EDITOR_BUTTON_TOOL_POLYLINE: fallback = "Polyline  U"; break;
+        default: break;
     }
+    return localized_tooltip(fallback);
 }
 
 static bool tooltip_is_tool_rail_command(uint32_t id)
@@ -251,8 +263,7 @@ static const char *row_action_tooltip(viewer_editor *editor,
 {
     if (node == NULL || node->spec.id < EDITOR_OUTLINE_ROW_BASE ||
         node->spec.id >= EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) return NULL;
-    size_t scale = (size_t)ceil(editor->backing_scale > 0.0 ?
-        editor->backing_scale : 1.0);
+    size_t scale = (size_t)ceil(editor_presentation_scale(editor));
     size_t action_start = node->bounds.x + node->bounds.width -
         (node->bounds.width > EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale ?
             EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale : node->bounds.width);
@@ -263,10 +274,10 @@ static const char *row_action_tooltip(viewer_editor *editor,
             editor->outline_visible_start + row, &item)) return NULL;
     if ((size_t)editor->hovered_x < action_start +
             EDITOR_OUTLINE_VISIBILITY_WIDTH_POINTS * scale)
-        return editor_outline_is_visible(editor, editor->outline[item]) ?
-            "Hide layer" : "Show layer";
-    return editor_outline_is_locked(editor, editor->outline[item]) ?
-        "Unlock layer" : "Lock layer";
+        return localized_tooltip(editor_outline_is_visible(editor, editor->outline[item]) ?
+            "Hide layer" : "Show layer");
+    return localized_tooltip(editor_outline_is_locked(editor, editor->outline[item]) ?
+        "Unlock layer" : "Lock layer");
 }
 
 void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
@@ -281,6 +292,8 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
     if (!ui_widget_canvas_init(&canvas, rgba, capacity, editor->width, editor->height,
             stride, scale, editor->theme, editor->increased_contrast,
             platform_text_ui_draw_widget, NULL)) return;
+    if (!ui_widget_canvas_set_text_scale(&canvas, editor->interface_scale_percent))
+        return;
     ui_widget_draw_spec tooltip_spec = {0};
     bool tooltip_ready = false;
     for (size_t index = 1U; index < editor->tree.count; ++index) {

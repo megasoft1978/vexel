@@ -53,8 +53,8 @@ static bool write_node(FILE *stream, const ui_node *node,
         node->spec.id >= EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE)
         return fputc('}', stream) != EOF;
 
-    double scaled = ceil(editor->backing_scale > 0.0 ? editor->backing_scale : 1.0);
-    if (!isfinite(scaled) || scaled < 1.0 || scaled > 4.0) return false;
+    double scaled = ceil(editor_presentation_scale(editor));
+    if (!isfinite(scaled) || scaled < 1.0 || scaled > 8.0) return false;
     uint32_t scale = (uint32_t)scaled;
     uint32_t action_span = EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale;
     uint32_t visibility_span = EDITOR_OUTLINE_VISIBILITY_WIDTH_POINTS * scale;

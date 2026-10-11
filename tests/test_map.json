@@ -15,6 +15,7 @@
     {"prefix": "src/platform/", "ctest": "platform-|viewer-|index-replay", "python": []},
     {"prefix": "app/", "ctest": "cli-|viewer-frame|render-soak", "python": ["tests.test_viewer_frame"]},
     {"prefix": "packaging/", "ctest": "cli-version", "python": ["tests.e2e.test_packaging"]},
+    {"prefix": "tests/test_w15_accessibility_localization.py", "ctest": "editor-accessibility-localization", "python": ["tests.test_w15_accessibility_localization"]},
     {"prefix": "scripts/", "ctest": "cli-version", "python": ["tests.test_dev", "tests.e2e"]},
     {"prefix": "tests/editor/", "ctest": "editor-", "python": ["tests.editor.test_smoke_supervisor"]},
     {"prefix": "tests/app/", "ctest": "viewer-timeline", "python": []},

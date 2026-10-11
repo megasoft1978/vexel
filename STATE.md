@@ -165,3 +165,18 @@
   tests; `./dev editor-smoke` and `./dev viewer-smoke` pass; the ledger validates
   with 406 entries. This lane has no frozen W12 work order, so no lifecycle event
   was added to `ledger.jsonl`.
+
+- Update 2026-10-11: uncommitted W15 accessibility/localization lane implements
+  r5 WO-6 and WO-9 on `lane/w15-a11y`. The VoiceOver tree covers layer
+  visibility/lock actions and canvas selection, keyboard focus navigates
+  controls while preserving text editing, and persisted interface text scaling
+  reaches 200% independently of canvas zoom. Added a 319-fallback localization
+  registry, English string table, localized fixed dialog/status/menu copy,
+  locale-formatted display values, pseudo-locale coverage, and light/dark 200%
+  headless goldens. `./dev build` and focused W15 checks pass; `./dev t --all`
+  reports 57/59 CTests and 69/69 Python tests, with only `index-replay` and
+  `native-viewer-smoke` blocked by unavailable Metal/LaunchServices host
+  services. Ledger validation reports 406 entries. See
+  `docs/lanes/w15-a11y.md`; no real-window automation was used. The r5 orders
+  are not frozen under `work/`, so no transition was added to `ledger.jsonl`;
+  the lane result is recorded in `LEDGER.md`.

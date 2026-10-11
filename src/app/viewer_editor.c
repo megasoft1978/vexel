@@ -22,6 +22,18 @@ void editor_set_text(char *target, size_t capacity, const char *source)
 {
     if (target == NULL || capacity == 0U) return;
     size_t length = bounded_length(source, capacity - 1U);
+    if (source != NULL && length == capacity - 1U && length > 0U) {
+        size_t start = length;
+        while (start > 0U && (((uint8_t)source[start - 1U] & 0xc0U) == 0x80U))
+            --start;
+        if (start > 0U) {
+            uint8_t lead = (uint8_t)source[start - 1U];
+            size_t expected = lead < 0x80U ? 1U : lead < 0xe0U ? 2U :
+                lead < 0xf0U ? 3U : 4U;
+            size_t available = length - start + 1U;
+            if (available < expected) length = start - 1U;
+        }
+    }
     if (length > 0U) memcpy(target, source, length);
     target[length] = '\0';
 }
@@ -43,25 +55,6 @@ const document_model *editor_model(const viewer_editor *editor)
 {
     return editor == NULL || editor->edit == NULL ? NULL :
         document_edit_model(editor->edit);
-}
-
-void editor_status_error(viewer_editor *editor, document_edit_error error)
-{
-    const char *name = document_edit_error_name(error);
-    int amount = snprintf(editor->status, sizeof(editor->status), "Edit rejected: %s",
-        name == NULL ? "unknown error" : name);
-    if (amount < 0 || (size_t)amount >= sizeof(editor->status))
-        editor_set_text(editor->status, sizeof(editor->status), "Edit rejected");
-    editor->tree_ready = false;
-    editor->redraw_requested = true;
-}
-
-void editor_status_ok(viewer_editor *editor, const char *message)
-{
-    if (message == NULL || message[0] == '\0') message = "Ready";
-    editor_set_text(editor->status, sizeof(editor->status), message);
-    editor->tree_ready = false;
-    editor->redraw_requested = true;
 }
 
 bool editor_begin_field(viewer_editor *editor, editor_field_kind kind,
@@ -328,12 +321,15 @@ bool editor_reorder_to_edge(viewer_editor *editor, bool front)
 }
 
 static void editor_preferences_changed(ui_theme theme, bool increased_contrast,
-                                       bool reduced_motion, void *context)
+                                       bool reduced_motion, uint8_t interface_scale,
+                                       void *context)
 {
     viewer_editor *editor = context;
-    if (editor != NULL)
+    if (editor != NULL) {
         (void)viewer_editor_set_appearance(editor, theme, increased_contrast,
                                            reduced_motion);
+        (void)viewer_editor_set_interface_scale(editor, interface_scale);
+    }
 }
 
 static void editor_view_menu_changed(bool structure_visible,
@@ -348,6 +344,22 @@ static bool editor_accessibility_command(uint32_t command_id, void *context)
 {
     viewer_editor *editor = context;
     if (editor == NULL) return false;
+    uint32_t action = command_id & PLATFORM_ACCESSIBILITY_COMMAND_MASK;
+    if (action != 0U) {
+        uint32_t row_id = command_id & ~PLATFORM_ACCESSIBILITY_COMMAND_MASK;
+        if (row_id < EDITOR_OUTLINE_ROW_BASE ||
+            row_id >= EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) return false;
+        size_t visible = editor->outline_visible_start + row_id - EDITOR_OUTLINE_ROW_BASE;
+        size_t model_index = 0U;
+        if (!editor_outline_visible_model_index(editor, visible, &model_index)) return false;
+        if (action == PLATFORM_ACCESSIBILITY_COMMAND_LAYER_VISIBILITY)
+            return editor_outline_toggle_visibility(editor, model_index);
+        if (action == PLATFORM_ACCESSIBILITY_COMMAND_LAYER_LOCK) {
+            (void)editor_outline_toggle_lock(editor, model_index);
+            return true;
+        }
+        return false;
+    }
     if (command_id == EDITOR_BUTTON_TOOL_SELECT)
         return viewer_editor_set_tool(editor, UI_ICON_SELECT) ||
             editor->active_tool == UI_ICON_SELECT;
@@ -419,6 +431,7 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     }
     editor->edit = created.edit;
     editor->theme = theme;
+    editor->interface_scale_percent = PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT;
     editor->modern_style = modern_style;
     editor->active_tool = UI_ICON_SELECT;
     editor->want_structure = true;
@@ -428,9 +441,10 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->backing_scale = 1.0;
     editor->path_selected_node_segment = SIZE_MAX;
     editor->snap_enabled = true;
-    if (modern_style) {
+    if (modern_style && platform_text_ui_app_is_active()) {
         (void)platform_text_ui_get_preferences(&editor->theme,
             &editor->increased_contrast, &editor->reduced_motion);
+        editor->interface_scale_percent = platform_text_ui_get_interface_scale();
     }
     editor_status_ok(editor, "Ready");
     if (!document_edit_root(editor->edit, &editor->selected)) {
@@ -439,9 +453,9 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     }
     editor_capture_selection_identity(editor);
     editor_refresh_outline(editor);
-    if (modern_style)
+    if (modern_style && platform_text_ui_app_is_active())
         (void)platform_text_ui_watch_preferences(editor_preferences_changed, editor);
-    if (modern_style) {
+    if (modern_style && platform_text_ui_app_is_active()) {
         platform_accessibility_set_view_callback(editor_view_menu_changed, editor,
             editor->want_structure, editor->want_inspector);
         platform_accessibility_set_command_callback(editor_accessibility_command, editor);
@@ -469,6 +483,19 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
     editor->theme = theme;
     editor->increased_contrast = increased_contrast;
     editor->reduced_motion = reduced_motion;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_set_interface_scale(viewer_editor *editor,
+                                       uint8_t scale_percent)
+{
+    if (editor == NULL || scale_percent < PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT ||
+        scale_percent > PLATFORM_INTERFACE_TEXT_SCALE_MAX ||
+        (scale_percent % 25U) != 0U) return false;
+    if (editor->interface_scale_percent == scale_percent) return true;
+    editor->interface_scale_percent = scale_percent;
     editor->tree_ready = false;
     editor->redraw_requested = true;
     return true;
@@ -547,7 +574,8 @@ bool viewer_editor_get_chrome_layout(viewer_editor *editor,
 {
     if (editor == NULL || out_layout == NULL) return false;
     return viewer_chrome_layout_compute(editor->width, editor->height,
-        editor->backing_scale, editor->want_structure, editor->want_inspector,
+        editor_presentation_scale(editor), editor->want_structure,
+        editor->want_inspector,
         (viewer_chrome_layout *)out_layout);
 }
 

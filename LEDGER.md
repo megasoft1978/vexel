@@ -2,6 +2,7 @@
 
 | UTC date | Work order | Status | Base | Commit | Evidence |
 |---|---|---|---|---|---|
+| 2026-10-11 | r5 WO-6 + WO-9 (W15-a11y; source orders not frozen under `work/`) | implemented; uncommitted; full suite limited by host Metal/LaunchServices | `3739b0b2dcce1dae5c4959452565d1a4dfdb2188` | — | Debug build and focused checks pass; `./dev t --all` 57/59 CTests and 69/69 Python tests, with `index-replay` and `native-viewer-smoke` unable to acquire host Metal services. Headless light/dark 200% goldens and 406-entry `ledger.jsonl` validation pass. Details: `docs/lanes/w15-a11y.md`. |
 | 2026-10-08 | WO-BOOT-01 | complete; fresh verifier pass | `b90dfbc44623e9834852b19513116149c83a15f0` | `beb0cdd` | Debug/Release/size/ASan-UBSan build; six ACs pass; `artifacts/WO-BOOT-01/`, `bench/results/WO-BOOT-01.json` |
 | 2026-10-08 | WO-BOOT-02 | complete; fresh verifier pass | `2d8e1ea60356d418d7a69cb6c926eacad7f16d08` | `278c227` | 8 tests pass; atomic append validated; `artifacts/WO-BOOT-02/` |
 | 2026-10-08 | WO-BOOT-03 | complete; fresh verifier pass | `4cc8bfbab2ecdda7c4cd72354f99cb28c08ab477` | `44cce8f` | 14 tests pass; actionlint/policy checks pass; hosted CI pending (no remote); `artifacts/WO-BOOT-03/` |

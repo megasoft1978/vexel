@@ -1,6 +1,7 @@
 #import <Cocoa/Cocoa.h>
 
 #include "platform_accessibility.h"
+#include "platform/platform_localization.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -10,6 +11,7 @@
 @property(nonatomic, copy) NSString *roleName;
 @property(nonatomic, copy) NSString *labelText;
 @property(nonatomic, copy) NSString *valueText;
+@property(nonatomic, copy) NSString *helpText;
 @property(nonatomic, copy) NSString *stableIdentifier;
 @property(nonatomic, assign) NSRect screenFrame;
 @property(nonatomic, strong) id parentElement;
@@ -17,6 +19,10 @@
 @property(nonatomic, assign) BOOL isEnabled;
 @property(nonatomic, assign) BOOL isSelected;
 @property(nonatomic, assign) BOOL isFocused;
+@property(nonatomic, assign) BOOL isCheckable;
+@property(nonatomic, assign) BOOL isChecked;
+@property(nonatomic, assign) BOOL isExpandable;
+@property(nonatomic, assign) BOOL isExpanded;
 @property(nonatomic, assign) uint32_t commandIdentifier;
 @property(nonatomic, assign) platform_accessibility_command_callback commandCallback;
 @property(nonatomic, assign) void *commandContext;
@@ -26,7 +32,12 @@
 @implementation VexelSemanticElement
 - (NSAccessibilityRole)accessibilityRole { return self.roleName; }
 - (NSString *)accessibilityLabel { return self.labelText; }
-- (id)accessibilityValue { return self.valueText.length == 0U ? nil : self.valueText; }
+- (id)accessibilityValue
+{
+    if (self.isCheckable) return @(self.isChecked);
+    return self.valueText.length == 0U ? nil : self.valueText;
+}
+- (NSString *)accessibilityHelp { return self.helpText; }
 - (NSString *)accessibilityIdentifier { return self.stableIdentifier; }
 - (NSRect)accessibilityFrame { return self.screenFrame; }
 - (id)accessibilityParent { return self.parentElement; }
@@ -38,10 +49,13 @@
 - (BOOL)isAccessibilityEnabled { return self.isEnabled; }
 - (BOOL)isAccessibilitySelected { return self.isSelected; }
 - (BOOL)isAccessibilityFocused { return self.isFocused; }
+- (BOOL)isAccessibilityExpanded { return self.isExpandable && self.isExpanded; }
 - (BOOL)isAccessibilityElement { return YES; }
 - (BOOL)accessibilityPerformPress
 {
     if (!self.isEnabled || self.commandIdentifier == 0U) return NO;
+    if (self.isCheckable && self.commandCallback != NULL)
+        return self.commandCallback(self.commandIdentifier, self.commandContext);
     if ([self performPointerPress]) return YES;
     return self.commandCallback != NULL &&
         self.commandCallback(self.commandIdentifier, self.commandContext);
@@ -83,7 +97,7 @@
 static VexelViewMenuActions *view_menu_actions;
 static platform_accessibility_command_callback command_callback;
 static void *command_context;
-static NSString *last_status_announcement;
+static NSMutableDictionary<NSNumber *, NSString *> *last_status_announcements;
 static ui_semantics_snapshot current_semantics_snapshot;
 
 static NSString *string_from_slice(const ui_semantics_snapshot *snapshot,
@@ -124,11 +138,15 @@ static VexelSemanticElement *element_for_id(NSDictionary<NSNumber *,
 static void install_view_menu(void)
 {
     if (NSApp == nil || view_menu_actions == nil) return;
-    NSMenuItem *view = [[NSApp mainMenu] itemWithTitle:@"View"];
+    NSString *view_title = platform_localization_string(@"menu.view.title", @"View",
+        @"View menu title.");
+    NSMenuItem *view = [[NSApp mainMenu] itemWithTitle:view_title];
     NSMenu *menu = view.submenu;
     if (menu == nil) return;
     if (view_menu_actions.structureItem == nil) {
-        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:@"Show Structure"
+        NSString *title = platform_localization_string(@"menu.view.show_layers",
+            @"Show Layers", @"Show Layers panel menu item.");
+        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title
             action:@selector(toggleStructure:) keyEquivalent:@""];
         item.target = view_menu_actions;
         item.tag = 0x565301;
@@ -137,7 +155,9 @@ static void install_view_menu(void)
         view_menu_actions.structureItem = item;
     }
     if (view_menu_actions.inspectorItem == nil) {
-        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:@"Show Inspector"
+        NSString *title = platform_localization_string(@"menu.view.show_inspector",
+            @"Show Inspector", @"Show Inspector panel menu item.");
+        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title
             action:@selector(toggleInspector:) keyEquivalent:@""];
         item.target = view_menu_actions;
         item.tag = 0x565302;
@@ -150,16 +170,73 @@ static void install_view_menu(void)
         NSControlStateValueOn : NSControlStateValueOff;
 }
 
-static void post_status_announcement(NSString *status)
+static void post_status_announcement(uint32_t identifier, NSString *status,
+                                     BOOL isError)
 {
-    if (status.length == 0U || [status isEqualToString:last_status_announcement]) return;
-    if (last_status_announcement != nil) {
+    if (status.length == 0U) return;
+    if (last_status_announcements == nil)
+        last_status_announcements = [NSMutableDictionary dictionary];
+    NSNumber *key = @(identifier);
+    NSString *previous = last_status_announcements[key];
+    if (previous != nil && ![status isEqualToString:previous]) {
         NSDictionary *info = @{NSAccessibilityAnnouncementKey: status,
-            NSAccessibilityPriorityKey: @(NSAccessibilityPriorityMedium)};
+            NSAccessibilityPriorityKey: @(isError ? NSAccessibilityPriorityHigh :
+                NSAccessibilityPriorityMedium)};
         NSAccessibilityPostNotificationWithUserInfo(NSApp,
             NSAccessibilityAnnouncementRequestedNotification, info);
     }
-    last_status_announcement = [status copy];
+    last_status_announcements[key] = [status copy];
+}
+
+static VexelSemanticElement *layer_action_element(const ui_semantics_node *row,
+    NSString *row_label, VexelSemanticElement *parent, BOOL visibility, BOOL active,
+    uint32_t pixel_height, double backing_scale)
+{
+    VexelSemanticElement *element = [[VexelSemanticElement alloc] init];
+    NSString *action = visibility ? platform_localization_string(
+        @"editor.accessibility.layer_visibility", @"Layer visibility",
+        @"VoiceOver layer visibility control label.") :
+        platform_localization_string(@"editor.accessibility.layer_lock", @"Layer lock",
+        @"VoiceOver layer lock control label.");
+    NSString *help;
+    if (visibility) {
+        help = platform_localization_string(active ? @"editor.accessibility.press_hide" :
+            @"editor.accessibility.press_show", active ? @"Press to hide this layer." :
+            @"Press to show this layer.", @"Help for the layer visibility control.");
+    } else {
+        help = platform_localization_string(active ? @"editor.accessibility.press_unlock" :
+            @"editor.accessibility.press_lock", active ? @"Press to unlock this layer." :
+            @"Press to lock this layer.", @"Help for the layer lock control.");
+    }
+    element.roleName = NSAccessibilityCheckBoxRole;
+    element.labelText = [NSString stringWithFormat:@"%@, %@", row_label, action];
+    element.helpText = help;
+    element.stableIdentifier = [NSString stringWithFormat:@"vexel-layer-%u-%@",
+        row->id, visibility ? @"visibility" : @"lock"];
+    element.isEnabled = YES;
+    element.isCheckable = YES;
+    element.isChecked = active;
+    element.isSelected = active;
+    element.parentElement = parent;
+    uint32_t row_id = row->command_id != 0U ? row->command_id : row->id;
+    element.commandIdentifier = row_id | (visibility ?
+        PLATFORM_ACCESSIBILITY_COMMAND_LAYER_VISIBILITY :
+        PLATFORM_ACCESSIBILITY_COMMAND_LAYER_LOCK);
+    element.commandCallback = command_callback;
+    element.commandContext = command_context;
+    double scale = backing_scale;
+    NSRect view_rect = NSMakeRect((double)row->frame.x / scale,
+        ((double)pixel_height - (double)row->frame.y - row->frame.height) / scale,
+        (double)row->frame.width / scale, (double)row->frame.height / scale);
+    NSWindow *window = NSApp.keyWindow;
+    NSRect window_rect = [window.contentView convertRect:view_rect toView:nil];
+    NSRect screen_rect = [window convertRectToScreen:window_rect];
+    CGFloat width = 16.0;
+    CGFloat height = MIN(24.0, NSHeight(screen_rect));
+    CGFloat inset = visibility ? 34.0 : 18.0;
+    element.screenFrame = NSMakeRect(NSMaxX(screen_rect) - inset,
+        NSMidY(screen_rect) - height / 2.0, width, height);
+    return element;
 }
 
 bool platform_accessibility_update(const ui_semantics_snapshot *snapshot,
@@ -175,7 +252,6 @@ bool platform_accessibility_update(const ui_semantics_snapshot *snapshot,
         [NSMutableDictionary dictionaryWithCapacity:snapshot->count];
     NSMutableArray<VexelSemanticElement *> *ordered =
         [NSMutableArray arrayWithCapacity:snapshot->count];
-    NSString *status = @"";
     for (size_t index = 0U; index < snapshot->count; ++index) {
         const ui_semantics_node *source = &snapshot->nodes[index];
         NSString *label = string_from_slice(snapshot, source, false);
@@ -186,8 +262,13 @@ bool platform_accessibility_update(const ui_semantics_snapshot *snapshot,
         element.valueText = value;
         element.stableIdentifier = [NSString stringWithFormat:@"vexel-ui-%u", source->id];
         element.isEnabled = (source->state & UI_STATE_DISABLED) == 0U;
-        element.isSelected = (source->state & UI_STATE_CHECKED) != 0U;
+        element.isSelected = (source->state &
+            (UI_STATE_CHECKED | UI_STATE_SELECTED)) != 0U;
         element.isFocused = (source->state & UI_STATE_FOCUSED) != 0U;
+        element.isCheckable = source->role == UI_ROLE_CHECKBOX;
+        element.isChecked = element.isSelected;
+        element.isExpandable = (source->state & UI_STATE_HAS_CHILDREN) != 0U;
+        element.isExpanded = (source->state & UI_STATE_EXPANDED) != 0U;
         element.commandIdentifier = source->command_id;
         element.commandCallback = command_callback;
         element.commandContext = command_context;
@@ -201,12 +282,24 @@ bool platform_accessibility_update(const ui_semantics_snapshot *snapshot,
         element.screenFrame = [window convertRectToScreen:window_rect];
         elements[@(source->id)] = element;
         [ordered addObject:element];
-        if (source->role == UI_ROLE_STATUS) status = label;
+        if (source->role == UI_ROLE_STATUS) {
+            if ((source->state & UI_STATE_ANNOUNCEMENT) != 0U)
+                post_status_announcement(source->id, label,
+                    (source->state & UI_STATE_INVALID) != 0U);
+            else {
+                if (last_status_announcements == nil)
+                    last_status_announcements = [NSMutableDictionary dictionary];
+                last_status_announcements[@(source->id)] = [label copy];
+            }
+        }
         if (source->role == UI_ROLE_BUTTON &&
-            [label isEqualToString:@"Structure"])
+            [label isEqualToString:platform_localization_string(
+                @"editor.panel.layers", @"Layers panel", @"Layers panel toggle label.")])
             view_menu_actions.structureControl = element;
         if (source->role == UI_ROLE_BUTTON &&
-            [label isEqualToString:@"Inspector"])
+            [label isEqualToString:platform_localization_string(
+                @"editor.panel.inspector", @"Inspector panel",
+                @"Inspector panel toggle label.")])
             view_menu_actions.inspectorControl = element;
     }
     for (size_t index = 0U; index < snapshot->count; ++index) {
@@ -222,12 +315,29 @@ bool platform_accessibility_update(const ui_semantics_snapshot *snapshot,
             parent.childElements = children;
         }
     }
+    for (size_t index = 0U; index < snapshot->count; ++index) {
+        const ui_semantics_node *source = &snapshot->nodes[index];
+        if (source->role != UI_ROLE_ROW || source->id < 1000U || source->id >= 1020U)
+            continue;
+        VexelSemanticElement *row = ordered[index];
+        NSString *row_label = string_from_slice(snapshot, source, false);
+        BOOL visible = (source->state & UI_STATE_HIDDEN) == 0U;
+        BOOL locked = (source->state & UI_STATE_LOCKED) != 0U;
+        VexelSemanticElement *visibility = layer_action_element(source,
+            row_label, row, YES, visible, pixel_height, backing_scale);
+        VexelSemanticElement *lock = layer_action_element(source, row_label,
+            row, NO, locked, pixel_height, backing_scale);
+        NSMutableArray *children = [row.childElements mutableCopy];
+        if (children == nil) children = [NSMutableArray array];
+        [children addObject:visibility];
+        [children addObject:lock];
+        row.childElements = children;
+    }
     VexelSemanticElement *root = ordered[0];
     root.parentElement = content;
     content.accessibilityChildren = @[root];
     content.accessibilityChildrenInNavigationOrder = @[root];
     install_view_menu();
-    post_status_announcement(status);
     NSAccessibilityPostNotification(content, NSAccessibilityLayoutChangedNotification);
     return true;
 }

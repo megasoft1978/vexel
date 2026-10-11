@@ -214,6 +214,10 @@ def build_bundle(root: Path = ROOT, env: dict[str, str] | None = None) -> Path:
     resources_dir.mkdir(parents=True)
     executable = macos_dir / "svgworkbench"
     shutil.copy2(binary, executable)
+    localization_resources = root / "resources" / "en.lproj"
+    if not (localization_resources / "Localizable.strings").is_file():
+        raise PackagingError(f"missing localization table: {localization_resources}")
+    shutil.copytree(localization_resources, resources_dir / "en.lproj")
     (app / "Contents/PkgInfo").write_bytes(b"APPL????")
     (app / "Contents/Info.plist").write_bytes(
         plistlib.dumps(info_plist(version), fmt=plistlib.FMT_XML, sort_keys=True)

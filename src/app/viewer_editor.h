@@ -123,6 +123,8 @@ bool viewer_editor_semantics(viewer_editor *editor,
                              ui_semantics_snapshot *out_snapshot);
 bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
                                   bool increased_contrast, bool reduced_motion);
+bool viewer_editor_set_interface_scale(viewer_editor *editor,
+                                       uint8_t scale_percent);
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
                                           bool structure_visible,
                                           bool inspector_visible);

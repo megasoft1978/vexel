@@ -2,6 +2,7 @@
 #define VEXEL_APP_VIEWER_EDITOR_INTERNAL_H
 
 #include "viewer_editor.h"
+#include "platform/platform_localization.h"
 
 #define EDITOR_OUTLINE_CAP 1024U
 #define EDITOR_OUTLINE_VISIBLE 20U
@@ -9,7 +10,7 @@
 #define EDITOR_ATTRIBUTE_VISIBLE 10U
 #define EDITOR_FIELD_CAP (64U * 1024U)
 #define EDITOR_NAME_CAP 128U
-#define EDITOR_STATUS_CAP 192U
+#define EDITOR_STATUS_CAP PLATFORM_LOCALIZATION_TEXT_CAP
 #define EDITOR_DEPTH_CAP 256U
 #define EDITOR_CANVAS_SELECTION_CAP 128U
 #define EDITOR_VISIBILITY_OVERRIDE_CAP EDITOR_OUTLINE_CAP
@@ -151,6 +152,7 @@ struct viewer_editor {
     bool node_edit_active;
     bool inspector_other_attributes_expanded;
     ui_theme theme;
+    uint8_t interface_scale_percent;
     ui_icon_kind active_tool;
     viewer_editor_draw_tool draw_tool;
     editor_canvas_gesture_kind canvas_gesture;
@@ -207,6 +209,9 @@ struct viewer_editor {
     bool modern_style;
     bool increased_contrast;
     bool reduced_motion;
+    bool status_error;
+    bool status_saved;
+    bool status_ready;
     bool redraw_requested;
     bool canvas_selection_valid;
     bool marquee_preserve_selection;
@@ -344,6 +349,11 @@ uint32_t editor_commit_field(viewer_editor *editor);
 void editor_cancel_field(viewer_editor *editor);
 uint32_t editor_history(viewer_editor *editor, bool redo);
 void editor_build_tree(viewer_editor *editor);
+double editor_presentation_scale(const viewer_editor *editor);
+bool editor_localize_slice(const char *source, size_t length,
+    char *output, size_t capacity, size_t *out_length);
+uint32_t editor_handle_focused_key(viewer_editor *editor, uint16_t key_code,
+    uint32_t modifiers, const char *text, size_t text_length);
 void editor_build_tree_modern(viewer_editor *editor);
 void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
                           size_t capacity, size_t stride);

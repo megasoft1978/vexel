@@ -1,10 +1,18 @@
 #import <Cocoa/Cocoa.h>
 
 #include "platform_window_internal.h"
+#include "platform/platform_localization.h"
+#include "platform/platform_text_ui.h"
 
 #include <string.h>
 
 #define PLATFORM_RECENT_LIMIT 12U
+#define PLATFORM_INTERFACE_TEXT_SIZE_TAG_BASE 0x5653100
+
+static NSString *menu_string(NSString *key, NSString *fallback, NSString *comment)
+{
+    return platform_localization_string(key, fallback, comment);
+}
 
 @interface VexelApplicationDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, assign) platform_window *owner;
@@ -19,6 +27,7 @@
 - (void)actionQuit:(id)sender;
 - (void)actionOpenRecent:(id)sender;
 - (void)actionClearRecent:(id)sender;
+- (void)actionSetInterfaceTextSize:(id)sender;
 @end
 
 static __strong VexelApplicationDelegate *platform_delegate;
@@ -63,13 +72,15 @@ static void platform_refresh_recent_menu(void)
         if (++added >= PLATFORM_RECENT_LIMIT) break;
     }
     if (added == 0U) {
-        NSMenuItem *empty = [[NSMenuItem alloc] initWithTitle:@"No Recent Files"
+        NSMenuItem *empty = [[NSMenuItem alloc] initWithTitle:menu_string(
+            @"menu.file.no_recent", @"No Recent Files", @"Empty Open Recent menu item.")
             action:nil keyEquivalent:@""];
         empty.enabled = NO;
         [platform_recent_menu addItem:empty];
     }
     [platform_recent_menu addItem:[NSMenuItem separatorItem]];
-    NSMenuItem *clear = [[NSMenuItem alloc] initWithTitle:@"Clear Menu"
+    NSMenuItem *clear = [[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.file.clear_recent", @"Clear Menu", @"Clear Open Recent menu item.")
         action:@selector(actionClearRecent:) keyEquivalent:@""];
     clear.target = platform_delegate;
     [platform_recent_menu addItem:clear];
@@ -79,31 +90,40 @@ void platform_macos_menus_init(void)
 {
     platform_delegate = [[VexelApplicationDelegate alloc] init];
     [NSApp setDelegate:platform_delegate];
-    NSMenu *main = [[NSMenu alloc] initWithTitle:@"Main Menu"];
+    NSMenu *main = [[NSMenu alloc] initWithTitle:menu_string(
+        @"menu.main.title", @"Main Menu", @"Application main menu title.")];
 
-    NSMenuItem *application = [[NSMenuItem alloc] initWithTitle:@"vexel" action:nil keyEquivalent:@""];
-    NSMenu *application_menu = [[NSMenu alloc] initWithTitle:@"vexel"];
-    [application_menu addItem:[[NSMenuItem alloc] initWithTitle:@"About vexel"
+    NSString *app_name = menu_string(@"menu.app.title", @"vexel", @"Application name.");
+    NSMenuItem *application = [[NSMenuItem alloc] initWithTitle:app_name action:nil keyEquivalent:@""];
+    NSMenu *application_menu = [[NSMenu alloc] initWithTitle:app_name];
+    [application_menu addItem:[[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.app.about", @"About vexel", @"About application command.")
         action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""]];
     [application_menu addItem:[NSMenuItem separatorItem]];
-    [application_menu addItem:platform_menu_item(@"Quit vexel", @"q",
+    [application_menu addItem:platform_menu_item(menu_string(@"menu.app.quit",
+        @"Quit vexel", @"Quit application command."), @"q",
         @selector(actionQuit:), PLATFORM_ACTION_QUIT)];
     application.submenu = application_menu;
     [main addItem:application];
 
-    NSMenuItem *file = [[NSMenuItem alloc] initWithTitle:@"File" action:nil keyEquivalent:@""];
-    NSMenu *file_menu = [[NSMenu alloc] initWithTitle:@"File"];
-    [file_menu addItem:platform_menu_item(@"Open…", @"o", @selector(actionOpenDocument:), 0)];
-    [file_menu addItem:platform_menu_item(@"Reload", @"r",
+    NSString *file_title = menu_string(@"menu.file.title", @"File", @"File menu title.");
+    NSMenuItem *file = [[NSMenuItem alloc] initWithTitle:file_title action:nil keyEquivalent:@""];
+    NSMenu *file_menu = [[NSMenu alloc] initWithTitle:file_title];
+    [file_menu addItem:platform_menu_item(menu_string(@"menu.file.open", @"Open…",
+        @"Open file command."), @"o", @selector(actionOpenDocument:), 0)];
+    [file_menu addItem:platform_menu_item(menu_string(@"menu.file.reload", @"Reload",
+        @"Reload file command."), @"r",
         @selector(actionReload:), PLATFORM_ACTION_RELOAD)];
     [file_menu addItem:[NSMenuItem separatorItem]];
-    NSMenuItem *recent = [[NSMenuItem alloc] initWithTitle:@"Open Recent"
+    NSMenuItem *recent = [[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.file.open_recent", @"Open Recent", @"Open Recent submenu title.")
         action:nil keyEquivalent:@""];
-    platform_recent_menu = [[NSMenu alloc] initWithTitle:@"Open Recent"];
+    platform_recent_menu = [[NSMenu alloc] initWithTitle:recent.title];
     recent.submenu = platform_recent_menu;
     [file_menu addItem:recent];
     [file_menu addItem:[NSMenuItem separatorItem]];
-    NSMenuItem *close = [[NSMenuItem alloc] initWithTitle:@"Close Window"
+    NSMenuItem *close = [[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.file.close_window", @"Close Window", @"Close window command.")
         action:@selector(performClose:) keyEquivalent:@"w"];
     close.target = nil;
     close.keyEquivalentModifierMask = NSEventModifierFlagCommand;
@@ -111,33 +131,64 @@ void platform_macos_menus_init(void)
     file.submenu = file_menu;
     [main addItem:file];
 
-    NSMenuItem *view = [[NSMenuItem alloc] initWithTitle:@"View" action:nil keyEquivalent:@""];
-    NSMenu *view_menu = [[NSMenu alloc] initWithTitle:@"View"];
-    NSMenuItem *checker = platform_menu_item(@"Checkerboard", @"t",
+    NSString *view_title = menu_string(@"menu.view.title", @"View", @"View menu title.");
+    NSMenuItem *view = [[NSMenuItem alloc] initWithTitle:view_title action:nil keyEquivalent:@""];
+    NSMenu *view_menu = [[NSMenu alloc] initWithTitle:view_title];
+    NSMenuItem *checker = platform_menu_item(menu_string(@"menu.view.checkerboard",
+        @"Checkerboard", @"Checkerboard toggle command."), @"t",
         @selector(actionToggleCheckerboard:), PLATFORM_ACTION_TOGGLE_CHECKERBOARD);
     checker.state = NSControlStateValueOn;
     [view_menu addItem:checker];
-    [view_menu addItem:platform_menu_item(@"Cycle Background", @"b",
+    [view_menu addItem:platform_menu_item(menu_string(@"menu.view.cycle_background",
+        @"Cycle Background", @"Cycle canvas background command."), @"b",
         @selector(actionCycleBackground:), PLATFORM_ACTION_CYCLE_BACKGROUND)];
     [view_menu addItem:[NSMenuItem separatorItem]];
-    [view_menu addItem:platform_menu_item(@"Fit Width", @"",
+    [view_menu addItem:platform_menu_item(menu_string(@"menu.view.fit_width",
+        @"Fit Width", @"Fit width command."), @"",
         @selector(actionFitWidth:), PLATFORM_ACTION_FIT_WIDTH)];
-    [view_menu addItem:platform_menu_item(@"Fit in Window", @"0",
+    [view_menu addItem:platform_menu_item(menu_string(@"menu.view.fit_window",
+        @"Fit in Window", @"Fit canvas in window command."), @"0",
         @selector(actionFitWindow:), PLATFORM_ACTION_FIT_WINDOW)];
-    [view_menu addItem:platform_menu_item(@"Actual Size", @"1",
+    [view_menu addItem:platform_menu_item(menu_string(@"menu.view.actual_size",
+        @"Actual Size", @"Show actual-size canvas command."), @"1",
         @selector(actionActualSize:), PLATFORM_ACTION_ACTUAL_SIZE)];
-    [view_menu addItem:platform_menu_item(@"Pixel Grid", @"g",
+    [view_menu addItem:platform_menu_item(menu_string(@"menu.view.pixel_grid",
+        @"Pixel Grid", @"Pixel grid toggle command."), @"g",
         @selector(actionTogglePixelGrid:), PLATFORM_ACTION_TOGGLE_PIXEL_GRID)];
+    [view_menu addItem:[NSMenuItem separatorItem]];
+    NSMenuItem *text_size = [[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.view.interface_text_size", @"Interface Text Size",
+        @"Interface text size submenu title.") action:nil keyEquivalent:@""];
+    NSMenu *text_size_menu = [[NSMenu alloc] initWithTitle:text_size.title];
+    const uint8_t sizes[] = {100U, 125U, 150U, 175U, 200U};
+    uint8_t current_size = platform_text_ui_get_interface_scale();
+    for (size_t index = 0U; index < sizeof(sizes) / sizeof(sizes[0]); ++index) {
+        uint8_t size = sizes[index];
+        NSString *key = [NSString stringWithFormat:@"menu.view.text_size_%u", size];
+        NSString *fallback = [NSString stringWithFormat:@"%u%%", size];
+        NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:menu_string(key,
+            fallback, @"Interface text size option.")
+            action:@selector(actionSetInterfaceTextSize:) keyEquivalent:@""];
+        item.target = platform_delegate;
+        item.tag = PLATFORM_INTERFACE_TEXT_SIZE_TAG_BASE + size;
+        item.state = current_size == size ? NSControlStateValueOn : NSControlStateValueOff;
+        [text_size_menu addItem:item];
+    }
+    text_size.submenu = text_size_menu;
+    [view_menu addItem:text_size];
     view.submenu = view_menu;
     [main addItem:view];
 
-    NSMenuItem *window_item = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
-    NSMenu *window_menu = [[NSMenu alloc] initWithTitle:@"Window"];
-    NSMenuItem *minimize = [[NSMenuItem alloc] initWithTitle:@"Minimize"
+    NSString *window_title = menu_string(@"menu.window.title", @"Window", @"Window menu title.");
+    NSMenuItem *window_item = [[NSMenuItem alloc] initWithTitle:window_title action:nil keyEquivalent:@""];
+    NSMenu *window_menu = [[NSMenu alloc] initWithTitle:window_title];
+    NSMenuItem *minimize = [[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.window.minimize", @"Minimize", @"Minimize window command.")
         action:@selector(performMiniaturize:) keyEquivalent:@"m"];
     minimize.keyEquivalentModifierMask = NSEventModifierFlagCommand;
     [window_menu addItem:minimize];
-    [window_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Bring All to Front"
+    [window_menu addItem:[[NSMenuItem alloc] initWithTitle:menu_string(
+        @"menu.window.bring_front", @"Bring All to Front", @"Bring all windows to front command.")
         action:@selector(arrangeInFront:) keyEquivalent:@""]];
     window_item.submenu = window_menu;
     [main addItem:window_item];
@@ -179,7 +230,8 @@ bool platform_macos_menus_set_option_state(platform_window *window,
                                            platform_viewer_action action, bool enabled)
 {
     if (window == NULL || platform_delegate.owner != window) return false;
-    NSMenuItem *view = [[NSApp mainMenu] itemWithTitle:@"View"];
+    NSMenuItem *view = [[NSApp mainMenu] itemWithTitle:menu_string(
+        @"menu.view.title", @"View", @"View menu title.")];
     for (NSMenuItem *item in view.submenu.itemArray) {
         if (item.tag == (NSInteger)action) {
             item.state = enabled ? NSControlStateValueOn : NSControlStateValueOff;
@@ -217,6 +269,27 @@ bool platform_macos_menus_set_option_state(platform_window *window,
     (void)sender;
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"VexelRecentFiles"];
     platform_refresh_recent_menu();
+}
+- (void)actionSetInterfaceTextSize:(id)sender
+{
+    if (![sender isKindOfClass:[NSMenuItem class]]) return;
+    NSInteger tag = [(NSMenuItem *)sender tag];
+    NSInteger size = tag - PLATFORM_INTERFACE_TEXT_SIZE_TAG_BASE;
+    if (size < (NSInteger)PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT ||
+        size > (NSInteger)PLATFORM_INTERFACE_TEXT_SCALE_MAX || size % 25 != 0 ||
+        !platform_text_ui_set_interface_scale((uint8_t)size)) return;
+    NSString *title = menu_string(@"menu.view.title", @"View", @"View menu title.");
+    NSMenuItem *view = [[NSApp mainMenu] itemWithTitle:title];
+    for (NSMenuItem *parent in view.submenu.itemArray) {
+        for (NSMenuItem *item in parent.submenu.itemArray) {
+            NSInteger item_size = item.tag - PLATFORM_INTERFACE_TEXT_SIZE_TAG_BASE;
+            if (item.tag >= PLATFORM_INTERFACE_TEXT_SIZE_TAG_BASE &&
+                item_size >= (NSInteger)PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT &&
+                item_size <= (NSInteger)PLATFORM_INTERFACE_TEXT_SCALE_MAX)
+                item.state = item_size == size ? NSControlStateValueOn :
+                    NSControlStateValueOff;
+        }
+    }
 }
 - (void)application:(NSApplication *)application openFiles:(NSArray<NSString *> *)filenames
 {

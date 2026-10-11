@@ -75,66 +75,115 @@ static uint32_t editor_toolbar_action_state(const viewer_editor *editor,
 }
 
 static void editor_canvas_status(viewer_editor *editor,
-                                 char hud[UI_TEXT_MAX_BYTES])
+                                 char hud[PLATFORM_LOCALIZATION_TEXT_CAP])
 {
-    int amount;
+    char zoom[48] = {0}, x[48] = {0}, y[48] = {0};
+    size_t ignored = 0U;
+    (void)platform_localization_format_number(editor->canvas_zoom * 100.0, 0U,
+        zoom, sizeof(zoom), &ignored);
     if (editor->canvas_pointer_valid) {
-        amount = snprintf(hud, UI_TEXT_MAX_BYTES, "%.0f%% · %.1f, %.1f",
-            editor->canvas_zoom * 100.0, editor->canvas_pointer_x,
-            editor->canvas_pointer_y);
+        if (!platform_localization_format_number(editor->canvas_pointer_x, 1U,
+                x, sizeof(x), &ignored))
+            (void)snprintf(x, sizeof(x), "%.1f", editor->canvas_pointer_x);
+        if (!platform_localization_format_number(editor->canvas_pointer_y, 1U,
+                y, sizeof(y), &ignored))
+            (void)snprintf(y, sizeof(y), "%.1f", editor->canvas_pointer_y);
+        (void)snprintf(hud, PLATFORM_LOCALIZATION_TEXT_CAP, "%s%% · %s, %s",
+            zoom[0] == '\0' ? "100" : zoom, x, y);
     } else {
-        amount = snprintf(hud, UI_TEXT_MAX_BYTES, "%.0f%% zoom",
-            editor->canvas_zoom * 100.0);
+        char zoom_label[32] = {0};
+        size_t length = 0U;
+        if (!editor_localize_slice("zoom", 4U, zoom_label,
+                sizeof(zoom_label), &length))
+            editor_set_text(zoom_label, sizeof(zoom_label), "zoom");
+        (void)snprintf(hud, PLATFORM_LOCALIZATION_TEXT_CAP, "%s%% %s",
+            zoom[0] == '\0' ? "100" : zoom, zoom_label);
     }
-    if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
-        (void)snprintf(hud, UI_TEXT_MAX_BYTES, "Canvas ready");
     size_t used = strlen(hud);
     if (editor->canvas_document_width > 0U && editor->canvas_document_height > 0U &&
-        used < UI_TEXT_MAX_BYTES - 1U) {
-        amount = snprintf(hud + used, UI_TEXT_MAX_BYTES - used, " · %u × %u",
-            editor->canvas_document_width, editor->canvas_document_height);
-        if (amount > 0 && (size_t)amount < UI_TEXT_MAX_BYTES - used)
+        used < PLATFORM_LOCALIZATION_TEXT_CAP - 1U) {
+        char width[48] = {0}, height[48] = {0};
+        (void)platform_localization_format_count(editor->canvas_document_width,
+            width, sizeof(width), &ignored);
+        (void)platform_localization_format_count(editor->canvas_document_height,
+            height, sizeof(height), &ignored);
+        int amount = snprintf(hud + used, PLATFORM_LOCALIZATION_TEXT_CAP - used,
+            " · %s × %s", width, height);
+        if (amount > 0 && (size_t)amount < PLATFORM_LOCALIZATION_TEXT_CAP - used)
             used += (size_t)amount;
     }
-    if (used < UI_TEXT_MAX_BYTES - 1U) {
+    if (used < PLATFORM_LOCALIZATION_TEXT_CAP - 1U) {
+        char render_label[32] = {0};
+        size_t render_length = 0U;
+        if (!editor_localize_slice("Rendering", 9U, render_label,
+                sizeof(render_label), &render_length))
+            editor_set_text(render_label, sizeof(render_label), "Rendering");
+        char sharp_label[32] = {0};
+        size_t sharp_length = 0U;
+        if (!editor_localize_slice("Sharp", 5U, sharp_label,
+                sizeof(sharp_label), &sharp_length))
+            editor_set_text(sharp_label, sizeof(sharp_label), "Sharp");
+        (void)render_length;
+        (void)sharp_length;
         if (editor->canvas_tiles_total > 0U) {
-            amount = snprintf(hud + used, UI_TEXT_MAX_BYTES - used,
-                editor->canvas_tiles_active ? " · Rendering %zu/%zu" : " · Sharp %zu/%zu",
-                editor->canvas_tiles_done, editor->canvas_tiles_total);
+            char done[48] = {0}, total[48] = {0};
+            (void)platform_localization_format_count(editor->canvas_tiles_done,
+                done, sizeof(done), &ignored);
+            (void)platform_localization_format_count(editor->canvas_tiles_total,
+                total, sizeof(total), &ignored);
+            (void)snprintf(hud + used, PLATFORM_LOCALIZATION_TEXT_CAP - used,
+                " · %s %s/%s", editor->canvas_tiles_active ? render_label :
+                    sharp_label, done, total);
         } else {
-            amount = snprintf(hud + used, UI_TEXT_MAX_BYTES - used, " · Sharp ready");
+            char ready[32] = {0};
+            size_t ready_length = 0U;
+            if (!editor_localize_slice("ready", 5U, ready, sizeof(ready),
+                    &ready_length)) editor_set_text(ready, sizeof(ready), "ready");
+            (void)ready_length;
+            (void)snprintf(hud + used, PLATFORM_LOCALIZATION_TEXT_CAP - used,
+                " · %s %s", sharp_label, ready);
         }
-        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES - used)
-            (void)snprintf(hud + used, UI_TEXT_MAX_BYTES - used, " · Sharp");
     }
 }
 
 static void editor_status_labels(viewer_editor *editor,
-                                 char primary[UI_TEXT_MAX_BYTES],
-                                 char secondary[UI_TEXT_MAX_BYTES])
+                                 char primary[EDITOR_STATUS_CAP],
+                                 char secondary[PLATFORM_LOCALIZATION_TEXT_CAP])
 {
-    if (strncmp(editor->status, "Edit rejected:", 14U) == 0 ||
-        strncmp(editor->status, "Save failed:", 12U) == 0 ||
-        strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
-        strncmp(editor->status, "Unsupported SVG content", 23U) == 0) {
-        editor_set_text(primary, UI_TEXT_MAX_BYTES, editor->status);
+    if (editor->status_error) {
+        editor_set_text(primary, EDITOR_STATUS_CAP, editor->status);
     } else {
-        const char *state = document_edit_is_dirty(editor->edit) ?
+        const char *state_fallback = document_edit_is_dirty(editor->edit) ?
             "Unsaved changes" : "Saved";
-        int amount = snprintf(primary, UI_TEXT_MAX_BYTES, "%s · %s",
-            editor->status[0] == '\0' || strcmp(editor->status, "Ready") == 0 ?
-                "Ready" : editor->status, state);
-        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
-            editor_set_text(primary, UI_TEXT_MAX_BYTES, state);
+        char state[128] = {0};
+        size_t state_length = 0U;
+        if (!editor_localize_slice(state_fallback, strlen(state_fallback), state,
+                sizeof(state), &state_length))
+            editor_set_text(state, sizeof(state), state_fallback);
+        (void)state_length;
+        const char *message = editor->status[0] == '\0' ? "Ready" : editor->status;
+        int amount = snprintf(primary, EDITOR_STATUS_CAP, "%s · %s", message, state);
+        if (amount < 0 || (size_t)amount >= EDITOR_STATUS_CAP)
+            editor_set_text(primary, EDITOR_STATUS_CAP, state);
     }
-    if (editor->canvas_selection_count > 1U) {
-        int amount = snprintf(secondary, UI_TEXT_MAX_BYTES, "%zu layers selected",
-            editor->canvas_selection_count);
-        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
-            editor_set_text(secondary, UI_TEXT_MAX_BYTES, "Multiple layers selected");
-    } else if (editor->canvas_selection_count == 1U) {
-        editor_set_text(secondary, UI_TEXT_MAX_BYTES, "1 layer selected");
-    } else editor_set_text(secondary, UI_TEXT_MAX_BYTES, "No selection");
+    if (editor->canvas_selection_count == 0U) {
+        size_t length = 0U;
+        if (!editor_localize_slice("No selection", 12U, secondary,
+                PLATFORM_LOCALIZATION_TEXT_CAP, &length))
+            editor_set_text(secondary, PLATFORM_LOCALIZATION_TEXT_CAP, "No selection");
+    } else {
+        size_t length = 0U;
+        if (!platform_localization_format_count_message(
+                editor->canvas_selection_count,
+                "editor.status.one_layer_selected", "1 layer selected",
+                "editor.status.layers_selected", "%@ layers selected",
+                "Canvas selection count status.", secondary,
+                PLATFORM_LOCALIZATION_TEXT_CAP, &length)) {
+            editor_set_text(secondary, PLATFORM_LOCALIZATION_TEXT_CAP,
+                editor->canvas_selection_count == 1U ? "1 layer selected" :
+                    "Multiple layers selected");
+        }
+    }
 }
 
 void editor_build_tree_modern(viewer_editor *editor)
@@ -143,7 +192,8 @@ void editor_build_tree_modern(viewer_editor *editor)
         return;
     viewer_chrome_layout layout;
     if (!viewer_chrome_layout_compute(editor->width, editor->height,
-            editor->backing_scale, editor->want_structure, editor->want_inspector,
+            editor_presentation_scale(editor), editor->want_structure,
+            editor->want_inspector,
             &layout) || !ui_tree_init_accessible(&editor->tree, editor->theme,
                 editor->increased_contrast)) return;
     editor->effective_structure = layout.structure_visible;
@@ -151,7 +201,7 @@ void editor_build_tree_modern(viewer_editor *editor)
     editor->tree.nodes[0].spec.color = 0U;
     editor->tree.nodes[0].spec.label_len = 0U;
     editor->tree.backing_scale = editor->backing_scale;
-    editor->tree.tokens.font_px = (uint32_t)ceil(13.0 * editor->backing_scale);
+    editor->tree.tokens.font_px = (uint32_t)ceil(13.0 * editor_presentation_scale(editor));
     editor->tree.tokens.radius = (uint32_t)ceil(6.0 * editor->backing_scale);
     editor->tree.tokens.spacing = (uint32_t)ceil(8.0 * editor->backing_scale);
     const ui_tokens *tokens = &editor->tree.tokens;
@@ -245,7 +295,7 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U);
     if (!okay) return;
-    char hud[UI_TEXT_MAX_BYTES] = {0};
+    char hud[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
     editor_canvas_status(editor, hud);
     double scale = editor->backing_scale > 0.0 ? editor->backing_scale : 1.0;
     uint32_t canvas_points = (uint32_t)((double)layout.canvas.width / scale);
@@ -270,12 +320,10 @@ void editor_build_tree_modern(viewer_editor *editor)
         if (!okay) return;
     }
     if (layout.inspector_visible && !editor_build_inspector_panel(editor, tokens)) return;
-    char status[UI_TEXT_MAX_BYTES] = {0}, selection[UI_TEXT_MAX_BYTES] = {0};
+    char status[EDITOR_STATUS_CAP] = {0};
+    char selection[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
     editor_status_labels(editor, status, selection);
-    bool status_error = strncmp(editor->status, "Edit rejected:", 14U) == 0 ||
-        strncmp(editor->status, "Save failed:", 12U) == 0 ||
-        strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
-        strncmp(editor->status, "Unsupported SVG content", 23U) == 0;
+    bool status_error = editor->status_error;
     uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);
     uint32_t status_points = (uint32_t)((double)layout.status.width / scale);
     uint32_t status_content_width = status_points > 24U ? status_points - 24U : 0U;
@@ -290,11 +338,13 @@ void editor_build_tree_modern(viewer_editor *editor)
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
             0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
             status, strlen(status), NULL, 0U,
-            status_error ? UI_STATE_INVALID : 0U, 0U) &&
+            (status_error ? UI_STATE_INVALID : 0U) |
+                ((status_error || editor->status_saved) ?
+                    UI_STATE_ANNOUNCEMENT : 0U), 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS + 101U,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, selection_width, 24U, 0U, 0U,
             0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
-            selection, strlen(selection), NULL, 0U, 0U, 0U) &&
+            selection, strlen(selection), NULL, 0U, UI_STATE_ANNOUNCEMENT, 0U) &&
         editor_add_node(editor, EDITOR_NODE_STATUS + 103U,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
             UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);

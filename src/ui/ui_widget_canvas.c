@@ -15,9 +15,19 @@ bool ui_widget_canvas_init(ui_widget_canvas *canvas, uint8_t *rgba,
         (size_t)height > SIZE_MAX / stride || capacity < (size_t)height * stride) return false;
     *canvas = (ui_widget_canvas){.rgba = rgba, .capacity = capacity,
         .stride = stride, .width = width, .height = height,
-        .backing_scale = backing_scale, .theme = theme,
+        .backing_scale = backing_scale, .text_scale_percent = 100U,
+        .theme = theme,
         .increased_contrast = increased_contrast,
         .tokens = ui_theme_tokens(theme, increased_contrast),
         .draw_text = draw_text, .text_context = text_context};
+    return true;
+}
+
+bool ui_widget_canvas_set_text_scale(ui_widget_canvas *canvas,
+    uint8_t scale_percent)
+{
+    if (canvas == NULL || scale_percent < 100U || scale_percent > 200U ||
+        (scale_percent % 25U) != 0U) return false;
+    canvas->text_scale_percent = scale_percent;
     return true;
 }

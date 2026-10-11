@@ -5,8 +5,18 @@
 #include "platform/macos/platform_accessibility.h"
 #include "platform/platform_text_ui.h"
 
+#include <limits.h>
 #include <math.h>
 #include <string.h>
+
+static bool scale_metric(uint32_t value, double scale, uint32_t *out_value)
+{
+    if (out_value == NULL || !isfinite(scale) || scale <= 0.0) return false;
+    double scaled = ceil((double)value * scale);
+    if (!isfinite(scaled) || scaled < 0.0 || scaled > (double)UINT32_MAX) return false;
+    *out_value = (uint32_t)scaled;
+    return true;
+}
 
 size_t editor_copy_slice(char *destination, size_t capacity, base_bytes bytes)
 {
@@ -77,11 +87,25 @@ bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                             const char *value, size_t value_len, uint32_t state,
                             uint32_t command_id)
 {
-    double scale = editor->backing_scale;
-    width = width == 0U ? 0U : (uint32_t)ceil((double)width * scale);
-    height = height == 0U ? 0U : (uint32_t)ceil((double)height * scale);
-    padding = padding == 0U ? 0U : (uint32_t)ceil((double)padding * scale);
-    gap = gap == 0U ? 0U : (uint32_t)ceil((double)gap * scale);
+    double scale = editor_presentation_scale(editor);
+    uint32_t scaled_width = 0U, scaled_height = 0U;
+    uint32_t scaled_padding = 0U, scaled_gap = 0U;
+    if (!scale_metric(width, scale, &scaled_width) ||
+        !scale_metric(height, scale, &scaled_height) ||
+        !scale_metric(padding, scale, &scaled_padding) ||
+        !scale_metric(gap, scale, &scaled_gap)) return false;
+    width = scaled_width;
+    height = scaled_height;
+    padding = scaled_padding;
+    gap = scaled_gap;
+    char localized_label[PLATFORM_LOCALIZATION_TEXT_CAP];
+    size_t localized_length = 0U;
+    if (label != NULL && label_len > 0U &&
+        editor_localize_slice(label, label_len, localized_label,
+            sizeof(localized_label), &localized_length)) {
+        label = localized_label;
+        label_len = localized_length;
+    }
     ui_widget_spec spec = {.id = id, .parent_id = parent, .axis = axis,
         .preferred_width = width, .preferred_height = height,
         .padding = padding, .gap = gap, .color = color,
@@ -539,8 +563,7 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
         if (editor->modern_style &&
             !editor_outline_visible_model_index(editor,
                 editor->outline_visible_start + row, &index)) return prior | VIEWER_EDITOR_HANDLED;
-        size_t scale = (size_t)ceil(editor->backing_scale > 0.0 ?
-            editor->backing_scale : 1.0);
+        size_t scale = (size_t)ceil(editor_presentation_scale(editor));
         size_t action_start = hit->bounds.x + hit->bounds.width -
             (hit->bounds.width > EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale ?
                 EDITOR_OUTLINE_ACTION_WIDTH_POINTS * scale : hit->bounds.width);
