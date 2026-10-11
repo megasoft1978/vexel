@@ -1,33 +1,36 @@
 # Bounded SVG paint CSS
 
-`css.c` implements the paint-only CSS subset used by `svg_shape_decode`. It
-borrows the original SVG byte slice and XML token vector. Selectors, property
-names, declarations, and values remain byte spans into that input; the module
-never rewrites or owns source text. The stylesheet object owns only bounded
-rule/declaration metadata and must be destroyed after decoding.
+`css.c` implements the source-preserving CSS subset used by `svg_shape_decode`.
+It borrows immutable SVG bytes and XML tokens. Selector, property, declaration,
+and value spans continue to point into the original source; only bounded
+rule/declaration metadata is owned by the stylesheet.
 
-The module recognizes fill, fill-rule, stroke, stroke-width, stroke-linecap,
-stroke-linejoin, stroke-miterlimit, stroke-dasharray, stroke-dashoffset,
-clip-path, stop-color, and stop-opacity.
-Selectors are one optional element, one optional ID, and up to sixteen class
-terms, with comma lists. It does not evaluate combinators, pseudo selectors,
-attribute selectors, namespaces, at-rule bodies, imports, or resources. Rules,
-declarations, stylesheet bytes, and total selector-match work have fixed caps
-in `css.h`; rule storage grows only as needed, and allocation products are
-checked before allocation. Matching class values are split on CSS
-whitespace without allocating class strings; names/keywords and `!important`
-are ASCII case-insensitive as CSS requires.
+The cascade recognizes 38 properties: fill, fill-rule, stroke, stroke-width,
+stroke-linecap, stroke-linejoin, stroke-miterlimit, stroke-dasharray,
+stroke-dashoffset, clip-path, stop-color, stop-opacity, fill-opacity,
+stroke-opacity, opacity, visibility, display, color, font-family, font-size,
+font-weight, font-style, text-anchor, letter-spacing, word-spacing, filter,
+mask, mix-blend-mode, isolation, vector-effect, shape-rendering, paint-order,
+marker and its start/mid/end longhands, mask-type, and
+color-interpolation-filters. Text properties inherit through groups and
+nested text spans. Presentation
+attributes, supported stylesheet declarations, and inline style participate in
+the cascade by importance, specificity, and source order. Fill/stroke values
+and color inherit; `clip-path` is evaluated at its declaring element.
 
-The cascade applies inherited computed paint, presentation attributes, matched
-rules, and inline declarations by importance, specificity, and source order.
-The shape decoder validates the winning property and reports its original
-value byte offset. `clip-path` is reset at each element and handled by
-traversal at the element that declares it. Non-paint declarations and
-unsupported selectors remain in the unchanged SVG source and have no rendering
-effect. A stop matched by a supported selector with an unsupported declaration
-returns an explicit unsupported diagnostic instead of silently using default
-stop values.
+Selectors support comma lists and up to four descendant terms. Each term may
+have an element, one ID, and up to sixteen classes. Class values split on CSS
+whitespace without allocating strings. Child/sibling combinators, pseudo and
+attribute selectors, namespace selectors, at-rules, imports, and external
+resources are not evaluated. Unsupported matched declarations produce a stable
+diagnostic instead of silently changing the cascade.
 
-This is original project code. CSS cascade and SVG styling behavior follow
-CSS Cascade Level 3 and SVG 2 Styling (consulted 2026-10-09); no renderer or
-editor implementation was consulted or copied.
+The stylesheet is capped at 1 MiB, 4,096 rules, 16,384 declarations, and
+4,194,304 selector-match visits. Color parsing lives in `color.c` and accepts
+148 CSS named colors, `rgb()`/`rgba()`/`hsl()`/`hsla()`, 3/4/6/8 digit hex,
+`transparent`, and context-resolved `currentColor`. `color.c` does not fetch or
+own source text; the caller supplies the span and receives RGBA bytes.
+
+CSS cascade and SVG styling behavior follow CSS Cascade Level 3 and SVG 2
+Styling (consulted 2026-10-09). The implementation is original project code;
+no renderer or editor implementation was consulted or copied.

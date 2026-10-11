@@ -1,0 +1,1 @@
+{"verdict":"pass","findings":[],"summary":"The smooth-curve implementation, focused equivalence and diagnostic tests, renderer comparisons, million-case fuzz evidence, corpus inventory, benchmark reports, and direct-host acceptance checks support a pass for the reviewed criteria. The earlier revision-1 preflight block and pending ledger acceptance were treated as expected."}

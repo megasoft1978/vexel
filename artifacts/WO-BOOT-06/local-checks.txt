@@ -1,0 +1,25 @@
+$ ./dev verify
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-06/build/mac-debug
+ninja: no work to do.
+Ran 123 tests in 5.758s
+
+OK
+Ran 123 tests: 123 passed, 0 failed, 0 errors, 0 skipped; 5.822s
+valid ledger: 92 entries
+[exit 0]
+
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 92 entries
+[exit 0]
+
+$ python3 scripts/wo_validate.py WO-BOOT-06 --ready
+valid WO-BOOT-06 revision 2 sha256 d5e9fe8139e732af4e77de5aec8831dd93e8a410a910665d2ab9c566cd05a570
+[exit 0]

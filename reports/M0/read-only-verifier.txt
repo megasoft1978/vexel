@@ -1,0 +1,6 @@
+Fresh isolated Codex read-only review: PASS, no findings.
+It rechecked all 12 source hashes, fixture/stress/trial/availability counts,
+benchmark claims, the five-item owner request, and the open owner decision.
+Verdict: reports/M0/verifier-verdict.json
+The standard runner's earlier false scope finding and task-start diff rationale
+are recorded in reports/M0/runner-review-note.md.

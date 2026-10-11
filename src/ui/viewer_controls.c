@@ -49,6 +49,55 @@ bool ui_viewer_navigation_zoom(ui_viewer_navigation *state, double factor, doubl
     return true;
 }
 
+bool ui_viewer_navigation_zoom_to(ui_viewer_navigation *state, double target_scale,
+                                  double anchor_x, double anchor_y)
+{
+    if (!finite_point(state, anchor_x, anchor_y) || !finite_positive(target_scale))
+        return false;
+    double scale = clamp_scale(target_scale);
+    double world_x = (anchor_x - state->pan_x) / state->scale;
+    double world_y = (anchor_y - state->pan_y) / state->scale;
+    double pan_x = anchor_x - world_x * scale;
+    double pan_y = anchor_y - world_y * scale;
+    if (!isfinite(scale) || !isfinite(pan_x) || !isfinite(pan_y)) return false;
+    state->scale = scale;
+    state->pan_x = pan_x;
+    state->pan_y = pan_y;
+    state->dragging = false;
+    return true;
+}
+
+bool ui_viewer_navigation_zoom_to_bounds(ui_viewer_navigation *state,
+    double x, double y, double width, double height, double padding)
+{
+    if (state == NULL || !finite_point(state, state->pan_x, state->pan_y) ||
+        !finite_positive(state->viewport_width) ||
+        !finite_positive(state->viewport_height) || !isfinite(x) || !isfinite(y) ||
+        !isfinite(width) || !isfinite(height) || width < 0.0 || height < 0.0 ||
+        !isfinite(padding) || padding < 0.0) return false;
+    double usable_width = state->viewport_width - 2.0 * padding;
+    double usable_height = state->viewport_height - 2.0 * padding;
+    if (!(usable_width > 0.0)) usable_width = state->viewport_width * 0.8;
+    if (!(usable_height > 0.0)) usable_height = state->viewport_height * 0.8;
+    double content_width = width > 1.0 ? width : 1.0;
+    double content_height = height > 1.0 ? height : 1.0;
+    double target_scale = fmin(usable_width / content_width,
+        usable_height / content_height);
+    double center_x = x + width * 0.5;
+    double center_y = y + height * 0.5;
+    if (!finite_positive(target_scale) || !isfinite(center_x) ||
+        !isfinite(center_y)) return false;
+    double scale = clamp_scale(target_scale);
+    double pan_x = state->viewport_width * 0.5 - center_x * scale;
+    double pan_y = state->viewport_height * 0.5 - center_y * scale;
+    if (!isfinite(pan_x) || !isfinite(pan_y)) return false;
+    state->scale = scale;
+    state->pan_x = pan_x;
+    state->pan_y = pan_y;
+    state->dragging = false;
+    return true;
+}
+
 bool ui_viewer_navigation_wheel(ui_viewer_navigation *state, double delta_y, double x, double y)
 {
     if (!isfinite(delta_y) || fabs(delta_y) > 10000.0) return false;
@@ -161,6 +210,37 @@ bool ui_viewer_navigation_fit(ui_viewer_navigation *state)
     double py = (state->viewport_height - state->document_height * scale) * 0.5;
     if (!isfinite(px) || !isfinite(py)) return false;
     state->scale = scale; state->pan_x = px; state->pan_y = py; state->dragging = false;
+    return true;
+}
+
+bool ui_viewer_navigation_fit_width(ui_viewer_navigation *state)
+{
+    if (state == NULL || !finite_positive(state->viewport_width) ||
+        !finite_positive(state->viewport_height) || !finite_positive(state->document_width) ||
+        !finite_positive(state->document_height)) return false;
+    double scale = clamp_scale(state->viewport_width / state->document_width);
+    double px = (state->viewport_width - state->document_width * scale) * 0.5;
+    double py = (state->viewport_height - state->document_height * scale) * 0.5;
+    if (!isfinite(scale) || !isfinite(px) || !isfinite(py)) return false;
+    state->scale = scale;
+    state->pan_x = px;
+    state->pan_y = py;
+    state->dragging = false;
+    return true;
+}
+
+bool ui_viewer_navigation_actual_size(ui_viewer_navigation *state)
+{
+    if (state == NULL || !finite_positive(state->viewport_width) ||
+        !finite_positive(state->viewport_height) || !finite_positive(state->document_width) ||
+        !finite_positive(state->document_height)) return false;
+    double px = (state->viewport_width - state->document_width) * 0.5;
+    double py = (state->viewport_height - state->document_height) * 0.5;
+    if (!isfinite(px) || !isfinite(py)) return false;
+    state->scale = 1.0;
+    state->pan_x = px;
+    state->pan_y = py;
+    state->dragging = false;
     return true;
 }
 

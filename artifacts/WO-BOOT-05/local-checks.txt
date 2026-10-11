@@ -1,0 +1,15 @@
+WO-BOOT-05 revision 3 local checks
+$ python3 scripts/ledger.py validate ledger.jsonl
+exit=0
+valid ledger: 51 entries
+
+$ git diff --check 0bc1cfdc9f990878f087dfff936d12fb175f4678 HEAD
+exit=0
+
+
+$ changed-path validation
+exit=0
+start=1589f8c38acd3e80df0e381c3f942399636d23f9
+head=471584674331e1009c87c066cf93e27649d25d30
+changed_paths=45
+root_path_guard=pass

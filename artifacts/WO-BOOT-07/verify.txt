@@ -1,0 +1,75 @@
+$ python3 -m unittest tests.test_ui_driver
+......
+----------------------------------------------------------------------
+Ran 6 tests in 1.463s
+
+OK
+[exit 0]
+$ python3 -m unittest tests.test_ui_driver.DriverTests.test_all_commands_emit_placeholder_artifacts tests.test_ui_driver.DriverTests.test_identical_replay_is_byte_identical
+..
+----------------------------------------------------------------------
+Ran 2 tests in 0.166s
+
+OK
+[exit 0]
+$ python3 -m unittest tests.test_ui_driver.DriverTests.test_invalid_cli_and_jsonl_are_rejected tests.test_ui_driver.DriverTests.test_path_escape_symlink_and_existing_output_are_rejected tests.test_ui_driver.DriverTests.test_bounds_and_command_order_are_enforced
+...
+----------------------------------------------------------------------
+Ran 3 tests in 1.087s
+
+OK
+[exit 0]
+$ python3 -c import shutil; from pathlib import Path; shutil.rmtree(Path('.cache/WO-BOOT-07/smoke'), ignore_errors=True)
+[exit 0]
+$ python3 app/test_driver/driver.py --script tests/ui/mixed-commands.jsonl --output-dir .cache/WO-BOOT-07/smoke --seed 17
+{"command":"open","index":0,"outputs":[],"virtual_time_ns":0}
+{"command":"resize","index":1,"outputs":[],"virtual_time_ns":0}
+{"command":"pointer","index":2,"outputs":[],"virtual_time_ns":0}
+{"command":"key","index":3,"outputs":[],"virtual_time_ns":0}
+{"command":"text_commit","index":4,"outputs":[],"virtual_time_ns":0}
+{"command":"frame","index":5,"outputs":[],"virtual_time_ns":16666667}
+{"command":"progress","index":6,"outputs":[],"virtual_time_ns":16666667}
+{"command":"accessibility","index":7,"outputs":["accessibility-0000.json"],"virtual_time_ns":16666667}
+{"command":"screenshot","index":8,"outputs":["frame-0000.png"],"virtual_time_ns":16666667}
+{"command":"save","index":9,"outputs":["document.json"],"virtual_time_ns":16666667}
+{"command":"key","index":10,"outputs":[],"virtual_time_ns":16666667}
+{"command":"pointer","index":11,"outputs":[],"virtual_time_ns":16666667}
+{"command":"pointer","index":12,"outputs":[],"virtual_time_ns":16666667}
+{"command":"screenshot","index":13,"outputs":["frame-0001.png"],"virtual_time_ns":16666667}
+{"command":"quit","index":14,"outputs":[],"virtual_time_ns":16666667}
+[exit 0]
+$ python3 tests/ui/verify_smoke.py .cache/WO-BOOT-07/smoke
+valid smoke artifacts: 2 PNG, 1 accessibility tree, 1 saved document
+[exit 0]
+$ python3 -m unittest tests.test_ui_driver.DriverTests.test_smoke_output_contract
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.034s
+
+OK
+[exit 0]
+$ ./dev verify
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-07/build/mac-debug
+ninja: no work to do.
+Ran 129 tests in 8.069s
+
+OK
+Ran 129 tests: 129 passed, 0 failed, 0 errors, 0 skipped; 8.137s
+valid ledger: 107 entries
+[exit 0]
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 107 entries
+[exit 0]
+$ python3 scripts/wo_validate.py WO-BOOT-07 --ready
+valid WO-BOOT-07 revision 3 sha256 4bddf187f5686f67c6d4c34137b8d40525348658038a36edf4494291fe22efb0
+[exit 0]
+$ git diff --check
+[exit 0]

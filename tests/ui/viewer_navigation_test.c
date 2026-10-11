@@ -60,6 +60,21 @@ int main(void)
     if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_FIT) ||
         !close_to(nav.scale, 2.5) || !close_to(nav.pan_x, 0.0) ||
         !close_to(nav.pan_y, 150.0)) return 22;
+    double zoom_anchor_x = 321.0, zoom_anchor_y = 234.0;
+    double anchor_world_x = (zoom_anchor_x - nav.pan_x) / nav.scale;
+    double anchor_world_y = (zoom_anchor_y - nav.pan_y) / nav.scale;
+    if (!ui_viewer_navigation_zoom_to(&nav, 0.75, zoom_anchor_x, zoom_anchor_y) ||
+        !close_to(nav.scale, 0.75) ||
+        !ui_viewer_navigation_project(&nav, anchor_world_x, anchor_world_y, &sx, &sy) ||
+        !close_to(sx, zoom_anchor_x) || !close_to(sy, zoom_anchor_y) ||
+        ui_viewer_navigation_zoom_to(&nav, NAN, zoom_anchor_x, zoom_anchor_y)) return 23;
+    if (!ui_viewer_navigation_zoom_to_bounds(&nav, 80.0, 40.0, 200.0,
+            100.0, 32.0) || !close_to(nav.scale, 4.68) ||
+        !ui_viewer_navigation_project(&nav, 180.0, 90.0, &sx, &sy) ||
+        !close_to(sx, nav.viewport_width * 0.5) ||
+        !close_to(sy, nav.viewport_height * 0.5) ||
+        ui_viewer_navigation_zoom_to_bounds(&nav, 0.0, 0.0, -1.0, 1.0, 0.0) ||
+        ui_viewer_navigation_zoom_to_bounds(&nav, NAN, 0.0, 1.0, 1.0, 0.0)) return 24;
     nav.pan_x = DBL_MAX;
     if (!ui_viewer_navigation_key(&nav, UI_VIEWER_KEY_LEFT) || !isfinite(nav.pan_x) ||
         nav.pan_x != DBL_MAX || !isfinite(nav.pan_y) || !ui_viewer_navigation_fit(&nav)) return 19;

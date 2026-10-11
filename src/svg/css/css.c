@@ -4,10 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct selector {
+typedef struct selector_term {
     svg_xml_span element, id, classes[SVG_CSS_MAX_CLASSES];
     uint8_t class_count;
     bool has_element, has_id;
+    uint32_t specificity;
+} selector_term;
+typedef struct selector {
+    selector_term terms[SVG_CSS_MAX_SELECTOR_TERMS];
+    uint8_t term_count;
     uint32_t specificity;
 } selector;
 typedef struct rule_decl {
@@ -24,7 +29,7 @@ typedef struct rule {
 } rule;
 struct svg_css_sheet {
     rule *rules;
-    size_t count, capacity, bytes, declarations, match_tests;
+    size_t count, capacity, bytes, declarations, match_tests, selector_visits;
     bool hit_limit;
     base_bytes source;
 };
@@ -148,7 +153,33 @@ static int property(base_bytes s, svg_xml_span n) {
                                                         "stroke-dashoffset",
                                                         "clip-path",
                                                         "stop-color",
-                                                        "stop-opacity"};
+                                                        "stop-opacity",
+                                                        "fill-opacity",
+                                                        "stroke-opacity",
+                                                        "opacity",
+                                                        "visibility",
+                                                        "display",
+                                                        "color",
+                                                        "font-family",
+                                                        "font-size",
+                                                        "font-weight",
+                                                        "font-style",
+                                                        "text-anchor",
+                                                        "letter-spacing",
+                                                        "word-spacing",
+                                                        "filter",
+                                                        "mask",
+                                                        "mix-blend-mode",
+                                                        "isolation",
+                                                        "vector-effect",
+                                                        "shape-rendering",
+                                                        "paint-order",
+                                                        "marker",
+                                                        "marker-start",
+                                                        "marker-mid",
+                                                        "marker-end",
+                                                        "mask-type",
+                                                        "color-interpolation-filters"};
     for (int i = 0; i < (int)SVG_CSS_PROPERTY_COUNT; i++)
         if (eq_ci(s, n, names[i]))
             return i;
@@ -160,36 +191,44 @@ static bool parse_selector(base_bytes s, size_t a, size_t z, selector *out) {
         z--;
     size_t i = a;
     skip_ws(s, &i, z);
-    size_t start = i;
-    if (i < z && s.ptr[i] != '#' && s.ptr[i] != '.') {
-        while (i < z && ident(s.ptr[i]))
-            i++;
-        if (i == start)
-            return false;
-        q.element = (svg_xml_span){start, i - start};
-        q.has_element = true;
-        q.specificity++;
-    }
     while (i < z) {
-        uint8_t marker = s.ptr[i++];
-        start = i;
-        while (i < z && ident(s.ptr[i]))
-            i++;
-        if (i == start)
+        if (q.term_count == SVG_CSS_MAX_SELECTOR_TERMS) return false;
+        selector_term *term = &q.terms[q.term_count];
+        size_t start = i;
+        if (i < z && s.ptr[i] != '#' && s.ptr[i] != '.') {
+            while (i < z && ident(s.ptr[i])) i++;
+            if (i == start) return false;
+            term->element = (svg_xml_span){start, i - start};
+            term->has_element = true;
+            term->specificity++;
+        }
+        while (i < z && (s.ptr[i] == '#' || s.ptr[i] == '.')) {
+            uint8_t marker = s.ptr[i++];
+            start = i;
+            while (i < z && ident(s.ptr[i])) i++;
+            if (i == start) return false;
+            svg_xml_span value = {start, i - start};
+            if (marker == '#' && !term->has_id) {
+                term->id = value;
+                term->has_id = true;
+                term->specificity += 10000U;
+            } else if (marker == '.' && term->class_count < SVG_CSS_MAX_CLASSES) {
+                term->classes[term->class_count++] = value;
+                term->specificity += 100U;
+            } else return false;
+        }
+        if (!term->has_element && !term->has_id && term->class_count == 0U)
             return false;
-        svg_xml_span x = {start, i - start};
-        if (marker == '#' && !q.has_id) {
-            q.id = x;
-            q.has_id = true;
-            q.specificity += 10000U;
-        } else if (marker == '.' && q.class_count < SVG_CSS_MAX_CLASSES) {
-            q.classes[q.class_count++] = x;
-            q.specificity += 100U;
-        } else
+        q.specificity += term->specificity;
+        q.term_count++;
+        size_t before = i;
+        skip_ws(s, &i, z);
+        if (i == z) break;
+        if (i == before || s.ptr[i] == '>' || s.ptr[i] == '+' || s.ptr[i] == '~')
             return false;
     }
     *out = q;
-    return q.has_element || q.has_id || q.class_count != 0U;
+    return q.term_count != 0U;
 }
 static bool parse_decls(svg_css_sheet *sh, size_t a, size_t z,
                         rule_decl **out, size_t *count,
@@ -452,7 +491,8 @@ static bool has_class(base_bytes s, svg_xml_span value, svg_xml_span wanted) {
     }
     return false;
 }
-static bool matches(base_bytes s, const selector *q, const svg_xml_token *t, size_t n, size_t e) {
+static bool matches_term(base_bytes s, const selector_term *q,
+                         const svg_xml_token *t, size_t n, size_t e) {
     if (q->has_element &&
         (q->element.length != t[e].local_name.length ||
          memcmp(s.ptr + q->element.offset, s.ptr + t[e].local_name.offset, q->element.length)))
@@ -465,6 +505,34 @@ static bool matches(base_bytes s, const selector *q, const svg_xml_token *t, siz
     for (size_t k = 0; k < q->class_count; k++)
         if (!hc || !has_class(s, cl, q->classes[k]))
             return false;
+    return true;
+}
+static bool matches(base_bytes s, const selector *q, const svg_xml_token *t,
+                    size_t n, size_t e, svg_css_sheet *sheet) {
+    if (q->term_count == 0U || !matches_term(s, &q->terms[q->term_count - 1U], t, n, e))
+        return false;
+    size_t descendant = e;
+    for (size_t term = q->term_count - 1U; term > 0U; --term) {
+        size_t depth = t[descendant].depth;
+        bool found = false;
+        for (size_t candidate = descendant; candidate > 0U;) {
+            candidate--;
+            if (t[candidate].kind != SVG_XML_TOKEN_START_ELEMENT &&
+                t[candidate].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) continue;
+            if (t[candidate].depth >= depth) continue;
+            if (sheet->selector_visits >= SVG_CSS_MAX_RULE_MATCHES) {
+                sheet->hit_limit = true;
+                return false;
+            }
+            sheet->selector_visits++;
+            if (matches_term(s, &q->terms[term - 1U], t, n, candidate)) {
+                descendant = candidate;
+                found = true;
+                break;
+            }
+        }
+        if (!found) return false;
+    }
     return true;
 }
 static void offer(winner *w, const rule_decl *d, uint32_t specificity, uint32_t order) {
@@ -495,6 +563,11 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
     /* clip-path is applied by its declaring element. Ancestors are handled as
      * enclosing clip intersections by shape traversal. */
     out->values[SVG_CSS_CLIP_PATH] = (svg_css_value){0};
+    out->values[SVG_CSS_FILTER] = (svg_css_value){0};
+    out->values[SVG_CSS_MASK] = (svg_css_value){0};
+    out->values[SVG_CSS_MIX_BLEND_MODE] = (svg_css_value){0};
+    out->values[SVG_CSS_ISOLATION] = (svg_css_value){0};
+    out->values[SVG_CSS_VECTOR_EFFECT] = (svg_css_value){0};
     winner w[SVG_CSS_PROPERTY_COUNT] = {0};
     const svg_xml_token *t = tokens;
     uint32_t order = 0;
@@ -502,7 +575,8 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
         if (sheet->match_tests >= SVG_CSS_MAX_RULE_MATCHES)
             return SVG_CSS_LIMIT;
         sheet->match_tests++;
-        if (matches(source, &sheet->rules[r].match, t, count, element)) {
+        if (matches(source, &sheet->rules[r].match, t, count, element, sheet)) {
+            if (sheet->hit_limit) return SVG_CSS_LIMIT;
             if (t[element].prefix.length == 0U &&
                 eq(source, t[element].local_name, "stop") &&
                 sheet->rules[r].has_unsupported_declaration)
@@ -526,13 +600,43 @@ svg_css_error svg_css_compute(svg_css_sheet *sheet, base_bytes source, const svg
                                       "stroke-dashoffset",
                                       "clip-path",
                                       "stop-color",
-                                      "stop-opacity"};
+                                      "stop-opacity",
+                                      "fill-opacity",
+                                      "stroke-opacity",
+                                      "opacity",
+                                      "visibility",
+                                      "display",
+                                      "color",
+                                      "font-family",
+                                      "font-size",
+                                      "font-weight",
+                                      "font-style",
+                                      "text-anchor",
+                                      "letter-spacing",
+                                      "word-spacing",
+                                      "filter",
+                                      "mask",
+                                      "mix-blend-mode",
+                                      "isolation",
+                                      "vector-effect",
+                                      "shape-rendering",
+                                      "paint-order",
+                                      "marker",
+                                      "marker-start",
+                                      "marker-mid",
+                                      "marker-end",
+                                      "mask-type",
+                                      "color-interpolation-filters"};
         svg_xml_span v;
         if (span_attr(source, t, count, element, names[p], &v)) {
             rule_decl d = {(svg_css_property)p, v, false};
             offer(w, &d, 0U, 0U);
         }
     }
+    /* These CSS properties are not inherited; text properties and SVG paint
+     * properties inherit by retaining the copied parent values above. */
+    out->values[SVG_CSS_OPACITY] = (svg_css_value){0};
+    out->values[SVG_CSS_DISPLAY] = (svg_css_value){0};
     svg_xml_span style;
     if (span_attr(source, t, count, element, "style", &style)) {
         if (style.length > SVG_CSS_MAX_BYTES)

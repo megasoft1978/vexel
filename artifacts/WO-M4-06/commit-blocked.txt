@@ -1,0 +1,1 @@
+fatal: Unable to create '/Users/megasoft78/Desktop/Freelance/vexel/.git/worktrees/WO-M4-06/index.lock': Operation not permitted

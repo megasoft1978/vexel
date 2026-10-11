@@ -1,0 +1,11 @@
+usage: ledger.py append [-h]
+                        (--entry-json ENTRY_JSON | --entry-file ENTRY_FILE)
+                        path
+
+positional arguments:
+  path
+
+options:
+  -h, --help            show this help message and exit
+  --entry-json ENTRY_JSON
+  --entry-file ENTRY_FILE

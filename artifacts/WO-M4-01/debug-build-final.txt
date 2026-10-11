@@ -1,0 +1,19 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01/build/mac-debug
+[1/9] Building C object CMakeFiles/vexel_shape.dir/src/geom/geometry.c.o
+[2/9] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[3/9] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[4/9] Linking C static library libvexel_shape.a
+[5/9] Linking C executable bin/shape_fuzz
+[6/9] Linking C executable bin/shape_test
+[7/9] Linking C executable bin/shape_render_cli
+[8/9] Linking C executable bin/svg_index_bench
+[9/9] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

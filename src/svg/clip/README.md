@@ -31,6 +31,19 @@ empty clips, unsupported child syntax, singular transforms, and external
 references fail with stable diagnostics. The raster work budget includes clip
 edge tests.
 
+The module also exposes an owned four-corner rectangle clip used by nested SVG
+viewports. Shape traversal maps that rectangle through the active viewport
+transform and attaches it to every descendant shape in the viewport range;
+this clip intersects with the shape's other clips during raster sampling.
+
+Each resolved clip records its rendered transform-frame owner rather than only
+the source byte offset. This distinguishes separate `<use>` instances of the
+same source element. Animation overlays deep-copy shared clip chains within a
+64 MiB per-frame cap, update the owning inverse transform, and refresh
+object-box bounds after local geometry changes. Nested viewport rectangles use
+the owning frame before its viewBox suffix so their clip stays in the viewport
+coordinate system.
+
 The 512 KiB budget allows about 1,700 standalone shape clips when each
 generated copy is about 300 bytes. Group clips consume one copy per declaring
 group regardless of its child shape count. Scratch is still charged once per

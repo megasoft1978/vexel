@@ -1,0 +1,43 @@
+name: macOS nightly sanitizer and fuzz campaigns
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 5 * * 1-5'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sanitizer-soak:
+    name: ASan, UBSan, XML and shape fuzz
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Run seeded headless SVG render matrix
+        run: ./dev e2e
+      - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
+        run: ./dev asan
+      - name: Run UndefinedBehaviorSanitizer
+        run: ./dev ubsan
+      - name: Run bounded sanitizer fuzz and worker TSan soak
+        run: ./dev soak --minutes 8 --seed 20261010
+      - name: Upload soak and fuzz reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vexel-nightly-reports-${{ github.run_id }}
+          path: |
+            .cache/e2e/latest.json
+            .cache/soak/latest.json
+            .cache/soak/shape-latest.json
+            .cache/WO-M2-03/soak-xml-latest.json
+          if-no-files-found: warn

@@ -245,7 +245,7 @@ static bool execute_native_command(platform_window **window, const native_comman
 {
     platform_event_type event_type = PLATFORM_EVENT_NONE;
     if (command->type == NATIVE_OPEN) {
-        platform_window_config config = {command->text, command->text_len, 320, 240, true};
+        platform_window_config config = {command->text, command->text_len, 320, 240, true, false};
         if (!platform_window_create(&config, window) || *window == NULL) {
             return false;
         }
@@ -350,7 +350,7 @@ static int native_metal_smoke(void)
         return EXIT_FAILURE;
     }
     const char title[] = "Vexel Metal smoke";
-    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true};
+    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true, false};
     platform_window *window = NULL;
     if (!platform_window_create(&config, &window)) {
         platform_shutdown();
@@ -427,7 +427,7 @@ static int native_metal_replay_smoke(void)
 static int native_navigation_event_smoke(void)
 {
     const char title[] = "Vexel navigation event smoke";
-    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true};
+    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true, false};
     platform_window *window = NULL;
     if (!platform_init() || !platform_window_create(&config, &window)) return EXIT_FAILURE;
     bool scroll = platform_test_inject_scroll(window, 2.0, -120.0, 42.5, 31.25);
@@ -458,8 +458,17 @@ static int native_navigation_event_smoke(void)
 
 int main(int argc, char *argv[])
 {
+    if (argc == 1) {
+        return app_run_viewer(NULL);
+    }
     if (argc >= 2 && strcmp(argv[1], "--render-frame") == 0) {
         return app_run_render_frame(argc, argv);
+    }
+    if (argc >= 2 && strcmp(argv[1], "--render-animation") == 0) {
+        return app_run_render_animation(argc, argv);
+    }
+    if (argc == 2 && strcmp(argv[1], "--native-viewer-smoke") == 0) {
+        return app_run_native_viewer_smoke(NULL);
     }
     if (argc == 3 && strcmp(argv[1], "--native-viewer-smoke") == 0) {
         return app_run_native_viewer_smoke(argv[2]);
@@ -510,9 +519,11 @@ int main(int argc, char *argv[])
         return EXIT_SUCCESS;
     }
 
-    (void)fputs("usage: svgworkbench <file.svg>\n"
+    (void)fputs("usage: svgworkbench [<file.svg>]\n"
                 "       svgworkbench --version\n"
+                "       svgworkbench --native-viewer-smoke [<file.svg>]\n"
                 "       svgworkbench --render-frame <file.svg> --size WxH --out <file.ppm> "
-                "[--zoom N] [--pan X,Y]\n", stderr);
+                "[--zoom N] [--pan X,Y] [--region X,Y,W,H] [--time seconds]\n"
+                "       svgworkbench --render-animation <file.svg> --fps N --duration D --out <dir/>\n", stderr);
     return 2;
 }

@@ -14,8 +14,15 @@ typedef struct svg_paint_cache svg_paint_cache;
 typedef enum svg_shape_paint_kind {
     SVG_SHAPE_PAINT_SOLID = 0,
     SVG_SHAPE_PAINT_LINEAR,
-    SVG_SHAPE_PAINT_RADIAL
+    SVG_SHAPE_PAINT_RADIAL,
+    SVG_SHAPE_PAINT_IMAGE,
+    SVG_SHAPE_PAINT_PATTERN
 } svg_shape_paint_kind;
+typedef enum svg_shape_spread_method {
+    SVG_SHAPE_SPREAD_PAD,
+    SVG_SHAPE_SPREAD_REFLECT,
+    SVG_SHAPE_SPREAD_REPEAT
+} svg_shape_spread_method;
 
 struct svg_paint_stop {
     double offset;
@@ -24,12 +31,17 @@ struct svg_paint_stop {
 
 struct svg_shape_paint {
     svg_shape_paint_kind kind;
+    svg_shape_spread_method spread_method;
     bool object_bounding_box;
     double coordinates[6];
     double bounds[4];
     geom_affine user_inverse;
+    geom_affine gradient_inverse;
     size_t first_stop;
     size_t stop_count;
+    size_t pattern_index;
+    geom_affine pattern_inverse;
+    double pattern_opacity;
 };
 
 /* Returns an edge pointer only for a nonempty in-range span; formed reports

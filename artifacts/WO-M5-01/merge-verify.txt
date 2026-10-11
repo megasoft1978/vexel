@@ -1,0 +1,77 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01/build/mac-debug
+[1/12] Building C object CMakeFiles/ui_demo_render.dir/app/ui_demo_render.c.o
+[2/12] Building C object CMakeFiles/ui_demo_render.dir/app/ui_demo.c.o
+[3/12] Building C object CMakeFiles/ui_core_test.dir/tests/ui/ui_core_test.c.o
+[4/12] Building C object CMakeFiles/vexel_ui_core.dir/src/ui/ui_core.c.o
+[5/12] Building C object CMakeFiles/document_model_test.dir/tests/document/test_document_model.c.o
+[6/12] Building C object CMakeFiles/vexel_document.dir/src/document/document_model.c.o
+[7/12] Linking C static library libvexel_ui_core.a
+[8/12] Linking C static library libvexel_document.a
+[9/12] Linking C executable bin/ui_core_test
+[10/12] Linking C executable bin/ui_demo_render
+[11/12] Linking C executable bin/document_model_test
+[12/12] Linking C executable bin/source_save_test
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01/build/mac-debug
+      Start  1: cli-version
+ 1/15 Test  #1: cli-version ......................   Passed    0.01 sec
+      Start  2: base-contract
+ 2/15 Test  #2: base-contract ....................   Passed    0.01 sec
+      Start  3: xml-tokenizer
+ 3/15 Test  #3: xml-tokenizer ....................   Passed    0.08 sec
+      Start  4: source-save
+ 4/15 Test  #4: source-save ......................   Passed    0.19 sec
+      Start  5: document-model
+ 5/15 Test  #5: document-model ...................   Passed    0.28 sec
+      Start  6: shape-render
+ 6/15 Test  #6: shape-render .....................   Passed    0.03 sec
+      Start  7: css-cascade
+ 7/15 Test  #7: css-cascade ......................   Passed    0.01 sec
+      Start  8: svg-index
+ 8/15 Test  #8: svg-index ........................   Passed    0.12 sec
+      Start  9: viewer-navigation
+ 9/15 Test  #9: viewer-navigation ................   Passed    0.02 sec
+      Start 10: ui-core
+10/15 Test #10: ui-core ..........................   Passed    0.18 sec
+      Start 11: ui-editor-chrome
+11/15 Test #11: ui-editor-chrome .................   Passed    0.30 sec
+      Start 12: svg-token-stream-budget
+12/15 Test #12: svg-token-stream-budget ..........   Passed    0.02 sec
+      Start 13: index-replay
+13/15 Test #13: index-replay .....................   Passed    0.13 sec
+      Start 14: spatial-cache
+14/15 Test #14: spatial-cache ....................   Passed    0.03 sec
+      Start 15: job-snapshot
+15/15 Test #15: job-snapshot .....................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 15
+
+Total Test time (real) =   1.44 sec
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 201 tests in 15.703s
+
+OK
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.160733
+20 frames with identical readback hashes and stable offscreen frame order
+readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
+native replay elapsed seconds: 0.140408
+Ran 201 tests: 201 passed, 0 failed, 0 errors, 0 skipped; 15.762s
+valid ledger: 383 entries

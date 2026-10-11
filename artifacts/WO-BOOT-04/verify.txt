@@ -1,0 +1,17 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+ninja: no work to do.
+.......................runner error: work-order runners support macOS only
+....................
+----------------------------------------------------------------------
+Ran 43 tests in 3.805s
+
+OK
+valid ledger: 30 entries

@@ -1,0 +1,7 @@
+WO-M3-03 revision 1 full verification summary
+
+The first isolated executor attempt had transient failures: CTest index-replay could not obtain an offscreen Metal device, and the Python suite reported process-policy failures. Raw initial transcripts are retained as debug-ctest.txt, verify.txt, asan.txt, ubsan.txt, and test-fast.txt.
+
+The project runner then executed every frozen verification command sequentially in a clean task worktree. All 16 commands exited 0. CTest passed 10/10 in Debug, ASan+UBSan, and UBSan; ./dev verify reported 177/177 Python tests; focused TSan CTest passed 1/1. The Release benchmark recorded 1,000 cycles in 0.018880 s, maximum join 0.000110 s, and binary size 70,288 bytes.
+
+Detailed per-command stdout/stderr and durations: artifacts/runs/WO-M3-03/07d39ea9-fcb5-4dac-b5dc-e90eb80ca2ed/check-01.json through check-16.json. The runner rejected the initial executor report because some acceptance entries cited commands not in the frozen verification list. A corrected schema-shaped report is retained as corrected-executor-report.json.

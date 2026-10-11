@@ -1,0 +1,1 @@
+{"verdict":"pass","findings":[],"summary":"AC-1 through AC-5 are supported by the implementation and supplied deterministic check results. The revision-1 terminal preflight block and pending STATE/LEDGER acceptance status are expected. This schema-valid verdict is the AC-6 artifact."}

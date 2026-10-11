@@ -1,0 +1,11 @@
+{
+  "index": 3,
+  "argv": [
+    "./dev",
+    "verify"
+  ],
+  "exit_code": 0,
+  "duration_s": 15.417144166989601,
+  "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\nninja: no work to do.\nInternal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-01-c943eb44-fcbc-4d79-ba08-eedb061629bf/build/mac-debug\n    Start 1: cli-version\n1/2 Test #1: cli-version ......................   Passed    0.00 sec\n    Start 2: base-contract\n2/2 Test #2: base-contract ....................   Passed    0.00 sec\n\n100% tests passed, 0 tests failed out of 2\n\nTotal Test time (real) =   0.01 sec\npresented frames: 2\nbyte-exact readback: pass\nresize/reset: pass\nnative smoke elapsed seconds: 0.141335\n20 frames with identical readback hashes and stable offscreen frame order\nreadback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c\nnative replay elapsed seconds: 0.135456\nRan 143 tests: 143 passed, 0 failed, 0 errors, 0 skipped; 15.178s\nvalid ledger: 170 entries\n",
+  "stderr": "Ran 143 tests in 15.099s\n\nOK\n"
+}

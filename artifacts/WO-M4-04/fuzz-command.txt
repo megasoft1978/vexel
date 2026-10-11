@@ -1,0 +1,37 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- The C compiler identification is AppleClang 21.0.0.21000334
+-- The OBJC compiler identification is AppleClang 21.0.0.21000334
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting OBJC compiler ABI info
+-- Detecting OBJC compiler ABI info - done
+-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-asan
+[1/13] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o
+[2/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/tile.c.o
+[3/13] Building C object CMakeFiles/vexel_shape.dir/src/geom/geometry.c.o
+[4/13] Building C object CMakeFiles/shape_fuzz.dir/tests/fuzz/shape/shape_fuzz.c.o
+[5/13] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
+[6/13] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_reader.c.o
+[7/13] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[8/13] Linking C static library libvexel_base.a
+[9/13] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o
+[10/13] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[11/13] Linking C static library libvexel_xml.a
+[12/13] Linking C static library libvexel_shape.a
+[13/13] Linking C executable bin/shape_fuzz
+{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04/build/mac-asan/bin/shape_fuzz", "cap_exhaustion_cases": 1, "cap_exhaustion_input_bytes": 327730, "cases": 1000000, "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)", "crashes": 0, "duration_seconds": 19.803, "evenodd_cases": 250000, "evenodd_renders": 7813, "fractional_cases": 750000, "fractional_renders": 7813, "host": {"machine": "arm64", "macos_version": "27.0", "platform": "macOS-27.0-arm64-arm-64bit"}, "input_max_bytes": 327730, "invariant_failures": 0, "metric_availability": {"peak_rss": "not collected by the bounded fuzz harness"}, "nonzero_cases": 250000, "nonzero_renders": 7813, "peak_rss_bytes": null, "process_cpu_seconds": 19.543, "random_input_max_bytes": 4096, "renderer": "Vexel scalar 4x4 shape rasterizer", "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "sanitizer_stderr": "artifacts/WO-M4-04/fuzz-report.stderr.txt", "sanitizer_stderr_bytes": 0, "seed": 20261009, "source_revision": "4e14a7c553c927a400da55d8445bc4e95fde8ab9", "stroke_cases": 47950, "stroke_renders": 3350}

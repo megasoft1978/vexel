@@ -1,0 +1,13 @@
+{
+  "index": 3,
+  "argv": [
+    "python3",
+    "-m",
+    "unittest",
+    "tests.test_xml_tokenizer"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.23535124999762047,
+  "stdout": "",
+  "stderr": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.152s\n\nOK\n"
+}

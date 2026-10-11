@@ -1,0 +1,40 @@
+{
+  "seed": 20261010,
+  "cases": 1000000,
+  "duration_seconds": 34.39,
+  "process_cpu_seconds": 31.277,
+  "renderer": "Vexel scalar 4x4 shape rasterizer",
+  "source_revision": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
+  "binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan/bin/shape_fuzz",
+  "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "host": {
+    "platform": "macOS-27.0-arm64-arm-64bit",
+    "machine": "arm64",
+    "macos_version": "27.0"
+  },
+  "metric_availability": {
+    "peak_rss": "not collected by the bounded fuzz harness"
+  },
+  "peak_rss_bytes": null,
+  "sanitizer_stderr": "artifacts/WO-M4-06/fuzz-report.stderr.txt",
+  "sanitizer_stderr_bytes": 0,
+  "random_input_max_bytes": 4096,
+  "cap_exhaustion_cases": 1,
+  "cap_exhaustion_input_bytes": 327730,
+  "fractional_cases": 750000,
+  "evenodd_cases": 250000,
+  "nonzero_cases": 250000,
+  "fractional_renders": 7813,
+  "evenodd_renders": 7813,
+  "nonzero_renders": 7813,
+  "stroke_cases": 48049,
+  "stroke_renders": 3269,
+  "input_max_bytes": 327730,
+  "crashes": 0,
+  "sanitizer_reports": 0,
+  "invariant_failures": 0,
+  "result": "pass",
+  "worktree_dirty": true,
+  "worktree_note": "Fuzz binary built from dirty worktree based on 2a484b195f8264b7b71632ef8eed6ea6cb881331; tested source changes are not represented by source_revision."
+}

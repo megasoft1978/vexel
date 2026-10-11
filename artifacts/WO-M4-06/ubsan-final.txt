@@ -1,0 +1,97 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="ubsan"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
+[1/20] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline.c.o
+[2/20] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[3/20] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[4/20] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[5/20] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[6/20] Linking C static library libvexel_shape.a
+[7/20] Linking C executable bin/viewer_frame_test
+[8/20] Linking C executable bin/ui_interaction_test
+[9/20] Linking C executable bin/ui_demo_interaction_test
+[10/20] Linking C executable bin/shape_fuzz
+[11/20] Linking C executable bin/shape_render_stats_cli
+[12/20] Linking C executable bin/ui_demo_render
+[13/20] Linking C executable bin/shape_render_cli
+[14/20] Linking C executable bin/ui_core_test
+[15/20] Linking C executable bin/css_test
+[16/20] Linking C executable bin/ui_focus_bench
+[17/20] Linking C executable bin/svg_index_bench
+[18/20] Linking C executable bin/shape_test
+[19/20] Linking C executable bin/shape_render_reference_cli
+[20/20] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-ubsan
+      Start  1: cli-version
+ 1/20 Test  #1: cli-version ......................   Passed    0.39 sec
+      Start  2: base-contract
+ 2/20 Test  #2: base-contract ....................   Passed    0.01 sec
+      Start  3: xml-tokenizer
+ 3/20 Test  #3: xml-tokenizer ....................   Passed    0.15 sec
+      Start  4: source-save
+ 4/20 Test  #4: source-save ......................   Passed    0.01 sec
+      Start  5: document-model
+ 5/20 Test  #5: document-model ...................   Passed    0.28 sec
+      Start  6: shape-render
+ 6/20 Test  #6: shape-render .....................   Passed    0.56 sec
+      Start  7: css-cascade
+ 7/20 Test  #7: css-cascade ......................   Passed    0.19 sec
+      Start  8: svg-index
+ 8/20 Test  #8: svg-index ........................   Passed    0.14 sec
+      Start  9: viewer-navigation
+ 9/20 Test  #9: viewer-navigation ................   Passed    0.03 sec
+      Start 10: viewer-composition
+10/20 Test #10: viewer-composition ...............   Passed    0.17 sec
+      Start 11: viewer-frame
+11/20 Test #11: viewer-frame .....................   Passed    0.16 sec
+      Start 12: native-viewer-smoke
+12/20 Test #12: native-viewer-smoke ..............***Failed    8.54 sec
+2026-10-09 23:31:32.134 svgworkbench[7268:4738704] Failure on line 688 in function id scheduleApplicationNotification(LSNotificationCode, NSWorkspaceNotificationCenter *): noErr == _LSModifyNotification(notificationID, 1, &code, 0, NULL, NULL, NULL)
+2026-10-09 23:31:32.200 svgworkbench[7268:4738705] Connection Invalid error for service com.apple.hiservices-xpcservice.
+2026-10-09 23:31:32.200 svgworkbench[7268:4738704] Error received in message reply handler: Connection invalid
+viewer: viewport at byte 0
+native viewer smoke: timed out waiting for viewer events
+native viewer smoke: failed after 0 presented frames
+
+      Start 13: ui-core
+13/20 Test #13: ui-core ..........................   Passed    0.20 sec
+      Start 14: ui-interaction
+14/20 Test #14: ui-interaction ...................   Passed    0.22 sec
+      Start 15: ui-demo-semantics
+15/20 Test #15: ui-demo-semantics ................   Passed    0.24 sec
+      Start 16: ui-editor-chrome
+16/20 Test #16: ui-editor-chrome .................   Passed    0.42 sec
+      Start 17: svg-token-stream-budget
+17/20 Test #17: svg-token-stream-budget ..........   Passed    0.06 sec
+      Start 18: index-replay
+18/20 Test #18: index-replay .....................***Failed    0.14 sec
+index replay preview: offscreen Metal device or queue unavailable
+progress: 10%
+progress: 50%
+progress: 90%
+index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=6746000
+stale_generation_rejected=true
+canceled_worker_rejected=true
+preview_state: submitted=true finished=true ready=true
+
+      Start 19: spatial-cache
+19/20 Test #19: spatial-cache ....................   Passed    0.05 sec
+      Start 20: job-snapshot
+20/20 Test #20: job-snapshot .....................   Passed    0.05 sec
+
+90% tests passed, 2 tests failed out of 20
+
+Total Test time (real) =  12.04 sec
+
+The following tests FAILED:
+	 12 - native-viewer-smoke (Failed)
+	 18 - index-replay (Failed)
+Errors while running CTest

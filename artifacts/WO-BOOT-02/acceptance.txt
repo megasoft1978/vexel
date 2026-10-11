@@ -1,0 +1,6 @@
+AGENTS lines: 50
+CLAUDE points to AGENTS.md: True
+Owner directive referenced: True
+MPL license text lines: 373
+Ledger schema JSON: valid
+Ledger entries: 12

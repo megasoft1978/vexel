@@ -1,0 +1,2 @@
+$ python3 -c from pathlib import Path; p=Path('reports/M0/product-evidence.md').read_text(); assert all(x in p for x in ['Benchmark gaps','Owner evidence request','Decision requested','Inkscape','Donner','RSS'])
+[exit 0]

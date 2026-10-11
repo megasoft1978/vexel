@@ -1,0 +1,6 @@
+Commands:
+- cmake -S . -B build/mac-asan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 -DCMAKE_C_FLAGS=-fsanitize=address,undefined
+- cmake --build build/mac-asan
+- ./build/mac-asan/bin/svgworkbench --version
+
+Result: configure/build passed; executable printed svgworkbench 0.0.1; no sanitizer diagnostic. The compile configuration includes the macOS 13 target. No test suite exists yet.

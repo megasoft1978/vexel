@@ -1,0 +1,20 @@
+{
+  "status": "complete",
+  "base_sha": "23ecbfbb671b1f79c5b5aa80515c914567d3f0b4",
+  "head_sha": "734c23ba42d405354d2408dcf8de69ef19a29b39",
+  "acceptance": {
+    "AC-1": {"commands": [{"argv": ["python3", "-m", "unittest", "tests.test_platform_driver", "tests.test_ui_driver"], "exit_code": 0}]},
+    "AC-2": {"commands": [{"argv": ["python3", "app/test_driver/driver.py", "--repeat-replay", "--script", "tests/ui/mixed-commands.jsonl", "--repeats", "20", "--output-dir", ".cache/WO-M1-03/replay"], "exit_code": 0}]},
+    "AC-3": {"commands": [{"argv": ["python3", "app/test_driver/driver.py", "--native-metal-replay-smoke", "--repeats", "20", "--output-dir", ".cache/WO-M1-03/native"], "exit_code": 0}]},
+    "AC-4": {"commands": [
+      {"argv": ["./dev", "verify"], "exit_code": 0},
+      {"argv": ["./dev", "asan"], "exit_code": 0},
+      {"argv": ["./dev", "ubsan"], "exit_code": 0},
+      {"argv": ["python3", "scripts/ledger.py", "validate", "ledger.jsonl"], "exit_code": 0},
+      {"argv": ["python3", "scripts/wo_validate.py", "WO-M1-03", "--ready"], "exit_code": 0},
+      {"argv": ["python3", "-m", "json.tool", "bench/results/WO-M1-03.json"], "exit_code": 0},
+      {"argv": ["git", "diff", "--check"], "exit_code": 0}
+    ]}
+  },
+  "summary": "Implemented deterministic JSONL replay and 20 bounded headless Metal blit/readback frames. All frozen commands passed in the executor worktree and a clean verifier worktree; the fresh read-only verdict passed with no findings. Release binary is 94,752 bytes; measured placeholder replay is 100.976 ms and Metal replay is 179.164 ms. RSS and SVG throughput are not claimed."
+}

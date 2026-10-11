@@ -1,0 +1,6 @@
+XML tokenizer fuzz smoke passed using the campaign-approved task cache.
+Seed: 12648430
+Iterations: 60583
+Duration: 1.014s
+Sanitizer output: False
+An initial output path under artifacts/WO-M5-01 was rejected by the frozen campaign path policy; the successful run used .cache/WO-M2-03.

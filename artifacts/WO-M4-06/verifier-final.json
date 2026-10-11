@@ -1,0 +1,90 @@
+{
+  "wo_id": "WO-M4-06",
+  "verdict": "fail",
+  "base_sha": "fb09369fa77475707d8a1e9cde0736f033bf7130",
+  "head_sha": "1dafa4f180cd6072a1f77c6cd6f748ba3da6bfcf",
+  "acceptance": [
+    {
+      "id": "AC-1",
+      "result": "pass",
+      "evidence": "artifacts/WO-M4-06/debug-ctest.txt; artifacts/WO-M4-06/full-checks.txt",
+      "detail": "Recorded clean Debug configure/build and 12/12 CTests passing."
+    },
+    {
+      "id": "AC-2",
+      "result": "fail",
+      "evidence": "tests/test_shape_render.py:test_reference_comparison_and_repeatability; artifacts/WO-M4-06/reference-matrix.json",
+      "detail": "The harness hashes fixture files before and after invoking the CLI, not the in-memory source buffer before and after decode/render. The implementation appears to borrow and preserve source bytes, but the stated source-SHA test is not established."
+    },
+    {
+      "id": "AC-3",
+      "result": "fail",
+      "evidence": "tests/svg/shape/fixtures/user-space-gradient-defaults.svg; src/svg/paint/paint.c:gradient_coordinates",
+      "detail": "The 35 fixtures pass recorded pixel thresholds, but the user-space radial-default fixture does not distinguish the incorrect default radius: its painted shape is outside both the implementation's and librsvg's gradient circles."
+    },
+    {
+      "id": "AC-4",
+      "result": "pass",
+      "evidence": "artifacts/WO-M4-06/full-checks.txt; artifacts/WO-M4-06/asan.txt; artifacts/WO-M4-06/ubsan.txt; artifacts/WO-M4-06/release-build.txt",
+      "detail": "Recorded ASan, UBSan, verify, and Release build checks pass."
+    },
+    {
+      "id": "AC-5",
+      "result": "pass",
+      "evidence": "artifacts/WO-M4-06/fuzz-report.json",
+      "detail": "Records 1,000,000 ASan+UBSan cases at source revision e53c760, with zero crashes, sanitizer reports, or invariant failures. Later candidate commits contain documentation/evidence changes only."
+    },
+    {
+      "id": "AC-6",
+      "result": "pass",
+      "evidence": "artifacts/WO-M4-06/paint-benchmark.json; artifacts/WO-M4-06/paint-benchmark.py; docs/PERF.md",
+      "detail": "Five fixed workloads have 21 raw trials each, stable output hashes, median/p95, throughput, and RSS. The basic-solid base comparison is reported separately, including its startup outlier and the candidate's slower median; no public speed claim is made."
+    },
+    {
+      "id": "AC-7",
+      "result": "pass",
+      "evidence": "artifacts/WO-M4-06/corpus-check.txt; reports/M4/head-to-head.json; reports/M4/head-to-head.md",
+      "detail": "Records 58 files and 116 trials, 2 successful previews and 56 unsupported outcomes. Manifest and supplied baseline hashes are recorded; the report identifies the open/index limitation."
+    },
+    {
+      "id": "AC-8",
+      "result": "pass",
+      "evidence": "artifacts/WO-M4-06/work-order-validation.txt; artifacts/WO-M4-06/ledger-validation.txt; artifacts/WO-M4-06/path-guard.json; artifacts/WO-M4-06/diff-check.txt",
+      "detail": "Revision 4 validation and the recorded ledger, path-guard, JSON, and diff checks pass. The path guard predates the final documentation-only commits."
+    },
+    {
+      "id": "AC-9",
+      "result": "fail",
+      "evidence": "src/svg/reference/expand.c:append; src/svg/reference/expand.c:svg_reference_expand_mapped; artifacts/WO-M4-06/reference-matrix.json",
+      "detail": "The 64 KiB per-reference cap and separate 512 KiB use and clip budgets mathematically enforce a 1 MiB combined maximum. However, expansion copies the rest of the document into a growing output buffer, and allocates a token array sized from total source length. These new allocations scale with the full document, contrary to ADR-0014 and AC-9."
+    }
+  ],
+  "scope_findings": [
+    {
+      "path": "src/svg/paint/paint.c",
+      "finding": "The omitted user-space radial r default is set to the full normalized viewport diagonal; SVG's 50% default is half that value. This produces incorrect radial gradients when the default radius affects painted pixels.",
+      "severity": "high"
+    },
+    {
+      "path": "src/svg/reference/expand.c",
+      "finding": "A live use causes a full rewritten SVG copy, while the new tokenizer allocation is also proportional to source length. The amendment authorizes bounded reference subtree copies, not these source-sized allocations.",
+      "severity": "high"
+    },
+    {
+      "path": "tests/svg/shape/fixtures/user-space-gradient-defaults.svg",
+      "finding": "The fixture's radial-painted region is outside both candidate and reference gradient circles, so it cannot catch the incorrect default radius despite passing the differential threshold.",
+      "severity": "high"
+    },
+    {
+      "path": "tests/test_shape_render.py",
+      "finding": "The immutability check re-hashes the fixture file around a subprocess call; it does not hash the source bytes passed to decode/render in memory as AC-9 requires.",
+      "severity": "high"
+    }
+  ],
+  "risk_flags": [
+    "The 64 KiB per-reference and combined 1 MiB caps are enforced; use and clip each have a 512 KiB sub-budget.",
+    "Evidence records tested source revision e53c760 and candidate 3396d81; the remaining commits through the requested head are documentation/evidence only.",
+    "Unsupported SVG elements are rejected by shape decoding, and corpus reporting counts only successful preview outcomes."
+  ],
+  "summary": "Fail. Source immutability, omitted stop-color defaulting to black, gradient interpolation endpoints, copy-budget arithmetic, corpus counts, and benchmark records are supported by the inspected code/evidence. Blocking issues remain: the user-space radial default radius is twice the specified value, its differential fixture is non-discriminating, and reference expansion introduces allocations that scale with total document size. The source-SHA acceptance test also hashes files rather than the in-memory decode input."
+}

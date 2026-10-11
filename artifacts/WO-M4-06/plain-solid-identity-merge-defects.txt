@@ -1,0 +1,2 @@
+fixtures=35 mismatches=0
+all pre-fix and repaired output/diagnostic hashes match

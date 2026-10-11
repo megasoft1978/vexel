@@ -1,0 +1,13 @@
+....usage: python3 -m unittest [-h] [--duration DURATION] [--seed SEED]
+                           [--binary BINARY] [--output OUTPUT]
+                           [--self-test-crash] [--self-test-timeout]
+python3 -m unittest: error: duration must be 1..600 and seed must be uint32
+usage: python3 -m unittest [-h] [--duration DURATION] [--seed SEED]
+                           [--binary BINARY] [--output OUTPUT]
+                           [--self-test-crash] [--self-test-timeout]
+python3 -m unittest: error: duration must be 1..600 and seed must be uint32
+..........
+----------------------------------------------------------------------
+Ran 14 tests in 1.775s
+
+OK

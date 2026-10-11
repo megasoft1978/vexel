@@ -1,0 +1,49 @@
+{
+  "artifacts": [
+    {
+      "path": ".cache/m0-02/generated/object-10mb.svg",
+      "family": "object-heavy",
+      "seed": 12648430,
+      "bytes": 10000000,
+      "sha256": "c451398f7e5243f74f5581cb22336ddce05f4311009efbe75d5cf1cbbd62bac8",
+      "counts": {
+        "objects": 10000,
+        "path_commands": 0,
+        "nested_groups": 0,
+        "images": 0,
+        "image_payload_bytes": 0
+      },
+      "elapsed_seconds": 0.003884
+    },
+    {
+      "path": ".cache/m0-02/generated/path-100mb.svg",
+      "family": "path-heavy",
+      "seed": 12648430,
+      "bytes": 100000000,
+      "sha256": "975f5127a5a2db0c2ab77123ce8e30556d1e5a25a5171df7c6c1a306e338cd07",
+      "counts": {
+        "objects": 0,
+        "path_commands": 100000,
+        "nested_groups": 0,
+        "images": 0,
+        "image_payload_bytes": 0
+      },
+      "elapsed_seconds": 0.036904
+    },
+    {
+      "path": ".cache/m0-02/generated/mixed-1gb.svg",
+      "family": "mixed",
+      "seed": 12648430,
+      "bytes": 1000000000,
+      "sha256": "895780c50a7e3b6f05e1ad34b68ca6d22684699e6fa1b7425a7f1baaa6caa9e7",
+      "counts": {
+        "objects": 33333,
+        "path_commands": 333333,
+        "nested_groups": 32,
+        "images": 1,
+        "image_payload_bytes": 256000
+      },
+      "elapsed_seconds": 0.369545
+    }
+  ]
+}

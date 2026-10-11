@@ -1,0 +1,7 @@
+[1/7] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o
+[2/7] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
+[3/7] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o
+[4/7] Linking C static library libvexel_xml.a
+[5/7] Linking C executable bin/xml_tokenizer_cli
+[6/7] Linking C executable bin/xml_tokenizer_test
+[7/7] Linking C executable bin/xml_tokenizer_fuzz

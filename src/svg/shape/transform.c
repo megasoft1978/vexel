@@ -73,8 +73,11 @@ static bool transform_parse(base_bytes source, svg_xml_span span,
         svg_shape_skip_number_space(&reader);
         if (reader.i == reader.n) break;
         size_t name = reader.i;
-        while (reader.i < reader.n && source.ptr[span.offset + reader.i] >= 'a' &&
-               source.ptr[span.offset + reader.i] <= 'z') reader.i++;
+        while (reader.i < reader.n &&
+               ((source.ptr[span.offset + reader.i] >= 'a' &&
+                 source.ptr[span.offset + reader.i] <= 'z') ||
+                (source.ptr[span.offset + reader.i] >= 'A' &&
+                 source.ptr[span.offset + reader.i] <= 'Z'))) reader.i++;
         if (reader.i == name || reader.i >= reader.n ||
             source.ptr[span.offset + reader.i++] != '(') return false;
         size_t name_length = reader.i - name - 1U;
@@ -93,6 +96,11 @@ static bool transform_parse(base_bytes source, svg_xml_span span,
         else if (name_length == 6U &&
                  memcmp(source.ptr + span.offset + name, "rotate", 6U) == 0)
             value_count = 3U;
+        else if ((name_length == 5U &&
+                  memcmp(source.ptr + span.offset + name, "skewX", 5U) == 0) ||
+                 (name_length == 5U &&
+                  memcmp(source.ptr + span.offset + name, "skewY", 5U) == 0))
+            value_count = 1U;
         else return false;
 
         svg_shape_skip_number_space(&reader);
@@ -136,9 +144,14 @@ static bool transform_parse(base_bytes source, svg_xml_span span,
         } else if (name_length == 9U) {
             operation.e = values[0];
             operation.f = values[1];
-        } else if (name_length == 5U) {
+        } else if (name_length == 5U && value_count == 2U) {
             operation.a = values[0];
             operation.d = values[1];
+        } else if (name_length == 5U && value_count == 1U) {
+            double tangent = tan(values[0] * 0.017453292519943295);
+            if (!isfinite(tangent) || fabs(tangent) > 1000000.0) return false;
+            if (source.ptr[span.offset + name + 4U] == 'X') operation.c = tangent;
+            else operation.b = tangent;
         } else {
             double angle = values[0] * 0.017453292519943295;
             double cosine = cos(angle), sine = sin(angle);
@@ -166,6 +179,13 @@ static bool transform_parse(base_bytes source, svg_xml_span span,
     *out = result;
     *operation_count = operations;
     return true;
+}
+
+bool svg_shape_transform_parse(base_bytes source, svg_xml_span span,
+                               geom_affine *out, size_t *operations)
+{
+    if (out == NULL || operations == NULL) return false;
+    return transform_parse(source, span, out, operations);
 }
 
 bool svg_shape_transform_node(base_bytes source, svg_xml_token *tokens,

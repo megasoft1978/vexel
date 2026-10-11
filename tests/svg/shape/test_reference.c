@@ -776,6 +776,7 @@ static bool cached_gradient_scan_check(void)
 bool svg_shape_reference_tests(void)
 {
     if (!source_bytes_unchanged_check()) { fprintf(stderr, "source preservation failed\n"); return false; }
+    if (!svg_shape_w5_reference_tests()) { fprintf(stderr, "switch language selection failed\n"); return false; }
     if (!decode_reference_memory_bounds_check()) { fprintf(stderr, "allocation bounds failed\n"); return false; }
     if (!group_clip_scratch_resolved_once_check()) { fprintf(stderr, "group clip allocation failed\n"); return false; }
     if (!reference_boundary_checks()) { fprintf(stderr, "reference boundaries failed\n"); return false; }

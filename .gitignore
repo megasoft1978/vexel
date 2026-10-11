@@ -1,6 +1,6 @@
 /build/
 /.cache/
-/artifacts/
+/.worktrees/
+/artifacts/runs/
 __pycache__/
 *.py[cod]
-.DS_Store

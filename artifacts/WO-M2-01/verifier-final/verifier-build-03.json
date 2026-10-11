@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "cmake",
+    "--build",
+    "--preset",
+    "mac-release"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.4619272499985527,
+  "stdout": "[1/11] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[2/11] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[3/11] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[4/11] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[5/11] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[6/11] Linking C static library libvexel_base.a\n[7/11] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[8/11] Linking C executable base_contract_test\n[9/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[10/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[11/11] Linking C executable bin/svgworkbench\n",
+  "stderr": ""
+}

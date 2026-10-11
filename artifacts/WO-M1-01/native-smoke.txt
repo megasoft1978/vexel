@@ -1,0 +1,4 @@
+Command: python3 app/test_driver/driver.py --native-platform-smoke --cycles 100 --output-dir .cache/WO-M1-01/native-smoke
+native smoke events: open resize scale key pointer close
+completed cycles: 100
+{"cycles":100,"elapsed_seconds":3.2132832079951186,"events":["open","resize","scale","key","pointer","close"],"exit_code":0,"status":"passed"}

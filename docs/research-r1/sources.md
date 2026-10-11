@@ -1,0 +1,108 @@
+# Sources
+
+Live web research checked 8 October 2026. URLs are grouped by the output file(s) citing them. Versions and project status can change; release pages and repositories are linked where available.
+
+- https://inkscape.org/en/develop/about-svg/ — 00-executive-summary.md, 01-prior-art.md, 03-format-and-animation.md
+- https://docs.glaxnimate.org/en/formats.html — 00-executive-summary.md, 01-prior-art.md, 03-format-and-animation.md
+- https://github.com/GraphiteEditor/Graphite — 00-executive-summary.md, 01-prior-art.md
+- https://wiki.inkscape.org/wiki/Release_notes/1.3 — 00-executive-summary.md, 01-prior-art.md, 02-tech-decisions.md
+- https://wiki.inkscape.org/wiki/Release_notes/1.5 — 00-executive-summary.md, 01-prior-art.md, 03-format-and-animation.md
+- https://lists.inkscape.org/hyperkitty/list/inkscape-devel%40lists.inkscape.org/2026/6/ — 00-executive-summary.md, 01-prior-art.md
+- https://github.com/linebender/resvg — 00-executive-summary.md, 02-tech-decisions.md, 05-engineering-practices.md
+- https://github.com/thorvg/thorvg — 00-executive-summary.md, 02-tech-decisions.md
+- https://github.com/blend2d/blend2d — 00-executive-summary.md, 02-tech-decisions.md
+- https://inkscape.org/en/about/license/ — 00-executive-summary.md, 01-prior-art.md, 05-engineering-practices.md
+- https://github.com/inkscape/inkscape/blob/master/COPYING — 00-executive-summary.md, 05-engineering-practices.md
+- https://github.com/harfbuzz/harfbuzz — 00-executive-summary.md, 02-tech-decisions.md
+- https://www.w3.org/TR/SVG/ — 00-executive-summary.md, 03-format-and-animation.md
+- https://wiki.inkscape.org/wiki/LivePathEffects — 00-executive-summary.md, 03-format-and-animation.md
+- https://wiki.inkscape.org/wiki/Release_notes — 01-prior-art.md, 04-parity-matrix.md
+- https://en.wikipedia.org/wiki/Sodipodi — 01-prior-art.md
+- https://github.com/sammycage/plutovg — 01-prior-art.md, 02-tech-decisions.md
+- https://github.com/KDE/glaxnimate — 01-prior-art.md
+- https://gitlab.com/mattbas/glaxnimate/-/releases — 01-prior-art.md
+- https://github.com/synfig/synfig — 01-prior-art.md
+- https://github.com/synfig/synfig/releases — 01-prior-art.md
+- https://wiki.synfig.org/Doc%3ASvg2synfig — 01-prior-art.md, 03-format-and-animation.md
+- https://github.com/SVG-Edit/svgedit — 01-prior-art.md
+- https://boxy-svg.com/ — 01-prior-art.md
+- https://lunacy.docs.icons8.com/release-notes/ — 01-prior-art.md
+- https://lunacy.docs.icons8.com/about/ — 01-prior-art.md
+- https://support.linearity.io/docs/getting-started/what-is-linearity-curve-and-move-explained — 01-prior-art.md
+- https://penpot.app/media-kit — 01-prior-art.md
+- https://github.com/penpot/penpot — 01-prior-art.md
+- https://help.figma.com/hc/en-us/articles/360040028114-Export-from-Figma — 01-prior-art.md
+- https://affinity.serif.com/en-us/designer/ — 01-prior-art.md
+- https://helpx.adobe.com/illustrator/using/saving-exporting.html — 01-prior-art.md
+- https://github.com/sozi-projects/Sozi — 01-prior-art.md, 03-format-and-animation.md
+- https://www.rive.app/editor — 01-prior-art.md, 03-format-and-animation.md
+- https://www.svgator.com/help/export-and-file-formats — 01-prior-art.md
+- https://tumult.com/hype/documentation/ — 01-prior-art.md
+- https://airbnb.io/lottie/ — 01-prior-art.md
+- https://wiki.inkscape.org/wiki/index.php/Release_notes/1.4 — 01-prior-art.md
+- https://lists.inkscape.org/hyperkitty/list/inkscape-devel%40lists.inkscape.org/thread/6G3P3RZUJYTRKM7UNI4QDOWCNLY5EII4/ — 01-prior-art.md
+- https://wiki.inkscape.org/wiki/index.php/Projects — 01-prior-art.md
+- https://wiki.inkscape.org/wiki/Architectural_overview — 01-prior-art.md, 02-tech-decisions.md, 03-format-and-animation.md
+- https://inkscape.gitlab.io/inkscape/doxygen/classSPDocument.html — 01-prior-art.md
+- https://gitlab.com/inkscape/inkscape/-/merge_requests/4986 — 01-prior-art.md
+- https://gitlab.com/inkscape/inkscape/-/merge_requests/3838 — 01-prior-art.md
+- https://gcc.gnu.org/projects/c-status.html — 02-tech-decisions.md
+- https://clang.llvm.org/c_status.html — 02-tech-decisions.md
+- https://cmu-sei.github.io/secure-coding-standards/sei-cert-c-coding-standard/front-matter/introduction/ — 02-tech-decisions.md
+- https://libexpat.github.io/doc/api/latest/ — 02-tech-decisions.md
+- https://gnome.pages.gitlab.gnome.org/libxml2/html/parser_8h.html — 02-tech-decisions.md
+- https://github.com/RazrFalcon/roxmltree — 02-tech-decisions.md
+- https://github.com/tafia/quick-xml — 02-tech-decisions.md
+- https://github.com/Kozea/tinycss2 — 02-tech-decisions.md
+- https://skia.org/ — 02-tech-decisions.md
+- https://www.cairographics.org/ — 02-tech-decisions.md
+- https://github.com/memononen/nanovg — 02-tech-decisions.md
+- https://agg.sourceforge.net/antigrain.com/license/index.html — 02-tech-decisions.md
+- https://github.com/memononen/nanosvg — 02-tech-decisions.md
+- https://github.com/sammycage/lunasvg — 02-tech-decisions.md
+- https://packages.fedoraproject.org/pkgs/lunasvg/lunasvg/ — 02-tech-decisions.md
+- https://github.com/linebender/vello — 02-tech-decisions.md
+- https://gitlab.com/inkscape/lib2geom — 02-tech-decisions.md
+- https://github.com/AngusJohnson/Clipper2 — 02-tech-decisions.md
+- https://github.com/paperjs/paper.js — 02-tech-decisions.md
+- https://assets.paperjs.org/boolean/ — 02-tech-decisions.md
+- https://github.com/freetype/freetype/blob/master/LICENSE.TXT — 02-tech-decisions.md
+- https://developer.apple.com/documentation/coretext — 02-tech-decisions.md
+- https://github.com/mm2/Little-CMS — 02-tech-decisions.md
+- https://github.com/nothings/stb — 02-tech-decisions.md
+- http://www.libpng.org/pub/png/libpng.html — 02-tech-decisions.md
+- https://github.com/libjpeg-turbo/libjpeg-turbo — 02-tech-decisions.md
+- https://chromium.googlesource.com/webm/libwebp/ — 02-tech-decisions.md
+- https://github.com/jpakkane/capypdf — 02-tech-decisions.md
+- https://pdfium.googlesource.com/pdfium/ — 02-tech-decisions.md
+- https://github.com/Samsung/rlottie/blob/master/COPYING — 02-tech-decisions.md
+- https://dotlottie.io/spec/ — 02-tech-decisions.md
+- https://developer.apple.com/documentation/appkit/accessibility-for-appkit — 02-tech-decisions.md
+- https://docs.gtk.org/gtk4/section-accessibility.html — 02-tech-decisions.md
+- https://doc.qt.io/qt-6/licensing.html — 02-tech-decisions.md, 05-engineering-practices.md
+- https://docs.gtk.org/gtk4/ — 02-tech-decisions.md
+- https://github.com/ocornut/imgui — 02-tech-decisions.md
+- https://github.com/Immediate-Mode-UI/Nuklear — 02-tech-decisions.md
+- https://wiki.libsdl.org/SDL3/CategoryGPU — 02-tech-decisions.md
+- https://docs.flutter.dev/platform-integration/desktop — 02-tech-decisions.md
+- https://docs.flutter.dev/ui/accessibility — 02-tech-decisions.md
+- https://www.w3.org/TR/2011/REC-SVG11-20110816/REC-SVG11-20110816.pdf — 03-format-and-animation.md
+- https://www.w3.org/TR/SVG/struct.html — 03-format-and-animation.md
+- https://wiki.inkscape.org/wiki/Inkscape_SVG_vs._plain_SVG — 03-format-and-animation.md
+- https://wiki.inkscape.org/wiki/Inkscape-specific_XML_attributes — 03-format-and-animation.md
+- https://www.w3.org/2026/07/svg-snapshot/CRS-SVG2-20260722/changes.html — 03-format-and-animation.md
+- https://wiki.inkscape.org/wiki/Mesh_Gradients — 03-format-and-animation.md
+- https://wiki.inkscape.org/wiki/XML_subsystem — 03-format-and-animation.md
+- https://developer.mozilla.org/en-US/docs/Web/SVG/Guides/SVG_animation_with_SMIL — 03-format-and-animation.md
+- https://caniuse.com/svg-smil — 03-format-and-animation.md
+- https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Element/animate — 03-format-and-animation.md
+- https://gitlab.com/inkscape/inbox/-/issues/10473 — 03-format-and-animation.md
+- https://inkscape.org/doc/inkscape-man.html — 04-parity-matrix.md
+- https://wiki.inkscape.org/wiki/index.php/Release_notes/1.2 — 04-parity-matrix.md
+- https://github.com/w3c/svgwg/wiki/Testing — 05-engineering-practices.md
+- https://gitlab.com/inkscape/inkscape/-/tree/master/testfiles — 05-engineering-practices.md
+- https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution — 05-engineering-practices.md
+- https://developer.apple.com/documentation/Security/customizing-the-notarization-workflow — 05-engineering-practices.md
+- https://www.gnu.org/licenses/gpl-faq.en.html — 05-engineering-practices.md
+- https://www.w3.org/policies/patent-policy/ — 05-engineering-practices.md
+- https://inkscapesoftware.com/about/branding/ — 05-engineering-practices.md

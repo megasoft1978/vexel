@@ -38,17 +38,20 @@ typedef struct raster_boundary_mask {
 
 /* Bounds cover every sample point the scalar renderer can paint. */
 bool raster_shape_bounds_build(const svg_shape_document *document,
-                               double scale, double offset_x, double offset_y,
+                               double scale_x, double scale_y,
+                               double offset_x, double offset_y,
                                raster_shape_bounds_set *out,
                                svg_shape_diagnostic *diagnostic);
 void raster_shape_bounds_destroy(raster_shape_bounds_set *bounds);
 bool raster_shape_bounds_mark_boundaries(const svg_shape_document *document,
-                                         double scale, double offset_x,
+                                         double scale_x, double scale_y,
+                                         double offset_x,
                                          double offset_y,
                                          raster_boundary_mask *out,
                                          svg_shape_diagnostic *diagnostic);
 bool raster_shape_bounds_mark_clip_boundaries(
-    const svg_shape_document *document, double scale, double offset_x,
+    const svg_shape_document *document, double scale_x, double scale_y,
+    double offset_x,
     double offset_y, raster_boundary_mask *boundary);
 void raster_boundary_mask_destroy(raster_boundary_mask *mask);
 bool raster_boundary_mask_test(const raster_boundary_mask *mask, size_t pixel_index);

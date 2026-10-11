@@ -85,7 +85,13 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
         if (doc->paints != NULL &&
             doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID &&
             !checked_add_size(auxiliary_per_sample,
-                              doc->paints[shape].stop_count,
+                              doc->paints[shape].stop_count +
+                                  (doc->paints[shape].kind ==
+                                       SVG_SHAPE_PAINT_PATTERN ? 4U : 0U),
+                              &auxiliary_per_sample)) return false;
+        if (doc->stroke_paints != NULL &&
+            doc->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN &&
+            !checked_add_size(auxiliary_per_sample, 4U,
                               &auxiliary_per_sample)) return false;
     }
     size_t stroke_tests, auxiliary_tests;
@@ -121,7 +127,7 @@ static bool render_sample(const svg_shape_document *doc,
     for (size_t shape = 0U; shape < doc->shape_count; shape++) {
         raster_shape_paint_sample(doc, shape, NULL,
                                   doc->shape_edge_count[shape], local_edges,
-                                  dash_seams, px, py, paint_x, paint_y, true,
+                                  dash_seams, NULL, px, py, paint_x, paint_y, true,
                                   sample_rgba);
     }
     return true;
@@ -180,13 +186,16 @@ static bool prepare_local_stroke_edges(const svg_shape_document *doc,
                   doc->shape_edge_count[shape] != 0U;
     if (!needed || doc->edge_count == 0U) return true;
     if (doc->edge_count > SIZE_MAX / sizeof(**out_edges) ||
-        doc->shape_count > SIZE_MAX / sizeof(**out_dash_seams)) {
+        doc->path_subpath_count > SIZE_MAX - doc->shape_count ||
+        doc->shape_count + doc->path_subpath_count >
+            SIZE_MAX / sizeof(**out_dash_seams)) {
         if (diag != NULL)
             *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
         return false;
     }
     geom_edge *edges = malloc(doc->edge_count * sizeof(*edges));
-    bool *seams = calloc(doc->shape_count, sizeof(*seams));
+    size_t seam_count = doc->shape_count + doc->path_subpath_count;
+    bool *seams = calloc(seam_count, sizeof(*seams));
     if (edges == NULL || seams == NULL) {
         free(edges);
         free(seams);
@@ -209,9 +218,19 @@ static bool prepare_local_stroke_edges(const svg_shape_document *doc,
             return false;
         }
     }
-    for (size_t shape = 0U; shape < doc->shape_count; shape++)
-        seams[shape] = doc->strokes[shape].rgba[3] != 0U &&
-            raster_shape_dash_joins_closed_seam(doc, shape, edges);
+    for (size_t shape = 0U; shape < doc->shape_count; shape++) {
+        size_t path_count = doc->shape_subpath_count[shape];
+        if (path_count != 0U) {
+            for (size_t path = 0U; path < path_count; ++path)
+                seams[doc->shape_count + doc->shape_subpath_start[shape] + path] =
+                    doc->strokes[shape].rgba[3] != 0U &&
+                    raster_shape_dash_subpath_joins_closed_seam(
+                        doc, shape, path, edges);
+        } else {
+            seams[shape] = doc->strokes[shape].rgba[3] != 0U &&
+                raster_shape_dash_joins_closed_seam(doc, shape, edges);
+        }
+    }
     *out_edges = edges;
     *out_dash_seams = seams;
     return true;
@@ -230,8 +249,10 @@ bool raster_shape_render_reference(const svg_shape_document *doc,
         (doc->shape_count != 0U &&
          (doc->shape_evenodd == NULL || doc->shape_filled == NULL ||
           doc->shape_stroke_closed == NULL || doc->shape_edge_start == NULL ||
-          doc->shape_edge_count == NULL || doc->shape_stroke_inverse == NULL ||
+          doc->shape_edge_count == NULL || doc->shape_subpath_start == NULL ||
+          doc->shape_subpath_count == NULL || doc->shape_stroke_inverse == NULL ||
           doc->strokes == NULL)) ||
+        (doc->path_subpath_count != 0U && doc->path_subpaths == NULL) ||
         !isfinite(doc->view_x) || !isfinite(doc->view_y) ||
         !isfinite(doc->view_width) || !isfinite(doc->view_height) ||
         doc->view_width <= 0.0 || doc->view_height <= 0.0) {
@@ -250,11 +271,23 @@ bool raster_shape_render_reference(const svg_shape_document *doc,
         if (doc->shape_edge_start[shape] > doc->edge_count ||
             doc->shape_edge_count[shape] >
                 doc->edge_count - doc->shape_edge_start[shape] ||
+            doc->shape_subpath_start[shape] > doc->path_subpath_count ||
+            doc->shape_subpath_count[shape] > doc->path_subpath_count -
+                doc->shape_subpath_start[shape] ||
             !isfinite(doc->strokes[shape].width) ||
             doc->strokes[shape].width < 0.0 ||
             !isfinite(doc->strokes[shape].miter_limit) ||
             doc->strokes[shape].miter_limit < 1.0 ||
             !isfinite(doc->strokes[shape].dash_offset)) {
+            if (diag != NULL)
+                *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
+            return false;
+        }
+    }
+    for (size_t path = 0U; path < doc->path_subpath_count; ++path) {
+        if (doc->path_subpaths[path].first_edge > doc->edge_count ||
+            doc->path_subpaths[path].edge_count > doc->edge_count -
+                doc->path_subpaths[path].first_edge) {
             if (diag != NULL)
                 *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
             return false;

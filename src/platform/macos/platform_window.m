@@ -1,6 +1,9 @@
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/CALayer.h>
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include "platform/platform_window.h"
+#include "platform_window_internal.h"
 #include "platform/macos/platform_metal_internal.h"
 #include "test_driver/native_injection.h"
 
@@ -15,14 +18,31 @@ typedef struct platform_event_node {
     struct platform_event_node *next;
 } platform_event_node;
 
+@class VexelOpenPanelRequest;
+
 struct platform_window {
     __strong NSWindow *native;
+    __strong NSView *render_view;
+    __strong NSVisualEffectView *toolbar_material;
+    __strong NSOpenPanel *open_panel;
+    __strong VexelOpenPanelRequest *open_panel_request;
     platform_event_node *first;
     platform_event_node *last;
     uint32_t last_pixel_width;
     uint32_t last_pixel_height;
     double last_scale;
+    size_t pending_count;
 };
+
+@interface VexelOpenPanelRequest : NSObject
+@property(nonatomic, assign) platform_window *owner;
+@property(nonatomic, strong) NSOpenPanel *panel;
+@end
+
+@implementation VexelOpenPanelRequest
+@end
+
+#define PLATFORM_EVENT_QUEUE_CAP 256U
 
 static bool platform_on_main_thread(void)
 {
@@ -44,7 +64,17 @@ void *platform_window_native_view(platform_window *window)
     if (!platform_on_main_thread() || window == NULL) {
         return NULL;
     }
-    return (__bridge void *)window->native.contentView;
+    return (__bridge void *)window->render_view;
+}
+
+bool platform_window_set_material_enabled(platform_window *window, bool enabled)
+{
+    if (!platform_on_main_thread() || window == NULL || window->toolbar_material == nil)
+        return false;
+    bool allowed = false;
+    if (@available(macOS 26.0, *)) allowed = enabled;
+    window->toolbar_material.hidden = !allowed;
+    return true;
 }
 
 static bool platform_dimensions_valid(int32_t width, int32_t height)
@@ -57,6 +87,22 @@ static bool platform_emit(platform_window *window, const platform_event *event)
     if (window == NULL || event == NULL) {
         return false;
     }
+    platform_event stamped = *event;
+    if (!(stamped.timestamp_seconds > 0.0))
+        stamped.timestamp_seconds = NSProcessInfo.processInfo.systemUptime;
+    event = &stamped;
+    if (event->type == PLATFORM_EVENT_POINTER_MOVE || event->type == PLATFORM_EVENT_RESIZE ||
+        event->type == PLATFORM_EVENT_SCALE || event->type == PLATFORM_EVENT_APPEARANCE ||
+        event->type == PLATFORM_EVENT_FOCUS || event->type == PLATFORM_EVENT_DROP_ENTER ||
+        event->type == PLATFORM_EVENT_DROP_EXIT) {
+        for (platform_event_node *cursor = window->first; cursor != NULL; cursor = cursor->next) {
+            if (cursor->value.type == event->type) {
+                cursor->value = *event;
+                return true;
+            }
+        }
+    }
+    if (window->pending_count >= PLATFORM_EVENT_QUEUE_CAP) return false;
     platform_event_node *node = malloc(sizeof(*node));
     if (node == NULL) {
         return false;
@@ -69,7 +115,33 @@ static bool platform_emit(platform_window *window, const platform_event *event)
         window->last->next = node;
     }
     window->last = node;
+    window->pending_count++;
     return true;
+}
+
+bool platform_window_emit_internal(platform_window *window, const platform_event *event)
+{
+    return platform_emit(window, event);
+}
+
+bool platform_window_dispatch_animation_tick(platform_window *window)
+{
+    return platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_ANIMATION_TICK});
+}
+
+void platform_window_dispatch_action(platform_window *window, platform_viewer_action action)
+{
+    if (window != NULL) {
+        platform_event event = {.type = PLATFORM_EVENT_ACTION, .action = action};
+        (void)platform_emit(window, &event);
+    }
+}
+
+void platform_window_dispatch_command(platform_window *window, uint32_t command_id)
+{
+    if (window == NULL || command_id == 0U) return;
+    platform_event event = {.type = PLATFORM_EVENT_COMMAND, .command_id = command_id};
+    (void)platform_emit(window, &event);
 }
 
 static bool platform_size_event(platform_window *window, platform_event_type type)
@@ -113,11 +185,70 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     return true;
 }
 
+static bool platform_dragged_svg_path(id<NSDraggingInfo> sender,
+    char out_path[PLATFORM_PATH_CAP], size_t *out_length)
+{
+    if (sender == nil || out_path == NULL || out_length == NULL) return false;
+    NSPasteboard *pasteboard = sender.draggingPasteboard;
+    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[[NSURL class]]
+        options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
+    if (urls.count != 1U) return false;
+    NSURL *url = urls.firstObject;
+    const char *bytes = url.path.fileSystemRepresentation;
+    size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
+    if (!url.isFileURL || !platform_path_supported_internal(bytes, length)) return false;
+    NSNumber *is_regular_file = nil;
+    if (![url getResourceValue:&is_regular_file forKey:NSURLIsRegularFileKey error:nil] ||
+        !is_regular_file.boolValue) return false;
+    memcpy(out_path, bytes, length);
+    out_path[length] = '\0';
+    *out_length = length;
+    return true;
+}
+
+static NSDragOperation platform_drag_operation(platform_window *window,
+    id<NSDraggingInfo> sender)
+{
+    char path[PLATFORM_PATH_CAP];
+    size_t length = 0U;
+    if (platform_dragged_svg_path(sender, path, &length)) {
+        (void)platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_DROP_ENTER});
+        return NSDragOperationCopy;
+    }
+    (void)platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_DROP_EXIT});
+    return NSDragOperationNone;
+}
+
 @interface VexelView : NSView
 @property(nonatomic, assign) platform_window *owner;
 @end
 
 @implementation VexelView
+- (void)viewDidChangeEffectiveAppearance
+{
+    [super viewDidChangeEffectiveAppearance];
+    (void)platform_emit(self.owner, &(platform_event){.type = PLATFORM_EVENT_APPEARANCE});
+}
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender
+{
+    return platform_drag_operation(self.owner, sender);
+}
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
+{
+    return platform_drag_operation(self.owner, sender);
+}
+- (void)draggingExited:(id<NSDraggingInfo>)sender
+{
+    (void)sender;
+    (void)platform_emit(self.owner, &(platform_event){.type = PLATFORM_EVENT_DROP_EXIT});
+}
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
+{
+    char path[PLATFORM_PATH_CAP];
+    size_t length = 0U;
+    return platform_dragged_svg_path(sender, path, &length) &&
+        platform_window_dispatch_file_drop(self.owner, path, length) ? YES : NO;
+}
 - (BOOL)acceptsFirstResponder { return YES; }
 - (void)keyDown:(NSEvent *)event
 {
@@ -152,9 +283,12 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.type = PLATFORM_EVENT_POINTER_MOVE;
     value.logical_x = (int32_t)point.x;
     value.logical_y = (int32_t)(NSHeight(self.bounds) - point.y);
-    value.modifiers = (uint32_t)event.modifierFlags;
+    value.modifiers = platform_modifiers(event.modifierFlags);
     (void)platform_emit(self.owner, &value);
 }
+- (void)rightMouseDown:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_DOWN]; }
+- (void)rightMouseUp:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_UP]; }
+- (void)mouseDragged:(NSEvent *)event { [self mouseMoved:event]; }
 - (void)mouseDown:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_DOWN]; }
 - (void)mouseUp:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_UP]; }
 - (void)scrollWheel:(NSEvent *)event
@@ -194,6 +328,8 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.logical_x = (int32_t)point.x;
     value.logical_y = (int32_t)(NSHeight(self.bounds) - point.y);
     value.button = (uint8_t)event.buttonNumber;
+    NSInteger clicks = event.clickCount;
+    value.click_count = clicks < 0 ? 0U : clicks > 255 ? 255U : (uint8_t)clicks;
     value.modifiers = platform_modifiers(event.modifierFlags);
     (void)platform_emit(self.owner, &value);
 }
@@ -226,6 +362,12 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
 @end
 
 @implementation VexelNativeWindow
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+    (void)notification;
+    platform_macos_menus_set_owner(self.owner);
+    (void)platform_emit(self.owner, &(platform_event){.type = PLATFORM_EVENT_FOCUS});
+}
 - (BOOL)windowShouldClose:(id)sender
 {
     (void)sender;
@@ -244,6 +386,16 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     (void)notification;
     (void)platform_size_event(self.owner, PLATFORM_EVENT_SCALE);
 }
+- (void)windowDidEnterFullScreen:(NSNotification *)notification
+{
+    (void)notification;
+    platform_macos_menus_set_full_screen(true);
+}
+- (void)windowDidExitFullScreen:(NSNotification *)notification
+{
+    (void)notification;
+    platform_macos_menus_set_full_screen(false);
+}
 @end
 
 bool platform_init(void)
@@ -253,8 +405,9 @@ bool platform_init(void)
     }
     (void)[NSApplication sharedApplication];
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    platform_macos_menus_init();
     [NSApp finishLaunching];
-    return true;
+    return platform_queue_test_open_from_environment();
 }
 
 bool platform_window_create(const platform_window_config *config, platform_window **out_window)
@@ -297,21 +450,45 @@ bool platform_window_create(const platform_window_config *config, platform_windo
             return false;
         }
         native.releasedWhenClosed = NO;
+        native.collectionBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
         window->native = native;
+        platform_macos_menus_set_owner(window);
+        platform_macos_welcome_set_owner(window);
         native.owner = window;
+        native.tabbingIdentifier = @"com.vexel.editor.document";
+        native.tabbingMode = NSWindowTabbingModeAutomatic;
         native.delegate = native;
         native.acceptsMouseMovedEvents = YES;
         native.contentMaxSize = NSMakeSize(4096.0, 4096.0);
-        VexelView *view = [[VexelView alloc] initWithFrame:NSMakeRect(0.0, 0.0,
-            config->width_points, config->height_points)];
+        NSRect content_frame = NSMakeRect(0.0, 0.0,
+            config->width_points, config->height_points);
+        NSView *container = [[NSView alloc] initWithFrame:content_frame];
+        container.wantsLayer = YES;
+        container.layer.backgroundColor = NSColor.clearColor.CGColor;
+        NSVisualEffectView *material = [[NSVisualEffectView alloc]
+            initWithFrame:NSMakeRect(0.0, config->height_points - 40.0,
+                config->width_points, 40.0)];
+        material.material = NSVisualEffectMaterialTitlebar;
+        material.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+        material.state = NSVisualEffectStateFollowsWindowActiveState;
+        material.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+        material.hidden = YES;
+        [container addSubview:material];
+        VexelView *view = [[VexelView alloc] initWithFrame:content_frame];
+        view.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         view.owner = window;
-        native.contentView = view;
-        view.frame = NSMakeRect(0.0, 0.0, config->width_points, config->height_points);
+        [view registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
+        [container addSubview:view positioned:NSWindowAbove relativeTo:material];
+        native.contentView = container;
+        window->render_view = view;
+        window->toolbar_material = material;
         [native setContentSize:NSMakeSize(config->width_points, config->height_points)];
         native.title = title;
-        [native makeKeyAndOrderFront:nil];
-        (void)[native makeFirstResponder:view];
-        [NSApp activateIgnoringOtherApps:YES];
+        if (!config->initially_hidden) {
+            [native makeKeyAndOrderFront:nil];
+            (void)[native makeFirstResponder:view];
+            [NSApp activateIgnoringOtherApps:YES];
+        }
         if (!platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_OPEN})) {
             (void)fputs("platform: initial event allocation failed\n", stderr);
             platform_window_destroy(window);
@@ -319,8 +496,71 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         }
         (void)platform_size_event(window, PLATFORM_EVENT_RESIZE);
         (void)platform_size_event(window, PLATFORM_EVENT_SCALE);
+        if (!platform_window_dispatch_startup_files(window)) {
+            platform_window_destroy(window);
+            return false;
+        }
         *out_window = window;
         return true;
+    }
+}
+
+bool platform_window_open_panel(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    if (window->open_panel_request != nil) return true;
+    @autoreleasepool {
+        NSOpenPanel *panel = [NSOpenPanel openPanel];
+        UTType *svg_type = [UTType typeWithFilenameExtension:@"svg"];
+        if (svg_type == nil) return false;
+        panel.allowedContentTypes = @[svg_type];
+        panel.canChooseFiles = YES;
+        panel.canChooseDirectories = NO;
+        panel.allowsMultipleSelection = NO;
+        panel.resolvesAliases = YES;
+        VexelOpenPanelRequest *request = [[VexelOpenPanelRequest alloc] init];
+        request.owner = window;
+        request.panel = panel;
+        window->open_panel = panel;
+        window->open_panel_request = request;
+        NSWindow *parent = [NSApp keyWindow];
+        if (parent == nil || parent == window->native) parent = window->native;
+        [panel beginSheetModalForWindow:parent
+            completionHandler:^(NSModalResponse response) {
+                platform_window *owner = request.owner;
+                if (owner == NULL || owner->open_panel_request != request) return;
+                owner->open_panel = nil;
+                owner->open_panel_request = nil;
+                request.owner = NULL;
+                if (response != NSModalResponseOK || panel.URL == nil ||
+                    !panel.URL.isFileURL) return;
+                const char *path = panel.URL.path.fileSystemRepresentation;
+                size_t length = path == NULL ? 0U : strnlen(path, PLATFORM_PATH_CAP);
+                (void)platform_window_dispatch_file_open(owner, path, length);
+            }];
+        return true;
+    }
+}
+
+bool platform_window_set_visible(platform_window *window, bool visible)
+{
+    if (!platform_on_main_thread() || window == NULL || window->native == nil) return false;
+    if (visible) {
+        [window->native makeKeyAndOrderFront:nil];
+        [NSApp activateIgnoringOtherApps:YES];
+    } else {
+        [window->native orderOut:nil];
+    }
+    return true;
+}
+
+bool platform_window_is_dark_appearance(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL || window->native == nil) return true;
+    @autoreleasepool {
+        NSAppearanceName match = [window->native.effectiveAppearance
+            bestMatchFromAppearancesWithNames:@[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
+        return [match isEqualToString:NSAppearanceNameDarkAqua];
     }
 }
 
@@ -413,7 +653,7 @@ bool platform_test_inject_pointer(platform_window *window, platform_event_type t
             modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
             eventNumber:0 clickCount:(type == PLATFORM_EVENT_POINTER_MOVE ? 0 : 1)
             pressure:(type == PLATFORM_EVENT_POINTER_DOWN ? 1.0 : 0.0)];
-        VexelView *view = (VexelView *)window->native.contentView;
+        VexelView *view = (VexelView *)window->render_view;
         /* Test injection must not depend on LaunchServices activating the window. */
         if (type == PLATFORM_EVENT_POINTER_MOVE) {
             [view mouseMoved:event];
@@ -434,7 +674,7 @@ bool platform_test_inject_scroll(platform_window *window, double delta_x, double
         fabs(delta_x) > 10000.0 || fabs(delta_y) > 10000.0 || logical_x < 0.0 ||
         logical_y < 0.0 || logical_x >= 4096.0 || logical_y >= 4096.0) return false;
     @autoreleasepool {
-        VexelView *view = (VexelView *)window->native.contentView;
+        VexelView *view = (VexelView *)window->render_view;
         NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
         VexelSyntheticScrollEvent *event = [[VexelSyntheticScrollEvent alloc] init];
         event.injectedLocation = point;
@@ -452,7 +692,7 @@ bool platform_test_inject_magnify(platform_window *window, double magnification,
         fabs(magnification) > 100.0 || !isfinite(logical_x) || !isfinite(logical_y) ||
         logical_x < 0.0 || logical_y < 0.0 || logical_x >= 4096.0 || logical_y >= 4096.0) return false;
     @autoreleasepool {
-        VexelView *view = (VexelView *)window->native.contentView;
+        VexelView *view = (VexelView *)window->render_view;
         NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
         VexelSyntheticMagnifyEvent *event = [[VexelSyntheticMagnifyEvent alloc] init];
         event.injectedLocation = point;
@@ -499,6 +739,7 @@ bool platform_poll_event(platform_window *window, platform_event *out_event)
             window->last = NULL;
         }
         *out_event = node->value;
+        if (window->pending_count > 0U) window->pending_count--;
         free(node);
         return true;
     }
@@ -509,19 +750,37 @@ void platform_window_destroy(platform_window *window)
     if (!platform_on_main_thread() || window == NULL) {
         return;
     }
+    platform_window_request_animation_ticks(window, false);
     @autoreleasepool {
+        VexelOpenPanelRequest *request = window->open_panel_request;
+        if (request != nil) {
+            request.owner = NULL;
+            if (window->open_panel != nil) {
+                if (window->native.attachedSheet == window->open_panel)
+                    [NSApp endSheet:window->open_panel
+                        returnCode:NSModalResponseCancel];
+                [window->open_panel orderOut:nil];
+            }
+            window->open_panel = nil;
+            window->open_panel_request = nil;
+        }
         [window->native orderOut:nil];
         window->native.delegate = nil;
-        [(VexelView *)window->native.contentView setOwner:NULL];
+        [(VexelView *)window->render_view setOwner:NULL];
         [(VexelNativeWindow *)window->native setOwner:NULL];
         [window->native close];
         window->native = nil;
+        window->render_view = nil;
+        window->toolbar_material = nil;
         platform_event_node *node = window->first;
         while (node != NULL) {
             platform_event_node *next = node->next;
             free(node);
             node = next;
         }
+        platform_macos_menus_clear_owner(window);
+        platform_macos_welcome_clear_owner(window);
+        window->pending_count = 0U;
         free(window);
     }
 }

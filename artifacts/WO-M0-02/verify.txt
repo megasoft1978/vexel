@@ -1,0 +1,23 @@
+note: the ephemeral verifier worktree UUID in the captured build path is normalized for reuse.
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- The C compiler identification is AppleClang 21.0.0.21000334
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02<fresh verifier worktree>/build/mac-debug
+[1/2] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
+[2/2] Linking C executable bin/svgworkbench
+Ran 85 tests: 85 passed, 0 failed, 0 errors, 0 skipped; 3.396s
+valid ledger: 73 entries
+Ran 85 tests in 3.355s
+
+OK

@@ -1,0 +1,11 @@
+[1/10] Building C object CMakeFiles/css_test.dir/tests/svg/css/test_css.c.o
+[2/10] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
+[3/10] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[4/10] Linking C static library libvexel_shape.a
+[5/10] Linking C executable bin/css_test
+[6/10] Linking C executable bin/svg_index_bench
+[7/10] Linking C executable bin/shape_test
+[8/10] Linking C executable bin/shape_fuzz
+[9/10] Linking C executable bin/shape_render_cli
+[10/10] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

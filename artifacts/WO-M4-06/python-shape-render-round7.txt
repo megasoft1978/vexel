@@ -1,0 +1,22 @@
+................F....
+======================================================================
+FAIL: test_reference_comparison_and_repeatability (tests.test_shape_render.ShapeRenderTests.test_reference_comparison_and_repeatability)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/tests/test_shape_render.py", line 470, in test_reference_comparison_and_repeatability
+    self.assertEqual(failed_fixtures, [],
+AssertionError: Lists differ: [{'case': 'clip-union', 'failures': ['max_[44 chars])']}] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+{'case': 'clip-union', 'failures': ['max_jointly_covered_straight_rgb_diff=4 (limit 1)']}
+
++ []
+- [{'case': 'clip-union',
+-   'failures': ['max_jointly_covered_straight_rgb_diff=4 (limit 1)']}] : librsvg fixture threshold failures are recorded in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/artifacts/WO-M4-06/reference-comparison.json
+
+----------------------------------------------------------------------
+Ran 21 tests in 5.968s
+
+FAILED (failures=1)
+raster differential seed=20261011 generated=200 paint-clip-seed=20261013 paint-clip-generated=160 tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40

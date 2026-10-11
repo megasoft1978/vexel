@@ -1,0 +1,204 @@
+{
+  "wo_id": "WO-M2-02",
+  "revision": 1,
+  "spec_sha256": "3148ef31423c306ccc6f96396becadf0b4f2ef964f6605ad1a9a0b02f4644f2f",
+  "candidate_sha": "a170928f4d116ac7db446a06b7b054ce1ae40da0",
+  "cli_version": "codex-cli 0.160.1",
+  "duration_s": 60.470966209002654,
+  "verifier_builds": [
+    {
+      "argv": [
+        "./dev",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_s": 2.2236219580081524,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.7s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\n[1/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o\n[2/20] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o\n[3/20] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[4/20] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o\n[5/20] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[6/20] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[7/20] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[8/20] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o\n[9/20] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[10/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o\n[11/20] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[12/20] Linking C static library libvexel_base.a\n[13/20] Linking C executable base_contract_test\n[14/20] Linking C static library libvexel_xml.a\n[15/20] Linking C executable bin/xml_tokenizer_cli\n[16/20] Linking C executable bin/xml_tokenizer_test\n[17/20] Linking C executable bin/xml_tokenizer_fuzz\n[18/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[19/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[20/20] Linking C executable bin/svgworkbench\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "cmake",
+        "--preset",
+        "mac-release"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.735712624998996,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Release\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.7s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-release\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "cmake",
+        "--build",
+        "--preset",
+        "mac-release"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.7065637500054436,
+      "stdout": "[1/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o\n[2/20] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o\n[3/20] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[4/20] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o\n[5/20] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[6/20] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[7/20] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[8/20] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[9/20] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o\n[10/20] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[11/20] Linking C static library libvexel_base.a\n[12/20] Linking C executable base_contract_test\n[13/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o\n[14/20] Linking C static library libvexel_xml.a\n[15/20] Linking C executable bin/xml_tokenizer_cli\n[16/20] Linking C executable bin/xml_tokenizer_fuzz\n[17/20] Linking C executable bin/xml_tokenizer_test\n[18/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[19/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[20/20] Linking C executable bin/svgworkbench\n",
+      "stderr": ""
+    }
+  ],
+  "checks": [
+    {
+      "index": 1,
+      "argv": [
+        "./dev",
+        "build"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.13171037498977967,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\nninja: no work to do.\n",
+      "stderr": ""
+    },
+    {
+      "index": 2,
+      "argv": [
+        "ctest",
+        "--test-dir",
+        "build/mac-debug",
+        "--output-on-failure"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.6423844160017325,
+      "stdout": "Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.20 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.17 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.23 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.60 sec\n",
+      "stderr": ""
+    },
+    {
+      "index": 3,
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "tests.test_xml_tokenizer"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.23535124999762047,
+      "stdout": "",
+      "stderr": "....\n----------------------------------------------------------------------\nRan 4 tests in 0.152s\n\nOK\n"
+    },
+    {
+      "index": 4,
+      "argv": [
+        "python3",
+        "tests/svg/xml/compare_expat.py",
+        "--expect-expat",
+        "expat_2.6.4"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.30678108301071916,
+      "stdout": "compared 24 pinned fixtures using Python 3.12.8 / expat_2.6.4\n",
+      "stderr": ""
+    },
+    {
+      "index": 5,
+      "argv": [
+        "python3",
+        "scripts/xml_fuzz.py",
+        "--binary",
+        "build/mac-asan/bin/xml_tokenizer_fuzz",
+        "--duration",
+        "60",
+        "--seed",
+        "20261009",
+        "--output",
+        ".cache/WO-M2-02/fuzz.json"
+      ],
+      "exit_code": 0,
+      "duration_s": 62.59506487500039,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.6s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-asan\n[1/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o\n[2/20] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o\n[3/20] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[4/20] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o\n[5/20] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[6/20] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[7/20] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[8/20] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o\n[9/20] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[10/20] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[11/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o\n[12/20] Linking C static library libvexel_base.a\n[13/20] Linking C executable base_contract_test\n[14/20] Linking C static library libvexel_xml.a\n[15/20] Linking C executable bin/xml_tokenizer_test\n[16/20] Linking C executable bin/xml_tokenizer_fuzz\n[17/20] Linking C executable bin/xml_tokenizer_cli\n[18/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[19/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[20/20] Linking C executable bin/svgworkbench\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-asan\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.36 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.19 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.39 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.93 sec\n{\"duration_requested_seconds\": 60, \"elapsed_seconds\": 60.000016, \"iterations\": 4140212, \"sanitizer_status\": \"clean\", \"seed\": 20261009, \"wall_elapsed_seconds\": 60.193567}\n",
+      "stderr": ""
+    },
+    {
+      "index": 6,
+      "argv": [
+        "./dev",
+        "verify"
+      ],
+      "exit_code": 0,
+      "duration_s": 18.352934583002934,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\nninja: no work to do.\nInternal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.02 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.00 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.07 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.10 sec\npresented frames: 2\nbyte-exact readback: pass\nresize/reset: pass\nnative smoke elapsed seconds: 0.259626\n20 frames with identical readback hashes and stable offscreen frame order\nreadback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c\nnative replay elapsed seconds: 0.110231\nRan 147 tests: 147 passed, 0 failed, 0 errors, 0 skipped; 17.875s\nvalid ledger: 178 entries\n",
+      "stderr": "Ran 147 tests in 17.755s\n\nOK\n"
+    },
+    {
+      "index": 7,
+      "argv": [
+        "./dev",
+        "asan"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.6959449170099106,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-asan\nninja: no work to do.\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-asan\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.18 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.02 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.22 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.43 sec\n",
+      "stderr": ""
+    },
+    {
+      "index": 8,
+      "argv": [
+        "./dev",
+        "ubsan"
+      ],
+      "exit_code": 0,
+      "duration_s": 2.264303625008324,
+      "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"ubsan\"\n\n-- The C compiler identification is AppleClang 21.0.0.21000334\n-- The OBJC compiler identification is AppleClang 21.0.0.21000334\n-- Detecting C compiler ABI info\n-- Detecting C compiler ABI info - done\n-- Check for working C compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc - skipped\n-- Detecting C compile features\n-- Detecting C compile features - done\n-- Detecting OBJC compiler ABI info\n-- Detecting OBJC compiler ABI info - done\n-- Check for working OBJC compiler: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang - skipped\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Configuring done (0.8s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-ubsan\n[1/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o\n[2/20] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o\n[3/20] Building C object CMakeFiles/xml_tokenizer_cli.dir/tests/svg/xml/xml_tokenizer_cli.c.o\n[4/20] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o\n[5/20] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o\n[6/20] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o\n[7/20] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o\n[8/20] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o\n[9/20] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o\n[10/20] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o\n[11/20] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o\n[12/20] Linking C static library libvexel_base.a\n[13/20] Linking C executable base_contract_test\n[14/20] Linking C static library libvexel_xml.a\n[15/20] Linking C executable bin/xml_tokenizer_test\n[16/20] Linking C executable bin/xml_tokenizer_cli\n[17/20] Linking C executable bin/xml_tokenizer_fuzz\n[18/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o\n[19/20] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o\n[20/20] Linking C executable bin/svgworkbench\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-ubsan\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.17 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.16 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.31 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.64 sec\n",
+      "stderr": ""
+    },
+    {
+      "index": 9,
+      "argv": [
+        "python3",
+        "scripts/ledger.py",
+        "validate",
+        "ledger.jsonl"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.05734283300989773,
+      "stdout": "valid ledger: 178 entries\n",
+      "stderr": ""
+    },
+    {
+      "index": 10,
+      "argv": [
+        "python3",
+        "scripts/wo_validate.py",
+        "WO-M2-02",
+        "--ready"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.034461709001334384,
+      "stdout": "valid WO-M2-02 revision 1 sha256 3148ef31423c306ccc6f96396becadf0b4f2ef964f6605ad1a9a0b02f4644f2f\n",
+      "stderr": ""
+    },
+    {
+      "index": 11,
+      "argv": [
+        "python3",
+        "-m",
+        "json.tool",
+        "bench/results/WO-M2-02.json"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.030311750000691973,
+      "stdout": "{\n    \"work_order\": \"WO-M2-02\",\n    \"revision\": 1,\n    \"base_sha\": \"b321f0ce4a2b35b8c38a436b5da59ede92635fe8\",\n    \"candidate_head_before_changes\": \"bd0dde8b6cd1aea888c22a3ea794c015d730ce77\",\n    \"acceptance_status\": \"machine_checks_passed_pending_independent_review\",\n    \"machine\": \"Apple Silicon arm64, macOS 27.0\",\n    \"compiler\": \"Apple Clang 21.0.0.21000334\",\n    \"python\": \"3.12.8\",\n    \"expat\": \"expat_2.6.4\",\n    \"checks\": {\n        \"debug_ctest\": {\n            \"passed\": 3,\n            \"total\": 3\n        },\n        \"focused_python\": {\n            \"passed\": 4,\n            \"total\": 4\n        },\n        \"deterministic_malformed_inputs\": 100000,\n        \"expat_fixtures\": {\n            \"checked\": 24,\n            \"accepted_and_counts_match\": 24\n        },\n        \"asan_ctest\": {\n            \"passed\": 3,\n            \"total\": 3\n        },\n        \"ubsan_ctest\": {\n            \"passed\": 3,\n            \"total\": 3\n        },\n        \"asan_fuzz\": {\n            \"seed\": 20261009,\n            \"iterations\": 4146195,\n            \"elapsed_seconds\": 60.000006,\n            \"sanitizer_status\": \"clean\"\n        },\n        \"dev_verify\": {\n            \"passed\": 147,\n            \"failed\": 0,\n            \"errors\": 0,\n            \"skipped\": 0,\n            \"host_runs\": 4\n        }\n    },\n    \"full_suite_failures\": [],\n    \"claims\": {\n        \"svg_throughput\": false,\n        \"performance_improvement\": false,\n        \"rss\": false\n    },\n    \"evidence\": {\n        \"debug_build_ctest\": \"artifacts/WO-M2-02/build-and-ctest.txt\",\n        \"focused_tests\": \"artifacts/WO-M2-02/focused-tests.txt\",\n        \"expat_comparison\": \"artifacts/WO-M2-02/expat-comparison.json\",\n        \"fuzz\": \"artifacts/WO-M2-02/fuzz.json\",\n        \"verify\": \"artifacts/WO-M2-02/verify-host.txt\",\n        \"release_build\": \"artifacts/WO-M2-02/release-build.txt\"\n    },\n    \"transient_executor_isolation\": {\n        \"attempts\": 3,\n        \"summary\": \"Nested workspace-write sandbox caused sandbox-exec and LaunchServices/XPC failures; direct host reruns passed without source or test changes.\",\n        \"evidence\": [\n            \"artifacts/WO-M2-02/verify.txt\",\n            \"artifacts/WO-M2-02/verify-rerun.txt\",\n            \"artifacts/WO-M2-02/verify-final.txt\",\n            \"artifacts/WO-M2-02/verify-host.txt\"\n        ]\n    },\n    \"review_fixes\": [\n        \"Accept a leading UTF-8 BOM while preserving subsequent source offsets.\",\n        \"Clamp caller-provided input, node, per-element attribute, total attribute, and text limits to documented hard ceilings.\",\n        \"Assert exact QName prefix and local-name source bytes.\",\n        \"Reject adjacent attributes without XML whitespace and reject QName local parts that do not begin with a NameStart character.\",\n        \"Validate source, name, value, prefix, and local-name spans in every successful deterministic malformed-generator case.\",\n        \"Confine resolved fuzz-report outputs to repository .cache/ or this work order\\u2019s artifacts directory, with regression tests for traversal and absolute paths.\",\n        \"Parse processing-instruction targets as XML Names, exclude the separator from PI data spans, and record the full non-empty start-tag span. Split UTF-8/XML character helpers into their own internal source module.\"\n    ],\n    \"release_binary_bytes\": {\n        \"svgworkbench\": 97040,\n        \"vexel_xml_static_library\": 16552\n    }\n}\n",
+      "stderr": ""
+    },
+    {
+      "index": 12,
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "duration_s": 0.061184500009403564,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "verdict": {
+    "verdict": "pass",
+    "findings": [],
+    "summary": "The tokenizer implementation and deterministic checks satisfy the reviewed acceptance criteria. Build, CTest, focused tests, Expat comparison, 60-second ASan fuzz, sanitizers, validation, and diff check pass. Pending ledger and STATE status is expected for this review."
+  },
+  "session_id": "01a11dc6-5203-71f1-b1d4-6b802fa3c020"
+}

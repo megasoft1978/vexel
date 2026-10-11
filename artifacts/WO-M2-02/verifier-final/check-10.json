@@ -1,0 +1,13 @@
+{
+  "index": 10,
+  "argv": [
+    "python3",
+    "scripts/wo_validate.py",
+    "WO-M2-02",
+    "--ready"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.034461709001334384,
+  "stdout": "valid WO-M2-02 revision 1 sha256 3148ef31423c306ccc6f96396becadf0b4f2ef964f6605ad1a9a0b02f4644f2f\n",
+  "stderr": ""
+}

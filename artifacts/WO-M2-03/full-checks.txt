@@ -1,0 +1,345 @@
+macOS-only bounded XML fuzz workflow: pass
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-debug
+[1/2] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o
+[2/2] Linking C executable bin/xml_tokenizer_fuzz
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-debug
+    Start 1: cli-version
+1/3 Test #1: cli-version ......................   Passed    0.01 sec
+    Start 2: base-contract
+2/3 Test #2: base-contract ....................   Passed    0.01 sec
+    Start 3: xml-tokenizer
+3/3 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.08 sec
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 159 tests in 8.869s
+
+FAILED (failures=8, errors=2)
+Ran 159 tests: 149 passed, 8 failed, 2 errors, 0 skipped; 8.969s
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-asan
+ninja: no work to do.
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-asan
+    Start 1: cli-version
+1/3 Test #1: cli-version ......................   Passed    0.03 sec
+    Start 2: base-contract
+2/3 Test #2: base-contract ....................   Passed    0.02 sec
+    Start 3: xml-tokenizer
+3/3 Test #3: xml-tokenizer ....................   Passed    0.22 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.27 sec
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="ubsan"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-ubsan
+[1/2] Building C object CMakeFiles/xml_tokenizer_fuzz.dir/tests/svg/xml/xml_tokenizer_fuzz.c.o
+[2/2] Linking C executable bin/xml_tokenizer_fuzz
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-ubsan
+    Start 1: cli-version
+1/3 Test #1: cli-version ......................   Passed    0.01 sec
+    Start 2: base-contract
+2/3 Test #2: base-contract ....................   Passed    0.02 sec
+    Start 3: xml-tokenizer
+3/3 Test #3: xml-tokenizer ....................   Passed    0.18 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.21 sec
+valid ledger: 186 entries
+valid WO-M2-03 revision 1 sha256 57c885fa1afbf331e47ee4396568d6be7888f972ae7b921ad0bf38eb37217787
+{
+    "work_order": "WO-M2-03",
+    "revision": 1,
+    "base_sha": "daf86e71deda8b42332a6fd5e684c1e03c1c5187",
+    "acceptance_status": "blocked_unaccepted_uncommitted",
+    "machine": "Apple Silicon arm64, macOS 27.0",
+    "compiler": "Apple Clang 21.0.0.21000334",
+    "seed": 20261009,
+    "build_identity": "c97dacfa7e0d98d80e46741b46517c9959b8e8fc32884e2cdcbef3b1596a3c10",
+    "campaigns": {
+        "pr_smoke": {
+            "requested_seconds": 30,
+            "elapsed_seconds": 30.206122,
+            "iterations": 2038582,
+            "sanitizer_status": "clean"
+        },
+        "scheduled": {
+            "requested_seconds": 600,
+            "elapsed_seconds": 600.09212,
+            "iterations": 40846268,
+            "sanitizer_status": "clean"
+        }
+    },
+    "checks": {
+        "focused_tests": {
+            "passed": 12,
+            "total": 12
+        },
+        "synthetic_crash_canary": {
+            "captured": true,
+            "minimized": true,
+            "fingerprint_preserved": true,
+            "counts_as_parser_defect": false
+        },
+        "timeout_process_group_canary": {
+            "timed_out": true,
+            "process_group_terminated": true
+        },
+        "asan_ctest": {
+            "passed": 3,
+            "total": 3
+        },
+        "ubsan_ctest": {
+            "passed": 3,
+            "total": 3
+        },
+        "dev_verify": {
+            "passed": 148,
+            "failed": 8,
+            "errors": 2,
+            "skipped": 0
+        }
+    },
+    "full_suite_failures": [
+        "7 benchmark harness process-policy and timeout tests",
+        "1 benchmark offline adapter test",
+        "1 native task cycle test",
+        "2 native Metal readback/replay errors"
+    ],
+    "claims": {
+        "svg_throughput": false,
+        "render_performance": false,
+        "parser_crashes": false
+    },
+    "implementation_commit": null,
+    "evidence": {
+        "focused_tests": "artifacts/WO-M2-03/focused-tests.txt",
+        "crash_canary": "artifacts/WO-M2-03/crash-canary.json",
+        "timeout_canary": "artifacts/WO-M2-03/timeout-canary.json",
+        "pr_smoke": "artifacts/WO-M2-03/pr-smoke.json",
+        "scheduled_campaign": "artifacts/WO-M2-03/scheduled-campaign.json",
+        "full_checks": "artifacts/WO-M2-03/full-checks.txt",
+        "verify_rerun": "artifacts/WO-M2-03/verify-rerun.txt"
+    }
+}
+{
+    "work_order": "WO-M2-03",
+    "revision": 1,
+    "base_sha": "daf86e71deda8b42332a6fd5e684c1e03c1c5187",
+    "acceptance_status": "blocked_unaccepted_uncommitted",
+    "machine": "Apple Silicon arm64, macOS 27.0",
+    "compiler": "Apple Clang 21.0.0.21000334",
+    "seed": 20261009,
+    "build_identity": "c97dacfa7e0d98d80e46741b46517c9959b8e8fc32884e2cdcbef3b1596a3c10",
+    "campaigns": {
+        "pr_smoke": {
+            "requested_seconds": 30,
+            "elapsed_seconds": 30.206122,
+            "iterations": 2038582,
+            "sanitizer_status": "clean"
+        },
+        "scheduled": {
+            "requested_seconds": 600,
+            "elapsed_seconds": 600.09212,
+            "iterations": 40846268,
+            "sanitizer_status": "clean"
+        }
+    },
+    "checks": {
+        "focused_tests": {
+            "passed": 12,
+            "total": 12
+        },
+        "synthetic_crash_canary": {
+            "captured": true,
+            "minimized": true,
+            "fingerprint_preserved": true,
+            "counts_as_parser_defect": false
+        },
+        "timeout_process_group_canary": {
+            "timed_out": true,
+            "process_group_terminated": true
+        },
+        "asan_ctest": {
+            "passed": 3,
+            "total": 3
+        },
+        "ubsan_ctest": {
+            "passed": 3,
+            "total": 3
+        },
+        "dev_verify": {
+            "passed": 149,
+            "failed": 8,
+            "errors": 2,
+            "skipped": 0
+        }
+    },
+    "full_suite_failures": [
+        "7 benchmark harness process-policy and timeout tests",
+        "1 benchmark offline adapter test",
+        "1 native task cycle test",
+        "2 native Metal readback/replay errors"
+    ],
+    "claims": {
+        "svg_throughput": false,
+        "render_performance": false,
+        "parser_crashes": false
+    },
+    "implementation_commit": null,
+    "evidence": {
+        "focused_tests": "artifacts/WO-M2-03/focused-tests.txt",
+        "crash_canary": "artifacts/WO-M2-03/crash-canary.json",
+        "timeout_canary": "artifacts/WO-M2-03/timeout-canary.json",
+        "pr_smoke": "artifacts/WO-M2-03/pr-smoke.json",
+        "scheduled_campaign": "artifacts/WO-M2-03/scheduled-campaign.json",
+        "full_checks": "artifacts/WO-M2-03/full-checks.txt",
+        "verify_rerun": "artifacts/WO-M2-03/verify-rerun.txt"
+    }
+}
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03/build/mac-debug
+    Start 1: cli-version
+1/3 Test #1: cli-version ......................   Passed    0.00 sec
+    Start 2: base-contract
+2/3 Test #2: base-contract ....................   Passed    0.00 sec
+    Start 3: xml-tokenizer
+3/3 Test #3: xml-tokenizer ....................   Passed    0.07 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =   0.08 sec
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 159 tests in 6.458s
+
+FAILED (failures=8, errors=2)
+Ran 159 tests: 149 passed, 8 failed, 2 errors, 0 skipped; 6.520s
+macOS-only bounded XML fuzz workflow: pass
+valid ledger: 186 entries
+valid WO-M2-03 revision 1 sha256 57c885fa1afbf331e47ee4396568d6be7888f972ae7b921ad0bf38eb37217787
+{
+    "work_order": "WO-M2-03",
+    "revision": 1,
+    "base_sha": "daf86e71deda8b42332a6fd5e684c1e03c1c5187",
+    "acceptance_status": "blocked_unaccepted_uncommitted",
+    "machine": "Apple Silicon arm64, macOS 27.0",
+    "compiler": "Apple Clang 21.0.0.21000334",
+    "seed": 20261009,
+    "build_identity": "c97dacfa7e0d98d80e46741b46517c9959b8e8fc32884e2cdcbef3b1596a3c10",
+    "campaigns": {
+        "pr_smoke": {
+            "requested_seconds": 30,
+            "elapsed_seconds": 30.206122,
+            "iterations": 2038582,
+            "sanitizer_status": "clean"
+        },
+        "scheduled": {
+            "requested_seconds": 600,
+            "elapsed_seconds": 600.09212,
+            "iterations": 40846268,
+            "sanitizer_status": "clean"
+        }
+    },
+    "checks": {
+        "focused_tests": {
+            "passed": 12,
+            "total": 12
+        },
+        "synthetic_crash_canary": {
+            "captured": true,
+            "minimized": true,
+            "fingerprint_preserved": true,
+            "counts_as_parser_defect": false
+        },
+        "timeout_process_group_canary": {
+            "timed_out": true,
+            "process_group_terminated": true
+        },
+        "asan_ctest": {
+            "passed": 3,
+            "total": 3
+        },
+        "ubsan_ctest": {
+            "passed": 3,
+            "total": 3
+        },
+        "dev_verify": {
+            "passed": 149,
+            "failed": 8,
+            "errors": 2,
+            "skipped": 0
+        }
+    },
+    "full_suite_failures": [
+        "7 benchmark harness process-policy and timeout tests",
+        "1 benchmark offline adapter test",
+        "1 native task cycle test",
+        "2 native Metal readback/replay errors"
+    ],
+    "claims": {
+        "svg_throughput": false,
+        "render_performance": false,
+        "parser_crashes": false
+    },
+    "implementation_commit": null,
+    "evidence": {
+        "focused_tests": "artifacts/WO-M2-03/focused-tests.txt",
+        "crash_canary": "artifacts/WO-M2-03/crash-canary.json",
+        "timeout_canary": "artifacts/WO-M2-03/timeout-canary.json",
+        "pr_smoke": "artifacts/WO-M2-03/pr-smoke.json",
+        "scheduled_campaign": "artifacts/WO-M2-03/scheduled-campaign.json",
+        "full_checks": "artifacts/WO-M2-03/full-checks.txt",
+        "verify_rerun": "artifacts/WO-M2-03/verify-rerun.txt"
+    }
+}

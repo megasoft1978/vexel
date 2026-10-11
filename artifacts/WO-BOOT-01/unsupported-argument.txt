@@ -1,0 +1,2 @@
+unsupported argument rejected; exit=1
+usage: svgworkbench --version

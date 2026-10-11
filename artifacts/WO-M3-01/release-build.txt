@@ -1,0 +1,19 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Release"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01/build/mac-release
+[1/8] Building C object CMakeFiles/vexel_index.dir/src/svg/index/index.c.o
+[2/8] Building C object CMakeFiles/xml_tokenizer_test.dir/tests/svg/xml/test_xml_tokenizer.c.o
+[3/8] Building C object CMakeFiles/svg_index_test.dir/tests/svg/index/test_index.c.o
+[4/8] Linking C executable bin/xml_tokenizer_test
+[5/8] Linking C static library libvexel_index.a
+[6/8] Linking C executable bin/svg_index_test
+ld: warning: ignoring duplicate libraries: 'libvexel_xml.a'
+[7/8] Linking C executable bin/svg_index_bench
+[8/8] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

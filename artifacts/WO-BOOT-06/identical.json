@@ -1,0 +1,34 @@
+{
+  "actual_png_sha256": "debb237b1659fa9200dcd0bfa3d5df3ad660840d15d79afc962d284f1ea49a75",
+  "backend": "scalar",
+  "build_sha": "1111111111111111111111111111111111111111111111111111111111111111",
+  "dimensions": {
+    "height": 256,
+    "width": 256
+  },
+  "expected_png_sha256": "debb237b1659fa9200dcd0bfa3d5df3ad660840d15d79afc962d284f1ea49a75",
+  "fixture_id": "shapes-basic",
+  "font": "System Sans",
+  "frame": 0,
+  "metrics": {
+    "differing_channels": 0,
+    "differing_pixels": 0,
+    "exact_equal": true,
+    "exact_equal_pixels": 65536,
+    "maximum_channel_delta": 0,
+    "mean_absolute_channel_delta": 0.0,
+    "total_absolute_channel_delta": 0
+  },
+  "pinned_svg_sha256": "6f546464f23d6cd95be30fe2c98130b84b0f75796e4578b330b0695dcf6de5c7",
+  "result": "pass",
+  "scale": 1.0,
+  "schema_version": 1,
+  "tolerance": {
+    "non_tolerated_pixels": 0,
+    "tolerated_pixels": 0
+  },
+  "tolerances": {
+    "edge_channel_tolerance": 1,
+    "edge_radius": 1
+  }
+}

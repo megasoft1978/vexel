@@ -1,0 +1,2 @@
+native_save file_fsync=true rename=true parent_directory_fsync=true
+source-save C tests passed; byte equality, permission preservation, pre-commit failure atomicity, and cleanup verified

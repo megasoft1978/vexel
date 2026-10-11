@@ -1,0 +1,3 @@
+arena_alignment_boundary: chunks=5 payload_capacity=80 used_bytes=13
+arena_allocator_failure: allocations=6 frees=4 live=0
+base contract tests passed

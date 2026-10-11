@@ -1,0 +1,877 @@
+{
+  "schema": 1,
+  "source": "project-authored deterministic fixtures",
+  "count": 87,
+  "cases": [
+    {
+      "file": "fixtures/charts/bar-chart-01.svg",
+      "category": "charts",
+      "supported": true,
+      "diagnostic": null,
+      "width": 320,
+      "height": 180,
+      "bytes": 3723,
+      "sha256": "69f1fe59985c0e4039a44a19ea8a44f33b58d5b012e332af1fa2e57400d36f14"
+    },
+    {
+      "file": "fixtures/charts/bar-chart-02.svg",
+      "category": "charts",
+      "supported": true,
+      "diagnostic": null,
+      "width": 320,
+      "height": 180,
+      "bytes": 3727,
+      "sha256": "7a2276a76d960dd62395bef5e0120b5c4a009a50f036ed4e9cc534ce93d1dbc7"
+    },
+    {
+      "file": "fixtures/charts/bar-chart-03.svg",
+      "category": "charts",
+      "supported": true,
+      "diagnostic": null,
+      "width": 320,
+      "height": 180,
+      "bytes": 3724,
+      "sha256": "a4131e91cebe9814aa3c81b6b867c96ff59275298ef6869c24c2d890237956c5"
+    },
+    {
+      "file": "fixtures/charts/bar-chart-04.svg",
+      "category": "charts",
+      "supported": true,
+      "diagnostic": null,
+      "width": 320,
+      "height": 180,
+      "bytes": 3723,
+      "sha256": "4564fe54f90bb54dca0cbb4be05c11d200315c799d32c18caf57996dedcf8309"
+    },
+    {
+      "file": "fixtures/charts/bar-chart-05.svg",
+      "category": "charts",
+      "supported": true,
+      "diagnostic": null,
+      "width": 320,
+      "height": 180,
+      "bytes": 3726,
+      "sha256": "b8fe30bdecac48d00889daeaab65932f09256b38139be7504678c28e12ad204c"
+    },
+    {
+      "file": "fixtures/feather/activity.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 345,
+      "sha256": "38354da7c4d1b24cd698be805c04dd95b205a4e0a56a42f12bdf3481080ebf7c"
+    },
+    {
+      "file": "fixtures/feather/archive.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 357,
+      "sha256": "e568bbb2b064c6e265ac3d3644a0326df72fbbfb2416fd394ce7638329e48f4e"
+    },
+    {
+      "file": "fixtures/feather/bell.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 373,
+      "sha256": "d79c18439119d311c0c9d7cb8dd9aefbff039a4af3dda1ed3f41a633c25ad169"
+    },
+    {
+      "file": "fixtures/feather/calendar.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 396,
+      "sha256": "88eba241d3247dff659e9e54e4718c58f4c987cd1610b4fe66f64a2d18163f98"
+    },
+    {
+      "file": "fixtures/feather/camera.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 375,
+      "sha256": "2e3461b260b4ba39ed3bb7e66654c7642906ef031ca60ce16540052c48038f3b"
+    },
+    {
+      "file": "fixtures/feather/check-circle.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 370,
+      "sha256": "ffe35e4a9ae8f86c503ddb55e71c5a21f82eb3f13076233837c5a7774f20a8ff"
+    },
+    {
+      "file": "fixtures/feather/clock.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 361,
+      "sha256": "cdee00b3dd52d172e0bd7c44783072f80d0882fb76d73078402cda2c383eafab"
+    },
+    {
+      "file": "fixtures/feather/cloud-upload.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 408,
+      "sha256": "b54d80578bc40a69dee9eaeffa47d9324ae5f899ca5a8e76c64e1fe68ac905ae"
+    },
+    {
+      "file": "fixtures/feather/download.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 355,
+      "sha256": "d7934fdb5c38254564871515ed0ee3e0c285e1e3ad15d3fbff03d7468852d2f7"
+    },
+    {
+      "file": "fixtures/feather/eye.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 394,
+      "sha256": "99b18287196c306121047bcceec3903f0082c1aadac4529ae6777b81c087aeef"
+    },
+    {
+      "file": "fixtures/feather/file-text.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 378,
+      "sha256": "7a7d7f891ba34f41efe5fa6a32733077676639eb40126707853d542f1116c7d6"
+    },
+    {
+      "file": "fixtures/feather/folder.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 337,
+      "sha256": "72a8756f53824e338b67cd0e6aaca505ed2f9d7f36b6ddfff79d0fdff0eae044"
+    },
+    {
+      "file": "fixtures/feather/heart.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 394,
+      "sha256": "da2a6d6d9eabd76a823040e61ebe34bb69779d337c9736594980d3d763691c65"
+    },
+    {
+      "file": "fixtures/feather/lock.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 401,
+      "sha256": "a65b67c01074ebb043a75715f2bb377f2616245636ce6f32ec980ce223291211"
+    },
+    {
+      "file": "fixtures/feather/mail.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 382,
+      "sha256": "cd9ca1213afd2052af5b3fa52d9a76f1b1a004fba27ce2bd3b312e7e7efb84c6"
+    },
+    {
+      "file": "fixtures/feather/map-pin.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 401,
+      "sha256": "184d48f7e24ed6c1aa4f2a4ab2118fa43d427d09e6dd05a47aacd8f9982b0b07"
+    },
+    {
+      "file": "fixtures/feather/search.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 360,
+      "sha256": "4a1c0652653c518b661227fb2adfa2b8501177708831487a33e75f489f1335fe"
+    },
+    {
+      "file": "fixtures/feather/settings.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 419,
+      "sha256": "37deb653aa13876618aaaf531370644a5431fd6adb02bd9e308e7354f38963db"
+    },
+    {
+      "file": "fixtures/feather/shopping-cart.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 408,
+      "sha256": "9cb6d73b8f072e2c2bbfffe116d87ab521bf688762ff8c3e041f6df13890da4e"
+    },
+    {
+      "file": "fixtures/feather/user.svg",
+      "category": "feather",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 369,
+      "sha256": "1a746b299d174d4d226bdd2302852290238a3c9b9b5722ca34eaaec769cac85e"
+    },
+    {
+      "file": "fixtures/illustrator/illustrator-export-01.svg",
+      "category": "illustrator",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 865,
+      "sha256": "cdd13c2db94a97ea143dd47fd19720282cd3a86e659a2c95f80c506388fca9b2"
+    },
+    {
+      "file": "fixtures/illustrator/illustrator-export-02.svg",
+      "category": "illustrator",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 865,
+      "sha256": "b04741084d5cd5d205f3b80a0716c70c062be2679931861b3b082432761a3316"
+    },
+    {
+      "file": "fixtures/illustrator/illustrator-export-03.svg",
+      "category": "illustrator",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 865,
+      "sha256": "06939f3731f92faaea9f86a7d03e86b9dab236e3da2974b770b0e5fbf9606bf2"
+    },
+    {
+      "file": "fixtures/illustrator/illustrator-export-04.svg",
+      "category": "illustrator",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 865,
+      "sha256": "4fd57c39c3940061849649bad410799e3ce5a0f38f086ebc37393f1d78b2a97b"
+    },
+    {
+      "file": "fixtures/illustrator/illustrator-export-05.svg",
+      "category": "illustrator",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 865,
+      "sha256": "8aef4c70c2cc32f1328e824bbe8902779502ee9f2afe2cfd86d69992bb53d8c3"
+    },
+    {
+      "file": "fixtures/illustrator/illustrator-export-06.svg",
+      "category": "illustrator",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 865,
+      "sha256": "470acac5be192d44e4ec8a6f2e31d7ea68d88a223d9ef59c5e0e45be83aa021a"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-01.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 992,
+      "sha256": "3e8fcffec2d0755ca6f8ee5c2e15a214638d49286c21fc0aa863e706dce6d295"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-02.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 992,
+      "sha256": "035895ea505dd82f586ce3add93b611dab4778bfa0d773f111d3fee686f11f81"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-03.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 992,
+      "sha256": "7cc48ca25882ebaddcb233471faa15c08541e2bb723db885ff8c4e6f1a667f67"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-04.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 991,
+      "sha256": "8008ba666bfbf2ce3115ad6d1f506fc9921b0964b136aa33f466350bedc94d25"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-05.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 991,
+      "sha256": "a99a6ac3ab7919f54eb97ea316389759cefd63c931fd6f12da2c67df2b8d0c53"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-06.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 991,
+      "sha256": "0a50d3fa225fdc8d3e06bf9055ff630aca12078b7a8ee91568e7fb0caeaae15a"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-07.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 991,
+      "sha256": "24ee72fc37fc5dd682828b405e77e9ad85d6e19d213e98c9409be05264838ec6"
+    },
+    {
+      "file": "fixtures/inkscape/inkscape-page-08.svg",
+      "category": "inkscape",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 991,
+      "sha256": "1af15129b29a93505b3596168d8fc43e1c0255e703f5097bfb89226e16eeb6e5"
+    },
+    {
+      "file": "fixtures/logos/curve-mark-01.svg",
+      "category": "logos",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 80,
+      "bytes": 1201,
+      "sha256": "6f908eccdd75479098f7660f6ffc5de58fbb43c9b225575942954e2247ff4bf6"
+    },
+    {
+      "file": "fixtures/logos/curve-mark-02.svg",
+      "category": "logos",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 80,
+      "bytes": 1201,
+      "sha256": "6ee1b99fe736fb50dec627adbf23a77fe4bfdb27c44d2be6f98d52ff9111e5e6"
+    },
+    {
+      "file": "fixtures/logos/curve-mark-03.svg",
+      "category": "logos",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 80,
+      "bytes": 1201,
+      "sha256": "786ede5205f4d4b1569717dbec77a15f8fb4d9758ed1cd43f2830d23072b2be8"
+    },
+    {
+      "file": "fixtures/logos/curve-mark-04.svg",
+      "category": "logos",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 80,
+      "bytes": 1201,
+      "sha256": "8138979cb3065685a4a7d3f82555e8e91e98c3ee702e3fc3f000311c07c138de"
+    },
+    {
+      "file": "fixtures/maps/map-mosaic-2000.svg",
+      "category": "maps",
+      "supported": true,
+      "diagnostic": null,
+      "width": 512,
+      "height": 512,
+      "bytes": 228997,
+      "sha256": "709baa56a00dc9623d36651913467e904f56a85a83d3237924559ba19e0a911c"
+    },
+    {
+      "file": "fixtures/material/account.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 293,
+      "sha256": "4a15b9dad87211211e8b58caf633e9639fa02faffba7b26456d9a7b105b39c38"
+    },
+    {
+      "file": "fixtures/material/bolt.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 234,
+      "sha256": "f7d05fbb57ebaf9ae66e16161473c6b80d1e237cb3c2bda0d3369300e22b1862"
+    },
+    {
+      "file": "fixtures/material/bookmark.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 232,
+      "sha256": "965d0deb87a43864cda52d1bc08284d09c1662d38dce8115ddf5eb492ae5dd2a"
+    },
+    {
+      "file": "fixtures/material/chat.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 231,
+      "sha256": "9e6bf68aed12fb57427a84f748733f9c282586d33936f5cb4722dc5c98f41656"
+    },
+    {
+      "file": "fixtures/material/dashboard.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 267,
+      "sha256": "76b2ee0be175e62f87f099144ca31b7e3698e18b6a57c8bb98d77974e23b473f"
+    },
+    {
+      "file": "fixtures/material/edit.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 251,
+      "sha256": "038b57ed0093726affe2f4b94f23a1b0c31c2b11f4d300adb5692bceeb1f32ce"
+    },
+    {
+      "file": "fixtures/material/favorite.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 262,
+      "sha256": "89aa3378df66df41877771500d61b77e997f55bfca791ef2c4edbd2b2de06dab"
+    },
+    {
+      "file": "fixtures/material/home.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 256,
+      "sha256": "bf9a886d75f5aa2df429c59da78f9dbbfe33dccaced2bc8a0a07809763bd1d8e"
+    },
+    {
+      "file": "fixtures/material/layers.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 297,
+      "sha256": "5092f4ee2d8b62e951da582fffcf58afa74466649e74dab96b11c4c2f5beb968"
+    },
+    {
+      "file": "fixtures/material/notifications.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 335,
+      "sha256": "ca3876ab9d1b61ffe7955e0b6e98e2a86955db70e8cd3dab573ebf70545eaca5"
+    },
+    {
+      "file": "fixtures/material/place.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 311,
+      "sha256": "178d1cd357383991e338762d34bc43f012bdcb164ace2e09ecef3e8855617a13"
+    },
+    {
+      "file": "fixtures/material/verified.svg",
+      "category": "material",
+      "supported": true,
+      "diagnostic": null,
+      "width": 64,
+      "height": 64,
+      "bytes": 313,
+      "sha256": "32892ffadbeac760c35ef62fce71a6921ce6e6f3399cc5e0bff9efbc3c74a7ec"
+    },
+    {
+      "file": "fixtures/special/arc-and-evenodd.svg",
+      "category": "special",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 534,
+      "sha256": "b3b8269632d3fcfaa19457a31193dfae6f337802fe3d63c58f8181e751273da9"
+    },
+    {
+      "file": "fixtures/special/dashed-cubic.svg",
+      "category": "special",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 534,
+      "sha256": "2e4613631a450223f24e1ed8176cd6838c447d8d089549a2972bf6612d34755e"
+    },
+    {
+      "file": "fixtures/special/dotted-circuit.svg",
+      "category": "special",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 521,
+      "sha256": "362454e97233561e41fab4ddceed9d365c36e9a59bd7c434476c5f3b6fb57a2e"
+    },
+    {
+      "file": "fixtures/special/nested-clip-gradient.svg",
+      "category": "special",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 96,
+      "bytes": 628,
+      "sha256": "b3e1396ccb131da7e8d09d5728eda88a9632f4c69c35a050031feec84b52cef3"
+    },
+    {
+      "file": "fixtures/w5/anchor-passthrough.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 262,
+      "sha256": "b7fe62b2dab3ae83629bf2740b959b359ad577170bf2b2b83d9d208abcb701db"
+    },
+    {
+      "file": "fixtures/w5/blend-isolation.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 408,
+      "sha256": "149987e3c5e9ab32bf56d34e6ec5de7bfd062e7a609cd88385af077de244a514"
+    },
+    {
+      "file": "fixtures/w5/crisp-edges.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 288,
+      "sha256": "6fec4e141a1494a0096af7a33f6ce3a635fbac382cbbc47a284687d9610a0bb9"
+    },
+    {
+      "file": "fixtures/w5/filter-blend.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 425,
+      "sha256": "0e0500693286542a0ecb2803e40e405a0c750c0d4e67fcf127448748917a9a80"
+    },
+    {
+      "file": "fixtures/w5/filter-blur-offset.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 491,
+      "sha256": "aaabe57e328f97c27b7b2e62e01f04978a3afb8bf88c4902a0829930917f2109"
+    },
+    {
+      "file": "fixtures/w5/filter-color-matrix.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 365,
+      "sha256": "4db2a9dfeece57a6f4cbfb2b212e238c8061b4732ef38551f26ab66f6b77115a"
+    },
+    {
+      "file": "fixtures/w5/filter-drop-shadow.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 387,
+      "sha256": "f5492fbd3c7c3cd6b99f35a29a0fbe7a2894919e4467246d83e2316dec2d2cd2"
+    },
+    {
+      "file": "fixtures/w5/filter-flood-composite.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 410,
+      "sha256": "c4665ab6ba9b1634c7ed14bcb83ecde863b9b56a3393e18cf63b1c1ffefc268b"
+    },
+    {
+      "file": "fixtures/w5/filter-merge.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 379,
+      "sha256": "3290f0d86104a494cdcf6493f090c97aeb43a7b9768b88655008da87a93318c8"
+    },
+    {
+      "file": "fixtures/w5/filter-morphology-unsupported.svg",
+      "category": "w5",
+      "supported": false,
+      "diagnostic": "unsupported-feMorphology",
+      "width": 96,
+      "height": 64,
+      "bytes": 357,
+      "sha256": "5f73dbb1cab99eda325dc5e0794becfe43d45348f3fa1cd02db9dd6e2716e1f6"
+    },
+    {
+      "file": "fixtures/w5/join-fallbacks.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 383,
+      "sha256": "ff219a96d5082a4b9d18c5dadd29733b2141fc1fccacf0548fc98ad72e61466c"
+    },
+    {
+      "file": "fixtures/w5/marker-path.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 521,
+      "sha256": "73447336bda7ce6fc23cd1fd01c19a6f022446257702ce0c95d8a685ebbc33e1"
+    },
+    {
+      "file": "fixtures/w5/marker-shapes.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 759,
+      "sha256": "be12ca3099aec574604f20c377b986eb5956fad0622a560f8c8bfaaed57498cf"
+    },
+    {
+      "file": "fixtures/w5/marker-start-reverse.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 484,
+      "sha256": "51aa4df0962abf1f6ace51c44a0454576db2c6b415728d1cbea7bb1d38fe8278"
+    },
+    {
+      "file": "fixtures/w5/marker-viewbox.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 497,
+      "sha256": "e439b04a6500d39decc7e7bf45ba90b29cd97340312b7624fa68587732a66f2b"
+    },
+    {
+      "file": "fixtures/w5/mask-alpha.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 434,
+      "sha256": "2b81a0bd0dfb328cd7929369d45811f5010485eddb8b6643c4d280ce269f220c"
+    },
+    {
+      "file": "fixtures/w5/mask-luminance.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 403,
+      "sha256": "a7bb591fad2ce866aa63a4a3cf4d2febd369dbcd7ad3d81cd2997d23dde6f03c"
+    },
+    {
+      "file": "fixtures/w5/mask-nested.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 459,
+      "sha256": "169f3ec538631615a4c26065d0637099f839ba1bc8ca3aa88bcec45c8de05928"
+    },
+    {
+      "file": "fixtures/w5/mask-object-bounds.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 458,
+      "sha256": "1a08a83eb1bd7a2967d0ce497328d9146ca2f3ec91965c09d7e4179d0fd29ff2"
+    },
+    {
+      "file": "fixtures/w5/non-scaling-stroke.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 317,
+      "sha256": "5c2d37649c3b48d85c7b7e15e87ae07180b9e3ca9fa2d98ee0c34c589eb3ba58"
+    },
+    {
+      "file": "fixtures/w5/paint-order.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 288,
+      "sha256": "827a6387b659e7b62c7e8c026cdd40e4e163095b5e58c5c370ad7014c5779691"
+    },
+    {
+      "file": "fixtures/w5/pattern-object-bounds.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 487,
+      "sha256": "78574e07c54ce0e90deeed085bc816e8e70a668f1c03f7e571d3799d96552a65"
+    },
+    {
+      "file": "fixtures/w5/pattern-stroke.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 441,
+      "sha256": "5081f83aa218f837fa5f2571a7da71828f9f884a110f65790bc3a04f244613e1"
+    },
+    {
+      "file": "fixtures/w5/pattern-transform.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 426,
+      "sha256": "8054de1a540c5f3b872c538d869b2fb6cddd050da59b26b97a06e9f1410b4984"
+    },
+    {
+      "file": "fixtures/w5/pattern-user-space.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 419,
+      "sha256": "ecf4c3dfdf10c3496965616a7a818f9e3caf8a945f1170e175d49e9872e85f4f"
+    },
+    {
+      "file": "fixtures/w5/pattern-viewbox.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 438,
+      "sha256": "1cabc1788def22a09ddc5030f5bac9bde8c0cbbdae200642f50658d98a8fd5cb"
+    },
+    {
+      "file": "fixtures/w5/switch-language.svg",
+      "category": "w5",
+      "supported": true,
+      "diagnostic": null,
+      "width": 96,
+      "height": 64,
+      "bytes": 362,
+      "sha256": "4d61c354518e1fb673e491d3aab994e9ff4a4b78ddb7fe3ef00ccf10f3ed24fc"
+    }
+  ]
+}

@@ -24,7 +24,8 @@ int main(void)
     if (ui_tree_layout(&tree, 0U, 200U) || !ui_tree_layout(&tree, 320U, 200U)) return 3;
     const ui_node *first = ui_tree_find(&tree, 2U), *second = ui_tree_find(&tree, 3U);
     if (first == NULL || second == NULL || first->bounds.x != 0U ||
-        first->bounds.width != 100U || second->bounds.x != 104U || second->bounds.width != 212U) {
+        first->bounds.width != 100U || second->bounds.x != 104U ||
+        second->bounds.width != 216U || second->bounds.x + second->bounds.width != 320U) {
         (void)fprintf(stderr, "bounds %u,%u %ux%u | %u,%u %ux%u\n", first == NULL ? 0U : first->bounds.x,
             first == NULL ? 0U : first->bounds.y, first == NULL ? 0U : first->bounds.width,
             first == NULL ? 0U : first->bounds.height, second == NULL ? 0U : second->bounds.x,
@@ -48,7 +49,24 @@ int main(void)
     first = ui_tree_find(&overflow, 2U);
     second = ui_tree_find(&overflow, 3U);
     if (first == NULL || second == NULL || first->bounds.width != 100U ||
-        second->bounds.x != 104U || second->bounds.width != 12U) return 12;
+        second->bounds.x != 104U || second->bounds.width != 16U ||
+        second->bounds.x + second->bounds.width != 120U) return 12;
+    ui_tree trailing_fixed;
+    if (!ui_tree_init(&trailing_fixed, UI_THEME_DARK)) return 13;
+    trailing_fixed.nodes[0].spec.axis = UI_AXIS_HORIZONTAL;
+    trailing_fixed.nodes[0].spec.gap = 4U;
+    if (!add(&trailing_fixed, 2U, UI_ROOT_ID, 40U, 20U, 0U) ||
+        !add(&trailing_fixed, 3U, UI_ROOT_ID, 0U, 20U, 0U) ||
+        !add(&trailing_fixed, 4U, UI_ROOT_ID, 40U, 20U, 0U) ||
+        !ui_tree_layout(&trailing_fixed, 320U, 20U)) return 14;
+    first = ui_tree_find(&trailing_fixed, 2U);
+    second = ui_tree_find(&trailing_fixed, 3U);
+    const ui_node *last = ui_tree_find(&trailing_fixed, 4U);
+    if (first == NULL || second == NULL || last == NULL ||
+        first->bounds.x != 0U || first->bounds.width != 40U ||
+        second->bounds.x != 44U || second->bounds.width != 232U ||
+        last->bounds.x != 280U || last->bounds.width != 40U ||
+        last->bounds.x + last->bounds.width != 320U) return 15;
     ui_tree invalid;
     if (ui_tree_init(&invalid, (ui_theme)99) || ui_tree_init(&invalid, UI_THEME_LIGHT) == false) return 7;
     for (uint32_t id = 2U; id < UI_MAX_NODES + 1U; id++) {

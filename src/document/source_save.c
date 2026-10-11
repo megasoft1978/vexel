@@ -1,4 +1,5 @@
 #include "source_save.h"
+#include "platform_atomic_new_file.h"
 
 #include <string.h>
 
@@ -29,6 +30,22 @@ source_save_result source_save_noop(base_bytes source, base_bytes path,
     }
 
     result.file_result = platform_atomic_file_replace(path, source, hooks);
+    if (result.file_result.error == PLATFORM_ATOMIC_FILE_NOT_FOUND) {
+        platform_atomic_new_file_hooks create_hooks = {0};
+        if (hooks != NULL) {
+            create_hooks.write = hooks->write;
+            create_hooks.context = hooks->context;
+        }
+        platform_atomic_new_file_result created = platform_atomic_file_create_new(
+            path, source, &create_hooks);
+        result.file_result.error =
+            created.error == PLATFORM_ATOMIC_NEW_FILE_OK ? PLATFORM_ATOMIC_FILE_OK :
+            created.error == PLATFORM_ATOMIC_NEW_FILE_DURABILITY ?
+                PLATFORM_ATOMIC_FILE_DURABILITY : PLATFORM_ATOMIC_FILE_IO;
+        result.file_result.file_fsynced = created.file_fsynced;
+        result.file_result.renamed = created.published;
+        result.file_result.directory_fsynced = created.directory_fsynced;
+    }
     if (result.file_result.error == PLATFORM_ATOMIC_FILE_OK) result.error = SOURCE_SAVE_OK;
     else if (result.file_result.error == PLATFORM_ATOMIC_FILE_DURABILITY)
         result.error = SOURCE_SAVE_DURABILITY;

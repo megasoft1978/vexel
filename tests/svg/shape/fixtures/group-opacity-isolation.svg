@@ -1,0 +1,5 @@
+<svg width="40" height="32" viewBox="0 0 40 32">
+ <rect width="40" height="32" fill="green"/>
+ <g opacity="0.5"><rect x="2" y="2" width="18" height="24" fill="red"/><rect x="12" y="2" width="18" height="24" fill="blue"/></g>
+ <g opacity="25%"><path d="M33 4 L39 4 L39 28 L33 28 Z" fill="white"/></g>
+</svg>

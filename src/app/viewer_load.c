@@ -11,6 +11,8 @@
 #include <string.h>
 #include <sys/types.h>
 
+svg_shape_media_providers svg_app_media_providers(void);
+
 #define VIEWER_LOAD_CHUNK_BYTES (1024U * 1024U)
 
 static bool is_canceled(const platform_task_cancel_token *token)
@@ -84,6 +86,44 @@ static bool read_bounded_file(const char *path, const platform_task_cancel_token
     return true;
 }
 
+static viewer_load_status decode_document_source(
+    const platform_task_cancel_token *token, viewer_loaded_document *out)
+{
+    if (is_canceled(token)) return VIEWER_LOAD_CANCELED;
+    svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
+    svg_shape_media_providers providers = svg_app_media_providers();
+    svg_shape_error error = svg_shape_decode_with_media(
+        (base_bytes){out->source, out->source_length}, &providers,
+        &out->shape, &diagnostic);
+    if (error != SVG_SHAPE_ERROR_NONE) {
+        out->shape_error = error;
+        out->error_offset = diagnostic.offset;
+        return VIEWER_LOAD_FAILED;
+    }
+    if (is_canceled(token)) return VIEWER_LOAD_CANCELED;
+    if (!raster_shape_render(&out->shape, &out->tile, &diagnostic)) {
+        out->shape_error = diagnostic.category == SVG_SHAPE_ERROR_NONE ?
+            SVG_SHAPE_ERROR_INVALID_ARGUMENT : diagnostic.category;
+        out->error_offset = diagnostic.offset;
+        return VIEWER_LOAD_FAILED;
+    }
+    return is_canceled(token) ? VIEWER_LOAD_CANCELED : VIEWER_LOAD_OK;
+}
+
+viewer_load_status viewer_decode_owned_source(uint8_t *source, size_t source_length,
+    const platform_task_cancel_token *token, viewer_loaded_document *out)
+{
+    if (out == NULL || (source == NULL && source_length != 0U)) return VIEWER_LOAD_FAILED;
+    *out = (viewer_loaded_document){0};
+    out->source = source;
+    out->source_length = source_length;
+    if (source_length == 0U || source_length > (size_t)SVG_INDEX_MAX_SOURCE_BYTES) {
+        set_load_error(out, "source is empty or exceeds the 1 GiB source limit");
+        return VIEWER_LOAD_FAILED;
+    }
+    return decode_document_source(token, out);
+}
+
 viewer_load_status viewer_load_document(const char *path,
                                         const platform_task_cancel_token *token,
                                         viewer_loaded_document *out)
@@ -92,40 +132,14 @@ viewer_load_status viewer_load_document(const char *path,
         return VIEWER_LOAD_FAILED;
     }
     *out = (viewer_loaded_document){0};
-    if (is_canceled(token)) {
-        return VIEWER_LOAD_CANCELED;
-    }
+    if (is_canceled(token)) return VIEWER_LOAD_CANCELED;
     if (!read_bounded_file(path, token, out)) {
         if (is_canceled(token)) {
             return VIEWER_LOAD_CANCELED;
         }
         return VIEWER_LOAD_FAILED;
     }
-    if (is_canceled(token)) {
-        return VIEWER_LOAD_CANCELED;
-    }
-
-    svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
-    svg_shape_error error = svg_shape_decode(
-        (base_bytes){out->source, out->source_length}, &out->shape, &diagnostic);
-    if (error != SVG_SHAPE_ERROR_NONE) {
-        out->shape_error = error;
-        out->error_offset = diagnostic.offset;
-        return VIEWER_LOAD_FAILED;
-    }
-    if (is_canceled(token)) {
-        return VIEWER_LOAD_CANCELED;
-    }
-    if (!raster_shape_render(&out->shape, &out->tile, &diagnostic)) {
-        out->shape_error = diagnostic.category == SVG_SHAPE_ERROR_NONE ?
-            SVG_SHAPE_ERROR_INVALID_ARGUMENT : diagnostic.category;
-        out->error_offset = diagnostic.offset;
-        return VIEWER_LOAD_FAILED;
-    }
-    if (is_canceled(token)) {
-        return VIEWER_LOAD_CANCELED;
-    }
-    return VIEWER_LOAD_OK;
+    return decode_document_source(token, out);
 }
 
 void viewer_loaded_document_destroy(viewer_loaded_document *document)
