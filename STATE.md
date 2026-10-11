@@ -333,3 +333,5 @@
   status pill is shorter, narrower, and uses 10 px text. Debug app bundle build
   and live screenshot review pass; cartoon and two tracks are open. Playback
   was not confirmed. Evidence: `artifacts/WO-UI-POLISH-REMOTE-01/ui-review.md`.
+
+- WO-UI-POLISH-GOLDENS-01 revision 1 completed at `8e19b7c25db3ab9c1206db3374a29feb6410c98f` on `fix/ui-polish-main`. Renderer outputs and manifests were refreshed only for the changed native shell, editor chrome, UI kit, timeline, command overlay, snapping popover, and accessibility screenshot sets. Ten targeted local CTests pass. No verifier logic or thresholds changed. The historical macOS CI run for base `c43fa82` already failed native shell, editor style, snap overlay, and accessibility goldens; this run additionally exposed five visual sets changed by the UI polish. BetterDisplay was active during local review; native AppKit output dimension doubled relative to the old baseline, so host scale remains a known CI portability risk. Evidence: `artifacts/WO-UI-POLISH-GOLDENS-01/`.
