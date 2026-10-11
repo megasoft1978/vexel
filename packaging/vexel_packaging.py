@@ -302,6 +302,12 @@ def build_bundle(root: Path = ROOT, env: dict[str, str] | None = None) -> Path:
         shutil.rmtree(app)
     shutil.copytree(built_app, app, symlinks=True)
     localization_table = app / "Contents/Resources/en.lproj/Localizable.strings"
+    localization_source = root / "resources" / "en.lproj"
+    if not localization_source.is_dir():
+        localization_source = ROOT / "resources" / "en.lproj"
+    if localization_source.is_dir():
+        shutil.copytree(localization_source, localization_table.parent,
+                        dirs_exist_ok=True)
     if not localization_table.is_file():
         raise PackagingError(f"generated app bundle is missing localization table: {localization_table}")
     try:

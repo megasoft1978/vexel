@@ -291,3 +291,25 @@
   reports 412 entries. No lifecycle event was added because r5 WO-6/WO-9 are
   not frozen under `work/`. VoiceOver traversal, keyboard focus order, text
   sizes, and native menus still need maintainer review in a real window.
+
+- W16 integration on `integrate/w16` merges `lane/w14-rulers`, `lane/w14-palette`,
+  `lane/w14-select`, `lane/w14-nodes`, `lane/w14-timeline`,
+  `lane/w14-keyframes`, `lane/w15-visual`, `lane/w15-native`, and
+  `lane/w15-a11y` in the requested order. The merge log and semantic resolutions
+  are in `docs/lanes/integrate.md`. Shared document sessions/recents and the
+  Welcome flow remain owned by W14's viewer runtime; keyframe edit operations
+  are wired into the docked timeline; the visual and accessibility scale
+  preferences share one setting. Shortcut collisions were removed while
+  retaining the frozen Align Center binding.
+  `./dev t --all` passes 79/79 CTests and 69/69 Python tests;
+  `./dev t --full` passes 79/79 CTests and 66/66 Python tests;
+  `./dev asan` and `./dev ubsan` each pass 79/79 CTests with three host-gated
+  skips. `./dev verify` builds Debug and Release and passes Debug CTest 79/79,
+  but its Python phase reports 291/302: seven benchmark tests are blocked by the
+  outer sandbox denying `sandbox-exec`, one native smoke test cannot use
+  LaunchServices, and two Metal tests have no offscreen Metal device. The
+  packaging helper, tooltip lifetime, and native shortcut bindings were fixed
+  during final integration. `ledger.jsonl` remains at 412 valid entries; no W16
+  lifecycle event was added because no W16 frozen work order exists. No live
+  window, keyboard/mouse automation, or screenshot was used. Maintainer window
+  checks remain listed in `docs/lanes/integrate.md`.

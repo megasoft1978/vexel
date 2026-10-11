@@ -174,7 +174,8 @@ void platform_macos_menus_init(void)
         @"menu.app.hide_others", @"Hide Others", @"Hide other applications command.")
         action:@selector(hideOtherApplications:) keyEquivalent:@"h"];
     hide_others.target = NSApp;
-    hide_others.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagOption;
+    hide_others.keyEquivalentModifierMask = NSEventModifierFlagCommand |
+        NSEventModifierFlagOption | NSEventModifierFlagShift;
     [application_menu addItem:hide_others];
     NSMenuItem *show_all = [[NSMenuItem alloc] initWithTitle:menu_string(
         @"menu.app.show_all", @"Show All", @"Show hidden applications command.")

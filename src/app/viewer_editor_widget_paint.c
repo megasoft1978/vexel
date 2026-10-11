@@ -340,6 +340,7 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
             platform_text_ui_draw_widget, NULL)) return;
     canvas.tokens = editor->tree.tokens;
     ui_widget_draw_spec tooltip_spec = {0};
+    char tooltip_storage[128] = {0};
     bool tooltip_ready = false;
     for (size_t index = 1U; index < editor->tree.count; ++index) {
         const ui_node *node = &editor->tree.nodes[index];
@@ -383,7 +384,7 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
         ui_widget_draw_spec spec = editor_draw_spec(editor, node, kind);
         if (!ui_widget_paint(&canvas, &spec)) return;
         if ((node->spec.state & UI_STATE_HOVERED) != 0U) {
-            char tooltip_storage[128] = {0};
+            tooltip_storage[0] = '\0';
             const char *tooltip = tooltip_for_id(node->spec.id,
                 tooltip_storage, sizeof(tooltip_storage));
             if (tooltip == NULL && node->spec.role == UI_ROLE_ROW)
