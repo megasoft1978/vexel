@@ -147,11 +147,11 @@ tool while `⌘T` toggles the checkerboard.
 
 | Command | Result |
 |---|---|
-| `./dev t --all` | PASS: build; 79/79 CTests; 69/69 Python tests |
-| `./dev t --full` | PASS: 79/79 CTests; 66/66 Python tests |
-| `./dev verify` | Debug CTest PASS 79/79 and Debug/Release builds succeed. Command exits 1 in the full Python phase: 291/302 pass, 8 fail, 2 error, 1 skip. |
-| `./dev asan` | PASS: 79/79 CTests, no sanitizer reports; 3 host-gated CTests skipped |
-| `./dev ubsan` | PASS: 79/79 CTests, no sanitizer reports; 3 host-gated CTests skipped |
+| `./dev t --all` | 78/79 CTests; 69/69 Python tests. `native-shell-goldens` is host-blocked: renderer emitted 1200x1300 at active 2x HiDPI scale, while unchanged golden is 600x650. |
+| `./dev t --full` | 78/79 CTests; 66/66 Python tests. Same native-shell-goldens display-scale mismatch. |
+| `./dev verify` | Debug build succeeds; Debug CTest 78/79, then exits before Release build and Python tests because of the native-shell-goldens mismatch. |
+| `./dev asan` | 78/79 CTests, no sanitizer reports; same native-shell-goldens display-scale mismatch. |
+| `./dev ubsan` | 78/79 CTests, no sanitizer reports; same native-shell-goldens display-scale mismatch. |
 | `python3 scripts/ledger.py validate ledger.jsonl` | PASS: 412 entries |
 | `git diff --check` | PASS |
 | `python3 -m json.tool tests/test_map.json` | PASS |
