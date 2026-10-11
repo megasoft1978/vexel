@@ -1,0 +1,20 @@
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/ui-golden-audit/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/ui-golden-audit/build/mac-debug
+    Start 26: native-shell-goldens
+1/4 Test #26: native-shell-goldens ........................***Failed    0.13 sec
+welcome-empty-light.png differs from its native UI golden
+
+    Start 52: editor-style-goldens
+2/4 Test #52: editor-style-goldens ........................   Passed    1.69 sec
+    Start 78: editor-snap-overlay-goldens
+3/4 Test #78: editor-snap-overlay-goldens .................   Passed    0.11 sec
+    Start 82: editor-accessibility-localization-goldens
+4/4 Test #82: editor-accessibility-localization-goldens ...   Passed    0.31 sec
+
+75% tests passed, 1 tests failed out of 4
+
+Total Test time (real) =   2.24 sec
+
+The following tests FAILED:
+	 26 - native-shell-goldens (Failed)
+Errors while running CTest

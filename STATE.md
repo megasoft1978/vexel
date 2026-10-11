@@ -332,3 +332,19 @@
   images and pixel metrics while preserving all expected images and assertions.
   Historical run artifacts were not attached; instrumentation will be added to
   the main CI workflow so a subsequent run can retain diagnostic images.
+
+- Update 2026-10-11: WO-UI-GOLDEN-01 diagnostic capture is complete. On this
+  macOS 27.0 arm64 host, the full 50-image matrix has 14/14 native-shell PNG
+  size mismatches (actual dimensions are 2x expected) and 36/36 exact matches
+  across style, snapping overlay, and accessibility localization. The local
+  focused CTest selection is 3/4: only native-shell-goldens fails. A retained
+  2x2 box-average diagnostic comparison reports 7,750/390,000 differing pixels
+  (1.987%) for the first Welcome image; raw and normalized images, red diff
+  PNGs, per-image metrics, and CTest output are in
+  `artifacts/WO-UI-GOLDEN-01/local-macos-27/`. The host reports one 2x main
+  display; BetterDisplay causality is not established. Historical GitHub run
+  38147398376 has no downloadable image artifact, so the macOS 15 failures in
+  its three headless UI golden categories remain unlocalized. `ci.yml` now
+  captures all four matrices after verification and uploads them even on failure
+  for the next CI run. Goldens, manifests, assertions, thresholds, and
+  `nightly.yml` are unchanged.
