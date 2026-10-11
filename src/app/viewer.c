@@ -1,5 +1,4 @@
 #define _POSIX_C_SOURCE 200809L
-#define _DARWIN_C_SOURCE
 
 #include "viewer.h"
 #include "viewer_internal.h"
@@ -7,6 +6,7 @@
 #include "frame_compose.h"
 #include "mcp_broker_hook.h"
 #include "platform/platform_metal.h"
+#include "platform/platform_settings.h"
 #include "platform/platform_task.h"
 #include "platform/platform_window.h"
 #include "raster/shape_render.h"
@@ -21,7 +21,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <time.h>
 
 static double monotonic_ms(void)
@@ -42,30 +41,6 @@ const char *viewer_error_reason(const viewer_app *app)
         app->document.load_error;
 }
 
-bool viewer_set_window_title(viewer_app *app)
-{
-    char next[VIEWER_TITLE_CAP];
-    int amount;
-    const char *dirty = viewer_editor_is_dirty(app->editor) ? "*" : "";
-    if (app->load_result_handled && app->load_status != VIEWER_LOAD_OK) {
-        amount = snprintf(next, sizeof(next), "vexel — %s%s — error: %s",
-                          app->display_name, dirty, viewer_error_reason(app));
-    } else if (app->pending_open || (app->job != NULL && app->job->kind == VIEWER_JOB_LOAD)) {
-        amount = snprintf(next, sizeof(next), "vexel — %s%s — Loading…", app->display_name, dirty);
-    } else if (app->navigation_ready && app->document_visible) {
-        amount = snprintf(next, sizeof(next), "vexel — %s%s — %.0f%%",
-                          app->display_name, dirty, app->navigation.scale * 100.0);
-    } else {
-        amount = snprintf(next, sizeof(next), "vexel — %s%s", app->display_name, dirty);
-    }
-    if (amount < 0 || (size_t)amount >= sizeof(next)) return false;
-    if (strcmp(next, app->title) == 0) return true;
-    size_t length = (size_t)amount;
-    if (!platform_window_set_title(app->window, next, length)) return false;
-    memcpy(app->title, next, length + 1U);
-    return true;
-}
-
 bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height)
 {
     if (app == NULL || width == 0U || height == 0U ||
@@ -83,44 +58,6 @@ bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height)
     app->height = height;
     app->frame_dirty = true;
     return true;
-}
-
-static bool file_stamp_read(const char *path, viewer_file_stamp *out)
-{
-    if (path == NULL || out == NULL) return false;
-    struct stat status;
-    if (stat(path, &status) != 0 || !S_ISREG(status.st_mode)) return false;
-    out->size = status.st_size;
-    out->modified = status.st_mtimespec;
-    out->valid = true;
-    return true;
-}
-
-static bool file_stamp_equal(const viewer_file_stamp *left, const viewer_file_stamp *right)
-{
-    return left->valid && right->valid && left->size == right->size &&
-        left->modified.tv_sec == right->modified.tv_sec &&
-        left->modified.tv_nsec == right->modified.tv_nsec;
-}
-
-void viewer_update_file_stamp(viewer_app *app)
-{
-    if (app == NULL) return;
-    app->file_stamp = (viewer_file_stamp){0};
-    if (app->path[0] != '\0') (void)file_stamp_read(app->path, &app->file_stamp);
-    app->external_change_pending = false;
-}
-
-bool viewer_file_changed_on_disk(viewer_app *app)
-{
-    if (app == NULL) return false;
-    if (app->external_change_pending) return true;
-    viewer_file_stamp current = {0};
-    (void)file_stamp_read(app->path, &current);
-    bool changed = current.valid != app->file_stamp.valid ||
-        (current.valid && !file_stamp_equal(&current, &app->file_stamp));
-    if (changed) app->external_change_pending = true;
-    return changed;
 }
 
 bool viewer_bump_generation(viewer_app *app)
@@ -291,6 +228,7 @@ static bool submit_job(viewer_app *app, viewer_job *job)
 
 bool viewer_request_open(viewer_app *app, const char *path, bool initial)
 {
+    if (app == NULL) return false;
     size_t length = viewer_bounded_length(path, PLATFORM_PATH_CAP - 1U);
     if (length == 0U || length >= PLATFORM_PATH_CAP) return false;
     if (!initial && !viewer_confirm_unsaved_changes(app, "Unsaved Changes",
@@ -298,6 +236,7 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
     if (!initial && !viewer_bump_generation(app)) return false;
     memcpy(app->pending_path, path, length + 1U);
     app->pending_open = true;
+    app->pending_new_document = false;
     app->load_result_handled = false;
     app->load_status = VIEWER_LOAD_CANCELED;
     app->load_error[0] = '\0';
@@ -375,8 +314,11 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     if (!worker_succeeded || job->load_status != VIEWER_LOAD_OK) {
         size_t path_length = viewer_bounded_length(job->path,
             PLATFORM_PATH_CAP - 1U);
-        if (path_length < PLATFORM_PATH_CAP)
+        if (path_length < PLATFORM_PATH_CAP) {
             memcpy(app->failed_path, job->path, path_length + 1U);
+            if (path_length > 0U)
+                platform_window_recent_open_failed(app->window, job->path, path_length);
+        }
         if (job->loaded.load_error[0] != '\0') {
             (void)snprintf(app->load_error, sizeof(app->load_error), "%.180s",
                 job->loaded.load_error);
@@ -410,6 +352,10 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     viewer_editor *next_editor = viewer_editor_create((base_bytes){job->loaded.source,
         job->loaded.source_length}, app->theme, app->width, app->height);
     if (next_editor != NULL) {
+        platform_settings_values preferences = {0};
+        platform_settings_get(&preferences);
+        (void)viewer_editor_set_sidebar_visibility(next_editor,
+            preferences.structure_visible, preferences.inspector_visible);
         (void)viewer_editor_set_timeline_state(next_editor,
             viewer_timeline_track_count(&next_timeline) > 0U,
             next_timeline.dock_open, next_timeline.dock_height_points);
@@ -463,6 +409,8 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     app->navigation_ready = true;
     app->navigation_user_zoomed = false;
     app->document_visible = true;
+    platform_window_hide_welcome(app->window);
+    (void)platform_window_set_visible(app->window, true);
     viewer_navigation_clamp(&app->navigation);
     (void)platform_window_set_option_state(app->window,
         PLATFORM_ACTION_TOGGLE_RULERS, viewer_editor_rulers_visible(app->editor));
@@ -498,9 +446,11 @@ static void service_job(viewer_app *app)
     bool succeeded = have_result && result.task_id == VIEWER_TASK_ID &&
         result.generation == job->generation && result.succeeded;
     app->job = NULL;
-    if (current && succeeded && job->kind == VIEWER_JOB_LOAD) {
+    bool document_load = job->kind == VIEWER_JOB_LOAD ||
+        job->kind == VIEWER_JOB_NEW_DOCUMENT;
+    if (current && succeeded && document_load) {
         finish_load(app, job, true);
-    } else if (current && job->kind == VIEWER_JOB_LOAD) {
+    } else if (current && document_load) {
         if (job->load_status == VIEWER_LOAD_CANCELED)
             app->load_status = VIEWER_LOAD_FAILED;
         finish_load(app, job, false);
@@ -625,9 +575,9 @@ static void poll_file_changes(viewer_app *app)
     if (now_ms - last_ms < VIEWER_AUTORELOAD_INTERVAL_MS) return;
     if (clock_gettime(CLOCK_MONOTONIC, &app->last_file_poll) != 0) return;
     viewer_file_stamp current = {0};
-    (void)file_stamp_read(app->path, &current);
+    (void)viewer_file_stamp_read(app->path, &current);
     bool changed = current.valid != app->file_stamp.valid ||
-        (current.valid && !file_stamp_equal(&current, &app->file_stamp));
+        (current.valid && !viewer_file_stamp_equal(&current, &app->file_stamp));
     if (changed) {
         if (viewer_editor_is_dirty(app->editor)) {
             if (!app->external_change_pending) {
@@ -694,14 +644,54 @@ static void start_editor_render(viewer_app *app)
     app->editor_render_requested = false;
 }
 
+static void start_pending_new_document(viewer_app *app)
+{
+    static const char blank_document[] =
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"512\" height=\"512\" "
+        "viewBox=\"0 0 512 512\"></svg>";
+    if (app == NULL || !app->pending_new_document || app->job != NULL ||
+        app->close_requested) return;
+    viewer_job *job = calloc(1U, sizeof(*job));
+    if (job == NULL) goto failed;
+    size_t length = sizeof(blank_document) - 1U;
+    job->source_snapshot = malloc(length);
+    if (job->source_snapshot == NULL) {
+        free(job);
+        goto failed;
+    }
+    memcpy(job->source_snapshot, blank_document, length);
+    job->source_snapshot_length = length;
+    job->app = app;
+    job->kind = VIEWER_JOB_NEW_DOCUMENT;
+    job->generation = app->generation;
+    if (!submit_job(app, job)) {
+        viewer_job_destroy(job);
+        goto failed;
+    }
+    app->pending_new_document = false;
+    (void)viewer_set_window_title(app);
+    return;
+failed:
+    app->pending_new_document = false;
+    app->load_status = VIEWER_LOAD_FAILED;
+    app->load_result_handled = true;
+    (void)snprintf(app->load_error, sizeof(app->load_error),
+        "could not start blank document creation");
+    app->frame_dirty = true;
+    (void)viewer_set_window_title(app);
+}
+
 void viewer_app_tick(viewer_app *app)
 {
     if (app == NULL || !app->running) return;
     service_job(app);
+    if (app->pending_new_document && app->job == NULL)
+        start_pending_new_document(app);
     if (app->pending_open && app->job == NULL) start_pending_load(app);
     if (app->editor_render_requested && app->job == NULL) start_editor_render(app);
     if (!app->close_requested) start_next_sharp_tile(app);
     if (viewer_editor_take_redraw_request(app->editor)) app->frame_dirty = true;
+    viewer_update_native_state(app);
     if (!viewer_compose_and_present(app)) {
         app->fatal_error = true;
         app->running = false;

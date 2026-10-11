@@ -16,10 +16,3 @@ bool platform_window_show_ruler_context_menu(platform_window *window,
     return platform_macos_menus_show_ruler_context_menu(window,
         horizontal_axis, logical_x, logical_y);
 }
-
-bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
-                                       bool enabled)
-{
-    if (![NSThread isMainThread] || window == NULL) return false;
-    return platform_macos_menus_set_command_state(window, command_id, enabled);
-}

@@ -147,31 +147,11 @@ void viewer_apply_navigation_key(viewer_app *app, ui_viewer_key key)
     }
 }
 
-static void apply_zoom_to_selection(viewer_app *app)
-{
-    if (app == NULL || !app->navigation_ready || !app->document_visible ||
-        app->editor == NULL) return;
-    svg_shape_rect bounds;
-    ui_viewer_navigation previous = app->navigation;
-    if (!viewer_editor_get_selection_bounds(app->editor, &app->document.shape,
-            &bounds)) {
-        if (ui_viewer_navigation_fit(&app->navigation)) {
-            app->navigation_user_zoomed = false;
-            navigation_changed(app, &previous);
-        }
-        return;
-    }
-    if (!ui_viewer_navigation_zoom_to_bounds(&app->navigation, bounds.x, bounds.y,
-            bounds.width, bounds.height, 32.0 * app->backing_scale)) return;
-    app->navigation_user_zoomed = true;
-    navigation_changed(app, &previous);
-}
-
 void viewer_toggle_checkerboard(viewer_app *app)
 {
     app->checkerboard = !app->checkerboard;
-    (void)platform_window_set_command_state(app->window,
-        VIEWER_COMMAND_TOGGLE_CHECKERBOARD, app->checkerboard);
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_CHECKERBOARD, app->checkerboard);
     app->frame_dirty = true;
 }
 
@@ -185,81 +165,9 @@ void viewer_cycle_background(viewer_app *app)
 void viewer_toggle_pixel_grid(viewer_app *app)
 {
     app->pixel_grid = !app->pixel_grid;
-    (void)platform_window_set_command_state(app->window,
-        VIEWER_COMMAND_TOGGLE_PIXEL_GRID, app->pixel_grid);
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_PIXEL_GRID, app->pixel_grid);
     app->frame_dirty = true;
-}
-
-void viewer_request_reload_or_open(viewer_app *app)
-{
-    if (app->path[0] != '\0') (void)viewer_request_open(app, app->path, false);
-    else (void)platform_window_open_panel(app->window);
-}
-
-void viewer_apply_action(viewer_app *app, platform_viewer_action action)
-{
-    switch (action) {
-        case PLATFORM_ACTION_RELOAD: viewer_request_reload_or_open(app); break;
-        case PLATFORM_ACTION_TOGGLE_CHECKERBOARD: viewer_toggle_checkerboard(app); break;
-        case PLATFORM_ACTION_CYCLE_BACKGROUND: viewer_cycle_background(app); break;
-        case PLATFORM_ACTION_FIT_WIDTH:
-        case PLATFORM_ACTION_FIT_WINDOW:
-        case PLATFORM_ACTION_ACTUAL_SIZE: apply_navigation_fit(app, action); break;
-        case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: viewer_toggle_pixel_grid(app); break;
-        case PLATFORM_ACTION_TOGGLE_RULERS:
-            if (app->editor != NULL) {
-                bool visible = !viewer_editor_rulers_visible(app->editor);
-                if (viewer_editor_set_rulers_visible(app->editor, visible)) {
-                    (void)platform_window_set_option_state(app->window, action, visible);
-                    (void)viewer_sync_canvas_geometry(app,
-                        !app->navigation_user_zoomed);
-                    app->frame_dirty = true;
-                }
-            }
-            break;
-        case PLATFORM_ACTION_TOGGLE_GUIDES:
-            if (app->editor != NULL) {
-                bool visible = !viewer_editor_guides_visible(app->editor);
-                if (viewer_editor_set_guides_visible(app->editor, visible)) {
-                    (void)platform_window_set_option_state(app->window, action, visible);
-                    app->frame_dirty = true;
-                }
-            }
-            break;
-        case PLATFORM_ACTION_TOGGLE_GUIDE_LOCK:
-            if (app->editor != NULL) {
-                bool locked = !viewer_editor_guides_locked(app->editor);
-                if (viewer_editor_set_guides_locked(app->editor, locked)) {
-                    (void)platform_window_set_option_state(app->window, action, locked);
-                    app->frame_dirty = true;
-                }
-            }
-            break;
-        case PLATFORM_ACTION_CLEAR_HORIZONTAL_GUIDES:
-        case PLATFORM_ACTION_CLEAR_VERTICAL_GUIDES:
-            if (app->editor != NULL) {
-                viewer_editor_guide_axis_kind axis =
-                    action == PLATFORM_ACTION_CLEAR_HORIZONTAL_GUIDES ?
-                    VIEWER_EDITOR_GUIDE_HORIZONTAL : VIEWER_EDITOR_GUIDE_VERTICAL;
-                if (viewer_editor_clear_guides(app->editor, axis)) app->frame_dirty = true;
-            }
-            break;
-        case PLATFORM_ACTION_ZOOM_TO_SELECTION: apply_zoom_to_selection(app); break;
-        case PLATFORM_ACTION_UI_SCALE_100:
-            if (app->editor != NULL && viewer_editor_set_ui_scale(app->editor, 100U))
-                app->frame_dirty = true;
-            break;
-        case PLATFORM_ACTION_UI_SCALE_110:
-            if (app->editor != NULL && viewer_editor_set_ui_scale(app->editor, 110U))
-                app->frame_dirty = true;
-            break;
-        case PLATFORM_ACTION_UI_SCALE_120:
-            if (app->editor != NULL && viewer_editor_set_ui_scale(app->editor, 120U))
-                app->frame_dirty = true;
-            break;
-        case PLATFORM_ACTION_QUIT: viewer_request_close(app); break;
-        case PLATFORM_ACTION_NONE: default: break;
-    }
 }
 
 static bool editor_alignment_shortcut(const platform_event *event,
@@ -282,9 +190,10 @@ static bool editor_alignment_shortcut(const platform_event *event,
 
 static void apply_key(viewer_app *app, const platform_event *event)
 {
-    bool loading_replacement = replacement_load_active(app) && app->document_visible;
-    bool command_key = (event->modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
-    bool allowed_command = command_key &&
+    bool loading_replacement = app->pending_new_document ||
+        (app->job != NULL && app->job->kind == VIEWER_JOB_NEW_DOCUMENT) ||
+        (replacement_load_active(app) && app->document_visible);
+    bool allowed_command = event->modifiers == PLATFORM_MODIFIER_COMMAND &&
         (strcmp(event->text, "q") == 0 || strcmp(event->text, "Q") == 0 ||
          strcmp(event->text, "o") == 0 || strcmp(event->text, "O") == 0 ||
          strcmp(event->text, "r") == 0 || strcmp(event->text, "R") == 0);
@@ -375,65 +284,66 @@ static void apply_key(viewer_app *app, const platform_event *event)
         viewer_process_editor_result(app, editor_result);
         return;
     }
-    bool command = (event->modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
-    if (command && (strcmp(event->text, "q") == 0 || strcmp(event->text, "Q") == 0)) {
+    bool command_only = event->modifiers == PLATFORM_MODIFIER_COMMAND;
+    bool plain_key = event->modifiers == 0U;
+    if (command_only && (strcmp(event->text, "q") == 0 || strcmp(event->text, "Q") == 0)) {
         app->quit_all_requested = true;
         return;
     }
-    if (command && (strcmp(event->text, "r") == 0 || strcmp(event->text, "R") == 0)) {
+    if (command_only && (strcmp(event->text, "r") == 0 || strcmp(event->text, "R") == 0)) {
         viewer_request_reload_or_open(app);
         return;
     }
-    if (command && (strcmp(event->text, "o") == 0 || strcmp(event->text, "O") == 0)) {
+    if (command_only && (strcmp(event->text, "o") == 0 || strcmp(event->text, "O") == 0)) {
         (void)platform_window_open_panel(app->window);
         return;
     }
-    if (command && strcmp(event->text, "0") == 0) {
+    if (command_only && strcmp(event->text, "0") == 0) {
         viewer_apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
         return;
     }
-    if (command && strcmp(event->text, "1") == 0) {
+    if (command_only && strcmp(event->text, "1") == 0) {
         viewer_apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
         return;
     }
-    if (command && (strcmp(event->text, "+") == 0 ||
+    if (command_only && (strcmp(event->text, "+") == 0 ||
             strcmp(event->text, "=") == 0)) {
         viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
         return;
     }
-    if (command && strcmp(event->text, "-") == 0) {
+    if (command_only && strcmp(event->text, "-") == 0) {
         viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
         return;
     }
-    if (strcmp(event->text, "t") == 0 || strcmp(event->text, "T") == 0) {
+    if (plain_key && (strcmp(event->text, "t") == 0 || strcmp(event->text, "T") == 0)) {
         viewer_toggle_checkerboard(app);
         return;
     }
-    if (strcmp(event->text, "b") == 0 || strcmp(event->text, "B") == 0) {
+    if (plain_key && (strcmp(event->text, "b") == 0 || strcmp(event->text, "B") == 0)) {
         viewer_cycle_background(app);
         return;
     }
-    if (strcmp(event->text, "g") == 0 || strcmp(event->text, "G") == 0) {
+    if (plain_key && (strcmp(event->text, "g") == 0 || strcmp(event->text, "G") == 0)) {
         viewer_toggle_pixel_grid(app);
         return;
     }
-    if (strcmp(event->text, "w") == 0 || strcmp(event->text, "W") == 0) {
+    if (plain_key && (strcmp(event->text, "w") == 0 || strcmp(event->text, "W") == 0)) {
         viewer_apply_action(app, PLATFORM_ACTION_FIT_WIDTH);
         return;
     }
-    if (strcmp(event->text, "1") == 0) {
+    if (plain_key && strcmp(event->text, "1") == 0) {
         viewer_apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
         return;
     }
-    if (event->key_code == 123U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_LEFT); return; }
-    if (event->key_code == 124U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_RIGHT); return; }
-    if (event->key_code == 125U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_DOWN); return; }
-    if (event->key_code == 126U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_UP); return; }
-    if (strcmp(event->text, "+") == 0 || strcmp(event->text, "=") == 0) {
+    if (plain_key && event->key_code == 123U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_LEFT); return; }
+    if (plain_key && event->key_code == 124U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_RIGHT); return; }
+    if (plain_key && event->key_code == 125U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_DOWN); return; }
+    if (plain_key && event->key_code == 126U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_UP); return; }
+    if (plain_key && (strcmp(event->text, "+") == 0 || strcmp(event->text, "=") == 0)) {
         viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
-    } else if (strcmp(event->text, "-") == 0) {
+    } else if (plain_key && strcmp(event->text, "-") == 0) {
         viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
-    } else if (strcmp(event->text, "0") == 0) {
+    } else if (plain_key && strcmp(event->text, "0") == 0) {
         viewer_apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
     }
 }
@@ -469,9 +379,10 @@ static void update_pointer_status(viewer_app *app, const platform_event *event)
 
 void viewer_process_event(viewer_app *app, const platform_event *event)
 {
-    if (app->editor != NULL)
+    if (app->document_visible && app->editor != NULL)
         viewer_editor_set_motion_time(app->editor, event->timestamp_seconds);
-    if (viewer_timeline_process_event(&app->timeline, event, app->editor,
+    if (app->document_visible && viewer_timeline_process_event(
+            &app->timeline, event, app->editor,
             app->width, app->height, app->backing_scale)) {
         if (viewer_timeline_take_editor_mutation(&app->timeline))
             viewer_process_editor_result(app,
@@ -715,10 +626,16 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
         case PLATFORM_EVENT_COMMAND:
             viewer_apply_command(app, (viewer_command_id)event->command_id);
             return;
-        case PLATFORM_EVENT_FILE_OPEN:
-            if (viewer_event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP)
-                (void)viewer_request_open(app, event->path, false);
+        case PLATFORM_EVENT_FILE_OPEN: {
+            size_t length = viewer_event_path_length(event->path,
+                PLATFORM_PATH_CAP - 1U);
+            if (length > 0U && length < PLATFORM_PATH_CAP &&
+                viewer_request_open(app, event->path, false)) {
+                platform_window_hide_welcome(app->window);
+                (void)platform_window_set_visible(app->window, true);
+            }
             return;
+        }
         case PLATFORM_EVENT_CLOSE_REQUEST: viewer_request_close(app); return;
         case PLATFORM_EVENT_DROP_ENTER:
             app->drop_hover = true;

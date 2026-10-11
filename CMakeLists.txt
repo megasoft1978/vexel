@@ -45,6 +45,68 @@ find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
 find_package(Threads REQUIRED)
 target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK} Threads::Threads)
 
+# lane: w15-native
+target_sources(svgworkbench PRIVATE src/app/welcome_model.c src/app/platform_command_policy.c
+    src/app/viewer_display.c
+    src/app/viewer_native_actions.c src/app/viewer_file_watch.c
+    src/app/viewer_document_factory.c src/app/viewer_native_state.c
+    src/app/feedback_diagnostics.c src/platform/macos/platform_recents.m
+    src/platform/macos/platform_welcome.m src/platform/macos/platform_settings.m
+    src/platform/macos/platform_feedback.m)
+set_source_files_properties(src/platform/macos/platform_recents.m
+    src/platform/macos/platform_welcome.m src/platform/macos/platform_settings.m
+    src/platform/macos/platform_feedback.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+add_executable(welcome_model_test tests/app/welcome_model_test.c src/app/welcome_model.c)
+target_include_directories(welcome_model_test PRIVATE src)
+set_target_properties(welcome_model_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(feedback_diagnostics_test tests/app/feedback_diagnostics_test.c
+    src/app/feedback_diagnostics.c)
+target_include_directories(feedback_diagnostics_test PRIVATE src)
+set_target_properties(feedback_diagnostics_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(platform_command_policy_test tests/app/platform_command_policy_test.c
+    src/app/platform_command_policy.c)
+target_include_directories(platform_command_policy_test PRIVATE src)
+set_target_properties(platform_command_policy_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(native_ui_render tests/ui/native_ui_render.m
+    src/app/welcome_model.c src/app/feedback_diagnostics.c
+    src/platform/macos/platform_recents.m src/platform/macos/platform_welcome.m
+    src/platform/macos/platform_settings.m src/platform/macos/platform_feedback.m)
+target_include_directories(native_ui_render PRIVATE src)
+target_compile_definitions(native_ui_render PRIVATE VEXEL_NATIVE_UI_GOLDEN_TEST=1)
+target_link_libraries(native_ui_render PRIVATE ${COCOA_FRAMEWORK})
+set_source_files_properties(tests/ui/native_ui_render.m src/platform/macos/platform_recents.m
+    src/platform/macos/platform_welcome.m src/platform/macos/platform_settings.m
+    src/platform/macos/platform_feedback.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(native_ui_render PROPERTIES OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+# Keep the CLI/test executable at bin/svgworkbench; the app shell is a separate
+# Finder-launchable target so existing development scripts retain their paths.
+configure_file(app/Info.plist.in "${CMAKE_CURRENT_BINARY_DIR}/Vexel-Info.plist" @ONLY)
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/Vexel-PkgInfo" "APPL????")
+find_program(VEXEL_PYTHON3_EXECUTABLE NAMES python3 REQUIRED)
+set(VEXEL_APP_BUNDLE "${CMAKE_CURRENT_BINARY_DIR}/Vexel.app")
+set(VEXEL_APP_CONTENTS "${VEXEL_APP_BUNDLE}/Contents")
+add_custom_command(OUTPUT "${VEXEL_APP_CONTENTS}/Info.plist"
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${VEXEL_APP_BUNDLE}"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${VEXEL_APP_CONTENTS}/MacOS"
+        "${VEXEL_APP_CONTENTS}/Resources"
+    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:svgworkbench>"
+        "${VEXEL_APP_CONTENTS}/MacOS/svgworkbench"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/Vexel-Info.plist"
+        "${VEXEL_APP_CONTENTS}/Info.plist"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/Vexel-PkgInfo"
+        "${VEXEL_APP_CONTENTS}/PkgInfo"
+    COMMAND ${VEXEL_PYTHON3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/packaging/vexel_packaging.py"
+        icon --output "${VEXEL_APP_CONTENTS}/Resources/Vexel.icns"
+    DEPENDS svgworkbench app/Info.plist.in packaging/vexel_packaging.py
+    VERBATIM)
+add_custom_target(vexel_app_bundle ALL DEPENDS "${VEXEL_APP_CONTENTS}/Info.plist")
+# end lane: w15-native
+
 # lane: viewer2
 target_sources(svgworkbench PRIVATE src/app/viewer_quality.c src/app/viewer_events.c
     src/app/viewer_render.c src/platform/macos/platform_menus.m)
@@ -566,6 +628,16 @@ if(BUILD_TESTING)
     add_test(NAME svg-index COMMAND svg_index_test)
     add_test(NAME viewer-navigation COMMAND viewer_navigation_test)
     add_test(NAME viewer-composition COMMAND viewer_frame_test)
+    # lane: w15-native
+    add_test(NAME welcome-model COMMAND welcome_model_test)
+    add_test(NAME feedback-diagnostics COMMAND feedback_diagnostics_test)
+    add_test(NAME platform-command-policy COMMAND platform_command_policy_test)
+    add_test(NAME native-shell-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/ui/verify_native_shell_goldens.py"
+        --binary $<TARGET_FILE:native_ui_render>
+        --recent-fixture "../../tests/svg/shape/fixtures/rect.svg"
+        --icon-png "${CMAKE_SOURCE_DIR}/app/Vexel-Icon-1024.png")
+    # end lane: w15-native
     # lane: viewer2
     add_test(NAME viewer-quality COMMAND viewer_quality_test)
     add_test(NAME viewer-frame COMMAND ${CMAKE_COMMAND} -E env
@@ -840,9 +912,11 @@ target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_editor_tree_legacy.c)
 target_sources(svgworkbench PRIVATE
     src/app/viewer_editor_result.c
+    src/platform/macos/platform_window_native_shell.m
     src/platform/macos/platform_window_animation.m
     src/platform/macos/platform_window_menus.m)
-set_source_files_properties(src/platform/macos/platform_window_animation.m
+set_source_files_properties(src/platform/macos/platform_window_native_shell.m
+    src/platform/macos/platform_window_animation.m
     src/platform/macos/platform_window_menus.m
     PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 
@@ -1108,8 +1182,7 @@ endif()
 # lane: w14-timeline
 target_sources(svgworkbench PRIVATE
     src/app/viewer_timeline_layout.c
-    src/app/viewer_display_name.c
-    src/app/viewer_test_layout_dump.c)
+    src/app/viewer_display_name.c)
 target_sources(viewer_timeline_test PRIVATE src/app/viewer_timeline_layout.c)
 add_executable(viewer_timeline_render
     tests/ui/viewer_timeline_render.c

@@ -107,6 +107,11 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
                                            bool modern_style);
 void viewer_editor_destroy(viewer_editor *editor);
 bool viewer_editor_is_dirty(const viewer_editor *editor);
+bool viewer_editor_can_undo(const viewer_editor *editor);
+bool viewer_editor_can_redo(const viewer_editor *editor);
+bool viewer_editor_has_selection(const viewer_editor *editor);
+bool viewer_editor_sidebar_visibility(const viewer_editor *editor,
+                                     bool *out_structure, bool *out_inspector);
 const char *viewer_editor_status(const viewer_editor *editor);
 void viewer_editor_set_status(viewer_editor *editor, const char *message);
 void viewer_editor_resize(viewer_editor *editor, uint32_t width, uint32_t height,

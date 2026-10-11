@@ -6,17 +6,9 @@
 #include <stdint.h>
 
 #define PLATFORM_PATH_CAP 4096U
-#define PLATFORM_RECENT_FILES_MAX 5U
+#define PLATFORM_RECENT_FILES_MAX 8U
 #define PLATFORM_RECENT_NAME_CAP 256U
 
-/* AppKit window contract. All calls, including destroy and shutdown, must run
- * on the main thread. The opaque window is owned by the caller until destroy.
- * Pointer and precise gesture coordinates are logical points from the view's
- * top-left; dimensions are backing pixels. `backing_scale` is populated on
- * resize, scale, scroll, and magnify events. Convert cursor and viewport values
- * to backing pixels before applying a navigation transform. Scroll deltas are finite AppKit
- * scrollingDeltaX/Y values, bounded to +/-10000; magnification is finite and
- * bounded to +/-100. Text is UTF-8 and truncated only at a code-point edge. */
 typedef struct platform_window platform_window;
 
 typedef enum platform_event_type {
@@ -74,8 +66,43 @@ typedef enum platform_viewer_action {
     PLATFORM_ACTION_UI_SCALE_100,
     PLATFORM_ACTION_UI_SCALE_110,
     PLATFORM_ACTION_UI_SCALE_120,
-    PLATFORM_ACTION_QUIT
+    PLATFORM_ACTION_QUIT,
+    PLATFORM_ACTION_NEW_DOCUMENT,
+    PLATFORM_ACTION_SAVE,
+    PLATFORM_ACTION_SAVE_AS,
+    PLATFORM_ACTION_EXPORT_PNG,
+    PLATFORM_ACTION_UNDO,
+    PLATFORM_ACTION_REDO,
+    PLATFORM_ACTION_CUT,
+    PLATFORM_ACTION_COPY,
+    PLATFORM_ACTION_PASTE,
+    PLATFORM_ACTION_DELETE,
+    PLATFORM_ACTION_SELECT_ALL,
+    PLATFORM_ACTION_CLOSE_DOCUMENT,
+    PLATFORM_ACTION_ZOOM_IN,
+    PLATFORM_ACTION_ZOOM_OUT,
+    PLATFORM_ACTION_TOGGLE_STRUCTURE,
+    PLATFORM_ACTION_TOGGLE_INSPECTOR,
+    PLATFORM_ACTION_APPLY_WORKSPACE_PREFERENCE,
+    PLATFORM_ACTION_APPLY_CHECKERBOARD_PREFERENCE,
+    PLATFORM_ACTION_APPLY_PIXEL_GRID_PREFERENCE,
+    PLATFORM_ACTION_APPLY_NAVIGATION_PREFERENCE,
+    PLATFORM_ACTION_REFRESH_PREFERENCES,
+    PLATFORM_ACTION_SHOW_HOME
 } platform_viewer_action;
+
+typedef struct platform_command_state {
+    bool has_document;
+    bool has_path;
+    bool dirty;
+    bool can_undo;
+    bool can_redo;
+    bool has_selection;
+    bool checkerboard_enabled;
+    bool pixel_grid_enabled;
+    bool structure_visible;
+    bool inspector_visible;
+} platform_command_state;
 
 typedef enum platform_modifier {
     PLATFORM_MODIFIER_COMMAND = 1U << 0,
@@ -105,16 +132,16 @@ typedef struct platform_event {
     uint32_t command_id;
     char text[256];
     size_t text_len;
-    /* Owned path bytes in this value event, NUL-terminated on file-open events. */
     char path[PLATFORM_PATH_CAP];
 } platform_event;
 
 typedef struct platform_window_config {
-    const char *title_utf8; /* borrowed UTF-8 slice, valid only during create */
+    const char *title_utf8;
     size_t title_len;
     int32_t width_points;
     int32_t height_points;
     bool resizable;
+    bool initially_hidden;
 } platform_window_config;
 
 typedef struct platform_recent_file {
@@ -126,28 +153,30 @@ typedef struct platform_recent_file {
 bool platform_init(void);
 bool platform_window_create(const platform_window_config *config, platform_window **out_window);
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points);
-/* Content-view top-left in the global point coordinates accepted by CGEvent. */
 bool platform_window_content_screen_origin(platform_window *window,
                                            double *out_x, double *out_y);
 bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
+bool platform_window_set_visible(platform_window *window, bool visible);
+bool platform_window_show_welcome(platform_window *window);
+void platform_window_hide_welcome(platform_window *window);
 bool platform_window_set_cursor(platform_window *window, platform_cursor_kind cursor);
-/* Starts a non-blocking macOS Open sheet; selection arrives as a later file event. */
 bool platform_window_open_panel(platform_window *window);
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);
 size_t platform_window_recent_files(platform_window *window,
     platform_recent_file *out_files, size_t capacity);
+void platform_window_recent_open_failed(platform_window *window, const char *path,
+                                        size_t path_len);
 bool platform_window_is_dark_appearance(platform_window *window);
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
                                       bool enabled);
 bool platform_window_show_ruler_context_menu(platform_window *window,
     bool horizontal_axis, int32_t logical_x, int32_t logical_y);
-bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
-                                       bool enabled);
+void platform_window_update_command_state(platform_window *window,
+                                          const platform_command_state *state);
 void platform_window_dispatch_command(platform_window *window, uint32_t command_id);
 bool platform_window_set_material_enabled(platform_window *window, bool enabled);
 void platform_window_request_animation_ticks(platform_window *window, bool enabled);
 bool platform_window_dispatch_animation_tick(platform_window *window);
-/* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);
 void platform_shutdown(void);

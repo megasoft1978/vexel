@@ -255,3 +255,26 @@
   report proposals are not frozen work orders under `work/`. WO-UX-03 remains
   gated on WO-M4-06 renderer acceptance: round 7 still has the `clip-union`
   reference mismatch (4 vs 1 raw RGB at pixel (8,4)).
+- Update 2026-10-11: uncommitted W15 native macOS shell candidate on
+  `lane/w15-native` implements r5 WO-1, WO-3, WO-4, WO-5, WO-7, and WO-10.
+  `./dev bundle`, the Release CMake app-bundle target, 13 packaging tests, and
+  69 Python tests pass. The 14 light/dark offscreen AppKit content and icon
+  goldens pass, including Welcome empty and recent-list states. `./dev t --all`
+  passes 59/61 CTests and 69/69 Python tests; the two failures are sandbox
+  LaunchServices/hiservices and offscreen-Metal failures
+  documented in `docs/lanes/w15-native.md`. Native titlebar/menu/full-screen
+  review is left for the maintainer because the shared screen must not be
+  automated or captured. The r5 orders are not frozen under `work/`, so the
+  ledger remains unchanged.
+
+- W15-native integration with W14 keeps `viewer_runtime.c` as the only document
+  session manager and routes New SVG, save/edit commands, preferences, and
+  Welcome file opens through its existing per-window event path. Recent files
+  now use the shared W15 model for the W14 home view, menus, Welcome, and Dock
+  menu. Welcome launch hides the host window; closing Welcome reveals the W14
+  home state. Removed the duplicate CMake test-layout source and split native
+  action/window-shell code to keep source files under 800 lines. The native UI
+  golden fixture now uses a checkout-independent relative path. `./dev t --all`
+  passes all 77 CTests and 69 Python tests; `python3 scripts/ledger.py validate ledger.jsonl`
+  reports 412 entries. Real titlebar, tab, Welcome, and menu review
+  remains for the maintainer.

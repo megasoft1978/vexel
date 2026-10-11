@@ -3,6 +3,7 @@
 
 #include "mcp_broker_hook.h"
 #include "platform/platform_metal.h"
+#include "platform/platform_settings.h"
 #include "test_driver/native_injection.h"
 #include "viewer_sessions.h"
 
@@ -43,8 +44,11 @@ static viewer_app *runtime_create_session(viewer_runtime *runtime,
     app->running = true;
     app->smoke_mode = runtime->smoke_mode;
     app->backing_scale = 1.0;
-    app->checkerboard = true;
-    app->pixel_grid = true;
+    platform_settings_values preferences = {0};
+    platform_settings_get(&preferences);
+    app->checkerboard = preferences.default_checkerboard;
+    app->pixel_grid = preferences.default_pixel_grid;
+    app->modifier_scroll_zooms = preferences.modifier_scroll_zooms;
     app->load_status = VIEWER_LOAD_CANCELED;
     app->theme = UI_THEME_DARK;
     viewer_copy_display_name(path == NULL ? "Open SVG" : path,
@@ -53,9 +57,19 @@ static viewer_app *runtime_create_session(viewer_runtime *runtime,
 
     platform_task_config task_config = {1U, 1U, NULL, NULL, NULL};
     if (platform_task_queue_create(&task_config, &app->tasks) != PLATFORM_TASK_OK) goto failed;
-    const char *title = path == NULL ? "vexel — Open SVG" : "vexel — Loading SVG";
-    platform_window_config window_config = {title, strlen(title),
-        VIEWER_INITIAL_WIDTH, VIEWER_INITIAL_HEIGHT, true};
+    bool show_welcome = initial && runtime->documents.count == 0U && path == NULL &&
+        preferences.show_welcome_on_launch;
+    const char *title = path == NULL ?
+        (show_welcome ? "vexel — Welcome" : "vexel — Open SVG") :
+        "vexel — Loading SVG";
+    platform_window_config window_config = {
+        .title_utf8 = title,
+        .title_len = strlen(title),
+        .width_points = VIEWER_INITIAL_WIDTH,
+        .height_points = VIEWER_INITIAL_HEIGHT,
+        .resizable = true,
+        .initially_hidden = show_welcome
+    };
     if (!platform_window_create(&window_config, &app->window) ||
         !viewer_allocate_frame(app, VIEWER_INITIAL_WIDTH, VIEWER_INITIAL_HEIGHT)) goto failed;
     app->theme = platform_window_is_dark_appearance(app->window) ?
@@ -67,6 +81,8 @@ static viewer_app *runtime_create_session(viewer_runtime *runtime,
     (void)platform_window_set_option_state(app->window,
         PLATFORM_ACTION_TOGGLE_PIXEL_GRID, app->pixel_grid);
     (void)snprintf(app->title, sizeof(app->title), "%s", title);
+    if (show_welcome && !platform_window_show_welcome(app->window))
+        (void)platform_window_set_visible(app->window, true);
     if (path != NULL && !viewer_request_open(app, path, initial)) goto failed;
     if (!viewer_sessions_add(&runtime->documents, app)) goto failed;
     return app;
