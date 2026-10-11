@@ -329,7 +329,7 @@ void editor_build_tree_modern(viewer_editor *editor)
     char hud[UI_TEXT_MAX_BYTES] = {0};
     editor_canvas_status(editor, hud);
     uint32_t canvas_points = (uint32_t)((double)layout.canvas.width / (scale * ui_scale));
-    uint32_t hud_width = (uint32_t)(strlen(hud) * 7U + 20U);
+    uint32_t hud_width = (uint32_t)(strlen(hud) * 5U + 12U);
     uint32_t hud_max_width = canvas_points > 8U ? canvas_points - 8U : canvas_points;
     if (hud_width > hud_max_width) hud_width = hud_max_width;
     if (hud_width == 0U) hud_width = 1U;
@@ -337,7 +337,7 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_AXIS_HORIZONTAL, 0U, 36U, 4U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_CANVAS_HUD + 100U,
-            EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, hud_width, 28U,
+            EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, hud_width, 20U,
             0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_HUD_PILL, UI_ICON_NONE,
             hud, strlen(hud), NULL, 0U,
             editor->zoom_menu_open ? UI_STATE_CHECKED : 0U,
