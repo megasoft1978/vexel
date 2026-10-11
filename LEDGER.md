@@ -116,3 +116,5 @@
 
 | 2026-10-11 | WO-MOTION-03 r1 | implementation candidate; full gate incomplete and uncommitted | `3739b0b` | `3739b0b` | Focused authoring C test and Debug build pass. `./dev t --all` reports 56/58 CTests and 69/69 Python tests; `index-replay` fails because offscreen Metal is unavailable and `native-viewer-smoke` fails without a retained diagnostic. Evidence: `artifacts/WO-MOTION-03/`; no commit. |
 | 2026-10-11 | WO-MOTION-04 r1 | implementation candidate; full gate incomplete and uncommitted | `3739b0b` | `3739b0b` | Focused timeline test passes; the light, dark, and increased-contrast easing PNGs compare byte-for-byte with headless renders. Full-suite result is recorded with WO-MOTION-03. Evidence: `artifacts/WO-MOTION-04/`; no commit. |
+
+| 2026-10-11 | WO-UI-GOLDEN-01 r1 | ready | `c43fa82` | `c43fa82` | Diagnostic-only capture and pixel-metric plan for the four UI golden CTest failures on migrated main. Keeps golden files, assertions, and thresholds protected; parallel-safe true. |

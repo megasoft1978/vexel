@@ -325,3 +325,10 @@
   lifecycle event was added because no W16 frozen work order exists. No live
   window, keyboard/mouse automation, or screenshot was used. Maintainer window
   checks remain listed in `docs/lanes/integrate.md`.
+
+- Update 2026-10-11: WO-UI-GOLDEN-01 revision 1 is frozen READY on
+  `c43fa826c0fbc8910e8dc0c09b4139c8aa615995`, parallel-safe true. It diagnoses
+  the four UI golden CTest failures from CI run 38147398376 by capturing actual
+  images and pixel metrics while preserving all expected images and assertions.
+  Historical run artifacts were not attached; instrumentation will be added to
+  the main CI workflow so a subsequent run can retain diagnostic images.
