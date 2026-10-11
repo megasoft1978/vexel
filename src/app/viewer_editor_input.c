@@ -240,6 +240,7 @@ static uint32_t editor_key_field(viewer_editor *editor, uint16_t key_code,
         if ((result & VIEWER_EDITOR_MUTATED) != 0U) return result;
         if (ui_focus_next(&editor->tree, shift)) {
             editor->focus_id = editor->tree.focused_id;
+            (void)editor_reveal_focus(editor);
             editor->tree_ready = false;
         }
         return VIEWER_EDITOR_HANDLED;
@@ -286,6 +287,8 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
     if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
         return viewer_editor_cancel_canvas_gesture(editor);
+    if (editor_splitter_key(editor, key_code, modifiers))
+        return VIEWER_EDITOR_HANDLED;
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
     if (key_code == 120U) {
@@ -395,6 +398,7 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         if (!editor->tree_ready) editor_build_tree(editor);
         if (ui_focus_next(&editor->tree, shift)) {
             editor->focus_id = editor->tree.focused_id;
+            (void)editor_reveal_focus(editor);
             editor->tree_ready = false;
         }
         return VIEWER_EDITOR_HANDLED;

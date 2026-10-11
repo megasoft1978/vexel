@@ -165,3 +165,17 @@
   tests; `./dev editor-smoke` and `./dev viewer-smoke` pass; the ledger validates
   with 406 entries. This lane has no frozen W12 work order, so no lifecycle event
   was added to `ledger.jsonl`.
+
+- Update 2026-10-11: uncommitted W15 visual work on `lane/w15-visual` adds
+  system-accent and readable-scale preferences, resizable sidebars, simplified
+  toolbar/Inspector hierarchy, scoped Layers focus, full-ID reveal/copy, the
+  macOS 26 toolbar material boundary, and interruptible motion. Headless style
+  goldens cover dark/light at 100%, 110%, and 120%, 1×/2×; editor chrome and
+  selection goldens were reviewed and refreshed. `./dev build`, focused editor
+  tests, 200,000-case layout fuzz, all relevant goldens, `./dev shot`/`pixdiff`,
+  and ledger validation pass. `./dev t --all` reports 55/57 CTests and 69/69
+  Python tests; only `index-replay` (offscreen Metal unavailable) and
+  `native-viewer-smoke` fail in this environment. Maintainer real-window checks
+  are listed in `docs/lanes/w15-visual.md`. No frozen W15 order is present under
+  `work/`, so the ledger remains at 406 valid entries with no W15 lifecycle
+  event. No commit was made.

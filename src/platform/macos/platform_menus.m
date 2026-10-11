@@ -1,5 +1,6 @@
 #import <Cocoa/Cocoa.h>
 
+#include "platform/platform_text_ui.h"
 #include "platform_window_internal.h"
 
 #include <string.h>
@@ -16,6 +17,7 @@
 - (void)actionFitWindow:(id)sender;
 - (void)actionActualSize:(id)sender;
 - (void)actionTogglePixelGrid:(id)sender;
+- (void)actionUIScale:(id)sender;
 - (void)actionQuit:(id)sender;
 - (void)actionOpenRecent:(id)sender;
 - (void)actionClearRecent:(id)sender;
@@ -128,6 +130,29 @@ void platform_macos_menus_init(void)
         @selector(actionActualSize:), PLATFORM_ACTION_ACTUAL_SIZE)];
     [view_menu addItem:platform_menu_item(@"Pixel Grid", @"g",
         @selector(actionTogglePixelGrid:), PLATFORM_ACTION_TOGGLE_PIXEL_GRID)];
+    [view_menu addItem:[NSMenuItem separatorItem]];
+    NSMenuItem *scale = [[NSMenuItem alloc] initWithTitle:@"Interface Size"
+        action:nil keyEquivalent:@""];
+    NSMenu *scale_menu = [[NSMenu alloc] initWithTitle:@"Interface Size"];
+    NSArray<NSString *> *scale_titles = @[@"Standard · 100%", @"Large · 110%",
+        @"Larger · 120%"];
+    NSInteger current_scale = [NSUserDefaults.standardUserDefaults
+        integerForKey:@"VexelUIScalePercent"];
+    if (current_scale != 100 && current_scale != 110 && current_scale != 120)
+        current_scale = 100;
+    const platform_viewer_action scale_actions[] = {PLATFORM_ACTION_UI_SCALE_100,
+        PLATFORM_ACTION_UI_SCALE_110, PLATFORM_ACTION_UI_SCALE_120};
+    const NSInteger scale_values[] = {100, 110, 120};
+    for (NSUInteger index = 0U; index < scale_titles.count; ++index) {
+        NSMenuItem *item = platform_menu_item(scale_titles[index], @"",
+            @selector(actionUIScale:), (NSInteger)scale_actions[index]);
+        item.representedObject = @(scale_values[index]);
+        item.state = current_scale == scale_values[index] ?
+            NSControlStateValueOn : NSControlStateValueOff;
+        [scale_menu addItem:item];
+    }
+    scale.submenu = scale_menu;
+    [view_menu addItem:scale];
     view.submenu = view_menu;
     [main addItem:view];
 
@@ -202,6 +227,22 @@ bool platform_macos_menus_set_option_state(platform_window *window,
 - (void)actionFitWindow:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_FIT_WINDOW); }
 - (void)actionActualSize:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_ACTUAL_SIZE); }
 - (void)actionTogglePixelGrid:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_TOGGLE_PIXEL_GRID); }
+- (void)actionUIScale:(id)sender
+{
+    if (![sender isKindOfClass:[NSMenuItem class]]) return;
+    NSMenuItem *selected = (NSMenuItem *)sender;
+    NSNumber *value = [selected.representedObject isKindOfClass:[NSNumber class]] ?
+        selected.representedObject : nil;
+    if (value == nil) return;
+    NSInteger percent = value.integerValue;
+    if (percent != 100 && percent != 110 && percent != 120) return;
+    if (!platform_text_ui_set_ui_scale((uint16_t)percent)) return;
+    for (NSMenuItem *item in selected.menu.itemArray)
+        item.state = item == selected ? NSControlStateValueOn : NSControlStateValueOff;
+    platform_window_dispatch_action(self.owner,
+        percent == 110 ? PLATFORM_ACTION_UI_SCALE_110 :
+        percent == 120 ? PLATFORM_ACTION_UI_SCALE_120 : PLATFORM_ACTION_UI_SCALE_100);
+}
 - (void)actionQuit:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_QUIT); }
 - (void)actionOpenRecent:(id)sender
 {

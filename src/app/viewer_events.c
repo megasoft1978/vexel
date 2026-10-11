@@ -230,11 +230,27 @@ static void process_editor_result(viewer_app *app, uint32_t result)
     }
     if ((result & VIEWER_EDITOR_RELOAD) != 0U) request_reload_or_open(app);
     if ((result & VIEWER_EDITOR_QUIT) != 0U) viewer_request_close(app);
+    if ((result & VIEWER_EDITOR_FIT_CANVAS) != 0U)
+        apply_navigation_fit(app, PLATFORM_ACTION_FIT_WINDOW);
+    if ((result & VIEWER_EDITOR_ACTUAL_SIZE) != 0U)
+        apply_navigation_fit(app, PLATFORM_ACTION_ACTUAL_SIZE);
+    if ((result & VIEWER_EDITOR_COPY_FULL_ID) != 0U) {
+        uint8_t identifier[64U * 1024U];
+        size_t length = 0U;
+        if (!viewer_editor_copy_full_id(app->editor, identifier,
+                sizeof(identifier), &length) ||
+            !platform_clipboard_write_text(identifier, length))
+            viewer_editor_set_status(app->editor, "Could not copy the full SVG ID");
+        else viewer_editor_set_status(app->editor, "Full SVG ID copied");
+    }
     if ((result & VIEWER_EDITOR_HANDLED) != 0U) {
         app->frame_dirty = true;
         (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
         (void)viewer_set_window_title(app);
     }
+    if (app->editor != NULL)
+        platform_window_request_animation_ticks(app->window,
+            viewer_editor_motion_active(app->editor));
 }
 
 static void apply_action(viewer_app *app, platform_viewer_action action)
@@ -247,6 +263,12 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
         case PLATFORM_ACTION_FIT_WINDOW:
         case PLATFORM_ACTION_ACTUAL_SIZE: apply_navigation_fit(app, action); break;
         case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: toggle_pixel_grid(app); break;
+        case PLATFORM_ACTION_UI_SCALE_100:
+            (void)viewer_editor_set_ui_scale(app->editor, 100U); app->frame_dirty = true; break;
+        case PLATFORM_ACTION_UI_SCALE_110:
+            (void)viewer_editor_set_ui_scale(app->editor, 110U); app->frame_dirty = true; break;
+        case PLATFORM_ACTION_UI_SCALE_120:
+            (void)viewer_editor_set_ui_scale(app->editor, 120U); app->frame_dirty = true; break;
         case PLATFORM_ACTION_QUIT: viewer_request_close(app); break;
         case PLATFORM_ACTION_NONE: default: break;
     }
@@ -430,12 +452,21 @@ static void update_pointer_status(viewer_app *app, const platform_event *event)
 
 void viewer_process_event(viewer_app *app, const platform_event *event)
 {
+    if (app->editor != NULL)
+        viewer_editor_set_motion_time(app->editor, event->timestamp_seconds);
     if (viewer_timeline_process_event(&app->timeline, event, app->editor,
             app->width, app->height, app->backing_scale)) {
         app->frame_dirty = true;
         return;
     }
     switch (event->type) {
+        case PLATFORM_EVENT_ANIMATION_TICK:
+            if (app->editor != NULL && viewer_editor_motion_tick(app->editor,
+                    event->timestamp_seconds)) app->frame_dirty = true;
+            if (app->editor != NULL)
+                platform_window_request_animation_ticks(app->window,
+                    viewer_editor_motion_active(app->editor));
+            return;
         case PLATFORM_EVENT_RESIZE:
         case PLATFORM_EVENT_SCALE: {
             if (event->pixel_width == 0U || event->pixel_height == 0U ||
@@ -467,8 +498,9 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             if (app->editor != NULL && isfinite(pixel_x) && isfinite(pixel_y) &&
                 pixel_x >= 0.0 && pixel_y >= 0.0 && pixel_x <= (double)UINT32_MAX &&
                 pixel_y <= (double)UINT32_MAX) {
-                uint32_t result = viewer_editor_pointer_down(app->editor,
-                    (uint32_t)pixel_x, (uint32_t)pixel_y, event->button);
+                uint32_t result = viewer_editor_pointer_down_click_count(app->editor,
+                    (uint32_t)pixel_x, (uint32_t)pixel_y, event->button,
+                    event->click_count);
                 if (result != 0U) {
                     process_editor_result(app, result);
                     return;
@@ -505,6 +537,8 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 if (isfinite(px) && isfinite(py) && px >= 0.0 && py >= 0.0 &&
                     px <= (double)UINT32_MAX && py <= (double)UINT32_MAX)
                     viewer_editor_pointer_move(app->editor, (uint32_t)px, (uint32_t)py);
+                platform_window_request_animation_ticks(app->window,
+                    viewer_editor_motion_active(app->editor));
             }
             if (app->navigation_ready && app->navigation.dragging) {
                 ui_viewer_navigation previous = app->navigation;
@@ -540,8 +574,11 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
         case PLATFORM_EVENT_SCROLL: {
             if (app->editor != NULL) {
                 double pixel_x = event->precise_x * event->backing_scale;
-                if (isfinite(pixel_x) && pixel_x >= 0.0 && pixel_x <= (double)UINT32_MAX &&
-                    viewer_editor_scroll(app->editor, (uint32_t)pixel_x, event->delta_y)) {
+                double pixel_y = event->precise_y * event->backing_scale;
+                if (isfinite(pixel_x) && isfinite(pixel_y) && pixel_x >= 0.0 &&
+                    pixel_y >= 0.0 && pixel_x <= (double)UINT32_MAX &&
+                    pixel_y <= (double)UINT32_MAX && viewer_editor_scroll_at(app->editor,
+                        (uint32_t)pixel_x, (uint32_t)pixel_y, event->delta_y)) {
                     app->frame_dirty = true;
                     return;
                 }

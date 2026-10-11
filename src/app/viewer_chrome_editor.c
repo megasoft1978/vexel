@@ -1,6 +1,7 @@
 #include "viewer_editor_internal.h"
 
 #include "viewer_chrome.h"
+#include "ui_widgets.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -21,6 +22,33 @@ static bool editor_add_divider(viewer_editor *editor, uint32_t id, uint32_t pare
     return editor_add_widget_node(editor, id, parent, UI_AXIS_VERTICAL,
         width, height, 0U, 0U, 0U, UI_ROLE_NONE, UI_WIDGET_DIVIDER,
         UI_ICON_NONE, NULL, 0U, NULL, 0U, 0U, 0U);
+}
+
+static bool editor_add_splitter(viewer_editor *editor, uint32_t id,
+    uint16_t width_points, const char *label)
+{
+    char value[16] = {0};
+    int amount = snprintf(value, sizeof(value), "%u pt", (unsigned)width_points);
+    if (amount < 0 || (size_t)amount >= sizeof(value)) return false;
+    double scale = editor->backing_scale *
+        ((double)viewer_editor_ui_scale_percent(editor) / 100.0);
+    ui_widget_spec spec = {.id = id, .parent_id = EDITOR_NODE_WORKSPACE,
+        .axis = UI_AXIS_VERTICAL,
+        .preferred_width = (uint32_t)ceil(VIEWER_CHROME_SPLITTER_POINTS * scale),
+        .preferred_height = 0U, .widget = UI_WIDGET_DIVIDER,
+        .label = label, .label_len = strlen(label),
+        .value = value, .value_len = (size_t)amount};
+    return ui_widget_add_slider(&editor->tree, &spec);
+}
+
+static void editor_set_node_bounds(viewer_editor *editor, uint32_t id, ui_rect bounds)
+{
+    for (size_t index = 0U; index < editor->tree.count; ++index) {
+        if (editor->tree.nodes[index].spec.id == id) {
+            editor->tree.nodes[index].bounds = bounds;
+            return;
+        }
+    }
 }
 
 static bool editor_draw_tool_selected(viewer_editor *editor,
@@ -142,25 +170,30 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (editor == NULL || editor->edit == NULL || editor->width == 0U || editor->height == 0U)
         return;
     viewer_chrome_layout layout;
-    if (!viewer_chrome_layout_compute(editor->width, editor->height,
-            editor->backing_scale, editor->want_structure, editor->want_inspector,
+    double ui_scale = (double)viewer_editor_ui_scale_percent(editor) / 100.0;
+    double scale = editor->backing_scale > 0.0 ? editor->backing_scale : 1.0;
+    if (!viewer_chrome_layout_compute_sized(editor->width, editor->height,
+            scale, ui_scale, editor->structure_width_points,
+            editor->inspector_width_points, editor->want_structure, editor->want_inspector,
             &layout) || !ui_tree_init_accessible(&editor->tree, editor->theme,
                 editor->increased_contrast)) return;
     editor->effective_structure = layout.structure_visible;
     editor->effective_inspector = layout.inspector_visible;
     editor->tree.nodes[0].spec.color = 0U;
     editor->tree.nodes[0].spec.label_len = 0U;
-    editor->tree.backing_scale = editor->backing_scale;
-    editor->tree.tokens.font_px = (uint32_t)ceil(13.0 * editor->backing_scale);
-    editor->tree.tokens.radius = (uint32_t)ceil(6.0 * editor->backing_scale);
-    editor->tree.tokens.spacing = (uint32_t)ceil(8.0 * editor->backing_scale);
+    editor->tree.backing_scale = scale;
+    editor->tree.tokens = ui_theme_tokens_accented(editor->theme,
+        editor->increased_contrast, editor->system_accent_srgb);
+    editor->tree.tokens.font_px = (uint32_t)ceil(13.0 * scale * ui_scale);
+    editor->tree.tokens.radius = (uint32_t)ceil(6.0 * scale * ui_scale);
+    editor->tree.tokens.spacing = (uint32_t)ceil(8.0 * scale * ui_scale);
     const ui_tokens *tokens = &editor->tree.tokens;
     bool okay = editor_add_node(editor, EDITOR_NODE_TOOLBAR, UI_ROOT_ID,
             UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_TOOLBAR_POINTS, 6U, 6U,
-            tokens->panel, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
+            viewer_editor_native_material_enabled(editor) ? 0U : tokens->panel,
+            UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_SAVE, EDITOR_NODE_TOOLBAR,
             UI_ICON_SAVE, "Save · Command-S", 0U) &&
-        editor_add_divider(editor, 30U, EDITOR_NODE_TOOLBAR, 1U, 32U) &&
         editor_add_icon(editor, EDITOR_BUTTON_UNDO, EDITOR_NODE_TOOLBAR,
             UI_ICON_UNDO, "Undo · Command-Z",
             editor_toolbar_action_state(editor, EDITOR_BUTTON_UNDO)) &&
@@ -240,15 +273,18 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_ICON_TEXT, "Text tool · T",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_TEXT) ? UI_STATE_CHECKED : 0U);
     if (!okay) return;
-    if (layout.structure_visible) editor_build_structure_panel(editor, tokens);
+    if (layout.structure_visible) {
+        editor_build_structure_panel(editor, tokens);
+        if (!editor_add_splitter(editor, EDITOR_SPLITTER_STRUCTURE_ID,
+                editor->layout_structure_width_points, "Layers panel width")) return;
+    }
     okay = editor_add_node(editor, EDITOR_NODE_CANVAS, EDITOR_NODE_WORKSPACE,
             UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U);
     if (!okay) return;
     char hud[UI_TEXT_MAX_BYTES] = {0};
     editor_canvas_status(editor, hud);
-    double scale = editor->backing_scale > 0.0 ? editor->backing_scale : 1.0;
-    uint32_t canvas_points = (uint32_t)((double)layout.canvas.width / scale);
+    uint32_t canvas_points = (uint32_t)((double)layout.canvas.width / (scale * ui_scale));
     uint32_t hud_width = (uint32_t)(strlen(hud) * 7U + 20U);
     uint32_t hud_max_width = canvas_points > 8U ? canvas_points - 8U : canvas_points;
     if (hud_width > hud_max_width) hud_width = hud_max_width;
@@ -269,6 +305,9 @@ void editor_build_tree_modern(viewer_editor *editor)
             0U, 0U);
         if (!okay) return;
     }
+    if (layout.inspector_visible && !editor_add_splitter(editor,
+            EDITOR_SPLITTER_INSPECTOR_ID, editor->layout_inspector_width_points,
+            "Inspector panel width")) return;
     if (layout.inspector_visible && !editor_build_inspector_panel(editor, tokens)) return;
     char status[UI_TEXT_MAX_BYTES] = {0}, selection[UI_TEXT_MAX_BYTES] = {0};
     editor_status_labels(editor, status, selection);
@@ -277,7 +316,7 @@ void editor_build_tree_modern(viewer_editor *editor)
         strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
         strncmp(editor->status, "Unsupported SVG content", 23U) == 0;
     uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);
-    uint32_t status_points = (uint32_t)((double)layout.status.width / scale);
+    uint32_t status_points = (uint32_t)((double)layout.status.width / (scale * ui_scale));
     uint32_t status_content_width = status_points > 24U ? status_points - 24U : 0U;
     if (selection_width > status_content_width) selection_width = status_content_width;
     okay = editor_add_node(editor, EDITOR_NODE_STATUS, UI_ROOT_ID,
@@ -299,6 +338,23 @@ void editor_build_tree_modern(viewer_editor *editor)
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
             UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
     if (okay && ui_tree_layout(&editor->tree, editor->width, editor->height)) {
+        editor_set_node_bounds(editor, EDITOR_NODE_TOOLBAR, layout.toolbar);
+        editor_set_node_bounds(editor, EDITOR_NODE_OPTIONS, layout.options);
+        editor_set_node_bounds(editor, EDITOR_NODE_WORKSPACE, layout.workspace);
+        editor_set_node_bounds(editor, EDITOR_NODE_TOOL_RAIL, layout.rail);
+        if (layout.structure_visible) {
+            editor_set_node_bounds(editor, EDITOR_NODE_OUTLINE, layout.structure);
+            editor_set_node_bounds(editor, EDITOR_SPLITTER_STRUCTURE_ID,
+                layout.structure_splitter);
+        }
+        editor_set_node_bounds(editor, EDITOR_NODE_CANVAS, layout.canvas);
+        if (layout.inspector_visible) {
+            editor_set_node_bounds(editor, EDITOR_SPLITTER_INSPECTOR_ID,
+                layout.inspector_splitter);
+            editor_set_node_bounds(editor, EDITOR_NODE_INSPECTOR, layout.inspector);
+        }
+        editor_set_node_bounds(editor, EDITOR_NODE_STATUS, layout.status);
+        editor_reveal_layout_nodes(editor);
         if (editor->focus_id != 0U) {
             for (size_t index = 0U; index < editor->tree.count; ++index) {
                 ui_node *node = &editor->tree.nodes[index];

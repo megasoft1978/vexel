@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[2]
 GOLDEN_DIR = ROOT / "tests/ui/style-golden"
 SIZES = ((1280, 800), (2560, 1600))
 THEMES = ("dark", "light")
-STATES = ("empty", "selection", "editing-field", "error", "narrow")
+STATES = ("empty", "selection", "editing-field", "error", "narrow",
+          "scale-110", "scale-120")
 
 
 def png_chunk(kind: bytes, data: bytes) -> bytes:
@@ -99,7 +100,7 @@ def main() -> int:
         manifest_path.write_text(manifest, encoding="utf-8")
     elif not manifest_path.is_file() or manifest_path.read_text(encoding="utf-8") != manifest:
         raise SystemExit("editor style golden manifest does not match rendered screenshots")
-    print("editor style goldens match: 20 screenshots, dark/light, 1x/2x, five states")
+    print("editor style goldens match: 28 screenshots, dark/light, 1x/2x, seven states")
     return 0
 
 

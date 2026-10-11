@@ -23,6 +23,20 @@ bool platform_clipboard_write_svg(const uint8_t *bytes, size_t length)
     }
 }
 
+bool platform_clipboard_write_text(const uint8_t *bytes, size_t length)
+{
+    if (bytes == NULL || length == 0U || length > PLATFORM_CLIPBOARD_SVG_LIMIT ||
+        memchr(bytes, 0, length) != NULL) return false;
+    @autoreleasepool {
+        NSString *text = [[NSString alloc] initWithBytes:bytes length:length
+            encoding:NSUTF8StringEncoding];
+        if (text == nil) return false;
+        NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+        [pasteboard clearContents];
+        return [pasteboard setString:text forType:NSPasteboardTypeString];
+    }
+}
+
 bool platform_clipboard_write_png(const uint8_t *bytes, size_t length)
 {
     if (bytes == NULL || length == 0U || length > 64U * 1024U * 1024U ||

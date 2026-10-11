@@ -327,13 +327,18 @@ bool editor_reorder_to_edge(viewer_editor *editor, bool front)
     return result == DOCUMENT_EDIT_OK;
 }
 
-static void editor_preferences_changed(ui_theme theme, bool increased_contrast,
-                                       bool reduced_motion, void *context)
+static void editor_preferences_changed(
+    const platform_text_ui_preferences *preferences, void *context)
 {
     viewer_editor *editor = context;
-    if (editor != NULL)
-        (void)viewer_editor_set_appearance(editor, theme, increased_contrast,
-                                           reduced_motion);
+    if (editor == NULL || preferences == NULL) return;
+    (void)viewer_editor_set_appearance(editor, preferences->appearance,
+        preferences->increased_contrast, preferences->reduced_motion);
+    (void)viewer_editor_set_system_accent(editor, preferences->accent_srgb,
+        preferences->material_allowed);
+    (void)viewer_editor_set_ui_scale(editor, preferences->ui_scale_percent);
+    (void)viewer_editor_set_panel_widths(editor,
+        preferences->structure_width_points, preferences->inspector_width_points);
 }
 
 static void editor_view_menu_changed(bool structure_visible,
@@ -428,9 +433,17 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->backing_scale = 1.0;
     editor->path_selected_node_segment = SIZE_MAX;
     editor->snap_enabled = true;
+    editor->ui_scale_percent = 100U;
+    editor->structure_width_points = EDITOR_LEFT_WIDTH;
+    editor->inspector_width_points = EDITOR_RIGHT_WIDTH;
+    editor->layout_structure_width_points = EDITOR_LEFT_WIDTH;
+    editor->layout_inspector_width_points = EDITOR_RIGHT_WIDTH;
+    editor->inspector_geometry_expanded = true;
+    editor->inspector_appearance_expanded = true;
     if (modern_style) {
-        (void)platform_text_ui_get_preferences(&editor->theme,
-            &editor->increased_contrast, &editor->reduced_motion);
+        platform_text_ui_preferences preferences = {0};
+        if (platform_text_ui_get_extended_preferences(&preferences))
+            editor_preferences_changed(&preferences, editor);
     }
     editor_status_ok(editor, "Ready");
     if (!document_edit_root(editor->edit, &editor->selected)) {
@@ -469,9 +482,71 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
     editor->theme = theme;
     editor->increased_contrast = increased_contrast;
     editor->reduced_motion = reduced_motion;
+    if (reduced_motion && editor->sidebar_motion_active) {
+        editor->layout_structure_width_points = editor->sidebar_motion_target_structure;
+        editor->layout_inspector_width_points = editor->sidebar_motion_target_inspector;
+        editor->sidebar_motion_active = false;
+    }
+    if (reduced_motion) {
+        for (size_t index = 0U; index < EDITOR_MOTION_CONTROL_CAP; ++index)
+            editor->control_transitions[index].active = false;
+    }
     editor->tree_ready = false;
     editor->redraw_requested = true;
     return true;
+}
+
+bool viewer_editor_set_system_accent(viewer_editor *editor, uint32_t accent_srgb,
+                                     bool material_allowed)
+{
+    if (editor == NULL) return false;
+    if (editor->system_accent_srgb == accent_srgb &&
+        editor->native_material_allowed == material_allowed) return false;
+    editor->system_accent_srgb = accent_srgb;
+    editor->native_material_allowed = material_allowed;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_set_ui_scale(viewer_editor *editor, uint16_t percent)
+{
+    if (editor == NULL || (percent != 100U && percent != 110U && percent != 120U))
+        return false;
+    if (editor->ui_scale_percent == percent) return false;
+    editor->ui_scale_percent = percent;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_set_panel_widths(viewer_editor *editor,
+    uint16_t structure_width_points, uint16_t inspector_width_points)
+{
+    if (editor == NULL || structure_width_points < 184U ||
+        structure_width_points > 320U || inspector_width_points < 240U ||
+        inspector_width_points > 440U) return false;
+    if (editor->structure_width_points == structure_width_points &&
+        editor->inspector_width_points == inspector_width_points) return false;
+    editor->structure_width_points = structure_width_points;
+    editor->inspector_width_points = inspector_width_points;
+    editor->layout_structure_width_points = structure_width_points;
+    editor->layout_inspector_width_points = inspector_width_points;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_native_material_enabled(const viewer_editor *editor)
+{
+    return editor != NULL && editor->modern_style &&
+        editor->native_material_allowed && !editor->increased_contrast;
+}
+
+uint16_t viewer_editor_ui_scale_percent(const viewer_editor *editor)
+{
+    return editor == NULL || editor->ui_scale_percent == 0U ? 100U :
+        editor->ui_scale_percent;
 }
 
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
@@ -483,6 +558,26 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
         editor->want_inspector == inspector_visible) return false;
     editor->want_structure = structure_visible;
     editor->want_inspector = inspector_visible;
+    uint16_t current_structure = editor->layout_structure_width_points;
+    uint16_t current_inspector = editor->layout_inspector_width_points;
+    if (!editor->reduced_motion) {
+        editor->sidebar_motion_start_structure = current_structure;
+        editor->sidebar_motion_start_inspector = current_inspector;
+        editor->sidebar_motion_target_structure = structure_visible ?
+            editor->structure_width_points : 0U;
+        editor->sidebar_motion_target_inspector = inspector_visible ?
+            editor->inspector_width_points : 0U;
+        editor->sidebar_motion_start_seconds = editor->motion_time_seconds;
+        editor->sidebar_motion_show_structure = structure_visible || current_structure > 0U;
+        editor->sidebar_motion_show_inspector = inspector_visible || current_inspector > 0U;
+        editor->sidebar_motion_active = true;
+    } else {
+        editor->layout_structure_width_points = structure_visible ?
+            editor->structure_width_points : 0U;
+        editor->layout_inspector_width_points = inspector_visible ?
+            editor->inspector_width_points : 0U;
+        editor->sidebar_motion_active = false;
+    }
     editor->tree_ready = false;
     editor->redraw_requested = true;
     if (editor->modern_style)
@@ -546,9 +641,19 @@ bool viewer_editor_get_chrome_layout(viewer_editor *editor,
                                      struct viewer_chrome_layout *out_layout)
 {
     if (editor == NULL || out_layout == NULL) return false;
-    return viewer_chrome_layout_compute(editor->width, editor->height,
-        editor->backing_scale, editor->want_structure, editor->want_inspector,
-        (viewer_chrome_layout *)out_layout);
+    double ui_scale = (double)viewer_editor_ui_scale_percent(editor) / 100.0;
+    uint16_t structure = editor->layout_structure_width_points;
+    uint16_t inspector = editor->layout_inspector_width_points;
+    bool want_structure = editor->sidebar_motion_active ?
+        (editor->sidebar_motion_start_structure > 0U ||
+         editor->sidebar_motion_target_structure > 0U) : editor->want_structure;
+    bool want_inspector = editor->sidebar_motion_active ?
+        (editor->sidebar_motion_start_inspector > 0U ||
+         editor->sidebar_motion_target_inspector > 0U) : editor->want_inspector;
+    return viewer_chrome_layout_compute_sized(editor->width, editor->height,
+        editor->backing_scale, ui_scale, structure,
+        inspector, want_structure,
+        want_inspector, (viewer_chrome_layout *)out_layout);
 }
 
 bool viewer_editor_is_dirty(const viewer_editor *editor)

@@ -99,6 +99,8 @@ bool viewer_compose_and_present(viewer_app *app)
             app->frame_bytes, app->width, app->height,
             (size_t)app->width * 4U, app->backing_scale);
     app->frame_dirty = false;
+    (void)platform_window_set_material_enabled(app->window,
+        viewer_editor_native_material_enabled(app->editor));
     if (!platform_metal_present(app->window, app->frame, app->frame_bytes,
             app->width, app->height, app->diagnostic, sizeof(app->diagnostic))) {
         (void)fprintf(stderr, "viewer: Metal presentation failed: %s\n",

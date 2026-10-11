@@ -165,6 +165,7 @@ typedef struct ui_widget_canvas {
     uint8_t *rgba;
     size_t capacity, stride;
     uint32_t width, height, backing_scale;
+    double ui_scale;
     ui_theme theme;
     bool increased_contrast;
     ui_tokens tokens;
@@ -199,12 +200,20 @@ typedef struct ui_widget_draw_spec {
     uint32_t text_color;
     bool checked, expanded, invalid, placeholder, focus_visible;
     bool has_children, visible, locked, show_row_actions;
+    bool has_transition;
+    ui_control_state transition_from, transition_to;
+    uint16_t transition_progress_permille;
+    uint32_t transition_from_color, transition_to_color;
 } ui_widget_draw_spec;
 
 bool ui_widget_canvas_init(ui_widget_canvas *canvas, uint8_t *rgba,
     size_t capacity, uint32_t width, uint32_t height, size_t stride,
     uint32_t backing_scale, ui_theme theme, bool increased_contrast,
     ui_widget_text_draw_fn draw_text, void *text_context);
+bool ui_widget_canvas_init_scaled(ui_widget_canvas *canvas, uint8_t *rgba,
+    size_t capacity, uint32_t width, uint32_t height, size_t stride,
+    uint32_t backing_scale, double ui_scale, ui_theme theme,
+    bool increased_contrast, ui_widget_text_draw_fn draw_text, void *text_context);
 bool ui_widget_paint(ui_widget_canvas *canvas, const ui_widget_draw_spec *spec);
 size_t ui_widget_paint_scratch_limit(void);
 

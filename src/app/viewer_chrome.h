@@ -13,6 +13,7 @@
 #define VIEWER_CHROME_STRUCTURE_POINTS 232U
 #define VIEWER_CHROME_INSPECTOR_POINTS 320U
 #define VIEWER_CHROME_CANVAS_MIN_POINTS 240U
+#define VIEWER_CHROME_SPLITTER_POINTS 6U
 
 typedef struct viewer_chrome_layout {
     ui_rect toolbar;
@@ -22,6 +23,8 @@ typedef struct viewer_chrome_layout {
     ui_rect structure;
     ui_rect canvas;
     ui_rect inspector;
+    ui_rect structure_splitter;
+    ui_rect inspector_splitter;
     ui_rect status;
     bool structure_visible;
     bool inspector_visible;
@@ -32,5 +35,9 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
                                   double backing_scale,
                                   bool want_structure, bool want_inspector,
                                   viewer_chrome_layout *out_layout);
+bool viewer_chrome_layout_compute_sized(uint32_t width, uint32_t height,
+    double backing_scale, double ui_scale, uint16_t structure_width_points,
+    uint16_t inspector_width_points, bool want_structure, bool want_inspector,
+    viewer_chrome_layout *out_layout);
 
 #endif

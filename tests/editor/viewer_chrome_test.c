@@ -9,7 +9,7 @@
 #include <string.h>
 
 static const uint8_t source[] =
-    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' "
+    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64' "
     "data-long='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'>"
     "<defs><linearGradient id='gradient'><stop offset='0' stop-color='red'/></linearGradient></defs>"
@@ -17,6 +17,7 @@ static const uint8_t source[] =
     "fill='#336699' stroke='#112233'/><circle id='accent' cx='8' cy='8' r='3'/>"
     "<path id='curve' d='M1 1 L8 8'/><text id='title' x='1' y='12'>Vexel</text>"
     "<image id='thumb' href='data:image/png;base64,AA==' width='2' height='2'/>"
+    "<path id='w15-visual-long-identifier-abcdefghijklmnopqrstuvwxyz-0123456789' d='M2 2 L6 6'/>"
     "</g></svg>";
 
 static const ui_semantics_node *find_label(const ui_semantics_snapshot *snapshot,
@@ -44,6 +45,21 @@ static const ui_semantics_node *find_role_label(const ui_semantics_snapshot *sna
         if (node->role == role && ui_semantics_text(snapshot, node, false,
                 &full, &full_length) && full_length == length &&
             memcmp(full, label, length) == 0) return node;
+    }
+    return NULL;
+}
+
+static const ui_semantics_node *find_role_prefix(const ui_semantics_snapshot *snapshot,
+    ui_role role, const char *prefix)
+{
+    size_t length = strlen(prefix);
+    for (size_t index = 0U; index < snapshot->count; ++index) {
+        const ui_semantics_node *node = &snapshot->nodes[index];
+        const char *full = NULL;
+        size_t full_length = 0U;
+        if (node->role == role && ui_semantics_text(snapshot, node, false,
+                &full, &full_length) && full_length >= length &&
+            memcmp(full, prefix, length) == 0) return node;
     }
     return NULL;
 }
@@ -112,7 +128,10 @@ static bool send_text(viewer_editor *editor, const char *text)
 static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapshot)
 {
     if (!viewer_editor_semantics(editor, snapshot) || selected_row_count(snapshot) != 0U ||
-        find_label(snapshot, "Name") != NULL) return 30;
+        find_label(snapshot, "Name") != NULL || find_label(snapshot, "Width") == NULL ||
+        find_label(snapshot, "Height") == NULL || find_label(snapshot, "ViewBox") == NULL ||
+        find_label(snapshot, "Fit Canvas") == NULL || find_label(snapshot, "Actual Size") == NULL)
+        return 30;
     const ui_semantics_node *undo = find_label(snapshot, "Undo · Command-Z");
     const ui_semantics_node *redo = find_label(snapshot, "Redo · Shift-Command-Z");
     const ui_semantics_node *duplicate = find_label(snapshot, "Duplicate · Command-D");
@@ -129,7 +148,6 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
         layers_toggle == NULL || layers_toggle->spec.icon != UI_ICON_LAYERS ||
         inspector_toggle == NULL || inspector_toggle->spec.icon != UI_ICON_SIDEBAR_RIGHT)
         return 30;
-    const ui_node *empty_widget = ui_tree_find(&editor->tree, 23000U);
     const ui_node *hud_widget = ui_tree_find(&editor->tree, EDITOR_NODE_CANVAS_HUD + 100U);
     const ui_node *toolbar_divider = ui_tree_find(&editor->tree, 30U);
     const ui_node *rail_divider_one = ui_tree_find(&editor->tree, 33U);
@@ -138,33 +156,25 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
     const ui_node *polyline_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_POLYLINE);
     const ui_node *pen_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_PEN);
     const ui_node *node_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_NODE);
-    if (empty_widget == NULL || empty_widget->spec.widget != UI_WIDGET_EMPTY_STATE ||
-        empty_widget->bounds.width < 240U || empty_widget->bounds.height < 112U ||
-        hud_widget == NULL || hud_widget->spec.widget != UI_WIDGET_HUD_PILL ||
-        toolbar_divider == NULL || toolbar_divider->spec.widget != UI_WIDGET_DIVIDER ||
+    if (hud_widget == NULL || hud_widget->spec.widget != UI_WIDGET_HUD_PILL ||
+        toolbar_divider != NULL ||
         rail_divider_one == NULL || rail_divider_one->spec.widget != UI_WIDGET_DIVIDER ||
         rail_divider_two == NULL || rail_divider_two->spec.widget != UI_WIDGET_DIVIDER ||
         line_tool == NULL || polyline_tool == NULL || pen_tool == NULL || node_tool == NULL ||
         line_tool->spec.icon == polyline_tool->spec.icon ||
         pen_tool->spec.icon == node_tool->spec.icon)
         return 30;
-    const ui_semantics_node *empty = find_label(snapshot, "No layer selected");
-    const char *empty_message = NULL;
-    size_t empty_message_length = 0U;
-    if (empty == NULL || !read_text(snapshot, empty, true,
-            &empty_message, &empty_message_length) ||
-        empty_message_length != sizeof("Select a layer to edit its properties") - 1U ||
-        memcmp(empty_message, "Select a layer to edit its properties",
-            empty_message_length) != 0) return 30;
+    const ui_semantics_node *document_properties = find_label(snapshot, "Document");
+    if (document_properties == NULL) return 30;
 
     const ui_semantics_node *document = find_role_label(snapshot, UI_ROLE_ROW, "Document");
     if (document == NULL || !click_node(editor, document, document->frame.width / 2U) ||
         !viewer_editor_semantics(editor, snapshot) || selected_row_count(snapshot) != 1U ||
-        find_label(snapshot, "Name") == NULL || find_label(snapshot, "Other attributes") == NULL ||
+        find_label(snapshot, "Name") == NULL || find_label(snapshot, "Additional attributes") == NULL ||
         find_label(snapshot, "Xmlns") != NULL || find_label(snapshot, "Data-long") != NULL)
         return 31;
 
-    const ui_semantics_node *other = find_label(snapshot, "Other attributes");
+    const ui_semantics_node *other = find_label(snapshot, "Additional attributes");
     if (other == NULL || !click_node(editor, other, other->frame.width / 2U) ||
         !viewer_editor_semantics(editor, snapshot)) return 32;
     const ui_semantics_node *attribute = find_label(snapshot, "Data-long");
@@ -195,6 +205,43 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
         !row_has_icon(editor, snapshot, "Path #curve", UI_ICON_PATH) ||
         !row_has_icon(editor, snapshot, "Text #title", UI_ICON_TEXT) ||
         !row_has_icon(editor, snapshot, "Image #thumb", UI_ICON_IMAGE)) return 35;
+
+    const ui_semantics_node *group_row = find_role_label(snapshot, UI_ROLE_ROW, "Group #group");
+    const ui_semantics_node *focus_group = find_label(snapshot, "Focus selected group");
+    if (group_row == NULL || focus_group == NULL || !click_node(editor, group_row,
+            group_row->frame.width / 2U) || !click_node(editor, focus_group,
+            focus_group->frame.width / 2U) || !viewer_editor_semantics(editor, snapshot) ||
+        find_role_label(snapshot, UI_ROLE_ROW, "Group #group") == NULL ||
+        find_role_label(snapshot, UI_ROLE_ROW, "Definitions") != NULL ||
+        find_role_label(snapshot, UI_ROLE_ROW, "Document") != NULL) return 39;
+    const ui_semantics_node *focused_path = find_role_prefix(snapshot, UI_ROLE_ROW,
+        "Path #w15-visual-long");
+    if (focused_path == NULL) return 40;
+    uint32_t path_x = focused_path->frame.x + focused_path->frame.width / 2U;
+    uint32_t path_y = focused_path->frame.y + focused_path->frame.height / 2U;
+    viewer_editor_pointer_move(editor, path_x, path_y);
+    if (!viewer_editor_semantics(editor, snapshot)) return 41;
+    const ui_semantics_node *reveal = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index)
+        if (snapshot->nodes[index].id == EDITOR_NODE_ID_REVEAL)
+            reveal = &snapshot->nodes[index];
+    static const char long_identifier[] =
+        "w15-visual-long-identifier-abcdefghijklmnopqrstuvwxyz-0123456789";
+    const char *revealed_id = NULL;
+    size_t revealed_id_length = 0U;
+    if (reveal == NULL || !read_text(snapshot, reveal, true, &revealed_id,
+            &revealed_id_length) || revealed_id_length != sizeof(long_identifier) - 1U ||
+        memcmp(revealed_id, long_identifier, revealed_id_length) != 0 ||
+        ui_tree_find(&editor->tree, EDITOR_BUTTON_COPY_FULL_ID) == NULL) return 42;
+    uint8_t copied_id[sizeof(long_identifier)] = {0};
+    size_t copied_id_length = 0U;
+    if (!viewer_editor_copy_full_id(editor, copied_id, sizeof(copied_id),
+            &copied_id_length) || copied_id_length != sizeof(long_identifier) - 1U ||
+        memcmp(copied_id, long_identifier, copied_id_length) != 0) return 52;
+    const ui_semantics_node *all_layers = find_label(snapshot, "All layers");
+    if (all_layers == NULL || !click_node(editor, all_layers,
+            all_layers->frame.width / 2U) || !viewer_editor_semantics(editor, snapshot))
+        return 53;
 
     const ui_semantics_node *definitions = find_role_label(snapshot,
         UI_ROLE_ROW, "Definitions");
@@ -355,6 +402,82 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
     return 0;
 }
 
+static int test_scale_splitters_and_motion(viewer_editor *editor,
+                                           ui_semantics_snapshot *snapshot)
+{
+    viewer_editor_set_motion_time(editor, 100.0);
+    (void)viewer_editor_motion_tick(editor, 100.0);
+    if (!viewer_editor_set_ui_scale(editor, 110U) ||
+        viewer_editor_ui_scale_percent(editor) != 110U ||
+        !viewer_editor_get_chrome_layout(editor, &(viewer_chrome_layout){0})) return 70;
+    viewer_chrome_layout layout;
+    if (!viewer_editor_get_chrome_layout(editor, &layout) || layout.toolbar.height != 44U ||
+        viewer_editor_set_ui_scale(editor, 105U)) return 71;
+    if (!viewer_editor_set_ui_scale(editor, 100U) ||
+        !viewer_editor_set_sidebar_visibility(editor, false, true) ||
+        !viewer_editor_motion_active(editor) ||
+        !viewer_editor_get_chrome_layout(editor, &layout) ||
+        !layout.structure_visible || layout.structure.width != EDITOR_LEFT_WIDTH) return 72;
+    if (!viewer_editor_motion_tick(editor, 100.08) ||
+        !viewer_editor_get_chrome_layout(editor, &layout) ||
+        !layout.structure_visible || layout.structure.width != EDITOR_LEFT_WIDTH / 2U) return 73;
+    if (!viewer_editor_set_sidebar_visibility(editor, true, true) ||
+        !viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.structure.width != EDITOR_LEFT_WIDTH / 2U ||
+        !viewer_editor_motion_tick(editor, 100.24) ||
+        !viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.structure.width != EDITOR_LEFT_WIDTH) return 74;
+
+    if (!viewer_editor_set_appearance(editor, UI_THEME_DARK, false, true) ||
+        !viewer_editor_semantics(editor, snapshot)) return 75;
+    const ui_semantics_node *structure_slider = find_role_label(snapshot,
+        UI_ROLE_SLIDER, "Layers panel width");
+    if (structure_slider == NULL || structure_slider->frame.width !=
+            VIEWER_CHROME_SPLITTER_POINTS) return 76;
+    uint32_t x = layout.structure_splitter.x + layout.structure_splitter.width / 2U;
+    uint32_t y = layout.structure_splitter.y + layout.structure_splitter.height / 2U;
+    if ((viewer_editor_pointer_down_click_count(editor, x, y, 0U, 1U) &
+            VIEWER_EDITOR_HANDLED) == 0U) return 77;
+    viewer_editor_pointer_move(editor, x + 32U, y);
+    viewer_editor_pointer_up(editor);
+    if (!viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.structure.width != EDITOR_LEFT_WIDTH + 32U) return 78;
+    if ((viewer_editor_key(editor, 124U, 0U, NULL, 0U) & VIEWER_EDITOR_HANDLED) == 0U ||
+        !viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.structure.width != EDITOR_LEFT_WIDTH + 40U) return 79;
+    x = layout.structure_splitter.x + layout.structure_splitter.width / 2U;
+    y = layout.structure_splitter.y + layout.structure_splitter.height / 2U;
+    if ((viewer_editor_pointer_down_click_count(editor, x, y, 0U, 2U) &
+            VIEWER_EDITOR_HANDLED) == 0U ||
+        !viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.structure.width != EDITOR_LEFT_WIDTH ||
+        editor->focus_id != EDITOR_SPLITTER_STRUCTURE_ID ||
+        !viewer_editor_semantics(editor, snapshot)) return 80;
+    structure_slider = find_role_label(snapshot, UI_ROLE_SLIDER, "Layers panel width");
+    if (structure_slider == NULL ||
+        (structure_slider->state & UI_STATE_FOCUSED) == 0U) return 86;
+
+    x = layout.inspector_splitter.x + layout.inspector_splitter.width / 2U;
+    y = layout.inspector_splitter.y + layout.inspector_splitter.height / 2U;
+    if ((viewer_editor_pointer_down_click_count(editor, x, y, 0U, 1U) &
+            VIEWER_EDITOR_HANDLED) == 0U) return 81;
+    viewer_editor_pointer_move(editor, x - 600U, y);
+    viewer_editor_pointer_up(editor);
+    if (!viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.inspector.width != 440U) return 82;
+    x = layout.inspector_splitter.x + layout.inspector_splitter.width / 2U;
+    y = layout.inspector_splitter.y + layout.inspector_splitter.height / 2U;
+    if ((viewer_editor_pointer_down_click_count(editor, x, y, 0U, 1U) &
+            VIEWER_EDITOR_HANDLED) == 0U) return 83;
+    viewer_editor_pointer_move(editor, x + 600U, y);
+    viewer_editor_pointer_up(editor);
+    if (!viewer_editor_get_chrome_layout(editor, &layout) ||
+        layout.inspector.width != 240U) return 84;
+    if (!viewer_editor_set_panel_widths(editor, EDITOR_LEFT_WIDTH,
+            EDITOR_RIGHT_WIDTH)) return 85;
+    return 0;
+}
+
 int main(void)
 {
     viewer_editor *editor = viewer_editor_create_styled(
@@ -388,6 +511,10 @@ int main(void)
     int tree_result = test_layer_tree(editor, snapshot);
     if (tree_result != 0) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return tree_result;
+    }
+    int splitter_result = test_scale_splitters_and_motion(editor, snapshot);
+    if (splitter_result != 0) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return splitter_result;
     }
     (void)viewer_editor_take_redraw_request(editor);
     viewer_editor_set_canvas_status(editor, 1.25, true, 10.5, 20.5,

@@ -82,7 +82,7 @@ static const char *section_title(uint8_t section)
 {
     if (section == 0U) return "Geometry";
     if (section == 1U) return "Appearance";
-    return "Other attributes";
+    return "Additional attributes";
 }
 
 static bool editor_add_section(viewer_editor *editor, uint32_t parent,
@@ -95,13 +95,13 @@ static bool editor_add_section(viewer_editor *editor, uint32_t parent,
 }
 
 static bool editor_add_collapsible_section(viewer_editor *editor, uint32_t id,
-                                           const char *title, bool expanded)
+    const char *title, bool expanded, uint32_t action)
 {
     return editor_add_widget_node(editor, id, EDITOR_NODE_INSPECTOR,
         UI_AXIS_HORIZONTAL, 0U, 24U, 0U, 0U, 0U, UI_ROLE_BUTTON,
         UI_WIDGET_SECTION_HEADER, UI_ICON_NONE, title, strlen(title), NULL, 0U,
         expanded ? UI_STATE_EXPANDED : 0U,
-        EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES);
+        action);
 }
 
 static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *tokens)
@@ -111,6 +111,37 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
     if (start > count) start = count;
     size_t visible = 0U;
     uint32_t section_sequence = 0U;
+    if (!editor->selection_active) {
+        bool added_header = false;
+        for (size_t attribute_index = 0U;
+             attribute_index < count && visible < EDITOR_ATTRIBUTE_VISIBLE;
+             ++attribute_index) {
+            document_edit_attribute attribute;
+            base_bytes name;
+            if (!document_edit_attribute_at(editor->edit, editor->selected,
+                    attribute_index, &attribute) ||
+                !document_edit_span_bytes(editor->edit, attribute.name, &name)) return false;
+            bool wanted = (name.len == 5U && memcmp(name.ptr, "width", 5U) == 0) ||
+                (name.len == 6U && memcmp(name.ptr, "height", 6U) == 0) ||
+                (name.len == 7U && memcmp(name.ptr, "viewBox", 7U) == 0);
+            if (!wanted) continue;
+            if (!added_header && !editor_add_section(editor, EDITOR_NODE_INSPECTOR,
+                    EDITOR_INSPECTOR_SECTION_BASE, "Geometry")) return false;
+            added_header = true;
+            char label[UI_TEXT_MAX_BYTES] = {0};
+            size_t label_length = editor_attribute_label(name, label);
+            const char *value = NULL;
+            size_t value_length = editor_full_attribute_value(editor, attribute.value, &value);
+            if (!editor_add_node(editor,
+                    EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index,
+                    EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                    tokens->panel, UI_ROLE_TEXT_FIELD, label, label_length, value,
+                    value_length, 0U,
+                    EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index)) return false;
+            ++visible;
+        }
+        return true;
+    }
     for (uint8_t section = 0U; section < 3U; ++section) {
         bool has_section = false;
         for (size_t index = 0U; index < count; ++index) {
@@ -126,15 +157,16 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
             }
         }
         if (!has_section) continue;
-        if (section == 2U) {
-            bool expanded = editor->inspector_other_attributes_expanded;
-            if (!editor_add_collapsible_section(editor,
-                    EDITOR_INSPECTOR_SECTION_BASE + section_sequence++,
-                    section_title(section), expanded)) return false;
-            if (!expanded) continue;
-        } else if (!editor_add_section(editor, EDITOR_NODE_INSPECTOR,
+        bool expanded = section == 0U ? editor->inspector_geometry_expanded :
+            section == 1U ? editor->inspector_appearance_expanded :
+                editor->inspector_other_attributes_expanded;
+        uint32_t action = section == 0U ? EDITOR_BUTTON_INSPECTOR_GEOMETRY :
+            section == 1U ? EDITOR_BUTTON_INSPECTOR_APPEARANCE :
+                EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES;
+        if (!editor_add_collapsible_section(editor,
                 EDITOR_INSPECTOR_SECTION_BASE + section_sequence++,
-                section_title(section))) return false;
+                section_title(section), expanded, action)) return false;
+        if (!expanded) continue;
         if (visible >= EDITOR_ATTRIBUTE_VISIBLE) continue;
 
         for (size_t attribute_index = start;
@@ -213,7 +245,7 @@ static size_t selected_type_label(viewer_editor *editor, char out[UI_TEXT_MAX_BY
 bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens)
 {
     bool okay = editor_add_node(editor, EDITOR_NODE_INSPECTOR, EDITOR_NODE_WORKSPACE,
-            UI_AXIS_VERTICAL, EDITOR_RIGHT_WIDTH, 0U, 8U, 3U,
+            UI_AXIS_VERTICAL, editor->layout_inspector_width_points, 0U, 8U, 3U,
             tokens->panel, UI_ROLE_GROUP, "Inspector", 9U, NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_INSPECTOR_HEADER, EDITOR_NODE_INSPECTOR,
             UI_AXIS_HORIZONTAL, 0U, 28U, 0U, 4U, 0U, UI_ROLE_GROUP,
@@ -229,12 +261,19 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
             EDITOR_BUTTON_HIDE_INSPECTOR);
     if (!okay) return false;
     if (!editor->selection_active) {
-        static const char title[] = "No layer selected";
-        static const char message[] = "Select a layer to edit its properties";
-        return editor_add_widget_node(editor, 23000U, EDITOR_NODE_INSPECTOR,
-            UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
-            UI_WIDGET_EMPTY_STATE, UI_ICON_LAYERS, title, sizeof(title) - 1U,
-            message, sizeof(message) - 1U, 0U, 0U);
+        if (!editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
+                0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, "Document",
+                8U, NULL, 0U, 0U, 0U) || !editor_add_attribute_rows(editor, tokens))
+            return false;
+        return editor_add_node(editor, EDITOR_BUTTON_FIT_CANVAS,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                tokens->panel_raised, UI_ROLE_BUTTON, "Fit Canvas", 10U,
+                NULL, 0U, 0U, EDITOR_BUTTON_FIT_CANVAS) &&
+            editor_add_node(editor, EDITOR_BUTTON_ACTUAL_SIZE,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                tokens->panel_raised, UI_ROLE_BUTTON, "Actual Size", 11U,
+                NULL, 0U, 0U, EDITOR_BUTTON_ACTUAL_SIZE);
     }
     char type[UI_TEXT_MAX_BYTES] = {0};
     size_t type_length = selected_type_label(editor, type);
@@ -272,8 +311,7 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
                 UI_ROLE_TEXT_FIELD, "Content", 7U, value, value_length, state,
                 EDITOR_TEXT_FIELD_ID)) return false;
     }
-    if (!editor_add_section(editor, EDITOR_NODE_INSPECTOR,
-            EDITOR_INSPECTOR_SECTION_BASE + 17U, "Additional attributes")) return false;
+    if (!editor->inspector_other_attributes_expanded) return true;
     const char *new_name = editor->field_kind == EDITOR_FIELD_NEW_NAME ?
         editor->field : editor->new_name;
     size_t new_name_length = editor->field_kind == EDITOR_FIELD_NEW_NAME ?

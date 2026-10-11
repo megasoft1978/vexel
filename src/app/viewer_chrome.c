@@ -7,7 +7,7 @@
 
 static bool scaled_points(uint32_t points, double scale, uint32_t *out_value)
 {
-    if (out_value == NULL || !isfinite(scale) || scale < 0.5 || scale > 4.0)
+    if (out_value == NULL || !isfinite(scale) || scale < 0.5 || scale > 4.8)
         return false;
     double value = ceil((double)points * scale);
     if (!isfinite(value) || value < 0.0 || value > (double)VIEWER_CHROME_MAX_AXIS)
@@ -26,19 +26,34 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
                                   bool want_structure, bool want_inspector,
                                   viewer_chrome_layout *out_layout)
 {
+    return viewer_chrome_layout_compute_sized(width, height, backing_scale, 1.0,
+        VIEWER_CHROME_STRUCTURE_POINTS, VIEWER_CHROME_INSPECTOR_POINTS,
+        want_structure, want_inspector, out_layout);
+}
+
+bool viewer_chrome_layout_compute_sized(uint32_t width, uint32_t height,
+    double backing_scale, double ui_scale, uint16_t structure_width_points,
+    uint16_t inspector_width_points, bool want_structure, bool want_inspector,
+    viewer_chrome_layout *out_layout)
+{
     if (out_layout == NULL || width == 0U || height == 0U ||
         width > VIEWER_CHROME_MAX_AXIS || height > VIEWER_CHROME_MAX_AXIS ||
-        !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0)
+        !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0 ||
+        !isfinite(ui_scale) || ui_scale < 1.0 || ui_scale > 1.2 ||
+        structure_width_points > 320U || inspector_width_points > 440U)
         return false;
+    double scale = backing_scale * ui_scale;
     uint32_t toolbar_height, options_height, status_height, rail_width;
     uint32_t structure_width, inspector_width, canvas_min;
-    if (!scaled_points(VIEWER_CHROME_TOOLBAR_POINTS, backing_scale, &toolbar_height) ||
-        !scaled_points(VIEWER_CHROME_OPTIONS_POINTS, backing_scale, &options_height) ||
-        !scaled_points(VIEWER_CHROME_STATUS_POINTS, backing_scale, &status_height) ||
-        !scaled_points(VIEWER_CHROME_RAIL_POINTS, backing_scale, &rail_width) ||
-        !scaled_points(VIEWER_CHROME_STRUCTURE_POINTS, backing_scale, &structure_width) ||
-        !scaled_points(VIEWER_CHROME_INSPECTOR_POINTS, backing_scale, &inspector_width) ||
-        !scaled_points(VIEWER_CHROME_CANVAS_MIN_POINTS, backing_scale, &canvas_min))
+    uint32_t splitter_width;
+    if (!scaled_points(VIEWER_CHROME_TOOLBAR_POINTS, scale, &toolbar_height) ||
+        !scaled_points(VIEWER_CHROME_OPTIONS_POINTS, scale, &options_height) ||
+        !scaled_points(VIEWER_CHROME_STATUS_POINTS, scale, &status_height) ||
+        !scaled_points(VIEWER_CHROME_RAIL_POINTS, scale, &rail_width) ||
+        !scaled_points(structure_width_points, scale, &structure_width) ||
+        !scaled_points(inspector_width_points, scale, &inspector_width) ||
+        !scaled_points(VIEWER_CHROME_CANVAS_MIN_POINTS, scale, &canvas_min) ||
+        !scaled_points(VIEWER_CHROME_SPLITTER_POINTS, scale, &splitter_width))
         return false;
     memset(out_layout, 0, sizeof(*out_layout));
 
@@ -57,16 +72,16 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
 
     uint32_t safe_rail = width > 1U ? min_u32(rail_width, width - 1U) : width;
     uint64_t requested_width = (uint64_t)safe_rail + canvas_min;
-    if (want_structure) requested_width += structure_width;
-    if (want_inspector) requested_width += inspector_width;
+    if (want_structure) requested_width += (uint64_t)structure_width + splitter_width;
+    if (want_inspector) requested_width += (uint64_t)inspector_width + splitter_width;
     bool show_inspector = want_inspector;
     bool show_structure = want_structure;
     if (requested_width > width && show_inspector) {
-        requested_width -= inspector_width;
+        requested_width -= (uint64_t)inspector_width + splitter_width;
         show_inspector = false;
     }
     if (requested_width > width && show_structure) {
-        requested_width -= structure_width;
+        requested_width -= (uint64_t)structure_width + splitter_width;
         show_structure = false;
     }
 
@@ -81,12 +96,20 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
         out_layout->structure = (ui_rect){left, out_layout->workspace.y,
             actual, workspace_height};
         left += actual;
+        uint32_t track = min_u32(splitter_width, right - left);
+        out_layout->structure_splitter = (ui_rect){left, out_layout->workspace.y,
+            track, workspace_height};
+        left += track;
     }
     if (show_inspector) {
         uint32_t actual = min_u32(inspector_width, right - left);
         out_layout->inspector = (ui_rect){right - actual, out_layout->workspace.y,
             actual, workspace_height};
         right -= actual;
+        uint32_t track = min_u32(splitter_width, right - left);
+        right -= track;
+        out_layout->inspector_splitter = (ui_rect){right,
+            out_layout->workspace.y, track, workspace_height};
     }
     if (right < left) return false;
     out_layout->canvas = (ui_rect){left, out_layout->workspace.y,

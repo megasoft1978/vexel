@@ -9,7 +9,8 @@
 
 static ui_rect editor_widget_bounds(const viewer_editor *editor, ui_rect pixels)
 {
-    double scale = editor->backing_scale;
+    double scale = editor->backing_scale *
+        ((double)viewer_editor_ui_scale_percent(editor) / 100.0);
     if (!isfinite(scale) || scale <= 0.0) scale = 1.0;
     return (ui_rect){
         (uint32_t)llround((double)pixels.x / scale),
@@ -131,6 +132,21 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
         .tone = UI_WIDGET_TONE_NEUTRAL, .visible = true,
         .focus_visible = (node->spec.state & UI_STATE_FOCUSED) != 0U,
         .expanded = (node->spec.state & UI_STATE_EXPANDED) != 0U};
+    for (size_t index = 0U; index < EDITOR_MOTION_CONTROL_CAP; ++index) {
+        const editor_control_transition *transition = &editor->control_transitions[index];
+        if (!transition->active || transition->id != node->spec.id) continue;
+        double elapsed = editor->motion_time_seconds - transition->start_seconds;
+        double progress = elapsed <= 0.0 ? 0.0 : elapsed * 1000.0 /
+            (double)transition->duration_ms;
+        if (progress > 1.0) progress = 1.0;
+        spec.has_transition = true;
+        spec.transition_from = transition->from_state;
+        spec.transition_to = transition->to_state;
+        spec.transition_progress_permille = (uint16_t)llround(progress * 1000.0);
+        spec.transition_from_color = transition->from_color;
+        spec.transition_to_color = transition->to_color;
+        break;
+    }
     if (kind == UI_WIDGET_LABEL && node->spec.id == EDITOR_NODE_STATUS)
         spec.font_size_pt = 12U;
     if (kind == UI_WIDGET_LABEL && node->spec.id == EDITOR_NODE_STATUS + 101U)
@@ -278,13 +294,18 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
     if (scale < 1U) scale = 1U;
     if (scale > 3U) scale = 3U;
     ui_widget_canvas canvas;
-    if (!ui_widget_canvas_init(&canvas, rgba, capacity, editor->width, editor->height,
-            stride, scale, editor->theme, editor->increased_contrast,
+    if (!ui_widget_canvas_init_scaled(&canvas, rgba, capacity, editor->width, editor->height,
+            stride, scale, (double)viewer_editor_ui_scale_percent(editor) / 100.0,
+            editor->theme, editor->increased_contrast,
             platform_text_ui_draw_widget, NULL)) return;
+    canvas.tokens = editor->tree.tokens;
     ui_widget_draw_spec tooltip_spec = {0};
     bool tooltip_ready = false;
     for (size_t index = 1U; index < editor->tree.count; ++index) {
         const ui_node *node = &editor->tree.nodes[index];
+        if (node->spec.id == EDITOR_NODE_ID_REVEAL ||
+            node->spec.id == EDITOR_NODE_REVEAL_TAG ||
+            node->spec.id == EDITOR_BUTTON_COPY_FULL_ID) continue;
         ui_widget_kind kind = node_widget(node);
         if (kind == UI_WIDGET_AUTO || node->bounds.width == 0U ||
             node->bounds.height == 0U) continue;
@@ -339,4 +360,5 @@ void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
         }
     }
     if (tooltip_ready) (void)ui_widget_paint(&canvas, &tooltip_spec);
+    editor_reveal_paint(editor, rgba, capacity, stride);
 }

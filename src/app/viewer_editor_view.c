@@ -77,7 +77,8 @@ bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                             const char *value, size_t value_len, uint32_t state,
                             uint32_t command_id)
 {
-    double scale = editor->backing_scale;
+    double scale = editor->backing_scale *
+        ((double)viewer_editor_ui_scale_percent(editor) / 100.0);
     width = width == 0U ? 0U : (uint32_t)ceil((double)width * scale);
     height = height == 0U ? 0U : (uint32_t)ceil((double)height * scale);
     padding = padding == 0U ? 0U : (uint32_t)ceil((double)padding * scale);
@@ -99,6 +100,7 @@ bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
     }
     if (role == UI_ROLE_BUTTON) return ui_widget_add_button(&editor->tree, &spec);
     if (role == UI_ROLE_TEXT_FIELD) return ui_widget_add_text_field(&editor->tree, &spec);
+    if (role == UI_ROLE_SLIDER) return ui_widget_add_slider(&editor->tree, &spec);
     if (role == UI_ROLE_ROW) return ui_widget_add_row(&editor->tree, &spec);
     bool added = ui_tree_add(&editor->tree, &(ui_node_spec){.id = id, .parent_id = parent,
         .axis = axis, .preferred_width = width, .preferred_height = height,
@@ -375,6 +377,20 @@ void viewer_editor_paint(viewer_editor *editor, uint8_t *rgba, size_t capacity,
                          size_t stride)
 {
     if (editor == NULL || rgba == NULL) return;
+    if (viewer_editor_native_material_enabled(editor)) {
+        size_t row_bytes = (size_t)editor->width * 4U;
+        double scale = editor->backing_scale *
+            ((double)viewer_editor_ui_scale_percent(editor) / 100.0);
+        double raw_height = ceil(40.0 * scale);
+        if (row_bytes <= stride && stride > 0U &&
+            (size_t)editor->height <= capacity / stride && isfinite(raw_height) &&
+            raw_height > 0.0) {
+            uint32_t height = raw_height >= (double)editor->height ? editor->height :
+                (uint32_t)raw_height;
+            for (uint32_t y = 0U; y < height; ++y)
+                memset(rgba + (size_t)y * stride, 0, row_bytes);
+        }
+    }
     if (!editor->tree_ready) editor_build_tree(editor);
     if (!editor->tree_ready) return;
     bool painted = editor->modern_style ?
@@ -461,13 +477,34 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
             editor->want_structure, !editor->want_inspector);
         return VIEWER_EDITOR_HANDLED;
     }
-    if (action == EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES) {
+    if (action == EDITOR_BUTTON_FOCUS_GROUP) {
+        (void)editor_focus_scope_toggle(editor);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_RESET_FOCUS) {
+        editor_focus_scope_reset(editor);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_INSPECTOR_GEOMETRY ||
+        action == EDITOR_BUTTON_INSPECTOR_APPEARANCE ||
+        action == EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES) {
+        if (action == EDITOR_BUTTON_INSPECTOR_GEOMETRY)
+            editor->inspector_geometry_expanded = !editor->inspector_geometry_expanded;
+        else if (action == EDITOR_BUTTON_INSPECTOR_APPEARANCE)
+            editor->inspector_appearance_expanded = !editor->inspector_appearance_expanded;
+        else
         editor->inspector_other_attributes_expanded =
             !editor->inspector_other_attributes_expanded;
         editor->tree_ready = false;
         editor->redraw_requested = true;
         return VIEWER_EDITOR_HANDLED;
     }
+    if (action == EDITOR_BUTTON_COPY_FULL_ID)
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_COPY_FULL_ID;
+    if (action == EDITOR_BUTTON_FIT_CANVAS)
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_FIT_CANVAS;
+    if (action == EDITOR_BUTTON_ACTUAL_SIZE)
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_ACTUAL_SIZE;
     if (action == EDITOR_BUTTON_DELETE || action == EDITOR_BUTTON_DUPLICATE ||
         action == EDITOR_BUTTON_GROUP || action == EDITOR_BUTTON_UNGROUP ||
         action == EDITOR_BUTTON_UNDO || action == EDITOR_BUTTON_REDO ||
@@ -502,12 +539,14 @@ static void editor_place_cursor(viewer_editor *editor, const ui_node *node, uint
     editor->tree_ready = false;
 }
 
-uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t y,
-                                    uint8_t button)
+uint32_t viewer_editor_pointer_down_click_count(viewer_editor *editor,
+    uint32_t x, uint32_t y, uint8_t button, uint8_t click_count)
 {
     if (editor == NULL || button != 0U) return 0U;
     if (!editor->tree_ready) editor_build_tree(editor);
     if (!editor->tree_ready) return 0U;
+    if (editor_splitter_pointer_down(editor, x, y, click_count))
+        return VIEWER_EDITOR_HANDLED;
     const ui_node *hit = NULL;
     for (size_t index = editor->tree.count; index > 0U; --index) {
         const ui_node *candidate = &editor->tree.nodes[index - 1U];
@@ -620,9 +659,23 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     return prior | VIEWER_EDITOR_HANDLED;
 }
 
+uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t y,
+                                    uint8_t button)
+{
+    return viewer_editor_pointer_down_click_count(editor, x, y, button, 1U);
+}
+
 bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y)
 {
+    return viewer_editor_scroll_at(editor, x, editor == NULL ? 0U : editor->hovered_y,
+        delta_y);
+}
+
+bool viewer_editor_scroll_at(viewer_editor *editor, uint32_t x, uint32_t y,
+                             double delta_y)
+{
     if (editor == NULL || delta_y == 0.0) return false;
+    if (editor_reveal_scroll(editor, x, y, delta_y)) return true;
     viewer_chrome_layout layout;
     bool modern = editor->modern_style && viewer_editor_get_chrome_layout(editor, &layout);
     uint32_t outline_start = modern ? layout.structure.x : 0U;

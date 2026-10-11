@@ -767,6 +767,15 @@ if(BUILD_TESTING)
     add_test(NAME mcp-features COMMAND mcp_features_test)
 endif()
 
+# lane: w15-visual
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_motion.c
+    src/app/viewer_editor_reveal.c)
+target_sources(svgworkbench PRIVATE
+    src/platform/macos/platform_window_animation.m)
+set_source_files_properties(src/platform/macos/platform_window_animation.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+
 add_library(vexel_platform_dialog STATIC src/platform/macos/platform_dialog.m)
 target_include_directories(vexel_platform_dialog PUBLIC src/platform/macos)
 target_link_libraries(vexel_platform_dialog PUBLIC ${COCOA_FRAMEWORK}

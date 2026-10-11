@@ -49,6 +49,29 @@ int main(void)
     uint64_t dark_icon_1x = ui_icon_asset_hash(UI_THEME_DARK, 1U);
     uint64_t light_icon_1x = ui_icon_asset_hash(UI_THEME_LIGHT, 1U);
     uint64_t dark_icon_2x = ui_icon_asset_hash(UI_THEME_DARK, 2U);
+    static const uint32_t accent_choices[] = {
+        UINT32_C(0xff3b30ff), UINT32_C(0xff9500ff), UINT32_C(0xffcc00ff),
+        UINT32_C(0x34c759ff), UINT32_C(0x00c7beff), UINT32_C(0x007affff),
+        UINT32_C(0xaf52deff), UINT32_C(0x8e8e93ff)
+    };
+    for (size_t index = 0U; index < sizeof(accent_choices) / sizeof(accent_choices[0]); ++index) {
+        for (uint32_t appearance = 0U; appearance < 2U; ++appearance) {
+            ui_theme theme = appearance == 0U ? UI_THEME_LIGHT : UI_THEME_DARK;
+            for (uint32_t contrast_mode = 0U; contrast_mode < 2U; ++contrast_mode) {
+                ui_tokens accented = ui_theme_tokens_accented(theme,
+                    contrast_mode != 0U, accent_choices[index]);
+                double minimum = contrast_mode != 0U ? 4.5 : 3.0;
+                if (accented.accent != accented.selection_edge ||
+                    accented.accent != accented.focus_ring ||
+                    contrast(accented.accent, accented.panel) < minimum ||
+                    contrast(accented.accent, accented.panel_raised) < minimum ||
+                    accented.selection_fill == accented.panel ||
+                    (accented.selection_fill & 255U) != 255U) return 2;
+            }
+        }
+    }
+    if (ui_theme_tokens_accented(UI_THEME_LIGHT, false, 0U).accent != light.accent)
+        return 3;
     if (light.window != color(242U, 244U, 247U) ||
         light.panel_raised != color(237U, 240U, 244U) ||
         light.canvas_well != color(231U, 235U, 240U) ||

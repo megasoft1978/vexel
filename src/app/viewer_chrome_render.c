@@ -66,7 +66,8 @@ int main(int argc, char **argv)
     uint32_t width = 0U, height = 0U, layout_width = 0U;
     if (!parse_axis(argv[2], &width) || !parse_axis(argv[3], &height)) return 2;
     const char *state = argv[4];
-    const char *states[] = {"empty", "selection", "editing-field", "error", "narrow"};
+    const char *states[] = {"empty", "selection", "editing-field", "error", "narrow",
+        "scale-110", "scale-120"};
     bool known_state = false;
     for (size_t index = 0U; index < sizeof(states) / sizeof(states[0]); ++index)
         if (strcmp(state, states[index]) == 0) known_state = true;
@@ -102,6 +103,10 @@ int main(int argc, char **argv)
     }
     double scale = width >= 2500U ? 2.0 : 1.0;
     viewer_editor_resize(editor, layout_width, height, scale);
+    if (strcmp(state, "scale-110") == 0)
+        (void)viewer_editor_set_ui_scale(editor, 110U);
+    else if (strcmp(state, "scale-120") == 0)
+        (void)viewer_editor_set_ui_scale(editor, 120U);
     ui_tokens tokens = ui_theme_tokens(theme, false);
     fill_window(rgba, length, tokens.window);
     viewer_chrome_layout layout;

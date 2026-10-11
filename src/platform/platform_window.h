@@ -31,7 +31,8 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_MAGNIFY,
     PLATFORM_EVENT_CLOSE_REQUEST,
     PLATFORM_EVENT_FILE_OPEN,
-    PLATFORM_EVENT_ACTION
+    PLATFORM_EVENT_ACTION,
+    PLATFORM_EVENT_ANIMATION_TICK
 } platform_event_type;
 
 typedef enum platform_viewer_action {
@@ -43,6 +44,9 @@ typedef enum platform_viewer_action {
     PLATFORM_ACTION_FIT_WINDOW,
     PLATFORM_ACTION_ACTUAL_SIZE,
     PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
+    PLATFORM_ACTION_UI_SCALE_100,
+    PLATFORM_ACTION_UI_SCALE_110,
+    PLATFORM_ACTION_UI_SCALE_120,
     PLATFORM_ACTION_QUIT
 } platform_viewer_action;
 
@@ -65,6 +69,7 @@ typedef struct platform_event {
     double magnification;
     double precise_x;
     double precise_y;
+    double timestamp_seconds;
     uint16_t key_code;
     uint8_t click_count;
     uint32_t modifiers;
@@ -96,6 +101,9 @@ bool platform_window_open_panel(platform_window *window);
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
                                       bool enabled);
+bool platform_window_set_material_enabled(platform_window *window, bool enabled);
+void platform_window_request_animation_ticks(platform_window *window, bool enabled);
+bool platform_window_dispatch_animation_tick(platform_window *window);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);

@@ -647,6 +647,7 @@ static bool editor_node_contains_canvas(const ui_node *node, uint32_t x,
 void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y)
 {
     if (editor == NULL) return;
+    if (editor_splitter_pointer_move(editor, x, y)) return;
     if (!editor->tree_ready) editor_build_tree(editor);
     if (!editor->tree_ready) return;
     uint32_t hovered = 0U;
@@ -659,16 +660,64 @@ void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y)
             break;
         }
     }
-    if (hovered == editor->hovered_id && x == editor->hovered_x) return;
+    bool over_reveal = false;
+    if (editor->reveal_active) {
+        const ui_node *body = ui_tree_find(&editor->tree, EDITOR_NODE_ID_REVEAL);
+        over_reveal = editor_node_contains_canvas(body, x, y);
+    }
+    bool reveal_changed = false;
+    if (hovered >= EDITOR_OUTLINE_ROW_BASE &&
+        hovered < EDITOR_OUTLINE_ROW_BASE + EDITOR_OUTLINE_VISIBLE) {
+        size_t row = hovered - EDITOR_OUTLINE_ROW_BASE;
+        size_t model_index = 0U;
+        if (editor_outline_visible_model_index(editor,
+                editor->outline_visible_start + row, &model_index)) {
+            document_handle handle = editor->outline[model_index];
+            if (!editor->reveal_active ||
+                !editor_same_handle(editor->reveal_handle, handle)) {
+                (void)editor_reveal_prepare(editor, handle);
+                reveal_changed = true;
+            }
+        }
+    } else if (!over_reveal && editor->reveal_active) {
+        editor->reveal_active = false;
+        editor->reveal_has_id = false;
+        reveal_changed = true;
+    } else if (over_reveal && hovered == 0U) {
+        hovered = editor->hovered_id;
+    }
+    if (hovered != editor->hovered_id) {
+        const ui_node *old_node = ui_tree_find(&editor->tree, editor->hovered_id);
+        const ui_node *new_node = ui_tree_find(&editor->tree, hovered);
+        if (editor->hovered_id != 0U && old_node != NULL &&
+            (old_node->spec.state & UI_STATE_CHECKED) == 0U)
+            editor_motion_control_transition(editor, editor->hovered_id,
+                UI_CONTROL_HOVER, UI_CONTROL_REST, 80U);
+        if (hovered != 0U && new_node != NULL &&
+            (new_node->spec.state & UI_STATE_CHECKED) == 0U)
+            editor_motion_control_transition(editor, hovered,
+                UI_CONTROL_REST, UI_CONTROL_HOVER, 80U);
+    }
+    if (hovered == editor->hovered_id && x == editor->hovered_x &&
+        y == editor->hovered_y && !reveal_changed) return;
     editor->hovered_id = hovered;
     editor->hovered_x = x;
+    editor->hovered_y = y;
     editor->tree_ready = false;
     editor->redraw_requested = true;
 }
 
 void viewer_editor_pointer_up(viewer_editor *editor)
 {
-    if (editor == NULL || editor->pressed_id == 0U) return;
+    if (editor == NULL) return;
+    if (editor->splitter_dragging) {
+        editor_splitter_pointer_up(editor);
+        editor->pressed_id = 0U;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return;
+    }
+    if (editor->pressed_id == 0U) return;
     editor->pressed_id = 0U;
     editor->tree_ready = false;
     editor->redraw_requested = true;
