@@ -196,7 +196,8 @@ typedef struct ui_widget_draw_spec {
     uint8_t indent;
     uint16_t selection_start, selection_length, cursor_byte_offset;
     ui_widget_tone tone;
-    bool checked, expanded, invalid, placeholder;
+    uint32_t text_color;
+    bool checked, expanded, invalid, placeholder, focus_visible;
     bool has_children, visible, locked, show_row_actions;
 } ui_widget_draw_spec;
 

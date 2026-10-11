@@ -659,8 +659,9 @@ void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y)
             break;
         }
     }
-    if (hovered == editor->hovered_id) return;
+    if (hovered == editor->hovered_id && x == editor->hovered_x) return;
     editor->hovered_id = hovered;
+    editor->hovered_x = x;
     editor->tree_ready = false;
     editor->redraw_requested = true;
 }

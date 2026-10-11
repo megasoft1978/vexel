@@ -4,7 +4,7 @@ See [the w4-ui style implementation](../lanes/ui-style.md) for the production
 editor palette, layout, CoreText path, accessibility bridge, computed contrast
 report, new 1×/2× style goldens, and remaining integration limits.
 
-The w7 UIKit adds a reusable design-token layer, 45 static path icons, bounded
+The w7 UIKit adds a reusable design-token layer, 53 static path icons, bounded
 input state machines, and custom-painted widget primitives. The gallery images
 show all 25 components across seven visual states. Their 2× exports are the
 human-review images; all four combinations of theme and backing scale are

@@ -380,6 +380,13 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
         return VIEWER_EDITOR_HANDLED;
     }
+    if (text_len > 0U && (text[0] == 'n' || text[0] == 'N')) {
+        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
+        editor->node_edit_active = true;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (text_len > 0U && (text[0] == 't' || text[0] == 'T')) {
         (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_TEXT);
         return VIEWER_EDITOR_HANDLED;

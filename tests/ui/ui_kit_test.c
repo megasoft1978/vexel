@@ -161,8 +161,8 @@ static int test_tokens(bool quiet)
 
 static int test_icons(void)
 {
-    if (ui_icon_path_count() != 45U || !ui_icon_validate_all()) return 10;
-    for (size_t index = 0U; index < 45U; ++index) {
+    if (ui_icon_path_count() != 53U || !ui_icon_validate_all()) return 10;
+    for (size_t index = 0U; index < 53U; ++index) {
         const char *name = NULL, *path = NULL;
         size_t length = 0U;
         ui_icon_bounds bounds = {0};
@@ -208,7 +208,10 @@ static int test_icons(void)
 static int test_emphasized_icon_masks(void)
 {
     static const ui_icon_kind icons[] = {UI_ICON_PEN, UI_ICON_NODE_EDIT,
-        UI_ICON_STROKE, UI_ICON_UNGROUP, UI_ICON_MORE};
+        UI_ICON_PENCIL, UI_ICON_STROKE, UI_ICON_UNGROUP, UI_ICON_MORE,
+        UI_ICON_CIRCLE, UI_ICON_ELLIPSE, UI_ICON_DOCUMENT, UI_ICON_STOP,
+        UI_ICON_PATH, UI_ICON_POLYLINE, UI_ICON_IMAGE,
+        UI_ICON_SIDEBAR_LEFT, UI_ICON_SIDEBAR_RIGHT};
     uint64_t hashes[sizeof(icons) / sizeof(icons[0])] = {0};
     for (size_t index = 0U; index < sizeof(icons) / sizeof(icons[0]); ++index) {
         uint8_t rgba[48U * 48U * 4U] = {0};
@@ -325,11 +328,12 @@ static int test_interactions(void)
 }
 
 typedef struct text_capture {
-    char labels[3][24];
+    char labels[4][UI_TEXT_MAX_BYTES];
     size_t count;
-    ui_font_family family[3];
-    ui_font_weight weight[3];
-    uint32_t size[3];
+    ui_font_family family[4];
+    ui_font_weight weight[4];
+    uint32_t size[4];
+    uint32_t color[4];
 } text_capture;
 
 static bool capture_text(void *context, const char *text, size_t length,
@@ -340,12 +344,13 @@ static bool capture_text(void *context, const char *text, size_t length,
     (void)bounds; (void)theme; (void)color_value; (void)pixels;
     (void)width; (void)height; (void)stride;
     text_capture *probe = context;
-    if (probe->count >= 3U || length >= sizeof(probe->labels[0])) return false;
+    if (probe->count >= 4U || length >= sizeof(probe->labels[0])) return false;
     memcpy(probe->labels[probe->count], text, length);
     probe->labels[probe->count][length] = '\0';
     probe->family[probe->count] = family;
     probe->weight[probe->count] = weight;
     probe->size[probe->count] = font_size;
+    probe->color[probe->count] = color_value;
     ++probe->count;
     return true;
 }
@@ -371,6 +376,15 @@ static int test_paint_bounds(void)
     if (!ui_widget_paint(&small_canvas, &spec) || !ui_widget_paint(&large_canvas, &spec)) {
         free(small); free(large); return 42;
     }
+    bool focus_ring_outside = false;
+    for (uint32_t y = 0U; y < small_height; ++y) {
+        for (uint32_t x = 0U; x < small_width; ++x) {
+            if (x >= 12U && x < 40U && y >= 12U && y < 40U) continue;
+            if (small[((size_t)y * small_width + x) * 4U + 3U] != 0U)
+                focus_ring_outside = true;
+        }
+    }
+    if (!focus_ring_outside) { free(small); free(large); return 42; }
     for (uint32_t y = 0U; y < small_height; ++y) {
         if (memcmp(small + (size_t)y * small_width * 4U,
                 large + (size_t)y * large_width * 4U, small_width * 4U) != 0) {
@@ -416,11 +430,58 @@ static int test_paint_bounds(void)
         capture.size[1] != 11U) {
         free(small); free(large); return 48;
     }
+    capture.count = 0U;
+    ui_widget_draw_spec secondary_label = {.kind = UI_WIDGET_LABEL,
+        .state = UI_CONTROL_REST, .bounds = {64U, 352U, 180U, 24U},
+        .label = "No selection", .label_length = 12U,
+        .text_color = UINT32_C(0x526171ff)};
+    if (!ui_widget_paint(&text_canvas, &secondary_label) || capture.count != 1U ||
+        capture.color[0] != UINT32_C(0x526171ff)) {
+        free(small); free(large); return 49;
+    }
     if (ui_widget_paint_scratch_limit() != 0U ||
         ui_widget_canvas_init(&small_canvas, small, small_bytes - 1U,
             small_width, small_height, small_width * 4U, 1U, UI_THEME_LIGHT, false,
             NULL, NULL)) { free(small); free(large); return 44; }
     free(small); free(large);
+    return 0;
+}
+
+static int test_row_label_truncation(void)
+{
+    const uint32_t width = 256U, height = 48U;
+    size_t bytes = (size_t)width * height * 4U;
+    uint8_t *pixels = calloc(bytes, 1U);
+    if (pixels == NULL) return 50;
+    text_capture capture = {0};
+    ui_widget_canvas canvas;
+    if (!ui_widget_canvas_init(&canvas, pixels, bytes, width, height,
+            width * 4U, 1U, UI_THEME_LIGHT, false, capture_text, &capture)) {
+        free(pixels);
+        return 51;
+    }
+    const char *with_id = "Linear Gradient #a-very-long-layer-id";
+    ui_widget_draw_spec row = {.kind = UI_WIDGET_TREE_ROW,
+        .state = UI_CONTROL_REST, .bounds = {0U, 0U, 232U, 28U},
+        .icon = UI_ICON_GRADIENT, .label = with_id,
+        .label_length = strlen(with_id), .visible = true, .show_row_actions = true};
+    if (!ui_widget_paint(&canvas, &row) || capture.count != 2U ||
+        strcmp(capture.labels[0], "Linear Gradient") != 0 ||
+        strcmp(capture.labels[1], "#a-v\xe2\x80\xa6") != 0) {
+        free(pixels);
+        return 52;
+    }
+    capture.count = 0U;
+    const char *long_type = "ExtremelyLongElementTypeName #id";
+    row.bounds.width = 160U;
+    row.label = long_type;
+    row.label_length = strlen(long_type);
+    if (!ui_widget_paint(&canvas, &row) || capture.count != 1U ||
+        strcmp(capture.labels[0], "Extre\xe2\x80\xa6" "eName") != 0) {
+        free(pixels);
+        return 53;
+    }
+    free(pixels);
     return 0;
 }
 
@@ -442,6 +503,8 @@ int main(int argc, char **argv)
     if (result != 0) return result;
     result = test_paint_bounds();
     if (result != 0) return result;
-    (void)puts("UI kit contracts passed: tokens, 45 icons, input state, parser edges, bounded painting");
+    result = test_row_label_truncation();
+    if (result != 0) return result;
+    (void)puts("UI kit contracts passed: tokens, 53 icons, input state, parser edges, bounded painting");
     return 0;
 }

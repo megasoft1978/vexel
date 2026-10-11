@@ -13,6 +13,7 @@
 #define UI_TEXT_MAX_BYTES 64U
 #define UI_TEXT_TOTAL_MAX_BYTES (1024U * 1024U)
 #define UI_MAX_COMMANDS 64U
+#define UI_TREE_ROW_INDENT_POINTS 14U
 #define UI_MOD_SHIFT 1U
 #define UI_MOD_COMMAND 2U
 #define UI_MOD_OPTION 4U
@@ -71,6 +72,14 @@ typedef enum ui_icon_kind {
     UI_ICON_ALIGN_TOP,
     UI_ICON_ALIGN_MIDDLE,
     UI_ICON_ALIGN_BOTTOM,
+    UI_ICON_CIRCLE,
+    UI_ICON_DOCUMENT,
+    UI_ICON_STOP,
+    UI_ICON_PATH,
+    UI_ICON_POLYLINE,
+    UI_ICON_IMAGE,
+    UI_ICON_SIDEBAR_LEFT,
+    UI_ICON_SIDEBAR_RIGHT,
     UI_ICON_COUNT,
     /* Kept as the editor tool name for the original zoom icon. */
     UI_ICON_ZOOM = UI_ICON_ZOOM_IN

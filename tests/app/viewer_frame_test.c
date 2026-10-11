@@ -76,6 +76,40 @@ static bool check_sampling_and_checkerboard(void)
         checker[dark + 1U] == 206U && checker[dark + 2U] == 210U;
 }
 
+static bool check_pixel_grid_threshold_and_opacity(void)
+{
+    uint8_t transparent_pixel[4] = {0U, 0U, 0U, 0U};
+    raster_tile transparent = {1U, 1U, sizeof(transparent_pixel), transparent_pixel};
+    ui_viewer_navigation navigation;
+    viewer_frame_options options = {.background_index = 1U, .pixel_grid = true};
+    uint8_t frame[16U * 16U * 4U] = {0U};
+    if (!ui_viewer_navigation_init(&navigation, 16.0, 16.0, 1.0, 1.0)) return false;
+    navigation.scale = 8.0;
+    navigation.pan_x = 1.0;
+    navigation.pan_y = 1.0;
+    if (!viewer_compose_frame_ex(&transparent, &navigation, NULL,
+            VIEWER_FRAME_DOCUMENT, NULL, &options, frame, sizeof(frame), 16U, 16U) ||
+        frame[((size_t)2U * 16U + 1U) * 4U] != 250U) return false;
+
+    navigation.scale = 9.0;
+    if (!viewer_compose_frame_ex(&transparent, &navigation, NULL,
+            VIEWER_FRAME_DOCUMENT, NULL, &options, frame, sizeof(frame), 16U, 16U) ||
+        frame[((size_t)2U * 16U + 1U) * 4U] != 234U ||
+        frame[((size_t)2U * 16U + 2U) * 4U] != 250U) return false;
+
+    options.background_index = 2U;
+    if (!viewer_compose_frame_ex(&transparent, &navigation, NULL,
+            VIEWER_FRAME_DOCUMENT, NULL, &options, frame, sizeof(frame), 16U, 16U) ||
+        frame[((size_t)2U * 16U + 1U) * 4U] <= 24U ||
+        frame[((size_t)2U * 16U + 1U) * 4U] >= 64U ||
+        frame[((size_t)2U * 16U + 2U) * 4U] != 24U) return false;
+
+    options.pixel_grid = false;
+    return viewer_compose_frame_ex(&transparent, &navigation, NULL,
+            VIEWER_FRAME_DOCUMENT, NULL, &options, frame, sizeof(frame), 16U, 16U) &&
+        frame[((size_t)2U * 16U + 1U) * 4U] == 24U;
+}
+
 static bool check_sharp_tile_overlays_preview(void)
 {
     uint8_t preview_pixels[4U * 4U * 4U];
@@ -162,6 +196,7 @@ int main(void)
     if (!check_fit_and_cursor_zoom()) return 1;
     if (!check_pan_clamp()) return 2;
     if (!check_sampling_and_checkerboard()) return 3;
+    if (!check_pixel_grid_threshold_and_opacity()) return 9;
     if (!check_sharp_tile_overlays_preview()) return 4;
     if (!check_empty_window_prompt()) return 5;
     if (!check_bad_dimensions()) return 6;

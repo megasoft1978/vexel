@@ -33,6 +33,8 @@ static bool editor_draw_tool_selected(viewer_editor *editor,
 
 static const char *editor_tool_hint(viewer_editor *editor)
 {
+    if (editor->node_edit_active)
+        return "Node edit tool · adjust path anchors · N";
     switch (editor->draw_tool) {
         case VIEWER_EDITOR_TOOL_RECT: return "Rectangle tool · drag to draw · R";
         case VIEWER_EDITOR_TOOL_ELLIPSE: return "Ellipse tool · drag to draw · O";
@@ -47,6 +49,29 @@ static const char *editor_tool_hint(viewer_editor *editor)
         return "Pan tool · drag the canvas · H / Space";
     if (editor->active_tool == UI_ICON_ZOOM) return "Zoom tool · scroll over the canvas · Z";
     return "Selection tool · choose a layer or edit it on the canvas · V";
+}
+
+static uint32_t editor_toolbar_action_state(const viewer_editor *editor,
+                                             uint32_t action)
+{
+    size_t cursor = document_edit_history_cursor(editor->edit);
+    size_t history = document_edit_history_count(editor->edit);
+    if ((action == EDITOR_BUTTON_UNDO && cursor == 0U) ||
+        (action == EDITOR_BUTTON_REDO && cursor >= history))
+        return UI_STATE_DISABLED;
+    bool selected = editor->canvas_selection_count > 0U ||
+        (editor->selection_active && editor->selected_index > 0U);
+    if ((action == EDITOR_BUTTON_DUPLICATE || action == EDITOR_BUTTON_DELETE) &&
+        !selected) return UI_STATE_DISABLED;
+    if (action == EDITOR_BUTTON_GROUP && editor->canvas_selection_count < 2U)
+        return UI_STATE_DISABLED;
+    if (action == EDITOR_BUTTON_UNGROUP) {
+        base_bytes tag = {0};
+        if (!selected || !document_edit_tag_name(editor->edit,
+                editor->selected, &tag) || tag.len != 1U || tag.ptr[0] != 'g')
+            return UI_STATE_DISABLED;
+    }
+    return 0U;
 }
 
 static void editor_canvas_status(viewer_editor *editor,
@@ -137,25 +162,31 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_ICON_SAVE, "Save · Command-S", 0U) &&
         editor_add_divider(editor, 30U, EDITOR_NODE_TOOLBAR, 1U, 32U) &&
         editor_add_icon(editor, EDITOR_BUTTON_UNDO, EDITOR_NODE_TOOLBAR,
-            UI_ICON_UNDO, "Undo · Command-Z", 0U) &&
+            UI_ICON_UNDO, "Undo · Command-Z",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_UNDO)) &&
         editor_add_icon(editor, EDITOR_BUTTON_REDO, EDITOR_NODE_TOOLBAR,
-            UI_ICON_REDO, "Redo · Shift-Command-Z", 0U) &&
+            UI_ICON_REDO, "Redo · Shift-Command-Z",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_REDO)) &&
         editor_add_divider(editor, 31U, EDITOR_NODE_TOOLBAR, 1U, 32U) &&
         editor_add_icon(editor, EDITOR_BUTTON_DUPLICATE, EDITOR_NODE_TOOLBAR,
-            UI_ICON_DUPLICATE, "Duplicate · Command-D", 0U) &&
+            UI_ICON_DUPLICATE, "Duplicate · Command-D",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_DUPLICATE)) &&
         editor_add_icon(editor, EDITOR_BUTTON_GROUP, EDITOR_NODE_TOOLBAR,
-            UI_ICON_GROUP, "Group · Command-G", 0U) &&
+            UI_ICON_GROUP, "Group · Command-G",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_GROUP)) &&
         editor_add_icon(editor, EDITOR_BUTTON_UNGROUP, EDITOR_NODE_TOOLBAR,
-            UI_ICON_UNGROUP, "Ungroup · Shift-Command-G", 0U) &&
+            UI_ICON_UNGROUP, "Ungroup · Shift-Command-G",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_UNGROUP)) &&
         editor_add_icon(editor, EDITOR_BUTTON_DELETE, EDITOR_NODE_TOOLBAR,
-            UI_ICON_TRASH, "Delete · Delete", 0U) &&
+            UI_ICON_TRASH, "Delete · Delete",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_DELETE)) &&
         editor_add_node(editor, 32U, EDITOR_NODE_TOOLBAR, UI_AXIS_HORIZONTAL,
             0U, 32U, 0U, 0U, 0U, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOGGLE_STRUCTURE,
             EDITOR_NODE_TOOLBAR, UI_ICON_LAYERS, "Layers panel",
             editor->want_structure ? UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOGGLE_INSPECTOR,
-            EDITOR_NODE_TOOLBAR, UI_ICON_RULER, "Inspector panel",
+            EDITOR_NODE_TOOLBAR, UI_ICON_SIDEBAR_RIGHT, "Inspector panel",
             editor->want_inspector ? UI_STATE_CHECKED : 0U);
     if (!okay) return;
     okay = editor_add_node(editor, EDITOR_NODE_OPTIONS, UI_ROOT_ID,
@@ -196,14 +227,14 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_ICON_PEN, "Polygon tool · Y",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_POLYGON) ? UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_POLYLINE, EDITOR_NODE_TOOL_RAIL,
-            UI_ICON_LINE, "Polyline tool · U",
+            UI_ICON_POLYLINE, "Polyline tool · U",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_POLYLINE) ? UI_STATE_CHECKED : 0U) &&
         editor_add_divider(editor, 34U, EDITOR_NODE_TOOL_RAIL, 32U, 1U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_PEN, EDITOR_NODE_TOOL_RAIL,
-            UI_ICON_PEN, "Pen tool · P",
+            UI_ICON_PENCIL, "Pen tool · P",
             editor_draw_tool_selected(editor, VIEWER_EDITOR_TOOL_PEN) ? UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_NODE, EDITOR_NODE_TOOL_RAIL,
-            UI_ICON_NODE_EDIT, "Edit path nodes · P",
+            UI_ICON_NODE_EDIT, "Node edit tool · N",
             editor->node_edit_active ? UI_STATE_CHECKED : 0U) &&
         editor_add_icon(editor, EDITOR_BUTTON_TOOL_TEXT, EDITOR_NODE_TOOL_RAIL,
             UI_ICON_TEXT, "Text tool · T",
@@ -245,18 +276,28 @@ void editor_build_tree_modern(viewer_editor *editor)
         strncmp(editor->status, "Save failed:", 12U) == 0 ||
         strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
         strncmp(editor->status, "Unsupported SVG content", 23U) == 0;
+    uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);
+    uint32_t status_points = (uint32_t)((double)layout.status.width / scale);
+    uint32_t status_content_width = status_points > 24U ? status_points - 24U : 0U;
+    if (selection_width > status_content_width) selection_width = status_content_width;
     okay = editor_add_node(editor, EDITOR_NODE_STATUS, UI_ROOT_ID,
-            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_STATUS_POINTS, 4U, 8U,
+            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_STATUS_POINTS, 0U, 0U,
             tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
+        editor_add_node(editor, EDITOR_NODE_STATUS + 102U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
+            UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS + 100U,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
             0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
             status, strlen(status), NULL, 0U,
             status_error ? UI_STATE_INVALID : 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS + 101U,
-            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 24U, 0U, 0U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, selection_width, 24U, 0U, 0U,
             0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
-            selection, strlen(selection), NULL, 0U, 0U, 0U);
+            selection, strlen(selection), NULL, 0U, 0U, 0U) &&
+        editor_add_node(editor, EDITOR_NODE_STATUS + 103U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
+            UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
     if (okay && ui_tree_layout(&editor->tree, editor->width, editor->height)) {
         if (editor->focus_id != 0U) {
             for (size_t index = 0U; index < editor->tree.count; ++index) {

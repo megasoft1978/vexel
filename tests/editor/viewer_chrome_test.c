@@ -14,7 +14,10 @@ static const uint8_t source[] =
     "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'>"
     "<defs><linearGradient id='gradient'><stop offset='0' stop-color='red'/></linearGradient></defs>"
     "<g id='group'><rect id='shape' x='1' y='2' width='3' height='4' "
-    "fill='#336699' stroke='#112233'/></g></svg>";
+    "fill='#336699' stroke='#112233'/><circle id='accent' cx='8' cy='8' r='3'/>"
+    "<path id='curve' d='M1 1 L8 8'/><text id='title' x='1' y='12'>Vexel</text>"
+    "<image id='thumb' href='data:image/png;base64,AA==' width='2' height='2'/>"
+    "</g></svg>";
 
 static const ui_semantics_node *find_label(const ui_semantics_snapshot *snapshot,
                                            const char *label)
@@ -43,6 +46,14 @@ static const ui_semantics_node *find_role_label(const ui_semantics_snapshot *sna
             memcmp(full, label, length) == 0) return node;
     }
     return NULL;
+}
+
+static bool row_has_icon(viewer_editor *editor,
+    const ui_semantics_snapshot *snapshot, const char *label, ui_icon_kind icon)
+{
+    const ui_semantics_node *row = find_role_label(snapshot, UI_ROLE_ROW, label);
+    const ui_node *node = row == NULL ? NULL : ui_tree_find(&editor->tree, row->id);
+    return node != NULL && node->spec.icon == icon;
 }
 
 static bool read_text(const ui_semantics_snapshot *snapshot,
@@ -102,13 +113,40 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
 {
     if (!viewer_editor_semantics(editor, snapshot) || selected_row_count(snapshot) != 0U ||
         find_label(snapshot, "Name") != NULL) return 30;
+    const ui_semantics_node *undo = find_label(snapshot, "Undo · Command-Z");
+    const ui_semantics_node *redo = find_label(snapshot, "Redo · Shift-Command-Z");
+    const ui_semantics_node *duplicate = find_label(snapshot, "Duplicate · Command-D");
+    const ui_semantics_node *delete_button = find_label(snapshot, "Delete · Delete");
+    const ui_node *layers_toggle = ui_tree_find(&editor->tree,
+        EDITOR_BUTTON_TOGGLE_STRUCTURE);
+    const ui_node *inspector_toggle = ui_tree_find(&editor->tree,
+        EDITOR_BUTTON_TOGGLE_INSPECTOR);
+    if (undo == NULL || redo == NULL || duplicate == NULL || delete_button == NULL ||
+        (undo->state & UI_STATE_DISABLED) == 0U ||
+        (redo->state & UI_STATE_DISABLED) == 0U ||
+        (duplicate->state & UI_STATE_DISABLED) == 0U ||
+        (delete_button->state & UI_STATE_DISABLED) == 0U ||
+        layers_toggle == NULL || layers_toggle->spec.icon != UI_ICON_LAYERS ||
+        inspector_toggle == NULL || inspector_toggle->spec.icon != UI_ICON_SIDEBAR_RIGHT)
+        return 30;
     const ui_node *empty_widget = ui_tree_find(&editor->tree, 23000U);
     const ui_node *hud_widget = ui_tree_find(&editor->tree, EDITOR_NODE_CANVAS_HUD + 100U);
     const ui_node *toolbar_divider = ui_tree_find(&editor->tree, 30U);
+    const ui_node *rail_divider_one = ui_tree_find(&editor->tree, 33U);
+    const ui_node *rail_divider_two = ui_tree_find(&editor->tree, 34U);
+    const ui_node *line_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_LINE);
+    const ui_node *polyline_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_POLYLINE);
+    const ui_node *pen_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_PEN);
+    const ui_node *node_tool = ui_tree_find(&editor->tree, EDITOR_BUTTON_TOOL_NODE);
     if (empty_widget == NULL || empty_widget->spec.widget != UI_WIDGET_EMPTY_STATE ||
         empty_widget->bounds.width < 240U || empty_widget->bounds.height < 112U ||
         hud_widget == NULL || hud_widget->spec.widget != UI_WIDGET_HUD_PILL ||
-        toolbar_divider == NULL || toolbar_divider->spec.widget != UI_WIDGET_DIVIDER)
+        toolbar_divider == NULL || toolbar_divider->spec.widget != UI_WIDGET_DIVIDER ||
+        rail_divider_one == NULL || rail_divider_one->spec.widget != UI_WIDGET_DIVIDER ||
+        rail_divider_two == NULL || rail_divider_two->spec.widget != UI_WIDGET_DIVIDER ||
+        line_tool == NULL || polyline_tool == NULL || pen_tool == NULL || node_tool == NULL ||
+        line_tool->spec.icon == polyline_tool->spec.icon ||
+        pen_tool->spec.icon == node_tool->spec.icon)
         return 30;
     const ui_semantics_node *empty = find_label(snapshot, "No layer selected");
     const char *empty_message = NULL;
@@ -148,6 +186,15 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
         !viewer_editor_semantics(editor, snapshot) ||
         find_role_label(snapshot, UI_ROLE_ROW, "Linear Gradient #gradient") == NULL ||
         find_role_label(snapshot, UI_ROLE_ROW, "Rectangle #shape") == NULL) return 35;
+    if (!row_has_icon(editor, snapshot, "Document", UI_ICON_DOCUMENT) ||
+        !row_has_icon(editor, snapshot, "Linear Gradient #gradient", UI_ICON_GRADIENT) ||
+        !row_has_icon(editor, snapshot, "Stop", UI_ICON_STOP) ||
+        !row_has_icon(editor, snapshot, "Group #group", UI_ICON_GROUP) ||
+        !row_has_icon(editor, snapshot, "Rectangle #shape", UI_ICON_RECTANGLE) ||
+        !row_has_icon(editor, snapshot, "Circle #accent", UI_ICON_CIRCLE) ||
+        !row_has_icon(editor, snapshot, "Path #curve", UI_ICON_PATH) ||
+        !row_has_icon(editor, snapshot, "Text #title", UI_ICON_TEXT) ||
+        !row_has_icon(editor, snapshot, "Image #thumb", UI_ICON_IMAGE)) return 35;
 
     const ui_semantics_node *definitions = find_role_label(snapshot,
         UI_ROLE_ROW, "Definitions");
@@ -330,9 +377,12 @@ int main(void)
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 2;
     }
     const ui_semantics_node *status_text = find_label(snapshot, "Ready · Saved");
+    const ui_semantics_node *selection_summary = find_label(snapshot, "No selection");
     if (selected_row_count(snapshot) != 0U || status_text == NULL ||
         status_text->frame.height < 16U ||
-        status_text->frame.y + status_text->frame.height > 800U) {
+        status_text->frame.y + status_text->frame.height > 800U ||
+        selection_summary == NULL || status_text->frame.x != 12U ||
+        selection_summary->frame.x + selection_summary->frame.width != 1268U) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 3;
     }
     int tree_result = test_layer_tree(editor, snapshot);
@@ -365,15 +415,27 @@ int main(void)
         !viewer_editor_semantics(editor, snapshot)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 27;
     }
-    tool = find_label(snapshot, "Edit path nodes · P");
+    tool = find_label(snapshot, "Node edit tool · N");
     if (tool == NULL || !click_node(editor, tool, tool->frame.width / 2U) ||
         viewer_editor_get_draw_tool(editor) != VIEWER_EDITOR_TOOL_PEN ||
         !viewer_editor_semantics(editor, snapshot)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 28;
     }
-    tool = find_label(snapshot, "Edit path nodes · P");
+    tool = find_label(snapshot, "Node edit tool · N");
     if (tool == NULL || (tool->state & UI_STATE_CHECKED) == 0U) {
-        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 29;
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 32;
+    }
+    if ((viewer_editor_key(editor, 0U, 0U, "n", 1U) & VIEWER_EDITOR_HANDLED) == 0U) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 33;
+    }
+    if (!viewer_editor_semantics(editor, snapshot)) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 34;
+    }
+    tool = find_label(snapshot, "Node edit tool · N");
+    if (tool == NULL || (tool->state & UI_STATE_CHECKED) == 0U) {
+        (void)fprintf(stderr, "node shortcut state: tool=%p state=%u active=%d\n",
+            (const void *)tool, tool == NULL ? 0U : tool->state, editor->node_edit_active);
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 35;
     }
     tool = find_label(snapshot, "Pen tool · P");
     if (tool == NULL || !click_node(editor, tool, tool->frame.width / 2U) ||
@@ -385,6 +447,7 @@ int main(void)
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 31;
     }
     if (!viewer_editor_set_appearance(editor, UI_THEME_LIGHT, true, true) ||
+        !editor->increased_contrast || !editor->reduced_motion ||
         !viewer_editor_set_tool(editor, UI_ICON_PAN)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 4;
     }
@@ -410,6 +473,25 @@ int main(void)
     if (pan_tool == NULL || (pan_tool->state & UI_STATE_HOVERED) == 0U) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 19;
     }
+    uint32_t tooltip_x = EDITOR_TOOL_RAIL_WIDTH + EDITOR_LEFT_WIDTH + 8U;
+    uint32_t tooltip_y = pan_tool->frame.y + pan_tool->frame.height + 4U;
+    size_t tooltip_sample = ((size_t)(tooltip_y + 14U) * 1280U +
+        tooltip_x + 8U) * 4U;
+    memset(pixels, 242, pixel_bytes);
+    for (size_t at = 3U; at < pixel_bytes; at += 4U) pixels[at] = 255U;
+    viewer_editor_paint(editor, pixels, pixel_bytes, (size_t)1280U * 4U);
+    uint8_t tooltip_rgb[3] = {pixels[tooltip_sample], pixels[tooltip_sample + 1U],
+        pixels[tooltip_sample + 2U]};
+    viewer_editor_pointer_move(editor, 0U, 0U);
+    memset(pixels, 242, pixel_bytes);
+    for (size_t at = 3U; at < pixel_bytes; at += 4U) pixels[at] = 255U;
+    viewer_editor_paint(editor, pixels, pixel_bytes, (size_t)1280U * 4U);
+    if (tooltip_rgb[0] == pixels[tooltip_sample] &&
+        tooltip_rgb[1] == pixels[tooltip_sample + 1U] &&
+        tooltip_rgb[2] == pixels[tooltip_sample + 2U]) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 67;
+    }
+    viewer_editor_pointer_move(editor, pan_x, pan_y);
     uint32_t pressed = viewer_editor_pointer_down(editor, pan_x, pan_y, 0U);
     if ((pressed & VIEWER_EDITOR_HANDLED) == 0U ||
         !viewer_editor_take_redraw_request(editor) ||

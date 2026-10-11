@@ -609,7 +609,8 @@ static bool paint_component(ui_widget_canvas *canvas, const ui_widget_draw_spec 
         case UI_WIDGET_AUTO: return false;
         case UI_WIDGET_LABEL:
             return ui_widget_paint_text(canvas, spec->label, spec->label_length, spec->bounds,
-                foreground, spec->font_family, spec->font_weight,
+                spec->text_color == 0U ? foreground : spec->text_color,
+                spec->font_family, spec->font_weight,
                 spec->font_size_pt == 0U ? 13U : spec->font_size_pt);
         case UI_WIDGET_ICON_BUTTON:
         case UI_WIDGET_BUTTON_GHOST:
@@ -743,7 +744,8 @@ bool ui_widget_paint(ui_widget_canvas *canvas, const ui_widget_draw_spec *spec)
     bool result = paint_component(canvas, &adjusted);
     ui_rect focus_bounds = adjusted.bounds;
     if (adjusted.kind == UI_WIDGET_DROPDOWN && adjusted.expanded) focus_bounds.height = 30U;
-    if (result && adjusted.state == UI_CONTROL_FOCUS) paint_focus(canvas, focus_bounds);
+    if (result && (adjusted.focus_visible || adjusted.state == UI_CONTROL_FOCUS))
+        paint_focus(canvas, focus_bounds);
     return result;
 }
 

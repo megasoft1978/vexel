@@ -17,7 +17,7 @@ caller supplies its text callback and backing scale.
 Empty states adapt their heading from a compact 16 pt panel treatment to the
 22 pt roomy canvas treatment when given enough space.
 
-The 45-icon path set is static project-authored geometry in a 24×24 grid. The
+The 53-icon path set is static project-authored geometry in a 24×24 grid. The
 allowlisted parser accepts only absolute `M`, `L`, `C`, `Q`, `A`, and `Z`
 commands with bounded coordinates. It rasterizes and caches masks at 1×, 2×,
 and 3×, then applies theme and interaction-state tint. The legacy three-icon

@@ -22,7 +22,9 @@ pressed state and request a redraw.
 | `Y` | Polygon tool |
 | `U` | Polyline tool |
 | `P` | Pen tool |
+| `N` | Node edit tool |
 | `T` | Text tool |
+| `G` | Toggle the pixel grid (shown above 800% zoom) |
 | Drag with Select | Move a hit-tested rendered shape |
 | Drag a selection handle | Resize or rotate |
 | Shift-click | Add or remove an element from the selection |

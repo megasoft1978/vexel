@@ -515,6 +515,8 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     }
     if (hit == NULL || hit->spec.id == EDITOR_NODE_CANVAS ||
         hit->spec.id == EDITOR_NODE_WORKSPACE || hit->spec.id == UI_ROOT_ID) return 0U;
+    if ((hit->spec.state & UI_STATE_DISABLED) != 0U)
+        return VIEWER_EDITOR_HANDLED;
     editor->pressed_id = hit->spec.id;
     editor->tree_ready = false;
     editor->redraw_requested = true;
@@ -556,7 +558,8 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
         if (editor->modern_style) {
             size_t indent = editor->outline_depth[index] > 8U ? 8U :
                 editor->outline_depth[index];
-            size_t disclosure_end = hit->bounds.x + (4U + indent * 16U + 18U) * scale;
+            size_t disclosure_end = hit->bounds.x +
+                (4U + indent * UI_TREE_ROW_INDENT_POINTS + 18U) * scale;
             if (x < disclosure_end && document_model_first_child(editor_model(editor),
                     editor->outline[index], &(document_handle){0})) {
                 (void)editor_outline_toggle_collapsed(editor, index);

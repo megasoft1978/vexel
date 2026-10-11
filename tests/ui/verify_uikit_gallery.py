@@ -16,7 +16,7 @@ GOLDENS = ROOT / "tests/ui/uikit-golden"
 DOCS = ROOT / "docs/ui"
 THEMES = ("light", "dark")
 SCALES = (1, 2)
-SHEETS = {"components": (1284, 1444), "icons": (462, 534)}
+SHEETS = {"components": (1284, 1444), "icons": (462, 650)}
 
 
 def png_chunk(kind: bytes, data: bytes) -> bytes:
@@ -88,7 +88,7 @@ def main() -> int:
         manifest_path.write_text(content, encoding="utf-8")
     elif not manifest_path.is_file() or manifest_path.read_text(encoding="utf-8") != content:
         raise SystemExit("UI kit golden manifest does not match its images")
-    print("UI kit goldens match: all components and 45 icons, light/dark, 1x/2x")
+    print("UI kit goldens match: all components and 53 icons, light/dark, 1x/2x")
     return 0
 
 

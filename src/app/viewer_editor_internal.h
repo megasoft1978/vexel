@@ -193,6 +193,7 @@ struct viewer_editor {
     double gesture_pivot_x;
     double gesture_pivot_y;
     uint32_t hovered_id;
+    uint32_t hovered_x;
     uint32_t pressed_id;
     uint8_t resize_handle;
     uint32_t width;

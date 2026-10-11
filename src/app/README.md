@@ -20,7 +20,7 @@ in force. A failed sharp render leaves the preview available.
 The viewer window opens at 1280 by 800 points and uses backing pixels for
 navigation and composition. Viewports are bounded to 8192 pixels per axis and
 128 MiB per frame. The display offers fit, fit width, actual size, cursor zoom,
-pan, checkerboard/background choices, a pixel grid at 8x or greater, and a
+pan, checkerboard/background choices, a pixel grid above 8x zoom, and a
 status line with zoom, pointer position in rendered document pixels, decoded
 tile dimensions, and latest load/render times. Launching without a path shows
 an Open SVG prompt. File changes are checked every 250 ms using file size and

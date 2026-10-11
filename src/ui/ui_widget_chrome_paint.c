@@ -2,7 +2,101 @@
 
 #include "ui_icons.h"
 
+#include <string.h>
+
 #define UI_POINT_TEXT 13U
+
+static size_t utf8_next(const char *text, size_t length, size_t offset)
+{
+    if (text == NULL || offset >= length) return length;
+    uint8_t first = (uint8_t)text[offset];
+    size_t step = first < 0x80U ? 1U : first < 0xe0U ? 2U :
+        first < 0xf0U ? 3U : 4U;
+    return step > length - offset ? length : offset + step;
+}
+
+static size_t utf8_count(const char *text, size_t length)
+{
+    size_t count = 0U;
+    for (size_t offset = 0U; offset < length; offset = utf8_next(text, length, offset))
+        ++count;
+    return count;
+}
+
+static size_t utf8_offset_after(const char *text, size_t length, size_t count)
+{
+    size_t offset = 0U;
+    while (offset < length && count > 0U) {
+        offset = utf8_next(text, length, offset);
+        --count;
+    }
+    return offset;
+}
+
+static size_t middle_ellipsis(const char *text, size_t length,
+    size_t maximum_characters, char output[UI_TEXT_MAX_BYTES])
+{
+    static const char ellipsis[] = "\xe2\x80\xa6";
+    size_t characters = utf8_count(text, length);
+    if (characters <= maximum_characters && length < UI_TEXT_MAX_BYTES) {
+        if (length > 0U) memcpy(output, text, length);
+        output[length] = '\0';
+        return length;
+    }
+    if (maximum_characters == 0U) {
+        output[0] = '\0';
+        return 0U;
+    }
+    size_t left_characters = maximum_characters / 2U;
+    size_t right_characters = maximum_characters - left_characters - 1U;
+    size_t left_bytes = utf8_offset_after(text, length, left_characters);
+    size_t right_start = utf8_offset_after(text, length, characters - right_characters);
+    size_t right_bytes = length - right_start;
+    while (left_bytes + sizeof(ellipsis) - 1U + right_bytes >= UI_TEXT_MAX_BYTES &&
+           right_characters > 0U) {
+        --right_characters;
+        right_start = utf8_offset_after(text, length, characters - right_characters);
+        right_bytes = length - right_start;
+    }
+    if (left_bytes > 0U) memcpy(output, text, left_bytes);
+    size_t used = left_bytes;
+    memcpy(output + used, ellipsis, sizeof(ellipsis) - 1U);
+    used += sizeof(ellipsis) - 1U;
+    if (right_bytes > 0U) {
+        memcpy(output + used, text + length - right_bytes, right_bytes);
+        used += right_bytes;
+    }
+    output[used] = '\0';
+    return used;
+}
+
+static size_t trailing_ellipsis(const char *text, size_t length,
+    size_t maximum_characters, char output[UI_TEXT_MAX_BYTES])
+{
+    static const char ellipsis[] = "\xe2\x80\xa6";
+    size_t characters = utf8_count(text, length);
+    if (characters <= maximum_characters && length < UI_TEXT_MAX_BYTES) {
+        if (length > 0U) memcpy(output, text, length);
+        output[length] = '\0';
+        return length;
+    }
+    if (maximum_characters == 0U) {
+        output[0] = '\0';
+        return 0U;
+    }
+    size_t prefix_characters = maximum_characters - 1U;
+    size_t prefix_bytes = utf8_offset_after(text, length, prefix_characters);
+    while (prefix_bytes + sizeof(ellipsis) - 1U >= UI_TEXT_MAX_BYTES &&
+           prefix_characters > 0U) {
+        --prefix_characters;
+        prefix_bytes = utf8_offset_after(text, length, prefix_characters);
+    }
+    if (prefix_bytes > 0U) memcpy(output, text, prefix_bytes);
+    memcpy(output + prefix_bytes, ellipsis, sizeof(ellipsis) - 1U);
+    size_t used = prefix_bytes + sizeof(ellipsis) - 1U;
+    output[used] = '\0';
+    return used;
+}
 
 bool ui_widget_paint_tree_row(const ui_widget_canvas *canvas, const ui_widget_draw_spec *spec)
 {
@@ -16,10 +110,12 @@ bool ui_widget_paint_tree_row(const ui_widget_canvas *canvas, const ui_widget_dr
             1U, canvas->tokens.accent, 0U, 0U);
     uint32_t guide_x = spec->bounds.x + 12U;
     for (uint32_t depth = 0U; depth < spec->indent && depth < 6U; ++depth) {
-        ui_rect guide = {guide_x + depth * 16U, spec->bounds.y, 1U, spec->bounds.height};
+        ui_rect guide = {guide_x + depth * UI_TREE_ROW_INDENT_POINTS,
+            spec->bounds.y, 1U, spec->bounds.height};
         ui_widget_paint_rect(canvas, guide, canvas->tokens.separator);
     }
-    uint32_t start = spec->bounds.x + 4U + (uint32_t)spec->indent * 16U;
+    uint32_t start = spec->bounds.x + 4U +
+        (uint32_t)spec->indent * UI_TREE_ROW_INDENT_POINTS;
     if (spec->has_children) {
         ui_icon_kind disclosure = spec->expanded ? UI_ICON_CHEVRON_DOWN : UI_ICON_CHEVRON_RIGHT;
         bool drawn = spec->visible ? ui_widget_paint_icon(canvas, disclosure,
@@ -54,25 +150,33 @@ bool ui_widget_paint_tree_row(const ui_widget_canvas *canvas, const ui_widget_dr
         break;
     }
     uint32_t available = text_right > start ? text_right - start : 0U;
+    size_t primary_characters = utf8_count(primary, primary_length);
+    uint64_t primary_natural_width = (uint64_t)primary_characters * 7U;
     uint32_t identifier_width = 0U;
-    if (identifier != NULL && available > 48U) {
-        uint64_t estimated = (uint64_t)identifier_length * 7U + 4U;
-        identifier_width = estimated > 64U ? 64U : (uint32_t)estimated;
-        if (identifier_width > available / 2U) identifier_width = available / 2U;
+    if (identifier != NULL && primary_natural_width + 32U < available) {
+        uint32_t remaining = available - (uint32_t)primary_natural_width - 8U;
+        identifier_width = remaining > 64U ? 64U : remaining;
+        if (identifier_width < 21U) identifier_width = 0U;
     }
-    uint32_t primary_width = available > identifier_width + 4U ?
-        available - identifier_width - (identifier_width > 0U ? 4U : 0U) : available;
+    uint32_t primary_width = identifier_width > 0U ?
+        available - identifier_width - 4U : available;
     ui_rect primary_bounds = {start, spec->bounds.y, primary_width, spec->bounds.height};
     uint32_t primary_color = spec->visible ? ui_widget_paint_state_foreground(canvas, spec->state) :
         canvas->tokens.text_secondary;
-    if (!ui_widget_paint_text(canvas, primary, primary_length, primary_bounds,
+    char primary_display[UI_TEXT_MAX_BYTES] = {0};
+    size_t primary_display_length = middle_ellipsis(primary, primary_length,
+        primary_width / 7U, primary_display);
+    if (!ui_widget_paint_text(canvas, primary_display, primary_display_length, primary_bounds,
             primary_color, UI_FONT_SYSTEM, UI_FONT_REGULAR, UI_POINT_TEXT)) return false;
     if (identifier_width > 0U) {
         ui_rect id_bounds = {text_right - identifier_width, spec->bounds.y,
             identifier_width, spec->bounds.height};
         uint32_t id_color = spec->visible ? canvas->tokens.text_tertiary :
             canvas->tokens.text_secondary;
-        if (!ui_widget_paint_text(canvas, identifier, identifier_length, id_bounds,
+        char identifier_display[UI_TEXT_MAX_BYTES] = {0};
+        size_t identifier_display_length = trailing_ellipsis(identifier, identifier_length,
+            identifier_width / 7U, identifier_display);
+        if (!ui_widget_paint_text(canvas, identifier_display, identifier_display_length, id_bounds,
                 id_color, UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U)) return false;
     }
     if (!spec->show_row_actions) return true;
@@ -80,9 +184,9 @@ bool ui_widget_paint_tree_row(const ui_widget_canvas *canvas, const ui_widget_dr
     ui_control_state action_state = spec->state == UI_CONTROL_SELECTED ?
         UI_CONTROL_SELECTED : UI_CONTROL_HOVER;
     if (!ui_widget_paint_icon(canvas, spec->visible ? UI_ICON_EYE : UI_ICON_EYE_OFF,
-            (ui_rect){trail_x, spec->bounds.y + 5U, 14U, 14U}, action_state)) return false;
+            (ui_rect){trail_x, spec->bounds.y + 4U, 16U, 16U}, action_state)) return false;
     return ui_widget_paint_icon(canvas, spec->locked ? UI_ICON_LOCK : UI_ICON_UNLOCK,
-        (ui_rect){trail_x + 16U, spec->bounds.y + 5U, 14U, 14U}, action_state);
+        (ui_rect){trail_x + 16U, spec->bounds.y + 4U, 16U, 16U}, action_state);
 }
 
 bool ui_widget_paint_empty_state(const ui_widget_canvas *canvas,

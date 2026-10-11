@@ -313,7 +313,7 @@ static bool ui_layout_node(ui_tree *tree, uint16_t index, ui_rect box, uint32_t 
     uint32_t bounded_gaps = gaps > main_extent ? main_extent : gaps;
     uint32_t available = main_extent - bounded_gaps;
     uint32_t flex_extent = available > fixed ? available - fixed : 0U;
-    uint32_t remaining = available;
+    uint32_t remaining = main_extent;
     uint32_t cursor = node->spec.axis == UI_AXIS_HORIZONTAL ? inner_x : inner_y;
     uint16_t child = node->first_child;
     while (child != UI_NO_NODE) {

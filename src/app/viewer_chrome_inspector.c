@@ -224,7 +224,7 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
             "Inspector", 9U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_BUTTON_HIDE_INSPECTOR,
             EDITOR_NODE_INSPECTOR_HEADER, UI_AXIS_HORIZONTAL, 28U, 28U,
-            0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_ICON_BUTTON, UI_ICON_CLOSE,
+            0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_ICON_BUTTON, UI_ICON_SIDEBAR_RIGHT,
             "Hide inspector panel", 20U, NULL, 0U, 0U,
             EDITOR_BUTTON_HIDE_INSPECTOR);
     if (!okay) return false;

@@ -9,23 +9,23 @@ static ui_icon_kind layer_icon(viewer_editor *editor, size_t index)
     base_bytes tag;
     if (!document_edit_tag_name(editor->edit, editor->outline[index], &tag))
         return UI_ICON_LAYERS;
-    if (tag.len == 3U && memcmp(tag.ptr, "svg", 3U) == 0) return UI_ICON_FIT;
+    if (tag.len == 3U && memcmp(tag.ptr, "svg", 3U) == 0) return UI_ICON_DOCUMENT;
     if (tag.len == 1U && tag.ptr[0] == 'g') return UI_ICON_GROUP;
     if (tag.len == 4U && memcmp(tag.ptr, "defs", 4U) == 0) return UI_ICON_LAYERS;
     if (tag.len == 4U && memcmp(tag.ptr, "rect", 4U) == 0) return UI_ICON_RECTANGLE;
-    if (tag.len == 6U && (memcmp(tag.ptr, "circle", 6U) == 0 ||
-        memcmp(tag.ptr, "ellipse", 6U) == 0)) return UI_ICON_ELLIPSE;
+    if (tag.len == 6U && memcmp(tag.ptr, "circle", 6U) == 0) return UI_ICON_CIRCLE;
+    if (tag.len == 6U && memcmp(tag.ptr, "ellipse", 6U) == 0) return UI_ICON_ELLIPSE;
     if (tag.len == 4U && memcmp(tag.ptr, "line", 4U) == 0) return UI_ICON_LINE;
-    if (tag.len == 4U && memcmp(tag.ptr, "path", 4U) == 0) return UI_ICON_PEN;
-    if (tag.len == 8U && memcmp(tag.ptr, "polyline", 8U) == 0) return UI_ICON_LINE;
+    if (tag.len == 4U && memcmp(tag.ptr, "path", 4U) == 0) return UI_ICON_PATH;
+    if (tag.len == 8U && memcmp(tag.ptr, "polyline", 8U) == 0) return UI_ICON_POLYLINE;
     if (tag.len == 7U && memcmp(tag.ptr, "polygon", 7U) == 0) return UI_ICON_PEN;
     if (tag.len == 4U && memcmp(tag.ptr, "text", 4U) == 0) return UI_ICON_TEXT;
-    if (tag.len == 5U && memcmp(tag.ptr, "image", 5U) == 0) return UI_ICON_GRID;
+    if (tag.len == 5U && memcmp(tag.ptr, "image", 5U) == 0) return UI_ICON_IMAGE;
     if (tag.len == 14U && memcmp(tag.ptr, "linearGradient", 14U) == 0)
         return UI_ICON_GRADIENT;
     if (tag.len == 14U && memcmp(tag.ptr, "radialGradient", 14U) == 0)
         return UI_ICON_GRADIENT;
-    if (tag.len == 4U && memcmp(tag.ptr, "stop", 4U) == 0) return UI_ICON_ELLIPSE;
+    if (tag.len == 4U && memcmp(tag.ptr, "stop", 4U) == 0) return UI_ICON_STOP;
     return UI_ICON_LAYERS;
 }
 
@@ -137,7 +137,7 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
             "Layers", 6U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_BUTTON_HIDE_STRUCTURE,
             EDITOR_NODE_OUTLINE_HEADER, UI_AXIS_HORIZONTAL, 28U, 28U,
-            0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_ICON_BUTTON, UI_ICON_CLOSE,
+            0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_ICON_BUTTON, UI_ICON_SIDEBAR_LEFT,
             "Hide layers panel", 17U, NULL, 0U, 0U, EDITOR_BUTTON_HIDE_STRUCTURE) &&
         editor_add_widget_node(editor, EDITOR_OUTLINE_SEARCH_ID, EDITOR_NODE_OUTLINE,
             UI_AXIS_HORIZONTAL, 0U, 30U, 0U, 0U, tokens->panel_raised,

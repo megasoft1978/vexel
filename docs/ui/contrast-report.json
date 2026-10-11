@@ -12,9 +12,9 @@
     "dark_secondary_on_raised_panel": {"ratio": 10.657, "greater_than_normal": true}
   },
   "icon_mask_hashes": {
-    "dark_1x": "3380fc5fdcded516",
-    "light_1x": "3380fc5fdcded516",
-    "dark_2x": "2f20022cc0d68e4e"
+    "dark_1x": "dd0cedd4ec723d06",
+    "light_1x": "dd0cedd4ec723d06",
+    "dark_2x": "2d4e975f7b5775c5"
   },
   "reproduce": "build/mac-debug/bin/ui_tokens_contrast_test"
 }

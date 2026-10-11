@@ -318,10 +318,20 @@ static void composite_sharp_tiles(const viewer_frame_options *options, uint8_t *
     }
 }
 
+static void blend_pixel_grid_ink(uint8_t *pixel)
+{
+    uint32_t luminance = (uint32_t)pixel[0] * 54U +
+        (uint32_t)pixel[1] * 183U + (uint32_t)pixel[2] * 19U;
+    uint32_t overlay = luminance > 32640U ? 0U : 255U;
+    for (size_t channel = 0U; channel < 3U; ++channel)
+        pixel[channel] = (uint8_t)(((uint32_t)pixel[channel] * 239U +
+            overlay * 16U) / 255U);
+}
+
 static void apply_pixel_grid(uint8_t *rgba, uint32_t width, uint32_t height,
                              const ui_viewer_navigation *nav)
 {
-    if (nav == NULL || nav->scale < 8.0 || !isfinite(nav->scale) ||
+    if (nav == NULL || nav->scale <= 8.0 || !isfinite(nav->scale) ||
         !isfinite(nav->pan_x) || !isfinite(nav->pan_y) ||
         !isfinite(nav->document_width) || !isfinite(nav->document_height) ||
         nav->document_width > 1000000.0 || nav->document_height > 1000000.0) return;
@@ -347,9 +357,7 @@ static void apply_pixel_grid(uint8_t *rgba, uint32_t width, uint32_t height,
         uint32_t x = (uint32_t)floor(edge);
         for (uint32_t y = 0U; y < height; y++) {
             size_t offset = ((size_t)y * width + x) * 4U;
-            rgba[offset] = (uint8_t)(((uint32_t)rgba[offset] * 3U) / 5U);
-            rgba[offset + 1U] = (uint8_t)(((uint32_t)rgba[offset + 1U] * 3U) / 5U);
-            rgba[offset + 2U] = (uint8_t)(((uint32_t)rgba[offset + 2U] * 3U) / 5U);
+            blend_pixel_grid_ink(rgba + offset);
         }
     }
     for (uint32_t row = start_row; row <= end_row; row++) {
@@ -358,9 +366,7 @@ static void apply_pixel_grid(uint8_t *rgba, uint32_t width, uint32_t height,
         uint32_t y = (uint32_t)floor(edge);
         for (uint32_t x = 0U; x < width; x++) {
             size_t offset = ((size_t)y * width + x) * 4U;
-            rgba[offset] = (uint8_t)(((uint32_t)rgba[offset] * 3U) / 5U);
-            rgba[offset + 1U] = (uint8_t)(((uint32_t)rgba[offset + 1U] * 3U) / 5U);
-            rgba[offset + 2U] = (uint8_t)(((uint32_t)rgba[offset + 2U] * 3U) / 5U);
+            blend_pixel_grid_ink(rgba + offset);
         }
     }
 }

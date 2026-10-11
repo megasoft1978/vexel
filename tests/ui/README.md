@@ -21,7 +21,7 @@ Review the images before updating them with
 
 The UIKit has separate deterministic component and icon sheets in
 `uikit-golden/`. `ui_gallery` renders 24 widgets in seven control states at 1×
-and 2× in both appearances; `ui_icon_gallery` renders all 45 authored paths at
+and 2× in both appearances; `ui_icon_gallery` renders all 53 authored paths at
 24 pt and 48 pt. The human-review PNGs are in `docs/ui/`. Run the gallery
 verifier through CTest as `ui-kit-gallery`, or run it directly with the two
 renderer paths. Do not replace the older style or chrome fixtures with the
