@@ -226,6 +226,8 @@ void viewer_editor_paint_canvas_overlay(viewer_editor *editor,
     if (editor == NULL || document == NULL || navigation == NULL || rgba == NULL ||
         canvas.width == 0U || canvas.height == 0U || !isfinite(navigation->scale) ||
         !(navigation->scale > 0.0) || stride < (size_t)width * 4U) return;
+    viewer_editor_guides_paint(editor, document, navigation, canvas, rgba,
+        width, height, stride);
     viewer_editor_canvas_overlay_state overlay;
     if (!viewer_editor_get_canvas_overlay(editor, document, &overlay) ||
         (overlay.path_point_count == 0U && !overlay_rect_valid(overlay.bounds))) return;

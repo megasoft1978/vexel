@@ -9,6 +9,20 @@ decoded document dimensions, and visible sharp-tile progress. Moving the
 pointer over a toolbar control updates hover state; pointer down and up update
 pressed state and request a redraw.
 
+The zoom value is a button with 25%, 50%, 100%, 200%, 400%, and 800% presets.
+Presets zoom around the viewport center. View → Zoom to Selection centers and
+fits the current selection with padding; when there is no selection it fits the
+document. Cmd+0 and Cmd+1 keep their Fit and Actual Size meanings.
+
+Top and left rulers show SVG user units with adaptive 1/2/5-decade tick spacing.
+Drag from a ruler to create a guide, drag a guide line to move it, then press
+Delete to remove the selected guide. Right-click a ruler to clear guides on that
+axis. View → Rulers and View → Guides control their visibility, while View →
+Lock Guides prevents creating, moving, or deleting an individual guide. Guides
+are editor state and survive visibility and panel changes without changing SVG
+source bytes. Visible guides are snap targets; Shift temporarily bypasses
+snapping. Holding Space pans and hides selection and snap overlays until release.
+
 ## Navigation and tools
 
 | Input | Action |

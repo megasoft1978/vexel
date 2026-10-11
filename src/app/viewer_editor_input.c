@@ -284,10 +284,20 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len)
 {
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
+    if (key_code == 53U && editor->zoom_menu_open) {
+        editor->zoom_menu_open = false;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
         return viewer_editor_cancel_canvas_gesture(editor);
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
+    if (key_code == 51U || key_code == 117U) {
+        uint32_t guide_result = viewer_editor_delete_selected_guide(editor);
+        if (guide_result != 0U) return guide_result;
+    }
     if (key_code == 120U) {
         (void)editor_begin_field(editor, EDITOR_FIELD_RENAME, 0U);
         return VIEWER_EDITOR_HANDLED;

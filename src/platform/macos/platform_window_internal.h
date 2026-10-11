@@ -18,5 +18,8 @@ bool platform_macos_menus_add_recent(const char *path, size_t length);
 size_t platform_macos_menus_copy_recent(platform_recent_file *out_files, size_t capacity);
 bool platform_macos_menus_set_option_state(platform_window *window,
                                            platform_viewer_action action, bool enabled);
+bool platform_macos_menus_show_ruler_context_menu(platform_window *window,
+    bool horizontal_axis, int32_t logical_x, int32_t logical_y);
+void *platform_window_native_view(platform_window *window);
 
 #endif

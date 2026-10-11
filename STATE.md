@@ -176,3 +176,13 @@
   `native-viewer-smoke` fails in this environment. The ledger validates with
   406 entries and `git diff --check` passes. No frozen UX-09/10 work orders are
   present under `work/`, so no lifecycle entries were added to `ledger.jsonl`.
+
+- Update 2026-10-11: uncommitted W14 rulers/zoom candidate from the supplied
+  `r2-interaction.md` work-order text is recorded in `docs/lanes/w14-rulers.md`.
+  Added editor-only bounded guides and rulers, zoom HUD presets, Zoom to
+  Selection, Space overlay hiding, and light/dark 1×/2× headless goldens. Final
+  `./dev t --all`: build passed, 57/59 CTests and 69/69 Python tests passed;
+  index-replay and native-viewer-smoke require Metal unavailable on this host.
+  Seeded ASan+UBSan shape fuzz completed 1,000,000 cases with zero crashes,
+  invariant failures, or sanitizer reports. The task has no matching frozen
+  local WO-UX files, so no ledger lifecycle event was added.

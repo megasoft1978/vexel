@@ -200,6 +200,7 @@ static ui_widget_draw_spec editor_draw_spec(viewer_editor *editor,
 static const char *tooltip_for_id(uint32_t id)
 {
     switch (id) {
+        case EDITOR_BUTTON_ZOOM_HUD: return "Choose a zoom preset";
         case EDITOR_BUTTON_SAVE: return "Save  ⌘S";
         case EDITOR_BUTTON_UNDO: return "Undo  ⌘Z";
         case EDITOR_BUTTON_REDO: return "Redo  ⇧⌘Z";

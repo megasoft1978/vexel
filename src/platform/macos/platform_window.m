@@ -257,6 +257,8 @@ static NSDragOperation platform_drag_operation(platform_window *window,
     value.modifiers = (uint32_t)event.modifierFlags;
     (void)platform_emit(self.owner, &value);
 }
+- (void)rightMouseDown:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_DOWN]; }
+- (void)rightMouseUp:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_UP]; }
 - (void)mouseDragged:(NSEvent *)event { [self mouseMoved:event]; }
 - (void)mouseDown:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_DOWN]; }
 - (void)mouseUp:(NSEvent *)event { [self emitButton:event type:PLATFORM_EVENT_POINTER_UP]; }
@@ -509,6 +511,14 @@ bool platform_window_set_option_state(platform_window *window, platform_viewer_a
 {
     if (!platform_on_main_thread() || window == NULL) return false;
     return platform_macos_menus_set_option_state(window, action, enabled);
+}
+
+bool platform_window_show_ruler_context_menu(platform_window *window,
+    bool horizontal_axis, int32_t logical_x, int32_t logical_y)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    return platform_macos_menus_show_ruler_context_menu(window,
+        horizontal_axis, logical_x, logical_y);
 }
 
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points)

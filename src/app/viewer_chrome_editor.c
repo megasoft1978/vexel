@@ -242,7 +242,9 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (!okay) return;
     if (layout.structure_visible) editor_build_structure_panel(editor, tokens);
     okay = editor_add_node(editor, EDITOR_NODE_CANVAS, EDITOR_NODE_WORKSPACE,
-            UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
+            UI_AXIS_VERTICAL, 0U, 0U,
+            editor->guides.rulers_visible ? VIEWER_EDITOR_RULER_LEFT_POINTS : 0U,
+            0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U);
     if (!okay) return;
     char hud[UI_TEXT_MAX_BYTES] = {0};
@@ -258,9 +260,32 @@ void editor_build_tree_modern(viewer_editor *editor)
             NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_CANVAS_HUD + 100U,
             EDITOR_NODE_CANVAS_HUD, UI_AXIS_HORIZONTAL, hud_width, 28U,
-            0U, 0U, 0U, UI_ROLE_STATUS, UI_WIDGET_HUD_PILL, UI_ICON_NONE,
-            hud, strlen(hud), NULL, 0U, 0U, 0U);
+            0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_HUD_PILL, UI_ICON_NONE,
+            hud, strlen(hud), NULL, 0U,
+            editor->zoom_menu_open ? UI_STATE_CHECKED : 0U,
+            EDITOR_BUTTON_ZOOM_HUD);
     if (!okay) return;
+    if (editor->zoom_menu_open) {
+        static const char *const zoom_labels[] = {
+            "25%", "50%", "100%", "200%", "400%", "800%"};
+        okay = editor_add_node(editor, EDITOR_NODE_CANVAS_ZOOM_MENU,
+            EDITOR_NODE_CANVAS, UI_AXIS_VERTICAL, 132U, 164U, 4U, 2U,
+            tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
+        for (size_t index = 0U; okay && index <
+                sizeof(zoom_labels) / sizeof(zoom_labels[0]); ++index) {
+            double preset = viewer_editor_zoom_preset_scale(index);
+            uint32_t state = fabs(editor->canvas_zoom - preset) < 0.000001 ?
+                UI_STATE_CHECKED : 0U;
+            okay = editor_add_widget_node(editor,
+                EDITOR_BUTTON_ZOOM_PRESET_BASE + (uint32_t)index,
+                EDITOR_NODE_CANVAS_ZOOM_MENU, UI_AXIS_HORIZONTAL, 0U, 24U,
+                2U, 0U, tokens->panel_raised, UI_ROLE_BUTTON,
+                UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+                zoom_labels[index], strlen(zoom_labels[index]), NULL, 0U,
+                state, EDITOR_BUTTON_ZOOM_PRESET_BASE + (uint32_t)index);
+        }
+        if (!okay) return;
+    }
     if (editor->outline_count <= 1U) {
         okay = editor_add_widget_node(editor, EDITOR_NODE_CANVAS + 100U,
             EDITOR_NODE_CANVAS, UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U,

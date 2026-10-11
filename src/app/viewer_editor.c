@@ -428,6 +428,7 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->backing_scale = 1.0;
     editor->path_selected_node_segment = SIZE_MAX;
     editor->snap_enabled = true;
+    viewer_editor_guides_init(&editor->guides);
     if (modern_style) {
         (void)platform_text_ui_get_preferences(&editor->theme,
             &editor->increased_contrast, &editor->reduced_motion);

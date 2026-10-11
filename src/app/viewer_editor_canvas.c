@@ -545,7 +545,8 @@ bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
     const svg_shape_document *document,
     viewer_editor_canvas_overlay_state *out_overlay)
 {
-    if (editor == NULL || document == NULL || out_overlay == NULL) return false;
+    if (editor == NULL || document == NULL || out_overlay == NULL ||
+        editor->navigation_overlays_hidden) return false;
     *out_overlay = (viewer_editor_canvas_overlay_state){0};
     out_overlay->snap_guide_x_visible = editor->snap_guide_x_visible;
     out_overlay->snap_guide_y_visible = editor->snap_guide_y_visible;

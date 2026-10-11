@@ -17,6 +17,11 @@
 - (void)actionFitWindow:(id)sender;
 - (void)actionActualSize:(id)sender;
 - (void)actionTogglePixelGrid:(id)sender;
+- (void)actionToggleRulers:(id)sender;
+- (void)actionToggleGuides:(id)sender;
+- (void)actionToggleGuideLock:(id)sender;
+- (void)actionZoomToSelection:(id)sender;
+- (void)actionClearGuides:(id)sender;
 - (void)actionQuit:(id)sender;
 - (void)actionOpenRecent:(id)sender;
 - (void)actionClearRecent:(id)sender;
@@ -129,6 +134,21 @@ void platform_macos_menus_init(void)
         @selector(actionActualSize:), PLATFORM_ACTION_ACTUAL_SIZE)];
     [view_menu addItem:platform_menu_item(@"Pixel Grid", @"g",
         @selector(actionTogglePixelGrid:), PLATFORM_ACTION_TOGGLE_PIXEL_GRID)];
+    [view_menu addItem:[NSMenuItem separatorItem]];
+    NSMenuItem *rulers = platform_menu_item(@"Rulers", @"",
+        @selector(actionToggleRulers:), PLATFORM_ACTION_TOGGLE_RULERS);
+    rulers.state = NSControlStateValueOn;
+    [view_menu addItem:rulers];
+    NSMenuItem *guides = platform_menu_item(@"Guides", @"",
+        @selector(actionToggleGuides:), PLATFORM_ACTION_TOGGLE_GUIDES);
+    guides.state = NSControlStateValueOn;
+    [view_menu addItem:guides];
+    NSMenuItem *guide_lock = platform_menu_item(@"Lock Guides", @"",
+        @selector(actionToggleGuideLock:), PLATFORM_ACTION_TOGGLE_GUIDE_LOCK);
+    [view_menu addItem:guide_lock];
+    [view_menu addItem:[NSMenuItem separatorItem]];
+    [view_menu addItem:platform_menu_item(@"Zoom to Selection", @"",
+        @selector(actionZoomToSelection:), PLATFORM_ACTION_ZOOM_TO_SELECTION)];
     view.submenu = view_menu;
     [main addItem:view];
 
@@ -243,6 +263,27 @@ bool platform_macos_menus_set_option_state(platform_window *window,
     return false;
 }
 
+bool platform_macos_menus_show_ruler_context_menu(platform_window *window,
+    bool horizontal_axis, int32_t logical_x, int32_t logical_y)
+{
+    if (window == NULL || platform_delegate.owner != window ||
+        ![NSThread isMainThread]) return false;
+    NSView *view = (__bridge NSView *)platform_window_native_view(window);
+    if (view == nil || logical_x < 0 || logical_y < 0) return false;
+    NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Ruler" ];
+    platform_viewer_action action = horizontal_axis ?
+        PLATFORM_ACTION_CLEAR_HORIZONTAL_GUIDES : PLATFORM_ACTION_CLEAR_VERTICAL_GUIDES;
+    NSString *title = horizontal_axis ? @"Clear Horizontal Guides" :
+        @"Clear Vertical Guides";
+    NSMenuItem *clear = [[NSMenuItem alloc] initWithTitle:title
+        action:@selector(actionClearGuides:) keyEquivalent:@""];
+    clear.target = platform_delegate;
+    clear.tag = action;
+    [menu addItem:clear];
+    NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
+    return [menu popUpMenuPositioningItem:nil atLocation:point inView:view];
+}
+
 @implementation VexelApplicationDelegate
 - (void)actionOpenDocument:(id)sender
 {
@@ -261,6 +302,15 @@ bool platform_macos_menus_set_option_state(platform_window *window,
 - (void)actionFitWindow:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_FIT_WINDOW); }
 - (void)actionActualSize:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_ACTUAL_SIZE); }
 - (void)actionTogglePixelGrid:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_TOGGLE_PIXEL_GRID); }
+- (void)actionToggleRulers:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_TOGGLE_RULERS); }
+- (void)actionToggleGuides:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_TOGGLE_GUIDES); }
+- (void)actionToggleGuideLock:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_TOGGLE_GUIDE_LOCK); }
+- (void)actionZoomToSelection:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_ZOOM_TO_SELECTION); }
+- (void)actionClearGuides:(id)sender
+{
+    if (![sender isKindOfClass:[NSMenuItem class]]) return;
+    platform_window_dispatch_action(self.owner, (platform_viewer_action)[(NSMenuItem *)sender tag]);
+}
 - (void)actionQuit:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_QUIT); }
 - (void)actionOpenRecent:(id)sender
 {

@@ -78,6 +78,25 @@ static void snap_axis_from_bounds(viewer_editor *editor,
             }
         }
     }
+    if (editor->guides.guides_visible) {
+        viewer_editor_guide_axis_kind axis = horizontal ?
+            VIEWER_EDITOR_GUIDE_VERTICAL : VIEWER_EDITOR_GUIDE_HORIZONTAL;
+        size_t guide_count = viewer_editor_guides_count(&editor->guides, axis);
+        for (size_t guide_index = 0U; guide_index < guide_count; ++guide_index) {
+            double target = 0.0;
+            if (!viewer_editor_guides_get(&editor->guides, axis, guide_index, &target))
+                continue;
+            for (size_t moving_index = 0U; moving_index < 3U; ++moving_index) {
+                double delta = target - moving[moving_index];
+                double distance = fabs(delta);
+                if (distance < best) {
+                    best = distance;
+                    chosen = target;
+                    chosen_delta = delta;
+                }
+            }
+        }
+    }
     *correction = 0.0;
     if (best < tolerance) {
         *correction = chosen_delta;
@@ -95,7 +114,8 @@ void editor_canvas_snap_translation(viewer_editor *editor,
         translate_y == NULL) return;
     editor->snap_guide_x_visible = false;
     editor->snap_guide_y_visible = false;
-    if (!editor->snap_enabled || !isfinite(tolerance) || !(tolerance > 0.0)) return;
+    if (!editor->snap_enabled || editor->snap_bypass ||
+        !isfinite(tolerance) || !(tolerance > 0.0)) return;
     svg_shape_rect bounds = editor->canvas_selection.user_bounds;
     double moving_x[3] = {bounds.x + *translate_x,
         bounds.x + bounds.width * 0.5 + *translate_x,
@@ -137,6 +157,18 @@ static double snap_axis_point(viewer_editor *editor,
             if (distance < best) { best = distance; target = targets[index]; }
         }
     }
+    if (editor->guides.guides_visible) {
+        viewer_editor_guide_axis_kind axis = horizontal ?
+            VIEWER_EDITOR_GUIDE_VERTICAL : VIEWER_EDITOR_GUIDE_HORIZONTAL;
+        size_t guide_count = viewer_editor_guides_count(&editor->guides, axis);
+        for (size_t index = 0U; index < guide_count; ++index) {
+            double candidate = 0.0;
+            if (!viewer_editor_guides_get(&editor->guides, axis, index, &candidate))
+                continue;
+            double distance = fabs(candidate - value);
+            if (distance < best) { best = distance; target = candidate; }
+        }
+    }
     if (best < tolerance) {
         *guide = target;
         *visible = true;
@@ -152,7 +184,7 @@ geom_point editor_canvas_snap_point(viewer_editor *editor,
         !isfinite(point.y) || !isfinite(tolerance) || !(tolerance > 0.0)) return point;
     editor->snap_guide_x_visible = false;
     editor->snap_guide_y_visible = false;
-    if (!editor->snap_enabled) return point;
+    if (!editor->snap_enabled || editor->snap_bypass) return point;
     point.x = snap_axis_point(editor, document, true, point.x, tolerance,
         &editor->snap_guide_x, &editor->snap_guide_x_visible);
     point.y = snap_axis_point(editor, document, false, point.y, tolerance,

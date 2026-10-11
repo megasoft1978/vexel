@@ -161,9 +161,8 @@ bool viewer_sync_canvas_geometry(viewer_app *app, bool refit)
 {
     if (app == NULL) return false;
     ui_rect next = {0U, 0U, app->width, app->height};
-    viewer_chrome_layout layout;
-    if (app->editor != NULL && viewer_editor_get_chrome_layout(app->editor, &layout))
-        next = layout.canvas;
+    if (app->editor != NULL && !viewer_editor_get_navigation_canvas_rect(
+            app->editor, NULL, &next)) return false;
     if (next.width == 0U || next.height == 0U) return false;
     ui_rect previous = app->navigation_canvas;
     bool changed = memcmp(&previous, &next, sizeof(next)) != 0;
@@ -422,11 +421,13 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         job->loaded.source_length}, app->theme, app->width, app->height);
     viewer_editor_resize(next_editor, app->width, app->height, app->backing_scale);
     viewer_chrome_layout next_layout = {0};
+    ui_rect next_canvas = {0};
     ui_viewer_navigation next_navigation = {0};
     bool document_ready = next_editor != NULL &&
-        viewer_editor_get_chrome_layout(next_editor, &next_layout) &&
-        ui_viewer_navigation_init(&next_navigation, (double)next_layout.canvas.width,
-            (double)next_layout.canvas.height, (double)job->loaded.tile.width,
+        viewer_editor_get_navigation_canvas_rect(next_editor, &next_layout,
+            &next_canvas) &&
+        ui_viewer_navigation_init(&next_navigation, (double)next_canvas.width,
+            (double)next_canvas.height, (double)job->loaded.tile.width,
             (double)job->loaded.tile.height) && ui_viewer_navigation_fit(&next_navigation);
     if (!document_ready) {
         viewer_editor_destroy(next_editor);
@@ -456,12 +457,19 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     app->document = job->loaded;
     job->loaded = (viewer_loaded_document){0};
     viewer_timeline_reset(&app->timeline, &app->document.shape);
-    app->navigation_canvas = next_layout.canvas;
+    app->load_ms = job->elapsed_ms;
+    app->navigation_canvas = next_canvas;
     app->navigation = next_navigation;
     app->navigation_ready = true;
     app->navigation_user_zoomed = false;
     app->document_visible = true;
     viewer_navigation_clamp(&app->navigation);
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_RULERS, viewer_editor_rulers_visible(app->editor));
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_GUIDES, viewer_editor_guides_visible(app->editor));
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_GUIDE_LOCK, viewer_editor_guides_locked(app->editor));
     size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
     if (path_length < PLATFORM_PATH_CAP) {
         memcpy(app->path, job->path, path_length + 1U);

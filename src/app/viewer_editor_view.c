@@ -404,6 +404,21 @@ void viewer_editor_paint_scalar(viewer_editor *editor, uint8_t *rgba,
 
 static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
 {
+    if (action == EDITOR_BUTTON_ZOOM_HUD) {
+        editor->zoom_menu_open = !editor->zoom_menu_open;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action >= EDITOR_BUTTON_ZOOM_PRESET_BASE &&
+        action < EDITOR_BUTTON_ZOOM_PRESET_BASE + 6U) {
+        editor->zoom_preset_request = action - EDITOR_BUTTON_ZOOM_PRESET_BASE;
+        editor->zoom_preset_pending = true;
+        editor->zoom_menu_open = false;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_ZOOM_PRESET_REQUEST;
+    }
     if (action == EDITOR_BUTTON_TOOL_SELECT) {
         (void)viewer_editor_set_tool(editor, UI_ICON_SELECT);
         return VIEWER_EDITOR_HANDLED;
@@ -512,6 +527,18 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
     for (size_t index = editor->tree.count; index > 0U; --index) {
         const ui_node *candidate = &editor->tree.nodes[index - 1U];
         if (editor_node_contains(candidate, x, y)) { hit = candidate; break; }
+    }
+    if (editor->zoom_menu_open) {
+        uint32_t command = hit == NULL ? 0U : hit->spec.command_id;
+        bool zoom_target = command == EDITOR_BUTTON_ZOOM_HUD ||
+            (command >= EDITOR_BUTTON_ZOOM_PRESET_BASE &&
+             command < EDITOR_BUTTON_ZOOM_PRESET_BASE + 6U) ||
+            (hit != NULL && hit->spec.id == EDITOR_NODE_CANVAS_ZOOM_MENU);
+        if (!zoom_target) {
+            editor->zoom_menu_open = false;
+            editor->tree_ready = false;
+            editor->redraw_requested = true;
+        }
     }
     if (hit == NULL || hit->spec.id == EDITOR_NODE_CANVAS ||
         hit->spec.id == EDITOR_NODE_WORKSPACE || hit->spec.id == UI_ROOT_ID) return 0U;

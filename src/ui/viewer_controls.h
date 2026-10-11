@@ -59,6 +59,10 @@ bool ui_viewer_navigation_drag_scaled(ui_viewer_navigation *state, double logica
                                        double logical_y, double backing_scale);
 bool ui_viewer_navigation_zoom(ui_viewer_navigation *state, double factor,
                                double cursor_x, double cursor_y);
+bool ui_viewer_navigation_zoom_to(ui_viewer_navigation *state, double scale,
+                                  double anchor_x, double anchor_y);
+bool ui_viewer_navigation_zoom_to_bounds(ui_viewer_navigation *state,
+    double x, double y, double width, double height, double padding);
 bool ui_viewer_navigation_wheel(ui_viewer_navigation *state, double delta_y,
                                 double cursor_x, double cursor_y);
 bool ui_viewer_navigation_wheel_scaled(ui_viewer_navigation *state, double delta_y,

@@ -52,6 +52,12 @@ typedef enum platform_viewer_action {
     PLATFORM_ACTION_ACTUAL_SIZE,
     PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
     PLATFORM_ACTION_NEW_WINDOW,
+    PLATFORM_ACTION_TOGGLE_RULERS,
+    PLATFORM_ACTION_TOGGLE_GUIDES,
+    PLATFORM_ACTION_TOGGLE_GUIDE_LOCK,
+    PLATFORM_ACTION_CLEAR_HORIZONTAL_GUIDES,
+    PLATFORM_ACTION_CLEAR_VERTICAL_GUIDES,
+    PLATFORM_ACTION_ZOOM_TO_SELECTION,
     PLATFORM_ACTION_QUIT
 } platform_viewer_action;
 
@@ -114,6 +120,8 @@ size_t platform_window_recent_files(platform_window *window,
 bool platform_window_is_dark_appearance(platform_window *window);
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
                                       bool enabled);
+bool platform_window_show_ruler_context_menu(platform_window *window,
+    bool horizontal_axis, int32_t logical_x, int32_t logical_y);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);

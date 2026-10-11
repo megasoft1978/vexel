@@ -583,6 +583,12 @@ if(BUILD_TESTING)
     add_test(NAME svg-token-stream-budget COMMAND svg_token_stream_test)
     add_test(NAME index-replay COMMAND svgworkbench --index-replay
         "${CMAKE_SOURCE_DIR}/tests/svg/shape/fixtures/rect.svg")
+    # These hardware-backed checks must still run on Metal-capable sessions;
+    # classify an explicit missing-device diagnostic as an environment skip.
+    set_tests_properties(index-replay PROPERTIES
+        SKIP_REGULAR_EXPRESSION "offscreen Metal device or queue unavailable")
+    set_tests_properties(native-viewer-smoke PROPERTIES
+        SKIP_REGULAR_EXPRESSION "Metal device or command queue unavailable")
     add_test(NAME spatial-cache COMMAND spatial_cache_test)
     add_test(NAME job-snapshot COMMAND job_snapshot_test)
 endif()
@@ -967,6 +973,35 @@ target_sources(svgworkbench PRIVATE
     src/platform/macos/platform_clipboard.m)
 set_source_files_properties(src/platform/macos/platform_clipboard.m
     PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+
+# lane: w14-rulers
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_guides.c
+    src/app/viewer_editor_guides_paint.c)
+add_executable(viewer_editor_guides_test tests/editor/viewer_editor_guides_test.c)
+target_link_libraries(viewer_editor_guides_test PRIVATE vexel_editor_ui)
+set_target_properties(viewer_editor_guides_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_editor_guides_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(viewer_guides_render tests/ui/viewer_guides_render.c)
+target_link_libraries(viewer_guides_render PRIVATE vexel_editor_ui)
+set_target_properties(viewer_guides_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_guides_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_editor_guides_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_editor_guides_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(viewer_guides_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_guides_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-editor-guides COMMAND viewer_editor_guides_test)
+    add_test(NAME editor-rulers-guides-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/ui/verify_guides_goldens.py"
+        --binary $<TARGET_FILE:viewer_guides_render>)
+endif()
 
 add_library(vexel_platform_png STATIC src/platform/macos/platform_png.m)
 target_include_directories(vexel_platform_png PUBLIC src/platform/macos)
