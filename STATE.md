@@ -207,3 +207,15 @@
   by LaunchServices/Metal availability in this environment. The ledger validates
   with 406 entries. The referenced work orders are not frozen under `work/`, so
   no lifecycle event was added to `ledger.jsonl`.
+- Update 2026-10-11: W14 implements WO-UX-04 self-revealing path node editing:
+  supported-path entry, anchor state shapes, selected handles, path-order
+  traversal, one/ten-unit nudge, line insertion hint, contextual Corner/Smooth,
+  and protected initial-anchor deletion. Regression, editor/chrome, and node
+  option tests pass; headless node-edit goldens cover light/dark at 1x/2x.
+  `./dev t --all` reports 55/57 CTests and 69/69 Python tests; the two failures
+  are the sandbox offscreen-Metal `index-replay` and `native-viewer-smoke` checks.
+  A 1,000,000-case ASan+UBSan shape fuzz run passes with zero reports. Details
+  are in `docs/lanes/w14-nodes.md`. No lifecycle event was added because W14
+  report proposals are not frozen work orders under `work/`. WO-UX-03 remains
+  gated on WO-M4-06 renderer acceptance: round 7 still has the `clip-union`
+  reference mismatch (4 vs 1 raw RGB at pixel (8,4)).

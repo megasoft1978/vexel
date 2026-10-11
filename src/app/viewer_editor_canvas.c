@@ -364,22 +364,25 @@ uint32_t viewer_editor_canvas_pointer_down_click_count(viewer_editor *editor,
     if (editor->draw_tool == VIEWER_EDITOR_TOOL_TEXT)
         return prior | editor_canvas_text_place(editor, document, user);
     if (editor->draw_tool == VIEWER_EDITOR_TOOL_PEN) {
-        canvas_view_transform view;
-        double tolerance = 0.0;
-        if (canvas_view_transform_get(document, &view)) {
-            double scale = navigation->scale * fmin(view.scale_x, view.scale_y);
-            if (isfinite(scale) && scale > 0.0)
-                tolerance = 8.0 * editor->backing_scale / scale;
-        }
-        if (tolerance > 0.0 && editor_canvas_path_node_begin(editor,
-                document, user, tolerance)) {
-            editor->redraw_requested = true;
+        if (editor->node_edit_active) {
+            canvas_view_transform view;
+            double tolerance = 0.0;
+            if (canvas_view_transform_get(document, &view)) {
+                double scale = navigation->scale * fmin(view.scale_x, view.scale_y);
+                if (isfinite(scale) && scale > 0.0)
+                    tolerance = 8.0 * editor->backing_scale / scale;
+            }
+            if (tolerance > 0.0 && editor_canvas_path_node_begin(editor,
+                    document, user, tolerance)) {
+                editor->redraw_requested = true;
+                return prior | VIEWER_EDITOR_HANDLED;
+            }
+            if (click_count >= 2U && tolerance > 0.0) {
+                uint32_t inserted = editor_canvas_path_add_node(editor, document,
+                    user, tolerance);
+                if (inserted != 0U) return prior | inserted;
+            }
             return prior | VIEWER_EDITOR_HANDLED;
-        }
-        if (click_count >= 2U && tolerance > 0.0) {
-            uint32_t inserted = editor_canvas_path_add_node(editor, document,
-                user, tolerance);
-            if (inserted != 0U) return prior | inserted;
         }
     }
     if (editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON ||
@@ -468,9 +471,19 @@ uint32_t viewer_editor_canvas_pointer_move_modifiers(viewer_editor *editor,
     editor->context_pointer_x = x;
     editor->context_pointer_y = y;
     editor->snap_bypass = (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U;
-    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE) return 0U;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE &&
+        !editor->node_edit_active) return 0U;
     geom_point user;
     if (!canvas_user_at(document, navigation, x, y, &user)) return 0U;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE) {
+        if (!editor->node_edit_active) return 0U;
+        canvas_view_transform view;
+        if (!canvas_view_transform_get(document, &view)) return 0U;
+        double scale = navigation->scale * fmin(view.scale_x, view.scale_y);
+        if (!(scale > 0.0) || !isfinite(scale)) return 0U;
+        double tolerance = 8.0 * editor->backing_scale / scale;
+        return editor_canvas_path_node_hover(editor, document, user, tolerance);
+    }
     if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH)
         return editor_canvas_path_pointer_move(editor, user, x, y);
     if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH_NODE)

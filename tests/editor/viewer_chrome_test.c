@@ -77,6 +77,132 @@ static bool click_node(viewer_editor *editor, const ui_semantics_node *node,
     return handled;
 }
 
+static uint8_t *copy_editor_source(viewer_editor *editor, size_t *out_length);
+
+static int test_node_delete_toolbar(viewer_editor *editor,
+                                    ui_semantics_snapshot *snapshot)
+{
+    size_t source_length = 0U;
+    uint8_t *current = copy_editor_source(editor, &source_length);
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    static const char root[] =
+        "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>";
+    static const char close[] = "</svg>";
+    uint8_t synthetic[4096];
+    size_t path_offset = editor->selected_offset;
+    const char *path = current != NULL && path_offset < source_length ?
+        (const char *)current + path_offset : NULL;
+    const char *path_end = path == NULL ? NULL : strstr(path, "/>" );
+    size_t path_length = path_end == NULL ? 0U : (size_t)(path_end - path) + 2U;
+    size_t root_length = sizeof(root) - 1U, close_length = sizeof(close) - 1U;
+    if (current == NULL || path == NULL || strncmp(path, "<path", 5U) != 0 ||
+        path_length == 0U || path_offset < root_length ||
+        path_offset > sizeof(synthetic) || close_length > sizeof(synthetic) -
+            path_offset || path_length > sizeof(synthetic) - path_offset - close_length) {
+        free(current);
+        svg_shape_document_destroy(&document);
+        return 1;
+    }
+    memcpy(synthetic, root, root_length);
+    memset(synthetic + root_length, ' ', path_offset - root_length);
+    memcpy(synthetic + path_offset, path, path_length);
+    memcpy(synthetic + path_offset + path_length, close, close_length);
+    size_t synthetic_length = path_offset + path_length + close_length;
+    if (svg_shape_decode((base_bytes){synthetic, synthetic_length}, &document,
+            &diagnostic) != SVG_SHAPE_ERROR_NONE) {
+        free(current);
+        svg_shape_document_destroy(&document);
+        return 2;
+    }
+    int result = 3;
+    const ui_semantics_node *delete = NULL;
+    if (!viewer_editor_semantics(editor, snapshot)) goto done;
+    result = 4;
+    delete = find_label(snapshot, "Delete · Delete");
+    if (delete == NULL || (delete->state & UI_STATE_DISABLED) == 0U) goto done;
+    result = 5;
+    if ((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+            VIEWER_EDITOR_HANDLED) == 0U || !editor->path_node_is_initial ||
+        !viewer_editor_semantics(editor, snapshot)) goto done;
+    result = 6;
+    delete = find_label(snapshot, "Delete · Delete");
+    if (delete == NULL || (delete->state & UI_STATE_DISABLED) == 0U) goto done;
+    result = 7;
+    if ((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+            VIEWER_EDITOR_HANDLED) == 0U || editor->path_node_is_initial ||
+        !viewer_editor_semantics(editor, snapshot)) goto done;
+    result = 8;
+    delete = find_label(snapshot, "Delete · Delete");
+    if (delete == NULL || (delete->state & UI_STATE_DISABLED) != 0U) goto done;
+    uint32_t x = (uint32_t)delete->frame.x + delete->frame.width / 2U;
+    uint32_t y = (uint32_t)delete->frame.y + delete->frame.height / 2U;
+    viewer_editor_pointer_move(editor, x, y);
+    uint32_t action = viewer_editor_pointer_down(editor, x, y, 0U);
+    viewer_editor_pointer_up(editor);
+    result = 9;
+    if ((action & VIEWER_EDITOR_DELETE_PATH_NODE) == 0U ||
+        (viewer_editor_delete_selected_path_node(editor, &document) &
+            VIEWER_EDITOR_MUTATED) == 0U) goto done;
+    result = 10;
+    uint8_t *after = copy_editor_source(editor, &source_length);
+    if (after == NULL || strstr((const char *)after, "<path") == NULL) {
+        free(after);
+        goto done;
+    }
+    free(after);
+    result = 0;
+done:
+    svg_shape_document_destroy(&document);
+    free(current);
+    return result;
+}
+
+static bool test_node_options_semantics(void)
+{
+    static const uint8_t path_source[] =
+        "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>"
+        "<path d='M 8 8 L 16 8 C 20 4 24 12 28 8 S 32 4 36 8'/></svg>";
+    viewer_editor *editor = viewer_editor_create_styled((base_bytes){path_source,
+        sizeof(path_source) - 1U}, UI_THEME_DARK, 640U, 480U, true);
+    svg_shape_document document = {0};
+    svg_shape_diagnostic diagnostic = {0};
+    ui_semantics_snapshot *snapshot = malloc(sizeof(*snapshot));
+    if (editor == NULL || snapshot == NULL ||
+        svg_shape_decode((base_bytes){path_source, sizeof(path_source) - 1U},
+            &document, &diagnostic) != SVG_SHAPE_ERROR_NONE) {
+        free(snapshot);
+        svg_shape_document_destroy(&document);
+        viewer_editor_destroy(editor);
+        return false;
+    }
+    int result = 1;
+    size_t path_offset = (size_t)(strstr((const char *)path_source, "<path") -
+        (const char *)path_source);
+    if (!viewer_editor_select_at_source_offset(editor, path_offset) ||
+        (viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+            VIEWER_EDITOR_HANDLED) == 0U) goto done;
+    for (size_t index = 0U; index < 3U; ++index)
+        if ((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+                VIEWER_EDITOR_HANDLED) == 0U) goto done;
+    if (!editor->path_node_corner_available ||
+        !editor->path_node_smooth_available ||
+        !viewer_editor_semantics(editor, snapshot) ||
+        find_label(snapshot, "Corner") == NULL ||
+        find_label(snapshot, "Smooth") == NULL) goto done;
+    if ((viewer_editor_key(editor, 53U, 0U, NULL, 0U) &
+            VIEWER_EDITOR_HANDLED) == 0U ||
+        !viewer_editor_semantics(editor, snapshot) ||
+        find_label(snapshot, "Corner") != NULL ||
+        find_label(snapshot, "Smooth") != NULL) goto done;
+    result = 0;
+done:
+    free(snapshot);
+    svg_shape_document_destroy(&document);
+    viewer_editor_destroy(editor);
+    return result == 0;
+}
+
 static size_t selected_row_count(const ui_semantics_snapshot *snapshot)
 {
     size_t count = 0U;
@@ -357,6 +483,7 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
 
 int main(void)
 {
+    if (!test_node_options_semantics()) return 66;
     viewer_editor *editor = viewer_editor_create_styled(
         (base_bytes){source, sizeof(source) - 1U}, UI_THEME_DARK,
         1280U, 800U, true);
@@ -415,11 +542,29 @@ int main(void)
         !viewer_editor_semantics(editor, snapshot)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 27;
     }
-    tool = find_label(snapshot, "Node edit tool · N");
-    if (tool == NULL || !click_node(editor, tool, tool->frame.width / 2U) ||
-        viewer_editor_get_draw_tool(editor) != VIEWER_EDITOR_TOOL_PEN ||
+    document_handle path_handle = {0};
+    document_source_span path_span = {0};
+    if (!document_edit_find_id(editor->edit,
+            (base_bytes){(const uint8_t *)"curve", 5U}, &path_handle) ||
+        !document_edit_source_span(editor->edit, path_handle, &path_span) ||
+        !viewer_editor_select_at_source_offset(editor, path_span.offset) ||
         !viewer_editor_semantics(editor, snapshot)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 28;
+    }
+    tool = find_label(snapshot, "Node edit tool · N");
+    bool node_tool_clicked = tool != NULL && click_node(editor, tool,
+        tool->frame.width / 2U);
+    int node_draw_tool = (int)viewer_editor_get_draw_tool(editor);
+    bool node_tool_semantics = viewer_editor_semantics(editor, snapshot);
+    if (tool == NULL || !node_tool_clicked ||
+        node_draw_tool != VIEWER_EDITOR_TOOL_PEN || !node_tool_semantics) {
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 28;
+    }
+    int node_delete_result = test_node_delete_toolbar(editor, snapshot);
+    if (node_delete_result != 0) {
+        (void)fprintf(stderr, "node Delete toolbar check failed at stage %d\n",
+            node_delete_result);
+        free(pixels); free(snapshot); viewer_editor_destroy(editor); return 36;
     }
     tool = find_label(snapshot, "Node edit tool · N");
     if (tool == NULL || (tool->state & UI_STATE_CHECKED) == 0U) {

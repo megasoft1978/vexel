@@ -1003,6 +1003,9 @@ if(BUILD_TESTING)
         "${CMAKE_SOURCE_DIR}/tests/ui/verify_guides_goldens.py"
         --binary $<TARGET_FILE:viewer_guides_render>)
 endif()
+# lane: w14-nodes
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_path_node_commands.c)
 
 add_library(vexel_platform_png STATIC src/platform/macos/platform_png.m)
 target_include_directories(vexel_platform_png PUBLIC src/platform/macos)

@@ -211,6 +211,21 @@ void viewer_process_editor_result(viewer_app *app, uint32_t result)
             }
         }
     }
+    if ((result & VIEWER_EDITOR_DELETE_PATH_NODE) != 0U) {
+        result &= ~(uint32_t)VIEWER_EDITOR_DELETE_PATH_NODE;
+        result |= app->document_visible ?
+            viewer_editor_delete_selected_path_node(app->editor,
+                &app->document.shape) : VIEWER_EDITOR_HANDLED;
+    }
+    uint32_t node_options = result & ((uint32_t)VIEWER_EDITOR_NODE_CORNER |
+        (uint32_t)VIEWER_EDITOR_NODE_SMOOTH);
+    if (node_options != 0U) {
+        result &= ~((uint32_t)VIEWER_EDITOR_NODE_CORNER |
+            (uint32_t)VIEWER_EDITOR_NODE_SMOOTH);
+        result |= viewer_editor_convert_selected_path_node(app->editor,
+            app->document_visible ? &app->document.shape : NULL,
+            (node_options & VIEWER_EDITOR_NODE_SMOOTH) != 0U);
+    }
     viewer_command_id selected_command = VIEWER_COMMAND_NONE;
     bool run_selected_command = (result & VIEWER_EDITOR_COMMAND_SELECTED) != 0U &&
         viewer_editor_take_pending_command(app->editor, &selected_command);
@@ -338,6 +353,16 @@ static void apply_key(viewer_app *app, const platform_event *event)
             &app->document.shape, alignment);
         viewer_process_editor_result(app, result);
         return;
+    }
+    if (app->document_visible && app->editor != NULL &&
+        !viewer_editor_text_input_active(app->editor) &&
+        viewer_editor_node_edit_active(app->editor)) {
+        uint32_t node_result = viewer_editor_node_edit_key(app->editor,
+            &app->document.shape, event->key_code, event->modifiers);
+        if (node_result != 0U) {
+            viewer_process_editor_result(app, node_result);
+            return;
+        }
     }
     if (event->key_code == 53U && app->navigation_ready &&
         app->navigation.dragging) {

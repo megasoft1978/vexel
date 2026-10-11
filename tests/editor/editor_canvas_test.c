@@ -650,7 +650,8 @@ static bool test_path_node_editing(void)
     size_t path_offset = (size_t)(strstr((const char *)path_source, "<path") -
         (const char *)path_source);
     CHECK(viewer_editor_select_at_source_offset(editor, path_offset));
-    CHECK(viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
     viewer_editor_canvas_overlay_state overlay = {0};
     CHECK(viewer_editor_get_canvas_overlay(editor, &document, &overlay));
     CHECK(overlay.visible && overlay.path_nodes_only &&
@@ -710,7 +711,8 @@ static bool test_path_node_editing(void)
     path_offset = (size_t)(strstr((const char *)line_path_source, "<path") -
         (const char *)line_path_source);
     CHECK(viewer_editor_select_at_source_offset(editor, path_offset));
-    CHECK(viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
     geom_point midpoint = screen_point(&navigation, 14.0, 8.0);
     CHECK((viewer_editor_canvas_pointer_down_click_count(editor, &document,
         &navigation, midpoint.x, midpoint.y, 0U, 2U) &

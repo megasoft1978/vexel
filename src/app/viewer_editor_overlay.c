@@ -200,6 +200,48 @@ static void paint_handle(uint8_t *rgba, uint32_t width, uint32_t height,
     }
 }
 
+static void paint_anchor(uint8_t *rgba, uint32_t width, uint32_t height,
+    size_t stride, ui_rect clip, geom_point center, uint32_t size, uint8_t state)
+{
+    int64_t half = (int64_t)(size / 2U);
+    int64_t center_x = (int64_t)llround(center.x);
+    int64_t center_y = (int64_t)llround(center.y);
+    int64_t left = center_x - half, top = center_y - half;
+    int64_t right = left + (int64_t)size, bottom = top + (int64_t)size;
+    int64_t clip_left = (int64_t)clip.x, clip_top = (int64_t)clip.y;
+    int64_t clip_right = clip_left + clip.width, clip_bottom = clip_top + clip.height;
+    uint8_t fill[3] = {248U, 250U, 255U};
+    uint8_t edge[3] = {36U, 105U, 218U};
+    int64_t radius = half > 0 ? half : 1;
+    if (state == 1U) {
+        fill[0] = 255U; fill[1] = 217U; fill[2] = 112U;
+        edge[0] = 112U; edge[1] = 73U; edge[2] = 0U;
+    } else if (state == 2U) {
+        fill[0] = 255U; fill[1] = 143U; fill[2] = 92U;
+        edge[0] = 112U; edge[1] = 40U; edge[2] = 12U;
+    }
+    for (int64_t y = top; y < bottom; ++y) {
+        for (int64_t x = left; x < right; ++x) {
+            if (x < clip_left || y < clip_top || x >= clip_right || y >= clip_bottom ||
+                x < 0 || y < 0 || (uint64_t)x >= width || (uint64_t)y >= height)
+                continue;
+            int64_t dx = x - center_x, dy = y - center_y;
+            bool inside = state == 1U ? dx * dx + dy * dy <= radius * radius :
+                state == 2U ? llabs(dx) + llabs(dy) <= radius : true;
+            if (!inside) continue;
+            bool border = state == 1U ? dx * dx + dy * dy >=
+                    (radius - 1) * (radius - 1) :
+                state == 2U ? llabs(dx) + llabs(dy) >= radius :
+                    x == left || x + 1 == right || y == top || y + 1 == bottom;
+            uint8_t *pixel = rgba + (size_t)y * stride + (size_t)x * 4U;
+            pixel[0] = border ? edge[0] : fill[0];
+            pixel[1] = border ? edge[1] : fill[1];
+            pixel[2] = border ? edge[2] : fill[2];
+            pixel[3] = 255U;
+        }
+    }
+}
+
 static bool overlay_user_to_screen(const svg_shape_document *document,
     const ui_viewer_navigation *navigation, ui_rect canvas, geom_point user,
     geom_point *out)
@@ -291,7 +333,9 @@ static void paint_path_preview(const viewer_editor_canvas_overlay_state *overlay
     uint32_t node_size = (uint32_t)ceil(6.0 * fmax(backing_scale, 1.0));
     if (node_size < 4U) node_size = 4U;
     for (size_t index = 0U; index < overlay->path_point_count; ++index) {
-        if (index < VIEWER_EDITOR_PATH_POINT_CAP && overlay->path_has_handles[index]) {
+        uint8_t state = overlay->path_point_states[index];
+        bool show_controls = !overlay->path_nodes_only || state == 2U;
+        if (show_controls && overlay->path_has_handles[index]) {
             geom_point control;
             if (overlay_user_to_screen(document, navigation, canvas,
                     overlay->path_handles[index], &control)) {
@@ -301,7 +345,7 @@ static void paint_path_preview(const viewer_editor_canvas_overlay_state *overlay
                     node_size, true);
             }
         }
-        if (index < VIEWER_EDITOR_PATH_POINT_CAP &&
+        if (show_controls && index < VIEWER_EDITOR_PATH_POINT_CAP &&
             overlay->path_has_in_handles[index]) {
             geom_point control;
             if (overlay_user_to_screen(document, navigation, canvas,
@@ -312,7 +356,11 @@ static void paint_path_preview(const viewer_editor_canvas_overlay_state *overlay
                     node_size, true);
             }
         }
-        paint_handle(rgba, width, height, stride, canvas, screen[index],
+        if (overlay->path_nodes_only) {
+            uint32_t anchor_size = state == 2U ? node_size + 2U : node_size;
+            paint_anchor(rgba, width, height, stride, canvas, screen[index],
+                anchor_size, state);
+        } else paint_handle(rgba, width, height, stride, canvas, screen[index],
             node_size, false);
     }
 }
