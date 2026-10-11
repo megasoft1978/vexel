@@ -343,8 +343,14 @@
   PNGs, per-image metrics, and CTest output are in
   `artifacts/WO-UI-GOLDEN-01/local-macos-27/`. The host reports one 2x main
   display; BetterDisplay causality is not established. Historical GitHub run
-  38147398376 has no downloadable image artifact, so the macOS 15 failures in
-  its three headless UI golden categories remain unlocalized. `ci.yml` now
-  captures all four matrices after verification and uploads them even on failure
-  for the next CI run. Goldens, manifests, assertions, thresholds, and
-  `nightly.yml` are unchanged.
+  38147398376 has no downloadable image artifact. The first instrumented
+  macOS 15 run, 38149075199, retained all 50 comparisons: 30 exact matches and
+  20 mismatches (14 native-shell, 2 node-edit style, 2 snap-overlay, and 2
+  accessibility). Native-shell uses expected dimensions on macOS 15; the three
+  editor-category mismatches are one-channel-value deltas at one or two pixels
+  each. Native-shell differences span each image. This localizes the failures
+  but does not establish a cause. The full report and PNGs are in
+  `artifacts/WO-UI-GOLDEN-01/hosted-macos-15/run-38149075199/`. CI capture and
+  upload succeeded after verification failed. BetterDisplay causality is not
+  established. Goldens, manifests, assertions, thresholds, and `nightly.yml`
+  are unchanged.
