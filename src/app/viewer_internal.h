@@ -8,6 +8,7 @@
 #include "viewer_load.h"
 #include "viewer_quality.h"
 #include "viewer_timeline.h"
+#include "viewer_home.h"
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -72,6 +73,8 @@ struct viewer_app {
     size_t frame_bytes;
     char path[PLATFORM_PATH_CAP];
     char pending_path[PLATFORM_PATH_CAP];
+    char failed_path[PLATFORM_PATH_CAP];
+    char load_error[192];
     char display_name[256];
     char title[VIEWER_TITLE_CAP];
     char diagnostic[192];
@@ -83,11 +86,15 @@ struct viewer_app {
     double pointer_doc_y;
     struct timespec last_file_poll;
     viewer_file_stamp file_stamp;
+    platform_recent_file recent_files[PLATFORM_RECENT_FILES_MAX];
+    size_t recent_file_count;
     viewer_load_status load_status;
+    ui_theme theme;
     uint8_t background_index;
     bool checkerboard;
     bool pixel_grid;
     bool pointer_valid;
+    bool drop_hover;
     bool navigation_ready;
     bool navigation_user_zoomed;
     bool space_down;
@@ -97,6 +104,7 @@ struct viewer_app {
     bool load_result_handled;
     bool sharp_plan_ready;
     bool close_requested;
+    bool quit_all_requested;
     bool editor_render_requested;
     bool external_change_pending;
     bool running;
@@ -120,9 +128,14 @@ bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_le
 bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
                                     const char *message);
 void viewer_request_close(viewer_app *app);
+void viewer_close_confirmed(viewer_app *app);
+void viewer_app_tick(viewer_app *app);
+void viewer_app_destroy(viewer_app *app);
 void viewer_process_event(viewer_app *app, const platform_event *event);
 bool viewer_export_png(viewer_app *app, bool copy_to_clipboard);
 bool viewer_compose_and_present(viewer_app *app);
+void viewer_home_state_from_app(const viewer_app *app, viewer_home_state *out_state);
+bool viewer_test_layout_dump(viewer_app *app);
 bool viewer_sync_canvas_geometry(viewer_app *app, bool refit);
 ui_viewer_navigation viewer_navigation_for_frame(const viewer_app *app);
 

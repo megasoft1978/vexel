@@ -165,3 +165,14 @@
   tests; `./dev editor-smoke` and `./dev viewer-smoke` pass; the ledger validates
   with 406 entries. This lane has no frozen W12 work order, so no lifecycle event
   was added to `ledger.jsonl`.
+
+- Update 2026-10-11: uncommitted W14 candidate implements UX-09's first-run
+  home/local SVG drop flow and UX-10's independent SVG sessions in native
+  AppKit windows/tabs. Details and maintainer real-window checks are in
+  `docs/lanes/w14-windows.md`. Debug build, focused home/session tests, 100,000
+  deterministic layout cases, 5,000 bounded frame paints, and 20 dark/light
+  1x/2x home goldens pass. `./dev t --all` reports 59/61 CTests and 69/69
+  Python tests; `index-replay` cannot acquire an offscreen Metal queue and
+  `native-viewer-smoke` fails in this environment. The ledger validates with
+  406 entries and `git diff --check` passes. No frozen UX-09/10 work orders are
+  present under `work/`, so no lifecycle entries were added to `ledger.jsonl`.

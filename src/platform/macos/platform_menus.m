@@ -9,6 +9,7 @@
 @interface VexelApplicationDelegate : NSObject <NSApplicationDelegate>
 @property(nonatomic, assign) platform_window *owner;
 - (void)actionOpenDocument:(id)sender;
+- (void)actionNewWindow:(id)sender;
 - (void)actionReload:(id)sender;
 - (void)actionToggleCheckerboard:(id)sender;
 - (void)actionCycleBackground:(id)sender;
@@ -36,11 +37,7 @@ static NSMenuItem *platform_menu_item(NSString *title, NSString *key, SEL action
 
 static bool path_is_svg(const char *path, size_t length)
 {
-    if (path == NULL || length == 0U || length >= PLATFORM_PATH_CAP ||
-        memchr(path, '\0', length) != NULL) return false;
-    NSString *value = [[NSString alloc] initWithBytes:path length:length
-                                             encoding:NSUTF8StringEncoding];
-    return value != nil && [[value.pathExtension lowercaseString] isEqualToString:@"svg"];
+    return platform_path_supported_internal(path, length);
 }
 
 static void platform_refresh_recent_menu(void)
@@ -94,6 +91,10 @@ void platform_macos_menus_init(void)
     NSMenuItem *file = [[NSMenuItem alloc] initWithTitle:@"File" action:nil keyEquivalent:@""];
     NSMenu *file_menu = [[NSMenu alloc] initWithTitle:@"File"];
     [file_menu addItem:platform_menu_item(@"Open…", @"o", @selector(actionOpenDocument:), 0)];
+    NSMenuItem *new_window = platform_menu_item(@"New Window", @"n",
+        @selector(actionNewWindow:), PLATFORM_ACTION_NEW_WINDOW);
+    new_window.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+    [file_menu addItem:new_window];
     [file_menu addItem:platform_menu_item(@"Reload", @"r",
         @selector(actionReload:), PLATFORM_ACTION_RELOAD)];
     [file_menu addItem:[NSMenuItem separatorItem]];
@@ -133,6 +134,21 @@ void platform_macos_menus_init(void)
 
     NSMenuItem *window_item = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
     NSMenu *window_menu = [[NSMenu alloc] initWithTitle:@"Window"];
+    NSMenuItem *previous_tab = [[NSMenuItem alloc] initWithTitle:@"Show Previous Tab"
+        action:@selector(selectPreviousTab:) keyEquivalent:@"["];
+    previous_tab.target = nil;
+    previous_tab.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+    [window_menu addItem:previous_tab];
+    NSMenuItem *next_tab = [[NSMenuItem alloc] initWithTitle:@"Show Next Tab"
+        action:@selector(selectNextTab:) keyEquivalent:@"]"];
+    next_tab.target = nil;
+    next_tab.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
+    [window_menu addItem:next_tab];
+    [window_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Move Tab to New Window"
+        action:@selector(moveTabToNewWindow:) keyEquivalent:@""]];
+    [window_menu addItem:[[NSMenuItem alloc] initWithTitle:@"Merge All Windows"
+        action:@selector(mergeAllWindows:) keyEquivalent:@""]];
+    [window_menu addItem:[NSMenuItem separatorItem]];
     NSMenuItem *minimize = [[NSMenuItem alloc] initWithTitle:@"Minimize"
         action:@selector(performMiniaturize:) keyEquivalent:@"m"];
     minimize.keyEquivalentModifierMask = NSEventModifierFlagCommand;
@@ -175,6 +191,44 @@ bool platform_macos_menus_add_recent(const char *path, size_t length)
     return true;
 }
 
+static size_t copy_utf8(char *destination, size_t capacity, const char *source,
+                        size_t source_limit)
+{
+    if (destination == NULL || capacity == 0U || source == NULL) return 0U;
+    size_t amount = strnlen(source, source_limit);
+    if (amount >= capacity) amount = capacity - 1U;
+    while (amount > 0U && (((const uint8_t *)source)[amount] & 0xc0U) == 0x80U) amount--;
+    memcpy(destination, source, amount);
+    destination[amount] = '\0';
+    return amount;
+}
+
+size_t platform_macos_menus_copy_recent(platform_recent_file *out_files, size_t capacity)
+{
+    if (out_files == NULL || capacity == 0U) return 0U;
+    if (capacity > PLATFORM_RECENT_FILES_MAX) capacity = PLATFORM_RECENT_FILES_MAX;
+    NSArray *paths = [[NSUserDefaults standardUserDefaults] arrayForKey:@"VexelRecentFiles"];
+    size_t added = 0U;
+    for (id item in paths) {
+        if (![item isKindOfClass:[NSString class]]) continue;
+        NSString *path = (NSString *)item;
+        const char *path_bytes = path.fileSystemRepresentation;
+        size_t path_length = path_bytes == NULL ? 0U : strnlen(path_bytes, PLATFORM_PATH_CAP);
+        if (!path_is_svg(path_bytes, path_length) || path_length >= PLATFORM_PATH_CAP) continue;
+        platform_recent_file *file = &out_files[added];
+        memset(file, 0, sizeof(*file));
+        memcpy(file->path, path_bytes, path_length);
+        file->path[path_length] = '\0';
+        file->path_length = path_length;
+        const char *name = path.lastPathComponent.fileSystemRepresentation;
+        if (name == NULL) name = "SVG document";
+        (void)copy_utf8(file->display_name, sizeof(file->display_name), name,
+            PLATFORM_PATH_CAP);
+        if (++added >= capacity) break;
+    }
+    return added;
+}
+
 bool platform_macos_menus_set_option_state(platform_window *window,
                                            platform_viewer_action action, bool enabled)
 {
@@ -194,6 +248,11 @@ bool platform_macos_menus_set_option_state(platform_window *window,
 {
     (void)sender;
     if (self.owner != NULL) (void)platform_window_open_panel(self.owner);
+}
+- (void)actionNewWindow:(id)sender
+{
+    (void)sender;
+    platform_window_dispatch_action(self.owner, PLATFORM_ACTION_NEW_WINDOW);
 }
 - (void)actionReload:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_RELOAD); }
 - (void)actionToggleCheckerboard:(id)sender { (void)sender; platform_window_dispatch_action(self.owner, PLATFORM_ACTION_TOGGLE_CHECKERBOARD); }
@@ -225,7 +284,9 @@ bool platform_macos_menus_set_option_state(platform_window *window,
     for (NSString *path in filenames) {
         const char *bytes = path.fileSystemRepresentation;
         size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
-        accepted |= platform_window_dispatch_file_open(self.owner, bytes, length);
+        accepted |= self.owner == NULL ?
+            platform_window_dispatch_file_open(NULL, bytes, length) :
+            platform_window_dispatch_new_file(self.owner, bytes, length);
     }
     [NSApp replyToOpenOrPrint:accepted ? NSApplicationDelegateReplySuccess :
                                          NSApplicationDelegateReplyFailure];
@@ -237,7 +298,10 @@ bool platform_macos_menus_set_option_state(platform_window *window,
         if (!url.isFileURL) continue;
         const char *bytes = url.path.fileSystemRepresentation;
         size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
-        (void)platform_window_dispatch_file_open(self.owner, bytes, length);
+        if (self.owner == NULL)
+            (void)platform_window_dispatch_file_open(NULL, bytes, length);
+        else
+            (void)platform_window_dispatch_new_file(self.owner, bytes, length);
     }
 }
 @end

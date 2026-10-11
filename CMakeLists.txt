@@ -51,6 +51,13 @@ target_sources(svgworkbench PRIVATE src/app/viewer_quality.c src/app/viewer_even
 set_source_files_properties(src/platform/macos/platform_menus.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 find_library(UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK UniformTypeIdentifiers REQUIRED)
 target_link_libraries(svgworkbench PRIVATE ${UNIFORM_TYPE_IDENTIFIERS_FRAMEWORK})
+# lane: w14-windows
+target_sources(svgworkbench PRIVATE src/app/viewer_home.c src/app/viewer_home_controller.c
+    src/app/viewer_runtime.c src/app/viewer_sessions.c src/app/viewer_test_layout_dump.c
+    src/platform/macos/platform_window_files.m src/platform/macos/platform_window_geometry.m)
+set_source_files_properties(src/platform/macos/platform_window_files.m
+    src/platform/macos/platform_window_geometry.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 add_executable(viewer_quality_test tests/viewer/viewer_quality_test.c src/app/viewer_quality.c)
 target_include_directories(viewer_quality_test PRIVATE src)
 target_link_libraries(viewer_quality_test PRIVATE vexel_ui_state)
@@ -722,6 +729,42 @@ set_target_properties(viewer_chrome_render PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# lane: w14-windows
+add_executable(viewer_home_test tests/app/viewer_home_test.c src/app/viewer_home.c)
+target_include_directories(viewer_home_test PRIVATE src/app)
+target_link_libraries(viewer_home_test PRIVATE vexel_ui_core)
+set_target_properties(viewer_home_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(viewer_home_render src/app/viewer_home_render.c src/app/viewer_home.c)
+target_include_directories(viewer_home_render PRIVATE src/app)
+target_link_libraries(viewer_home_render PRIVATE vexel_ui_core)
+set_target_properties(viewer_home_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(viewer_home_layout_fuzz tests/app/viewer_home_layout_fuzz.c
+    src/app/viewer_home.c)
+target_include_directories(viewer_home_layout_fuzz PRIVATE src/app)
+target_link_libraries(viewer_home_layout_fuzz PRIVATE vexel_ui_core)
+set_target_properties(viewer_home_layout_fuzz PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(viewer_sessions_test tests/app/viewer_sessions_test.c
+    src/app/viewer_sessions.c)
+target_include_directories(viewer_sessions_test PRIVATE src/app)
+target_link_libraries(viewer_sessions_test PRIVATE vexel_editor_ui)
+set_target_properties(viewer_sessions_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+foreach(w14_windows_target viewer_home_test viewer_home_render viewer_home_layout_fuzz
+        viewer_sessions_test)
+    target_compile_options(${w14_windows_target} PRIVATE ${VEXEL_STRICT_WARNINGS})
+    if(VEXEL_SANITIZER)
+        target_compile_options(${w14_windows_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+        target_link_options(${w14_windows_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    endif()
+endforeach()
+
 foreach(w4_ui_target vexel_platform_text_ui viewer_chrome_layout_fuzz
         ui_tokens_contrast_test viewer_chrome_test platform_text_ui_test
         viewer_chrome_render)
@@ -738,6 +781,13 @@ if(VEXEL_SANITIZER)
 endif()
 
 if(BUILD_TESTING)
+    # lane: w14-windows
+    add_test(NAME viewer-home COMMAND viewer_home_test)
+    add_test(NAME viewer-home-layout-fuzz COMMAND viewer_home_layout_fuzz)
+    add_test(NAME viewer-sessions COMMAND viewer_sessions_test)
+    add_test(NAME viewer-home-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/ui/verify_home_goldens.py"
+        --binary $<TARGET_FILE:viewer_home_render>)
     add_test(NAME ui-token-contrast COMMAND ui_tokens_contrast_test)
     add_test(NAME viewer-chrome-layout-fuzz COMMAND viewer_chrome_layout_fuzz)
     add_test(NAME viewer-chrome-style COMMAND viewer_chrome_test)

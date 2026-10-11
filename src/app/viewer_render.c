@@ -30,15 +30,11 @@ bool viewer_compose_and_present(viewer_app *app)
         app->frame_dirty = true;
     if (!app->frame_dirty || app->frame == NULL || app->width == 0U || app->height == 0U)
         return true;
-    viewer_frame_kind kind = app->path[0] == '\0' && !app->pending_open && app->job == NULL ?
-        VIEWER_FRAME_EMPTY : VIEWER_FRAME_LOADING;
+    viewer_frame_kind kind = VIEWER_FRAME_EMPTY;
     const raster_tile *tile = NULL;
     const ui_viewer_navigation *navigation = NULL;
     const char *message = NULL;
-    if (app->load_result_handled && app->load_status != VIEWER_LOAD_OK) {
-        kind = VIEWER_FRAME_ERROR;
-        message = viewer_error_reason(app);
-    } else if (app->document_visible && app->navigation_ready) {
+    if (app->document_visible && app->navigation_ready) {
         kind = VIEWER_FRAME_DOCUMENT;
         tile = &app->document.tile;
         navigation = &app->navigation;
@@ -98,6 +94,10 @@ bool viewer_compose_and_present(viewer_app *app)
         (void)viewer_timeline_paint(&app->timeline, app->editor, app->frame,
             app->frame_bytes, app->width, app->height,
             (size_t)app->width * 4U, app->backing_scale);
+    viewer_home_state home_state;
+    viewer_home_state_from_app(app, &home_state);
+    viewer_home_paint(&home_state, app->theme, app->frame, app->frame_bytes,
+        (size_t)app->width * 4U, app->width, app->height, app->backing_scale);
     app->frame_dirty = false;
     if (!platform_metal_present(app->window, app->frame, app->frame_bytes,
             app->width, app->height, app->diagnostic, sizeof(app->diagnostic))) {

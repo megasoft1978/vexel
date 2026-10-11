@@ -6,6 +6,8 @@
 #include <stdint.h>
 
 #define PLATFORM_PATH_CAP 4096U
+#define PLATFORM_RECENT_FILES_MAX 5U
+#define PLATFORM_RECENT_NAME_CAP 256U
 
 /* AppKit window contract. All calls, including destroy and shutdown, must run
  * on the main thread. The opaque window is owned by the caller until destroy.
@@ -20,6 +22,10 @@ typedef struct platform_window platform_window;
 typedef enum platform_event_type {
     PLATFORM_EVENT_NONE = 0,
     PLATFORM_EVENT_OPEN,
+    PLATFORM_EVENT_FOCUS,
+    PLATFORM_EVENT_APPEARANCE,
+    PLATFORM_EVENT_DROP_ENTER,
+    PLATFORM_EVENT_DROP_EXIT,
     PLATFORM_EVENT_RESIZE,
     PLATFORM_EVENT_SCALE,
     PLATFORM_EVENT_KEY_DOWN,
@@ -31,6 +37,8 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_MAGNIFY,
     PLATFORM_EVENT_CLOSE_REQUEST,
     PLATFORM_EVENT_FILE_OPEN,
+    PLATFORM_EVENT_FILE_DROP,
+    PLATFORM_EVENT_FILE_NEW,
     PLATFORM_EVENT_ACTION
 } platform_event_type;
 
@@ -43,6 +51,7 @@ typedef enum platform_viewer_action {
     PLATFORM_ACTION_FIT_WINDOW,
     PLATFORM_ACTION_ACTUAL_SIZE,
     PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
+    PLATFORM_ACTION_NEW_WINDOW,
     PLATFORM_ACTION_QUIT
 } platform_viewer_action;
 
@@ -84,6 +93,12 @@ typedef struct platform_window_config {
     bool resizable;
 } platform_window_config;
 
+typedef struct platform_recent_file {
+    char path[PLATFORM_PATH_CAP];
+    char display_name[PLATFORM_RECENT_NAME_CAP];
+    size_t path_length;
+} platform_recent_file;
+
 bool platform_init(void);
 bool platform_window_create(const platform_window_config *config, platform_window **out_window);
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points);
@@ -94,6 +109,9 @@ bool platform_window_set_title(platform_window *window, const char *title_utf8, 
 /* Starts a non-blocking macOS Open sheet; selection arrives as a later file event. */
 bool platform_window_open_panel(platform_window *window);
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);
+size_t platform_window_recent_files(platform_window *window,
+    platform_recent_file *out_files, size_t capacity);
+bool platform_window_is_dark_appearance(platform_window *window);
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
                                       bool enabled);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */

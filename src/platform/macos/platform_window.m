@@ -41,9 +41,6 @@ struct platform_window {
 
 #define PLATFORM_EVENT_QUEUE_CAP 256U
 
-static char platform_startup_path[PLATFORM_PATH_CAP];
-static bool platform_startup_open_pending;
-
 static bool platform_on_main_thread(void)
 {
     return [NSThread isMainThread];
@@ -78,7 +75,9 @@ static bool platform_emit(platform_window *window, const platform_event *event)
         return false;
     }
     if (event->type == PLATFORM_EVENT_POINTER_MOVE || event->type == PLATFORM_EVENT_RESIZE ||
-        event->type == PLATFORM_EVENT_SCALE) {
+        event->type == PLATFORM_EVENT_SCALE || event->type == PLATFORM_EVENT_APPEARANCE ||
+        event->type == PLATFORM_EVENT_FOCUS || event->type == PLATFORM_EVENT_DROP_ENTER ||
+        event->type == PLATFORM_EVENT_DROP_EXIT) {
         for (platform_event_node *cursor = window->first; cursor != NULL; cursor = cursor->next) {
             if (cursor->value.type == event->type) {
                 cursor->value = *event;
@@ -103,48 +102,9 @@ static bool platform_emit(platform_window *window, const platform_event *event)
     return true;
 }
 
-static bool platform_path_supported(const char *path, size_t length)
+bool platform_window_emit_internal(platform_window *window, const platform_event *event)
 {
-    if (path == NULL || length == 0U || length >= PLATFORM_PATH_CAP ||
-        memchr(path, '\0', length) != NULL) return false;
-    NSString *value = [[NSString alloc] initWithBytes:path length:length
-                                             encoding:NSUTF8StringEncoding];
-    if (value == nil) return false;
-    return [[value.pathExtension lowercaseString] isEqualToString:@"svg"];
-}
-
-bool platform_window_dispatch_file_open(platform_window *window, const char *path, size_t length)
-{
-    if (!platform_path_supported(path, length)) return false;
-    if (window == NULL) {
-        memcpy(platform_startup_path, path, length);
-        platform_startup_path[length] = '\0';
-        platform_startup_open_pending = true;
-        return true;
-    }
-    platform_event value = {.type = PLATFORM_EVENT_FILE_OPEN};
-    memcpy(value.path, path, length);
-    value.path[length] = '\0';
-    return platform_emit(window, &value);
-}
-
-static bool platform_queue_test_open_from_environment(void)
-{
-    const char *path = getenv("VEXEL_TEST_OPEN");
-    if (path == NULL || path[0] == '\0') return true;
-    size_t length = strnlen(path, PLATFORM_PATH_CAP);
-    if (length == 0U || length >= PLATFORM_PATH_CAP ||
-        !platform_path_supported(path, length)) {
-        (void)fprintf(stderr,
-            "platform: VEXEL_TEST_OPEN must be a UTF-8 .svg path shorter than %u bytes\n",
-            PLATFORM_PATH_CAP);
-        return false;
-    }
-    if (!platform_window_dispatch_file_open(NULL, path, length)) {
-        (void)fputs("platform: could not queue VEXEL_TEST_OPEN file event\n", stderr);
-        return false;
-    }
-    return true;
+    return platform_emit(window, event);
 }
 
 void platform_window_dispatch_action(platform_window *window, platform_viewer_action action)
@@ -196,34 +156,69 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     return true;
 }
 
+static bool platform_dragged_svg_path(id<NSDraggingInfo> sender,
+    char out_path[PLATFORM_PATH_CAP], size_t *out_length)
+{
+    if (sender == nil || out_path == NULL || out_length == NULL) return false;
+    NSPasteboard *pasteboard = sender.draggingPasteboard;
+    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[[NSURL class]]
+        options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
+    if (urls.count != 1U) return false;
+    NSURL *url = urls.firstObject;
+    const char *bytes = url.path.fileSystemRepresentation;
+    size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
+    if (!url.isFileURL || !platform_path_supported_internal(bytes, length)) return false;
+    NSNumber *is_regular_file = nil;
+    if (![url getResourceValue:&is_regular_file forKey:NSURLIsRegularFileKey error:nil] ||
+        !is_regular_file.boolValue) return false;
+    memcpy(out_path, bytes, length);
+    out_path[length] = '\0';
+    *out_length = length;
+    return true;
+}
+
+static NSDragOperation platform_drag_operation(platform_window *window,
+    id<NSDraggingInfo> sender)
+{
+    char path[PLATFORM_PATH_CAP];
+    size_t length = 0U;
+    if (platform_dragged_svg_path(sender, path, &length)) {
+        (void)platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_DROP_ENTER});
+        return NSDragOperationCopy;
+    }
+    (void)platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_DROP_EXIT});
+    return NSDragOperationNone;
+}
+
 @interface VexelView : NSView
 @property(nonatomic, assign) platform_window *owner;
 @end
 
 @implementation VexelView
+- (void)viewDidChangeEffectiveAppearance
+{
+    [super viewDidChangeEffectiveAppearance];
+    (void)platform_emit(self.owner, &(platform_event){.type = PLATFORM_EVENT_APPEARANCE});
+}
+- (NSDragOperation)draggingUpdated:(id<NSDraggingInfo>)sender
+{
+    return platform_drag_operation(self.owner, sender);
+}
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
 {
-    NSPasteboard *pasteboard = sender.draggingPasteboard;
-    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[[NSURL class]]
-        options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
-    for (NSURL *url in urls) {
-        const char *bytes = url.path.fileSystemRepresentation;
-        size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
-        if (platform_path_supported(bytes, length)) return NSDragOperationCopy;
-    }
-    return NSDragOperationNone;
+    return platform_drag_operation(self.owner, sender);
+}
+- (void)draggingExited:(id<NSDraggingInfo>)sender
+{
+    (void)sender;
+    (void)platform_emit(self.owner, &(platform_event){.type = PLATFORM_EVENT_DROP_EXIT});
 }
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
 {
-    NSPasteboard *pasteboard = sender.draggingPasteboard;
-    NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[[NSURL class]]
-        options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
-    for (NSURL *url in urls) {
-        const char *bytes = url.path.fileSystemRepresentation;
-        size_t length = bytes == NULL ? 0U : strnlen(bytes, PLATFORM_PATH_CAP);
-        if (platform_window_dispatch_file_open(self.owner, bytes, length)) return YES;
-    }
-    return NO;
+    char path[PLATFORM_PATH_CAP];
+    size_t length = 0U;
+    return platform_dragged_svg_path(sender, path, &length) &&
+        platform_window_dispatch_file_drop(self.owner, path, length) ? YES : NO;
 }
 - (BOOL)acceptsFirstResponder { return YES; }
 - (void)keyDown:(NSEvent *)event
@@ -336,6 +331,12 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
 @end
 
 @implementation VexelNativeWindow
+- (void)windowDidBecomeKey:(NSNotification *)notification
+{
+    (void)notification;
+    platform_macos_menus_set_owner(self.owner);
+    (void)platform_emit(self.owner, &(platform_event){.type = PLATFORM_EVENT_FOCUS});
+}
 - (BOOL)windowShouldClose:(id)sender
 {
     (void)sender;
@@ -411,6 +412,8 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         window->native = native;
         platform_macos_menus_set_owner(window);
         native.owner = window;
+        native.tabbingIdentifier = @"com.vexel.editor.document";
+        native.tabbingMode = NSWindowTabbingModeAutomatic;
         native.delegate = native;
         native.acceptsMouseMovedEvents = YES;
         native.contentMaxSize = NSMakeSize(4096.0, 4096.0);
@@ -432,11 +435,9 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         }
         (void)platform_size_event(window, PLATFORM_EVENT_RESIZE);
         (void)platform_size_event(window, PLATFORM_EVENT_SCALE);
-        if (platform_startup_open_pending) {
-            (void)platform_window_dispatch_file_open(window, platform_startup_path,
-                strnlen(platform_startup_path, PLATFORM_PATH_CAP));
-            platform_startup_path[0] = '\0';
-            platform_startup_open_pending = false;
+        if (!platform_window_dispatch_startup_files(window)) {
+            platform_window_destroy(window);
+            return false;
         }
         *out_window = window;
         return true;
@@ -484,38 +485,30 @@ bool platform_window_recent_add(platform_window *window, const char *path, size_
     return platform_macos_menus_add_recent(path, path_len);
 }
 
+size_t platform_window_recent_files(platform_window *window,
+    platform_recent_file *out_files, size_t capacity)
+{
+    if (!platform_on_main_thread() || window == NULL || out_files == NULL || capacity == 0U)
+        return 0U;
+    if (capacity > PLATFORM_RECENT_FILES_MAX) capacity = PLATFORM_RECENT_FILES_MAX;
+    return platform_macos_menus_copy_recent(out_files, capacity);
+}
+
+bool platform_window_is_dark_appearance(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL || window->native == nil) return true;
+    @autoreleasepool {
+        NSAppearanceName match = [window->native.effectiveAppearance
+            bestMatchFromAppearancesWithNames:@[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
+        return [match isEqualToString:NSAppearanceNameDarkAqua];
+    }
+}
+
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
                                       bool enabled)
 {
     if (!platform_on_main_thread() || window == NULL) return false;
     return platform_macos_menus_set_option_state(window, action, enabled);
-}
-
-bool platform_window_content_screen_origin(platform_window *window,
-                                           double *out_x, double *out_y)
-{
-    if (!platform_on_main_thread() || window == NULL || window->native == nil ||
-        out_x == NULL || out_y == NULL) return false;
-    @autoreleasepool {
-        NSView *content = window->native.contentView;
-        NSScreen *screen = window->native.screen;
-        if (content == nil || screen == nil) return false;
-        NSNumber *screen_number = screen.deviceDescription[@"NSScreenNumber"];
-        if (screen_number == nil) return false;
-        CGDirectDisplayID display = (CGDirectDisplayID)screen_number.unsignedIntValue;
-        CGRect quartz_bounds = CGDisplayBounds(display);
-        NSRect cocoa_bounds = screen.frame;
-        NSRect content_in_window = [content convertRect:content.bounds toView:nil];
-        NSRect content_on_screen = [window->native convertRectToScreen:content_in_window];
-        double x = CGRectGetMinX(quartz_bounds) + NSMinX(content_on_screen) -
-            NSMinX(cocoa_bounds);
-        double y = CGRectGetMinY(quartz_bounds) + NSMaxY(cocoa_bounds) -
-            NSMaxY(content_on_screen);
-        if (!isfinite(x) || !isfinite(y)) return false;
-        *out_x = x;
-        *out_y = y;
-        return true;
-    }
 }
 
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points)

@@ -15,7 +15,6 @@
 #include "viewer_quality.h"
 #include "viewer_chrome.h"
 #include "viewer_canvas_geometry.h"
-#include "viewer_editor_test_layout.h"
 
 #include <math.h>
 #include <stdatomic.h>
@@ -40,60 +39,6 @@ static double monotonic_ms(void)
     return (double)now.tv_sec * 1000.0 + (double)now.tv_nsec / 1000000.0;
 }
 
-static bool viewer_test_layout_dump(viewer_app *app)
-{
-    const char *path = getenv("VEXEL_TEST_LAYOUT_DUMP");
-    if (path == NULL || path[0] == '\0' || app == NULL || app->editor == NULL ||
-        !app->navigation_ready || !app->document_visible) return true;
-    double now = monotonic_ms();
-    if (now - app->test_layout_last_write_ms < 100.0) return true;
-    app->test_layout_last_write_ms = now;
-
-    size_t path_length = bounded_length(path, PLATFORM_PATH_CAP - 1U);
-    double origin_x = 0.0, origin_y = 0.0;
-    char temporary[PLATFORM_PATH_CAP + 8U];
-    if (path_length == 0U || path_length >= PLATFORM_PATH_CAP ||
-        path_length + sizeof(".tmp") > sizeof(temporary) ||
-        !platform_window_content_screen_origin(app->window, &origin_x, &origin_y)) {
-        if (!app->test_layout_dump_failed)
-            (void)fputs("viewer: invalid VEXEL_TEST_LAYOUT_DUMP target or window origin\n",
-                stderr);
-        app->test_layout_dump_failed = true;
-        return false;
-    }
-    memcpy(temporary, path, path_length);
-    memcpy(temporary + path_length, ".tmp", sizeof(".tmp"));
-    FILE *stream = fopen(temporary, "wb");
-    if (stream == NULL) goto failed;
-    double translate_x = (double)app->navigation_canvas.x + app->navigation.pan_x;
-    double translate_y = (double)app->navigation_canvas.y + app->navigation.pan_y;
-    bool okay = fprintf(stream,
-        "{\"window_content_origin\":{\"x\":%.9g,\"y\":%.9g},"
-        "\"backing_scale\":%.9g,\"window\":{\"width\":%u,\"height\":%u},"
-        "\"canvas\":{\"x\":%u,\"y\":%u,\"width\":%u,\"height\":%u},"
-        "\"document\":{\"width\":%u,\"height\":%u},"
-        "\"view\":{\"scale\":%.9g,\"translate_x\":%.9g,\"translate_y\":%.9g},"
-        "\"nodes\":",
-        origin_x, origin_y, app->backing_scale, app->width, app->height,
-        app->navigation_canvas.x, app->navigation_canvas.y,
-        app->navigation_canvas.width, app->navigation_canvas.height,
-        app->document.tile.width, app->document.tile.height,
-        app->navigation.scale, translate_x, translate_y) >= 0 &&
-        viewer_editor_test_layout_write_nodes(app->editor, stream) &&
-        fputs("}\n", stream) != EOF;
-    if (fclose(stream) != 0) okay = false;
-    if (!okay || rename(temporary, path) != 0) goto failed;
-    return true;
-
-failed:
-    if (!app->test_layout_dump_failed)
-        (void)fprintf(stderr, "viewer: could not write VEXEL_TEST_LAYOUT_DUMP: %s\n",
-            path);
-    app->test_layout_dump_failed = true;
-    (void)remove(temporary);
-    return false;
-}
-
 static void copy_display_name(const char *path, char out[256])
 {
     const char *name = path;
@@ -111,6 +56,7 @@ static void copy_display_name(const char *path, char out[256])
 
 const char *viewer_error_reason(const viewer_app *app)
 {
+    if (app->load_error[0] != '\0') return app->load_error;
     if (app->document.shape_error != SVG_SHAPE_ERROR_NONE) {
         const char *name = svg_shape_error_name(app->document.shape_error);
         return name == NULL ? "unknown SVG error" : name;
@@ -373,27 +319,15 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
     if (length == 0U || length >= PLATFORM_PATH_CAP) return false;
     if (!initial && !viewer_confirm_unsaved_changes(app, "Unsaved Changes",
             "Save changes before opening another document?")) return false;
-    viewer_editor_destroy(app->editor);
-    app->editor = NULL;
-    app->editor_render_requested = false;
-    app->external_change_pending = false;
     if (!initial && !viewer_bump_generation(app)) return false;
-    memcpy(app->path, path, length + 1U);
     memcpy(app->pending_path, path, length + 1U);
     app->pending_open = true;
     app->load_result_handled = false;
     app->load_status = VIEWER_LOAD_CANCELED;
-    app->document_visible = false;
-    app->navigation_ready = false;
-    app->navigation_user_zoomed = false;
-    app->pointer_valid = false;
+    app->load_error[0] = '\0';
+    app->failed_path[0] = '\0';
     app->load_ms = 0.0;
     app->render_ms = 0.0;
-    app->file_stamp = (viewer_file_stamp){0};
-    (void)file_stamp_read(app->path, &app->file_stamp);
-    copy_display_name(path, app->display_name);
-    viewer_tile_cache_clear(&app->sharp_cache, app->generation);
-    app->sharp_plan_ready = false;
     (void)ui_viewer_progress_update(&app->progress, app->generation, 0U,
         UI_PROGRESS_ACTIVE, "Loading SVG", 11U);
     app->frame_dirty = true;
@@ -412,6 +346,8 @@ bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_le
     viewer_update_file_stamp(app);
     app->frame_dirty = true;
     (void)platform_window_recent_add(app->window, path, path_length);
+    app->recent_file_count = platform_window_recent_files(app->window,
+        app->recent_files, PLATFORM_RECENT_FILES_MAX);
     return viewer_set_window_title(app);
 }
 
@@ -441,20 +377,78 @@ failed:
     app->pending_open = false;
     app->load_status = VIEWER_LOAD_FAILED;
     app->load_result_handled = true;
-    (void)snprintf(app->document.load_error, sizeof(app->document.load_error),
+    size_t failed_length = bounded_length(app->pending_path, PLATFORM_PATH_CAP - 1U);
+    if (failed_length < PLATFORM_PATH_CAP)
+        memcpy(app->failed_path, app->pending_path, failed_length + 1U);
+    app->pending_path[0] = '\0';
+    (void)snprintf(app->load_error, sizeof(app->load_error),
                    "could not start document loading");
     (void)ui_viewer_progress_update(&app->progress, app->generation, 0U,
         UI_PROGRESS_FAILED, "Failed", 6U);
+    if (app->document_visible) viewer_refresh_sharp_plan(app);
     app->frame_dirty = true;
     (void)viewer_set_window_title(app);
 }
 
 static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
 {
-    app->load_result_handled = true;
-    app->load_status = worker_succeeded ? job->load_status : VIEWER_LOAD_FAILED;
+    app->load_ms = job->elapsed_ms;
+    if (!worker_succeeded || job->load_status != VIEWER_LOAD_OK) {
+        size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
+        if (path_length < PLATFORM_PATH_CAP)
+            memcpy(app->failed_path, job->path, path_length + 1U);
+        if (job->loaded.load_error[0] != '\0') {
+            (void)snprintf(app->load_error, sizeof(app->load_error), "%.180s",
+                job->loaded.load_error);
+        } else {
+            const char *reason = svg_shape_error_name(job->loaded.shape_error);
+            if (reason == NULL || reason[0] == '\0') reason = "could not load SVG";
+            (void)snprintf(app->load_error, sizeof(app->load_error), "%.180s", reason);
+        }
+        app->pending_open = false;
+        app->pending_path[0] = '\0';
+        app->load_result_handled = true;
+        app->load_status = VIEWER_LOAD_FAILED;
+        (void)ui_viewer_progress_update(&app->progress, app->generation, 0U,
+            UI_PROGRESS_FAILED, "Failed", 6U);
+        if (app->document_visible) viewer_refresh_sharp_plan(app);
+        app->frame_dirty = true;
+        (void)fprintf(stderr, "viewer: %s\n", viewer_error_reason(app));
+        (void)viewer_set_window_title(app);
+        return;
+    }
+
+    viewer_editor *next_editor = viewer_editor_create((base_bytes){job->loaded.source,
+        job->loaded.source_length}, app->theme, app->width, app->height);
+    viewer_editor_resize(next_editor, app->width, app->height, app->backing_scale);
+    viewer_chrome_layout next_layout = {0};
+    ui_viewer_navigation next_navigation = {0};
+    bool document_ready = next_editor != NULL &&
+        viewer_editor_get_chrome_layout(next_editor, &next_layout) &&
+        ui_viewer_navigation_init(&next_navigation, (double)next_layout.canvas.width,
+            (double)next_layout.canvas.height, (double)job->loaded.tile.width,
+            (double)job->loaded.tile.height) && ui_viewer_navigation_fit(&next_navigation);
+    if (!document_ready) {
+        viewer_editor_destroy(next_editor);
+        size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
+        if (path_length < PLATFORM_PATH_CAP)
+            memcpy(app->failed_path, job->path, path_length + 1U);
+        (void)snprintf(app->load_error, sizeof(app->load_error),
+            "document dimensions cannot fit this window");
+        app->pending_open = false;
+        app->pending_path[0] = '\0';
+        app->load_result_handled = true;
+        app->load_status = VIEWER_LOAD_FAILED;
+        (void)ui_viewer_progress_update(&app->progress, app->generation, 0U,
+            UI_PROGRESS_FAILED, "Failed", 6U);
+        if (app->document_visible) viewer_refresh_sharp_plan(app);
+        app->frame_dirty = true;
+        (void)viewer_set_window_title(app);
+        return;
+    }
+
     viewer_editor_destroy(app->editor);
-    app->editor = NULL;
+    app->editor = next_editor;
     viewer_timeline_reset(&app->timeline, NULL);
     viewer_loaded_document_destroy(&app->document);
     free(app->render_source);
@@ -462,42 +456,33 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     app->document = job->loaded;
     job->loaded = (viewer_loaded_document){0};
     viewer_timeline_reset(&app->timeline, &app->document.shape);
-    app->load_ms = job->elapsed_ms;
-    if (app->document.source != NULL && app->document.source_length > 0U)
-        app->editor = viewer_editor_create((base_bytes){app->document.source,
-            app->document.source_length}, UI_THEME_DARK, app->width, app->height);
-    viewer_editor_resize(app->editor, app->width, app->height, app->backing_scale);
-    (void)viewer_sync_canvas_geometry(app, true);
-    if (app->load_status == VIEWER_LOAD_OK &&
-        ui_viewer_navigation_init(&app->navigation,
-            (double)app->navigation_canvas.width,
-            (double)app->navigation_canvas.height,
-            (double)app->document.tile.width,
-            (double)app->document.tile.height) &&
-        ui_viewer_navigation_fit(&app->navigation)) {
-        app->navigation_ready = true;
-        app->navigation_user_zoomed = false;
-        app->document_visible = true;
-        viewer_navigation_clamp(&app->navigation);
-        (void)ui_viewer_progress_update(&app->progress, app->generation, 100U,
-            UI_PROGRESS_COMPLETE, "Ready", 5U);
-        (void)platform_window_recent_add(app->window, app->path,
-            bounded_length(app->path, PLATFORM_PATH_CAP - 1U));
-        viewer_refresh_sharp_plan(app);
-    } else {
-        app->navigation_ready = false;
-        app->document_visible = false;
-        if (app->load_status == VIEWER_LOAD_OK) {
-            app->document.shape_error = SVG_SHAPE_ERROR_VIEWPORT;
-            app->document.error_offset = 0U;
-            app->load_status = VIEWER_LOAD_FAILED;
-            (void)snprintf(app->document.load_error, sizeof(app->document.load_error),
-                           "document dimensions cannot fit this window");
-        }
-        (void)ui_viewer_progress_update(&app->progress, app->generation, 0U,
-            UI_PROGRESS_FAILED, "Failed", 6U);
-        (void)fprintf(stderr, "viewer: %s\n", viewer_error_reason(app));
+    app->navigation_canvas = next_layout.canvas;
+    app->navigation = next_navigation;
+    app->navigation_ready = true;
+    app->navigation_user_zoomed = false;
+    app->document_visible = true;
+    viewer_navigation_clamp(&app->navigation);
+    size_t path_length = bounded_length(job->path, PLATFORM_PATH_CAP - 1U);
+    if (path_length < PLATFORM_PATH_CAP) {
+        memcpy(app->path, job->path, path_length + 1U);
+        copy_display_name(job->path, app->display_name);
+        app->file_stamp = (viewer_file_stamp){0};
+        (void)file_stamp_read(app->path, &app->file_stamp);
+        (void)platform_window_recent_add(app->window, app->path, path_length);
+        app->recent_file_count = platform_window_recent_files(app->window,
+            app->recent_files, PLATFORM_RECENT_FILES_MAX);
     }
+    app->failed_path[0] = '\0';
+    app->pending_path[0] = '\0';
+    app->pending_open = false;
+    app->load_error[0] = '\0';
+    app->load_result_handled = true;
+    app->load_status = VIEWER_LOAD_OK;
+    app->external_change_pending = false;
+    app->pointer_valid = false;
+    (void)ui_viewer_progress_update(&app->progress, app->generation, 100U,
+        UI_PROGRESS_COMPLETE, "Ready", 5U);
+    viewer_refresh_sharp_plan(app);
     app->frame_dirty = true;
     (void)viewer_set_window_title(app);
 }
@@ -612,24 +597,17 @@ void viewer_request_close(viewer_app *app)
 {
     if (!viewer_confirm_unsaved_changes(app, "Unsaved Changes",
             "Save changes before closing?")) return;
+    viewer_close_confirmed(app);
+}
+
+void viewer_close_confirmed(viewer_app *app)
+{
+    if (app == NULL) return;
     app->close_requested = true;
     app->pending_open = false;
     app->pending_path[0] = '\0';
     if (app->job != NULL && app->job->generation == app->generation)
         (void)viewer_bump_generation(app);
-}
-
-static bool script_native_smoke(viewer_app *app)
-{
-    platform_window *window = app->window;
-    bool okay = platform_test_inject_pointer(window, PLATFORM_EVENT_POINTER_DOWN, 40, 40) &&
-        platform_test_inject_pointer(window, PLATFORM_EVENT_POINTER_MOVE, 80, 72) &&
-        platform_test_inject_pointer(window, PLATFORM_EVENT_POINTER_UP, 80, 72) &&
-        platform_test_inject_magnify(window, 0.25, 120.0, 100.0) &&
-        platform_test_inject_key_text(window, "0", 1U, 29U, 0U) &&
-        platform_test_inject_key_text(window, "q", 1U, 12U, PLATFORM_MODIFIER_COMMAND);
-    app->smoke_scripted = okay;
-    return okay;
 }
 
 static void poll_file_changes(viewer_app *app)
@@ -710,14 +688,27 @@ static void start_editor_render(viewer_app *app)
     app->editor_render_requested = false;
 }
 
-static void idle_sleep(void)
+void viewer_app_tick(viewer_app *app)
 {
-    const struct timespec delay = {0, 6000000L};
-    (void)nanosleep(&delay, NULL);
+    if (app == NULL || !app->running) return;
+    service_job(app);
+    if (app->pending_open && app->job == NULL) start_pending_load(app);
+    if (app->editor_render_requested && app->job == NULL) start_editor_render(app);
+    if (!app->close_requested) start_next_sharp_tile(app);
+    if (viewer_editor_take_redraw_request(app->editor)) app->frame_dirty = true;
+    if (!viewer_compose_and_present(app)) {
+        app->fatal_error = true;
+        app->running = false;
+        return;
+    }
+    (void)viewer_test_layout_dump(app);
+    poll_file_changes(app);
+    if (app->close_requested && app->job == NULL) app->running = false;
 }
 
-static void destroy_viewer(viewer_app *app)
+void viewer_app_destroy(viewer_app *app)
 {
+    if (app == NULL) return;
     if (app->tasks != NULL) {
         if (app->job != NULL && app->job->generation == app->generation)
             (void)viewer_bump_generation(app);
@@ -742,123 +733,4 @@ static void destroy_viewer(viewer_app *app)
     viewer_loaded_document_destroy(&app->document);
     free(app->render_source);
     app->render_source = NULL;
-    platform_shutdown();
-}
-
-static int run_viewer(const char *path, bool smoke_mode)
-{
-    if (path != NULL && (path[0] == '\0' || bounded_length(path, PLATFORM_PATH_CAP - 1U) >= PLATFORM_PATH_CAP)) {
-        (void)fputs("viewer: invalid or oversized SVG path\n", stderr);
-        return EXIT_FAILURE;
-    }
-    viewer_app app = {0};
-    viewer_timeline_init(&app.timeline);
-    app.generation = VIEWER_GENERATION;
-    app.running = true;
-    app.smoke_mode = smoke_mode;
-    app.backing_scale = 1.0;
-    app.checkerboard = true;
-    app.pixel_grid = true;
-    app.load_status = VIEWER_LOAD_CANCELED;
-    copy_display_name(path == NULL ? "Open SVG" : path, app.display_name);
-    if (!viewer_tile_cache_init(&app.sharp_cache, app.generation)) return EXIT_FAILURE;
-    if (!platform_init()) {
-        (void)fputs("viewer: AppKit initialization failed\n", stderr);
-        viewer_tile_cache_destroy(&app.sharp_cache);
-        return EXIT_FAILURE;
-    }
-    platform_task_config task_config = {1U, 1U, NULL, NULL, NULL};
-    if (platform_task_queue_create(&task_config, &app.tasks) != PLATFORM_TASK_OK) {
-        (void)fputs("viewer: worker queue creation failed\n", stderr);
-        platform_shutdown();
-        viewer_tile_cache_destroy(&app.sharp_cache);
-        return EXIT_FAILURE;
-    }
-    const char *initial_title = path == NULL ? "vexel — Open SVG" : "vexel — Loading SVG";
-    platform_window_config window_config = {initial_title, strlen(initial_title), 1280, 800, true};
-    if (!platform_window_create(&window_config, &app.window) ||
-        !viewer_allocate_frame(&app, 1280U, 800U)) {
-        (void)fputs("viewer: window creation or frame allocation failed\n", stderr);
-        destroy_viewer(&app);
-        return EXIT_FAILURE;
-    }
-    (void)platform_window_set_option_state(app.window,
-        PLATFORM_ACTION_TOGGLE_CHECKERBOARD, app.checkerboard);
-    (void)platform_window_set_option_state(app.window,
-        PLATFORM_ACTION_TOGGLE_PIXEL_GRID, app.pixel_grid);
-    (void)snprintf(app.title, sizeof(app.title), "%s", initial_title);
-    if (path != NULL && !viewer_request_open(&app, path, true)) {
-        (void)fputs("viewer: invalid initial SVG path\n", stderr);
-        destroy_viewer(&app);
-        return EXIT_FAILURE;
-    }
-    unsigned smoke_poll_count = 0U;
-    while (app.running) {
-        platform_event event;
-        while (platform_poll_event(app.window, &event)) {
-            viewer_process_event(&app, &event);
-            if (!app.running) break;
-        }
-        if (!app.running) break;
-        mcp_broker_hook_poll(&app);
-        service_job(&app);
-        if (app.pending_open && app.job == NULL) start_pending_load(&app);
-        if (app.editor_render_requested && app.job == NULL) start_editor_render(&app);
-        if (!app.close_requested) start_next_sharp_tile(&app);
-        if (viewer_editor_take_redraw_request(app.editor)) app.frame_dirty = true;
-        if (!viewer_compose_and_present(&app)) {
-            app.fatal_error = true;
-            app.running = false;
-            break;
-        }
-        (void)viewer_test_layout_dump(&app);
-        if (app.smoke_mode && !app.smoke_scripted && app.document_visible &&
-            app.presented_frames > 0U) {
-            if (!script_native_smoke(&app)) {
-                (void)fputs("native viewer smoke: event injection failed\n", stderr);
-                app.fatal_error = true;
-                app.running = false;
-                break;
-            }
-        }
-        poll_file_changes(&app);
-        if (app.close_requested && app.job == NULL) {
-            app.running = false;
-            break;
-        }
-        if (app.smoke_mode && !app.close_requested && ++smoke_poll_count > 1000U) {
-            (void)fputs("native viewer smoke: timed out waiting for viewer events\n", stderr);
-            app.fatal_error = true;
-            app.running = false;
-            break;
-        }
-        idle_sleep();
-    }
-    if (app.smoke_mode && !app.fatal_error) {
-        app.smoke_passed = app.smoke_scripted && app.close_requested &&
-            app.document_visible && app.presented_frames > 0U;
-    }
-    unsigned presented_frames = app.presented_frames;
-    bool smoke_passed = app.smoke_passed;
-    bool failed = app.fatal_error;
-    destroy_viewer(&app);
-    if (smoke_mode) {
-        if (!smoke_passed) {
-            (void)fprintf(stderr, "native viewer smoke: failed after %u presented frames\n",
-                          presented_frames);
-            return EXIT_FAILURE;
-        }
-        (void)printf("native viewer smoke: drag/zoom/fit/quit passed\npresented frames: %u\n",
-                     presented_frames);
-    }
-    return failed ? EXIT_FAILURE : EXIT_SUCCESS;
-}
-
-int app_run_viewer(const char *path)
-{
-    return run_viewer(path, false);
-}
-int app_run_native_viewer_smoke(const char *path)
-{
-    return run_viewer(path, true);
 }

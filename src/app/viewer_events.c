@@ -17,6 +17,38 @@ static size_t event_path_length(const char *path, size_t limit)
     return length;
 }
 
+static bool replacement_load_active(const viewer_app *app)
+{
+    return app != NULL && (app->pending_open || (app->job != NULL &&
+        app->job->kind == VIEWER_JOB_LOAD));
+}
+
+static bool process_home_pointer_down(viewer_app *app, const platform_event *event)
+{
+    if (app == NULL || event == NULL || !isfinite(app->backing_scale) ||
+        !(app->backing_scale > 0.0)) return false;
+    double px = floor((double)event->logical_x * app->backing_scale);
+    double py = floor((double)event->logical_y * app->backing_scale);
+    if (!isfinite(px) || !isfinite(py) || px < 0.0 || py < 0.0 ||
+        px > (double)UINT32_MAX || py > (double)UINT32_MAX) return false;
+    viewer_home_state state;
+    viewer_home_state_from_app(app, &state);
+    viewer_home_action action = viewer_home_pointer_down(&state, app->width,
+        app->height, app->backing_scale, (uint32_t)px, (uint32_t)py);
+    if (action.kind == VIEWER_HOME_ACTION_OPEN) {
+        (void)platform_window_open_panel(app->window);
+    } else if (action.kind == VIEWER_HOME_ACTION_RETRY) {
+        if (app->failed_path[0] != '\0')
+            (void)viewer_request_open(app, app->failed_path, false);
+    } else if (action.kind == VIEWER_HOME_ACTION_RECENT &&
+        action.recent_index < app->recent_file_count) {
+        (void)viewer_request_open(app,
+            app->recent_files[action.recent_index].path, false);
+    }
+    if (action.kind != VIEWER_HOME_ACTION_NONE) app->frame_dirty = true;
+    return action.kind != VIEWER_HOME_ACTION_NONE;
+}
+
 static bool navigation_differs(const ui_viewer_navigation *left,
                                const ui_viewer_navigation *right)
 {
@@ -229,7 +261,7 @@ static void process_editor_result(viewer_app *app, uint32_t result)
         (void)platform_window_open_panel(app->window);
     }
     if ((result & VIEWER_EDITOR_RELOAD) != 0U) request_reload_or_open(app);
-    if ((result & VIEWER_EDITOR_QUIT) != 0U) viewer_request_close(app);
+    if ((result & VIEWER_EDITOR_QUIT) != 0U) app->quit_all_requested = true;
     if ((result & VIEWER_EDITOR_HANDLED) != 0U) {
         app->frame_dirty = true;
         (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
@@ -247,7 +279,7 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
         case PLATFORM_ACTION_FIT_WINDOW:
         case PLATFORM_ACTION_ACTUAL_SIZE: apply_navigation_fit(app, action); break;
         case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: toggle_pixel_grid(app); break;
-        case PLATFORM_ACTION_QUIT: viewer_request_close(app); break;
+        case PLATFORM_ACTION_QUIT: app->quit_all_requested = true; break;
         case PLATFORM_ACTION_NONE: default: break;
     }
 }
@@ -272,6 +304,13 @@ static bool editor_alignment_shortcut(const platform_event *event,
 
 static void apply_key(viewer_app *app, const platform_event *event)
 {
+    bool loading_replacement = replacement_load_active(app) && app->document_visible;
+    bool command_key = (event->modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
+    bool allowed_command = command_key &&
+        (strcmp(event->text, "q") == 0 || strcmp(event->text, "Q") == 0 ||
+         strcmp(event->text, "o") == 0 || strcmp(event->text, "O") == 0 ||
+         strcmp(event->text, "r") == 0 || strcmp(event->text, "R") == 0);
+    if (loading_replacement && !allowed_command) return;
     viewer_editor_alignment alignment;
     if (app->document_visible && app->editor != NULL &&
         !viewer_editor_text_input_active(app->editor) &&
@@ -286,8 +325,9 @@ static void apply_key(viewer_app *app, const platform_event *event)
         (void)ui_viewer_navigation_drag_end(&app->navigation);
         app->frame_dirty = true;
     }
-    uint32_t editor_result = viewer_editor_key(app->editor, event->key_code,
-        event->modifiers, event->text, event->text_len);
+    uint32_t editor_result = loading_replacement ? 0U :
+        viewer_editor_key(app->editor, event->key_code,
+            event->modifiers, event->text, event->text_len);
     if ((editor_result & VIEWER_EDITOR_DELETE_PATH_NODE) != 0U) {
         editor_result &= ~(uint32_t)VIEWER_EDITOR_DELETE_PATH_NODE;
         editor_result |= viewer_editor_delete_selected_path_node(app->editor,
@@ -349,7 +389,7 @@ static void apply_key(viewer_app *app, const platform_event *event)
     }
     bool command = (event->modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
     if (command && (strcmp(event->text, "q") == 0 || strcmp(event->text, "Q") == 0)) {
-        viewer_request_close(app);
+        app->quit_all_requested = true;
         return;
     }
     if (command && (strcmp(event->text, "r") == 0 || strcmp(event->text, "R") == 0)) {
@@ -462,6 +502,8 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             return;
         }
         case PLATFORM_EVENT_POINTER_DOWN: {
+            if (process_home_pointer_down(app, event)) return;
+            if (replacement_load_active(app) && app->document_visible) return;
             double pixel_x = (double)event->logical_x * app->backing_scale;
             double pixel_y = (double)event->logical_y * app->backing_scale;
             if (app->editor != NULL && isfinite(pixel_x) && isfinite(pixel_y) &&
@@ -499,6 +541,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
         case PLATFORM_EVENT_POINTER_MOVE:
             update_pointer_status(app, event);
             app->frame_dirty = true;
+            if (replacement_load_active(app) && app->document_visible) return;
             if (app->editor != NULL) {
                 double px = (double)event->logical_x * app->backing_scale;
                 double py = (double)event->logical_y * app->backing_scale;
@@ -524,6 +567,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             }
             return;
         case PLATFORM_EVENT_POINTER_UP:
+            if (replacement_load_active(app) && app->document_visible) return;
             viewer_editor_pointer_up(app->editor);
             if (app->navigation_ready && app->navigation.dragging) {
                 (void)ui_viewer_navigation_drag_end(&app->navigation);
@@ -597,6 +641,20 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 (void)viewer_request_open(app, event->path, false);
             return;
         case PLATFORM_EVENT_CLOSE_REQUEST: viewer_request_close(app); return;
+        case PLATFORM_EVENT_DROP_ENTER:
+            app->drop_hover = true;
+            app->frame_dirty = true;
+            return;
+        case PLATFORM_EVENT_DROP_EXIT:
+            app->drop_hover = false;
+            app->frame_dirty = true;
+            return;
+        case PLATFORM_EVENT_APPEARANCE:
+            app->theme = platform_window_is_dark_appearance(app->window) ?
+                UI_THEME_DARK : UI_THEME_LIGHT;
+            app->frame_dirty = true;
+            return;
+        case PLATFORM_EVENT_FOCUS:
         case PLATFORM_EVENT_OPEN:
         case PLATFORM_EVENT_KEY_UP:
             if (event->key_code == 49U) app->space_down = false;
