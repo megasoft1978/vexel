@@ -1,0 +1,13 @@
+{
+  "byte_budget": "pass",
+  "deterministic_digest": "pass",
+  "failed_submit_cleanup": 0,
+  "generation_filter": "pass",
+  "owned_cleanup_cases": 4,
+  "random_cleanup_accounting": "zero_after_generation",
+  "random_schedule": "pass",
+  "random_seed": 1295209779,
+  "scheduler_capacity": "pass",
+  "snapshot": "pass",
+  "status": "pass"
+}

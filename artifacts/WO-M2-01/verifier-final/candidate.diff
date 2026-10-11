@@ -1,0 +1,1533 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3a18c87..4aede5c 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -40,6 +40,22 @@ find_library(METAL_FRAMEWORK Metal REQUIRED)
+ find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
+ find_package(Threads REQUIRED)
+ target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK} Threads::Threads)
++
++add_library(vexel_base STATIC src/base/base.c)
++target_include_directories(vexel_base PUBLIC src/base)
++set_target_properties(vexel_base PROPERTIES
++    C_STANDARD 17
++    C_STANDARD_REQUIRED YES
++    C_EXTENSIONS NO
++)
++
++add_executable(base_contract_test tests/base/test_base.c)
++target_link_libraries(base_contract_test PRIVATE vexel_base)
++set_target_properties(base_contract_test PROPERTIES
++    C_STANDARD 17
++    C_STANDARD_REQUIRED YES
++    C_EXTENSIONS NO
++)
+ set_target_properties(svgworkbench PROPERTIES
+     C_STANDARD 17
+     C_STANDARD_REQUIRED YES
+@@ -51,7 +67,7 @@ set_target_properties(svgworkbench PROPERTIES
+ )
+ 
+ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+-    target_compile_options(svgworkbench PRIVATE
++    set(VEXEL_STRICT_WARNINGS
+         -Wall
+         -Wextra
+         -Wpedantic
+@@ -62,6 +78,9 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
+         -Wmissing-prototypes
+         -Werror
+     )
++    target_compile_options(svgworkbench PRIVATE ${VEXEL_STRICT_WARNINGS})
++    target_compile_options(vexel_base PRIVATE ${VEXEL_STRICT_WARNINGS})
++    target_compile_options(base_contract_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+ else()
+     message(FATAL_ERROR "vexel requires Clang or GCC for its strict warning profile")
+ endif()
+@@ -69,9 +88,13 @@ endif()
+ if(VEXEL_SANITIZER)
+     target_compile_options(svgworkbench PRIVATE ${VEXEL_SANITIZER_FLAGS})
+     target_link_options(svgworkbench PRIVATE ${VEXEL_SANITIZER_FLAGS})
++    target_compile_options(vexel_base PRIVATE ${VEXEL_SANITIZER_FLAGS})
++    target_compile_options(base_contract_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
++    target_link_options(base_contract_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+ endif()
+ 
+ include(CTest)
+ if(BUILD_TESTING)
+     add_test(NAME cli-version COMMAND svgworkbench --version)
++    add_test(NAME base-contract COMMAND base_contract_test)
+ endif()
+diff --git a/LEDGER.md b/LEDGER.md
+index b7f8a85..2a5f790 100644
+--- a/LEDGER.md
++++ b/LEDGER.md
+@@ -35,3 +35,6 @@
+ | 2026-10-09 | WO-M1-04 r2 | implementation attempt blocked before acceptance; uncommitted | `ad7b79a44f745f74890981bde18769a98d28f3ac` | — | Native task and sanitizer cycle checks pass. AC-1/AC-3 fail on native Metal/LaunchServices and benchmark sandbox cases; remaining AC-4 checks pass. Evidence: `artifacts/WO-M1-04/`. No merge or performance claim. |
+ | 2026-10-09 | WO-M1-04 r3 | ready; deterministic test-only pointer delivery amendment | `f7de05710a4c8fb706f8a1a82c6b0eb46edeb3b7` | `dacf718171c3b7dce336533f3c2c5efc964336a1` | ADR-0007 records the same `pointer_down` failure on the accepted M1-03 baseline and r2 candidate; current tests retain the native event payload assertions. `work/WO-M1-04.md` revision 3. |
+ | 2026-10-09 | WO-M1-04 r3 | complete; independently verified and merged | `f7de05710a4c8fb706f8a1a82c6b0eb46edeb3b7` | `91ff611782c843428fb5bdc4ba874e3ccdd37f94` | 20 focused and 143 full tests pass; 1,000 queue cycles complete in 0.044 s, maximum join 0.000073 s; ASan/UBSan CTest 1/1 each and sanitizer task smokes 1,000 cycles each. Release executable 97,072 bytes. Two fresh verifier verdicts pass; ledger records the first status-field correction and second passing review. Evidence: `artifacts/WO-M1-04/`, `artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/`, `bench/results/WO-M1-04.json`. |
++| 2026-10-09 | WO-M2-01 r1 | blocked; runner parser contract and full-suite instability | `a566ec33d61af88a12da0de54cb0417421fe6a9c` | `29d8a51a53ea30959ae57f777b36a8d3dad197cf` | Candidate produced working source plus passing Debug CTest and sanitizer tests, but runner could not parse the missing `Verification commands` section. `./dev verify` reported 133/143 pass, 8 benchmark sandbox failures and 3 native platform failures; no implementation commit. Raw report: `artifacts/runs/WO-M2-01/19454468-62a4-467a-b602-6884a065891f/`. |
++| 2026-10-09 | WO-M2-01 r2 | ready; parser-compatible frozen contract | `a566ec33d61af88a12da0de54cb0417421fe6a9c` | `29d8a51a53ea30959ae57f777b36a8d3dad197cf` | Supersedes r1 with the required machine-readable `Verification commands` block; resumes the preserved base API candidate. |
++| 2026-10-09 | WO-M2-01 r2 | machine checks pass; independent review pending | `a566ec33d61af88a12da0de54cb0417421fe6a9c` | pending implementation commit | CTest 2/2, Python 143/143, ASan/UBSan CTest 2/2; Release `svgworkbench` 97,040 bytes and base static library 3,504 bytes. Arena limit/allocation metrics and all command evidence are under `artifacts/WO-M2-01/`; benchmark JSON at `bench/results/WO-M2-01.json`. |
+diff --git a/STATE.md b/STATE.md
+index 19a2fd2..d6ee4ef 100644
+--- a/STATE.md
++++ b/STATE.md
+@@ -74,6 +74,6 @@
+ 
+ - WO-M1-03 revision 2 was superseded before execution because a typo in its declared base SHA failed runner preflight. Revision 3 corrects the base to the verified clean main commit; the prior runner and output-path findings remain documented in `artifacts/WO-M1-03/`.
+ - WO-M1-03 revision 3 is complete and merged at `734c23ba42d405354d2408dcf8de69ef19a29b39`. The initial visible-window replay failed during AppKit teardown; LLDB and ASan localized the fault to `platform_window_destroy`'s autorelease-pool drain after all 20 frame submissions. The deterministic core now performs headless Metal blits and verifies GPU readback; the separate AppKit/Metal smoke passes. Placeholder replay is 20/20 identical (digest `c46e612bbfa618d18a27693c33a952b9fce16bb941e3d9b6f5048b7bfd280c59`); Metal replay is 20/20 identical (readback `3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c`). Focused tests: 19 passed; full `./dev verify`: 142 passed, zero failures/errors/skips; ASan and UBSan CTest pass 1/1 each. Fresh read-only verification run `2c6ae867-72ae-4f61-9b04-580079e1d580` passed with no findings after building clean Debug/Release binaries. Release binary: 94,752 bytes; measured placeholder replay 100.976 ms and Metal replay 179.164 ms. Evidence and executor report: `artifacts/WO-M1-03/`, `bench/results/WO-M1-03.json`.
+-- Verifier runner now builds clean Debug and Release binaries before frozen checks; `python3 -m unittest tests.test_wo_runner` passes all 40 tests. WO-M1-04 revision 3 supersedes the previously blocked revision and is merged; its resolved shutdown contract and deterministic native test injection are recorded in ADR-0006 and ADR-0007. Next work order: M2-01 checked slices and arena.
+-- WO-M1-04 candidate `181b62743e3373ba511c6732463eff283b5eeba2` remains unmerged. All nine verifier commands passed (21 focused tests; 144 full tests), but the fresh read-only review still rejects the shutdown lifetime contract for a caller paused before API admission. Three implementation approaches were reviewed; details and exact next decision are in `BLOCKERS.md` and `HANDOFF.md`. Do not merge until the owner/planner resolves the contract or lifetime protocol.
++- Verifier runner now builds clean Debug and Release binaries before frozen checks; `python3 -m unittest tests.test_wo_runner` passes all 40 tests. WO-M1-04 revision 3 is merged; its resolved shutdown contract and deterministic native test injection are recorded in ADR-0006 and ADR-0007. Active work order: WO-M2-01 revision 2, which resumes the preserved checked-slice/arena candidate and adds the runner-required Verification commands block. Revision 1's runner parse failure and initial full-suite failures are preserved in its ledger and `artifacts/WO-M2-01/`.
+ - WO-M1-04 revision 3 is complete and merged at `91ff611782c843428fb5bdc4ba874e3ccdd37f94`. Its two fresh read-only reviews passed with no findings; the first review event needed a ledger status correction, so the second review records the passing transition. All nine frozen commands pass: 20 focused tests, 143 full tests, 1,000 queue cycles in 0.044 s with a 0.000073 s maximum join, ASan/UBSan CTest 1/1 each, and 1,000-cycle task smokes under both sanitizers. Release executable is 97,072 bytes; no SVG throughput or RSS claim. Evidence is under `artifacts/WO-M1-04/` and `artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/`; benchmark data is in `bench/results/WO-M1-04.json`.
++- WO-M2-01 revision 2 implementation is on `wo/WO-M2-01`. The CTest base contract, all 143 Python tests, ASan/UBSan CTest, and Release build pass. Release `svgworkbench` size is 97,040 bytes; `vexel_base` static library is 3,504 bytes. Arena metrics and acceptance evidence are in `artifacts/WO-M2-01/` and `bench/results/WO-M2-01.json`. Independent review remains pending.
+diff --git a/artifacts/WO-M2-01/arena-metrics.txt b/artifacts/WO-M2-01/arena-metrics.txt
+new file mode 100644
+index 0000000..bb6b37b
+--- /dev/null
++++ b/artifacts/WO-M2-01/arena-metrics.txt
+@@ -0,0 +1,3 @@
++arena_alignment_boundary: chunks=5 payload_capacity=80 used_bytes=13
++arena_allocator_failure: allocations=6 frees=4 live=0
++base contract tests passed
+diff --git a/artifacts/WO-M2-01/asan.txt b/artifacts/WO-M2-01/asan.txt
+new file mode 100644
+index 0000000..9afe1c9
+--- /dev/null
++++ b/artifacts/WO-M2-01/asan.txt
+@@ -0,0 +1,22 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++  VEXEL_SANITIZER="asan-ubsan"
++
++-- Configuring done (0.0s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-asan
++[1/3] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
++[2/3] Linking C static library libvexel_base.a
++[3/3] Linking C executable base_contract_test
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-asan
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.02 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.18 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.20 sec
+diff --git a/artifacts/WO-M2-01/binary-size.txt b/artifacts/WO-M2-01/binary-size.txt
+new file mode 100644
+index 0000000..29c3dce
+--- /dev/null
++++ b/artifacts/WO-M2-01/binary-size.txt
+@@ -0,0 +1,2 @@
++release_svgworkbench_bytes 97040
++release_base_library_bytes 3504
+diff --git a/artifacts/WO-M2-01/build.txt b/artifacts/WO-M2-01/build.txt
+new file mode 100644
+index 0000000..9837d22
+--- /dev/null
++++ b/artifacts/WO-M2-01/build.txt
+@@ -0,0 +1,12 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++
++-- Configuring done (0.0s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++[1/3] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
++[2/3] Linking C static library libvexel_base.a
++[3/3] Linking C executable base_contract_test
+diff --git a/artifacts/WO-M2-01/ctest-debug.txt b/artifacts/WO-M2-01/ctest-debug.txt
+new file mode 100644
+index 0000000..45a1724
+--- /dev/null
++++ b/artifacts/WO-M2-01/ctest-debug.txt
+@@ -0,0 +1,10 @@
++Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.00 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.17 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.17 sec
+diff --git a/artifacts/WO-M2-01/diff-check.txt b/artifacts/WO-M2-01/diff-check.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/artifacts/WO-M2-01/full-checks.txt b/artifacts/WO-M2-01/full-checks.txt
+new file mode 100644
+index 0000000..b1158d8
+--- /dev/null
++++ b/artifacts/WO-M2-01/full-checks.txt
+@@ -0,0 +1,11 @@
++WO-M2-01 revision 2 machine-check summary
++
++AC-1 `./dev build` — exit 0; Debug app and base test targets built with strict warnings. See `build.txt`.
++AC-2 `ctest --test-dir build/mac-debug --output-on-failure` — exit 0; CLI and base-contract tests passed 2/2. See `ctest-debug.txt` and `arena-metrics.txt`.
++AC-3 `./dev verify` — exit 0; CTest passed 2/2 and Python suite passed 143/143 with zero failures, errors, or skips. See `full-suite.txt`.
++AC-4 `./dev asan` — exit 0; CTest passed 2/2. See `asan.txt`.
++AC-4 `./dev ubsan` — exit 0; CTest passed 2/2. See `ubsan.txt`.
++AC-5 `cmake --preset mac-release` and `cmake --build --preset mac-release` — exit 0. See `release-configure.txt` and `release-build.txt`.
++AC-5 ledger validation, work-order hash validation, benchmark JSON parsing, and `git diff --check` all exited 0. See `release-and-records.txt` and the individual result files.
++
++Revision 1's transient sandbox and LaunchServices failures remain preserved under `r1-attempt/`; the revision-2 full-suite rerun passed without test changes.
+diff --git a/artifacts/WO-M2-01/full-suite.txt b/artifacts/WO-M2-01/full-suite.txt
+new file mode 100644
+index 0000000..685d525
+--- /dev/null
++++ b/artifacts/WO-M2-01/full-suite.txt
+@@ -0,0 +1,32 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++
++-- Configuring done (0.0s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++ninja: no work to do.
++Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.00 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.00 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.01 sec
++Ran 143 tests in 13.943s
++
++OK
++presented frames: 2
++byte-exact readback: pass
++resize/reset: pass
++native smoke elapsed seconds: 0.218095
++20 frames with identical readback hashes and stable offscreen frame order
++readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
++native replay elapsed seconds: 0.136721
++Ran 143 tests: 143 passed, 0 failed, 0 errors, 0 skipped; 13.992s
++valid ledger: 169 entries
+diff --git a/artifacts/WO-M2-01/json-tool.txt b/artifacts/WO-M2-01/json-tool.txt
+new file mode 100644
+index 0000000..644fb16
+--- /dev/null
++++ b/artifacts/WO-M2-01/json-tool.txt
+@@ -0,0 +1,65 @@
++{
++    "work_order": "WO-M2-01",
++    "revision": 2,
++    "machine": "Apple Silicon arm64, macOS 27.0",
++    "compiler": "Apple Clang 21.0.0.21000334",
++    "build": "Debug and Release",
++    "acceptance_status": "machine_checks_passed_pending_independent_review",
++    "binary_bytes": {
++        "release_svgworkbench": 97040,
++        "release_base_static_library": 3504,
++        "rss": null
++    },
++    "arena_boundary": {
++        "initial_chunk_bytes": 16,
++        "capacity_limit_bytes": 96,
++        "retained_chunks": 5,
++        "payload_capacity_bytes": 80,
++        "used_bytes_including_alignment_padding": 13,
++        "alignments": [
++            1,
++            2,
++            4,
++            8,
++            16,
++            64,
++            256,
++            4096
++        ],
++        "allocation_failure": {
++            "allocator_calls": 6,
++            "frees_after_destroy": 4,
++            "live_allocations_after_destroy": 0,
++            "failed_push_preserved_statistics": true
++        }
++    },
++    "tests": {
++        "debug_ctest_passed": 2,
++        "debug_ctest_total": 2,
++        "asan_ctest_passed": 2,
++        "asan_ctest_total": 2,
++        "ubsan_ctest_passed": 2,
++        "ubsan_ctest_total": 2,
++        "python_total": 143,
++        "python_passed": 143,
++        "python_failures": 0,
++        "python_errors": 0,
++        "python_skipped": 0,
++        "fixed_seed_arithmetic_cases": 100000,
++        "fixed_seed_slice_cases": 10000
++    },
++    "claims": {
++        "svg_throughput": false,
++        "performance_improvement": false,
++        "rss": false
++    },
++    "evidence": {
++        "debug_build": "artifacts/WO-M2-01/build.txt",
++        "debug_ctest": "artifacts/WO-M2-01/ctest-debug.txt",
++        "full_suite": "artifacts/WO-M2-01/full-suite.txt",
++        "asan": "artifacts/WO-M2-01/asan.txt",
++        "ubsan": "artifacts/WO-M2-01/ubsan.txt",
++        "arena_metrics": "artifacts/WO-M2-01/arena-metrics.txt",
++        "release_build": "artifacts/WO-M2-01/release-build.txt"
++    }
++}
+diff --git a/artifacts/WO-M2-01/ledger-validate.txt b/artifacts/WO-M2-01/ledger-validate.txt
+new file mode 100644
+index 0000000..309b087
+--- /dev/null
++++ b/artifacts/WO-M2-01/ledger-validate.txt
+@@ -0,0 +1 @@
++valid ledger: 170 entries
+diff --git a/artifacts/WO-M2-01/r1-attempt/BLOCKER.md b/artifacts/WO-M2-01/r1-attempt/BLOCKER.md
+new file mode 100644
+index 0000000..275c258
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/BLOCKER.md
+@@ -0,0 +1,15 @@
++# WO-M2-01 acceptance blocker
++
++The implementation candidate is not accepted and has not been committed.
++AC-1, AC-2, AC-4, and all AC-5 commands pass. AC-3 runs Debug CTest
++successfully, then reports 133 passed, 8 failed, 2 errors, and 0 skipped among
++143 Python tests.
++
++Seven failures are existing benchmark process-policy tests whose sandboxed
++children exit 71. Three failures/errors are existing native platform-driver
++tests that crash during LaunchServices startup (exit -11). Targeted reruns
++reproduced both classes. These test and platform source paths are protected by
++the frozen work order, so they were not changed. No accepted implementation
++commit or passing executor report is produced. Rerun AC-3 in an executor
++environment where the existing sandbox and LaunchServices tests succeed before
++accepting this candidate.
+diff --git a/artifacts/WO-M2-01/r1-attempt/asan.txt b/artifacts/WO-M2-01/r1-attempt/asan.txt
+new file mode 100644
+index 0000000..689c84b
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/asan.txt
+@@ -0,0 +1,21 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++  VEXEL_SANITIZER="asan-ubsan"
++
++-- Configuring done (0.1s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-asan
++[1/2] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
++[2/2] Linking C executable base_contract_test
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-asan
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.02 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.22 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.25 sec
+diff --git a/artifacts/WO-M2-01/r1-attempt/build.txt b/artifacts/WO-M2-01/r1-attempt/build.txt
+new file mode 100644
+index 0000000..4eb9b24
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/build.txt
+@@ -0,0 +1,11 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++
++-- Configuring done (0.1s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++[1/2] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
++[2/2] Linking C executable base_contract_test
+diff --git a/artifacts/WO-M2-01/r1-attempt/ctest-debug.txt b/artifacts/WO-M2-01/r1-attempt/ctest-debug.txt
+new file mode 100644
+index 0000000..8c4c4e2
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/ctest-debug.txt
+@@ -0,0 +1,10 @@
++Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.01 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.21 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.22 sec
+diff --git a/artifacts/WO-M2-01/r1-attempt/full-suite.txt b/artifacts/WO-M2-01/r1-attempt/full-suite.txt
+new file mode 100644
+index 0000000..d8957f0
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/full-suite.txt
+@@ -0,0 +1,24 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++
++-- Configuring done (0.1s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++ninja: no work to do.
++Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.00 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.00 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.01 sec
++Ran 143 tests in 7.057s
++
++FAILED (failures=8, errors=2)
++Ran 143 tests: 133 passed, 8 failed, 2 errors, 0 skipped; 7.165s
+diff --git a/artifacts/WO-M2-01/r1-attempt/release-and-records.txt b/artifacts/WO-M2-01/r1-attempt/release-and-records.txt
+new file mode 100644
+index 0000000..f2f9308
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/release-and-records.txt
+@@ -0,0 +1,85 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Release"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++
++-- Configuring done (0.1s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-release
++[1/2] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
++[2/2] Linking C executable base_contract_test
++valid ledger: 168 entries
++valid WO-M2-01 revision 1 sha256 e353c2d7e33e7996b26f121e4ade353a825af17a4c3c4c508833877a8b32a2a5
++{
++    "work_order": "WO-M2-01",
++    "revision": 1,
++    "machine": "Apple Silicon arm64, macOS 27.0",
++    "compiler": "Apple Clang 21.0.0.21000334",
++    "build": "Debug and Release",
++    "acceptance_status": "blocked_by_executor_environment",
++    "binary": {
++        "release_svgworkbench_bytes": 97040,
++        "release_base_library_bytes": 3560,
++        "rss_bytes": null
++    },
++    "arena_boundary": {
++        "initial_chunk_bytes": 16,
++        "capacity_limit_bytes": 96,
++        "alignments_tested": [
++            1,
++            2,
++            4,
++            8,
++            16,
++            64,
++            256,
++            4096
++        ],
++        "retained_chunks": 5,
++        "payload_capacity_bytes": 80,
++        "used_bytes_including_alignment_padding": 13,
++        "allocation_failure": {
++            "allocator_calls": 6,
++            "frees_after_destroy": 4,
++            "live_allocations_after_destroy": 0,
++            "failed_push_preserved_statistics": true
++        }
++    },
++    "tests": {
++        "debug_ctest_passed": 2,
++        "debug_ctest_total": 2,
++        "asan_ctest_passed": 2,
++        "asan_ctest_total": 2,
++        "ubsan_ctest_passed": 2,
++        "ubsan_ctest_total": 2,
++        "python_total": 143,
++        "python_passed": 133,
++        "python_failures": 8,
++        "python_errors": 2,
++        "python_skipped": 0
++    },
++    "environment_failures": {
++        "benchmark_process_policy_tests_exit_71": 7,
++        "native_platform_driver_tests_launchservices_exit_minus_11": 3
++    },
++    "claims": {
++        "svg_throughput": false,
++        "performance_improvement": false,
++        "rss": false
++    },
++    "evidence": {
++        "debug_build": "artifacts/WO-M2-01/build.txt",
++        "debug_ctest": "artifacts/WO-M2-01/ctest-debug.txt",
++        "full_suite": "artifacts/WO-M2-01/full-suite.txt",
++        "asan": "artifacts/WO-M2-01/asan.txt",
++        "ubsan": "artifacts/WO-M2-01/ubsan.txt",
++        "release_and_records": "artifacts/WO-M2-01/release-and-records.txt"
++    },
++    "implementation_commit": null
++}
++release svgworkbench bytes: 97040
++release base library bytes: 3560
++arena_alignment_boundary: chunks=5 payload_capacity=80 used_bytes=13
++arena_allocator_failure: allocations=6 frees=4 live=0
++base contract tests passed
+diff --git a/artifacts/WO-M2-01/r1-attempt/release-build.txt b/artifacts/WO-M2-01/r1-attempt/release-build.txt
+new file mode 100644
+index 0000000..fe3e287
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/release-build.txt
+@@ -0,0 +1,11 @@
++[1/11] Building C object CMakeFiles/svgworkbench.dir/src/raster/tile.c.o
++[2/11] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
++[3/11] Building C object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_task.c.o
++[4/11] Building C object CMakeFiles/svgworkbench.dir/app/test_driver/native_task_tests.c.o
++[5/11] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
++[6/11] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
++[7/11] Linking C static library libvexel_base.a
++[8/11] Linking C executable base_contract_test
++[9/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o
++[10/11] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o
++[11/11] Linking C executable bin/svgworkbench
+diff --git a/artifacts/WO-M2-01/r1-attempt/ubsan.txt b/artifacts/WO-M2-01/r1-attempt/ubsan.txt
+new file mode 100644
+index 0000000..80751b1
+--- /dev/null
++++ b/artifacts/WO-M2-01/r1-attempt/ubsan.txt
+@@ -0,0 +1,21 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++  VEXEL_SANITIZER="ubsan"
++
++-- Configuring done (0.1s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-ubsan
++[1/2] Building C object CMakeFiles/base_contract_test.dir/tests/base/test_base.c.o
++[2/2] Linking C executable base_contract_test
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-ubsan
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.01 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.21 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.22 sec
+diff --git a/artifacts/WO-M2-01/release-and-records.txt b/artifacts/WO-M2-01/release-and-records.txt
+new file mode 100644
+index 0000000..ce7f77c
+--- /dev/null
++++ b/artifacts/WO-M2-01/release-and-records.txt
+@@ -0,0 +1,12 @@
++AC-5 command evidence
++
++cmake --preset mac-release — exit 0; Release configured for arm64 / macOS 13.0. See release-configure.txt.
++cmake --build --preset mac-release — exit 0; see release-build.txt.
++python3 scripts/ledger.py validate ledger.jsonl — exit 0; valid ledger: 170 entries.
++python3 scripts/wo_validate.py WO-M2-01 --ready — exit 0; revision 2 spec hash 51539e64c90fe386c14bb76b8a92a4c638c14cc1dcbb7122012b51c95cf23ec2.
++python3 -m json.tool bench/results/WO-M2-01.json — exit 0; formatted output in json-tool.txt.
++git diff --check — exit 0; no whitespace errors.
++
++Release sizes: svgworkbench 97,040 bytes; vexel_base static library 3,504 bytes.
++Arena boundary: 5 chunks, 80 bytes retained payload capacity, 13 bytes used including alignment padding under a 96-byte cap.
++Allocator failure: 6 allocations attempted, 4 frees at destroy, zero live allocations; failure preserved arena statistics.
+diff --git a/artifacts/WO-M2-01/release-build.txt b/artifacts/WO-M2-01/release-build.txt
+new file mode 100644
+index 0000000..de1ded7
+--- /dev/null
++++ b/artifacts/WO-M2-01/release-build.txt
+@@ -0,0 +1,3 @@
++[1/3] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
++[2/3] Linking C static library libvexel_base.a
++[3/3] Linking C executable base_contract_test
+diff --git a/artifacts/WO-M2-01/release-configure.txt b/artifacts/WO-M2-01/release-configure.txt
+new file mode 100644
+index 0000000..3639bea
+--- /dev/null
++++ b/artifacts/WO-M2-01/release-configure.txt
+@@ -0,0 +1,9 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Release"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++
++-- Configuring done (0.1s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-release
+diff --git a/artifacts/WO-M2-01/ubsan.txt b/artifacts/WO-M2-01/ubsan.txt
+new file mode 100644
+index 0000000..898fa5c
+--- /dev/null
++++ b/artifacts/WO-M2-01/ubsan.txt
+@@ -0,0 +1,22 @@
++Preset CMake variables:
++
++  CMAKE_BUILD_TYPE="Debug"
++  CMAKE_OSX_ARCHITECTURES="arm64"
++  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
++  VEXEL_SANITIZER="ubsan"
++
++-- Configuring done (0.0s)
++-- Generating done (0.0s)
++-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-ubsan
++[1/3] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
++[2/3] Linking C static library libvexel_base.a
++[3/3] Linking C executable base_contract_test
++Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-ubsan
++    Start 1: cli-version
++1/2 Test #1: cli-version ......................   Passed    0.01 sec
++    Start 2: base-contract
++2/2 Test #2: base-contract ....................   Passed    0.17 sec
++
++100% tests passed, 0 tests failed out of 2
++
++Total Test time (real) =   0.18 sec
+diff --git a/artifacts/WO-M2-01/wo-validate.txt b/artifacts/WO-M2-01/wo-validate.txt
+new file mode 100644
+index 0000000..4a97de7
+--- /dev/null
++++ b/artifacts/WO-M2-01/wo-validate.txt
+@@ -0,0 +1 @@
++valid WO-M2-01 revision 2 sha256 51539e64c90fe386c14bb76b8a92a4c638c14cc1dcbb7122012b51c95cf23ec2
+diff --git a/bench/results/WO-M2-01.json b/bench/results/WO-M2-01.json
+new file mode 100644
+index 0000000..1545184
+--- /dev/null
++++ b/bench/results/WO-M2-01.json
+@@ -0,0 +1,65 @@
++{
++  "work_order": "WO-M2-01",
++  "revision": 2,
++  "machine": "Apple Silicon arm64, macOS 27.0",
++  "compiler": "Apple Clang 21.0.0.21000334",
++  "build": "Debug and Release",
++  "acceptance_status": "machine_checks_passed_pending_independent_review",
++  "binary_bytes": {
++    "release_svgworkbench": 97040,
++    "release_base_static_library": 3504,
++    "rss": null
++  },
++  "arena_boundary": {
++    "initial_chunk_bytes": 16,
++    "capacity_limit_bytes": 96,
++    "retained_chunks": 5,
++    "payload_capacity_bytes": 80,
++    "used_bytes_including_alignment_padding": 13,
++    "alignments": [
++      1,
++      2,
++      4,
++      8,
++      16,
++      64,
++      256,
++      4096
++    ],
++    "allocation_failure": {
++      "allocator_calls": 6,
++      "frees_after_destroy": 4,
++      "live_allocations_after_destroy": 0,
++      "failed_push_preserved_statistics": true
++    }
++  },
++  "tests": {
++    "debug_ctest_passed": 2,
++    "debug_ctest_total": 2,
++    "asan_ctest_passed": 2,
++    "asan_ctest_total": 2,
++    "ubsan_ctest_passed": 2,
++    "ubsan_ctest_total": 2,
++    "python_total": 143,
++    "python_passed": 143,
++    "python_failures": 0,
++    "python_errors": 0,
++    "python_skipped": 0,
++    "fixed_seed_arithmetic_cases": 100000,
++    "fixed_seed_slice_cases": 10000
++  },
++  "claims": {
++    "svg_throughput": false,
++    "performance_improvement": false,
++    "rss": false
++  },
++  "evidence": {
++    "debug_build": "artifacts/WO-M2-01/build.txt",
++    "debug_ctest": "artifacts/WO-M2-01/ctest-debug.txt",
++    "full_suite": "artifacts/WO-M2-01/full-suite.txt",
++    "asan": "artifacts/WO-M2-01/asan.txt",
++    "ubsan": "artifacts/WO-M2-01/ubsan.txt",
++    "arena_metrics": "artifacts/WO-M2-01/arena-metrics.txt",
++    "release_build": "artifacts/WO-M2-01/release-build.txt"
++  }
++}
+diff --git a/dev b/dev
+index 7e53a6b..ba43e69 100755
+--- a/dev
++++ b/dev
+@@ -61,6 +61,7 @@ case "$command_name" in
+         ;;
+     verify)
+         "$repo_root/dev" build
++        ctest --test-dir build/mac-debug --output-on-failure
+         "$repo_root/dev" test-fast
+         ;;
+ esac
+diff --git a/docs/PERF.md b/docs/PERF.md
+index c8404fd..2c5bab9 100644
+--- a/docs/PERF.md
++++ b/docs/PERF.md
+@@ -82,3 +82,23 @@ injection dispatches directly to its target view, so the native lifecycle
+ smoke does not depend on LaunchServices activation. RSS, SVG throughput, and
+ renderer latency were not measured. Evidence is in `artifacts/WO-M1-04/` and
+ `bench/results/WO-M1-04.json`.
++
++## WO-M2-01 checked base API
++
++The Release `svgworkbench` executable is 97,040 bytes and the base static
++library is 3,504 bytes (Apple Clang 21.0.0.21000334, Apple Silicon arm64,
++macOS 27.0). The deterministic arena boundary test uses 16-byte initial
++chunks and a 96-byte total payload limit: its alignment sequence (1, 2, 4, 8,
++16, 64, 256, 4096) retains 5 chunks with 80 bytes of payload capacity and 13
++used bytes including alignment padding. The injected allocation-failure test
++records 6 allocator calls, 4 frees after destroy, and zero live allocations;
++the failed push leaves arena statistics unchanged.
++
++The base contract test passed in Debug, ASan+UBSan, and UBSan CTest runs. Debug
++CTest also passed the existing CLI smoke (2/2 total). `./dev verify` passed all
++143 Python tests and both Debug CTest cases. The revision-1 attempt's transient
++benchmark sandbox and LaunchServices failures are retained under
++`artifacts/WO-M2-01/r1-attempt/`; the revision-2 rerun passed. No SVG
++throughput, RSS, or performance-improvement claim is made. Detailed output is
++in `artifacts/WO-M2-01/` and the machine-readable result is
++`bench/results/WO-M2-01.json`.
+diff --git a/ledger.jsonl b/ledger.jsonl
+index 9a005be..bbfd9a0 100644
+--- a/ledger.jsonl
++++ b/ledger.jsonl
+@@ -163,3 +163,8 @@
+ {"ts":"2026-10-08T22:16:01Z","wo_id":"WO-M1-04","event":"verified","revision":3,"base_sha":"f7de05710a4c8fb706f8a1a82c6b0eb46edeb3b7","head_sha":"91ff611782c843428fb5bdc4ba874e3ccdd37f94","run_id":"m104-r3-round2-verified-221601","session_id":"01a11d95-c77e-7b30-b31d-77a80e786578","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"pass","artifacts":["artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/verdict.json","artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/metadata.json"],"note":"Second fresh read-only review passed with no findings. All nine deterministic commands pass; candidate accepted and merged."}
+ {"ts":"2026-10-08T22:16:02Z","wo_id":"WO-M1-04","event":"accepted","revision":3,"base_sha":"f7de05710a4c8fb706f8a1a82c6b0eb46edeb3b7","head_sha":"91ff611782c843428fb5bdc4ba874e3ccdd37f94","run_id":"m104-r3-accepted-final-221602","session_id":"owner-standing-authorization","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"accepted","artifacts":["artifacts/WO-M1-04/executor-report.json","artifacts/WO-M1-04/verdict-review.json"],"note":"Second fresh read-only review passed with no findings. All nine deterministic commands pass; candidate accepted and merged."}
+ {"ts":"2026-10-08T22:16:03Z","wo_id":"WO-M1-04","event":"merged","revision":3,"base_sha":"f7de05710a4c8fb706f8a1a82c6b0eb46edeb3b7","head_sha":"91ff611782c843428fb5bdc4ba874e3ccdd37f94","run_id":"m104-r3-merged-final-221603","session_id":"owner-standing-authorization","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"merged","artifacts":["LEDGER.md","STATE.md","bench/results/WO-M1-04.json"],"note":"Second fresh read-only review passed with no findings. All nine deterministic commands pass; candidate accepted and merged."}
++{"ts":"2026-10-08T22:18:14Z","wo_id":"WO-M2-01","event":"ready","revision":1,"base_sha":"a566ec33d61af88a12da0de54cb0417421fe6a9c","head_sha":"9cdd255c7186562ad64400dea0ea52cc9bad90bb","run_id":"m201-r1-ready-20261008-221814","session_id":"m201-r1-ready-20261008-221814","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"ready","artifacts":["work/WO-M2-01.md"],"note":"Ready work order defines checked slices, bounded arena, CTest integration, strict warnings, sanitizer and allocation-failure checks."}
++{"ts":"2026-10-08T22:21:42Z","wo_id":"WO-M2-01","event":"run_started","revision":1,"base_sha":"a566ec33d61af88a12da0de54cb0417421fe6a9c","head_sha":"29d8a51a53ea30959ae57f777b36a8d3dad197cf","run_id":"m201-exec-20261008-222142","session_id":"top-level-codex-root","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"running","artifacts":["artifacts/WO-M2-01/build.txt"],"note":"Executor started the revision-1 candidate from its frozen root-copy specification."}
++{"ts":"2026-10-08T22:21:43Z","wo_id":"WO-M2-01","event":"blocked","revision":1,"base_sha":"a566ec33d61af88a12da0de54cb0417421fe6a9c","head_sha":"29d8a51a53ea30959ae57f777b36a8d3dad197cf","run_id":"m201-blocked-20261008-222143","session_id":"top-level-codex-root","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"blocked","artifacts":["artifacts/WO-M2-01/full-suite.txt","artifacts/WO-M2-01/asan.txt","artifacts/WO-M2-01/ubsan.txt"],"note":"Runner rejected the frozen work order because it lacked the required Verification commands block. The executor report also records 8 benchmark sandbox failures and 3 existing native driver failures in the full suite; no implementation commit."}
++{"ts":"2026-10-08T22:24:08Z","wo_id":"WO-M2-01","event":"ready","revision":2,"base_sha":"a566ec33d61af88a12da0de54cb0417421fe6a9c","head_sha":"29d8a51a53ea30959ae57f777b36a8d3dad197cf","run_id":"m201-r2-ready-20261008-222408","session_id":"m201-r2-ready-20261008-222408","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"ready","artifacts":["work/WO-M2-01.md","artifacts/runs/WO-M2-01/19454468-62a4-467a-b602-6884a065891f/"],"note":"Revision 2 adds runner-required Verification commands syntax and preserves the r1 implementation attempt for resume."}
++{"ts":"2026-10-08T22:27:53Z","wo_id":"WO-M2-01","event":"run_started","revision":2,"base_sha":"a566ec33d61af88a12da0de54cb0417421fe6a9c","head_sha":"10efe4eee166b6d72c63db3504bba8a07709f0bd","run_id":"m201-r2-run-20261008-222753","session_id":"top-level-codex-root","model":"gpt-6-luna","cli_version":"codex-cli 0.160.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"running","artifacts":["artifacts/WO-M2-01/"],"note":"Revision-2 implementation resumed from the preserved candidate; all acceptance commands currently pass."}
+diff --git a/src/base/README.md b/src/base/README.md
+new file mode 100644
+index 0000000..420ad72
+--- /dev/null
++++ b/src/base/README.md
+@@ -0,0 +1,59 @@
++# Base byte slices and arena
++
++`base.h` exposes checked `size_t` arithmetic, immutable and mutable byte slices,
++and a bounded chunked arena. The module uses C17 and has no dependencies beyond
++the C library.
++
++## Arithmetic and slices
++
++`base_size_add` and `base_size_mul` return `true` and write the result when the
++operation fits in `size_t`. A null output pointer or overflow returns `false`;
++when an output pointer is valid, it is set to zero on failure.
++
++`base_bytes` and `base_mut_bytes` are pointer-plus-length views. A null pointer
++is valid only for a zero-length slice. Slice operations do not inspect
++terminators or infer a length. Sub-slicing checks `offset <= len` and
++`length <= len - offset`; failure clears a valid output to `{NULL, 0}`. A
++successful zero-length sub-slice is also represented canonically as
++`{NULL, 0}`. Equality returns false for invalid slices or unequal lengths,
++true for any two valid empty slices, and otherwise compares exactly `len`
++bytes. The caller owns the memory and must keep it valid for the duration of
++each operation.
++
++## Arena ownership and lifetime
++
++Create an arena with a nonzero `initial_chunk_bytes`, a `capacity_limit`, and
++either both allocator callbacks or neither. With no callbacks, the arena uses
++`malloc` and `free`. A custom allocator must return storage suitably aligned
++for any C object, and its context must remain alive until the arena is
++destroyed. Every successful allocation, including arena metadata and chunks,
++is released through the matching free callback exactly once.
++
++Chunk allocation is lazy. Each chunk has a payload capacity of at least the
++initial chunk size (or the request size, when larger), subject to the remaining
++capacity limit. The limit counts the sum of chunk payload capacities and
++excludes chunk headers and alignment slack. Chunk payload starts on a 4096-byte
++boundary. `base_arena_get_stats` reports retained chunk count, total payload
++capacity, and bytes consumed including alignment padding.
++
++Push alignment must be a power of two from 1 through 4096. Invalid arena or
++alignment returns `BASE_STATUS_INVALID`. A zero-size push succeeds with a null
++output pointer and consumes nothing after its alignment has been validated.
++Nonempty pushes return `BASE_STATUS_LIMIT` when another chunk cannot fit within
++the total payload limit, `BASE_STATUS_OVERFLOW` if allocation-size arithmetic
++cannot be represented, and `BASE_STATUS_OOM` if the allocator fails. On any
++failure the output pointer is null and arena chunk/capacity/usage state is
++unchanged. A successful pointer stays valid until reset or destroy.
++
++Reset sets every retained chunk's used count to zero and keeps all chunks for
++reuse. Destroy frees all chunks and arena metadata. The arena is single-owner,
++not thread-safe, and must not be used after destroy. Callers must not use pushed
++pointers after reset or destroy.
++
++## Error and thread behavior
++
++All operations that can fail report a boolean or `base_status`; they do not
++abort or assert on caller input. Null destroy and reset are no-ops. Statistics
++with a null output return false; when the arena is null, a valid output is
++cleared and the call returns false. No operation allocates memory except arena
++creation and a push that needs a new chunk.
+diff --git a/src/base/base.c b/src/base/base.c
+new file mode 100644
+index 0000000..3c5651d
+--- /dev/null
++++ b/src/base/base.c
+@@ -0,0 +1,297 @@
++#include "base.h"
++
++#include <stddef.h>
++#include <stdint.h>
++#include <stdlib.h>
++#include <string.h>
++
++#define BASE_ARENA_MAX_ALIGNMENT ((size_t)4096)
++
++typedef struct base_arena_chunk {
++    struct base_arena_chunk *next;
++    uint8_t *data;
++    size_t capacity;
++    size_t used;
++} base_arena_chunk;
++
++struct base_arena {
++    base_allocator allocator;
++    base_arena_chunk *first;
++    base_arena_chunk *last;
++    size_t initial_chunk_bytes;
++    size_t capacity_limit;
++    size_t payload_capacity;
++    size_t chunk_count;
++};
++
++bool base_size_add(size_t a, size_t b, size_t *out)
++{
++    if (out == NULL) {
++        return false;
++    }
++    *out = 0;
++    if (b > SIZE_MAX - a) {
++        return false;
++    }
++    *out = a + b;
++    return true;
++}
++
++bool base_size_mul(size_t a, size_t b, size_t *out)
++{
++    if (out == NULL) {
++        return false;
++    }
++    *out = 0;
++    if (a != 0 && b > SIZE_MAX / a) {
++        return false;
++    }
++    *out = a * b;
++    return true;
++}
++
++bool base_bytes_valid(base_bytes bytes)
++{
++    return bytes.ptr != NULL || bytes.len == 0;
++}
++
++bool base_mut_bytes_valid(base_mut_bytes bytes)
++{
++    return bytes.ptr != NULL || bytes.len == 0;
++}
++
++bool base_bytes_sub(base_bytes bytes, size_t offset, size_t length, base_bytes *out)
++{
++    if (out == NULL) {
++        return false;
++    }
++    out->ptr = NULL;
++    out->len = 0;
++    if (!base_bytes_valid(bytes) || offset > bytes.len || length > bytes.len - offset) {
++        return false;
++    }
++    if (length != 0) {
++        out->ptr = bytes.ptr + offset;
++        out->len = length;
++    }
++    return true;
++}
++
++bool base_mut_bytes_sub(base_mut_bytes bytes, size_t offset, size_t length, base_mut_bytes *out)
++{
++    if (out == NULL) {
++        return false;
++    }
++    out->ptr = NULL;
++    out->len = 0;
++    if (!base_mut_bytes_valid(bytes) || offset > bytes.len || length > bytes.len - offset) {
++        return false;
++    }
++    if (length != 0) {
++        out->ptr = bytes.ptr + offset;
++        out->len = length;
++    }
++    return true;
++}
++
++bool base_bytes_equal(base_bytes left, base_bytes right)
++{
++    if (!base_bytes_valid(left) || !base_bytes_valid(right) || left.len != right.len) {
++        return false;
++    }
++    return left.len == 0 || memcmp(left.ptr, right.ptr, left.len) == 0;
++}
++
++static void *base_default_alloc(size_t size, void *context)
++{
++    (void)context;
++    return malloc(size);
++}
++
++static void base_default_free(void *ptr, void *context)
++{
++    (void)context;
++    free(ptr);
++}
++
++static size_t base_align_offset(const uint8_t *ptr, size_t alignment)
++{
++    uintptr_t address = (uintptr_t)ptr;
++    uintptr_t mask = (uintptr_t)(alignment - 1);
++    uintptr_t padding = ((uintptr_t)0 - address) & mask;
++    return (size_t)padding;
++}
++
++static base_arena_chunk *base_arena_chunk_create(base_arena *arena, size_t capacity)
++{
++    size_t allocation_size = 0;
++    size_t total = 0;
++    if (!base_size_add(sizeof(base_arena_chunk), capacity, &total) ||
++        !base_size_add(total, BASE_ARENA_MAX_ALIGNMENT - 1, &allocation_size)) {
++        return NULL;
++    }
++
++    base_arena_chunk *chunk = arena->allocator.alloc(allocation_size, arena->allocator.context);
++    if (chunk == NULL) {
++        return NULL;
++    }
++    chunk->next = NULL;
++    chunk->capacity = capacity;
++    chunk->used = 0;
++    uint8_t *storage = (uint8_t *)(chunk + 1);
++    size_t padding = base_align_offset(storage, BASE_ARENA_MAX_ALIGNMENT);
++    chunk->data = storage + padding;
++    return chunk;
++}
++
++base_status base_arena_create(const base_arena_config *config, base_arena **out)
++{
++    if (out == NULL) {
++        return BASE_STATUS_INVALID;
++    }
++    *out = NULL;
++    if (config == NULL || config->initial_chunk_bytes == 0 ||
++        ((config->allocator.alloc == NULL) != (config->allocator.free == NULL))) {
++        return BASE_STATUS_INVALID;
++    }
++    if (config->initial_chunk_bytes > config->capacity_limit) {
++        return BASE_STATUS_LIMIT;
++    }
++
++    base_allocator allocator = config->allocator;
++    if (allocator.alloc == NULL) {
++        allocator.alloc = base_default_alloc;
++        allocator.free = base_default_free;
++        allocator.context = NULL;
++    }
++    base_arena *arena = allocator.alloc(sizeof(*arena), allocator.context);
++    if (arena == NULL) {
++        return BASE_STATUS_OOM;
++    }
++    arena->allocator = allocator;
++    arena->first = NULL;
++    arena->last = NULL;
++    arena->initial_chunk_bytes = config->initial_chunk_bytes;
++    arena->capacity_limit = config->capacity_limit;
++    arena->payload_capacity = 0;
++    arena->chunk_count = 0;
++    *out = arena;
++    return BASE_STATUS_OK;
++}
++
++static bool base_arena_chunk_fits(const base_arena_chunk *chunk, size_t size, size_t alignment,
++                                  size_t *offset)
++{
++    size_t padding = base_align_offset(chunk->data + chunk->used, alignment);
++    size_t aligned_offset = 0;
++    size_t end = 0;
++    if (!base_size_add(chunk->used, padding, &aligned_offset) ||
++        !base_size_add(aligned_offset, size, &end) || end > chunk->capacity) {
++        return false;
++    }
++    *offset = aligned_offset;
++    return true;
++}
++
++static base_status base_arena_chunk_failure_status(size_t capacity)
++{
++    size_t total = 0;
++    if (!base_size_add(sizeof(base_arena_chunk), capacity, &total) ||
++        !base_size_add(total, BASE_ARENA_MAX_ALIGNMENT - 1, &total)) {
++        return BASE_STATUS_OVERFLOW;
++    }
++    return BASE_STATUS_OOM;
++}
++
++static base_status base_arena_append_chunk(base_arena *arena, size_t size, size_t alignment,
++                                           void **out)
++{
++    size_t remaining = arena->capacity_limit - arena->payload_capacity;
++    if (size > remaining) {
++        return BASE_STATUS_LIMIT;
++    }
++    size_t capacity = arena->initial_chunk_bytes;
++    if (capacity > remaining) capacity = remaining;
++    if (capacity < size) capacity = size;
++    base_arena_chunk *chunk = base_arena_chunk_create(arena, capacity);
++    if (chunk == NULL) return base_arena_chunk_failure_status(capacity);
++    size_t offset = 0;
++    if (!base_arena_chunk_fits(chunk, size, alignment, &offset)) {
++        arena->allocator.free(chunk, arena->allocator.context);
++        return BASE_STATUS_OVERFLOW;
++    }
++    chunk->used = offset + size;
++    if (arena->last == NULL) {
++        arena->first = chunk;
++    } else {
++        arena->last->next = chunk;
++    }
++    arena->last = chunk;
++    arena->payload_capacity += capacity;
++    arena->chunk_count += 1;
++    *out = chunk->data + offset;
++    return BASE_STATUS_OK;
++}
++
++base_status base_arena_push(base_arena *arena, size_t size, size_t alignment, void **out)
++{
++    if (out == NULL) return BASE_STATUS_INVALID;
++    *out = NULL;
++    if (arena == NULL || alignment == 0 || alignment > BASE_ARENA_MAX_ALIGNMENT ||
++        (alignment & (alignment - 1)) != 0) return BASE_STATUS_INVALID;
++    if (size == 0) return BASE_STATUS_OK;
++
++    for (base_arena_chunk *candidate = arena->first; candidate != NULL; candidate = candidate->next) {
++        size_t offset = 0;
++        if (base_arena_chunk_fits(candidate, size, alignment, &offset)) {
++            candidate->used = offset + size;
++            *out = candidate->data + offset;
++            return BASE_STATUS_OK;
++        }
++    }
++    return base_arena_append_chunk(arena, size, alignment, out);
++}
++
++bool base_arena_get_stats(const base_arena *arena, base_arena_stats *out)
++{
++    if (out == NULL) {
++        return false;
++    }
++    out->chunk_count = 0;
++    out->payload_capacity = 0;
++    out->used_bytes = 0;
++    if (arena == NULL) {
++        return false;
++    }
++    out->chunk_count = arena->chunk_count;
++    out->payload_capacity = arena->payload_capacity;
++    for (const base_arena_chunk *chunk = arena->first; chunk != NULL; chunk = chunk->next) {
++        out->used_bytes += chunk->used;
++    }
++    return true;
++}
++
++void base_arena_reset(base_arena *arena)
++{
++    if (arena == NULL) {
++        return;
++    }
++    for (base_arena_chunk *chunk = arena->first; chunk != NULL; chunk = chunk->next) {
++        chunk->used = 0;
++    }
++}
++
++void base_arena_destroy(base_arena *arena)
++{
++    if (arena == NULL) {
++        return;
++    }
++    base_allocator allocator = arena->allocator;
++    base_arena_chunk *chunk = arena->first;
++    while (chunk != NULL) {
++        base_arena_chunk *next = chunk->next;
++        allocator.free(chunk, allocator.context);
++        chunk = next;
++    }
++    allocator.free(arena, allocator.context);
++}
+diff --git a/src/base/base.h b/src/base/base.h
+new file mode 100644
+index 0000000..c9c0288
+--- /dev/null
++++ b/src/base/base.h
+@@ -0,0 +1,64 @@
++#ifndef VEXEL_BASE_BASE_H
++#define VEXEL_BASE_BASE_H
++
++#include <stdbool.h>
++#include <stddef.h>
++#include <stdint.h>
++
++typedef enum base_status {
++    BASE_STATUS_OK = 0,
++    BASE_STATUS_INVALID,
++    BASE_STATUS_OVERFLOW,
++    BASE_STATUS_LIMIT,
++    BASE_STATUS_OOM
++} base_status;
++
++typedef struct base_bytes {
++    const uint8_t *ptr;
++    size_t len;
++} base_bytes;
++
++typedef struct base_mut_bytes {
++    uint8_t *ptr;
++    size_t len;
++} base_mut_bytes;
++
++typedef void *(*base_alloc_fn)(size_t size, void *context);
++typedef void (*base_free_fn)(void *ptr, void *context);
++
++typedef struct base_allocator {
++    base_alloc_fn alloc;
++    base_free_fn free;
++    void *context;
++} base_allocator;
++
++typedef struct base_arena base_arena;
++
++typedef struct base_arena_config {
++    size_t initial_chunk_bytes;
++    size_t capacity_limit;
++    base_allocator allocator;
++} base_arena_config;
++
++typedef struct base_arena_stats {
++    size_t chunk_count;
++    size_t payload_capacity;
++    size_t used_bytes;
++} base_arena_stats;
++
++bool base_size_add(size_t a, size_t b, size_t *out);
++bool base_size_mul(size_t a, size_t b, size_t *out);
++
++bool base_bytes_valid(base_bytes bytes);
++bool base_mut_bytes_valid(base_mut_bytes bytes);
++bool base_bytes_sub(base_bytes bytes, size_t offset, size_t length, base_bytes *out);
++bool base_mut_bytes_sub(base_mut_bytes bytes, size_t offset, size_t length, base_mut_bytes *out);
++bool base_bytes_equal(base_bytes left, base_bytes right);
++
++base_status base_arena_create(const base_arena_config *config, base_arena **out);
++base_status base_arena_push(base_arena *arena, size_t size, size_t alignment, void **out);
++bool base_arena_get_stats(const base_arena *arena, base_arena_stats *out);
++void base_arena_reset(base_arena *arena);
++void base_arena_destroy(base_arena *arena);
++
++#endif
+diff --git a/tests/base/test_base.c b/tests/base/test_base.c
+new file mode 100644
+index 0000000..cb27577
+--- /dev/null
++++ b/tests/base/test_base.c
+@@ -0,0 +1,240 @@
++#include "base.h"
++
++#include <inttypes.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++#define CHECK(expression) do { \
++    if (!(expression)) { \
++        fprintf(stderr, "%s:%d: check failed: %s\n", __FILE__, __LINE__, #expression); \
++        return false; \
++    } \
++} while (0)
++
++typedef struct allocator_state {
++    size_t allocations;
++    size_t frees;
++    size_t live;
++    size_t fail_on_call;
++} allocator_state;
++
++static void *counting_alloc(size_t size, void *context)
++{
++    allocator_state *state = context;
++    state->allocations += 1;
++    if (state->fail_on_call != 0 && state->allocations == state->fail_on_call) {
++        return NULL;
++    }
++    void *memory = malloc(size);
++    if (memory != NULL) {
++        state->live += 1;
++    }
++    return memory;
++}
++
++static void counting_free(void *ptr, void *context)
++{
++    allocator_state *state = context;
++    if (ptr != NULL) {
++        state->frees += 1;
++        state->live -= 1;
++        free(ptr);
++    }
++}
++
++static uint64_t next_random(uint64_t *state)
++{
++    *state ^= *state << 13;
++    *state ^= *state >> 7;
++    *state ^= *state << 17;
++    return *state;
++}
++
++static bool test_arithmetic(void)
++{
++    size_t result = 99;
++    CHECK(base_size_add(0, 0, &result) && result == 0);
++    CHECK(base_size_add(SIZE_MAX, 0, &result) && result == SIZE_MAX);
++    CHECK(!base_size_add(SIZE_MAX, 1, &result) && result == 0);
++    CHECK(!base_size_add(1, 2, NULL));
++    CHECK(base_size_mul(0, SIZE_MAX, &result) && result == 0);
++    CHECK(base_size_mul(SIZE_MAX, 1, &result) && result == SIZE_MAX);
++    CHECK(!base_size_mul(SIZE_MAX, 2, &result) && result == 0);
++    CHECK(!base_size_mul(2, 2, NULL));
++
++    uint64_t seed = UINT64_C(0x4d595df4d0f33173);
++    for (size_t i = 0; i < 100000; ++i) {
++        size_t a = (size_t)next_random(&seed);
++        size_t b = (size_t)next_random(&seed);
++        bool add_fits = b <= SIZE_MAX - a;
++        result = 123;
++        CHECK(base_size_add(a, b, &result) == add_fits);
++        CHECK(result == (add_fits ? a + b : 0));
++        bool mul_fits = a == 0 || b <= SIZE_MAX / a;
++        result = 123;
++        CHECK(base_size_mul(a, b, &result) == mul_fits);
++        CHECK(result == (mul_fits ? a * b : 0));
++    }
++    return true;
++}
++
++static bool test_slices(void)
++{
++    uint8_t bytes[64];
++    uint8_t copy[64];
++    for (size_t i = 0; i < sizeof(bytes); ++i) {
++        bytes[i] = (uint8_t)(i * 17U);
++        copy[i] = bytes[i];
++    }
++    base_bytes source = {bytes, sizeof(bytes)};
++    base_mut_bytes mutable_source = {bytes, sizeof(bytes)};
++    CHECK(base_bytes_valid((base_bytes){NULL, 0}));
++    CHECK(!base_bytes_valid((base_bytes){NULL, 1}));
++    CHECK(base_mut_bytes_valid((base_mut_bytes){NULL, 0}));
++    CHECK(!base_mut_bytes_valid((base_mut_bytes){NULL, 1}));
++    CHECK(base_bytes_equal(source, (base_bytes){copy, sizeof(copy)}));
++    CHECK(base_bytes_equal((base_bytes){NULL, 0}, (base_bytes){NULL, 0}));
++    CHECK(!base_bytes_equal(source, (base_bytes){copy, sizeof(copy) - 1}));
++    copy[7] ^= 1U;
++    CHECK(!base_bytes_equal(source, (base_bytes){copy, sizeof(copy)}));
++
++    uint64_t seed = UINT64_C(0x9e3779b97f4a7c15);
++    for (size_t i = 0; i < 10000; ++i) {
++        size_t offset = (size_t)(next_random(&seed) % (sizeof(bytes) + 1));
++        size_t length = (size_t)(next_random(&seed) % (sizeof(bytes) - offset + 1));
++        base_bytes sub = {bytes, 1};
++        base_mut_bytes mut_sub = {bytes, 1};
++        CHECK(base_bytes_sub(source, offset, length, &sub));
++        CHECK(base_mut_bytes_sub(mutable_source, offset, length, &mut_sub));
++        CHECK(sub.len == length && mut_sub.len == length);
++        if (length == 0) {
++            CHECK(sub.ptr == NULL && mut_sub.ptr == NULL);
++        } else {
++            CHECK(sub.ptr == bytes + offset && mut_sub.ptr == bytes + offset);
++            CHECK(memcmp(sub.ptr, source.ptr + offset, length) == 0);
++        }
++    }
++    base_bytes out = {bytes, sizeof(bytes)};
++    CHECK(!base_bytes_sub(source, SIZE_MAX, 1, &out));
++    CHECK(out.ptr == NULL && out.len == 0);
++    CHECK(!base_bytes_sub(source, 0, SIZE_MAX, &out));
++    CHECK(!base_bytes_sub((base_bytes){NULL, 2}, 0, 0, &out));
++    CHECK(!base_bytes_sub(source, 0, 0, NULL));
++    base_mut_bytes mut_out = {bytes, sizeof(bytes)};
++    CHECK(!base_mut_bytes_sub(mutable_source, 65, 0, &mut_out));
++    CHECK(mut_out.ptr == NULL && mut_out.len == 0);
++    return true;
++}
++
++static bool test_arena_alignment_reset_and_limit(void)
++{
++    base_arena_config config = {16, 96, {NULL, NULL, NULL}};
++    base_arena *arena = NULL;
++    CHECK(base_arena_create(&config, &arena) == BASE_STATUS_OK && arena != NULL);
++    base_arena_stats stats;
++    CHECK(base_arena_get_stats(arena, &stats));
++    CHECK(stats.chunk_count == 0 && stats.payload_capacity == 0 && stats.used_bytes == 0);
++
++    void *empty = (void *)(uintptr_t)1;
++    CHECK(base_arena_push(arena, 0, 4096, &empty) == BASE_STATUS_OK && empty == NULL);
++    CHECK(base_arena_push(arena, 1, 3, &empty) == BASE_STATUS_INVALID && empty == NULL);
++    CHECK(base_arena_push(arena, 1, 8192, &empty) == BASE_STATUS_INVALID && empty == NULL);
++
++    void *pointers[8] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
++    const size_t alignments[8] = {1, 2, 4, 8, 16, 64, 256, 4096};
++    for (size_t i = 0; i < 8; ++i) {
++        CHECK(base_arena_push(arena, 1, alignments[i], &pointers[i]) == BASE_STATUS_OK);
++        CHECK(pointers[i] != NULL);
++        CHECK((uintptr_t)pointers[i] % alignments[i] == 0);
++    }
++    CHECK(base_arena_get_stats(arena, &stats));
++    CHECK(stats.chunk_count >= 1 && stats.payload_capacity <= 96);
++    CHECK(stats.used_bytes <= stats.payload_capacity);
++    printf("arena_alignment_boundary: chunks=%zu payload_capacity=%zu used_bytes=%zu\n",
++           stats.chunk_count, stats.payload_capacity, stats.used_bytes);
++    CHECK(base_arena_push(arena, 48, 1, &empty) == BASE_STATUS_LIMIT && empty == NULL);
++
++    size_t retained_chunks = stats.chunk_count;
++    size_t retained_capacity = stats.payload_capacity;
++    base_arena_reset(arena);
++    CHECK(base_arena_get_stats(arena, &stats));
++    CHECK(stats.chunk_count == retained_chunks && stats.payload_capacity == retained_capacity);
++    CHECK(stats.used_bytes == 0);
++    CHECK(base_arena_push(arena, 8, 8, &empty) == BASE_STATUS_OK);
++    CHECK((uintptr_t)empty % 8 == 0);
++    CHECK(base_arena_get_stats(arena, &stats) && stats.chunk_count == retained_chunks);
++    base_arena_destroy(arena);
++
++    config.initial_chunk_bytes = 9;
++    config.capacity_limit = 8;
++    arena = (base_arena *)(uintptr_t)1;
++    CHECK(base_arena_create(&config, &arena) == BASE_STATUS_LIMIT && arena == NULL);
++    return true;
++}
++
++static bool test_allocator_failure_and_cleanup(void)
++{
++    allocator_state state = {0, 0, 0, 1};
++    base_arena_config config = {8, 24, {counting_alloc, counting_free, &state}};
++    base_arena *arena = (base_arena *)(uintptr_t)1;
++    CHECK(base_arena_create(&config, &arena) == BASE_STATUS_OOM && arena == NULL);
++    CHECK(state.allocations == 1 && state.frees == 0 && state.live == 0);
++
++    state.fail_on_call = 0;
++    CHECK(base_arena_create(&config, &arena) == BASE_STATUS_OK && arena != NULL);
++    CHECK(state.allocations == 2 && state.live == 1);
++    void *pointer = NULL;
++    CHECK(base_arena_push(arena, 8, 1, &pointer) == BASE_STATUS_OK && pointer != NULL);
++    base_arena_stats before;
++    base_arena_stats after;
++    CHECK(base_arena_get_stats(arena, &before));
++
++    state.fail_on_call = state.allocations + 1;
++    pointer = (void *)(uintptr_t)1;
++    CHECK(base_arena_push(arena, 8, 1, &pointer) == BASE_STATUS_OOM && pointer == NULL);
++    CHECK(base_arena_get_stats(arena, &after));
++    CHECK(before.chunk_count == after.chunk_count &&
++          before.payload_capacity == after.payload_capacity && before.used_bytes == after.used_bytes);
++    CHECK(state.live == 2 && state.frees == 0);
++
++    state.fail_on_call = 0;
++    CHECK(base_arena_push(arena, 8, 1, &pointer) == BASE_STATUS_OK && pointer != NULL);
++    CHECK(base_arena_push(arena, 8, 1, &pointer) == BASE_STATUS_OK && pointer != NULL);
++    CHECK(base_arena_get_stats(arena, &after));
++    CHECK(after.chunk_count == 3 && after.payload_capacity == 24);
++    CHECK(base_arena_push(arena, 1, 1, &pointer) == BASE_STATUS_LIMIT && pointer == NULL);
++    base_arena_destroy(arena);
++    CHECK(state.live == 0);
++    CHECK(state.frees == 4);
++    CHECK(state.allocations == 6);
++    printf("arena_allocator_failure: allocations=%zu frees=%zu live=%zu\n",
++           state.allocations, state.frees, state.live);
++
++    config.allocator.free = NULL;
++    arena = (base_arena *)(uintptr_t)1;
++    CHECK(base_arena_create(&config, &arena) == BASE_STATUS_INVALID && arena == NULL);
++
++    config.initial_chunk_bytes = 1;
++    config.capacity_limit = SIZE_MAX;
++    config.allocator = (base_allocator){NULL, NULL, NULL};
++    CHECK(base_arena_create(&config, &arena) == BASE_STATUS_OK && arena != NULL);
++    CHECK(base_arena_get_stats(arena, &before));
++    CHECK(base_arena_push(arena, SIZE_MAX, 1, &pointer) == BASE_STATUS_OVERFLOW);
++    CHECK(pointer == NULL && base_arena_get_stats(arena, &after));
++    CHECK(before.chunk_count == after.chunk_count &&
++          before.payload_capacity == after.payload_capacity && before.used_bytes == after.used_bytes);
++    base_arena_destroy(arena);
++    return true;
++}
++
++int main(void)
++{
++    if (!test_arithmetic() || !test_slices() || !test_arena_alignment_reset_and_limit() ||
++        !test_allocator_failure_and_cleanup()) {
++        return EXIT_FAILURE;
++    }
++    puts("base contract tests passed");
++    return EXIT_SUCCESS;
++}
+diff --git a/work/WO-M2-01.md b/work/WO-M2-01.md
+new file mode 100644
+index 0000000..125ec21
+--- /dev/null
++++ b/work/WO-M2-01.md
+@@ -0,0 +1,97 @@
++---
++id: WO-M2-01
++revision: 2
++supersedes: 1
++status: READY
++milestone: M2
++owner: project-owner
++executor: codex-gpt-6-luna
++base_sha: a566ec33d61af88a12da0de54cb0417421fe6a9c
++spec_sha256: 51539e64c90fe386c14bb76b8a92a4c638c14cc1dcbb7122012b51c95cf23ec2
++parallel_safe: false
++network: false
++---
++# Goal
++Add a bounded C17 byte-slice, checked-size arithmetic, and arena API with boundary and allocation-failure coverage.
++
++# Context pointers
++- Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/CODING_STANDARD.md`, `docs/research-r4/01-operating-model.md`, `docs/research-r4/05-revised-roadmap.md`, `docs/research-r3/plan/02-architecture.md`, `tests/README.md`.
++- Relevant decisions: C17, Apple Silicon macOS 13+, MPL-2.0, minimal dependencies, explicit ownership, bounded allocation.
++- No external source, network access, third-party code, or corpus changes.
++
++# Existing contracts and invariants
++- Exported symbols use the `base_` prefix. Public APIs return explicit status or boolean values and use pointer-plus-length slices.
++- A slice is valid when its pointer is non-null or its length is zero. Sub-slices require checked bounds and preserve the empty-slice representation.
++- Checked add/multiply fail without wrapping and initialize valid output pointers to zero on failure.
++- Arena memory is single-owner and not thread-safe. Pushed pointers remain valid until reset or destroy. Reset retains chunks for reuse.
++- Arena capacity limits the sum of chunk payload capacities, excluding chunk headers. All growth and alignment arithmetic is checked before allocation.
++- Alignment must be a power of two from 1 through 4096. An empty push returns success with a null output pointer and consumes no capacity.
++- Allocator callbacks are either both supplied or both omitted. The arena owns every allocation made through its allocator and frees all chunks at destroy.
++
++# Files allowed to touch
++- `CMakeLists.txt`
++- `dev`
++- `src/base/**`
++- `tests/base/**`
++- `docs/PERF.md`
++- `bench/results/WO-M2-01.json`
++- `artifacts/WO-M2-01/**`
++- `STATE.md`
++- `LEDGER.md`
++- `ledger.jsonl`
++
++# Protected paths
++- `work/**`, `OWNER-DIRECTIVES.md`, `tests/oracle/**`, `tests/golden/**`, `bench/corpus/**`, all previous benchmark results and artifacts.
++- All paths outside the explicit allowlist.
++
++# Required implementation
++1. Add checked `size_t` addition and multiplication with defined null-output, overflow, and failure behavior.
++2. Add immutable and mutable byte slices with validity checks, checked sub-slicing, and byte equality. Do not infer lengths from NUL termination.
++3. Add a bounded chunked arena with configurable initial chunk size, total payload-capacity limit, optional paired allocator callbacks, aligned pushes, reset, statistics needed for tests, and destroy.
++4. Reject invalid alignment, malformed allocator configuration, arithmetic overflow, and capacity exhaustion without partially changing arena state. Preserve arena state when an injected allocation fails.
++5. Add a C test executable under CTest. Include fixed-seed boundary/property checks for arithmetic and slices; alignment and bounds checks; reset/reuse checks; limit and allocation-failure injection; and exact cleanup counts.
++6. Make `./dev verify` run Debug CTest in addition to the Python fast suite. Apply the existing strict warning profile to the base library and C tests; ASan/UBSan profiles must instrument the library and test executable.
++7. Add `src/base/README.md` documenting API contracts, ownership/lifetime, limits, error behavior, and thread-safety. Record binary size, arena boundary metrics, test/sanitizer evidence, and absence of SVG throughput/RSS claims in the benchmark result and `docs/PERF.md`.
++
++# Acceptance criteria (machine-checkable)
++- AC-1 `./dev build` exits 0 with strict warnings; evidence `artifacts/WO-M2-01/build.txt`.
++- AC-2 `ctest --test-dir build/mac-debug --output-on-failure` exits 0 and runs the base contract test plus existing CLI smoke; evidence `artifacts/WO-M2-01/ctest-debug.txt`.
++- AC-3 `./dev verify` exits 0 and reports all Python and Debug CTest checks passing with zero failures, errors, or skips; evidence `artifacts/WO-M2-01/full-suite.txt`.
++- AC-4 `./dev asan` and `./dev ubsan` each exit 0 and run the base contract test; evidence `artifacts/WO-M2-01/asan.txt` and `artifacts/WO-M2-01/ubsan.txt`.
++- AC-5 `cmake --preset mac-release && cmake --build --preset mac-release`, `python3 scripts/ledger.py validate ledger.jsonl`, `python3 scripts/wo_validate.py WO-M2-01 --ready`, `python3 -m json.tool bench/results/WO-M2-01.json`, and `git diff --check` all exit 0; evidence `artifacts/WO-M2-01/release-and-records.txt`.
++
++# Verification sequence
++1. Configure/build Debug and run the base CTest target.
++2. Run `./dev verify` to exercise CTest and the full local Python suite.
++3. Run ASan/UBSan CTest profiles.
++4. Build Release, record executable size and deterministic arena limit/allocation metrics; make no throughput claim.
++5. Validate the work-order hash, JSON result, ledger, and diff scope; save command output under `artifacts/WO-M2-01/`.
++
++# Verification commands
++Execute each command from the repository root in listed order.
++
++```text
++./dev build
++ctest --test-dir build/mac-debug --output-on-failure
++./dev verify
++./dev asan
++./dev ubsan
++cmake --preset mac-release
++cmake --build --preset mac-release
++python3 scripts/ledger.py validate ledger.jsonl
++python3 scripts/wo_validate.py WO-M2-01 --ready
++python3 -m json.tool bench/results/WO-M2-01.json
++git diff --check
++```
++
++# Non-goals
++No XML/SVG parsing, UTF-8 validation, string builder, file mapping, thread-safe arena, custom VM allocator, external dependency, platform implementation, or cross-platform work.
++
++# Budget
++Executor max runs: 3; verifier max rounds: 2; elapsed hard limit: 180 min; dependency/network: none.
++
++# Failure and escalation
++Do not weaken overflow, slice, alignment, capacity, allocator-failure, cleanup, or sanitizer checks. If a frozen oracle conflicts with this contract, preserve the evidence and stop with a `BLOCKERS.md` entry. No benchmark speedup is claimed without a repeatable reference.
++
++# Output
++One implementation commit using `feat(base): add checked slices and arena`. Commit command evidence and update `STATE.md`, `LEDGER.md`, `ledger.jsonl`, and `docs/PERF.md`. Produce the schema-validated executor report and a fresh read-only verifier verdict.

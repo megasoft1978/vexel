@@ -1,0 +1,63 @@
+{
+  "status": "passed",
+  "fixture_count": 24,
+  "comparison": "resumable svg_xml_token_stream output versus one-shot token kinds and spans",
+  "fixtures": [
+    "clip-path.svg",
+    "image-embedded-data.svg",
+    "metadata-namespaces.svg",
+    "metadata-rdf-like.svg",
+    "namespaces-custom-attributes.svg",
+    "path-arcs.svg",
+    "path-line-curves.svg",
+    "path-relative-commands.svg",
+    "shapes-basic.svg",
+    "shapes-lines-polygons.svg",
+    "shapes-rounded.svg",
+    "stress-long-path.svg",
+    "stress-many-shapes.svg",
+    "stress-nested-groups.svg",
+    "stress-text-collection.svg",
+    "style-css-class.svg",
+    "style-gradient.svg",
+    "style-opacity-transform.svg",
+    "style-presentation-attributes.svg",
+    "text-basic.svg",
+    "text-positioning.svg",
+    "text-spans.svg",
+    "use-local-reference.svg",
+    "viewbox-preserve.svg"
+  ],
+  "diagnostic_exact_offsets": [
+    {
+      "case": 0,
+      "category": "mismatched_tag",
+      "offset": 12
+    },
+    {
+      "case": 1,
+      "category": "malformed_syntax",
+      "offset": 17
+    },
+    {
+      "case": 2,
+      "category": "malformed_syntax",
+      "offset": 10
+    },
+    {
+      "case": 3,
+      "category": "unsupported_dtd",
+      "offset": 0
+    },
+    {
+      "case": 4,
+      "category": "duplicate_attribute",
+      "offset": 17
+    },
+    {
+      "case": 5,
+      "category": "malformed_syntax",
+      "offset": 5
+    }
+  ]
+}

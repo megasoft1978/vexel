@@ -1,0 +1,19 @@
+Fixture: gradient-stop-alpha-overpaint.svg
+Pixel: (1,1), sampled at sx,sy locations {0.125, 0.375, 0.625, 0.875}.
+Both paths evaluate 16 covered subsamples here; all samples are identical within each renderer.
+
+0732b8e premerge sample RGBA values (sy rows, sx columns):
+  [0,0,255,128] | [0,0,255,128] | [0,0,255,128] | [0,0,255,128]
+  [0,0,255,128] | [0,0,255,128] | [0,0,255,128] | [0,0,255,128]
+  [0,0,255,128] | [0,0,255,128] | [0,0,255,128] | [0,0,255,128]
+  [0,0,255,128] | [0,0,255,128] | [0,0,255,128] | [0,0,255,128]
+Premerge pixel average: [0,0,255,128].
+
+Working-tree source-over sample RGBA values (sy rows, sx columns):
+  [127,0,128,255] | [127,0,128,255] | [127,0,128,255] | [127,0,128,255]
+  [127,0,128,255] | [127,0,128,255] | [127,0,128,255] | [127,0,128,255]
+  [127,0,128,255] | [127,0,128,255] | [127,0,128,255] | [127,0,128,255]
+  [127,0,128,255] | [127,0,128,255] | [127,0,128,255] | [127,0,128,255]
+Working-tree pixel average: [127,0,128,255].
+
+The opaque red underpaint has alpha 255. Compositing a blue source sample with alpha 128 gives output alpha 255, red 127, blue 128. The premerge renderer replaced the earlier sample with the gradient sample and retained alpha 128. This intentional source-over behavior is independent of the three librsvg threshold regressions.

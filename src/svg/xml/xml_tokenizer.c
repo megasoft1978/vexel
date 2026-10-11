@@ -1,18 +1,13 @@
 #include "xml_tokenizer.h"
 #include "xml_internal.h"
+#include "xml_tokenizer_private.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define XML_MAX_DEPTH 256U
 #define XML_MAX_NAME_BYTES 4096U
-#define XML_MAX_INPUT_BYTES (16U * 1024U * 1024U)
-#define XML_MAX_NODES 1000000U
-#define XML_MAX_ATTRIBUTES_PER_ELEMENT 4096U
-#define XML_MAX_TOTAL_ATTRIBUTES 1000000U
-#define XML_MAX_TEXT_RUN_BYTES (4U * 1024U * 1024U)
 
 typedef struct xml_open_name { svg_xml_span span; } xml_open_name;
 typedef enum xml_stream_pending_kind {
@@ -758,49 +753,10 @@ void svg_xml_token_stream_destroy(svg_xml_token_stream *stream)
     free(stream);
 }
 
-svg_xml_options svg_xml_default_options(void)
+svg_xml_result svg_xml_tokenizer_run(base_bytes input, svg_xml_options options,
+    svg_xml_token *tokens, size_t token_capacity, svg_xml_cancel_check_fn canceled,
+    void *cancel_context)
 {
-    svg_xml_options o={{XML_MAX_INPUT_BYTES, XML_MAX_DEPTH, XML_MAX_NODES,
-                        XML_MAX_ATTRIBUTES_PER_ELEMENT, XML_MAX_TOTAL_ATTRIBUTES,
-                        XML_MAX_TEXT_RUN_BYTES}};
-    return o;
-}
-
-svg_xml_result svg_xml_tokenize(base_bytes input, svg_xml_options options,
-                                svg_xml_token *tokens, size_t token_capacity)
-{
-    xml_scanner s={0};s.input=input;s.options=options;s.tokens=tokens;s.capacity=token_capacity;
-    s.result.diagnostic.category=SVG_XML_ERROR_NONE;s.result.diagnostic.offset=0;
-    if(options.limits.input_bytes > XML_MAX_INPUT_BYTES)
-        options.limits.input_bytes = XML_MAX_INPUT_BYTES;
-    if(options.limits.nesting_depth > XML_MAX_DEPTH)
-        options.limits.nesting_depth = XML_MAX_DEPTH;
-    if(options.limits.nodes > XML_MAX_NODES)
-        options.limits.nodes = XML_MAX_NODES;
-    if(options.limits.attributes_per_element > XML_MAX_ATTRIBUTES_PER_ELEMENT)
-        options.limits.attributes_per_element = XML_MAX_ATTRIBUTES_PER_ELEMENT;
-    if(options.limits.total_attributes > XML_MAX_TOTAL_ATTRIBUTES)
-        options.limits.total_attributes = XML_MAX_TOTAL_ATTRIBUTES;
-    if(options.limits.text_run_bytes > XML_MAX_TEXT_RUN_BYTES)
-        options.limits.text_run_bytes = XML_MAX_TEXT_RUN_BYTES;
-    s.options=options;
-    if(tokenize(&s)) return s.result;
-    s.result.token_count=0;
-    s.result.element_count=0;s.result.attribute_count=0;s.result.node_count=0;
-    return s.result;
-}
-
-svg_xml_result svg_xml_tokenize_large(base_bytes input, svg_xml_token *tokens,
-                                      size_t token_capacity)
-{
-    return svg_xml_tokenize_large_cancelable(input, tokens, token_capacity, NULL, NULL);
-}
-
-svg_xml_result svg_xml_tokenize_large_cancelable(base_bytes input, svg_xml_token *tokens,
-    size_t token_capacity, svg_xml_cancel_check_fn canceled, void *cancel_context)
-{
-    svg_xml_options options = svg_xml_default_options();
-    options.limits.input_bytes = 1024U * 1024U * 1024U;
     xml_scanner s = {0};
     s.input = input; s.options = options; s.tokens = tokens; s.capacity = token_capacity;
     s.cancel_check = canceled; s.cancel_context = cancel_context;
@@ -809,10 +765,4 @@ svg_xml_result svg_xml_tokenize_large_cancelable(base_bytes input, svg_xml_token
     s.result.token_count = 0U;
     s.result.element_count = 0U; s.result.attribute_count = 0U; s.result.node_count = 0U;
     return s.result;
-}
-
-const char *svg_xml_error_name(svg_xml_error error)
-{
-    static const char *const names[]={"none","invalid_argument","input_limit","invalid_utf8","invalid_character","unsupported_encoding","invalid_name","malformed_syntax","duplicate_attribute","mismatched_tag","depth_limit","node_limit","attribute_limit","text_limit","output_exhausted","unsupported_dtd","multiple_roots","incomplete_document"};
-    return (unsigned)error<sizeof(names)/sizeof(names[0])?names[(unsigned)error]:"unknown";
 }

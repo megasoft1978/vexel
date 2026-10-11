@@ -1,0 +1,32 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-01/build/mac-debug
+    Start 1: cli-version
+1/2 Test #1: cli-version ......................   Passed    0.00 sec
+    Start 2: base-contract
+2/2 Test #2: base-contract ....................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.01 sec
+Ran 143 tests in 13.943s
+
+OK
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.218095
+20 frames with identical readback hashes and stable offscreen frame order
+readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
+native replay elapsed seconds: 0.136721
+Ran 143 tests: 143 passed, 0 failed, 0 errors, 0 skipped; 13.992s
+valid ledger: 169 entries

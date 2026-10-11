@@ -1,0 +1,153 @@
+UU BLOCKERS.md
+M  CMakeLists.txt
+UU HANDOFF.md
+A  LEDGER-laneB.md
+M  README.md
+A  STATE-laneB.md
+A  STATE-laneC.md
+UU STATE.md
+M  app/README.md
+M  app/main.c
+M  app/test_driver/README.md
+M  app/test_driver/native_injection.h
+A  app/ui_demo.c
+A  app/ui_demo.h
+A  app/ui_demo_render.c
+A  app/ui_focus_bench.c
+ M artifacts/WO-M4-06/asan.txt
+ M artifacts/WO-M4-06/benchmark-json.txt
+ M artifacts/WO-M4-06/commit-blocked.txt
+ M artifacts/WO-M4-06/corpus-run.txt
+ M artifacts/WO-M4-06/debug-configure.txt
+ M artifacts/WO-M4-06/debug-ctest.txt
+ M artifacts/WO-M4-06/full-checks.txt
+ M artifacts/WO-M4-06/fuzz-report.json
+ M artifacts/WO-M4-06/fuzz-run.txt
+ M artifacts/WO-M4-06/head-to-head-json.txt
+ M artifacts/WO-M4-06/ledger-validation.txt
+A  artifacts/WO-M4-06/manual-review-r2/review-note.md
+A  artifacts/WO-M4-06/manual-review-r2/verdict.json
+ M artifacts/WO-M4-06/paint-benchmark.json
+ M artifacts/WO-M4-06/path-guard-json.txt
+ M artifacts/WO-M4-06/path-guard.json
+ M artifacts/WO-M4-06/protected-path-diff.txt
+ M artifacts/WO-M4-06/python-shape-render.txt
+ M artifacts/WO-M4-06/reference-comparison.json
+ M artifacts/WO-M4-06/reference-matrix-json.txt
+ M artifacts/WO-M4-06/reference-matrix.json
+ M artifacts/WO-M4-06/release-build.txt
+ M artifacts/WO-M4-06/release-configure.txt
+ M artifacts/WO-M4-06/ubsan.txt
+ M artifacts/WO-M4-06/verify.txt
+ M artifacts/WO-M4-06/worktree-status.txt
+A  artifacts/WO-M5-01/asan.txt
+A  artifacts/WO-M5-01/closeout.txt
+A  artifacts/WO-M5-01/debug-build.txt
+A  artifacts/WO-M5-01/diff-check.txt
+A  artifacts/WO-M5-01/focused-tests.txt
+A  artifacts/WO-M5-01/fuzz-smoke.txt
+A  artifacts/WO-M5-01/handle-matrix.json
+A  artifacts/WO-M5-01/ledger-validate.txt
+A  artifacts/WO-M5-01/merge-verify.txt
+A  artifacts/WO-M5-01/python-full.txt
+A  artifacts/WO-M5-01/release-build.txt
+A  artifacts/WO-M5-01/review-round-1.json
+A  artifacts/WO-M5-01/review-round-2.json
+A  artifacts/WO-M5-01/review-round-3.json
+A  artifacts/WO-M5-01/review-round-4.json
+A  artifacts/WO-M5-01/review-round-5.json
+A  artifacts/WO-M5-01/review-schema.json
+A  artifacts/WO-M5-01/sanitizers.txt
+A  artifacts/WO-M5-01/ubsan.txt
+A  artifacts/WO-M5-01/verify.txt
+A  artifacts/WO-M5-01/wo-validate.txt
+A  artifacts/WO-M5-01/xml-fuzz.json
+ M bench/results/WO-M4-06.json
+A  bench/results/WO-M6-01.json
+A  bench/results/WO-M6-02.json
+A  bench/results/raster-culling.json
+M  dev
+UU docs/PERF.md
+M  docs/ui-test-driver.md
+A  docs/ui/README.md
+UU ledger.jsonl
+ M reports/M4/head-to-head.json
+ M reports/M4/head-to-head.md
+A  src/app/README.md
+A  src/app/frame_compose.c
+A  src/app/frame_compose.h
+A  src/app/render_frame_cli.c
+A  src/app/render_frame_cli.h
+A  src/app/viewer.c
+A  src/app/viewer.h
+A  src/app/viewer_load.c
+A  src/app/viewer_load.h
+M  src/document/README.md
+A  src/document/document_model.c
+A  src/document/document_model.h
+A  src/document/document_view.h
+M  src/platform/macos/README.md
+M  src/platform/macos/platform_metal.m
+M  src/platform/macos/platform_window.m
+M  src/platform/platform_metal.h
+M  src/platform/platform_window.h
+M  src/raster/README.md
+A  src/raster/shape_bounds.c
+A  src/raster/shape_bounds.h
+UU src/raster/shape_render.c
+AM src/raster/shape_render_internal.h
+A  src/raster/shape_scanline.c
+A  src/raster/shape_scanline.h
+ M src/svg/clip/README.md
+ M src/svg/clip/clip.c
+ M src/svg/clip/clip.h
+ M src/svg/paint/README.md
+ M src/svg/paint/paint.c
+ M src/svg/paint/paint.h
+ M src/svg/shape/README.md
+ M src/svg/shape/shape.c
+ M src/svg/shape/shape_internal.h
+ M src/svg/shape/traverse-README.md
+ M src/svg/shape/traverse.c
+M  src/ui/README.md
+A  src/ui/ui_core.c
+A  src/ui/ui_core.h
+A  src/ui/ui_widgets.c
+A  src/ui/ui_widgets.h
+A  tests/app/viewer_frame_test.c
+A  tests/bench_raster_culling.py
+M  tests/document/README.md
+A  tests/document/test_document_model.c
+A  tests/svg/shape/shape_render_reference.c
+A  tests/svg/shape/shape_render_reference.h
+A  tests/svg/shape/shape_render_reference_cli.c
+AM tests/svg/shape/shape_render_stats_cli.c
+ M tests/svg/shape/test_reference.c
+ M tests/svg/shape/test_shape.c
+A  tests/test_document_model.py
+UU tests/test_shape_render.py
+A  tests/test_ui_chrome_golden.py
+A  tests/test_viewer_frame.py
+A  tests/ui/chrome-golden/editor-chrome-dark.png
+A  tests/ui/chrome-golden/editor-chrome-light.png
+A  tests/ui/chrome-golden/manifest.json
+A  tests/ui/ui_core_test.c
+A  tests/ui/ui_demo_interaction_test.c
+A  tests/ui/ui_interaction_test.c
+A  tests/ui/verify_chrome.py
+A  tests/viewer/fixtures/malformed.svg
+A  tests/viewer/fixtures/simple-shape.svg
+A  tests/viewer/fixtures/unsupported.svg
+A  work/WO-M5-01.md
+A  work/WO-M6-01.md
+A  work/WO-M6-02.md
+?? artifacts/WO-M4-06/changed-files.json
+?? artifacts/WO-M4-06/changed-paths.txt
+?? artifacts/WO-M4-06/conflict-marker-scan.txt
+?? artifacts/WO-M4-06/json-validation.txt
+?? artifacts/WO-M4-06/line-count.txt
+?? artifacts/WO-M4-06/merge-head.txt
+?? artifacts/WO-M4-06/paint-benchmark-json.txt
+?? artifacts/WO-M4-06/threshold-check.txt
+?? artifacts/WO-M4-06/unmerged-index.txt
+?? tests/svg/shape/fixtures/gradient-stop-alpha-overpaint.svg

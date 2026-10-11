@@ -1,0 +1,19 @@
+{
+  "work_order":"WO-M3-02",
+  "build_type":"Release",
+  "machine":{"sysname":"Darwin","os_version":"27.0","model":"Mac17,14","chip":"Apple M5 Max","kernel":"27.0.0","architecture":"arm64"},
+  "compiler":"21.0.0 (clang-2100.3.34.2)",
+  "seed":20261009,
+  "entries":1000000,
+  "queries":1,
+  "index_build_seconds":0.099194458,
+  "query_p50_ms":0.015083333,
+  "query_p95_ms":0.015083333,
+  "query_max_ms":0.015083333,
+  "p95_target_ms":5.0,
+  "p95_target_met":true,
+  "binary_bytes":35376,
+  "record_count":1000000,
+  "result_counts":[105],
+  "cache_cap_behavior":{"cap_bytes":4096,"accounted_bytes":0,"entry_rejected_when_accounted_size_exceeds_cap_without_ownership_transfer":true}
+}

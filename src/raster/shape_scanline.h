@@ -48,7 +48,7 @@ typedef struct raster_scanline_index {
 
 bool raster_scanline_index_create(const svg_shape_document *document,
                                   const raster_shape_bounds_set *bounds,
-                                  double scale, double offset_y,
+                                  double scale_y, double offset_y,
                                   raster_scanline_index *out,
                                   svg_shape_diagnostic *diagnostic);
 void raster_scanline_index_reset(raster_scanline_index *index);

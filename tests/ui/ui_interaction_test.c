@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static bool add_control(ui_tree *tree, uint32_t id, const char *label,
@@ -106,10 +107,29 @@ int main(void)
     if (ui_tree_add(&tree, &invalid_text)) return 9;
     char long_label[UI_TEXT_MAX_BYTES + 2U];
     memset(long_label, 'a', sizeof(long_label));
-    ui_node_spec too_long = {0};
-    too_long.id = 9U; too_long.parent_id = UI_ROOT_ID; too_long.axis = UI_AXIS_HORIZONTAL;
-    too_long.label = long_label; too_long.label_len = sizeof(long_label);
-    if (ui_tree_add(&tree, &too_long)) return 9;
+    ui_node_spec expanded = {0};
+    expanded.id = 9U; expanded.parent_id = UI_ROOT_ID;
+    expanded.axis = UI_AXIS_HORIZONTAL; expanded.label = long_label;
+    expanded.label_len = sizeof(long_label);
+    if (!ui_tree_add(&tree, &expanded)) return 9;
+    size_t over_limit_length = UI_TEXT_TOTAL_MAX_BYTES + 1U;
+    char *over_limit = malloc(over_limit_length);
+    if (over_limit == NULL) return 9;
+    memset(over_limit, 'b', over_limit_length);
+    ui_node_spec too_long = {.id = 10U, .parent_id = UI_ROOT_ID,
+        .axis = UI_AXIS_HORIZONTAL, .label = over_limit,
+        .label_len = over_limit_length};
+    bool rejected_over_limit = !ui_tree_add(&tree, &too_long);
+    free(over_limit);
+    if (!rejected_over_limit || tree.nodes[7].spec.label_len != UI_TEXT_MAX_BYTES - 1U ||
+        tree.nodes[7].full_label_len != sizeof(long_label)) return 9;
+    ui_semantics_snapshot expanded_snapshot = {0};
+    const char *expanded_text = NULL;
+    size_t expanded_length = 0U;
+    if (!ui_semantics_snapshot_build(&tree, &expanded_snapshot) ||
+        !ui_semantics_text(&expanded_snapshot, &expanded_snapshot.nodes[7], false,
+            &expanded_text, &expanded_length) || expanded_length != sizeof(long_label) ||
+        memcmp(expanded_text, long_label, sizeof(long_label)) != 0) return 9;
     if (!ui_tree_layout(&tree, 640U, 360U)) return 10;
     raster_tile before_focus = {0}, after_focus = {0};
     if (!ui_tree_render(&tree, &before_focus) || !ui_focus_next(&tree, false) ||

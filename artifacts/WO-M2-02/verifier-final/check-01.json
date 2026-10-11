@@ -1,0 +1,11 @@
+{
+  "index": 1,
+  "argv": [
+    "./dev",
+    "build"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.13171037498977967,
+  "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\nninja: no work to do.\n",
+  "stderr": ""
+}

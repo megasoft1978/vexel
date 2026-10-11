@@ -1,0 +1,223 @@
+{
+  "started_at": "2026-10-08T15:09:25.185Z",
+  "ended_at": "2026-10-08T15:09:28.769Z",
+  "elapsed_seconds": 3.584431,
+  "counts": {
+    "passed": 52,
+    "failed": 0,
+    "error": 0,
+    "skipped": 0,
+    "expected_failure": 0,
+    "unexpected_success": 0
+  },
+  "tests": [
+    {
+      "id": "tests.test_boot05.Boot05Contracts.test_fuzz_cli_bounds_and_deterministic_printable_mutation",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_boot05.Boot05Contracts.test_retained_sanitizer_probe_traces_are_compressed_evidence",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_boot05.Boot05Contracts.test_strict_schema_matches_frozen_acceptance_set",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_boot05.Boot05Contracts.test_test_results_schema_accepts_machine_result_shape",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_boot05.Boot05Contracts.test_workflow_policy_rejects_non_macos_runner",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_dev.DevCommandTests.test_help_lists_supported_commands",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_dev.DevCommandTests.test_linux_runner_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_dev.DevCommandTests.test_real_workflow_passes_policy",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_dev.DevCommandTests.test_secret_reference_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_dev.DevCommandTests.test_unknown_command_fails_with_usage",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_dev.DevCommandTests.test_unpinned_action_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_cli_rejects_invalid_entry_without_mutation",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_concurrent_appends_remain_complete_and_valid",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_duplicate_run_id_fails",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_interleaved_work_orders_keep_independent_transitions",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_invalid_append_does_not_change_ledger",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_invalid_transition_fails",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_malformed_json_and_unknown_fields_fail",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_older_blocked_revision_is_retained_but_open_revision_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_seeded_history_is_valid",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_ledger.LedgerTests.test_summary_preserves_unavailable_usage",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.FrozenWorkOrderTests.test_current_spec_hash_is_valid",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.FrozenWorkOrderTests.test_hash_mutation_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.FrozenWorkOrderTests.test_scope_rejects_escape_and_protected_paths",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.FrozenWorkOrderTests.test_work_order_path_rules_read_all_comma_separated_entries",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.FrozenWorkOrderTests.test_work_order_symlink_escape_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_concurrent_lock_and_interrupted_atomic_append",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_dirty_base_is_rejected",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_driver_rejects_non_darwin_before_codex",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_executor_report_rejects_empty_acceptance_evidence",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_fake_codex_completes_new_worktree_lifecycle",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_fake_codex_success_and_timeout",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_fake_codex_verifier_uses_read_only_exact_commit",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_malformed_jsonl_and_missing_thread_id_fail_closed",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_missing_report_and_schema_fail",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_new_run_rejects_clean_non_main_branch",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_rejects_unsupported_flag",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_requires_exact_option_tokens",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_preflight_supported_fake",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_recursive_work_order_globs_match_nested_files",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_recursive_work_order_path_rules_allow_nested_evidence_and_protect_subtrees",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_report_schema_rejects_extra_fields_and_forged_failure",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_resume_identity_and_changed_cache_key",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_resume_preflight_checks_every_invocation_capability",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_resume_rejects_dirty_task_worktree",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_review_diff_excludes_old_transcripts_and_stays_bounded",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_runner_help_does_not_start_work",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_scope_git_protected_and_disallowed_paths",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_session_cache_write_error_fails_closed",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_session_parser_ignores_unknown_events_and_bad_ids",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_strict_executor_schema_expands_work_order_acceptance_ids",
+      "status": "passed"
+    },
+    {
+      "id": "tests.test_wo_runner.RunnerPrimitiveTests.test_verifier_stops_when_deterministic_check_fails",
+      "status": "passed"
+    }
+  ]
+}

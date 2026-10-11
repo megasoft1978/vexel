@@ -1,0 +1,18 @@
+P2 named regressions: pre-fix Release renderer versus repaired Release renderer and
+the test-only unculled Debug reference. Pre-fix renderer binary was copied from
+the worktree before source edits. A nonzero pre-fix byte mismatch and an exact
+candidate/reference match were required for each case.
+
+radial-gradient-interior: pre_fix_diff_bytes=176; candidate_matches_reference=True;
+pre_fix_sha256=52900bf1df350947c0050eecb77dde858e153367797d8f8d12b5d233395044ce;
+candidate_sha256=25d8e7803bba4e108426b1883e001d2f092f312ddf50a7eedc94bea91971d51d;
+reference_sha256=25d8e7803bba4e108426b1883e001d2f092f312ddf50a7eedc94bea91971d51d
+
+clip-half-pixel-x20_5: pre_fix_diff_bytes=12; candidate_matches_reference=True;
+pre_fix_sha256=edad8237660a956da051b27ecf45169c18c29f4d2d55a68a4e31abc4979d32e8;
+candidate_sha256=2f0eccba4383051c3fafa5d2d14cbc5debd01348c4e63fb4bbcf89c5dff41327;
+reference_sha256=2f0eccba4383051c3fafa5d2d14cbc5debd01348c4e63fb4bbcf89c5dff41327
+
+P3 zero-area first-shape regression: `shape_test` requires stable `unsupported`
+diagnostic at the `url(#g)` source offset for a zero-width gradient rect. The
+same shape test passed Debug, ASan+UBSan CTest, and UBSan CTest.

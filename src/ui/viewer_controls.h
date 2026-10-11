@@ -5,8 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define UI_VIEWER_MIN_SCALE 0.05
-#define UI_VIEWER_MAX_SCALE 64.0
+#define UI_VIEWER_MIN_SCALE 0.001
+#define UI_VIEWER_MAX_SCALE 1000.0
 #define UI_VIEWER_LABEL_CAP 96U
 
 typedef struct ui_viewer_navigation {
@@ -59,6 +59,10 @@ bool ui_viewer_navigation_drag_scaled(ui_viewer_navigation *state, double logica
                                        double logical_y, double backing_scale);
 bool ui_viewer_navigation_zoom(ui_viewer_navigation *state, double factor,
                                double cursor_x, double cursor_y);
+bool ui_viewer_navigation_zoom_to(ui_viewer_navigation *state, double scale,
+                                  double anchor_x, double anchor_y);
+bool ui_viewer_navigation_zoom_to_bounds(ui_viewer_navigation *state,
+    double x, double y, double width, double height, double padding);
 bool ui_viewer_navigation_wheel(ui_viewer_navigation *state, double delta_y,
                                 double cursor_x, double cursor_y);
 bool ui_viewer_navigation_wheel_scaled(ui_viewer_navigation *state, double delta_y,
@@ -70,6 +74,8 @@ bool ui_viewer_navigation_pinch_scaled(ui_viewer_navigation *state, double magni
                                        double logical_x, double logical_y,
                                        double backing_scale);
 bool ui_viewer_navigation_fit(ui_viewer_navigation *state);
+bool ui_viewer_navigation_fit_width(ui_viewer_navigation *state);
+bool ui_viewer_navigation_actual_size(ui_viewer_navigation *state);
 bool ui_viewer_navigation_key(ui_viewer_navigation *state, ui_viewer_key key);
 bool ui_viewer_navigation_project(const ui_viewer_navigation *state, double world_x,
                                   double world_y, double *screen_x, double *screen_y);

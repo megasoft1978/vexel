@@ -1,0 +1,25 @@
+WO-M4-02 revision 2 frozen verification transcript summary
+Date: 2026-10-09
+Base: 5ca87f7b7835c159550be754afd263051d982925
+Task-worktree starting HEAD: 73c1d357904c7215fe9e0cac5442807fe72467eb
+
+PASS (exit 0): cmake --preset mac-debug && cmake --build --preset mac-debug
+FAIL (exit 8): ctest --test-dir build/mac-debug --output-on-failure; 10/11 pass, index-replay fails: offscreen Metal device or queue unavailable. Reproduced on retry.
+PASS (exit 0): python3 -m unittest tests.test_shape_render; 9 tests pass, including all 10 fixture comparisons.
+PASS (exit 0): ./dev shape-fuzz --duration 60 --seed 20261009 --output artifacts/WO-M4-02/fuzz-report.json; 1,000,000 cases, 0 sanitizer reports, 0 crashes, 0 invariant failures; 24.275 s wall time.
+PASS (exit 0): cmake --preset mac-release && cmake --build --preset mac-release
+PASS (exit 0): ./dev bench-corpus --run; 58 files / 116 trials; 2 ok, 56 unsupported, 0 limit, 0 crash.
+PASS (exit 0): ./dev bench-corpus --check; 58 files / 116 trials reconciled.
+FAIL (exit 8): ./dev verify; same index-replay Metal queue failure before the Python suite runs.
+FAIL (exit 8): ./dev asan; 10/11 CTests pass; index-replay has the same Metal queue failure.
+FAIL (exit 8): ./dev ubsan; 10/11 CTests pass; index-replay has the same Metal queue failure.
+PASS (exit 0): python3 reports/M4/path-command-inventory.py --corpus-dir /Users/megasoft78/Desktop/Freelance/vexel-corpus-real --check; validates all 58 entries, 56 path-bearing files, 1,438 lowercase s in 3 files, 0 t.
+PASS (exit 0): python3 -m json.tool reports/M4/head-to-head.json
+PASS (exit 0): python3 scripts/ledger.py validate ledger.jsonl
+PASS (exit 0): python3 scripts/wo_validate.py WO-M4-02 --ready; revision 2 frozen SHA-256 matches supplied value.
+PASS (exit 0): git diff --check
+FAIL (exit 1): ./dev test-fast; 192 Python tests: 182 passed, 8 failed, 2 errors. Failures/errors are process-policy sandbox and native Metal tests; details are in .cache/test-results/latest.json.
+
+Renderer: rsvg-convert 2.63.2 (Cairo 1.18.6, Pango 1.58.2, HarfBuzz 14.6.0).
+Corpus baseline SHA-256 remains 3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba; the baseline was not rerun or modified.
+Measurement note: /usr/bin/time -l could not query kern.clockrate in the managed sandbox. Per-file RSS uses svg_index_bench getrusage metrics; this limitation is recorded in JSON and docs/PERF.md.

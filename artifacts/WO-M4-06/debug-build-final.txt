@@ -1,0 +1,15 @@
+[1/14] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[2/14] Linking C executable bin/ui_interaction_test
+[3/14] Linking C executable bin/ui_demo_render
+[4/14] Linking C executable bin/shape_fuzz
+[5/14] Linking C executable bin/ui_focus_bench
+[6/14] Linking C executable bin/ui_demo_interaction_test
+[7/14] Linking C executable bin/svg_index_bench
+[8/14] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[9/14] Linking C executable bin/ui_core_test
+[10/14] Linking C executable bin/css_test
+[11/14] Linking C executable bin/viewer_frame_test
+[12/14] Linking C executable bin/shape_render_reference_cli
+[13/14] Linking C executable bin/shape_render_stats_cli
+[14/14] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

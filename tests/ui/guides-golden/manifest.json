@@ -1,0 +1,37 @@
+{
+  "screenshots": {
+    "rulers-guides-dark-1x.png": {
+      "backing_scale": 1,
+      "height": 480,
+      "renderer": "scalar ruler ticks and CoreText numeric labels",
+      "sha256": "05dc02f9e763f89741e623ae44d06196ce3eea22cd7c22938d4f4b2e2e8e15b5",
+      "theme": "dark",
+      "width": 640
+    },
+    "rulers-guides-dark-2x.png": {
+      "backing_scale": 2,
+      "height": 960,
+      "renderer": "scalar ruler ticks and CoreText numeric labels",
+      "sha256": "f6e4e4c4858cc44883fed7b0375c4e80e3356f9fdefe3b05fdedf93fb2213bcd",
+      "theme": "dark",
+      "width": 1280
+    },
+    "rulers-guides-light-1x.png": {
+      "backing_scale": 1,
+      "height": 480,
+      "renderer": "scalar ruler ticks and CoreText numeric labels",
+      "sha256": "91bfb417ab0aacda82f31ce3ce935f54558ba2b99b33c7a493d50a6ea5eeca3f",
+      "theme": "light",
+      "width": 640
+    },
+    "rulers-guides-light-2x.png": {
+      "backing_scale": 2,
+      "height": 960,
+      "renderer": "scalar ruler ticks and CoreText numeric labels",
+      "sha256": "10d10c009461e49f56ea3b38500dfc0d71219cd50760f55248bf749cfa6b8f0b",
+      "theme": "light",
+      "width": 1280
+    }
+  },
+  "version": 1
+}

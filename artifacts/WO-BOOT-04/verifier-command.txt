@@ -1,0 +1,3 @@
+$ ./scripts/wo-verify.sh WO-BOOT-04 05dc456a90ef67a8d9a1f8344fd52fe000f1af9c > artifacts/WO-BOOT-04/fresh-verifier-final.txt 2>&1
+exit: 0
+See fresh-verifier-final.txt for the exact structured wrapper result and deterministic checks.

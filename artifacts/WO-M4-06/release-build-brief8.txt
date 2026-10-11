@@ -1,0 +1,31 @@
+[1/30] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_paint_edge_span.c.o
+[2/30] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
+[3/30] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_sample.c.o
+[4/30] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_clip_work_budget.c.o
+[5/30] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
+[6/30] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[7/30] Building C object CMakeFiles/vexel_shape.dir/src/svg/clip/clip.c.o
+[8/30] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[9/30] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[10/30] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
+[11/30] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
+[12/30] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
+[13/30] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[14/30] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[15/30] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[16/30] Linking C static library libvexel_shape.a
+[17/30] Linking C executable bin/shape_render_cli
+[18/30] Linking C executable bin/ui_focus_bench
+[19/30] Linking C executable bin/ui_demo_interaction_test
+[20/30] Linking C executable bin/ui_core_test
+[21/30] Linking C executable bin/ui_interaction_test
+[22/30] Linking C executable bin/shape_render_reference_cli
+[23/30] Linking C executable bin/shape_render_stats_cli
+[24/30] Linking C executable bin/ui_demo_render
+[25/30] Linking C executable bin/css_test
+[26/30] Linking C executable bin/shape_fuzz
+[27/30] Linking C executable bin/shape_test
+[28/30] Linking C executable bin/viewer_frame_test
+[29/30] Linking C executable bin/svg_index_bench
+[30/30] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

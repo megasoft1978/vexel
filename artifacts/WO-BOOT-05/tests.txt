@@ -1,0 +1,15 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-05/build/mac-debug
+ninja: no work to do.
+Ran 52 tests in 3.556s
+
+OK
+Ran 52 tests: 52 passed, 0 failed, 0 errors, 0 skipped; 3.584s
+valid ledger: 51 entries

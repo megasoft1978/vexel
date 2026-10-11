@@ -1,0 +1,25 @@
+{
+  "metrics": {
+    "100MiB.first_preview_p95_ns": {
+      "last_status": "violation",
+      "last_value": 327694375,
+      "streak": 2
+    },
+    "100MiB.max_step_ns": {
+      "last_status": "none",
+      "last_value": null,
+      "streak": 0
+    },
+    "100MiB.peak_rss_bytes": {
+      "last_status": "violation",
+      "last_value": 139411456,
+      "streak": 2
+    },
+    "10MiB.first_preview_p95_ns": {
+      "last_status": "healthy",
+      "last_value": 31267584,
+      "streak": 0
+    }
+  },
+  "schema_version": 1
+}

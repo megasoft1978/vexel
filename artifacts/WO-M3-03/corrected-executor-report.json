@@ -1,0 +1,147 @@
+{
+  "status": "complete",
+  "base_sha": "89b654c182b221967e0031ccde0ece80a5882d5f",
+  "head_sha": "8f9c8504716a59f2967167015d714c1e30675d2a",
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_jobs"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": [
+            "./build/mac-debug/bin/job_snapshot_test"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": [
+            "./build/mac-release/bin/job_snapshot_test",
+            "--benchmark",
+            "--output",
+            "artifacts/WO-M3-03/schedule-benchmark.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "tsan"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--preset",
+            "mac-release"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "--preset",
+            "mac-release",
+            "--parallel",
+            "4"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M3-03",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-M3-03/schedule-benchmark.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-M3-03/scheduler-tests.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "summary": "Implemented owned queue-context cleanup, immutable refcounted source snapshots, bounded scheduling, generation-safe delivery, randomized tests, 1,000 lifecycle cycles, and a macOS TSan path. The runner's sequential clean-worktree execution passed all 16 frozen commands: Debug/ASan/UBSan CTest 10/10, full suite 177/177, and TSan 1/1. Release benchmark: 1,000 cycles in 0.018880 seconds; maximum join 0.000110 seconds; binary 70,288 bytes. The runner rejected the original executor report because its acceptance entries cited commands outside the frozen list; this corrected report cites the exact passing frozen commands. Independent review is pending."
+}

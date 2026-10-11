@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "transport": "vexel-mcp stdio -> headless broker when no app window is present",
+  "featureProbe": "tools/list",
+  "scenarios": [
+    {
+      "name": "flat-style-icon",
+      "requiresTools": ["document_open", "tree_get", "element_add", "attribute_set", "render_png", "element_get", "export_svg", "save"],
+      "golden": "flat-style-icon.ppm"
+    },
+    {
+      "name": "gradient-sunset",
+      "requiresTools": ["document_open", "tree_get", "element_add_fragment", "element_add", "attribute_set", "render_png", "element_get", "export_svg", "save"],
+      "golden": "gradient-sunset.ppm"
+    },
+    {
+      "name": "bouncing-ball-smil",
+      "requiresTools": ["document_open", "tree_get", "element_add", "animation_add", "animation_list", "render_png", "element_get", "export_svg", "save"],
+      "golden": "bouncing-ball-smil.ppm",
+      "time": 1
+    },
+    {
+      "name": "spinner-smil",
+      "requiresTools": ["document_open", "tree_get", "element_add", "animation_add", "animation_list", "render_png", "element_get", "export_svg", "save"],
+      "golden": "spinner-smil.ppm",
+      "time": 0.25
+    },
+    {
+      "name": "morph-free-logo-reveal",
+      "requiresTools": ["document_open", "tree_get", "element_add", "animation_add", "animation_list", "render_png", "element_get", "export_svg", "save"],
+      "golden": "morph-free-logo-reveal.ppm",
+      "time": 0.5
+    }
+  ]
+}

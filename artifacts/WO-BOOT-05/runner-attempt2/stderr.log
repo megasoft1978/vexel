@@ -1,0 +1,6 @@
+2026-10-08T14:32:36.134745Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase_prod
+2026-10-08T14:32:36.193485Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase
+2026-10-08T14:32:36.226507Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase_dev
+2026-10-08T14:32:37.115007Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server vercel: OAuth refresh token was rejected: Server returned error response: invalid_grant: Refresh token is invalid.
+2026-10-08T14:32:37.127864Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server stripe: OAuth refresh token was rejected: Server returned error response: invalid_grant: Invalid refresh token
+2026-10-08T14:32:40.015789Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server jam: OAuth refresh token was rejected: Server returned error response: invalid_grant: Invalid or already used refresh token

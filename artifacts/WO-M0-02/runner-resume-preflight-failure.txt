@@ -1,0 +1,2 @@
+Runner attempt 55cd0237-6b51-4fb5-af61-cdf284465c56 stopped before a Codex model turn: codex exec resume rejected the sandbox selector `-s`.
+A runner fix was briefly tested, but the fresh verifier correctly found that resume-sandbox behavior exceeded WO-M0-02's runner-file scope. That fix was removed; schedule it as a separate runner hardening order after the M0-02 baseline is accepted.

@@ -1,0 +1,159 @@
+{
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "perf-gate",
+            "--help"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "perf-gate",
+            "--output",
+            ".cache/WO-BOOT-08/result.json",
+            "--history",
+            ".cache/WO-BOOT-08/history.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "perf-gate",
+            "--output",
+            ".cache/WO-BOOT-08/result.json",
+            "--history",
+            ".cache/WO-BOOT-08/history.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            ".cache/WO-BOOT-08/result.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/perf-gate-baseline.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-BOOT-08.json"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_perf_gate"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-BOOT-08/gate-contract.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-BOOT-08",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-BOOT-08/perf-gate.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "artifacts/WO-BOOT-08/gate-tests.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "base_sha": "97bc3d1cb89d3cddfb48a796868fdb98aada16b7",
+  "head_sha": "d17cb50510510594fdd54ee816c58d7a1fc69b62",
+  "status": "complete",
+  "summary": "All 14 frozen acceptance commands completed successfully. Two fresh comparable runs with strict nested report validation show 100 MiB first-preview p95 within the pinned relative threshold (277.57 ms, 274.66 ms). Peak RSS breaches its relative threshold twice (137,904,128 bytes, 139,526,144 bytes), so the second run reports gate status fail while all absolute targets pass. The first maximum-step observation was noisy, the second healthy; 10 MiB p95 passed both runs. BOOT-08 is ready for owner review in the M3-05 decision packet."
+}

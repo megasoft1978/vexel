@@ -23,3 +23,23 @@ span-visit budget per decode. These counters bound repeated traversal; they do
 not trigger any source copy. The original source remains borrowed and unchanged. SVG 2 Document
 Structure was consulted 2026-10-09. The implementation is original project
 code.
+
+Attribute validation includes stroke-capable paths and basic shapes, rounded
+rectangle `rx`/`ry`, CSS presentation values, and nested `<svg>` viewport
+attributes. Text validation includes `xml:space` and the supported font, text
+anchor, and spacing properties; image hrefs are accepted only by the media-aware
+shape decoder when they use the supported embedded Base64 PNG/JPEG form.
+Unsupported attributes still fail with the original token's source offset.
+Nested viewBox mappings and viewport clipping are performed by shape traversal;
+this module only indexes and validates local references.
+
+Root `xmlns:*` declarations and unknown prefixed export metadata (for example
+Inkscape labels or Illustrator layer tags) are ignored for rendering while the
+borrowed source remains unchanged. A prefixed spelling of a recognized SVG
+paint or geometry attribute remains unsupported, so foreign metadata cannot
+silently override SVG semantics. `xlink:href` continues to be accepted only
+for validated local references.
+
+W5 local filter, mask, pattern, and marker references resolve through the same
+source-backed ID table. Their definition spans stay in the original token
+array; the resolver does not rewrite source bytes or fetch external resources.

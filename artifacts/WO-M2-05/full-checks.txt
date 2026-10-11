@@ -1,0 +1,19 @@
+WO-M2-05 revision 2 final machine checks (2026-10-09)
+
+PASS ./dev build
+PASS ctest --test-dir build/mac-debug --output-on-failure (5/5)
+PASS python3 -m unittest tests.test_shape_render (8/8; includes curve overshoot, SVG namespace, numeric separator, viewBox meet, and per-channel tolerance regressions)
+PASS ./dev shape-fuzz --duration 60 --seed 20261009 (1,000,000 random cases plus one 327,730-byte command-cap exhaustion seed; 6.579 s wall; sanitizer stderr checked and empty; ASan+UBSan clean)
+PASS python3 -m json.tool artifacts/WO-M2-05/reference-comparison.json (7/7 fixture comparisons; alpha delta <=160, covered RGB delta <=1, zero interior differences)
+PASS ./dev verify (173 Python tests, 0 failures/errors/skips; Debug CTest 5/5; native smoke and 20-frame Metal replay pass)
+PASS ./dev asan (CTest 5/5; includes aggregate multi-path command cap and viewBox letterboxing tests)
+PASS ./dev ubsan (CTest 5/5)
+PASS cmake --preset mac-release; cmake --build --preset mac-release
+PASS python3 scripts/ledger.py validate ledger.jsonl
+PASS python3 scripts/wo_validate.py WO-M2-05 --ready (revision 2, spec SHA-256 35d71223cc2beb5818d10747a0e7483ba388e428e3fb1c6482192839093da73a)
+PASS python3 -m json.tool bench/results/WO-M2-05.json
+PASS git diff --check
+
+Fresh verifier round 1 findings and fixes are recorded in `round-1-review-findings.md`. Round 2 findings and fixes are in `round-2-review-findings.md`. Round 3 found the aggregate document command cap, default viewBox sizing, incomplete reference tolerance checks, and stale performance text; fixes are recorded in `round-3-review-findings.md`. Round 4 found missing rectangle dimensions and ignored processing instructions; fixes are recorded in `round-4-review-findings.md`. A fresh exact-commit review round 5 is pending.
+
+PASS Release end-to-end benchmark: 7 measured fresh processes after 2 warmups; median 15.265 ms, p95 16.618 ms, 4.29 MPixel/s, maximum RSS 2,244,608 bytes; raw evidence `artifacts/WO-M2-05/render-benchmark.json`.

@@ -1,0 +1,1 @@
+{"verdict":"pass","findings":[],"summary":"The candidate meets the reviewed acceptance criteria. Debug, sanitizer, Release, focused reference, fuzz, benchmark, corpus, and validator results pass; pending acceptance status is expected for this review."}

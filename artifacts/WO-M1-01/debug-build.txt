@@ -1,0 +1,11 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-01/build/mac-debug
+[1/2] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
+[2/2] Linking C executable bin/svgworkbench

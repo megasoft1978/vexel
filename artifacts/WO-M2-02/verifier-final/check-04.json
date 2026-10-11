@@ -1,0 +1,13 @@
+{
+  "index": 4,
+  "argv": [
+    "python3",
+    "tests/svg/xml/compare_expat.py",
+    "--expect-expat",
+    "expat_2.6.4"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.30678108301071916,
+  "stdout": "compared 24 pinned fixtures using Python 3.12.8 / expat_2.6.4\n",
+  "stderr": ""
+}

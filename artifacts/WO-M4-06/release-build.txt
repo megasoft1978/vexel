@@ -1,0 +1,56 @@
+[1/55] Building C object CMakeFiles/vexel_ui_core.dir/src/ui/ui_widgets.c.o
+[2/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
+[3/55] Building C object CMakeFiles/svgworkbench.dir/src/app/viewer_load.c.o
+[4/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
+[5/55] Building C object CMakeFiles/vexel_document.dir/src/document/document_model.c.o
+[6/55] Building C object CMakeFiles/svgworkbench.dir/app/index_replay.c.o
+[7/55] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline.c.o
+[8/55] Building C object CMakeFiles/ui_demo_render.dir/app/ui_demo_render.c.o
+[9/55] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[10/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/clip/clip.c.o
+[11/55] Building C object CMakeFiles/ui_demo_render.dir/app/ui_demo.c.o
+[12/55] Building C object CMakeFiles/vexel_ui_core.dir/src/ui/ui_core.c.o
+[13/55] Building C object CMakeFiles/svgworkbench.dir/src/app/viewer.c.o
+[14/55] Building C object CMakeFiles/svgworkbench.dir/src/app/render_frame_cli.c.o
+[15/55] Building C object CMakeFiles/ui_interaction_test.dir/tests/ui/ui_interaction_test.c.o
+[16/55] Building C object CMakeFiles/ui_demo_interaction_test.dir/tests/ui/ui_demo_interaction_test.c.o
+[17/55] Building C object CMakeFiles/ui_focus_bench.dir/app/ui_focus_bench.c.o
+[18/55] Building C object CMakeFiles/ui_demo_interaction_test.dir/app/ui_demo.c.o
+[19/55] Building C object CMakeFiles/svgworkbench.dir/app/main.c.o
+[20/55] Building C object CMakeFiles/ui_core_test.dir/tests/ui/ui_core_test.c.o
+[21/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
+[22/55] Linking C static library libvexel_document.a
+[23/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
+[24/55] Building C object CMakeFiles/svgworkbench.dir/src/app/frame_compose.c.o
+[25/55] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference_cli.c.o
+[26/55] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_stats_cli.c.o
+[27/55] Building C object CMakeFiles/viewer_frame_test.dir/tests/app/viewer_frame_test.c.o
+[28/55] Linking C executable bin/source_save_test
+[29/55] Building C object CMakeFiles/document_model_test.dir/tests/document/test_document_model.c.o
+[30/55] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[31/55] Linking C executable bin/document_model_test
+[32/55] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[33/55] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
+[34/55] Building C object CMakeFiles/shape_render_reference_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[35/55] Building C object CMakeFiles/shape_render_stats_cli.dir/tests/svg/shape/shape_render_reference.c.o
+[36/55] Building C object CMakeFiles/viewer_frame_test.dir/src/app/frame_compose.c.o
+[37/55] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[38/55] Linking C static library libvexel_shape.a
+[39/55] Linking C static library libvexel_ui_core.a
+[40/55] Linking C executable bin/shape_fuzz
+[41/55] Linking C executable bin/shape_render_stats_cli
+[42/55] Linking C executable bin/css_test
+[43/55] Linking C executable bin/svg_index_bench
+[44/55] Linking C executable bin/shape_test
+[45/55] Linking C executable bin/shape_render_reference_cli
+[46/55] Linking C executable bin/viewer_frame_test
+[47/55] Linking C executable bin/shape_render_cli
+[48/55] Linking C executable bin/ui_interaction_test
+[49/55] Linking C executable bin/ui_core_test
+[50/55] Linking C executable bin/ui_demo_interaction_test
+[51/55] Linking C executable bin/ui_demo_render
+[52/55] Linking C executable bin/ui_focus_bench
+[53/55] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o
+[54/55] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o
+[55/55] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a'

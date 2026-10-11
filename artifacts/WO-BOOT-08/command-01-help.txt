@@ -1,0 +1,12 @@
+usage: perf_gate.py [-h] [--output OUTPUT] [--history HISTORY]
+                    [--baseline BASELINE]
+
+Build and run the macOS Release index performance gate (5 cold-order + 10
+warm-order trials per case).
+
+options:
+  -h, --help           show this help message and exit
+  --output OUTPUT      result JSON path under .cache/ (default: .cache/perf-
+                       gate/result.json)
+  --history HISTORY    per-metric streak JSON path under .cache/
+  --baseline BASELINE  pinned baseline JSON

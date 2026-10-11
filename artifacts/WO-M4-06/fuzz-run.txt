@@ -1,0 +1,22 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="asan-ubsan"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan
+[1/11] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
+[2/11] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
+[3/11] Building C object CMakeFiles/vexel_shape.dir/src/svg/clip/clip.c.o
+[4/11] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline.c.o
+[5/11] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[6/11] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
+[7/11] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
+[8/11] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[9/11] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[10/11] Linking C static library libvexel_shape.a
+[11/11] Linking C executable bin/shape_fuzz
+{"binary": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-asan/bin/shape_fuzz", "cap_exhaustion_cases": 1, "cap_exhaustion_input_bytes": 327730, "cases": 1000000, "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)", "crashes": 0, "duration_seconds": 31.433, "evenodd_cases": 250000, "evenodd_renders": 7813, "fractional_cases": 750000, "fractional_renders": 7813, "host": {"machine": "arm64", "macos_version": "27.0", "platform": "macOS-27.0-arm64-arm-64bit"}, "input_max_bytes": 327730, "invariant_failures": 0, "metric_availability": {"peak_rss": "not collected by the bounded fuzz harness"}, "nonzero_cases": 250000, "nonzero_renders": 7813, "peak_rss_bytes": null, "process_cpu_seconds": 30.909, "random_input_max_bytes": 4096, "renderer": "Vexel scalar 4x4 shape rasterizer", "result": "pass", "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer", "sanitizer_reports": 0, "sanitizer_stderr": "artifacts/WO-M4-06/fuzz-report.stderr.txt", "sanitizer_stderr_bytes": 0, "seed": 20261010, "source_revision": "0732b8e0fc32b9d41fe4ef1fb9fa190989066ef9", "stroke_cases": 48049, "stroke_renders": 3269}

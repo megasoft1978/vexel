@@ -1,0 +1,5 @@
+OWNER-DIRECTIVES reference: 3:Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first; it sets the platform
+14:- `work/`: active work orders; `OWNER-DIRECTIVES.md` takes precedence.
+
+Platform directive: 4:boundary and overrides conflicting roadmap text. vexel is macOS-only initially
+6:interfaces; do not add other-OS code, CI jobs, runners, shims, or portability

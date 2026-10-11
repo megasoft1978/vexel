@@ -1,0 +1,6 @@
+$ python3 app/test_driver/driver.py --native-metal-smoke --output-dir .cache/WO-M1-02/native-smoke
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.115506
+exit code: 0

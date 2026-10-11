@@ -1,0 +1,19 @@
+{
+  "check": "WO-M4-06 brief 8 corpus immutability",
+  "files": 58,
+  "checks": {
+    "same_file_ids": true,
+    "same_source_hashes": true,
+    "same_inkscape_baselines": true,
+    "same_manifest_sha256": true,
+    "same_inkscape_baseline_sha256": true
+  },
+  "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
+  "inkscape_baseline_sha256": "3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba",
+  "outcome_counts": {
+    "ok": 2,
+    "unsupported": 56,
+    "limit": 0,
+    "crash": 0
+  }
+}

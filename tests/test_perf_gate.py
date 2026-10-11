@@ -148,6 +148,38 @@ class PerfGateTests(unittest.TestCase):
         with self.assertRaises(gate.GateError):
             gate.validate_baseline(malformed_baseline)
 
+    def test_raw_and_generated_report_reject_nested_unknowns_and_bool_versions(self) -> None:
+        raw = valid_raw_report()
+        gate.validate_raw(raw)
+        malformed_raw = copy.deepcopy(raw)
+        malformed_raw["schema_version"] = True
+        with self.assertRaises(gate.GateError):
+            gate.validate_raw(malformed_raw)
+        malformed_raw = copy.deepcopy(raw)
+        malformed_raw["cases"]["10MiB"]["progressive_replay"]["surprise"] = 1
+        with self.assertRaises(gate.GateError):
+            gate.validate_raw(malformed_raw)
+
+        result_path = gate.ROOT / "artifacts/WO-BOOT-08/perf-gate.json"
+        result = gate.load_json(result_path, "test result report")
+        gate.validate_result(result)
+        improved = copy.deepcopy(result)
+        metric = improved["gate"]["metrics"]["100MiB.first_preview_p95_ns"]
+        metric["delta_from_baseline"] = -1
+        gate.validate_result(improved)
+        invalid_measurement = copy.deepcopy(improved)
+        invalid_measurement["gate"]["metrics"]["100MiB.first_preview_p95_ns"]["value"] = -1
+        with self.assertRaises(gate.GateError):
+            gate.validate_result(invalid_measurement)
+        malformed_result = copy.deepcopy(result)
+        malformed_result["schema_version"] = True
+        with self.assertRaises(gate.GateError):
+            gate.validate_result(malformed_result)
+        malformed_result = copy.deepcopy(result)
+        malformed_result["cases"]["100MiB"]["summary"]["surprise"] = 1
+        with self.assertRaises(gate.GateError):
+            gate.validate_result(malformed_result)
+
     def test_deterministic_serialization_and_stretch_targets_are_report_only(self) -> None:
         results, _ = gate.evaluate(self.metrics, self.limits, self.baselines,
                                    self.tolerances, self.history, True)

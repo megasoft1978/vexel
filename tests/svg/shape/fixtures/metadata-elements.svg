@@ -1,0 +1,6 @@
+<svg width="24" height="16" xmlns="http://www.w3.org/2000/svg">
+  <title>Green marker</title>
+  <desc>A rendered green rectangle.</desc>
+  <metadata><rdf:RDF xmlns:rdf="urn:example:rdf"><rdf:Description>ignored</rdf:Description></rdf:RDF></metadata>
+  <rect x="2" y="2" width="20" height="12" fill="green"/>
+</svg>

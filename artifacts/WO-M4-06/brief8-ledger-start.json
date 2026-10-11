@@ -1,0 +1,22 @@
+{
+  "ts": "2026-10-09T22:30:53Z",
+  "wo_id": "WO-M4-06",
+  "event": "run_started",
+  "revision": 4,
+  "base_sha": "fb09369fa77475707d8a1e9cde0736f033bf7130",
+  "head_sha": "9214c1c7e16645f6285466841a3c25d006b558f0",
+  "run_id": "m406-r4-review-brief8-closeout-start",
+  "session_id": "codex-wo-m406-review-brief8",
+  "model": "gpt-6",
+  "cli_version": "api-session",
+  "duration_s": 0.0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "running",
+  "artifacts": [
+    "artifacts/WO-M4-06/brief8-summary.md"
+  ],
+  "note": "Started final validation and ledger recording for review brief 8; implementation changes remain uncommitted."
+}

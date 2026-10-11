@@ -1,0 +1,3 @@
+
+$ python3 scripts/wo_validate.py WO-M3-01 --ready
+valid WO-M3-01 revision 1 sha256 609d1d2eab7264c705e54d0bf29e6ead41c837c5c99c2c4a8587924f961a317d

@@ -1,0 +1,16 @@
+<svg width="48" height="36" viewBox="0 0 48 36" color="blue">
+ <style>
+   svg g.scope rect.desc { fill: currentColor; fill-opacity: 50%; opacity: .5; }
+   svg g.scope line.stroke { stroke: red; stroke-width: 2; stroke-opacity: 50%; }
+   #hidden { visibility: hidden; }
+   .gone { display: none; }
+   .hole { fill-rule: evenodd; }
+ </style>
+ <g class="scope">
+   <rect class="desc" x="2" y="2" width="12" height="12"/>
+   <rect id="hidden" x="18" y="2" width="12" height="12" fill="red"/>
+   <rect class="gone" x="34" y="2" width="12" height="12" fill="green"/>
+   <line class="stroke" x1="2" y1="19" x2="18" y2="19"/>
+ </g>
+ <path class="hole" d="M24 16 H44 V32 H24 Z M29 21 H39 V27 H29 Z" fill="yellow"/>
+</svg>

@@ -1,0 +1,10 @@
+WO-M5-01 closeout
+
+Release configure/build: pass; see release-build.txt.
+Debug configure/build: pass; see debug-build.txt.
+handle-matrix.json and xml-fuzz.json: valid JSON.
+WO validation: valid WO-M5-01 revision 1 sha256 cf0f14bac2a33b49ed9c2f1dc398fcc80e7a801ac75764862df05b97dabd50fc
+Ledger validation: valid ledger: 378 entries
+git diff --check: pass (exit 0, no whitespace diagnostics).
+Release svgworkbench size: 206304 bytes.
+XML tokenizer fuzz: pass, 60583 iterations in 1.014s.

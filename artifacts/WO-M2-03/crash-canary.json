@@ -1,0 +1,17 @@
+{
+  "failure_files": "artifacts/WO-M2-03/failures/synthetic-canary",
+  "fingerprint": "2653975861548a33291c9fa39c79d0286fb8d0b1c65e33a25e29fd3b9e32455b",
+  "iteration": 0,
+  "kind": "synthetic_harness_canary",
+  "minimized_fingerprint": "2653975861548a33291c9fa39c79d0286fb8d0b1c65e33a25e29fd3b9e32455b",
+  "minimized_sha256": "52158144ff1689abbe0b1b2be540df14c2a048b54ce6126e2cf72a061ccb36c7",
+  "minimized_size": 22,
+  "original_sha256": "bbef9cba4eb563495b41dc9168278425790a92c6d923dac64ea7701109efc4b1",
+  "original_size": 45,
+  "raw_output": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"<string>\", line 1, in <genexpr>\nRuntimeError: SYNTHETIC_HARNESS_CANARY\n",
+  "reproduction_command": "python3 scripts/xml_fuzz_campaign.py --self-test-crash",
+  "same_fingerprint": true,
+  "seed": 0,
+  "signal_or_status": 1,
+  "synthetic": true
+}

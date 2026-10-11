@@ -1,0 +1,29 @@
+{
+  "records": [
+    {
+      "fixture": "c_authored_native_contract",
+      "source_bytes": 255,
+      "saved_bytes": 255,
+      "source_sha256": "f039b74c1891195dbadbc9d2f74fed4667103b2ed00e9bead3f9394c97c07959",
+      "saved_sha256": "f039b74c1891195dbadbc9d2f74fed4667103b2ed00e9bead3f9394c97c07959",
+      "matching_sha256": true,
+      "verified_by": "C byte-for-byte memcmp"
+    },
+    {
+      "fixture": "metadata_namespaces_comments_mixed_lines",
+      "source_bytes": 255,
+      "saved_bytes": 255,
+      "source_sha256": "f039b74c1891195dbadbc9d2f74fed4667103b2ed00e9bead3f9394c97c07959",
+      "saved_sha256": "f039b74c1891195dbadbc9d2f74fed4667103b2ed00e9bead3f9394c97c07959",
+      "matching_sha256": true
+    },
+    {
+      "fixture": "processing_instruction_cdata_and_cr",
+      "source_bytes": 132,
+      "saved_bytes": 132,
+      "source_sha256": "83d03187e3b9c5cd3f6bd5683511e445a4bb1b8a505425772720ac19cdfee4b8",
+      "saved_sha256": "83d03187e3b9c5cd3f6bd5683511e445a4bb1b8a505425772720ac19cdfee4b8",
+      "matching_sha256": true
+    }
+  ]
+}

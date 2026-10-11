@@ -1,0 +1,65 @@
+{
+    "work_order": "WO-M2-01",
+    "revision": 2,
+    "machine": "Apple Silicon arm64, macOS 27.0",
+    "compiler": "Apple Clang 21.0.0.21000334",
+    "build": "Debug and Release",
+    "acceptance_status": "machine_checks_passed_pending_independent_review",
+    "binary_bytes": {
+        "release_svgworkbench": 97040,
+        "release_base_static_library": 3504,
+        "rss": null
+    },
+    "arena_boundary": {
+        "initial_chunk_bytes": 16,
+        "capacity_limit_bytes": 96,
+        "retained_chunks": 5,
+        "payload_capacity_bytes": 80,
+        "used_bytes_including_alignment_padding": 13,
+        "alignments": [
+            1,
+            2,
+            4,
+            8,
+            16,
+            64,
+            256,
+            4096
+        ],
+        "allocation_failure": {
+            "allocator_calls": 6,
+            "frees_after_destroy": 4,
+            "live_allocations_after_destroy": 0,
+            "failed_push_preserved_statistics": true
+        }
+    },
+    "tests": {
+        "debug_ctest_passed": 2,
+        "debug_ctest_total": 2,
+        "asan_ctest_passed": 2,
+        "asan_ctest_total": 2,
+        "ubsan_ctest_passed": 2,
+        "ubsan_ctest_total": 2,
+        "python_total": 143,
+        "python_passed": 143,
+        "python_failures": 0,
+        "python_errors": 0,
+        "python_skipped": 0,
+        "fixed_seed_arithmetic_cases": 100000,
+        "fixed_seed_slice_cases": 10000
+    },
+    "claims": {
+        "svg_throughput": false,
+        "performance_improvement": false,
+        "rss": false
+    },
+    "evidence": {
+        "debug_build": "artifacts/WO-M2-01/build.txt",
+        "debug_ctest": "artifacts/WO-M2-01/ctest-debug.txt",
+        "full_suite": "artifacts/WO-M2-01/full-suite.txt",
+        "asan": "artifacts/WO-M2-01/asan.txt",
+        "ubsan": "artifacts/WO-M2-01/ubsan.txt",
+        "arena_metrics": "artifacts/WO-M2-01/arena-metrics.txt",
+        "release_build": "artifacts/WO-M2-01/release-build.txt"
+    }
+}

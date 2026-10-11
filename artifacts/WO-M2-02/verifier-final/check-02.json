@@ -1,0 +1,13 @@
+{
+  "index": 2,
+  "argv": [
+    "ctest",
+    "--test-dir",
+    "build/mac-debug",
+    "--output-on-failure"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.6423844160017325,
+  "stdout": "Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\nTest project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M2-02-75b3883a-1f47-4f83-ad19-f5b316ba5d16/build/mac-debug\n    Start 1: cli-version\n1/3 Test #1: cli-version ......................   Passed    0.20 sec\n    Start 2: base-contract\n2/3 Test #2: base-contract ....................   Passed    0.17 sec\n    Start 3: xml-tokenizer\n3/3 Test #3: xml-tokenizer ....................   Passed    0.23 sec\n\n100% tests passed, 0 tests failed out of 3\n\nTotal Test time (real) =   0.60 sec\n",
+  "stderr": ""
+}

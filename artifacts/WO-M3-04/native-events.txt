@@ -1,0 +1,11 @@
+WO-M3-04 native input evidence
+
+./build/mac-debug/bin/svgworkbench --native-navigation-event-smoke
+exit_code: 0
+native scroll: delta=(2,-120) cursor=(42.5,31.25)
+native magnify: delta=0.125 cursor=(42.5,31.25)
+
+Both event handlers preserve finite positive backing_scale from the active
+window. Cursor positions remain fractional logical top-left points; the C
+retina test converts viewport and cursor to backing pixels at 2x and preserves
+the anchored world point. The scaled drag helpers are covered by the same 2x C test.

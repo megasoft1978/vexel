@@ -4,14 +4,14 @@ import json
 import platform
 import random
 import shutil
-import struct
 import subprocess
 import tempfile
+import time
 import unittest
-import zlib
 from pathlib import Path
 
 from tests.svg.shape.paint_clip_generator import random_paint_clip_document
+from tests.svg.shape.png_utils import png_rgba
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMP_ROOT = ROOT / ".cache"
@@ -20,54 +20,7 @@ FIXTURES = ROOT / "tests/svg/shape/fixtures"
 CLI = ROOT / "build/mac-debug/bin/shape_render_cli"
 REFERENCE_CLI = ROOT / "build/mac-debug/bin/shape_render_reference_cli"
 STATS_CLI = ROOT / "build/mac-debug/bin/shape_render_stats_cli"
-OUT = ROOT / "artifacts/WO-M4-06/reference-comparison.json"
-
-
-def png_rgba(data):
-    if data[:8] != b"\x89PNG\r\n\x1a\n":
-        raise ValueError("not PNG")
-    pos, compressed, width, height, bpp = 8, bytearray(), 0, 0, 0
-    while pos < len(data):
-        size = struct.unpack(">I", data[pos:pos + 4])[0]
-        kind = data[pos + 4:pos + 8]
-        payload = data[pos + 8:pos + 8 + size]
-        if kind == b"IHDR":
-            width, height, depth, color, comp, filt, interlace = struct.unpack(">IIBBBBB", payload)
-            if depth != 8 or color != 6 or interlace != 0:
-                raise ValueError("reference PNG must be noninterlaced RGBA8")
-            bpp = 4
-        elif kind == b"IDAT":
-            compressed.extend(payload)
-        elif kind == b"IEND":
-            break
-        pos += size + 12
-    raw = zlib.decompress(compressed)
-    stride = width * bpp
-    rows, previous, off = [], bytearray(stride), 0
-    for _ in range(height):
-        f = raw[off]
-        row = bytearray(raw[off + 1:off + 1 + stride])
-        off += stride + 1
-        for i in range(stride):
-            a = row[i - bpp] if i >= bpp else 0
-            b = previous[i]
-            c = previous[i - bpp] if i >= bpp else 0
-            if f == 1:
-                row[i] = (row[i] + a) & 255
-            elif f == 2:
-                row[i] = (row[i] + b) & 255
-            elif f == 3:
-                row[i] = (row[i] + ((a + b) // 2)) & 255
-            elif f == 4:
-                p = a + b - c
-                pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
-                predictor = a if pa <= pb and pa <= pc else b if pb <= pc else c
-                row[i] = (row[i] + predictor) & 255
-            elif f != 0:
-                raise ValueError("unknown PNG filter")
-        rows.append(row)
-        previous = row
-    return width, height, b"".join(rows)
+OUT = Path("/private/tmp/w2-decode-reference-comparison.json")
 
 
 def random_shape_document(rng, index):
@@ -170,6 +123,49 @@ class ShapeRenderTests(unittest.TestCase):
         self.assertEqual(rgba[center:center + 4], bytes((220, 32, 35, 98)))
         self.assertNotEqual(rgba[center:center + 4], rgba[neighbor:neighbor + 4])
 
+    def test_dashed_cubic_stays_under_work_cap(self):
+        self.assertTrue(STATS_CLI.is_file(), "run ./dev build before the focused shape tests")
+        source = ('<svg width="640" height="400" viewBox="0 0 640 400">'
+                  '<path d="M280 150 C 320 20, 420 20, 460 150 '
+                  'S 560 280, 600 150" fill="none" stroke="darkgreen" '
+                  'stroke-width="8" stroke-linecap="round" '
+                  'stroke-dasharray="20 10"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-dashed-cubic-",
+                                         dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            input_path = directory / "dashed-cubic.svg"
+            output_path = directory / "dashed-cubic.rgba"
+            input_path.write_text(source, encoding="utf-8")
+            result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            counters = {key: int(value) for key, value in
+                        (line.split("=", 1) for line in result.stderr.splitlines())}
+            self.assertGreater(counters["stroke_tests"], 0)
+            self.assertLess(counters["total_work"], 200_000_000)
+            self.assertEqual(output_path.stat().st_size, 640 * 400 * 4)
+
+    def test_sparse_compound_stroke_uses_local_candidates(self):
+        self.assertTrue(STATS_CLI.is_file(), "run ./dev build before the focused shape tests")
+        source = ('<svg width="1280" height="800" viewBox="0 0 320 200">'
+                  '<path d="M16 18V180H304" fill="none" stroke="#111" '
+                  'stroke-width="2"/></svg>')
+        with tempfile.TemporaryDirectory(prefix="vexel-sparse-stroke-",
+                                         dir=TEMP_ROOT) as temp:
+            directory = Path(temp)
+            input_path = directory / "sparse-stroke.svg"
+            output_path = directory / "sparse-stroke.rgba"
+            input_path.write_text(source, encoding="utf-8")
+            result = subprocess.run([str(STATS_CLI), str(input_path), str(output_path)],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            counters = {key: int(value) for key, value in
+                        (line.split("=", 1) for line in result.stderr.splitlines())}
+            self.assertLess(counters["stroke_tests"],
+                            counters["shape_samples"] * 3 // 2)
+            self.assertLess(counters["total_work"], 200_000_000)
+            self.assertEqual(output_path.stat().st_size, 1280 * 800 * 4)
+
     def test_user_space_clip_half_pixel_edge_uses_4x4_samples(self):
         source = ('<svg width="32" height="8"><defs>'
                   '<clipPath id="c" clipPathUnits="userSpaceOnUse">'
@@ -245,9 +241,9 @@ class ShapeRenderTests(unittest.TestCase):
     def test_css_invalid_values_for_all_nine_paint_properties(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
         cases = {
-            "fill": ("magenta", "unsupported"),
+            "fill": ("not-a-css-color", "unsupported"),
             "fill-rule": ("invalid", "unsupported"),
-            "stroke": ("magenta", "unsupported"),
+            "stroke": ("not-a-css-color", "unsupported"),
             "stroke-width": ("-1", "number"),
             "stroke-linecap": ("triangle", "unsupported"),
             "stroke-linejoin": ("invalid", "unsupported"),
@@ -496,14 +492,13 @@ class ShapeRenderTests(unittest.TestCase):
             "trailing_polygon_comma": '<svg width="16" height="16"><polygon points="1 1 2 2,"/></svg>',
             "nan_transform": '<svg width="16" height="16"><g transform="translate(NaN 1)"/></svg>',
             "trailing_transform_comma": '<svg width="16" height="16"><g transform="translate(1,)"/></svg>',
-            "skew_transform": '<svg width="16" height="16"><rect width="1" height="1" transform="skewX(10)"/></svg>',
+            "malformed_skew_transform": '<svg width="16" height="16"><rect width="1" height="1" transform="skewX(nope)"/></svg>',
             "transform_overflow": '<svg width="16" height="16"><rect width="1" height="1" transform="matrix(1e300 0 0 1 0 0)"/></svg>',
             "ellipse_segment_cap": '<svg width="16" height="16"><circle r="1000000"/></svg>',
             "negative_stroke_width": '<svg width="16" height="16"><line stroke="red" stroke-width="-1"/></svg>',
             "invalid_stroke_cap": '<svg width="16" height="16"><line stroke="red" stroke-linecap="triangle"/></svg>',
             "bad_dash_separator": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1,,2"/></svg>',
             "too_many_dash_values": '<svg width="16" height="16"><line stroke="red" stroke-dasharray="1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"/></svg>',
-            "unsupported_stroked_path": '<svg width="16" height="16"><path stroke="red" d="M1 1 L8 8"/></svg>',
             "unsupported_stylesheet_pi": '<?xml-stylesheet type="text/css" href="theme.css"?><svg width="16" height="16"/>',
         }
         stroke_diagnostic_offsets = {
@@ -511,7 +506,6 @@ class ShapeRenderTests(unittest.TestCase):
             "invalid_stroke_cap": ("unsupported", "triangle"),
             "bad_dash_separator": ("number", "1,,2"),
             "too_many_dash_values": ("number", "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17"),
-            "unsupported_stroked_path": ("unsupported", "red"),
         }
         report = {"cases": [], "source_retention": "input bytes hashed before and after invocation; CLI borrows file unchanged"}
         with tempfile.TemporaryDirectory(prefix="vexel-shape-bounds-", dir=TEMP_ROOT) as temp:
@@ -621,7 +615,7 @@ class ShapeRenderTests(unittest.TestCase):
 
     def test_transform_diagnostic_preserves_attribute_value_offset(self):
         binary = ROOT / "build/mac-debug/bin/shape_render_cli"
-        source = b'<svg width="16" height="16"><g transform="skewX(10)"/></svg>'
+        source = b'<svg width="16" height="16"><g transform="skewX(nope)"/></svg>'
         with tempfile.TemporaryDirectory(prefix="vexel-transform-offset-", dir=TEMP_ROOT) as temp:
             input_path = Path(temp) / "offset.svg"
             output_path = Path(temp) / "offset.rgba"
@@ -642,7 +636,14 @@ class ShapeRenderTests(unittest.TestCase):
         feature_generated_count = 160
         rng = random.Random(seed)
         feature_rng = random.Random(feature_seed)
-        oracle_sources = list(sorted(FIXTURES.glob("*.svg")))
+        # These fixtures cover semantics that the deliberately unculled raster
+        # oracle does not model. They remain covered by the librsvg comparison.
+        oracle_exclusions = {
+            "css-composition.svg", "group-opacity-isolation.svg",
+            "root-preserve-aspect.svg",
+        }
+        oracle_sources = [path for path in sorted(FIXTURES.glob("*.svg"))
+                          if path.name not in oracle_exclusions]
         oracle_sources.extend(sorted((ROOT / "tests/viewer/fixtures").glob("*.svg")))
         sources = [path.read_bytes() for path in oracle_sources]
         generated = [random_shape_document(rng, index).encode("utf-8")

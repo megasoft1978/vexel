@@ -1,0 +1,44 @@
+{
+  "records": [
+    {
+      "failure": "malformed_xml",
+      "before_sha256": "950efdd0faf1f979c40ad1aeb482e1fb8b9aa6471a99a354a5f439ce1621dab4",
+      "after_sha256": "950efdd0faf1f979c40ad1aeb482e1fb8b9aa6471a99a354a5f439ce1621dab4",
+      "before_mode": "0o640",
+      "after_mode": "0o640",
+      "temporary_files": [],
+      "unchanged": true,
+      "verified_by": "C native contract test"
+    },
+    {
+      "failure": "injected_write",
+      "before_sha256": "950efdd0faf1f979c40ad1aeb482e1fb8b9aa6471a99a354a5f439ce1621dab4",
+      "after_sha256": "950efdd0faf1f979c40ad1aeb482e1fb8b9aa6471a99a354a5f439ce1621dab4",
+      "before_mode": "0o640",
+      "after_mode": "0o640",
+      "temporary_files": [],
+      "unchanged": true,
+      "verified_by": "C native contract test"
+    },
+    {
+      "failure": "injected_rename",
+      "before_sha256": "950efdd0faf1f979c40ad1aeb482e1fb8b9aa6471a99a354a5f439ce1621dab4",
+      "after_sha256": "950efdd0faf1f979c40ad1aeb482e1fb8b9aa6471a99a354a5f439ce1621dab4",
+      "before_mode": "0o640",
+      "after_mode": "0o640",
+      "temporary_files": [],
+      "unchanged": true,
+      "verified_by": "C native contract test"
+    },
+    {
+      "failure": "parse",
+      "before_sha256": "e5bcd2ad48aa226a6439822330b39c46be0285d4a75ccfc0ebbee4dc9d3db09a",
+      "after_sha256": "e5bcd2ad48aa226a6439822330b39c46be0285d4a75ccfc0ebbee4dc9d3db09a",
+      "before_mode": "0o604",
+      "after_mode": "0o604",
+      "temporary_files": [],
+      "unchanged": true,
+      "verified_by": "C native contract test"
+    }
+  ]
+}

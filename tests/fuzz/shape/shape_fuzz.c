@@ -10,6 +10,132 @@
 
 #define INPUT_CAP 4096U
 #define SHAPE_SOURCE_LIMIT (16U * 1024U * 1024U)
+#define FEATURE_COUNT 22U
+
+static const char *const feature_names[FEATURE_COUNT] = {
+    "path_stroke", "rounded_rect", "colors", "transforms", "opacity",
+    "nested_viewport", "gradients", "css_selectors", "length_units",
+    "text", "image", "mask", "pattern", "marker", "filter",
+    "blend_modes", "switch", "anchor", "vector_effect", "paint_order",
+    "crisp_edges", "join_fallbacks"
+};
+
+static void identify_features(const char *shape, bool features[FEATURE_COUNT])
+{
+    features[0] = strstr(shape, "<path") != NULL &&
+                  strstr(shape, "stroke=") != NULL;
+    features[1] = strstr(shape, "rx=") != NULL || strstr(shape, "ry=") != NULL;
+    features[2] = strstr(shape, "rgb(") != NULL || strstr(shape, "hsl(") != NULL ||
+                  strstr(shape, "currentColor") != NULL ||
+                  strstr(shape, "rebeccapurple") != NULL;
+    features[3] = strstr(shape, "skewX(") != NULL ||
+                  strstr(shape, "skewY(") != NULL ||
+                  strstr(shape, "rotate(") != NULL ||
+                  strstr(shape, "matrix(") != NULL;
+    features[4] = strstr(shape, "opacity=") != NULL ||
+                  strstr(shape, "opacity:") != NULL;
+    features[5] = strstr(shape, "<svg ") != NULL &&
+                  strstr(shape, "viewBox=") != NULL;
+    features[6] = strstr(shape, "Gradient") != NULL ||
+                  strstr(shape, "gradient") != NULL ||
+                  strstr(shape, "url(#") != NULL;
+    features[7] = strstr(shape, "<style>") != NULL;
+    features[8] = strstr(shape, "em\"") != NULL || strstr(shape, "mm") != NULL ||
+                  strstr(shape, "cm\"") != NULL || strstr(shape, "pt\"") != NULL ||
+                  strstr(shape, "in\"") != NULL;
+    features[9] = strstr(shape, "<text") != NULL || strstr(shape, "<tspan") != NULL;
+    features[10] = strstr(shape, "<image") != NULL ||
+                   strstr(shape, "data:image/") != NULL;
+    features[11] = strstr(shape, "<mask") != NULL ||
+                   strstr(shape, "mask=") != NULL;
+    features[12] = strstr(shape, "<pattern") != NULL ||
+                   strstr(shape, "pattern") != NULL;
+    features[13] = strstr(shape, "<marker") != NULL ||
+                   strstr(shape, "marker-") != NULL;
+    features[14] = strstr(shape, "<filter") != NULL ||
+                   strstr(shape, "filter=") != NULL;
+    features[15] = strstr(shape, "mix-blend-mode") != NULL ||
+                   strstr(shape, "isolation") != NULL ||
+                   strstr(shape, "<feBlend") != NULL;
+    features[16] = strstr(shape, "<switch") != NULL;
+    features[17] = strstr(shape, "<a>") != NULL;
+    features[18] = strstr(shape, "vector-effect") != NULL;
+    features[19] = strstr(shape, "paint-order") != NULL;
+    features[20] = strstr(shape, "crispEdges") != NULL;
+    features[21] = strstr(shape, "stroke-linejoin=\"arcs\"") != NULL ||
+                   strstr(shape, "stroke-linejoin=\"miter-clip\"") != NULL;
+}
+
+static svg_shape_media_status fuzz_layout_text(
+    void *context, const svg_shape_text_request *request,
+    svg_shape_text_layout *out)
+{
+    (void)context;
+    if (request == NULL || out == NULL || request->text.len >
+        SVG_SHAPE_MEDIA_MAX_TEXT_BYTES) return SVG_SHAPE_MEDIA_LIMIT;
+    size_t glyph_count = 0U;
+    for (size_t i = 0U; i < request->text.len; ++i)
+        if ((request->text.ptr[i] & 0xC0U) != 0x80U) glyph_count++;
+    if (glyph_count > SVG_SHAPE_MEDIA_MAX_GLYPHS) return SVG_SHAPE_MEDIA_LIMIT;
+    size_t command_count = glyph_count == 0U ? 0U : 5U;
+    svg_shape_text_glyph *glyphs = glyph_count == 0U ? NULL :
+        calloc(glyph_count, sizeof(*glyphs));
+    svg_shape_text_command *commands = command_count == 0U ? NULL :
+        calloc(command_count, sizeof(*commands));
+    if ((glyph_count != 0U && glyphs == NULL) ||
+        (command_count != 0U && commands == NULL)) {
+        free(glyphs);
+        free(commands);
+        return SVG_SHAPE_MEDIA_OOM;
+    }
+    if (command_count != 0U) {
+        commands[0] = (svg_shape_text_command){SVG_SHAPE_TEXT_MOVE, {0.0, 0.0}};
+        commands[1] = (svg_shape_text_command){SVG_SHAPE_TEXT_LINE, {4.0, 0.0}};
+        commands[2] = (svg_shape_text_command){SVG_SHAPE_TEXT_LINE, {4.0, 6.0}};
+        commands[3] = (svg_shape_text_command){SVG_SHAPE_TEXT_LINE, {0.0, 6.0}};
+        commands[4] = (svg_shape_text_command){SVG_SHAPE_TEXT_CLOSE, {0.0}};
+    }
+    for (size_t i = 0U; i < glyph_count; ++i) {
+        glyphs[i] = (svg_shape_text_glyph){
+            .x = (double)i * 5.0, .advance = 5.0,
+            .command_start = i == 0U ? 0U : command_count,
+            .command_count = i == 0U ? command_count : 0U};
+    }
+    *out = (svg_shape_text_layout){
+        .glyphs = glyphs, .glyph_count = glyph_count,
+        .commands = commands, .command_count = command_count,
+        .advance_width = (double)glyph_count * 5.0,
+        .ascent = 6.0, .descent = 1.0};
+    return SVG_SHAPE_MEDIA_OK;
+}
+
+static void fuzz_release_text(void *context, svg_shape_text_layout *layout)
+{
+    (void)context;
+    if (layout == NULL) return;
+    free(layout->glyphs);
+    free(layout->commands);
+    *layout = (svg_shape_text_layout){0};
+}
+
+static const uint8_t fuzz_image_pixels[4] = {40U, 120U, 200U, 255U};
+
+static svg_shape_media_status fuzz_decode_image(
+    void *context, base_bytes encoded, svg_shape_decoded_image *out)
+{
+    (void)context;
+    if (out == NULL || encoded.ptr == NULL || encoded.len == 0U)
+        return SVG_SHAPE_MEDIA_INVALID;
+    *out = (svg_shape_decoded_image){
+        fuzz_image_pixels, sizeof(fuzz_image_pixels), 4U, 1U, 1U, NULL};
+    return SVG_SHAPE_MEDIA_OK;
+}
+
+static void fuzz_release_image(void *context, svg_shape_decoded_image *image)
+{
+    (void)context;
+    if (image != NULL) *image = (svg_shape_decoded_image){0};
+}
 
 static uint32_t next_u32(uint32_t *state)
 {
@@ -73,6 +199,32 @@ int main(int argc, char **argv)
         "<polyline points=\"2 2 8 2 8 2 8 8\" fill=\"none\" stroke=\"green\" stroke-width=\"1.5\" stroke-linejoin=\"bevel\"/>",
         "<polygon points=\"2 2 8 2 8 8 2 8\" fill=\"none\" stroke=\"#369\" stroke-width=\"2\" stroke-linejoin=\"miter\" stroke-miterlimit=\"2\"/>",
         "<line x1=\"1\" y1=\"8\" x2=\"15\" y2=\"8\" stroke=\"black\" stroke-dasharray=\"3 2 1\" stroke-dashoffset=\"-2\"/>"
+        ,"<path fill=\"none\" stroke=\"blue\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-dasharray=\"3mm 2mm\" d=\"M1 2 C3 0 5 4 7 2 A3 2 10 0 1 13 4\"/>"
+        ,"<rect x=\"5%\" y=\"1em\" width=\"50%\" height=\"4cm\" rx=\"20%\" ry=\"2pt\" fill=\"rgba(0 255 0 / 50%)\"/>"
+        ,"<g transform=\"matrix(1 0.1 0.2 1 1 1) skewY(5) rotate(10 4 4)\"><polygon points=\"1 1 8 2 6 9\" fill-rule=\"evenodd\" fill=\"hsl(240 100% 50%)\"/></g>"
+        ,"<g opacity=\"0.5\"><rect x=\"1\" y=\"1\" width=\"6\" height=\"6\" fill=\"red\"/><circle cx=\"5\" cy=\"5\" r=\"4\" fill=\"blue\"/></g>"
+        ,"<svg x=\"1\" y=\"1\" width=\"8\" height=\"8\" viewBox=\"0 0 4 4\" preserveAspectRatio=\"none\"><rect width=\"100%\" height=\"100%\" fill=\"rebeccapurple\"/></svg>"
+        ,"<defs><linearGradient id=\"base\" gradientUnits=\"userSpaceOnUse\" x2=\"8\" spreadMethod=\"reflect\"><stop stop-color=\"red\"/><stop offset=\"1\" stop-color=\"blue\"/></linearGradient><linearGradient id=\"g\" href=\"#base\" gradientTransform=\"translate(2 0)\"/><radialGradient id=\"r\" cx=\"0.4\" cy=\"0.5\" r=\"0.5\" fx=\"0.2\"><stop stop-color=\"white\"/><stop offset=\"1\" stop-color=\"black\"/></radialGradient></defs><rect width=\"8\" height=\"8\" fill=\"url(#g)\"/><circle cx=\"8\" cy=\"8\" r=\"5\" fill=\"url(#r)\"/>"
+        ,"<style>svg g.box rect.item{fill:currentColor;opacity:.75}</style><g class=\"box\" color=\"orange\"><rect class=\"item\" x=\"1\" y=\"1\" width=\"6\" height=\"6\"/></g>"
+        ,"<rect x=\"2mm\" y=\"3pt\" width=\"1in\" height=\"2em\" fill=\"teal\"/>"
+        ,"<text x=\"1 6\" y=\"8\" font-family=\"sans-serif\" font-size=\"6\" text-anchor=\"middle\">A<tspan dx=\"1\" fill=\"blue\">B</tspan></text>"
+        ,"<text xml:space=\"preserve\" x=\"1\" y=\"8\"> A  B </text>"
+        ,"<text x=\"1\" y=\"8\" font-size=\"bad\">x</text>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/png;base64,AQ==\"/>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/jpeg;base64,AA==\"/>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"data:image/png;base64,A===\"/>"
+        ,"<image x=\"1\" y=\"1\" width=\"8\" height=\"8\" href=\"https://example.invalid/image.png\"/>"
+        ,"<defs><mask id=\"m\" mask-type=\"alpha\"><circle cx=\".5\" cy=\".5\" r=\".45\" fill=\"white\"/></mask></defs><rect width=\"16\" height=\"16\" fill=\"red\" mask=\"url(#m)\"/>"
+        ,"<defs><pattern id=\"p\" patternUnits=\"userSpaceOnUse\" width=\"4\" height=\"4\"><rect width=\"2\" height=\"2\" fill=\"blue\"/></pattern></defs><rect width=\"16\" height=\"16\" fill=\"url(#p)\"/>"
+        ,"<defs><marker id=\"m\" markerWidth=\"4\" markerHeight=\"4\" refX=\"2\" refY=\"2\" orient=\"auto\"><path d=\"M0 0L4 2L0 4Z\" fill=\"red\" stroke=\"none\"/></marker></defs><path d=\"M2 8H14\" fill=\"none\" stroke=\"black\" marker-start=\"url(#m)\" marker-mid=\"url(#m)\" marker-end=\"url(#m)\"/>"
+        ,"<defs><filter id=\"f\"><feGaussianBlur stdDeviation=\".5\"/></filter></defs><rect x=\"3\" y=\"3\" width=\"10\" height=\"10\" filter=\"url(#f)\"/>"
+        ,"<g style=\"mix-blend-mode:multiply;isolation:isolate\"><rect width=\"10\" height=\"10\" fill=\"red\"/><circle cx=\"8\" cy=\"8\" r=\"5\" fill=\"blue\"/></g>"
+        ,"<switch><g systemLanguage=\"en\"><rect width=\"12\" height=\"12\" fill=\"green\"/></g><circle cx=\"8\" cy=\"8\" r=\"5\"/></switch>"
+        ,"<a><rect x=\"2\" y=\"2\" width=\"12\" height=\"12\" fill=\"teal\"/></a>"
+        ,"<path d=\"M1 2H15\" fill=\"none\" stroke=\"red\" stroke-width=\"2\" vector-effect=\"non-scaling-stroke\"/>"
+        ,"<path d=\"M2 14L8 2L14 14Z\" fill=\"orange\" stroke=\"black\" stroke-width=\"3\" paint-order=\"stroke fill\"/>"
+        ,"<path d=\"M2 2H14V14H2Z\" fill=\"purple\" shape-rendering=\"crispEdges\"/>"
+        ,"<path d=\"M2 14L8 2L14 14Z\" fill=\"none\" stroke=\"blue\" stroke-width=\"3\" stroke-linejoin=\"arcs\"/>"
     };
     static const char *coverage_cases[] = {
         "<rect x=\"1.125\" y=\"2.375\" width=\"8.5\" height=\"6.25\"/>",
@@ -81,13 +233,22 @@ int main(int argc, char **argv)
     };
     static const char shape_prefix[] = "<svg width=\"16\" height=\"16\">";
     static const char shape_suffix[] = "</svg>";
+    const svg_shape_media_providers providers = {
+        .layout_text = fuzz_layout_text,
+        .release_text = fuzz_release_text,
+        .decode_image = fuzz_decode_image,
+        .release_image = fuzz_release_image};
     unsigned long completed = 0;
     unsigned long fractional_cases = 0, evenodd_cases = 0, nonzero_cases = 0;
     unsigned long fractional_renders = 0, evenodd_renders = 0, nonzero_renders = 0;
     unsigned long stroke_cases = 0U, stroke_renders = 0U;
+    unsigned long feature_cases[FEATURE_COUNT] = {0U};
+    unsigned long feature_renders[FEATURE_COUNT] = {0U};
     for (unsigned long c = 0; c < count; c++) {
         uint8_t input[INPUT_CAP]; size_t n = 0;
         unsigned mode = (unsigned)(c % 4UL);
+        bool features[FEATURE_COUNT] = {false};
+        bool case_has_stroke = false;
         if (mode < 3U) {
             memcpy(input, shape_prefix, sizeof(shape_prefix)-1U); n=sizeof(shape_prefix)-1U;
             const char *shape=coverage_cases[mode];
@@ -100,7 +261,11 @@ int main(int argc, char **argv)
         } else if ((next_u32(&state) & 1U) != 0U) {
             memcpy(input, shape_prefix, sizeof(shape_prefix)-1U); n=sizeof(shape_prefix)-1U;
             const char *shape=shape_cases[next_u32(&state)%(sizeof(shape_cases)/sizeof(shape_cases[0]))];
-            if (strstr(shape, "stroke=") != NULL) stroke_cases++;
+            case_has_stroke = strstr(shape, "stroke=") != NULL;
+            if (case_has_stroke) stroke_cases++;
+            identify_features(shape, features);
+            for (size_t feature = 0U; feature < FEATURE_COUNT; ++feature)
+                if (features[feature]) feature_cases[feature]++;
             size_t length=strlen(shape);
             memcpy(input+n,shape,length);n+=length;
             memcpy(input+n,shape_suffix,sizeof(shape_suffix)-1U);n+=sizeof(shape_suffix)-1U;
@@ -115,7 +280,8 @@ int main(int argc, char **argv)
             memcpy(input+n, suffix, sizeof(suffix)-1U); n += sizeof(suffix)-1U;
         }
         svg_shape_document doc; svg_shape_diagnostic diag;
-        svg_shape_error error = svg_shape_decode((base_bytes){input,n}, &doc, &diag);
+        svg_shape_error error = svg_shape_decode_with_media(
+            (base_bytes){input,n}, &providers, &doc, &diag);
         if (error == SVG_SHAPE_ERROR_NONE) {
             if (doc.width == 0U || doc.width > 4096U || doc.height == 0U || doc.height > 4096U || doc.edge_count > SVG_SHAPE_MAX_EDGES) return 3;
             bool render_case = (mode < 3U && c % 128UL == mode) ||
@@ -127,7 +293,10 @@ int main(int argc, char **argv)
                     return 6;
                 }
                 raster_tile_destroy(&tile);
-                if (mode == 3U) stroke_renders++;
+                if (mode == 3U && case_has_stroke) stroke_renders++;
+                if (mode == 3U)
+                    for (size_t feature = 0U; feature < FEATURE_COUNT; ++feature)
+                        if (features[feature]) feature_renders[feature]++;
                 if (mode == 0U) fractional_renders++;
                 else if (mode == 1U) evenodd_renders++;
                 else if (mode == 2U) nonzero_renders++;
@@ -139,8 +308,13 @@ int main(int argc, char **argv)
             (double)(clock() - started) / (double)CLOCKS_PER_SEC >= (double)duration) break;
     }
     double seconds = (double)(clock() - started) / (double)CLOCKS_PER_SEC;
-    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu fractional_cases=%lu evenodd_cases=%lu nonzero_cases=%lu fractional_renders=%lu evenodd_renders=%lu nonzero_renders=%lu stroke_cases=%lu stroke_renders=%lu\n",
+    printf("seed=%lu cases=%lu duration=%.3f cap_exhaustion=1 cap_case_bytes=%zu fractional_cases=%lu evenodd_cases=%lu nonzero_cases=%lu fractional_renders=%lu evenodd_renders=%lu nonzero_renders=%lu stroke_cases=%lu stroke_renders=%lu",
            seed_long, completed, seconds, cap_case_bytes, fractional_cases, evenodd_cases, nonzero_cases,
            fractional_renders, evenodd_renders, nonzero_renders, stroke_cases, stroke_renders);
+    for (size_t feature = 0U; feature < FEATURE_COUNT; ++feature)
+        printf(" feature_%s_cases=%lu feature_%s_renders=%lu", feature_names[feature],
+               feature_cases[feature], feature_names[feature],
+               feature_renders[feature]);
+    putchar('\n');
     return 0;
 }

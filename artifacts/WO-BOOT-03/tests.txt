@@ -1,0 +1,7 @@
+$ python3 -m unittest tests.test_dev tests.test_ledger
+exit: 0
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.209s
+
+OK

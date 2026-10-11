@@ -1,0 +1,15 @@
+{
+  "screenshots": {
+    "snap-overlay-dark.png": {
+      "height": 800,
+      "sha256": "d8b36b035e76682596c981872a9c4cafc55fc716d3b291f65e87669199775936",
+      "width": 1280
+    },
+    "snap-overlay-light.png": {
+      "height": 800,
+      "sha256": "8a54362e026eda8848c8999c86e0c85ae13abd3145f8462ca71e67ae36f306da",
+      "width": 1280
+    }
+  },
+  "version": 1
+}

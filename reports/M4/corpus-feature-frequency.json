@@ -1,0 +1,7067 @@
+{
+  "attribute_occurrences": [
+    {
+      "name": "x",
+      "occurrences": 25140463
+    },
+    {
+      "name": "y",
+      "occurrences": 25140413
+    },
+    {
+      "name": "width",
+      "occurrences": 23457168
+    },
+    {
+      "name": "height",
+      "occurrences": 23457168
+    },
+    {
+      "name": "href",
+      "occurrences": 20519286
+    },
+    {
+      "name": "d",
+      "occurrences": 9688323
+    },
+    {
+      "name": "cx",
+      "occurrences": 9109517
+    },
+    {
+      "name": "cy",
+      "occurrences": 9109517
+    },
+    {
+      "name": "r",
+      "occurrences": 9109031
+    },
+    {
+      "name": "x1",
+      "occurrences": 1077175
+    },
+    {
+      "name": "y1",
+      "occurrences": 1077175
+    },
+    {
+      "name": "x2",
+      "occurrences": 1077175
+    },
+    {
+      "name": "y2",
+      "occurrences": 1077175
+    },
+    {
+      "name": "id",
+      "occurrences": 705774
+    },
+    {
+      "name": "style",
+      "occurrences": 506200
+    },
+    {
+      "name": "class",
+      "occurrences": 409143
+    },
+    {
+      "name": "data-region",
+      "occurrences": 284459
+    },
+    {
+      "name": "clip-path",
+      "occurrences": 242339
+    },
+    {
+      "name": "offset",
+      "occurrences": 134240
+    },
+    {
+      "name": "fill-rule",
+      "occurrences": 68126
+    },
+    {
+      "name": "vector-effect",
+      "occurrences": 67444
+    },
+    {
+      "name": "connector-curvature",
+      "occurrences": 65600
+    },
+    {
+      "name": "transform",
+      "occurrences": 30592
+    },
+    {
+      "name": "fill",
+      "occurrences": 26947
+    },
+    {
+      "name": "display",
+      "occurrences": 21734
+    },
+    {
+      "name": "gradientUnits",
+      "occurrences": 17585
+    },
+    {
+      "name": "gradientTransform",
+      "occurrences": 17581
+    },
+    {
+      "name": "fy",
+      "occurrences": 16642
+    },
+    {
+      "name": "fx",
+      "occurrences": 16642
+    },
+    {
+      "name": "stroke",
+      "occurrences": 11170
+    },
+    {
+      "name": "collect",
+      "occurrences": 9987
+    },
+    {
+      "name": "fill-opacity",
+      "occurrences": 8330
+    },
+    {
+      "name": "nodetypes",
+      "occurrences": 8213
+    },
+    {
+      "name": "stroke-width",
+      "occurrences": 6240
+    },
+    {
+      "name": "stroke-opacity",
+      "occurrences": 5155
+    },
+    {
+      "name": "type",
+      "occurrences": 4137
+    },
+    {
+      "name": "stroke-dasharray",
+      "occurrences": 4128
+    },
+    {
+      "name": "font-size",
+      "occurrences": 3925
+    },
+    {
+      "name": "font-style",
+      "occurrences": 3786
+    },
+    {
+      "name": "font-weight",
+      "occurrences": 3786
+    },
+    {
+      "name": "stroke-miterlimit",
+      "occurrences": 3703
+    },
+    {
+      "name": "stroke-linejoin",
+      "occurrences": 3615
+    },
+    {
+      "name": "stroke-linecap",
+      "occurrences": 3090
+    },
+    {
+      "name": "stdDeviation",
+      "occurrences": 2685
+    },
+    {
+      "name": "horiz-adv-x",
+      "occurrences": 2130
+    },
+    {
+      "name": "unicode",
+      "occurrences": 2010
+    },
+    {
+      "name": "persp3d-origin",
+      "occurrences": 1476
+    },
+    {
+      "name": "vp_z",
+      "occurrences": 1476
+    },
+    {
+      "name": "vp_y",
+      "occurrences": 1476
+    },
+    {
+      "name": "vp_x",
+      "occurrences": 1476
+    },
+    {
+      "name": "font-family",
+      "occurrences": 1430
+    },
+    {
+      "name": "role",
+      "occurrences": 1337
+    },
+    {
+      "name": "space",
+      "occurrences": 1208
+    },
+    {
+      "name": "systemLanguage",
+      "occurrences": 788
+    },
+    {
+      "name": "patternTransform",
+      "occurrences": 745
+    },
+    {
+      "name": "patternUnits",
+      "occurrences": 638
+    },
+    {
+      "name": "label",
+      "occurrences": 562
+    },
+    {
+      "name": "ry",
+      "occurrences": 518
+    },
+    {
+      "name": "effect",
+      "occurrences": 474
+    },
+    {
+      "name": "is_visible",
+      "occurrences": 474
+    },
+    {
+      "name": "lpeversion",
+      "occurrences": 471
+    },
+    {
+      "name": "rx",
+      "occurrences": 456
+    },
+    {
+      "name": "stockid",
+      "occurrences": 318
+    },
+    {
+      "name": "threshold",
+      "occurrences": 314
+    },
+    {
+      "name": "steps",
+      "occurrences": 314
+    },
+    {
+      "name": "smooth_angles",
+      "occurrences": 314
+    },
+    {
+      "name": "helper_size",
+      "occurrences": 314
+    },
+    {
+      "name": "simplify_individual_paths",
+      "occurrences": 314
+    },
+    {
+      "name": "simplify_just_coalesce",
+      "occurrences": 314
+    },
+    {
+      "name": "viewBox",
+      "occurrences": 296
+    },
+    {
+      "name": "markerWidth",
+      "occurrences": 245
+    },
+    {
+      "name": "markerHeight",
+      "occurrences": 245
+    },
+    {
+      "name": "refX",
+      "occurrences": 245
+    },
+    {
+      "name": "refY",
+      "occurrences": 245
+    },
+    {
+      "name": "orient",
+      "occurrences": 245
+    },
+    {
+      "name": "points",
+      "occurrences": 215
+    },
+    {
+      "name": "markerUnits",
+      "occurrences": 212
+    },
+    {
+      "name": "overflow",
+      "occurrences": 167
+    },
+    {
+      "name": "groupmode",
+      "occurrences": 143
+    },
+    {
+      "name": "mask",
+      "occurrences": 130
+    },
+    {
+      "name": "xmlns",
+      "occurrences": 129
+    },
+    {
+      "name": "text-anchor",
+      "occurrences": 129
+    },
+    {
+      "name": "stop-color",
+      "occurrences": 76
+    },
+    {
+      "name": "enable-background",
+      "occurrences": 69
+    },
+    {
+      "name": "isolated",
+      "occurrences": 68
+    },
+    {
+      "name": "layer",
+      "occurrences": 68
+    },
+    {
+      "name": "dimmedPercent",
+      "occurrences": 68
+    },
+    {
+      "name": "rgbTrio",
+      "occurrences": 68
+    },
+    {
+      "name": "objectNS",
+      "occurrences": 68
+    },
+    {
+      "name": "objectType",
+      "occurrences": 68
+    },
+    {
+      "name": "requiredExtensions",
+      "occurrences": 68
+    },
+    {
+      "name": "placementMethod",
+      "occurrences": 68
+    },
+    {
+      "name": "align",
+      "occurrences": 68
+    },
+    {
+      "name": "valign",
+      "occurrences": 68
+    },
+    {
+      "name": "refWidth",
+      "occurrences": 68
+    },
+    {
+      "name": "refHeight",
+      "occurrences": 68
+    },
+    {
+      "name": "knockout",
+      "occurrences": 68
+    },
+    {
+      "name": "vert-adv-y",
+      "occurrences": 60
+    },
+    {
+      "name": "vert-origin-y",
+      "occurrences": 60
+    },
+    {
+      "name": "vert-origin-x",
+      "occurrences": 60
+    }
+  ],
+  "class_occurrences": [
+    {
+      "name": "land",
+      "occurrences": 284495
+    },
+    {
+      "name": "shadow1",
+      "occurrences": 46718
+    },
+    {
+      "name": "shadow2",
+      "occurrences": 27718
+    },
+    {
+      "name": "topo1",
+      "occurrences": 7528
+    },
+    {
+      "name": "topo2",
+      "occurrences": 6787
+    },
+    {
+      "name": "topo3",
+      "occurrences": 6112
+    },
+    {
+      "name": "topo4",
+      "occurrences": 5222
+    },
+    {
+      "name": "topo5",
+      "occurrences": 4464
+    },
+    {
+      "name": "topo6",
+      "occurrences": 4091
+    },
+    {
+      "name": "topo0",
+      "occurrences": 3463
+    },
+    {
+      "name": "topo7",
+      "occurrences": 3372
+    },
+    {
+      "name": "topo8",
+      "occurrences": 2504
+    },
+    {
+      "name": "topo9",
+      "occurrences": 1897
+    },
+    {
+      "name": "topo10",
+      "occurrences": 1160
+    },
+    {
+      "name": "topo11",
+      "occurrences": 707
+    },
+    {
+      "name": "st8",
+      "occurrences": 505
+    },
+    {
+      "name": "st0",
+      "occurrences": 452
+    },
+    {
+      "name": "st6",
+      "occurrences": 444
+    },
+    {
+      "name": "topo12",
+      "occurrences": 429
+    },
+    {
+      "name": "st3",
+      "occurrences": 379
+    },
+    {
+      "name": "st7",
+      "occurrences": 378
+    },
+    {
+      "name": "st2",
+      "occurrences": 377
+    },
+    {
+      "name": "st4",
+      "occurrences": 375
+    },
+    {
+      "name": "st1",
+      "occurrences": 372
+    },
+    {
+      "name": "st5",
+      "occurrences": 372
+    },
+    {
+      "name": "st9",
+      "occurrences": 372
+    },
+    {
+      "name": "st10",
+      "occurrences": 356
+    },
+    {
+      "name": "st12",
+      "occurrences": 355
+    },
+    {
+      "name": "st11",
+      "occurrences": 352
+    },
+    {
+      "name": "lakes2",
+      "occurrences": 255
+    },
+    {
+      "name": "bathymetry1",
+      "occurrences": 219
+    },
+    {
+      "name": "topo13",
+      "occurrences": 189
+    },
+    {
+      "name": "bathymetry2",
+      "occurrences": 176
+    },
+    {
+      "name": "landxx",
+      "occurrences": 171
+    },
+    {
+      "name": "point",
+      "occurrences": 149
+    },
+    {
+      "name": "lakes",
+      "occurrences": 144
+    },
+    {
+      "name": "grid",
+      "occurrences": 127
+    },
+    {
+      "name": "town",
+      "occurrences": 111
+    },
+    {
+      "name": "st13",
+      "occurrences": 95
+    },
+    {
+      "name": "scaletopo",
+      "occurrences": 90
+    },
+    {
+      "name": "st14",
+      "occurrences": 90
+    },
+    {
+      "name": "st15",
+      "occurrences": 90
+    },
+    {
+      "name": "st16",
+      "occurrences": 90
+    },
+    {
+      "name": "village",
+      "occurrences": 80
+    },
+    {
+      "name": "topo14",
+      "occurrences": 75
+    },
+    {
+      "name": "st22",
+      "occurrences": 75
+    },
+    {
+      "name": "st17",
+      "occurrences": 70
+    },
+    {
+      "name": "st18",
+      "occurrences": 70
+    },
+    {
+      "name": "st19",
+      "occurrences": 70
+    },
+    {
+      "name": "st20",
+      "occurrences": 70
+    },
+    {
+      "name": "st21",
+      "occurrences": 70
+    },
+    {
+      "name": "st23",
+      "occurrences": 70
+    },
+    {
+      "name": "st24",
+      "occurrences": 70
+    },
+    {
+      "name": "st25",
+      "occurrences": 70
+    },
+    {
+      "name": "st26",
+      "occurrences": 70
+    },
+    {
+      "name": "st27",
+      "occurrences": 70
+    },
+    {
+      "name": "st28",
+      "occurrences": 70
+    },
+    {
+      "name": "st29",
+      "occurrences": 70
+    },
+    {
+      "name": "st30",
+      "occurrences": 70
+    },
+    {
+      "name": "st31",
+      "occurrences": 70
+    },
+    {
+      "name": "st32",
+      "occurrences": 70
+    },
+    {
+      "name": "st33",
+      "occurrences": 70
+    },
+    {
+      "name": "st34",
+      "occurrences": 70
+    },
+    {
+      "name": "st35",
+      "occurrences": 70
+    },
+    {
+      "name": "st36",
+      "occurrences": 70
+    },
+    {
+      "name": "st37",
+      "occurrences": 70
+    },
+    {
+      "name": "st38",
+      "occurrences": 70
+    },
+    {
+      "name": "rivers",
+      "occurrences": 67
+    },
+    {
+      "name": "coast",
+      "occurrences": 60
+    },
+    {
+      "name": "st39",
+      "occurrences": 60
+    },
+    {
+      "name": "st40",
+      "occurrences": 60
+    },
+    {
+      "name": "st41",
+      "occurrences": 60
+    },
+    {
+      "name": "st42",
+      "occurrences": 60
+    },
+    {
+      "name": "st43",
+      "occurrences": 60
+    },
+    {
+      "name": "st44",
+      "occurrences": 60
+    },
+    {
+      "name": "st45",
+      "occurrences": 60
+    },
+    {
+      "name": "st46",
+      "occurrences": 60
+    },
+    {
+      "name": "st47",
+      "occurrences": 60
+    },
+    {
+      "name": "st48",
+      "occurrences": 60
+    },
+    {
+      "name": "st49",
+      "occurrences": 60
+    },
+    {
+      "name": "st50",
+      "occurrences": 60
+    },
+    {
+      "name": "st51",
+      "occurrences": 60
+    },
+    {
+      "name": "st52",
+      "occurrences": 60
+    },
+    {
+      "name": "st53",
+      "occurrences": 60
+    },
+    {
+      "name": "st54",
+      "occurrences": 60
+    },
+    {
+      "name": "st55",
+      "occurrences": 60
+    },
+    {
+      "name": "st56",
+      "occurrences": 60
+    },
+    {
+      "name": "st57",
+      "occurrences": 60
+    },
+    {
+      "name": "st58",
+      "occurrences": 60
+    },
+    {
+      "name": "st59",
+      "occurrences": 60
+    },
+    {
+      "name": "st60",
+      "occurrences": 60
+    },
+    {
+      "name": "st61",
+      "occurrences": 60
+    },
+    {
+      "name": "st62",
+      "occurrences": 60
+    },
+    {
+      "name": "st63",
+      "occurrences": 60
+    },
+    {
+      "name": "st64",
+      "occurrences": 60
+    },
+    {
+      "name": "st65",
+      "occurrences": 60
+    },
+    {
+      "name": "st66",
+      "occurrences": 60
+    },
+    {
+      "name": "st67",
+      "occurrences": 60
+    },
+    {
+      "name": "st68",
+      "occurrences": 60
+    },
+    {
+      "name": "st69",
+      "occurrences": 60
+    }
+  ],
+  "css_property_occurrences": [
+    {
+      "name": "fill",
+      "occurrences": 357996
+    },
+    {
+      "name": "stroke",
+      "occurrences": 306501
+    },
+    {
+      "name": "stroke-width",
+      "occurrences": 263593
+    },
+    {
+      "name": "stop-color",
+      "occurrences": 134322
+    },
+    {
+      "name": "stop-opacity",
+      "occurrences": 134231
+    },
+    {
+      "name": "stroke-linecap",
+      "occurrences": 112636
+    },
+    {
+      "name": "opacity",
+      "occurrences": 54990
+    },
+    {
+      "name": "stroke-dasharray",
+      "occurrences": 34695
+    },
+    {
+      "name": "stroke-miterlimit",
+      "occurrences": 29553
+    },
+    {
+      "name": "fill-opacity",
+      "occurrences": 22638
+    },
+    {
+      "name": "display",
+      "occurrences": 14327
+    },
+    {
+      "name": "stroke-opacity",
+      "occurrences": 14123
+    },
+    {
+      "name": "stroke-linejoin",
+      "occurrences": 12544
+    },
+    {
+      "name": "fill-rule",
+      "occurrences": 12205
+    },
+    {
+      "name": "font-size",
+      "occurrences": 6896
+    },
+    {
+      "name": "font-family",
+      "occurrences": 6566
+    },
+    {
+      "name": "font-style",
+      "occurrences": 6365
+    },
+    {
+      "name": "font-weight",
+      "occurrences": 6275
+    },
+    {
+      "name": "vector-effect",
+      "occurrences": 4256
+    },
+    {
+      "name": "-inkscape-font-specification",
+      "occurrences": 3762
+    },
+    {
+      "name": "font-stretch",
+      "occurrences": 3684
+    },
+    {
+      "name": "font-variant",
+      "occurrences": 3681
+    },
+    {
+      "name": "line-height",
+      "occurrences": 3182
+    },
+    {
+      "name": "text-anchor",
+      "occurrences": 2874
+    },
+    {
+      "name": "clip-rule",
+      "occurrences": 2755
+    },
+    {
+      "name": "text-align",
+      "occurrences": 2180
+    },
+    {
+      "name": "writing-mode",
+      "occurrences": 2063
+    },
+    {
+      "name": "stroke-dashoffset",
+      "occurrences": 1547
+    },
+    {
+      "name": "letter-spacing",
+      "occurrences": 1534
+    },
+    {
+      "name": "word-spacing",
+      "occurrences": 1343
+    },
+    {
+      "name": "overflow",
+      "occurrences": 774
+    },
+    {
+      "name": "visibility",
+      "occurrences": 754
+    },
+    {
+      "name": "marker",
+      "occurrences": 751
+    },
+    {
+      "name": "enable-background",
+      "occurrences": 745
+    },
+    {
+      "name": "text-indent",
+      "occurrences": 721
+    },
+    {
+      "name": "text-transform",
+      "occurrences": 721
+    },
+    {
+      "name": "text-decoration-line",
+      "occurrences": 715
+    },
+    {
+      "name": "direction",
+      "occurrences": 707
+    },
+    {
+      "name": "text-decoration",
+      "occurrences": 651
+    },
+    {
+      "name": "baseline-shift",
+      "occurrences": 638
+    },
+    {
+      "name": "color",
+      "occurrences": 625
+    },
+    {
+      "name": "adobe-knockout",
+      "occurrences": 200
+    },
+    {
+      "name": "font-variant-caps",
+      "occurrences": 165
+    },
+    {
+      "name": "font-variant-ligatures",
+      "occurrences": 165
+    },
+    {
+      "name": "font-variant-numeric",
+      "occurrences": 165
+    },
+    {
+      "name": "-inkscape-stroke",
+      "occurrences": 156
+    },
+    {
+      "name": "font-variation-settings",
+      "occurrences": 148
+    },
+    {
+      "name": "font-variant-east-asian",
+      "occurrences": 118
+    },
+    {
+      "name": "font-feature-settings",
+      "occurrences": 103
+    },
+    {
+      "name": "marker-end",
+      "occurrences": 73
+    },
+    {
+      "name": "text-decoration-color",
+      "occurrences": 67
+    },
+    {
+      "name": "white-space",
+      "occurrences": 65
+    },
+    {
+      "name": "text-decoration-style",
+      "occurrences": 59
+    },
+    {
+      "name": "font-variant-position",
+      "occurrences": 56
+    },
+    {
+      "name": "font-variant-alternates",
+      "occurrences": 56
+    },
+    {
+      "name": "text-orientation",
+      "occurrences": 56
+    },
+    {
+      "name": "dominant-baseline",
+      "occurrences": 56
+    },
+    {
+      "name": "paint-order",
+      "occurrences": 10
+    },
+    {
+      "name": "clip-path",
+      "occurrences": 8
+    },
+    {
+      "name": "isolation",
+      "occurrences": 7
+    },
+    {
+      "name": "color-interpolation-filters",
+      "occurrences": 5
+    },
+    {
+      "name": "mix-blend-mode",
+      "occurrences": 3
+    },
+    {
+      "name": "color-interpolation",
+      "occurrences": 3
+    },
+    {
+      "name": "solid-color",
+      "occurrences": 3
+    },
+    {
+      "name": "solid-opacity",
+      "occurrences": 3
+    },
+    {
+      "name": "color-rendering",
+      "occurrences": 3
+    },
+    {
+      "name": "image-rendering",
+      "occurrences": 3
+    },
+    {
+      "name": "shape-rendering",
+      "occurrences": 3
+    },
+    {
+      "name": "text-rendering",
+      "occurrences": 3
+    },
+    {
+      "name": "filter",
+      "occurrences": 2
+    },
+    {
+      "name": "shape-inside",
+      "occurrences": 1
+    }
+  ],
+  "element_occurrences": [
+    {
+      "name": "use",
+      "occurrences": 19885734
+    },
+    {
+      "name": "path",
+      "occurrences": 9686313
+    },
+    {
+      "name": "circle",
+      "occurrences": 9092377
+    },
+    {
+      "name": "rect",
+      "occurrences": 2952249
+    },
+    {
+      "name": "text",
+      "occurrences": 1681979
+    },
+    {
+      "name": "line",
+      "occurrences": 1076244
+    },
+    {
+      "name": "image",
+      "occurrences": 616491
+    },
+    {
+      "name": "stop",
+      "occurrences": 134238
+    },
+    {
+      "name": "g",
+      "occurrences": 127862
+    },
+    {
+      "name": "clipPath",
+      "occurrences": 60161
+    },
+    {
+      "name": "radialGradient",
+      "occurrences": 16654
+    },
+    {
+      "name": "style",
+      "occurrences": 2890
+    },
+    {
+      "name": "filter",
+      "occurrences": 2685
+    },
+    {
+      "name": "feGaussianBlur",
+      "occurrences": 2685
+    },
+    {
+      "name": "glyph",
+      "occurrences": 2010
+    },
+    {
+      "name": "tspan",
+      "occurrences": 1757
+    },
+    {
+      "name": "perspective",
+      "occurrences": 1476
+    },
+    {
+      "name": "linearGradient",
+      "occurrences": 997
+    },
+    {
+      "name": "pattern",
+      "occurrences": 957
+    },
+    {
+      "name": "path-effect",
+      "occurrences": 474
+    },
+    {
+      "name": "ellipse",
+      "occurrences": 388
+    },
+    {
+      "name": "switch",
+      "occurrences": 365
+    },
+    {
+      "name": "mask",
+      "occurrences": 284
+    },
+    {
+      "name": "marker",
+      "occurrences": 245
+    },
+    {
+      "name": "defs",
+      "occurrences": 234
+    },
+    {
+      "name": "polygon",
+      "occurrences": 176
+    },
+    {
+      "name": "title",
+      "occurrences": 119
+    },
+    {
+      "name": "symbol",
+      "occurrences": 102
+    },
+    {
+      "name": "foreignObject",
+      "occurrences": 68
+    },
+    {
+      "name": "imageReplacement",
+      "occurrences": 68
+    },
+    {
+      "name": "targetRef",
+      "occurrences": 68
+    },
+    {
+      "name": "font",
+      "occurrences": 60
+    },
+    {
+      "name": "font-face",
+      "occurrences": 60
+    },
+    {
+      "name": "missing-glyph",
+      "occurrences": 60
+    },
+    {
+      "name": "svg",
+      "occurrences": 58
+    },
+    {
+      "name": "metadata",
+      "occurrences": 42
+    },
+    {
+      "name": "polyline",
+      "occurrences": 39
+    },
+    {
+      "name": "namedview",
+      "occurrences": 18
+    },
+    {
+      "name": "RDF",
+      "occurrences": 8
+    },
+    {
+      "name": "Work",
+      "occurrences": 8
+    },
+    {
+      "name": "format",
+      "occurrences": 8
+    },
+    {
+      "name": "type",
+      "occurrences": 7
+    },
+    {
+      "name": "creator",
+      "occurrences": 3
+    },
+    {
+      "name": "Bag",
+      "occurrences": 3
+    },
+    {
+      "name": "Agent",
+      "occurrences": 3
+    },
+    {
+      "name": "grid",
+      "occurrences": 2
+    },
+    {
+      "name": "li",
+      "occurrences": 2
+    },
+    {
+      "name": "publisher",
+      "occurrences": 2
+    },
+    {
+      "name": "date",
+      "occurrences": 2
+    },
+    {
+      "name": "desc",
+      "occurrences": 2
+    },
+    {
+      "name": "textPath",
+      "occurrences": 1
+    },
+    {
+      "name": "variableSets",
+      "occurrences": 1
+    },
+    {
+      "name": "variableSet",
+      "occurrences": 1
+    },
+    {
+      "name": "variables",
+      "occurrences": 1
+    },
+    {
+      "name": "sampleDataSets",
+      "occurrences": 1
+    },
+    {
+      "name": "sfw",
+      "occurrences": 1
+    },
+    {
+      "name": "slices",
+      "occurrences": 1
+    },
+    {
+      "name": "sliceSourceBounds",
+      "occurrences": 1
+    },
+    {
+      "name": "Description",
+      "occurrences": 1
+    },
+    {
+      "name": "subject",
+      "occurrences": 1
+    },
+    {
+      "name": "identifier",
+      "occurrences": 1
+    },
+    {
+      "name": "description",
+      "occurrences": 1
+    }
+  ],
+  "files_containing_features": [
+    {
+      "feature": "attribute:height",
+      "files": 58
+    },
+    {
+      "feature": "attribute:width",
+      "files": 58
+    },
+    {
+      "feature": "attribute:xmlns",
+      "files": 58
+    },
+    {
+      "feature": "element:svg",
+      "files": 58
+    },
+    {
+      "feature": "attribute:d",
+      "files": 56
+    },
+    {
+      "feature": "element:path",
+      "files": 56
+    },
+    {
+      "feature": "element:g",
+      "files": 54
+    },
+    {
+      "feature": "attribute:id",
+      "files": 53
+    },
+    {
+      "feature": "attribute:viewBox",
+      "files": 51
+    },
+    {
+      "feature": "element:defs",
+      "files": 51
+    },
+    {
+      "feature": "css:fill",
+      "files": 50
+    },
+    {
+      "feature": "css:stroke",
+      "files": 50
+    },
+    {
+      "feature": "css:stroke-width",
+      "files": 50
+    },
+    {
+      "feature": "attribute:cx",
+      "files": 47
+    },
+    {
+      "feature": "attribute:cy",
+      "files": 47
+    },
+    {
+      "feature": "attribute:inkscape",
+      "files": 45
+    },
+    {
+      "feature": "attribute:sodipodi",
+      "files": 45
+    },
+    {
+      "feature": "element:style",
+      "files": 45
+    },
+    {
+      "feature": "attribute:fill",
+      "files": 44
+    },
+    {
+      "feature": "attribute:r",
+      "files": 42
+    },
+    {
+      "feature": "element:circle",
+      "files": 42
+    },
+    {
+      "feature": "element:metadata",
+      "files": 42
+    },
+    {
+      "feature": "element:title",
+      "files": 42
+    },
+    {
+      "feature": "attribute:x",
+      "files": 41
+    },
+    {
+      "feature": "attribute:y",
+      "files": 41
+    },
+    {
+      "feature": "attribute:offset",
+      "files": 38
+    },
+    {
+      "feature": "element:linearGradient",
+      "files": 38
+    },
+    {
+      "feature": "element:stop",
+      "files": 38
+    },
+    {
+      "feature": "attribute:stdDeviation",
+      "files": 35
+    },
+    {
+      "feature": "element:feGaussianBlur",
+      "files": 35
+    },
+    {
+      "feature": "element:filter",
+      "files": 35
+    },
+    {
+      "feature": "attribute:markerHeight",
+      "files": 34
+    },
+    {
+      "feature": "attribute:markerWidth",
+      "files": 34
+    },
+    {
+      "feature": "attribute:orient",
+      "files": 34
+    },
+    {
+      "feature": "attribute:refX",
+      "files": 34
+    },
+    {
+      "feature": "attribute:refY",
+      "files": 34
+    },
+    {
+      "feature": "attribute:stop-color",
+      "files": 34
+    },
+    {
+      "feature": "element:marker",
+      "files": 34
+    },
+    {
+      "feature": "element:symbol",
+      "files": 34
+    },
+    {
+      "feature": "class:land",
+      "files": 33
+    },
+    {
+      "feature": "class:series",
+      "files": 33
+    },
+    {
+      "feature": "attribute:stroke",
+      "files": 25
+    },
+    {
+      "feature": "element:rect",
+      "files": 25
+    },
+    {
+      "feature": "attribute:transform",
+      "files": 23
+    },
+    {
+      "feature": "attribute:stroke-width",
+      "files": 22
+    },
+    {
+      "feature": "element:text",
+      "files": 22
+    },
+    {
+      "feature": "attribute:href",
+      "files": 20
+    },
+    {
+      "feature": "attribute:version",
+      "files": 19
+    },
+    {
+      "feature": "element:namedview",
+      "files": 18
+    },
+    {
+      "feature": "attribute:style",
+      "files": 17
+    },
+    {
+      "feature": "attribute:class",
+      "files": 16
+    },
+    {
+      "feature": "attribute:groupmode",
+      "files": 16
+    },
+    {
+      "feature": "attribute:label",
+      "files": 16
+    },
+    {
+      "feature": "attribute:xlink",
+      "files": 16
+    },
+    {
+      "feature": "attribute:font-size",
+      "files": 15
+    },
+    {
+      "feature": "attribute:pagecolor",
+      "files": 15
+    },
+    {
+      "feature": "css:stroke-linecap",
+      "files": 15
+    },
+    {
+      "feature": "css:stroke-linejoin",
+      "files": 15
+    },
+    {
+      "feature": "element:clipPath",
+      "files": 15
+    },
+    {
+      "feature": "attribute:clip-path",
+      "files": 14
+    },
+    {
+      "feature": "css:opacity",
+      "files": 14
+    },
+    {
+      "feature": "css:stroke-opacity",
+      "files": 14
+    },
+    {
+      "feature": "element:use",
+      "files": 14
+    },
+    {
+      "feature": "attribute:type",
+      "files": 13
+    },
+    {
+      "feature": "css:fill-opacity",
+      "files": 13
+    },
+    {
+      "feature": "css:font-family",
+      "files": 13
+    },
+    {
+      "feature": "css:font-size",
+      "files": 13
+    },
+    {
+      "feature": "css:stroke-dasharray",
+      "files": 13
+    },
+    {
+      "feature": "attribute:bordercolor",
+      "files": 12
+    },
+    {
+      "feature": "attribute:borderopacity",
+      "files": 12
+    },
+    {
+      "feature": "attribute:current-layer",
+      "files": 12
+    },
+    {
+      "feature": "attribute:docname",
+      "files": 12
+    },
+    {
+      "feature": "attribute:font-family",
+      "files": 12
+    },
+    {
+      "feature": "attribute:pageopacity",
+      "files": 12
+    },
+    {
+      "feature": "attribute:showgrid",
+      "files": 12
+    },
+    {
+      "feature": "attribute:space",
+      "files": 12
+    },
+    {
+      "feature": "attribute:stroke-linejoin",
+      "files": 12
+    },
+    {
+      "feature": "attribute:svg",
+      "files": 12
+    },
+    {
+      "feature": "attribute:window-height",
+      "files": 12
+    },
+    {
+      "feature": "attribute:window-maximized",
+      "files": 12
+    },
+    {
+      "feature": "attribute:window-width",
+      "files": 12
+    },
+    {
+      "feature": "attribute:window-x",
+      "files": 12
+    },
+    {
+      "feature": "attribute:window-y",
+      "files": 12
+    },
+    {
+      "feature": "attribute:zoom",
+      "files": 12
+    },
+    {
+      "feature": "css:fill-rule",
+      "files": 12
+    },
+    {
+      "feature": "css:stroke-miterlimit",
+      "files": 12
+    },
+    {
+      "feature": "attribute:nodetypes",
+      "files": 10
+    },
+    {
+      "feature": "attribute:x1",
+      "files": 10
+    },
+    {
+      "feature": "attribute:x2",
+      "files": 10
+    },
+    {
+      "feature": "attribute:y1",
+      "files": 10
+    },
+    {
+      "feature": "attribute:y2",
+      "files": 10
+    },
+    {
+      "feature": "css:font-style",
+      "files": 10
+    },
+    {
+      "feature": "css:font-weight",
+      "files": 10
+    },
+    {
+      "feature": "css:stroke-dashoffset",
+      "files": 10
+    },
+    {
+      "feature": "attribute:connector-curvature",
+      "files": 9
+    },
+    {
+      "feature": "attribute:fill-opacity",
+      "files": 9
+    },
+    {
+      "feature": "css:-inkscape-font-specification",
+      "files": 9
+    },
+    {
+      "feature": "css:letter-spacing",
+      "files": 9
+    },
+    {
+      "feature": "css:text-align",
+      "files": 9
+    },
+    {
+      "feature": "css:text-anchor",
+      "files": 9
+    },
+    {
+      "feature": "element:image",
+      "files": 9
+    },
+    {
+      "feature": "attribute:cc",
+      "files": 8
+    },
+    {
+      "feature": "attribute:dc",
+      "files": 8
+    },
+    {
+      "feature": "attribute:pagecheckerboard",
+      "files": 8
+    },
+    {
+      "feature": "attribute:rdf",
+      "files": 8
+    },
+    {
+      "feature": "css:display",
+      "files": 8
+    },
+    {
+      "feature": "css:font-stretch",
+      "files": 8
+    },
+    {
+      "feature": "css:font-variant",
+      "files": 8
+    },
+    {
+      "feature": "css:line-height",
+      "files": 8
+    },
+    {
+      "feature": "css:word-spacing",
+      "files": 8
+    },
+    {
+      "feature": "element:RDF",
+      "files": 8
+    },
+    {
+      "feature": "element:Work",
+      "files": 8
+    },
+    {
+      "feature": "element:format",
+      "files": 8
+    },
+    {
+      "feature": "element:line",
+      "files": 8
+    },
+    {
+      "feature": "element:tspan",
+      "files": 8
+    },
+    {
+      "feature": "attribute:about",
+      "files": 7
+    },
+    {
+      "feature": "attribute:pageshadow",
+      "files": 7
+    },
+    {
+      "feature": "attribute:resource",
+      "files": 7
+    },
+    {
+      "feature": "attribute:ry",
+      "files": 7
+    },
+    {
+      "feature": "attribute:stroke-miterlimit",
+      "files": 7
+    },
+    {
+      "feature": "css:writing-mode",
+      "files": 7
+    },
+    {
+      "feature": "element:type",
+      "files": 7
+    },
+    {
+      "feature": "attribute:deskcolor",
+      "files": 6
+    },
+    {
+      "feature": "attribute:fill-rule",
+      "files": 6
+    },
+    {
+      "feature": "attribute:gridtolerance",
+      "files": 6
+    },
+    {
+      "feature": "attribute:guidetolerance",
+      "files": 6
+    },
+    {
+      "feature": "attribute:objecttolerance",
+      "files": 6
+    },
+    {
+      "feature": "attribute:role",
+      "files": 6
+    },
+    {
+      "feature": "attribute:rx",
+      "files": 6
+    },
+    {
+      "feature": "attribute:showpageshadow",
+      "files": 6
+    },
+    {
+      "feature": "attribute:stroke-linecap",
+      "files": 6
+    },
+    {
+      "feature": "attribute:stroke-opacity",
+      "files": 6
+    },
+    {
+      "feature": "css:stop-color",
+      "files": 6
+    },
+    {
+      "feature": "attribute:clipPathUnits",
+      "files": 5
+    },
+    {
+      "feature": "attribute:document-units",
+      "files": 5
+    },
+    {
+      "feature": "attribute:effect",
+      "files": 5
+    },
+    {
+      "feature": "attribute:is_visible",
+      "files": 5
+    },
+    {
+      "feature": "attribute:opacity",
+      "files": 5
+    },
+    {
+      "feature": "attribute:path-effect",
+      "files": 5
+    },
+    {
+      "feature": "class:bathymetry0",
+      "files": 5
+    },
+    {
+      "feature": "class:bathymetry1",
+      "files": 5
+    },
+    {
+      "feature": "class:bathymetry2",
+      "files": 5
+    },
+    {
+      "feature": "class:bathymetry3",
+      "files": 5
+    },
+    {
+      "feature": "class:bathymetry4",
+      "files": 5
+    },
+    {
+      "feature": "class:border",
+      "files": 5
+    },
+    {
+      "feature": "class:border0",
+      "files": 5
+    },
+    {
+      "feature": "class:cities",
+      "files": 5
+    },
+    {
+      "feature": "class:city",
+      "files": 5
+    },
+    {
+      "feature": "class:coast",
+      "files": 5
+    },
+    {
+      "feature": "class:grid",
+      "files": 5
+    },
+    {
+      "feature": "class:highway",
+      "files": 5
+    },
+    {
+      "feature": "class:highways",
+      "files": 5
+    },
+    {
+      "feature": "class:highwaytop",
+      "files": 5
+    },
+    {
+      "feature": "class:lake",
+      "files": 5
+    },
+    {
+      "feature": "class:lakes",
+      "files": 5
+    },
+    {
+      "feature": "class:primary",
+      "files": 5
+    },
+    {
+      "feature": "class:primarytop",
+      "files": 5
+    },
+    {
+      "feature": "class:railway",
+      "files": 5
+    },
+    {
+      "feature": "class:railway_narrow",
+      "files": 5
+    },
+    {
+      "feature": "class:railways",
+      "files": 5
+    },
+    {
+      "feature": "class:railwaytop",
+      "files": 5
+    },
+    {
+      "feature": "class:river",
+      "files": 5
+    },
+    {
+      "feature": "class:rivers",
+      "files": 5
+    },
+    {
+      "feature": "class:secondary",
+      "files": 5
+    },
+    {
+      "feature": "class:shadow1",
+      "files": 5
+    },
+    {
+      "feature": "class:shadow2",
+      "files": 5
+    },
+    {
+      "feature": "class:tertiary",
+      "files": 5
+    },
+    {
+      "feature": "class:tertiarytop",
+      "files": 5
+    },
+    {
+      "feature": "class:topo0",
+      "files": 5
+    },
+    {
+      "feature": "class:topo1",
+      "files": 5
+    },
+    {
+      "feature": "class:topo10",
+      "files": 5
+    },
+    {
+      "feature": "class:topo11",
+      "files": 5
+    },
+    {
+      "feature": "class:topo12",
+      "files": 5
+    },
+    {
+      "feature": "class:topo13",
+      "files": 5
+    },
+    {
+      "feature": "class:topo14",
+      "files": 5
+    },
+    {
+      "feature": "class:topo15",
+      "files": 5
+    },
+    {
+      "feature": "class:topo16",
+      "files": 5
+    },
+    {
+      "feature": "class:topo17",
+      "files": 5
+    },
+    {
+      "feature": "class:topo2",
+      "files": 5
+    },
+    {
+      "feature": "class:topo3",
+      "files": 5
+    },
+    {
+      "feature": "class:topo4",
+      "files": 5
+    },
+    {
+      "feature": "class:topo5",
+      "files": 5
+    },
+    {
+      "feature": "class:topo6",
+      "files": 5
+    },
+    {
+      "feature": "class:topo7",
+      "files": 5
+    },
+    {
+      "feature": "class:topo8",
+      "files": 5
+    },
+    {
+      "feature": "class:topo9",
+      "files": 5
+    },
+    {
+      "feature": "class:town",
+      "files": 5
+    },
+    {
+      "feature": "class:towns",
+      "files": 5
+    },
+    {
+      "feature": "class:trunk",
+      "files": 5
+    },
+    {
+      "feature": "class:trunktop",
+      "files": 5
+    },
+    {
+      "feature": "class:urban",
+      "files": 5
+    },
+    {
+      "feature": "css:stop-opacity",
+      "files": 5
+    },
+    {
+      "feature": "element:ellipse",
+      "files": 5
+    },
+    {
+      "feature": "element:path-effect",
+      "files": 5
+    },
+    {
+      "feature": "attribute:font-style",
+      "files": 4
+    },
+    {
+      "feature": "attribute:font-weight",
+      "files": 4
+    },
+    {
+      "feature": "attribute:gradientTransform",
+      "files": 4
+    },
+    {
+      "feature": "attribute:gradientUnits",
+      "files": 4
+    },
+    {
+      "feature": "class:bathymetry5",
+      "files": 4
+    },
+    {
+      "feature": "class:bathymetry6",
+      "files": 4
+    },
+    {
+      "feature": "class:bathymetry7",
+      "files": 4
+    },
+    {
+      "feature": "class:bathymetry8",
+      "files": 4
+    },
+    {
+      "feature": "class:bathymetry9",
+      "files": 4
+    },
+    {
+      "feature": "class:border00",
+      "files": 4
+    },
+    {
+      "feature": "class:border01",
+      "files": 4
+    },
+    {
+      "feature": "class:border02",
+      "files": 4
+    },
+    {
+      "feature": "class:industrial",
+      "files": 4
+    },
+    {
+      "feature": "class:mask",
+      "files": 4
+    },
+    {
+      "feature": "class:minorroad",
+      "files": 4
+    },
+    {
+      "feature": "class:minorroadtop",
+      "files": 4
+    },
+    {
+      "feature": "class:scalelinetext",
+      "files": 4
+    },
+    {
+      "feature": "class:scaletopo",
+      "files": 4
+    },
+    {
+      "feature": "class:topo",
+      "files": 4
+    },
+    {
+      "feature": "class:topo-1",
+      "files": 4
+    },
+    {
+      "feature": "class:village",
+      "files": 4
+    },
+    {
+      "feature": "class:villages",
+      "files": 4
+    },
+    {
+      "feature": "class:water",
+      "files": 4
+    },
+    {
+      "feature": "css:white-space",
+      "files": 4
+    },
+    {
+      "feature": "attribute:baseProfile",
+      "files": 3
+    },
+    {
+      "feature": "attribute:collect",
+      "files": 3
+    },
+    {
+      "feature": "attribute:data-region",
+      "files": 3
+    },
+    {
+      "feature": "attribute:display",
+      "files": 3
+    },
+    {
+      "feature": "attribute:export-filename",
+      "files": 3
+    },
+    {
+      "feature": "attribute:export-xdpi",
+      "files": 3
+    },
+    {
+      "feature": "attribute:export-ydpi",
+      "files": 3
+    },
+    {
+      "feature": "attribute:filter",
+      "files": 3
+    },
+    {
+      "feature": "attribute:fit-margin-bottom",
+      "files": 3
+    },
+    {
+      "feature": "attribute:fit-margin-left",
+      "files": 3
+    },
+    {
+      "feature": "attribute:fit-margin-right",
+      "files": 3
+    },
+    {
+      "feature": "attribute:fit-margin-top",
+      "files": 3
+    },
+    {
+      "feature": "attribute:marker-end",
+      "files": 3
+    },
+    {
+      "feature": "attribute:overflow",
+      "files": 3
+    },
+    {
+      "feature": "attribute:points",
+      "files": 3
+    },
+    {
+      "feature": "attribute:showguides",
+      "files": 3
+    },
+    {
+      "feature": "attribute:stroke-dasharray",
+      "files": 3
+    },
+    {
+      "feature": "attribute:transform-center-x",
+      "files": 3
+    },
+    {
+      "feature": "attribute:transform-center-y",
+      "files": 3
+    },
+    {
+      "feature": "attribute:vector-effect",
+      "files": 3
+    },
+    {
+      "feature": "css:clip-rule",
+      "files": 3
+    },
+    {
+      "feature": "css:color",
+      "files": 3
+    },
+    {
+      "feature": "css:enable-background",
+      "files": 3
+    },
+    {
+      "feature": "css:font-variant-caps",
+      "files": 3
+    },
+    {
+      "feature": "css:font-variant-ligatures",
+      "files": 3
+    },
+    {
+      "feature": "css:font-variant-numeric",
+      "files": 3
+    },
+    {
+      "feature": "css:marker",
+      "files": 3
+    },
+    {
+      "feature": "css:overflow",
+      "files": 3
+    },
+    {
+      "feature": "css:text-decoration-color",
+      "files": 3
+    },
+    {
+      "feature": "css:text-decoration-line",
+      "files": 3
+    },
+    {
+      "feature": "css:visibility",
+      "files": 3
+    },
+    {
+      "feature": "element:polygon",
+      "files": 3
+    },
+    {
+      "feature": "element:switch",
+      "files": 3
+    },
+    {
+      "feature": "attribute:arg1",
+      "files": 2
+    },
+    {
+      "feature": "attribute:arg2",
+      "files": 2
+    },
+    {
+      "feature": "attribute:flatsided",
+      "files": 2
+    },
+    {
+      "feature": "attribute:guide-bbox",
+      "files": 2
+    },
+    {
+      "feature": "attribute:helper_size",
+      "files": 2
+    },
+    {
+      "feature": "attribute:insensitive",
+      "files": 2
+    },
+    {
+      "feature": "attribute:lpeversion",
+      "files": 2
+    },
+    {
+      "feature": "attribute:mask",
+      "files": 2
+    },
+    {
+      "feature": "attribute:original-d",
+      "files": 2
+    },
+    {
+      "feature": "attribute:originx",
+      "files": 2
+    },
+    {
+      "feature": "attribute:originy",
+      "files": 2
+    },
+    {
+      "feature": "attribute:patternTransform",
+      "files": 2
+    },
+    {
+      "feature": "attribute:patternUnits",
+      "files": 2
+    },
+    {
+      "feature": "attribute:persp3d-origin",
+      "files": 2
+    },
+    {
+      "feature": "attribute:r1",
+      "files": 2
+    },
+    {
+      "feature": "attribute:r2",
+      "files": 2
+    },
+    {
+      "feature": "attribute:randomized",
+      "files": 2
+    },
+    {
+      "feature": "attribute:rounded",
+      "files": 2
+    },
+    {
+      "feature": "attribute:sides",
+      "files": 2
+    },
+    {
+      "feature": "attribute:simplify_individual_paths",
+      "files": 2
+    },
+    {
+      "feature": "attribute:simplify_just_coalesce",
+      "files": 2
+    },
+    {
+      "feature": "attribute:smooth_angles",
+      "files": 2
+    },
+    {
+      "feature": "attribute:steps",
+      "files": 2
+    },
+    {
+      "feature": "attribute:systemLanguage",
+      "files": 2
+    },
+    {
+      "feature": "attribute:threshold",
+      "files": 2
+    },
+    {
+      "feature": "attribute:visible",
+      "files": 2
+    },
+    {
+      "feature": "attribute:vp_x",
+      "files": 2
+    },
+    {
+      "feature": "attribute:vp_y",
+      "files": 2
+    },
+    {
+      "feature": "attribute:vp_z",
+      "files": 2
+    },
+    {
+      "feature": "class:point",
+      "files": 2
+    },
+    {
+      "feature": "class:river1",
+      "files": 2
+    },
+    {
+      "feature": "class:river2",
+      "files": 2
+    },
+    {
+      "feature": "class:river3",
+      "files": 2
+    },
+    {
+      "feature": "class:river4",
+      "files": 2
+    },
+    {
+      "feature": "class:river5",
+      "files": 2
+    },
+    {
+      "feature": "class:river6",
+      "files": 2
+    },
+    {
+      "feature": "class:riverint",
+      "files": 2
+    },
+    {
+      "feature": "class:riversint",
+      "files": 2
+    },
+    {
+      "feature": "class:st0",
+      "files": 2
+    },
+    {
+      "feature": "class:st1",
+      "files": 2
+    },
+    {
+      "feature": "class:st10",
+      "files": 2
+    },
+    {
+      "feature": "class:st11",
+      "files": 2
+    },
+    {
+      "feature": "class:st12",
+      "files": 2
+    },
+    {
+      "feature": "class:st13",
+      "files": 2
+    },
+    {
+      "feature": "class:st2",
+      "files": 2
+    },
+    {
+      "feature": "class:st22",
+      "files": 2
+    },
+    {
+      "feature": "class:st3",
+      "files": 2
+    },
+    {
+      "feature": "class:st4",
+      "files": 2
+    },
+    {
+      "feature": "class:st5",
+      "files": 2
+    },
+    {
+      "feature": "class:st6",
+      "files": 2
+    },
+    {
+      "feature": "class:st7",
+      "files": 2
+    },
+    {
+      "feature": "class:st8",
+      "files": 2
+    },
+    {
+      "feature": "class:st9",
+      "files": 2
+    },
+    {
+      "feature": "class:swamp",
+      "files": 2
+    },
+    {
+      "feature": "class:swamps",
+      "files": 2
+    },
+    {
+      "feature": "class:waterint",
+      "files": 2
+    },
+    {
+      "feature": "css:-inkscape-stroke",
+      "files": 2
+    },
+    {
+      "feature": "css:baseline-shift",
+      "files": 2
+    },
+    {
+      "feature": "css:direction",
+      "files": 2
+    },
+    {
+      "feature": "css:font-feature-settings",
+      "files": 2
+    },
+    {
+      "feature": "css:font-variant-east-asian",
+      "files": 2
+    },
+    {
+      "feature": "css:font-variation-settings",
+      "files": 2
+    },
+    {
+      "feature": "css:isolation",
+      "files": 2
+    },
+    {
+      "feature": "css:text-decoration-style",
+      "files": 2
+    },
+    {
+      "feature": "css:text-indent",
+      "files": 2
+    },
+    {
+      "feature": "css:text-transform",
+      "files": 2
+    },
+    {
+      "feature": "css:vector-effect",
+      "files": 2
+    },
+    {
+      "feature": "element:Agent",
+      "files": 2
+    },
+    {
+      "feature": "element:creator",
+      "files": 2
+    },
+    {
+      "feature": "element:date",
+      "files": 2
+    },
+    {
+      "feature": "element:desc",
+      "files": 2
+    },
+    {
+      "feature": "element:grid",
+      "files": 2
+    },
+    {
+      "feature": "element:mask",
+      "files": 2
+    },
+    {
+      "feature": "element:pattern",
+      "files": 2
+    },
+    {
+      "feature": "element:perspective",
+      "files": 2
+    },
+    {
+      "feature": "element:radialGradient",
+      "files": 2
+    },
+    {
+      "feature": "attribute:a",
+      "files": 1
+    },
+    {
+      "feature": "attribute:align",
+      "files": 1
+    },
+    {
+      "feature": "attribute:arc-type",
+      "files": 1
+    },
+    {
+      "feature": "attribute:aria-label",
+      "files": 1
+    },
+    {
+      "feature": "attribute:ascent",
+      "files": 1
+    },
+    {
+      "feature": "attribute:border_marks",
+      "files": 1
+    },
+    {
+      "feature": "attribute:bottomLeftOrigin",
+      "files": 1
+    },
+    {
+      "feature": "attribute:bx",
+      "files": 1
+    },
+    {
+      "feature": "attribute:center_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:clip-rule",
+      "files": 1
+    },
+    {
+      "feature": "attribute:color",
+      "files": 1
+    },
+    {
+      "feature": "attribute:copytype",
+      "files": 1
+    },
+    {
+      "feature": "attribute:data-name",
+      "files": 1
+    },
+    {
+      "feature": "attribute:date",
+      "files": 1
+    },
+    {
+      "feature": "attribute:deform_type",
+      "files": 1
+    },
+    {
+      "feature": "attribute:descent",
+      "files": 1
+    },
+    {
+      "feature": "attribute:description",
+      "files": 1
+    },
+    {
+      "feature": "attribute:dimmedPercent",
+      "files": 1
+    },
+    {
+      "feature": "attribute:discard_orig_path",
+      "files": 1
+    },
+    {
+      "feature": "attribute:document-rotation",
+      "files": 1
+    },
+    {
+      "feature": "attribute:down_left_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:down_right_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:dx",
+      "files": 1
+    },
+    {
+      "feature": "attribute:empcolor",
+      "files": 1
+    },
+    {
+      "feature": "attribute:empopacity",
+      "files": 1
+    },
+    {
+      "feature": "attribute:empspacing",
+      "files": 1
+    },
+    {
+      "feature": "attribute:enable-background",
+      "files": 1
+    },
+    {
+      "feature": "attribute:enabled",
+      "files": 1
+    },
+    {
+      "feature": "attribute:end",
+      "files": 1
+    },
+    {
+      "feature": "attribute:end_linecap_type",
+      "files": 1
+    },
+    {
+      "feature": "attribute:end_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:format",
+      "files": 1
+    },
+    {
+      "feature": "attribute:fuse_paths",
+      "files": 1
+    },
+    {
+      "feature": "attribute:fuse_tolerance",
+      "files": 1
+    },
+    {
+      "feature": "attribute:fx",
+      "files": 1
+    },
+    {
+      "feature": "attribute:fy",
+      "files": 1
+    },
+    {
+      "feature": "attribute:graph",
+      "files": 1
+    },
+    {
+      "feature": "attribute:hide_knot",
+      "files": 1
+    },
+    {
+      "feature": "attribute:horiz-adv-x",
+      "files": 1
+    },
+    {
+      "feature": "attribute:horiz-origin-x",
+      "files": 1
+    },
+    {
+      "feature": "attribute:horiz-origin-y",
+      "files": 1
+    },
+    {
+      "feature": "attribute:horizontal_mirror",
+      "files": 1
+    },
+    {
+      "feature": "attribute:i",
+      "files": 1
+    },
+    {
+      "feature": "attribute:identifier",
+      "files": 1
+    },
+    {
+      "feature": "attribute:interpolator_beta",
+      "files": 1
+    },
+    {
+      "feature": "attribute:interpolator_type",
+      "files": 1
+    },
+    {
+      "feature": "attribute:isolated",
+      "files": 1
+    },
+    {
+      "feature": "attribute:knockout",
+      "files": 1
+    },
+    {
+      "feature": "attribute:layer",
+      "files": 1
+    },
+    {
+      "feature": "attribute:letter-spacing",
+      "files": 1
+    },
+    {
+      "feature": "attribute:linejoin_type",
+      "files": 1
+    },
+    {
+      "feature": "attribute:link_styles",
+      "files": 1
+    },
+    {
+      "feature": "attribute:locked",
+      "files": 1
+    },
+    {
+      "feature": "attribute:lpesatellites",
+      "files": 1
+    },
+    {
+      "feature": "attribute:major_mark_gap",
+      "files": 1
+    },
+    {
+      "feature": "attribute:major_mark_steps",
+      "files": 1
+    },
+    {
+      "feature": "attribute:mark_angle",
+      "files": 1
+    },
+    {
+      "feature": "attribute:mark_dir",
+      "files": 1
+    },
+    {
+      "feature": "attribute:mark_distance",
+      "files": 1
+    },
+    {
+      "feature": "attribute:mark_length",
+      "files": 1
+    },
+    {
+      "feature": "attribute:markerUnits",
+      "files": 1
+    },
+    {
+      "feature": "attribute:message",
+      "files": 1
+    },
+    {
+      "feature": "attribute:minor_mark_gap",
+      "files": 1
+    },
+    {
+      "feature": "attribute:minor_mark_length",
+      "files": 1
+    },
+    {
+      "feature": "attribute:miter_limit",
+      "files": 1
+    },
+    {
+      "feature": "attribute:mode",
+      "files": 1
+    },
+    {
+      "feature": "attribute:normal_offset",
+      "files": 1
+    },
+    {
+      "feature": "attribute:not_jump",
+      "files": 1
+    },
+    {
+      "feature": "attribute:objectNS",
+      "files": 1
+    },
+    {
+      "feature": "attribute:objectType",
+      "files": 1
+    },
+    {
+      "feature": "attribute:offset_points",
+      "files": 1
+    },
+    {
+      "feature": "attribute:open",
+      "files": 1
+    },
+    {
+      "feature": "attribute:oposite_fuse",
+      "files": 1
+    },
+    {
+      "feature": "attribute:original",
+      "files": 1
+    },
+    {
+      "feature": "attribute:overflow_perspective",
+      "files": 1
+    },
+    {
+      "feature": "attribute:pageBounds",
+      "files": 1
+    },
+    {
+      "feature": "attribute:pattern",
+      "files": 1
+    },
+    {
+      "feature": "attribute:placementMethod",
+      "files": 1
+    },
+    {
+      "feature": "attribute:preserveAspectRatio",
+      "files": 1
+    },
+    {
+      "feature": "attribute:prop_scale",
+      "files": 1
+    },
+    {
+      "feature": "attribute:prop_units",
+      "files": 1
+    },
+    {
+      "feature": "attribute:radius",
+      "files": 1
+    },
+    {
+      "feature": "attribute:rdfs",
+      "files": 1
+    },
+    {
+      "feature": "attribute:refHeight",
+      "files": 1
+    },
+    {
+      "feature": "attribute:refWidth",
+      "files": 1
+    },
+    {
+      "feature": "attribute:requiredExtensions",
+      "files": 1
+    },
+    {
+      "feature": "attribute:rgbTrio",
+      "files": 1
+    },
+    {
+      "feature": "attribute:rulerOrigin",
+      "files": 1
+    },
+    {
+      "feature": "attribute:scale_width",
+      "files": 1
+    },
+    {
+      "feature": "attribute:scale_y_rel",
+      "files": 1
+    },
+    {
+      "feature": "attribute:shift",
+      "files": 1
+    },
+    {
+      "feature": "attribute:snap-global",
+      "files": 1
+    },
+    {
+      "feature": "attribute:sort_points",
+      "files": 1
+    },
+    {
+      "feature": "attribute:spacing",
+      "files": 1
+    },
+    {
+      "feature": "attribute:spacingx",
+      "files": 1
+    },
+    {
+      "feature": "attribute:spacingy",
+      "files": 1
+    },
+    {
+      "feature": "attribute:split_items",
+      "files": 1
+    },
+    {
+      "feature": "attribute:split_open",
+      "files": 1
+    },
+    {
+      "feature": "attribute:start",
+      "files": 1
+    },
+    {
+      "feature": "attribute:start_linecap_type",
+      "files": 1
+    },
+    {
+      "feature": "attribute:start_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:step",
+      "files": 1
+    },
+    {
+      "feature": "attribute:stockid",
+      "files": 1
+    },
+    {
+      "feature": "attribute:stop-opacity",
+      "files": 1
+    },
+    {
+      "feature": "attribute:swatch",
+      "files": 1
+    },
+    {
+      "feature": "attribute:tang_offset",
+      "files": 1
+    },
+    {
+      "feature": "attribute:text-anchor",
+      "files": 1
+    },
+    {
+      "feature": "attribute:title",
+      "files": 1
+    },
+    {
+      "feature": "attribute:unicode",
+      "files": 1
+    },
+    {
+      "feature": "attribute:unit",
+      "files": 1
+    },
+    {
+      "feature": "attribute:units",
+      "files": 1
+    },
+    {
+      "feature": "attribute:units-per-em",
+      "files": 1
+    },
+    {
+      "feature": "attribute:up_left_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:up_right_point",
+      "files": 1
+    },
+    {
+      "feature": "attribute:v",
+      "files": 1
+    },
+    {
+      "feature": "attribute:valign",
+      "files": 1
+    },
+    {
+      "feature": "attribute:varSetName",
+      "files": 1
+    },
+    {
+      "feature": "attribute:vert-adv-y",
+      "files": 1
+    },
+    {
+      "feature": "attribute:vert-origin-x",
+      "files": 1
+    },
+    {
+      "feature": "attribute:vert-origin-y",
+      "files": 1
+    },
+    {
+      "feature": "attribute:vertical_mirror",
+      "files": 1
+    },
+    {
+      "feature": "attribute:vertical_pattern",
+      "files": 1
+    },
+    {
+      "feature": "attribute:viewBoxInterpretation",
+      "files": 1
+    },
+    {
+      "feature": "attribute:viewOrigin",
+      "files": 1
+    },
+    {
+      "feature": "attribute:visibility",
+      "files": 1
+    },
+    {
+      "feature": "attribute:word-spacing",
+      "files": 1
+    },
+    {
+      "feature": "class:AA",
+      "files": 1
+    },
+    {
+      "feature": "class:AB",
+      "files": 1
+    },
+    {
+      "feature": "class:AC",
+      "files": 1
+    },
+    {
+      "feature": "class:AD",
+      "files": 1
+    },
+    {
+      "feature": "class:AE",
+      "files": 1
+    },
+    {
+      "feature": "class:AF",
+      "files": 1
+    },
+    {
+      "feature": "class:AG",
+      "files": 1
+    },
+    {
+      "feature": "class:AH",
+      "files": 1
+    },
+    {
+      "feature": "class:AI",
+      "files": 1
+    },
+    {
+      "feature": "class:AJ",
+      "files": 1
+    },
+    {
+      "feature": "class:AK",
+      "files": 1
+    },
+    {
+      "feature": "class:AL",
+      "files": 1
+    },
+    {
+      "feature": "class:AM",
+      "files": 1
+    },
+    {
+      "feature": "class:AN",
+      "files": 1
+    },
+    {
+      "feature": "class:AO",
+      "files": 1
+    },
+    {
+      "feature": "class:AP",
+      "files": 1
+    },
+    {
+      "feature": "class:AQ",
+      "files": 1
+    },
+    {
+      "feature": "class:AR",
+      "files": 1
+    },
+    {
+      "feature": "class:AS",
+      "files": 1
+    },
+    {
+      "feature": "class:AT",
+      "files": 1
+    },
+    {
+      "feature": "class:AU",
+      "files": 1
+    },
+    {
+      "feature": "class:AV",
+      "files": 1
+    },
+    {
+      "feature": "class:AW",
+      "files": 1
+    },
+    {
+      "feature": "class:AX",
+      "files": 1
+    },
+    {
+      "feature": "class:AY",
+      "files": 1
+    },
+    {
+      "feature": "class:AZ",
+      "files": 1
+    },
+    {
+      "feature": "class:Aa",
+      "files": 1
+    },
+    {
+      "feature": "class:Ab",
+      "files": 1
+    },
+    {
+      "feature": "class:Ac",
+      "files": 1
+    },
+    {
+      "feature": "class:Ad",
+      "files": 1
+    },
+    {
+      "feature": "class:Ae",
+      "files": 1
+    },
+    {
+      "feature": "class:Af",
+      "files": 1
+    },
+    {
+      "feature": "class:Ag",
+      "files": 1
+    },
+    {
+      "feature": "class:Ah",
+      "files": 1
+    },
+    {
+      "feature": "class:Ai",
+      "files": 1
+    },
+    {
+      "feature": "class:Aj",
+      "files": 1
+    },
+    {
+      "feature": "class:Ak",
+      "files": 1
+    },
+    {
+      "feature": "class:Al",
+      "files": 1
+    },
+    {
+      "feature": "class:Am",
+      "files": 1
+    },
+    {
+      "feature": "class:An",
+      "files": 1
+    },
+    {
+      "feature": "class:Ao",
+      "files": 1
+    },
+    {
+      "feature": "class:Ap",
+      "files": 1
+    },
+    {
+      "feature": "class:Aq",
+      "files": 1
+    },
+    {
+      "feature": "class:Ar",
+      "files": 1
+    },
+    {
+      "feature": "class:As",
+      "files": 1
+    },
+    {
+      "feature": "class:At",
+      "files": 1
+    },
+    {
+      "feature": "class:Au",
+      "files": 1
+    },
+    {
+      "feature": "class:Av",
+      "files": 1
+    },
+    {
+      "feature": "class:Aw",
+      "files": 1
+    },
+    {
+      "feature": "class:Ax",
+      "files": 1
+    },
+    {
+      "feature": "class:Ay",
+      "files": 1
+    },
+    {
+      "feature": "class:Az",
+      "files": 1
+    },
+    {
+      "feature": "class:B",
+      "files": 1
+    },
+    {
+      "feature": "class:BA",
+      "files": 1
+    },
+    {
+      "feature": "class:BB",
+      "files": 1
+    },
+    {
+      "feature": "class:BC",
+      "files": 1
+    },
+    {
+      "feature": "class:C",
+      "files": 1
+    },
+    {
+      "feature": "class:D",
+      "files": 1
+    },
+    {
+      "feature": "class:E",
+      "files": 1
+    },
+    {
+      "feature": "class:F",
+      "files": 1
+    },
+    {
+      "feature": "class:FA",
+      "files": 1
+    },
+    {
+      "feature": "class:FB",
+      "files": 1
+    },
+    {
+      "feature": "class:FC",
+      "files": 1
+    },
+    {
+      "feature": "class:FD",
+      "files": 1
+    },
+    {
+      "feature": "class:FE",
+      "files": 1
+    },
+    {
+      "feature": "class:FF",
+      "files": 1
+    },
+    {
+      "feature": "class:FG",
+      "files": 1
+    },
+    {
+      "feature": "class:FH",
+      "files": 1
+    },
+    {
+      "feature": "class:FI",
+      "files": 1
+    },
+    {
+      "feature": "class:FJ",
+      "files": 1
+    },
+    {
+      "feature": "class:FK",
+      "files": 1
+    },
+    {
+      "feature": "class:FL",
+      "files": 1
+    },
+    {
+      "feature": "class:FM",
+      "files": 1
+    },
+    {
+      "feature": "class:FN",
+      "files": 1
+    },
+    {
+      "feature": "class:FO",
+      "files": 1
+    },
+    {
+      "feature": "class:FP",
+      "files": 1
+    },
+    {
+      "feature": "class:FQ",
+      "files": 1
+    },
+    {
+      "feature": "class:FR",
+      "files": 1
+    },
+    {
+      "feature": "class:FS",
+      "files": 1
+    },
+    {
+      "feature": "class:FT",
+      "files": 1
+    },
+    {
+      "feature": "class:FU",
+      "files": 1
+    },
+    {
+      "feature": "class:FV",
+      "files": 1
+    },
+    {
+      "feature": "class:FW",
+      "files": 1
+    },
+    {
+      "feature": "class:FX",
+      "files": 1
+    },
+    {
+      "feature": "class:FY",
+      "files": 1
+    },
+    {
+      "feature": "class:FZ",
+      "files": 1
+    },
+    {
+      "feature": "class:Fa",
+      "files": 1
+    },
+    {
+      "feature": "class:Fb",
+      "files": 1
+    },
+    {
+      "feature": "class:Fc",
+      "files": 1
+    },
+    {
+      "feature": "class:Fd",
+      "files": 1
+    },
+    {
+      "feature": "class:Fe",
+      "files": 1
+    },
+    {
+      "feature": "class:Ff",
+      "files": 1
+    },
+    {
+      "feature": "class:Fg",
+      "files": 1
+    },
+    {
+      "feature": "class:Fh",
+      "files": 1
+    },
+    {
+      "feature": "class:Fi",
+      "files": 1
+    },
+    {
+      "feature": "class:Fj",
+      "files": 1
+    },
+    {
+      "feature": "class:Fk",
+      "files": 1
+    },
+    {
+      "feature": "class:Fl",
+      "files": 1
+    },
+    {
+      "feature": "class:Fm",
+      "files": 1
+    },
+    {
+      "feature": "class:Fn",
+      "files": 1
+    },
+    {
+      "feature": "class:Fo",
+      "files": 1
+    },
+    {
+      "feature": "class:Fp",
+      "files": 1
+    },
+    {
+      "feature": "class:Fq",
+      "files": 1
+    },
+    {
+      "feature": "class:Fr",
+      "files": 1
+    },
+    {
+      "feature": "class:Fs",
+      "files": 1
+    },
+    {
+      "feature": "class:Ft",
+      "files": 1
+    },
+    {
+      "feature": "class:Fu",
+      "files": 1
+    },
+    {
+      "feature": "class:Fv",
+      "files": 1
+    },
+    {
+      "feature": "class:Fw",
+      "files": 1
+    },
+    {
+      "feature": "class:Fx",
+      "files": 1
+    },
+    {
+      "feature": "class:Fy",
+      "files": 1
+    },
+    {
+      "feature": "class:Fz",
+      "files": 1
+    },
+    {
+      "feature": "class:G",
+      "files": 1
+    },
+    {
+      "feature": "class:GA",
+      "files": 1
+    },
+    {
+      "feature": "class:GB",
+      "files": 1
+    },
+    {
+      "feature": "class:GC",
+      "files": 1
+    },
+    {
+      "feature": "class:GD",
+      "files": 1
+    },
+    {
+      "feature": "class:GE",
+      "files": 1
+    },
+    {
+      "feature": "class:GF",
+      "files": 1
+    },
+    {
+      "feature": "class:GG",
+      "files": 1
+    },
+    {
+      "feature": "class:GH",
+      "files": 1
+    },
+    {
+      "feature": "class:GI",
+      "files": 1
+    },
+    {
+      "feature": "class:GJ",
+      "files": 1
+    },
+    {
+      "feature": "class:GK",
+      "files": 1
+    },
+    {
+      "feature": "class:GL",
+      "files": 1
+    },
+    {
+      "feature": "class:GM",
+      "files": 1
+    },
+    {
+      "feature": "class:GN",
+      "files": 1
+    },
+    {
+      "feature": "class:GO",
+      "files": 1
+    },
+    {
+      "feature": "class:GP",
+      "files": 1
+    },
+    {
+      "feature": "class:GQ",
+      "files": 1
+    },
+    {
+      "feature": "class:GR",
+      "files": 1
+    },
+    {
+      "feature": "class:GS",
+      "files": 1
+    },
+    {
+      "feature": "class:GT",
+      "files": 1
+    },
+    {
+      "feature": "class:GU",
+      "files": 1
+    },
+    {
+      "feature": "class:GV",
+      "files": 1
+    },
+    {
+      "feature": "class:GW",
+      "files": 1
+    },
+    {
+      "feature": "class:GX",
+      "files": 1
+    },
+    {
+      "feature": "class:GY",
+      "files": 1
+    },
+    {
+      "feature": "class:GZ",
+      "files": 1
+    },
+    {
+      "feature": "class:Ga",
+      "files": 1
+    },
+    {
+      "feature": "class:Gb",
+      "files": 1
+    },
+    {
+      "feature": "class:Gc",
+      "files": 1
+    },
+    {
+      "feature": "class:Gd",
+      "files": 1
+    },
+    {
+      "feature": "class:Ge",
+      "files": 1
+    },
+    {
+      "feature": "class:Gf",
+      "files": 1
+    },
+    {
+      "feature": "class:Gg",
+      "files": 1
+    },
+    {
+      "feature": "class:Gh",
+      "files": 1
+    },
+    {
+      "feature": "class:Gi",
+      "files": 1
+    },
+    {
+      "feature": "class:Gj",
+      "files": 1
+    },
+    {
+      "feature": "class:Gk",
+      "files": 1
+    },
+    {
+      "feature": "class:Gl",
+      "files": 1
+    },
+    {
+      "feature": "class:Gm",
+      "files": 1
+    },
+    {
+      "feature": "class:Gn",
+      "files": 1
+    },
+    {
+      "feature": "class:Go",
+      "files": 1
+    },
+    {
+      "feature": "class:Gp",
+      "files": 1
+    },
+    {
+      "feature": "class:Gq",
+      "files": 1
+    },
+    {
+      "feature": "class:Gr",
+      "files": 1
+    },
+    {
+      "feature": "class:Gs",
+      "files": 1
+    },
+    {
+      "feature": "class:Gt",
+      "files": 1
+    },
+    {
+      "feature": "class:Gu",
+      "files": 1
+    },
+    {
+      "feature": "class:Gv",
+      "files": 1
+    },
+    {
+      "feature": "class:Gw",
+      "files": 1
+    },
+    {
+      "feature": "class:Gx",
+      "files": 1
+    },
+    {
+      "feature": "class:Gy",
+      "files": 1
+    },
+    {
+      "feature": "class:Gz",
+      "files": 1
+    },
+    {
+      "feature": "class:H",
+      "files": 1
+    },
+    {
+      "feature": "class:HA",
+      "files": 1
+    },
+    {
+      "feature": "class:HB",
+      "files": 1
+    },
+    {
+      "feature": "class:HC",
+      "files": 1
+    },
+    {
+      "feature": "class:HD",
+      "files": 1
+    },
+    {
+      "feature": "class:HE",
+      "files": 1
+    },
+    {
+      "feature": "class:HF",
+      "files": 1
+    },
+    {
+      "feature": "class:HG",
+      "files": 1
+    },
+    {
+      "feature": "class:HH",
+      "files": 1
+    },
+    {
+      "feature": "class:HI",
+      "files": 1
+    },
+    {
+      "feature": "class:HJ",
+      "files": 1
+    },
+    {
+      "feature": "class:HK",
+      "files": 1
+    },
+    {
+      "feature": "class:HL",
+      "files": 1
+    },
+    {
+      "feature": "class:HM",
+      "files": 1
+    },
+    {
+      "feature": "class:HN",
+      "files": 1
+    },
+    {
+      "feature": "class:HO",
+      "files": 1
+    },
+    {
+      "feature": "class:HP",
+      "files": 1
+    },
+    {
+      "feature": "class:HQ",
+      "files": 1
+    },
+    {
+      "feature": "class:HR",
+      "files": 1
+    },
+    {
+      "feature": "class:HS",
+      "files": 1
+    },
+    {
+      "feature": "class:HT",
+      "files": 1
+    },
+    {
+      "feature": "class:HU",
+      "files": 1
+    },
+    {
+      "feature": "class:HV",
+      "files": 1
+    },
+    {
+      "feature": "class:HW",
+      "files": 1
+    },
+    {
+      "feature": "class:HX",
+      "files": 1
+    },
+    {
+      "feature": "class:HY",
+      "files": 1
+    },
+    {
+      "feature": "class:HZ",
+      "files": 1
+    },
+    {
+      "feature": "class:Ha",
+      "files": 1
+    },
+    {
+      "feature": "class:Hb",
+      "files": 1
+    },
+    {
+      "feature": "class:Hc",
+      "files": 1
+    },
+    {
+      "feature": "class:Hd",
+      "files": 1
+    },
+    {
+      "feature": "class:He",
+      "files": 1
+    },
+    {
+      "feature": "class:Hf",
+      "files": 1
+    },
+    {
+      "feature": "class:Hg",
+      "files": 1
+    },
+    {
+      "feature": "class:Hh",
+      "files": 1
+    },
+    {
+      "feature": "class:Hi",
+      "files": 1
+    },
+    {
+      "feature": "class:Hj",
+      "files": 1
+    },
+    {
+      "feature": "class:Hk",
+      "files": 1
+    },
+    {
+      "feature": "class:Hl",
+      "files": 1
+    },
+    {
+      "feature": "class:I",
+      "files": 1
+    },
+    {
+      "feature": "class:J",
+      "files": 1
+    },
+    {
+      "feature": "class:K",
+      "files": 1
+    },
+    {
+      "feature": "class:L",
+      "files": 1
+    },
+    {
+      "feature": "class:M",
+      "files": 1
+    },
+    {
+      "feature": "class:N",
+      "files": 1
+    },
+    {
+      "feature": "class:O",
+      "files": 1
+    },
+    {
+      "feature": "class:P",
+      "files": 1
+    },
+    {
+      "feature": "class:Q",
+      "files": 1
+    },
+    {
+      "feature": "class:R",
+      "files": 1
+    },
+    {
+      "feature": "class:S",
+      "files": 1
+    },
+    {
+      "feature": "class:T",
+      "files": 1
+    },
+    {
+      "feature": "class:U",
+      "files": 1
+    },
+    {
+      "feature": "class:V",
+      "files": 1
+    },
+    {
+      "feature": "class:W",
+      "files": 1
+    },
+    {
+      "feature": "class:X",
+      "files": 1
+    },
+    {
+      "feature": "class:Y",
+      "files": 1
+    },
+    {
+      "feature": "class:Z",
+      "files": 1
+    },
+    {
+      "feature": "class:a",
+      "files": 1
+    },
+    {
+      "feature": "class:ad",
+      "files": 1
+    },
+    {
+      "feature": "class:ae",
+      "files": 1
+    },
+    {
+      "feature": "class:af",
+      "files": 1
+    },
+    {
+      "feature": "class:ag",
+      "files": 1
+    },
+    {
+      "feature": "class:al",
+      "files": 1
+    },
+    {
+      "feature": "class:am",
+      "files": 1
+    },
+    {
+      "feature": "class:antxx",
+      "files": 1
+    },
+    {
+      "feature": "class:ar",
+      "files": 1
+    },
+    {
+      "feature": "class:at",
+      "files": 1
+    },
+    {
+      "feature": "class:au",
+      "files": 1
+    },
+    {
+      "feature": "class:az",
+      "files": 1
+    },
+    {
+      "feature": "class:b",
+      "files": 1
+    },
+    {
+      "feature": "class:ba",
+      "files": 1
+    },
+    {
+      "feature": "class:bathymetry15",
+      "files": 1
+    },
+    {
+      "feature": "class:bathymetry16",
+      "files": 1
+    },
+    {
+      "feature": "class:bathymetry17",
+      "files": 1
+    },
+    {
+      "feature": "class:bathymetry18",
+      "files": 1
+    },
+    {
+      "feature": "class:bathymetry19",
+      "files": 1
+    },
+    {
+      "feature": "class:bb",
+      "files": 1
+    },
+    {
+      "feature": "class:bd",
+      "files": 1
+    },
+    {
+      "feature": "class:be",
+      "files": 1
+    },
+    {
+      "feature": "class:bf",
+      "files": 1
+    },
+    {
+      "feature": "class:bg",
+      "files": 1
+    },
+    {
+      "feature": "class:bh",
+      "files": 1
+    },
+    {
+      "feature": "class:bi",
+      "files": 1
+    },
+    {
+      "feature": "class:bj",
+      "files": 1
+    },
+    {
+      "feature": "class:bn",
+      "files": 1
+    },
+    {
+      "feature": "class:borderext",
+      "files": 1
+    },
+    {
+      "feature": "class:br",
+      "files": 1
+    },
+    {
+      "feature": "class:bt",
+      "files": 1
+    },
+    {
+      "feature": "class:bw",
+      "files": 1
+    },
+    {
+      "feature": "class:by",
+      "files": 1
+    },
+    {
+      "feature": "class:c",
+      "files": 1
+    },
+    {
+      "feature": "class:ca",
+      "files": 1
+    },
+    {
+      "feature": "class:cc",
+      "files": 1
+    },
+    {
+      "feature": "class:cd",
+      "files": 1
+    },
+    {
+      "feature": "class:cf",
+      "files": 1
+    },
+    {
+      "feature": "class:cg",
+      "files": 1
+    },
+    {
+      "feature": "class:ch",
+      "files": 1
+    },
+    {
+      "feature": "class:ci",
+      "files": 1
+    },
+    {
+      "feature": "class:circlexx",
+      "files": 1
+    },
+    {
+      "feature": "class:cl",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-1",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-10",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-11",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-12",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-13",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-14",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-15",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-16",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-17",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-18",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-19",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-2",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-20",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-21",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-22",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-23",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-24",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-25",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-26",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-27",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-28",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-29",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-3",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-30",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-31",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-32",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-33",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-34",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-35",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-36",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-37",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-38",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-39",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-4",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-40",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-41",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-42",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-43",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-44",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-45",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-46",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-47",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-48",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-49",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-5",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-50",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-51",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-52",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-53",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-54",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-55",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-56",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-57",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-58",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-59",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-6",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-60",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-61",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-62",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-63",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-64",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-65",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-66",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-67",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-68",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-69",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-7",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-70",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-71",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-72",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-73",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-74",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-75",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-76",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-77",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-78",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-79",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-8",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-80",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-81",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-82",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-83",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-84",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-85",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-86",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-87",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-88",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-89",
+      "files": 1
+    },
+    {
+      "feature": "class:cls-9",
+      "files": 1
+    },
+    {
+      "feature": "class:cm",
+      "files": 1
+    },
+    {
+      "feature": "class:cn",
+      "files": 1
+    },
+    {
+      "feature": "class:cnx",
+      "files": 1
+    },
+    {
+      "feature": "class:coastxx",
+      "files": 1
+    },
+    {
+      "feature": "class:cv",
+      "files": 1
+    },
+    {
+      "feature": "class:cx",
+      "files": 1
+    },
+    {
+      "feature": "class:cy",
+      "files": 1
+    },
+    {
+      "feature": "class:cz",
+      "files": 1
+    },
+    {
+      "feature": "class:d",
+      "files": 1
+    },
+    {
+      "feature": "class:de",
+      "files": 1
+    },
+    {
+      "feature": "class:dj",
+      "files": 1
+    },
+    {
+      "feature": "class:dk",
+      "files": 1
+    },
+    {
+      "feature": "class:dm",
+      "files": 1
+    },
+    {
+      "feature": "class:dz",
+      "files": 1
+    },
+    {
+      "feature": "class:e",
+      "files": 1
+    },
+    {
+      "feature": "class:eaeu",
+      "files": 1
+    },
+    {
+      "feature": "class:ee",
+      "files": 1
+    },
+    {
+      "feature": "class:eg",
+      "files": 1
+    },
+    {
+      "feature": "class:eh",
+      "files": 1
+    },
+    {
+      "feature": "class:er",
+      "files": 1
+    },
+    {
+      "feature": "class:es",
+      "files": 1
+    },
+    {
+      "feature": "class:et",
+      "files": 1
+    },
+    {
+      "feature": "class:eu",
+      "files": 1
+    },
+    {
+      "feature": "class:f",
+      "files": 1
+    },
+    {
+      "feature": "class:fi",
+      "files": 1
+    },
+    {
+      "feature": "class:fil6",
+      "files": 1
+    },
+    {
+      "feature": "class:fk",
+      "files": 1
+    },
+    {
+      "feature": "class:fo",
+      "files": 1
+    },
+    {
+      "feature": "class:fr",
+      "files": 1
+    },
+    {
+      "feature": "class:frx",
+      "files": 1
+    },
+    {
+      "feature": "class:g",
+      "files": 1
+    },
+    {
+      "feature": "class:ga",
+      "files": 1
+    },
+    {
+      "feature": "class:gb",
+      "files": 1
+    },
+    {
+      "feature": "class:ge",
+      "files": 1
+    },
+    {
+      "feature": "class:geo-names",
+      "files": 1
+    },
+    {
+      "feature": "class:gf",
+      "files": 1
+    },
+    {
+      "feature": "class:gg",
+      "files": 1
+    },
+    {
+      "feature": "class:gh",
+      "files": 1
+    },
+    {
+      "feature": "class:gi",
+      "files": 1
+    },
+    {
+      "feature": "class:gm",
+      "files": 1
+    },
+    {
+      "feature": "class:gn",
+      "files": 1
+    },
+    {
+      "feature": "class:gp",
+      "files": 1
+    },
+    {
+      "feature": "class:gq",
+      "files": 1
+    },
+    {
+      "feature": "class:gr",
+      "files": 1
+    },
+    {
+      "feature": "class:grid-polar",
+      "files": 1
+    },
+    {
+      "feature": "class:gs",
+      "files": 1
+    },
+    {
+      "feature": "class:gw",
+      "files": 1
+    },
+    {
+      "feature": "class:gy",
+      "files": 1
+    },
+    {
+      "feature": "class:h",
+      "files": 1
+    },
+    {
+      "feature": "class:hk",
+      "files": 1
+    },
+    {
+      "feature": "class:hm",
+      "files": 1
+    },
+    {
+      "feature": "class:hr",
+      "files": 1
+    },
+    {
+      "feature": "class:hu",
+      "files": 1
+    },
+    {
+      "feature": "class:i",
+      "files": 1
+    },
+    {
+      "feature": "class:id",
+      "files": 1
+    },
+    {
+      "feature": "class:ie",
+      "files": 1
+    },
+    {
+      "feature": "class:il",
+      "files": 1
+    },
+    {
+      "feature": "class:im",
+      "files": 1
+    },
+    {
+      "feature": "class:in",
+      "files": 1
+    },
+    {
+      "feature": "class:io",
+      "files": 1
+    },
+    {
+      "feature": "class:iq",
+      "files": 1
+    },
+    {
+      "feature": "class:ir",
+      "files": 1
+    },
+    {
+      "feature": "class:is",
+      "files": 1
+    },
+    {
+      "feature": "class:it",
+      "files": 1
+    },
+    {
+      "feature": "class:j",
+      "files": 1
+    },
+    {
+      "feature": "class:je",
+      "files": 1
+    },
+    {
+      "feature": "class:jo",
+      "files": 1
+    },
+    {
+      "feature": "class:k",
+      "files": 1
+    },
+    {
+      "feature": "class:ke",
+      "files": 1
+    },
+    {
+      "feature": "class:kg",
+      "files": 1
+    },
+    {
+      "feature": "class:kh",
+      "files": 1
+    },
+    {
+      "feature": "class:km",
+      "files": 1
+    },
+    {
+      "feature": "class:kp",
+      "files": 1
+    },
+    {
+      "feature": "class:kr",
+      "files": 1
+    },
+    {
+      "feature": "class:kw",
+      "files": 1
+    },
+    {
+      "feature": "class:kz",
+      "files": 1
+    },
+    {
+      "feature": "class:l",
+      "files": 1
+    },
+    {
+      "feature": "class:la",
+      "files": 1
+    },
+    {
+      "feature": "class:lakes2",
+      "files": 1
+    },
+    {
+      "feature": "class:landxx",
+      "files": 1
+    },
+    {
+      "feature": "class:lb",
+      "files": 1
+    },
+    {
+      "feature": "class:li",
+      "files": 1
+    },
+    {
+      "feature": "class:limitxx",
+      "files": 1
+    },
+    {
+      "feature": "class:lr",
+      "files": 1
+    },
+    {
+      "feature": "class:ls",
+      "files": 1
+    },
+    {
+      "feature": "class:lt",
+      "files": 1
+    },
+    {
+      "feature": "class:lu",
+      "files": 1
+    },
+    {
+      "feature": "class:lv",
+      "files": 1
+    },
+    {
+      "feature": "class:ly",
+      "files": 1
+    },
+    {
+      "feature": "class:m",
+      "files": 1
+    },
+    {
+      "feature": "class:ma",
+      "files": 1
+    },
+    {
+      "feature": "class:mc",
+      "files": 1
+    },
+    {
+      "feature": "class:md",
+      "files": 1
+    },
+    {
+      "feature": "class:me",
+      "files": 1
+    },
+    {
+      "feature": "class:mk",
+      "files": 1
+    },
+    {
+      "feature": "class:ml",
+      "files": 1
+    },
+    {
+      "feature": "class:mm",
+      "files": 1
+    },
+    {
+      "feature": "class:mn",
+      "files": 1
+    },
+    {
+      "feature": "class:mo",
+      "files": 1
+    },
+    {
+      "feature": "class:mq",
+      "files": 1
+    },
+    {
+      "feature": "class:mr",
+      "files": 1
+    },
+    {
+      "feature": "class:mt",
+      "files": 1
+    },
+    {
+      "feature": "class:mu",
+      "files": 1
+    },
+    {
+      "feature": "class:mv",
+      "files": 1
+    },
+    {
+      "feature": "class:mw",
+      "files": 1
+    },
+    {
+      "feature": "class:my",
+      "files": 1
+    },
+    {
+      "feature": "class:mz",
+      "files": 1
+    },
+    {
+      "feature": "class:n",
+      "files": 1
+    },
+    {
+      "feature": "class:na",
+      "files": 1
+    },
+    {
+      "feature": "class:ne",
+      "files": 1
+    },
+    {
+      "feature": "class:ng",
+      "files": 1
+    },
+    {
+      "feature": "class:nl",
+      "files": 1
+    },
+    {
+      "feature": "class:nlx",
+      "files": 1
+    },
+    {
+      "feature": "class:no",
+      "files": 1
+    },
+    {
+      "feature": "class:noxx",
+      "files": 1
+    },
+    {
+      "feature": "class:np",
+      "files": 1
+    },
+    {
+      "feature": "class:o",
+      "files": 1
+    },
+    {
+      "feature": "class:om",
+      "files": 1
+    },
+    {
+      "feature": "class:p",
+      "files": 1
+    },
+    {
+      "feature": "class:parc",
+      "files": 1
+    },
+    {
+      "feature": "class:pk",
+      "files": 1
+    },
+    {
+      "feature": "class:pl",
+      "files": 1
+    },
+    {
+      "feature": "class:pm",
+      "files": 1
+    },
+    {
+      "feature": "class:ps",
+      "files": 1
+    },
+    {
+      "feature": "class:ps00",
+      "files": 1
+    },
+    {
+      "feature": "class:ps01",
+      "files": 1
+    },
+    {
+      "feature": "class:ps010",
+      "files": 1
+    },
+    {
+      "feature": "class:ps011",
+      "files": 1
+    },
+    {
+      "feature": "class:ps012",
+      "files": 1
+    },
+    {
+      "feature": "class:ps013",
+      "files": 1
+    },
+    {
+      "feature": "class:ps014",
+      "files": 1
+    },
+    {
+      "feature": "class:ps015",
+      "files": 1
+    },
+    {
+      "feature": "class:ps016",
+      "files": 1
+    },
+    {
+      "feature": "class:ps017",
+      "files": 1
+    },
+    {
+      "feature": "class:ps018",
+      "files": 1
+    },
+    {
+      "feature": "class:ps019",
+      "files": 1
+    },
+    {
+      "feature": "class:ps02",
+      "files": 1
+    },
+    {
+      "feature": "class:ps020",
+      "files": 1
+    },
+    {
+      "feature": "class:ps021",
+      "files": 1
+    },
+    {
+      "feature": "class:ps022",
+      "files": 1
+    },
+    {
+      "feature": "class:ps023",
+      "files": 1
+    },
+    {
+      "feature": "class:ps024",
+      "files": 1
+    },
+    {
+      "feature": "class:ps025",
+      "files": 1
+    },
+    {
+      "feature": "class:ps026",
+      "files": 1
+    },
+    {
+      "feature": "class:ps027",
+      "files": 1
+    },
+    {
+      "feature": "class:ps028",
+      "files": 1
+    },
+    {
+      "feature": "class:ps029",
+      "files": 1
+    },
+    {
+      "feature": "class:ps03",
+      "files": 1
+    },
+    {
+      "feature": "class:ps030",
+      "files": 1
+    },
+    {
+      "feature": "class:ps031",
+      "files": 1
+    },
+    {
+      "feature": "class:ps032",
+      "files": 1
+    },
+    {
+      "feature": "class:ps033",
+      "files": 1
+    },
+    {
+      "feature": "class:ps034",
+      "files": 1
+    },
+    {
+      "feature": "class:ps035",
+      "files": 1
+    },
+    {
+      "feature": "class:ps036",
+      "files": 1
+    },
+    {
+      "feature": "class:ps037",
+      "files": 1
+    },
+    {
+      "feature": "class:ps038",
+      "files": 1
+    },
+    {
+      "feature": "class:ps04",
+      "files": 1
+    },
+    {
+      "feature": "class:ps05",
+      "files": 1
+    },
+    {
+      "feature": "class:ps06",
+      "files": 1
+    },
+    {
+      "feature": "class:ps07",
+      "files": 1
+    },
+    {
+      "feature": "class:ps08",
+      "files": 1
+    },
+    {
+      "feature": "class:ps09",
+      "files": 1
+    },
+    {
+      "feature": "class:ps10",
+      "files": 1
+    },
+    {
+      "feature": "class:ps11",
+      "files": 1
+    },
+    {
+      "feature": "class:ps110",
+      "files": 1
+    },
+    {
+      "feature": "class:ps111",
+      "files": 1
+    },
+    {
+      "feature": "class:ps112",
+      "files": 1
+    },
+    {
+      "feature": "class:ps113",
+      "files": 1
+    },
+    {
+      "feature": "class:ps114",
+      "files": 1
+    },
+    {
+      "feature": "class:ps115",
+      "files": 1
+    },
+    {
+      "feature": "class:ps116",
+      "files": 1
+    },
+    {
+      "feature": "class:ps117",
+      "files": 1
+    },
+    {
+      "feature": "class:ps118",
+      "files": 1
+    },
+    {
+      "feature": "class:ps119",
+      "files": 1
+    },
+    {
+      "feature": "class:ps12",
+      "files": 1
+    },
+    {
+      "feature": "class:ps120",
+      "files": 1
+    },
+    {
+      "feature": "class:ps121",
+      "files": 1
+    },
+    {
+      "feature": "class:ps122",
+      "files": 1
+    },
+    {
+      "feature": "class:ps123",
+      "files": 1
+    },
+    {
+      "feature": "class:ps124",
+      "files": 1
+    },
+    {
+      "feature": "class:ps125",
+      "files": 1
+    },
+    {
+      "feature": "class:ps126",
+      "files": 1
+    },
+    {
+      "feature": "class:ps127",
+      "files": 1
+    },
+    {
+      "feature": "class:ps128",
+      "files": 1
+    },
+    {
+      "feature": "class:ps129",
+      "files": 1
+    },
+    {
+      "feature": "class:ps13",
+      "files": 1
+    },
+    {
+      "feature": "class:ps130",
+      "files": 1
+    },
+    {
+      "feature": "class:ps131",
+      "files": 1
+    },
+    {
+      "feature": "class:ps132",
+      "files": 1
+    },
+    {
+      "feature": "class:ps133",
+      "files": 1
+    },
+    {
+      "feature": "class:ps134",
+      "files": 1
+    },
+    {
+      "feature": "class:ps135",
+      "files": 1
+    },
+    {
+      "feature": "class:ps136",
+      "files": 1
+    },
+    {
+      "feature": "class:ps137",
+      "files": 1
+    },
+    {
+      "feature": "class:ps138",
+      "files": 1
+    },
+    {
+      "feature": "class:ps139",
+      "files": 1
+    },
+    {
+      "feature": "class:ps14",
+      "files": 1
+    },
+    {
+      "feature": "class:ps140",
+      "files": 1
+    },
+    {
+      "feature": "class:ps141",
+      "files": 1
+    },
+    {
+      "feature": "class:ps142",
+      "files": 1
+    },
+    {
+      "feature": "class:ps143",
+      "files": 1
+    },
+    {
+      "feature": "class:ps144",
+      "files": 1
+    },
+    {
+      "feature": "class:ps145",
+      "files": 1
+    },
+    {
+      "feature": "class:ps146",
+      "files": 1
+    },
+    {
+      "feature": "class:ps147",
+      "files": 1
+    },
+    {
+      "feature": "class:ps148",
+      "files": 1
+    },
+    {
+      "feature": "class:ps149",
+      "files": 1
+    },
+    {
+      "feature": "class:ps15",
+      "files": 1
+    },
+    {
+      "feature": "class:ps150",
+      "files": 1
+    },
+    {
+      "feature": "class:ps151",
+      "files": 1
+    },
+    {
+      "feature": "class:ps152",
+      "files": 1
+    },
+    {
+      "feature": "class:ps153",
+      "files": 1
+    },
+    {
+      "feature": "class:ps154",
+      "files": 1
+    },
+    {
+      "feature": "class:ps155",
+      "files": 1
+    },
+    {
+      "feature": "class:ps156",
+      "files": 1
+    },
+    {
+      "feature": "class:ps157",
+      "files": 1
+    },
+    {
+      "feature": "class:ps158",
+      "files": 1
+    },
+    {
+      "feature": "class:ps159",
+      "files": 1
+    },
+    {
+      "feature": "class:ps16",
+      "files": 1
+    },
+    {
+      "feature": "class:ps160",
+      "files": 1
+    },
+    {
+      "feature": "class:ps161",
+      "files": 1
+    },
+    {
+      "feature": "class:ps162",
+      "files": 1
+    },
+    {
+      "feature": "class:ps163",
+      "files": 1
+    },
+    {
+      "feature": "class:ps164",
+      "files": 1
+    },
+    {
+      "feature": "class:ps165",
+      "files": 1
+    },
+    {
+      "feature": "class:ps166",
+      "files": 1
+    },
+    {
+      "feature": "class:ps167",
+      "files": 1
+    },
+    {
+      "feature": "class:ps168",
+      "files": 1
+    },
+    {
+      "feature": "class:ps169",
+      "files": 1
+    },
+    {
+      "feature": "class:ps17",
+      "files": 1
+    },
+    {
+      "feature": "class:ps18",
+      "files": 1
+    },
+    {
+      "feature": "class:ps19",
+      "files": 1
+    },
+    {
+      "feature": "class:ps20",
+      "files": 1
+    },
+    {
+      "feature": "class:ps21",
+      "files": 1
+    },
+    {
+      "feature": "class:ps22",
+      "files": 1
+    },
+    {
+      "feature": "class:ps23",
+      "files": 1
+    },
+    {
+      "feature": "class:ps24",
+      "files": 1
+    },
+    {
+      "feature": "class:pt",
+      "files": 1
+    },
+    {
+      "feature": "class:py",
+      "files": 1
+    },
+    {
+      "feature": "class:q",
+      "files": 1
+    },
+    {
+      "feature": "class:qa",
+      "files": 1
+    },
+    {
+      "feature": "class:r",
+      "files": 1
+    },
+    {
+      "feature": "class:re",
+      "files": 1
+    },
+    {
+      "feature": "class:ro",
+      "files": 1
+    },
+    {
+      "feature": "class:road-names",
+      "files": 1
+    },
+    {
+      "feature": "class:rs",
+      "files": 1
+    },
+    {
+      "feature": "class:ru",
+      "files": 1
+    },
+    {
+      "feature": "class:rw",
+      "files": 1
+    },
+    {
+      "feature": "class:s",
+      "files": 1
+    },
+    {
+      "feature": "class:sa",
+      "files": 1
+    },
+    {
+      "feature": "class:sc",
+      "files": 1
+    },
+    {
+      "feature": "class:sd",
+      "files": 1
+    },
+    {
+      "feature": "class:se",
+      "files": 1
+    },
+    {
+      "feature": "class:sg",
+      "files": 1
+    },
+    {
+      "feature": "class:sh",
+      "files": 1
+    },
+    {
+      "feature": "class:si",
+      "files": 1
+    },
+    {
+      "feature": "class:sk",
+      "files": 1
+    },
+    {
+      "feature": "class:sl",
+      "files": 1
+    },
+    {
+      "feature": "class:sm",
+      "files": 1
+    },
+    {
+      "feature": "class:sn",
+      "files": 1
+    },
+    {
+      "feature": "class:so",
+      "files": 1
+    },
+    {
+      "feature": "class:sr",
+      "files": 1
+    },
+    {
+      "feature": "class:ss",
+      "files": 1
+    },
+    {
+      "feature": "class:st",
+      "files": 1
+    },
+    {
+      "feature": "class:st100",
+      "files": 1
+    },
+    {
+      "feature": "class:st101",
+      "files": 1
+    },
+    {
+      "feature": "class:st102",
+      "files": 1
+    },
+    {
+      "feature": "class:st14",
+      "files": 1
+    },
+    {
+      "feature": "class:st15",
+      "files": 1
+    },
+    {
+      "feature": "class:st16",
+      "files": 1
+    },
+    {
+      "feature": "class:st17",
+      "files": 1
+    },
+    {
+      "feature": "class:st18",
+      "files": 1
+    },
+    {
+      "feature": "class:st19",
+      "files": 1
+    },
+    {
+      "feature": "class:st20",
+      "files": 1
+    },
+    {
+      "feature": "class:st21",
+      "files": 1
+    },
+    {
+      "feature": "class:st23",
+      "files": 1
+    },
+    {
+      "feature": "class:st24",
+      "files": 1
+    },
+    {
+      "feature": "class:st25",
+      "files": 1
+    },
+    {
+      "feature": "class:st26",
+      "files": 1
+    },
+    {
+      "feature": "class:st27",
+      "files": 1
+    },
+    {
+      "feature": "class:st28",
+      "files": 1
+    },
+    {
+      "feature": "class:st29",
+      "files": 1
+    },
+    {
+      "feature": "class:st30",
+      "files": 1
+    },
+    {
+      "feature": "class:st31",
+      "files": 1
+    },
+    {
+      "feature": "class:st32",
+      "files": 1
+    },
+    {
+      "feature": "class:st33",
+      "files": 1
+    },
+    {
+      "feature": "class:st34",
+      "files": 1
+    },
+    {
+      "feature": "class:st35",
+      "files": 1
+    },
+    {
+      "feature": "class:st36",
+      "files": 1
+    },
+    {
+      "feature": "class:st37",
+      "files": 1
+    },
+    {
+      "feature": "class:st38",
+      "files": 1
+    },
+    {
+      "feature": "class:st39",
+      "files": 1
+    },
+    {
+      "feature": "class:st40",
+      "files": 1
+    },
+    {
+      "feature": "class:st41",
+      "files": 1
+    },
+    {
+      "feature": "class:st42",
+      "files": 1
+    },
+    {
+      "feature": "class:st43",
+      "files": 1
+    },
+    {
+      "feature": "class:st44",
+      "files": 1
+    },
+    {
+      "feature": "class:st45",
+      "files": 1
+    },
+    {
+      "feature": "class:st46",
+      "files": 1
+    },
+    {
+      "feature": "class:st47",
+      "files": 1
+    },
+    {
+      "feature": "class:st48",
+      "files": 1
+    },
+    {
+      "feature": "class:st49",
+      "files": 1
+    },
+    {
+      "feature": "class:st50",
+      "files": 1
+    },
+    {
+      "feature": "class:st51",
+      "files": 1
+    },
+    {
+      "feature": "class:st52",
+      "files": 1
+    },
+    {
+      "feature": "class:st53",
+      "files": 1
+    },
+    {
+      "feature": "class:st54",
+      "files": 1
+    },
+    {
+      "feature": "class:st55",
+      "files": 1
+    },
+    {
+      "feature": "class:st56",
+      "files": 1
+    },
+    {
+      "feature": "class:st57",
+      "files": 1
+    },
+    {
+      "feature": "class:st58",
+      "files": 1
+    },
+    {
+      "feature": "class:st59",
+      "files": 1
+    },
+    {
+      "feature": "class:st60",
+      "files": 1
+    },
+    {
+      "feature": "class:st61",
+      "files": 1
+    },
+    {
+      "feature": "class:st62",
+      "files": 1
+    },
+    {
+      "feature": "class:st63",
+      "files": 1
+    },
+    {
+      "feature": "class:st64",
+      "files": 1
+    },
+    {
+      "feature": "class:st65",
+      "files": 1
+    },
+    {
+      "feature": "class:st66",
+      "files": 1
+    },
+    {
+      "feature": "class:st67",
+      "files": 1
+    },
+    {
+      "feature": "class:st68",
+      "files": 1
+    },
+    {
+      "feature": "class:st69",
+      "files": 1
+    },
+    {
+      "feature": "class:st70",
+      "files": 1
+    },
+    {
+      "feature": "class:st71",
+      "files": 1
+    },
+    {
+      "feature": "class:st72",
+      "files": 1
+    },
+    {
+      "feature": "class:st73",
+      "files": 1
+    },
+    {
+      "feature": "class:st74",
+      "files": 1
+    },
+    {
+      "feature": "class:st75",
+      "files": 1
+    },
+    {
+      "feature": "class:st76",
+      "files": 1
+    },
+    {
+      "feature": "class:st77",
+      "files": 1
+    },
+    {
+      "feature": "class:st78",
+      "files": 1
+    },
+    {
+      "feature": "class:st79",
+      "files": 1
+    },
+    {
+      "feature": "class:st80",
+      "files": 1
+    },
+    {
+      "feature": "class:st81",
+      "files": 1
+    },
+    {
+      "feature": "class:st82",
+      "files": 1
+    },
+    {
+      "feature": "class:st83",
+      "files": 1
+    },
+    {
+      "feature": "class:st84",
+      "files": 1
+    },
+    {
+      "feature": "class:st85",
+      "files": 1
+    },
+    {
+      "feature": "class:st86",
+      "files": 1
+    },
+    {
+      "feature": "class:st87",
+      "files": 1
+    },
+    {
+      "feature": "class:st88",
+      "files": 1
+    },
+    {
+      "feature": "class:st89",
+      "files": 1
+    },
+    {
+      "feature": "class:st90",
+      "files": 1
+    },
+    {
+      "feature": "class:st91",
+      "files": 1
+    },
+    {
+      "feature": "class:st92",
+      "files": 1
+    },
+    {
+      "feature": "class:st93",
+      "files": 1
+    },
+    {
+      "feature": "class:st94",
+      "files": 1
+    },
+    {
+      "feature": "class:st95",
+      "files": 1
+    },
+    {
+      "feature": "class:st96",
+      "files": 1
+    },
+    {
+      "feature": "class:st97",
+      "files": 1
+    },
+    {
+      "feature": "class:st98",
+      "files": 1
+    },
+    {
+      "feature": "class:st99",
+      "files": 1
+    },
+    {
+      "feature": "class:str1",
+      "files": 1
+    },
+    {
+      "feature": "class:str2",
+      "files": 1
+    },
+    {
+      "feature": "class:subxx",
+      "files": 1
+    },
+    {
+      "feature": "class:sy",
+      "files": 1
+    },
+    {
+      "feature": "class:sz",
+      "files": 1
+    },
+    {
+      "feature": "class:t",
+      "files": 1
+    },
+    {
+      "feature": "class:td",
+      "files": 1
+    },
+    {
+      "feature": "class:tf",
+      "files": 1
+    },
+    {
+      "feature": "class:tg",
+      "files": 1
+    },
+    {
+      "feature": "class:th",
+      "files": 1
+    },
+    {
+      "feature": "class:tj",
+      "files": 1
+    },
+    {
+      "feature": "class:tl",
+      "files": 1
+    },
+    {
+      "feature": "class:tm",
+      "files": 1
+    },
+    {
+      "feature": "class:tn",
+      "files": 1
+    },
+    {
+      "feature": "class:topo100",
+      "files": 1
+    },
+    {
+      "feature": "class:topo18",
+      "files": 1
+    },
+    {
+      "feature": "class:tz",
+      "files": 1
+    },
+    {
+      "feature": "class:u",
+      "files": 1
+    },
+    {
+      "feature": "class:ua",
+      "files": 1
+    },
+    {
+      "feature": "class:ug",
+      "files": 1
+    },
+    {
+      "feature": "class:unxx",
+      "files": 1
+    },
+    {
+      "feature": "class:us",
+      "files": 1
+    },
+    {
+      "feature": "class:uy",
+      "files": 1
+    },
+    {
+      "feature": "class:uz",
+      "files": 1
+    },
+    {
+      "feature": "class:v",
+      "files": 1
+    },
+    {
+      "feature": "class:va",
+      "files": 1
+    },
+    {
+      "feature": "class:vc",
+      "files": 1
+    },
+    {
+      "feature": "class:ve",
+      "files": 1
+    },
+    {
+      "feature": "class:vn",
+      "files": 1
+    },
+    {
+      "feature": "class:w",
+      "files": 1
+    },
+    {
+      "feature": "class:x",
+      "files": 1
+    },
+    {
+      "feature": "class:xa",
+      "files": 1
+    },
+    {
+      "feature": "class:xc",
+      "files": 1
+    },
+    {
+      "feature": "class:xd",
+      "files": 1
+    },
+    {
+      "feature": "class:xj",
+      "files": 1
+    },
+    {
+      "feature": "class:xk",
+      "files": 1
+    },
+    {
+      "feature": "class:xl",
+      "files": 1
+    },
+    {
+      "feature": "class:xn",
+      "files": 1
+    },
+    {
+      "feature": "class:xo",
+      "files": 1
+    },
+    {
+      "feature": "class:xp",
+      "files": 1
+    },
+    {
+      "feature": "class:xq",
+      "files": 1
+    },
+    {
+      "feature": "class:xs",
+      "files": 1
+    },
+    {
+      "feature": "class:xz",
+      "files": 1
+    },
+    {
+      "feature": "class:y",
+      "files": 1
+    },
+    {
+      "feature": "class:ye",
+      "files": 1
+    },
+    {
+      "feature": "class:yt",
+      "files": 1
+    },
+    {
+      "feature": "class:z",
+      "files": 1
+    },
+    {
+      "feature": "class:za",
+      "files": 1
+    },
+    {
+      "feature": "class:zm",
+      "files": 1
+    },
+    {
+      "feature": "class:zw",
+      "files": 1
+    },
+    {
+      "feature": "css:adobe-knockout",
+      "files": 1
+    },
+    {
+      "feature": "css:clip-path",
+      "files": 1
+    },
+    {
+      "feature": "css:color-interpolation",
+      "files": 1
+    },
+    {
+      "feature": "css:color-interpolation-filters",
+      "files": 1
+    },
+    {
+      "feature": "css:color-rendering",
+      "files": 1
+    },
+    {
+      "feature": "css:dominant-baseline",
+      "files": 1
+    },
+    {
+      "feature": "css:filter",
+      "files": 1
+    },
+    {
+      "feature": "css:font-variant-alternates",
+      "files": 1
+    },
+    {
+      "feature": "css:font-variant-position",
+      "files": 1
+    },
+    {
+      "feature": "css:image-rendering",
+      "files": 1
+    },
+    {
+      "feature": "css:marker-end",
+      "files": 1
+    },
+    {
+      "feature": "css:mix-blend-mode",
+      "files": 1
+    },
+    {
+      "feature": "css:paint-order",
+      "files": 1
+    },
+    {
+      "feature": "css:shape-inside",
+      "files": 1
+    },
+    {
+      "feature": "css:shape-rendering",
+      "files": 1
+    },
+    {
+      "feature": "css:solid-color",
+      "files": 1
+    },
+    {
+      "feature": "css:solid-opacity",
+      "files": 1
+    },
+    {
+      "feature": "css:text-decoration",
+      "files": 1
+    },
+    {
+      "feature": "css:text-orientation",
+      "files": 1
+    },
+    {
+      "feature": "css:text-rendering",
+      "files": 1
+    },
+    {
+      "feature": "element:Bag",
+      "files": 1
+    },
+    {
+      "feature": "element:Description",
+      "files": 1
+    },
+    {
+      "feature": "element:description",
+      "files": 1
+    },
+    {
+      "feature": "element:font",
+      "files": 1
+    },
+    {
+      "feature": "element:font-face",
+      "files": 1
+    },
+    {
+      "feature": "element:foreignObject",
+      "files": 1
+    },
+    {
+      "feature": "element:glyph",
+      "files": 1
+    },
+    {
+      "feature": "element:identifier",
+      "files": 1
+    },
+    {
+      "feature": "element:imageReplacement",
+      "files": 1
+    },
+    {
+      "feature": "element:li",
+      "files": 1
+    },
+    {
+      "feature": "element:missing-glyph",
+      "files": 1
+    },
+    {
+      "feature": "element:polyline",
+      "files": 1
+    },
+    {
+      "feature": "element:publisher",
+      "files": 1
+    },
+    {
+      "feature": "element:sampleDataSets",
+      "files": 1
+    },
+    {
+      "feature": "element:sfw",
+      "files": 1
+    },
+    {
+      "feature": "element:sliceSourceBounds",
+      "files": 1
+    },
+    {
+      "feature": "element:slices",
+      "files": 1
+    },
+    {
+      "feature": "element:subject",
+      "files": 1
+    },
+    {
+      "feature": "element:targetRef",
+      "files": 1
+    },
+    {
+      "feature": "element:textPath",
+      "files": 1
+    },
+    {
+      "feature": "element:variableSet",
+      "files": 1
+    },
+    {
+      "feature": "element:variableSets",
+      "files": 1
+    },
+    {
+      "feature": "element:variables",
+      "files": 1
+    }
+  ],
+  "parse_failures": [],
+  "parsed_files": 58,
+  "schema_version": 1,
+  "source": {
+    "bytes": 4429240515,
+    "files": 58,
+    "manifest": "/Users/megasoft78/Desktop/Freelance/vexel-corpus-real/manifest.json",
+    "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
+    "root": "/Users/megasoft78/Desktop/Freelance/vexel-corpus-real",
+    "tiers": {
+      "T1": 12,
+      "T2": 17,
+      "T3": 26,
+      "T4": 3
+    }
+  },
+  "tier_file_counts": {
+    "T1": {
+      "attribute:class": 2,
+      "attribute:clip-path": 2,
+      "attribute:cx": 10,
+      "attribute:cy": 10,
+      "attribute:d": 12,
+      "attribute:data-region": 1,
+      "attribute:document-units": 1,
+      "attribute:effect": 1,
+      "attribute:fill": 12,
+      "attribute:fill-opacity": 1,
+      "attribute:filter": 1,
+      "attribute:font-family": 3,
+      "attribute:font-size": 4,
+      "attribute:groupmode": 2,
+      "attribute:height": 12,
+      "attribute:href": 2,
+      "attribute:id": 12,
+      "attribute:inkscape": 10,
+      "attribute:is_visible": 1,
+      "attribute:label": 2,
+      "attribute:marker-end": 1,
+      "attribute:markerHeight": 10,
+      "attribute:markerWidth": 10,
+      "attribute:offset": 10,
+      "attribute:orient": 10,
+      "attribute:pagecolor": 1,
+      "attribute:path-effect": 1,
+      "attribute:r": 10,
+      "attribute:refX": 10,
+      "attribute:refY": 10,
+      "attribute:sodipodi": 10,
+      "attribute:stdDeviation": 10,
+      "attribute:stop-color": 10,
+      "attribute:stroke": 6,
+      "attribute:stroke-linejoin": 2,
+      "attribute:stroke-width": 5,
+      "attribute:text-anchor": 1,
+      "attribute:transform": 1,
+      "attribute:viewBox": 12,
+      "attribute:width": 12,
+      "attribute:x": 7,
+      "attribute:x1": 1,
+      "attribute:x2": 1,
+      "attribute:xmlns": 12,
+      "attribute:y": 7,
+      "attribute:y1": 1,
+      "attribute:y2": 1,
+      "css:fill": 10,
+      "css:stroke": 10,
+      "css:stroke-width": 10,
+      "element:circle": 10,
+      "element:clipPath": 2,
+      "element:defs": 10,
+      "element:feGaussianBlur": 10,
+      "element:filter": 10,
+      "element:g": 11,
+      "element:image": 1,
+      "element:line": 1,
+      "element:linearGradient": 10,
+      "element:marker": 10,
+      "element:metadata": 10,
+      "element:namedview": 2,
+      "element:path": 12,
+      "element:path-effect": 1,
+      "element:rect": 4,
+      "element:stop": 10,
+      "element:style": 10,
+      "element:svg": 12,
+      "element:symbol": 10,
+      "element:text": 4,
+      "element:title": 10,
+      "element:use": 1,
+      "files": 12
+    },
+    "T2": {
+      "attribute:a": 1,
+      "attribute:about": 3,
+      "attribute:align": 1,
+      "attribute:bordercolor": 3,
+      "attribute:borderopacity": 3,
+      "attribute:bottomLeftOrigin": 1,
+      "attribute:cc": 4,
+      "attribute:class": 5,
+      "attribute:clip-path": 3,
+      "attribute:clip-rule": 1,
+      "attribute:connector-curvature": 3,
+      "attribute:current-layer": 3,
+      "attribute:cx": 14,
+      "attribute:cy": 14,
+      "attribute:d": 16,
+      "attribute:data-region": 1,
+      "attribute:dc": 4,
+      "attribute:deskcolor": 1,
+      "attribute:dimmedPercent": 1,
+      "attribute:display": 1,
+      "attribute:docname": 3,
+      "attribute:document-units": 1,
+      "attribute:effect": 1,
+      "attribute:enable-background": 1,
+      "attribute:export-filename": 1,
+      "attribute:export-xdpi": 1,
+      "attribute:export-ydpi": 1,
+      "attribute:fill": 12,
+      "attribute:fill-opacity": 1,
+      "attribute:fill-rule": 1,
+      "attribute:filter": 1,
+      "attribute:font-family": 2,
+      "attribute:font-size": 4,
+      "attribute:font-style": 1,
+      "attribute:font-weight": 1,
+      "attribute:graph": 1,
+      "attribute:gridtolerance": 3,
+      "attribute:groupmode": 4,
+      "attribute:guide-bbox": 1,
+      "attribute:guidetolerance": 3,
+      "attribute:height": 17,
+      "attribute:href": 6,
+      "attribute:i": 1,
+      "attribute:id": 16,
+      "attribute:inkscape": 13,
+      "attribute:is_visible": 1,
+      "attribute:isolated": 1,
+      "attribute:knockout": 1,
+      "attribute:label": 4,
+      "attribute:layer": 1,
+      "attribute:locked": 1,
+      "attribute:marker-end": 1,
+      "attribute:markerHeight": 10,
+      "attribute:markerWidth": 10,
+      "attribute:nodetypes": 2,
+      "attribute:objectNS": 1,
+      "attribute:objectType": 1,
+      "attribute:objecttolerance": 3,
+      "attribute:offset": 10,
+      "attribute:opacity": 1,
+      "attribute:orient": 10,
+      "attribute:overflow": 2,
+      "attribute:pageBounds": 1,
+      "attribute:pagecheckerboard": 1,
+      "attribute:pagecolor": 4,
+      "attribute:pageopacity": 3,
+      "attribute:pageshadow": 3,
+      "attribute:path-effect": 1,
+      "attribute:placementMethod": 1,
+      "attribute:r": 12,
+      "attribute:rdf": 4,
+      "attribute:refHeight": 1,
+      "attribute:refWidth": 1,
+      "attribute:refX": 10,
+      "attribute:refY": 10,
+      "attribute:requiredExtensions": 1,
+      "attribute:resource": 4,
+      "attribute:rgbTrio": 1,
+      "attribute:role": 2,
+      "attribute:rulerOrigin": 1,
+      "attribute:rx": 2,
+      "attribute:ry": 2,
+      "attribute:showgrid": 3,
+      "attribute:showguides": 1,
+      "attribute:showpageshadow": 1,
+      "attribute:sodipodi": 13,
+      "attribute:space": 4,
+      "attribute:stdDeviation": 10,
+      "attribute:stop-color": 10,
+      "attribute:stroke": 7,
+      "attribute:stroke-dasharray": 1,
+      "attribute:stroke-linecap": 1,
+      "attribute:stroke-linejoin": 3,
+      "attribute:stroke-miterlimit": 1,
+      "attribute:stroke-opacity": 1,
+      "attribute:stroke-width": 6,
+      "attribute:style": 5,
+      "attribute:svg": 3,
+      "attribute:systemLanguage": 1,
+      "attribute:transform": 7,
+      "attribute:type": 3,
+      "attribute:v": 1,
+      "attribute:valign": 1,
+      "attribute:varSetName": 1,
+      "attribute:version": 5,
+      "attribute:viewBox": 15,
+      "attribute:viewBoxInterpretation": 1,
+      "attribute:viewOrigin": 1,
+      "attribute:visibility": 1,
+      "attribute:visible": 1,
+      "attribute:width": 17,
+      "attribute:window-height": 3,
+      "attribute:window-maximized": 3,
+      "attribute:window-width": 3,
+      "attribute:window-x": 3,
+      "attribute:window-y": 3,
+      "attribute:x": 12,
+      "attribute:x1": 1,
+      "attribute:x2": 1,
+      "attribute:xlink": 4,
+      "attribute:xmlns": 17,
+      "attribute:y": 12,
+      "attribute:y1": 1,
+      "attribute:y2": 1,
+      "attribute:zoom": 3,
+      "css:-inkscape-font-specification": 2,
+      "css:-inkscape-stroke": 1,
+      "css:display": 2,
+      "css:fill": 15,
+      "css:fill-opacity": 4,
+      "css:fill-rule": 4,
+      "css:font-family": 4,
+      "css:font-size": 4,
+      "css:font-stretch": 2,
+      "css:font-style": 4,
+      "css:font-variant": 2,
+      "css:font-variant-caps": 1,
+      "css:font-variant-east-asian": 1,
+      "css:font-variant-ligatures": 1,
+      "css:font-variant-numeric": 1,
+      "css:font-variation-settings": 1,
+      "css:font-weight": 4,
+      "css:letter-spacing": 3,
+      "css:line-height": 3,
+      "css:opacity": 4,
+      "css:stop-color": 1,
+      "css:stroke": 15,
+      "css:stroke-dasharray": 4,
+      "css:stroke-dashoffset": 2,
+      "css:stroke-linecap": 5,
+      "css:stroke-linejoin": 5,
+      "css:stroke-miterlimit": 3,
+      "css:stroke-opacity": 4,
+      "css:stroke-width": 15,
+      "css:text-align": 3,
+      "css:text-anchor": 3,
+      "css:text-decoration-color": 1,
+      "css:text-decoration-line": 1,
+      "css:vector-effect": 1,
+      "css:word-spacing": 3,
+      "css:writing-mode": 2,
+      "element:Agent": 1,
+      "element:RDF": 4,
+      "element:Work": 4,
+      "element:circle": 12,
+      "element:clipPath": 3,
+      "element:creator": 1,
+      "element:date": 1,
+      "element:defs": 14,
+      "element:ellipse": 1,
+      "element:feGaussianBlur": 10,
+      "element:filter": 10,
+      "element:foreignObject": 1,
+      "element:format": 4,
+      "element:g": 16,
+      "element:image": 3,
+      "element:imageReplacement": 1,
+      "element:line": 1,
+      "element:linearGradient": 10,
+      "element:marker": 10,
+      "element:metadata": 15,
+      "element:namedview": 5,
+      "element:path": 16,
+      "element:path-effect": 1,
+      "element:rect": 6,
+      "element:sampleDataSets": 1,
+      "element:sfw": 1,
+      "element:sliceSourceBounds": 1,
+      "element:slices": 1,
+      "element:stop": 10,
+      "element:style": 13,
+      "element:svg": 17,
+      "element:switch": 2,
+      "element:symbol": 11,
+      "element:targetRef": 1,
+      "element:text": 6,
+      "element:title": 14,
+      "element:tspan": 3,
+      "element:type": 4,
+      "element:use": 4,
+      "element:variableSet": 1,
+      "element:variableSets": 1,
+      "element:variables": 1,
+      "files": 17
+    },
+    "T3": {
+      "attribute:about": 4,
+      "attribute:arc-type": 1,
+      "attribute:arg1": 2,
+      "attribute:arg2": 2,
+      "attribute:aria-label": 1,
+      "attribute:ascent": 1,
+      "attribute:baseProfile": 3,
+      "attribute:border_marks": 1,
+      "attribute:bordercolor": 9,
+      "attribute:borderopacity": 9,
+      "attribute:bx": 1,
+      "attribute:cc": 4,
+      "attribute:center_point": 1,
+      "attribute:class": 8,
+      "attribute:clip-path": 9,
+      "attribute:clipPathUnits": 5,
+      "attribute:collect": 3,
+      "attribute:color": 1,
+      "attribute:connector-curvature": 6,
+      "attribute:copytype": 1,
+      "attribute:current-layer": 9,
+      "attribute:cx": 20,
+      "attribute:cy": 20,
+      "attribute:d": 25,
+      "attribute:data-name": 1,
+      "attribute:data-region": 1,
+      "attribute:date": 1,
+      "attribute:dc": 4,
+      "attribute:deform_type": 1,
+      "attribute:descent": 1,
+      "attribute:description": 1,
+      "attribute:deskcolor": 5,
+      "attribute:discard_orig_path": 1,
+      "attribute:display": 2,
+      "attribute:docname": 9,
+      "attribute:document-rotation": 1,
+      "attribute:document-units": 3,
+      "attribute:down_left_point": 1,
+      "attribute:down_right_point": 1,
+      "attribute:dx": 1,
+      "attribute:effect": 3,
+      "attribute:empcolor": 1,
+      "attribute:empopacity": 1,
+      "attribute:empspacing": 1,
+      "attribute:enabled": 1,
+      "attribute:end": 1,
+      "attribute:end_linecap_type": 1,
+      "attribute:end_point": 1,
+      "attribute:export-filename": 2,
+      "attribute:export-xdpi": 2,
+      "attribute:export-ydpi": 2,
+      "attribute:fill": 17,
+      "attribute:fill-opacity": 6,
+      "attribute:fill-rule": 5,
+      "attribute:filter": 1,
+      "attribute:fit-margin-bottom": 3,
+      "attribute:fit-margin-left": 3,
+      "attribute:fit-margin-right": 3,
+      "attribute:fit-margin-top": 3,
+      "attribute:flatsided": 2,
+      "attribute:font-family": 6,
+      "attribute:font-size": 6,
+      "attribute:font-style": 3,
+      "attribute:font-weight": 3,
+      "attribute:format": 1,
+      "attribute:fuse_paths": 1,
+      "attribute:fuse_tolerance": 1,
+      "attribute:fx": 1,
+      "attribute:fy": 1,
+      "attribute:gradientTransform": 4,
+      "attribute:gradientUnits": 4,
+      "attribute:gridtolerance": 3,
+      "attribute:groupmode": 10,
+      "attribute:guide-bbox": 1,
+      "attribute:guidetolerance": 3,
+      "attribute:height": 26,
+      "attribute:helper_size": 2,
+      "attribute:hide_knot": 1,
+      "attribute:horiz-adv-x": 1,
+      "attribute:horiz-origin-x": 1,
+      "attribute:horiz-origin-y": 1,
+      "attribute:horizontal_mirror": 1,
+      "attribute:href": 11,
+      "attribute:id": 22,
+      "attribute:identifier": 1,
+      "attribute:inkscape": 19,
+      "attribute:insensitive": 2,
+      "attribute:interpolator_beta": 1,
+      "attribute:interpolator_type": 1,
+      "attribute:is_visible": 3,
+      "attribute:label": 10,
+      "attribute:letter-spacing": 1,
+      "attribute:linejoin_type": 1,
+      "attribute:link_styles": 1,
+      "attribute:lpesatellites": 1,
+      "attribute:lpeversion": 2,
+      "attribute:major_mark_gap": 1,
+      "attribute:major_mark_steps": 1,
+      "attribute:mark_angle": 1,
+      "attribute:mark_dir": 1,
+      "attribute:mark_distance": 1,
+      "attribute:mark_length": 1,
+      "attribute:marker-end": 1,
+      "attribute:markerHeight": 11,
+      "attribute:markerUnits": 1,
+      "attribute:markerWidth": 11,
+      "attribute:mask": 2,
+      "attribute:message": 1,
+      "attribute:minor_mark_gap": 1,
+      "attribute:minor_mark_length": 1,
+      "attribute:miter_limit": 1,
+      "attribute:mode": 1,
+      "attribute:nodetypes": 8,
+      "attribute:normal_offset": 1,
+      "attribute:not_jump": 1,
+      "attribute:objecttolerance": 3,
+      "attribute:offset": 15,
+      "attribute:offset_points": 1,
+      "attribute:opacity": 4,
+      "attribute:open": 1,
+      "attribute:oposite_fuse": 1,
+      "attribute:orient": 11,
+      "attribute:original": 1,
+      "attribute:original-d": 2,
+      "attribute:originx": 2,
+      "attribute:originy": 2,
+      "attribute:overflow": 1,
+      "attribute:overflow_perspective": 1,
+      "attribute:pagecheckerboard": 7,
+      "attribute:pagecolor": 10,
+      "attribute:pageopacity": 9,
+      "attribute:pageshadow": 4,
+      "attribute:path-effect": 3,
+      "attribute:pattern": 1,
+      "attribute:patternTransform": 2,
+      "attribute:patternUnits": 2,
+      "attribute:persp3d-origin": 2,
+      "attribute:points": 3,
+      "attribute:preserveAspectRatio": 1,
+      "attribute:prop_scale": 1,
+      "attribute:prop_units": 1,
+      "attribute:r": 17,
+      "attribute:r1": 2,
+      "attribute:r2": 2,
+      "attribute:radius": 1,
+      "attribute:randomized": 2,
+      "attribute:rdf": 4,
+      "attribute:rdfs": 1,
+      "attribute:refX": 11,
+      "attribute:refY": 11,
+      "attribute:resource": 3,
+      "attribute:role": 4,
+      "attribute:rounded": 2,
+      "attribute:rx": 4,
+      "attribute:ry": 5,
+      "attribute:scale_width": 1,
+      "attribute:scale_y_rel": 1,
+      "attribute:shift": 1,
+      "attribute:showgrid": 9,
+      "attribute:showguides": 2,
+      "attribute:showpageshadow": 5,
+      "attribute:sides": 2,
+      "attribute:simplify_individual_paths": 2,
+      "attribute:simplify_just_coalesce": 2,
+      "attribute:smooth_angles": 2,
+      "attribute:snap-global": 1,
+      "attribute:sodipodi": 19,
+      "attribute:sort_points": 1,
+      "attribute:space": 8,
+      "attribute:spacing": 1,
+      "attribute:spacingx": 1,
+      "attribute:spacingy": 1,
+      "attribute:split_items": 1,
+      "attribute:split_open": 1,
+      "attribute:start": 1,
+      "attribute:start_linecap_type": 1,
+      "attribute:start_point": 1,
+      "attribute:stdDeviation": 12,
+      "attribute:step": 1,
+      "attribute:steps": 2,
+      "attribute:stockid": 1,
+      "attribute:stop-color": 11,
+      "attribute:stop-opacity": 1,
+      "attribute:stroke": 11,
+      "attribute:stroke-dasharray": 2,
+      "attribute:stroke-linecap": 5,
+      "attribute:stroke-linejoin": 7,
+      "attribute:stroke-miterlimit": 6,
+      "attribute:stroke-opacity": 5,
+      "attribute:stroke-width": 10,
+      "attribute:style": 12,
+      "attribute:svg": 9,
+      "attribute:swatch": 1,
+      "attribute:systemLanguage": 1,
+      "attribute:tang_offset": 1,
+      "attribute:threshold": 2,
+      "attribute:title": 1,
+      "attribute:transform": 15,
+      "attribute:transform-center-x": 3,
+      "attribute:transform-center-y": 3,
+      "attribute:type": 10,
+      "attribute:unicode": 1,
+      "attribute:unit": 1,
+      "attribute:units": 1,
+      "attribute:units-per-em": 1,
+      "attribute:up_left_point": 1,
+      "attribute:up_right_point": 1,
+      "attribute:vector-effect": 3,
+      "attribute:version": 14,
+      "attribute:vert-adv-y": 1,
+      "attribute:vert-origin-x": 1,
+      "attribute:vert-origin-y": 1,
+      "attribute:vertical_mirror": 1,
+      "attribute:vertical_pattern": 1,
+      "attribute:viewBox": 21,
+      "attribute:visible": 1,
+      "attribute:vp_x": 2,
+      "attribute:vp_y": 2,
+      "attribute:vp_z": 2,
+      "attribute:width": 26,
+      "attribute:window-height": 9,
+      "attribute:window-maximized": 9,
+      "attribute:window-width": 9,
+      "attribute:window-x": 9,
+      "attribute:window-y": 9,
+      "attribute:word-spacing": 1,
+      "attribute:x": 20,
+      "attribute:x1": 8,
+      "attribute:x2": 8,
+      "attribute:xlink": 12,
+      "attribute:xmlns": 26,
+      "attribute:y": 20,
+      "attribute:y1": 8,
+      "attribute:y2": 8,
+      "attribute:zoom": 9,
+      "css:-inkscape-font-specification": 7,
+      "css:-inkscape-stroke": 1,
+      "css:adobe-knockout": 1,
+      "css:baseline-shift": 2,
+      "css:clip-path": 1,
+      "css:clip-rule": 3,
+      "css:color": 3,
+      "css:color-interpolation": 1,
+      "css:color-interpolation-filters": 1,
+      "css:color-rendering": 1,
+      "css:direction": 2,
+      "css:display": 6,
+      "css:dominant-baseline": 1,
+      "css:enable-background": 3,
+      "css:fill": 22,
+      "css:fill-opacity": 9,
+      "css:fill-rule": 8,
+      "css:filter": 1,
+      "css:font-family": 9,
+      "css:font-feature-settings": 2,
+      "css:font-size": 9,
+      "css:font-stretch": 6,
+      "css:font-style": 6,
+      "css:font-variant": 6,
+      "css:font-variant-alternates": 1,
+      "css:font-variant-caps": 2,
+      "css:font-variant-east-asian": 1,
+      "css:font-variant-ligatures": 2,
+      "css:font-variant-numeric": 2,
+      "css:font-variant-position": 1,
+      "css:font-variation-settings": 1,
+      "css:font-weight": 6,
+      "css:image-rendering": 1,
+      "css:isolation": 2,
+      "css:letter-spacing": 6,
+      "css:line-height": 5,
+      "css:marker": 3,
+      "css:marker-end": 1,
+      "css:mix-blend-mode": 1,
+      "css:opacity": 10,
+      "css:overflow": 3,
+      "css:paint-order": 1,
+      "css:shape-inside": 1,
+      "css:shape-rendering": 1,
+      "css:solid-color": 1,
+      "css:solid-opacity": 1,
+      "css:stop-color": 5,
+      "css:stop-opacity": 5,
+      "css:stroke": 22,
+      "css:stroke-dasharray": 9,
+      "css:stroke-dashoffset": 8,
+      "css:stroke-linecap": 10,
+      "css:stroke-linejoin": 10,
+      "css:stroke-miterlimit": 9,
+      "css:stroke-opacity": 10,
+      "css:stroke-width": 22,
+      "css:text-align": 6,
+      "css:text-anchor": 6,
+      "css:text-decoration": 1,
+      "css:text-decoration-color": 2,
+      "css:text-decoration-line": 2,
+      "css:text-decoration-style": 2,
+      "css:text-indent": 2,
+      "css:text-orientation": 1,
+      "css:text-rendering": 1,
+      "css:text-transform": 2,
+      "css:vector-effect": 1,
+      "css:visibility": 3,
+      "css:white-space": 4,
+      "css:word-spacing": 5,
+      "css:writing-mode": 5,
+      "element:Agent": 1,
+      "element:Bag": 1,
+      "element:Description": 1,
+      "element:RDF": 4,
+      "element:Work": 4,
+      "element:circle": 17,
+      "element:clipPath": 10,
+      "element:creator": 1,
+      "element:date": 1,
+      "element:defs": 24,
+      "element:desc": 2,
+      "element:description": 1,
+      "element:ellipse": 4,
+      "element:feGaussianBlur": 12,
+      "element:filter": 12,
+      "element:font": 1,
+      "element:font-face": 1,
+      "element:format": 4,
+      "element:g": 25,
+      "element:glyph": 1,
+      "element:grid": 2,
+      "element:identifier": 1,
+      "element:image": 5,
+      "element:li": 1,
+      "element:line": 6,
+      "element:linearGradient": 15,
+      "element:marker": 11,
+      "element:mask": 2,
+      "element:metadata": 14,
+      "element:missing-glyph": 1,
+      "element:namedview": 11,
+      "element:path": 25,
+      "element:path-effect": 3,
+      "element:pattern": 2,
+      "element:perspective": 2,
+      "element:polygon": 3,
+      "element:polyline": 1,
+      "element:publisher": 1,
+      "element:radialGradient": 2,
+      "element:rect": 15,
+      "element:stop": 15,
+      "element:style": 19,
+      "element:subject": 1,
+      "element:svg": 26,
+      "element:switch": 1,
+      "element:symbol": 10,
+      "element:text": 11,
+      "element:textPath": 1,
+      "element:title": 15,
+      "element:tspan": 5,
+      "element:type": 3,
+      "element:use": 8,
+      "files": 26
+    },
+    "T4": {
+      "attribute:class": 1,
+      "attribute:cx": 3,
+      "attribute:cy": 3,
+      "attribute:d": 3,
+      "attribute:fill": 3,
+      "attribute:fill-opacity": 1,
+      "attribute:font-family": 1,
+      "attribute:font-size": 1,
+      "attribute:height": 3,
+      "attribute:href": 1,
+      "attribute:id": 3,
+      "attribute:inkscape": 3,
+      "attribute:markerHeight": 3,
+      "attribute:markerWidth": 3,
+      "attribute:offset": 3,
+      "attribute:orient": 3,
+      "attribute:r": 3,
+      "attribute:refX": 3,
+      "attribute:refY": 3,
+      "attribute:sodipodi": 3,
+      "attribute:stdDeviation": 3,
+      "attribute:stop-color": 3,
+      "attribute:stroke": 1,
+      "attribute:stroke-width": 1,
+      "attribute:viewBox": 3,
+      "attribute:width": 3,
+      "attribute:x": 2,
+      "attribute:xmlns": 3,
+      "attribute:y": 2,
+      "css:fill": 3,
+      "css:stroke": 3,
+      "css:stroke-width": 3,
+      "element:circle": 3,
+      "element:defs": 3,
+      "element:feGaussianBlur": 3,
+      "element:filter": 3,
+      "element:g": 2,
+      "element:linearGradient": 3,
+      "element:marker": 3,
+      "element:metadata": 3,
+      "element:path": 3,
+      "element:stop": 3,
+      "element:style": 3,
+      "element:svg": 3,
+      "element:symbol": 3,
+      "element:text": 1,
+      "element:title": 3,
+      "element:use": 1,
+      "files": 3
+    }
+  }
+}

@@ -1,0 +1,1 @@
+PASS: no diff under tests/oracle, tests/golden, or tests/golden/manifest.lock.

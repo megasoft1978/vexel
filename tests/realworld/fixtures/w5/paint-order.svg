@@ -1,0 +1,1 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  width="96" height="64" viewBox="0 0 96 64" ><title>W5 rendering sample: paint-order</title><path d="M16 50L48 12L80 50Z" fill="#f97316" stroke="#1e293b" stroke-width="8" paint-order="stroke fill"/></svg>

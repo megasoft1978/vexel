@@ -1,0 +1,1 @@
+PASS: fixture edge count 120, edge alpha delta 160, and jointly covered RGB delta 1 match base HEAD.

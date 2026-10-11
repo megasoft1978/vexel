@@ -1,0 +1,11 @@
+Corrected candidate verification on native Apple Silicon macOS:
+
+- `./dev verify`: PASS; CTest 12/12, Python 199/199, native smoke and 20-frame Metal replay pass.
+- `./dev asan`: PASS; CTest 12/12, no sanitizer reports.
+- `./dev ubsan`: PASS; CTest 12/12, no sanitizer reports.
+- mac-release configure/build: PASS.
+- Focused shape/CSS tests: PASS; 16 Python reference tests and CSS property matrix.
+- Seeded ASan+UBSan shape fuzz: PASS; 1,000,000 cases, 0 crashes/reports/invariant failures (23.622 s).
+- Corpus run/check: PASS; 58 files, 116 trials, 2 previews, 56 unsupported, 0 limit/crash; inputs/baselines unchanged.
+- The host's offscreen Metal path was available; no skips were reported.
+Detailed output: `verify.txt`, `asan.txt`, `ubsan.txt`, `release-build.txt`, `reference-tests.txt`, `fuzz-report.json`, and `corpus-run.txt`.

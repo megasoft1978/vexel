@@ -1,0 +1,1 @@
+{"verdict":"pass","findings":[],"summary":"The current candidate closes the prior root/group attribute and closed-dash-seam findings. Supplied build, differential, native shape, sanitizer, fuzz, benchmark, and corpus evidence meets the other acceptance criteria. Pending ledger acceptance and the terminal preflight-only sequence are expected for this review."}

@@ -1,0 +1,20 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+  VEXEL_SANITIZER="tsan"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03/build/mac-tsan
+[1/2] Building C object CMakeFiles/job_snapshot_test.dir/tests/jobs/test_job_snapshot.c.o
+[2/2] Linking C executable bin/job_snapshot_test
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03/build/mac-tsan
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03/build/mac-tsan
+    Start 10: job-snapshot
+1/1 Test #10: job-snapshot .....................   Passed    0.37 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.37 sec

@@ -1,0 +1,11 @@
+$ python3 -m unittest tests.test_platform_driver
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.208203
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 4.359s
+
+OK
+exit code: 0

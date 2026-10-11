@@ -1,0 +1,102 @@
+{
+  "status": "complete",
+  "base_sha": "f7de05710a4c8fb706f8a1a82c6b0eb46edeb3b7",
+  "head_sha": "91ff611782c843428fb5bdc4ba874e3ccdd37f94",
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_platform_driver",
+            "tests.test_ui_driver"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": [
+            "python3",
+            "app/test_driver/driver.py",
+            "--native-task-smoke",
+            "--cycles",
+            "1000",
+            "--output-dir",
+            ".cache/WO-M1-04/native"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "verify"
+          ],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": [
+            "./dev",
+            "asan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "./dev",
+            "ubsan"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/ledger.py",
+            "validate",
+            "ledger.jsonl"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "scripts/wo_validate.py",
+            "WO-M1-04",
+            "--ready"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "python3",
+            "-m",
+            "json.tool",
+            "bench/results/WO-M1-04.json"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "summary": "Implemented the bounded macOS task queue and deterministic test-only pointer injection. All nine frozen verification commands passed; focused tests were 20/20, the full suite was 143/143, and the 1,000-cycle queue smoke had zero stale publications and a maximum join of 0.000121 seconds in fresh verification. ASan/UBSan CTest and 1,000-cycle native task smokes passed. Release size: 97,072 bytes. Candidate commit 91ff611782c843428fb5bdc4ba874e3ccdd37f94 was independently verified with no findings and fast-forward merged."
+}

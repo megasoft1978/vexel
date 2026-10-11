@@ -30,5 +30,14 @@ class XmlTokenizerTests(unittest.TestCase):
         count = int(run.stdout.rsplit("=", 1)[1].strip())
         self.assertGreaterEqual(count, 100_000)
 
+    def test_comparison_evidence_records_all_fixtures_once(self):
+        report = ROOT / "artifacts/WO-M2-02/expat-comparison.json"
+        self.assertTrue(report.is_file(), "run the frozen Expat comparison command first")
+        data = json.loads(report.read_text())
+        ids = [row["fixture_id"] for row in data["results"]]
+        self.assertEqual(len(ids), len(set(ids)))
+        self.assertEqual(data["fixtures_checked"], 24)
+
+
 if __name__ == "__main__":
     unittest.main()

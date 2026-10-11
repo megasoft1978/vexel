@@ -1,0 +1,13 @@
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 212 tests in 13.308s
+
+FAILED (failures=8, errors=2)
+raster differential seed=20261011 generated=200 paint-clip-seed=20261013 paint-clip-generated=120 tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40
+Ran 212 tests: 202 passed, 8 failed, 2 errors, 0 skipped; 13.358s

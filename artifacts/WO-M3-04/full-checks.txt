@@ -1,0 +1,81 @@
+WO-M3-04 AC-6 frozen verification
+
+./dev verify
+exit_code: 8
+Stopped in Debug CTest because index-replay reported "offscreen Metal device
+or queue unavailable". No Python suite or native smoke was reached by dev.
+
+./dev asan
+exit_code: 8
+Build succeeded; 10/11 CTest tests passed. index-replay failed with the same
+offscreen Metal queue availability error.
+
+./dev ubsan
+exit_code: 8
+Build succeeded; 10/11 CTest tests passed. index-replay failed with the same
+offscreen Metal queue availability error.
+
+python3 scripts/ledger.py validate ledger.jsonl
+exit_code: 0
+valid ledger: 254 entries
+
+python3 scripts/wo_validate.py WO-M3-04 --ready
+exit_code: 0
+valid WO-M3-04 revision 1 sha256 3e5d3d95d1f9d80820945fd19a76611670a7016e6ef40f39f8482fdc14a1191d
+
+python3 -m json.tool artifacts/WO-M3-04/navigation-tests.json
+exit_code: 0
+
+python3 -m json.tool artifacts/WO-M3-04/semantics.json
+exit_code: 0
+
+git diff --check
+exit_code: 0
+
+python3 -m unittest
+exit_code: 1
+178 tests; 8 failures and 2 errors. Existing sandbox-exec policy tests fail
+with status 71 and native Metal/AppKit tests fail in the current host session.
+Focused new navigation and UI-driver suites pass (1/1 and 7/7 respectively).
+
+Initial verification attempts were affected by host timing/process state. A fresh
+rerun in the task worktree passed the full frozen checks:
+
+./dev verify: exit 0; Debug CTest 11/11; Python 178/178; ledger valid.
+./dev asan: exit 0; CTest 11/11.
+./dev ubsan: exit 0; CTest 11/11.
+python3 scripts/ledger.py validate ledger.jsonl: exit 0; 254 entries.
+python3 scripts/wo_validate.py WO-M3-04 --ready: exit 0; frozen revision/hash valid.
+Both required artifact JSON files parse; git diff --check passes.
+
+The first ASan rerun had a transient 177.94 ms index-replay owner step against
+its existing 100 ms gate; the immediate repeat passed in 0.18 s. No gate or
+existing test was changed.
+
+Requested report write to
+/Users/megasoft78/Desktop/Freelance/vexel/artifacts/runs/WO-M3-04/f24ffa31-77c6-49b8-a111-2b316a680f7e/report.json
+was denied with PermissionError because that path is outside the writable
+task-worktree root. The report copy is retained at
+artifacts/runs/WO-M3-04/f24ffa31-77c6-49b8-a111-2b316a680f7e/report.json.
+
+
+Post-review correction verification (candidate after both substantive fixes):
+./dev verify: exit 0; Debug CTest 11/11; Python 178/178; ledger valid.
+./dev asan: exit 0; CTest 11/11.
+./dev ubsan: exit 0; CTest 11/11.
+Focused C navigation + Python driver tests pass; baseline verifier matches 7
+files (legacy metadata plus new rendered navigation screens). Native event smoke
+passes with finite positive backing_scale. The C model verifies 2x viewport and
+logical cursor conversion while preserving the anchored world coordinate.
+Artifacts: verify-final.txt, asan-final.txt, ubsan-final.txt, native-events.txt,
+navigation-tests.json, navigation-golden-manifest.json, and golden-and-10k.txt.
+
+
+Final corrected candidate with Retina drag conversion:
+./dev verify: exit 0; Debug CTest 11/11, Python 178/178.
+./dev asan: exit 0; CTest 11/11.
+./dev ubsan: exit 0; CTest 11/11.
+Focused new suites pass 8/8; baseline comparison passes 7 files; native event
+smoke exits 0. Deterministic 2x C tests cover logical viewport, drag, wheel,
+pinch, and cursor-anchor conversion. Logs: verify-corrected.txt,
+asan-corrected.txt, ubsan-corrected.txt.

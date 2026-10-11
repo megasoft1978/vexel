@@ -1,0 +1,62 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01/build/mac-debug
+      Start  1: cli-version
+ 1/13 Test  #1: cli-version ......................   Passed    0.00 sec
+      Start  2: base-contract
+ 2/13 Test  #2: base-contract ....................   Passed    0.00 sec
+      Start  3: xml-tokenizer
+ 3/13 Test  #3: xml-tokenizer ....................   Passed    0.07 sec
+      Start  4: source-save
+ 4/13 Test  #4: source-save ......................   Passed    0.00 sec
+      Start  5: document-model
+ 5/13 Test  #5: document-model ...................   Passed    0.09 sec
+      Start  6: shape-render
+ 6/13 Test  #6: shape-render .....................   Passed    0.02 sec
+      Start  7: css-cascade
+ 7/13 Test  #7: css-cascade ......................   Passed    0.00 sec
+      Start  8: svg-index
+ 8/13 Test  #8: svg-index ........................   Passed    0.11 sec
+      Start  9: viewer-navigation
+ 9/13 Test  #9: viewer-navigation ................   Passed    0.01 sec
+      Start 10: svg-token-stream-budget
+10/13 Test #10: svg-token-stream-budget ..........   Passed    0.02 sec
+      Start 11: index-replay
+11/13 Test #11: index-replay .....................   Passed    0.13 sec
+      Start 12: spatial-cache
+12/13 Test #12: spatial-cache ....................   Passed    0.02 sec
+      Start 13: job-snapshot
+13/13 Test #13: job-snapshot .....................   Passed    0.04 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Total Test time (real) =   0.53 sec
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 200 tests in 15.693s
+
+OK
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.145009
+20 frames with identical readback hashes and stable offscreen frame order
+readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
+native replay elapsed seconds: 0.129692
+Ran 200 tests: 200 passed, 0 failed, 0 errors, 0 skipped; 15.739s
+valid ledger: 378 entries
