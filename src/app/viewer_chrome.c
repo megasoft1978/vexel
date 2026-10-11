@@ -26,6 +26,15 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
                                   bool want_structure, bool want_inspector,
                                   viewer_chrome_layout *out_layout)
 {
+    return viewer_chrome_layout_compute_docked(width, height, backing_scale,
+        want_structure, want_inspector, false, 0U, out_layout);
+}
+
+bool viewer_chrome_layout_compute_docked(uint32_t width, uint32_t height,
+    double backing_scale, bool want_structure, bool want_inspector,
+    bool timeline_visible, uint32_t timeline_height_points,
+    viewer_chrome_layout *out_layout)
+{
     if (out_layout == NULL || width == 0U || height == 0U ||
         width > VIEWER_CHROME_MAX_AXIS || height > VIEWER_CHROME_MAX_AXIS ||
         !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0)
@@ -47,12 +56,28 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
     options_height = min_u32(options_height, remaining_height);
     remaining_height -= options_height;
     status_height = min_u32(status_height, remaining_height);
-    uint32_t workspace_height = remaining_height - status_height;
-    uint32_t status_y = toolbar_height + options_height + workspace_height;
+    remaining_height -= status_height;
+    uint32_t dock_height = 0U;
+    if (timeline_visible && timeline_height_points > 0U &&
+        !scaled_points(timeline_height_points, backing_scale, &dock_height)) return false;
+    uint32_t workspace_height = remaining_height;
+    uint32_t minimum_workspace = 120U;
+    if (timeline_visible && dock_height > 0U &&
+        workspace_height < dock_height + minimum_workspace) {
+        uint32_t collapsed = 0U;
+        if (!scaled_points(32U, backing_scale, &collapsed)) return false;
+        dock_height = workspace_height > minimum_workspace + collapsed ? collapsed :
+            (workspace_height > minimum_workspace ? workspace_height - minimum_workspace : 0U);
+    }
+    if (dock_height > workspace_height) dock_height = workspace_height;
+    workspace_height -= dock_height;
+    uint32_t timeline_y = toolbar_height + options_height + workspace_height;
+    uint32_t status_y = timeline_y + dock_height;
     out_layout->toolbar = (ui_rect){0U, 0U, width, toolbar_height};
     out_layout->options = (ui_rect){0U, toolbar_height, width, options_height};
     out_layout->workspace = (ui_rect){0U, toolbar_height + options_height,
         width, workspace_height};
+    out_layout->timeline = (ui_rect){0U, timeline_y, width, dock_height};
     out_layout->status = (ui_rect){0U, status_y, width, status_height};
 
     uint32_t safe_rail = width > 1U ? min_u32(rail_width, width - 1U) : width;

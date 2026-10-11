@@ -207,6 +207,11 @@ static void process_editor_result(viewer_app *app, uint32_t result)
 {
     if ((result & VIEWER_EDITOR_SELECT_ALL) != 0U && app->document_visible)
         (void)viewer_editor_select_all(app->editor, &app->document.shape);
+    if (app->editor != NULL && viewer_timeline_track_count(&app->timeline) > 0U) {
+        bool requested_open = viewer_editor_timeline_visible(app->editor);
+        if (requested_open != app->timeline.dock_open)
+            (void)viewer_timeline_dock_set_open(&app->timeline, requested_open);
+    }
     bool document_mutated = (result & VIEWER_EDITOR_MUTATED) != 0U;
     bool preview_changed = (result & VIEWER_EDITOR_PREVIEW_CHANGED) != 0U;
     if (document_mutated || preview_changed) {
@@ -433,6 +438,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
     if (viewer_timeline_process_event(&app->timeline, event, app->editor,
             app->width, app->height, app->backing_scale)) {
         app->frame_dirty = true;
+        (void)viewer_sync_canvas_geometry(app, false);
         return;
     }
     switch (event->type) {

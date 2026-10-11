@@ -13,8 +13,7 @@
 
 #define VIEWER_TIMELINE_FALLBACK_SECONDS 5.0
 #define VIEWER_TIMELINE_FRAME_INTERVAL (1.0 / 30.0)
-#define VIEWER_TIMELINE_PANEL_POINTS 178U
-#define VIEWER_TIMELINE_MIN_WIDTH_POINTS 300U
+#define VIEWER_TIMELINE_MIN_WIDTH_POINTS 280U
 #define VIEWER_TIMELINE_SOURCE_SCAN_CAP 4096U
 #define VIEWER_TIMELINE_TAG_CAP 32U
 #define VIEWER_TIMELINE_ID_CAP 48U
@@ -24,6 +23,14 @@ static double timeline_monotonic_seconds(void)
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0.0;
     return (double)now.tv_sec + (double)now.tv_nsec / 1000000000.0;
+}
+
+static bool timeline_rect_contains(ui_rect rect, double x, double y)
+{
+    return rect.width > 0U && rect.height > 0U && isfinite(x) && isfinite(y) &&
+        x >= (double)rect.x && y >= (double)rect.y &&
+        x - (double)rect.x < (double)rect.width &&
+        y - (double)rect.y < (double)rect.height;
 }
 
 static double min_double(double left, double right)
@@ -69,17 +76,26 @@ static double document_display_duration(const svg_shape_document *document)
 {
     size_t count = timeline_track_count_for_document(document);
     double duration = 0.0;
+    bool indefinite = false;
     for (size_t index = 0U; index < count; ++index) {
+        const svg_anim_track *track = &document->animation.tracks[index];
+        if (track->duration_indefinite || track->repeat_indefinite ||
+            track->repeat_duration_indefinite) indefinite = true;
         double end = track_display_end(&document->animation.tracks[index]);
         if (end > duration) duration = end;
     }
-    return duration;
+    return indefinite ? VIEWER_TIMELINE_FALLBACK_SECONDS : duration;
 }
 
 void viewer_timeline_init(viewer_timeline *timeline)
 {
     if (timeline == NULL) return;
     *timeline = (viewer_timeline){0};
+    timeline->dock_height_points = VIEWER_TIMELINE_DOCK_DEFAULT_POINTS;
+    timeline->zoom_factor = 1.0;
+    timeline->playback_speed = 1.0;
+    timeline->mode = VIEWER_TIMELINE_MODE_ONE_SHOT;
+    timeline->playback_direction = 1;
 }
 
 void viewer_timeline_reset(viewer_timeline *timeline,
@@ -87,9 +103,30 @@ void viewer_timeline_reset(viewer_timeline *timeline,
 {
     if (timeline == NULL) return;
     raster_tile_destroy(&timeline->preview);
+    bool dock_state_explicit = timeline->dock_state_explicit;
+    bool dock_open = timeline->dock_open;
+    bool reduced_motion = timeline->reduced_motion;
+    uint16_t dock_height_points = timeline->dock_height_points;
+    viewer_timeline_mode mode = timeline->mode;
+    double speed = timeline->playback_speed;
     *timeline = (viewer_timeline){0};
     timeline->document = document;
     timeline->duration_seconds = document_display_duration(document);
+    timeline->dock_state_explicit = dock_state_explicit;
+    timeline->dock_open = timeline_track_count_for_document(document) > 0U &&
+        (dock_state_explicit ? dock_open : true);
+    timeline->dock_height_points = dock_height_points >= VIEWER_TIMELINE_DOCK_MIN_POINTS &&
+        dock_height_points <= VIEWER_TIMELINE_DOCK_MAX_POINTS ? dock_height_points :
+            VIEWER_TIMELINE_DOCK_DEFAULT_POINTS;
+    timeline->reduced_motion = reduced_motion;
+    timeline->mode = mode >= VIEWER_TIMELINE_MODE_ONE_SHOT &&
+        mode <= VIEWER_TIMELINE_MODE_PING_PONG ? mode :
+        VIEWER_TIMELINE_MODE_ONE_SHOT;
+    timeline->loop = timeline->mode == VIEWER_TIMELINE_MODE_LOOP;
+    timeline->playback_speed = speed == 0.25 || speed == 0.5 || speed == 1.0 ||
+        speed == 2.0 ? speed : 1.0;
+    timeline->zoom_factor = 1.0;
+    timeline->playback_direction = 1;
 }
 
 void viewer_timeline_destroy(viewer_timeline *timeline)
@@ -216,6 +253,21 @@ bool viewer_timeline_track_label(const viewer_timeline *timeline, size_t track_i
     int amount = id[0] != '\0' ?
         snprintf(buffer, capacity, "%s#%s / %s", tag, id, attribute) :
         snprintf(buffer, capacity, "%s / %s", tag, attribute);
+    size_t same_attribute_before = 0U;
+    for (size_t index = 0U; index < track_index; ++index) {
+        const svg_anim_track *prior = &timeline->document->animation.tracks[index];
+        if (prior->target_offset == track->target_offset &&
+            prior->target_length == track->target_length &&
+            prior->attribute == track->attribute) same_attribute_before++;
+    }
+    if (same_attribute_before > 0U && amount > 0 &&
+        (size_t)amount < capacity) {
+        int suffix = snprintf(buffer + (size_t)amount, capacity - (size_t)amount,
+            " · %zu", same_attribute_before + 1U);
+        if (suffix < 0 || (size_t)suffix >= capacity - (size_t)amount)
+            amount = (int)capacity;
+        else amount += suffix;
+    }
     if (amount < 0 || (size_t)amount >= capacity) {
         buffer[0] = '\0';
         return false;
@@ -243,18 +295,163 @@ bool viewer_timeline_seek(viewer_timeline *timeline, double time_seconds)
 
 bool viewer_timeline_set_loop(viewer_timeline *timeline, bool loop)
 {
+    return viewer_timeline_set_mode(timeline, loop ? VIEWER_TIMELINE_MODE_LOOP :
+        VIEWER_TIMELINE_MODE_ONE_SHOT);
+}
+
+bool viewer_timeline_set_mode(viewer_timeline *timeline, viewer_timeline_mode mode)
+{
     if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
-        timeline->loop == loop) return false;
-    timeline->loop = loop;
+        mode < VIEWER_TIMELINE_MODE_ONE_SHOT ||
+        mode > VIEWER_TIMELINE_MODE_PING_PONG || timeline->mode == mode) return false;
+    timeline->mode = mode;
+    timeline->loop = mode == VIEWER_TIMELINE_MODE_LOOP;
+    timeline->playback_direction = 1;
     return true;
+}
+
+bool viewer_timeline_set_speed(viewer_timeline *timeline, double speed)
+{
+    if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
+        (speed != 0.25 && speed != 0.5 && speed != 1.0 && speed != 2.0) ||
+        timeline->playback_speed == speed) return false;
+    timeline->playback_speed = speed;
+    return true;
+}
+
+double viewer_timeline_view_duration(const viewer_timeline *timeline)
+{
+    if (timeline == NULL) return 0.0;
+    double duration = viewer_timeline_duration(timeline);
+    double zoom = timeline->zoom_factor;
+    if (!(zoom >= 1.0) || !isfinite(zoom)) zoom = 1.0;
+    double view_duration = duration / zoom;
+    return isfinite(view_duration) && view_duration >= 0.0 ? view_duration : 0.0;
+}
+
+bool viewer_timeline_zoom_at(viewer_timeline *timeline, double anchor_seconds,
+                             double factor)
+{
+    if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
+        !isfinite(anchor_seconds) || !isfinite(factor) || factor <= 0.0 ||
+        !(timeline->duration_seconds > 0.0)) return false;
+    double old_zoom = timeline->zoom_factor;
+    if (!isfinite(old_zoom) || old_zoom < 1.0) old_zoom = 1.0;
+    double next_zoom = old_zoom * factor;
+    if (!isfinite(next_zoom) || next_zoom < 1.0) next_zoom = 1.0;
+    if (next_zoom > 64.0) next_zoom = 64.0;
+    if (next_zoom == old_zoom) return false;
+    double old_span = timeline->duration_seconds / old_zoom;
+    double old_start = timeline->view_start_seconds;
+    if (!isfinite(old_start) || old_start < 0.0) old_start = 0.0;
+    double fraction = old_span > 0.0 ? (anchor_seconds - old_start) / old_span : 0.0;
+    if (!isfinite(fraction)) fraction = 0.5;
+    if (fraction < 0.0) fraction = 0.0;
+    if (fraction > 1.0) fraction = 1.0;
+    double next_span = timeline->duration_seconds / next_zoom;
+    double next_start = anchor_seconds - fraction * next_span;
+    double max_start = timeline->duration_seconds - next_span;
+    if (!isfinite(next_start) || next_start < 0.0) next_start = 0.0;
+    if (next_start > max_start) next_start = max_start;
+    timeline->zoom_factor = next_zoom;
+    timeline->view_start_seconds = next_start;
+    return true;
+}
+
+bool viewer_timeline_pan(viewer_timeline *timeline, double delta_seconds)
+{
+    if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
+        !isfinite(delta_seconds)) return false;
+    double span = viewer_timeline_view_duration(timeline);
+    double maximum = viewer_timeline_duration(timeline) - span;
+    double next = timeline->view_start_seconds + delta_seconds;
+    if (!isfinite(next)) return false;
+    if (next < 0.0) next = 0.0;
+    if (next > maximum) next = maximum;
+    if (next == timeline->view_start_seconds) return false;
+    timeline->view_start_seconds = next;
+    return true;
+}
+
+bool viewer_timeline_fit(viewer_timeline *timeline)
+{
+    if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U) return false;
+    bool changed = timeline->zoom_factor != 1.0 || timeline->view_start_seconds != 0.0;
+    timeline->zoom_factor = 1.0;
+    timeline->view_start_seconds = 0.0;
+    return changed;
+}
+
+bool viewer_timeline_dock_set_open(viewer_timeline *timeline, bool open)
+{
+    if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
+        timeline->dock_open == open) return false;
+    timeline->dock_open = open;
+    timeline->dock_state_explicit = true;
+    timeline->dragging_resize = false;
+    return true;
+}
+
+bool viewer_timeline_dock_resize(viewer_timeline *timeline, int32_t delta_points)
+{
+    if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U) return false;
+    int64_t current = timeline->dock_height_points;
+    int64_t next = current + (int64_t)delta_points;
+    if (next < (int64_t)VIEWER_TIMELINE_DOCK_MIN_POINTS)
+        next = (int64_t)VIEWER_TIMELINE_DOCK_MIN_POINTS;
+    if (next > (int64_t)VIEWER_TIMELINE_DOCK_MAX_POINTS)
+        next = (int64_t)VIEWER_TIMELINE_DOCK_MAX_POINTS;
+    if (next == current) return false;
+    timeline->dock_height_points = (uint16_t)next;
+    timeline->dock_open = true;
+    timeline->dock_state_explicit = true;
+    return true;
+}
+
+void viewer_timeline_set_reduced_motion(viewer_timeline *timeline, bool reduced_motion)
+{
+    if (timeline != NULL) timeline->reduced_motion = reduced_motion;
+}
+
+void viewer_timeline_sync_selection(viewer_timeline *timeline, viewer_editor *editor)
+{
+    if (timeline == NULL || editor == NULL || viewer_timeline_track_count(timeline) == 0U)
+        return;
+    document_source_span selection = {0};
+    if (!viewer_editor_selection_span(editor, &selection)) return;
+    for (size_t index = 0U; index < viewer_timeline_track_count(timeline); ++index) {
+        const svg_anim_track *track = &timeline->document->animation.tracks[index];
+        if (track->target_offset >= selection.offset &&
+            track->target_offset - selection.offset < selection.length) {
+            timeline->selected_track = index;
+            if (index < timeline->first_track ||
+                index - timeline->first_track >= VIEWER_TIMELINE_VISIBLE_TRACK_CAP)
+                timeline->first_track = index;
+            return;
+        }
+    }
+}
+
+uint32_t viewer_timeline_key_hit_radius(double backing_scale)
+{
+    if (!isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0)
+        return 0U;
+    double pixels = ceil(6.0 * backing_scale);
+    if (pixels > (double)UINT32_MAX) return 0U;
+    return (uint32_t)pixels;
 }
 
 bool viewer_timeline_toggle_play(viewer_timeline *timeline, double now_seconds)
 {
     if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
         !(viewer_timeline_duration(timeline) > 0.0) || !isfinite(now_seconds)) return false;
-    if (!timeline->playing && timeline->time_seconds >= timeline->duration_seconds &&
-        !timeline->loop) timeline->time_seconds = 0.0;
+    if (!timeline->playing && timeline->mode == VIEWER_TIMELINE_MODE_ONE_SHOT &&
+        timeline->time_seconds >= timeline->duration_seconds)
+        timeline->time_seconds = 0.0;
+    if (!timeline->playing && timeline->time_seconds <= 0.0)
+        timeline->playback_direction = 1;
+    else if (!timeline->playing && timeline->time_seconds >= timeline->duration_seconds)
+        timeline->playback_direction = -1;
     timeline->playing = !timeline->playing;
     timeline->dragging_scrubber = false;
     timeline->last_tick_seconds = now_seconds;
@@ -285,10 +482,25 @@ bool viewer_timeline_advance(viewer_timeline *timeline, double now_seconds)
         VIEWER_TIMELINE_FRAME_INTERVAL) return false;
     timeline->last_tick_seconds = now_seconds;
     double duration = viewer_timeline_duration(timeline);
-    double next = timeline->time_seconds + delta;
+    double scaled_delta = delta * timeline->playback_speed;
+    if (!isfinite(scaled_delta)) scaled_delta = SVG_ANIM_MAX_TIMELINE_SECONDS;
+    double next = timeline->time_seconds + scaled_delta;
     if (!isfinite(next)) next = duration;
     bool reached_end = next >= duration;
-    if (reached_end && timeline->loop && duration > 0.0) {
+    if (timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG && duration > 0.0) {
+        double period = duration * 2.0;
+        double phase = timeline->playback_direction >= 0 ?
+            timeline->time_seconds : period - timeline->time_seconds;
+        phase = fmod(phase + scaled_delta, period);
+        if (!isfinite(phase) || phase < 0.0) phase = 0.0;
+        if (phase <= duration) {
+            next = phase;
+            timeline->playback_direction = phase >= duration ? -1 : 1;
+        } else {
+            next = period - phase;
+            timeline->playback_direction = -1;
+        }
+    } else if (reached_end && timeline->mode == VIEWER_TIMELINE_MODE_LOOP && duration > 0.0) {
         next = fmod(next, duration);
         if (!isfinite(next) || next < 0.0) next = 0.0;
     } else if (reached_end) {
@@ -326,192 +538,6 @@ bool viewer_timeline_handle_key(viewer_timeline *timeline, uint16_t key_code,
     return viewer_timeline_seek(timeline, next);
 }
 
-static bool scaled_points(uint32_t points, double scale, uint32_t *out_pixels)
-{
-    if (out_pixels == NULL || !isfinite(scale) || scale < 0.5 || scale > 4.0)
-        return false;
-    double pixels = ceil((double)points * scale);
-    if (!isfinite(pixels) || pixels > (double)UINT32_MAX) return false;
-    *out_pixels = (uint32_t)pixels;
-    return true;
-}
-
-static ui_rect rect_at(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
-{
-    return (ui_rect){x, y, width, height};
-}
-
-bool viewer_timeline_layout_compute(const viewer_timeline *timeline,
-                                    uint32_t width, uint32_t height,
-                                    double backing_scale,
-                                    viewer_timeline_layout *out_layout)
-{
-    if (timeline == NULL || out_layout == NULL || width == 0U || height == 0U ||
-        width > 8192U || height > 8192U || !isfinite(backing_scale) ||
-        backing_scale < 0.5 || backing_scale > 4.0 ||
-        viewer_timeline_track_count(timeline) == 0U) return false;
-    uint32_t panel_height, status_height, min_width;
-    if (!scaled_points(VIEWER_TIMELINE_PANEL_POINTS, backing_scale, &panel_height) ||
-        !scaled_points(VIEWER_CHROME_STATUS_POINTS, backing_scale, &status_height) ||
-        !scaled_points(VIEWER_TIMELINE_MIN_WIDTH_POINTS, backing_scale, &min_width) ||
-        width < min_width || height <= status_height) return false;
-    memset(out_layout, 0, sizeof(*out_layout));
-    out_layout->backing_scale = backing_scale;
-    uint32_t panel_bottom = height - status_height;
-    if (panel_height > panel_bottom) panel_height = panel_bottom;
-    if (panel_height < status_height * 3U) return false;
-    uint32_t panel_top = panel_bottom - panel_height;
-    out_layout->panel = rect_at(0U, panel_top, width, panel_height);
-    out_layout->track_count = viewer_timeline_track_count(timeline);
-
-    uint32_t inset, play_x, play_width, control_y, control_height;
-    uint32_t time_x, time_width, loop_x, loop_width, scrub_y, scrub_height;
-    uint32_t row_start_y, row_height, row_inset;
-    if (!scaled_points(12U, backing_scale, &inset) ||
-        !scaled_points(12U, backing_scale, &play_x) ||
-        !scaled_points(64U, backing_scale, &play_width) ||
-        !scaled_points(24U, backing_scale, &control_y) ||
-        !scaled_points(26U, backing_scale, &control_height) ||
-        !scaled_points(84U, backing_scale, &time_x) ||
-        !scaled_points(104U, backing_scale, &time_width) ||
-        !scaled_points(196U, backing_scale, &loop_x) ||
-        !scaled_points(92U, backing_scale, &loop_width) ||
-        !scaled_points(52U, backing_scale, &scrub_y) ||
-        !scaled_points(22U, backing_scale, &scrub_height) ||
-        !scaled_points(78U, backing_scale, &row_start_y) ||
-        !scaled_points(17U, backing_scale, &row_height) ||
-        !scaled_points(8U, backing_scale, &row_inset)) return false;
-    if ((uint64_t)panel_top + control_y > UINT32_MAX ||
-        (uint64_t)panel_top + scrub_y > UINT32_MAX ||
-        (uint64_t)panel_top + row_start_y > UINT32_MAX ||
-        (uint64_t)inset + play_width > width ||
-        (uint64_t)time_x + time_width + inset > width ||
-        (uint64_t)loop_x + loop_width + inset > width || width <= inset * 2U)
-        return false;
-    out_layout->play_button = rect_at(play_x, panel_top + control_y,
-        play_width, control_height);
-    out_layout->time_readout = rect_at(time_x, panel_top + control_y,
-        time_width, control_height);
-    out_layout->loop_toggle = rect_at(loop_x, panel_top + control_y,
-        loop_width, control_height);
-    out_layout->scrubber = rect_at(inset, panel_top + scrub_y,
-        width - inset * 2U, scrub_height);
-
-    uint32_t row_y = panel_top + row_start_y;
-    uint32_t row_bottom = panel_bottom > row_inset ? panel_bottom - row_inset : 0U;
-    if (row_y >= row_bottom || row_height == 0U) return true;
-    size_t visible = (size_t)((row_bottom - row_y) / row_height);
-    if (visible > VIEWER_TIMELINE_VISIBLE_TRACK_CAP)
-        visible = VIEWER_TIMELINE_VISIBLE_TRACK_CAP;
-    size_t track_count = out_layout->track_count;
-    if (visible > track_count) visible = track_count;
-    uint32_t row_width = width - inset * 2U;
-    for (size_t row = 0U; row < visible; ++row) {
-        uint64_t y = (uint64_t)row_y + (uint64_t)row * row_height;
-        if (y > UINT32_MAX || y + row_height > panel_bottom) break;
-        out_layout->track_rows[row] = rect_at(inset, (uint32_t)y, row_width, row_height);
-        out_layout->visible_track_count++;
-    }
-    return true;
-}
-
-static bool rect_contains(ui_rect rect, double x, double y)
-{
-    return isfinite(x) && isfinite(y) && x >= (double)rect.x &&
-        y >= (double)rect.y && x - (double)rect.x < (double)rect.width &&
-        y - (double)rect.y < (double)rect.height;
-}
-
-static double seek_time_from_x(const viewer_timeline_layout *layout, double x,
-                               double duration)
-{
-    uint32_t track_inset = 8U, value_reserve = 64U;
-    double scaled_inset = ceil((double)track_inset * layout->backing_scale);
-    double scaled_reserve = ceil((double)value_reserve * layout->backing_scale);
-    if (!isfinite(scaled_inset) || !isfinite(scaled_reserve) ||
-        scaled_inset > (double)UINT32_MAX || scaled_reserve > (double)UINT32_MAX)
-        return 0.0;
-    track_inset = (uint32_t)scaled_inset;
-    value_reserve = (uint32_t)scaled_reserve;
-    if (layout->scrubber.width <= value_reserve) track_inset = 0U;
-    double start = (double)layout->scrubber.x + (double)track_inset;
-    double track_width = layout->scrubber.width > value_reserve ?
-        (double)(layout->scrubber.width - value_reserve) :
-        (double)layout->scrubber.width;
-    if (!(track_width > 0.0)) return 0.0;
-    double progress = (x - start) / track_width;
-    if (!isfinite(progress) || progress < 0.0) progress = 0.0;
-    if (progress > 1.0) progress = 1.0;
-    return progress * duration;
-}
-
-bool viewer_timeline_pointer(viewer_timeline *timeline,
-                             const viewer_timeline_layout *layout,
-                             viewer_timeline_pointer_kind kind,
-                             double x, double y, double delta_y,
-                             double now_seconds)
-{
-    if (timeline == NULL || layout == NULL ||
-        viewer_timeline_track_count(timeline) == 0U) return false;
-    if (kind == VIEWER_TIMELINE_POINTER_UP && timeline->dragging_scrubber) {
-        timeline->dragging_scrubber = false;
-        return true;
-    }
-    if (kind == VIEWER_TIMELINE_POINTER_MOVE && timeline->dragging_scrubber) {
-        double next = seek_time_from_x(layout, x, timeline->duration_seconds);
-        timeline->time_seconds = next;
-        timeline->playing = false;
-        timeline->has_tick_time = false;
-        timeline->preview_failed = false;
-        return true;
-    }
-    if (!rect_contains(layout->panel, x, y)) return false;
-    if (kind == VIEWER_TIMELINE_POINTER_SCROLL) {
-        if (layout->visible_track_count > 0U &&
-            y >= (double)layout->track_rows[0].y && delta_y != 0.0) {
-            size_t step = fabs(delta_y) >= 3.0 ? 3U : 1U;
-            size_t maximum = layout->track_count > layout->visible_track_count ?
-                layout->track_count - layout->visible_track_count : 0U;
-            if (delta_y < 0.0)
-                timeline->first_track = timeline->first_track + step > maximum ?
-                    maximum : timeline->first_track + step;
-            else timeline->first_track = timeline->first_track > step ?
-                timeline->first_track - step : 0U;
-        }
-        return true;
-    }
-    if (kind == VIEWER_TIMELINE_POINTER_DOWN) {
-        if (rect_contains(layout->play_button, x, y)) {
-            (void)viewer_timeline_toggle_play(timeline, now_seconds);
-            return true;
-        }
-        if (rect_contains(layout->loop_toggle, x, y)) {
-            (void)viewer_timeline_set_loop(timeline, !timeline->loop);
-            return true;
-        }
-        if (rect_contains(layout->scrubber, x, y)) {
-            timeline->dragging_scrubber = true;
-            double next = seek_time_from_x(layout, x, timeline->duration_seconds);
-            (void)viewer_timeline_seek(timeline, next);
-            timeline->dragging_scrubber = true;
-            return true;
-        }
-        for (size_t row = 0U; row < layout->visible_track_count; ++row) {
-            if (!rect_contains(layout->track_rows[row], x, y)) continue;
-            size_t index = timeline->first_track + row;
-            if (index >= viewer_timeline_track_count(timeline)) return true;
-            timeline->selected_track = index;
-            double start = timeline->document->animation.tracks[index].has_begin_sync ?
-                0.0 : timeline->document->animation.tracks[index].begin_offset;
-            (void)viewer_timeline_seek(timeline, start);
-            timeline->selected_track = index;
-            return true;
-        }
-        return true;
-    }
-    return kind == VIEWER_TIMELINE_POINTER_MOVE || kind == VIEWER_TIMELINE_POINTER_UP;
-}
-
 bool viewer_timeline_process_event(viewer_timeline *timeline,
                                    const platform_event *event,
                                    viewer_editor *editor,
@@ -531,12 +557,13 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
     if (!viewer_timeline_layout_compute(timeline, width, height, backing_scale,
             &layout)) return false;
     double x = 0.0, y = 0.0;
+    double delta_x = 0.0, delta_y = 0.0;
     viewer_timeline_pointer_kind pointer_kind;
     switch (event->type) {
         case PLATFORM_EVENT_POINTER_DOWN:
             x = (double)event->logical_x * backing_scale;
             y = (double)event->logical_y * backing_scale;
-            if (event->button != 0U) return rect_contains(layout.panel, x, y);
+            if (event->button != 0U) return timeline_rect_contains(layout.panel, x, y);
             pointer_kind = VIEWER_TIMELINE_POINTER_DOWN;
             break;
         case PLATFORM_EVENT_POINTER_MOVE:
@@ -552,13 +579,15 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
         case PLATFORM_EVENT_SCROLL:
             x = event->precise_x * backing_scale;
             y = event->precise_y * backing_scale;
+            delta_x = event->delta_x * backing_scale;
+            delta_y = event->delta_y;
             pointer_kind = VIEWER_TIMELINE_POINTER_SCROLL;
             break;
         default: return false;
     }
     if (!isfinite(x) || !isfinite(y)) return false;
-    return viewer_timeline_pointer(timeline, &layout, pointer_kind, x, y,
-        event->delta_y, timeline_monotonic_seconds());
+    return viewer_timeline_pointer_ex(timeline, &layout, pointer_kind, x, y,
+        delta_x, delta_y, event->modifiers, timeline_monotonic_seconds(), editor);
 }
 
 const raster_tile *viewer_timeline_prepare_frame(viewer_timeline *timeline)

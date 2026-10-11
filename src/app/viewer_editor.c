@@ -1,4 +1,5 @@
 #include "viewer_editor_internal.h"
+#include "viewer_timeline.h"
 
 #include "document_model.h"
 #include "viewer_chrome.h"
@@ -423,6 +424,7 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->active_tool = UI_ICON_SELECT;
     editor->want_structure = true;
     editor->want_inspector = true;
+    editor->timeline_height_points = VIEWER_TIMELINE_DOCK_DEFAULT_POINTS;
     editor->width = width;
     editor->height = height;
     editor->backing_scale = 1.0;
@@ -491,6 +493,38 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
     return true;
 }
 
+bool viewer_editor_set_timeline_state(viewer_editor *editor, bool available,
+                                      bool visible, uint32_t height_points)
+{
+    if (editor == NULL || height_points < VIEWER_TIMELINE_DOCK_MIN_POINTS ||
+        height_points > VIEWER_TIMELINE_DOCK_MAX_POINTS) return false;
+    visible = available && visible;
+    if (editor->timeline_available == available &&
+        editor->timeline_visible == visible &&
+        editor->timeline_height_points == height_points) return false;
+    editor->timeline_available = available;
+    editor->timeline_visible = visible;
+    editor->timeline_height_points = (uint16_t)height_points;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_timeline_visible(const viewer_editor *editor)
+{
+    return editor != NULL && editor->timeline_visible;
+}
+
+bool viewer_editor_timeline_available(const viewer_editor *editor)
+{
+    return editor != NULL && editor->timeline_available;
+}
+
+bool viewer_editor_reduced_motion(const viewer_editor *editor)
+{
+    return editor != NULL && editor->reduced_motion;
+}
+
 bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool)
 {
     if (editor == NULL || tool < UI_ICON_SELECT || tool > UI_ICON_ZOOM) return false;
@@ -546,8 +580,11 @@ bool viewer_editor_get_chrome_layout(viewer_editor *editor,
                                      struct viewer_chrome_layout *out_layout)
 {
     if (editor == NULL || out_layout == NULL) return false;
-    return viewer_chrome_layout_compute(editor->width, editor->height,
+    uint32_t timeline_points = editor->timeline_visible ?
+        editor->timeline_height_points : 32U;
+    return viewer_chrome_layout_compute_docked(editor->width, editor->height,
         editor->backing_scale, editor->want_structure, editor->want_inspector,
+        editor->timeline_available, timeline_points,
         (viewer_chrome_layout *)out_layout);
 }
 

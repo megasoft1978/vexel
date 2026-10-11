@@ -461,6 +461,12 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
             editor->want_structure, !editor->want_inspector);
         return VIEWER_EDITOR_HANDLED;
     }
+    if (action == EDITOR_BUTTON_TOGGLE_TIMELINE) {
+        if (editor->timeline_available)
+            (void)viewer_editor_set_timeline_state(editor, true,
+                !editor->timeline_visible, editor->timeline_height_points);
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (action == EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES) {
         editor->inspector_other_attributes_expanded =
             !editor->inspector_other_attributes_expanded;

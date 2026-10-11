@@ -126,6 +126,11 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
                                           bool structure_visible,
                                           bool inspector_visible);
+bool viewer_editor_set_timeline_state(viewer_editor *editor, bool available,
+                                      bool visible, uint32_t height_points);
+bool viewer_editor_timeline_visible(const viewer_editor *editor);
+bool viewer_editor_timeline_available(const viewer_editor *editor);
+bool viewer_editor_reduced_motion(const viewer_editor *editor);
 bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool);
 ui_icon_kind viewer_editor_get_tool(const viewer_editor *editor);
 bool viewer_editor_text_input_active(const viewer_editor *editor);

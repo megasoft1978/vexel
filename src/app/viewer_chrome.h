@@ -21,6 +21,7 @@ typedef struct viewer_chrome_layout {
     ui_rect rail;
     ui_rect structure;
     ui_rect canvas;
+    ui_rect timeline;
     ui_rect inspector;
     ui_rect status;
     bool structure_visible;
@@ -32,5 +33,9 @@ bool viewer_chrome_layout_compute(uint32_t width, uint32_t height,
                                   double backing_scale,
                                   bool want_structure, bool want_inspector,
                                   viewer_chrome_layout *out_layout);
+bool viewer_chrome_layout_compute_docked(uint32_t width, uint32_t height,
+    double backing_scale, bool want_structure, bool want_inspector,
+    bool timeline_visible, uint32_t timeline_height_points,
+    viewer_chrome_layout *out_layout);
 
 #endif

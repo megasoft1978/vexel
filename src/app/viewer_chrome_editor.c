@@ -142,9 +142,12 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (editor == NULL || editor->edit == NULL || editor->width == 0U || editor->height == 0U)
         return;
     viewer_chrome_layout layout;
-    if (!viewer_chrome_layout_compute(editor->width, editor->height,
+    uint32_t timeline_points = editor->timeline_visible ?
+        editor->timeline_height_points : 32U;
+    if (!viewer_chrome_layout_compute_docked(editor->width, editor->height,
             editor->backing_scale, editor->want_structure, editor->want_inspector,
-            &layout) || !ui_tree_init_accessible(&editor->tree, editor->theme,
+            editor->timeline_available, timeline_points, &layout) ||
+        !ui_tree_init_accessible(&editor->tree, editor->theme,
                 editor->increased_contrast)) return;
     editor->effective_structure = layout.structure_visible;
     editor->effective_inspector = layout.inspector_visible;
@@ -189,6 +192,10 @@ void editor_build_tree_modern(viewer_editor *editor)
             EDITOR_NODE_TOOLBAR, UI_ICON_SIDEBAR_RIGHT, "Inspector panel",
             editor->want_inspector ? UI_STATE_CHECKED : 0U);
     if (!okay) return;
+    if (editor->timeline_available && !editor_add_icon(editor,
+            EDITOR_BUTTON_TOGGLE_TIMELINE, EDITOR_NODE_TOOLBAR, UI_ICON_RULER,
+            "Animation timeline", editor->timeline_visible ? UI_STATE_CHECKED : 0U))
+        return;
     okay = editor_add_node(editor, EDITOR_NODE_OPTIONS, UI_ROOT_ID,
             UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_OPTIONS_POINTS, 8U, 8U,
             tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
@@ -270,6 +277,14 @@ void editor_build_tree_modern(viewer_editor *editor)
         if (!okay) return;
     }
     if (layout.inspector_visible && !editor_build_inspector_panel(editor, tokens)) return;
+    if (editor->timeline_available && layout.timeline.height > 0U) {
+        uint32_t preferred_height = (uint32_t)ceil(
+            (double)layout.timeline.height / scale);
+        if (!editor_add_node(editor, EDITOR_NODE_TIMELINE_DOCK, UI_ROOT_ID,
+                UI_AXIS_VERTICAL, 0U, preferred_height, 0U, 0U,
+                tokens->panel, UI_ROLE_GROUP, "Animation timeline", 18U,
+                NULL, 0U, 0U, 0U)) return;
+    }
     char status[UI_TEXT_MAX_BYTES] = {0}, selection[UI_TEXT_MAX_BYTES] = {0};
     editor_status_labels(editor, status, selection);
     bool status_error = strncmp(editor->status, "Edit rejected:", 14U) == 0 ||

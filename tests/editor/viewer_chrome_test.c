@@ -355,8 +355,45 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
     return 0;
 }
 
+static bool test_timeline_dock_and_reduce_motion(void)
+{
+    viewer_editor *editor = viewer_editor_create_styled(
+        (base_bytes){source, sizeof(source) - 1U}, UI_THEME_DARK,
+        1280U, 800U, true);
+    ui_semantics_snapshot *snapshot = malloc(sizeof(*snapshot));
+    if (editor == NULL || snapshot == NULL) {
+        viewer_editor_destroy(editor);
+        free(snapshot);
+        return false;
+    }
+    viewer_chrome_layout layout;
+    bool okay = viewer_editor_set_timeline_state(editor, true, true, 220U) &&
+        viewer_editor_get_chrome_layout(editor, &layout) &&
+        layout.timeline.height == 220U &&
+        layout.timeline.y + layout.timeline.height <= layout.status.y &&
+        layout.canvas.y + layout.canvas.height <= layout.timeline.y &&
+        viewer_editor_semantics(editor, snapshot);
+    const ui_semantics_node *toggle = okay ? find_label(snapshot,
+        "Animation timeline") : NULL;
+    okay = okay && toggle != NULL && click_node(editor, toggle,
+        toggle->frame.width / 2U) && !viewer_editor_timeline_visible(editor) &&
+        viewer_editor_get_chrome_layout(editor, &layout) &&
+        layout.timeline.height == 32U;
+    (void)viewer_editor_take_redraw_request(editor);
+    okay = okay && viewer_editor_set_appearance(editor, UI_THEME_LIGHT, true, true) &&
+        viewer_editor_reduced_motion(editor) &&
+        viewer_editor_take_redraw_request(editor) &&
+        viewer_editor_set_timeline_state(editor, true, true, 220U) &&
+        viewer_editor_get_chrome_layout(editor, &layout) &&
+        layout.timeline.height == 220U;
+    free(snapshot);
+    viewer_editor_destroy(editor);
+    return okay;
+}
+
 int main(void)
 {
+    if (!test_timeline_dock_and_reduce_motion()) return 70;
     viewer_editor *editor = viewer_editor_create_styled(
         (base_bytes){source, sizeof(source) - 1U}, UI_THEME_DARK,
         1280U, 800U, true);
