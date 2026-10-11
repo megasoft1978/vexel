@@ -1,7 +1,12 @@
 #include "viewer_timeline.h"
+#include "platform/macos/platform_png.h"
+#include "platform/platform_text_ui.h"
+#include "ui/ui_widgets.h"
+#include "viewer_anim_edit.h"
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define CHECK(expression) do { \

@@ -31,3 +31,25 @@ Object-box gradients and clips update with animated bounds. Filtered/masked
 opacity groups, active path morphing, geometry changes under patterns, and
 group opacity animation still return stable unsupported results when their
 flattened scene data cannot represent the update.
+
+## Source authoring
+
+authoring.c builds byte patches for supported SMIL values, key timing, and
+easing. The patch owns its replacement buffer; its source is borrowed from the
+decoded animation document until the patch has been built. Callers apply the
+single patch with document_edit_replace_source_span, then destroy it.
+
+Only bounded numeric, supported color, and transform animate /
+animateTransform tracks with finite simple timing and no additive,
+accumulated, sync-base, paced, path, or motion semantics are editable. A
+property-value edit rewrites only the animation start tag, preserving all
+unrelated tag bytes and every byte outside that tag. Key sequences are capped
+at 256 values, tags and individual values at 64 KiB, and one patch at 1 MiB.
+Rejected and no-op operations produce no patch. Easing handles are finite and
+in [0,1]; an interval edit preserves the raw text of other spline tuples.
+
+Track creation returns one bounded animate fragment with explicit initial
+and authored values, begin="0s", finite duration, and linear interpolation.
+The editor inserts/removes it with the document edit transaction API. The
+caller supplies the selected property's current typed value as the time-zero
+seed; static field edits never call this module implicitly.

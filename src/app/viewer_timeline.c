@@ -3,6 +3,7 @@
 #include "viewer_timeline.h"
 
 #include "raster/shape_render.h"
+#include "viewer_anim_edit.h"
 #include "viewer_editor.h"
 #include "viewer_chrome.h"
 
@@ -13,7 +14,6 @@
 
 #define VIEWER_TIMELINE_FALLBACK_SECONDS 5.0
 #define VIEWER_TIMELINE_FRAME_INTERVAL (1.0 / 30.0)
-#define VIEWER_TIMELINE_MIN_WIDTH_POINTS 280U
 #define VIEWER_TIMELINE_SOURCE_SCAN_CAP 4096U
 #define VIEWER_TIMELINE_TAG_CAP 32U
 #define VIEWER_TIMELINE_ID_CAP 48U
@@ -546,6 +546,22 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
 {
     if (timeline == NULL || event == NULL || editor == NULL ||
         viewer_timeline_track_count(timeline) == 0U) return false;
+    viewer_timeline_layout layout;
+    if (!viewer_timeline_layout_compute(timeline, width, height, backing_scale,
+            &layout)) return false;
+    if (event->type == PLATFORM_EVENT_POINTER_UP && timeline->dragging_key) {
+        size_t track_index = timeline->dragging_key_track;
+        size_t key_index = timeline->dragging_key_index;
+        timeline->dragging_key = false;
+        uint32_t result = viewer_editor_animation_move_key(editor,
+            &timeline->document->animation, track_index, key_index,
+            timeline->time_seconds);
+        if ((result & VIEWER_EDITOR_MUTATED) != 0U)
+            timeline->edit_mutation_pending = true;
+        return true;
+    }
+    if (viewer_timeline_easing_process_event(timeline, editor, event, &layout))
+        return true;
     if (event->type == PLATFORM_EVENT_KEY_DOWN &&
         !viewer_editor_text_input_active(editor) &&
         (event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL |
@@ -553,9 +569,6 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
         return viewer_timeline_handle_key(timeline, event->key_code,
             event->text, event->text_len, timeline_monotonic_seconds());
     }
-    viewer_timeline_layout layout;
-    if (!viewer_timeline_layout_compute(timeline, width, height, backing_scale,
-            &layout)) return false;
     double x = 0.0, y = 0.0;
     double delta_x = 0.0, delta_y = 0.0;
     viewer_timeline_pointer_kind pointer_kind;
@@ -588,6 +601,14 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
     if (!isfinite(x) || !isfinite(y)) return false;
     return viewer_timeline_pointer_ex(timeline, &layout, pointer_kind, x, y,
         delta_x, delta_y, event->modifiers, timeline_monotonic_seconds(), editor);
+}
+
+bool viewer_timeline_take_editor_mutation(viewer_timeline *timeline)
+{
+    if (timeline == NULL) return false;
+    bool changed = timeline->edit_mutation_pending;
+    timeline->edit_mutation_pending = false;
+    return changed;
 }
 
 const raster_tile *viewer_timeline_prepare_frame(viewer_timeline *timeline)

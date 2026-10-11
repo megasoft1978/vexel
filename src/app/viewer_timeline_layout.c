@@ -187,9 +187,9 @@ static double track_start_time(const svg_anim_track *track)
 
 static bool key_near_pointer(const viewer_timeline *timeline,
     const viewer_timeline_layout *layout, size_t track_index, size_t row,
-    double x, double y, double *out_time)
+    double x, double y, double *out_time, size_t *out_key)
 {
-    if (timeline == NULL || layout == NULL || out_time == NULL ||
+    if (timeline == NULL || layout == NULL || out_time == NULL || out_key == NULL ||
         track_index >= viewer_timeline_track_count(timeline)) return false;
     const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
     if (!track->supported || track->keys == NULL || track->key_count == 0U) return false;
@@ -209,6 +209,7 @@ static bool key_near_pointer(const viewer_timeline *timeline,
             ((key_time - timeline->view_start_seconds) / span) * layout->ruler.width;
         if (fabs(x - key_x) <= (double)radius) {
             *out_time = key_time;
+            *out_key = key;
             return true;
         }
     }
@@ -258,6 +259,32 @@ bool viewer_timeline_pointer_ex(viewer_timeline *timeline,
     if (kind == VIEWER_TIMELINE_POINTER_MOVE && timeline->dragging_scrubber) {
         (void)viewer_timeline_seek(timeline, time_from_x(timeline, layout, x));
         timeline->dragging_scrubber = true;
+        return true;
+    }
+    if (kind == VIEWER_TIMELINE_POINTER_MOVE && timeline->dragging_key) {
+        double next = time_from_x(timeline, layout, x);
+        if (timeline->dragging_key_track < viewer_timeline_track_count(timeline)) {
+            const svg_anim_track *track = &timeline->document->animation.tracks[
+                timeline->dragging_key_track];
+            size_t key = timeline->dragging_key_index;
+            if (track->keys != NULL && key > 0U && key + 1U < track->key_count) {
+                double start = track_start_time(track);
+                double lower = start + track->keys[key - 1U].time *
+                    track->duration_seconds;
+                double upper = start + track->keys[key + 1U].time *
+                    track->duration_seconds;
+                if (isfinite(lower) && isfinite(upper) && lower < upper) {
+                    lower = nextafter(lower, INFINITY);
+                    upper = nextafter(upper, -INFINITY);
+                    if (next < lower) next = lower;
+                    if (next > upper) next = upper;
+                }
+            }
+        }
+        timeline->time_seconds = next;
+        timeline->playing = false;
+        timeline->has_tick_time = false;
+        timeline->preview_failed = false;
         return true;
     }
     if (kind == VIEWER_TIMELINE_POINTER_MOVE && timeline->dragging_resize) {
@@ -353,10 +380,23 @@ bool viewer_timeline_pointer_ex(viewer_timeline *timeline,
             if (!rect_contains(layout->track_rows[row], x, y)) continue;
             size_t index = layout->first_track + row;
             double key_time = 0.0;
+            size_t key_index = 0U;
             bool on_key = rect_contains(layout->time_grid, x, y) &&
-                key_near_pointer(timeline, layout, index, row, x, y, &key_time);
+                key_near_pointer(timeline, layout, index, row, x, y,
+                    &key_time, &key_index);
             if (!select_track(timeline, editor, index)) return false;
-            if (on_key) (void)viewer_timeline_seek(timeline, key_time);
+            timeline->selected_key = on_key ? key_index : 0U;
+            timeline->easing_initialized = false;
+            if (on_key) {
+                (void)viewer_timeline_seek(timeline, key_time);
+                const svg_anim_track *track =
+                    &timeline->document->animation.tracks[index];
+                timeline->dragging_key = track->supported &&
+                    track->calc_mode != SVG_ANIM_CALC_SPLINE &&
+                    key_index > 0U && key_index + 1U < track->key_count;
+                timeline->dragging_key_track = index;
+                timeline->dragging_key_index = key_index;
+            }
             return true;
         }
         return true;

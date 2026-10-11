@@ -158,6 +158,22 @@
 - Update 2026-10-09: WO-M4-06 merge-integration brief 6 removes the blanket `mark_varying_shape_bounds` sampling mask. The three previously failing librsvg fixtures are byte-identical across scratch builds at `0732b8e`, `9bae63e`, and the repaired tree; all 47 comparisons pass unchanged thresholds. The test reference shares the boundary-map sampling decision but still visits every shape and edge. Culled/reference identity passes for the three fixtures, alpha-gradient overpaint, and 120 seeded paint/clip documents. Debug/Release, `shape_test`, focused Python 20/20, and 1M ASan+UBSan fuzz (seed 20261014) pass. Debug/ASan/UBSan/verify CTest are 18/20 due LaunchServices and offscreen Metal; `./dev test-fast` is 202/212 due sandbox benchmark/platform tests. Corpus run/check remains 2 previews / 58 and all hashes unchanged. Four solid paired benchmarks are byte-identical and within noise (+0.72%, +1.42%, -0.46%, -0.13%). Git metadata remains unchanged; post-merge runner guard remains unverified. Evidence and current caveats are in `HANDOFF.md` and `artifacts/WO-M4-06/`.
 - Update 2026-10-10: WO-M4-06 round 7 adds clip-child and parent-chain edges to the conservative device-space boundary map, restores the shortcut-free all-16 reference, and defines center-evaluated gradient paint with per-sample shape∧clip coverage. The half-pixel target pixel now matches librsvg `(124,0,131,128)`; 160 seeded paint/clip documents match the reference byte-for-byte. Of 48 librsvg fixtures, 47 pass unchanged thresholds; `clip-union` remains over the raw RGB limit (4 vs 1 at pixel (8,4)), blocking acceptance. Debug/Release, shape_test, million-case seed-20261015 ASan+UBSan fuzz, and corpus run/check pass; focused Python is 20/21. Debug CTest and `./dev asan`, `./dev ubsan`, `./dev verify` each remain 18/20 due the two sandbox Metal/LaunchServices checks. Details and evidence are in `HANDOFF.md`, `docs/PERF.md`, and `artifacts/WO-M4-06/`.
 
+- Update 2026-10-11: WO-MOTION-03 and WO-MOTION-04 are implemented in the
+  uncommitted `w14-keyframes` worktree. Source-preserving keyframe and track
+  authoring uses document edit undo/redo; the timeline has key markers, a
+  selected-interval easing graph, bounded numeric controls, presets, and
+  accessibility values. `./dev build`, `animation_authoring_test`, and
+  `viewer_timeline_test` pass; focused CTest is 3/3, and all three headless
+  easing PNGs compare byte for byte with the new goldens. Ledger validation
+  passes with 412 entries; `git diff --check` passes. `./dev t --all` is
+  incomplete: 69/69 Python tests
+  and 56/58 CTests pass; `index-replay` cannot create an offscreen Metal queue,
+  and `native-viewer-smoke` failed without a diagnostic in the runner summary.
+  The all-tests command invoked that registered native event-injection test;
+  no separate manual window review or screenshot was done. See
+  `docs/lanes/w14-keyframes.md` and `artifacts/WO-MOTION-03/` / `artifacts/WO-MOTION-04/`.
+  Maintainer real-window review remains outstanding; no commit was made.
+
 - Update 2026-10-10: uncommitted W12 polish2 candidate on `lane/w12-polish2`
   refreshes the native editor chrome, pixel grid, and status bar. Live light/dark
   window captures and interaction checks are recorded in

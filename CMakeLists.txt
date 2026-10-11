@@ -1265,3 +1265,48 @@ if(BUILD_TESTING)
         --binary $<TARGET_FILE:editor_snap_overlay_render>)
 endif()
 # end lane: w14-select
+
+# lane: w14-keyframes
+target_sources(svgworkbench PRIVATE src/app/viewer_timeline_accessibility.c)
+target_sources(viewer_timeline_test PRIVATE src/app/viewer_timeline_accessibility.c)
+target_sources(viewer_timeline_render PRIVATE src/app/viewer_timeline_accessibility.c)
+target_sources(vexel_shape PRIVATE src/svg/animation/authoring.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_anim_edit.c
+    src/app/viewer_timeline_easing.c)
+
+add_executable(animation_authoring_test tests/anim/animation_authoring_test.c)
+target_include_directories(animation_authoring_test PRIVATE src src/document src/app)
+target_link_libraries(animation_authoring_test PRIVATE vexel_shape vexel_document vexel_editor_ui)
+set_target_properties(animation_authoring_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(animation_authoring_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(animation_authoring_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(animation_authoring_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME animation-authoring COMMAND animation_authoring_test)
+endif()
+add_executable(viewer_timeline_keyframe_test
+    tests/app/viewer_timeline_keyframe_test.c
+    src/app/viewer_timeline.c
+    src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_ui.c
+    src/app/viewer_timeline_accessibility.c)
+target_include_directories(viewer_timeline_keyframe_test PRIVATE src src/app)
+target_link_libraries(viewer_timeline_keyframe_test PRIVATE
+    vexel_shape vexel_editor_ui vexel_platform_png)
+set_target_properties(viewer_timeline_keyframe_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_timeline_keyframe_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_timeline_keyframe_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_timeline_keyframe_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-timeline-keyframes COMMAND viewer_timeline_keyframe_test)
+endif()
+# end lane: w14-keyframes
