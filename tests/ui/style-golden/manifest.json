@@ -36,6 +36,15 @@
       "viewport_width": 450,
       "width": 1280
     },
+    "editor-dark-1280x800-node-edit.png": {
+      "height": 800,
+      "renderer": "deterministic scalar text and cached path icons",
+      "sha256": "0596c839ddad70fe69b5e47f76ddaa570a84614574923646f498fe17a95c480a",
+      "state": "node-edit",
+      "theme": "dark",
+      "viewport_width": 1280,
+      "width": 1280
+    },
     "editor-dark-1280x800-selection.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
@@ -79,6 +88,15 @@
       "state": "narrow",
       "theme": "dark",
       "viewport_width": 900,
+      "width": 2560
+    },
+    "editor-dark-2560x1600-node-edit.png": {
+      "height": 1600,
+      "renderer": "deterministic scalar text and cached path icons",
+      "sha256": "81a15c3a317e459085da17ecc94ce204b7d7aa43406cb45e7a926bbb732ca4b5",
+      "state": "node-edit",
+      "theme": "dark",
+      "viewport_width": 2560,
       "width": 2560
     },
     "editor-dark-2560x1600-selection.png": {
@@ -126,6 +144,15 @@
       "viewport_width": 450,
       "width": 1280
     },
+    "editor-light-1280x800-node-edit.png": {
+      "height": 800,
+      "renderer": "deterministic scalar text and cached path icons",
+      "sha256": "2a55a74e514f86a8995418390cae398f3ab3c4eac1e8b4a7abad815df66a6451",
+      "state": "node-edit",
+      "theme": "light",
+      "viewport_width": 1280,
+      "width": 1280
+    },
     "editor-light-1280x800-selection.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
@@ -169,6 +196,15 @@
       "state": "narrow",
       "theme": "light",
       "viewport_width": 900,
+      "width": 2560
+    },
+    "editor-light-2560x1600-node-edit.png": {
+      "height": 1600,
+      "renderer": "deterministic scalar text and cached path icons",
+      "sha256": "c1d267b180270328ab09c3e87de9022cdb1337dd49b956381f50cde30ec55c17",
+      "state": "node-edit",
+      "theme": "light",
+      "viewport_width": 2560,
       "width": 2560
     },
     "editor-light-2560x1600-selection.png": {

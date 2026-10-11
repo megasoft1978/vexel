@@ -205,6 +205,21 @@ bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
 
 static void process_editor_result(viewer_app *app, uint32_t result)
 {
+    if ((result & VIEWER_EDITOR_DELETE_PATH_NODE) != 0U) {
+        result &= ~(uint32_t)VIEWER_EDITOR_DELETE_PATH_NODE;
+        result |= app->document_visible ?
+            viewer_editor_delete_selected_path_node(app->editor,
+                &app->document.shape) : VIEWER_EDITOR_HANDLED;
+    }
+    uint32_t node_options = result & ((uint32_t)VIEWER_EDITOR_NODE_CORNER |
+        (uint32_t)VIEWER_EDITOR_NODE_SMOOTH);
+    if (node_options != 0U) {
+        result &= ~((uint32_t)VIEWER_EDITOR_NODE_CORNER |
+            (uint32_t)VIEWER_EDITOR_NODE_SMOOTH);
+        result |= viewer_editor_convert_selected_path_node(app->editor,
+            app->document_visible ? &app->document.shape : NULL,
+            (node_options & VIEWER_EDITOR_NODE_SMOOTH) != 0U);
+    }
     if ((result & VIEWER_EDITOR_SELECT_ALL) != 0U && app->document_visible)
         (void)viewer_editor_select_all(app->editor, &app->document.shape);
     bool document_mutated = (result & VIEWER_EDITOR_MUTATED) != 0U;
@@ -280,6 +295,16 @@ static void apply_key(viewer_app *app, const platform_event *event)
             &app->document.shape, alignment);
         process_editor_result(app, result);
         return;
+    }
+    if (app->document_visible && app->editor != NULL &&
+        !viewer_editor_text_input_active(app->editor) &&
+        viewer_editor_node_edit_active(app->editor)) {
+        uint32_t node_result = viewer_editor_node_edit_key(app->editor,
+            &app->document.shape, event->key_code, event->modifiers);
+        if (node_result != 0U) {
+            process_editor_result(app, node_result);
+            return;
+        }
     }
     if (event->key_code == 53U && app->navigation_ready &&
         app->navigation.dragging) {

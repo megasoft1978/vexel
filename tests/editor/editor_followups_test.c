@@ -29,6 +29,24 @@ static const uint8_t arc_source[] =
     "viewBox='0 0 64 64'><path id='curve' d='M 8 40 A 20 20 0 0 1 38 40' "
     "fill='none' stroke='#172033' stroke-width='1'/></svg>";
 
+static const uint8_t unsupported_path_source[] =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' "
+    "viewBox='0 0 64 64'><path id='curve' d='M 8 40 R 12 30' "
+    "fill='none' stroke='#172033'/></svg>";
+
+static const uint8_t node_command_source[] =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' "
+    "viewBox='0 0 64 64'><path id='curve' "
+    "d='M 4 8 L 10 8 C 12 6 14 10 16 8 S 22 6 24 8 "
+    "Q 26 6 28 8 T 32 8 A 4 4 0 0 1 40 8' "
+    "fill='none' stroke='#172033'/></svg>";
+
+static const uint8_t smooth_node_source[] =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' "
+    "viewBox='0 0 64 64'><path id='curve' "
+    "d='M 4 10 C 8 10 12 10 16 10 C 18 15 20 15 22 12' "
+    "fill='none' stroke='#172033'/></svg>";
+
 static const uint8_t multi_source[] =
     "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' "
     "viewBox='0 0 64 64'><rect id='first' x='8' y='8' width='16' height='12' "
@@ -198,6 +216,8 @@ static bool curve_split_round_trip(const uint8_t *source, size_t source_length,
     CHECK(materialize(editor, changed, sizeof(changed), &changed_length));
     CHECK(decode(changed, changed_length, &after));
     CHECK(document_edges_near(&before, &after, 0.5));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
     viewer_editor_canvas_overlay_state overlay = {0};
     CHECK(editor_canvas_path_nodes_overlay(editor, &after, &overlay));
     CHECK(overlay.path_point_count == 3U);
@@ -512,6 +532,238 @@ done:
     return result == 0;
 }
 
+static bool test_node_mode_requires_supported_path_and_protects_move_to(void)
+{
+    viewer_editor *editor = NULL;
+    svg_shape_document document = {0};
+    int result = 1;
+    editor = viewer_editor_create_styled((base_bytes){multi_source,
+        sizeof(multi_source) - 1U}, UI_THEME_DARK, 640U, 640U, false);
+    CHECK(editor != NULL);
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(!editor->node_edit_active);
+    viewer_editor_destroy(editor);
+    editor = viewer_editor_create_styled((base_bytes){unsupported_path_source,
+        sizeof(unsupported_path_source) - 1U}, UI_THEME_DARK, 640U, 640U, false);
+    size_t path_offset = (size_t)(strstr((const char *)unsupported_path_source,
+        "<path") - (const char *)unsupported_path_source);
+    CHECK(editor != NULL && viewer_editor_select_at_source_offset(editor,
+        path_offset));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(!editor->node_edit_active);
+    viewer_editor_destroy(editor);
+    editor = viewer_editor_create_styled((base_bytes){cubic_source,
+        sizeof(cubic_source) - 1U}, UI_THEME_DARK, 640U, 640U, false);
+    CHECK(editor != NULL && decode(cubic_source, sizeof(cubic_source) - 1U,
+        &document));
+    path_offset = (size_t)(strstr((const char *)cubic_source, "<path") -
+        (const char *)cubic_source);
+    CHECK(viewer_editor_select_at_source_offset(editor, path_offset));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->node_edit_active);
+    CHECK((viewer_editor_key(editor, 53U, 0U, NULL, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(!editor->node_edit_active);
+    CHECK((viewer_editor_key(editor, 36U, 0U, NULL, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->node_edit_active);
+    CHECK(editor_canvas_path_node_begin(editor, &document,
+        (geom_point){8.0, 40.0}, 1.0));
+    uint32_t delete_result = viewer_editor_key(editor, 51U, 0U, NULL, 0U);
+    CHECK((delete_result & VIEWER_EDITOR_DELETE_PATH_NODE) == 0U);
+    CHECK((delete_result & VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK((editor_canvas_path_node_delete(editor, &document) &
+        VIEWER_EDITOR_MUTATED) == 0U);
+    result = 0;
+done:
+    svg_shape_document_destroy(&document);
+    viewer_editor_destroy(editor);
+    return result == 0;
+}
+
+static bool test_node_traversal_handles_nudges_and_undo(void)
+{
+    viewer_editor *editor = NULL;
+    svg_shape_document document = {0}, changed_document = {0};
+    uint8_t changed[8192], restored[8192], redone[8192];
+    size_t changed_length = 0U, restored_length = 0U, redone_length = 0U;
+    int result = 1;
+    editor = viewer_editor_create_styled((base_bytes){node_command_source,
+        sizeof(node_command_source) - 1U}, UI_THEME_LIGHT, 640U, 640U, false);
+    CHECK(editor != NULL && decode(node_command_source,
+        sizeof(node_command_source) - 1U, &document));
+    size_t path_offset = (size_t)(strstr((const char *)node_command_source,
+        "<path") - (const char *)node_command_source);
+    CHECK(viewer_editor_select_at_source_offset(editor, path_offset));
+    CHECK((viewer_editor_key(editor, 36U, 0U, NULL, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(viewer_editor_node_edit_active(editor));
+    viewer_editor_canvas_overlay_state overlay = {0};
+    CHECK(viewer_editor_get_canvas_overlay(editor, &document, &overlay));
+    CHECK(overlay.visible && overlay.path_nodes_only &&
+        overlay.path_point_count == 7U);
+    CHECK((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->path_selected_node_segment == 0U);
+    CHECK(editor->path_node_is_initial);
+    CHECK((viewer_editor_key(editor, 51U, 0U, NULL, 0U) &
+        VIEWER_EDITOR_DELETE_PATH_NODE) == 0U);
+    CHECK((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->path_selected_node_segment == 1U);
+    CHECK(!editor->path_node_is_initial);
+    CHECK(viewer_editor_get_canvas_overlay(editor, &document, &overlay));
+    CHECK(overlay.path_point_states[1] == 2U &&
+        overlay.path_has_handles[1] && fabs(overlay.path_handles[1].x - 12.0) < 1.0e-9 &&
+        fabs(overlay.path_handles[1].y - 6.0) < 1.0e-9);
+    CHECK((viewer_editor_node_edit_key(editor, &document, 48U,
+            PLATFORM_MODIFIER_SHIFT) & VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->path_selected_node_segment == 0U);
+    CHECK((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->path_selected_node_segment == 1U);
+    for (size_t index = 2U; index < 7U; ++index)
+        CHECK((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+            VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->path_selected_node_segment == 6U);
+    CHECK((viewer_editor_node_edit_key(editor, &document, 124U,
+            PLATFORM_MODIFIER_SHIFT) & VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, changed, sizeof(changed), &changed_length));
+    CHECK(decode(changed, changed_length, &changed_document));
+    CHECK(source_contains(editor, "A 4 4 0 0 1 50 8"));
+    CHECK((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, restored, sizeof(restored), &restored_length));
+    CHECK(restored_length == sizeof(node_command_source) - 1U &&
+        memcmp(restored, node_command_source, restored_length) == 0);
+    CHECK((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND |
+            PLATFORM_MODIFIER_SHIFT, "z", 1U) & VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, redone, sizeof(redone), &redone_length));
+    CHECK(redone_length == changed_length &&
+        memcmp(redone, changed, redone_length) == 0);
+    CHECK((viewer_editor_node_edit_key(editor, &document, 48U, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(!viewer_editor_node_edit_active(editor));
+    CHECK(editor->focus_id != EDITOR_NODE_CANVAS);
+    result = 0;
+done:
+    svg_shape_document_destroy(&changed_document);
+    svg_shape_document_destroy(&document);
+    viewer_editor_destroy(editor);
+    return result == 0;
+}
+
+static bool test_node_curve_handles_hover_cancel_and_conversion(void)
+{
+    viewer_editor *editor = NULL;
+    svg_shape_document document = {0}, converted = {0}, smoothed = {0};
+    uint8_t original[8192], changed[8192], undone[8192];
+    size_t original_length = 0U, changed_length = 0U, undone_length = 0U;
+    int result = 1;
+    editor = viewer_editor_create_styled((base_bytes){node_command_source,
+        sizeof(node_command_source) - 1U}, UI_THEME_DARK, 640U, 640U, false);
+    CHECK(editor != NULL && decode(node_command_source,
+        sizeof(node_command_source) - 1U, &document));
+    size_t path_offset = (size_t)(strstr((const char *)node_command_source,
+        "<path") - (const char *)node_command_source);
+    CHECK(viewer_editor_select_at_source_offset(editor, path_offset));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor_canvas_path_node_select_index(editor, &document, 2U));
+    CHECK(editor->path_node_corner_available && editor->path_node_smooth_available);
+    CHECK(editor_canvas_path_node_begin(editor, &document,
+        (geom_point){14.0, 10.0}, 0.5));
+    CHECK(editor->path_node_handle_kind == 2U &&
+        editor->path_selected_node_segment == 2U);
+    CHECK((editor_canvas_path_node_pointer_move(editor, &document,
+            (geom_point){15.0, 11.0}) & VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK((viewer_editor_key(editor, 53U, 0U, NULL, 0U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(materialize(editor, original, sizeof(original), &original_length));
+    CHECK(original_length == sizeof(node_command_source) - 1U &&
+        memcmp(original, node_command_source, original_length) == 0);
+    CHECK(editor_canvas_path_node_begin(editor, &document,
+        (geom_point){18.0, 6.0}, 0.5));
+    CHECK(editor->path_node_handle_kind == 1U && editor->path_node_virtual_handle);
+    CHECK((editor_canvas_path_node_pointer_move(editor, &document,
+            (geom_point){19.0, 7.0}) & VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK((editor_canvas_path_node_pointer_up(editor, &document) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(source_contains(editor, "C 19 7 22 6 24 8"));
+    CHECK((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, original, sizeof(original), &original_length));
+    CHECK(original_length == sizeof(node_command_source) - 1U &&
+        memcmp(original, node_command_source, original_length) == 0);
+    CHECK(editor_canvas_path_node_begin(editor, &document,
+        (geom_point){30.0, 10.0}, 0.5));
+    CHECK((editor->path_node_handle_kind == 1U ||
+        editor->path_node_handle_kind == 2U) && editor->path_node_virtual_handle);
+    CHECK((editor_canvas_path_node_pointer_move(editor, &document,
+            (geom_point){31.0, 11.0}) & VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK((editor_canvas_path_node_pointer_up(editor, &document) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(source_contains(editor, "Q 31 11 32 8"));
+    CHECK((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, original, sizeof(original), &original_length));
+    CHECK(original_length == sizeof(node_command_source) - 1U &&
+        memcmp(original, node_command_source, original_length) == 0);
+    CHECK(editor_canvas_path_node_select_index(editor, &document, 2U));
+    CHECK((viewer_editor_node_edit_hover(editor, &document,
+            (geom_point){7.0, 8.0}, 0.5) & VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor->path_hovered_segment_valid);
+    CHECK((viewer_editor_node_edit_hover(editor, &document,
+            (geom_point){10.0, 8.0}, 0.5) & VIEWER_EDITOR_HANDLED) != 0U);
+    viewer_editor_canvas_overlay_state overlay = {0};
+    CHECK(viewer_editor_get_canvas_overlay(editor, &document, &overlay));
+    CHECK(overlay.path_point_states[1] == 1U);
+    uint32_t corner_result = viewer_editor_convert_selected_path_node(editor,
+        &document, false);
+    CHECK((corner_result & VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, changed, sizeof(changed), &changed_length));
+    CHECK(decode(changed, changed_length, &converted));
+    CHECK(document_edges_near(&document, &converted, 0.01));
+    CHECK(source_contains(editor, "C 18 6 22 6 24 8"));
+    CHECK((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(materialize(editor, undone, sizeof(undone), &undone_length));
+    CHECK(undone_length == sizeof(node_command_source) - 1U &&
+        memcmp(undone, node_command_source, undone_length) == 0);
+    viewer_editor_destroy(editor);
+    editor = NULL;
+    svg_shape_document_destroy(&converted);
+    svg_shape_document_destroy(&document);
+    memset(&document, 0, sizeof(document));
+    editor = viewer_editor_create_styled((base_bytes){smooth_node_source,
+        sizeof(smooth_node_source) - 1U}, UI_THEME_LIGHT, 640U, 640U, false);
+    CHECK(editor != NULL && decode(smooth_node_source,
+        sizeof(smooth_node_source) - 1U, &document));
+    path_offset = (size_t)(strstr((const char *)smooth_node_source,
+        "<path") - (const char *)smooth_node_source);
+    CHECK(viewer_editor_select_at_source_offset(editor, path_offset));
+    CHECK((viewer_editor_key(editor, 0U, 0U, "n", 1U) &
+        VIEWER_EDITOR_HANDLED) != 0U);
+    CHECK(editor_canvas_path_node_select_index(editor, &document, 1U));
+    CHECK(editor->path_node_smooth_available);
+    CHECK((viewer_editor_convert_selected_path_node(editor, &document, true) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(source_contains(editor, "C 21.3851648 10"));
+    CHECK(materialize(editor, changed, sizeof(changed), &changed_length));
+    CHECK(decode(changed, changed_length, &smoothed));
+    CHECK(smoothed.path_number_count == document.path_number_count);
+    result = 0;
+done:
+    svg_shape_document_destroy(&smoothed);
+    svg_shape_document_destroy(&converted);
+    svg_shape_document_destroy(&document);
+    viewer_editor_destroy(editor);
+    return result == 0;
+}
+
 int main(void)
 {
     if (!test_curve_node_round_trip()) return 1;
@@ -523,6 +775,9 @@ int main(void)
     if (!test_shift_nudge_shortcut()) return 1;
     if (!test_layer_visibility_is_preview_only()) return 1;
     if (!test_outline_handles_survive_save()) return 1;
+    if (!test_node_mode_requires_supported_path_and_protects_move_to()) return 1;
+    if (!test_node_traversal_handles_nudges_and_undo()) return 1;
+    if (!test_node_curve_handles_hover_cancel_and_conversion()) return 1;
     (void)puts("editor follow-ups: curve nodes, arrangement, grouping, nudging, "
         "visibility, and save stability passed");
     return 0;

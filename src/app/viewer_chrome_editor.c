@@ -33,8 +33,10 @@ static bool editor_draw_tool_selected(viewer_editor *editor,
 
 static const char *editor_tool_hint(viewer_editor *editor)
 {
+    if (editor->node_edit_active && editor->path_hovered_segment_valid)
+        return "Double-click this segment to add an anchor";
     if (editor->node_edit_active)
-        return "Node edit tool · adjust path anchors · N";
+        return "Node edit · Tab anchors · arrows nudge · Esc exits";
     switch (editor->draw_tool) {
         case VIEWER_EDITOR_TOOL_RECT: return "Rectangle tool · drag to draw · R";
         case VIEWER_EDITOR_TOOL_ELLIPSE: return "Ellipse tool · drag to draw · O";
@@ -59,6 +61,9 @@ static uint32_t editor_toolbar_action_state(const viewer_editor *editor,
     if ((action == EDITOR_BUTTON_UNDO && cursor == 0U) ||
         (action == EDITOR_BUTTON_REDO && cursor >= history))
         return UI_STATE_DISABLED;
+    if (action == EDITOR_BUTTON_DELETE && editor->node_edit_active &&
+        (editor->path_selected_node_segment == SIZE_MAX ||
+         editor->path_node_is_initial)) return UI_STATE_DISABLED;
     bool selected = editor->canvas_selection_count > 0U ||
         (editor->selection_active && editor->selected_index > 0U);
     if ((action == EDITOR_BUTTON_DUPLICATE || action == EDITOR_BUTTON_DELETE) &&
@@ -190,13 +195,25 @@ void editor_build_tree_modern(viewer_editor *editor)
             editor->want_inspector ? UI_STATE_CHECKED : 0U);
     if (!okay) return;
     okay = editor_add_node(editor, EDITOR_NODE_OPTIONS, UI_ROOT_ID,
-            UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_OPTIONS_POINTS, 8U, 8U,
-            tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
-        editor_add_widget_node(editor, EDITOR_NODE_OPTIONS + 100U,
-            EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
-            UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, editor_tool_hint(editor),
-            strlen(editor_tool_hint(editor)), NULL, 0U, 0U, 0U) &&
-        editor_add_node(editor, EDITOR_NODE_WORKSPACE, UI_ROOT_ID,
+        UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_OPTIONS_POINTS, 8U, 8U,
+        tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
+    if (!okay) return;
+    const char *hint = editor_tool_hint(editor);
+    okay = editor_add_widget_node(editor, EDITOR_NODE_OPTIONS + 100U,
+        EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
+        UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, hint,
+        strlen(hint), NULL, 0U, 0U, 0U);
+    if (okay && editor->node_edit_active && editor->path_node_corner_available)
+        okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_CORNER,
+            EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
+            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+            "Corner", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_CORNER);
+    if (okay && editor->node_edit_active && editor->path_node_smooth_available)
+        okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_SMOOTH,
+            EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
+            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+            "Smooth", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_SMOOTH);
+    okay = okay && editor_add_node(editor, EDITOR_NODE_WORKSPACE, UI_ROOT_ID,
             UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_TOOL_RAIL, EDITOR_NODE_WORKSPACE,

@@ -47,6 +47,8 @@ enum {
     EDITOR_BUTTON_SAVE_AS,
     EDITOR_BUTTON_ADD_ATTRIBUTE,
     EDITOR_BUTTON_REMOVE_ATTRIBUTE,
+    EDITOR_BUTTON_NODE_CORNER = 130U,
+    EDITOR_BUTTON_NODE_SMOOTH,
     EDITOR_BUTTON_TOOL_SELECT = 300U,
     EDITOR_BUTTON_TOOL_PAN,
     EDITOR_BUTTON_TOOL_ZOOM,
@@ -108,6 +110,36 @@ typedef struct editor_path_anchor {
     bool has_handle;
 } editor_path_anchor;
 
+typedef struct editor_path_node_ref {
+    size_t segment_index;
+    size_t number_x;
+    size_t number_y;
+    size_t out_segment;
+    size_t out_number_x;
+    size_t out_number_y;
+    size_t in_segment;
+    size_t in_number_x;
+    size_t in_number_y;
+    double x;
+    double y;
+    double origin_x;
+    double origin_y;
+    geom_point out_control;
+    geom_point in_control;
+    double out_origin_x;
+    double out_origin_y;
+    double in_origin_x;
+    double in_origin_y;
+    bool has_x;
+    bool has_y;
+    bool has_out;
+    bool has_in;
+    bool relative;
+    bool out_virtual;
+    bool in_virtual;
+    char command;
+} editor_path_node_ref;
+
 struct viewer_editor {
     document_edit *edit;
     document_handle selected;
@@ -166,7 +198,10 @@ struct viewer_editor {
     size_t path_node_number_y;
     size_t path_selected_node_segment;
     size_t path_node_anchor_segment;
+    size_t path_hovered_node_segment;
+    size_t path_hovered_segment;
     uint8_t path_node_handle_kind;
+    uint8_t path_hovered_handle_kind;
     double path_node_origin_x;
     double path_node_origin_y;
     double path_node_current_x;
@@ -174,6 +209,11 @@ struct viewer_editor {
     bool path_node_has_x;
     bool path_node_has_y;
     bool path_node_relative;
+    bool path_node_virtual_handle;
+    bool path_node_is_initial;
+    bool path_hovered_segment_valid;
+    bool path_node_corner_available;
+    bool path_node_smooth_available;
     bool text_draft_active;
     double text_draft_x;
     double text_draft_y;
@@ -318,6 +358,21 @@ uint32_t editor_canvas_path_finish(viewer_editor *editor, bool closed);
 void editor_canvas_path_cancel(viewer_editor *editor);
 bool editor_canvas_path_node_begin(viewer_editor *editor,
     const svg_shape_document *document, geom_point user, double tolerance);
+bool editor_canvas_path_node_collect(viewer_editor *editor,
+    const svg_shape_document *document,
+    editor_path_node_ref out_nodes[VIEWER_EDITOR_PATH_POINT_CAP],
+    size_t *out_count);
+bool editor_canvas_path_node_select_index(viewer_editor *editor,
+    const svg_shape_document *document, size_t node_index);
+uint32_t editor_canvas_path_node_hover(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user, double tolerance);
+uint32_t editor_canvas_path_node_key(viewer_editor *editor,
+    const svg_shape_document *document, uint16_t key_code, uint32_t modifiers);
+uint32_t editor_canvas_path_node_nudge(viewer_editor *editor,
+    const svg_shape_document *document, double dx, double dy);
+uint32_t editor_canvas_path_node_convert(viewer_editor *editor,
+    const svg_shape_document *document, bool smooth);
+bool editor_canvas_path_node_mode_enter(viewer_editor *editor);
 uint32_t editor_canvas_path_node_pointer_move(viewer_editor *editor,
     const svg_shape_document *document, geom_point user);
 uint32_t editor_canvas_path_node_pointer_up(viewer_editor *editor,

@@ -189,11 +189,22 @@ void editor_cancel_field(viewer_editor *editor)
 uint32_t editor_history(viewer_editor *editor, bool redo)
 {
     size_t old_offset = editor->selected_offset;
+    size_t node_anchor = editor->path_node_anchor_segment;
+    bool restore_node_anchor = editor->node_edit_active;
     char old_id[EDITOR_NAME_CAP];
     editor_set_text(old_id, sizeof(old_id), editor->selected_has_id ? editor->selected_id : "");
     document_edit_error result = redo ? document_edit_redo(editor->edit) :
         document_edit_undo(editor->edit);
-    return editor_apply_result(editor, result, old_offset, old_id, (document_handle){0});
+    uint32_t applied = editor_apply_result(editor, result, old_offset, old_id,
+        (document_handle){0});
+    base_bytes tag = {0};
+    if (result == DOCUMENT_EDIT_OK && restore_node_anchor &&
+        document_edit_tag_name(editor->edit, editor->selected, &tag) &&
+        tag.len == 4U && memcmp(tag.ptr, "path", 4U) == 0) {
+        editor->path_selected_node_segment = node_anchor;
+        editor->path_node_anchor_segment = node_anchor;
+    }
+    return applied;
 }
 
 static uint32_t editor_key_field(viewer_editor *editor, uint16_t key_code,
@@ -295,6 +306,14 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     if (editor_canvas_path_active(editor) && (key_code == 36U || key_code == 76U))
         return editor_canvas_path_finish(editor,
             editor->draw_tool == VIEWER_EDITOR_TOOL_POLYGON || editor->path_close_preview);
+    if (key_code == 36U || key_code == 76U) {
+        base_bytes selected_tag = {0};
+        if (document_edit_tag_name(editor->edit, editor->selected, &selected_tag) &&
+            selected_tag.len == 4U && memcmp(selected_tag.ptr, "path", 4U) == 0) {
+            (void)editor_canvas_path_node_mode_enter(editor);
+            return VIEWER_EDITOR_HANDLED;
+        }
+    }
     bool command = (modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
     bool shift = (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U;
     bool option = (modifiers & PLATFORM_MODIFIER_OPTION) != 0U;
@@ -381,10 +400,7 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return VIEWER_EDITOR_HANDLED;
     }
     if (text_len > 0U && (text[0] == 'n' || text[0] == 'N')) {
-        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
-        editor->node_edit_active = true;
-        editor->tree_ready = false;
-        editor->redraw_requested = true;
+        (void)editor_canvas_path_node_mode_enter(editor);
         return VIEWER_EDITOR_HANDLED;
     }
     if (text_len > 0U && (text[0] == 't' || text[0] == 'T')) {
@@ -408,6 +424,15 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return VIEWER_EDITOR_HANDLED;
     }
     if (key_code == 53U) {
+        if (editor->node_edit_active) {
+            editor->node_edit_active = false;
+            editor->path_hovered_node_segment = SIZE_MAX;
+            editor->path_hovered_segment_valid = false;
+            editor->tree_ready = false;
+            editor->redraw_requested = true;
+            editor_status_ok(editor, "Node editing ended");
+            return VIEWER_EDITOR_HANDLED;
+        }
         if (editor->new_name_length > 0U || editor->new_value_length > 0U) {
             editor->new_name[0] = editor->new_value[0] = '\0';
             editor->new_name_length = editor->new_value_length = 0U;
@@ -425,12 +450,17 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     if (key_code == 125U) { (void)editor_select_delta(editor, 1); return VIEWER_EDITOR_HANDLED; }
     if (key_code == 123U) { (void)editor_select_parent(editor); return VIEWER_EDITOR_HANDLED; }
     if (key_code == 124U) { (void)editor_select_child(editor); return VIEWER_EDITOR_HANDLED; }
-    if ((key_code == 51U || key_code == 117U) &&
-        editor->draw_tool == VIEWER_EDITOR_TOOL_PEN &&
-        editor->path_selected_node_segment != SIZE_MAX)
-        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_DELETE_PATH_NODE;
-    if (key_code == 51U || key_code == 117U)
+    if (key_code == 51U || key_code == 117U) {
+        if (editor->node_edit_active) {
+            if (editor->path_selected_node_segment == SIZE_MAX ||
+                editor->path_node_is_initial) {
+                editor_status_ok(editor, "The initial move-to anchor is protected");
+                return VIEWER_EDITOR_HANDLED;
+            }
+            return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_DELETE_PATH_NODE;
+        }
         return editor_apply_button(editor, EDITOR_BUTTON_DELETE);
+    }
     if (text_len > 0U && text[0] == '[') {
         return editor_reorder(editor, false) ?
             VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED : VIEWER_EDITOR_HANDLED;

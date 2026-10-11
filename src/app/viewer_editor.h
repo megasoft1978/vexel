@@ -51,6 +51,7 @@ typedef struct viewer_editor_canvas_overlay_state {
     geom_point path_points[VIEWER_EDITOR_PATH_POINT_CAP];
     geom_point path_handles[VIEWER_EDITOR_PATH_POINT_CAP];
     geom_point path_in_handles[VIEWER_EDITOR_PATH_POINT_CAP];
+    uint8_t path_point_states[VIEWER_EDITOR_PATH_POINT_CAP];
     bool path_has_handles[VIEWER_EDITOR_PATH_POINT_CAP];
     bool path_has_in_handles[VIEWER_EDITOR_PATH_POINT_CAP];
     bool path_closed_preview;
@@ -77,7 +78,9 @@ enum {
     VIEWER_EDITOR_PASTE_IN_PLACE = 1U << 12U,
     VIEWER_EDITOR_EXPORT_PNG = 1U << 13U,
     VIEWER_EDITOR_COPY_PNG = 1U << 14U,
-    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U
+    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U,
+    VIEWER_EDITOR_NODE_CORNER = 1U << 16U,
+    VIEWER_EDITOR_NODE_SMOOTH = 1U << 17U
 };
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
@@ -129,6 +132,13 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
 bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool);
 ui_icon_kind viewer_editor_get_tool(const viewer_editor *editor);
 bool viewer_editor_text_input_active(const viewer_editor *editor);
+bool viewer_editor_node_edit_active(const viewer_editor *editor);
+uint32_t viewer_editor_node_edit_key(viewer_editor *editor,
+    const svg_shape_document *document, uint16_t key_code, uint32_t modifiers);
+uint32_t viewer_editor_node_edit_hover(viewer_editor *editor,
+    const svg_shape_document *document, geom_point user, double tolerance);
+uint32_t viewer_editor_convert_selected_path_node(viewer_editor *editor,
+    const svg_shape_document *document, bool smooth);
 bool viewer_editor_set_draw_tool(viewer_editor *editor,
                                  viewer_editor_draw_tool tool);
 viewer_editor_draw_tool viewer_editor_get_draw_tool(const viewer_editor *editor);

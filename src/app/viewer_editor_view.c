@@ -404,6 +404,19 @@ void viewer_editor_paint_scalar(viewer_editor *editor, uint8_t *rgba,
 
 static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
 {
+    if (action == EDITOR_BUTTON_NODE_CORNER)
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_NODE_CORNER;
+    if (action == EDITOR_BUTTON_NODE_SMOOTH)
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_NODE_SMOOTH;
+    if (action == EDITOR_BUTTON_DELETE && editor->node_edit_active) {
+        if (editor->path_selected_node_segment == SIZE_MAX ||
+            editor->path_node_is_initial) {
+            editor_status_ok(editor,
+                "The initial move-to anchor is protected");
+            return VIEWER_EDITOR_HANDLED;
+        }
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_DELETE_PATH_NODE;
+    }
     if (action == EDITOR_BUTTON_TOOL_SELECT) {
         (void)viewer_editor_set_tool(editor, UI_ICON_SELECT);
         return VIEWER_EDITOR_HANDLED;
@@ -433,10 +446,7 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
         return VIEWER_EDITOR_HANDLED;
     }
     if (action == EDITOR_BUTTON_TOOL_NODE) {
-        (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_PEN);
-        editor->node_edit_active = true;
-        editor->tree_ready = false;
-        editor->redraw_requested = true;
+        (void)editor_canvas_path_node_mode_enter(editor);
         return VIEWER_EDITOR_HANDLED;
     }
     if (action == EDITOR_BUTTON_TOOL_POLYGON) {
