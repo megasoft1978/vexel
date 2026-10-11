@@ -1,5 +1,11 @@
 # Project state
 
+- Update 2026-10-11: `WO-CI-NIGHTLY-01` is frozen READY at base `c43fa82`.
+  It is parallel-safe and limited to making the macOS nightly sanitizer job
+  provision librsvg and Debug subprocess binaries and use CI's 500 ms owner
+  step limit. The four golden mismatches from run `38147398376` remain outside
+  its scope.
+
 - Update 2026-10-11: MCP integration continuation is in the uncommitted
   `integrate/mcp-next` worktree. The M0 live host, M1 scene tools, M2 view and
   animation changes, and five M3 real-stdio scenarios are integrated. The
