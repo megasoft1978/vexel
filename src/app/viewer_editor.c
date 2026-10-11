@@ -357,6 +357,14 @@ static bool editor_accessibility_command(uint32_t command_id, void *context)
     if (command_id == EDITOR_BUTTON_TOOL_ZOOM)
         return viewer_editor_set_tool(editor, UI_ICON_ZOOM) ||
             editor->active_tool == UI_ICON_ZOOM;
+    if (command_id == EDITOR_BUTTON_SNAPPING) {
+        editor->snap_popover_open = !editor->snap_popover_open;
+        editor->snap_popover_hovered = false;
+        editor->snap_popover_hovered_row = UINT8_MAX;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return true;
+    }
     if (command_id == EDITOR_BUTTON_TOGGLE_STRUCTURE ||
         command_id == EDITOR_BUTTON_HIDE_STRUCTURE) {
         (void)viewer_editor_set_sidebar_visibility(editor,
@@ -429,6 +437,10 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->path_selected_node_segment = SIZE_MAX;
     editor->snap_enabled = true;
     viewer_editor_guides_init(&editor->guides);
+    editor->snap_grid_enabled = true;
+    editor->snap_objects_enabled = true;
+    editor->snap_guides_enabled = true;
+    editor->snap_popover_hovered_row = UINT8_MAX;
     if (modern_style) {
         (void)platform_text_ui_get_preferences(&editor->theme,
             &editor->increased_contrast, &editor->reduced_motion);

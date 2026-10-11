@@ -1138,7 +1138,6 @@ if(BUILD_TESTING)
     add_test(NAME shape-render-large-work COMMAND raster_large_render_test)
 endif()
 # end lane: w8-perf
-
 # lane: w14-palette — command palette and bounded undo history
 target_sources(svgworkbench PRIVATE
     src/app/viewer_command_dispatch.c
@@ -1182,3 +1181,58 @@ if(BUILD_TESTING)
     add_test(NAME document-edit-history COMMAND document_edit_history_test)
 endif()
 # end lane: w14-palette
+
+# lane: w14-select
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_contextual.c
+    src/app/viewer_editor_snap_ui.c)
+target_sources(svgworkbench PRIVATE src/platform/macos/platform_cursor.m)
+set_source_files_properties(src/platform/macos/platform_cursor.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+add_executable(viewer_editor_ux_test tests/editor/viewer_editor_ux_test.c)
+target_include_directories(viewer_editor_ux_test PRIVATE src src/app)
+target_link_libraries(viewer_editor_ux_test PRIVATE vexel_editor_ui)
+set_target_properties(viewer_editor_ux_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_editor_ux_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_editor_ux_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_editor_ux_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-ux-selection-snap COMMAND viewer_editor_ux_test)
+endif()
+add_executable(editor_snap_popover_render tests/editor/editor_snap_popover_render.c)
+target_include_directories(editor_snap_popover_render PRIVATE src src/app)
+target_link_libraries(editor_snap_popover_render PRIVATE vexel_editor_ui)
+set_target_properties(editor_snap_popover_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_snap_popover_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(editor_snap_popover_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_snap_popover_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-snap-popover-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/editor/verify_snap_popover_goldens.py"
+        --binary $<TARGET_FILE:editor_snap_popover_render>)
+endif()
+add_executable(editor_snap_overlay_render tests/editor/editor_snap_overlay_render.c)
+target_include_directories(editor_snap_overlay_render PRIVATE src src/app)
+target_link_libraries(editor_snap_overlay_render PRIVATE vexel_editor_ui)
+set_target_properties(editor_snap_overlay_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_snap_overlay_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(editor_snap_overlay_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_snap_overlay_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-snap-overlay-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/editor/verify_snap_overlay_goldens.py"
+        --binary $<TARGET_FILE:editor_snap_overlay_render>)
+endif()
+# end lane: w14-select

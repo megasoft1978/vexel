@@ -12,6 +12,7 @@
 #define EDITOR_STATUS_CAP 192U
 #define EDITOR_DEPTH_CAP 256U
 #define EDITOR_CANVAS_SELECTION_CAP 128U
+#define EDITOR_SNAP_GUIDE_CAP 128U
 #define EDITOR_VISIBILITY_OVERRIDE_CAP EDITOR_OUTLINE_CAP
 #define EDITOR_OUTLINE_ACTION_WIDTH_POINTS 34U
 #define EDITOR_OUTLINE_VISIBILITY_WIDTH_POINTS 16U
@@ -41,6 +42,10 @@ enum {
     EDITOR_NODE_OUTLINE_HEADER,
     EDITOR_NODE_INSPECTOR_HEADER,
     EDITOR_NODE_CANVAS_ZOOM_MENU = 26U,
+    EDITOR_BUTTON_SNAPPING = 121U,
+    EDITOR_BUTTON_SNAP_GRID,
+    EDITOR_BUTTON_SNAP_OBJECTS,
+    EDITOR_BUTTON_SNAP_GUIDES,
     EDITOR_BUTTON_SAVE = 100U,
     EDITOR_BUTTON_UNDO,
     EDITOR_BUTTON_REDO,
@@ -70,6 +75,13 @@ enum {
     EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES = 500U,
     EDITOR_BUTTON_ZOOM_HUD = 600U,
     EDITOR_BUTTON_ZOOM_PRESET_BASE = 610U,
+    EDITOR_CONTEXT_EDIT_NODES = 630U,
+    EDITOR_CONTEXT_FILL,
+    EDITOR_CONTEXT_STROKE,
+    EDITOR_CONTEXT_ALIGN,
+    EDITOR_CONTEXT_GROUP,
+    EDITOR_CONTEXT_DUPLICATE,
+    EDITOR_CONTEXT_DELETE,
     EDITOR_OUTLINE_ROW_BASE = 1000U,
     EDITOR_ATTRIBUTE_ROW_BASE = 10000U,
     EDITOR_TEXT_FIELD_ID = 20000U,
@@ -130,6 +142,18 @@ typedef struct editor_path_anchor {
     double handle_y;
     bool has_handle;
 } editor_path_anchor;
+
+typedef struct editor_snap_guide {
+    bool vertical;
+    double position;
+} editor_snap_guide;
+
+typedef struct editor_context_action {
+    uint32_t id;
+    const char *label;
+    size_t label_length;
+    ui_rect bounds;
+} editor_context_action;
 
 struct viewer_editor {
     document_edit *edit;
@@ -259,10 +283,29 @@ struct viewer_editor {
     bool zoom_preset_pending;
     size_t zoom_preset_request;
     viewer_editor_guides guides;
+    bool snap_grid_enabled;
+    bool snap_objects_enabled;
+    bool snap_guides_enabled;
+    bool snap_popover_open;
+    bool snap_popover_hovered;
+    uint8_t snap_popover_hovered_row;
     bool snap_guide_x_visible;
     bool snap_guide_y_visible;
     double snap_guide_x;
     double snap_guide_y;
+    editor_snap_guide snap_guides[EDITOR_SNAP_GUIDE_CAP];
+    size_t snap_guide_count;
+    char snap_label[32];
+    bool snap_label_visible;
+    bool snap_label_is_gap;
+    double snap_label_delta;
+    size_t context_action_count;
+    editor_context_action context_actions[4];
+    bool context_actions_fallback;
+    uint32_t context_action_hovered;
+    double context_pointer_x;
+    double context_pointer_y;
+    bool context_pointer_valid;
     bool want_structure;
     bool want_inspector;
     bool effective_structure;
@@ -385,8 +428,27 @@ uint32_t editor_canvas_path_curve_add_node(viewer_editor *editor,
 void editor_canvas_snap_translation(viewer_editor *editor,
     const svg_shape_document *document, double tolerance,
     double *translate_x, double *translate_y);
+void editor_canvas_snap_clear(viewer_editor *editor);
+bool editor_canvas_snap_guide_add(viewer_editor *editor, bool vertical,
+                                  double position);
+void editor_canvas_snap_guide_clear(viewer_editor *editor);
 geom_point editor_canvas_snap_point(viewer_editor *editor,
     const svg_shape_document *document, geom_point point, double tolerance);
+void editor_paint_context_actions(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas, uint8_t *rgba, uint32_t width, uint32_t height,
+    size_t stride);
+uint32_t editor_context_action_at(viewer_editor *editor, uint32_t x, uint32_t y);
+void editor_context_action_pointer_move(viewer_editor *editor,
+    uint32_t x, uint32_t y);
+uint32_t editor_context_action_run(viewer_editor *editor,
+    const svg_shape_document *document, uint32_t action);
+void editor_paint_snap_popover(viewer_editor *editor, uint8_t *rgba,
+    size_t capacity, size_t stride);
+bool editor_snap_popover_pointer_down(viewer_editor *editor, uint32_t x,
+    uint32_t y);
+void editor_snap_popover_pointer_move(viewer_editor *editor, uint32_t x,
+    uint32_t y);
 size_t editor_utf8_next(const char *text, size_t length, size_t cursor);
 void editor_selection_range(const viewer_editor *editor, size_t *start, size_t *end);
 uint32_t editor_commit_field(viewer_editor *editor);

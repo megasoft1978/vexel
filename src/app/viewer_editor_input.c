@@ -298,6 +298,14 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return viewer_editor_open_command_palette(editor) ? VIEWER_EDITOR_HANDLED : 0U;
     if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
         return viewer_editor_cancel_canvas_gesture(editor);
+    if (key_code == 53U && editor->snap_popover_open) {
+        editor->snap_popover_open = false;
+        editor->snap_popover_hovered = false;
+        editor->snap_popover_hovered_row = UINT8_MAX;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
     if (key_code == 51U || key_code == 117U) {

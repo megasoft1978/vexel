@@ -68,6 +68,8 @@ typedef struct viewer_editor_canvas_overlay_state {
     bool snap_guide_y_visible;
     double snap_guide_x;
     double snap_guide_y;
+    bool snap_label_visible;
+    char snap_label[32];
 } viewer_editor_canvas_overlay_state;
 
 enum {
@@ -187,6 +189,12 @@ uint32_t viewer_editor_canvas_pointer_down_click_count(viewer_editor *editor,
 uint32_t viewer_editor_canvas_pointer_move(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
     double x, double y);
+uint32_t viewer_editor_canvas_pointer_move_modifiers(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y, uint32_t modifiers);
+platform_cursor_kind viewer_editor_canvas_cursor(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y);
 uint32_t viewer_editor_canvas_pointer_up(viewer_editor *editor,
     const svg_shape_document *document);
 uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor);
@@ -223,6 +231,10 @@ void viewer_editor_set_canvas_status(viewer_editor *editor, double zoom,
 bool viewer_editor_take_redraw_request(viewer_editor *editor);
 void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y);
 void viewer_editor_pointer_up(viewer_editor *editor);
+uint32_t viewer_editor_context_action_at(viewer_editor *editor,
+    uint32_t x, uint32_t y);
+uint32_t viewer_editor_context_action_run(viewer_editor *editor,
+    const svg_shape_document *document, uint32_t action);
 bool viewer_editor_get_chrome_layout(viewer_editor *editor,
                                      struct viewer_chrome_layout *out_layout);
 

@@ -234,6 +234,7 @@ static const char *tooltip_for_id(uint32_t id, char *buffer, size_t capacity)
         case EDITOR_BUTTON_UNGROUP: return "Ungroup  ⇧⌘G";
         case EDITOR_BUTTON_SAVE_AS: return "Save as";
         case EDITOR_BUTTON_HISTORY: return "Undo History";
+        case EDITOR_BUTTON_SNAPPING: return "Snapping settings  Grid · Objects · Guides";
         case EDITOR_BUTTON_TOOL_SELECT: return "Select  V";
         case EDITOR_BUTTON_TOOL_PAN: return "Pan  H / Space";
         case EDITOR_BUTTON_TOOL_ZOOM: return "Zoom  Z";

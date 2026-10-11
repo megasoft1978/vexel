@@ -81,6 +81,29 @@ static bool event_canvas_point(const viewer_app *app, const platform_event *even
     return isfinite(*out_x) && isfinite(*out_y);
 }
 
+static void update_editor_cursor(viewer_app *app, const platform_event *event)
+{
+    if (app == NULL || app->window == NULL) return;
+    platform_cursor_kind cursor = PLATFORM_CURSOR_ARROW;
+    if (app->navigation_ready && app->navigation.dragging) {
+        cursor = PLATFORM_CURSOR_CLOSED_HAND;
+    } else if (app->editor != NULL && app->document_visible &&
+        app->navigation_ready && event != NULL) {
+        double pixel_x = (double)event->logical_x * app->backing_scale;
+        double pixel_y = (double)event->logical_y * app->backing_scale;
+        double local_x, local_y;
+        if (canvas_contains(app, pixel_x, pixel_y) &&
+            event_canvas_point(app, event, &local_x, &local_y)) {
+            if (app->space_down ||
+                viewer_editor_get_tool(app->editor) == UI_ICON_PAN)
+                cursor = PLATFORM_CURSOR_OPEN_HAND;
+            else cursor = viewer_editor_canvas_cursor(app->editor,
+                &app->document.shape, &app->navigation, local_x, local_y);
+        }
+    }
+    (void)platform_window_set_cursor(app->window, cursor);
+}
+
 static void apply_navigation_fit(viewer_app *app, platform_viewer_action action)
 {
     if (!app->navigation_ready || !app->document_visible) return;
@@ -535,6 +558,18 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             if (app->editor != NULL)
                 viewer_editor_set_snap_bypass(app->editor,
                     (event->modifiers & PLATFORM_MODIFIER_SHIFT) != 0U);
+            if (event->button == 0U && app->editor != NULL &&
+                app->document_visible && isfinite(pixel_x) && isfinite(pixel_y) &&
+                pixel_x >= 0.0 && pixel_y >= 0.0 &&
+                pixel_x <= (double)UINT32_MAX && pixel_y <= (double)UINT32_MAX) {
+                uint32_t action = viewer_editor_context_action_at(app->editor,
+                    (uint32_t)pixel_x, (uint32_t)pixel_y);
+                if (action != 0U) {
+                    viewer_process_editor_result(app, viewer_editor_context_action_run(
+                        app->editor, &app->document.shape, action));
+                    return;
+                }
+            }
             if (app->editor != NULL && isfinite(pixel_x) && isfinite(pixel_y) &&
                 pixel_x >= 0.0 && pixel_y >= 0.0 && pixel_x <= (double)UINT32_MAX &&
                 pixel_y <= (double)UINT32_MAX) {
@@ -551,6 +586,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 !event_canvas_point(app, event, &local_x, &local_y)) return;
             if (app->space_down || viewer_editor_get_tool(app->editor) == UI_ICON_PAN) {
                 (void)ui_viewer_navigation_drag_begin(&app->navigation, local_x, local_y);
+                update_editor_cursor(app, event);
                 return;
             }
             if (viewer_editor_get_tool(app->editor) == UI_ICON_ZOOM) {
@@ -598,11 +634,13 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             } else if (app->navigation_ready && app->editor != NULL) {
                 double local_x, local_y;
                 if (event_canvas_point(app, event, &local_x, &local_y)) {
-                    uint32_t result = viewer_editor_canvas_pointer_move(app->editor,
-                        &app->document.shape, &app->navigation, local_x, local_y);
+                    uint32_t result = viewer_editor_canvas_pointer_move_modifiers(
+                        app->editor, &app->document.shape, &app->navigation,
+                        local_x, local_y, event->modifiers);
                     if (result != 0U) viewer_process_editor_result(app, result);
                 }
             }
+            update_editor_cursor(app, event);
             return;
         case PLATFORM_EVENT_POINTER_UP:
             if (replacement_load_active(app) && app->document_visible) return;
@@ -614,6 +652,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             if (app->navigation_ready && app->navigation.dragging) {
                 (void)ui_viewer_navigation_drag_end(&app->navigation);
                 app->frame_dirty = true;
+                update_editor_cursor(app, event);
                 return;
             }
             if (app->editor != NULL) {
@@ -622,6 +661,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 if (result != 0U) viewer_process_editor_result(app, result);
                 else app->frame_dirty = true;
             }
+            update_editor_cursor(app, event);
             return;
         case PLATFORM_EVENT_SCROLL: {
             if (app->editor != NULL) {

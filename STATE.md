@@ -197,3 +197,13 @@
   entries. These UX work orders are from the research scratchpad and are not
   frozen under `work/`, so no lifecycle events were added. Maintainer real-window
   checks are listed in `docs/lanes/w14-palette.md`.
+- Update 2026-10-11: uncommitted W14 select candidate implements WO-UX-01 and
+  WO-UX-02 from the research interaction report. Selection feedback, cursor
+  mapping, contextual actions, bounded snapping, Shift bypass, category controls,
+  headless regressions, and dark/light goldens are recorded in
+  `docs/lanes/w14-select.md`. Debug build and focused regression passed; all five
+  light/dark headless golden verifiers passed. `./dev t --all` passed 58/60
+  CTests and 69/69 Python tests; native viewer smoke and index replay are blocked
+  by LaunchServices/Metal availability in this environment. The ledger validates
+  with 406 entries. The referenced work orders are not frozen under `work/`, so
+  no lifecycle event was added to `ledger.jsonl`.

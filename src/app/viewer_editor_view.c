@@ -383,6 +383,7 @@ void viewer_editor_paint(viewer_editor *editor, uint8_t *rgba, size_t capacity,
     if (!painted) return;
     if (editor->modern_style) {
         editor_paint_widgets(editor, rgba, capacity, stride);
+        editor_paint_snap_popover(editor, rgba, capacity, stride);
         if (platform_text_ui_app_is_active())
             (void)platform_accessibility_update_tree(&editor->tree, editor->width,
                 editor->height, editor->backing_scale);
@@ -431,6 +432,14 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
     }
     if (action == EDITOR_BUTTON_TOOL_ZOOM) {
         (void)viewer_editor_set_tool(editor, UI_ICON_ZOOM);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (action == EDITOR_BUTTON_SNAPPING) {
+        editor->snap_popover_open = !editor->snap_popover_open;
+        editor->snap_popover_hovered = false;
+        editor->snap_popover_hovered_row = UINT8_MAX;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
         return VIEWER_EDITOR_HANDLED;
     }
     if (action == EDITOR_BUTTON_TOOL_RECTANGLE) {
@@ -523,6 +532,10 @@ uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t 
                                     uint8_t button)
 {
     if (editor == NULL || button != 0U) return 0U;
+    if (!editor->tree_ready) editor_build_tree(editor);
+    if (!editor->tree_ready) return 0U;
+    if (editor_snap_popover_pointer_down(editor, x, y))
+        return VIEWER_EDITOR_HANDLED;
     if (!editor->tree_ready) editor_build_tree(editor);
     if (!editor->tree_ready) return 0U;
     const ui_node *hit = NULL;

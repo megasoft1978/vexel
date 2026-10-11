@@ -198,6 +198,9 @@ void editor_build_tree_modern(viewer_editor *editor)
             EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
             UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, editor_tool_hint(editor),
             strlen(editor_tool_hint(editor)), NULL, 0U, 0U, 0U) &&
+        editor_add_icon(editor, EDITOR_BUTTON_SNAPPING, EDITOR_NODE_OPTIONS,
+            UI_ICON_SNAP, "Snapping settings · Grid, Objects, Guides",
+            editor->snap_enabled ? UI_STATE_CHECKED : 0U) &&
         editor_add_node(editor, EDITOR_NODE_WORKSPACE, UI_ROOT_ID,
             UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
