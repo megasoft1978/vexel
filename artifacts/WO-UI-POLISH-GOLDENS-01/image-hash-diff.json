@@ -1,0 +1,205 @@
+{
+  "accessibility": {
+    "changed_png_count": 2,
+    "pngs": [
+      {
+        "after_sha256": "3f6f509ad70d8514df316a5bf4137015292ce34a010a841b25996c3541dd1046",
+        "before_sha256": "1c953ac46d869f004a875328a305afeeab6f8929c6cae194c04ad02137700949",
+        "image": "accessibility-chrome-dark-200.png"
+      },
+      {
+        "after_sha256": "f01bdb311ce18775614b8fcb54d61f629ebe555b9566f1327704a345726f3004",
+        "before_sha256": "06fb2ac3dcf7f116980f80fdf23904e210119e8e17a6cb9988dc7f40724efc28",
+        "image": "accessibility-chrome-light-200.png"
+      }
+    ]
+  },
+  "command-overlay": {
+    "changed_png_count": 4,
+    "pngs": [
+      {
+        "after_sha256": "13b3f22c86db2c009ff0bf0b3e9adfbd6179397ab96615ce73596d0cf80d8380",
+        "before_sha256": "c8b520bf79df968221c0d38c8c596312a5ca589fe01db47f4e09ff9d5bfee01b",
+        "image": "history-dark.png"
+      },
+      {
+        "after_sha256": "ed48b80b75b09a6b2f204f89b5f1c8770e3ce875d88825a33eb548803bc111de",
+        "before_sha256": "be07614707df3a48b8f96f6634d1c96ec2bada40692e0b8271d95f04bea98629",
+        "image": "history-light.png"
+      },
+      {
+        "after_sha256": "4d6898f02833552907103b7527ccdb0fed6141aeb2cd40de887c0a2c864924ca",
+        "before_sha256": "8741605a0c636fb69c03579d3805ae313e104b952d0c0c6df317d69a6aab2283",
+        "image": "palette-dark.png"
+      },
+      {
+        "after_sha256": "fb3c9d91df74c47ff694c68b5fcf96da14744b17887cd5b6d10c06543ce3bd3c",
+        "before_sha256": "827e5332475049fa944f2519e0e8318a12e493b21f895f9d2988b92f8e0207af",
+        "image": "palette-light.png"
+      }
+    ]
+  },
+  "editor-chrome": {
+    "changed_png_count": 2,
+    "pngs": [
+      {
+        "after_sha256": "ccc19a2a6a5a15065708d8bd590938f07944e441bade505a2f15db3a8d134f35",
+        "before_sha256": "7437d32760258d859113fde9e964d08ae851f90f7110bfc862d747bbc22d8295",
+        "image": "editor-chrome-dark.png"
+      },
+      {
+        "after_sha256": "3cdfbc4d5bfc69a14cbeafd1cdec00ec48b2fab7191ff20ac10eaddc02c5d3c6",
+        "before_sha256": "39306343dcb04277dfa40bdf0fa4d5818dfcb469af8f0610d14e9d6f26d487cc",
+        "image": "editor-chrome-light.png"
+      }
+    ]
+  },
+  "editor-style": {
+    "changed_png_count": 0,
+    "pngs": []
+  },
+  "native-shell": {
+    "changed_png_count": 14,
+    "pngs": [
+      {
+        "after_sha256": "477de6e9ea8e9e6ad05ec6777b2d8a217199ce7ba8d448587d391093fc730731",
+        "before_sha256": "ca0cd932dbc68fa24b2eb2f01e18c2c2dd458c15bd745ff6593549a5f869b02d",
+        "image": "app-icon-dark.png"
+      },
+      {
+        "after_sha256": "f6c674528036f620cc21a486c5a1d0e6eb4a4f241094c203ca6fe1c32e99c224",
+        "before_sha256": "f83462729236ff7668aaa004f4a48c7e2c55e9425028d5c85bfa585fcfba6342",
+        "image": "app-icon-light.png"
+      },
+      {
+        "after_sha256": "55f3220cc9b645dc82515b45e00f0ba71686cf5c476546e4de3a4284868f4ae5",
+        "before_sha256": "0481e4d6f41aac604bb2fb9f346ad449e9c99a7235deca2dbdd2847a8231c573",
+        "image": "feedback-dark.png"
+      },
+      {
+        "after_sha256": "41e61bb6b837be70865e8e0deedccaf46b628e5970388ce8b998cd2ff23440ef",
+        "before_sha256": "e96835f465666a28d8a322604f9e3372e0bb3988c00987622fe65b243e1d395f",
+        "image": "feedback-light.png"
+      },
+      {
+        "after_sha256": "273c999830afe964308d3dcba0a57fbe816cd1330f286ceff15a487a7c5a0831",
+        "before_sha256": "b1615676a217448ecf61e0f900993fc19592032fdbc820addc397eeb2863097c",
+        "image": "help-dark.png"
+      },
+      {
+        "after_sha256": "156af827f593c44e94daac40d4bb9bfd3e80d844417648017afe3b2d45746d64",
+        "before_sha256": "ab8f8461c6706576212d2e0b7e9263bf0ffbff88445f99a8771b38e5cc26c2c5",
+        "image": "help-light.png"
+      },
+      {
+        "after_sha256": "7492f9477515ddf855c32b4ccc87996b3af501cddfb2cbfb59ba45dae5a223e6",
+        "before_sha256": "15cdf0a430e182193ff067d75638c8e1b6069a466f8731aef8a9e13753df1dff",
+        "image": "settings-canvas-dark.png"
+      },
+      {
+        "after_sha256": "06ad291fd2b241cd611386554df79f29844e8605fd7d01ca936f1c2dc39157ca",
+        "before_sha256": "cd7d907f2882105c68464c492624ff22fc4eeffe1804a29db08473ee2428545b",
+        "image": "settings-canvas-light.png"
+      },
+      {
+        "after_sha256": "e52ce6109bcd230e1b0c0436a2ccc1fc3bfaa526564a6205217f68aef7a7a281",
+        "before_sha256": "6c3317f4883856a850ff6539f45a3f7b26d14b9edddba5014189246915248a7f",
+        "image": "settings-general-dark.png"
+      },
+      {
+        "after_sha256": "235959fdeb4d5200bd15f767a5899b14de1ea546fac014ac8347cdfd9d00e172",
+        "before_sha256": "19e91015d6d363a82f4b54ea872034f1b438f8bcb2fad7a9b54ae5a9af7a4562",
+        "image": "settings-general-light.png"
+      },
+      {
+        "after_sha256": "ea2a7574484620828afff88f0644d45044e4d15ca2b248f21554d2e3aac518f8",
+        "before_sha256": "c0c95668065616dff903843c831c53c41d409c2047071a29ca815b56897c676d",
+        "image": "welcome-empty-dark.png"
+      },
+      {
+        "after_sha256": "011d21b2a99f4ba6a7cbd7d2dc666f11344e8dfc3f55ba3a3824e3d7b1c07fab",
+        "before_sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b",
+        "image": "welcome-empty-light.png"
+      },
+      {
+        "after_sha256": "831e5586c8de3da2a3b8ff66d55fd0e2b28f05538bae9e08c85ed116769ed810",
+        "before_sha256": "536b3edd8042d0843da81831bcae516c0b4283d32bea91ae5b36d50924056b94",
+        "image": "welcome-recent-dark.png"
+      },
+      {
+        "after_sha256": "a63ea9e9300128af8898b4da877a5370a843d9e0896ef5e811682665faf8e848",
+        "before_sha256": "31845ed5820500ce53f0c3362728043cf93f01179c41b64d2077ec9c1cb2bd86",
+        "image": "welcome-recent-light.png"
+      }
+    ]
+  },
+  "snap-overlay": {
+    "changed_png_count": 0,
+    "pngs": []
+  },
+  "snap-popover": {
+    "changed_png_count": 2,
+    "pngs": [
+      {
+        "after_sha256": "5d875cf9e8ca2ce9ac576b4e8e3f6158c405dac527da14f92f0138bf66790e8d",
+        "before_sha256": "b498c743d8c5a4c08f378231df3b30bf06adc08aa50b3b74ca267c0608e3097a",
+        "image": "snapping-dark.png"
+      },
+      {
+        "after_sha256": "ee05700508b222a94530a6dd51f5512787518bbb368db41712ea91ce2b1bb81c",
+        "before_sha256": "e38180699909be1e6fa2c1bf89fc3255c0d3a3bca446b8b317f3b712e62b0a06",
+        "image": "snapping-light.png"
+      }
+    ]
+  },
+  "timeline": {
+    "changed_png_count": 4,
+    "pngs": [
+      {
+        "after_sha256": "c23fc09b3247cc3601f8934c47ddb7a300105004afedc6c24580c79c3c621e91",
+        "before_sha256": "20cd851faa3554c1200a1c37ffc5058cd6bcebd2667a80b557d1b965e8c7eac6",
+        "image": "timeline-dark-1x.png"
+      },
+      {
+        "after_sha256": "3ef1fa395d275b09f1a0bcfb72399bb4be6b5ead77d4318f8defb034960efef9",
+        "before_sha256": "3709f900955081b346eb2716663ea686b3da0fa66ddcd921c274975994479f11",
+        "image": "timeline-dark-2x.png"
+      },
+      {
+        "after_sha256": "db4fba10bc981dcf13fe9f950960c386c9904550fcf6f5ed41e02e9c0833365f",
+        "before_sha256": "f368c0f5bb8f1cc4c5ca3d956550db47be0e0e55de83c6638c48bd787030301f",
+        "image": "timeline-light-1x.png"
+      },
+      {
+        "after_sha256": "f4f1cc1146607f6ec57acde3fcde11682e2f5c94735411436611897791f72099",
+        "before_sha256": "24158e6cee224590863ce5f5deff57d42eb9f179737f443ec6948a709572dbc9",
+        "image": "timeline-light-2x.png"
+      }
+    ]
+  },
+  "ui-kit": {
+    "changed_png_count": 4,
+    "pngs": [
+      {
+        "after_sha256": "dd8c1825948c1a4fa9915638c72a7c57b163cc4fe3ec5ec2db486b701c32029a",
+        "before_sha256": "f66e67374872ceff9ed113dfcefa0f6ec9ee091080ac78ff392f0317c7c28268",
+        "image": "components-dark-1x.png"
+      },
+      {
+        "after_sha256": "f6744faf496dcd8abd9462b280c9f2a894cfb460550d764d1dd9bf9cf8ce6049",
+        "before_sha256": "e75dd9fa511c5420037db4e325943845b7f869d19ec262a6d30161a5768154ca",
+        "image": "components-dark-2x.png"
+      },
+      {
+        "after_sha256": "b52ca1e6aedbe63bce6a0d70517b89ab9ce5935961a3a613bea7ee8676bc9704",
+        "before_sha256": "df9f2b22c471dbfdacfa834ba892c2f5c0e61e88dd688c9cedfcb3e694e7d072",
+        "image": "components-light-1x.png"
+      },
+      {
+        "after_sha256": "9a180cbd04c7ef779bd1c990da90ec8cf7d5d6f121c4e3f7a6de76b6a6b2fdca",
+        "before_sha256": "694704a747ee0f65e884705d551bbc0f66aed6941c536d61f9878ef11128aa0e",
+        "image": "components-light-2x.png"
+      }
+    ]
+  }
+}

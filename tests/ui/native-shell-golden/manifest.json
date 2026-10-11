@@ -1,116 +1,116 @@
 {
   "screenshots": {
     "app-icon-dark.png": {
-      "height": 256,
+      "height": 512,
       "renderer": "offscreen AppKit content view",
       "screen": "app-icon",
-      "sha256": "ca0cd932dbc68fa24b2eb2f01e18c2c2dd458c15bd745ff6593549a5f869b02d",
+      "sha256": "477de6e9ea8e9e6ad05ec6777b2d8a217199ce7ba8d448587d391093fc730731",
       "theme": "dark",
-      "width": 256
+      "width": 512
     },
     "app-icon-light.png": {
-      "height": 256,
+      "height": 512,
       "renderer": "offscreen AppKit content view",
       "screen": "app-icon",
-      "sha256": "f83462729236ff7668aaa004f4a48c7e2c55e9425028d5c85bfa585fcfba6342",
+      "sha256": "f6c674528036f620cc21a486c5a1d0e6eb4a4f241094c203ca6fe1c32e99c224",
       "theme": "light",
-      "width": 256
+      "width": 512
     },
     "feedback-dark.png": {
-      "height": 480,
+      "height": 960,
       "renderer": "offscreen AppKit content view",
       "screen": "feedback",
-      "sha256": "0481e4d6f41aac604bb2fb9f346ad449e9c99a7235deca2dbdd2847a8231c573",
+      "sha256": "55f3220cc9b645dc82515b45e00f0ba71686cf5c476546e4de3a4284868f4ae5",
       "theme": "dark",
-      "width": 620
+      "width": 1240
     },
     "feedback-light.png": {
-      "height": 480,
+      "height": 960,
       "renderer": "offscreen AppKit content view",
       "screen": "feedback",
-      "sha256": "e96835f465666a28d8a322604f9e3372e0bb3988c00987622fe65b243e1d395f",
+      "sha256": "41e61bb6b837be70865e8e0deedccaf46b628e5970388ce8b998cd2ff23440ef",
       "theme": "light",
-      "width": 620
+      "width": 1240
     },
     "help-dark.png": {
-      "height": 360,
+      "height": 720,
       "renderer": "offscreen AppKit content view",
       "screen": "help",
-      "sha256": "b1615676a217448ecf61e0f900993fc19592032fdbc820addc397eeb2863097c",
+      "sha256": "273c999830afe964308d3dcba0a57fbe816cd1330f286ceff15a487a7c5a0831",
       "theme": "dark",
-      "width": 520
+      "width": 1040
     },
     "help-light.png": {
-      "height": 360,
+      "height": 720,
       "renderer": "offscreen AppKit content view",
       "screen": "help",
-      "sha256": "ab8f8461c6706576212d2e0b7e9263bf0ffbff88445f99a8771b38e5cc26c2c5",
+      "sha256": "156af827f593c44e94daac40d4bb9bfd3e80d844417648017afe3b2d45746d64",
       "theme": "light",
-      "width": 520
+      "width": 1040
     },
     "settings-canvas-dark.png": {
-      "height": 380,
+      "height": 760,
       "renderer": "offscreen AppKit content view",
       "screen": "settings-canvas",
-      "sha256": "15cdf0a430e182193ff067d75638c8e1b6069a466f8731aef8a9e13753df1dff",
+      "sha256": "7492f9477515ddf855c32b4ccc87996b3af501cddfb2cbfb59ba45dae5a223e6",
       "theme": "dark",
-      "width": 560
+      "width": 1120
     },
     "settings-canvas-light.png": {
-      "height": 380,
+      "height": 760,
       "renderer": "offscreen AppKit content view",
       "screen": "settings-canvas",
-      "sha256": "cd7d907f2882105c68464c492624ff22fc4eeffe1804a29db08473ee2428545b",
+      "sha256": "06ad291fd2b241cd611386554df79f29844e8605fd7d01ca936f1c2dc39157ca",
       "theme": "light",
-      "width": 560
+      "width": 1120
     },
     "settings-general-dark.png": {
-      "height": 380,
+      "height": 760,
       "renderer": "offscreen AppKit content view",
       "screen": "settings-general",
-      "sha256": "6c3317f4883856a850ff6539f45a3f7b26d14b9edddba5014189246915248a7f",
+      "sha256": "e52ce6109bcd230e1b0c0436a2ccc1fc3bfaa526564a6205217f68aef7a7a281",
       "theme": "dark",
-      "width": 560
+      "width": 1120
     },
     "settings-general-light.png": {
-      "height": 380,
+      "height": 760,
       "renderer": "offscreen AppKit content view",
       "screen": "settings-general",
-      "sha256": "19e91015d6d363a82f4b54ea872034f1b438f8bcb2fad7a9b54ae5a9af7a4562",
+      "sha256": "235959fdeb4d5200bd15f767a5899b14de1ea546fac014ac8347cdfd9d00e172",
       "theme": "light",
-      "width": 560
+      "width": 1120
     },
     "welcome-empty-dark.png": {
-      "height": 650,
+      "height": 1300,
       "renderer": "offscreen AppKit content view",
       "screen": "welcome-empty",
-      "sha256": "c0c95668065616dff903843c831c53c41d409c2047071a29ca815b56897c676d",
+      "sha256": "ea2a7574484620828afff88f0644d45044e4d15ca2b248f21554d2e3aac518f8",
       "theme": "dark",
-      "width": 600
+      "width": 1200
     },
     "welcome-empty-light.png": {
-      "height": 650,
+      "height": 1300,
       "renderer": "offscreen AppKit content view",
       "screen": "welcome-empty",
-      "sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b",
+      "sha256": "011d21b2a99f4ba6a7cbd7d2dc666f11344e8dfc3f55ba3a3824e3d7b1c07fab",
       "theme": "light",
-      "width": 600
+      "width": 1200
     },
     "welcome-recent-dark.png": {
-      "height": 650,
+      "height": 1300,
       "renderer": "offscreen AppKit content view",
       "screen": "welcome-recent",
-      "sha256": "536b3edd8042d0843da81831bcae516c0b4283d32bea91ae5b36d50924056b94",
+      "sha256": "831e5586c8de3da2a3b8ff66d55fd0e2b28f05538bae9e08c85ed116769ed810",
       "theme": "dark",
-      "width": 600
+      "width": 1200
     },
     "welcome-recent-light.png": {
-      "height": 650,
+      "height": 1300,
       "renderer": "offscreen AppKit content view",
       "screen": "welcome-recent",
-      "sha256": "31845ed5820500ce53f0c3362728043cf93f01179c41b64d2077ec9c1cb2bd86",
+      "sha256": "a63ea9e9300128af8898b4da877a5370a843d9e0896ef5e811682665faf8e848",
       "theme": "light",
-      "width": 600
+      "width": 1200
     }
   },
   "version": 1
