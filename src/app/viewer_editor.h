@@ -6,6 +6,7 @@
 #include "svg/shape/shape.h"
 #include "ui/ui_core.h"
 #include "ui/viewer_controls.h"
+#include "viewer_editor_guides.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -38,6 +39,13 @@ typedef enum viewer_editor_distribution {
     VIEWER_EDITOR_DISTRIBUTE_HORIZONTAL = 0,
     VIEWER_EDITOR_DISTRIBUTE_VERTICAL
 } viewer_editor_distribution;
+
+typedef enum viewer_editor_guide_pointer_result {
+    VIEWER_EDITOR_GUIDE_POINTER_NONE = 0,
+    VIEWER_EDITOR_GUIDE_POINTER_HANDLED,
+    VIEWER_EDITOR_GUIDE_POINTER_CONTEXT_HORIZONTAL,
+    VIEWER_EDITOR_GUIDE_POINTER_CONTEXT_VERTICAL
+} viewer_editor_guide_pointer_result;
 
 #define VIEWER_EDITOR_PATH_POINT_CAP 128U
 #define VIEWER_EDITOR_PREVIEW_EXTRA_BYTES (1024U * 32U)
@@ -77,7 +85,8 @@ enum {
     VIEWER_EDITOR_PASTE_IN_PLACE = 1U << 12U,
     VIEWER_EDITOR_EXPORT_PNG = 1U << 13U,
     VIEWER_EDITOR_COPY_PNG = 1U << 14U,
-    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U
+    VIEWER_EDITOR_PREVIEW_CHANGED = 1U << 15U,
+    VIEWER_EDITOR_ZOOM_PRESET_REQUEST = 1U << 16U
 };
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
@@ -126,6 +135,31 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
                                           bool structure_visible,
                                           bool inspector_visible);
+bool viewer_editor_set_rulers_visible(viewer_editor *editor, bool visible);
+bool viewer_editor_rulers_visible(const viewer_editor *editor);
+bool viewer_editor_set_guides_visible(viewer_editor *editor, bool visible);
+bool viewer_editor_guides_visible(const viewer_editor *editor);
+bool viewer_editor_set_guides_locked(viewer_editor *editor, bool locked);
+bool viewer_editor_guides_locked(const viewer_editor *editor);
+bool viewer_editor_clear_guides(viewer_editor *editor,
+                                viewer_editor_guide_axis_kind axis);
+bool viewer_editor_get_navigation_canvas_rect(viewer_editor *editor,
+                                               struct viewer_chrome_layout *out_layout,
+                                               ui_rect *out_canvas);
+viewer_editor_guide_pointer_result viewer_editor_guide_pointer_down(
+    viewer_editor *editor, const svg_shape_document *document,
+    const ui_viewer_navigation *navigation, ui_rect canvas,
+    double screen_x, double screen_y, uint8_t button);
+bool viewer_editor_guide_pointer_move(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas, double screen_x, double screen_y);
+bool viewer_editor_guide_pointer_up(viewer_editor *editor);
+uint32_t viewer_editor_delete_selected_guide(viewer_editor *editor);
+void viewer_editor_set_navigation_overlays_hidden(viewer_editor *editor,
+                                                   bool hidden);
+void viewer_editor_set_snap_bypass(viewer_editor *editor, bool bypass);
+bool viewer_editor_take_zoom_preset(viewer_editor *editor, double *out_scale);
+double viewer_editor_zoom_preset_scale(size_t index);
 bool viewer_editor_set_tool(viewer_editor *editor, ui_icon_kind tool);
 ui_icon_kind viewer_editor_get_tool(const viewer_editor *editor);
 bool viewer_editor_text_input_active(const viewer_editor *editor);

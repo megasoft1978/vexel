@@ -37,6 +37,7 @@ enum {
     EDITOR_NODE_CANVAS_TILE_STATUS,
     EDITOR_NODE_OUTLINE_HEADER,
     EDITOR_NODE_INSPECTOR_HEADER,
+    EDITOR_NODE_CANVAS_ZOOM_MENU = 26U,
     EDITOR_BUTTON_SAVE = 100U,
     EDITOR_BUTTON_UNDO,
     EDITOR_BUTTON_REDO,
@@ -63,6 +64,8 @@ enum {
     EDITOR_BUTTON_TOOL_POLYGON,
     EDITOR_BUTTON_TOOL_POLYLINE,
     EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES = 500U,
+    EDITOR_BUTTON_ZOOM_HUD = 600U,
+    EDITOR_BUTTON_ZOOM_PRESET_BASE = 610U,
     EDITOR_OUTLINE_ROW_BASE = 1000U,
     EDITOR_ATTRIBUTE_ROW_BASE = 10000U,
     EDITOR_TEXT_FIELD_ID = 20000U,
@@ -212,6 +215,12 @@ struct viewer_editor {
     bool marquee_preserve_selection;
     bool canvas_gesture_moved;
     bool snap_enabled;
+    bool snap_bypass;
+    bool navigation_overlays_hidden;
+    bool zoom_menu_open;
+    bool zoom_preset_pending;
+    size_t zoom_preset_request;
+    viewer_editor_guides guides;
     bool snap_guide_x_visible;
     bool snap_guide_y_visible;
     double snap_guide_x;
@@ -347,5 +356,13 @@ void editor_build_tree(viewer_editor *editor);
 void editor_build_tree_modern(viewer_editor *editor);
 void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
                           size_t capacity, size_t stride);
+void viewer_editor_guides_paint(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas, uint8_t *rgba, uint32_t width, uint32_t height,
+    size_t stride);
+void viewer_editor_guides_paint_scalar(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas, uint8_t *rgba, uint32_t width, uint32_t height,
+    size_t stride);
 
 #endif

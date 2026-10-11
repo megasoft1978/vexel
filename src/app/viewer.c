@@ -215,9 +215,8 @@ bool viewer_sync_canvas_geometry(viewer_app *app, bool refit)
 {
     if (app == NULL) return false;
     ui_rect next = {0U, 0U, app->width, app->height};
-    viewer_chrome_layout layout;
-    if (app->editor != NULL && viewer_editor_get_chrome_layout(app->editor, &layout))
-        next = layout.canvas;
+    if (app->editor != NULL && !viewer_editor_get_navigation_canvas_rect(
+            app->editor, NULL, &next)) return false;
     if (next.width == 0U || next.height == 0U) return false;
     ui_rect previous = app->navigation_canvas;
     bool changed = memcmp(&previous, &next, sizeof(next)) != 0;
@@ -466,6 +465,12 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     if (app->document.source != NULL && app->document.source_length > 0U)
         app->editor = viewer_editor_create((base_bytes){app->document.source,
             app->document.source_length}, UI_THEME_DARK, app->width, app->height);
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_RULERS, viewer_editor_rulers_visible(app->editor));
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_GUIDES, viewer_editor_guides_visible(app->editor));
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_GUIDE_LOCK, viewer_editor_guides_locked(app->editor));
     viewer_editor_resize(app->editor, app->width, app->height, app->backing_scale);
     (void)viewer_sync_canvas_geometry(app, true);
     if (app->load_status == VIEWER_LOAD_OK &&

@@ -19,6 +19,12 @@ revisions; `platform_text_ui_test` checks native CoreText output structurally.
 Review the images before updating them with
 `python3 tests/ui/verify_style_goldens.py --update`.
 
+`verify_guides_goldens.py` checks the ruler and persistent-guide renderer at
+1×/2× in light and dark themes. Its human-review PNGs live in
+`guides-golden/`; ticks, guides, and numeric labels use deterministic scalar
+rendering. Production numeric labels use CoreText. Update reviewed images with
+`python3 tests/ui/verify_guides_goldens.py --update`.
+
 The UIKit has separate deterministic component and icon sheets in
 `uikit-golden/`. `ui_gallery` renders 24 widgets in seven control states at 1×
 and 2× in both appearances; `ui_icon_gallery` renders all 53 authored paths at
