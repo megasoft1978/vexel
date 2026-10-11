@@ -313,3 +313,11 @@
   lifecycle event was added because no W16 frozen work order exists. No live
   window, keyboard/mouse automation, or screenshot was used. Maintainer window
   checks remain listed in `docs/lanes/integrate.md`.
+
+- WO-UI-POLISH-01 revision 1 is complete on `fix/ui-polish` at source commit
+  `a16a8dbeccf88506ffb833e3234f962da3187aef`. Icon-only button glyphs are 15 px
+  instead of 22 px while 32 px targets remain unchanged; close glyphs are
+  unchanged. The canvas status pill is shorter, narrower, and uses 10 px text.
+  Debug app bundle build and live CUA screenshot review pass. The saved
+  `cartoon.svg` is reopened with both timeline tracks visible. Playback was not
+  confirmed. Evidence: `artifacts/WO-UI-POLISH-01/ui-review.md`.
