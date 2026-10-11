@@ -29,3 +29,9 @@ running the raw stdio/headless-broker test here; the test is retained for a
 normal macOS runtime where local sockets are available. Report the exact
 focused and full-suite commands and outcomes in the implementation handoff.
 
+The live-window bridge is implemented in [`m0-live.md`](m0-live.md). It adds
+shared editor-document/history binding, per-window IDs, an AppKit UI host, and
+owner-thread interaction backpressure. The lane's in-process fake-presenter
+test does not drive a visible window; see its maintainer checklist for checks
+that still require normal macOS GUI verification.
+

@@ -293,6 +293,8 @@ set_target_properties(editor_state_test PROPERTIES C_STANDARD 17 C_STANDARD_REQU
 # lane: w4-mcp
 add_library(vexel_mcp STATIC
     src/mcp/mcp_json.c
+    src/mcp/mcp_ui_host.c
+    src/mcp/mcp_owner_queue.c
     src/mcp/mcp_tools.c
     src/mcp/mcp_protocol.c
     src/mcp/mcp_socket.c
@@ -306,7 +308,8 @@ add_library(vexel_mcp STATIC
 target_include_directories(vexel_mcp PUBLIC src src/mcp)
 target_link_libraries(vexel_mcp PUBLIC vexel_document vexel_shape)
 set_target_properties(vexel_mcp PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-target_sources(svgworkbench PRIVATE src/app/mcp_broker_hook.c)
+target_sources(svgworkbench PRIVATE src/app/mcp_broker_hook.c
+    src/app/viewer_mcp_host.c)
 target_link_libraries(svgworkbench PRIVATE vexel_mcp)
 add_executable(vexel-mcp app/vexel_mcp_main.c)
 target_link_libraries(vexel-mcp PRIVATE vexel_mcp)
@@ -334,6 +337,26 @@ target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # lane: w6-anim
 target_sources(vexel_mcp PRIVATE src/mcp/mcp_broker_animation.c)
+target_sources(vexel_mcp PRIVATE
+    src/mcp/mcp_broker_scene.c
+    src/mcp/mcp_broker_scene_ops.c
+    src/mcp/mcp_broker_scene_query.c
+    src/mcp/mcp_broker_scene_path.c
+    src/mcp/mcp_broker_scene_style.c
+    src/mcp/mcp_broker_scene_duplicate.c)
+add_executable(mcp_scene_test tests/mcp/mcp_scene_test.c)
+target_include_directories(mcp_scene_test PRIVATE src src/mcp)
+target_link_libraries(mcp_scene_test PRIVATE vexel_mcp)
+set_target_properties(mcp_scene_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(mcp_scene_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(mcp_scene_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(mcp_scene_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME mcp-scene COMMAND mcp_scene_test)
+endif()
 add_executable(svg_anim_test tests/anim/anim_test.c)
 target_link_libraries(svg_anim_test PRIVATE vexel_shape)
 set_target_properties(svg_anim_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
@@ -612,6 +635,11 @@ if(BUILD_TESTING)
     add_test(NAME mcp-fuzz COMMAND mcp_fuzz 200000 12648430)
     add_test(NAME mcp-stdio-e2e COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/mcp/test_e2e.py -v)
     set_tests_properties(mcp-stdio-e2e PROPERTIES
+        SKIP_REGULAR_EXPRESSION "execution sandbox denies Unix-domain socket bind")
+    add_test(NAME mcp-agent-scenarios COMMAND ${CMAKE_COMMAND} -E env
+        "VEXEL_MCP_BIN_DIR=$<TARGET_FILE_DIR:vexel-mcp>"
+        python3 ${CMAKE_SOURCE_DIR}/tests/mcp/agent_scenarios/test_scenarios.py -v)
+    set_tests_properties(mcp-agent-scenarios PROPERTIES
         SKIP_REGULAR_EXPRESSION "execution sandbox denies Unix-domain socket bind")
     add_test(NAME cli-version COMMAND svgworkbench --version)
     add_test(NAME base-contract COMMAND base_contract_test)
@@ -1162,6 +1190,35 @@ if(BUILD_TESTING)
     add_test(NAME platform-png COMMAND platform_png_test)
     add_test(NAME viewer-png-export COMMAND viewer_export_test)
     add_test(NAME editor-canvas-fuzz COMMAND editor_canvas_fuzz_test)
+endif()
+
+# lane: m0-live
+add_executable(viewer_mcp_test
+    tests/mcp/viewer_mcp_test.c
+    src/app/viewer_mcp_host.c
+    src/app/viewer_render.c
+    src/app/frame_compose.c
+    src/app/viewer_load.c
+    src/app/viewer_home.c
+    src/app/viewer_home_controller.c
+    src/app/viewer_sessions.c
+    src/app/viewer_timeline.c
+    src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_ui.c
+    src/app/viewer_timeline_accessibility.c)
+target_include_directories(viewer_mcp_test PRIVATE src src/app src/mcp
+    src/platform/macos)
+target_link_libraries(viewer_mcp_test PRIVATE vexel_editor_ui vexel_mcp
+    vexel_shape vexel_ui_state vexel_platform_media vexel_platform_png)
+set_target_properties(viewer_mcp_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_mcp_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_mcp_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_mcp_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME mcp-viewer-live COMMAND viewer_mcp_test)
 endif()
 
 # lane: w8-timeline

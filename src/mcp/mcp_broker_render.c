@@ -282,7 +282,9 @@ bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
     int dimensions_length = snprintf(dimensions, sizeof(dimensions), "%u,\"height\":%u}", width, height);
     return dimensions_length > 0 && (size_t)dimensions_length < sizeof(dimensions) &&
         mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(NULL, document),
+            strlen(mcp_broker_public_id(NULL, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"mimeType\":\"image/png\",\"width\":" ) &&
         mcp_json_buffer_append(&out->structured_json, dimensions, (size_t)dimensions_length) &&
         mcp_json_buffer_literal(&out->content_json, "[{\"type\":\"image\",\"data\":" ) &&
@@ -509,7 +511,9 @@ bool mcp_broker_export_animation(mcp_broker_document *document,
                                   frame_count, width, height);
     return numeric_length > 0 && (size_t)numeric_length < sizeof(numeric) &&
         mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(NULL, document),
+            strlen(mcp_broker_public_id(NULL, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"format\":" ) &&
         mcp_json_buffer_quoted(&out->structured_json, format, strlen(format)) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"path\":" ) &&

@@ -112,7 +112,12 @@ class McpStdioEndToEndTests(unittest.TestCase):
     def call_tool(self, name: str, arguments: dict[str, object]) -> dict[str, object]:
         response = self.rpc("tools/call", {"name": name, "arguments": arguments})
         self.assertIn("result", response)
-        return response["result"]
+        result = response["result"]
+        error = result.get("structuredContent", {}).get("error", {})
+        if not (error.get("code") == "invalid_arguments" and
+                error.get("message") == "unexpected argument"):
+            self.assertEqual(result["structuredContent"].get("mode"), "headless", result)
+        return result
 
     def expect_tool_error(self, name: str, arguments: dict[str, object], code: str) -> None:
         result = self.call_tool(name, arguments)
@@ -125,9 +130,13 @@ class McpStdioEndToEndTests(unittest.TestCase):
         tool_names = {item["name"] for item in listed}
         expected = {
             "document_open", "document_close", "document_list", "document_info", "tree_get",
-            "element_get", "element_query", "attribute_set", "attribute_remove", "text_set",
+            "element_tree", "element_get", "element_query", "attribute_set", "attribute_remove", "text_set",
             "element_add", "element_add_fragment", "element_delete", "element_duplicate", "element_reorder",
-            "element_group", "element_ungroup", "transaction", "undo", "redo", "save",
+            "element_create", "element_set", "element_group", "element_ungroup", "transform_set",
+            "transform_apply", "style_fill", "style_stroke", "style_opacity", "gradient_create",
+            "gradient_stop_add", "gradient_stop_set", "gradient_stop_remove", "path_from_commands",
+            "path_append", "path_edit_node", "element_align", "element_distribute", "batch",
+            "transaction", "undo", "redo", "save",
             "save_as", "render_png", "animation_list", "animation_add", "animation_set",
             "animation_remove", "export_animation", "selection_get", "selection_set", "export_svg",
         }
@@ -157,6 +166,109 @@ class McpStdioEndToEndTests(unittest.TestCase):
         query = self.call_tool("element_query", {"documentId": document_id,
                                                     "tag": "circle"})["structuredContent"]
         self.assertEqual(query["elements"][0]["elementId"], "c1")
+        self.assertEqual(query["mode"], "headless")
+        detailed_tree = self.call_tool("element_tree", {"documentId": document_id,
+            "includeAttributes": True, "includeBounds": True, "limit": 32})["structuredContent"]
+        self.assertEqual(detailed_tree["mode"], "headless")
+        self.assertTrue(any(row["elementId"] == "r1" and row["bounds"] is not None
+                            for row in detailed_tree["elements"]))
+        selector = self.call_tool("element_query", {"documentId": document_id,
+            "selector": "#c1"})["structuredContent"]
+        self.assertEqual(selector["elements"][0]["elementId"], "c1")
+        by_id = self.call_tool("element_query", {"documentId": document_id,
+            "id": "r1"})["structuredContent"]
+        self.assertEqual(by_id["elements"][0]["elementId"], "r1")
+        hit = self.call_tool("element_query", {"documentId": document_id,
+            "hitTest": {"x": 10, "y": 10}})["structuredContent"]
+        self.assertIn("r1", [row["elementId"] for row in hit["elements"]])
+
+        created_scene = self.call_tool("element_create", {"documentId": document_id,
+            "parentId": root_id, "tag": "rect", "index": 0,
+            "attributes": {"id": "scene-rect", "x": "2", "y": "3",
+                           "width": "8", "height": "6"},
+            "style": {"fill": "red", "stroke": "black"}})["structuredContent"]
+        self.assertEqual(created_scene["elementId"], "scene-rect")
+        self.assertEqual(created_scene["mode"], "headless")
+        self.expect_tool_error("element_create", {"documentId": document_id,
+            "parentId": root_id, "tag": "rect", "index": 999}, "invalid_argument")
+        self.call_tool("style_stroke", {"documentId": document_id,
+            "elementId": "scene-rect", "value": "blue"})
+        self.call_tool("style_opacity", {"documentId": document_id,
+            "elementId": "scene-rect", "value": "0.7"})
+        self.call_tool("style_fill", {"documentId": document_id,
+            "elementId": "scene-rect", "value": "orange"})
+        self.call_tool("element_set", {"documentId": document_id,
+            "elementId": "scene-rect", "attributes": {"opacity": "0.8"},
+            "style": {"stroke": "navy", "stroke-width": "2"}})
+        self.call_tool("transform_apply", {"documentId": document_id,
+            "elementId": "scene-rect", "operation": "rotate", "angle": 15,
+            "cx": 6, "cy": 6})
+        scene_svg = self.call_tool("export_svg", {"documentId": document_id})["structuredContent"]["svg"]
+        self.assertIn("rotate(15 6 6)", scene_svg)
+        self.call_tool("transform_set", {"documentId": document_id,
+            "elementId": "scene-rect", "value": "translate(1 2) scale(1.25)"})
+
+        path = self.call_tool("path_from_commands", {"documentId": document_id,
+            "parentId": root_id, "commands": "M 1 1 L 5 5 Z"})["structuredContent"]
+        path_id = path["elementId"]
+        self.call_tool("path_edit_node", {"documentId": document_id,
+            "elementId": path_id, "nodeIndex": 1, "values": "7 9"})
+        self.call_tool("path_append", {"documentId": document_id,
+            "elementId": path_id, "commands": "L 10 12"})
+        defs_id = self.call_tool("element_create", {"documentId": document_id,
+            "parentId": root_id, "tag": "defs", "attributes": {"id": "scene-defs"}})["structuredContent"]["elementId"]
+        gradient = self.call_tool("gradient_create", {"documentId": document_id,
+            "parentId": defs_id, "kind": "linearGradient", "index": 0,
+            "attributes": {"x1": "0%", "x2": "100%"}})["structuredContent"]
+        gradient_id = gradient["elementId"]
+        self.call_tool("gradient_stop_add", {"documentId": document_id,
+            "gradientId": gradient_id, "index": 0, "offset": "0%", "color": "white"})
+        self.call_tool("gradient_stop_add", {"documentId": document_id,
+            "gradientId": gradient_id, "index": 1, "offset": "1", "color": "black"})
+        self.call_tool("gradient_stop_add", {"documentId": document_id,
+            "gradientId": gradient_id, "index": 2, "offset": "1", "color": "red"})
+        self.call_tool("gradient_stop_set", {"documentId": document_id,
+            "gradientId": gradient_id, "index": 1, "color": "blue"})
+        self.call_tool("gradient_stop_remove", {"documentId": document_id,
+            "gradientId": gradient_id, "index": 2})
+        self.call_tool("style_fill", {"documentId": document_id,
+            "elementId": "scene-rect", "value": f"url(#{gradient_id})"})
+        filter_id = self.call_tool("element_create", {"documentId": document_id,
+            "parentId": defs_id, "tag": "filter"})["structuredContent"]["elementId"]
+        self.call_tool("element_create", {"documentId": document_id,
+            "parentId": filter_id, "tag": "feGaussianBlur",
+            "attributes": {"stdDeviation": "1"}})
+        self.call_tool("element_create", {"documentId": document_id,
+            "parentId": root_id, "tag": "image", "attributes": {
+                "x": "80", "y": "80", "width": "8", "height": "8",
+                "href": self._tiny_png_data_uri()}})
+        for element_id, x in (("align-a", "4"), ("align-b", "30"), ("align-c", "60")):
+            self.call_tool("element_create", {"documentId": document_id,
+                "parentId": root_id, "tag": "rect", "attributes": {"id": element_id,
+                "x": x, "y": "20", "width": "5", "height": "5"}})
+        self.call_tool("element_align", {"documentId": document_id,
+            "elementIds": ["align-a", "align-b"], "axis": "x", "alignment": "start"})
+        self.call_tool("element_distribute", {"documentId": document_id,
+            "elementIds": ["align-a", "align-b", "align-c"], "axis": "x"})
+        batch = self.call_tool("batch", {"documentId": document_id, "operations": [
+            {"op": "element_set", "elementId": "scene-rect", "attributes": {"fill": "purple"}},
+            {"op": "element_set", "elementId": "scene-rect", "attributes": {"x": "12"}},
+        ]})["structuredContent"]
+        self.assertEqual(batch["undoSteps"], 1)
+        self.assertEqual([row["applied"] for row in batch["results"]], [True, True])
+        self.call_tool("undo", {"documentId": document_id})
+        scene_after_undo = self.call_tool("element_get", {"documentId": document_id,
+            "elementId": "scene-rect"})["structuredContent"]
+        scene_attrs = {item["name"]: item["value"] for item in scene_after_undo["attributes"]}
+        self.assertIn(f"url(#{gradient_id})", scene_attrs["style"])
+        self.call_tool("redo", {"documentId": document_id})
+        before_rollback = self.call_tool("export_svg", {"documentId": document_id})["structuredContent"]["svg"]
+        self.expect_tool_error("batch", {"documentId": document_id, "operations": [
+            {"op": "element_set", "elementId": "scene-rect", "attributes": {"fill": "cyan"}},
+            {"op": "not_supported", "elementId": "scene-rect"},
+        ]}, "batch_rolled_back")
+        after_rollback = self.call_tool("export_svg", {"documentId": document_id})["structuredContent"]["svg"]
+        self.assertEqual(after_rollback, before_rollback)
 
         animations = self.call_tool("animation_list", {"documentId": document_id})["structuredContent"]
         self.assertEqual(animations["tracks"][0]["animationId"], "grow")
@@ -191,6 +303,9 @@ class McpStdioEndToEndTests(unittest.TestCase):
         duplicate = self.call_tool("element_duplicate", {"documentId": document_id,
                                                             "elementId": "r1"})["structuredContent"]
         self.assertTrue(duplicate["created"])
+        animation_id_query = self.call_tool("element_query", {"documentId": document_id,
+            "id": "grow"})["structuredContent"]
+        self.assertEqual(len(animation_id_query["elements"]), 1)
         self.call_tool("element_delete", {"documentId": document_id,
                                            "elementId": duplicate["elementId"]})
         self.call_tool("element_group", {"documentId": document_id, "elementId": "added"})

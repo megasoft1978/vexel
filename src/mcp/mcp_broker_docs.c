@@ -28,16 +28,25 @@ static bool append_bool(mcp_json_buffer *out, bool value)
     return mcp_json_buffer_literal(out, value ? "true" : "false");
 }
 
-static bool append_document_entry(mcp_json_buffer *out, mcp_broker_document *document,
-                                  bool active)
+static bool append_document_entry(mcp_broker *broker, mcp_json_buffer *out,
+                                  mcp_broker_document *document, bool active)
 {
     return mcp_json_buffer_literal(out, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(out, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(out, mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(out, ",\"path\":" ) &&
         mcp_json_buffer_quoted(out, document->path, strlen(document->path)) &&
+        mcp_json_buffer_literal(out, ",\"mode\":" ) &&
+        mcp_json_buffer_quoted(out, mcp_broker_document_mode(document),
+            strlen(mcp_broker_document_mode(document))) &&
         mcp_json_buffer_literal(out, ",\"dirty\":" ) &&
         append_bool(out, document_edit_is_dirty(document->edit)) &&
         mcp_json_buffer_literal(out, ",\"active\":" ) && append_bool(out, active) &&
+        mcp_json_buffer_literal(out, ",\"live\":" ) && append_bool(out, document->live) &&
+        (document->live ?
+            (mcp_json_buffer_literal(out, ",\"windowId\":" ) &&
+             mcp_json_buffer_quoted(out, document->window_id,
+                 strlen(document->window_id))) : true) &&
         mcp_json_buffer_literal(out, "}" );
 }
 
@@ -91,6 +100,14 @@ static mcp_broker_document *open_document(mcp_broker *broker, const char *path,
     }
     mcp_broker_document *existing = find_path(broker, canonical);
     if (existing != NULL) return existing;
+    size_t headless_count = 0U;
+    for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++)
+        if (broker->documents[index].used && !broker->documents[index].live)
+            headless_count++;
+    if (headless_count >= MCP_BROKER_MAX_HEADLESS_DOCUMENTS) {
+        *out_error = "document_limit";
+        return NULL;
+    }
     mcp_broker_document *slot = NULL;
     for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++)
         if (!broker->documents[index].used) { slot = &broker->documents[index]; break; }
@@ -111,6 +128,7 @@ static mcp_broker_document *open_document(mcp_broker *broker, const char *path,
     *slot = (mcp_broker_document){0};
     slot->used = true;
     slot->edit = created.edit;
+    mcp_ui_host_init_headless(&slot->ui_host);
     slot->owned_source = source;
     slot->owned_source_length = source_length;
     memcpy(slot->path, canonical, strlen(canonical) + 1U);
@@ -130,13 +148,18 @@ static mcp_broker_document *open_document(mcp_broker *broker, const char *path,
     return slot;
 }
 
-static bool emit_element(mcp_broker_document *document, document_handle handle,
+static bool emit_element(mcp_broker *broker, mcp_broker_document *document,
+                         document_handle handle,
                          mcp_json_buffer *out)
 {
+    (void)broker;
     base_bytes tag = {0};
     if (!document_edit_tag_name(document->edit, handle, &tag) ||
         !mcp_json_buffer_literal(out, "{\"elementId\":" ) ||
         !mcp_broker_element_id(document, handle, out) ||
+        !mcp_json_buffer_literal(out, ",\"mode\":" ) ||
+        !mcp_json_buffer_quoted(out, mcp_broker_document_mode(document),
+            strlen(mcp_broker_document_mode(document))) ||
         !mcp_json_buffer_literal(out, ",\"tag\":" ) ||
         !mcp_json_buffer_quoted(out, (const char *)tag.ptr, tag.len) ||
         !mcp_json_buffer_literal(out, ",\"attributes\":[")) return false;
@@ -175,7 +198,8 @@ static bool document_list(mcp_broker *broker, mcp_tool_response *out)
         mcp_broker_document *document = &broker->documents[index];
         if (!document->used || document->edit == NULL) continue;
         if (!first && !mcp_json_buffer_literal(&out->structured_json, ",")) return false;
-        if (!append_document_entry(&out->structured_json, document, document == broker->app_document)) return false;
+        if (!append_document_entry(broker, &out->structured_json, document,
+                document == broker->app_document)) return false;
         first = false;
     }
     return mcp_json_buffer_literal(&out->structured_json, "]}" );
@@ -187,7 +211,9 @@ static bool document_info(mcp_broker *broker, const mcp_json_doc *request,
     mcp_broker_document *document = mcp_broker_find(broker, request, args, "documentId");
     if (document == NULL) return mcp_broker_set_error(out, "document_not_found", "documentId is not open");
     return mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"path\":" ) &&
         mcp_json_buffer_quoted(&out->structured_json, document->path, strlen(document->path)) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"sourceBytes\":" ) &&
@@ -201,6 +227,12 @@ static bool document_info(mcp_broker *broker, const mcp_json_doc *request,
             document_edit_history_count(document->edit) - document_edit_history_cursor(document->edit)) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"active\":" ) &&
         append_bool(&out->structured_json, document == broker->app_document) &&
+        mcp_json_buffer_literal(&out->structured_json, ",\"live\":" ) &&
+        append_bool(&out->structured_json, document->live) &&
+        (document->live ?
+            (mcp_json_buffer_literal(&out->structured_json, ",\"windowId\":" ) &&
+             mcp_json_buffer_quoted(&out->structured_json, document->window_id,
+                 strlen(document->window_id))) : true) &&
         mcp_json_buffer_literal(&out->structured_json, "}" );
 }
 
@@ -227,7 +259,7 @@ static bool element_get(mcp_broker *broker, const mcp_json_doc *request,
     if (document == NULL) return mcp_broker_set_error(out, "document_not_found", "documentId is not open");
     if (!get_element_argument(document, request, args, "elementId", &handle))
         return mcp_broker_set_error(out, "element_not_found", "elementId does not identify a live element");
-    return emit_element(document, handle, &out->structured_json);
+    return emit_element(broker, document, handle, &out->structured_json);
 }
 
 static bool query_matches(mcp_broker_document *document, document_handle handle,
@@ -293,7 +325,12 @@ static bool element_query(mcp_broker *broker, const mcp_json_doc *request,
     size_t node_count = document_model_node_count(model);
     if (cursor > node_count) return mcp_broker_set_error(out, "invalid_cursor", "query cursor is outside the document");
     if (!mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) ||
-        !mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) ||
+        !mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) ||
+        !mcp_json_buffer_literal(&out->structured_json, ",\"mode\":" ) ||
+        !mcp_json_buffer_quoted(&out->structured_json, mcp_broker_document_mode(document),
+            strlen(mcp_broker_document_mode(document))) ||
         !mcp_json_buffer_literal(&out->structured_json, ",\"elements\":[")) return false;
     size_t slot = (size_t)cursor, emitted = 0U;
     for (; slot < node_count && emitted < (size_t)limit; slot++) {
@@ -331,7 +368,9 @@ static bool export_svg(mcp_broker *broker, const mcp_json_doc *request,
         return mcp_broker_set_error(out, "source_unavailable", "SVG source could not be materialized");
     }
     bool okay = mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"svg\":" ) &&
         mcp_json_buffer_quoted(&out->structured_json, (const char *)source, length) &&
         mcp_json_buffer_literal(&out->structured_json, "}" );
@@ -346,7 +385,9 @@ static bool selection_get(mcp_broker *broker, const mcp_json_doc *request,
     if (document == NULL) return mcp_broker_set_error(out, "document_not_found", "documentId is not open");
     if (!document->selection_valid) return mcp_broker_set_error(out, "selection_unavailable", "document has no active selection");
     return mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"elementId\":" ) &&
         mcp_broker_element_id(document, document->selection, &out->structured_json) &&
         mcp_json_buffer_literal(&out->structured_json, "}" );
@@ -362,10 +403,15 @@ static bool selection_set(mcp_broker *broker, const mcp_json_doc *request,
         return mcp_broker_set_error(out, "element_not_found", "elementId does not identify a live element");
     document->selection = handle;
     document->selection_valid = true;
-    if (document->app_owned && broker->host.selection_changed != NULL)
+    if (document->app_owned && broker->host.selection_changed_for_document != NULL)
+        broker->host.selection_changed_for_document(broker->host.context,
+            document->host_document, handle);
+    else if (document->app_owned && broker->host.selection_changed != NULL)
         broker->host.selection_changed(broker->host.context, handle);
     return mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"elementId\":" ) &&
         mcp_broker_element_id(document, handle, &out->structured_json) &&
         mcp_json_buffer_literal(&out->structured_json, "}" );
@@ -390,16 +436,25 @@ static bool save_document(mcp_broker *broker, const mcp_json_doc *request,
     if (saved.error != DOCUMENT_EDIT_OK)
         return mcp_broker_set_error(out, document_edit_error_name(saved.error), "document save failed");
     if (strcmp(tool, "save_as") == 0) {
-        if (document->app_owned && (broker->host.set_current_path == NULL ||
-            !broker->host.set_current_path(broker->host.context, save_path)))
+        bool updated = true;
+        if (document->app_owned && broker->host.set_document_path != NULL)
+            updated = broker->host.set_document_path(broker->host.context,
+                document->host_document, save_path);
+        else if (document->app_owned && broker->host.set_current_path != NULL)
+            updated = broker->host.set_current_path(broker->host.context, save_path);
+        else if (document->app_owned) updated = false;
+        if (!updated)
             return mcp_broker_set_error(out, "save_as_path_update_failed",
                 "document was written but Vexel could not update the open path");
         memcpy(document->path, save_path, strlen(save_path) + 1U);
     }
     if (document->app_owned && broker->host.agent_edited != NULL)
         broker->host.agent_edited(broker->host.context, document->path);
+    mcp_broker_commit_mutation(broker, document->id, MCP_BROKER_MUTATION_SAVE);
     return mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"path\":" ) &&
         mcp_json_buffer_quoted(&out->structured_json, document->path, strlen(document->path)) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"saved\":true}" );
@@ -413,11 +468,12 @@ static bool history_action(mcp_broker *broker, const mcp_json_doc *request,
     document_edit_error error = redo ? document_edit_redo(document->edit) : document_edit_undo(document->edit);
     if (error != DOCUMENT_EDIT_OK) return mcp_broker_set_error(out,
         redo ? "redo_unavailable" : "undo_unavailable", document_edit_error_name(error));
-    document_handle selection;
-    if (!document_edit_root(document->edit, &selection)) return mcp_broker_set_error(out, "document_invalid", "document tree is unavailable");
-    mcp_broker_after_edit(broker, document, selection);
+    mcp_broker_after_edit(broker, document, (document_handle){0},
+        redo ? MCP_BROKER_MUTATION_REDO : MCP_BROKER_MUTATION_UNDO, false);
     return mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, redo ? ",\"action\":\"redo\"}" : ",\"action\":\"undo\"}" );
 }
 
@@ -437,7 +493,7 @@ bool mcp_broker_documents_call(mcp_broker *broker, const mcp_json_doc *request,
         if (document == NULL) return mcp_broker_set_error(out, error, "document could not be opened");
         if (broker->host.agent_edited != NULL)
             broker->host.agent_edited(broker->host.context, document->path);
-        return append_document_entry(&out->structured_json, document,
+        return append_document_entry(broker, &out->structured_json, document,
                                      document == broker->app_document);
     }
     if (strcmp(tool_name, "document_close") == 0) {

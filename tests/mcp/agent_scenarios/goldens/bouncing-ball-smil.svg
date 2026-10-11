@@ -1,0 +1,1 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect id='floor' x='0' y='54' width='64' height='10' fill='#344e41'/><circle id='ball' cx='32' cy='12' r='6' fill='#2ec4b6'><animate id='bounce' attributeName='cy' values='12;48;12' keyTimes='0;0.5;1' dur='2s' repeatCount='indefinite'/></circle></svg>

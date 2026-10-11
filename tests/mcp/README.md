@@ -16,3 +16,11 @@ add, set, and remove operations, PNG frame sequence and GIF export, atomic
 new-path Save As, output timing/frame-count checks, refusal to overwrite output,
 granted-directory checks, and closing one clean document while another remains
 open. It keeps these feature checks runnable when the host blocks socket bind.
+
+`viewer_mcp_test` uses real `viewer_editor`, `document_edit`, timeline, frame
+composition, and PNG encoding code with a fake presenter. It verifies active
+and per-window IDs, shared GUI/MCP undo, live transactions, dirty/selection
+refresh, rendered pixels, view/tool/panel/timeline commands, capture bounds,
+and busy-queue release, expiry, and capacity. Run it with `./dev t -k mcp`.
+`./dev mcp-fuzz` runs the deterministic viewer-host operation campaign in
+addition to the JSON argument fuzzer. Neither command drives an AppKit window.

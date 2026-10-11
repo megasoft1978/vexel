@@ -22,13 +22,28 @@ static mcp_broker_document *free_slot(mcp_broker *broker)
     return NULL;
 }
 
-static void assign_id(mcp_broker *broker, mcp_broker_document *document)
+mcp_broker_document *mcp_broker_find_id(mcp_broker *broker,
+                                        const char *document_id)
 {
-    uint32_t serial = broker->next_serial++;
-    if (serial == 0U) serial = broker->next_serial++;
-    document->serial = serial;
-    int amount = snprintf(document->id, sizeof(document->id), "doc-%08x", serial);
-    if (amount < 0 || (size_t)amount >= sizeof(document->id)) document->id[0] = '\0';
+    if (broker == NULL || document_id == NULL) return NULL;
+    if (strcmp(document_id, "active") == 0) return broker->app_document;
+    for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++) {
+        mcp_broker_document *document = &broker->documents[index];
+        if (document->used && document->edit != NULL &&
+            (strcmp(document->id, document_id) == 0 ||
+             (document->window_id[0] != '\0' &&
+              strcmp(document->window_id, document_id) == 0))) return document;
+    }
+    return NULL;
+}
+
+const char *mcp_broker_public_id(const mcp_broker *broker,
+                                const mcp_broker_document *document)
+{
+    if (document != NULL && (document->listed_active_alias ||
+        (broker != NULL && document == broker->app_document)))
+        return "active";
+    return document == NULL ? "" : document->id;
 }
 
 bool mcp_broker_create(const mcp_broker_host *host, mcp_broker **out)
@@ -38,6 +53,7 @@ bool mcp_broker_create(const mcp_broker_host *host, mcp_broker **out)
     mcp_broker *broker = calloc(1U, sizeof(*broker));
     if (broker == NULL) return false;
     if (host != NULL) broker->host = *host;
+    mcp_ui_host_init_headless(&broker->ui_host);
     broker->next_serial = 1U;
     *out = broker;
     return true;
@@ -83,6 +99,13 @@ void mcp_broker_bind_current(mcp_broker *broker)
             broker->app_document->owned_source_length = 0U;
         }
         broker->app_document->edit = edit;
+        broker->app_document->app_owned = true;
+        broker->app_document->live = true;
+        broker->app_document->live_mode = false;
+        broker->app_document->listed_active_alias = true;
+        broker->app_document->host_document = broker->host.context;
+        memcpy(broker->app_document->id, "active", sizeof("active"));
+        mcp_ui_host_init_headless(&broker->app_document->ui_host);
         document_handle selection;
         if (broker->host.current_selection != NULL &&
             broker->host.current_selection(broker->host.context, &selection)) {
@@ -99,11 +122,104 @@ void mcp_broker_bind_current(mcp_broker *broker)
     if (document == NULL) return;
     document->used = true;
     document->app_owned = true;
+    document->live = true;
+    document->live_mode = broker->host.live_document_count != NULL;
+    document->listed_active_alias = true;
     document->edit = edit;
     memcpy(document->path, path, strlen(path) + 1U);
-    assign_id(broker, document);
+    memcpy(document->id, "active", sizeof("active"));
+    document->host_document = broker->host.context;
+    mcp_ui_host_init_headless(&document->ui_host);
     broker->app_document = document;
     if (document_edit_root(edit, &document->selection)) document->selection_valid = true;
+}
+
+static mcp_broker_document *find_live_identity(mcp_broker *broker, void *identity)
+{
+    if (broker == NULL || identity == NULL) return NULL;
+    for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++) {
+        mcp_broker_document *document = &broker->documents[index];
+        if (document->used && document->live && document->host_document == identity)
+            return document;
+    }
+    return NULL;
+}
+
+static bool live_window_id(uint32_t number, char out[32])
+{
+    int amount = snprintf(out, 32U, "window:%u", number);
+    return amount > 0 && (size_t)amount < 32U;
+}
+
+void mcp_broker_bind_live_documents(mcp_broker *broker)
+{
+    if (broker == NULL || broker->host.live_document_count == NULL ||
+        broker->host.live_document_at == NULL) return;
+    if (broker->host.live_control_enabled != NULL &&
+        !broker->host.live_control_enabled(broker->host.context)) {
+        for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++) {
+            mcp_broker_document *document = &broker->documents[index];
+            if (document->used && document->live) clear_document(document, false);
+        }
+        broker->app_document = NULL;
+        return;
+    }
+
+    bool seen[MCP_BROKER_MAX_DOCUMENTS] = {0};
+    broker->app_document = NULL;
+    for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++)
+        if (broker->documents[index].used && broker->documents[index].live)
+            broker->documents[index].listed_active_alias = false;
+    size_t count = broker->host.live_document_count(broker->host.context);
+    if (count > MCP_BROKER_MAX_LIVE_DOCUMENTS) count = MCP_BROKER_MAX_LIVE_DOCUMENTS;
+    for (size_t index = 0U; index < count; index++) {
+        mcp_broker_live_document source = {0};
+        if (!broker->host.live_document_at(broker->host.context, index, &source) ||
+            source.identity == NULL || source.edit == NULL || source.path == NULL ||
+            source.path[0] == '\0' ||
+            strnlen(source.path, MCP_BROKER_PATH_CAP) >= MCP_BROKER_PATH_CAP) continue;
+        char id[32];
+        if (!live_window_id(source.window_number, id)) continue;
+        mcp_broker_document *document = find_live_identity(broker, source.identity);
+        if (document == NULL) {
+            for (size_t slot = 0U; slot < MCP_BROKER_MAX_DOCUMENTS; slot++) {
+                if (!broker->documents[slot].used) {
+                    document = &broker->documents[slot];
+                    break;
+                }
+            }
+            if (document == NULL) continue;
+            *document = (mcp_broker_document){0};
+            document->used = true;
+            document->app_owned = true;
+            document->live = true;
+            document->live_mode = true;
+            document->host_document = source.identity;
+        }
+        size_t slot = (size_t)(document - broker->documents);
+        if (slot >= MCP_BROKER_MAX_DOCUMENTS) continue;
+        seen[slot] = true;
+        document->edit = source.edit;
+        document->window_number = source.window_number;
+        memcpy(document->id, id, strlen(id) + 1U);
+        memcpy(document->window_id, id, strlen(id) + 1U);
+        size_t path_length = strlen(source.path);
+        memcpy(document->path, source.path, path_length + 1U);
+        document->selection = source.selection;
+        document->selection_valid = source.selection_valid;
+        document->ui_host = source.ui_host;
+        if (document->ui_host.vtable == NULL)
+            mcp_ui_host_init_headless(&document->ui_host);
+        if (source.active) {
+            document->listed_active_alias = true;
+            broker->app_document = document;
+        }
+    }
+    for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++) {
+        mcp_broker_document *document = &broker->documents[index];
+        if (document->used && document->live && !seen[index])
+            clear_document(document, false);
+    }
 }
 
 mcp_broker_document *mcp_broker_current(mcp_broker *broker)
@@ -124,11 +240,7 @@ mcp_broker_document *mcp_broker_find(mcp_broker *broker, const mcp_json_doc *doc
     size_t length = 0U;
     if (!mcp_broker_string_arg(doc, args, key, id, sizeof(id), &length)) return NULL;
     id[length] = '\0';
-    for (size_t index = 0U; index < MCP_BROKER_MAX_DOCUMENTS; index++) {
-        mcp_broker_document *document = &broker->documents[index];
-        if (document->used && strcmp(document->id, id) == 0 && document->edit != NULL) return document;
-    }
-    return NULL;
+    return mcp_broker_find_id(broker, id);
 }
 
 bool mcp_broker_string_arg(const mcp_json_doc *doc, size_t args, const char *name,
@@ -265,7 +377,8 @@ bool mcp_broker_tree_json(mcp_broker_document *document, size_t cursor, size_t l
     size_t node_count = document_model_node_count(model);
     if (cursor > node_count) return false;
     if (!mcp_json_buffer_literal(out, "{\"documentId\":" ) ||
-        !mcp_json_buffer_quoted(out, document->id, strlen(document->id)) ||
+        !mcp_json_buffer_quoted(out, mcp_broker_public_id(NULL, document),
+            strlen(mcp_broker_public_id(NULL, document))) ||
         !mcp_json_buffer_literal(out, ",\"elements\":[")) return false;
     size_t slot = cursor;
     size_t emitted = 0U;
@@ -300,13 +413,51 @@ bool mcp_broker_tree_json(mcp_broker_document *document, size_t cursor, size_t l
 }
 
 void mcp_broker_after_edit(mcp_broker *broker, mcp_broker_document *document,
-                           document_handle selection)
+                           document_handle selection,
+                           mcp_broker_mutation_kind mutation_kind,
+                           bool selection_valid)
 {
     if (broker == NULL || document == NULL || document->edit == NULL) return;
     document->selection = selection;
-    document->selection_valid = true;
-    if (broker->host.selection_changed != NULL && document->app_owned)
-        broker->host.selection_changed(broker->host.context, selection);
+    document->selection_valid = selection_valid;
+    if (document->app_owned && selection_valid) {
+        if (broker->host.selection_changed_for_document != NULL)
+            broker->host.selection_changed_for_document(broker->host.context,
+                document->host_document, selection);
+        else if (broker->host.selection_changed != NULL)
+            broker->host.selection_changed(broker->host.context, selection);
+    }
     if (broker->host.agent_edited != NULL)
         broker->host.agent_edited(broker->host.context, document->path);
+    mcp_broker_commit_mutation(broker, document->id, mutation_kind);
+}
+
+const char *mcp_broker_document_mode(const mcp_broker_document *document)
+{
+    return document != NULL && document->live_mode ? "live" : "headless";
+}
+
+void mcp_broker_commit_mutation(mcp_broker *broker, const char *document_id,
+                                mcp_broker_mutation_kind mutation_kind)
+{
+    mcp_broker_document *document = mcp_broker_find_id(broker, document_id);
+    if (document == NULL || !document->app_owned) return;
+    void *identity = document->host_document == NULL ? broker->host.context :
+        document->host_document;
+    free(document->last_render_base64);
+    document->last_render_base64 = NULL;
+    document->last_render_length = 0U;
+    document->last_render_width = 0U;
+    document->last_render_height = 0U;
+    if (broker->host.commit_mutation != NULL)
+        broker->host.commit_mutation(broker->host.context, identity, mutation_kind,
+            document->selection, document->selection_valid);
+    if (broker->host.current_selection_for_document != NULL) {
+        document_handle selection = {0};
+        if (broker->host.current_selection_for_document(broker->host.context,
+                identity, &selection)) {
+            document->selection = selection;
+            document->selection_valid = true;
+        } else document->selection_valid = false;
+    }
 }

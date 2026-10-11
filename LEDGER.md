@@ -2,6 +2,7 @@
 
 | UTC date | Work order | Status | Base | Commit | Evidence |
 |---|---|---|---|---|---|
+| 2026-10-11 | MCP integration continuation | locally verified; uncommitted | `f3e28cd` | — | M0 live host, M1 scene tools, M2 view/animation, and M3 stdio scenarios are integrated in `integrate/mcp-next`; successful and semantic-error broker results carry `mode`. `./dev test-fast`: 303/303; MCP tests: 7/7 CTests, 2/2 Python; Debug/Release CTest: 81/81 each excluding `native-shell-goldens`; ASan+UBSan and UBSan MCP CTests: 7/7 each. BetterDisplay's 2x AppKit capture matches the W16 baseline but not the fixture. Details: `docs/lanes/mcp-integration.md`. |
 | 2026-10-11 | r5 WO-6 + WO-9 (W15-a11y; source orders not frozen under `work/`) | merged into `integrate/w16`; integrated fast suite passes | `3739b0b2dcce1dae5c4959452565d1a4dfdb2188` | `18137a6` | `./dev t --all`: 79/79 CTests and 69/69 Python tests; `ledger.jsonl` validates with 412 entries. No lifecycle event was added because the source orders are not frozen under `work/`. Details: `docs/lanes/w15-a11y.md` and `docs/lanes/integrate.md`. |
 | 2026-10-08 | WO-BOOT-01 | complete; fresh verifier pass | `b90dfbc44623e9834852b19513116149c83a15f0` | `beb0cdd` | Debug/Release/size/ASan-UBSan build; six ACs pass; `artifacts/WO-BOOT-01/`, `bench/results/WO-BOOT-01.json` |
 | 2026-10-08 | WO-BOOT-02 | complete; fresh verifier pass | `2d8e1ea60356d418d7a69cb6c926eacad7f16d08` | `278c227` | 8 tests pass; atomic append validated; `artifacts/WO-BOOT-02/` |

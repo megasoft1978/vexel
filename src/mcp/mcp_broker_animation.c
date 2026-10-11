@@ -162,6 +162,14 @@ static bool append_track(mcp_broker_document *document,
         !mcp_broker_element_id(document, target, out) ||
         !mcp_json_buffer_literal(out, ",\"supported\":" ) ||
         !mcp_json_buffer_literal(out, track->supported ? "true" : "false") ||
+        !mcp_json_buffer_literal(out, ",\"calcMode\":" ) ||
+        !mcp_json_buffer_quoted(out,
+            track->calc_mode == SVG_ANIM_CALC_SPLINE ? "spline" :
+            track->calc_mode == SVG_ANIM_CALC_DISCRETE ? "discrete" :
+            track->calc_mode == SVG_ANIM_CALC_PACED ? "paced" : "linear",
+            track->calc_mode == SVG_ANIM_CALC_SPLINE ? 6U :
+            track->calc_mode == SVG_ANIM_CALC_DISCRETE ? 8U :
+            track->calc_mode == SVG_ANIM_CALC_PACED ? 5U : 6U) ||
         !mcp_json_buffer_literal(out, ",\"timing\":{\"begin\":" ) ||
         !append_number(out, track->begin_seconds) ||
         !mcp_json_buffer_literal(out, ",\"duration\":" ) ||
@@ -201,7 +209,9 @@ static bool animation_list(mcp_broker_document *document, mcp_tool_response *out
     if (!snapshot_create(document, &snapshot))
         return mcp_broker_set_error(out, "animation_decode_failed", "document could not be decoded within the animation source limit");
     bool okay = mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(NULL, document),
+            strlen(mcp_broker_public_id(NULL, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"tracks\":[" );
     for (size_t index = 0U; okay && index < snapshot.document.track_count; index++) {
         if (index > 0U) okay = mcp_json_buffer_literal(&out->structured_json, ",");
@@ -332,9 +342,12 @@ static bool animation_edit(mcp_broker *broker, mcp_broker_document *document,
     document_handle selection;
     if (!document_edit_root(document->edit, &selection))
         return mcp_broker_set_error(out, "document_invalid", "animation edit succeeded but the root could not be rebound");
-    mcp_broker_after_edit(broker, document, selection);
+    mcp_broker_after_edit(broker, document, selection,
+        MCP_BROKER_MUTATION_ANIMATION, true);
     return mcp_json_buffer_literal(&out->structured_json, "{\"documentId\":" ) &&
-        mcp_json_buffer_quoted(&out->structured_json, document->id, strlen(document->id)) &&
+        mcp_json_buffer_quoted(&out->structured_json,
+            mcp_broker_public_id(broker, document),
+            strlen(mcp_broker_public_id(broker, document))) &&
         mcp_json_buffer_literal(&out->structured_json, ",\"changed\":true}");
 }
 

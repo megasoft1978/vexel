@@ -1,5 +1,17 @@
 # Project state
 
+- Update 2026-10-11: MCP integration continuation is in the uncommitted
+  `integrate/mcp-next` worktree. The M0 live host, M1 scene tools, M2 view and
+  animation changes, and five M3 real-stdio scenarios are integrated. The
+  successful and semantic-error broker responses now carry `mode` at the
+  structured-content root, and CTest uses configuration-matched MCP binaries.
+  `./dev test-fast` passes 303/303; MCP gates pass 7/7 CTests and 2/2 Python
+  tests; Debug and Release CTest each pass 81/81 excluding the known
+  `native-shell-goldens` mismatch; ASan+UBSan and UBSan MCP CTest each pass 7/7. The
+  BetterDisplay 2x offscreen AppKit capture is byte-identical to a W16 baseline
+  and still differs from the 600x650 fixture after downsampling. No fixture was
+  changed. Further verification is recorded in `docs/lanes/mcp-integration.md`.
+
 - Completed work order: `WO-M0-02` is merged to `main` at
   `0f24ab6f4a5a9ab6f7ff3846ae3d6339316287a9`. All nine frozen commands pass;
   the read-only review found no remaining code, safety, scope, or test defect.

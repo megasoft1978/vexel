@@ -254,7 +254,7 @@ static int run_viewer(const char *path, bool smoke_mode)
             else index++;
         }
         if (runtime.documents.active != NULL && runtime.documents.count > 0U)
-            mcp_broker_hook_poll(runtime.documents.active);
+            mcp_broker_hook_poll(&runtime.documents);
         if (runtime.documents.count > 0U) runtime_sleep();
     }
     platform_shutdown();

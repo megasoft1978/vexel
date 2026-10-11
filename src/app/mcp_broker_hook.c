@@ -3,12 +3,13 @@
 
 #include "mcp_broker_hook.h"
 
-#include "viewer_editor_internal.h"
-#include "viewer_internal.h"
 #include "mcp/mcp_broker.h"
 #include "mcp/mcp_json.h"
+#include "mcp/mcp_owner_queue.h"
 #include "mcp/mcp_protocol.h"
 #include "mcp/mcp_socket.h"
+#include "viewer_mcp_host.h"
+#include "viewer_sessions.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -16,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -23,120 +25,31 @@
 
 #define MCP_HOOK_CLIENTS 8U
 #define MCP_HOOK_BACKPRESSURE_MS 2000
+#define MCP_HOOK_PENDING_TIMEOUT_MS UINT64_C(2000)
 
 typedef struct mcp_hook_client {
     int descriptor;
     uint8_t *input;
     size_t length;
+    uint64_t generation;
     mcp_protocol_session protocol;
 } mcp_hook_client;
 
 typedef struct mcp_hook_state {
-    viewer_app *app;
+    viewer_session_collection *sessions;
     int listener;
     bool owns_socket;
     bool start_attempted;
     bool reported_error;
+    bool connected;
+    uint64_t next_client_generation;
     char socket_path[sizeof(((struct sockaddr_un *)0)->sun_path)];
     mcp_broker *broker;
     mcp_hook_client clients[MCP_HOOK_CLIENTS];
+    mcp_owner_queue pending;
 } mcp_hook_state;
 
 static mcp_hook_state hook = {.listener = -1};
-
-static document_edit *host_current_edit(void *context)
-{
-    viewer_app *app = context;
-    return app == NULL || app->editor == NULL ? NULL : app->editor->edit;
-}
-
-static const char *host_current_path(void *context)
-{
-    viewer_app *app = context;
-    return app == NULL || app->editor == NULL || app->load_status != VIEWER_LOAD_OK ? "" : app->path;
-}
-
-static bool host_current_selection(void *context, document_handle *out)
-{
-    viewer_app *app = context;
-    if (app == NULL || app->editor == NULL || out == NULL) return false;
-    *out = app->editor->selected;
-    return true;
-}
-
-static bool host_replace_edit(void *context, document_edit *expected,
-                              document_edit *replacement, document_handle selection)
-{
-    viewer_app *app = context;
-    if (app == NULL || app->editor == NULL || app->editor->edit != expected || replacement == NULL ||
-        !viewer_bump_generation(app)) return false;
-    app->editor->edit = replacement;
-    document_edit_destroy(expected);
-    editor_select_handle(app->editor, selection);
-    editor_refresh_outline(app->editor);
-    viewer_editor_set_status(app->editor, "Agent edited document — transaction committed");
-    app->editor_render_requested = true;
-    app->frame_dirty = true;
-    (void)viewer_set_window_title(app);
-    return true;
-}
-
-static bool host_destroy_edit(void *context, document_edit *edit)
-{
-    viewer_app *app = context;
-    if (app == NULL || app->editor == NULL || app->editor->edit != edit) return false;
-    app->editor->edit = NULL;
-    document_edit_destroy(edit);
-    return true;
-}
-
-static bool host_set_path(void *context, const char *path)
-{
-    viewer_app *app = context;
-    if (app == NULL || path == NULL || app->editor == NULL) return false;
-    size_t length = strnlen(path, sizeof(app->path));
-    if (length == 0U || length >= sizeof(app->path)) return false;
-    memcpy(app->path, path, length + 1U);
-    const char *base = path;
-    for (const char *cursor = path; *cursor != '\0'; cursor++)
-        if (*cursor == '/') base = cursor + 1;
-    size_t base_length = strnlen(base, sizeof(app->display_name) - 1U);
-    for (size_t index = 0U; index < base_length; index++) {
-        unsigned char byte = (unsigned char)base[index];
-        app->display_name[index] = byte >= 32U && byte < 127U ? (char)byte : '?';
-    }
-    app->display_name[base_length] = '\0';
-    viewer_update_file_stamp(app);
-    app->frame_dirty = true;
-    return viewer_set_window_title(app);
-}
-
-static void host_agent_edited(void *context, const char *path)
-{
-    viewer_app *app = context;
-    if (app == NULL || app->editor == NULL) return;
-    const char *base = path == NULL ? "document" : path;
-    if (path != NULL) {
-        for (const char *cursor = path; *cursor != '\0'; cursor++)
-            if (*cursor == '/') base = cursor + 1;
-    }
-    char status[192];
-    int amount = snprintf(status, sizeof(status), "Agent edited — %.120s", base);
-    if (amount > 0 && (size_t)amount < sizeof(status)) viewer_editor_set_status(app->editor, status);
-    if (path != NULL && strcmp(path, app->path) == 0) {
-        if (viewer_bump_generation(app)) app->editor_render_requested = true;
-    }
-    app->frame_dirty = true;
-}
-
-static void host_selection_changed(void *context, document_handle selection)
-{
-    viewer_app *app = context;
-    if (app == NULL || app->editor == NULL) return;
-    editor_select_handle(app->editor, selection);
-    editor_refresh_outline(app->editor);
-    app->frame_dirty = true;
-}
 
 static bool parent_directory_is_private(const char *socket_path)
 {
@@ -205,29 +118,31 @@ static bool start_listener(mcp_hook_state *state)
     return true;
 }
 
-static bool ensure_hook(viewer_app *app)
+static bool ensure_hook(viewer_session_collection *sessions)
 {
-    if (hook.app == app && hook.broker != NULL) return true;
-    if (hook.app == app && hook.start_attempted) return false;
-    if (hook.app != NULL) mcp_broker_hook_shutdown(hook.app);
-    hook = (mcp_hook_state){.listener = -1, .app = app, .start_attempted = true};
+    if (hook.sessions == sessions && hook.broker != NULL) return true;
+    if (hook.sessions == sessions && hook.start_attempted) return false;
+    if (hook.sessions != NULL) mcp_broker_hook_shutdown(NULL);
+    hook = (mcp_hook_state){.listener = -1, .sessions = sessions,
+        .start_attempted = true};
     for (size_t index = 0U; index < MCP_HOOK_CLIENTS; index++) hook.clients[index].descriptor = -1;
     mcp_broker_host host = {0};
-    host.context = app;
-    host.current_edit = host_current_edit;
-    host.current_path = host_current_path;
-    host.current_selection = host_current_selection;
-    host.replace_current_edit = host_replace_edit;
-    host.destroy_current_edit = host_destroy_edit;
-    host.set_current_path = host_set_path;
-    host.agent_edited = host_agent_edited;
-    host.selection_changed = host_selection_changed;
+    host.context = sessions;
+    host.live_document_count = viewer_mcp_live_document_count;
+    host.live_document_at = viewer_mcp_live_document_at;
+    host.live_control_enabled = viewer_mcp_live_control_enabled;
+    host.current_selection_for_document = viewer_mcp_current_selection;
+    host.selection_changed_for_document = viewer_mcp_selection_changed;
+    host.commit_mutation = viewer_mcp_commit_mutation;
+    host.set_document_path = viewer_mcp_set_document_path;
+    host.owner_is_busy = viewer_mcp_sessions_are_busy;
     if (!mcp_broker_create(&host, &hook.broker)) return false;
     if (!start_listener(&hook)) {
         mcp_broker_destroy(hook.broker);
         hook.broker = NULL;
         return false;
     }
+    viewer_mcp_set_broker(sessions, hook.broker);
     for (size_t index = 0U; index < MCP_HOOK_CLIENTS; index++) {
         hook.clients[index].descriptor = -1;
         mcp_protocol_session_reset(&hook.clients[index].protocol);
@@ -267,6 +182,38 @@ static bool send_json_line(int descriptor, mcp_json_buffer *response)
         send_all(descriptor, (const uint8_t *)"\n", 1U);
 }
 
+static uint64_t hook_monotonic_ms(void)
+{
+    struct timespec now;
+    if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0U;
+    return (uint64_t)now.tv_sec * UINT64_C(1000) +
+        (uint64_t)now.tv_nsec / UINT64_C(1000000);
+}
+
+static bool send_busy_error(mcp_hook_client *client, const uint8_t *line,
+                            size_t length, const char *message)
+{
+    if (client == NULL || client->descriptor < 0 ||
+        !mcp_protocol_request_expects_response(line, length)) return true;
+    if (message == NULL) return false;
+    mcp_json_doc request = {0};
+    bool parsed = mcp_json_parse(line, length, &request);
+    size_t id = parsed ? mcp_json_object_get(&request, request.root, "id") :
+        MCP_JSON_NO_TOKEN;
+    mcp_json_buffer response = {0};
+    bool okay = mcp_json_buffer_init(&response, 192U, MCP_JSON_MAX_BYTES) &&
+        mcp_json_buffer_literal(&response, "{\"jsonrpc\":\"2.0\",\"id\":" ) &&
+        (id == MCP_JSON_NO_TOKEN ? mcp_json_buffer_literal(&response, "null") :
+            mcp_json_buffer_raw_token(&response, &request, id)) &&
+        mcp_json_buffer_literal(&response, ",\"error\":{\"code\":-32001,\"message\":" ) &&
+        mcp_json_buffer_quoted(&response, message, strlen(message)) &&
+        mcp_json_buffer_literal(&response, "}}" ) &&
+        send_json_line(client->descriptor, &response);
+    mcp_json_buffer_destroy(&response);
+    mcp_json_doc_destroy(&request);
+    return okay;
+}
+
 static bool process_line(mcp_hook_client *client, const uint8_t *line, size_t length)
 {
     mcp_json_buffer response = {0};
@@ -278,16 +225,46 @@ static bool process_line(mcp_hook_client *client, const uint8_t *line, size_t le
     return okay;
 }
 
-static bool process_buffer(mcp_hook_client *client)
+static bool owner_is_busy(const mcp_hook_state *state)
 {
+    return state != NULL && viewer_mcp_live_control_enabled(NULL) &&
+        viewer_mcp_sessions_are_busy(state->sessions);
+}
+
+static bool queue_pending(mcp_hook_state *state, size_t client_index,
+                          const uint8_t *line, size_t length)
+{
+    mcp_hook_client *client = &state->clients[client_index];
+    mcp_owner_queue_result queued = mcp_owner_queue_enqueue(&state->pending,
+        client_index, client->generation, line, length, hook_monotonic_ms(),
+        MCP_HOOK_PENDING_TIMEOUT_MS);
+    if (queued == MCP_OWNER_QUEUE_ENQUEUED) return true;
+    const char *reason = queued == MCP_OWNER_QUEUE_FULL ?
+        "busy_retry: bounded owner-thread queue is full; retry after the editor interaction completes" :
+        "busy_retry: owner-thread queue could not accept this request; retry shortly";
+    return queued != MCP_OWNER_QUEUE_INVALID &&
+        send_busy_error(client, line, length, reason);
+}
+
+static bool process_buffer(mcp_hook_state *state, size_t client_index)
+{
+    mcp_hook_client *client = &state->clients[client_index];
     size_t consumed = 0U;
     while (consumed < client->length) {
         uint8_t *newline = memchr(client->input + consumed, '\n', client->length - consumed);
         if (newline == NULL) break;
         size_t line_length = (size_t)(newline - (client->input + consumed));
         if (line_length > 0U && client->input[consumed + line_length - 1U] == '\r') line_length--;
-        if (line_length > MCP_JSON_MAX_BYTES ||
-            !process_line(client, client->input + consumed, line_length)) return false;
+        if (line_length > MCP_JSON_MAX_BYTES) return false;
+        const uint8_t *line = client->input + consumed;
+        if (owner_is_busy(state)) {
+            mcp_json_doc parsed = {0};
+            bool valid_json = mcp_json_parse(line, line_length, &parsed);
+            mcp_json_doc_destroy(&parsed);
+            if (valid_json) {
+                if (!queue_pending(state, client_index, line, line_length)) return false;
+            } else if (!process_line(client, line, line_length)) return false;
+        } else if (!process_line(client, line, line_length)) return false;
         consumed = (size_t)(newline - client->input) + 1U;
     }
     if (consumed > 0U) {
@@ -319,15 +296,19 @@ static void accept_clients(mcp_hook_state *state)
         if (index == MCP_HOOK_CLIENTS) { (void)close(descriptor); continue; }
         uint8_t *buffer = malloc(MCP_JSON_MAX_BYTES + 1U);
         if (buffer == NULL) { (void)close(descriptor); continue; }
-        state->clients[index] = (mcp_hook_client){.descriptor = descriptor, .input = buffer};
+        uint64_t generation = ++state->next_client_generation;
+        if (generation == 0U) generation = ++state->next_client_generation;
+        state->clients[index] = (mcp_hook_client){.descriptor = descriptor,
+            .input = buffer, .generation = generation};
         mcp_protocol_session_reset(&state->clients[index].protocol);
         int flags = fcntl(descriptor, F_GETFL, 0);
         if (flags < 0 || fcntl(descriptor, F_SETFL, flags | O_NONBLOCK) != 0) close_client(&state->clients[index]);
     }
 }
 
-static void service_client(mcp_hook_client *client)
+static void service_client(mcp_hook_state *state, size_t index)
 {
+    mcp_hook_client *client = &state->clients[index];
     if (client->descriptor < 0 || client->input == NULL) return;
     for (;;) {
         ssize_t amount = recv(client->descriptor, client->input + client->length,
@@ -336,24 +317,69 @@ static void service_client(mcp_hook_client *client)
         if (amount < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) break;
         if (amount <= 0) { close_client(client); return; }
         client->length += (size_t)amount;
-        if (!process_buffer(client)) { close_client(client); return; }
+        if (!process_buffer(state, index)) { close_client(client); return; }
     }
 }
 
-void mcp_broker_hook_poll(viewer_app *app)
+static void drain_pending(mcp_hook_state *state)
 {
-    if (app == NULL || app->smoke_mode || !ensure_hook(app)) return;
-    mcp_broker_bind_current(hook.broker);
-    accept_clients(&hook);
-    for (size_t index = 0U; index < MCP_HOOK_CLIENTS; index++) service_client(&hook.clients[index]);
+    for (;;) {
+        bool busy = owner_is_busy(state);
+        mcp_owner_queue_item item = {0};
+        mcp_owner_queue_take_result result = mcp_owner_queue_take(&state->pending,
+            busy, hook_monotonic_ms(), &item);
+        if (result == MCP_OWNER_QUEUE_EMPTY || result == MCP_OWNER_QUEUE_WAITING)
+            return;
+        if (item.owner_index < MCP_HOOK_CLIENTS) {
+            mcp_hook_client *client = &state->clients[item.owner_index];
+            if (client->descriptor >= 0 &&
+                client->generation == item.owner_generation) {
+                if (result == MCP_OWNER_QUEUE_EXPIRED)
+                    (void)send_busy_error(client, item.bytes, item.length,
+                        "busy_retry: editor interaction did not finish within 2000 ms; retry after it completes");
+                else if (!process_line(client, item.bytes, item.length))
+                    close_client(client);
+            }
+        }
+        mcp_owner_queue_item_destroy(&item);
+    }
 }
 
-void mcp_broker_hook_shutdown(viewer_app *app)
+static bool has_connected_client(const mcp_hook_state *state)
 {
-    if (hook.app == NULL || (app != NULL && hook.app != app)) return;
+    for (size_t index = 0U; index < MCP_HOOK_CLIENTS; index++)
+        if (state->clients[index].descriptor >= 0) return true;
+    return false;
+}
+
+void mcp_broker_hook_poll(viewer_session_collection *sessions)
+{
+    if (sessions == NULL || !ensure_hook(sessions)) return;
+    mcp_broker_bind_live_documents(hook.broker);
+    viewer_mcp_set_broker(sessions, hook.broker);
+    accept_clients(&hook);
+    for (size_t index = 0U; index < MCP_HOOK_CLIENTS; index++)
+        service_client(&hook, index);
+    drain_pending(&hook);
+    bool connected = has_connected_client(&hook);
+    if (connected != hook.connected ||
+        viewer_mcp_connection_needs_sync(sessions, connected)) {
+        hook.connected = connected;
+        viewer_mcp_connection_changed(sessions, connected);
+    }
+}
+
+void mcp_broker_hook_shutdown(void *runtime_or_window)
+{
+    if (runtime_or_window != NULL || hook.sessions == NULL) return;
     for (size_t index = 0U; index < MCP_HOOK_CLIENTS; index++) close_client(&hook.clients[index]);
+    mcp_owner_queue_item item = {0};
+    while (mcp_owner_queue_take(&hook.pending, false, UINT64_MAX, &item) ==
+        MCP_OWNER_QUEUE_READY) mcp_owner_queue_item_destroy(&item);
     if (hook.listener >= 0) (void)close(hook.listener);
     if (hook.owns_socket) (void)unlink(hook.socket_path);
+    viewer_mcp_connection_changed(hook.sessions, false);
+    viewer_mcp_set_broker(hook.sessions, NULL);
     mcp_broker_destroy(hook.broker);
     hook = (mcp_hook_state){.listener = -1};
 }

@@ -228,8 +228,11 @@ case "$command_name" in
     mcp-fuzz)
         shift
         cmake --preset mac-asan
-        cmake --build --preset mac-asan --target mcp_fuzz
+        cmake --build --preset mac-asan --target mcp_fuzz viewer_mcp_test
         build/mac-asan/bin/mcp_fuzz "$@"
+        cases=${1:-50000}
+        seed=${2:-20261011}
+        build/mac-asan/bin/viewer_mcp_test --fuzz "$cases" "$seed"
         ;;
     verify)
         "$repo_root/dev" build

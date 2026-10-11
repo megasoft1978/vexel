@@ -55,6 +55,8 @@ typedef struct viewer_file_stamp {
 
 struct viewer_app {
     platform_window *window;
+    uint32_t mcp_window_number;
+    struct mcp_broker *mcp_broker;
     platform_task_queue *tasks;
     viewer_loaded_document document;
     viewer_editor *editor;
@@ -113,6 +115,8 @@ struct viewer_app {
     bool running;
     bool fatal_error;
     bool smoke_mode;
+    bool mcp_connected;
+    bool mcp_live_control_enabled;
     bool smoke_scripted;
     bool smoke_passed;
     bool test_layout_dump_failed;
