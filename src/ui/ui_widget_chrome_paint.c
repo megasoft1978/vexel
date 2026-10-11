@@ -52,6 +52,11 @@ static size_t middle_ellipsis(const char *text, size_t length,
     size_t left_bytes = utf8_offset_after(text, length, left_characters);
     size_t right_start = utf8_offset_after(text, length, characters - right_characters);
     size_t right_bytes = length - right_start;
+    while (left_bytes + sizeof(ellipsis) - 1U >= UI_TEXT_MAX_BYTES &&
+           left_characters > 0U) {
+        --left_characters;
+        left_bytes = utf8_offset_after(text, length, left_characters);
+    }
     while (left_bytes + sizeof(ellipsis) - 1U + right_bytes >= UI_TEXT_MAX_BYTES &&
            right_characters > 0U) {
         --right_characters;

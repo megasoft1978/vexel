@@ -485,6 +485,32 @@ static int test_row_label_truncation(void)
     return 0;
 }
 
+static int test_row_label_wide_multibyte(void)
+{
+    const uint32_t width = 1024U, height = 48U;
+    size_t bytes = (size_t)width * height * 4U;
+    uint8_t *pixels = calloc(bytes, 1U);
+    if (pixels == NULL) return 54;
+    text_capture capture = {0};
+    ui_widget_canvas canvas;
+    if (!ui_widget_canvas_init(&canvas, pixels, bytes, width, height,
+            width * 4U, 1U, UI_THEME_LIGHT, false, capture_text, &capture)) {
+        free(pixels);
+        return 55;
+    }
+    char label[161];
+    for (size_t index = 0U; index < 40U; ++index) memcpy(label + index * 4U, "\xf0\x9f\x98\x80", 4U);
+    label[160] = '\0';
+    ui_widget_draw_spec row = {.kind = UI_WIDGET_TREE_ROW,
+        .state = UI_CONTROL_REST, .bounds = {0U, 0U, 1000U, 28U},
+        .icon = UI_ICON_GRADIENT, .label = label, .label_length = 160U,
+        .visible = true, .show_row_actions = true};
+    bool painted = ui_widget_paint(&canvas, &row);
+    bool bounded = capture.count > 0U && strlen(capture.labels[0]) < UI_TEXT_MAX_BYTES;
+    free(pixels);
+    return painted && bounded ? 0 : 56;
+}
+
 int main(int argc, char **argv)
 {
     if (argc == 2 && strcmp(argv[1], "--contrast-report") == 0) {
@@ -504,6 +530,8 @@ int main(int argc, char **argv)
     result = test_paint_bounds();
     if (result != 0) return result;
     result = test_row_label_truncation();
+    if (result != 0) return result;
+    result = test_row_label_wide_multibyte();
     if (result != 0) return result;
     (void)puts("UI kit contracts passed: tokens, 53 icons, input state, parser edges, bounded painting");
     return 0;
