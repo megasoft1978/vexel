@@ -13,7 +13,11 @@
 #define UI_TEXT_MAX_FONT_PX 256U
 #define UI_TEXT_MAX_RENDER_HEIGHT 1024U
 
-@class VexelAppearanceWatcher;
+@interface VexelAppearanceWatcher : NSView
+@property(nonatomic, assign) platform_text_ui_preferences_callback callback;
+@property(nonatomic, assign) void *callbackContext;
+- (void)notifyPreferences;
+@end
 
 typedef struct ui_text_cache_entry {
     uint8_t *text;
@@ -37,6 +41,8 @@ static platform_text_ui_preferences_callback preferences_callback;
 static void *preferences_context;
 static VexelAppearanceWatcher *watcher_view;
 static id accessibility_options_observer;
+static id system_colors_observer;
+static id user_defaults_observer;
 static bool appearance_kvo_installed;
 static char appearance_kvo_context;
 
@@ -162,11 +168,77 @@ bool platform_text_ui_get_preferences(ui_theme *out_appearance,
     return true;
 }
 
-@interface VexelAppearanceWatcher : NSView
-@property(nonatomic, assign) platform_text_ui_preferences_callback callback;
-@property(nonatomic, assign) void *callbackContext;
-- (void)notifyPreferences;
-@end
+static uint16_t preference_unsigned(NSUserDefaults *defaults, NSString *key,
+                                    uint16_t fallback, uint16_t minimum,
+                                    uint16_t maximum)
+{
+    id value = [defaults objectForKey:key];
+    if (![value isKindOfClass:[NSNumber class]]) return fallback;
+    long long amount = [(NSNumber *)value longLongValue];
+    return amount < minimum || amount > maximum ? fallback : (uint16_t)amount;
+}
+
+bool platform_text_ui_get_extended_preferences(
+    platform_text_ui_preferences *out_preferences)
+{
+    if (out_preferences == NULL || ![NSThread isMainThread] || NSApp == nil) return false;
+    NSWorkspace *workspace = NSWorkspace.sharedWorkspace;
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    bool increased = workspace.accessibilityDisplayShouldIncreaseContrast;
+    bool reduced_transparency = workspace.accessibilityDisplayShouldReduceTransparency;
+    uint16_t scale = preference_unsigned(defaults, @"VexelUIScalePercent",
+        100U, 100U, 120U);
+    if (scale != 100U && scale != 110U && scale != 120U) scale = 100U;
+    uint16_t structure = preference_unsigned(defaults, @"VexelMainStructureWidth",
+        232U, 184U, 320U);
+    uint16_t inspector = preference_unsigned(defaults, @"VexelMainInspectorWidth",
+        320U, 240U, 440U);
+    uint32_t accent = 0U;
+    NSColor *srgb = [NSColor.controlAccentColor colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+    CGFloat red = 0.0, green = 0.0, blue = 0.0, alpha = 0.0;
+    if (srgb != nil) {
+        [srgb getRed:&red green:&green blue:&blue alpha:&alpha];
+        uint32_t r = (uint32_t)llround(fmin(fmax(red, 0.0), 1.0) * 255.0);
+        uint32_t g = (uint32_t)llround(fmin(fmax(green, 0.0), 1.0) * 255.0);
+        uint32_t b = (uint32_t)llround(fmin(fmax(blue, 0.0), 1.0) * 255.0);
+        accent = (r << 24U) | (g << 16U) | (b << 8U) | 255U;
+    }
+    bool material_allowed = false;
+    if (@available(macOS 26.0, *))
+        material_allowed = !increased && !reduced_transparency;
+    *out_preferences = (platform_text_ui_preferences){
+        .appearance = current_theme(UI_THEME_DARK),
+        .increased_contrast = increased,
+        .reduced_motion = workspace.accessibilityDisplayShouldReduceMotion,
+        .reduced_transparency = reduced_transparency,
+        .material_allowed = material_allowed,
+        .accent_srgb = accent,
+        .ui_scale_percent = scale,
+        .structure_width_points = structure,
+        .inspector_width_points = inspector};
+    return true;
+}
+
+bool platform_text_ui_set_ui_scale(uint16_t percent)
+{
+    if (![NSThread isMainThread] || NSApp == nil ||
+        (percent != 100U && percent != 110U && percent != 120U)) return false;
+    [NSUserDefaults.standardUserDefaults setInteger:percent forKey:@"VexelUIScalePercent"];
+    if (watcher_view != nil) [watcher_view notifyPreferences];
+    return true;
+}
+
+bool platform_text_ui_set_panel_widths(uint16_t structure_width_points,
+    uint16_t inspector_width_points)
+{
+    if (![NSThread isMainThread] || NSApp == nil ||
+        structure_width_points < 184U || structure_width_points > 320U ||
+        inspector_width_points < 240U || inspector_width_points > 440U) return false;
+    NSUserDefaults *defaults = NSUserDefaults.standardUserDefaults;
+    [defaults setInteger:structure_width_points forKey:@"VexelMainStructureWidth"];
+    [defaults setInteger:inspector_width_points forKey:@"VexelMainInspectorWidth"];
+    return true;
+}
 
 @implementation VexelAppearanceWatcher
 - (void)viewDidChangeEffectiveAppearance
@@ -182,10 +254,9 @@ bool platform_text_ui_get_preferences(ui_theme *out_appearance,
 - (void)notifyPreferences
 {
     if (self.callback == NULL) return;
-    ui_theme theme = UI_THEME_DARK;
-    bool increased = false, reduced = false;
-    if (platform_text_ui_get_preferences(&theme, &increased, &reduced))
-        self.callback(theme, increased, reduced, self.callbackContext);
+    platform_text_ui_preferences preferences = {0};
+    if (platform_text_ui_get_extended_preferences(&preferences))
+        self.callback(&preferences, self.callbackContext);
 }
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object
                         change:(NSDictionary<NSKeyValueChangeKey, id> *)change
@@ -256,6 +327,22 @@ bool platform_text_ui_watch_preferences(platform_text_ui_preferences_callback ca
                 [watcher_view notifyPreferences];
             }];
     }
+    if (system_colors_observer == nil) {
+        system_colors_observer = [NSWorkspace.sharedWorkspace.notificationCenter
+            addObserverForName:NSSystemColorsDidChangeNotification object:nil
+            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+                (void)note;
+                [watcher_view notifyPreferences];
+            }];
+    }
+    if (user_defaults_observer == nil) {
+        user_defaults_observer = [NSNotificationCenter.defaultCenter
+            addObserverForName:NSUserDefaultsDidChangeNotification object:nil
+            queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+                (void)note;
+                [watcher_view notifyPreferences];
+            }];
+    }
     [watcher notifyPreferences];
     return true;
 }
@@ -279,6 +366,14 @@ void platform_text_ui_unwatch_preferences(void *context)
         [NSWorkspace.sharedWorkspace.notificationCenter
             removeObserver:accessibility_options_observer];
         accessibility_options_observer = nil;
+    }
+    if (system_colors_observer != nil) {
+        [NSWorkspace.sharedWorkspace.notificationCenter removeObserver:system_colors_observer];
+        system_colors_observer = nil;
+    }
+    if (user_defaults_observer != nil) {
+        [NSNotificationCenter.defaultCenter removeObserver:user_defaults_observer];
+        user_defaults_observer = nil;
     }
     [watcher_view removeFromSuperview];
     watcher_view = nil;

@@ -261,6 +261,9 @@ bool ui_tree_init(ui_tree *tree, ui_theme theme);
 bool ui_tree_init_accessible(ui_tree *tree, ui_theme theme,
                              bool increased_contrast);
 ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast);
+/* Applies a dynamic AppKit accent after checking edge contrast on panel surfaces. */
+ui_tokens ui_theme_tokens_accented(ui_theme theme, bool increased_contrast,
+                                   uint32_t system_accent_srgb);
 ui_type_scale ui_theme_type_scale(void);
 ui_metrics ui_design_metrics(void);
 /* Adds a node. Labels/values are copied as bounded valid UTF-8 slices. */

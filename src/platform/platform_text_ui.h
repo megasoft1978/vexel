@@ -7,12 +7,28 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef void (*platform_text_ui_preferences_callback)(ui_theme appearance,
-    bool increased_contrast, bool reduced_motion, void *context);
+typedef struct platform_text_ui_preferences {
+    ui_theme appearance;
+    bool increased_contrast;
+    bool reduced_motion;
+    bool reduced_transparency;
+    bool material_allowed;
+    uint32_t accent_srgb;
+    uint16_t ui_scale_percent;
+    uint16_t structure_width_points;
+    uint16_t inspector_width_points;
+} platform_text_ui_preferences;
+
+typedef void (*platform_text_ui_preferences_callback)(
+    const platform_text_ui_preferences *preferences, void *context);
 
 bool platform_text_ui_app_is_active(void);
 bool platform_text_ui_get_preferences(ui_theme *out_appearance,
     bool *out_increased_contrast, bool *out_reduced_motion);
+bool platform_text_ui_get_extended_preferences(platform_text_ui_preferences *out_preferences);
+bool platform_text_ui_set_ui_scale(uint16_t percent);
+bool platform_text_ui_set_panel_widths(uint16_t structure_width_points,
+    uint16_t inspector_width_points);
 bool platform_text_ui_watch_preferences(platform_text_ui_preferences_callback callback,
                                         void *context);
 void platform_text_ui_unwatch_preferences(void *context);

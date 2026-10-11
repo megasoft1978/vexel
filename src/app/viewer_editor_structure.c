@@ -57,9 +57,31 @@ void editor_rebuild_visible_outline(viewer_editor *editor)
 {
     if (editor == NULL) return;
     editor->outline_visible_count = 0U;
+    size_t scope_start = 0U;
+    size_t scope_end = editor->outline_count;
+    size_t scope_depth = 0U;
+    if (editor->focus_scope_active) {
+        bool found = false;
+        for (size_t index = 0U; index < editor->outline_count; ++index) {
+            if (!editor_same_handle(editor->outline[index], editor->focus_scope)) continue;
+            scope_start = index;
+            scope_depth = editor->outline_depth[index];
+            scope_end = index + 1U;
+            while (scope_end < editor->outline_count &&
+                editor->outline_depth[scope_end] > scope_depth) ++scope_end;
+            found = true;
+            break;
+        }
+        if (!found) {
+            editor->focus_scope_active = false;
+            scope_start = 0U;
+            scope_end = editor->outline_count;
+        }
+    }
     size_t collapsed_depth = SIZE_MAX;
-    for (size_t index = 0U; index < editor->outline_count; ++index) {
+    for (size_t index = scope_start; index < scope_end; ++index) {
         size_t depth = editor->outline_depth[index];
+        if (editor->focus_scope_active) depth -= scope_depth;
         if (collapsed_depth != SIZE_MAX) {
             if (depth > collapsed_depth) continue;
             collapsed_depth = SIZE_MAX;
@@ -75,6 +97,56 @@ void editor_rebuild_visible_outline(viewer_editor *editor)
         if (editor->outline_visible_start > maximum)
             editor->outline_visible_start = maximum;
     }
+}
+
+void editor_focus_scope_reset(viewer_editor *editor)
+{
+    if (editor == NULL || !editor->focus_scope_active) return;
+    editor->focus_scope_active = false;
+    editor->focus_scope = (document_handle){0U};
+    editor_rebuild_visible_outline(editor);
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+}
+
+static bool tag_is_group(viewer_editor *editor, document_handle handle)
+{
+    base_bytes tag = {0};
+    return document_edit_tag_name(editor->edit, handle, &tag) &&
+        tag.len == 1U && tag.ptr[0] == 'g';
+}
+
+bool editor_focus_scope_toggle(viewer_editor *editor)
+{
+    if (editor == NULL || editor->edit == NULL) return false;
+    if (editor->focus_scope_active) {
+        editor_focus_scope_reset(editor);
+        return false;
+    }
+    document_handle candidate = editor->selected;
+    document_handle root = {0U};
+    if (!document_edit_root(editor->edit, &root)) return false;
+    bool found = false;
+    for (size_t depth = 0U; depth < EDITOR_DEPTH_CAP; ++depth) {
+        if (tag_is_group(editor, candidate)) { found = true; break; }
+        if (editor_same_handle(candidate, root)) break;
+        document_handle parent = {0U};
+        if (!document_model_parent(editor_model(editor), candidate, &parent)) break;
+        candidate = parent;
+    }
+    if (!found) candidate = root;
+    editor->focus_scope = candidate;
+    editor->focus_scope_active = true;
+    editor_rebuild_visible_outline(editor);
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+void editor_focus_scope_update(viewer_editor *editor)
+{
+    if (editor == NULL || !editor->focus_scope_active) return;
+    editor_rebuild_visible_outline(editor);
 }
 
 bool editor_outline_visible_model_index(const viewer_editor *editor, size_t row,
@@ -299,8 +371,24 @@ void editor_capture_selection_identity(viewer_editor *editor)
     }
 }
 
+static uint32_t outline_row_id_for_handle(const viewer_editor *editor,
+                                          document_handle handle)
+{
+    for (size_t row = 0U; row < EDITOR_OUTLINE_VISIBLE; ++row) {
+        size_t model_index = 0U;
+        if (editor_outline_visible_model_index(editor,
+                editor->outline_visible_start + row, &model_index) &&
+            editor_same_handle(editor->outline[model_index], handle))
+            return EDITOR_OUTLINE_ROW_BASE + (uint32_t)row;
+    }
+    return 0U;
+}
+
 void editor_select_handle(viewer_editor *editor, document_handle selected)
 {
+    if (editor == NULL) return;
+    document_handle prior = editor->selected;
+    bool had_selection = editor->selection_active;
     editor->selected = selected;
     editor->selection_active = true;
     editor->selected_attribute = 0U;
@@ -310,6 +398,16 @@ void editor_select_handle(viewer_editor *editor, document_handle selected)
     editor->canvas_selection_offsets[0] = editor->selected_offset;
     editor->path_selected_node_segment = SIZE_MAX;
     editor_refresh_outline(editor);
+    if (had_selection && !editor_same_handle(prior, selected)) {
+        uint32_t old_row = outline_row_id_for_handle(editor, prior);
+        uint32_t new_row = outline_row_id_for_handle(editor, selected);
+        if (old_row != 0U)
+            editor_motion_control_transition(editor, old_row, UI_CONTROL_SELECTED,
+                UI_CONTROL_REST, 100U);
+        if (new_row != 0U)
+            editor_motion_control_transition(editor, new_row, UI_CONTROL_REST,
+                UI_CONTROL_SELECTED, 100U);
+    }
     editor->tree_ready = false;
 }
 

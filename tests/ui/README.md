@@ -11,12 +11,12 @@ canvas baseline and manifest remain byte-for-byte unchanged. The verifier
 checks both manifests and every SHA-256 before comparing output bytes. The
 frozen lifecycle scenario remains unchanged.
 
-`verify_style_goldens.py` checks 20 new deterministic scalar screenshots for
-the editor chrome: dark/light at 1280×800 and 2560×1600 in empty, selection,
-editing-field, error, and narrow-viewport states. Text in these screenshots
-uses the scalar glyph painter so the PNG hashes do not depend on system font
-revisions; `platform_text_ui_test` checks native CoreText output structurally.
-Review the images before updating them with
+`verify_style_goldens.py` checks 28 deterministic scalar screenshots for the
+editor chrome: dark/light at 1280×800 and 2560×1600 in empty, selection,
+editing-field, error, narrow-viewport, and 110%/120% interface-scale states.
+Text in these screenshots uses the scalar glyph painter so the PNG hashes do
+not depend on system font revisions; `platform_text_ui_test` checks native
+CoreText output structurally. Review the images before updating them with
 `python3 tests/ui/verify_style_goldens.py --update`.
 
 `verify_guides_goldens.py` checks the ruler and persistent-guide renderer at

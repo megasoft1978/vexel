@@ -156,6 +156,8 @@ bool platform_metal_present_and_verify(platform_window *window, const uint8_t *r
             layer.device = device;
             layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
             layer.framebufferOnly = NO;
+            layer.opaque = NO;
+            layer.backgroundColor = NSColor.clearColor.CGColor;
             layer.contentsScale = view.window.backingScaleFactor;
             view.wantsLayer = YES;
             view.layer = layer;
@@ -345,6 +347,8 @@ bool platform_metal_present(platform_window *window, const uint8_t *rgba,
             view.layer = layer;
         }
         layer.device = platform_present_device;
+        layer.opaque = NO;
+        layer.backgroundColor = NSColor.clearColor.CGColor;
         layer.frame = view.bounds;
         layer.contentsScale = view.window.backingScaleFactor;
         layer.drawableSize = CGSizeMake((CGFloat)width, (CGFloat)height);

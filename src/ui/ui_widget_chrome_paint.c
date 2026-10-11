@@ -2,6 +2,7 @@
 
 #include "ui_icons.h"
 
+#include <math.h>
 #include <string.h>
 
 #define UI_POINT_TEXT 13U
@@ -108,11 +109,29 @@ bool ui_widget_paint_tree_row(const ui_widget_canvas *canvas, const ui_widget_dr
     uint32_t bg = spec->state == UI_CONTROL_SELECTED ? canvas->tokens.selection_fill :
         spec->state == UI_CONTROL_HOVER || spec->state == UI_CONTROL_PRESSED ?
             canvas->tokens.panel_hover : 0U;
+    if (spec->has_transition) {
+        double amount = (double)spec->transition_progress_permille / 1000.0;
+        bg = 0U;
+        for (unsigned shift = 0U; shift < 32U; shift += 8U) {
+            uint32_t left = (spec->transition_from_color >> shift) & 255U;
+            uint32_t right = (spec->transition_to_color >> shift) & 255U;
+            uint32_t channel = (uint32_t)llround((double)left * (1.0 - amount) +
+                (double)right * amount);
+            bg |= channel << shift;
+        }
+    }
     if (bg != 0U) ui_widget_paint_round(canvas, spec->bounds, 4U, bg, 0U, 0U);
-    if (spec->state == UI_CONTROL_SELECTED)
+    double selected_amount = spec->state == UI_CONTROL_SELECTED ? 1.0 : 0.0;
+    if (spec->has_transition) {
+        double progress = (double)spec->transition_progress_permille / 1000.0;
+        selected_amount = spec->transition_from == UI_CONTROL_SELECTED ? 1.0 - progress :
+            spec->transition_to == UI_CONTROL_SELECTED ? progress : 0.0;
+    }
+    if (selected_amount > 0.0)
         ui_widget_paint_round(canvas, (ui_rect){spec->bounds.x, spec->bounds.y + 4U, 2U,
             spec->bounds.height > 8U ? spec->bounds.height - 8U : 1U},
-            1U, canvas->tokens.accent, 0U, 0U);
+            1U, (canvas->tokens.accent & UINT32_C(0xffffff00)) |
+                (uint32_t)llround(selected_amount * 255.0), 0U, 0U);
     uint32_t guide_x = spec->bounds.x + 12U;
     for (uint32_t depth = 0U; depth < spec->indent && depth < 6U; ++depth) {
         ui_rect guide = {guide_x + depth * UI_TREE_ROW_INDENT_POINTS,

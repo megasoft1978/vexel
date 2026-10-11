@@ -16,7 +16,9 @@ static bool canvas_valid(const ui_widget_canvas *canvas)
     return canvas != NULL && canvas->rgba != NULL && canvas->width > 0U &&
         canvas->height > 0U && canvas->width <= UI_WIDGET_MAX_CANVAS_AXIS &&
         canvas->height <= UI_WIDGET_MAX_CANVAS_AXIS && canvas->backing_scale >= 1U &&
-        canvas->backing_scale <= 3U && canvas->theme >= UI_THEME_DARK &&
+        canvas->backing_scale <= 3U && isfinite(canvas->ui_scale) &&
+        canvas->ui_scale >= 1.0 && canvas->ui_scale <= 1.2 &&
+        canvas->theme >= UI_THEME_DARK &&
         canvas->theme <= UI_THEME_LIGHT &&
         (size_t)canvas->width <= SIZE_MAX / 4U &&
         canvas->stride >= (size_t)canvas->width * 4U &&
@@ -29,9 +31,18 @@ static bool scaled_rect(const ui_widget_canvas *canvas, ui_rect logical,
 {
     if (canvas == NULL || out_pixels == NULL || logical.width == 0U || logical.height == 0U)
         return false;
-    uint64_t scale = canvas->backing_scale;
-    uint64_t x = (uint64_t)logical.x * scale, y = (uint64_t)logical.y * scale;
-    uint64_t width = (uint64_t)logical.width * scale, height = (uint64_t)logical.height * scale;
+    double scale = (double)canvas->backing_scale * canvas->ui_scale;
+    double raw_x = round((double)logical.x * scale);
+    double raw_y = round((double)logical.y * scale);
+    double raw_width = round((double)logical.width * scale);
+    double raw_height = round((double)logical.height * scale);
+    if (!isfinite(raw_x) || !isfinite(raw_y) || !isfinite(raw_width) ||
+        !isfinite(raw_height) || raw_x < 0.0 || raw_y < 0.0 ||
+        raw_width < 1.0 || raw_height < 1.0 || raw_x > UINT32_MAX ||
+        raw_y > UINT32_MAX || raw_width > UINT32_MAX || raw_height > UINT32_MAX)
+        return false;
+    uint64_t x = (uint64_t)raw_x, y = (uint64_t)raw_y;
+    uint64_t width = (uint64_t)raw_width, height = (uint64_t)raw_height;
     if (x > UINT32_MAX || y > UINT32_MAX || width > UINT32_MAX || height > UINT32_MAX ||
         x + width > UINT32_MAX || y + height > UINT32_MAX) return false;
     *out_pixels = (ui_rect){(uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height};
@@ -77,10 +88,11 @@ void ui_widget_paint_round(const ui_widget_canvas *canvas, ui_rect logical,
     uint32_t bottom_limit = rect.y + rect.height;
     if (right_limit < rect.x || right_limit > canvas->width) right_limit = canvas->width;
     if (bottom_limit < rect.y || bottom_limit > canvas->height) bottom_limit = canvas->height;
-    double radius = (double)(radius_points * canvas->backing_scale);
+    double scale = (double)canvas->backing_scale * canvas->ui_scale;
+    double radius = (double)radius_points * scale;
     if (radius > (double)rect.width / 2.0) radius = (double)rect.width / 2.0;
     if (radius > (double)rect.height / 2.0) radius = (double)rect.height / 2.0;
-    double inset = (double)(edge_points * canvas->backing_scale);
+    double inset = (double)edge_points * scale;
     double outer_left = rect.x, outer_top = rect.y;
     double outer_right = (double)rect.x + rect.width;
     double outer_bottom = (double)rect.y + rect.height;
@@ -161,6 +173,20 @@ static uint32_t state_surface(const ui_widget_canvas *canvas, ui_control_state s
     return ordinary;
 }
 
+static uint32_t blend_colors(uint32_t from, uint32_t to, uint16_t progress)
+{
+    double amount = (double)progress / 1000.0;
+    uint32_t result = 0U;
+    for (unsigned shift = 0U; shift < 32U; shift += 8U) {
+        uint32_t left = (from >> shift) & 255U;
+        uint32_t right = (to >> shift) & 255U;
+        uint32_t channel = (uint32_t)llround((double)left * (1.0 - amount) +
+            (double)right * amount);
+        result |= channel << shift;
+    }
+    return result;
+}
+
 bool ui_widget_paint_text(const ui_widget_canvas *canvas, const char *text, size_t length,
     ui_rect bounds, uint32_t color, ui_font_family family, ui_font_weight weight,
     uint32_t font_points)
@@ -168,8 +194,9 @@ bool ui_widget_paint_text(const ui_widget_canvas *canvas, const char *text, size
     if (text == NULL || length == 0U || canvas->draw_text == NULL) return true;
     ui_rect pixels = {0};
     if (!scaled_rect(canvas, bounds, &pixels)) return false;
-    uint32_t font_px = font_points * canvas->backing_scale;
-    if (font_px == 0U || font_px > 256U) return false;
+    double scaled_font = ceil((double)font_points * canvas->backing_scale * canvas->ui_scale);
+    if (!isfinite(scaled_font) || scaled_font < 1.0 || scaled_font > 256.0) return false;
+    uint32_t font_px = (uint32_t)scaled_font;
     return canvas->draw_text(canvas->text_context, text, length, pixels,
         canvas->theme, font_px, color, family, weight, canvas->rgba,
         canvas->width, canvas->height, canvas->stride);
@@ -181,7 +208,7 @@ bool ui_widget_paint_icon(const ui_widget_canvas *canvas, ui_icon_kind icon,
     ui_rect pixels = {0};
     if (!scaled_rect(canvas, bounds, &pixels)) return false;
     return ui_icon_paint_state_into(icon, canvas->theme, canvas->increased_contrast,
-        (double)canvas->backing_scale, pixels, state, &canvas->tokens,
+        (double)canvas->backing_scale * canvas->ui_scale, pixels, state, &canvas->tokens,
         canvas->rgba, canvas->width, canvas->height, canvas->stride);
 }
 
@@ -191,7 +218,7 @@ bool ui_widget_paint_icon_color(const ui_widget_canvas *canvas, ui_icon_kind ico
     ui_rect pixels = {0};
     if (!scaled_rect(canvas, bounds, &pixels)) return false;
     return ui_icon_paint_into(icon, canvas->theme,
-        (double)canvas->backing_scale, pixels, color, canvas->rgba,
+        (double)canvas->backing_scale * canvas->ui_scale, pixels, color, canvas->rgba,
         canvas->width, canvas->height, canvas->stride);
 }
 
@@ -207,6 +234,9 @@ static bool draw_button(const ui_widget_canvas *canvas, const ui_widget_draw_spe
     uint32_t surface, uint32_t foreground, bool primary)
 {
     bool icon_only = spec->kind == UI_WIDGET_ICON_BUTTON;
+    if (spec->has_transition && (icon_only || spec->kind == UI_WIDGET_BUTTON_GHOST))
+        surface = blend_colors(spec->transition_from_color,
+            spec->transition_to_color, spec->transition_progress_permille);
     if (primary && spec->state == UI_CONTROL_PRESSED)
         surface = canvas->theme == UI_THEME_LIGHT ? UINT32_C(0x124b97ff) :
             canvas->tokens.selection_fill;
@@ -328,7 +358,7 @@ static void draw_chevron(const ui_widget_canvas *canvas, ui_rect bounds,
     int32_t left_y = points_up ? middle_y + rise : middle_y - rise;
     int32_t right_y = left_y;
     int32_t tip_y = points_up ? middle_y - rise : middle_y + rise;
-    uint32_t thickness = 2U * canvas->backing_scale;
+    uint32_t thickness = (uint32_t)ceil(2.0 * canvas->backing_scale * canvas->ui_scale);
     draw_chevron_segment(canvas, middle_x - wing, left_y, middle_x, tip_y,
         thickness, color);
     draw_chevron_segment(canvas, middle_x, tip_y, middle_x + wing, right_y,

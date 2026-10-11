@@ -328,13 +328,18 @@ bool editor_reorder_to_edge(viewer_editor *editor, bool front)
     return result == DOCUMENT_EDIT_OK;
 }
 
-static void editor_preferences_changed(ui_theme theme, bool increased_contrast,
-                                       bool reduced_motion, void *context)
+static void editor_preferences_changed(
+    const platform_text_ui_preferences *preferences, void *context)
 {
     viewer_editor *editor = context;
-    if (editor != NULL)
-        (void)viewer_editor_set_appearance(editor, theme, increased_contrast,
-                                           reduced_motion);
+    if (editor == NULL || preferences == NULL) return;
+    (void)viewer_editor_set_appearance(editor, preferences->appearance,
+        preferences->increased_contrast, preferences->reduced_motion);
+    (void)viewer_editor_set_system_accent(editor, preferences->accent_srgb,
+        preferences->material_allowed);
+    (void)viewer_editor_set_ui_scale(editor, preferences->ui_scale_percent);
+    (void)viewer_editor_set_panel_widths(editor,
+        preferences->structure_width_points, preferences->inspector_width_points);
 }
 
 static void editor_view_menu_changed(bool structure_visible,
@@ -443,9 +448,17 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->snap_objects_enabled = true;
     editor->snap_guides_enabled = true;
     editor->snap_popover_hovered_row = UINT8_MAX;
+    editor->ui_scale_percent = 100U;
+    editor->structure_width_points = EDITOR_LEFT_WIDTH;
+    editor->inspector_width_points = EDITOR_RIGHT_WIDTH;
+    editor->layout_structure_width_points = EDITOR_LEFT_WIDTH;
+    editor->layout_inspector_width_points = EDITOR_RIGHT_WIDTH;
+    editor->inspector_geometry_expanded = true;
+    editor->inspector_appearance_expanded = true;
     if (modern_style) {
-        (void)platform_text_ui_get_preferences(&editor->theme,
-            &editor->increased_contrast, &editor->reduced_motion);
+        platform_text_ui_preferences preferences = {0};
+        if (platform_text_ui_get_extended_preferences(&preferences))
+            editor_preferences_changed(&preferences, editor);
     }
     editor_status_ok(editor, "Ready");
     if (!document_edit_root(editor->edit, &editor->selected)) {
@@ -484,9 +497,71 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
     editor->theme = theme;
     editor->increased_contrast = increased_contrast;
     editor->reduced_motion = reduced_motion;
+    if (reduced_motion && editor->sidebar_motion_active) {
+        editor->layout_structure_width_points = editor->sidebar_motion_target_structure;
+        editor->layout_inspector_width_points = editor->sidebar_motion_target_inspector;
+        editor->sidebar_motion_active = false;
+    }
+    if (reduced_motion) {
+        for (size_t index = 0U; index < EDITOR_MOTION_CONTROL_CAP; ++index)
+            editor->control_transitions[index].active = false;
+    }
     editor->tree_ready = false;
     editor->redraw_requested = true;
     return true;
+}
+
+bool viewer_editor_set_system_accent(viewer_editor *editor, uint32_t accent_srgb,
+                                     bool material_allowed)
+{
+    if (editor == NULL) return false;
+    if (editor->system_accent_srgb == accent_srgb &&
+        editor->native_material_allowed == material_allowed) return false;
+    editor->system_accent_srgb = accent_srgb;
+    editor->native_material_allowed = material_allowed;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_set_ui_scale(viewer_editor *editor, uint16_t percent)
+{
+    if (editor == NULL || (percent != 100U && percent != 110U && percent != 120U))
+        return false;
+    if (editor->ui_scale_percent == percent) return false;
+    editor->ui_scale_percent = percent;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_set_panel_widths(viewer_editor *editor,
+    uint16_t structure_width_points, uint16_t inspector_width_points)
+{
+    if (editor == NULL || structure_width_points < 184U ||
+        structure_width_points > 320U || inspector_width_points < 240U ||
+        inspector_width_points > 440U) return false;
+    if (editor->structure_width_points == structure_width_points &&
+        editor->inspector_width_points == inspector_width_points) return false;
+    editor->structure_width_points = structure_width_points;
+    editor->inspector_width_points = inspector_width_points;
+    editor->layout_structure_width_points = structure_width_points;
+    editor->layout_inspector_width_points = inspector_width_points;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_native_material_enabled(const viewer_editor *editor)
+{
+    return editor != NULL && editor->modern_style &&
+        editor->native_material_allowed && !editor->increased_contrast;
+}
+
+uint16_t viewer_editor_ui_scale_percent(const viewer_editor *editor)
+{
+    return editor == NULL || editor->ui_scale_percent == 0U ? 100U :
+        editor->ui_scale_percent;
 }
 
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
@@ -498,6 +573,26 @@ bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
         editor->want_inspector == inspector_visible) return false;
     editor->want_structure = structure_visible;
     editor->want_inspector = inspector_visible;
+    uint16_t current_structure = editor->layout_structure_width_points;
+    uint16_t current_inspector = editor->layout_inspector_width_points;
+    if (!editor->reduced_motion) {
+        editor->sidebar_motion_start_structure = current_structure;
+        editor->sidebar_motion_start_inspector = current_inspector;
+        editor->sidebar_motion_target_structure = structure_visible ?
+            editor->structure_width_points : 0U;
+        editor->sidebar_motion_target_inspector = inspector_visible ?
+            editor->inspector_width_points : 0U;
+        editor->sidebar_motion_start_seconds = editor->motion_time_seconds;
+        editor->sidebar_motion_show_structure = structure_visible || current_structure > 0U;
+        editor->sidebar_motion_show_inspector = inspector_visible || current_inspector > 0U;
+        editor->sidebar_motion_active = true;
+    } else {
+        editor->layout_structure_width_points = structure_visible ?
+            editor->structure_width_points : 0U;
+        editor->layout_inspector_width_points = inspector_visible ?
+            editor->inspector_width_points : 0U;
+        editor->sidebar_motion_active = false;
+    }
     editor->tree_ready = false;
     editor->redraw_requested = true;
     if (editor->modern_style)
@@ -595,129 +690,18 @@ bool viewer_editor_get_chrome_layout(viewer_editor *editor,
     if (editor == NULL || out_layout == NULL) return false;
     uint32_t timeline_points = editor->timeline_visible ?
         editor->timeline_height_points : 32U;
-    return viewer_chrome_layout_compute_docked(editor->width, editor->height,
-        editor->backing_scale, editor->want_structure, editor->want_inspector,
-        editor->timeline_available, timeline_points,
+    double ui_scale = (double)viewer_editor_ui_scale_percent(editor) / 100.0;
+    uint16_t structure = editor->layout_structure_width_points;
+    uint16_t inspector = editor->layout_inspector_width_points;
+    bool want_structure = editor->sidebar_motion_active ?
+        (editor->sidebar_motion_start_structure > 0U ||
+         editor->sidebar_motion_target_structure > 0U) : editor->want_structure;
+    bool want_inspector = editor->sidebar_motion_active ?
+        (editor->sidebar_motion_start_inspector > 0U ||
+         editor->sidebar_motion_target_inspector > 0U) : editor->want_inspector;
+    return viewer_chrome_layout_compute_docked_sized(editor->width, editor->height,
+        editor->backing_scale, ui_scale, structure,
+        inspector, want_structure,
+        want_inspector, editor->timeline_available, timeline_points,
         (viewer_chrome_layout *)out_layout);
-}
-
-bool viewer_editor_is_dirty(const viewer_editor *editor)
-{
-    if (editor == NULL || editor->edit == NULL) return false;
-    if (document_edit_is_dirty(editor->edit) || editor->new_name_length > 0U ||
-        editor->new_value_length > 0U) return true;
-    uint8_t current[EDITOR_FIELD_CAP];
-    size_t length = 0U;
-    if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE) {
-        document_edit_attribute attribute;
-        if (!document_edit_attribute_at(editor->edit, editor->selected,
-                editor->field_attribute, &attribute) ||
-            !document_edit_decode_span(editor->edit, attribute.value,
-                current, sizeof(current), &length)) return true;
-    } else if (editor->field_kind == EDITOR_FIELD_TEXT) {
-        if (!document_edit_text_content(editor->edit, editor->selected,
-                current, sizeof(current), &length)) return true;
-    } else if (editor->field_kind == EDITOR_FIELD_NEW_NAME) {
-        return editor->field_length != editor->new_name_length ||
-            (editor->field_length > 0U && memcmp(editor->field,
-                editor->new_name, editor->field_length) != 0);
-    } else if (editor->field_kind == EDITOR_FIELD_NEW_VALUE) {
-        return editor->field_length != editor->new_value_length ||
-            (editor->field_length > 0U && memcmp(editor->field,
-                editor->new_value, editor->field_length) != 0);
-    } else return false;
-    return length != editor->field_length ||
-        (length > 0U && memcmp(current, editor->field, length) != 0);
-}
-
-const char *viewer_editor_status(const viewer_editor *editor)
-{
-    return editor == NULL ? "Editing unavailable" : editor->status;
-}
-
-void viewer_editor_set_status(viewer_editor *editor, const char *message)
-{
-    if (editor == NULL) return;
-    editor_status_ok(editor, message);
-}
-
-void viewer_editor_resize(viewer_editor *editor, uint32_t width, uint32_t height,
-                          double backing_scale)
-{
-    if (editor == NULL || width == 0U || height == 0U ||
-        !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 8.0) return;
-    editor->width = width;
-    editor->height = height;
-    editor->backing_scale = backing_scale;
-    editor->tree_ready = false;
-    editor->redraw_requested = true;
-}
-
-bool viewer_editor_take_redraw_request(viewer_editor *editor)
-{
-    if (editor == NULL) return false;
-    bool requested = editor->redraw_requested;
-    editor->redraw_requested = false;
-    return requested;
-}
-
-size_t viewer_editor_byte_length(const viewer_editor *editor)
-{
-    return editor == NULL ? 0U : document_edit_byte_length(editor->edit);
-}
-
-bool viewer_editor_materialize(viewer_editor *editor, uint8_t *buffer,
-                               size_t capacity, size_t *out_length)
-{
-    return editor != NULL && document_edit_materialize(editor->edit,
-        buffer, capacity, out_length);
-}
-
-document_edit_save_result viewer_editor_save(viewer_editor *editor, base_bytes path)
-{
-    if (editor == NULL || editor->edit == NULL) return (document_edit_save_result){
-        .error = DOCUMENT_EDIT_INVALID_ARGUMENT};
-    document_edit_save_result result = document_edit_save_as(editor->edit, path, NULL);
-    if (result.error == DOCUMENT_EDIT_OK) editor_status_ok(editor, "Saved");
-    else {
-        const char *name = source_save_error_name(result.source_result.error);
-        char message[EDITOR_STATUS_CAP];
-        int amount = snprintf(message, sizeof(message), "Save failed: %s",
-            name == NULL ? "write error" : name);
-        editor_status_ok(editor, amount > 0 && (size_t)amount < sizeof(message) ?
-            message : "Save failed");
-    }
-    return result;
-}
-
-bool viewer_editor_select_at_source_offset(viewer_editor *editor, size_t offset)
-{
-    if (editor == NULL) return false;
-    document_handle selected;
-    if (!document_edit_element_at_offset(editor->edit, offset, &selected)) return false;
-    editor_select_handle(editor, selected);
-    editor_status_ok(editor, "Selected from canvas · outline support pending");
-    return true;
-}
-
-bool viewer_editor_selection_span(viewer_editor *editor,
-                                  document_source_span *out_span)
-{
-    return editor != NULL && out_span != NULL &&
-        document_edit_source_span(editor->edit, editor->selected, out_span);
-}
-
-bool viewer_editor_get_selection_bounds(viewer_editor *editor,
-    const svg_shape_document *document, svg_shape_rect *out_bounds)
-{
-    if (editor == NULL || document == NULL || out_bounds == NULL) return false;
-    svg_shape_selection selection;
-    if (editor_canvas_selection_bounds(editor, document, &selection) ||
-        svg_shape_element_at_offset(document, editor->selected_offset, &selection)) {
-        *out_bounds = selection.device_bounds;
-        return isfinite(out_bounds->x) && isfinite(out_bounds->y) &&
-            isfinite(out_bounds->width) && isfinite(out_bounds->height) &&
-            out_bounds->width >= 0.0 && out_bounds->height >= 0.0;
-    }
-    return false;
 }

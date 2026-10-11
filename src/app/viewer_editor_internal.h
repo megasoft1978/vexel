@@ -24,6 +24,11 @@
 #define EDITOR_PALETTE_QUERY_CAP 64U
 #define EDITOR_PALETTE_VISIBLE_MAX 8U
 #define EDITOR_HISTORY_VISIBLE_MAX 20U
+#define EDITOR_SPLITTER_STRUCTURE_ID 24010U
+#define EDITOR_SPLITTER_INSPECTOR_ID 24011U
+#define EDITOR_NODE_FOCUS_BREADCRUMB 24012U
+#define EDITOR_NODE_REVEAL_TAG 24504U
+#define EDITOR_MOTION_CONTROL_CAP 4U
 
 enum {
     EDITOR_NODE_TOOLBAR = 2U,
@@ -68,6 +73,8 @@ enum {
     EDITOR_BUTTON_TOGGLE_TIMELINE,
     EDITOR_BUTTON_HIDE_STRUCTURE,
     EDITOR_BUTTON_HIDE_INSPECTOR,
+    EDITOR_BUTTON_FOCUS_GROUP,
+    EDITOR_BUTTON_RESET_FOCUS,
     EDITOR_BUTTON_TOOL_RECTANGLE = 400U,
     EDITOR_BUTTON_TOOL_ELLIPSE,
     EDITOR_BUTTON_TOOL_LINE,
@@ -77,6 +84,8 @@ enum {
     EDITOR_BUTTON_TOOL_POLYGON,
     EDITOR_BUTTON_TOOL_POLYLINE,
     EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES = 500U,
+    EDITOR_BUTTON_INSPECTOR_GEOMETRY = 501U,
+    EDITOR_BUTTON_INSPECTOR_APPEARANCE = 502U,
     EDITOR_BUTTON_ZOOM_HUD = 600U,
     EDITOR_BUTTON_ZOOM_PRESET_BASE = 610U,
     EDITOR_CONTEXT_EDIT_NODES = 630U,
@@ -108,7 +117,12 @@ enum {
     EDITOR_HISTORY_CURRENT,
     EDITOR_HISTORY_SAVED,
     EDITOR_HISTORY_ROW_BASE = 22110U,
-    EDITOR_HISTORY_FOOTER = 22131U
+    EDITOR_HISTORY_FOOTER = 22131U,
+    EDITOR_INSPECTOR_SECTION_BASE = 22200U,
+    EDITOR_NODE_ID_REVEAL = 24500U,
+    EDITOR_BUTTON_COPY_FULL_ID,
+    EDITOR_BUTTON_FIT_CANVAS,
+    EDITOR_BUTTON_ACTUAL_SIZE
 };
 
 typedef enum editor_field_kind {
@@ -189,6 +203,15 @@ typedef struct editor_path_node_ref {
     char command;
 } editor_path_node_ref;
 
+typedef struct editor_control_transition {
+    uint32_t id;
+    ui_control_state from_state, to_state;
+    double start_seconds;
+    uint16_t duration_ms;
+    uint32_t from_color, to_color;
+    bool active;
+} editor_control_transition;
+
 struct viewer_editor {
     document_edit *edit;
     document_handle selected;
@@ -242,6 +265,10 @@ struct viewer_editor {
     size_t history_selected_cursor;
     size_t history_visible_capacity;
     viewer_command_id pending_command;
+    document_handle focus_scope;
+    bool focus_scope_active;
+    bool inspector_geometry_expanded;
+    bool inspector_appearance_expanded;
     bool selection_active;
     bool node_edit_active;
     bool inspector_other_attributes_expanded;
@@ -297,6 +324,7 @@ struct viewer_editor {
     double gesture_pivot_y;
     uint32_t hovered_id;
     uint32_t hovered_x;
+    uint32_t hovered_y;
     uint32_t pressed_id;
     uint8_t resize_handle;
     uint32_t width;
@@ -314,6 +342,36 @@ struct viewer_editor {
     bool modern_style;
     bool increased_contrast;
     bool reduced_motion;
+    bool native_material_allowed;
+    uint32_t system_accent_srgb;
+    uint16_t ui_scale_percent;
+    uint16_t structure_width_points;
+    uint16_t inspector_width_points;
+    uint16_t layout_structure_width_points;
+    uint16_t layout_inspector_width_points;
+    uint32_t splitter_drag_id;
+    uint32_t splitter_drag_start_x;
+    uint16_t splitter_drag_start_width;
+    bool splitter_dragging;
+    double motion_time_seconds;
+    double sidebar_motion_start_seconds;
+    uint16_t sidebar_motion_start_structure;
+    uint16_t sidebar_motion_start_inspector;
+    uint16_t sidebar_motion_target_structure;
+    uint16_t sidebar_motion_target_inspector;
+    bool sidebar_motion_show_structure;
+    bool sidebar_motion_show_inspector;
+    bool sidebar_motion_active;
+    editor_control_transition control_transitions[EDITOR_MOTION_CONTROL_CAP];
+    document_handle reveal_handle;
+    char reveal_id[EDITOR_FIELD_CAP + 1U];
+    size_t reveal_id_length;
+    char reveal_tag[EDITOR_FIELD_CAP + 1U];
+    size_t reveal_tag_length;
+    size_t reveal_scroll_codepoints;
+    bool reveal_active;
+    bool reveal_has_id;
+    bool reveal_exceeds_limit;
     bool redraw_requested;
     bool canvas_selection_valid;
     bool marquee_preserve_selection;
@@ -391,6 +449,25 @@ void editor_status_ok(viewer_editor *editor, const char *message);
 void editor_refresh_outline(viewer_editor *editor);
 void editor_capture_selection_identity(viewer_editor *editor);
 void editor_rebuild_visible_outline(viewer_editor *editor);
+void editor_focus_scope_update(viewer_editor *editor);
+void editor_focus_scope_reset(viewer_editor *editor);
+bool editor_focus_scope_toggle(viewer_editor *editor);
+bool editor_splitter_pointer_down(viewer_editor *editor, uint32_t x,
+    uint32_t y, uint8_t click_count);
+bool editor_splitter_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y);
+void editor_splitter_pointer_up(viewer_editor *editor);
+bool editor_splitter_key(viewer_editor *editor, uint16_t key_code,
+    uint32_t modifiers);
+void editor_motion_control_transition(viewer_editor *editor, uint32_t id,
+    ui_control_state from_state, ui_control_state to_state,
+    uint16_t duration_ms);
+bool editor_reveal_prepare(viewer_editor *editor, document_handle handle);
+bool editor_reveal_focus(viewer_editor *editor);
+bool editor_reveal_scroll(viewer_editor *editor, uint32_t x, uint32_t y,
+    double delta_y);
+void editor_reveal_layout_nodes(viewer_editor *editor);
+void editor_reveal_paint(viewer_editor *editor, uint8_t *rgba,
+    size_t capacity, size_t stride);
 bool editor_outline_visible_model_index(const viewer_editor *editor, size_t row,
                                         size_t *out_index);
 bool editor_outline_is_collapsed(const viewer_editor *editor, size_t index);
@@ -515,6 +592,7 @@ uint32_t editor_commit_field(viewer_editor *editor);
 void editor_cancel_field(viewer_editor *editor);
 uint32_t editor_history(viewer_editor *editor, bool redo);
 void editor_build_tree(viewer_editor *editor);
+void editor_build_tree_legacy(viewer_editor *editor);
 void editor_build_tree_modern(viewer_editor *editor);
 void editor_overlay_add_nodes(viewer_editor *editor);
 void editor_overlay_layout_nodes(viewer_editor *editor);

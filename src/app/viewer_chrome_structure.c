@@ -2,6 +2,7 @@
 
 #include "viewer_chrome.h"
 
+#include <stdio.h>
 #include <string.h>
 
 static ui_icon_kind layer_icon(viewer_editor *editor, size_t index)
@@ -125,8 +126,22 @@ static size_t layer_label(viewer_editor *editor, size_t index,
 
 void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens)
 {
+    char breadcrumb[UI_TEXT_MAX_BYTES] = {0};
+    size_t breadcrumb_length = 0U;
+    if (editor->focus_scope_active) {
+        for (size_t index = 0U; index < editor->outline_count; ++index) {
+            if (!editor_same_handle(editor->outline[index], editor->focus_scope)) continue;
+            char scope_label[UI_TEXT_MAX_BYTES] = {0};
+            size_t scope_length = layer_label(editor, index, scope_label);
+            int amount = snprintf(breadcrumb, sizeof(breadcrumb), "Layers âº %.*s",
+                (int)scope_length, scope_label);
+            if (amount > 0 && (size_t)amount < sizeof(breadcrumb))
+                breadcrumb_length = (size_t)amount;
+            break;
+        }
+    }
     bool okay = editor_add_node(editor, EDITOR_NODE_OUTLINE, EDITOR_NODE_WORKSPACE,
-            UI_AXIS_VERTICAL, EDITOR_LEFT_WIDTH, 0U, 8U, 4U, tokens->panel,
+            UI_AXIS_VERTICAL, editor->layout_structure_width_points, 0U, 8U, 4U, tokens->panel,
             UI_ROLE_LIST, "Layers", 6U, NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_OUTLINE_HEADER, EDITOR_NODE_OUTLINE,
             UI_AXIS_HORIZONTAL, 0U, 28U, 0U, 4U, 0U, UI_ROLE_GROUP,
@@ -135,10 +150,23 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
             EDITOR_NODE_OUTLINE_HEADER, UI_AXIS_HORIZONTAL, 0U, 28U,
             4U, 0U, 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
             "Layers", 6U, NULL, 0U, 0U, 0U) &&
+        editor_add_widget_node(editor,
+            editor->focus_scope_active ? EDITOR_BUTTON_RESET_FOCUS : EDITOR_BUTTON_FOCUS_GROUP,
+            EDITOR_NODE_OUTLINE_HEADER, UI_AXIS_HORIZONTAL, 28U, 28U, 0U, 0U,
+            0U, UI_ROLE_BUTTON, UI_WIDGET_ICON_BUTTON,
+            editor->focus_scope_active ? UI_ICON_LAYERS : UI_ICON_GROUP,
+            editor->focus_scope_active ? "All layers" : "Focus selected group",
+            editor->focus_scope_active ? 10U : 20U, NULL, 0U,
+            editor->selection_active || editor->focus_scope_active ? 0U : UI_STATE_DISABLED,
+            editor->focus_scope_active ? EDITOR_BUTTON_RESET_FOCUS : EDITOR_BUTTON_FOCUS_GROUP) &&
         editor_add_widget_node(editor, EDITOR_BUTTON_HIDE_STRUCTURE,
             EDITOR_NODE_OUTLINE_HEADER, UI_AXIS_HORIZONTAL, 28U, 28U,
             0U, 0U, 0U, UI_ROLE_BUTTON, UI_WIDGET_ICON_BUTTON, UI_ICON_SIDEBAR_LEFT,
             "Hide layers panel", 17U, NULL, 0U, 0U, EDITOR_BUTTON_HIDE_STRUCTURE) &&
+        (!editor->focus_scope_active || editor_add_widget_node(editor,
+            EDITOR_NODE_FOCUS_BREADCRUMB, EDITOR_NODE_OUTLINE, UI_AXIS_HORIZONTAL,
+            0U, 22U, 4U, 0U, 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
+            breadcrumb, breadcrumb_length, NULL, 0U, 0U, 0U)) &&
         editor_add_widget_node(editor, EDITOR_OUTLINE_SEARCH_ID, EDITOR_NODE_OUTLINE,
             UI_AXIS_HORIZONTAL, 0U, 30U, 0U, 0U, tokens->panel_raised,
             UI_ROLE_TEXT_FIELD, UI_WIDGET_TEXT_FIELD, UI_ICON_SEARCH,
@@ -198,5 +226,24 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
             0U, UI_ROLE_GROUP, UI_WIDGET_EMPTY_STATE, UI_ICON_LAYERS,
             heading, strlen(heading), detail, strlen(detail), 0U,
             EDITOR_OUTLINE_ROW_BASE);
+    }
+    if (editor->reveal_active) {
+        static const char too_long[] = "ID exceeds 64 KiB reveal limit";
+        const char *id_value = editor->reveal_exceeds_limit ? too_long : editor->reveal_id;
+        size_t id_length = editor->reveal_exceeds_limit ? sizeof(too_long) - 1U :
+            editor->reveal_id_length;
+        if (!editor_add_node(editor, EDITOR_NODE_ID_REVEAL, EDITOR_NODE_OUTLINE,
+                UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_TEXT,
+                "Full SVG ID", 11U, id_value, id_length, 0U, 0U) ||
+            !editor_add_node(editor, EDITOR_NODE_REVEAL_TAG, EDITOR_NODE_OUTLINE,
+                UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_TEXT,
+                "SVG tag", 7U, editor->reveal_tag, editor->reveal_tag_length, 0U, 0U))
+            return;
+        if (editor->reveal_has_id && !editor->reveal_exceeds_limit &&
+            !editor_add_widget_node(editor, EDITOR_BUTTON_COPY_FULL_ID,
+                EDITOR_NODE_OUTLINE, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
+                tokens->panel_raised, UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY,
+                UI_ICON_NONE, "Copy Full ID", 12U, NULL, 0U, 0U,
+                EDITOR_BUTTON_COPY_FULL_ID)) return;
     }
 }

@@ -1,4 +1,5 @@
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/CALayer.h>
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include "platform/platform_window.h"
@@ -21,6 +22,8 @@ typedef struct platform_event_node {
 
 struct platform_window {
     __strong NSWindow *native;
+    __strong NSView *render_view;
+    __strong NSVisualEffectView *toolbar_material;
     __strong NSOpenPanel *open_panel;
     __strong VexelOpenPanelRequest *open_panel_request;
     platform_event_node *first;
@@ -61,7 +64,17 @@ void *platform_window_native_view(platform_window *window)
     if (!platform_on_main_thread() || window == NULL) {
         return NULL;
     }
-    return (__bridge void *)window->native.contentView;
+    return (__bridge void *)window->render_view;
+}
+
+bool platform_window_set_material_enabled(platform_window *window, bool enabled)
+{
+    if (!platform_on_main_thread() || window == NULL || window->toolbar_material == nil)
+        return false;
+    bool allowed = false;
+    if (@available(macOS 26.0, *)) allowed = enabled;
+    window->toolbar_material.hidden = !allowed;
+    return true;
 }
 
 static bool platform_dimensions_valid(int32_t width, int32_t height)
@@ -74,6 +87,10 @@ static bool platform_emit(platform_window *window, const platform_event *event)
     if (window == NULL || event == NULL) {
         return false;
     }
+    platform_event stamped = *event;
+    if (!(stamped.timestamp_seconds > 0.0))
+        stamped.timestamp_seconds = NSProcessInfo.processInfo.systemUptime;
+    event = &stamped;
     if (event->type == PLATFORM_EVENT_POINTER_MOVE || event->type == PLATFORM_EVENT_RESIZE ||
         event->type == PLATFORM_EVENT_SCALE || event->type == PLATFORM_EVENT_APPEARANCE ||
         event->type == PLATFORM_EVENT_FOCUS || event->type == PLATFORM_EVENT_DROP_ENTER ||
@@ -105,6 +122,11 @@ static bool platform_emit(platform_window *window, const platform_event *event)
 bool platform_window_emit_internal(platform_window *window, const platform_event *event)
 {
     return platform_emit(window, event);
+}
+
+bool platform_window_dispatch_animation_tick(platform_window *window)
+{
+    return platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_ANIMATION_TICK});
 }
 
 void platform_window_dispatch_action(platform_window *window, platform_viewer_action action)
@@ -426,12 +448,28 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         native.delegate = native;
         native.acceptsMouseMovedEvents = YES;
         native.contentMaxSize = NSMakeSize(4096.0, 4096.0);
-        VexelView *view = [[VexelView alloc] initWithFrame:NSMakeRect(0.0, 0.0,
-            config->width_points, config->height_points)];
+        NSRect content_frame = NSMakeRect(0.0, 0.0,
+            config->width_points, config->height_points);
+        NSView *container = [[NSView alloc] initWithFrame:content_frame];
+        container.wantsLayer = YES;
+        container.layer.backgroundColor = NSColor.clearColor.CGColor;
+        NSVisualEffectView *material = [[NSVisualEffectView alloc]
+            initWithFrame:NSMakeRect(0.0, config->height_points - 40.0,
+                config->width_points, 40.0)];
+        material.material = NSVisualEffectMaterialTitlebar;
+        material.blendingMode = NSVisualEffectBlendingModeBehindWindow;
+        material.state = NSVisualEffectStateFollowsWindowActiveState;
+        material.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+        material.hidden = YES;
+        [container addSubview:material];
+        VexelView *view = [[VexelView alloc] initWithFrame:content_frame];
+        view.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
         view.owner = window;
         [view registerForDraggedTypes:@[NSPasteboardTypeFileURL]];
-        native.contentView = view;
-        view.frame = NSMakeRect(0.0, 0.0, config->width_points, config->height_points);
+        [container addSubview:view positioned:NSWindowAbove relativeTo:material];
+        native.contentView = container;
+        window->render_view = view;
+        window->toolbar_material = material;
         [native setContentSize:NSMakeSize(config->width_points, config->height_points)];
         native.title = title;
         [native makeKeyAndOrderFront:nil];
@@ -511,28 +549,6 @@ bool platform_window_is_dark_appearance(platform_window *window)
             bestMatchFromAppearancesWithNames:@[NSAppearanceNameAqua, NSAppearanceNameDarkAqua]];
         return [match isEqualToString:NSAppearanceNameDarkAqua];
     }
-}
-
-bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
-                                      bool enabled)
-{
-    if (!platform_on_main_thread() || window == NULL) return false;
-    return platform_macos_menus_set_option_state(window, action, enabled);
-}
-
-bool platform_window_show_ruler_context_menu(platform_window *window,
-    bool horizontal_axis, int32_t logical_x, int32_t logical_y)
-{
-    if (!platform_on_main_thread() || window == NULL) return false;
-    return platform_macos_menus_show_ruler_context_menu(window,
-        horizontal_axis, logical_x, logical_y);
-}
-
-bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
-                                       bool enabled)
-{
-    if (!platform_on_main_thread() || window == NULL) return false;
-    return platform_macos_menus_set_command_state(window, command_id, enabled);
 }
 
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points)
@@ -624,7 +640,7 @@ bool platform_test_inject_pointer(platform_window *window, platform_event_type t
             modifierFlags:0 timestamp:0.0 windowNumber:window->native.windowNumber context:nil
             eventNumber:0 clickCount:(type == PLATFORM_EVENT_POINTER_MOVE ? 0 : 1)
             pressure:(type == PLATFORM_EVENT_POINTER_DOWN ? 1.0 : 0.0)];
-        VexelView *view = (VexelView *)window->native.contentView;
+        VexelView *view = (VexelView *)window->render_view;
         /* Test injection must not depend on LaunchServices activating the window. */
         if (type == PLATFORM_EVENT_POINTER_MOVE) {
             [view mouseMoved:event];
@@ -645,7 +661,7 @@ bool platform_test_inject_scroll(platform_window *window, double delta_x, double
         fabs(delta_x) > 10000.0 || fabs(delta_y) > 10000.0 || logical_x < 0.0 ||
         logical_y < 0.0 || logical_x >= 4096.0 || logical_y >= 4096.0) return false;
     @autoreleasepool {
-        VexelView *view = (VexelView *)window->native.contentView;
+        VexelView *view = (VexelView *)window->render_view;
         NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
         VexelSyntheticScrollEvent *event = [[VexelSyntheticScrollEvent alloc] init];
         event.injectedLocation = point;
@@ -663,7 +679,7 @@ bool platform_test_inject_magnify(platform_window *window, double magnification,
         fabs(magnification) > 100.0 || !isfinite(logical_x) || !isfinite(logical_y) ||
         logical_x < 0.0 || logical_y < 0.0 || logical_x >= 4096.0 || logical_y >= 4096.0) return false;
     @autoreleasepool {
-        VexelView *view = (VexelView *)window->native.contentView;
+        VexelView *view = (VexelView *)window->render_view;
         NSPoint point = NSMakePoint(logical_x, NSHeight(view.bounds) - logical_y);
         VexelSyntheticMagnifyEvent *event = [[VexelSyntheticMagnifyEvent alloc] init];
         event.injectedLocation = point;
@@ -721,6 +737,7 @@ void platform_window_destroy(platform_window *window)
     if (!platform_on_main_thread() || window == NULL) {
         return;
     }
+    platform_window_request_animation_ticks(window, false);
     @autoreleasepool {
         VexelOpenPanelRequest *request = window->open_panel_request;
         if (request != nil) {
@@ -736,10 +753,12 @@ void platform_window_destroy(platform_window *window)
         }
         [window->native orderOut:nil];
         window->native.delegate = nil;
-        [(VexelView *)window->native.contentView setOwner:NULL];
+        [(VexelView *)window->render_view setOwner:NULL];
         [(VexelNativeWindow *)window->native setOwner:NULL];
         [window->native close];
         window->native = nil;
+        window->render_view = nil;
+        window->toolbar_material = nil;
         platform_event_node *node = window->first;
         while (node != NULL) {
             platform_event_node *next = node->next;

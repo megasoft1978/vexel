@@ -722,6 +722,12 @@ target_link_libraries(viewer_chrome_test PRIVATE vexel_editor_ui)
 set_target_properties(viewer_chrome_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(viewer_visual_test tests/editor/viewer_visual_test.c)
+target_include_directories(viewer_visual_test PRIVATE src/app)
+target_link_libraries(viewer_visual_test PRIVATE vexel_editor_ui)
+set_target_properties(viewer_visual_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 add_executable(platform_text_ui_test tests/ui/platform_text_ui_test.c)
 target_link_libraries(platform_text_ui_test PRIVATE vexel_platform_text_ui)
@@ -773,15 +779,15 @@ foreach(w14_windows_target viewer_home_test viewer_home_render viewer_home_layou
 endforeach()
 
 foreach(w4_ui_target vexel_platform_text_ui viewer_chrome_layout_fuzz
-        ui_tokens_contrast_test viewer_chrome_test platform_text_ui_test
-        viewer_chrome_render)
+        ui_tokens_contrast_test viewer_chrome_test viewer_visual_test
+        platform_text_ui_test viewer_chrome_render)
     target_compile_options(${w4_ui_target} PRIVATE ${VEXEL_STRICT_WARNINGS})
 endforeach()
 
 if(VEXEL_SANITIZER)
     foreach(w4_ui_target vexel_platform_text_ui viewer_chrome_layout_fuzz
-            ui_tokens_contrast_test viewer_chrome_test platform_text_ui_test
-            viewer_chrome_render)
+            ui_tokens_contrast_test viewer_chrome_test viewer_visual_test
+            platform_text_ui_test viewer_chrome_render)
         target_compile_options(${w4_ui_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${w4_ui_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -798,6 +804,7 @@ if(BUILD_TESTING)
     add_test(NAME ui-token-contrast COMMAND ui_tokens_contrast_test)
     add_test(NAME viewer-chrome-layout-fuzz COMMAND viewer_chrome_layout_fuzz)
     add_test(NAME viewer-chrome-style COMMAND viewer_chrome_test)
+    add_test(NAME editor-visual COMMAND viewer_visual_test)
     add_test(NAME platform-text-ui COMMAND platform_text_ui_test)
     add_test(NAME editor-style-goldens COMMAND python3
         "${CMAKE_SOURCE_DIR}/tests/ui/verify_style_goldens.py"
@@ -823,6 +830,21 @@ endif()
 if(BUILD_TESTING)
     add_test(NAME mcp-features COMMAND mcp_features_test)
 endif()
+
+# lane: w15-visual
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_motion.c
+    src/app/viewer_editor_reveal.c
+    src/app/viewer_editor_document.c
+    src/app/viewer_editor_canvas_pointer.c
+    src/app/viewer_editor_tree_legacy.c)
+target_sources(svgworkbench PRIVATE
+    src/app/viewer_editor_result.c
+    src/platform/macos/platform_window_animation.m
+    src/platform/macos/platform_window_menus.m)
+set_source_files_properties(src/platform/macos/platform_window_animation.m
+    src/platform/macos/platform_window_menus.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 
 add_library(vexel_platform_dialog STATIC src/platform/macos/platform_dialog.m)
 target_include_directories(vexel_platform_dialog PUBLIC src/platform/macos)

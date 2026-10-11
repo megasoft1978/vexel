@@ -3,6 +3,7 @@
 #include "raster/shape_render.h"
 #include "shape.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -82,6 +83,91 @@ ui_tokens ui_theme_tokens(ui_theme theme, bool increased_contrast)
     tokens.text = tokens.text_primary;
     tokens.muted = tokens.text_secondary;
     tokens.border = tokens.separator;
+    return tokens;
+}
+
+static double ui_linear_channel(uint32_t color, uint32_t shift)
+{
+    double channel = (double)((color >> shift) & 255U) / 255.0;
+    return channel <= 0.04045 ? channel / 12.92 :
+        pow((channel + 0.055) / 1.055, 2.4);
+}
+
+static double ui_luminance(uint32_t color)
+{
+    return 0.2126 * ui_linear_channel(color, 24U) +
+        0.7152 * ui_linear_channel(color, 16U) +
+        0.0722 * ui_linear_channel(color, 8U);
+}
+
+static double ui_contrast(uint32_t first, uint32_t second)
+{
+    double a = ui_luminance(first), b = ui_luminance(second);
+    return (fmax(a, b) + 0.05) / (fmin(a, b) + 0.05);
+}
+
+static uint32_t ui_accent_candidate(uint32_t source, bool lighten,
+                                    uint32_t percent)
+{
+    uint32_t output = 0U;
+    for (uint32_t shift = 8U; shift <= 24U; shift += 8U) {
+        uint32_t channel = (source >> shift) & 255U;
+        uint32_t target = lighten ? 255U : 0U;
+        uint32_t adjusted = (channel * (100U - percent) + target * percent + 50U) / 100U;
+        output |= adjusted << shift;
+    }
+    return output | 255U;
+}
+
+static uint32_t ui_accent_with_contrast(uint32_t source, ui_theme theme,
+                                        bool increased_contrast,
+                                        const ui_tokens *tokens)
+{
+    double required = increased_contrast ? 4.5 : 3.0;
+    bool lighten = theme == UI_THEME_DARK;
+    uint32_t best = source | 255U;
+    double best_contrast = 0.0;
+    for (uint32_t amount = 0U; amount <= 100U; ++amount) {
+        uint32_t candidate = ui_accent_candidate(source, lighten, amount);
+        double against_panel = ui_contrast(candidate, tokens->panel);
+        double against_raised = ui_contrast(candidate, tokens->panel_raised);
+        double score = fmin(against_panel, against_raised);
+        if (score > best_contrast) {
+            best = candidate;
+            best_contrast = score;
+        }
+        if (score >= required) return candidate;
+    }
+    return best;
+}
+
+static uint32_t ui_blend_opaque(uint32_t background, uint32_t foreground,
+                                uint32_t opacity_percent)
+{
+    uint32_t result = 255U;
+    for (uint32_t shift = 8U; shift <= 24U; shift += 8U) {
+        uint32_t back = (background >> shift) & 255U;
+        uint32_t front = (foreground >> shift) & 255U;
+        uint32_t channel = (back * (100U - opacity_percent) +
+            front * opacity_percent + 50U) / 100U;
+        result |= channel << shift;
+    }
+    return result;
+}
+
+ui_tokens ui_theme_tokens_accented(ui_theme theme, bool increased_contrast,
+                                   uint32_t system_accent_srgb)
+{
+    ui_tokens tokens = ui_theme_tokens(theme, increased_contrast);
+    if (system_accent_srgb == 0U || (system_accent_srgb & 255U) == 0U)
+        return tokens;
+    uint32_t accent = ui_accent_with_contrast(system_accent_srgb, theme,
+        increased_contrast, &tokens);
+    tokens.accent = accent;
+    tokens.selection_edge = accent;
+    tokens.focus_ring = accent;
+    tokens.selection_fill = ui_blend_opaque(tokens.panel, accent,
+        increased_contrast ? 20U : 14U);
     return tokens;
 }
 

@@ -193,6 +193,26 @@
   406 entries and `git diff --check` passes. No frozen UX-09/10 work orders are
   present under `work/`, so no lifecycle entries were added to `ledger.jsonl`.
 
+- Update 2026-10-11: uncommitted W15 visual work on `lane/w15-visual` adds
+  system-accent and readable-scale preferences, resizable sidebars, simplified
+  toolbar/Inspector hierarchy, scoped Layers focus, full-ID reveal/copy, the
+  macOS 26 toolbar material boundary, and interruptible motion. Headless style
+  goldens cover dark/light at 100%, 110%, and 120%, 1×/2×; editor chrome and
+  selection goldens were reviewed and refreshed. `./dev build`, focused editor
+  tests, 200,000-case layout fuzz, all relevant goldens, `./dev shot`/`pixdiff`,
+  and ledger validation pass. `./dev t --all` reports 55/57 CTests and 69/69
+  Python tests; only `index-replay` (offscreen Metal unavailable) and
+  `native-viewer-smoke` fail in that lane's environment. Maintainer real-window
+  checks are listed in `docs/lanes/w15-visual.md`. No frozen W15 order is present
+  under `work/`, so the ledger has no W15 lifecycle event. No commit was made.
+
+- Integration follow-up for W15 visual: Inspector group accessibility IDs now
+  use a reserved range separate from the command palette. The editor document,
+  legacy tree, canvas pointer, result-dispatch, and macOS menu wrapper code were
+  split into focused files to stay below 800 lines. Combined headless goldens
+  were regenerated. `./dev build` passes; `./dev t --all` passes all 73 CTests
+  and 69 Python tests.
+
 - Update 2026-10-11: uncommitted W14 rulers/zoom candidate from the supplied
   `r2-interaction.md` work-order text is recorded in `docs/lanes/w14-rulers.md`.
   Added editor-only bounded guides and rulers, zoom HUD presets, Zoom to

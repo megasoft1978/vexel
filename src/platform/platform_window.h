@@ -40,7 +40,8 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_FILE_DROP,
     PLATFORM_EVENT_FILE_NEW,
     PLATFORM_EVENT_ACTION,
-    PLATFORM_EVENT_COMMAND
+    PLATFORM_EVENT_COMMAND,
+    PLATFORM_EVENT_ANIMATION_TICK
 } platform_event_type;
 
 typedef enum platform_cursor_kind {
@@ -70,6 +71,9 @@ typedef enum platform_viewer_action {
     PLATFORM_ACTION_CLEAR_HORIZONTAL_GUIDES,
     PLATFORM_ACTION_CLEAR_VERTICAL_GUIDES,
     PLATFORM_ACTION_ZOOM_TO_SELECTION,
+    PLATFORM_ACTION_UI_SCALE_100,
+    PLATFORM_ACTION_UI_SCALE_110,
+    PLATFORM_ACTION_UI_SCALE_120,
     PLATFORM_ACTION_QUIT
 } platform_viewer_action;
 
@@ -92,6 +96,7 @@ typedef struct platform_event {
     double magnification;
     double precise_x;
     double precise_y;
+    double timestamp_seconds;
     uint16_t key_code;
     uint8_t click_count;
     uint32_t modifiers;
@@ -139,6 +144,9 @@ bool platform_window_show_ruler_context_menu(platform_window *window,
 bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
                                        bool enabled);
 void platform_window_dispatch_command(platform_window *window, uint32_t command_id);
+bool platform_window_set_material_enabled(platform_window *window, bool enabled);
+void platform_window_request_animation_ticks(platform_window *window, bool enabled);
+bool platform_window_dispatch_animation_tick(platform_window *window);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);

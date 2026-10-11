@@ -93,7 +93,10 @@ enum {
     VIEWER_EDITOR_ZOOM_PRESET_REQUEST = 1U << 16U,
     VIEWER_EDITOR_COMMAND_SELECTED = 1U << 17U,
     VIEWER_EDITOR_NODE_CORNER = 1U << 18U,
-    VIEWER_EDITOR_NODE_SMOOTH = 1U << 19U
+    VIEWER_EDITOR_NODE_SMOOTH = 1U << 19U,
+    VIEWER_EDITOR_FIT_CANVAS = 1U << 20U,
+    VIEWER_EDITOR_ACTUAL_SIZE = 1U << 21U,
+    VIEWER_EDITOR_COPY_FULL_ID = 1U << 22U
 };
 
 viewer_editor *viewer_editor_create(base_bytes source, ui_theme theme,
@@ -119,6 +122,8 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len);
 uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t y,
                                     uint8_t button);
+uint32_t viewer_editor_pointer_down_click_count(viewer_editor *editor,
+    uint32_t x, uint32_t y, uint8_t button, uint8_t click_count);
 bool viewer_editor_scroll(viewer_editor *editor, uint32_t x, double delta_y);
 bool viewer_editor_scroll_at(viewer_editor *editor, uint32_t x, uint32_t y,
                              double delta_y);
@@ -141,6 +146,18 @@ bool viewer_editor_semantics(viewer_editor *editor,
                              ui_semantics_snapshot *out_snapshot);
 bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
                                   bool increased_contrast, bool reduced_motion);
+bool viewer_editor_set_system_accent(viewer_editor *editor, uint32_t accent_srgb,
+                                     bool material_allowed);
+bool viewer_editor_set_ui_scale(viewer_editor *editor, uint16_t percent);
+bool viewer_editor_set_panel_widths(viewer_editor *editor,
+    uint16_t structure_width_points, uint16_t inspector_width_points);
+bool viewer_editor_native_material_enabled(const viewer_editor *editor);
+uint16_t viewer_editor_ui_scale_percent(const viewer_editor *editor);
+bool viewer_editor_copy_full_id(const viewer_editor *editor, uint8_t *buffer,
+    size_t capacity, size_t *out_length);
+void viewer_editor_set_motion_time(viewer_editor *editor, double seconds);
+bool viewer_editor_motion_tick(viewer_editor *editor, double seconds);
+bool viewer_editor_motion_active(const viewer_editor *editor);
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
                                           bool structure_visible,
                                           bool inspector_visible);

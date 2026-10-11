@@ -146,6 +146,8 @@ void viewer_process_editor_result(viewer_app *app, uint32_t result);
 void viewer_apply_command(viewer_app *app, viewer_command_id command);
 void viewer_app_tick(viewer_app *app);
 void viewer_app_destroy(viewer_app *app);
+void navigation_changed(viewer_app *app, const ui_viewer_navigation *previous);
+void apply_navigation_fit(viewer_app *app, platform_viewer_action action);
 void viewer_process_event(viewer_app *app, const platform_event *event);
 bool viewer_export_png(viewer_app *app, bool copy_to_clipboard);
 bool viewer_compose_and_present(viewer_app *app);
