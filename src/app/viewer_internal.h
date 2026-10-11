@@ -127,8 +127,20 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial);
 bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_length);
 bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
                                     const char *message);
+size_t viewer_event_path_length(const char *path, size_t limit);
+bool viewer_save_document(viewer_app *app, bool force_save_as);
 void viewer_request_close(viewer_app *app);
 void viewer_close_confirmed(viewer_app *app);
+void viewer_apply_action(viewer_app *app, platform_viewer_action action);
+void viewer_apply_navigation_key(viewer_app *app, ui_viewer_key key);
+void viewer_toggle_checkerboard(viewer_app *app);
+void viewer_cycle_background(viewer_app *app);
+void viewer_toggle_pixel_grid(viewer_app *app);
+void viewer_request_reload_or_open(viewer_app *app);
+void viewer_apply_synthetic_key(viewer_app *app, uint16_t key_code,
+    uint32_t modifiers, const char *text, size_t text_len);
+void viewer_process_editor_result(viewer_app *app, uint32_t result);
+void viewer_apply_command(viewer_app *app, viewer_command_id command);
 void viewer_app_tick(viewer_app *app);
 void viewer_app_destroy(viewer_app *app);
 void viewer_process_event(viewer_app *app, const platform_event *event);

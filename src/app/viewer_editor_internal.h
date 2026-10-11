@@ -20,6 +20,9 @@
 #define EDITOR_LEFT_WIDTH 232U
 #define EDITOR_RIGHT_WIDTH 320U
 #define EDITOR_TOOL_RAIL_WIDTH 44U
+#define EDITOR_PALETTE_QUERY_CAP 64U
+#define EDITOR_PALETTE_VISIBLE_MAX 8U
+#define EDITOR_HISTORY_VISIBLE_MAX 20U
 
 enum {
     EDITOR_NODE_TOOLBAR = 2U,
@@ -48,6 +51,7 @@ enum {
     EDITOR_BUTTON_SAVE_AS,
     EDITOR_BUTTON_ADD_ATTRIBUTE,
     EDITOR_BUTTON_REMOVE_ATTRIBUTE,
+    EDITOR_BUTTON_HISTORY = 607U,
     EDITOR_BUTTON_TOOL_SELECT = 300U,
     EDITOR_BUTTON_TOOL_PAN,
     EDITOR_BUTTON_TOOL_ZOOM,
@@ -72,7 +76,23 @@ enum {
     EDITOR_NEW_NAME_ID,
     EDITOR_NEW_VALUE_ID,
     EDITOR_OUTLINE_SEARCH_ID = 21000U,
-    EDITOR_RENAME_ID
+    EDITOR_RENAME_ID,
+    EDITOR_PALETTE_BACKDROP = 22000U,
+    EDITOR_PALETTE_PANEL,
+    EDITOR_PALETTE_SURFACE,
+    EDITOR_PALETTE_TITLE,
+    EDITOR_PALETTE_SEARCH,
+    EDITOR_PALETTE_GROUPS,
+    EDITOR_PALETTE_RESULT_BASE = 22010U,
+    EDITOR_PALETTE_FOOTER = 22018U,
+    EDITOR_HISTORY_BACKDROP = 22100U,
+    EDITOR_HISTORY_PANEL,
+    EDITOR_HISTORY_SURFACE,
+    EDITOR_HISTORY_TITLE,
+    EDITOR_HISTORY_CURRENT,
+    EDITOR_HISTORY_SAVED,
+    EDITOR_HISTORY_ROW_BASE = 22110U,
+    EDITOR_HISTORY_FOOTER = 22131U
 };
 
 typedef enum editor_field_kind {
@@ -150,6 +170,20 @@ struct viewer_editor {
     char new_value[EDITOR_FIELD_CAP];
     size_t new_value_length;
     uint32_t focus_id;
+    uint32_t overlay_return_focus;
+    char palette_query[EDITOR_PALETTE_QUERY_CAP];
+    size_t palette_query_length;
+    size_t palette_cursor;
+    size_t palette_anchor;
+    viewer_command_id palette_results[UI_MAX_COMMANDS];
+    size_t palette_result_count;
+    size_t palette_selected_index;
+    size_t palette_first_visible;
+    size_t palette_visible_capacity;
+    size_t history_first_visible;
+    size_t history_selected_cursor;
+    size_t history_visible_capacity;
+    viewer_command_id pending_command;
     bool selection_active;
     bool node_edit_active;
     bool inspector_other_attributes_expanded;
@@ -206,6 +240,10 @@ struct viewer_editor {
     char status[EDITOR_STATUS_CAP];
     char display_text[EDITOR_FIELD_CAP + 1U];
     bool tree_ready;
+    bool command_palette_open;
+    bool history_popover_open;
+    bool history_viewport_initialized;
+    bool pending_command_valid;
     bool outline_truncated;
     bool modern_style;
     bool increased_contrast;
@@ -294,6 +332,8 @@ uint32_t editor_apply_button(viewer_editor *editor, uint32_t id);
 bool editor_reorder(viewer_editor *editor, bool forward);
 bool editor_reorder_to_edge(viewer_editor *editor, bool front);
 bool editor_canvas_selection_contains(const viewer_editor *editor, size_t offset);
+bool editor_selection_restore(viewer_editor *editor, const size_t *offsets,
+                              size_t count);
 bool editor_canvas_selection_bounds(viewer_editor *editor,
     const svg_shape_document *document, svg_shape_selection *out_selection);
 bool editor_canvas_selection_toggle(viewer_editor *editor, size_t source_offset);
@@ -354,6 +394,15 @@ void editor_cancel_field(viewer_editor *editor);
 uint32_t editor_history(viewer_editor *editor, bool redo);
 void editor_build_tree(viewer_editor *editor);
 void editor_build_tree_modern(viewer_editor *editor);
+void editor_overlay_add_nodes(viewer_editor *editor);
+void editor_overlay_layout_nodes(viewer_editor *editor);
+uint32_t editor_overlay_key(viewer_editor *editor, uint16_t key_code,
+                            uint32_t modifiers, const char *text,
+                            size_t text_len);
+uint32_t editor_overlay_pointer_down(viewer_editor *editor, uint32_t id,
+                                     uint32_t command_id);
+bool editor_overlay_scroll(viewer_editor *editor, uint32_t x, uint32_t y,
+                           double delta_y);
 void editor_paint_widgets(viewer_editor *editor, uint8_t *rgba,
                           size_t capacity, size_t stride);
 void viewer_editor_guides_paint(viewer_editor *editor,

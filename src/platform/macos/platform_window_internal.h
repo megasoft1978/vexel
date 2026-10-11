@@ -11,6 +11,8 @@ bool platform_queue_test_open_from_environment(void);
 bool platform_window_emit_internal(platform_window *window, const platform_event *event);
 bool platform_path_supported_internal(const char *path, size_t length);
 void platform_window_dispatch_action(platform_window *window, platform_viewer_action action);
+bool platform_macos_menus_set_command_state(platform_window *window,
+                                             uint32_t command_id, bool enabled);
 void platform_macos_menus_init(void);
 void platform_macos_menus_set_owner(platform_window *window);
 void platform_macos_menus_clear_owner(platform_window *window);

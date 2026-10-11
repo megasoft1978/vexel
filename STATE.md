@@ -186,3 +186,14 @@
   Seeded ASan+UBSan shape fuzz completed 1,000,000 cases with zero crashes,
   invariant failures, or sanitizer reports. The task has no matching frozen
   local WO-UX files, so no ledger lifecycle event was added.
+
+- Update 2026-10-11: uncommitted `lane/w14-palette` implements UX-05's Cmd+K
+  command palette and shortcut discovery, and UX-08's named undo history
+  popover. `./dev build` passes; `./dev t --all` passes 58/60 CTests and 69/69
+  Python tests. The remaining CTest failures are `index-replay` (offscreen
+  Metal unavailable) and `native-viewer-smoke`. Light/dark palette, history,
+  editor-chrome, and UI-chrome goldens pass; `./dev shot`, exact `pixdiff`, and
+  a 48,128-case ASan+UBSan shape fuzz pass. The ledger validates with 406
+  entries. These UX work orders are from the research scratchpad and are not
+  frozen under `work/`, so no lifecycle events were added. Maintainer real-window
+  checks are listed in `docs/lanes/w14-palette.md`.

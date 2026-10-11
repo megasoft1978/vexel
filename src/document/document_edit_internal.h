@@ -23,7 +23,32 @@ typedef struct document_edit_command {
     bool coalescible_attribute;
     uint64_t before_state;
     uint64_t after_state;
+    char label[DOCUMENT_EDIT_HISTORY_LABEL_CAP];
 } document_edit_command;
+
+typedef enum document_edit_history_action {
+    DOCUMENT_EDIT_HISTORY_ACTION_EDIT_ATTRIBUTE,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_ATTRIBUTE,
+    DOCUMENT_EDIT_HISTORY_ACTION_REMOVE_ATTRIBUTE,
+    DOCUMENT_EDIT_HISTORY_ACTION_EDIT_TEXT,
+    DOCUMENT_EDIT_HISTORY_ACTION_DELETE,
+    DOCUMENT_EDIT_HISTORY_ACTION_DUPLICATE,
+    DOCUMENT_EDIT_HISTORY_ACTION_MOVE,
+    DOCUMENT_EDIT_HISTORY_ACTION_GROUP,
+    DOCUMENT_EDIT_HISTORY_ACTION_UNGROUP,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_RECTANGLE,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_CIRCLE,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_ELLIPSE,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_LINE,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_PATH,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_GROUP,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_TEXT,
+    DOCUMENT_EDIT_HISTORY_ACTION_ADD_SHAPE,
+    DOCUMENT_EDIT_HISTORY_ACTION_EDIT_OBJECTS,
+    DOCUMENT_EDIT_HISTORY_ACTION_EDIT_PATH,
+    DOCUMENT_EDIT_HISTORY_ACTION_RESIZE,
+    DOCUMENT_EDIT_HISTORY_ACTION_ROTATE
+} document_edit_history_action;
 
 typedef struct document_edit_node_info {
     document_source_span span;
@@ -93,7 +118,16 @@ bool document_edit_handle_info(document_edit *edit, document_handle handle,
                                document_edit_node_info **out_info);
 document_edit_error document_edit_commit_replace(document_edit *edit,
     size_t offset, size_t remove_length, const uint8_t *insert, size_t insert_length,
-    uint32_t target_slot, bool coalescible_attribute);
+    uint32_t target_slot, bool coalescible_attribute,
+    document_edit_history_action action);
+base_bytes document_edit_history_action_label(document_edit_history_action action);
+document_edit_history_action document_edit_history_template_action(
+    document_edit_template_kind kind);
+void document_edit_history_relabel_latest(document_edit *edit,
+    document_edit_history_action action);
+document_edit_error document_edit_replace_xml_region_labeled(document_edit *edit,
+    document_handle parent_handle, document_source_span region,
+    base_bytes replacement, document_edit_history_action action);
 bool document_edit_validate_replace(document_edit *edit,
     size_t region_offset, size_t region_length, size_t patch_offset,
     size_t remove_length, const uint8_t *insert, size_t insert_length,

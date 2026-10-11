@@ -1,7 +1,8 @@
 #include "document_edit_internal.h"
 
-document_edit_error document_edit_replace_xml_region(document_edit *edit,
-    document_handle parent_handle, document_source_span region, base_bytes replacement)
+document_edit_error document_edit_replace_xml_region_labeled(document_edit *edit,
+    document_handle parent_handle, document_source_span region, base_bytes replacement,
+    document_edit_history_action action)
 {
     if (edit == NULL || !base_bytes_valid(replacement))
         return DOCUMENT_EDIT_INVALID_ARGUMENT;
@@ -19,7 +20,15 @@ document_edit_error document_edit_replace_xml_region(document_edit *edit,
             region.offset, region.length, replacement.ptr, replacement.len, true, false))
         return DOCUMENT_EDIT_MALFORMED_XML;
     return document_edit_commit_replace(edit, region.offset, region.length,
-        replacement.ptr, replacement.len, parent_handle.slot, false);
+        replacement.ptr, replacement.len, parent_handle.slot, false,
+        action);
+}
+
+document_edit_error document_edit_replace_xml_region(document_edit *edit,
+    document_handle parent_handle, document_source_span region, base_bytes replacement)
+{
+    return document_edit_replace_xml_region_labeled(edit, parent_handle, region,
+        replacement, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_OBJECTS);
 }
 
 document_edit_error document_edit_replace_source_span(document_edit *edit,
@@ -38,5 +47,6 @@ document_edit_error document_edit_replace_source_span(document_edit *edit,
             span.offset, span.length, replacement.ptr, replacement.len, false, false))
         return DOCUMENT_EDIT_MALFORMED_XML;
     return document_edit_commit_replace(edit, span.offset, span.length,
-        replacement.ptr, replacement.len, 0U, false);
+        replacement.ptr, replacement.len, 0U, false,
+        DOCUMENT_EDIT_HISTORY_ACTION_EDIT_PATH);
 }

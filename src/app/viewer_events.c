@@ -2,20 +2,11 @@
 
 #include "frame_compose.h"
 #include "platform/macos/platform_clipboard.h"
-#include "platform/macos/platform_dialog.h"
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-static size_t event_path_length(const char *path, size_t limit)
-{
-    size_t length = 0U;
-    if (path == NULL) return 0U;
-    while (length <= limit && path[length] != '\0') length++;
-    return length;
-}
 
 static bool replacement_load_active(const viewer_app *app)
 {
@@ -121,7 +112,7 @@ static void apply_pan_delta(viewer_app *app, double dx, double dy, double scale)
     navigation_changed(app, &previous);
 }
 
-static void apply_navigation_key(viewer_app *app, ui_viewer_key key)
+void viewer_apply_navigation_key(viewer_app *app, ui_viewer_key key)
 {
     if (!app->navigation_ready || !app->document_visible) return;
     ui_viewer_navigation previous = app->navigation;
@@ -153,109 +144,36 @@ static void apply_zoom_to_selection(viewer_app *app)
     navigation_changed(app, &previous);
 }
 
-static void toggle_checkerboard(viewer_app *app)
+void viewer_toggle_checkerboard(viewer_app *app)
 {
     app->checkerboard = !app->checkerboard;
-    (void)platform_window_set_option_state(app->window, PLATFORM_ACTION_TOGGLE_CHECKERBOARD,
-                                          app->checkerboard);
+    (void)platform_window_set_command_state(app->window,
+        VIEWER_COMMAND_TOGGLE_CHECKERBOARD, app->checkerboard);
     app->frame_dirty = true;
 }
 
-static void cycle_background(viewer_app *app)
+void viewer_cycle_background(viewer_app *app)
 {
     app->background_index = (uint8_t)((app->background_index + 1U) % 3U);
-    if (app->checkerboard) toggle_checkerboard(app);
+    if (app->checkerboard) viewer_toggle_checkerboard(app);
     app->frame_dirty = true;
 }
 
-static void toggle_pixel_grid(viewer_app *app)
+void viewer_toggle_pixel_grid(viewer_app *app)
 {
     app->pixel_grid = !app->pixel_grid;
-    (void)platform_window_set_option_state(app->window, PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
-                                          app->pixel_grid);
+    (void)platform_window_set_command_state(app->window,
+        VIEWER_COMMAND_TOGGLE_PIXEL_GRID, app->pixel_grid);
     app->frame_dirty = true;
 }
 
-static void request_reload_or_open(viewer_app *app)
+void viewer_request_reload_or_open(viewer_app *app)
 {
     if (app->path[0] != '\0') (void)viewer_request_open(app, app->path, false);
     else (void)platform_window_open_panel(app->window);
 }
 
-static void show_save_error(viewer_app *app, const char *title, const char *message)
-{
-    if (app->editor != NULL) viewer_editor_set_status(app->editor, message);
-    (void)platform_dialog_show_error(title, strlen(title), message, strlen(message));
-    app->frame_dirty = true;
-}
-
-static bool save_document(viewer_app *app, bool force_save_as)
-{
-    if (app == NULL || app->editor == NULL) return false;
-    char chosen_path[PLATFORM_DIALOG_PATH_CAP] = {0};
-    size_t chosen_length = 0U;
-    const char *path = app->path;
-    size_t path_length = event_path_length(path, PLATFORM_PATH_CAP - 1U);
-    bool save_as = force_save_as || path_length == 0U || path_length >= PLATFORM_PATH_CAP;
-    if (save_as) {
-        size_t name_length = event_path_length(app->display_name, sizeof(app->display_name) - 1U);
-        platform_dialog_status choice = platform_dialog_save_svg(app->display_name,
-            name_length, chosen_path, sizeof(chosen_path), &chosen_length);
-        if (choice != PLATFORM_DIALOG_ACCEPT) {
-            if (choice == PLATFORM_DIALOG_ERROR)
-                show_save_error(app, "Save Failed", "The save panel could not provide a valid SVG path.");
-            return false;
-        }
-        path = chosen_path;
-        path_length = chosen_length;
-        size_t current_length = event_path_length(app->path, PLATFORM_PATH_CAP - 1U);
-        if (app->path[0] != '\0' && path_length == current_length &&
-            memcmp(path, app->path, path_length) == 0 && viewer_file_changed_on_disk(app)) {
-            show_save_error(app, "File Changed on Disk",
-                "The selected file changed outside Vexel. Save As to a different path to keep both versions.");
-            return false;
-        }
-    } else if (viewer_file_changed_on_disk(app)) {
-        show_save_error(app, "File Changed on Disk",
-            "The file changed outside Vexel. Use Save As to keep both versions.");
-        return false;
-    }
-    document_edit_save_result saved = viewer_editor_save(app->editor,
-        (base_bytes){(const uint8_t *)path, path_length});
-    if (saved.error != DOCUMENT_EDIT_OK) {
-        const char *status = viewer_editor_status(app->editor);
-        show_save_error(app, "Save Failed",
-            status == NULL ? "The SVG could not be saved." : status);
-        return false;
-    }
-    if (save_as && !viewer_update_active_path(app, path, path_length)) {
-        show_save_error(app, "Save Failed",
-            "The file was saved, but Vexel could not update its document path.");
-        return false;
-    }
-    viewer_update_file_stamp(app);
-    app->frame_dirty = true;
-    (void)viewer_set_window_title(app);
-    return true;
-}
-
-bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
-                                    const char *message)
-{
-    if (app == NULL || !viewer_editor_is_dirty(app->editor)) return true;
-    platform_unsaved_choice choice = platform_dialog_unsaved_changes(title,
-        strlen(title), message, strlen(message));
-    if (choice == PLATFORM_UNSAVED_DONT_SAVE) return true;
-    if (choice == PLATFORM_UNSAVED_SAVE) return save_document(app, false);
-    if (app->editor != NULL) {
-        viewer_editor_set_status(app->editor, choice == PLATFORM_UNSAVED_CANCEL ?
-            "Action canceled" : "Could not show the unsaved-changes dialog");
-    }
-    app->frame_dirty = true;
-    return false;
-}
-
-static void process_editor_result(viewer_app *app, uint32_t result)
+void viewer_process_editor_result(viewer_app *app, uint32_t result)
 {
     if ((result & VIEWER_EDITOR_ZOOM_PRESET_REQUEST) != 0U) {
         result &= ~(uint32_t)VIEWER_EDITOR_ZOOM_PRESET_REQUEST;
@@ -270,6 +188,10 @@ static void process_editor_result(viewer_app *app, uint32_t result)
             }
         }
     }
+    viewer_command_id selected_command = VIEWER_COMMAND_NONE;
+    bool run_selected_command = (result & VIEWER_EDITOR_COMMAND_SELECTED) != 0U &&
+        viewer_editor_take_pending_command(app->editor, &selected_command);
+    result &= ~(uint32_t)VIEWER_EDITOR_COMMAND_SELECTED;
     if ((result & VIEWER_EDITOR_SELECT_ALL) != 0U && app->document_visible)
         (void)viewer_editor_select_all(app->editor, &app->document.shape);
     bool document_mutated = (result & VIEWER_EDITOR_MUTATED) != 0U;
@@ -285,33 +207,35 @@ static void process_editor_result(viewer_app *app, uint32_t result)
         if (document_mutated) (void)viewer_set_window_title(app);
     }
     if ((result & VIEWER_EDITOR_SAVE) != 0U) {
-        (void)save_document(app, false);
+        (void)viewer_save_document(app, false);
     }
     if ((result & VIEWER_EDITOR_SAVE_AS) != 0U) {
-        (void)save_document(app, true);
+        (void)viewer_save_document(app, true);
     }
     if ((result & VIEWER_EDITOR_OPEN) != 0U) {
         (void)platform_window_open_panel(app->window);
     }
-    if ((result & VIEWER_EDITOR_RELOAD) != 0U) request_reload_or_open(app);
-    if ((result & VIEWER_EDITOR_QUIT) != 0U) app->quit_all_requested = true;
+    if ((result & VIEWER_EDITOR_RELOAD) != 0U) viewer_request_reload_or_open(app);
+    if ((result & VIEWER_EDITOR_QUIT) != 0U) viewer_request_close(app);
     if ((result & VIEWER_EDITOR_HANDLED) != 0U) {
         app->frame_dirty = true;
         (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
         (void)viewer_set_window_title(app);
     }
+    if (run_selected_command && !app->fatal_error)
+        viewer_apply_command(app, selected_command);
 }
 
-static void apply_action(viewer_app *app, platform_viewer_action action)
+void viewer_apply_action(viewer_app *app, platform_viewer_action action)
 {
     switch (action) {
-        case PLATFORM_ACTION_RELOAD: request_reload_or_open(app); break;
-        case PLATFORM_ACTION_TOGGLE_CHECKERBOARD: toggle_checkerboard(app); break;
-        case PLATFORM_ACTION_CYCLE_BACKGROUND: cycle_background(app); break;
+        case PLATFORM_ACTION_RELOAD: viewer_request_reload_or_open(app); break;
+        case PLATFORM_ACTION_TOGGLE_CHECKERBOARD: viewer_toggle_checkerboard(app); break;
+        case PLATFORM_ACTION_CYCLE_BACKGROUND: viewer_cycle_background(app); break;
         case PLATFORM_ACTION_FIT_WIDTH:
         case PLATFORM_ACTION_FIT_WINDOW:
         case PLATFORM_ACTION_ACTUAL_SIZE: apply_navigation_fit(app, action); break;
-        case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: toggle_pixel_grid(app); break;
+        case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: viewer_toggle_pixel_grid(app); break;
         case PLATFORM_ACTION_TOGGLE_RULERS:
             if (app->editor != NULL) {
                 bool visible = !viewer_editor_rulers_visible(app->editor);
@@ -389,7 +313,7 @@ static void apply_key(viewer_app *app, const platform_event *event)
         editor_alignment_shortcut(event, &alignment)) {
         uint32_t result = viewer_editor_align_selection(app->editor,
             &app->document.shape, alignment);
-        process_editor_result(app, result);
+        viewer_process_editor_result(app, result);
         return;
     }
     if (event->key_code == 53U && app->navigation_ready &&
@@ -456,7 +380,7 @@ static void apply_key(viewer_app *app, const platform_event *event)
         free(clipboard);
     }
     if (editor_result != 0U) {
-        process_editor_result(app, editor_result);
+        viewer_process_editor_result(app, editor_result);
         return;
     }
     bool command = (event->modifiers & PLATFORM_MODIFIER_COMMAND) != 0U;
@@ -465,7 +389,7 @@ static void apply_key(viewer_app *app, const platform_event *event)
         return;
     }
     if (command && (strcmp(event->text, "r") == 0 || strcmp(event->text, "R") == 0)) {
-        request_reload_or_open(app);
+        viewer_request_reload_or_open(app);
         return;
     }
     if (command && (strcmp(event->text, "o") == 0 || strcmp(event->text, "O") == 0)) {
@@ -473,53 +397,64 @@ static void apply_key(viewer_app *app, const platform_event *event)
         return;
     }
     if (command && strcmp(event->text, "0") == 0) {
-        apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
+        viewer_apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
         return;
     }
     if (command && strcmp(event->text, "1") == 0) {
-        apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
+        viewer_apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
         return;
     }
     if (command && (strcmp(event->text, "+") == 0 ||
             strcmp(event->text, "=") == 0)) {
-        apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
+        viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
         return;
     }
     if (command && strcmp(event->text, "-") == 0) {
-        apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
+        viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
         return;
     }
     if (strcmp(event->text, "t") == 0 || strcmp(event->text, "T") == 0) {
-        toggle_checkerboard(app);
+        viewer_toggle_checkerboard(app);
         return;
     }
     if (strcmp(event->text, "b") == 0 || strcmp(event->text, "B") == 0) {
-        cycle_background(app);
+        viewer_cycle_background(app);
         return;
     }
     if (strcmp(event->text, "g") == 0 || strcmp(event->text, "G") == 0) {
-        toggle_pixel_grid(app);
+        viewer_toggle_pixel_grid(app);
         return;
     }
     if (strcmp(event->text, "w") == 0 || strcmp(event->text, "W") == 0) {
-        apply_action(app, PLATFORM_ACTION_FIT_WIDTH);
+        viewer_apply_action(app, PLATFORM_ACTION_FIT_WIDTH);
         return;
     }
     if (strcmp(event->text, "1") == 0) {
-        apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
+        viewer_apply_action(app, PLATFORM_ACTION_ACTUAL_SIZE);
         return;
     }
-    if (event->key_code == 123U) { apply_navigation_key(app, UI_VIEWER_KEY_LEFT); return; }
-    if (event->key_code == 124U) { apply_navigation_key(app, UI_VIEWER_KEY_RIGHT); return; }
-    if (event->key_code == 125U) { apply_navigation_key(app, UI_VIEWER_KEY_DOWN); return; }
-    if (event->key_code == 126U) { apply_navigation_key(app, UI_VIEWER_KEY_UP); return; }
+    if (event->key_code == 123U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_LEFT); return; }
+    if (event->key_code == 124U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_RIGHT); return; }
+    if (event->key_code == 125U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_DOWN); return; }
+    if (event->key_code == 126U) { viewer_apply_navigation_key(app, UI_VIEWER_KEY_UP); return; }
     if (strcmp(event->text, "+") == 0 || strcmp(event->text, "=") == 0) {
-        apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
+        viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_IN);
     } else if (strcmp(event->text, "-") == 0) {
-        apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
+        viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
     } else if (strcmp(event->text, "0") == 0) {
-        apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
+        viewer_apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
     }
+}
+
+void viewer_apply_synthetic_key(viewer_app *app, uint16_t key_code,
+                                uint32_t modifiers, const char *text,
+                                size_t text_len)
+{
+    if (text_len >= sizeof(((platform_event *)0)->text)) return;
+    platform_event event = {.type = PLATFORM_EVENT_KEY_DOWN,
+        .key_code = key_code, .modifiers = modifiers, .text_len = text_len};
+    if (text_len > 0U && text != NULL) memcpy(event.text, text, text_len);
+    apply_key(app, &event);
 }
 
 static void update_pointer_status(viewer_app *app, const platform_event *event)
@@ -606,7 +541,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 uint32_t result = viewer_editor_pointer_down(app->editor,
                     (uint32_t)pixel_x, (uint32_t)pixel_y, event->button);
                 if (result != 0U) {
-                    process_editor_result(app, result);
+                    viewer_process_editor_result(app, result);
                     return;
                 }
             }
@@ -629,7 +564,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             uint32_t result = viewer_editor_canvas_pointer_down_click_count(app->editor,
                 &app->document.shape, &app->navigation, local_x, local_y,
                 event->modifiers, event->click_count);
-            if (result != 0U) process_editor_result(app, result);
+            if (result != 0U) viewer_process_editor_result(app, result);
             return;
         }
         case PLATFORM_EVENT_POINTER_MOVE:
@@ -665,7 +600,7 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 if (event_canvas_point(app, event, &local_x, &local_y)) {
                     uint32_t result = viewer_editor_canvas_pointer_move(app->editor,
                         &app->document.shape, &app->navigation, local_x, local_y);
-                    if (result != 0U) process_editor_result(app, result);
+                    if (result != 0U) viewer_process_editor_result(app, result);
                 }
             }
             return;
@@ -684,15 +619,20 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             if (app->editor != NULL) {
                 uint32_t result = viewer_editor_canvas_pointer_up(app->editor,
                     &app->document.shape);
-                if (result != 0U) process_editor_result(app, result);
+                if (result != 0U) viewer_process_editor_result(app, result);
                 else app->frame_dirty = true;
             }
             return;
         case PLATFORM_EVENT_SCROLL: {
             if (app->editor != NULL) {
-                double pixel_x = event->precise_x * event->backing_scale;
-                if (isfinite(pixel_x) && pixel_x >= 0.0 && pixel_x <= (double)UINT32_MAX &&
-                    viewer_editor_scroll(app->editor, (uint32_t)pixel_x, event->delta_y)) {
+                double scale = isfinite(event->backing_scale) && event->backing_scale > 0.0 ?
+                    event->backing_scale : app->backing_scale;
+                double pixel_x = event->precise_x * scale;
+                double pixel_y = event->precise_y * scale;
+                if (isfinite(pixel_x) && isfinite(pixel_y) && pixel_x >= 0.0 &&
+                    pixel_y >= 0.0 && pixel_x <= (double)UINT32_MAX &&
+                    pixel_y <= (double)UINT32_MAX && viewer_editor_scroll_at(app->editor,
+                        (uint32_t)pixel_x, (uint32_t)pixel_y, event->delta_y)) {
                     app->frame_dirty = true;
                     return;
                 }
@@ -746,9 +686,12 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             }
             apply_key(app, event);
             return;
-        case PLATFORM_EVENT_ACTION: apply_action(app, event->action); return;
+        case PLATFORM_EVENT_ACTION: viewer_apply_action(app, event->action); return;
+        case PLATFORM_EVENT_COMMAND:
+            viewer_apply_command(app, (viewer_command_id)event->command_id);
+            return;
         case PLATFORM_EVENT_FILE_OPEN:
-            if (event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP)
+            if (viewer_event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP)
                 (void)viewer_request_open(app, event->path, false);
             return;
         case PLATFORM_EVENT_CLOSE_REQUEST: viewer_request_close(app); return;

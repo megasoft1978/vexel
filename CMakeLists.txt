@@ -78,6 +78,7 @@ set_target_properties(job_snapshot_test PROPERTIES C_STANDARD 17 C_STANDARD_REQU
 
 add_library(vexel_xml STATIC
     src/svg/xml/xml_chars.c
+    src/svg/xml/xml_tokenizer_api.c
     src/svg/xml/xml_tokenizer.c
     src/svg/xml/xml_reader.c
 )
@@ -1137,3 +1138,47 @@ if(BUILD_TESTING)
     add_test(NAME shape-render-large-work COMMAND raster_large_render_test)
 endif()
 # end lane: w8-perf
+
+# lane: w14-palette — command palette and bounded undo history
+target_sources(svgworkbench PRIVATE
+    src/app/viewer_command_dispatch.c
+    src/app/viewer_save.c)
+target_sources(vexel_document PRIVATE src/document/document_edit_history.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_commands.c
+    src/app/viewer_editor_multi_edit.c
+    src/app/viewer_editor_palette.c)
+add_executable(editor_command_palette_test tests/editor/editor_command_palette_test.c)
+target_link_libraries(editor_command_palette_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_command_palette_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_command_palette_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(editor_command_overlay_render app/editor_command_overlay_render.c)
+target_link_libraries(editor_command_overlay_render PRIVATE vexel_editor_ui)
+set_target_properties(editor_command_overlay_render PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_command_overlay_render PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(document_edit_history_test tests/edit/document_edit_history_test.c)
+target_link_libraries(document_edit_history_test PRIVATE vexel_document)
+set_target_properties(document_edit_history_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(document_edit_history_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(editor_command_palette_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_command_palette_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(editor_command_overlay_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_command_overlay_render PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(document_edit_history_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(document_edit_history_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-command-palette COMMAND editor_command_palette_test)
+    add_test(NAME editor-command-overlay-golden COMMAND python3
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/ui/verify_command_overlay_goldens.py"
+        --binary "$<TARGET_FILE:editor_command_overlay_render>")
+    add_test(NAME document-edit-history COMMAND document_edit_history_test)
+endif()
+# end lane: w14-palette

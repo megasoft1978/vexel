@@ -39,7 +39,8 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_FILE_OPEN,
     PLATFORM_EVENT_FILE_DROP,
     PLATFORM_EVENT_FILE_NEW,
-    PLATFORM_EVENT_ACTION
+    PLATFORM_EVENT_ACTION,
+    PLATFORM_EVENT_COMMAND
 } platform_event_type;
 
 typedef enum platform_viewer_action {
@@ -85,6 +86,7 @@ typedef struct platform_event {
     uint32_t modifiers;
     uint8_t button;
     platform_viewer_action action;
+    uint32_t command_id;
     char text[256];
     size_t text_len;
     /* Owned path bytes in this value event, NUL-terminated on file-open events. */
@@ -122,6 +124,9 @@ bool platform_window_set_option_state(platform_window *window, platform_viewer_a
                                       bool enabled);
 bool platform_window_show_ruler_context_menu(platform_window *window,
     bool horizontal_axis, int32_t logical_x, int32_t logical_y);
+bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
+                                       bool enabled);
+void platform_window_dispatch_command(platform_window *window, uint32_t command_id);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */
 bool platform_poll_event(platform_window *window, platform_event *out_event);
 void platform_window_destroy(platform_window *window);

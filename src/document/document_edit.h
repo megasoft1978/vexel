@@ -51,11 +51,19 @@ typedef enum document_edit_template_kind {
 
 #define DOCUMENT_EDIT_XML_FRAGMENT_LIMIT (64U * 1024U)
 #define DOCUMENT_EDIT_GROUP_NODE_LIMIT 128U
+#define DOCUMENT_EDIT_HISTORY_LABEL_CAP 64U
 
 typedef struct document_edit_template_attribute {
     base_bytes name;
     base_bytes value;
 } document_edit_template_attribute;
+
+typedef struct document_edit_history_entry {
+    char label[DOCUMENT_EDIT_HISTORY_LABEL_CAP];
+    size_t state_cursor;
+    bool is_current;
+    bool is_saved;
+} document_edit_history_entry;
 
 typedef struct document_edit_save_result {
     document_edit_error error;
@@ -98,6 +106,13 @@ bool document_edit_materialize(const document_edit *edit, uint8_t *buffer,
 bool document_edit_is_dirty(const document_edit *edit);
 size_t document_edit_history_count(const document_edit *edit);
 size_t document_edit_history_cursor(const document_edit *edit);
+bool document_edit_history_entry_at(const document_edit *edit, size_t index,
+                                   document_edit_history_entry *out_entry);
+/* Returns false when the saved state fell outside retained history. */
+bool document_edit_history_saved_cursor(const document_edit *edit,
+                                        size_t *out_cursor);
+document_edit_error document_edit_history_jump(document_edit *edit,
+                                                size_t state_cursor);
 
 document_edit_error document_edit_set_attribute(document_edit *edit,
     document_handle node, base_bytes name, base_bytes value);

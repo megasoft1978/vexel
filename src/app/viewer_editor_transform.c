@@ -1,5 +1,7 @@
 #include "viewer_editor_internal.h"
 
+#include "document_edit_internal.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -184,6 +186,11 @@ uint32_t editor_commit_transform(viewer_editor *editor,
     if (error != DOCUMENT_EDIT_OK)
         return editor_apply_result(editor, error, old_offset, old_id,
             (document_handle){0});
+    document_edit_history_relabel_latest(editor->edit,
+        rotate_radians != 0.0 ? DOCUMENT_EDIT_HISTORY_ACTION_ROTATE :
+        (scale_x != 1.0 || scale_y != 1.0 ?
+            DOCUMENT_EDIT_HISTORY_ACTION_RESIZE :
+            DOCUMENT_EDIT_HISTORY_ACTION_MOVE));
     editor_status_ok(editor, "Transform committed · preview updating");
     return editor_apply_result(editor, DOCUMENT_EDIT_OK, old_offset, old_id,
         (document_handle){0});

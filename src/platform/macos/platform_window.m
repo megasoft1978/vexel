@@ -115,6 +115,13 @@ void platform_window_dispatch_action(platform_window *window, platform_viewer_ac
     }
 }
 
+void platform_window_dispatch_command(platform_window *window, uint32_t command_id)
+{
+    if (window == NULL || command_id == 0U) return;
+    platform_event event = {.type = PLATFORM_EVENT_COMMAND, .command_id = command_id};
+    (void)platform_emit(window, &event);
+}
+
 static bool platform_size_event(platform_window *window, platform_event_type type)
 {
     NSWindow *native = window->native;
@@ -519,6 +526,13 @@ bool platform_window_show_ruler_context_menu(platform_window *window,
     if (!platform_on_main_thread() || window == NULL) return false;
     return platform_macos_menus_show_ruler_context_menu(window,
         horizontal_axis, logical_x, logical_y);
+}
+
+bool platform_window_set_command_state(platform_window *window, uint32_t command_id,
+                                       bool enabled)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    return platform_macos_menus_set_command_state(window, command_id, enabled);
 }
 
 bool platform_window_resize(platform_window *window, int32_t width_points, int32_t height_points)

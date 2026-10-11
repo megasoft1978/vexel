@@ -167,7 +167,9 @@ void editor_build_tree_modern(viewer_editor *editor)
         editor_add_icon(editor, EDITOR_BUTTON_REDO, EDITOR_NODE_TOOLBAR,
             UI_ICON_REDO, "Redo · Shift-Command-Z",
             editor_toolbar_action_state(editor, EDITOR_BUTTON_REDO)) &&
-        editor_add_divider(editor, 31U, EDITOR_NODE_TOOLBAR, 1U, 32U) &&
+        editor_add_icon(editor, EDITOR_BUTTON_HISTORY, EDITOR_NODE_TOOLBAR,
+            UI_ICON_CHEVRON_DOWN, "Undo History",
+            editor_toolbar_action_state(editor, EDITOR_BUTTON_HISTORY)) &&
         editor_add_icon(editor, EDITOR_BUTTON_DUPLICATE, EDITOR_NODE_TOOLBAR,
             UI_ICON_DUPLICATE, "Duplicate · Command-D",
             editor_toolbar_action_state(editor, EDITOR_BUTTON_DUPLICATE)) &&
