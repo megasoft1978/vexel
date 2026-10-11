@@ -124,7 +124,7 @@ static size_t selection_handle_at(const viewer_editor *editor,
         {right, bottom}, {middle_x, bottom}, {left, bottom}, {left, middle_y},
         {middle_x, top - 22.0 * editor->backing_scale}
     };
-    double radius = 8.0 * editor->backing_scale;
+    double radius = 4.0 * editor->backing_scale;
     for (size_t handle = 0U; handle < 9U; ++handle)
         if (handle_distance(x, y, handles[handle]) <= radius) return handle;
     return SIZE_MAX;
@@ -175,6 +175,7 @@ static void editor_begin_gesture(viewer_editor *editor,
     editor->resize_handle = 0U;
     editor->snap_guide_x_visible = false;
     editor->snap_guide_y_visible = false;
+    editor->snap_bypass = false;
     if (kind == EDITOR_CANVAS_GESTURE_MOVE) {
         editor->canvas_preview_bounds = editor->canvas_selection.device_bounds;
     } else if (kind == EDITOR_CANVAS_GESTURE_DRAW ||
@@ -393,22 +394,24 @@ uint32_t viewer_editor_canvas_pointer_down_click_count(viewer_editor *editor,
         editor->redraw_requested = true;
         return prior | VIEWER_EDITOR_HANDLED;
     }
-    if (editor->canvas_selection_valid) {
+    if (editor->canvas_selection_count > 0U) {
         svg_shape_selection current_selection;
         if (editor_canvas_selection_bounds(editor, document, &current_selection) ||
-            editor_selected_shape(editor, document, &current_selection))
+            editor_selected_shape(editor, document, &current_selection)) {
             editor->canvas_selection = current_selection;
-        size_t handle = selection_handle_at(editor, &editor->canvas_selection,
-            navigation, x, y);
-        if (handle < 9U) {
-            editor_begin_gesture(editor,
-                handle == 8U ? EDITOR_CANVAS_GESTURE_ROTATE :
-                    EDITOR_CANVAS_GESTURE_RESIZE,
-                document, navigation, user, x, y);
-            editor->resize_handle = (uint8_t)handle;
-            editor->canvas_preview_bounds = editor->canvas_selection.device_bounds;
-            editor->redraw_requested = true;
-            return prior | VIEWER_EDITOR_HANDLED;
+            editor->canvas_selection_valid = true;
+            size_t handle = selection_handle_at(editor, &editor->canvas_selection,
+                navigation, x, y);
+            if (handle < 9U) {
+                editor_begin_gesture(editor,
+                    handle == 8U ? EDITOR_CANVAS_GESTURE_ROTATE :
+                        EDITOR_CANVAS_GESTURE_RESIZE,
+                    document, navigation, user, x, y);
+                editor->resize_handle = (uint8_t)handle;
+                editor->canvas_preview_bounds = editor->canvas_selection.device_bounds;
+                editor->redraw_requested = true;
+                return prior | VIEWER_EDITOR_HANDLED;
+            }
         }
     }
     svg_shape_selection selection;
@@ -451,8 +454,21 @@ uint32_t viewer_editor_canvas_pointer_move(viewer_editor *editor,
     const svg_shape_document *document, const ui_viewer_navigation *navigation,
     double x, double y)
 {
+    return viewer_editor_canvas_pointer_move_modifiers(editor, document,
+        navigation, x, y, 0U);
+}
+
+uint32_t viewer_editor_canvas_pointer_move_modifiers(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y, uint32_t modifiers)
+{
     if (editor == NULL || document == NULL || navigation == NULL ||
-        editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE) return 0U;
+        !isfinite(x) || !isfinite(y)) return 0U;
+    editor->context_pointer_valid = true;
+    editor->context_pointer_x = x;
+    editor->context_pointer_y = y;
+    editor->snap_bypass = (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U;
+    if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_NONE) return 0U;
     geom_point user;
     if (!canvas_user_at(document, navigation, x, y, &user)) return 0U;
     if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH)
@@ -509,8 +525,44 @@ uint32_t viewer_editor_canvas_pointer_up(viewer_editor *editor,
                 editor->gesture_pivot_y);
     }
     editor_reset_canvas_gesture(editor);
+    editor->snap_bypass = false;
+    editor_canvas_snap_clear(editor);
     editor->redraw_requested = true;
     return result;
+}
+
+platform_cursor_kind viewer_editor_canvas_cursor(viewer_editor *editor,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    double x, double y)
+{
+    if (editor == NULL || document == NULL || navigation == NULL ||
+        !isfinite(x) || !isfinite(y) || editor->draw_tool != VIEWER_EDITOR_TOOL_SELECT ||
+        editor->active_tool != UI_ICON_SELECT || editor->node_edit_active ||
+        editor->canvas_selection_count == 0U) return PLATFORM_CURSOR_ARROW;
+    svg_shape_selection selection;
+    if (!editor_canvas_selection_bounds(editor, document, &selection) &&
+        !editor_selected_shape(editor, document, &selection))
+        return PLATFORM_CURSOR_ARROW;
+    size_t handle = selection_handle_at(editor, &selection, navigation, x, y);
+    switch (handle) {
+        case 0U:
+        case 4U: return PLATFORM_CURSOR_RESIZE_NORTHWEST_SOUTHEAST;
+        case 2U:
+        case 6U: return PLATFORM_CURSOR_RESIZE_NORTHEAST_SOUTHWEST;
+        case 1U:
+        case 5U: return PLATFORM_CURSOR_RESIZE_NORTH_SOUTH;
+        case 3U:
+        case 7U: return PLATFORM_CURSOR_RESIZE_EAST_WEST;
+        case 8U: return PLATFORM_CURSOR_ROTATE;
+        default: break;
+    }
+    svg_shape_selection hit;
+    geom_point hit_user;
+    if (editor_hit_canvas_shape(editor, document, navigation, x, y,
+            &hit, &hit_user) &&
+        editor_canvas_selection_contains(editor, hit.source_offset))
+        return PLATFORM_CURSOR_OPEN_HAND;
+    return PLATFORM_CURSOR_ARROW;
 }
 
 uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor)
@@ -522,6 +574,8 @@ uint32_t viewer_editor_cancel_canvas_gesture(viewer_editor *editor)
     else if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH_NODE)
         editor->path_node_segment = SIZE_MAX;
     editor_reset_canvas_gesture(editor);
+    editor->snap_bypass = false;
+    editor_canvas_snap_clear(editor);
     editor->redraw_requested = true;
     editor_status_ok(editor, "Canvas gesture canceled");
     return VIEWER_EDITOR_HANDLED;
@@ -551,6 +605,10 @@ bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
     out_overlay->snap_guide_y_visible = editor->snap_guide_y_visible;
     out_overlay->snap_guide_x = editor->snap_guide_x;
     out_overlay->snap_guide_y = editor->snap_guide_y;
+    out_overlay->snap_label_visible = editor->snap_label_visible;
+    if (editor->snap_label_visible)
+        editor_set_text(out_overlay->snap_label, sizeof(out_overlay->snap_label),
+            editor->snap_label);
     if (editor->canvas_gesture == EDITOR_CANVAS_GESTURE_PATH &&
         editor->path_anchor_count > 0U) {
         size_t count = editor->path_anchor_count;
@@ -589,7 +647,10 @@ bool viewer_editor_get_canvas_overlay(viewer_editor *editor,
         out_overlay->drawing_preview = true;
         return true;
     }
-    if (!editor->canvas_selection_valid) return false;
+    if (editor->draw_tool != VIEWER_EDITOR_TOOL_SELECT ||
+        editor->active_tool != UI_ICON_SELECT || editor->node_edit_active ||
+        (editor->canvas_selection_count == 0U && !editor->canvas_selection_valid))
+        return false;
     svg_shape_selection selection;
     if (!editor_canvas_selection_bounds(editor, document, &selection) &&
         !editor_selected_shape(editor, document, &selection)) {
@@ -647,6 +708,21 @@ static bool editor_node_contains_canvas(const ui_node *node, uint32_t x,
 void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y)
 {
     if (editor == NULL) return;
+    editor_snap_popover_pointer_move(editor, x, y);
+    editor_context_action_pointer_move(editor, x, y);
+    if (editor->modern_style) {
+        viewer_chrome_layout layout;
+        if (viewer_chrome_layout_compute(editor->width, editor->height,
+                editor->backing_scale, editor->want_structure,
+                editor->want_inspector, &layout) &&
+            x >= layout.canvas.x && y >= layout.canvas.y &&
+            x - layout.canvas.x < layout.canvas.width &&
+            y - layout.canvas.y < layout.canvas.height) {
+            editor->context_pointer_valid = true;
+            editor->context_pointer_x = x - layout.canvas.x;
+            editor->context_pointer_y = y - layout.canvas.y;
+        } else editor->context_pointer_valid = false;
+    }
     if (!editor->tree_ready) editor_build_tree(editor);
     if (!editor->tree_ready) return;
     uint32_t hovered = 0U;

@@ -1,0 +1,15 @@
+{
+  "screenshots": {
+    "snapping-dark.png": {
+      "height": 800,
+      "sha256": "7c3ba338dc9974be2af942a005abff2b565366892c7b55c8ab754012ff90efc0",
+      "width": 1280
+    },
+    "snapping-light.png": {
+      "height": 800,
+      "sha256": "738e4021f2150e9137e45d3c4b133d6496214512a23680717898cf2920de94c7",
+      "width": 1280
+    }
+  },
+  "version": 1
+}

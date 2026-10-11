@@ -1,6 +1,10 @@
 #include "viewer_editor_internal.h"
 
+#include "ui/ui_widgets.h"
+#include "platform/platform_text_ui.h"
+
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 static bool overlay_rect_valid(svg_shape_rect rect)
@@ -62,6 +66,110 @@ static void paint_line(uint8_t *rgba, uint32_t width, uint32_t height,
         if (twice >= dy) { error += dy; ix0 += sx; }
         if (twice <= dx) { error += dx; iy0 += sy; }
     }
+}
+
+static void paint_snap_line(uint8_t *rgba, uint32_t width, uint32_t height,
+    size_t stride, ui_rect clip, geom_point from, geom_point to,
+    uint32_t color, double backing_scale)
+{
+    uint32_t thickness = (uint32_t)ceil(backing_scale);
+    if (thickness == 0U) thickness = 1U;
+    if (thickness > 8U) thickness = 8U;
+    double offset = ((double)thickness - 1.0) * 0.5;
+    if (fabs(to.x - from.x) >= fabs(to.y - from.y)) {
+        for (uint32_t index = 0U; index < thickness; ++index) {
+            double shift = (double)index - offset;
+            paint_line(rgba, width, height, stride, clip,
+                (geom_point){from.x, from.y + shift},
+                (geom_point){to.x, to.y + shift}, color);
+        }
+    } else {
+        for (uint32_t index = 0U; index < thickness; ++index) {
+            double shift = (double)index - offset;
+            paint_line(rgba, width, height, stride, clip,
+                (geom_point){from.x + shift, from.y},
+                (geom_point){to.x + shift, to.y}, color);
+        }
+    }
+}
+
+static ui_rect overlay_points(viewer_editor *editor, ui_rect pixels)
+{
+    double scale = editor->backing_scale > 0.0 ? editor->backing_scale : 1.0;
+    return (ui_rect){
+        (uint32_t)llround((double)pixels.x / scale),
+        (uint32_t)llround((double)pixels.y / scale),
+        (uint32_t)llround((double)pixels.width / scale),
+        (uint32_t)llround((double)pixels.height / scale)};
+}
+
+static bool overlay_user_to_screen(const svg_shape_document *document,
+    const ui_viewer_navigation *navigation, ui_rect canvas, geom_point user,
+    geom_point *out);
+
+static void paint_snap_label(viewer_editor *editor,
+    const viewer_editor_canvas_overlay_state *overlay,
+    const svg_shape_document *document, const ui_viewer_navigation *navigation,
+    ui_rect canvas,
+    uint8_t *rgba, uint32_t width, uint32_t height, size_t stride)
+{
+    if (editor == NULL || overlay == NULL || !overlay->snap_label_visible ||
+        overlay->snap_label[0] == '\0' || height == 0U ||
+        stride > SIZE_MAX / height) return;
+    double raw_scale = editor->backing_scale > 0.0 ? editor->backing_scale : 1.0;
+    uint32_t scale = (uint32_t)llround(raw_scale);
+    if (scale == 0U) scale = 1U;
+    if (scale > 8U) scale = 8U;
+    size_t label_length = 0U;
+    while (label_length < sizeof(overlay->snap_label) &&
+        overlay->snap_label[label_length] != '\0') ++label_length;
+    if (label_length == 0U || label_length >= sizeof(overlay->snap_label)) return;
+    uint32_t label_width = (uint32_t)label_length * 7U + 24U;
+    if (label_width < 58U) label_width = 58U;
+    if (label_width > 128U) label_width = 128U;
+    uint32_t label_height = 26U;
+    uint32_t max_label_width = (uint32_t)floor((double)canvas.width / raw_scale);
+    uint32_t max_label_height = (uint32_t)floor((double)canvas.height / raw_scale);
+    if (max_label_width < 32U || max_label_height < 16U) return;
+    if (label_width > max_label_width) label_width = max_label_width;
+    if (label_height > max_label_height) label_height = max_label_height;
+    double anchor_x = (double)canvas.x + navigation->pan_x +
+        overlay->bounds.x * navigation->scale;
+    double anchor_y = (double)canvas.y + navigation->pan_y +
+        overlay->bounds.y * navigation->scale;
+    if (overlay->snap_guide_x_visible) {
+        geom_point guide;
+        if (overlay_user_to_screen(document, navigation, canvas,
+                (geom_point){overlay->snap_guide_x, document->view_y}, &guide))
+            anchor_x = guide.x;
+    }
+    if (overlay->snap_guide_y_visible) {
+        geom_point guide;
+        if (overlay_user_to_screen(document, navigation, canvas,
+                (geom_point){document->view_x, overlay->snap_guide_y}, &guide))
+            anchor_y = guide.y;
+    }
+    double max_x = (double)canvas.x + canvas.width - label_width * raw_scale;
+    double x_value = fmax((double)canvas.x,
+        fmin(anchor_x + 6.0 * raw_scale, max_x));
+    uint32_t x = (uint32_t)llround(x_value);
+    double y = anchor_y - (double)(label_height + 4U) * raw_scale;
+    if (y < (double)canvas.y) y = anchor_y + 4.0 * raw_scale;
+    double min_y = (double)canvas.y;
+    double max_y = (double)canvas.y + canvas.height - label_height * raw_scale;
+    y = fmax(min_y, fmin(y, max_y));
+    ui_widget_canvas widget_canvas;
+    size_t capacity = stride * height;
+    if (!ui_widget_canvas_init(&widget_canvas, rgba, capacity, width, height,
+            stride, scale, editor->theme, editor->increased_contrast,
+            platform_text_ui_draw_widget, NULL)) return;
+    ui_widget_draw_spec spec = {.kind = UI_WIDGET_TOOLTIP,
+        .state = UI_CONTROL_REST,
+        .bounds = overlay_points(editor, (ui_rect){x, (uint32_t)fmax(0.0, y),
+            (uint32_t)ceil((double)label_width * raw_scale),
+            (uint32_t)ceil((double)label_height * raw_scale)}),
+        .label = overlay->snap_label, .label_length = label_length};
+    (void)ui_widget_paint(&widget_canvas, &spec);
 }
 
 static void paint_handle(uint8_t *rgba, uint32_t width, uint32_t height,
@@ -233,17 +341,17 @@ void viewer_editor_paint_canvas_overlay(viewer_editor *editor,
         geom_point guide;
         if (overlay_user_to_screen(document, navigation, canvas,
                 (geom_point){overlay.snap_guide_x, document->view_y}, &guide))
-            paint_line(rgba, width, height, stride, canvas, guide,
+            paint_snap_line(rgba, width, height, stride, canvas, guide,
                 (geom_point){guide.x, (double)canvas.y + canvas.height},
-                UINT32_C(0x12a99aff));
+                UINT32_C(0x12a99aff), editor->backing_scale);
     }
     if (overlay.snap_guide_y_visible) {
         geom_point guide;
         if (overlay_user_to_screen(document, navigation, canvas,
                 (geom_point){document->view_x, overlay.snap_guide_y}, &guide))
-            paint_line(rgba, width, height, stride, canvas, guide,
+            paint_snap_line(rgba, width, height, stride, canvas, guide,
                 (geom_point){(double)canvas.x + canvas.width, guide.y},
-                UINT32_C(0x12a99aff));
+                UINT32_C(0x12a99aff), editor->backing_scale);
     }
     if (overlay.path_point_count > 0U) {
         paint_path_preview(&overlay, document, navigation, canvas, rgba,
@@ -305,4 +413,8 @@ void viewer_editor_paint_canvas_overlay(viewer_editor *editor,
             handle_size, false);
     paint_handle(rgba, width, height, stride, canvas, rotate_handle,
         handle_size + 2U, true);
+    paint_snap_label(editor, &overlay, document, navigation, canvas,
+        rgba, width, height, stride);
+    editor_paint_context_actions(editor, document, navigation, canvas, rgba,
+        width, height, stride);
 }

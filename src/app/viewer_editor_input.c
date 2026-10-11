@@ -286,6 +286,14 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
     if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
         return viewer_editor_cancel_canvas_gesture(editor);
+    if (key_code == 53U && editor->snap_popover_open) {
+        editor->snap_popover_open = false;
+        editor->snap_popover_hovered = false;
+        editor->snap_popover_hovered_row = UINT8_MAX;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
     if (key_code == 120U) {
@@ -301,8 +309,7 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     int character = text_len > 0U ? tolower((unsigned char)text[0]) : -1;
     if (command && (character == '\'' || key_code == 39U)) {
         editor->snap_enabled = !editor->snap_enabled;
-        editor->snap_guide_x_visible = false;
-        editor->snap_guide_y_visible = false;
+        editor_canvas_snap_clear(editor);
         editor_status_ok(editor, editor->snap_enabled ? "Snapping on" : "Snapping off");
         editor->redraw_requested = true;
         return VIEWER_EDITOR_HANDLED;

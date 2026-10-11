@@ -34,6 +34,17 @@ typedef enum platform_event_type {
     PLATFORM_EVENT_ACTION
 } platform_event_type;
 
+typedef enum platform_cursor_kind {
+    PLATFORM_CURSOR_ARROW,
+    PLATFORM_CURSOR_OPEN_HAND,
+    PLATFORM_CURSOR_CLOSED_HAND,
+    PLATFORM_CURSOR_RESIZE_NORTH_SOUTH,
+    PLATFORM_CURSOR_RESIZE_EAST_WEST,
+    PLATFORM_CURSOR_RESIZE_NORTHWEST_SOUTHEAST,
+    PLATFORM_CURSOR_RESIZE_NORTHEAST_SOUTHWEST,
+    PLATFORM_CURSOR_ROTATE
+} platform_cursor_kind;
+
 typedef enum platform_viewer_action {
     PLATFORM_ACTION_NONE,
     PLATFORM_ACTION_RELOAD,
@@ -91,6 +102,7 @@ bool platform_window_resize(platform_window *window, int32_t width_points, int32
 bool platform_window_content_screen_origin(platform_window *window,
                                            double *out_x, double *out_y);
 bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
+bool platform_window_set_cursor(platform_window *window, platform_cursor_kind cursor);
 /* Starts a non-blocking macOS Open sheet; selection arrives as a later file event. */
 bool platform_window_open_panel(platform_window *window);
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);

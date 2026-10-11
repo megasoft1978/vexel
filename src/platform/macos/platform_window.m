@@ -259,7 +259,7 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     value.type = PLATFORM_EVENT_POINTER_MOVE;
     value.logical_x = (int32_t)point.x;
     value.logical_y = (int32_t)(NSHeight(self.bounds) - point.y);
-    value.modifiers = (uint32_t)event.modifierFlags;
+    value.modifiers = platform_modifiers(event.modifierFlags);
     (void)platform_emit(self.owner, &value);
 }
 - (void)mouseDragged:(NSEvent *)event { [self mouseMoved:event]; }
