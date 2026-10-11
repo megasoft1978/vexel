@@ -35,6 +35,15 @@ bool platform_clipboard_write_png(const uint8_t *bytes, size_t length)
     }
 }
 
+bool platform_clipboard_can_paste_svg(void)
+{
+    @autoreleasepool {
+        NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+        return [pasteboard availableTypeFromArray:@[vexel_svg_type,
+            NSPasteboardTypeString]] != nil;
+    }
+}
+
 platform_clipboard_result platform_clipboard_read_svg(uint8_t *buffer,
     size_t capacity, size_t *out_length)
 {

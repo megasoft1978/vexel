@@ -580,6 +580,37 @@ bool viewer_editor_is_dirty(const viewer_editor *editor)
         (length > 0U && memcmp(current, editor->field, length) != 0);
 }
 
+bool viewer_editor_can_undo(const viewer_editor *editor)
+{
+    return editor != NULL && editor->edit != NULL &&
+        document_edit_history_cursor(editor->edit) > 0U;
+}
+
+bool viewer_editor_can_redo(const viewer_editor *editor)
+{
+    if (editor == NULL || editor->edit == NULL) return false;
+    return document_edit_history_cursor(editor->edit) <
+        document_edit_history_count(editor->edit);
+}
+
+bool viewer_editor_has_selection(const viewer_editor *editor)
+{
+    if (editor == NULL || editor->edit == NULL) return false;
+    if (editor->canvas_selection_count > 0U) return true;
+    document_handle root = {0};
+    return document_edit_root(editor->edit, &root) &&
+        !editor_same_handle(editor->selected, root);
+}
+
+bool viewer_editor_sidebar_visibility(const viewer_editor *editor,
+                                     bool *out_structure, bool *out_inspector)
+{
+    if (editor == NULL || out_structure == NULL || out_inspector == NULL) return false;
+    *out_structure = editor->want_structure;
+    *out_inspector = editor->want_inspector;
+    return true;
+}
+
 const char *viewer_editor_status(const viewer_editor *editor)
 {
     return editor == NULL ? "Editing unavailable" : editor->status;

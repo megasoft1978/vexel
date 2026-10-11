@@ -245,7 +245,7 @@ static bool execute_native_command(platform_window **window, const native_comman
 {
     platform_event_type event_type = PLATFORM_EVENT_NONE;
     if (command->type == NATIVE_OPEN) {
-        platform_window_config config = {command->text, command->text_len, 320, 240, true};
+        platform_window_config config = {command->text, command->text_len, 320, 240, true, false};
         if (!platform_window_create(&config, window) || *window == NULL) {
             return false;
         }
@@ -350,7 +350,7 @@ static int native_metal_smoke(void)
         return EXIT_FAILURE;
     }
     const char title[] = "Vexel Metal smoke";
-    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true};
+    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true, false};
     platform_window *window = NULL;
     if (!platform_window_create(&config, &window)) {
         platform_shutdown();
@@ -427,7 +427,7 @@ static int native_metal_replay_smoke(void)
 static int native_navigation_event_smoke(void)
 {
     const char title[] = "Vexel navigation event smoke";
-    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true};
+    platform_window_config config = {title, sizeof(title) - 1U, 320, 240, true, false};
     platform_window *window = NULL;
     if (!platform_init() || !platform_window_create(&config, &window)) return EXIT_FAILURE;
     bool scroll = platform_test_inject_scroll(window, 2.0, -120.0, 42.5, 31.25);

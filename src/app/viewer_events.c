@@ -3,6 +3,7 @@
 #include "frame_compose.h"
 #include "platform/macos/platform_clipboard.h"
 #include "platform/macos/platform_dialog.h"
+#include "platform/platform_settings.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -124,6 +125,19 @@ static void toggle_pixel_grid(viewer_app *app)
     app->frame_dirty = true;
 }
 
+static void toggle_sidebar(viewer_app *app, bool toggle_structure)
+{
+    if (app == NULL || app->editor == NULL) return;
+    bool structure = true;
+    bool inspector = true;
+    if (!viewer_editor_sidebar_visibility(app->editor, &structure, &inspector)) return;
+    if (toggle_structure) structure = !structure;
+    else inspector = !inspector;
+    (void)viewer_editor_set_sidebar_visibility(app->editor, structure, inspector);
+    (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
+    app->frame_dirty = true;
+}
+
 static void request_reload_or_open(viewer_app *app)
 {
     if (app->path[0] != '\0') (void)viewer_request_open(app, app->path, false);
@@ -237,6 +251,57 @@ static void process_editor_result(viewer_app *app, uint32_t result)
     }
 }
 
+static void apply_key(viewer_app *app, const platform_event *event);
+
+static void apply_menu_key(viewer_app *app, uint16_t key_code,
+                           uint32_t modifiers, const char *text)
+{
+    platform_event event = {0};
+    event.type = PLATFORM_EVENT_KEY_DOWN;
+    event.key_code = key_code;
+    event.modifiers = modifiers;
+    if (text != NULL) {
+        size_t length = event_path_length(text, sizeof(event.text) - 1U);
+        if (length < sizeof(event.text)) {
+            memcpy(event.text, text, length);
+            event.text[length] = '\0';
+            event.text_len = length;
+        }
+    }
+    apply_key(app, &event);
+}
+
+static void apply_platform_preferences(viewer_app *app)
+{
+    platform_settings_values preferences = {0};
+    platform_settings_get(&preferences);
+    app->checkerboard = preferences.default_checkerboard;
+    app->pixel_grid = preferences.default_pixel_grid;
+    app->modifier_scroll_zooms = preferences.modifier_scroll_zooms;
+    if (app->editor != NULL) {
+        (void)viewer_editor_set_sidebar_visibility(app->editor,
+            preferences.structure_visible, preferences.inspector_visible);
+        (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
+    }
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_CHECKERBOARD, app->checkerboard);
+    (void)platform_window_set_option_state(app->window,
+        PLATFORM_ACTION_TOGGLE_PIXEL_GRID, app->pixel_grid);
+    app->frame_dirty = true;
+}
+
+static void apply_workspace_preference(viewer_app *app)
+{
+    platform_settings_values preferences = {0};
+    platform_settings_get(&preferences);
+    if (app->editor != NULL) {
+        (void)viewer_editor_set_sidebar_visibility(app->editor,
+            preferences.structure_visible, preferences.inspector_visible);
+        (void)viewer_sync_canvas_geometry(app, !app->navigation_user_zoomed);
+    }
+    app->frame_dirty = true;
+}
+
 static void apply_action(viewer_app *app, platform_viewer_action action)
 {
     switch (action) {
@@ -247,7 +312,79 @@ static void apply_action(viewer_app *app, platform_viewer_action action)
         case PLATFORM_ACTION_FIT_WINDOW:
         case PLATFORM_ACTION_ACTUAL_SIZE: apply_navigation_fit(app, action); break;
         case PLATFORM_ACTION_TOGGLE_PIXEL_GRID: toggle_pixel_grid(app); break;
+        case PLATFORM_ACTION_TOGGLE_STRUCTURE: toggle_sidebar(app, true); break;
+        case PLATFORM_ACTION_TOGGLE_INSPECTOR: toggle_sidebar(app, false); break;
+        case PLATFORM_ACTION_NEW_DOCUMENT:
+            (void)viewer_request_new_document(app);
+            break;
+        case PLATFORM_ACTION_SAVE:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "s");
+            break;
+        case PLATFORM_ACTION_SAVE_AS:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "s");
+            break;
+        case PLATFORM_ACTION_EXPORT_PNG:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "e");
+            break;
+        case PLATFORM_ACTION_UNDO:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "z");
+            break;
+        case PLATFORM_ACTION_REDO:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "z");
+            break;
+        case PLATFORM_ACTION_CUT:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "x");
+            break;
+        case PLATFORM_ACTION_COPY:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "c");
+            break;
+        case PLATFORM_ACTION_PASTE:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "v");
+            break;
+        case PLATFORM_ACTION_DELETE:
+            apply_menu_key(app, 51U, 0U, NULL);
+            break;
+        case PLATFORM_ACTION_SELECT_ALL:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "a");
+            break;
+        case PLATFORM_ACTION_CLOSE_DOCUMENT:
         case PLATFORM_ACTION_QUIT: viewer_request_close(app); break;
+        case PLATFORM_ACTION_ZOOM_IN:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "+");
+            break;
+        case PLATFORM_ACTION_ZOOM_OUT:
+            apply_menu_key(app, 0U, PLATFORM_MODIFIER_COMMAND, "-");
+            break;
+        case PLATFORM_ACTION_REFRESH_PREFERENCES:
+            apply_platform_preferences(app);
+            break;
+        case PLATFORM_ACTION_APPLY_WORKSPACE_PREFERENCE:
+            apply_workspace_preference(app);
+            break;
+        case PLATFORM_ACTION_APPLY_CHECKERBOARD_PREFERENCE: {
+            platform_settings_values preferences = {0};
+            platform_settings_get(&preferences);
+            app->checkerboard = preferences.default_checkerboard;
+            (void)platform_window_set_option_state(app->window,
+                PLATFORM_ACTION_TOGGLE_CHECKERBOARD, app->checkerboard);
+            app->frame_dirty = true;
+            break;
+        }
+        case PLATFORM_ACTION_APPLY_PIXEL_GRID_PREFERENCE: {
+            platform_settings_values preferences = {0};
+            platform_settings_get(&preferences);
+            app->pixel_grid = preferences.default_pixel_grid;
+            (void)platform_window_set_option_state(app->window,
+                PLATFORM_ACTION_TOGGLE_PIXEL_GRID, app->pixel_grid);
+            app->frame_dirty = true;
+            break;
+        }
+        case PLATFORM_ACTION_APPLY_NAVIGATION_PREFERENCE: {
+            platform_settings_values preferences = {0};
+            platform_settings_get(&preferences);
+            app->modifier_scroll_zooms = preferences.modifier_scroll_zooms;
+            break;
+        }
         case PLATFORM_ACTION_NONE: default: break;
     }
 }
@@ -556,7 +693,8 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
                 (double)app->navigation_canvas.x / scale;
             double local_y = event->precise_y -
                 (double)app->navigation_canvas.y / scale;
-            if ((event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL)) != 0U ||
+            if ((app->modifier_scroll_zooms &&
+                    (event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL)) != 0U) ||
                 viewer_editor_get_tool(app->editor) == UI_ICON_ZOOM) {
                 ui_viewer_navigation previous = app->navigation;
                 if (ui_viewer_navigation_wheel_scaled(&app->navigation, event->delta_y,
@@ -593,8 +731,11 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
             return;
         case PLATFORM_EVENT_ACTION: apply_action(app, event->action); return;
         case PLATFORM_EVENT_FILE_OPEN:
-            if (event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP)
-                (void)viewer_request_open(app, event->path, false);
+            if (event_path_length(event->path, PLATFORM_PATH_CAP - 1U) < PLATFORM_PATH_CAP &&
+                viewer_request_open(app, event->path, false)) {
+                platform_window_hide_welcome(app->window);
+                (void)platform_window_set_visible(app->window, true);
+            }
             return;
         case PLATFORM_EVENT_CLOSE_REQUEST: viewer_request_close(app); return;
         case PLATFORM_EVENT_OPEN:

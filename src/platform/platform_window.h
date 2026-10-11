@@ -43,8 +43,42 @@ typedef enum platform_viewer_action {
     PLATFORM_ACTION_FIT_WINDOW,
     PLATFORM_ACTION_ACTUAL_SIZE,
     PLATFORM_ACTION_TOGGLE_PIXEL_GRID,
-    PLATFORM_ACTION_QUIT
+    PLATFORM_ACTION_QUIT,
+    PLATFORM_ACTION_NEW_DOCUMENT,
+    PLATFORM_ACTION_SAVE,
+    PLATFORM_ACTION_SAVE_AS,
+    PLATFORM_ACTION_EXPORT_PNG,
+    PLATFORM_ACTION_UNDO,
+    PLATFORM_ACTION_REDO,
+    PLATFORM_ACTION_CUT,
+    PLATFORM_ACTION_COPY,
+    PLATFORM_ACTION_PASTE,
+    PLATFORM_ACTION_DELETE,
+    PLATFORM_ACTION_SELECT_ALL,
+    PLATFORM_ACTION_CLOSE_DOCUMENT,
+    PLATFORM_ACTION_ZOOM_IN,
+    PLATFORM_ACTION_ZOOM_OUT,
+    PLATFORM_ACTION_TOGGLE_STRUCTURE,
+    PLATFORM_ACTION_TOGGLE_INSPECTOR,
+    PLATFORM_ACTION_APPLY_WORKSPACE_PREFERENCE,
+    PLATFORM_ACTION_APPLY_CHECKERBOARD_PREFERENCE,
+    PLATFORM_ACTION_APPLY_PIXEL_GRID_PREFERENCE,
+    PLATFORM_ACTION_APPLY_NAVIGATION_PREFERENCE,
+    PLATFORM_ACTION_REFRESH_PREFERENCES
 } platform_viewer_action;
+
+typedef struct platform_command_state {
+    bool has_document;
+    bool has_path;
+    bool dirty;
+    bool can_undo;
+    bool can_redo;
+    bool has_selection;
+    bool checkerboard_enabled;
+    bool pixel_grid_enabled;
+    bool structure_visible;
+    bool inspector_visible;
+} platform_command_state;
 
 typedef enum platform_modifier {
     PLATFORM_MODIFIER_COMMAND = 1U << 0,
@@ -82,6 +116,7 @@ typedef struct platform_window_config {
     int32_t width_points;
     int32_t height_points;
     bool resizable;
+    bool initially_hidden;
 } platform_window_config;
 
 bool platform_init(void);
@@ -91,9 +126,16 @@ bool platform_window_resize(platform_window *window, int32_t width_points, int32
 bool platform_window_content_screen_origin(platform_window *window,
                                            double *out_x, double *out_y);
 bool platform_window_set_title(platform_window *window, const char *title_utf8, size_t title_len);
+bool platform_window_set_visible(platform_window *window, bool visible);
+bool platform_window_show_welcome(platform_window *window);
+void platform_window_hide_welcome(platform_window *window);
 /* Starts a non-blocking macOS Open sheet; selection arrives as a later file event. */
 bool platform_window_open_panel(platform_window *window);
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len);
+void platform_window_recent_open_failed(platform_window *window, const char *path,
+                                        size_t path_len);
+void platform_window_set_command_state(platform_window *window,
+                                      const platform_command_state *state);
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
                                       bool enabled);
 /* Pumps pending AppKit events without waiting. False means no event is ready. */

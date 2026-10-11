@@ -354,6 +354,16 @@ static bool platform_size_event(platform_window *window, platform_event_type typ
     (void)notification;
     (void)platform_size_event(self.owner, PLATFORM_EVENT_SCALE);
 }
+- (void)windowDidEnterFullScreen:(NSNotification *)notification
+{
+    (void)notification;
+    platform_macos_menus_set_full_screen(true);
+}
+- (void)windowDidExitFullScreen:(NSNotification *)notification
+{
+    (void)notification;
+    platform_macos_menus_set_full_screen(false);
+}
 @end
 
 bool platform_init(void)
@@ -408,8 +418,10 @@ bool platform_window_create(const platform_window_config *config, platform_windo
             return false;
         }
         native.releasedWhenClosed = NO;
+        native.collectionBehavior |= NSWindowCollectionBehaviorFullScreenPrimary;
         window->native = native;
         platform_macos_menus_set_owner(window);
+        platform_macos_welcome_set_owner(window);
         native.owner = window;
         native.delegate = native;
         native.acceptsMouseMovedEvents = YES;
@@ -422,9 +434,11 @@ bool platform_window_create(const platform_window_config *config, platform_windo
         view.frame = NSMakeRect(0.0, 0.0, config->width_points, config->height_points);
         [native setContentSize:NSMakeSize(config->width_points, config->height_points)];
         native.title = title;
-        [native makeKeyAndOrderFront:nil];
-        (void)[native makeFirstResponder:view];
-        [NSApp activateIgnoringOtherApps:YES];
+        if (!config->initially_hidden) {
+            [native makeKeyAndOrderFront:nil];
+            (void)[native makeFirstResponder:view];
+            [NSApp activateIgnoringOtherApps:YES];
+        }
         if (!platform_emit(window, &(platform_event){.type = PLATFORM_EVENT_OPEN})) {
             (void)fputs("platform: initial event allocation failed\n", stderr);
             platform_window_destroy(window);
@@ -461,7 +475,9 @@ bool platform_window_open_panel(platform_window *window)
         request.panel = panel;
         window->open_panel = panel;
         window->open_panel_request = request;
-        [panel beginSheetModalForWindow:window->native
+        NSWindow *parent = [NSApp keyWindow];
+        if (parent == nil || parent == window->native) parent = window->native;
+        [panel beginSheetModalForWindow:parent
             completionHandler:^(NSModalResponse response) {
                 platform_window *owner = request.owner;
                 if (owner == NULL || owner->open_panel_request != request) return;
@@ -481,7 +497,46 @@ bool platform_window_open_panel(platform_window *window)
 bool platform_window_recent_add(platform_window *window, const char *path, size_t path_len)
 {
     if (!platform_on_main_thread() || window == NULL) return false;
-    return platform_macos_menus_add_recent(path, path_len);
+    return platform_recents_add(path, path_len);
+}
+
+void platform_window_recent_open_failed(platform_window *window, const char *path,
+                                        size_t path_len)
+{
+    if (!platform_on_main_thread() || window == NULL) return;
+    platform_macos_welcome_open_failure(window, path, path_len);
+}
+
+void platform_window_set_command_state(platform_window *window,
+                                      const platform_command_state *state)
+{
+    if (!platform_on_main_thread() || window == NULL || state == NULL) return;
+    platform_macos_menus_update_state(window, state);
+}
+
+bool platform_window_set_visible(platform_window *window, bool visible)
+{
+    if (!platform_on_main_thread() || window == NULL || window->native == nil) return false;
+    if (visible) {
+        [window->native makeKeyAndOrderFront:nil];
+        [NSApp activateIgnoringOtherApps:YES];
+    } else {
+        [window->native orderOut:nil];
+    }
+    return true;
+}
+
+bool platform_window_show_welcome(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL) return false;
+    platform_macos_welcome_show(window);
+    return true;
+}
+
+void platform_window_hide_welcome(platform_window *window)
+{
+    if (!platform_on_main_thread() || window == NULL) return;
+    platform_macos_welcome_hide();
 }
 
 bool platform_window_set_option_state(platform_window *window, platform_viewer_action action,
@@ -730,6 +785,7 @@ void platform_window_destroy(platform_window *window)
             node = next;
         }
         platform_macos_menus_clear_owner(window);
+        platform_macos_welcome_clear_owner(window);
         window->pending_count = 0U;
         free(window);
     }

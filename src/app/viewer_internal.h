@@ -26,7 +26,8 @@
 
 typedef struct viewer_app viewer_app;
 typedef enum viewer_job_kind {
-    VIEWER_JOB_LOAD, VIEWER_JOB_SHARP_TILE, VIEWER_JOB_EDIT_RENDER
+    VIEWER_JOB_LOAD, VIEWER_JOB_NEW_DOCUMENT, VIEWER_JOB_SHARP_TILE,
+    VIEWER_JOB_EDIT_RENDER
 } viewer_job_kind;
 
 typedef struct viewer_job {
@@ -87,6 +88,7 @@ struct viewer_app {
     uint8_t background_index;
     bool checkerboard;
     bool pixel_grid;
+    bool modifier_scroll_zooms;
     bool pointer_valid;
     bool navigation_ready;
     bool navigation_user_zoomed;
@@ -94,6 +96,7 @@ struct viewer_app {
     bool document_visible;
     bool frame_dirty;
     bool pending_open;
+    bool pending_new_document;
     bool load_result_handled;
     bool sharp_plan_ready;
     bool close_requested;
@@ -110,12 +113,18 @@ struct viewer_app {
 
 const char *viewer_error_reason(const viewer_app *app);
 bool viewer_set_window_title(viewer_app *app);
+void viewer_copy_display_name(const char *path, char out[256]);
+bool viewer_write_test_layout_dump(viewer_app *app);
 void viewer_update_file_stamp(viewer_app *app);
 bool viewer_file_changed_on_disk(viewer_app *app);
+bool viewer_file_stamp_read(const char *path, viewer_file_stamp *out);
+bool viewer_file_stamp_equal(const viewer_file_stamp *left,
+                             const viewer_file_stamp *right);
 bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height);
 bool viewer_bump_generation(viewer_app *app);
 void viewer_refresh_sharp_plan(viewer_app *app);
 bool viewer_request_open(viewer_app *app, const char *path, bool initial);
+bool viewer_request_new_document(viewer_app *app);
 bool viewer_update_active_path(viewer_app *app, const char *path, size_t path_length);
 bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
                                     const char *message);
@@ -125,5 +134,6 @@ bool viewer_export_png(viewer_app *app, bool copy_to_clipboard);
 bool viewer_compose_and_present(viewer_app *app);
 bool viewer_sync_canvas_geometry(viewer_app *app, bool refit);
 ui_viewer_navigation viewer_navigation_for_frame(const viewer_app *app);
+void viewer_update_native_state(viewer_app *app);
 
 #endif

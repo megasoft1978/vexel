@@ -165,3 +165,15 @@
   tests; `./dev editor-smoke` and `./dev viewer-smoke` pass; the ledger validates
   with 406 entries. This lane has no frozen W12 work order, so no lifecycle event
   was added to `ledger.jsonl`.
+
+- Update 2026-10-11: uncommitted W15 native macOS shell candidate on
+  `lane/w15-native` implements r5 WO-1, WO-3, WO-4, WO-5, WO-7, and WO-10.
+  `./dev bundle`, the Release CMake app-bundle target, 13 packaging tests, and
+  69 Python tests pass. The 14 light/dark offscreen AppKit content and icon
+  goldens pass, including Welcome empty and recent-list states. `./dev t --all`
+  passes 59/61 CTests and 69/69 Python tests; the two failures are sandbox
+  LaunchServices/hiservices and offscreen-Metal failures
+  documented in `docs/lanes/w15-native.md`. Native titlebar/menu/full-screen
+  review is left for the maintainer because the shared screen must not be
+  automated or captured. The r5 orders are not frozen under `work/`, so the
+  ledger remains unchanged.
