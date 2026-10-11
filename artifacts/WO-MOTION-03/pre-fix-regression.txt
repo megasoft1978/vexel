@@ -1,0 +1,12 @@
+Regression-first evidence for the source-patch offset defect:
+
+Command, before the fix:
+  cmake --build --preset mac-debug --target animation_authoring_test >/dev/null && ./build/mac-debug/bin/animation_authoring_test
+
+Observed failure:
+  tests/anim/animation_authoring_test.c:105: check failed: svg_anim_authoring_add_key(&animation, 0U, 1.0, (base_bytes){(const uint8_t *)"5", 1U}, &patch) == SVG_ANIM_AUTHORING_OK
+
+The parser's attribute offsets are absolute source offsets. The initial patch
+builder treated them as tag-local offsets, so the add-key regression failed
+before the patch-builder fix. The focused test now passes; see
+animation-authoring-test.txt.

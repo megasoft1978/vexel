@@ -19,6 +19,11 @@ enum {
     TIMELINE_A11Y_SLIDER,
     TIMELINE_A11Y_LOOP,
     TIMELINE_A11Y_TRACKS,
+    TIMELINE_A11Y_EASING_MODE,
+    TIMELINE_A11Y_SPLINE_X1,
+    TIMELINE_A11Y_SPLINE_Y1,
+    TIMELINE_A11Y_SPLINE_X2,
+    TIMELINE_A11Y_SPLINE_Y2,
     TIMELINE_A11Y_ROW_BASE = VIEWER_TIMELINE_A11Y_BASE + 16U
 };
 
@@ -172,6 +177,48 @@ static bool add_timeline_node(ui_tree *tree, uint32_t id, uint32_t parent,
     return true;
 }
 
+static const char *animation_mode_label(svg_anim_calc_mode mode)
+{
+    if (mode == SVG_ANIM_CALC_SPLINE) return "Spline";
+    if (mode == SVG_ANIM_CALC_DISCRETE) return "Discrete";
+    if (mode == SVG_ANIM_CALC_PACED) return "Paced";
+    return "Linear";
+}
+
+static bool add_easing_semantics(ui_tree *tree, viewer_timeline *timeline,
+    const viewer_timeline_layout *layout)
+{
+    viewer_timeline_easing_layout easing;
+    if (!viewer_timeline_easing_layout_compute(layout, &easing)) return false;
+    viewer_timeline_easing_sync(timeline);
+    svg_anim_calc_mode mode = timeline->easing_mode_override ?
+        timeline->easing_mode :
+        timeline->document->animation.tracks[timeline->selected_track].calc_mode;
+    uint32_t disabled = viewer_timeline_easing_enabled(timeline) ?
+        0U : UI_STATE_DISABLED;
+    if (!add_timeline_node(tree, TIMELINE_A11Y_EASING_MODE,
+            TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON,
+            "Interpolation mode", animation_mode_label(mode), disabled,
+            easing.mode_buttons[2])) return false;
+    static const uint32_t ids[4] = {
+        TIMELINE_A11Y_SPLINE_X1, TIMELINE_A11Y_SPLINE_Y1,
+        TIMELINE_A11Y_SPLINE_X2, TIMELINE_A11Y_SPLINE_Y2
+    };
+    static const char *labels[4] = {
+        "Spline x1", "Spline y1", "Spline x2", "Spline y2"
+    };
+    char number[4][40];
+    for (size_t index = 0U; index < 4U; ++index) {
+        int amount = snprintf(number[index], sizeof(number[index]), "%.17g",
+            timeline->easing_fields[index].value);
+        if (amount <= 0 || (size_t)amount >= sizeof(number[index]) ||
+            !add_timeline_node(tree, ids[index], TIMELINE_A11Y_PANEL,
+                UI_ROLE_SLIDER, labels[index], number[index], disabled,
+                easing.fields[index])) return false;
+    }
+    return true;
+}
+
 static bool build_timeline_tree(viewer_timeline *timeline,
     const viewer_timeline_layout *layout, ui_theme theme,
     bool increased_contrast, size_t row_limit)
@@ -198,7 +245,9 @@ static bool build_timeline_tree(viewer_timeline *timeline,
             timeline->loop ? UI_STATE_CHECKED : 0U, layout->loop_toggle) ||
         !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_TRACKS,
             TIMELINE_A11Y_PANEL, UI_ROLE_LIST, "Animation tracks", NULL, 0U,
-            layout->panel)) return false;
+            layout->panel) ||
+        !add_easing_semantics(&timeline_accessibility_tree, timeline, layout))
+        return false;
     if (row_limit > layout->visible_track_count) row_limit = layout->visible_track_count;
     for (size_t row = 0U; row < row_limit; ++row) {
         size_t track_index = timeline->first_track + row;
@@ -237,10 +286,10 @@ static bool publish_merged_accessibility(viewer_timeline *timeline,
     size_t editor_count = editor_semantics_scratch.count;
     if (editor_count == 0U || editor_count > UI_MAX_NODES) return false;
     size_t extras = UI_MAX_NODES - editor_count;
-    bool include_editor = extras >= 5U;
+    bool include_editor = extras >= 10U;
     size_t row_limit = 0U;
-    if (include_editor && extras > 5U) {
-        row_limit = extras - 5U;
+    if (include_editor && extras > 10U) {
+        row_limit = extras - 10U;
         if (row_limit > layout->visible_track_count)
             row_limit = layout->visible_track_count;
     }
@@ -327,7 +376,12 @@ bool viewer_timeline_paint(viewer_timeline *timeline, viewer_editor *editor,
             UI_CONTROL_SELECTED : UI_CONTROL_REST;
         (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY,
             layout.track_rows[row], state, label, label_length, NULL, 0U, 0.0, false);
+        viewer_timeline_easing_paint_key_markers(timeline, &layout,
+            track_index, row, &canvas);
     }
+    viewer_timeline_easing_layout easing_layout;
+    if (viewer_timeline_easing_layout_compute(&layout, &easing_layout))
+        viewer_timeline_easing_paint(timeline, &layout, &easing_layout, &canvas);
     (void)publish_merged_accessibility(timeline, editor, &layout, width, height,
         backing_scale, theme, increased_contrast);
     return true;

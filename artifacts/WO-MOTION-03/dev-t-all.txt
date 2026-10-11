@@ -1,0 +1,26 @@
+ok   build              0.3s
+FAIL ctest -R all              6.3s  97% tests passed, 2 tests failed out of 58
+  failed: index-replay, native-viewer-smoke
+  --- first failure: index-replay
+  Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-keyframes/build/mac-debug
+  Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-keyframes/build/mac-debug
+      Start 31: index-replay
+  1/1 Test #31: index-replay .....................***Failed    0.12 sec
+  index replay preview: offscreen Metal device or queue unavailable
+  progress: 10%
+  progress: 50%
+  progress: 90%
+  index replay: complete=true preview=none ui_visible=false before_complete=true percent=100 max_owner_step_ns=10780000
+  stale_generation_rejected=true
+  canceled_worker_rejected=true
+  preview_state: submitted=true finished=true ready=true
+  
+  
+  0% tests passed, 1 tests failed out of 1
+  
+  Total Test time (real) =   0.12 sec
+  
+  The following tests FAILED:
+  	 31 - index-replay (Failed)
+ok   python mcp.test_e2e,svg.sha   3.0s  Ran 69 tests in 2.916s
+FAIL  total 9.8s   (slow Python skipped; --full or ./dev t -k <name>)

@@ -1,0 +1,26 @@
+{
+  "fixture": "selected spline interval 1; custom easing graph, four fields, interpolation modes, and presets",
+  "size": "900x720",
+  "backing_scale": 2,
+  "pixel_hash": "fnv1a64 over RGBA8 bytes before PNG encoding",
+  "renders": [
+    {
+      "file": "easing-light.png",
+      "theme": "light",
+      "increased_contrast": false,
+      "hash": "7bc5c278646f35d8"
+    },
+    {
+      "file": "easing-dark.png",
+      "theme": "dark",
+      "increased_contrast": false,
+      "hash": "eed8c47f12b6356d"
+    },
+    {
+      "file": "easing-high-contrast.png",
+      "theme": "dark",
+      "increased_contrast": true,
+      "hash": "0db2c8bad46cddd4"
+    }
+  ]
+}

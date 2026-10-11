@@ -1052,3 +1052,26 @@ if(BUILD_TESTING)
     add_test(NAME shape-render-large-work COMMAND raster_large_render_test)
 endif()
 # end lane: w8-perf
+
+# lane: w14-keyframes
+target_sources(vexel_shape PRIVATE src/svg/animation/authoring.c)
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_anim_edit.c
+    src/app/viewer_timeline_easing.c)
+target_link_libraries(viewer_timeline_test PRIVATE vexel_platform_png)
+
+add_executable(animation_authoring_test tests/anim/animation_authoring_test.c)
+target_include_directories(animation_authoring_test PRIVATE src src/document src/app)
+target_link_libraries(animation_authoring_test PRIVATE vexel_shape vexel_document vexel_editor_ui)
+set_target_properties(animation_authoring_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(animation_authoring_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(animation_authoring_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(animation_authoring_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME animation-authoring COMMAND animation_authoring_test)
+endif()
+# end lane: w14-keyframes

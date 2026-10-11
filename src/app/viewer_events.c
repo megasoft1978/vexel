@@ -433,6 +433,9 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
     if (viewer_timeline_process_event(&app->timeline, event, app->editor,
             app->width, app->height, app->backing_scale)) {
         app->frame_dirty = true;
+        if (viewer_timeline_take_editor_mutation(&app->timeline))
+            process_editor_result(app,
+                VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED);
         return;
     }
     switch (event->type) {

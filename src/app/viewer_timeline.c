@@ -3,6 +3,7 @@
 #include "viewer_timeline.h"
 
 #include "raster/shape_render.h"
+#include "viewer_anim_edit.h"
 #include "viewer_editor.h"
 #include "viewer_chrome.h"
 
@@ -13,7 +14,7 @@
 
 #define VIEWER_TIMELINE_FALLBACK_SECONDS 5.0
 #define VIEWER_TIMELINE_FRAME_INTERVAL (1.0 / 30.0)
-#define VIEWER_TIMELINE_PANEL_POINTS 178U
+#define VIEWER_TIMELINE_PANEL_POINTS 300U
 #define VIEWER_TIMELINE_MIN_WIDTH_POINTS 300U
 #define VIEWER_TIMELINE_SOURCE_SCAN_CAP 4096U
 #define VIEWER_TIMELINE_TAG_CAP 32U
@@ -445,6 +446,30 @@ static double seek_time_from_x(const viewer_timeline_layout *layout, double x,
     return progress * duration;
 }
 
+static bool key_screen_x(const viewer_timeline_layout *layout,
+    const svg_anim_track *track, double duration, size_t key_index, double *out_x)
+{
+    if (layout == NULL || track == NULL || out_x == NULL ||
+        key_index >= track->key_count || !(duration > 0.0) ||
+        !isfinite(duration) || !isfinite(track->duration_seconds)) return false;
+    double inset = ceil(8.0 * layout->backing_scale);
+    double reserve = ceil(64.0 * layout->backing_scale);
+    if (!isfinite(inset) || !isfinite(reserve) || inset > UINT32_MAX ||
+        reserve > UINT32_MAX) return false;
+    double track_width = (double)layout->scrubber.width -
+        (layout->scrubber.width > reserve ? reserve : 0.0);
+    if (!(track_width > 0.0)) return false;
+    double start = track->has_begin_sync ? 0.0 : track->begin_offset;
+    double time = start + track->keys[key_index].time * track->duration_seconds;
+    if (!isfinite(time)) return false;
+    double x = (double)layout->scrubber.x +
+        (layout->scrubber.width > reserve ? inset : 0.0) +
+        time / duration * track_width;
+    if (!isfinite(x)) return false;
+    *out_x = x;
+    return true;
+}
+
 bool viewer_timeline_pointer(viewer_timeline *timeline,
                              const viewer_timeline_layout *layout,
                              viewer_timeline_pointer_kind kind,
@@ -455,6 +480,18 @@ bool viewer_timeline_pointer(viewer_timeline *timeline,
         viewer_timeline_track_count(timeline) == 0U) return false;
     if (kind == VIEWER_TIMELINE_POINTER_UP && timeline->dragging_scrubber) {
         timeline->dragging_scrubber = false;
+        return true;
+    }
+    if (kind == VIEWER_TIMELINE_POINTER_UP && timeline->dragging_key) {
+        timeline->dragging_key = false;
+        return true;
+    }
+    if (kind == VIEWER_TIMELINE_POINTER_MOVE && timeline->dragging_key) {
+        double next = seek_time_from_x(layout, x, timeline->duration_seconds);
+        timeline->time_seconds = next;
+        timeline->playing = false;
+        timeline->has_tick_time = false;
+        timeline->preview_failed = false;
         return true;
     }
     if (kind == VIEWER_TIMELINE_POINTER_MOVE && timeline->dragging_scrubber) {
@@ -501,10 +538,47 @@ bool viewer_timeline_pointer(viewer_timeline *timeline,
             size_t index = timeline->first_track + row;
             if (index >= viewer_timeline_track_count(timeline)) return true;
             timeline->selected_track = index;
-            double start = timeline->document->animation.tracks[index].has_begin_sync ?
-                0.0 : timeline->document->animation.tracks[index].begin_offset;
+            const svg_anim_track *track =
+                &timeline->document->animation.tracks[index];
+            size_t selected_key = 0U;
+            bool marker_hit = false;
+            double marker_radius = 8.0 * layout->backing_scale;
+            for (size_t key = 0U; key < track->key_count; ++key) {
+                double marker_x = 0.0;
+                if (key_screen_x(layout, track, timeline->duration_seconds,
+                        key, &marker_x) && fabs(x - marker_x) <= marker_radius) {
+                    selected_key = key;
+                    marker_hit = true;
+                    break;
+                }
+            }
+            if (!marker_hit && track->key_count > 0U) {
+                double best_distance = HUGE_VAL;
+                for (size_t key = 0U; key < track->key_count; ++key) {
+                    double marker_x = 0.0;
+                    if (!key_screen_x(layout, track, timeline->duration_seconds,
+                            key, &marker_x)) continue;
+                    double distance = fabs(x - marker_x);
+                    if (distance < best_distance) {
+                        best_distance = distance;
+                        selected_key = key;
+                    }
+                }
+            }
+            timeline->selected_key = selected_key;
+            timeline->easing_initialized = false;
+            double start = track->has_begin_sync ? 0.0 : track->begin_offset;
+            if (track->key_count > 0U) {
+                start += track->keys[selected_key].time * track->duration_seconds;
+                timeline->dragging_key = marker_hit && selected_key > 0U &&
+                    selected_key + 1U < track->key_count;
+                timeline->dragging_key_track = index;
+                timeline->dragging_key_index = selected_key;
+            }
             (void)viewer_timeline_seek(timeline, start);
             timeline->selected_track = index;
+            timeline->selected_key = selected_key;
+            if (timeline->dragging_key) timeline->dragging_key = true;
             return true;
         }
         return true;
@@ -520,6 +594,22 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
 {
     if (timeline == NULL || event == NULL || editor == NULL ||
         viewer_timeline_track_count(timeline) == 0U) return false;
+    viewer_timeline_layout layout;
+    if (!viewer_timeline_layout_compute(timeline, width, height, backing_scale,
+            &layout)) return false;
+    if (event->type == PLATFORM_EVENT_POINTER_UP && timeline->dragging_key) {
+        size_t track_index = timeline->dragging_key_track;
+        size_t key_index = timeline->dragging_key_index;
+        timeline->dragging_key = false;
+        uint32_t result = viewer_editor_animation_move_key(editor,
+            &timeline->document->animation, track_index, key_index,
+            timeline->time_seconds);
+        if ((result & VIEWER_EDITOR_MUTATED) != 0U)
+            timeline->edit_mutation_pending = true;
+        return true;
+    }
+    if (viewer_timeline_easing_process_event(timeline, editor, event, &layout))
+        return true;
     if (event->type == PLATFORM_EVENT_KEY_DOWN &&
         !viewer_editor_text_input_active(editor) &&
         (event->modifiers & (PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_CONTROL |
@@ -527,9 +617,6 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
         return viewer_timeline_handle_key(timeline, event->key_code,
             event->text, event->text_len, timeline_monotonic_seconds());
     }
-    viewer_timeline_layout layout;
-    if (!viewer_timeline_layout_compute(timeline, width, height, backing_scale,
-            &layout)) return false;
     double x = 0.0, y = 0.0;
     viewer_timeline_pointer_kind pointer_kind;
     switch (event->type) {
@@ -559,6 +646,14 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
     if (!isfinite(x) || !isfinite(y)) return false;
     return viewer_timeline_pointer(timeline, &layout, pointer_kind, x, y,
         event->delta_y, timeline_monotonic_seconds());
+}
+
+bool viewer_timeline_take_editor_mutation(viewer_timeline *timeline)
+{
+    if (timeline == NULL) return false;
+    bool changed = timeline->edit_mutation_pending;
+    timeline->edit_mutation_pending = false;
+    return changed;
 }
 
 const raster_tile *viewer_timeline_prepare_frame(viewer_timeline *timeline)
