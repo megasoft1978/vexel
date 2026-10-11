@@ -46,6 +46,13 @@ static id user_defaults_observer;
 static bool appearance_kvo_installed;
 static char appearance_kvo_context;
 
+static bool interface_scale_valid(uint16_t percent)
+{
+    return percent == 100U || percent == 110U || percent == 120U ||
+        (percent >= 125U && percent <= PLATFORM_INTERFACE_TEXT_SCALE_MAX &&
+         (percent % 25U) == 0U);
+}
+
 static bool ui_text_bytes_valid(const char *bytes, size_t length)
 {
     return length <= PLATFORM_TEXT_MAX_BYTES && (length == 0U || bytes != NULL);
@@ -187,8 +194,8 @@ bool platform_text_ui_get_extended_preferences(
     bool increased = workspace.accessibilityDisplayShouldIncreaseContrast;
     bool reduced_transparency = workspace.accessibilityDisplayShouldReduceTransparency;
     uint16_t scale = preference_unsigned(defaults, @"VexelUIScalePercent",
-        100U, 100U, 120U);
-    if (scale != 100U && scale != 110U && scale != 120U) scale = 100U;
+        100U, 100U, PLATFORM_INTERFACE_TEXT_SCALE_MAX);
+    if (!interface_scale_valid(scale)) scale = 100U;
     uint16_t structure = preference_unsigned(defaults, @"VexelMainStructureWidth",
         232U, 184U, 320U);
     uint16_t inspector = preference_unsigned(defaults, @"VexelMainInspectorWidth",
@@ -222,10 +229,29 @@ bool platform_text_ui_get_extended_preferences(
 bool platform_text_ui_set_ui_scale(uint16_t percent)
 {
     if (![NSThread isMainThread] || NSApp == nil ||
-        (percent != 100U && percent != 110U && percent != 120U)) return false;
+        !interface_scale_valid(percent)) return false;
     [NSUserDefaults.standardUserDefaults setInteger:percent forKey:@"VexelUIScalePercent"];
     if (watcher_view != nil) [watcher_view notifyPreferences];
     return true;
+}
+
+uint8_t platform_text_ui_get_interface_scale(void)
+{
+    if (![NSThread isMainThread]) return PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT;
+    id value = [NSUserDefaults.standardUserDefaults objectForKey:@"VexelUIScalePercent"];
+    if (![value isKindOfClass:[NSNumber class]])
+        return PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT;
+    NSInteger stored = [(NSNumber *)value integerValue];
+    if (stored < 0 || stored > UINT8_MAX ||
+        !interface_scale_valid((uint16_t)stored))
+        return PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT;
+    return (uint8_t)stored;
+}
+
+bool platform_text_ui_set_interface_scale(uint8_t scale_percent)
+{
+    return interface_scale_valid(scale_percent) &&
+        platform_text_ui_set_ui_scale((uint16_t)scale_percent);
 }
 
 bool platform_text_ui_set_panel_widths(uint16_t structure_width_points,

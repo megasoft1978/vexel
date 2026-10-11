@@ -154,6 +154,8 @@ bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,
 bool viewer_editor_set_system_accent(viewer_editor *editor, uint32_t accent_srgb,
                                      bool material_allowed);
 bool viewer_editor_set_ui_scale(viewer_editor *editor, uint16_t percent);
+bool viewer_editor_set_interface_scale(viewer_editor *editor,
+                                       uint8_t scale_percent);
 bool viewer_editor_set_panel_widths(viewer_editor *editor,
     uint16_t structure_width_points, uint16_t inspector_width_points);
 bool viewer_editor_native_material_enabled(const viewer_editor *editor);

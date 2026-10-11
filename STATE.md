@@ -278,3 +278,16 @@
   passes all 77 CTests and 69 Python tests; `python3 scripts/ledger.py validate ledger.jsonl`
   reports 412 entries. Real titlebar, tab, Welcome, and menu review
   remains for the maintainer.
+
+- W15-a11y integration keeps W14's docked timeline and W15 visual/native
+  chrome while adding focus-aware keyboard handling, localized editor/status
+  text, VoiceOver layer actions, and localized native menu/dialog copy. The
+  visual 100/110/120% scale and accessibility 100–200% sizes now share one
+  `VexelUIScalePercent` setting, editor field, and View menu; 100, 110, 120,
+  125, 150, 175, and 200% are supported. Text and layout scale together, while
+  canvas zoom remains separate. The accessibility goldens were refreshed for
+  the integrated docked chrome at 200%. `./dev t --all` passes 79/79 CTests
+  and 69/69 Python tests; `python3 scripts/ledger.py validate ledger.jsonl`
+  reports 412 entries. No lifecycle event was added because r5 WO-6/WO-9 are
+  not frozen under `work/`. VoiceOver traversal, keyboard focus order, text
+  sizes, and native menus still need maintainer review in a real window.

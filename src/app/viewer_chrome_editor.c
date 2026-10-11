@@ -2,6 +2,7 @@
 
 #include "viewer_chrome.h"
 #include "ui_widgets.h"
+#include "platform/platform_localization.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -143,31 +144,42 @@ static void editor_canvas_status(viewer_editor *editor,
 }
 
 static void editor_status_labels(viewer_editor *editor,
-                                 char primary[UI_TEXT_MAX_BYTES],
-                                 char secondary[UI_TEXT_MAX_BYTES])
+                                 char primary[EDITOR_STATUS_CAP],
+                                 char secondary[PLATFORM_LOCALIZATION_TEXT_CAP])
 {
-    if (strncmp(editor->status, "Edit rejected:", 14U) == 0 ||
-        strncmp(editor->status, "Save failed:", 12U) == 0 ||
-        strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
-        strncmp(editor->status, "Unsupported SVG content", 23U) == 0) {
-        editor_set_text(primary, UI_TEXT_MAX_BYTES, editor->status);
+    if (editor->status_error) {
+        editor_set_text(primary, EDITOR_STATUS_CAP, editor->status);
     } else {
-        const char *state = document_edit_is_dirty(editor->edit) ?
+        const char *state_fallback = document_edit_is_dirty(editor->edit) ?
             "Unsaved changes" : "Saved";
-        int amount = snprintf(primary, UI_TEXT_MAX_BYTES, "%s · %s",
-            editor->status[0] == '\0' || strcmp(editor->status, "Ready") == 0 ?
-                "Ready" : editor->status, state);
-        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
-            editor_set_text(primary, UI_TEXT_MAX_BYTES, state);
+        char state[128] = {0};
+        size_t state_length = 0U;
+        if (!editor_localize_slice(state_fallback, strlen(state_fallback), state,
+                sizeof(state), &state_length))
+            editor_set_text(state, sizeof(state), state_fallback);
+        (void)state_length;
+        const char *message = editor->status[0] == '\0' ? "Ready" : editor->status;
+        int amount = snprintf(primary, EDITOR_STATUS_CAP, "%s · %s", message, state);
+        if (amount < 0 || (size_t)amount >= EDITOR_STATUS_CAP)
+            editor_set_text(primary, EDITOR_STATUS_CAP, state);
     }
-    if (editor->canvas_selection_count > 1U) {
-        int amount = snprintf(secondary, UI_TEXT_MAX_BYTES, "%zu layers selected",
-            editor->canvas_selection_count);
-        if (amount < 0 || (size_t)amount >= UI_TEXT_MAX_BYTES)
-            editor_set_text(secondary, UI_TEXT_MAX_BYTES, "Multiple layers selected");
-    } else if (editor->canvas_selection_count == 1U) {
-        editor_set_text(secondary, UI_TEXT_MAX_BYTES, "1 layer selected");
-    } else editor_set_text(secondary, UI_TEXT_MAX_BYTES, "No selection");
+    if (editor->canvas_selection_count == 0U) {
+        size_t length = 0U;
+        if (!editor_localize_slice("No selection", 12U, secondary,
+                PLATFORM_LOCALIZATION_TEXT_CAP, &length))
+            editor_set_text(secondary, PLATFORM_LOCALIZATION_TEXT_CAP, "No selection");
+    } else {
+        size_t length = 0U;
+        if (!platform_localization_format_count_message(
+                editor->canvas_selection_count,
+                "editor.status.one_layer_selected", "1 layer selected",
+                "editor.status.layers_selected", "%@ layers selected",
+                "Canvas selection count status.", secondary,
+                PLATFORM_LOCALIZATION_TEXT_CAP, &length))
+            editor_set_text(secondary, PLATFORM_LOCALIZATION_TEXT_CAP,
+                editor->canvas_selection_count == 1U ? "1 layer selected" :
+                    "Multiple layers selected");
+    }
 }
 
 void editor_build_tree_modern(viewer_editor *editor)
@@ -372,12 +384,10 @@ void editor_build_tree_modern(viewer_editor *editor)
                 tokens->panel, UI_ROLE_GROUP, "Animation timeline", 18U,
                 NULL, 0U, 0U, 0U)) return;
     }
-    char status[UI_TEXT_MAX_BYTES] = {0}, selection[UI_TEXT_MAX_BYTES] = {0};
+    char status[EDITOR_STATUS_CAP] = {0};
+    char selection[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
     editor_status_labels(editor, status, selection);
-    bool status_error = strncmp(editor->status, "Edit rejected:", 14U) == 0 ||
-        strncmp(editor->status, "Save failed:", 12U) == 0 ||
-        strncmp(editor->status, "Preview update failed:", 22U) == 0 ||
-        strncmp(editor->status, "Unsupported SVG content", 23U) == 0;
+    bool status_error = editor->status_error;
     uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);
     uint32_t status_points = (uint32_t)((double)layout.status.width / (scale * ui_scale));
     uint32_t status_content_width = status_points > 24U ? status_points - 24U : 0U;

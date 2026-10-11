@@ -3,6 +3,7 @@
 #include "viewer_chrome.h"
 #include "ui_widgets.h"
 #include "platform/macos/platform_accessibility.h"
+#include "platform/platform_localization.h"
 #include "platform/platform_text_ui.h"
 
 #include <math.h>
@@ -57,6 +58,20 @@ size_t editor_format_outline(const viewer_editor *editor, size_t index,
     return at;
 }
 
+static bool scale_metric(uint32_t value, double scale, uint32_t *out_value)
+{
+    if (out_value == NULL || !isfinite(scale) || scale <= 0.0) return false;
+    if (value == 0U) {
+        *out_value = 0U;
+        return true;
+    }
+    double scaled = ceil((double)value * scale);
+    if (!isfinite(scaled) || scaled < 1.0 || scaled > (double)UINT32_MAX)
+        return false;
+    *out_value = (uint32_t)scaled;
+    return true;
+}
+
 bool editor_add_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                             ui_axis axis, uint32_t width, uint32_t height,
                             uint32_t padding, uint32_t gap, uint32_t color,
@@ -77,12 +92,25 @@ bool editor_add_widget_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                             const char *value, size_t value_len, uint32_t state,
                             uint32_t command_id)
 {
-    double scale = editor->backing_scale *
-        ((double)viewer_editor_ui_scale_percent(editor) / 100.0);
-    width = width == 0U ? 0U : (uint32_t)ceil((double)width * scale);
-    height = height == 0U ? 0U : (uint32_t)ceil((double)height * scale);
-    padding = padding == 0U ? 0U : (uint32_t)ceil((double)padding * scale);
-    gap = gap == 0U ? 0U : (uint32_t)ceil((double)gap * scale);
+    double scale = editor_presentation_scale(editor);
+    uint32_t scaled_width = 0U, scaled_height = 0U;
+    uint32_t scaled_padding = 0U, scaled_gap = 0U;
+    if (!scale_metric(width, scale, &scaled_width) ||
+        !scale_metric(height, scale, &scaled_height) ||
+        !scale_metric(padding, scale, &scaled_padding) ||
+        !scale_metric(gap, scale, &scaled_gap)) return false;
+    width = scaled_width;
+    height = scaled_height;
+    padding = scaled_padding;
+    gap = scaled_gap;
+    char localized_label[PLATFORM_LOCALIZATION_TEXT_CAP];
+    size_t localized_length = 0U;
+    if (label != NULL && label_len > 0U &&
+        editor_localize_slice(label, label_len, localized_label,
+            sizeof(localized_label), &localized_length)) {
+        label = localized_label;
+        label_len = localized_length;
+    }
     ui_widget_spec spec = {.id = id, .parent_id = parent, .axis = axis,
         .preferred_width = width, .preferred_height = height,
         .padding = padding, .gap = gap, .color = color,

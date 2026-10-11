@@ -71,11 +71,26 @@
       ]
     },
     {
+      "prefix": "resources/en.lproj/",
+      "ctest": "editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
+      "prefix": "tests/test_w15_accessibility_localization.py",
+      "ctest": "editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
       "prefix": "src/app/",
       "ctest": "viewer-|editor-|ui-|mcp",
       "python": [
         "tests.test_viewer_frame",
-        "tests.test_viewer_navigation"
+        "tests.test_viewer_navigation",
+        "tests.test_w15_accessibility_localization"
       ]
     },
     {
@@ -114,9 +129,18 @@
       "python": []
     },
     {
+      "prefix": "src/platform/platform_localization",
+      "ctest": "editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
       "prefix": "src/platform/",
-      "ctest": "platform-|viewer-|index-replay",
-      "python": []
+      "ctest": "platform-|viewer-|index-replay|editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
     },
     {
       "prefix": "app/",

@@ -301,6 +301,9 @@ def build_bundle(root: Path = ROOT, env: dict[str, str] | None = None) -> Path:
     elif app.exists():
         shutil.rmtree(app)
     shutil.copytree(built_app, app, symlinks=True)
+    localization_table = app / "Contents/Resources/en.lproj/Localizable.strings"
+    if not localization_table.is_file():
+        raise PackagingError(f"generated app bundle is missing localization table: {localization_table}")
     try:
         with (app / "Contents/Info.plist").open("rb") as stream:
             manifest = plistlib.load(stream)

@@ -298,6 +298,14 @@ static void apply_key(viewer_app *app, const platform_event *event)
         (void)platform_window_open_panel(app->window);
         return;
     }
+    if (command_only && (strcmp(event->text, "b") == 0 || strcmp(event->text, "B") == 0)) {
+        viewer_cycle_background(app);
+        return;
+    }
+    if (command_only && (strcmp(event->text, "t") == 0 || strcmp(event->text, "T") == 0)) {
+        viewer_toggle_checkerboard(app);
+        return;
+    }
     if (command_only && strcmp(event->text, "0") == 0) {
         viewer_apply_action(app, PLATFORM_ACTION_FIT_WINDOW);
         return;
@@ -313,10 +321,6 @@ static void apply_key(viewer_app *app, const platform_event *event)
     }
     if (command_only && strcmp(event->text, "-") == 0) {
         viewer_apply_navigation_key(app, UI_VIEWER_KEY_ZOOM_OUT);
-        return;
-    }
-    if (plain_key && (strcmp(event->text, "t") == 0 || strcmp(event->text, "T") == 0)) {
-        viewer_toggle_checkerboard(app);
         return;
     }
     if (plain_key && (strcmp(event->text, "b") == 0 || strcmp(event->text, "B") == 0)) {

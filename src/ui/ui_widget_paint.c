@@ -17,7 +17,10 @@ static bool canvas_valid(const ui_widget_canvas *canvas)
         canvas->height > 0U && canvas->width <= UI_WIDGET_MAX_CANVAS_AXIS &&
         canvas->height <= UI_WIDGET_MAX_CANVAS_AXIS && canvas->backing_scale >= 1U &&
         canvas->backing_scale <= 3U && isfinite(canvas->ui_scale) &&
-        canvas->ui_scale >= 1.0 && canvas->ui_scale <= 1.2 &&
+        canvas->ui_scale >= 1.0 && canvas->ui_scale <= 2.0 &&
+        canvas->text_scale_percent >= 100U &&
+        canvas->text_scale_percent <= 200U &&
+        (canvas->text_scale_percent % 25U) == 0U &&
         canvas->theme >= UI_THEME_DARK &&
         canvas->theme <= UI_THEME_LIGHT &&
         (size_t)canvas->width <= SIZE_MAX / 4U &&
@@ -194,7 +197,9 @@ bool ui_widget_paint_text(const ui_widget_canvas *canvas, const char *text, size
     if (text == NULL || length == 0U || canvas->draw_text == NULL) return true;
     ui_rect pixels = {0};
     if (!scaled_rect(canvas, bounds, &pixels)) return false;
-    double scaled_font = ceil((double)font_points * canvas->backing_scale * canvas->ui_scale);
+    double text_scale = (double)canvas->text_scale_percent / 100.0;
+    double scaled_font = ceil((double)font_points * canvas->backing_scale *
+        canvas->ui_scale * text_scale);
     if (!isfinite(scaled_font) || scaled_font < 1.0 || scaled_font > 256.0) return false;
     uint32_t font_px = (uint32_t)scaled_font;
     return canvas->draw_text(canvas->text_context, text, length, pixels,

@@ -166,6 +166,7 @@ typedef struct ui_widget_canvas {
     size_t capacity, stride;
     uint32_t width, height, backing_scale;
     double ui_scale;
+    uint8_t text_scale_percent;
     ui_theme theme;
     bool increased_contrast;
     ui_tokens tokens;
@@ -214,6 +215,8 @@ bool ui_widget_canvas_init_scaled(ui_widget_canvas *canvas, uint8_t *rgba,
     size_t capacity, uint32_t width, uint32_t height, size_t stride,
     uint32_t backing_scale, double ui_scale, ui_theme theme,
     bool increased_contrast, ui_widget_text_draw_fn draw_text, void *text_context);
+bool ui_widget_canvas_set_text_scale(ui_widget_canvas *canvas,
+    uint8_t scale_percent);
 bool ui_widget_paint(ui_widget_canvas *canvas, const ui_widget_draw_spec *spec);
 size_t ui_widget_paint_scratch_limit(void);
 

@@ -46,25 +46,6 @@ const document_model *editor_model(const viewer_editor *editor)
         document_edit_model(editor->edit);
 }
 
-void editor_status_error(viewer_editor *editor, document_edit_error error)
-{
-    const char *name = document_edit_error_name(error);
-    int amount = snprintf(editor->status, sizeof(editor->status), "Edit rejected: %s",
-        name == NULL ? "unknown error" : name);
-    if (amount < 0 || (size_t)amount >= sizeof(editor->status))
-        editor_set_text(editor->status, sizeof(editor->status), "Edit rejected");
-    editor->tree_ready = false;
-    editor->redraw_requested = true;
-}
-
-void editor_status_ok(viewer_editor *editor, const char *message)
-{
-    if (message == NULL || message[0] == '\0') message = "Ready";
-    editor_set_text(editor->status, sizeof(editor->status), message);
-    editor->tree_ready = false;
-    editor->redraw_requested = true;
-}
-
 bool editor_begin_field(viewer_editor *editor, editor_field_kind kind,
                                size_t attribute_index)
 {
@@ -455,7 +436,7 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->layout_inspector_width_points = EDITOR_RIGHT_WIDTH;
     editor->inspector_geometry_expanded = true;
     editor->inspector_appearance_expanded = true;
-    if (modern_style) {
+    if (modern_style && platform_text_ui_app_is_active()) {
         platform_text_ui_preferences preferences = {0};
         if (platform_text_ui_get_extended_preferences(&preferences))
             editor_preferences_changed(&preferences, editor);
@@ -526,13 +507,22 @@ bool viewer_editor_set_system_accent(viewer_editor *editor, uint32_t accent_srgb
 
 bool viewer_editor_set_ui_scale(viewer_editor *editor, uint16_t percent)
 {
-    if (editor == NULL || (percent != 100U && percent != 110U && percent != 120U))
-        return false;
+    bool valid = percent == 100U || percent == 110U || percent == 120U ||
+        (percent >= 125U && percent <= 200U && (percent % 25U) == 0U);
+    if (editor == NULL || !valid) return false;
     if (editor->ui_scale_percent == percent) return false;
     editor->ui_scale_percent = percent;
     editor->tree_ready = false;
     editor->redraw_requested = true;
     return true;
+}
+
+bool viewer_editor_set_interface_scale(viewer_editor *editor,
+                                       uint8_t scale_percent)
+{
+    if (editor == NULL) return false;
+    if (editor->ui_scale_percent == scale_percent) return true;
+    return viewer_editor_set_ui_scale(editor, (uint16_t)scale_percent);
 }
 
 bool viewer_editor_set_panel_widths(viewer_editor *editor,

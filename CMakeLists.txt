@@ -94,15 +94,21 @@ add_custom_command(OUTPUT "${VEXEL_APP_CONTENTS}/Info.plist"
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${VEXEL_APP_BUNDLE}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${VEXEL_APP_CONTENTS}/MacOS"
         "${VEXEL_APP_CONTENTS}/Resources"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "${VEXEL_APP_CONTENTS}/Resources/en.lproj"
     COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:svgworkbench>"
         "${VEXEL_APP_CONTENTS}/MacOS/svgworkbench"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/Vexel-Info.plist"
         "${VEXEL_APP_CONTENTS}/Info.plist"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_BINARY_DIR}/Vexel-PkgInfo"
         "${VEXEL_APP_CONTENTS}/PkgInfo"
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_CURRENT_SOURCE_DIR}/resources/en.lproj/Localizable.strings"
+        "${VEXEL_APP_CONTENTS}/Resources/en.lproj/Localizable.strings"
     COMMAND ${VEXEL_PYTHON3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/packaging/vexel_packaging.py"
         icon --output "${VEXEL_APP_CONTENTS}/Resources/Vexel.icns"
     DEPENDS svgworkbench app/Info.plist.in packaging/vexel_packaging.py
+        resources/en.lproj/Localizable.strings
     VERBATIM)
 add_custom_target(vexel_app_bundle ALL DEPENDS "${VEXEL_APP_CONTENTS}/Info.plist")
 # end lane: w15-native
@@ -1405,3 +1411,40 @@ if(BUILD_TESTING)
     add_test(NAME viewer-timeline-keyframes COMMAND viewer_timeline_keyframe_test)
 endif()
 # end lane: w14-keyframes
+
+# lane: w15-a11y
+target_sources(vexel_editor_ui PRIVATE
+    src/app/viewer_editor_keyboard.c
+    src/app/viewer_editor_status.c)
+target_sources(vexel_platform_text_ui PRIVATE
+    src/platform/platform_localization_defaults.c
+    src/platform/macos/platform_localization.m)
+set_source_files_properties(src/platform/macos/platform_localization.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+target_link_libraries(vexel_platform_dialog PUBLIC vexel_platform_text_ui)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/en.lproj")
+configure_file(resources/en.lproj/Localizable.strings
+    "${CMAKE_BINARY_DIR}/bin/en.lproj/Localizable.strings" COPYONLY)
+
+add_executable(editor_accessibility_localization_test
+    tests/editor/accessibility_localization_test.c)
+target_link_libraries(editor_accessibility_localization_test PRIVATE vexel_editor_ui)
+set_target_properties(editor_accessibility_localization_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(editor_accessibility_localization_test PRIVATE
+    ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(editor_accessibility_localization_test PRIVATE
+        ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(editor_accessibility_localization_test PRIVATE
+        ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME editor-accessibility-localization
+        COMMAND editor_accessibility_localization_test)
+    add_test(NAME editor-accessibility-localization-goldens COMMAND python3
+        "${CMAKE_SOURCE_DIR}/tests/editor/verify_accessibility_localization.py"
+        --binary $<TARGET_FILE:editor_chrome_render>)
+endif()
+# end lane: w15-a11y

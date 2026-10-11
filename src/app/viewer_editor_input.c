@@ -322,6 +322,9 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return VIEWER_EDITOR_HANDLED;
     if (editor->field_kind != EDITOR_FIELD_NONE)
         return editor_key_field(editor, key_code, modifiers, text, text_len);
+    uint32_t focused_result = editor_handle_focused_key(editor, key_code,
+        modifiers, text, text_len);
+    if (focused_result != 0U) return focused_result;
     if (key_code == 51U || key_code == 117U) {
         uint32_t guide_result = viewer_editor_delete_selected_guide(editor);
         if (guide_result != 0U) return guide_result;

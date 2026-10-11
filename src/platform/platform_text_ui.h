@@ -7,6 +7,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define PLATFORM_INTERFACE_TEXT_SCALE_DEFAULT 100U
+#define PLATFORM_INTERFACE_TEXT_SCALE_MAX 200U
+
 typedef struct platform_text_ui_preferences {
     ui_theme appearance;
     bool increased_contrast;
@@ -27,6 +30,8 @@ bool platform_text_ui_get_preferences(ui_theme *out_appearance,
     bool *out_increased_contrast, bool *out_reduced_motion);
 bool platform_text_ui_get_extended_preferences(platform_text_ui_preferences *out_preferences);
 bool platform_text_ui_set_ui_scale(uint16_t percent);
+uint8_t platform_text_ui_get_interface_scale(void);
+bool platform_text_ui_set_interface_scale(uint8_t scale_percent);
 bool platform_text_ui_set_panel_widths(uint16_t structure_width_points,
     uint16_t inspector_width_points);
 bool platform_text_ui_watch_preferences(platform_text_ui_preferences_callback callback,

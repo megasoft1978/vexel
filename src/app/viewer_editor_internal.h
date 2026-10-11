@@ -342,9 +342,16 @@ struct viewer_editor {
     bool modern_style;
     bool increased_contrast;
     bool reduced_motion;
+    bool status_error;
+    bool status_saved;
+    bool status_ready;
     bool native_material_allowed;
     uint32_t system_accent_srgb;
-    uint16_t ui_scale_percent;
+    union {
+        uint16_t ui_scale_percent;
+        /* Kept as an alias for the accessibility lane's internal test API. */
+        uint16_t interface_scale_percent;
+    };
     uint16_t structure_width_points;
     uint16_t inspector_width_points;
     uint16_t layout_structure_width_points;
@@ -593,6 +600,11 @@ void editor_cancel_field(viewer_editor *editor);
 uint32_t editor_history(viewer_editor *editor, bool redo);
 void editor_build_tree(viewer_editor *editor);
 void editor_build_tree_legacy(viewer_editor *editor);
+double editor_presentation_scale(const viewer_editor *editor);
+bool editor_localize_slice(const char *source, size_t length,
+    char *output, size_t capacity, size_t *out_length);
+uint32_t editor_handle_focused_key(viewer_editor *editor, uint16_t key_code,
+    uint32_t modifiers, const char *text, size_t text_length);
 void editor_build_tree_modern(viewer_editor *editor);
 void editor_overlay_add_nodes(viewer_editor *editor);
 void editor_overlay_layout_nodes(viewer_editor *editor);

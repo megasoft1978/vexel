@@ -7,7 +7,7 @@
 
 static bool scaled_points(uint32_t points, double scale, uint32_t *out_value)
 {
-    if (out_value == NULL || !isfinite(scale) || scale < 0.5 || scale > 4.8)
+    if (out_value == NULL || !isfinite(scale) || scale < 0.5 || scale > 8.0)
         return false;
     double value = ceil((double)points * scale);
     if (!isfinite(value) || value < 0.0 || value > (double)VIEWER_CHROME_MAX_AXIS)
@@ -30,7 +30,7 @@ static bool viewer_chrome_layout_compute_internal(uint32_t width, uint32_t heigh
     if (out_layout == NULL || width == 0U || height == 0U ||
         width > VIEWER_CHROME_MAX_AXIS || height > VIEWER_CHROME_MAX_AXIS ||
         !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0 ||
-        !isfinite(ui_scale) || ui_scale < 1.0 || ui_scale > 1.2 ||
+        !isfinite(ui_scale) || ui_scale < 1.0 || ui_scale > 2.0 ||
         structure_width_points > 320U || inspector_width_points > 440U)
         return false;
     double scale = backing_scale * ui_scale;
