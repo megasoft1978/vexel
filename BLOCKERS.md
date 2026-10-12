@@ -9,20 +9,20 @@ failed independent review and are `blocked` in the ledger; see defect 4.
 
 ## Open defects
 
-### 1. Multi-million-edge drawings exceed one document-wide edge array
+### 1. `generated/cad_t2` is refused by the element budget, with a further hidden limit
 
-`SVG_SHAPE_MAX_EDGES` is 4,194,304 flattened edges. The CAD corpus file
-`generated/cad_t2` (10.6 MB) now reaches that bound at byte 9,365,917 and is
-refused. Raising the constant again buys a larger constant, not a fix: a viewer
-for large documents should not need every edge of every element resident in one
-array. The fix is per-element edge storage or a streaming traversal, and it is a
-design change rather than a budget change. No work order exists for this yet; `work/WO-M4-10.md` covers only the 16 MiB source cap.
+Corrected 2026-10-12 by the WO-CORPUS-02 probe (`artifacts/WO-CORPUS-02/probe.md`):
+the 10.6 MB CAD file is refused with `limit at byte 2680259` by `SVG_SHAPE_MAX_SHAPES`
+(65,536 elements; the file has about 106k paths, 53k rects, 53k lines and 42k text
+elements). The earlier diagnosis (edge array exhausted at byte 9,365,917) was wrong:
+the edge count at refusal is far below 4,194,304. A scratch run with shapes 1,048,576 and
+edges 16M still failed at byte 9,448,701 (peak RSS about 375 MB) at a site not yet
+identified. A per-element edge store alone will not render this file; WO-CORPUS-02
+is blocked pending a re-plan that finds every limit site with a symbol-resolving probe.
 
-The real-drawing budgets that were previously far too small are now documented
-and finite: edges 4M, per-path commands 4M, elements 65,536, document text bytes
-64 MiB (64 KiB per token), glyphs 1M document / 65,536 per run, transform
-operations 1M. Each was raised only after a symbol-resolving probe identified the
-exact site that was refusing ordinary drawings.
+The real-drawing budgets are documented and finite: edges 4M, per-path commands 4M,
+elements 65,536, document text bytes 64 MiB (64 KiB per token), glyphs 1M document /
+65,536 per run, transform operations 1M.
 
 ### 2. Corpus documents still refused for real content reasons
 
