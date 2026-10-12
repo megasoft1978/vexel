@@ -1,0 +1,12 @@
+{
+  "index": 7,
+  "argv": [
+    "git",
+    "diff",
+    "--check"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.12454991598497145,
+  "stdout": "",
+  "stderr": ""
+}
