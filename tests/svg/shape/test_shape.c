@@ -1,5 +1,6 @@
 #include "shape.h"
 #include "test_reference.h"
+#include "test_m4_06_evidence.h"
 #include "shape_render.h"
 
 #include <stdio.h>
@@ -599,6 +600,7 @@ static bool stroke_cap_join_and_dash_checks(void)
 int main(void)
 {
     if (!svg_shape_reference_tests()) { fprintf(stderr, "reference checks failed\n"); return 49; }
+    if (!svg_shape_m4_06_evidence_tests()) { fprintf(stderr, "M4-06 evidence failed\n"); return 99; }
     if (!gradient_checks()) { fprintf(stderr, "gradient rendering failed\n"); return 50; }
     if (!clip_checks()) { fprintf(stderr, "clip rendering failed\n"); return 51; }
     if (!clip_work_budget_check()) { fprintf(stderr, "clip work budget failed\n"); return 52; }

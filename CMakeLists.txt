@@ -328,7 +328,8 @@ add_executable(shape_render_cli tests/svg/shape/shape_render_cli.c)
 target_link_libraries(shape_render_cli PRIVATE vexel_shape)
 set_target_properties(shape_render_cli PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(shape_test tests/svg/shape/test_shape.c tests/svg/shape/test_reference.c
-    tests/svg/shape/test_clip_work_budget.c tests/svg/shape/test_paint_edge_span.c)
+    tests/svg/shape/test_clip_work_budget.c tests/svg/shape/test_paint_edge_span.c
+    tests/svg/shape/test_m4_06_evidence.c)
 target_include_directories(shape_test PRIVATE src/svg/paint)
 target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

@@ -10,6 +10,15 @@
 #define CLIP_MAX_CHILDREN 64U
 #define CLIP_MAX_REFERENCE_BYTES (64U * 1024U)
 #define CLIP_MAX_JOB_REFERENCE_BYTES (512U * 1024U)
+#define CLIP_WRAPPER_BUFFER_BYTES 192U
+#define CLIP_WRAPPER_LIMIT_BYTES 4096U
+/* Worst-case userSpaceOnUse wrapper: fixed text, two 10-digit %u values, four
+ * "-d.<16 digits>e-308" (24 byte) %.17g values, and the terminating NUL. */
+#define CLIP_WRAPPER_WORST_BYTES (12U + 10U + 11U + 3U + 2U + 2U * 10U + 4U * 24U + 1U)
+_Static_assert(CLIP_WRAPPER_BUFFER_BYTES <= CLIP_WRAPPER_LIMIT_BYTES,
+               "clip wrapper buffer exceeds the 4 KiB generated-syntax bound");
+_Static_assert(CLIP_WRAPPER_WORST_BYTES <= CLIP_WRAPPER_BUFFER_BYTES,
+               "worst-case clip wrapper must fit its buffer");
 #define CLIP_MAX_EDGES 65536U
 #define CLIP_CLONE_MAX_DEPTH 64U
 #define CLIP_CLONE_MAX_BYTES (64U * 1024U * 1024U)
@@ -176,7 +185,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     }
     if (child_count == 0U || child_start > child_end || child_end > source.len) goto unsupported;
     /* The prefix permits 191 payload bytes; suffix and NUL count in scratch. */
-    char prefix_pattern[192];
+    char prefix_pattern[CLIP_WRAPPER_BUFFER_BYTES];
     int prefix_result = object_box
         ? snprintf(prefix_pattern, sizeof(prefix_pattern),
                    "<svg width=\"1\" height=\"1\" viewBox=\"0 0 1 1\">")

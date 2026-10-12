@@ -233,6 +233,13 @@ static bool group_clip_scratch_resolved_once_check(void)
 
 static uint8_t pixel_alpha(const raster_tile *tile, uint32_t x, uint32_t y);
 
+static bool sha_same(const char *s, size_t n, const unsigned char *before)
+{
+    unsigned char after[CC_SHA256_DIGEST_LENGTH];
+    return CC_SHA256(s, (CC_LONG)n, after) != NULL &&
+           memcmp(before, after, sizeof(after)) == 0;
+}
+
 static bool decode_use_target_size(size_t target_size,
                                    svg_shape_error expected_error)
 {
@@ -260,9 +267,11 @@ static bool decode_use_target_size(size_t target_size,
     cursor += sizeof(suffix) - 1U;
     svg_shape_document document = {0};
     svg_shape_diagnostic diagnostic = {0};
+    unsigned char before[CC_SHA256_DIGEST_LENGTH];
+    if (CC_SHA256(source, (CC_LONG)cursor, before) == NULL) { free(source); return false; }
     svg_shape_error error = svg_shape_decode(
         (base_bytes){(const uint8_t *)source, cursor}, &document, &diagnostic);
-    bool ok = error == expected_error &&
+    bool ok = sha_same(source, cursor, before) && error == expected_error &&
         (expected_error != SVG_SHAPE_ERROR_LIMIT ||
          diagnostic.category == SVG_SHAPE_ERROR_LIMIT);
     if (!ok) fprintf(stderr, "use boundary %zu: expected %d got %d at %zu\n",
@@ -333,10 +342,12 @@ static bool decode_clip_boundary(size_t child_bytes, size_t declarations,
                                     &source_length)) return false;
     svg_shape_document document = {0};
     svg_shape_diagnostic diagnostic = {0};
+    unsigned char before[CC_SHA256_DIGEST_LENGTH];
+    if (CC_SHA256(source, (CC_LONG)source_length, before) == NULL) { free(source); return false; }
     svg_shape_error error = svg_shape_decode(
         (base_bytes){(const uint8_t *)source, source_length}, &document,
         &diagnostic);
-    bool ok = error == expected_error &&
+    bool ok = sha_same(source, source_length, before) && error == expected_error &&
         (expected_error != SVG_SHAPE_ERROR_LIMIT ||
          diagnostic.category == SVG_SHAPE_ERROR_LIMIT);
     if (!ok) fprintf(stderr, "clip boundary child=%zu declarations=%zu: expected %d got %d at %zu\n",
