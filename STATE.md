@@ -504,3 +504,4 @@
   `./dev fuzz-xml --duration 300 --seed 1` and `./dev shape-fuzz --seed 1` pass (bare `./dev shape-fuzz` exits 2:
   the script requires `--seed`). `./dev editor-smoke` and `./dev viewer-smoke` were NOT run (macOS session locked).
   Independent verifier verdict pending.
+- WO-GAP-UI-02: `inspector-tab-reachability` CTest proves each attribute of a probe element is on exactly one inspector tab (pointer-click driven); it found and fixed id shown on Object, Fill and Stroke. `./dev editor-smoke` not run (GUI session locked). Evidence: `artifacts/WO-GAP-UI-02/`.

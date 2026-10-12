@@ -826,6 +826,15 @@ set_target_properties(viewer_chrome_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+add_executable(inspector_tab_reachability_test
+    tests/editor/inspector_tab_reachability_test.c)
+target_include_directories(inspector_tab_reachability_test PRIVATE src/app)
+target_link_libraries(inspector_tab_reachability_test PRIVATE vexel_editor_ui)
+set_target_properties(inspector_tab_reachability_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(inspector_tab_reachability_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+
 add_executable(viewer_workspace_test tests/editor/viewer_workspace_test.c
     src/platform/macos/platform_settings.m)
 target_include_directories(viewer_workspace_test PRIVATE src src/app)
@@ -919,6 +928,7 @@ if(BUILD_TESTING)
     add_test(NAME ui-token-contrast COMMAND ui_tokens_contrast_test)
     add_test(NAME viewer-chrome-layout-fuzz COMMAND viewer_chrome_layout_fuzz)
     add_test(NAME viewer-chrome-style COMMAND viewer_chrome_test)
+    add_test(NAME inspector-tab-reachability COMMAND inspector_tab_reachability_test)
     add_test(NAME editor-visual COMMAND viewer_visual_test)
     add_test(NAME platform-text-ui COMMAND platform_text_ui_test)
     add_test(NAME editor-style-goldens COMMAND python3

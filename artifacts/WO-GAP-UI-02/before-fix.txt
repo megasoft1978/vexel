@@ -1,0 +1,2 @@
+attribute 'id' is on 3 tabs: Object Fill Stroke
+exit=10

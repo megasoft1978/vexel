@@ -414,6 +414,10 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
             EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
             0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, type,
             type_length, NULL, 0U, 0U, 0U)) return false;
+    /* The name (id), text content and add/remove fields belong to Object, so
+     * the id attribute is reachable on exactly one tab. */
+    if (editor->inspector_tab != EDITOR_INSPECTOR_TAB_OBJECT)
+        return editor_add_attribute_rows(editor, tokens);
     const char *name_value = editor->field_kind == EDITOR_FIELD_RENAME ?
         editor->field : (editor->selected_has_id ? editor->selected_id : "");
     size_t name_length = editor->field_kind == EDITOR_FIELD_RENAME ?
