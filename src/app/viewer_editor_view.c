@@ -333,6 +333,12 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
         (void)viewer_editor_set_draw_tool(editor, VIEWER_EDITOR_TOOL_TEXT);
         return VIEWER_EDITOR_HANDLED;
     }
+    if (action >= EDITOR_BUTTON_WORKSPACE_BASE &&
+        action < EDITOR_BUTTON_WORKSPACE_BASE + (uint32_t)viewer_workspace_count()) {
+        (void)viewer_editor_set_workspace(editor,
+            (viewer_workspace_kind)(action - EDITOR_BUTTON_WORKSPACE_BASE));
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (action == EDITOR_BUTTON_TOGGLE_STRUCTURE || action == EDITOR_BUTTON_HIDE_STRUCTURE) {
         (void)viewer_editor_set_sidebar_visibility(editor,
             !editor->want_structure, editor->want_inspector);

@@ -6,6 +6,7 @@
 #include "platform/platform_window.h"
 #include "svg/shape/shape.h"
 #include "ui/ui_core.h"
+#include "viewer_workspace.h"
 #include "ui/viewer_controls.h"
 #include "viewer_editor_guides.h"
 
@@ -165,6 +166,17 @@ bool viewer_editor_copy_full_id(const viewer_editor *editor, uint8_t *buffer,
 void viewer_editor_set_motion_time(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_tick(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_active(const viewer_editor *editor);
+/* Notified after a workspace change so the platform layer can persist it. */
+typedef void (*viewer_editor_workspace_callback)(void *context, const char *name);
+void viewer_editor_set_workspace_callback(viewer_editor *editor,
+    viewer_editor_workspace_callback callback, void *context);
+/* Applies a remembered workspace name; unknown names fall back to the default. */
+bool viewer_editor_apply_workspace_name(viewer_editor *editor,
+    const char *name, size_t length);
+/* Applies a task workspace's pane visibility. */
+bool viewer_editor_set_workspace(viewer_editor *editor, viewer_workspace_kind workspace);
+bool viewer_editor_cycle_workspace(viewer_editor *editor, bool backwards);
+viewer_workspace_kind viewer_editor_workspace(const viewer_editor *editor);
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,
                                           bool structure_visible,
                                           bool inspector_visible);

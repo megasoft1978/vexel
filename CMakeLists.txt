@@ -275,7 +275,7 @@ target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_stat
 # lane: w3-editor
 add_library(vexel_editor_ui STATIC src/app/viewer_editor.c
     src/app/viewer_editor_view.c src/app/viewer_editor_input.c
-    src/app/viewer_chrome.c)
+    src/app/viewer_chrome.c src/app/viewer_workspace.c)
 target_include_directories(vexel_editor_ui PUBLIC src src/app src/ui src/document)
 target_link_libraries(vexel_editor_ui PUBLIC vexel_document vexel_ui_core)
 set_target_properties(vexel_editor_ui PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
@@ -783,7 +783,8 @@ set_target_properties(vexel_platform_text_ui PROPERTIES
 target_link_libraries(vexel_editor_ui PUBLIC vexel_platform_text_ui)
 
 add_executable(viewer_chrome_layout_fuzz
-    tests/ui/viewer_chrome_layout_fuzz.c src/app/viewer_chrome.c)
+    tests/ui/viewer_chrome_layout_fuzz.c src/app/viewer_chrome.c
+    src/app/viewer_workspace.c)
 target_include_directories(viewer_chrome_layout_fuzz PRIVATE src src/app)
 set_target_properties(viewer_chrome_layout_fuzz PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO

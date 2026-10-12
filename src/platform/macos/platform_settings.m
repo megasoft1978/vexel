@@ -4,6 +4,8 @@
 #include "platform/macos/platform_window_internal.h"
 #include "platform/platform_recents.h"
 
+#include <string.h>
+
 typedef NS_ENUM(NSInteger, VexelSettingTag) {
     VexelSettingShowWelcome = 1,
     VexelSettingRememberWorkspace,
@@ -38,6 +40,13 @@ static VexelSettingsController *settings_controller;
 static NSString *settings_key(NSString *suffix)
 {
     return [VexelSettingsPrefix stringByAppendingString:suffix];
+}
+
+static NSString *settings_string(NSString *key, NSString *fallback)
+{
+    id stored = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    if (![stored isKindOfClass:[NSString class]]) return fallback;
+    return (NSString *)stored;
 }
 
 static BOOL settings_bool(NSString *key, BOOL fallback)
@@ -75,8 +84,33 @@ void platform_settings_get(platform_settings_values *out_values)
         .inspector_visible = remember ? settings_bool(settings_key(@"inspectorVisible"), YES) : YES,
         .default_checkerboard = settings_bool(settings_key(@"checkerboard"), YES),
         .default_pixel_grid = settings_bool(settings_key(@"pixelGrid"), NO),
-        .modifier_scroll_zooms = settings_bool(settings_key(@"modifierScrollZooms"), YES)
+        .modifier_scroll_zooms = settings_bool(settings_key(@"modifierScrollZooms"), YES),
+        .workspace = {0}
     };
+    if (remember) {
+        NSString *workspace = settings_string(settings_key(@"workspace"), @"");
+        const char *name = [workspace UTF8String];
+        if (name != NULL) {
+            size_t length = strlen(name);
+            if (length >= sizeof(out_values->workspace))
+                length = sizeof(out_values->workspace) - 1U;
+            memcpy(out_values->workspace, name, length);
+            out_values->workspace[length] = '\0';
+        }
+    }
+}
+
+void platform_settings_store_workspace(const char *name)
+{
+    if (![NSThread isMainThread]) return;
+    settings_seed_defaults();
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if (!settings_bool(settings_key(@"rememberWorkspace"), YES)) return;
+    NSString *key = settings_key(@"workspace");
+    NSString *value = name == NULL ? @"" : [NSString stringWithUTF8String:name];
+    NSString *current = settings_string(key, @"");
+    if (value != nil && ![current isEqualToString:value])
+        [defaults setObject:value forKey:key];
 }
 
 void platform_settings_store_sidebar_visibility(bool structure_visible,

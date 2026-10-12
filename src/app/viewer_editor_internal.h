@@ -2,6 +2,7 @@
 #define VEXEL_APP_VIEWER_EDITOR_INTERNAL_H
 
 #include "viewer_editor.h"
+#include "viewer_workspace.h"
 
 #define EDITOR_OUTLINE_CAP 1024U
 #define EDITOR_OUTLINE_VISIBLE 20U
@@ -122,7 +123,13 @@ enum {
     EDITOR_NODE_ID_REVEAL = 24500U,
     EDITOR_BUTTON_COPY_FULL_ID,
     EDITOR_BUTTON_FIT_CANVAS,
-    EDITOR_BUTTON_ACTUAL_SIZE
+    EDITOR_BUTTON_ACTUAL_SIZE,
+    /* Blender-style task workspaces and the consolidated status bar. */
+    EDITOR_NODE_WORKSPACES = 24510U,
+    EDITOR_BUTTON_WORKSPACE_BASE = 24520U,
+    EDITOR_NODE_STATUS_HINT = 24530U,
+    EDITOR_NODE_STATUS_REPORT = 24531U,
+    EDITOR_NODE_STATUS_READOUT = 24532U
 };
 
 typedef enum editor_field_kind {
@@ -214,6 +221,9 @@ typedef struct editor_control_transition {
 
 struct viewer_editor {
     document_edit *edit;
+    viewer_workspace_kind workspace;
+    viewer_editor_workspace_callback workspace_changed;
+    void *workspace_context;
     document_handle selected;
     document_handle outline[EDITOR_OUTLINE_CAP];
     uint16_t outline_depth[EDITOR_OUTLINE_CAP];

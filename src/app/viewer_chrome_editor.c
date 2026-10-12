@@ -252,11 +252,36 @@ void editor_build_tree_modern(viewer_editor *editor)
         UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_OPTIONS_POINTS, 8U, 8U,
         tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
     if (!okay) return;
-    const char *hint = editor_tool_hint(editor);
-    okay = editor_add_widget_node(editor, EDITOR_NODE_OPTIONS + 100U,
-        EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
-        UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, hint,
-        strlen(hint), NULL, 0U, 0U, 0U);
+    /* Blender-style task workspaces: a tab strip, not a mode switch. The strip
+     * replaces the duplicated tool-hint row; the hint now lives in the status
+     * bar. Pane visibility and the inspector group come from the workspace
+     * table, so the tabs and the layout can never disagree. */
+    const viewer_workspace_spec *workspace_spec =
+        viewer_workspace_get(editor->workspace);
+    okay = editor_add_node(editor, EDITOR_NODE_WORKSPACES, EDITOR_NODE_OPTIONS,
+        UI_AXIS_HORIZONTAL, 0U, 24U, 0U, 0U, 0U, UI_ROLE_GROUP,
+        "Workspaces", 10U, NULL, 0U, 0U, 0U);
+    (void)workspace_spec;
+    for (size_t workspace_index = 0U;
+         okay && workspace_index < viewer_workspace_count(); ++workspace_index) {
+        const viewer_workspace_spec *spec =
+            viewer_workspace_get((viewer_workspace_kind)workspace_index);
+        char workspace_label[64] = {0};
+        int label_amount = snprintf(workspace_label, sizeof(workspace_label),
+            "%s · Control-Tab", spec->label);
+        if (label_amount < 0 || (size_t)label_amount >= sizeof(workspace_label))
+            snprintf(workspace_label, sizeof(workspace_label), "%s", spec->label);
+        okay = editor_add_widget_node(editor,
+            EDITOR_BUTTON_WORKSPACE_BASE + (uint32_t)workspace_index,
+            EDITOR_NODE_WORKSPACES, UI_AXIS_HORIZONTAL, 0U, 24U, 8U, 0U,
+            (viewer_workspace_kind)workspace_index == editor->workspace ?
+                tokens->panel_raised : 0U,
+            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+            spec->label, strlen(spec->label), NULL, 0U,
+            (viewer_workspace_kind)workspace_index == editor->workspace ?
+                UI_STATE_CHECKED : 0U,
+            EDITOR_BUTTON_WORKSPACE_BASE + (uint32_t)workspace_index);
+    }
     if (okay && editor->node_edit_active && editor->path_node_corner_available)
         okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_CORNER,
             EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
@@ -388,6 +413,19 @@ void editor_build_tree_modern(viewer_editor *editor)
     char selection[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
     editor_status_labels(editor, status, selection);
     bool status_error = editor->status_error;
+    /* One status bar with the three Blender regions: hint, report, readout. */
+    const char *status_hint = editor_tool_hint(editor);
+    char report[EDITOR_STATUS_CAP] = {0};
+    if (editor->status_error) {
+        editor_set_text(report, sizeof(report), editor->status);
+    } else if (editor->status[0] != '\0' &&
+               strcmp(editor->status, "Ready") != 0 && strcmp(editor->status, "Saved") != 0) {
+        editor_set_text(report, sizeof(report), editor->status);
+    }
+    char readout[EDITOR_STATUS_CAP] = {0};
+    int readout_amount = snprintf(readout, sizeof(readout), "%s · %s", status, selection);
+    if (readout_amount < 0 || (size_t)readout_amount >= sizeof(readout))
+        editor_set_text(readout, sizeof(readout), selection);
     uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);
     uint32_t status_points = (uint32_t)((double)layout.status.width / (scale * ui_scale));
     uint32_t status_content_width = status_points > 24U ? status_points - 24U : 0U;
@@ -396,20 +434,24 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_STATUS_POINTS, 0U, 0U,
             tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_STATUS + 102U,
-            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 8U, 0U, 0U, 0U, 0U,
             UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
-        editor_add_widget_node(editor, EDITOR_NODE_STATUS + 100U,
+        editor_add_widget_node(editor, EDITOR_NODE_STATUS_HINT,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
             0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
-            status, strlen(status), NULL, 0U,
-            status_error ? UI_STATE_INVALID : 0U, 0U) &&
-        editor_add_widget_node(editor, EDITOR_NODE_STATUS + 101U,
-            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, selection_width, 24U, 0U, 0U,
-            0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
-            selection, strlen(selection), NULL, 0U, 0U, 0U) &&
+            status_hint, strlen(status_hint), NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_STATUS + 103U,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
-            UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
+            UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
+        editor_add_widget_node(editor, EDITOR_NODE_STATUS_REPORT,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
+            0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
+            report, strlen(report), NULL, 0U,
+            status_error ? UI_STATE_INVALID : 0U, 0U) &&
+        editor_add_widget_node(editor, EDITOR_NODE_STATUS_READOUT,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, selection_width, 24U, 0U, 0U,
+            0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
+            readout, strlen(readout), NULL, 0U, 0U, 0U);
     if (okay && ui_tree_layout(&editor->tree, editor->width, editor->height)) {
         editor_set_node_bounds(editor, EDITOR_NODE_TOOLBAR, layout.toolbar);
         editor_set_node_bounds(editor, EDITOR_NODE_OPTIONS, layout.options);

@@ -1,4 +1,6 @@
 #include "viewer_editor_internal.h"
+
+#include <string.h>
 #include "viewer_timeline.h"
 
 #include "document_model.h"
@@ -418,6 +420,9 @@ viewer_editor *viewer_editor_create_styled(base_bytes source, ui_theme theme,
     editor->active_tool = UI_ICON_SELECT;
     editor->want_structure = true;
     editor->want_inspector = true;
+    editor->workspace = viewer_workspace_default();
+    editor->want_structure = viewer_workspace_get(editor->workspace)->structure;
+    editor->want_inspector = viewer_workspace_get(editor->workspace)->inspector;
     editor->timeline_height_points = VIEWER_TIMELINE_DOCK_DEFAULT_POINTS;
     editor->width = width;
     editor->height = height;
@@ -552,6 +557,60 @@ uint16_t viewer_editor_ui_scale_percent(const viewer_editor *editor)
 {
     return editor == NULL || editor->ui_scale_percent == 0U ? 100U :
         editor->ui_scale_percent;
+}
+
+bool viewer_editor_set_workspace(viewer_editor *editor, viewer_workspace_kind workspace)
+{
+    if (editor == NULL || (size_t)workspace >= viewer_workspace_count())
+        workspace = viewer_workspace_default();
+    const viewer_workspace_spec *spec = viewer_workspace_get(workspace);
+    bool changed = editor->workspace != workspace;
+    editor->workspace = workspace;
+    /* A workspace only selects panes; it never changes the document. */
+    bool sidebar_changed = editor->want_structure != spec->structure ||
+        editor->want_inspector != spec->inspector;
+    if (sidebar_changed)
+        (void)viewer_editor_set_sidebar_visibility(editor, spec->structure,
+            spec->inspector);
+    if (editor->timeline_available && editor->timeline_visible != spec->timeline)
+        (void)viewer_editor_set_timeline_state(editor, true, spec->timeline,
+            editor->timeline_height_points);
+    if (editor->workspace_changed != NULL)
+        editor->workspace_changed(editor->workspace_context,
+            viewer_workspace_name(workspace));
+    if (changed) {
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+    }
+    return changed || sidebar_changed;
+}
+
+bool viewer_editor_cycle_workspace(viewer_editor *editor, bool backwards)
+{
+    if (editor == NULL) return false;
+    return viewer_editor_set_workspace(editor,
+        viewer_workspace_cycle(editor->workspace, backwards));
+}
+
+void viewer_editor_set_workspace_callback(viewer_editor *editor,
+    viewer_editor_workspace_callback callback, void *context)
+{
+    if (editor == NULL) return;
+    editor->workspace_changed = callback;
+    editor->workspace_context = context;
+}
+
+bool viewer_editor_apply_workspace_name(viewer_editor *editor,
+    const char *name, size_t length)
+{
+    if (editor == NULL) return false;
+    return viewer_editor_set_workspace(editor,
+        viewer_workspace_from_name(name, length));
+}
+
+viewer_workspace_kind viewer_editor_workspace(const viewer_editor *editor)
+{
+    return editor == NULL ? viewer_workspace_default() : editor->workspace;
 }
 
 bool viewer_editor_set_sidebar_visibility(viewer_editor *editor,

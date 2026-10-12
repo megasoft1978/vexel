@@ -3,6 +3,7 @@
 #include "viewer.h"
 #include "viewer_internal.h"
 
+
 #include "frame_compose.h"
 #include "mcp_broker_hook.h"
 #include "platform/platform_metal.h"
@@ -22,6 +23,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+
+/* Persists a workspace change through the platform settings store. */
+static void viewer_persist_workspace(void *context, const char *name)
+{
+    (void)context;
+    platform_settings_store_workspace(name);
+}
 
 static double monotonic_ms(void)
 {
@@ -354,6 +362,11 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     if (next_editor != NULL) {
         platform_settings_values preferences = {0};
         platform_settings_get(&preferences);
+        viewer_editor_set_workspace_callback(next_editor,
+            viewer_persist_workspace, NULL);
+        if (preferences.remember_workspace && preferences.workspace[0] != '\0')
+            (void)viewer_editor_apply_workspace_name(next_editor,
+                preferences.workspace, strlen(preferences.workspace));
         (void)viewer_editor_set_sidebar_visibility(next_editor,
             preferences.structure_visible, preferences.inspector_visible);
         (void)viewer_editor_set_timeline_state(next_editor,
