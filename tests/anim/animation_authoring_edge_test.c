@@ -445,6 +445,32 @@ static bool test_spline_track_key_edits(void)
     return true;
 }
 
+/* Whitespace padding is untrimmed raw text, so a duplicated tuple can push
+ * keySplines past 64 KiB even though the parsed tuple is tiny. */
+static bool test_spline_output_limit(void)
+{
+    enum { PAD = 40000 };
+    static const char head[] =
+        "<svg><rect><animate attributeName='x' values='0;1;2' dur='2s' "
+        "calcMode='spline' keySplines='";
+    static const char tail[] = "0 0 1 1;0 0 1 1'/></rect></svg>";
+    size_t length = sizeof(head) - 1U + PAD + sizeof(tail) - 1U;
+    uint8_t *text = malloc(length);
+    CHECK(text != NULL);
+    memcpy(text, head, sizeof(head) - 1U);
+    memset(text + sizeof(head) - 1U, ' ', PAD);
+    memcpy(text + sizeof(head) - 1U + PAD, tail, sizeof(tail) - 1U);
+    svg_anim_document animation = {0};
+    svg_anim_authoring_patch patch = {0};
+    bool parsed = parse_animation((base_bytes){text, length}, &animation);
+    free(text);
+    CHECK(parsed && svg_anim_authoring_track_editable(&animation, 0U));
+    REJECT(svg_anim_authoring_add_key(&animation, 0U, 0.5, BYTES("7"), &patch),
+        SVG_ANIM_AUTHORING_LIMIT, patch);
+    svg_anim_document_destroy(&animation);
+    return true;
+}
+
 int main(void)
 {
     if (!test_null_patch_and_bad_track_index() ||
@@ -452,7 +478,8 @@ int main(void)
         !test_key_operation_bounds() ||
         !test_timing_spline_and_mode_bounds() ||
         !test_create_track_bounds() ||
-        !test_spline_track_key_edits()) return EXIT_FAILURE;
+        !test_spline_track_key_edits() ||
+        !test_spline_output_limit()) return EXIT_FAILURE;
     (void)puts("animation authoring edge: all checks passed");
     return EXIT_SUCCESS;
 }

@@ -55,7 +55,9 @@ tuple. Deleting key 0 drops tuple 0, the last key drops the last tuple, and any
 other key k drops tuple k. Deleting a spline track down to one key removes
 keySplines and sets calcMode="linear", because a one-key spline track does not
 parse. A keySplines or values result over 64 KiB returns the limit error before
-any patch exists. authoring_create.c holds track creation; both files share
+any patch exists. Tuples are copied raw, so whitespace padding the parser
+trims can make the output exceed 64 KiB (an add_key that duplicates a padded
+tuple); the edge test covers this limit path. authoring_create.c holds track creation; both files share
 authoring_internal.h.
 
 Track creation returns one bounded animate fragment with explicit initial
