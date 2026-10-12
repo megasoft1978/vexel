@@ -6,7 +6,7 @@ milestone: M5
 owner: project-owner
 executor: deepseek-flash
 base_sha: 27e7781207c746a9012dd4b15d98df0478cd82ef
-spec_sha256: aa7cefb93dccffaf0b339d7a80cec6489a72da87b695bcca611ffd530405099d
+spec_sha256: 42b01e2e19fdfe95f841b707c3a47a93f21b57d4faf715431a5f77999b2b23fa
 parallel_safe: false
 network: false
 ---
@@ -49,7 +49,7 @@ ctest --test-dir build/mac-debug --output-on-failure
 ./dev verify
 ./dev t --all
 mkdir -p .cache/WO-GAP-BUG-01
-for i in 1 2 3 4 5 6 7 8 9 10; do ./dev editor-smoke > .cache/WO-GAP-BUG-01/run-$i.log 2>&1; echo "run $i exit $?"; done
+sh -c 'mkdir -p .cache/WO-GAP-BUG-01; for i in 1 2 3 4 5 6 7 8 9 10; do ./dev editor-smoke > .cache/WO-GAP-BUG-01/run-$i.log 2>&1 || exit 1; echo run $i ok; done'
 git show --name-only --format= HEAD
 python3 scripts/ledger.py validate ledger.jsonl
 python3 scripts/wo_validate.py WO-BUG-01 --ready
