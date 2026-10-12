@@ -321,3 +321,5 @@
 - Update 2026-10-12: **WO-M4-06 merged** (revision 5, `b04981c`). Bounded references, gradients and clipping are accepted and every frozen gate passes. The corpus supported-file delta is 0: gradient, clip and use support alone makes no additional real-corpus file previewable. Next roadmap items are M4-07 (renderer bake-off) and the M4-08 fidelity gate, which needs an owner decision on scope.
 
 - Update 2026-10-12: **WO-MOTION-03 merged** (revision 4). Spline-track key editing, edge-bound tests and byte-exact undo/redo evidence landed. `authoring.c` was split (`authoring_create.c`, `authoring_internal.h`). Real-window timeline checks remain with the maintainer.
+
+- Update 2026-10-12: **WO-MOTION-04 merged** (revision 3). The easing editor's numeric field editing now works from the keyboard and rejected or uncommitted drafts no longer leak into other fields. Real-window timeline checks remain with the maintainer.

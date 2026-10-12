@@ -7,7 +7,7 @@
     "mac-debug"
   ],
   "exit_code": 0,
-  "duration_s": 0.021734583977377042,
+  "duration_s": 0.019494624983053654,
   "stdout": "ninja: no work to do.\n",
   "stderr": ""
 }
