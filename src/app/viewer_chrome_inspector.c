@@ -171,7 +171,7 @@ static bool editor_add_section(viewer_editor *editor, uint32_t parent,
                                uint32_t id, const char *title)
 {
     return editor_add_widget_node(editor, id, parent, UI_AXIS_HORIZONTAL,
-        0U, 24U, 0U, 0U, 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL,
+        0U, editor_section_height(editor), 0U, 0U, 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL,
         UI_ICON_NONE, title, strlen(title), NULL, 0U,
         0U, 0U);
 }
@@ -216,7 +216,7 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
             size_t value_length = editor_full_attribute_value(editor, attribute.value, &value);
             if (!editor_add_node(editor,
                     EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index,
-                    EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                    EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, editor_field_height(editor), 4U, 0U,
                     tokens->panel, UI_ROLE_TEXT_FIELD, label, label_length, value,
                     value_length, 0U,
                     EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index)) return false;
@@ -291,7 +291,7 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
                 tokens->selection_fill : tokens->panel;
             if (!editor_add_node(editor,
                     EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index,
-                    EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                    EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, editor_field_height(editor), 4U, 0U,
                     color, UI_ROLE_TEXT_FIELD, label, label_length, value,
                     value_length, state,
                     EDITOR_ATTRIBUTE_ROW_BASE + (uint32_t)attribute_index)) return false;
@@ -382,17 +382,17 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
                 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, "Document",
                 8U, NULL, 0U, 0U, 0U) &&
             editor_add_widget_node(editor, EDITOR_NODE_INSPECTOR_DOCUMENT_SIZE,
-                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, editor_field_height(editor), 4U, 0U,
                 tokens->panel, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
                 "Size", 4U, document_size, strlen(document_size), 0U, 0U) &&
             /* The document's own attributes stay editable here. */
             editor_add_attribute_rows(editor, tokens) &&
             editor_add_node(editor, EDITOR_BUTTON_FIT_CANVAS,
-                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, editor_field_height(editor), 4U, 0U,
                 tokens->panel_raised, UI_ROLE_BUTTON, "Fit Canvas", 10U,
                 NULL, 0U, 0U, EDITOR_BUTTON_FIT_CANVAS) &&
             editor_add_node(editor, EDITOR_BUTTON_ACTUAL_SIZE,
-                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, editor_field_height(editor), 4U, 0U,
                 tokens->panel_raised, UI_ROLE_BUTTON, "Actual Size", 11U,
                 NULL, 0U, 0U, EDITOR_BUTTON_ACTUAL_SIZE);
     }

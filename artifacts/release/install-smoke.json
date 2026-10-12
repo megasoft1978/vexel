@@ -1,0 +1,17 @@
+{
+ "steps": [
+  {
+   "step": "bundle",
+   "exit": 0,
+   "stdout_tail": "it=1064960\nExecutable Segment flags=0x1\nPage size=16384\nCDHash=deaecd9b7bbae2f6d75f43347a92e39d0d6181e6\nSignature=adhoc\nInfo.plist entries=15\nTeamIdentifier=not set\nRuntime Version=27.0.0\nSealed Resources version=2 rules=13 files=2\nInternal requirements count=0 size=12\nTotal signatures=1\nChosen signature=1\nBuilt /Users/megasoft78/Desktop/Freelance/vexel/build/Vexel.app (version 0.0.1, identity -)\n"
+  },
+  {
+   "step": "run --version",
+   "exit": 0,
+   "stdout_tail": "svgworkbench 0.0.1\n"
+  }
+ ],
+ "bundle": "build/mac-release/Vexel.app",
+ "installed_binary": "/var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpii3q2ziz/Applications/Vexel.app/Contents/MacOS/svgworkbench",
+ "result": "pass"
+}

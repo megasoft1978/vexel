@@ -296,6 +296,21 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len)
 {
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
+    editor->scrub_fine = (modifiers & PLATFORM_MODIFIER_OPTION) != 0U;
+    if (key_code == 3U &&
+        (modifiers & (PLATFORM_MODIFIER_CONTROL | PLATFORM_MODIFIER_COMMAND)) ==
+            (PLATFORM_MODIFIER_CONTROL | PLATFORM_MODIFIER_COMMAND)) {
+        (void)viewer_editor_toggle_focus_mode(editor);
+        return VIEWER_EDITOR_HANDLED;
+    }
+    if (key_code == 2U &&
+        (modifiers & (PLATFORM_MODIFIER_OPTION | PLATFORM_MODIFIER_COMMAND)) ==
+            (PLATFORM_MODIFIER_OPTION | PLATFORM_MODIFIER_COMMAND)) {
+        viewer_editor_set_density(editor,
+            editor->density == VIEWER_EDITOR_DENSITY_COMPACT ?
+                VIEWER_EDITOR_DENSITY_COMFORTABLE : VIEWER_EDITOR_DENSITY_COMPACT);
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 37U &&
         (modifiers & (PLATFORM_MODIFIER_OPTION | PLATFORM_MODIFIER_COMMAND)) ==
             (PLATFORM_MODIFIER_OPTION | PLATFORM_MODIFIER_COMMAND)) {
@@ -322,6 +337,13 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     }
     if (editor->command_palette_open || editor->history_popover_open)
         return editor_overlay_key(editor, key_code, modifiers, text, text_len);
+    if (key_code == 53U && editor->last_operation.valid &&
+        !editor->last_operation.dismissed) {
+        editor->last_operation.dismissed = true;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 53U && editor->zoom_menu_open) {
         editor->zoom_menu_open = false;
         editor->tree_ready = false;

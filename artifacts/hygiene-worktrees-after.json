@@ -1,0 +1,29 @@
+{
+ "worktrees_before": 98,
+ "worktrees_after": 23,
+ "worktrees_removed": 75,
+ "worktrees_kept_dirty": 7,
+ "disk_before": "21G",
+ "disk_after": "3.3G",
+ "second_root": "d97da2f",
+ "archive_tag": "archive/second-lineage",
+ "archive_branch": "archive/second-lineage-tip",
+ "unmerged_branches": [
+  "fix/ui-polish",
+  "fix/ui-polish-main",
+  "integrate/final-ui-docs",
+  "integrate/mcp-next",
+  "integrate/vexel-main-migration",
+  "lane/m2-view-anim",
+  "lane/m3-agent",
+  "plan/ci-nightly",
+  "plan/ui-golden-audit",
+  "wo/WO-M1-02",
+  "wo/WO-M1-03-r1",
+  "wo/WO-M1-04-r1",
+  "wo/WO-UI-DOCS-01",
+  "wo/WO-UI-DOCS-02",
+  "worktree-agent-ac9b3f7832e7ddfc2"
+ ],
+ "note": "Clean worktrees whose HEAD is reachable from main were removed; dirty worktrees were never force-removed; the second root is archived (tag + branch), not deleted."
+}

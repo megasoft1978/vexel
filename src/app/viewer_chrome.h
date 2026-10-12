@@ -9,6 +9,7 @@
 #define VIEWER_CHROME_TOOLBAR_POINTS 40U
 #define VIEWER_CHROME_OPTIONS_POINTS 32U
 #define VIEWER_CHROME_STATUS_POINTS 24U
+#define VIEWER_CHROME_TOOL_OPTIONS_POINTS 28U
 #define VIEWER_CHROME_RAIL_POINTS 44U
 #define VIEWER_CHROME_STRUCTURE_POINTS 232U
 #define VIEWER_CHROME_INSPECTOR_POINTS 320U
@@ -18,6 +19,7 @@
 typedef struct viewer_chrome_layout {
     ui_rect toolbar;
     ui_rect options;
+    ui_rect tool_options;
     ui_rect workspace;
     ui_rect rail;
     ui_rect structure;

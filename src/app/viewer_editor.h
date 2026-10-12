@@ -166,6 +166,20 @@ bool viewer_editor_copy_full_id(const viewer_editor *editor, uint8_t *buffer,
 void viewer_editor_set_motion_time(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_tick(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_active(const viewer_editor *editor);
+/* Density: compact is the default; comfortable restores the older metrics. */
+#define VIEWER_EDITOR_DENSITY_COMPACT 0U
+#define VIEWER_EDITOR_DENSITY_COMFORTABLE 1U
+typedef void (*viewer_editor_density_callback)(void *context, uint8_t density);
+void viewer_editor_set_density_callback(viewer_editor *editor,
+    viewer_editor_density_callback callback, void *context);
+void viewer_editor_set_density(viewer_editor *editor, uint8_t density);
+uint8_t viewer_editor_density(const viewer_editor *editor);
+
+/* Focus mode hides both side panels and the timeline, and restores them. */
+bool viewer_editor_set_focus_mode(viewer_editor *editor, bool focus);
+bool viewer_editor_toggle_focus_mode(viewer_editor *editor);
+bool viewer_editor_focus_mode(const viewer_editor *editor);
+
 /* Bounded operator/warning/error log (Blender's Info editor). */
 void viewer_editor_log(viewer_editor *editor, uint8_t severity,
     const char *text, size_t length);

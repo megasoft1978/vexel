@@ -146,7 +146,10 @@ enum {
     /* Operator/warning/error log pane. */
     EDITOR_NODE_LOG = 24570U,
     EDITOR_NODE_LOG_ROW_BASE = 24580U,
-    EDITOR_BUTTON_TOGGLE_LOG = 530U
+    EDITOR_BUTTON_TOGGLE_LOG = 530U,
+    EDITOR_NODE_TOOL_OPTIONS = 24590U,
+    EDITOR_NODE_ADJUST = 24600U,
+    EDITOR_BUTTON_ADJUST_REPEAT = 540U
 };
 
 typedef enum editor_field_kind {
@@ -227,6 +230,12 @@ typedef struct editor_path_node_ref {
     char command;
 } editor_path_node_ref;
 
+/* Density-dependent metric helpers; the chrome asks for these instead of
+ * hard-coding a height so a single preference changes every list and field. */
+uint32_t editor_row_height(const viewer_editor *editor);
+uint32_t editor_field_height(const viewer_editor *editor);
+uint32_t editor_section_height(const viewer_editor *editor);
+
 typedef enum editor_log_severity {
     EDITOR_LOG_OPERATION = 0,
     EDITOR_LOG_INFORMATION,
@@ -262,6 +271,32 @@ struct viewer_editor {
     size_t log_start;
     uint32_t log_next_sequence;
     bool log_open;
+    uint8_t density;
+    viewer_editor_density_callback density_changed;
+    void *density_context;
+    bool focus_mode;
+    bool focus_saved_structure;
+    bool focus_saved_inspector;
+    bool focus_saved_timeline;
+    /* Numeric drag-to-scrub on an inspector field. */
+    bool scrub_fine;
+    bool field_scrub_armed;
+    bool field_scrub_moved;
+    uint32_t field_scrub_start_x;
+    size_t field_scrub_attribute;
+    double field_scrub_start_value;
+
+    /* Blender's Adjust Last Operation: the parameters of the last edit, kept so
+     * they can be re-applied without hunting through undo history. */
+    struct {
+        bool valid;
+        bool dismissed;
+        bool rotate;
+        bool scale;
+        char label[48];
+        double translate_x, translate_y, scale_x, scale_y, rotate_radians;
+        double pivot_x, pivot_y;
+    } last_operation;
     bool status_operation_active;
     document_handle selected;
     document_handle outline[EDITOR_OUTLINE_CAP];

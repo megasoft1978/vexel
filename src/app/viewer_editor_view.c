@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 size_t editor_copy_slice(char *destination, size_t capacity, base_bytes bytes)
@@ -273,6 +274,15 @@ static void editor_log_action(viewer_editor *editor, uint32_t action)
 
 static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
 {
+    if (action == EDITOR_BUTTON_ADJUST_REPEAT) {
+        if (editor->last_operation.valid) {
+            (void)editor_commit_transform(editor, editor->last_operation.translate_x,
+                editor->last_operation.translate_y, editor->last_operation.scale_x,
+                editor->last_operation.scale_y, editor->last_operation.rotate_radians,
+                editor->last_operation.pivot_x, editor->last_operation.pivot_y);
+        }
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (action == EDITOR_BUTTON_TOGGLE_LOG)
         return viewer_editor_toggle_log(editor) ? VIEWER_EDITOR_HANDLED :
             VIEWER_EDITOR_HANDLED;
@@ -547,6 +557,22 @@ uint32_t viewer_editor_pointer_down_click_count(viewer_editor *editor,
             editor->attribute_start = attribute - EDITOR_ATTRIBUTE_VISIBLE + 1U;
         if (editor->field_kind != EDITOR_FIELD_ATTRIBUTE || editor->field_attribute != attribute)
             (void)editor_begin_field(editor, EDITOR_FIELD_ATTRIBUTE, attribute);
+        /* Arm drag-to-scrub: a numeric field follows a horizontal drag, which is
+         * Blender's primary way to change a value. A click without movement
+         * keeps the existing caret placement. */
+        editor->field_scrub_armed = false;
+        editor->field_scrub_moved = false;
+        editor->field_scrub_start_x = x;
+        editor->field_scrub_attribute = attribute;
+        if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE) {
+            char *end = NULL;
+            double parsed = strtod(editor->field, &end);
+            if (end != NULL && end != editor->field && *end == '\0' && isfinite(parsed)) {
+                editor->field_scrub_armed = true;
+                editor->field_scrub_start_value = parsed;
+            }
+        }
+        if (editor->field_scrub_armed) return prior | VIEWER_EDITOR_HANDLED;
         editor_place_cursor(editor, hit, x);
         return prior | VIEWER_EDITOR_HANDLED;
     }

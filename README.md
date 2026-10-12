@@ -1,13 +1,16 @@
 # vexel
 
-vexel is a macOS-first, C17 workbench for large SVG documents. The initial
-application is a native SVG viewer for the supported document subset.
+vexel is a macOS-first, C17 SVG editor: a custom-drawn editing surface, an owned
+SVG parser and rasteriser, SMIL/CSS animation with a docked timeline, and an MCP
+server so an agent can drive the same editor. It aims to be a practical
+alternative to Inkscape for the documents it supports, with animation and agent
+access as first-class features (`docs/adr/0016-product-target-and-gates.md`).
 
 ## Status
 
 | Feature | Status |
 | --- | --- |
-| Interactive SVG viewer | Built |
+| SVG editor with animation and MCP | Built |
 
 ## Usage
 
@@ -15,7 +18,9 @@ application is a native SVG viewer for the supported document subset.
 ./build/mac-release/bin/svgworkbench file.svg
 ```
 
-The viewer supports fit, zoom, pan, resize, and clean quit. To build and launch
+The editor supports fit, zoom, pan, drawing, selection and transform, layer
+visibility and locking, a tabbed inspector, task workspaces, an operator log, a
+command palette, and clean quit. To build and launch
 the Release executable in one step, run `./dev run file.svg`. A headless PPM
 frame can be rendered with:
 

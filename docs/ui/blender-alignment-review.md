@@ -173,6 +173,25 @@ Each step keeps the existing golden discipline: deterministic headless renders i
 dark and light at 1× and 2×, semantic-tree assertions for accessibility, and no
 change to the frozen oracle/golden files outside its own new fixtures.
 
+## 5a. Programme status (2026-10-13)
+
+| Step | Status | Evidence |
+|---|---|---|
+| Workspaces (Draw · Nodes · Animate · Inspect) + one status bar | **done** | `viewer_workspace.c`, `viewer-workspaces` CTest, goldens |
+| Properties icon tabs (Object · Fill · Stroke · Document) | **done** | `viewer_chrome_inspector.c`, tab round-trip in the structure test |
+| Operator/warning/error log pane | **done** | `viewer_editor_log.c`, bounded ring and overflow mutation proof |
+| Tool-options strip (active tool, its key, its options) | **done** | `EDITOR_NODE_TOOL_OPTIONS`, reserved layout band |
+| Adjust Last Operation panel with Repeat | **done** | `editor_note_last_operation`, `EDITOR_NODE_ADJUST` |
+| Density (compact default, comfortable) | **done** | `editor_row_height`/`editor_field_height`, `Option-Command-D` |
+| Maximize / Focus mode | **done** | `viewer_editor_set_focus_mode`, `Control-Command-F` |
+| Numeric field drag-to-scrub | **partial** | horizontal drag edits and commits on release; no `⌃` snap or mixed-value "X" yet |
+| Outliner three state columns (visible / locked / exported) | **partial** | visible and locked are per-row toggles; "exported" is deferred because it needs export-path semantics rather than a UI flag |
+| Unused / Orphans tree mode | **deferred** | needs reference counts surfaced from `svg/reference`; listed as follow-up work, not silently dropped |
+| Asset / reference library | **deferred** | large surface (catalogs, thumbnails, import settings); belongs in its own milestone rather than the chrome rework |
+
+Deferrals are recorded here rather than implemented thinly: a flag with no
+backend meaning would be worse than no flag.
+
 ## 6. Constraints this review does not change
 
 - macOS-only, C17, custom-drawn UI, no new dependency, MPL-2.0

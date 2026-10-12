@@ -1,5 +1,7 @@
 #include "traverse_internal.h"
 
+#include <stdlib.h>
+
 #include "reference.h"
 #include "../paint/paint.h"
 
@@ -60,28 +62,57 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     }
     *out = (svg_shape_document){0};
     *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0U};
-    if (source.len > SHAPE_MAX_BYTES) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, SHAPE_MAX_BYTES);
+    if (source.len > SHAPE_MAX_SOURCE_BYTES) {
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT,
+            SHAPE_MAX_SOURCE_BYTES);
         return SVG_SHAPE_ERROR_LIMIT;
     }
-    size_t capacity = source.len / 2U + 2U;
-    if (capacity > SIZE_MAX / sizeof(svg_xml_token)) {
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, 0U);
-        return SVG_SHAPE_ERROR_LIMIT;
-    }
-    svg_xml_token *tokens = svg_shape_calloc(capacity, sizeof(*tokens));
-    if (tokens == NULL) {
+    /* Tokens come from the streaming tokenizer rather than being pre-allocated
+     * from the source length. Pre-allocating source.len / 2 tokens needed about
+     * 4.7 GiB for a 94 MiB document, which is what made large real-world files
+     * fail at the old 16 MiB source cap. Storage is now bounded by
+     * SHAPE_MAX_TOKEN_BYTES and grows geometrically inside the stream. */
+    svg_xml_token_stream *stream = NULL;
+    if (svg_xml_token_stream_start(source, SHAPE_MAX_TOKEN_BYTES, NULL, NULL,
+            &stream) != SVG_XML_STREAM_OK || stream == NULL) {
         svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
         return SVG_SHAPE_ERROR_OOM;
     }
-    (void)svg_shape_alloc_set_tag(tokens, SVG_SHAPE_ALLOC_TAG_TOKEN_ARRAY);
-    svg_xml_result xml = svg_xml_tokenize(source, svg_xml_default_options(),
-                                          tokens, capacity);
+    svg_xml_stream_status stream_status = SVG_XML_STREAM_OK;
+    while (stream_status == SVG_XML_STREAM_OK)
+        stream_status = svg_xml_token_stream_step(stream, 64U * 1024U);
+    svg_xml_result xml = svg_xml_token_stream_result(stream);
+    if (stream_status != SVG_XML_STREAM_COMPLETE) {
+        size_t offset = xml.diagnostic.offset;
+        svg_xml_token_stream_destroy(stream);
+        svg_shape_traverse_fail(diagnostic,
+            stream_status == SVG_XML_STREAM_CANCELED ? SVG_SHAPE_ERROR_LIMIT :
+                (xml.diagnostic.category == SVG_XML_ERROR_NONE ?
+                    SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_XML), offset);
+        return stream_status == SVG_XML_STREAM_CANCELED ? SVG_SHAPE_ERROR_LIMIT :
+            (xml.diagnostic.category == SVG_XML_ERROR_NONE ?
+                SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_XML);
+    }
     if (xml.diagnostic.category != SVG_XML_ERROR_NONE) {
-        svg_shape_free(tokens);
-        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_XML, xml.diagnostic.offset);
+        size_t offset = xml.diagnostic.offset;
+        svg_xml_token_stream_destroy(stream);
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_XML, offset);
         return SVG_SHAPE_ERROR_XML;
     }
+    svg_xml_token *tokens = NULL;
+    size_t token_count = 0U;
+    if (!svg_xml_token_stream_take(stream, &tokens, &token_count) ||
+        tokens == NULL || token_count == 0U) {
+        svg_xml_token_stream_destroy(stream);
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
+        return SVG_SHAPE_ERROR_OOM;
+    }
+    size_t token_bytes = token_count * sizeof(svg_xml_token);
+    svg_xml_token_stream_destroy(stream);
+    xml.token_count = token_count;
+    /* The stream owns this vector, so it is released with free(), not through
+     * the shape allocator; accounting still includes it. */
+    svg_shape_alloc_note_external(tokens, token_bytes);
 
     shape_traversal traversal = {
         .source = source,
@@ -162,7 +193,8 @@ cleanup:
     svg_paint_cache_destroy(traversal.paint_cache);
     svg_css_sheet_destroy(traversal.css);
     svg_reference_index_destroy(&traversal.references);
-    svg_shape_free(tokens);
+    svg_shape_alloc_forget_external(tokens);
+    free(tokens);
     if (error != SVG_SHAPE_ERROR_NONE) svg_shape_document_destroy(out);
     return error;
 }

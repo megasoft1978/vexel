@@ -62,6 +62,31 @@ static bool format_matrix(char output[256], geom_affine matrix, size_t *out_leng
     return true;
 }
 
+/* Records what the operation did so the Adjust Last Operation panel can show
+ * and re-apply it. */
+static void editor_note_last_operation(viewer_editor *editor, double translate_x,
+    double translate_y, double scale_x, double scale_y, double rotate_radians,
+    double pivot_x, double pivot_y)
+{
+    bool rotate = rotate_radians < -0.000001 || rotate_radians > 0.000001;
+    bool scale = scale_x < 0.999999 || scale_x > 1.000001 ||
+        scale_y < 0.999999 || scale_y > 1.000001;
+    editor->last_operation.valid = true;
+    editor->last_operation.dismissed = false;
+    editor->last_operation.rotate = rotate;
+    editor->last_operation.scale = scale && !rotate;
+    editor->last_operation.translate_x = translate_x;
+    editor->last_operation.translate_y = translate_y;
+    editor->last_operation.scale_x = scale_x;
+    editor->last_operation.scale_y = scale_y;
+    editor->last_operation.rotate_radians = rotate_radians;
+    editor->last_operation.pivot_x = pivot_x;
+    editor->last_operation.pivot_y = pivot_y;
+    const char *name = rotate ? "Rotate" : (scale ? "Resize" : "Move");
+    snprintf(editor->last_operation.label, sizeof(editor->last_operation.label),
+        "%s", name);
+}
+
 uint32_t editor_commit_transform(viewer_editor *editor,
     double translate_x, double translate_y, double scale_x, double scale_y,
     double rotate_radians, double pivot_x, double pivot_y)
@@ -203,6 +228,8 @@ uint32_t editor_commit_transform(viewer_editor *editor,
             DOCUMENT_EDIT_HISTORY_ACTION_RESIZE :
             DOCUMENT_EDIT_HISTORY_ACTION_MOVE));
     editor_status_ok(editor, "Transform committed · preview updating");
+    editor_note_last_operation(editor, translate_x, translate_y, scale_x,
+        scale_y, rotate_radians, pivot_x, pivot_y);
     return editor_apply_result(editor, DOCUMENT_EDIT_OK, old_offset, old_id,
         (document_handle){0});
 }

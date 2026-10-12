@@ -3,7 +3,11 @@
 
 #include "shape_internal.h"
 
-#define SHAPE_MAX_BYTES (16U * 1024U * 1024U)
+/* The tokenizer streams, so the source limit is the tokenizer's own 1 GiB input
+ * limit; token storage is bounded separately and taken from the stream. */
+#define SHAPE_MAX_SOURCE_BYTES (1024U * 1024U * 1024U)
+#define SHAPE_MAX_TOKEN_BYTES (256U * 1024U * 1024U)
+#define SHAPE_MAX_BYTES SHAPE_MAX_SOURCE_BYTES
 #define SHAPE_MAX_XML_DEPTH 64U
 #define SHAPE_MAX_REFERENCE_DEPTH 16U
 #define SHAPE_MAX_USE_INSTANCES 65536U

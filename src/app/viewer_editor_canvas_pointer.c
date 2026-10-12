@@ -43,9 +43,33 @@ static bool editor_node_contains_canvas(const ui_node *node, uint32_t x,
         y - node->bounds.y < node->bounds.height;
 }
 
+/* Applies a horizontal drag to the armed numeric field. The value is shown live
+ * and committed once on release, so a scrub is one undo command. */
+static bool editor_field_scrub_move(viewer_editor *editor, uint32_t x)
+{
+    if (!editor->field_scrub_armed) return false;
+    if (x > editor->field_scrub_start_x)
+        editor->field_scrub_moved = true;
+    else if (editor->field_scrub_start_x > x)
+        editor->field_scrub_moved = true;
+    int64_t delta = (int64_t)x - (int64_t)editor->field_scrub_start_x;
+    /* One document unit per pixel, a tenth of a unit with Option held. */
+    double step = (editor->scrub_fine ? 0.1 : 1.0) * (double)delta;
+    double value = editor->field_scrub_start_value + step;
+    char text[64] = {0};
+    int amount = snprintf(text, sizeof(text), "%.2f", value);
+    if (amount <= 0 || (size_t)amount >= sizeof(text)) return true;
+    editor_set_text(editor->field, sizeof(editor->field), text);
+    editor->field_length = strlen(editor->field);
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
 void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y)
 {
     if (editor == NULL) return;
+    if (editor_field_scrub_move(editor, x)) return;
     if (editor_splitter_pointer_move(editor, x, y)) return;
     editor_snap_popover_pointer_move(editor, x, y);
     editor_context_action_pointer_move(editor, x, y);
@@ -122,6 +146,15 @@ void viewer_editor_pointer_move(viewer_editor *editor, uint32_t x, uint32_t y)
 void viewer_editor_pointer_up(viewer_editor *editor)
 {
     if (editor == NULL) return;
+    if (editor->field_scrub_armed) {
+        bool moved = editor->field_scrub_moved;
+        editor->field_scrub_armed = false;
+        editor->field_scrub_moved = false;
+        if (moved) (void)editor_commit_field(editor);
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return;
+    }
     if (editor->splitter_dragging) {
         editor_splitter_pointer_up(editor);
         editor->pressed_id = 0U;

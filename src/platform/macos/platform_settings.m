@@ -85,7 +85,9 @@ void platform_settings_get(platform_settings_values *out_values)
         .default_checkerboard = settings_bool(settings_key(@"checkerboard"), YES),
         .default_pixel_grid = settings_bool(settings_key(@"pixelGrid"), NO),
         .modifier_scroll_zooms = settings_bool(settings_key(@"modifierScrollZooms"), YES),
-        .workspace = {0}
+        .workspace = {0},
+        .density = (uint8_t)[[NSUserDefaults standardUserDefaults]
+            integerForKey:settings_key(@"density")]
     };
     if (remember) {
         NSString *workspace = settings_string(settings_key(@"workspace"), @"");
@@ -98,6 +100,16 @@ void platform_settings_get(platform_settings_values *out_values)
             out_values->workspace[length] = '\0';
         }
     }
+}
+
+void platform_settings_store_density(uint8_t density)
+{
+    if (![NSThread isMainThread]) return;
+    settings_seed_defaults();
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if (!settings_bool(settings_key(@"rememberWorkspace"), YES)) return;
+    if ((uint8_t)[defaults integerForKey:settings_key(@"density")] == density) return;
+    [defaults setInteger:(NSInteger)density forKey:settings_key(@"density")];
 }
 
 void platform_settings_store_workspace(const char *name)

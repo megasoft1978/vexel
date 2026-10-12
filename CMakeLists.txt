@@ -659,6 +659,12 @@ if(BUILD_TESTING)
     add_test(NAME ui-editor-chrome COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/ui/verify_chrome.py --binary $<TARGET_FILE:ui_demo_render>)
     # lane: w3-editor
     add_test(NAME editor-state COMMAND editor_state_test)
+    # lane: release evidence
+    add_test(NAME release-sbom COMMAND python3 ${CMAKE_SOURCE_DIR}/scripts/make_sbom.py
+        --binary $<TARGET_FILE:svgworkbench>
+        --out ${CMAKE_SOURCE_DIR}/artifacts/release/sbom.cyclonedx.json)
+    add_test(NAME release-install-smoke COMMAND python3
+        ${CMAKE_SOURCE_DIR}/scripts/install_smoke.py)
     add_test(NAME viewer-workspaces COMMAND viewer_workspace_test)
     add_test(NAME editor-chrome COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/editor/verify_chrome.py
         --binary $<TARGET_FILE:editor_chrome_render>)

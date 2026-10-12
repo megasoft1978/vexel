@@ -15,6 +15,7 @@ typedef struct platform_settings_values {
     bool modifier_scroll_zooms;
     /* Active task workspace name; empty when unset. Bounded short identifier. */
     char workspace[16];
+    uint8_t density;
 } platform_settings_values;
 
 void platform_settings_get(platform_settings_values *out_values);
@@ -22,5 +23,6 @@ void platform_settings_show(platform_window *owner_window);
 void platform_settings_store_sidebar_visibility(bool structure_visible,
                                                bool inspector_visible);
 void platform_settings_store_workspace(const char *name);
+void platform_settings_store_density(uint8_t density);
 
 #endif

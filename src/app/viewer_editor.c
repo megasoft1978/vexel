@@ -559,6 +559,91 @@ uint16_t viewer_editor_ui_scale_percent(const viewer_editor *editor)
         editor->ui_scale_percent;
 }
 
+static uint32_t density_scale(const viewer_editor *editor, uint32_t comfortable,
+                              uint32_t compact)
+{
+    return editor != NULL && editor->density == VIEWER_EDITOR_DENSITY_COMPACT ?
+        compact : comfortable;
+}
+
+uint32_t editor_row_height(const viewer_editor *editor)
+{
+    return density_scale(editor, 28U, 23U);
+}
+
+uint32_t editor_field_height(const viewer_editor *editor)
+{
+    return density_scale(editor, 30U, 25U);
+}
+
+uint32_t editor_section_height(const viewer_editor *editor)
+{
+    return density_scale(editor, 24U, 21U);
+}
+
+void viewer_editor_set_density(viewer_editor *editor, uint8_t density)
+{
+    if (editor == NULL) return;
+    if (density != VIEWER_EDITOR_DENSITY_COMFORTABLE)
+        density = VIEWER_EDITOR_DENSITY_COMPACT;
+    if (editor->density == density) return;
+    editor->density = density;
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    if (editor->density_changed != NULL)
+        editor->density_changed(editor->density_context, density);
+}
+
+void viewer_editor_set_density_callback(viewer_editor *editor,
+    viewer_editor_density_callback callback, void *context)
+{
+    if (editor == NULL) return;
+    editor->density_changed = callback;
+    editor->density_context = context;
+}
+
+uint8_t viewer_editor_density(const viewer_editor *editor)
+{
+    return editor == NULL ? VIEWER_EDITOR_DENSITY_COMPACT : editor->density;
+}
+
+bool viewer_editor_set_focus_mode(viewer_editor *editor, bool focus)
+{
+    if (editor == NULL) return false;
+    if (editor->focus_mode == focus) return false;
+    if (focus) {
+        editor->focus_saved_structure = editor->want_structure;
+        editor->focus_saved_inspector = editor->want_inspector;
+        editor->focus_saved_timeline = editor->timeline_visible;
+        editor->focus_mode = true;
+        (void)viewer_editor_set_sidebar_visibility(editor, false, false);
+        if (editor->timeline_available)
+            (void)viewer_editor_set_timeline_state(editor, true, false,
+                editor->timeline_height_points);
+    } else {
+        editor->focus_mode = false;
+        (void)viewer_editor_set_sidebar_visibility(editor,
+            editor->focus_saved_structure, editor->focus_saved_inspector);
+        if (editor->timeline_available)
+            (void)viewer_editor_set_timeline_state(editor, true,
+                editor->focus_saved_timeline, editor->timeline_height_points);
+    }
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+    return true;
+}
+
+bool viewer_editor_toggle_focus_mode(viewer_editor *editor)
+{
+    return editor == NULL ? false :
+        viewer_editor_set_focus_mode(editor, !editor->focus_mode);
+}
+
+bool viewer_editor_focus_mode(const viewer_editor *editor)
+{
+    return editor != NULL && editor->focus_mode;
+}
+
 bool viewer_editor_set_workspace(viewer_editor *editor, viewer_workspace_kind workspace)
 {
     if (editor == NULL) return false;

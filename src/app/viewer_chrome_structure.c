@@ -198,7 +198,8 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
             0U, 22U, 4U, 0U, 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
             breadcrumb, breadcrumb_length, NULL, 0U, 0U, 0U)) &&
         editor_add_widget_node(editor, EDITOR_OUTLINE_SEARCH_ID, EDITOR_NODE_OUTLINE,
-            UI_AXIS_HORIZONTAL, 0U, 30U, 0U, 0U, tokens->panel_raised,
+            UI_AXIS_HORIZONTAL, 0U, editor_field_height(editor), 0U, 0U,
+            tokens->panel_raised,
             UI_ROLE_TEXT_FIELD, UI_WIDGET_TEXT_FIELD, UI_ICON_SEARCH,
             "Search layers", 13U,
             editor->field_kind == EDITOR_FIELD_SEARCH ? editor->field :
@@ -241,7 +242,8 @@ void editor_build_structure_panel(viewer_editor *editor, const ui_tokens *tokens
         if (children && !editor_outline_is_collapsed(editor, item))
             state |= UI_STATE_EXPANDED;
         okay = editor_add_widget_node(editor, EDITOR_OUTLINE_ROW_BASE + (uint32_t)row,
-            EDITOR_NODE_OUTLINE, UI_AXIS_HORIZONTAL, 0U, 28U, 4U, 0U,
+            EDITOR_NODE_OUTLINE, UI_AXIS_HORIZONTAL, 0U,
+            editor_row_height(editor), 4U, 0U,
             0U, UI_ROLE_ROW, UI_WIDGET_TREE_ROW, layer_icon(editor, item),
             label, length, row_state, row_state_length, state,
             EDITOR_OUTLINE_ROW_BASE + (uint32_t)row);

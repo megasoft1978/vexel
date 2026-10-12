@@ -25,7 +25,7 @@ static bool viewer_chrome_layout_compute_internal(uint32_t width, uint32_t heigh
     double backing_scale, double ui_scale, uint16_t structure_width_points,
     uint16_t inspector_width_points, bool want_structure, bool want_inspector,
     bool timeline_visible, uint32_t timeline_height_points,
-    viewer_chrome_layout *out_layout)
+    bool want_tool_options, viewer_chrome_layout *out_layout)
 {
     if (out_layout == NULL || width == 0U || height == 0U ||
         width > VIEWER_CHROME_MAX_AXIS || height > VIEWER_CHROME_MAX_AXIS ||
@@ -35,11 +35,13 @@ static bool viewer_chrome_layout_compute_internal(uint32_t width, uint32_t heigh
         return false;
     double scale = backing_scale * ui_scale;
     uint32_t toolbar_height, options_height, status_height, rail_width;
+    uint32_t tool_options_height;
     uint32_t structure_width, inspector_width, canvas_min;
     uint32_t splitter_width;
     if (!scaled_points(VIEWER_CHROME_TOOLBAR_POINTS, scale, &toolbar_height) ||
         !scaled_points(VIEWER_CHROME_OPTIONS_POINTS, scale, &options_height) ||
         !scaled_points(VIEWER_CHROME_STATUS_POINTS, scale, &status_height) ||
+        !scaled_points(VIEWER_CHROME_TOOL_OPTIONS_POINTS, scale, &tool_options_height) ||
         !scaled_points(VIEWER_CHROME_RAIL_POINTS, scale, &rail_width) ||
         !scaled_points(structure_width_points, scale, &structure_width) ||
         !scaled_points(inspector_width_points, scale, &inspector_width) ||
@@ -68,10 +70,23 @@ static bool viewer_chrome_layout_compute_internal(uint32_t width, uint32_t heigh
     }
     if (dock_height > workspace_height) dock_height = workspace_height;
     workspace_height -= dock_height;
-    uint32_t timeline_y = toolbar_height + options_height + workspace_height;
+    /* The tool-options strip is reserved from the bottom of the workspace area,
+     * as Blender's Tool Settings region sits inside the area under its header. */
+    /* The strip belongs to the editor's docked chrome: the simple layout keeps
+     * the workspace abutting the status bar, which its invariant asserts. */
+    if (!want_tool_options ||
+        workspace_height < tool_options_height + minimum_workspace)
+        tool_options_height = 0U;
+    uint32_t tool_options_y = toolbar_height + options_height +
+        (workspace_height - tool_options_height);
+    workspace_height -= tool_options_height;
+    uint32_t timeline_y = toolbar_height + options_height + workspace_height +
+        tool_options_height;
     uint32_t status_y = timeline_y + dock_height;
     out_layout->toolbar = (ui_rect){0U, 0U, width, toolbar_height};
     out_layout->options = (ui_rect){0U, toolbar_height, width, options_height};
+    out_layout->tool_options = (ui_rect){0U, tool_options_y, width,
+        tool_options_height};
     out_layout->workspace = (ui_rect){0U, toolbar_height + options_height,
         width, workspace_height};
     out_layout->timeline = (ui_rect){0U, timeline_y, width, dock_height};
@@ -151,7 +166,7 @@ bool viewer_chrome_layout_compute_sized(uint32_t width, uint32_t height,
 {
     return viewer_chrome_layout_compute_internal(width, height, backing_scale,
         ui_scale, structure_width_points, inspector_width_points, want_structure,
-        want_inspector, false, 0U, out_layout);
+        want_inspector, false, 0U, false, out_layout);
 }
 
 bool viewer_chrome_layout_compute_docked_sized(uint32_t width, uint32_t height,
@@ -162,5 +177,5 @@ bool viewer_chrome_layout_compute_docked_sized(uint32_t width, uint32_t height,
 {
     return viewer_chrome_layout_compute_internal(width, height, backing_scale,
         ui_scale, structure_width_points, inspector_width_points, want_structure,
-        want_inspector, timeline_visible, timeline_height_points, out_layout);
+        want_inspector, timeline_visible, timeline_height_points, true, out_layout);
 }

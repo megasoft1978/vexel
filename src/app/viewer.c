@@ -24,6 +24,13 @@
 #include <string.h>
 #include <time.h>
 
+/* Persists a density change through the platform settings store. */
+static void viewer_persist_density(void *context, uint8_t density)
+{
+    (void)context;
+    platform_settings_store_density(density);
+}
+
 /* Persists a workspace change through the platform settings store. */
 static void viewer_persist_workspace(void *context, const char *name)
 {
@@ -364,6 +371,8 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         platform_settings_get(&preferences);
         viewer_editor_set_workspace_callback(next_editor,
             viewer_persist_workspace, NULL);
+        viewer_editor_set_density_callback(next_editor, viewer_persist_density, NULL);
+        viewer_editor_set_density(next_editor, preferences.density);
         /* Tests pin the starting workspace so a remembered user choice cannot
          * change the fixture layout between runs. */
         const char *test_workspace = getenv("VEXEL_TEST_WORKSPACE");

@@ -82,6 +82,42 @@ static const char *editor_tool_hint(viewer_editor *editor)
     return "Selection tool · choose a layer or edit it on the canvas · V";
 }
 
+static const char *editor_tool_name(const viewer_editor *editor)
+{
+    if (editor->node_edit_active) return "Node edit";
+    switch (editor->draw_tool) {
+        case VIEWER_EDITOR_TOOL_RECT: return "Rectangle";
+        case VIEWER_EDITOR_TOOL_ELLIPSE: return "Ellipse";
+        case VIEWER_EDITOR_TOOL_LINE: return "Line";
+        case VIEWER_EDITOR_TOOL_POLYGON: return "Polygon";
+        case VIEWER_EDITOR_TOOL_POLYLINE: return "Polyline";
+        case VIEWER_EDITOR_TOOL_PEN: return "Pen";
+        case VIEWER_EDITOR_TOOL_TEXT: return "Text";
+        case VIEWER_EDITOR_TOOL_SELECT: break;
+    }
+    if (editor->active_tool == UI_ICON_PAN) return "Pan";
+    if (editor->active_tool == UI_ICON_ZOOM) return "Zoom";
+    return "Select";
+}
+
+static const char *editor_tool_key(const viewer_editor *editor)
+{
+    if (editor->node_edit_active) return "N";
+    switch (editor->draw_tool) {
+        case VIEWER_EDITOR_TOOL_RECT: return "R";
+        case VIEWER_EDITOR_TOOL_ELLIPSE: return "O";
+        case VIEWER_EDITOR_TOOL_LINE: return "L";
+        case VIEWER_EDITOR_TOOL_POLYGON: return "Y";
+        case VIEWER_EDITOR_TOOL_POLYLINE: return "U";
+        case VIEWER_EDITOR_TOOL_PEN: return "P";
+        case VIEWER_EDITOR_TOOL_TEXT: return "T";
+        case VIEWER_EDITOR_TOOL_SELECT: break;
+    }
+    if (editor->active_tool == UI_ICON_PAN) return "H";
+    if (editor->active_tool == UI_ICON_ZOOM) return "Z";
+    return "V";
+}
+
 static uint32_t editor_toolbar_action_state(const viewer_editor *editor,
                                              uint32_t action)
 {
@@ -285,18 +321,33 @@ void editor_build_tree_modern(viewer_editor *editor)
     }
     if (okay && editor->node_edit_active && editor->path_node_corner_available)
         okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_CORNER,
-            EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
+            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
             UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
             "Corner", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_CORNER);
     if (okay && editor->node_edit_active && editor->path_node_smooth_available)
         okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_SMOOTH,
-            EDITOR_NODE_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
+            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
             UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
             "Smooth", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_SMOOTH);
     if (okay)
-        okay = editor_add_icon(editor, EDITOR_BUTTON_SNAPPING, EDITOR_NODE_OPTIONS,
+        okay = editor_add_icon(editor, EDITOR_BUTTON_SNAPPING, EDITOR_NODE_TOOL_OPTIONS,
             UI_ICON_SNAP, "Snapping settings · Grid, Objects, Guides",
             editor->snap_enabled ? UI_STATE_CHECKED : 0U);
+    /* Blender's Active Tool / Tool Settings region: the active tool, its
+     * shortcut and the options that belong to it. */
+    char tool_label[64] = {0};
+    int tool_amount = snprintf(tool_label, sizeof(tool_label), "%s tool · %s",
+        editor_tool_name(editor), editor_tool_key(editor));
+    if (tool_amount < 0 || (size_t)tool_amount >= sizeof(tool_label))
+        snprintf(tool_label, sizeof(tool_label), "%s", editor_tool_name(editor));
+    okay = editor_add_node(editor, EDITOR_NODE_TOOL_OPTIONS, UI_ROOT_ID,
+        UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_TOOL_OPTIONS_POINTS, 8U, 2U,
+        tokens->panel_raised, UI_ROLE_GROUP, "Tool options", 12U, NULL, 0U, 0U, 0U) &&
+        editor_add_widget_node(editor, EDITOR_NODE_TOOL_OPTIONS + 1U,
+            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
+            UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, tool_label,
+            strlen(tool_label), NULL, 0U, 0U, 0U);
+    if (!okay) return;
     okay = okay && editor_add_node(editor, EDITOR_NODE_WORKSPACE, UI_ROOT_ID,
             UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
@@ -398,6 +449,30 @@ void editor_build_tree_modern(viewer_editor *editor)
             0U, 0U);
         if (!okay) return;
     }
+    /* Adjust Last Operation: a heads-up strip at the bottom-left of the canvas
+     * that re-applies the last transform without hunting through undo. */
+    if (editor->last_operation.valid && !editor->last_operation.dismissed) {
+        char adjust[96] = {0};
+        int adjust_amount = snprintf(adjust, sizeof(adjust), "%s · %.2f, %.2f",
+            editor->last_operation.label, editor->last_operation.translate_x,
+            editor->last_operation.translate_y);
+        if (adjust_amount > 0 && (size_t)adjust_amount < sizeof(adjust) &&
+            !editor_add_node(editor, EDITOR_NODE_ADJUST, EDITOR_NODE_CANVAS,
+                UI_AXIS_HORIZONTAL, 0U, 28U, 6U, 0U, tokens->panel_raised,
+                UI_ROLE_GROUP, "Adjust last operation", 22U, NULL, 0U, 0U, 0U))
+            return;
+        if (adjust_amount > 0 && (size_t)adjust_amount < sizeof(adjust) &&
+            !editor_add_widget_node(editor, EDITOR_NODE_ADJUST + 1U,
+                EDITOR_NODE_ADJUST, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U,
+                UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
+                adjust, strlen(adjust), NULL, 0U, 0U, 0U)) return;
+        if (adjust_amount > 0 && (size_t)adjust_amount < sizeof(adjust) &&
+            !editor_add_widget_node(editor, EDITOR_BUTTON_ADJUST_REPEAT,
+                EDITOR_NODE_ADJUST, UI_AXIS_HORIZONTAL, 64U, 22U, 4U, 0U,
+                tokens->panel, UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY,
+                UI_ICON_NONE, "Repeat", 6U, NULL, 0U, 0U,
+                EDITOR_BUTTON_ADJUST_REPEAT)) return;
+    }
     if (layout.inspector_visible && !editor_add_splitter(editor,
             EDITOR_SPLITTER_INSPECTOR_ID, editor->layout_inspector_width_points,
             "Inspector panel width")) return;
@@ -414,7 +489,7 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (editor->log_open) {
         size_t rows = editor->log_count < EDITOR_LOG_VISIBLE ?
             editor->log_count : EDITOR_LOG_VISIBLE;
-        log_height_points = 22U + (uint32_t)rows * EDITOR_LOG_ROW_HEIGHT_POINTS;
+        log_height_points = 22U + (uint32_t)rows * editor_row_height(editor);
         okay = editor_add_node(editor, EDITOR_NODE_LOG, UI_ROOT_ID,
                 UI_AXIS_VERTICAL, 0U, log_height_points, 4U, 2U,
                 tokens->panel, UI_ROLE_GROUP, "Log", 3U, NULL, 0U, 0U, 0U);
@@ -435,7 +510,7 @@ void editor_build_tree_modern(viewer_editor *editor)
             if (amount < 0 || (size_t)amount >= sizeof(row)) continue;
             okay = editor_add_widget_node(editor,
                 EDITOR_NODE_LOG_ROW_BASE + (uint32_t)index, EDITOR_NODE_LOG,
-                UI_AXIS_HORIZONTAL, 0U, EDITOR_LOG_ROW_HEIGHT_POINTS, 2U, 0U,
+                UI_AXIS_HORIZONTAL, 0U, editor_row_height(editor), 2U, 0U,
                 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
                 row, strlen(row), NULL, 0U,
                 severity == EDITOR_LOG_ERROR ? UI_STATE_INVALID : 0U, 0U);
@@ -504,6 +579,7 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (okay && ui_tree_layout(&editor->tree, editor->width, editor->height)) {
         editor_set_node_bounds(editor, EDITOR_NODE_TOOLBAR, layout.toolbar);
         editor_set_node_bounds(editor, EDITOR_NODE_OPTIONS, layout.options);
+        editor_set_node_bounds(editor, EDITOR_NODE_TOOL_OPTIONS, layout.tool_options);
         editor_set_node_bounds(editor, EDITOR_NODE_WORKSPACE, layout.workspace);
         editor_set_node_bounds(editor, EDITOR_NODE_TOOL_RAIL, layout.rail);
         if (layout.structure_visible) {
@@ -512,6 +588,13 @@ void editor_build_tree_modern(viewer_editor *editor)
                 layout.structure_splitter);
         }
         editor_set_node_bounds(editor, EDITOR_NODE_CANVAS, layout.canvas);
+        if (editor->last_operation.valid && !editor->last_operation.dismissed &&
+            layout.canvas.width > 360U && layout.canvas.height > 44U) {
+            ui_rect adjust_rect = {layout.canvas.x + 8U,
+                layout.canvas.y + layout.canvas.height - 36U,
+                layout.canvas.width > 348U ? 340U : layout.canvas.width - 8U, 28U};
+            editor_set_node_bounds(editor, EDITOR_NODE_ADJUST, adjust_rect);
+        }
         if (layout.inspector_visible) {
             editor_set_node_bounds(editor, EDITOR_SPLITTER_INSPECTOR_ID,
                 layout.inspector_splitter);
