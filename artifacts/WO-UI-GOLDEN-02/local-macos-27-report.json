@@ -1633,7 +1633,7 @@
     "macos_version": "27.0",
     "os": "macOS-27.0-arm64-arm-64bit",
     "source_branch": "integrate/final-ui-docs",
-    "source_commit": "7f72d11016d24d6f395045edd4cd4955271b7d7e"
+    "source_commit": "c3d3aad57920789b5cec0416648589e74fe5a9d5"
   },
   "purpose": "Diagnostic image comparison only; expected UI goldens and checks are read-only.",
   "schema_version": 1,

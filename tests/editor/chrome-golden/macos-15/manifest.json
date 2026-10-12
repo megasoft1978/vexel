@@ -1,0 +1,16 @@
+{
+  "macos_major": 15,
+  "screenshots": {
+    "editor-chrome-dark.png": {
+      "height": 800,
+      "sha256": "b9501f49c08918ca0ca27e0bd0dd1ff0a0ddf424aee667909f2ef2b7ac861720",
+      "width": 1280
+    },
+    "editor-chrome-light.png": {
+      "height": 800,
+      "sha256": "ad51fdfb4d35dd3d9b1ebe41f4b0863a3492730a7487408f1fb06fd6664619b9",
+      "width": 1280
+    }
+  },
+  "version": 2
+}

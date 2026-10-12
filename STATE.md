@@ -414,5 +414,21 @@
   pixel-difference rows now identify their screenshot names and families.
   Focused screenshot CTests pass 6/6, `./dev verify` passes 82 CTests and 303
   Python tests, and `./dev test-fast` passes 303/303. Fresh Sol 6.1 review passes
-  these changes and the work-order scope. Mac 15 editor-chrome capture and green
-  hosted CI/nightly sanitizer checks are still required before merge.
+  these changes and the work-order scope. Mac 15 editor-chrome capture is now complete; green hosted CI/nightly
+  sanitizer checks remain required before merge.
+
+- Update 2026-10-12: Hosted macOS 15 run `38208517342` compared all 52
+  screenshot images: 50 exact, zero mismatches, and only the two newly covered
+  editor-chrome images unbaselined. Both Mac 15 editor-chrome captures and their
+  versioned manifest are now added from that run; full captures and report are
+  retained under `artifacts/WO-UI-GOLDEN-02/hosted-macos-15/run-38208517342/`.
+  Images were visually inspected. Focused CTest passes 6/6, Mac 27 audit passes
+  52/52 exact, and `./dev verify` passes 82 CTests and 303 Python tests after
+  this addition. Fresh Sol 6.1 review and a new hosted Mac 15/nightly run remain.
+
+- Update 2026-10-12: Fresh Sol 6.1 review passes the Mac 15 editor-chrome
+  profile. Both 1280 × 800 images match hosted run `38208517342` exactly; the
+  full report, captures, and image inspection are retained. The run had 50 exact
+  matches, zero mismatches, and only these two expected unbaselined images.
+  Local focused tests pass 6/6, Mac 27 audit 52/52 exact, and `./dev verify`
+  passes 82 CTests and 303 Python tests. Final hosted CI/nightly checks remain.

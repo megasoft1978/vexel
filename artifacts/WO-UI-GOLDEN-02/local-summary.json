@@ -1,7 +1,7 @@
 {
   "work_order": "WO-UI-GOLDEN-02",
   "frozen_base": "1ddaac358e510fe7d12cf05ea58a3952390512b1",
-  "source_commit": "7f72d11016d24d6f395045edd4cd4955271b7d7e",
+  "source_commit": "c3d3aad57920789b5cec0416648589e74fe5a9d5",
   "host": {
     "os": "macOS-27.0-arm64-arm-64bit",
     "macos": "27.0",
@@ -17,8 +17,8 @@
       "mismatches": 0,
       "unbaselined": 0
     },
-    "focused_ctest": "6/6 passed",
-    "dev_verify": "82/82 CTests and 303/303 Python tests passed after shared-golden links",
+    "focused_ctest": "6/6 passed after Mac15 editor-chrome capture",
+    "dev_verify": "82/82 CTests and 303/303 Python tests passed after Mac15 editor-chrome capture",
     "dev_asan": "82/82 CTests passed",
     "dev_ubsan": "82/82 CTests passed",
     "dev_test_fast": "303/303 Python tests passed after shared-golden links; ledger valid",
@@ -29,9 +29,11 @@
     "hosted_macos15_first_capture": "artifacts/WO-UI-GOLDEN-02/hosted-macos-15/run-38207350150/",
     "hosted_pixel_diffs": "artifacts/WO-UI-GOLDEN-02/macos15-headless-differences.png",
     "repeat_hashes": "artifacts/WO-UI-GOLDEN-02/native-repeat-renders.json",
-    "comparison_metrics": "artifacts/WO-UI-GOLDEN-02/comparison-metrics.json"
+    "comparison_metrics": "artifacts/WO-UI-GOLDEN-02/comparison-metrics.json",
+    "hosted_macos15_editor_chrome": "artifacts/WO-UI-GOLDEN-02/hosted-macos-15/run-38208517342/",
+    "sol_review_macos15_chrome": "artifacts/WO-UI-GOLDEN-02/sol-6.1-review-macos15-chrome.md"
   },
-  "hosted_macos15": "native/style/snap/accessibility captured; editor-chrome still pending next PR run",
+  "hosted_macos15": "Run 38208517342: 50 exact, zero mismatches, two expected unbaselined editor-chrome images; both are now captured and profiled. Final hosted verification pending.",
   "ci": "first PR run intentionally failed bootstrap/profile checks; next push reruns all jobs",
   "macos27_profiles": {
     "tests/ui/native-shell-golden": {
@@ -74,5 +76,5 @@
     }
   },
   "profile_storage": "68 byte-identical profile PNG copies replaced by symlinks to shared baselines; profile manifests remain complete",
-  "sol_review": "PASS on shared baseline reuse and evidence labels; hosted Mac15 editor-chrome pending"
+  "sol_review": "PASS: fresh Sol 6.1 review validates Mac15 editor-chrome capture, hashes, dimensions, scope, and local evidence"
 }

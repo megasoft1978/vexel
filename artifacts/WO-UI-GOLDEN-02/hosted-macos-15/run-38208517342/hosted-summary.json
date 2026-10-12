@@ -1,0 +1,12 @@
+{
+  "run_id": 38208517342,
+  "macos": "15.7.9",
+  "build": "24G830",
+  "architecture": "arm64",
+  "images_compared": 52,
+  "exact_matches": 50,
+  "mismatches": 0,
+  "unbaselined_before_bootstrap": 2,
+  "result": "50 exact; 2 editor-chrome captures added as explicit macos-15 baseline",
+  "artifact_path": "artifacts/WO-UI-GOLDEN-02/hosted-macos-15/run-38208517342"
+}

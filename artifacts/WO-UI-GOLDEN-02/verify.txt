@@ -15,17 +15,17 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/
       Start  2: render-soak-driver-bounds
  2/82 Test  #2: render-soak-driver-bounds ...................   Passed    0.01 sec
       Start  3: mcp-protocol
- 3/82 Test  #3: mcp-protocol ................................   Passed    0.00 sec
+ 3/82 Test  #3: mcp-protocol ................................   Passed    0.01 sec
       Start  4: mcp-fuzz
- 4/82 Test  #4: mcp-fuzz ....................................   Passed    0.38 sec
+ 4/82 Test  #4: mcp-fuzz ....................................   Passed    0.37 sec
       Start  5: mcp-stdio-e2e
  5/82 Test  #5: mcp-stdio-e2e ...............................   Passed    0.18 sec
       Start  6: mcp-agent-scenarios
- 6/82 Test  #6: mcp-agent-scenarios .........................   Passed    0.36 sec
+ 6/82 Test  #6: mcp-agent-scenarios .........................   Passed    0.28 sec
       Start  7: cli-version
  7/82 Test  #7: cli-version .................................   Passed    0.00 sec
       Start  8: base-contract
- 8/82 Test  #8: base-contract ...............................   Passed    0.00 sec
+ 8/82 Test  #8: base-contract ...............................   Passed    0.01 sec
       Start  9: xml-tokenizer
  9/82 Test  #9: xml-tokenizer ...............................   Passed    0.07 sec
       Start 10: source-save
@@ -33,53 +33,53 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/
       Start 11: document-model
 11/82 Test #11: document-model ..............................   Passed    0.09 sec
       Start 12: document-edit
-12/82 Test #12: document-edit ...............................   Passed    1.22 sec
+12/82 Test #12: document-edit ...............................   Passed    1.15 sec
       Start 13: shape-render
-13/82 Test #13: shape-render ................................   Passed    0.84 sec
+13/82 Test #13: shape-render ................................   Passed    0.80 sec
       Start 14: svg-animation
-14/82 Test #14: svg-animation ...............................   Passed    0.00 sec
+14/82 Test #14: svg-animation ...............................   Passed    0.01 sec
       Start 15: svg-animation-python-reference
-15/82 Test #15: svg-animation-python-reference ..............   Passed    0.36 sec
+15/82 Test #15: svg-animation-python-reference ..............   Passed    0.32 sec
       Start 16: svg-animation-rsvg-reference
-16/82 Test #16: svg-animation-rsvg-reference ................   Passed    1.64 sec
+16/82 Test #16: svg-animation-rsvg-reference ................   Passed    1.50 sec
       Start 17: svg-text-image
-17/82 Test #17: svg-text-image ..............................   Passed    0.00 sec
+17/82 Test #17: svg-text-image ..............................   Passed    0.01 sec
       Start 18: svg-marker-realloc
 18/82 Test #18: svg-marker-realloc ..........................   Passed    0.01 sec
       Start 19: css-cascade
-19/82 Test #19: css-cascade .................................   Passed    0.00 sec
+19/82 Test #19: css-cascade .................................   Passed    0.01 sec
       Start 20: svg-index
 20/82 Test #20: svg-index ...................................   Passed    0.11 sec
       Start 21: viewer-navigation
-21/82 Test #21: viewer-navigation ...........................   Passed    0.01 sec
+21/82 Test #21: viewer-navigation ...........................   Passed    0.02 sec
       Start 22: viewer-composition
-22/82 Test #22: viewer-composition ..........................   Passed    0.00 sec
+22/82 Test #22: viewer-composition ..........................   Passed    0.01 sec
       Start 23: welcome-model
 23/82 Test #23: welcome-model ...............................   Passed    0.00 sec
       Start 24: feedback-diagnostics
 24/82 Test #24: feedback-diagnostics ........................   Passed    0.00 sec
       Start 25: platform-command-policy
-25/82 Test #25: platform-command-policy .....................   Passed    0.00 sec
+25/82 Test #25: platform-command-policy .....................   Passed    0.01 sec
       Start 26: native-shell-goldens
-26/82 Test #26: native-shell-goldens ........................   Passed    1.05 sec
+26/82 Test #26: native-shell-goldens ........................   Passed    0.99 sec
       Start 27: viewer-quality
 27/82 Test #27: viewer-quality ..............................   Passed    0.13 sec
       Start 28: viewer-frame
-28/82 Test #28: viewer-frame ................................   Passed    0.19 sec
+28/82 Test #28: viewer-frame ................................   Passed    0.18 sec
       Start 29: native-viewer-smoke
-29/82 Test #29: native-viewer-smoke .........................   Passed    0.24 sec
+29/82 Test #29: native-viewer-smoke .........................   Passed    0.23 sec
       Start 30: ui-core
 30/82 Test #30: ui-core .....................................   Passed    0.01 sec
       Start 31: ui-interaction
-31/82 Test #31: ui-interaction ..............................   Passed    0.01 sec
+31/82 Test #31: ui-interaction ..............................   Passed    0.02 sec
       Start 32: ui-demo-semantics
-32/82 Test #32: ui-demo-semantics ...........................   Passed    0.00 sec
+32/82 Test #32: ui-demo-semantics ...........................   Passed    0.01 sec
       Start 33: ui-editor-chrome
-33/82 Test #33: ui-editor-chrome ............................   Passed    0.12 sec
+33/82 Test #33: ui-editor-chrome ............................   Passed    0.11 sec
       Start 34: editor-state
-34/82 Test #34: editor-state ................................   Passed    3.14 sec
+34/82 Test #34: editor-state ................................   Passed    2.98 sec
       Start 35: editor-chrome
-35/82 Test #35: editor-chrome ...............................   Passed    0.20 sec
+35/82 Test #35: editor-chrome ...............................   Passed    0.19 sec
       Start 36: svg-token-stream-budget
 36/82 Test #36: svg-token-stream-budget .....................   Passed    0.02 sec
       Start 37: index-replay
@@ -87,9 +87,9 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/
       Start 38: spatial-cache
 38/82 Test #38: spatial-cache ...............................   Passed    0.02 sec
       Start 39: job-snapshot
-39/82 Test #39: job-snapshot ................................   Passed    0.04 sec
+39/82 Test #39: job-snapshot ................................   Passed    0.05 sec
       Start 40: platform-media-fixtures
-40/82 Test #40: platform-media-fixtures .....................   Passed    0.45 sec
+40/82 Test #40: platform-media-fixtures .....................   Passed    0.44 sec
       Start 41: platform-media
 41/82 Test #41: platform-media ..............................   Passed    0.12 sec
       Start 42: platform-media-python
@@ -97,79 +97,79 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/
       Start 43: viewer-home
 43/82 Test #43: viewer-home .................................   Passed    0.01 sec
       Start 44: viewer-home-layout-fuzz
-44/82 Test #44: viewer-home-layout-fuzz .....................   Passed    0.01 sec
+44/82 Test #44: viewer-home-layout-fuzz .....................   Passed    0.02 sec
       Start 45: viewer-sessions
 45/82 Test #45: viewer-sessions .............................   Passed    0.01 sec
       Start 46: viewer-home-goldens
-46/82 Test #46: viewer-home-goldens .........................   Passed    0.85 sec
+46/82 Test #46: viewer-home-goldens .........................   Passed    0.86 sec
       Start 47: ui-token-contrast
-47/82 Test #47: ui-token-contrast ...........................   Passed    0.14 sec
+47/82 Test #47: ui-token-contrast ...........................   Passed    0.15 sec
       Start 48: viewer-chrome-layout-fuzz
 48/82 Test #48: viewer-chrome-layout-fuzz ...................   Passed    0.03 sec
       Start 49: viewer-chrome-style
 49/82 Test #49: viewer-chrome-style .........................   Passed    0.09 sec
       Start 50: editor-visual
-50/82 Test #50: editor-visual ...............................   Passed    0.01 sec
+50/82 Test #50: editor-visual ...............................   Passed    0.02 sec
       Start 51: platform-text-ui
 51/82 Test #51: platform-text-ui ............................   Passed    0.02 sec
       Start 52: editor-style-goldens
-52/82 Test #52: editor-style-goldens ........................   Passed    1.35 sec
+52/82 Test #52: editor-style-goldens ........................   Passed    1.33 sec
       Start 53: mcp-features
-53/82 Test #53: mcp-features ................................   Passed    0.02 sec
+53/82 Test #53: mcp-features ................................   Passed    0.03 sec
       Start 54: platform-dialog
 54/82 Test #54: platform-dialog .............................   Passed    0.01 sec
       Start 55: editor-canvas
-55/82 Test #55: editor-canvas ...............................   Passed    0.01 sec
+55/82 Test #55: editor-canvas ...............................   Passed    0.02 sec
       Start 56: editor-clipboard-ids
 56/82 Test #56: editor-clipboard-ids ........................   Passed    0.01 sec
       Start 57: editor-selection-goldens
 57/82 Test #57: editor-selection-goldens ....................   Passed    0.29 sec
       Start 58: viewer-canvas-geometry
-58/82 Test #58: viewer-canvas-geometry ......................   Passed    0.00 sec
+58/82 Test #58: viewer-canvas-geometry ......................   Passed    0.01 sec
       Start 59: ui-widget-kit
-59/82 Test #59: ui-widget-kit ...............................   Passed    0.39 sec
+59/82 Test #59: ui-widget-kit ...............................   Passed    0.40 sec
       Start 60: ui-widget-parser-fuzz
-60/82 Test #60: ui-widget-parser-fuzz .......................   Passed    0.10 sec
+60/82 Test #60: ui-widget-parser-fuzz .......................   Passed    0.11 sec
       Start 61: ui-kit-gallery
-61/82 Test #61: ui-kit-gallery ..............................   Passed    2.77 sec
+61/82 Test #61: ui-kit-gallery ..............................   Passed    2.80 sec
       Start 62: viewer-editor-guides
-62/82 Test #62: viewer-editor-guides ........................   Passed    0.01 sec
+62/82 Test #62: viewer-editor-guides ........................   Passed    0.02 sec
       Start 63: editor-rulers-guides-goldens
-63/82 Test #63: editor-rulers-guides-goldens ................   Passed    0.11 sec
+63/82 Test #63: editor-rulers-guides-goldens ................   Passed    0.12 sec
       Start 64: platform-png
 64/82 Test #64: platform-png ................................   Passed    0.01 sec
       Start 65: viewer-png-export
-65/82 Test #65: viewer-png-export ...........................   Passed    0.01 sec
+65/82 Test #65: viewer-png-export ...........................   Passed    0.02 sec
       Start 66: editor-canvas-fuzz
 66/82 Test #66: editor-canvas-fuzz ..........................   Passed    0.83 sec
       Start 67: mcp-viewer-live
-67/82 Test #67: mcp-viewer-live .............................   Passed    0.12 sec
+67/82 Test #67: mcp-viewer-live .............................   Passed    0.13 sec
       Start 68: viewer-timeline
-68/82 Test #68: viewer-timeline .............................   Passed    0.02 sec
+68/82 Test #68: viewer-timeline .............................   Passed    0.03 sec
       Start 69: ui-timeline-goldens
 69/82 Test #69: ui-timeline-goldens .........................   Passed    0.26 sec
       Start 70: editor-followups
-70/82 Test #70: editor-followups ............................   Passed    0.01 sec
+70/82 Test #70: editor-followups ............................   Passed    0.02 sec
       Start 71: editor-media-providers
 71/82 Test #71: editor-media-providers ......................   Passed    0.01 sec
       Start 72: shape-render-large-work
-72/82 Test #72: shape-render-large-work .....................   Passed    2.99 sec
+72/82 Test #72: shape-render-large-work .....................   Passed    2.95 sec
       Start 73: editor-command-palette
-73/82 Test #73: editor-command-palette ......................   Passed    0.01 sec
+73/82 Test #73: editor-command-palette ......................   Passed    0.02 sec
       Start 74: editor-command-overlay-golden
-74/82 Test #74: editor-command-overlay-golden ...............   Passed    0.53 sec
+74/82 Test #74: editor-command-overlay-golden ...............   Passed    0.54 sec
       Start 75: document-edit-history
-75/82 Test #75: document-edit-history .......................   Passed    0.00 sec
+75/82 Test #75: document-edit-history .......................   Passed    0.01 sec
       Start 76: editor-ux-selection-snap
-76/82 Test #76: editor-ux-selection-snap ....................   Passed    0.02 sec
+76/82 Test #76: editor-ux-selection-snap ....................   Passed    0.03 sec
       Start 77: editor-snap-popover-goldens
-77/82 Test #77: editor-snap-popover-goldens .................   Passed    0.18 sec
+77/82 Test #77: editor-snap-popover-goldens .................   Passed    0.19 sec
       Start 78: editor-snap-overlay-goldens
-78/82 Test #78: editor-snap-overlay-goldens .................   Passed    0.11 sec
+78/82 Test #78: editor-snap-overlay-goldens .................   Passed    0.10 sec
       Start 79: animation-authoring
-79/82 Test #79: animation-authoring .........................   Passed    0.01 sec
+79/82 Test #79: animation-authoring .........................   Passed    0.02 sec
       Start 80: viewer-timeline-keyframes
-80/82 Test #80: viewer-timeline-keyframes ...................   Passed    0.10 sec
+80/82 Test #80: viewer-timeline-keyframes ...................   Passed    0.11 sec
       Start 81: editor-accessibility-localization
 81/82 Test #81: editor-accessibility-localization ...........   Passed    0.01 sec
       Start 82: editor-accessibility-localization-goldens
@@ -177,7 +177,7 @@ Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/
 
 100% tests passed, 0 tests failed out of 82
 
-Total Test time (real) =  23.53 sec
+Total Test time (real) =  23.11 sec
 Preset CMake variables:
 
   CMAKE_BUILD_TYPE="Release"
@@ -235,20 +235,20 @@ usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
                       [--binary BINARY] [--output OUTPUT] [--self-test-crash]
                       [--self-test-timeout]
 test_runner.py: error: duration must be 1..600 and seed must be uint32
-Ran 303 tests in 36.967s
+Ran 303 tests in 36.613s
 
 OK
-Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpjd98iv54/build/Vexel.app (version 1.2.3, identity -)
-Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmp4d5v6hfy/build/Vexel.dmg
-Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpq3gidb3w/build/Vexel.dmg
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpntug_k0u/build/Vexel.app (version 1.2.3, identity -)
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpiz3bs0g7/build/Vexel.dmg
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmporidooyq/build/Vexel.dmg
 agent scenarios passed: 5; feature-gated: {}
 presented frames: 2
 byte-exact readback: pass
 resize/reset: pass
-native smoke elapsed seconds: 0.130634
+native smoke elapsed seconds: 0.133056
 20 frames with identical readback hashes and stable offscreen frame order
 readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
-native replay elapsed seconds: 0.100612
+native replay elapsed seconds: 0.097898
 raster differential seed=20261011 generated=200 paint-clip-seed=20261013 paint-clip-generated=160 tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40
-Ran 303 tests: 303 passed, 0 failed, 0 errors, 0 skipped; 37.055s
+Ran 303 tests: 303 passed, 0 failed, 0 errors, 0 skipped; 36.721s
 valid ledger: 449 entries
