@@ -2,7 +2,6 @@
 
 #include "platform/platform_text_ui.h"
 #include "ui/ui_draw.h"
-#include "ui/ui_icons.h"
 #include "ui/ui_widget_paint_internal.h"
 #include "ui/ui_widgets.h"
 #include "viewer_chrome.h"
@@ -429,6 +428,65 @@ static size_t utf8_prefix(const char *text, size_t length, size_t maximum)
     return amount;
 }
 
+static void paint_fit_glyph(const ui_widget_canvas *canvas, ui_rect glyph,
+    uint32_t color)
+{
+    uint32_t stroke = glyph.width >= 14U ? 2U : 1U;
+    uint32_t inset = stroke;
+    uint32_t arm = glyph.width / 3U;
+    if (arm <= stroke) arm = stroke + 1U;
+    uint32_t right = glyph.x + glyph.width - inset - arm;
+    uint32_t bottom = glyph.y + glyph.height - inset - arm;
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, glyph.y + inset, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, glyph.y + inset, stroke, arm}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, glyph.y + inset, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right + arm - stroke, glyph.y + inset, stroke, arm}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, bottom + arm - stroke, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, bottom, stroke, arm}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, bottom + arm - stroke, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right + arm - stroke, bottom, stroke, arm}, color);
+}
+
+static void paint_loop_glyph(const ui_widget_canvas *canvas, ui_rect glyph,
+    uint32_t color)
+{
+    uint32_t stroke = glyph.width >= 14U ? 2U : 1U;
+    uint32_t left = glyph.x + 2U;
+    uint32_t right = glyph.x + glyph.width - 2U - stroke;
+    uint32_t top = glyph.y + 2U;
+    uint32_t bottom = glyph.y + glyph.height - 2U - stroke;
+    uint32_t middle_left = glyph.x + glyph.width / 4U;
+    uint32_t middle_right = glyph.x + (glyph.width * 3U) / 4U - stroke;
+    ui_widget_paint_rect(canvas,
+        (ui_rect){middle_left + stroke, top, middle_right - middle_left, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, top + stroke, stroke, glyph.height / 4U}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, glyph.y + glyph.height / 2U,
+            stroke, glyph.height / 4U}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){middle_left + stroke, bottom,
+            middle_right - middle_left, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){left, glyph.y + glyph.height / 2U,
+            stroke, glyph.height / 4U}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){left, top + stroke, stroke, glyph.height / 4U}, color);
+    /* Arrowhead at the upper right marks the repeating direction. */
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right - stroke, glyph.y + 1U, stroke * 2U + 1U, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right + stroke, glyph.y + 1U, stroke, stroke * 2U + 1U}, color);
+}
+
 /* Project-authored media glyphs; isolated from the shared icon atlas. */
 static void paint_media_control(ui_widget_canvas *canvas, ui_rect pixels,
     bool pause, viewer_timeline_mode mode, bool playback, bool fit)
@@ -444,9 +502,9 @@ static void paint_media_control(ui_widget_canvas *canvas, ui_rect pixels,
     ui_rect glyph = {button.x + (button.width - side) / 2U,
         button.y + (button.height - side) / 2U, side, side};
     uint32_t color = canvas->tokens.text_primary;
-    if (fit) { (void)ui_widget_paint_icon(canvas, UI_ICON_FIT, glyph, UI_CONTROL_REST); return; }
+    if (fit) { paint_fit_glyph(canvas, glyph, color); return; }
     if (!playback && mode == VIEWER_TIMELINE_MODE_LOOP) {
-        (void)ui_widget_paint_icon(canvas, UI_ICON_REDO, glyph, UI_CONTROL_REST);
+        paint_loop_glyph(canvas, glyph, color);
         return;
     }
     if (!playback && mode == VIEWER_TIMELINE_MODE_PING_PONG) {

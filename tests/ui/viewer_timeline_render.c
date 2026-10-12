@@ -85,15 +85,19 @@ static bool paint_tile(uint8_t *rgba, uint32_t width, uint32_t height,
 
 int main(int argc, char **argv)
 {
-    if ((argc != 3 && argc != 4 && argc != 5) || (strcmp(argv[1], "dark") != 0 &&
+    if ((argc != 3 && argc != 4 && argc != 5 && argc != 6) || (strcmp(argv[1], "dark") != 0 &&
             strcmp(argv[1], "light") != 0)) {
-        (void)fputs("usage: viewer_timeline_render dark|light 1x|2x\n", stderr);
+        (void)fputs("usage: viewer_timeline_render dark|light 1x|2x [contrast|normal [hover|normal [loop]]]\n", stderr);
         return 2;
     }
     if (argc >= 4 && strcmp(argv[3], "contrast") != 0 &&
         strcmp(argv[3], "normal") != 0) return 2;
     if (argc == 5 && strcmp(argv[4], "hover") != 0) return 2;
+    if (argc == 6 && ((strcmp(argv[4], "hover") != 0 &&
+            strcmp(argv[4], "normal") != 0) || strcmp(argv[5], "loop") != 0)) return 2;
     bool contrast = argc >= 4 && strcmp(argv[3], "contrast") == 0;
+    bool hover = (argc == 5 && strcmp(argv[4], "hover") == 0) ||
+        (argc == 6 && strcmp(argv[4], "hover") == 0);
     uint32_t scale = strcmp(argv[2], "2x") == 0 ? 2U :
         strcmp(argv[2], "1x") == 0 ? 1U : 0U;
     if (scale == 0U) return 2;
@@ -117,6 +121,8 @@ int main(int argc, char **argv)
     viewer_timeline timeline;
     viewer_timeline_init(&timeline);
     viewer_timeline_reset(&timeline, &document);
+    if (argc == 6)
+        (void)viewer_timeline_set_mode(&timeline, VIEWER_TIMELINE_MODE_LOOP);
     viewer_editor *editor = viewer_editor_create_styled(source, theme, width, height, true);
     uint8_t *rgba = calloc(1U, length);
     if (editor == NULL || rgba == NULL ||
@@ -141,7 +147,7 @@ int main(int argc, char **argv)
             layout.canvas, &artwork, scale);
     viewer_editor_paint_scalar(editor, rgba, length, (size_t)width * 4U);
     viewer_timeline_layout timeline_layout;
-    if (argc == 5 && viewer_timeline_layout_compute(&timeline, width, height,
+    if (hover && viewer_timeline_layout_compute(&timeline, width, height,
             (double)scale, &timeline_layout)) {
         timeline.hover_valid = true;
         timeline.hover_x = timeline_layout.play_button.x + 1.0;
@@ -150,7 +156,7 @@ int main(int argc, char **argv)
     okay = okay && viewer_timeline_paint_scalar_appearance(&timeline, editor,
         rgba, length, width, height, (size_t)width * 4U, (double)scale,
         theme, contrast, false);
-    if (okay && argc == 5) {
+    if (okay && hover) {
         static ui_semantics_snapshot snapshot;
         okay = viewer_timeline_accessibility_snapshot(&timeline, &timeline_layout,
             theme, contrast, &snapshot);

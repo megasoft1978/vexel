@@ -1,6 +1,7 @@
 #include "viewer_timeline.h"
 #include "platform/macos/platform_png.h"
 #include "platform/platform_text_ui.h"
+#include "ui/ui_draw.h"
 #include "ui/ui_widgets.h"
 #include "viewer_anim_edit.h"
 
@@ -28,6 +29,84 @@ static bool decode(const char *source, svg_shape_document *document)
         (void)fprintf(stderr, "viewer timeline fixture decode failed: %d at %zu\n",
             (int)error, diagnostic.offset);
     return error == SVG_SHAPE_ERROR_NONE;
+}
+
+static size_t control_glyph_mask(const uint8_t *rgba, uint32_t width,
+    const ui_tokens *tokens, ui_rect button, uint32_t scale, uint64_t mask[4])
+{
+    uint32_t extent = button.width / scale < button.height / scale ?
+        button.width / scale : button.height / scale;
+    uint32_t side = 16U;
+    if (extent < side + 12U) side = extent > 12U ? extent - 12U : extent;
+    uint32_t origin_x = button.x + (button.width - side * scale) / 2U;
+    uint32_t origin_y = button.y + (button.height - side * scale) / 2U;
+    memset(mask, 0, 4U * sizeof(*mask));
+    size_t count = 0U;
+    uint8_t red = (uint8_t)(tokens->text_primary >> 24U);
+    uint8_t green = (uint8_t)(tokens->text_primary >> 16U);
+    uint8_t blue = (uint8_t)(tokens->text_primary >> 8U);
+    for (uint32_t y = 0U; y < side; ++y) {
+        for (uint32_t x = 0U; x < side; ++x) {
+            uint32_t px = origin_x + x * scale + scale / 2U;
+            uint32_t py = origin_y + y * scale + scale / 2U;
+            if (px >= width) continue;
+            const uint8_t *pixel = rgba + ((size_t)py * width + px) * 4U;
+            if (pixel[0] != red || pixel[1] != green || pixel[2] != blue) continue;
+            size_t bit = (size_t)y * side + x;
+            mask[bit / 64U] |= UINT64_C(1) << (bit % 64U);
+            count++;
+        }
+    }
+    return count;
+}
+
+static bool test_fit_and_loop_glyphs_at_backing_scales(void)
+{
+    static const char source_text[] =
+        "<svg width='32' height='32'><rect id='shape' width='8' height='8' fill='blue'>"
+        "<animate attributeName='x' from='0' to='8' dur='2s'/></rect></svg>";
+    base_bytes source = {(const uint8_t *)source_text, sizeof(source_text) - 1U};
+    svg_shape_document document = {0};
+    CHECK(decode(source_text, &document));
+    viewer_timeline timeline;
+    viewer_timeline_init(&timeline);
+    viewer_timeline_reset(&timeline, &document);
+    CHECK(viewer_timeline_set_mode(&timeline, VIEWER_TIMELINE_MODE_LOOP));
+
+    for (uint32_t scale = 1U; scale <= 2U; ++scale) {
+        uint32_t width = 1280U * scale, height = 800U * scale;
+        size_t stride = (size_t)width * 4U;
+        size_t capacity = stride * height;
+        uint8_t *rgba = calloc(1U, capacity);
+        CHECK(rgba != NULL);
+        ui_theme theme = UI_THEME_DARK;
+        ui_tokens tokens = ui_theme_tokens(theme, false);
+        viewer_editor *editor = viewer_editor_create_styled(source, theme,
+            width, height, true);
+        CHECK(editor != NULL);
+        CHECK(viewer_editor_set_timeline_state(editor, true, true,
+            VIEWER_TIMELINE_DOCK_DEFAULT_POINTS));
+        viewer_editor_resize(editor, width, height, (double)scale);
+        viewer_editor_paint_scalar(editor, rgba, capacity, stride);
+        viewer_timeline_layout layout;
+        CHECK(viewer_timeline_layout_compute(&timeline, width, height,
+            (double)scale, &layout));
+        CHECK(viewer_timeline_paint_scalar_appearance(&timeline, editor,
+            rgba, capacity, width, height, stride, (double)scale,
+            theme, false, false));
+        uint64_t fit_mask[4], loop_mask[4];
+        size_t fit_pixels = control_glyph_mask(rgba, width, &tokens,
+            layout.fit_button, scale, fit_mask);
+        size_t loop_pixels = control_glyph_mask(rgba, width, &tokens,
+            layout.mode_button, scale, loop_mask);
+        CHECK(fit_pixels >= 24U && loop_pixels >= 24U);
+        CHECK(memcmp(fit_mask, loop_mask, sizeof(fit_mask)) != 0);
+        free(rgba);
+        viewer_editor_destroy(editor);
+    }
+    viewer_timeline_destroy(&timeline);
+    svg_shape_document_destroy(&document);
+    return true;
 }
 
 static bool test_tracks_labels_and_duration(void)
@@ -629,7 +708,8 @@ static bool test_named_transform_labels_and_full_accessibility(void)
 
 int main(void)
 {
-    if (!test_named_transform_labels_and_full_accessibility() ||
+    if (!test_fit_and_loop_glyphs_at_backing_scales() ||
+        !test_named_transform_labels_and_full_accessibility() ||
         !test_twelve_track_grid_scroll_and_reveal() || !test_tracks_labels_and_duration() || !test_seek_play_pause_loop_and_keys() ||
         !test_layout_pointer_scrub_and_rows() || !test_frame_preview_and_bounds() ||
         !test_accessibility_labels() || !test_indefinite_and_unsupported_accessibility() ||
