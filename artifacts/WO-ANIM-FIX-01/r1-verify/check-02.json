@@ -1,13 +1,15 @@
 {
-  "index": 2,
-  "argv": [
-    "cmake",
-    "--build",
-    "--preset",
-    "mac-debug"
-  ],
-  "exit_code": 0,
-  "duration_s": 0.02097658399725333,
-  "stdout": "ninja: no work to do.\n",
-  "stderr": ""
+ "index": 2,
+ "label": "cmake --build --preset mac-debug",
+ "argv": [
+  "cmake",
+  "--build",
+  "--preset",
+  "mac-debug"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.018845796585083008,
+ "stdout": "ninja: no work to do.\n",
+ "stderr": "",
+ "frozen_command": "cmake --build --preset mac-debug"
 }
