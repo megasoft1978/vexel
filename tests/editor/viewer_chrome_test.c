@@ -550,13 +550,18 @@ int main(void)
     if (!viewer_editor_semantics(editor, snapshot)) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 2;
     }
-    const ui_semantics_node *status_text = find_label(snapshot, "Ready · Saved");
-    const ui_semantics_node *selection_summary = find_label(snapshot, "No selection");
-    if (selected_row_count(snapshot) != 0U || status_text == NULL ||
-        status_text->frame.height < 16U ||
-        status_text->frame.y + status_text->frame.height > 800U ||
-        selection_summary == NULL || status_text->frame.x != 12U ||
-        selection_summary->frame.x + selection_summary->frame.width != 1268U) {
+    /* The status bar now has Blender's three regions: hint, report, readout.
+     * The hint keeps the historical 12 pt left inset and the readout stays
+     * right-aligned; the tool hint is no longer duplicated above the canvas. */
+    const ui_semantics_node *tool_hint = find_label(snapshot,
+        "Selection tool · choose a layer or edit it on the canvas · V");
+    const ui_semantics_node *status_readout = find_label(snapshot,
+        "Ready · Saved · No selection");
+    if (selected_row_count(snapshot) != 0U || tool_hint == NULL ||
+        tool_hint->frame.x != 12U ||
+        status_readout == NULL || status_readout->frame.height < 16U ||
+        status_readout->frame.y + status_readout->frame.height > 800U ||
+        status_readout->frame.x + status_readout->frame.width != 1268U) {
         free(pixels); free(snapshot); viewer_editor_destroy(editor); return 3;
     }
     int tree_result = test_layer_tree(editor, snapshot);

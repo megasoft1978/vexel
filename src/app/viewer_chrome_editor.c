@@ -271,9 +271,10 @@ void editor_build_tree_modern(viewer_editor *editor)
             "%s · Control-Tab", spec->label);
         if (label_amount < 0 || (size_t)label_amount >= sizeof(workspace_label))
             snprintf(workspace_label, sizeof(workspace_label), "%s", spec->label);
+        uint32_t tab_width = (uint32_t)(strlen(spec->label) * 9U + 28U);
         okay = editor_add_widget_node(editor,
             EDITOR_BUTTON_WORKSPACE_BASE + (uint32_t)workspace_index,
-            EDITOR_NODE_WORKSPACES, UI_AXIS_HORIZONTAL, 0U, 24U, 8U, 0U,
+            EDITOR_NODE_WORKSPACES, UI_AXIS_HORIZONTAL, tab_width, 24U, 6U, 0U,
             (viewer_workspace_kind)workspace_index == editor->workspace ?
                 tokens->panel_raised : 0U,
             UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
@@ -427,6 +428,7 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (readout_amount < 0 || (size_t)readout_amount >= sizeof(readout))
         editor_set_text(readout, sizeof(readout), selection);
     uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);
+    uint32_t readout_width = (uint32_t)(strlen(readout) * 7U + 24U);
     uint32_t status_points = (uint32_t)((double)layout.status.width / (scale * ui_scale));
     uint32_t status_content_width = status_points > 24U ? status_points - 24U : 0U;
     if (selection_width > status_content_width) selection_width = status_content_width;
@@ -434,7 +436,7 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_STATUS_POINTS, 0U, 0U,
             tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_node(editor, EDITOR_NODE_STATUS + 102U,
-            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 8U, 0U, 0U, 0U, 0U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
             UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS_HINT,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U,
@@ -449,9 +451,12 @@ void editor_build_tree_modern(viewer_editor *editor)
             report, strlen(report), NULL, 0U,
             status_error ? UI_STATE_INVALID : 0U, 0U) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS_READOUT,
-            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, selection_width, 24U, 0U, 0U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, readout_width, 24U, 0U, 0U,
             0U, UI_ROLE_STATUS, UI_WIDGET_LABEL, UI_ICON_NONE,
-            readout, strlen(readout), NULL, 0U, 0U, 0U);
+            readout, strlen(readout), NULL, 0U, 0U, 0U) &&
+        editor_add_node(editor, EDITOR_NODE_STATUS + 104U,
+            EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, 12U, 0U, 0U, 0U, 0U,
+            UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
     if (okay && ui_tree_layout(&editor->tree, editor->width, editor->height)) {
         editor_set_node_bounds(editor, EDITOR_NODE_TOOLBAR, layout.toolbar);
         editor_set_node_bounds(editor, EDITOR_NODE_OPTIONS, layout.options);

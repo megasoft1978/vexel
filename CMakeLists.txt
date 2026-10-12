@@ -658,6 +658,7 @@ if(BUILD_TESTING)
     add_test(NAME ui-editor-chrome COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/ui/verify_chrome.py --binary $<TARGET_FILE:ui_demo_render>)
     # lane: w3-editor
     add_test(NAME editor-state COMMAND editor_state_test)
+    add_test(NAME viewer-workspaces COMMAND viewer_workspace_test)
     add_test(NAME editor-chrome COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/editor/verify_chrome.py
         --binary $<TARGET_FILE:editor_chrome_render>)
     add_test(NAME svg-token-stream-budget COMMAND svg_token_stream_test)
@@ -799,7 +800,15 @@ set_target_properties(ui_tokens_contrast_test PROPERTIES
 add_executable(viewer_chrome_test tests/editor/viewer_chrome_test.c)
 target_include_directories(viewer_chrome_test PRIVATE src/app)
 target_link_libraries(viewer_chrome_test PRIVATE vexel_editor_ui)
+
 set_target_properties(viewer_chrome_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+
+add_executable(viewer_workspace_test tests/editor/viewer_workspace_test.c)
+target_include_directories(viewer_workspace_test PRIVATE src/app)
+target_link_libraries(viewer_workspace_test PRIVATE vexel_editor_ui)
+set_target_properties(viewer_workspace_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(viewer_visual_test tests/editor/viewer_visual_test.c)

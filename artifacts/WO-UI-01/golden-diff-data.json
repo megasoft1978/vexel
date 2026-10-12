@@ -1,0 +1,122 @@
+[
+ {
+  "fixture": "tests/editor/accessibility-localization-golden/accessibility-chrome-dark-200.png",
+  "after_sha256": "74133af1bd973273c0f9d8f64fa74f2b8f979f04bfc767b7c85a8682f834b228",
+  "before_sha256": "1c953ac46d869f004a875328a305afeeab6f8929c6cae194c04ad02137700949",
+  "diff_image": "artifacts/WO-UI-01/diff-accessibility-chrome-dark-200.png",
+  "pixdiff": [
+   "15930 of 1024000 pixels differ (1.556%), max delta 203, mean delta 107.7, bbox x16..1172 y96..788",
+   "  (23,96) (41, 46, 55) vs (41, 48, 59)",
+   "  (24,96) (41, 46, 55) vs (40, 52, 69)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/editor/accessibility-localization-golden/accessibility-chrome-light-200.png",
+  "after_sha256": "928b7218e760c08525163fc30242d30fe86860a1bd2183fbc9328a968303862b",
+  "before_sha256": "06fb2ac3dcf7f116980f80fdf23904e210119e8e17a6cb9988dc7f40724efc28",
+  "diff_image": "artifacts/WO-UI-01/diff-accessibility-chrome-light-200.png",
+  "pixdiff": [
+   "15930 of 1024000 pixels differ (1.556%), max delta 206, mean delta 107.9, bbox x16..1172 y96..788",
+   "  (23,96) (237, 240, 244) vs (235, 239, 245)",
+   "  (24,96) (237, 240, 244) vs (230, 237, 249)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/editor/chrome-golden/editor-chrome-dark.png",
+  "after_sha256": "a515b28335ca91801fd8572c50a9d503ffeab3541777c4b29dd52caf39d0892f",
+  "before_sha256": "7437d32760258d859113fde9e964d08ae851f90f7110bfc862d747bbc22d8295",
+  "diff_image": "artifacts/WO-UI-01/diff-editor-chrome-dark.png",
+  "pixdiff": [
+   "5697 of 1024000 pixels differ (0.556%), max delta 203, mean delta 86.6, bbox x8..1226 y48..793",
+   "  (11,48) (41, 46, 55) vs (40, 52, 69)",
+   "  (12,48) (41, 46, 55) vs (39, 57, 82)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/editor/chrome-golden/editor-chrome-light.png",
+  "after_sha256": "c97e3a2bc38b3df3ffa8472595fc8d0e577ef94fa66b5807d95c4f873c279792",
+  "before_sha256": "39306343dcb04277dfa40bdf0fa4d5818dfcb469af8f0610d14e9d6f26d487cc",
+  "diff_image": "artifacts/WO-UI-01/diff-editor-chrome-light.png",
+  "pixdiff": [
+   "5697 of 1024000 pixels differ (0.556%), max delta 206, mean delta 87.3, bbox x8..1226 y48..793",
+   "  (11,48) (237, 240, 244) vs (230, 237, 249)",
+   "  (12,48) (237, 240, 244) vs (223, 235, 253)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/editor/snapping-golden/snapping-dark.png",
+  "after_sha256": "ac44cc2273f4b8088aa7b4a14802b3be1b856a090c9418fea23d7df989b39db2",
+  "before_sha256": "b498c743d8c5a4c08f378231df3b30bf06adc08aa50b3b74ca267c0608e3097a",
+  "diff_image": "artifacts/WO-UI-01/diff-snapping-dark.png",
+  "pixdiff": [
+   "5557 of 1024000 pixels differ (0.543%), max delta 203, mean delta 86.8, bbox x8..1234 y48..793",
+   "  (11,48) (41, 46, 55) vs (40, 52, 69)",
+   "  (12,48) (41, 46, 55) vs (39, 57, 82)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/editor/snapping-golden/snapping-light.png",
+  "after_sha256": "633817909d9bee413d0b10c63d3dd9fe5868e2810b7d11965623e6eb425c7fe4",
+  "before_sha256": "e38180699909be1e6fa2c1bf89fc3255c0d3a3bca446b8b317f3b712e62b0a06",
+  "diff_image": "artifacts/WO-UI-01/diff-snapping-light.png",
+  "pixdiff": [
+   "5557 of 1024000 pixels differ (0.543%), max delta 206, mean delta 87.5, bbox x8..1234 y48..793",
+   "  (11,48) (237, 240, 244) vs (230, 237, 249)",
+   "  (12,48) (237, 240, 244) vs (223, 235, 253)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/ui/command-overlay-golden/history-dark.png",
+  "after_sha256": "2e6fce839bedae406015f0f503e6a3e47f1d1d30a4b34deb72473ade0ea9dde9",
+  "before_sha256": "c8b520bf79df968221c0d38c8c596312a5ca589fe01db47f4e09ff9d5bfee01b",
+  "diff_image": "artifacts/WO-UI-01/diff-history-dark.png",
+  "pixdiff": [
+   "4197 of 1024000 pixels differ (0.410%), max delta 117, mean delta 49.4, bbox x8..1226 y48..793",
+   "  (11,48) (23, 26, 31) vs (23, 30, 40)",
+   "  (12,48) (23, 26, 31) vs (22, 33, 47)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/ui/command-overlay-golden/history-light.png",
+  "after_sha256": "638522d29ccb3f96e152249a202e3376a23232aaf7b98c6728434b57fb3746ab",
+  "before_sha256": "be07614707df3a48b8f96f6634d1c96ec2bada40692e0b8271d95f04bea98629",
+  "diff_image": "artifacts/WO-UI-01/diff-history-light.png",
+  "pixdiff": [
+   "4193 of 1024000 pixels differ (0.409%), max delta 120, mean delta 49.9, bbox x8..1226 y48..793",
+   "  (11,48) (137, 139, 141) vs (133, 137, 144)",
+   "  (12,48) (137, 139, 141) vs (129, 136, 146)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/ui/command-overlay-golden/palette-dark.png",
+  "after_sha256": "711b50aab413f475df53827d20d64b370a80a73d74e0a9980266588f30611dc8",
+  "before_sha256": "8741605a0c636fb69c03579d3805ae313e104b952d0c0c6df317d69a6aab2283",
+  "diff_image": "artifacts/WO-UI-01/diff-palette-dark.png",
+  "pixdiff": [
+   "5556 of 1024000 pixels differ (0.543%), max delta 117, mean delta 50.6, bbox x8..1234 y48..793",
+   "  (11,48) (23, 26, 31) vs (23, 30, 40)",
+   "  (12,48) (23, 26, 31) vs (22, 33, 47)"
+  ],
+  "exit": 1
+ },
+ {
+  "fixture": "tests/ui/command-overlay-golden/palette-light.png",
+  "after_sha256": "4deb28ff993de79294ae50b6b02a47cf38b5f295f3b7564a806c0c88eed99f92",
+  "before_sha256": "827e5332475049fa944f2519e0e8318a12e493b21f895f9d2988b92f8e0207af",
+  "diff_image": "artifacts/WO-UI-01/diff-palette-light.png",
+  "pixdiff": [
+   "5556 of 1024000 pixels differ (0.543%), max delta 120, mean delta 50.8, bbox x8..1234 y48..793",
+   "  (11,48) (137, 139, 141) vs (133, 137, 144)",
+   "  (12,48) (137, 139, 141) vs (129, 136, 146)"
+  ],
+  "exit": 1
+ }
+]
