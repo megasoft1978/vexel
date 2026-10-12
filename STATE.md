@@ -391,3 +391,20 @@
   full-render source cap with a bounded token-storage budget (the largest measured corpus
   blocker: 11 files fail at offset 16777216), and **WO-HYGIENE-01** archives the disconnected
   second-root branch lineage as tags and prunes the 21 GB of stale worktrees.
+
+- Update 2026-10-12: **WO-QA-02** makes every fuzzer part of the final gate and stops routine
+  commands from rewriting pinned evidence. `./dev final` now runs shape, XML tokenizer, animation
+  and MCP fuzzers plus e2e, soak and both native smokes; `./dev animation-fuzz [cases] [seed]`
+  is new (200,000 cases / seed 20261012 default). `./dev fuzz-xml` gained `--output` and defaults
+  to `.cache/qa/`, so the WO-M2-03 packet pinned by `reports/M3/validate_packet.py` is no longer
+  rewritten by a routine campaign; `tests/fuzz/shape/shape_fuzz.py` defaults under `.cache/qa/`
+  too. `.github/workflows/fuzz.yml` gained the `push` trigger that `scripts/check_ci.py`
+  requires and writes the pinned packet only through an explicit `--output`. `./dev final` passes
+  end to end on this host (CTest 80/80, Python 331/331, fuzzers clean). Evidence:
+  `artifacts/WO-QA-02/`.
+- Update 2026-10-12: a separate defect was found while running the repository's own validators:
+  `python3 reports/M3/validate_packet.py --check` fails with `changed source hash: docs/PERF.md`,
+  because the M4 performance work updated that living document after the M3 packet pinned its
+  bytes. Exactly one pinned input is stale; every other frozen input still matches. Frozen as
+  **WO-QA-03**, which reclassifies living narrative inputs from frozen to recorded-but-not-enforced
+  and regenerates the packet under review.

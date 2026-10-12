@@ -1,0 +1,89 @@
+{
+ "facts": [
+  {
+   "index": 1,
+   "label": "python3 -m unittest tests.e2e.test_dev_final",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {
+    "python_plain": "4"
+   }
+  },
+  {
+   "index": 2,
+   "label": "./dev fuzz-xml --duration 5 --seed 20261012",
+   "exit": 0,
+   "seconds": 5.2,
+   "facts": {}
+  },
+  {
+   "index": 3,
+   "label": "./dev animation-fuzz 100000 20261012",
+   "exit": 0,
+   "seconds": 61.7,
+   "facts": {}
+  },
+  {
+   "index": 4,
+   "label": "./dev shape-fuzz --seed 20261010",
+   "exit": 0,
+   "seconds": 46.6,
+   "facts": {}
+  },
+  {
+   "index": 5,
+   "label": "python3 scripts/check_ci.py .github/workflows/fuzz.yml",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {}
+  },
+  {
+   "index": 6,
+   "label": "./dev final",
+   "exit": 0,
+   "seconds": 492.3,
+   "facts": {
+    "ctest": "100% tests passed, 0 tests failed out of 80",
+    "python": [
+     "331",
+     "331",
+     "0",
+     "0",
+     "0"
+    ],
+    "python_plain": "331",
+    "ledger": "479"
+   }
+  },
+  {
+   "index": 7,
+   "label": "python3 scripts/ledger.py validate ledger.jsonl",
+   "exit": 0,
+   "seconds": 0.1,
+   "facts": {
+    "ledger": "479"
+   }
+  },
+  {
+   "index": 8,
+   "label": "python3 scripts/wo_validate.py WO-QA-02 --ready",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {
+    "wo": [
+     "WO-QA-02",
+     "5",
+     "09fdffe1d9622cb61d96faf88d635097f98a838e6678168492a3d1cabf604a59"
+    ]
+   }
+  },
+  {
+   "index": 9,
+   "label": "git diff --check",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {}
+  }
+ ],
+ "failed": []
+}

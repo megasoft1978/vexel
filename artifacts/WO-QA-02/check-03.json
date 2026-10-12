@@ -1,0 +1,14 @@
+{
+ "index": 3,
+ "frozen_command": "./dev animation-fuzz 100000 20261012",
+ "argv": [
+  "./dev",
+  "animation-fuzz",
+  "100000",
+  "20261012"
+ ],
+ "exit_code": 0,
+ "duration_s": 61.74039816856384,
+ "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-asan\nninja: no work to do.\nanimation hierarchy fuzz: 100000 cases, parsed=100000, tracked=9172, decoded=100000, rendered=100000, kinds=25018/25045/24912/25025, hierarchies=16658/16704/16788/16676/16573/16601, seed-final=687629899957465122\n",
+ "stderr": ""
+}

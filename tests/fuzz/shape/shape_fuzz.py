@@ -16,7 +16,7 @@ def main():
     parser.add_argument("--duration", type=int, default=60)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--cases", type=int, default=1_000_000)
-    parser.add_argument("--output", type=Path, default=ROOT / "artifacts/WO-M4-04/fuzz-report.json")
+    parser.add_argument("--output", type=Path, default=ROOT / ".cache/qa/shape-fuzz.json")
     args = parser.parse_args()
     if not 1 <= args.duration <= 600 or not 1 <= args.cases <= 100_000_000 or not 0 <= args.seed <= 0xFFFFFFFF:
         parser.error("duration, case count, or seed is outside the configured bounds")

@@ -10,9 +10,11 @@ usage() {
     printf '%s\n' '       ./dev editor-smoke [<binary>]'
     printf '%s\n' 'usage: ./dev index-bench [--sizes 10MiB,100MiB] [--output PATH]'
     printf '%s\n' 'usage: ./dev perf-gate [--output PATH] [--history PATH] [--baseline PATH]'
-    printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz}'
+    printf '%s\n' 'usage: ./dev {asan|ubsan|fuzz|fuzz-xml|shape-fuzz|animation-fuzz}'
     # lane: w4-mcp
     printf '%s\n' '       ./dev mcp-fuzz [cases [seed]]'
+    printf '%s\n' '       ./dev animation-fuzz [cases [seed]]'
+    printf '%s\n' 'usage: ./dev fuzz-xml [--duration N] [--seed N] [--output PATH]'
     printf '%s\n' 'usage: ./dev bench-corpus [--run|--check]'
     printf '%s\n' '       ./dev tsan'
     printf '%s\n' '       ./dev e2e [--seed N] [--documents N] [--timeout-seconds N]'
@@ -20,7 +22,7 @@ usage() {
     printf '%s\n' '       ./dev t [-k PATTERN | --all | --list]   fast tests for changed files (inner loop)'
     printf '%s\n' '       ./dev shot <file.svg> [--size WxH] [--zoom N] [--out FILE.png]   render and print a PNG path'
     printf '%s\n' '       ./dev pixdiff A B [--out diff.png] [--tolerance N]   precise image diff'
-    printf '%s\n' '       ./dev final   full gate: verify + asan + ubsan + native smokes + e2e + soak + fuzz'
+    printf '%s\n' '       ./dev final   full gate: verify + asan + ubsan + all fuzzers + e2e + soak + native smokes'
     printf '%s\n' '       ./dev wo-help'
 }
 
@@ -61,6 +63,8 @@ case "$command_name" in
                 step "asan"; "$repo_root/dev" asan
                 step "ubsan"; "$repo_root/dev" ubsan
                 step "shape fuzz"; "$repo_root/dev" shape-fuzz --seed 20261010 --output "$repo_root/.cache/qa/shape-fuzz-final.json"
+                step "xml tokenizer fuzz (30 s)"; "$repo_root/dev" fuzz-xml --duration 30 --seed 20261010
+                step "animation fuzz (200000 cases)"; "$repo_root/dev" animation-fuzz 200000 20261010
                 step "mcp fuzz"; "$repo_root/dev" mcp-fuzz
                 step "e2e (render matrix, mutations)"; "$repo_root/dev" e2e
                 step "soak (1 minute)"; "$repo_root/dev" soak --minutes 1
@@ -89,7 +93,7 @@ if [ "$command_name" = run ]; then
         usage >&2
         exit 2
     fi
-elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != mcp-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ] && [ "${1:-}" != viewer-smoke ] && [ "${1:-}" != viewer-panel-smoke ] && [ "${1:-}" != editor-smoke ]; then
+elif [ "$#" -gt 1 ] && [ "${1:-}" != fuzz ] && [ "${1:-}" != fuzz-xml ] && [ "${1:-}" != shape-fuzz ] && [ "${1:-}" != animation-fuzz ] && [ "${1:-}" != mcp-fuzz ] && [ "${1:-}" != index-bench ] && [ "${1:-}" != perf-gate ] && [ "${1:-}" != bench-corpus ] && [ "${1:-}" != e2e ] && [ "${1:-}" != soak ] && [ "${1:-}" != viewer-smoke ] && [ "${1:-}" != viewer-panel-smoke ] && [ "${1:-}" != editor-smoke ]; then
     usage >&2
     exit 2
 fi
@@ -99,7 +103,7 @@ case "$command_name" in
         usage
         exit 0
         ;;
-    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|mcp-fuzz|viewer-smoke|viewer-panel-smoke|editor-smoke|wo-help|doctor|bundle|dmg|e2e|soak)
+    build|test-fast|test|verify|run|index-bench|perf-gate|bench-corpus|asan|ubsan|tsan|fuzz|fuzz-xml|shape-fuzz|animation-fuzz|mcp-fuzz|viewer-smoke|viewer-panel-smoke|editor-smoke|wo-help|doctor|bundle|dmg|e2e|soak)
         ;;
     *)
         usage >&2
@@ -196,6 +200,7 @@ case "$command_name" in
         shift
         duration=
         seed=
+        report=
         while [ "$#" -gt 0 ]; do
             case "$1" in
                 --duration)
@@ -204,6 +209,9 @@ case "$command_name" in
                 --seed)
                     [ "$#" -ge 2 ] || { usage >&2; exit 2; }
                     seed=$2; shift 2 ;;
+                --output)
+                    [ "$#" -ge 2 ] || { usage >&2; exit 2; }
+                    report=$2; shift 2 ;;
                 *) usage >&2; exit 2 ;;
             esac
         done
@@ -213,10 +221,30 @@ case "$command_name" in
         [ "$seed" -le 4294967295 ] || { usage >&2; exit 2; }
         cmake --preset mac-asan
         cmake --build --preset mac-asan --target xml_tokenizer_fuzz
-        report=artifacts/WO-M2-03/pr-smoke.json
-        [ "$duration" -ne 600 ] || report=artifacts/WO-M2-03/scheduled-campaign.json
+        # Default reports stay under the ignored .cache/ tree. Writing the pinned
+        # WO-M2-03 packet requires an explicit --output.
+        if [ -z "$report" ]; then
+            mkdir -p .cache/qa
+            report=.cache/qa/xml-fuzz-pr-smoke.json
+            [ "$duration" -ne 600 ] || report=.cache/qa/xml-fuzz-scheduled.json
+        fi
         python3 scripts/xml_fuzz_campaign.py --binary build/mac-asan/bin/xml_tokenizer_fuzz \
             --duration "$duration" --seed "$seed" --output "$report"
+        ;;
+    animation-fuzz)
+        shift
+        cases=200000
+        seed=20261012
+        [ "$#" -eq 0 ] || { cases=$1; shift; }
+        [ "$#" -eq 0 ] || { seed=$1; shift; }
+        [ "$#" -eq 0 ] || { usage >&2; exit 2; }
+        case "$cases" in ''|*[!0-9]*) usage >&2; exit 2 ;; esac
+        case "$seed" in ''|*[!0-9]*) usage >&2; exit 2 ;; esac
+        [ "$cases" -ge 1 ] && [ "$cases" -le 100000000 ] || { usage >&2; exit 2; }
+        [ "$seed" -le 4294967295 ] || { usage >&2; exit 2; }
+        cmake --preset mac-asan
+        cmake --build --preset mac-asan --target animation_fuzz
+        build/mac-asan/bin/animation_fuzz "$cases" "$seed"
         ;;
     shape-fuzz)
         shift

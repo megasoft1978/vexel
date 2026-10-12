@@ -9,7 +9,7 @@ suites) belong to the final gate only.
 | Targeted | `./dev t -k PATTERN` | 0.2–14 s | CTest `-R PATTERN` and Python `-k PATTERN`. |
 | Wider | `./dev t --full` / `--all` | ~15 s / ~25 s | Adds the slow Python modules / runs every CTest in parallel. |
 | Pre-merge | `./dev verify` | ~1 min | Debug + Release build, all CTest, all Python. |
-| Final gate | `./dev final` | several minutes | verify + ASan + UBSan + shape/MCP fuzz + e2e + soak + real-window editor and viewer smokes. Run once before merging a milestone. |
+| Final gate | `./dev final` | ~15 minutes | verify + ASan + UBSan + shape + XML tokenizer + animation fuzzers + MCP fuzz + e2e + soak + real-window editor and viewer smokes. Run once before merging a milestone. |
 
 The mapping from paths to tests lives in `tests/test_map.json`. A changed source file with no mapping is
 reported as `unmapped sources` so the map cannot silently rot. Add a prefix when you add a module.
@@ -22,6 +22,23 @@ reported as `unmapped sources` so the map cannot silently rot. Add a prefix when
 * `./dev pixdiff A B [--out diff.png] [--tolerance N]` compares PPM/PNG images: differing pixel count, bounding
   box, max/mean channel delta, the first differing pixels with both colours, and a red-highlight image.
   Exit status 0 means identical within tolerance. Use it for golden failures and before/after UI work.
+
+## Fuzz campaigns
+
+Every fuzzer is reachable from `./dev` and every one of them runs in `./dev final`:
+
+| Command | Target | Final-gate bound |
+| --- | --- | --- |
+| `./dev shape-fuzz [--seed N] [--duration N]` | `shape_fuzz` | 1,000,000 cases |
+| `./dev fuzz-xml [--duration N] [--seed N] [--output PATH]` | `xml_tokenizer_fuzz` | 30 s |
+| `./dev animation-fuzz [cases] [seed]` | `animation_fuzz` | 200,000 cases |
+| `./dev mcp-fuzz [cases [seed]]` | `mcp_fuzz` | 200,000 cases |
+
+Default reports are written under the ignored `.cache/qa/` tree. The pinned
+milestone packets `artifacts/WO-M2-03/pr-smoke.json` and
+`artifacts/WO-M2-03/scheduled-campaign.json` are evidence controlled by
+`reports/M3/validate_packet.py`; `./dev fuzz-xml` writes them only when given an
+explicit `--output`, so a routine campaign can no longer invalidate that packet.
 
 ## Real-corpus render diagnostics
 

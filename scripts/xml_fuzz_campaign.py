@@ -30,8 +30,8 @@ def confined_output_path(path: str | Path, root: Path = ROOT) -> Path:
         candidate = root / candidate
     resolved = candidate.resolve()
     base = root.resolve()
-    if not any(resolved.is_relative_to(base / part) for part in (".cache/WO-M2-03", "artifacts/WO-M2-03")):
-        raise ValueError("output must stay below .cache/WO-M2-03 or artifacts/WO-M2-03")
+    if not any(resolved.is_relative_to(base / part) for part in (".cache", "artifacts/WO-M2-03")):
+        raise ValueError("output must stay below .cache or artifacts/WO-M2-03")
     return resolved
 
 
