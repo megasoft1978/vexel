@@ -408,3 +408,15 @@
   bytes. Exactly one pinned input is stale; every other frozen input still matches. Frozen as
   **WO-QA-03**, which reclassifies living narrative inputs from frozen to recorded-but-not-enforced
   and regenerates the packet under review.
+
+- Update 2026-10-12: **WO-QA-02 revision 6** supersedes revision 5 after the first read-only
+  verifier round found scope and record-integrity defects. Revision 6 also fixes
+  `scripts/xml_fuzz_campaign.py`, whose failure inputs and tracked canary files were written to a
+  fixed `artifacts/WO-M2-03/failures/**` path regardless of `--output`; that directory is now
+  derived from the requested report, so a campaign without `--output` writes nothing under
+  `artifacts/`. The final-gate assertions are no longer vacuous: each of the four fuzzer steps is
+  asserted against its exact bound and seed. `./dev final` passes end to end in 457 s. One
+  observation is recorded rather than hidden: the first gate attempt failed inside the
+  real-window `editor-smoke` with `saved SVG changed bytes outside the selected transform`;
+  the smoke passes standalone and the re-run passed, so it is a timing-sensitive smoke defect,
+  not a product regression, and the smoke was not changed by this order.

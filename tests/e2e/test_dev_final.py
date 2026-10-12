@@ -17,19 +17,22 @@ class DevFinalCommandTests(unittest.TestCase):
         self.assertIsNotNone(match, "final gate must run shape-fuzz")
         self.assertRegex(match.group(1), r"(?:^|\s)--seed(?:\s|$)")
 
-    def test_final_gate_runs_every_fuzzer_with_a_fixed_seed(self):
+    #: Each fuzzer step and the exact bound and seed the final gate must pass.
+    EXPECTED_FUZZ_ARGS = {
+        "shape-fuzz": r"--seed 20261010",
+        "fuzz-xml": r"--duration 30 --seed 20261010",
+        "animation-fuzz": r"200000 20261010",
+        "mcp-fuzz": r"200000 20261010",
+    }
+
+    def test_final_gate_runs_every_fuzzer_with_its_bound_and_seed(self):
         block = self._final_block()
-        for step in ("shape-fuzz", "fuzz-xml", "animation-fuzz", "mcp-fuzz"):
+        for step, expected in self.EXPECTED_FUZZ_ARGS.items():
             with self.subTest(step=step):
                 match = re.search(rf'"\$repo_root/dev" {step}([^\n]*)', block)
                 self.assertIsNotNone(match, f"final gate must run {step}")
-                args = match.group(1)
-                if step == "fuzz-xml":
-                    self.assertRegex(args, r"(?:^|\s)--seed(?:\s|$)")
-                elif step == "mcp-fuzz":
-                    continue
-                else:
-                    self.assertRegex(args, r"\b\d{6,}\b")
+                self.assertIn(expected, match.group(1),
+                              f"{step} must be bounded as {expected!r}")
 
     def test_animation_fuzz_command_defaults_stay_bounded(self):
         script = (ROOT / "dev").read_text()
@@ -47,6 +50,14 @@ class DevFinalCommandTests(unittest.TestCase):
         shape = (ROOT / "tests/fuzz/shape/shape_fuzz.py").read_text()
         self.assertIn('.cache/qa/shape-fuzz.json', shape)
         self.assertNotIn("artifacts/WO-M4-04/fuzz-report.json", shape)
+
+    def test_xml_failure_evidence_follows_the_report_path(self):
+        campaign = (ROOT / "scripts/xml_fuzz_campaign.py").read_text()
+        self.assertIn("def failure_directory(", campaign)
+        self.assertNotIn('confined_output_path("artifacts/WO-M2-03/failures', campaign)
+        # The confinement policy still allows the ignored .cache tree and the
+        # pinned packet directory, and nothing else.
+        self.assertIn('".cache", "artifacts/WO-M2-03"', campaign)
 
 
 if __name__ == "__main__":

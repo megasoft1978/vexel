@@ -7,7 +7,7 @@
   ".github/workflows/fuzz.yml"
  ],
  "exit_code": 0,
- "duration_s": 0.024204730987548828,
+ "duration_s": 0.021332263946533203,
  "stdout": "macOS-only CI policy: pass\n",
  "stderr": ""
 }

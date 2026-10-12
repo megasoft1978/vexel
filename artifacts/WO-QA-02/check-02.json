@@ -10,7 +10,7 @@
   "20261012"
  ],
  "exit_code": 0,
- "duration_s": 5.2126688957214355,
+ "duration_s": 5.241513967514038,
  "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-asan\nninja: no work to do.\n",
  "stderr": ""
 }

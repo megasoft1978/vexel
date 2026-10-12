@@ -65,7 +65,7 @@ case "$command_name" in
                 step "shape fuzz"; "$repo_root/dev" shape-fuzz --seed 20261010 --output "$repo_root/.cache/qa/shape-fuzz-final.json"
                 step "xml tokenizer fuzz (30 s)"; "$repo_root/dev" fuzz-xml --duration 30 --seed 20261010
                 step "animation fuzz (200000 cases)"; "$repo_root/dev" animation-fuzz 200000 20261010
-                step "mcp fuzz"; "$repo_root/dev" mcp-fuzz
+                step "mcp fuzz (200000 cases)"; "$repo_root/dev" mcp-fuzz 200000 20261010
                 step "e2e (render matrix, mutations)"; "$repo_root/dev" e2e
                 step "soak (1 minute)"; "$repo_root/dev" soak --minutes 1
                 step "native editor smoke (real window, real mouse)"; "$repo_root/dev" editor-smoke

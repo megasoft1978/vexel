@@ -6,7 +6,7 @@
    "exit": 0,
    "seconds": 0.0,
    "facts": {
-    "python_plain": "4"
+    "python_plain": "5"
    }
   },
   {
@@ -20,14 +20,14 @@
    "index": 3,
    "label": "./dev animation-fuzz 100000 20261012",
    "exit": 0,
-   "seconds": 61.7,
+   "seconds": 58.8,
    "facts": {}
   },
   {
    "index": 4,
    "label": "./dev shape-fuzz --seed 20261010",
    "exit": 0,
-   "seconds": 46.6,
+   "seconds": 42.5,
    "facts": {}
   },
   {
@@ -40,19 +40,19 @@
   {
    "index": 6,
    "label": "./dev final",
-   "exit": 0,
-   "seconds": 492.3,
+   "exit": 1,
+   "seconds": 452.9,
    "facts": {
     "ctest": "100% tests passed, 0 tests failed out of 80",
     "python": [
-     "331",
-     "331",
+     "332",
+     "332",
      "0",
      "0",
      "0"
     ],
-    "python_plain": "331",
-    "ledger": "479"
+    "python_plain": "332",
+    "ledger": "487"
    }
   },
   {
@@ -61,7 +61,7 @@
    "exit": 0,
    "seconds": 0.1,
    "facts": {
-    "ledger": "479"
+    "ledger": "487"
    }
   },
   {
@@ -72,8 +72,8 @@
    "facts": {
     "wo": [
      "WO-QA-02",
-     "5",
-     "09fdffe1d9622cb61d96faf88d635097f98a838e6678168492a3d1cabf604a59"
+     "6",
+     "fd4a95b5fc5ffcc4a55d9d4d28ae77eab0032774a5a48c25ed53e5b293bb25a4"
     ]
    }
   },
@@ -85,5 +85,12 @@
    "facts": {}
   }
  ],
- "failed": []
+ "failed": [
+  {
+   "index": 6,
+   "label": "./dev final",
+   "exit": 1,
+   "stderr_tail": "nner.py: error: duration must be 1..600 and seed must be uint32\nusage: test_runner.py [-h] [--duration DURATION] [--seed SEED]\n                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]\n                      [--self-test-timeout]\ntest_runner.py: error: duration must be 1..600 and seed must be uint32\nRan 332 tests in 41.430s\n\nOK\neditor smoke exited with status 1\nnative editor smoke diagnostic: phase=interactive editor smoke\nrunner pid=5240 state=exited 1\nprocess group:\nPID  PPID  PGID STAT ELAPSED COMMAND\nsmoke log tail:\nsaved SVG changed bytes outside the selected transform: b\"<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'></svg>\\n\"\nsmoke log retained at: /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/vexel-editor-smoke-3v11lm0g.log\n"
+  }
+ ]
 }

@@ -156,6 +156,11 @@ def write_json(path: Path, report: dict[str, object]) -> None:
     path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def failure_directory(output: Path) -> Path:
+    """Failure evidence lives beside the requested report, never in a fixed path."""
+    return output.parent / "failures"
+
+
 def run_canary(output: Path) -> int:
     original = (ROOT / "tests/svg/xml/fuzz/seeds/synthetic-canary.seed").read_bytes()
     initial = canary_run(original)
@@ -164,7 +169,7 @@ def run_canary(output: Path) -> int:
     minimized = minimize(original, lambda item: initial_reproduces(item, expected), budget=64)
     replay = canary_run(minimized)
     same = fingerprint(replay["stderr"]) == expected
-    failure_dir = confined_output_path("artifacts/WO-M2-03/failures/synthetic-canary")
+    failure_dir = confined_output_path(failure_directory(output) / "synthetic-canary")
     failure_dir.mkdir(parents=True, exist_ok=True)
     (failure_dir / "original.input").write_bytes(original)
     (failure_dir / "minimized.input").write_bytes(minimized)
@@ -272,7 +277,7 @@ def run_campaign(args: argparse.Namespace, output: Path) -> int:
         report["signal_or_status"] = result["returncode"]
         expected = fingerprint(stderr)
         report["fingerprint"] = expected
-        failures = confined_output_path("artifacts/WO-M2-03/failures")
+        failures = confined_output_path(failure_directory(output))
         failures.mkdir(parents=True, exist_ok=True)
         (failures / f"seed-{args.seed}-raw-output.txt").write_bytes(combined)
         failure_iteration = None
