@@ -1,0 +1,85 @@
+{
+ "status": "complete",
+ "base_sha": "5894cb40acfaf0aac10127d82c30fb8be9d38cb4",
+ "head_sha": "ac950d1231585b8d9c3dd2610603b55bd9dd333a",
+ "acceptance": {
+  "AC-1": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-01.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  },
+  "AC-2": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-02.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  },
+  "AC-3": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-03.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  },
+  "AC-4": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-04.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  },
+  "AC-5": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-05.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  },
+  "AC-6": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-06.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  },
+  "AC-7": {
+   "commands": [
+    {
+     "argv": [
+      "see",
+      "artifacts/WO-QA-01/check-07.json"
+     ],
+     "exit_code": 0
+    }
+   ]
+  }
+ },
+ "summary": "Records the first complete full-gate baseline and repairs ./dev editor-smoke. The W15 accessibility lane added a 'Selected on canvas' layer-row value, so two smoke assertions that expected an empty row value timed out; selection deliberately survives hiding and locking, so the driver gained a not-contains= condition and the two steps assert the state they toggle. No product code changed. Sixteen frozen commands pass with a clean tree: CTest 80/80, Python 328/328, ASan and UBSan 80/80, e2e, soak, shape fuzz 1000000 cases, mcp fuzz, viewer smoke, editor smoke, XML fuzz 30 s and animation fuzz 1000000 cases. Also records that ./dev fuzz-xml rewrites the pinned artifacts/WO-M2-03/pr-smoke.json, which a separate order fixes."
+}
