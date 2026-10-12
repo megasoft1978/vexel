@@ -6,7 +6,7 @@ milestone: M0
 owner: project-owner
 executor: deepseek-flash
 base_sha: 27e7781207c746a9012dd4b15d98df0478cd82ef
-spec_sha256: 1bda3a742b2919041c127a3a4f2f30d548b17511d319c65aa788a3842ddde52d
+spec_sha256: 63907b8ab04bdcde151b99bcbd647ad9f27818b45600f0d61a83de610e64eff4
 parallel_safe: false
 network: false
 ---
@@ -33,7 +33,7 @@ Close the failed and unverifiable acceptance criteria of `work/WO-HYGIENE-01.md`
 1. `artifacts/WO-HYGIENE-01/inventory-before.json`: derived from `artifacts/hygiene-worktrees-before.json` plus the eight tip SHAs, marked `"reconstructed": true`, stating that the pre-pruning `git branch -vv` and `git rev-list --all --count` were not recorded and cannot be recovered.
 2. `artifacts/WO-HYGIENE-01/archive-tags.json`: for each of the four archive refs: name, kind (tag/branch), object type (lightweight or annotated, as found), target SHA; per tip: name, SHA, and the `git merge-base --is-ancestor` result against `archive/second-lineage-final` and `archive/second-lineage-tip`; plus the deviation note on per-tip tags from Context.
 3. Verify each prunable entry's HEAD is reachable (`git for-each-ref --contains <sha>` nonempty), record it, then run `git worktree prune`.
-4. `artifacts/WO-HYGIENE-01/inventory-after.json`: `git worktree list --porcelain`, linked count, `du -sh .worktrees`, `git rev-list --all --count`, `git branch --no-merged main`, the reduction from 98, and the reachability result for every `head` in the before record.
+4. `artifacts/WO-HYGIENE-01/inventory-after.json`: `git worktree list --porcelain`, linked count, `du -sh "$(git rev-parse --git-common-dir)/../.worktrees"` (the main checkout's `.worktrees`, reachable from any worktree), `git rev-list --all --count`, `git branch --no-merged main`, the reduction from 98, and the reachability result for every `head` in the before record.
 5. Record each verification command, its exit code and the last 40 output lines in `artifacts/WO-GAP-HYGIENE-01/check-NN.txt`.
 
 # Acceptance criteria
@@ -56,7 +56,7 @@ git tag --list 'archive/*' --format='%(refname) %(objecttype) %(*objectname) %(o
 git for-each-ref refs/heads/archive refs/remotes/origin/archive
 git branch --no-merged main
 git rev-list --all --count
-du -sh .worktrees
+du -sh "$(git rev-parse --git-common-dir)/../.worktrees"
 ./dev build
 ./dev t --all
 ./dev verify
