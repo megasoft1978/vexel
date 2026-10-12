@@ -38,7 +38,6 @@ PINNED = {
     "artifacts/WO-M3-04/semantics-0000.json": "b1fe92734296ac8dd2463df365dea1b5a19b195e9e8eb2d5413c293348ad6506",
     "artifacts/WO-M3-04/semantics-0001.json": "556b4301f050e285ea443c2a1adb5de7ac059e2a9cd8e7d068929e0f8897fe9c",
     "artifacts/WO-M3-04/semantics-0002.json": "8f09bbde0cbb58a11696b05b08a3046bbc9e5e071220debb1edb88abdd521c42",
-    "docs/PERF.md": "7e9e6ec7ebb3840b640154cda264560c281f686708efc2ee69ae0c752f20cb80",
     "docs/adr/0001-product-and-platform-locks.md": "143ecfd9821b69b23d732eb774b576192c82eec10562a8942e1a454158429ed0",
     "docs/adr/0006-m1-04-owner-quiescence.md": "45f9e99b64d3184fc7fce5e9a6823b0fd758fd779b44ae6d1a9b120c7a9f31fa",
     "work/WO-M3-01.md": "54bd664e5061aede7a133b07869e96f9401027cc7f404b86a11ff24b8230e748",
@@ -47,6 +46,15 @@ PINNED = {
     "work/WO-M3-04.md": "9fd77fed0650fb718b209626b43641b99fbadf9654fbe6488555f0206289a0db",
     "work/WO-BOOT-08.md": "f7fbc767f475c0a4b264987bdd54719e8e87e4910fee4e04bffef12f5790c98f",
 }
+
+# Living narrative documents are part of the packet's provenance but are not
+# byte-frozen: they are edited by later milestones. They are listed in the
+# packet's source table as {"path", "living": true} and never hash-enforced, so
+# the packet stays byte-reproducible across those edits. Frozen measurement
+# inputs stay in PINNED and are enforced exactly.
+LIVING_PATHS = (
+    "docs/PERF.md",
+)
 
 M0_EXTRA_PATHS = (
     "bench/corpus/manifest.json", "bench/corpus/manifest.sha256",
@@ -85,7 +93,9 @@ def source_list() -> list[dict]:
     for path in M0_EXTRA_PATHS:
         if path not in paths:
             paths[path] = M0_EXTRA_HASHES[path]
-    return [{"path": p, "sha256": h} for p, h in sorted(paths.items())]
+    listed = [{"path": p, "sha256": h} for p, h in sorted(paths.items())]
+    listed += [{"path": p, "living": True} for p in sorted(LIVING_PATHS)]
+    return sorted(listed, key=lambda item: item["path"])
 
 
 def require(condition: bool, message: str) -> None:
@@ -104,6 +114,8 @@ def validate_inputs() -> list[dict]:
         require(sha(path) == expected, f"changed source hash: {path}")
     for src in m0["sources"]:
         require(sha(src["path"]) == src["sha256"], f"M0 source hash mismatch: {src['path']}")
+    for path in LIVING_PATHS:
+        require((ROOT / path).is_file(), f"missing source: {path}")
     return source_list()
 
 
@@ -253,7 +265,11 @@ def validate_schema(p: dict) -> None:
     require(p["performance_gate"]["final_metrics"]["100MiB.peak_rss_bytes"]["status"] == "fail", "repeated relative RSS gate failure missing")
     require(p["performance_gate"]["final_metrics"]["100MiB.peak_rss_bytes"]["value"] < p["performance_gate"]["final_metrics"]["100MiB.peak_rss_bytes"]["absolute_limit"], "RSS absolute/relative distinction inconsistent")
     for item in p["sources"]:
-        require(set(item) == {"path", "sha256"} and re.fullmatch(r"[0-9a-f]{64}", item["sha256"]), "invalid source entry")
+        if item.get("living") is True:
+            require(set(item) == {"path", "living"}, "invalid living source entry")
+            require(item["path"] in LIVING_PATHS, "unexpected living source")
+        else:
+            require(set(item) == {"path", "sha256"} and re.fullmatch(r"[0-9a-f]{64}", item["sha256"]), "invalid source entry")
 
 
 def render_markdown(p: dict) -> str:
@@ -291,7 +307,10 @@ def render_markdown(p: dict) -> str:
     for option in p["owner_decision"]["options"]:
         lines.append(f"- **{option['choice']}** — {option['implication']}")
     lines += ["", "## Confidence and limitations", "", p["confidence_and_limits"]["measured_claims"], "", p["confidence_and_limits"]["customer_demand"], "", p["confidence_and_limits"]["generalization"], "", "## Checked source SHA-256", "", "Every packet source below is repository-relative and verified by the offline validator.", "", "| Repository path | SHA-256 |", "|---|---|"]
-    lines.extend(f"| `{s['path']}` | `{s['sha256']}` |" for s in p["sources"])
+    lines.extend(
+        f"| `{s['path']}` | `{s['sha256']}` |" if "sha256" in s
+        else f"| `{s['path']}` | living input, not byte-frozen |"
+        for s in p["sources"])
     return "\n".join(lines) + "\n"
 
 

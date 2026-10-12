@@ -1,0 +1,14 @@
+{
+ "index": 6,
+ "frozen_command": "python3 scripts/wo_validate.py WO-QA-03 --ready",
+ "argv": [
+  "python3",
+  "scripts/wo_validate.py",
+  "WO-QA-03",
+  "--ready"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.027811050415039062,
+ "stdout": "valid WO-QA-03 revision 3 sha256 5165c21af5a911f6d13ff37896e767e352274e5fe41807bad04ded92985ac14b\n",
+ "stderr": ""
+}

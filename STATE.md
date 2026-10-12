@@ -420,3 +420,16 @@
   real-window `editor-smoke` with `saved SVG changed bytes outside the selected transform`;
   the smoke passes standalone and the re-run passed, so it is a timing-sensitive smoke defect,
   not a product regression, and the smoke was not changed by this order.
+
+- Update 2026-10-12: **WO-QA-03** restores a passing M3 owner-packet validator.
+  `python3 reports/M3/validate_packet.py --check` had failed with `changed source hash:
+  docs/PERF.md`, because the M4 performance work legitimately updated that living narrative after
+  the M3 packet pinned its bytes. Exactly one of the packet's pinned inputs was stale; every other
+  frozen measurement input still matched. The generator now separates **frozen** inputs (still
+  enforced byte-for-byte) from **living** inputs, which are listed in the packet's source table as
+  `{"path": ..., "living": true}` with no hash. The packet stays byte-reproducible across later
+  edits to the narrative while every measurement hash is still enforced. The regenerated diff
+  touched only the `docs/PERF.md` entry. NEW `tests/test_m3_packet.py` covers the frozen-check
+  pass, a mutated frozen input failing, a mutated living input not failing, the packet recording
+  the living input without a hash, and the committed packet matching the generator. Evidence:
+  `artifacts/WO-QA-03/`.

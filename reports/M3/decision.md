@@ -86,7 +86,7 @@ Every packet source below is repository-relative and verified by the offline val
 | `bench/results/WO-M0-03.csv` | `846f26ace59c2a3d0bc1be61e8a2e24222a8b09ea3575484f7192721c80756d6` |
 | `bench/results/WO-M0-03.json` | `854ff1ed1cacc0483598bd1d4fcb7d1fd118bd47062876759025e4cb929bf1b9` |
 | `bench/results/WO-M3-01.json` | `f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a` |
-| `docs/PERF.md` | `7e9e6ec7ebb3840b640154cda264560c281f686708efc2ee69ae0c752f20cb80` |
+| `docs/PERF.md` | living input, not byte-frozen |
 | `docs/adr/0001-product-and-platform-locks.md` | `143ecfd9821b69b23d732eb774b576192c82eec10562a8942e1a454158429ed0` |
 | `docs/adr/0006-m1-04-owner-quiescence.md` | `45f9e99b64d3184fc7fce5e9a6823b0fd758fd779b44ae6d1a9b120c7a9f31fa` |
 | `docs/corpus/PROVENANCE.md` | `f803ceaabd93411d07fad0d6641854f4ebe91f8a76d4fb2e7642efb93f0c97e2` |

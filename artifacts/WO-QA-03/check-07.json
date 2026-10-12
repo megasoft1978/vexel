@@ -1,0 +1,14 @@
+{
+ "index": 7,
+ "frozen_command": "git diff --check",
+ "argv": [
+  "git",
+  "diff",
+  "--check"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.009303092956542969,
+ "stdout": "",
+ "stderr": "",
+ "note": "Re-executed after the evidence README was written."
+}

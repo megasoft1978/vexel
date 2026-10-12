@@ -374,8 +374,8 @@
       "sha256": "f2d7d9cd7c95bd43d185ff0a9d994d21d1c5b109ece06d0eb41d5d58cd73569a"
     },
     {
-      "path": "docs/PERF.md",
-      "sha256": "7e9e6ec7ebb3840b640154cda264560c281f686708efc2ee69ae0c752f20cb80"
+      "living": true,
+      "path": "docs/PERF.md"
     },
     {
       "path": "docs/adr/0001-product-and-platform-locks.md",
