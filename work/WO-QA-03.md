@@ -1,12 +1,12 @@
 ---
 id: WO-QA-03
-revision: 1
+revision: 2
 status: READY
 milestone: M3
 owner: project-owner
 executor: deepseek-flash
 base_sha: ef09a95423604fc4b41a9802bb9a4f3c94511cc7
-spec_sha256: 7cc99dd97e0ca2d995b0364cdbccc5654b60273b8469c5543477cf4b256ffd32
+spec_sha256: e4983d56fb6ec7fc580875d22b191a46d70d9a4d0b8498dfbcd318c442230ce8
 parallel_safe: false
 network: false
 ---
@@ -39,14 +39,14 @@ Restore a passing, deterministic M3 owner-packet validator. `python3 reports/M3/
 - `work/**`, `OWNER-DIRECTIVES.md`, `AGENTS.md`, `docs/adr/**`, `src/**`, `app/**`, `CMakeLists.txt`, `tests/oracle/**`, `tests/golden/**`, `bench/**`, `docs/PERF.md` itself, every other `artifacts/WO-*/**` path, `reports/M0/**`, `reports/M4/**`, and every path outside the allowlist.
 
 # Required implementation
-1. In `reports/M3/validate_packet.py`, separate the input set into **frozen** inputs (enforced byte-for-byte, exactly as today) and **living** inputs (hashed and recorded, but not enforced). Move `docs/PERF.md` to the living set and document why in the generator's own comment.
+1. In `reports/M3/validate_packet.py`, separate the input set into **frozen** inputs (enforced byte-for-byte, exactly as today) and **living** inputs. Move `docs/PERF.md` to the living set and document why in the generator's own comment. A living input must be listed in the packet's `sources` as `{"path": ..., "living": true}` with no byte hash, so the packet stays byte-reproducible no matter how the narrative document is later edited; a frozen input keeps its exact `{"path", "sha256"}` entry and is still enforced. Update `validate_schema` and `render_markdown` for the living entry shape.
 2. Keep every other input in the frozen set unchanged, including their hashes.
-3. Regenerate the packet with `python3 reports/M3/validate_packet.py --write` and inspect the diff of `reports/M3/evidence.json` and `reports/M3/decision.md`. The diff must change only the `docs/PERF.md` entry (its hash and its living classification) and any derived prose that names that entry. If anything else changes, stop and record the unexpected delta instead of committing.
-4. Add `tests/test_m3_packet.py`, which runs the validator's functions in-process and asserts: (a) the current tree passes the frozen check; (b) mutating a frozen input's expected hash makes the check fail; (c) a simulated change to a living input does **not** make the frozen check fail; (d) the living input's current hash is still recorded in the packet.
+3. Regenerate the packet with `python3 reports/M3/validate_packet.py --write` and inspect the diff of `reports/M3/evidence.json` and `reports/M3/decision.md`. The diff must change only the `docs/PERF.md` entry (its hash replaced by the living marker) and its row in the Markdown source table. If anything else changes, stop and record the unexpected delta instead of committing.
+4. Add `tests/test_m3_packet.py`, which runs the validator's functions in-process and asserts: (a) the current tree passes the frozen check; (b) mutating a frozen input's expected hash makes the check fail; (c) a simulated change to a living input does **not** make the frozen check fail, and the living input is still listed in the packet's source table; (d) the packet contains no hash for the living input.
 5. Record in `artifacts/WO-QA-03/` the before/after validator output, the diff summary, and the justification for reclassifying `docs/PERF.md`.
 
 # Acceptance criteria (machine-checkable)
-- AC-1 `python3 reports/M3/validate_packet.py --check` exits 0 and reports the same number of checked sources as before this order.
+- AC-1 `python3 reports/M3/validate_packet.py --check` exits 0 and reports the same number of sources as before this order.
 - AC-2 `python3 -m unittest tests.test_m3_packet` exits 0 and covers the four cases in Required implementation item 4.
 - AC-3 `git diff --name-status` lists only allowlisted paths, and no frozen input besides the packet's two derived outputs changed: in particular `git diff --name-only -- bench/ artifacts/ docs/PERF.md work/` is empty.
 - AC-4 `./dev verify` and `./dev t --all` exit 0.
