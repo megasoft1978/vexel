@@ -43,8 +43,11 @@ python3 scripts/corpus_render_report.py \
   report, so the tool can never silently describe different inputs.
 * Files larger than `--max-bytes` (default 32 MiB) are recorded as `skipped` with a reason, so the
   report always accounts for every manifest entry.
-* The JSON output is byte-reproducible: wall-clock timing is excluded by design and only the Markdown
-  summary reports elapsed milliseconds.
+* The JSON output is byte-reproducible: wall-clock timing is excluded from the report entirely by
+  design, in both the JSON and the Markdown summary, so that two runs over the same inputs compare
+  byte-for-byte.
+* `--timeout` is the render budget per file and `--trial-timeout-grace` adds slack on top of it; the
+  effective budget is recorded in the report.
 * `tests/test_corpus_render_report.py` covers the digest guard, diagnostic parsing and verdict
   mapping, size/skip accounting, the missing-source path, and JSON determinism, using an injected
   fake runner so it needs neither the corpus nor a built binary.

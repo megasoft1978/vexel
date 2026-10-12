@@ -66,10 +66,26 @@ class DiagnosticParsingTests(unittest.TestCase):
             report_tool.failure_note("render-frame: /tmp/b.svg: other\n", Path("/tmp/a.svg"))
         )
 
-    def test_feature_specific_unsupported_maps_to_unsupported(self) -> None:
+    def test_real_camel_case_feature_category_is_parsed_and_mapped(self) -> None:
+        # src/svg/shape/document.c emits mixed-case feature categories.
+        stderr = "render-frame: /tmp/a.svg: unsupported-feTurbulence at byte 42\n"
         self.assertEqual(
-            report_tool.verdict_for("unsupported-fe-turbulence", 1, False), "unsupported"
+            report_tool.parse_diagnostic(stderr, Path("/tmp/a.svg")),
+            ("unsupported-feTurbulence", 42),
         )
+        self.assertEqual(
+            report_tool.verdict_for("unsupported-feTurbulence", 1, False), "unsupported"
+        )
+        for name in (
+            "unsupported-feDisplacementMap",
+            "unsupported-feConvolveMatrix",
+            "unsupported-feImage",
+            "unsupported-feLighting",
+            "unsupported-feMorphology",
+        ):
+            self.assertEqual(report_tool.parse_diagnostic(
+                f"render-frame: /tmp/a.svg: {name} at byte 1\n", Path("/tmp/a.svg")
+            ), (name, 1))
 
     def test_verdict_vocabulary_is_the_frozen_set(self) -> None:
         for category in ("invalid-argument", "none", "mystery", "malformed"):
@@ -201,7 +217,7 @@ class ReportShapeTests(unittest.TestCase):
     def _report(self, tmp: str, runner: _FakeRunner, max_bytes: int = 1024) -> dict:
         return report_tool.build_report(
             self._entries(), self._corpus(tmp), Path("fake-bin"), "64x64", max_bytes, 5.0,
-            Path(tmp) / "scratch.ppm", runner,
+            Path(tmp) / "scratch.ppm", runner, timeout_grace=0.0,
         )
 
     def test_histogram_and_skipped_accounting_cover_every_entry(self) -> None:
@@ -280,6 +296,25 @@ class ReportShapeTests(unittest.TestCase):
             item = [i for i in report["files"] if i["id"] == "b"][0]
             self.assertEqual(item["verdict"], report_tool.TIMEOUT)
             self.assertIn("timeout", item["diagnostic_note"])
+
+    def test_trial_timeout_grace_extends_the_budget_and_is_recorded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            seen: list[float] = []
+
+            def runner(argv, timeout):  # noqa: ANN001 - runner protocol
+                seen.append(timeout)
+                return (124, "", True)
+
+            report = report_tool.build_report(
+                self._entries(), self._corpus(tmp), Path("fake-bin"), "64x64", 1024, 5.0,
+                Path(tmp) / "scratch.ppm", runner, timeout_grace=2.5,
+            )
+            self.assertEqual(seen, [7.5, 7.5])
+            self.assertEqual(report["timeout_seconds"], 5.0)
+            self.assertEqual(report["timeout_grace_seconds"], 2.5)
+            self.assertEqual(report["effective_timeout_seconds"], 7.5)
+            note = [i for i in report["files"] if i["id"] == "b"][0]["diagnostic_note"]
+            self.assertIn("trial-timeout-grace", note)
 
     def test_missing_source_is_reported_not_crashed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

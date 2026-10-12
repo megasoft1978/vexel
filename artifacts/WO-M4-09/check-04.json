@@ -12,7 +12,7 @@
   "reports/M4/render-diagnostics.md"
  ],
  "exit_code": 0,
- "duration_s": 5.4281086921691895,
+ "duration_s": 4.988940954208374,
  "stdout": "corpus-render-report: 58 files, 1 rendered, histogram {'limit': 26, 'ok': 1, 'skipped': 19, 'unsupported': 8, 'xml': 4}\n",
  "stderr": ""
 }

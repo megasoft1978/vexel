@@ -48,7 +48,10 @@ the identical corpus produced JSON with the same SHA-256
 
 ## Findings usable for sequencing
 
-Counts below are read from the committed JSON.
+Counts below are read from the committed JSON. The JSON records the raw category and offset; the
+semantic labels ("glyph cap", "path-command cap", "use expansion cap") are attributed from the
+renderer constants cited in `src/svg/shape/media.h` and `src/svg/shape/traverse_internal.h` and are
+an interpretation of the offsets, not a field in the JSON.
 
 - **The full-render path is hard-capped at 16 MiB of source.**
   `SHAPE_MAX_BYTES` (`src/svg/shape/traverse_internal.h:6`) rejects any document
@@ -57,8 +60,9 @@ Counts below are read from the committed JSON.
   index path allows 1 GiB (`SVG_INDEX_MAX_SOURCE_BYTES`), which is why the
   preview benchmark appears to work on large files while a render cannot. The
   cap exists because `svg_shape_decode` allocates a token array sized
-  `source.len / 2 + 2`, so a 94 MiB document would need on the order of 2.6 GiB
-  of tokens; lifting it is a decode-architecture change, not a constant bump.
+  `source.len / 2 + 2` of `svg_xml_token` (96 bytes), so a 94 MiB document would
+  need about 4.4 GiB of tokens; lifting it is a decode-architecture change, not
+  a constant bump.
 - **2 files** report `limit` with a diagnostic offset of 0, which carries no
   usable source location (`generated-embedded_t2`, `generated-science_t1`).
 - **2 files** are rejected for a `<!DOCTYPE ...>` declaration
@@ -74,6 +78,21 @@ Counts below are read from the committed JSON.
   **2** the `<use>` expansion cap, and **2** the XML nesting cap reported as an
   `xml` error.
 - **1 file** fails on the CSS property `writing-mode`.
+
+## Record sequencing
+
+`STATE.md` is updated in the implementation commit. `LEDGER.md` and `ledger.jsonl`
+carry the `verified`, `accepted` and `merged` events, so they are written after the
+verifier verdict and name the accepted candidate commit; the transition table in
+`scripts/ledger.py` requires that order. The schema-valid executor report is
+retained under `artifacts/WO-M4-09/` and names the verified candidate commit.
+
+## Known stale text in history
+
+The commit message of `85e7d17` says "13 real files fail at exactly 16777216".
+That count was wrong; the measured value is 11, as recorded in the committed JSON
+and corrected in the README and in `454c09d`. The message is immutable history
+and is recorded here rather than silently left to contradict the evidence.
 
 No renderer, parser, raster, policy, or platform code was changed by this work
 order; the cap and policy fixes are separate orders.

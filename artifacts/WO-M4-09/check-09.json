@@ -8,7 +8,7 @@
   "--ready"
  ],
  "exit_code": 0,
- "duration_s": 0.026008129119873047,
+ "duration_s": 0.0244140625,
  "stdout": "valid WO-M4-09 revision 2 sha256 3817a27f1dc7fd1a1784de56d651cb547d6f0783761572062d937e5c342409b9\n",
  "stderr": ""
 }

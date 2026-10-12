@@ -8,7 +8,7 @@
   "ledger.jsonl"
  ],
  "exit_code": 0,
- "duration_s": 0.0692901611328125,
- "stdout": "valid ledger: 467 entries\n",
+ "duration_s": 0.05845499038696289,
+ "stdout": "valid ledger: 469 entries\n",
  "stderr": ""
 }

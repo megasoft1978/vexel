@@ -30,11 +30,15 @@ DEFAULT_BINARY = Path("build/mac-release/bin/svgworkbench")
 DEFAULT_SIZE = "128x128"
 DEFAULT_MAX_BYTES = 32 * 1024 * 1024
 DEFAULT_TIMEOUT = 120.0
+DEFAULT_TIMEOUT_GRACE = 0.0
 EXCERPT_PAD = 48
 EXCERPT_LIMIT = 160
 
+# The renderer emits both lowercase categories ("limit", "xml") and camelCase
+# feature categories ("unsupported-feTurbulence"), so the character class must
+# accept both.
 DIAGNOSTIC_RE = re.compile(
-    r"^render-frame: (?P<path>.*): (?P<category>[a-z][a-z0-9_-]*) at byte (?P<offset>\d+)\s*$"
+    r"^render-frame: (?P<path>.*): (?P<category>[A-Za-z][A-Za-z0-9_-]*) at byte (?P<offset>\d+)\s*$"
 )
 FAILURE_LINE_RE = re.compile(r"^render-frame: (?P<path>.*): (?P<message>.+?)\s*$")
 USAGE_RE = re.compile(r"^(?P<width>\d{1,5})x(?P<height>\d{1,5})$")
@@ -141,7 +145,7 @@ def verdict_for(category: str | None, exit_code: int, timed_out: bool) -> str:
         return SUCCESS
     if category is None:
         return ERROR
-    if category.startswith("unsupported"):
+    if category.lower().startswith("unsupported"):
         return "unsupported"
     return category if category in REPORTED_VERDICTS else ERROR
 
@@ -204,9 +208,11 @@ def run_trial(
     timeout: float,
     scratch: Path,
     runner: Callable[[Sequence[str], float], tuple[int, str, bool]] = _default_runner,
+    timeout_grace: float = DEFAULT_TIMEOUT_GRACE,
 ) -> dict[str, Any]:
     argv = [str(binary), "--render-frame", str(source), "--size", size, "--out", str(scratch)]
-    exit_code, stderr, timed_out = runner(argv, timeout)
+    effective_timeout = timeout + timeout_grace
+    exit_code, stderr, timed_out = runner(argv, effective_timeout)
     category, offset = parse_diagnostic(stderr, source)
     verdict = verdict_for(category, exit_code, timed_out)
     record: dict[str, Any] = {
@@ -219,7 +225,10 @@ def run_trial(
     }
     if verdict not in (SUCCESS, SKIPPED):
         if timed_out:
-            record["diagnostic_note"] = f"render exceeded the {timeout:g} s timeout"
+            record["diagnostic_note"] = (
+                f"render exceeded the {effective_timeout:g} s budget "
+                f"(--timeout {timeout:g} s plus --trial-timeout-grace {timeout_grace:g} s)"
+            )
         elif category is None:
             record["diagnostic_note"] = failure_note(stderr, source) or "no diagnostic output"
         try:
@@ -239,6 +248,7 @@ def build_report(
     timeout: float,
     scratch: Path,
     runner: Callable[[Sequence[str], float], tuple[int, str, bool]] = _default_runner,
+    timeout_grace: float = DEFAULT_TIMEOUT_GRACE,
 ) -> dict[str, Any]:
     files: list[dict[str, Any]] = []
     histogram: dict[str, int] = {}
@@ -275,7 +285,9 @@ def build_report(
                     }
                 )
             else:
-                record.update(run_trial(binary, source, size, timeout, scratch, runner))
+                record.update(
+                    run_trial(binary, source, size, timeout, scratch, runner, timeout_grace)
+                )
         histogram[record["verdict"]] = histogram.get(record["verdict"], 0) + 1
         files.append(record)
     render_tested = sum(
@@ -289,6 +301,8 @@ def build_report(
         "render_size": size,
         "max_bytes": max_bytes,
         "timeout_seconds": timeout,
+        "timeout_grace_seconds": timeout_grace,
+        "effective_timeout_seconds": timeout + timeout_grace,
         "file_count": len(files),
         "coverage": {
             "render_tested": render_tested,
@@ -361,6 +375,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--size", default=DEFAULT_SIZE)
     parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
     parser.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT)
+    parser.add_argument("--trial-timeout-grace", type=float, default=DEFAULT_TIMEOUT_GRACE)
     parser.add_argument("--output-json", required=True)
     parser.add_argument("--output-markdown", required=True)
     return parser
@@ -376,6 +391,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ReportError("--max-bytes must not be negative")
         if args.timeout <= 0:
             raise ReportError("--timeout must be positive")
+        if args.trial_timeout_grace < 0:
+            raise ReportError("--trial-timeout-grace must not be negative")
         if not binary.is_file():
             raise ReportError(f"render binary not found: {binary}")
         entries, _ = load_manifest(corpus)
@@ -383,7 +400,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         try:
             report = build_report(
                 entries, corpus, binary, args.size, args.max_bytes, args.timeout,
-                scratch_dir / "frame.ppm",
+                scratch_dir / "frame.ppm", timeout_grace=args.trial_timeout_grace,
             )
         finally:
             shutil.rmtree(scratch_dir, ignore_errors=True)

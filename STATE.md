@@ -356,3 +356,23 @@
   contradictions, 21 GB of worktrees, a second-root branch lineage, and the fact that
   every owner gate (M0, M3, M4 scope, M6, M8, M10, M13) is still open while M13 shipped
   without its demand ADR.
+
+- Update 2026-10-12: **WO-M4-09** records per-file corpus full-render diagnostics.
+  `scripts/corpus_render_report.py` renders every pinned corpus file in full and records the
+  error category and source offset for each failure; the report and its Markdown summary are
+  committed under `reports/M4/render-diagnostics.*`. 26 focused tests pass; `./dev verify`
+  reports CTest 80/80 and Python 327/327; ASan and UBSan each pass 80/80. Of the 58 manifest
+  files, 39 were render-tested and 1 renders; 19 files above 32 MiB are recorded as skipped with
+  a reason. The headline blocker: the full-render path is hard-capped at 16 MiB by
+  `SHAPE_MAX_BYTES` (`src/svg/shape/traverse_internal.h:6`), and 11 files fail at exactly offset
+  16777216. Other measured blockers: DOCTYPE declarations (2 files), `<clipPath>` outside
+  `<defs>` (2), `stroke="url(#…)"` (2), unknown non-namespaced attributes (2), the glyph,
+  path-command, `<use>`-expansion and XML-nesting caps (2 each), `writing-mode` (1), and 2
+  unlocatable limits at offset 0. Two runs produced byte-identical JSON. No renderer, parser,
+  raster, policy or platform code changed. Evidence: `artifacts/WO-M4-09/`.
+
+- Update 2026-10-12: **ADR-0016 records the owner's product target.** Vexel is a macOS-first
+  alternative to Inkscape with animation authoring and MCP integration, not a narrow viewer;
+  fidelity is measured by full-document renders; the M0 and M3 gates proceed on synthetic and
+  public-corpus evidence without user interviews or user files, knowingly carrying that risk;
+  and the M13 animation demand gate is retired in favour of ordinary work orders.
