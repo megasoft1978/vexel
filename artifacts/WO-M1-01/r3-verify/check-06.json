@@ -1,0 +1,18 @@
+{
+ "index": 6,
+ "label": "native-platform-smoke 100 cycles",
+ "argv": [
+  "python3",
+  "app/test_driver/driver.py",
+  "--native-platform-smoke",
+  "--cycles",
+  "100",
+  "--output-dir",
+  ".cache/WO-M1-01/native-smoke"
+ ],
+ "exit_code": 0,
+ "duration_s": 3.209942102432251,
+ "stdout": "native smoke events: open resize scale key pointer close\ncompleted cycles: 100\nnative smoke elapsed seconds: 3.173720\n",
+ "stderr": "",
+ "frozen_command": "python3 app/test_driver/driver.py --native-platform-smoke --cycles 100 --output-dir .cache/WO-M1-01/native-smoke"
+}

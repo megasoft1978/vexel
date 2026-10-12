@@ -1,55 +1,94 @@
 {
   "work_order": "WO-M1-01",
+  "revision": 3,
+  "note": "Revision 3 is a closure revision over shipped code. The revision-1 measurement is retained verbatim under revision_1_history and is not presented as a current measurement. No rendering throughput or RSS claim is made.",
   "environment": {
     "os": "macOS 27.0 (Build 26A425)",
     "architecture": "arm64",
     "compiler": "Apple clang 21.0.0 (clang-2100.3.34.2)",
     "build_type": "Release"
   },
-  "release_executable": {
-    "path": "build/mac-release/bin/svgworkbench",
-    "size_bytes": 74048
-  },
-  "native_smoke": {
-    "requested_cycles": 100,
-    "completed_cycles": 100,
-    "acceptance_elapsed_seconds": 3.2132832079951186,
-    "status": "passed",
-    "events": [
-      "open",
-      "resize",
-      "scale",
-      "key",
-      "pointer",
-      "close"
-    ],
-    "benchmark": {
-      "cycles_per_run": 100,
-      "runs": 5,
-      "samples_elapsed_seconds": [
-        3.209596042011981,
-        3.3999841249897145,
-        3.1406728330039186,
-        3.241060957996524,
-        3.1838259999931324
+  "closure_revision_3": {
+    "measured_on": "2026-10-12",
+    "source_commit": "248fbfac44fade380b15522393cf7c6c7ab7cbf1",
+    "release_executable": {
+      "path": "build/mac-release/bin/svgworkbench",
+      "size_bytes": 1321920
+    },
+    "native_smoke": {
+      "requested_cycles": 100,
+      "completed_cycles": 100,
+      "elapsed_seconds": 3.173719957994763,
+      "status": "passed",
+      "events": [
+        "open",
+        "resize",
+        "scale",
+        "key",
+        "pointer",
+        "close"
       ],
-      "median_seconds": 3.209596042011981,
-      "p95_nearest_rank_seconds": 3.3999841249897145,
-      "all_completed": true
+      "result_record": ".cache/WO-M1-01/native-smoke/run-0002/result.json"
+    },
+    "verification": {
+      "focused_tests": 13,
+      "focused_test_module": "tests.test_platform_driver",
+      "ctest_targets_passed": 80,
+      "ctest_targets_failed": 0,
+      "python_tests_passed": 302,
+      "python_tests_failed": 0,
+      "asan_ctest_passed": 80,
+      "ubsan_ctest_passed": 80
+    },
+    "evidence": "artifacts/WO-M1-01/r3-verify/"
+  },
+  "revision_1_history": {
+    "note": "Superseded measurement from revision 1 (2026-10-08). Retained for history only; it does not describe the current tree.",
+    "release_executable": {
+      "path": "build/mac-release/bin/svgworkbench",
+      "size_bytes": 74048
+    },
+    "native_smoke": {
+      "requested_cycles": 100,
+      "completed_cycles": 100,
+      "acceptance_elapsed_seconds": 3.2132832079951186,
+      "status": "passed",
+      "events": [
+        "open",
+        "resize",
+        "scale",
+        "key",
+        "pointer",
+        "close"
+      ],
+      "benchmark": {
+        "cycles_per_run": 100,
+        "runs": 5,
+        "samples_elapsed_seconds": [
+          3.209596042011981,
+          3.3999841249897145,
+          3.1406728330039186,
+          3.241060957996524,
+          3.1838259999931324
+        ],
+        "median_seconds": 3.209596042011981,
+        "p95_nearest_rank_seconds": 3.3999841249897145,
+        "all_completed": true
+      }
+    },
+    "sanitizer_smoke": {
+      "asan_cycles": 100,
+      "ubsan_cycles": 100,
+      "status": "passed",
+      "command_contract": "native lifecycle arguments supplied to both sanitizer binaries"
+    },
+    "verification": {
+      "focused_tests": 8,
+      "full_tests_passed": 137,
+      "full_tests_failed": 0,
+      "full_tests_errors": 0,
+      "full_tests_skipped": 0
     }
-  },
-  "sanitizer_smoke": {
-    "asan_cycles": 100,
-    "ubsan_cycles": 100,
-    "status": "passed",
-    "command_contract": "native lifecycle arguments supplied to both sanitizer binaries"
-  },
-  "verification": {
-    "focused_tests": 8,
-    "full_tests_passed": 137,
-    "full_tests_failed": 0,
-    "full_tests_errors": 0,
-    "full_tests_skipped": 0
   },
   "claims": {
     "rendering_throughput": null,

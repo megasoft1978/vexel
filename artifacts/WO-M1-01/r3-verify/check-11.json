@@ -1,0 +1,15 @@
+{
+ "index": 11,
+ "label": "python3 scripts/wo_validate.py WO-M1-01 --ready",
+ "argv": [
+  "python3",
+  "scripts/wo_validate.py",
+  "WO-M1-01",
+  "--ready"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.02895069122314453,
+ "stdout": "valid WO-M1-01 revision 3 sha256 cf443fdee7f5c481828051bb224a3f4339b2e180ef6470c3f0b2b8e7ab7b750e\n",
+ "stderr": "",
+ "frozen_command": "python3 scripts/wo_validate.py WO-M1-01 --ready"
+}

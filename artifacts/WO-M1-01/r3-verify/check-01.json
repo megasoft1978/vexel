@@ -1,0 +1,14 @@
+{
+ "index": 1,
+ "label": "cmake --preset mac-debug",
+ "argv": [
+  "cmake",
+  "--preset",
+  "mac-debug"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.1183328628540039,
+ "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug\n",
+ "stderr": "",
+ "frozen_command": "cmake --preset mac-debug"
+}
