@@ -2,7 +2,10 @@
 
 #include "viewer_chrome.h"
 
+#include "platform/platform_localization.h"
+
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 static bool scaled_points(uint32_t points, double scale, uint32_t *out_pixels)
@@ -150,6 +153,10 @@ bool viewer_timeline_layout_compute(const viewer_timeline *timeline,
     size_t visible = rows_height / row_height;
     if (visible > VIEWER_TIMELINE_VISIBLE_TRACK_CAP)
         visible = VIEWER_TIMELINE_VISIBLE_TRACK_CAP;
+    out_layout->visible_row_capacity = visible;
+    size_t maximum = out_layout->track_count > visible ?
+        out_layout->track_count - visible : 0U;
+    if (out_layout->first_track > maximum) out_layout->first_track = maximum;
     size_t remaining = out_layout->track_count - out_layout->first_track;
     if (visible > remaining) visible = remaining;
     for (size_t row = 0U; row < visible; ++row) {
@@ -250,6 +257,11 @@ bool viewer_timeline_pointer_ex(viewer_timeline *timeline,
     if (timeline == NULL || layout == NULL ||
         viewer_timeline_track_count(timeline) == 0U || !isfinite(x) ||
         !isfinite(y) || !isfinite(delta_x) || !isfinite(delta_y)) return false;
+    if (kind == VIEWER_TIMELINE_POINTER_MOVE) {
+        timeline->hover_x = x;
+        timeline->hover_y = y;
+        timeline->hover_valid = rect_contains(layout->panel, x, y);
+    }
     if (kind == VIEWER_TIMELINE_POINTER_UP &&
         (timeline->dragging_scrubber || timeline->dragging_resize)) {
         timeline->dragging_scrubber = false;
@@ -320,13 +332,15 @@ bool viewer_timeline_pointer_ex(viewer_timeline *timeline,
                     viewer_timeline_view_duration(timeline) / layout->ruler.width;
                 (void)viewer_timeline_pan(timeline, seconds);
             }
-            return true;
+            if ((modifiers & PLATFORM_MODIFIER_COMMAND) != 0U || delta_x != 0.0 ||
+                rect_contains(layout->ruler, x, y)) return true;
         }
-        if (layout->visible_track_count > 0U && delta_y != 0.0 &&
+        timeline->first_track = layout->first_track;
+        if (layout->visible_row_capacity > 0U && delta_y != 0.0 &&
             y >= (double)layout->track_rows[0].y) {
             size_t step = fabs(delta_y) >= 3.0 ? 3U : 1U;
-            size_t maximum = layout->track_count > layout->visible_track_count ?
-                layout->track_count - layout->visible_track_count : 0U;
+            size_t maximum = layout->track_count > layout->visible_row_capacity ?
+                layout->track_count - layout->visible_row_capacity : 0U;
             if (delta_y < 0.0)
                 timeline->first_track = timeline->first_track + step > maximum ?
                     maximum : timeline->first_track + step;
@@ -410,4 +424,59 @@ bool viewer_timeline_pointer(viewer_timeline *timeline,
 {
     return viewer_timeline_pointer_ex(timeline, layout, kind, x, y, 0.0,
         delta_y, 0U, now_seconds, NULL);
+}
+
+bool viewer_timeline_tooltip(const viewer_timeline *timeline,
+    const viewer_timeline_layout *layout, uint32_t width, uint32_t height,
+    char *buffer, size_t capacity, ui_rect *out_bounds)
+{
+    if (timeline == NULL || layout == NULL || buffer == NULL || capacity == 0U ||
+        out_bounds == NULL || !timeline->hover_valid || layout->collapsed ||
+        width == 0U || height == 0U) return false;
+    double x = timeline->hover_x, y = timeline->hover_y;
+    const char *label = NULL;
+    ui_rect anchor = {0};
+    if (rect_contains(layout->play_button, x, y)) {
+        label = timeline->playing ? "Pause animation" : "Play animation";
+        anchor = layout->play_button;
+    } else if (rect_contains(layout->mode_button, x, y)) {
+        label = timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Preview mode: Loop" :
+            timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ?
+                "Preview mode: Ping-Pong" : "Preview mode: One Shot";
+        anchor = layout->mode_button;
+    } else if (rect_contains(layout->fit_button, x, y)) {
+        label = "Fit timeline to work area";
+        anchor = layout->fit_button;
+    } else {
+        for (size_t row = 0U; row < layout->visible_track_count; ++row) {
+            if (rect_contains(layout->track_rows[row], x, y) &&
+                rect_contains(layout->track_gutter, x, y)) {
+                size_t length = 0U;
+                if (!viewer_timeline_track_label(timeline, layout->first_track + row,
+                        buffer, capacity, &length)) return false;
+                anchor = layout->track_rows[row];
+                break;
+            }
+        }
+        if (anchor.height == 0U) return false;
+    }
+    if (label != NULL) {
+        size_t length = 0U;
+        if (!platform_localization_copy_default(label, strlen(label), buffer,
+                capacity, &length)) {
+            int amount = snprintf(buffer, capacity, "%s", label);
+            if (amount < 0 || (size_t)amount >= capacity) return false;
+        }
+    }
+    double scale = layout->backing_scale;
+    uint32_t tooltip_width = (uint32_t)ceil(fmin(480.0,
+        (double)strlen(buffer) * 7.0 + 20.0) * scale);
+    uint32_t tooltip_height = (uint32_t)ceil(28.0 * scale);
+    if (tooltip_width > width) tooltip_width = width;
+    if (tooltip_height > height) tooltip_height = height;
+    uint32_t left = anchor.x > width - tooltip_width ? width - tooltip_width : anchor.x;
+    uint32_t top = anchor.y > tooltip_height + 4U ? anchor.y - tooltip_height - 4U : 0U;
+    if (top > height - tooltip_height) top = height - tooltip_height;
+    *out_bounds = (ui_rect){left, top, tooltip_width, tooltip_height};
+    return true;
 }

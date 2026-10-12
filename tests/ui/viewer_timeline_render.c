@@ -16,10 +16,10 @@
 static const char sample_svg[] =
     "<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'>"
     "<rect id='logo' x='8' y='12' width='24' height='20' rx='3' fill='#6b9eff'>"
-    "<animate attributeName='x' values='8;30;8' keyTimes='0;0.55;1' "
+    "<animate id='anim-logo-position' attributeName='x' values='8;30;8' keyTimes='0;0.55;1' "
     "dur='4s' calcMode='linear'/></rect>"
     "<circle id='pulse' cx='45' cy='42' r='9' fill='#ef8354'>"
-    "<animate attributeName='opacity' values='1;0.25;1' dur='2s' "
+    "<animate id='anim-pulse-opacity' attributeName='opacity' values='1;0.25;1' dur='2s' "
     "repeatCount='indefinite' calcMode='discrete'/></circle></svg>";
 
 static void fill_rgba(uint8_t *rgba, size_t length, uint32_t packed)
@@ -85,11 +85,15 @@ static bool paint_tile(uint8_t *rgba, uint32_t width, uint32_t height,
 
 int main(int argc, char **argv)
 {
-    if (argc != 3 || (strcmp(argv[1], "dark") != 0 &&
+    if ((argc != 3 && argc != 4 && argc != 5) || (strcmp(argv[1], "dark") != 0 &&
             strcmp(argv[1], "light") != 0)) {
         (void)fputs("usage: viewer_timeline_render dark|light 1x|2x\n", stderr);
         return 2;
     }
+    if (argc >= 4 && strcmp(argv[3], "contrast") != 0 &&
+        strcmp(argv[3], "normal") != 0) return 2;
+    if (argc == 5 && strcmp(argv[4], "hover") != 0) return 2;
+    bool contrast = argc >= 4 && strcmp(argv[3], "contrast") == 0;
     uint32_t scale = strcmp(argv[2], "2x") == 0 ? 2U :
         strcmp(argv[2], "1x") == 0 ? 1U : 0U;
     if (scale == 0U) return 2;
@@ -125,9 +129,9 @@ int main(int argc, char **argv)
         svg_shape_document_destroy(&document);
         return 1;
     }
-    (void)viewer_editor_set_appearance(editor, theme, false, false);
+    (void)viewer_editor_set_appearance(editor, theme, contrast, false);
     viewer_editor_resize(editor, width, height, (double)scale);
-    ui_tokens tokens = ui_theme_tokens(theme, false);
+    ui_tokens tokens = ui_theme_tokens(theme, contrast);
     fill_rgba(rgba, length, tokens.window);
     viewer_chrome_layout layout;
     bool okay = viewer_editor_get_chrome_layout(editor, &layout) &&
@@ -136,9 +140,37 @@ int main(int argc, char **argv)
         paint_tile(rgba, width, height, (size_t)width * 4U,
             layout.canvas, &artwork, scale);
     viewer_editor_paint_scalar(editor, rgba, length, (size_t)width * 4U);
+    viewer_timeline_layout timeline_layout;
+    if (argc == 5 && viewer_timeline_layout_compute(&timeline, width, height,
+            (double)scale, &timeline_layout)) {
+        timeline.hover_valid = true;
+        timeline.hover_x = timeline_layout.play_button.x + 1.0;
+        timeline.hover_y = timeline_layout.play_button.y + 1.0;
+    }
     okay = okay && viewer_timeline_paint_scalar_appearance(&timeline, editor,
         rgba, length, width, height, (size_t)width * 4U, (double)scale,
-        theme, false, false);
+        theme, contrast, false);
+    if (okay && argc == 5) {
+        static ui_semantics_snapshot snapshot;
+        okay = viewer_timeline_accessibility_snapshot(&timeline, &timeline_layout,
+            theme, contrast, &snapshot);
+        if (okay) {
+            (void)fputs("{\"nodes\":[", stderr);
+            for (size_t index = 0U; index < snapshot.count; ++index) {
+                const ui_semantics_node *node = &snapshot.nodes[index];
+                const char *label = NULL, *value = NULL;
+                size_t label_length = 0U, value_length = 0U;
+                okay = ui_semantics_text(&snapshot, node, false, &label, &label_length) &&
+                    ui_semantics_text(&snapshot, node, true, &value, &value_length);
+                if (!okay) break;
+                (void)fprintf(stderr,
+                    "%s{\"label\":\"%.*s\",\"value\":\"%.*s\",\"state\":%u}",
+                    index == 0U ? "" : ",", (int)label_length, label,
+                    (int)value_length, value, node->state);
+            }
+            (void)fputs("]}\n", stderr);
+        }
+    }
     if (okay) okay = fwrite(rgba, 1U, length, stdout) == length;
     free(rgba);
     viewer_editor_destroy(editor);

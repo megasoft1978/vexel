@@ -404,9 +404,18 @@ static bool test_modes_speed_virtualization_and_selection_sync(void)
     CHECK(viewer_editor_selection_span(editor, &selected));
     CHECK(selected.offset == expected_offset);
     CHECK(timeline.selected_track == 73U);
+    CHECK(viewer_editor_select_at_source_offset(editor,
+        document.animation.tracks[SVG_ANIM_MAX_TRACKS - 1U].target_offset));
+    viewer_timeline_sync_selection(&timeline, editor);
+    CHECK(timeline.selected_track == SVG_ANIM_MAX_TRACKS - 1U);
+    CHECK(timeline.reveal_selection_pending);
+    viewer_timeline_reveal_selected(&timeline, &layout);
+    CHECK(viewer_timeline_layout_compute(&timeline, 1280U, 800U, 1.0, &layout));
+    CHECK(layout.first_track + layout.visible_track_count == SVG_ANIM_MAX_TRACKS);
+    CHECK(!timeline.reveal_selection_pending);
     CHECK(viewer_editor_set_timeline_state(editor, true, false, 220U));
     viewer_timeline_sync_selection(&timeline, editor);
-    CHECK(timeline.selected_track == 73U);
+    CHECK(timeline.selected_track == SVG_ANIM_MAX_TRACKS - 1U);
 
     viewer_editor_destroy(editor);
     viewer_timeline_destroy(&timeline);
@@ -454,6 +463,7 @@ static bool test_duplicate_and_missing_ids_keep_source_identity(void)
         tracks[index].kind = SVG_ANIM_KIND_ANIMATE;
         tracks[index].attribute = index == 2U ? SVG_ANIM_ATTR_CY : SVG_ANIM_ATTR_X;
         tracks[index].duration_seconds = 2.0;
+        tracks[index].repeat_duration = -1.0;
         tracks[index].repeat_count = 1.0;
         tracks[index].target_offset = (size_t)(target - source);
         tracks[index].target_length = (size_t)(end - target) + 1U;
@@ -483,9 +493,144 @@ static bool test_duplicate_and_missing_ids_keep_source_identity(void)
     return true;
 }
 
+static bool test_twelve_track_grid_scroll_and_reveal(void)
+{
+    svg_anim_track tracks[12] = {0};
+    svg_shape_document document = {0};
+    document.animation.tracks = tracks;
+    document.animation.track_count = 12U;
+    for (size_t index = 0U; index < 12U; ++index) {
+        tracks[index].supported = true;
+        tracks[index].duration_seconds = 2.0;
+        tracks[index].repeat_duration = -1.0;
+        tracks[index].repeat_count = 1.0;
+    }
+    viewer_timeline timeline;
+    viewer_timeline_init(&timeline);
+    viewer_timeline_reset(&timeline, &document);
+    timeline.dock_height_points = VIEWER_TIMELINE_DOCK_MIN_POINTS;
+    viewer_timeline_layout layout;
+    CHECK(viewer_timeline_layout_compute(&timeline, 1280U, 800U, 1.0, &layout));
+    CHECK(layout.visible_track_count > 0U && layout.visible_track_count < 12U);
+    CHECK(viewer_timeline_pointer_ex(&timeline, &layout,
+        VIEWER_TIMELINE_POINTER_SCROLL, layout.time_grid.x + 8.0,
+        layout.time_grid.y + 8.0, 0.0, -1.0, 0U, 0.0, NULL));
+    CHECK(timeline.first_track == 1U);
+    CHECK(viewer_timeline_layout_compute(&timeline, 1280U, 800U, 1.0, &layout));
+    CHECK(viewer_timeline_pointer_ex(&timeline, &layout,
+        VIEWER_TIMELINE_POINTER_SCROLL, layout.track_gutter.x + 8.0,
+        layout.track_gutter.y + 8.0, 0.0, -1.0, 0U, 0.0, NULL));
+    CHECK(timeline.first_track == 2U);
+    size_t first = timeline.first_track;
+    CHECK(viewer_timeline_pointer_ex(&timeline, &layout,
+        VIEWER_TIMELINE_POINTER_SCROLL, layout.time_grid.x + 8.0,
+        layout.time_grid.y + 8.0, 0.0, -1.0, PLATFORM_MODIFIER_COMMAND, 0.0, NULL));
+    CHECK(timeline.first_track == first && timeline.zoom_factor > 1.0);
+    CHECK(viewer_timeline_pointer_ex(&timeline, &layout,
+        VIEWER_TIMELINE_POINTER_SCROLL, layout.time_grid.x + 8.0,
+        layout.time_grid.y + 8.0, 10.0, 0.0, 0U, 0.0, NULL));
+    CHECK(timeline.first_track == first && timeline.view_start_seconds > 0.0);
+    timeline.selected_track = 11U;
+    viewer_timeline_reveal_selected(&timeline, &layout);
+    CHECK(timeline.first_track == 12U - layout.visible_row_capacity);
+    CHECK(viewer_timeline_layout_compute(&timeline, 1280U, 800U, 1.0, &layout));
+    CHECK(layout.first_track <= 11U &&
+        11U < layout.first_track + layout.visible_track_count);
+    timeline.first_track = 11U;
+    CHECK(viewer_timeline_layout_compute(&timeline, 1280U, 800U, 1.0, &layout));
+    CHECK(layout.first_track + layout.visible_track_count == 12U);
+    CHECK(layout.visible_track_count > 1U);
+    timeline.hover_valid = true;
+    timeline.hover_x = layout.play_button.x + 1.0;
+    timeline.hover_y = layout.play_button.y + 1.0;
+    char tooltip[4096];
+    ui_rect tip;
+    CHECK(viewer_timeline_tooltip(&timeline, &layout, 1280U, 800U,
+        tooltip, sizeof(tooltip), &tip));
+    CHECK(strcmp(tooltip, "Play animation") == 0);
+    CHECK(tip.x + tip.width <= 1280U && tip.y + tip.height <= 800U);
+    CHECK(viewer_timeline_accessibility_snapshot(&timeline, &layout,
+        UI_THEME_DARK, true, &semantics_scratch));
+    bool range_found = false;
+    for (size_t index = 0U; index < semantics_scratch.count; ++index) {
+        const ui_semantics_node *node = &semantics_scratch.nodes[index];
+        if (strcmp(node->label, "Animation tracks") == 0)
+            range_found = strstr(node->value, "12 tracks") != NULL &&
+                strstr(node->value, "above") != NULL;
+    }
+    CHECK(range_found);
+    CHECK(viewer_timeline_set_mode(&timeline, VIEWER_TIMELINE_MODE_LOOP));
+    CHECK(viewer_timeline_set_speed(&timeline, 2.0));
+    timeline.playing = true;
+    CHECK(viewer_timeline_accessibility_snapshot(&timeline, &layout,
+        UI_THEME_LIGHT, false, &semantics_scratch));
+    CHECK(snapshot_has_label(&semantics_scratch, UI_ROLE_BUTTON, "Pause animation"));
+    CHECK(snapshot_has_value_fragment(&semantics_scratch, UI_ROLE_BUTTON, "Loop", false));
+    CHECK(snapshot_has_value_fragment(&semantics_scratch, UI_ROLE_BUTTON, "2", false));
+    document.animation.track_count = 1U;
+    CHECK(viewer_timeline_layout_compute(&timeline, 1280U, 800U, 1.0, &layout));
+    CHECK(layout.first_track == 0U && layout.visible_track_count == 1U);
+    viewer_timeline_destroy(&timeline);
+    return true;
+}
+
+static bool test_named_transform_labels_and_full_accessibility(void)
+{
+    static const char source[] =
+        "<svg width='32' height='32'><g id='character'><rect width='8' height='8'/>"
+        "<animateTransform id='anim-character-body-squash-stretch-with-a-long-stable-name' "
+        "attributeName='transform' type='scale' values='1 1;1.1 .9' dur='2s'/>"
+        "<animateTransform id='anim-character-head-turn' attributeName='transform' "
+        "type='rotate' values='0;12' dur='2s'/></g></svg>";
+    svg_shape_document document = {0};
+    CHECK(decode(source, &document));
+    viewer_timeline timeline;
+    viewer_timeline_init(&timeline);
+    viewer_timeline_reset(&timeline, &document);
+    char label[4096];
+    size_t length = 0U;
+    CHECK(viewer_timeline_track_label(&timeline, 0U, label, sizeof(label), &length));
+    CHECK(strstr(label, "anim-character-body-squash-stretch-with-a-long-stable-name") != NULL);
+    CHECK(strstr(label, "transform (scale)") != NULL);
+    for (size_t appearance = 0U; appearance < 3U; ++appearance) {
+        for (uint32_t scale = 1U; scale <= 2U; ++scale) {
+            viewer_timeline_layout layout;
+            CHECK(viewer_timeline_layout_compute(&timeline, 1280U * scale,
+                800U * scale, scale, &layout));
+            CHECK(viewer_timeline_accessibility_snapshot(&timeline, &layout,
+                appearance == 1U ? UI_THEME_LIGHT : UI_THEME_DARK,
+                appearance == 2U, &semantics_scratch));
+            bool full_found = false;
+            for (size_t index = 0U; index < semantics_scratch.count; ++index) {
+                const ui_semantics_node *node = &semantics_scratch.nodes[index];
+                const char *full = NULL;
+                size_t full_length = 0U;
+                CHECK(ui_semantics_text(&semantics_scratch, node, false, &full, &full_length));
+                if (node->role == UI_ROLE_ROW && full_length == length &&
+                    memcmp(full, label, length) == 0) full_found = true;
+            }
+            CHECK(full_found);
+            timeline.hover_valid = true;
+            timeline.hover_x = layout.track_gutter.x + 1.0;
+            timeline.hover_y = layout.track_rows[0].y + 1.0;
+            char tooltip[4096];
+            ui_rect bounds;
+            CHECK(viewer_timeline_tooltip(&timeline, &layout,
+                1280U * scale, 800U * scale, tooltip, sizeof(tooltip), &bounds));
+            CHECK(strcmp(tooltip, label) == 0);
+            CHECK(bounds.x + bounds.width <= 1280U * scale &&
+                bounds.y + bounds.height <= 800U * scale);
+        }
+    }
+    viewer_timeline_destroy(&timeline);
+    svg_shape_document_destroy(&document);
+    return true;
+}
+
 int main(void)
 {
-    if (!test_tracks_labels_and_duration() || !test_seek_play_pause_loop_and_keys() ||
+    if (!test_named_transform_labels_and_full_accessibility() ||
+        !test_twelve_track_grid_scroll_and_reveal() || !test_tracks_labels_and_duration() || !test_seek_play_pause_loop_and_keys() ||
         !test_layout_pointer_scrub_and_rows() || !test_frame_preview_and_bounds() ||
         !test_accessibility_labels() || !test_indefinite_and_unsupported_accessibility() ||
         !test_docked_layout_controls_and_navigation() ||

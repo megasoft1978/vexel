@@ -1,0 +1,14 @@
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/.cache/ui-docs-pristine/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/.cache/ui-docs-pristine/build/mac-debug
+    Start 25: native-shell-goldens
+1/1 Test #25: native-shell-goldens .............***Failed    0.38 sec
+welcome-empty-light.png differs from its native UI golden
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.38 sec
+
+The following tests FAILED:
+	 25 - native-shell-goldens (Failed)
+Errors while running CTest

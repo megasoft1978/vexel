@@ -1,5 +1,7 @@
 # Project state
 
+- WO-UI-DOCS-01 revision 3 candidate is in `wo/WO-UI-DOCS-01`, pinned to remote main `c43fa826c0fbc8910e8dc0c09b4139c8aa615995`. Scoped timeline scrolling/reveal, local media glyphs/tooltips/accessibility and named track labels are implemented, with README/Pages and three verified demo imports. Shared glyph/layer rendering is deferred by revision 2. Debug build and focused tests/goldens pass. Final `./dev t --all` is 81/82 CTests and 70/70 Python; the sole native-shell welcome-empty-light mismatch reproduces on pristine pinned base with byte-identical candidate/base output, permitted as a documented pre-existing blocker by revision 3. Fresh independent review failed on clipped Fit/Loop glyphs (review evidence: `timeline-detail-comparison.png` and final reviewer report); fix requires a bounded successor work order. No commit, push, integration or Pages deployment yet. Evidence: `artifacts/WO-UI-DOCS-01/verification-summary.md`. WO-M4-06 is superseded at owner direction without acceptance; renderer limitations remain.
+
 - Update 2026-10-11: MCP integration continuation is in the uncommitted
   `integrate/mcp-next` worktree. The M0 live host, M1 scene tools, M2 view and
   animation changes, and five M3 real-stdio scenarios are integrated. The

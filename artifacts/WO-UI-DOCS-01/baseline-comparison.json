@@ -1,0 +1,50 @@
+[
+  {
+    "file": "tests/ui/timeline-golden/timeline-dark-1x.png",
+    "before_sha256": "20cd851faa3554c1200a1c37ffc5058cd6bcebd2667a80b557d1b965e8c7eac6",
+    "after_sha256": "3a4a1e9b75a476537cf4d571a46b20524b32e1be6c90e484d59512b4ec2075c0",
+    "changed_bbox": [
+      10,
+      582,
+      367,
+      670
+    ],
+    "reason": "Timeline-only media controls and named animation labels; no shared chrome geometry changes."
+  },
+  {
+    "file": "tests/ui/timeline-golden/timeline-dark-2x.png",
+    "before_sha256": "3709f900955081b346eb2716663ea686b3da0fa66ddcd921c274975994479f11",
+    "after_sha256": "287781dabbbb373da3c867e475fc02842c7648c5139324f5ec7c71063cd8cabc",
+    "changed_bbox": [
+      20,
+      1164,
+      734,
+      1341
+    ],
+    "reason": "Timeline-only media controls and named animation labels; no shared chrome geometry changes."
+  },
+  {
+    "file": "tests/ui/timeline-golden/timeline-light-1x.png",
+    "before_sha256": "f368c0f5bb8f1cc4c5ca3d956550db47be0e0e55de83c6638c48bd787030301f",
+    "after_sha256": "2c1d2bb65c9b0f95e6a54d7c13b4a3e4032f5ed9e5426c8ab7a0bbe9aaded51b",
+    "changed_bbox": [
+      10,
+      582,
+      367,
+      670
+    ],
+    "reason": "Timeline-only media controls and named animation labels; no shared chrome geometry changes."
+  },
+  {
+    "file": "tests/ui/timeline-golden/timeline-light-2x.png",
+    "before_sha256": "24158e6cee224590863ce5f5deff57d42eb9f179737f443ec6948a709572dbc9",
+    "after_sha256": "12349236e256301e32d6c086695678f950f0567a2a203b5fa0f5906324b85fd4",
+    "changed_bbox": [
+      20,
+      1164,
+      734,
+      1341
+    ],
+    "reason": "Timeline-only media controls and named animation labels; no shared chrome geometry changes."
+  }
+]
