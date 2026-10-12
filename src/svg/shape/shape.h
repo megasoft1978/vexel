@@ -11,8 +11,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SVG_SHAPE_MAX_EDGES 262144U
-#define SVG_SHAPE_MAX_COMMANDS 65536U
+/* Document-wide flattened-edge budget. Every line segment of every path becomes
+ * one edge, so a drawing made of thousands of small paths exceeded 262144 long
+ * before it was large. The bound stays finite so a pathological input is still
+ * refused. */
+#define SVG_SHAPE_MAX_EDGES (4U * 1024U * 1024U)
+/* Shape (path/element) budget. 65536 elements is already far beyond any hand
+ * authored document, so a file with more is refused rather than rendered. */
+#define SVG_SHAPE_MAX_SHAPES 65536U
+/* Per-path command budget. A single CAD path routinely carries hundreds of
+ * thousands of segments, so 65536 refused ordinary drawings. */
+#define SVG_SHAPE_MAX_COMMANDS (4U * 1024U * 1024U)
 #define SVG_SHAPE_MAX_DASH_VALUES 16U
 #define SVG_SHAPE_MAX_PATH_NUMBERS (SVG_SHAPE_MAX_COMMANDS * 7U)
 

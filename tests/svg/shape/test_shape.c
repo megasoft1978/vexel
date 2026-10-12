@@ -718,23 +718,22 @@ int main(void)
     }
     svg_shape_document_destroy(&doc);
     if (!retained_overshoot) return 9;
-    size_t source_bytes = 330000U + 256U;
+    /* The document-wide bounds are now large enough for real drawings (a single
+     * CAD path carries millions of commands), so this check exceeds the shape
+     * budget: many elements each with one segment. */
+    static const char path_start[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0 L1 1";
+    static const char path_middle[] = "\"/><path d=\"M0 0 L1 1";
+    static const char path_end[] = "\"/></svg>";
+    const size_t many_path_count = 70000U;
+    size_t source_bytes = sizeof(path_start) + sizeof(path_end) +
+        many_path_count * (sizeof(path_middle) - 1U) + 256U;
     uint8_t *many_paths = malloc(source_bytes);
     if (many_paths == NULL) return 10;
-    static const char path_start[] = "<svg width=\"8\" height=\"8\"><path d=\"M0 0";
-    static const char path_middle[] = "\"/><path d=\"M0 0";
-    static const char path_end[] = "\"/></svg>";
     size_t offset = sizeof(path_start) - 1U;
     memcpy(many_paths, path_start, offset);
-    for (size_t path = 0; path < 2U; path++) {
-        for (size_t i = 0; i < 33000U; i++) {
-            memcpy(many_paths + offset, " L1 1", 5U);
-            offset += 5U;
-        }
-        if (path == 0U) {
-            memcpy(many_paths + offset, path_middle, sizeof(path_middle) - 1U);
-            offset += sizeof(path_middle) - 1U;
-        }
+    for (size_t path = 0; path < many_path_count; path++) {
+        memcpy(many_paths + offset, path_middle, sizeof(path_middle) - 1U);
+        offset += sizeof(path_middle) - 1U;
     }
     memcpy(many_paths + offset, path_end, sizeof(path_end) - 1U);
     offset += sizeof(path_end) - 1U;

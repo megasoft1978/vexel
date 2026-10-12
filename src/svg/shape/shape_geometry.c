@@ -54,14 +54,14 @@ bool svg_shape_builder_add_edge(svg_shape_builder *builder, geom_point from,
 
 bool svg_shape_builder_begin_shape(builder *b, bool evenodd)
 {
-    if (b->doc->shape_count >= SVG_SHAPE_MAX_EDGES ||
+    if (b->doc->shape_count >= SVG_SHAPE_MAX_SHAPES ||
         b->doc->shape_count > UINT32_MAX) {
         svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset);
         return false;
     }
     if (b->doc->shape_count == b->shape_capacity) {
         size_t next = b->shape_capacity == 0U ? 32U : b->shape_capacity * 2U;
-        if (next > SVG_SHAPE_MAX_EDGES) next = SVG_SHAPE_MAX_EDGES;
+        if (next > SVG_SHAPE_MAX_SHAPES) next = SVG_SHAPE_MAX_SHAPES;
         if (next > SIZE_MAX / sizeof(*b->doc->shape_evenodd)) {
             svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset);
             return false;

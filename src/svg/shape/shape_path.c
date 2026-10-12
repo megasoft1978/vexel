@@ -3,7 +3,9 @@
 #include <math.h>
 #include <string.h>
 
-#define SHAPE_MAX_COMMANDS 65536U
+/* Per-path command budget; a single CAD path routinely carries hundreds of
+ * thousands of segments. */
+#define SHAPE_MAX_COMMANDS (4U * 1024U * 1024U)
 #define SHAPE_MAX_COORD 1000000.0
 typedef svg_shape_builder builder;
 typedef svg_shape_number_reader number_reader;

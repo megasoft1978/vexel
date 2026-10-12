@@ -11,10 +11,10 @@ Unlike `head-to-head.md`, this report measures a full-document render, not a syn
 
 | Verdict | Files |
 |---|---:|
-| `limit` | 16 |
-| `ok` | 1 |
+| `limit` | 13 |
+| `ok` | 3 |
 | `skipped` | 19 |
-| `unsupported` | 12 |
+| `unsupported` | 13 |
 | `viewport` | 2 |
 | `xml` | 8 |
 
@@ -22,23 +22,25 @@ Unlike `head-to-head.md`, this report measures a full-document render, not a syn
 
 | ID | Bytes | Tier |
 |---|---:|---|
+| `generated-cnc_t1` | 990772 | T1 |
 | `generated-embedded_t1` | 912235 | T1 |
+| `commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg` | 16162430 | T2 |
 
 ## Per-file results
 
 | ID | Kind | Tier | Bytes | Verdict | Diagnostic | Offset | Excerpt |
 |---|---|---|---:|---|---|---:|---|
-| `generated-cad_t1` | generated | T1 | 997801 | `limit` | limit | 863987 | `...637</text><text x="570" y="72">Room 0638</text><text x="585" y="72">Room 0639</text><text x="600...` |
-| `generated-cad_t2` | generated | T2 | 10592198 | `limit` | limit | 1527099 | `...><path d="M750 4488 a5 5 0 0 1 10 0"/><path d="M765 4488 h11 v7 h-11 z"/><rect x="780" y="4488" ...` |
+| `generated-cad_t1` | generated | T1 | 997801 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
+| `generated-cad_t2` | generated | T2 | 10592198 | `limit` | limit | 9365917 | `...</text><text x="465" y="1452">Room 12131</text><text x="480" y="1452">Room 12132</text><text x="...` |
 | `generated-cad_t3` | generated | T3 | 109719583 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
-| `generated-cnc_t1` | generated | T1 | 990772 | `limit` | limit | 691833 | `...25 .15"/><path d="M857 599l1.25 .15"/><path d="M858 606l1.25 .15"/><path d="M859 613l1.25 .15"/>...` |
-| `generated-cnc_t2` | generated | T2 | 10162188 | `limit` | limit | 507893 | `...90 1965 l3 0 l0 3 l-3 0 Z"/><path d="M105 1965 l3 0 l0 3 l-3 0 Z"/><path d="M120 1965 l3 0 l0 3 ...` |
+| `generated-cnc_t1` | generated | T1 | 990772 | `ok` |  |  | `` |
+| `generated-cnc_t2` | generated | T2 | 10162188 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
 | `generated-cnc_t3` | generated | T3 | 102580014 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-embedded_t1` | generated | T1 | 912235 | `ok` |  |  | `` |
 | `generated-embedded_t2` | generated | T2 | 9371925 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
 | `generated-embedded_t3` | generated | T3 | 93970295 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
-| `generated-giant_path_t1` | generated | T1 | 920236 | `limit` | limit | 603597 | `...30,610 L1531,647 L1532,684 L1533,721 L1534,758 L1535,795 L1536,832 L1537,869 L1538,906 L1539,943...` |
-| `generated-giant_path_t2` | generated | T2 | 8340030 | `limit` | limit | 603597 | `...30,610 L1531,647 L1532,684 L1533,721 L1534,758 L1535,795 L1536,832 L1537,869 L1538,906 L1539,943...` |
+| `generated-giant_path_t1` | generated | T1 | 920236 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
+| `generated-giant_path_t2` | generated | T2 | 8340030 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
 | `generated-giant_path_t3` | generated | T3 | 91963466 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-giant_path_t4` | generated | T4 | 827663466 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-inkscape_t1` | generated | T1 | 979796 | `unsupported` | unsupported | 1214 | `...path-effect="#path-effect1" fill="none" stroke="url(#g)"><path d="M0 0h4v2h-4z"/><path d="M1 11h...` |
@@ -51,20 +53,20 @@ Unlike `head-to-head.md`, this report measures a full-document render, not a syn
 | `generated-nested_t2` | generated | T2 | 9430992 | `xml` | xml | 16843 | `..." transform="translate(.001 .001) rotate(.001)"><g id="nest-255" transform="translate(.001 .001)...` |
 | `generated-nested_t3` | generated | T3 | 93956332 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-science_t1` | generated | T1 | 1374397 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
-| `generated-science_t2` | generated | T2 | 14116675 | `limit` | limit | 903814 | `...1.3"/><circle cx="299.47" cy="285.17" r="1.3"/><circle cx="1274.69" cy="271.09" r="1.3"/><circle...` |
+| `generated-science_t2` | generated | T2 | 14116675 | `limit` | limit | 0 | `<?xml version="1.0" encoding="UTF-8"?>.<svg xmln...` |
 | `generated-science_t3` | generated | T3 | 117860153 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-science_t4` | generated | T4 | 635202435 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
-| `generated-text_t1` | generated | T1 | 887035 | `limit` | limit | 15500 | `...tion, and identifier</text><text x="685" y="35">Sample 000175: measurement, annotation, and iden...` |
-| `generated-text_t2` | generated | T2 | 9024701 | `limit` | limit | 15500 | `...tion, and identifier</text><text x="685" y="35">Sample 000175: measurement, annotation, and iden...` |
+| `generated-text_t1` | generated | T1 | 887035 | `limit` | limit | 235947 | `...ation, and identifier</text><text x="675" y="5">Sample 002825: measurement, annotation, and iden...` |
+| `generated-text_t2` | generated | T2 | 9024701 | `limit` | limit | 235947 | `...ation, and identifier</text><text x="675" y="5">Sample 002825: measurement, annotation, and iden...` |
 | `generated-text_t3` | generated | T3 | 90488308 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-use_t1` | generated | T1 | 986323 | `limit` | limit | 648183 | `...="#mark" x="321" y="773" width="6" height="6"/><use href="#mark" x="322" y="786" width="6" heigh...` |
 | `generated-use_t2` | generated | T2 | 10036526 | `limit` | limit | 648183 | `...="#mark" x="321" y="773" width="6" height="6"/><use href="#mark" x="322" y="786" width="6" heigh...` |
 | `generated-use_t3` | generated | T3 | 100542256 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `generated-use_t4` | generated | T4 | 1005597835 | `skipped` |  |  | `not render-tested: source exceeds --max-bytes (33554432)` |
 | `commons-1-42-polytope-7-cube-svg` | real | T3 | 29836045 | `xml` | xml | 15241908 | `...y1="425.803" x2="608.789" y2="440.122"/>..<line x1="579.054" y1="425.803" x2="629.366" y2="465.9...` |
-| `commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg` | real | T2 | 16162430 | `limit` | limit | 738202 | `....2 -0.1,0.1 -0.2,0.4 -0.1,0.1 h -0.2 l -0.1,0.2 -0.2,0.6 v 0.2 l 0.1,0.2 v 0.3 l -0.1,0.1 -0.2,0...` |
+| `commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg` | real | T2 | 16162430 | `ok` |  |  | `` |
 | `commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg` | real | T3 | 22666147 | `viewport` | viewport | 70 | `...coding="UTF-8" standalone="no"?>.<svg.   width="7409".   height="2600".   version="1.0".   id="s...` |
-| `commons-amhara-topographic-map-svg` | real | T2 | 15593284 | `limit` | limit | 2506734 | `...9 0.0971-0.16061 0.2051-0.35704 0.36719-0.73633 0.71564 0.816 0.36897 2.3223-0.32617 2.9668 0.06...` |
+| `commons-amhara-topographic-map-svg` | real | T2 | 15593284 | `unsupported` | unsupported | 14608543 | `...g>. <g transform="translate(-49.4 -30.176)">.  <path d="m365.29 432.38c-2.0945-0.60237-4.7362 0....` |
 | `commons-bulgaria-in-1915-geographic-map-en-svg` | real | T2 | 15165804 | `unsupported` | unsupported | 3805 | `...:#555555;stroke:none; opacity:0.2;}.</style>.  <clipPath.     id="IDmain">.    <rect.       x="0...` |
 | `commons-cambodia-geographic-map-en-svg` | real | T3 | 20142590 | `unsupported` | unsupported | 9490 | `...55555;stroke:none; opacity:0.2;}.]]></style>.  <clipPath.     id="IDmain">.    <rect.       id="...` |
 | `commons-chuaattractormodified-svg` | real | T3 | 20763720 | `xml` | xml | 56 | `...rsion="1.0" encoding="utf-8" standalone="no"?>..<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN".....` |
