@@ -1,0 +1,10 @@
+VERDICT: fail
+AC-1 pass: `.cache/final-gate-2026-10-12.log` shows the debug build and all 83 CTest cases passing at HEAD.
+AC-2 unverifiable: `artifacts/WO-UI-02/check-04.json` and `check-05.json` record `./dev verify` and `./dev t --all` passing, but the HEAD final-gate log does not run `./dev t --all`.
+AC-3 pass: `.cache/final-gate-2026-10-12.log` records the native editor smoke passing at HEAD; `check-06.json` also records an earlier failed run.
+AC-4 pass: `artifacts/WO-UI-02/mutation.md` records the deliberate mutation and test failure; `tests/editor/viewer_chrome_test.c` contains the corresponding assertion.
+AC-5 fail: `tests/editor/viewer_chrome_test.c` checks Fill and Stroke visibility, but does not enumerate the selected element’s attributes and prove each appears on exactly one tab.
+AC-6 pass: `artifacts/WO-UI-02/check-07.json`, `check-08.json`, and `check-10.json` record the ledger validation, work-order validation, and diff check passing.
+AC-7 fail: this independent read-only review found AC-5 unmet.
+
+Defects found: AC-5’s required per-attribute reachability test is missing. The WO evidence also records an intermittent editor-smoke save failure in `check-06.json`; the later HEAD final gate passed the smoke, and `editor-smoke-flake.md` attributes the observed failure to the transform/save path.

@@ -1,0 +1,17 @@
+VERDICT: fail
+AC-1 pass: `.cache/final-gate-2026-10-12.log` records Debug/Release builds and 83/83 CTests passing at `bcdc3fa`.
+AC-2 pass: `.cache/final-gate-2026-10-12.log` records `./dev verify` passing at `bcdc3fa`.
+AC-3 unverifiable: `artifacts/WO-UI-01/check-05.json` records `./dev t --all` before later commits; the final gate log does not show that command at `bcdc3fa`.
+AC-4 pass: `CMakeLists.txt` registers `viewer-workspaces`; the final gate log records it passing; `artifacts/WO-UI-01/pre-change.md` records the specified missing-header diagnostic.
+AC-5 fail: `tests/editor/viewer_workspace_test.c` covers workspace and semantic behavior, but no focused test exercises a settings save/load round-trip; unknown-name coverage tests the name parser, not a stored setting.
+AC-6 fail: `tests/editor/native_smoke_actions.sh` pins Draw and checks live tab states, but its keyboard sequence does not wrap around the workspace list as AC-6 requires.
+AC-7 fail: `tests/editor/native_smoke_actions.sh` omits Inspect and checks expected SVG content after switching rather than comparing the saved file against bytes saved before the workspace sequence.
+AC-8 fail: `artifacts/WO-UI-01/golden-changes.md` and `golden-diff-data.json` document the order’s changed fixtures and hashes, but the recorded PNG artifacts are red-highlight diffs, not the required side-by-side comparisons.
+AC-9 unverifiable: `check-09.json` through `check-11.json` record the commands on an earlier candidate; `check-10.json` validates revision 1, while the frozen spec at HEAD is revision 2. The final gate log does not establish the revision-2 `wo_validate` and `git diff --check` results.
+AC-10 fail: this fresh read-only review of `bcdc3fa` finds unmet and unverified criteria, so it cannot report pass.
+
+Defects found:
+
+- The workspace table in `src/app/viewer_workspace.c` uses `Geometry`, `Geometry`, `Appearance`, and `Attributes`; the frozen spec calls for Draw `Object`, Nodes geometry/path, and Inspect `Document`.
+- The status readout in `src/app/viewer_chrome_editor.c` omits document size. `viewer_editor_set_operation_progress` has no production call sites, while open/render and export paths still send status through `viewer_editor_set_status`.
+- Focused tests do not verify settings persistence or unknown stored-setting fallback. The native smoke does not complete the required wrap and all-workspace save checks.

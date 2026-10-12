@@ -1,0 +1,12 @@
+VERDICT: fail
+AC-1 pass: `.cache/final-gate-2026-10-12.log` — `./dev verify` passed; Debug CTest reports 83/83.
+AC-2 unverifiable: `.cache/final-gate-2026-10-12.log`, `dev` — `./dev verify` passed, but there is no evidence that the separately required `./dev t --all` ran.
+AC-3 fail: `tests/editor/native_smoke_actions.sh`, `.cache/final-gate-2026-10-12.log` — the real-window smoke ran and saved byte-identically, but its actions do not open or close the log pane.
+AC-4 pass: `artifacts/WO-UI-03/mutation.md`, `tests/editor/viewer_workspace_test.c` — raising the cap to 256 is recorded as causing the overflow assertion to fail.
+AC-5 pass: `artifacts/WO-UI-03/document-invariance.md`, `tests/editor/viewer_workspace_test.c`, `.cache/final-gate-2026-10-12.log` — the test compares materialized bytes after logging an operation, warning, error and toggling the pane; the gate passed.
+AC-6 unverifiable: `.cache/final-gate-2026-10-12.log` — ledger validation passed, but there is no evidence for `wo_validate.py WO-UI-03 --ready` or `git diff --check`.
+AC-7 fail: this read-only review of `bcdc3fa` — I cannot report pass while AC-3 fails and AC-2/AC-6 lack required evidence.
+
+Defects found:
+
+- `editor_status_ok` does not log status messages. `editor_status_error` logs the existing status before constructing the new error status. This does not meet the requirement to log every status and error with matching severity. Evidence: `src/app/viewer_editor_status.c`.

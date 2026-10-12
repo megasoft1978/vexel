@@ -1,0 +1,16 @@
+VERDICT: fail
+AC-1 pass: `artifacts/WO-UI-02/editor-smoke-flake.md` records the pre-fix saved bytes with the `<rect>` missing.
+AC-2 pass: commit `f18d771` adds the root-transform regression test and records the pre-fix failure as `root transform guard failed: 4`.
+AC-3 pass: `.cache/final-gate-2026-10-12.log` records the debug build and CTest passing, with 83/83 tests.
+AC-4 unverifiable: the final-gate log supports `./dev verify`, but provides no HEAD evidence for `./dev t --all`.
+AC-5 fail: commit `f18d771` reports only 7 passing runs out of 10; the required ten consecutive passes are not recorded.
+AC-6 pass: the native smoke save assertion checks that the rectangle survives and has exactly one matrix; the final-gate log records the native editor smoke passing.
+AC-7 unverifiable: `./dev verify` validates the ledger, but the final-gate log does not show `wo_validate WO-BUG-01 --ready` or `git diff --check`.
+AC-8 fail: this fresh read-only verification reports fail.
+
+Defects found:
+
+- `artifacts/WO-BUG-01/` is absent at HEAD, so the order’s required evidence packet is missing.
+- The available smoke count does not meet AC-5.
+- Required AC-7 command results are not evidenced. The final gate does not include the work-order validator or `git diff --check`.
+- The pre-fix report records the bad bytes and repeated command, but does not record the exact gesture sequence required by the implementation instructions.

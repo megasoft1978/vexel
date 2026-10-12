@@ -1,0 +1,14 @@
+VERDICT: fail
+AC-1 pass: `.cache/final-gate-2026-10-12.log` records Debug and Release CTest passing 83/83 and Python tests passing 338/338.
+AC-2 pass: `.cache/final-gate-2026-10-12.log` records ASan and UBSan CTest passing 83/83.
+AC-3 unverifiable: The final-gate log does not show `./dev t --all`; `./dev final` runs a different set of steps.
+AC-4 fail: `tests/svg/shape/test_shape.c` has no focused tests for the >16 MiB decode, tiny token budget, >1 GiB source ceiling, or balanced token accounting; no pre-change failure evidence is recorded.
+AC-5 fail: `artifacts/WO-M4-10/render-diagnostics.json` lacks the required `corpus-delta.json` and per-category before/after delta; the specified command and output paths are not evidenced.
+AC-6 fail: `git diff e31084f..bcdc3fa` includes many paths outside the allowlist, including UI, release, docs, and workflow changes; the worktree also has unrelated uncommitted changes.
+AC-7 unverifiable: The log records ledger validation, but does not establish `wo_validate.py WO-M4-10 --ready` or `git diff --check`.
+AC-8 fail: This fresh review found acceptance gaps and a stream-error mapping defect.
+
+Defects found:
+
+- In `src/svg/shape/decode.c` at `071e0ec`, token-storage exhaustion produces `SVG_XML_ERROR_OUTPUT_EXHAUSTED`, but the stream failure branch maps nonempty XML diagnostics to `SVG_SHAPE_ERROR_XML`. The spec requires `SVG_SHAPE_ERROR_LIMIT`.
+- `src/svg/shape/traverse_internal.h` documents the 256 MiB token budget but omits the resulting token count required by the implementation contract.

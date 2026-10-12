@@ -1,0 +1,14 @@
+VERDICT: fail
+AC-1 fail: `artifacts/WO-HYGIENE-01/inventory-before.json` and `archive-tags.json` are absent; the sole `archive/second-lineage` tag does not preserve any of the eight named tips. The before/after commit counts are not recorded.
+AC-2 fail: Required `artifacts/WO-HYGIENE-01/inventory-after.json` is absent. The older `artifacts/hygiene-worktrees-after.json` records a 98-to-23 reduction and 21G-to-3.3G sizes, but is not the required inventory; current `git worktree list` also differs from that count.
+AC-3 unverifiable: There is no work-order before inventory establishing the branch set to compare. Current refs retain the named unmerged branches, but that alone does not establish the criterion against the required before-state.
+AC-4 unverifiable: `.cache/final-gate-2026-10-12.log` records a passing `./dev final`, whose `verify` step runs build and verification. It does not establish that the separately required `./dev t --all` exited 0.
+AC-5 fail: `git status --porcelain` is nonempty, and `git worktree list --porcelain` reports prunable entries with missing gitdir locations.
+AC-6 unverifiable: `git diff --check` currently exits 0, and the final gate’s `verify` step runs ledger validation. No evidence establishes `python3 scripts/wo_validate.py WO-HYGIENE-01 --ready` exited 0.
+AC-7 fail: Against candidate `bcdc3fafd7e34c04f80331044334f6dbb1d8fa87`, the required archive tags do not preserve the eight tips. `git merge-base --is-ancestor` fails for each named tip against the sole `archive/second-lineage` tag.
+
+Defects found:
+
+- The required `artifacts/WO-HYGIENE-01/` evidence directory and implementation commit are absent.
+- The existing archive tag targets `d97da2f` (the second root), rather than the required `integrate/final-ui-docs` target with one additional annotated tag per second-root tip.
+- Current worktree state violates AC-5: four paths are modified, and `git worktree list` reports missing gitdir locations.
