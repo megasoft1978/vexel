@@ -31,11 +31,11 @@ direction is `docs/adr/0017-ui-direction-blender-aligned.md`.
   `release-install-smoke`). `./dev bundle` and `./dev dmg` produce the artifacts.
 - **Hygiene**: worktrees were pruned from 98 to 23 and the checkout from 21 GB to
   3.3 GB. Only clean worktrees reachable from `main` were removed; seven dirty
-  ones were left untouched. The disconnected second root `d97da2f` is tagged `archive/second-lineage` and
-  branched as `archive/second-lineage-tip`, but both point at the root, not the
-  tip (`09c8663` on `integrate/final-ui-docs`); the ~31 later commits survive only
-  on their original branches and `origin`. `origin/main` is that second lineage
-  and shares no history with local `main` (475 local commits are not on GitHub).
+  ones were left untouched. The disconnected second lineage is preserved on origin and locally as the tags
+  `archive/second-lineage` (root `d97da2f`), `archive/second-lineage-final` and the
+  branch `archive/second-lineage-tip` (tip `09c8663`), plus
+  `archive/origin-main-9896eb5` (the old GitHub `main`). On 2026-10-12 GitHub
+  `main` was replaced by local `main` (force-push with lease, owner-approved).
 
 ## How work is done here
 
@@ -63,8 +63,8 @@ SHA-256. Three lessons that cost real time in this repository:
    BUG-01, M4-10, HYGIENE-01); gaps are in `artifacts/retro-verification-2026-10-12/`.
    Each either closes its failed acceptance criteria or is superseded by a
    revision matching what was built (owner call).
-2. Owner decision: which lineage becomes GitHub `main`; then move the archive refs
-   to the real tips and decide whether to port WO-UI-GOLDEN-02's 1x native fix.
+2. Decide whether to port WO-UI-GOLDEN-02's 1x native fix from
+   `archive/second-lineage-final` (lineage decision is done: local `main` won).
 3. Corpus: attribute policy, `<meta>`, DOCTYPE, `writing-mode`, per-element edge
    storage (`generated/cad_t2`), the 19 files over 32 MiB, the 100 MB timing.
 4. Owner-only: M4-08 scope, the partial and deferred UI items, real-window and
