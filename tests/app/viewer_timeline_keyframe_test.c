@@ -402,11 +402,240 @@ static bool test_docked_timeline_key_drag_edits_source(void)
     return true;
 }
 
+static const char field_edit_source[] =
+    "<svg width='48' height='16'><rect id='dot' x='0' y='2' width='8' height='8'>"
+    "<animate attributeName='x' values='0;5;10;15' keyTimes='0;0.25;0.5;1' "
+    "dur='2s' calcMode='spline' keySplines='0.10 0.20 0.30 0.40; "
+    "0.22 0.32 0.42 0.52;0.40 0.50 0.60 0.70'/></rect></svg>";
+
+static bool key_event(viewer_timeline *timeline, viewer_editor *editor,
+    const viewer_timeline_layout *layout, uint16_t key_code, char text)
+{
+    platform_event event = {.type = PLATFORM_EVENT_KEY_DOWN, .key_code = key_code};
+    if (text != '\0') {
+        event.text[0] = text;
+        event.text_len = 1U;
+    }
+    return viewer_timeline_easing_process_event(timeline, editor, &event, layout);
+}
+
+/* Splits the keySplines attribute of edited into trimmed tuples. */
+static bool split_splines(const char *edited, char tuples[3][96])
+{
+    const char *start = strstr(edited, "keySplines='");
+    if (start == NULL) return false;
+    start += strlen("keySplines='");
+    const char *end = strchr(start, '\'');
+    if (end == NULL) return false;
+    for (size_t index = 0U; index < 3U; ++index) {
+        while (start < end && *start == ' ') start++;
+        const char *stop = start;
+        while (stop < end && *stop != ';') stop++;
+        const char *trim = stop;
+        while (trim > start && trim[-1] == ' ') trim--;
+        if ((size_t)(trim - start) >= 96U) return false;
+        memcpy(tuples[index], start, (size_t)(trim - start));
+        tuples[index][trim - start] = '\0';
+        start = stop < end ? stop + 1 : stop;
+    }
+    return true;
+}
+
+/* Types input into easing field 0 of key 1 and commits with Return. */
+static bool type_into_field(const char *input, bool *out_mutated,
+    char tuples[3][96], double *out_decoded, bool *out_snapshot_matches)
+{
+    base_bytes bytes = {(const uint8_t *)field_edit_source,
+        sizeof(field_edit_source) - 1U};
+    svg_shape_document document = {0};
+    CHECK(decode(field_edit_source, &document));
+    viewer_editor *editor = viewer_editor_create(bytes, UI_THEME_DARK, 900U, 1200U);
+    CHECK(editor != NULL);
+    viewer_timeline timeline;
+    viewer_timeline_init(&timeline);
+    viewer_timeline_reset(&timeline, &document);
+    CHECK(open_easing_dock(&timeline));
+    timeline.selected_key = 1U;
+    viewer_timeline_layout layout;
+    CHECK(viewer_timeline_layout_compute(&timeline, 900U, 1200U, 2.0, &layout));
+    viewer_timeline_easing_layout easing;
+    CHECK(viewer_timeline_easing_layout_compute(&layout, &easing));
+    platform_event event = {.type = PLATFORM_EVENT_POINTER_DOWN,
+        .logical_x = (int32_t)((easing.fields[0].x + easing.fields[0].width / 2U) / 2U),
+        .logical_y = (int32_t)((easing.fields[0].y + easing.fields[0].height / 2U) / 2U)};
+    CHECK(viewer_timeline_easing_process_event(&timeline, editor, &event, &layout));
+    event.type = PLATFORM_EVENT_POINTER_UP;
+    CHECK(viewer_timeline_easing_process_event(&timeline, editor, &event, &layout));
+    CHECK(timeline.easing_has_focus && timeline.easing_focused_field == 0U);
+    (void)viewer_timeline_take_editor_mutation(&timeline);
+    for (size_t index = 0U; index < 24U; ++index)
+        CHECK(key_event(&timeline, editor, &layout, 51U, '\0'));
+    for (const char *cursor = input; *cursor != '\0'; ++cursor)
+        CHECK(key_event(&timeline, editor, &layout, 0U, *cursor));
+    CHECK(key_event(&timeline, editor, &layout, 36U, '\0'));
+    *out_mutated = viewer_timeline_take_editor_mutation(&timeline);
+    size_t capacity = viewer_editor_byte_length(editor) + 1U;
+    uint8_t *edited = malloc(capacity);
+    CHECK(edited != NULL);
+    size_t length = 0U;
+    CHECK(viewer_editor_materialize(editor, edited, capacity, &length));
+    edited[length] = 0U;
+    bool okay = split_splines((const char *)edited, tuples);
+    svg_shape_document decoded = {0};
+    okay = okay && decode((const char *)edited, &decoded);
+    if (okay) *out_decoded = decoded.animation.tracks[0].splines[1][0];
+    char expected[40];
+    (void)snprintf(expected, sizeof(expected), "%.17g",
+        timeline.easing_fields[0].value);
+    *out_snapshot_matches = okay && viewer_timeline_accessibility_snapshot(&timeline,
+        &layout, UI_THEME_DARK, true, &semantics_scratch) &&
+        snapshot_has_value(&semantics_scratch, UI_ROLE_SLIDER, "Spline x1", expected);
+    free(edited);
+    svg_shape_document_destroy(&decoded);
+    viewer_timeline_destroy(&timeline);
+    viewer_editor_destroy(editor);
+    svg_shape_document_destroy(&document);
+    return okay;
+}
+
+static bool check_accepted_field_value(const char *input, double expected)
+{
+    char tuples[3][96];
+    bool mutated = false, snapshot_matches = false;
+    double decoded = -1.0;
+    CHECK(type_into_field(input, &mutated, tuples, &decoded, &snapshot_matches));
+    CHECK(mutated);
+    CHECK(strcmp(tuples[0], "0.10 0.20 0.30 0.40") == 0);
+    CHECK(strcmp(tuples[2], "0.40 0.50 0.60 0.70") == 0);
+    char *rest = NULL;
+    CHECK(strtod(tuples[1], &rest) == expected);
+    CHECK(strtod(rest, &rest) == 0.32 && strtod(rest, &rest) == 0.42 &&
+        strtod(rest, &rest) == 0.52 && *rest == '\0');
+    CHECK(decoded == expected);
+    CHECK(snapshot_matches);
+    return true;
+}
+
+static bool check_rejected_field_value(const char *input)
+{
+    char tuples[3][96];
+    bool mutated = true, snapshot_matches = false;
+    double decoded = -1.0;
+    CHECK(type_into_field(input, &mutated, tuples, &decoded, &snapshot_matches));
+    CHECK(!mutated);
+    CHECK(strcmp(tuples[0], "0.10 0.20 0.30 0.40") == 0);
+    CHECK(strcmp(tuples[1], "0.22 0.32 0.42 0.52") == 0);
+    CHECK(strcmp(tuples[2], "0.40 0.50 0.60 0.70") == 0);
+    CHECK(decoded == 0.22);
+    return true;
+}
+
+static bool test_easing_numeric_field_edits(void)
+{
+    CHECK(check_accepted_field_value("0.37", 0.37));
+    CHECK(check_accepted_field_value("0", 0.0));
+    CHECK(check_accepted_field_value("1", 1.0));
+    CHECK(check_rejected_field_value("1.5"));
+    CHECK(check_rejected_field_value("-0.1"));
+    CHECK(check_rejected_field_value(""));
+    CHECK(check_rejected_field_value("abc"));
+    return true;
+}
+
+static bool click_field(viewer_timeline *timeline, viewer_editor *editor,
+    const viewer_timeline_layout *layout, const viewer_timeline_easing_layout *easing,
+    size_t field)
+{
+    ui_rect rect = easing->fields[field];
+    platform_event event = {.type = PLATFORM_EVENT_POINTER_DOWN,
+        .logical_x = (int32_t)((rect.x + rect.width / 2U) / 2U),
+        .logical_y = (int32_t)((rect.y + rect.height / 2U) / 2U)};
+    CHECK(viewer_timeline_easing_process_event(timeline, editor, &event, layout));
+    event.type = PLATFORM_EVENT_POINTER_UP;
+    CHECK(viewer_timeline_easing_process_event(timeline, editor, &event, layout));
+    return timeline->easing_focused_field == field;
+}
+
+static bool type_and_return(viewer_timeline *timeline, viewer_editor *editor,
+    const viewer_timeline_layout *layout, const char *input)
+{
+    for (size_t index = 0U; index < 24U; ++index)
+        CHECK(key_event(timeline, editor, layout, 51U, '\0'));
+    for (const char *cursor = input; *cursor != '\0'; ++cursor)
+        CHECK(key_event(timeline, editor, layout, 0U, *cursor));
+    CHECK(key_event(timeline, editor, layout, 36U, '\0'));
+    return true;
+}
+
+/* Rejected or never-committed x1 draft, then a valid commit of x2; x1 keeps its source value. */
+static bool check_unentered_field_does_not_leak(const char *draft, bool press_return)
+{
+    base_bytes bytes = {(const uint8_t *)field_edit_source,
+        sizeof(field_edit_source) - 1U};
+    svg_shape_document document = {0};
+    CHECK(decode(field_edit_source, &document));
+    viewer_editor *editor = viewer_editor_create(bytes, UI_THEME_DARK, 900U, 1200U);
+    CHECK(editor != NULL);
+    viewer_timeline timeline;
+    viewer_timeline_init(&timeline);
+    viewer_timeline_reset(&timeline, &document);
+    CHECK(open_easing_dock(&timeline));
+    timeline.selected_key = 1U;
+    viewer_timeline_layout layout;
+    CHECK(viewer_timeline_layout_compute(&timeline, 900U, 1200U, 2.0, &layout));
+    viewer_timeline_easing_layout easing;
+    CHECK(viewer_timeline_easing_layout_compute(&layout, &easing));
+    CHECK(click_field(&timeline, editor, &layout, &easing, 0U));
+    if (press_return) CHECK(type_and_return(&timeline, editor, &layout, draft));
+    else {
+        for (size_t index = 0U; index < 24U; ++index)
+            CHECK(key_event(&timeline, editor, &layout, 51U, '\0'));
+        for (const char *cursor = draft; *cursor != '\0'; ++cursor)
+            CHECK(key_event(&timeline, editor, &layout, 0U, *cursor));
+    }
+    CHECK(click_field(&timeline, editor, &layout, &easing, 2U));
+    CHECK(type_and_return(&timeline, editor, &layout, "0.41"));
+    size_t capacity = viewer_editor_byte_length(editor) + 1U;
+    uint8_t *edited = malloc(capacity);
+    CHECK(edited != NULL);
+    size_t length = 0U;
+    CHECK(viewer_editor_materialize(editor, edited, capacity, &length));
+    edited[length] = 0U;
+    char tuples[3][96];
+    svg_shape_document decoded = {0};
+    bool okay = split_splines((const char *)edited, tuples) &&
+        decode((const char *)edited, &decoded);
+    if (okay) {
+        const double *tuple = decoded.animation.tracks[0].splines[1];
+        if (tuple[0] != 0.22)
+            (void)fprintf(stderr, "draft '%s': x1 became %.17g\n", draft, tuple[0]);
+        okay = tuple[0] == 0.22 && tuple[1] == 0.32 && tuple[2] == 0.41 &&
+            tuple[3] == 0.52 && strcmp(tuples[0], "0.10 0.20 0.30 0.40") == 0 &&
+            strcmp(tuples[2], "0.40 0.50 0.60 0.70") == 0;
+    }
+    free(edited);
+    svg_shape_document_destroy(&decoded);
+    viewer_timeline_destroy(&timeline);
+    viewer_editor_destroy(editor);
+    svg_shape_document_destroy(&document);
+    return okay;
+}
+
+static bool test_easing_rejected_field_does_not_leak(void)
+{
+    CHECK(check_unentered_field_does_not_leak("1.5", true));
+    CHECK(check_unentered_field_does_not_leak("-0.1", true));
+    CHECK(check_unentered_field_does_not_leak("abc", true));
+    CHECK(check_unentered_field_does_not_leak("0.3", false));
+    return true;
+}
 
 int main(void)
 {
     if (!test_easing_accessibility_and_raster_goldens() ||
         !test_easing_pointer_and_keyboard_edits() ||
+        !test_easing_numeric_field_edits() ||
+        !test_easing_rejected_field_does_not_leak() ||
         !test_docked_timeline_key_drag_edits_source()) return 1;
     (void)puts("viewer timeline keyframes: passed");
     return 0;

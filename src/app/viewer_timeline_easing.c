@@ -332,6 +332,16 @@ static void set_pending_value(viewer_timeline *timeline, size_t index, double va
     timeline->easing_pending = true;
 }
 
+/* Reverts uncommitted drafts so only a field's own Return commits its value. */
+static void discard_drafts(viewer_timeline *timeline, size_t keep)
+{
+    for (size_t index = 0U; index < 4U; ++index) {
+        if (index == keep || !timeline->easing_fields[index].edit.editing) continue;
+        (void)ui_widget_number_field_key(&timeline->easing_fields[index],
+            UI_KEY_ESCAPE, 0U);
+    }
+}
+
 static uint32_t apply_spline(viewer_timeline *timeline, viewer_editor *editor)
 {
     if (!viewer_timeline_easing_enabled(timeline)) return VIEWER_EDITOR_HANDLED;
@@ -447,6 +457,7 @@ bool viewer_timeline_easing_process_event(viewer_timeline *timeline,
     if (event->type == PLATFORM_EVENT_POINTER_DOWN && has_point) {
         for (size_t index = 0U; index < 3U; ++index) {
             if (!rect_contains(easing.mode_buttons[index], x, y)) continue;
+            discard_drafts(timeline, 4U);
             if (enabled) (void)apply_mode(timeline, editor,
                 index == 0U ? SVG_ANIM_CALC_LINEAR :
                 index == 1U ? SVG_ANIM_CALC_DISCRETE : SVG_ANIM_CALC_SPLINE);
@@ -468,6 +479,7 @@ bool viewer_timeline_easing_process_event(viewer_timeline *timeline,
         for (size_t index = 0U; index < 4U; ++index) {
             if (!rect_contains(easing.fields[index], x, y)) continue;
             if (!enabled) return true;
+            discard_drafts(timeline, index);
             timeline->easing_focused_field = index;
             timeline->easing_has_focus = true;
             timeline->easing_graph_focused = false;
@@ -480,6 +492,7 @@ bool viewer_timeline_easing_process_event(viewer_timeline *timeline,
         }
         if (rect_contains(easing.graph, x, y)) {
             if (!enabled) return true;
+            discard_drafts(timeline, 4U);
             double values[4];
             size_t handle = 0U;
             field_values(timeline, values);
@@ -536,6 +549,7 @@ bool viewer_timeline_easing_process_event(viewer_timeline *timeline,
     if (event->key_code == 48U) {
         timeline->easing_focused_field =
             (timeline->easing_focused_field + 1U) % 4U;
+        discard_drafts(timeline, timeline->easing_focused_field);
         timeline->easing_graph_focused = false;
         timeline->easing_graph_dragging = false;
         timeline->easing_pending = false;
@@ -572,6 +586,10 @@ bool viewer_timeline_easing_process_event(viewer_timeline *timeline,
         event->key_code == 125U ? UI_KEY_DOWN :
         event->key_code == 36U ? UI_KEY_RETURN :
         event->key_code == 53U ? UI_KEY_ESCAPE :
+        event->key_code == 51U ? UI_KEY_BACKSPACE :
+        event->key_code == 117U ? UI_KEY_DELETE :
+        event->key_code == 123U ? UI_KEY_LEFT :
+        event->key_code == 124U ? UI_KEY_RIGHT :
         event->text_len == 1U ? (uint8_t)event->text[0] : 0U;
     uint32_t modifiers =
         ((event->modifiers & PLATFORM_MODIFIER_SHIFT) != 0U ? UI_MOD_SHIFT : 0U) |
@@ -585,6 +603,11 @@ bool viewer_timeline_easing_process_event(viewer_timeline *timeline,
     }
     if (result == UI_WIDGET_INPUT_COMMITTED) {
         (void)apply_spline(timeline, editor);
+        return true;
+    }
+    if (result == UI_WIDGET_INPUT_INVALID) {
+        discard_drafts(timeline, 4U);
+        timeline->easing_pending = false;
         return true;
     }
     if (result == UI_WIDGET_INPUT_CANCELLED) {
