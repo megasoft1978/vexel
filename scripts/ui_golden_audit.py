@@ -317,6 +317,7 @@ def _metadata() -> dict[str, Any]:
 def capture(output: Path, build: Path) -> dict[str, Any]:
     native = importlib.import_module("verify_native_shell_goldens")
     style = importlib.import_module("verify_style_goldens")
+    chrome = importlib.import_module("verify_chrome")
     snap = importlib.import_module("verify_snap_overlay_goldens")
     accessibility = importlib.import_module("verify_accessibility_localization")
 
@@ -330,6 +331,10 @@ def capture(output: Path, build: Path) -> dict[str, Any]:
         if not path.is_file():
             raise FileNotFoundError(f"missing renderer executable: {path}")
     rows: list[dict[str, Any]] = []
+    style_major, style_profile = style.profile_dir()
+    chrome_major, chrome_profile = chrome.profile_dir()
+    snap_major, snap_profile = snap.profile_dir()
+    access_major, access_profile = accessibility.profile_dir()
 
     recent = Path("../../tests/svg/shape/fixtures/rect.svg")
     icon = ROOT / "app/Vexel-Icon-1024.png"
@@ -354,25 +359,31 @@ def capture(output: Path, build: Path) -> dict[str, Any]:
                 viewport = style.layout_width(width, state)
                 name = f"editor-{theme}-{width}x{height}-{state}.png"
                 actual = style.render(bins["style"], theme, width, height, state, viewport)
-                rows.append(_capture(output, "editor-style", name,
-                                     style.GOLDEN_DIR / name, actual, bins["style"]))
+                rows.append(_capture(output, f"editor-style-macos-{style_major}", name,
+                                     style_profile / name, actual, bins["style"]))
+
+    for theme in ("dark", "light"):
+        name = f"editor-chrome-{theme}.png"
+        actual = chrome.render(bins["accessibility"], theme)
+        rows.append(_capture(output, f"editor-chrome-macos-{chrome_major}", name,
+                             chrome_profile / name, actual, bins["accessibility"]))
 
     for theme in ("dark", "light"):
         name = f"snap-overlay-{theme}.png"
         actual = snap.render(bins["snap"], theme)
-        rows.append(_capture(output, "snap-overlay", name,
-                             snap.GOLDEN_DIR / name, actual, bins["snap"]))
+        rows.append(_capture(output, f"snap-overlay-macos-{snap_major}", name,
+                             snap_profile / name, actual, bins["snap"]))
 
     for theme in ("dark", "light"):
         name = f"accessibility-chrome-{theme}-{accessibility.INTERFACE_SCALE}.png"
         actual = accessibility.render(bins["accessibility"], theme)
-        rows.append(_capture(output, "accessibility-localization", name,
-                             accessibility.GOLDEN_DIR / name, actual, bins["accessibility"]))
+        rows.append(_capture(output, f"accessibility-localization-macos-{access_major}", name,
+                             access_profile / name, actual, bins["accessibility"]))
 
     report = {
         "schema_version": 1,
         "purpose": "Diagnostic image comparison only; expected UI goldens and checks are read-only.",
-        "comparison_policy": "Captures every image in all four renderer matrices even after a mismatch; this is diagnostic coverage beyond each verifier's fail-fast behavior.",
+        "comparison_policy": "Captures every image in all five renderer matrices even after a mismatch; this is diagnostic coverage beyond each verifier's fail-fast behavior.",
         "metadata": _metadata(),
         "summary": {
             "images_compared": len(rows),

@@ -1,0 +1,57 @@
+{
+  "workflow_run": "https://github.com/megasoft1978/vexel/actions/runs/38207350150",
+  "source_commit": "7f72d11016d24d6f395045edd4cd4955271b7d7e",
+  "os": "15.7.9",
+  "os_build": "24G830",
+  "architecture": "arm64",
+  "audit": {
+    "categories": {
+      "accessibility-localization": {
+        "compared": 2,
+        "mismatch_names": [
+          "accessibility-chrome-dark-200.png",
+          "accessibility-chrome-light-200.png"
+        ],
+        "mismatches": 2,
+        "unbaselined": 0
+      },
+      "editor-style": {
+        "compared": 32,
+        "mismatch_names": [
+          "editor-dark-2560x1600-node-edit.png",
+          "editor-light-2560x1600-node-edit.png"
+        ],
+        "mismatches": 2,
+        "unbaselined": 0
+      },
+      "native-shell-macos-15": {
+        "compared": 14,
+        "mismatch_names": [],
+        "mismatches": 0,
+        "unbaselined": 14
+      },
+      "snap-overlay": {
+        "compared": 2,
+        "mismatch_names": [
+          "snap-overlay-dark.png",
+          "snap-overlay-light.png"
+        ],
+        "mismatches": 2,
+        "unbaselined": 0
+      }
+    },
+    "exact_matches": 30,
+    "images_compared": 50,
+    "mismatches": 6,
+    "unbaselined": 14
+  },
+  "ctest_failure_categories": [
+    "native-shell-goldens",
+    "editor-chrome",
+    "editor-style-goldens",
+    "editor-snap-overlay-goldens",
+    "editor-accessibility-localization-goldens"
+  ],
+  "captures": 56,
+  "note": "First hosted profile bootstrap. Renderer source was candidate 7f72d11; editor-chrome was absent from that audit version and must be captured by the subsequent run."
+}

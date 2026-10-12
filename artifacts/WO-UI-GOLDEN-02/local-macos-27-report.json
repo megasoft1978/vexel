@@ -1,5 +1,5 @@
 {
-  "comparison_policy": "Captures every image in all four renderer matrices even after a mismatch; this is diagnostic coverage beyond each verifier's fail-fast behavior.",
+  "comparison_policy": "Captures every image in all five renderer matrices even after a mismatch; this is diagnostic coverage beyond each verifier's fail-fast behavior.",
   "images": [
     {
       "actual_image": "actual/native-shell-macos-27/welcome-empty-light.png",
@@ -436,10 +436,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-empty.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-empty.png",
       "actual_png_sha256": "a933e0cb6ea1b3c7ad77933c4108ae15c0d8db437ec2d65e6922eeef73a921b7",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-empty.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-empty.png",
       "expected_png_sha256": "a933e0cb6ea1b3c7ad77933c4108ae15c0d8db437ec2d65e6922eeef73a921b7",
       "metrics": {
         "actual_dimensions": {
@@ -467,10 +467,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-selection.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-selection.png",
       "actual_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-selection.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-selection.png",
       "expected_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
       "metrics": {
         "actual_dimensions": {
@@ -498,10 +498,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-editing-field.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-editing-field.png",
       "actual_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-editing-field.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-editing-field.png",
       "expected_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
       "metrics": {
         "actual_dimensions": {
@@ -529,10 +529,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-error.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-error.png",
       "actual_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-error.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-error.png",
       "expected_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
       "metrics": {
         "actual_dimensions": {
@@ -560,10 +560,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-narrow.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-narrow.png",
       "actual_png_sha256": "b9d96a4f284228c708961963c8060e45dff69be8bc4a5a528566ff06a60189a5",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-narrow.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-narrow.png",
       "expected_png_sha256": "b9d96a4f284228c708961963c8060e45dff69be8bc4a5a528566ff06a60189a5",
       "metrics": {
         "actual_dimensions": {
@@ -591,10 +591,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-node-edit.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-node-edit.png",
       "actual_png_sha256": "801c3a926e7bd29129dc9f19aeca849e517da37b23386ef15d1a0d17ff033591",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-node-edit.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-node-edit.png",
       "expected_png_sha256": "801c3a926e7bd29129dc9f19aeca849e517da37b23386ef15d1a0d17ff033591",
       "metrics": {
         "actual_dimensions": {
@@ -622,10 +622,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-scale-110.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-scale-110.png",
       "actual_png_sha256": "439f290d60f8cfc707f9d81961f480245da7149603254d789991401d5cc2ce8c",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-scale-110.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-scale-110.png",
       "expected_png_sha256": "439f290d60f8cfc707f9d81961f480245da7149603254d789991401d5cc2ce8c",
       "metrics": {
         "actual_dimensions": {
@@ -653,10 +653,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-1280x800-scale-120.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-1280x800-scale-120.png",
       "actual_png_sha256": "45c9d22e553120d0f239b4acfccb170fbfc726279078ddf2fe02370c90d41973",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-scale-120.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-1280x800-scale-120.png",
       "expected_png_sha256": "45c9d22e553120d0f239b4acfccb170fbfc726279078ddf2fe02370c90d41973",
       "metrics": {
         "actual_dimensions": {
@@ -684,10 +684,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-empty.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-empty.png",
       "actual_png_sha256": "72eceaaa2f634e85c4d229df29dbccb8a5aaab1c0741993f3b04b40151fbab65",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-empty.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-empty.png",
       "expected_png_sha256": "72eceaaa2f634e85c4d229df29dbccb8a5aaab1c0741993f3b04b40151fbab65",
       "metrics": {
         "actual_dimensions": {
@@ -715,10 +715,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-selection.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-selection.png",
       "actual_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-selection.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-selection.png",
       "expected_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
       "metrics": {
         "actual_dimensions": {
@@ -746,10 +746,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-editing-field.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-editing-field.png",
       "actual_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-editing-field.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-editing-field.png",
       "expected_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
       "metrics": {
         "actual_dimensions": {
@@ -777,10 +777,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-error.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-error.png",
       "actual_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-error.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-error.png",
       "expected_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
       "metrics": {
         "actual_dimensions": {
@@ -808,10 +808,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-narrow.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-narrow.png",
       "actual_png_sha256": "a35215c3fab94740ac3030f8840f3b0bdabb8e134942929afa9fe726b0488ccc",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-narrow.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-narrow.png",
       "expected_png_sha256": "a35215c3fab94740ac3030f8840f3b0bdabb8e134942929afa9fe726b0488ccc",
       "metrics": {
         "actual_dimensions": {
@@ -839,10 +839,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-node-edit.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-node-edit.png",
       "actual_png_sha256": "86da3b91f641c62fddcd86d5b6a61a4271edb25f9df41e7946495adfc995ba6e",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-node-edit.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-node-edit.png",
       "expected_png_sha256": "86da3b91f641c62fddcd86d5b6a61a4271edb25f9df41e7946495adfc995ba6e",
       "metrics": {
         "actual_dimensions": {
@@ -870,10 +870,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-scale-110.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-scale-110.png",
       "actual_png_sha256": "78dc176875d63a701ee8efa0f253c3c96456f3c5e5f6288c386de1369ab616cb",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-scale-110.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-scale-110.png",
       "expected_png_sha256": "78dc176875d63a701ee8efa0f253c3c96456f3c5e5f6288c386de1369ab616cb",
       "metrics": {
         "actual_dimensions": {
@@ -901,10 +901,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-1280x800-scale-120.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-1280x800-scale-120.png",
       "actual_png_sha256": "ac99e098f63a00d7a9a16d05129f7c20a46b1b44d65f0e0ae4cc81ea56c93701",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-1280x800-scale-120.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-1280x800-scale-120.png",
       "expected_png_sha256": "ac99e098f63a00d7a9a16d05129f7c20a46b1b44d65f0e0ae4cc81ea56c93701",
       "metrics": {
         "actual_dimensions": {
@@ -932,10 +932,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-empty.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-empty.png",
       "actual_png_sha256": "ef8d9bcbeb882b246eec4e1d691d6e4cb32f76e94ccd5a569575a9603c3e2dd5",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-empty.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-empty.png",
       "expected_png_sha256": "ef8d9bcbeb882b246eec4e1d691d6e4cb32f76e94ccd5a569575a9603c3e2dd5",
       "metrics": {
         "actual_dimensions": {
@@ -963,10 +963,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-selection.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-selection.png",
       "actual_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-selection.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-selection.png",
       "expected_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
       "metrics": {
         "actual_dimensions": {
@@ -994,10 +994,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-editing-field.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-editing-field.png",
       "actual_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-editing-field.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-editing-field.png",
       "expected_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
       "metrics": {
         "actual_dimensions": {
@@ -1025,10 +1025,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-error.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-error.png",
       "actual_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-error.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-error.png",
       "expected_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
       "metrics": {
         "actual_dimensions": {
@@ -1056,10 +1056,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-narrow.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-narrow.png",
       "actual_png_sha256": "caf806a5d12fe71ab143441e8dc0c6d4069b08f06d555552b2060cf4dd358634",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-narrow.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-narrow.png",
       "expected_png_sha256": "caf806a5d12fe71ab143441e8dc0c6d4069b08f06d555552b2060cf4dd358634",
       "metrics": {
         "actual_dimensions": {
@@ -1087,10 +1087,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-node-edit.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-node-edit.png",
       "actual_png_sha256": "d97b7ff896946a3ec0f8f73622d06cf6038cb63604a78f14d1c5b879b4ee7311",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-node-edit.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-node-edit.png",
       "expected_png_sha256": "d97b7ff896946a3ec0f8f73622d06cf6038cb63604a78f14d1c5b879b4ee7311",
       "metrics": {
         "actual_dimensions": {
@@ -1118,10 +1118,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-scale-110.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-scale-110.png",
       "actual_png_sha256": "521b0edb2b1d59732508a0b06a6cbd5e02093e311819a5c65ab32a4b648b9a65",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-scale-110.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-scale-110.png",
       "expected_png_sha256": "521b0edb2b1d59732508a0b06a6cbd5e02093e311819a5c65ab32a4b648b9a65",
       "metrics": {
         "actual_dimensions": {
@@ -1149,10 +1149,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-dark-2560x1600-scale-120.png",
+      "actual_image": "actual/editor-style-macos-27/editor-dark-2560x1600-scale-120.png",
       "actual_png_sha256": "58bd420e8478f04cf08298524d3dfda0c683e157aec472d926794ad782e311ef",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-scale-120.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-dark-2560x1600-scale-120.png",
       "expected_png_sha256": "58bd420e8478f04cf08298524d3dfda0c683e157aec472d926794ad782e311ef",
       "metrics": {
         "actual_dimensions": {
@@ -1180,10 +1180,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-empty.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-empty.png",
       "actual_png_sha256": "a4c46f0a109775236dbb5d04ccb22f9bd4dc341424a34b9726efacfbbffdd065",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-empty.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-empty.png",
       "expected_png_sha256": "a4c46f0a109775236dbb5d04ccb22f9bd4dc341424a34b9726efacfbbffdd065",
       "metrics": {
         "actual_dimensions": {
@@ -1211,10 +1211,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-selection.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-selection.png",
       "actual_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-selection.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-selection.png",
       "expected_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
       "metrics": {
         "actual_dimensions": {
@@ -1242,10 +1242,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-editing-field.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-editing-field.png",
       "actual_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-editing-field.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-editing-field.png",
       "expected_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
       "metrics": {
         "actual_dimensions": {
@@ -1273,10 +1273,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-error.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-error.png",
       "actual_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-error.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-error.png",
       "expected_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
       "metrics": {
         "actual_dimensions": {
@@ -1304,10 +1304,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-narrow.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-narrow.png",
       "actual_png_sha256": "9fbe8f6dcd66120c51501e25f81e9e1d8d57aac9a38efc8ecf4337d52cf52c83",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-narrow.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-narrow.png",
       "expected_png_sha256": "9fbe8f6dcd66120c51501e25f81e9e1d8d57aac9a38efc8ecf4337d52cf52c83",
       "metrics": {
         "actual_dimensions": {
@@ -1335,10 +1335,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-node-edit.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-node-edit.png",
       "actual_png_sha256": "9557cee090366ea42afba92b4491b92aad23dd1ff6a582370b5ac499329b34c7",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-node-edit.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-node-edit.png",
       "expected_png_sha256": "9557cee090366ea42afba92b4491b92aad23dd1ff6a582370b5ac499329b34c7",
       "metrics": {
         "actual_dimensions": {
@@ -1366,10 +1366,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-scale-110.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-scale-110.png",
       "actual_png_sha256": "6969c62fb8e718c9ea924d116ca37add7517e67527289f240ee72bbd9b9d88f3",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-scale-110.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-scale-110.png",
       "expected_png_sha256": "6969c62fb8e718c9ea924d116ca37add7517e67527289f240ee72bbd9b9d88f3",
       "metrics": {
         "actual_dimensions": {
@@ -1397,10 +1397,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/editor-style/editor-light-2560x1600-scale-120.png",
+      "actual_image": "actual/editor-style-macos-27/editor-light-2560x1600-scale-120.png",
       "actual_png_sha256": "c4d666e82f10828dc41a1df5fddbc113de0e59f5df2373ac3618114a8dd08431",
-      "category": "editor-style",
-      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-scale-120.png",
+      "category": "editor-style-macos-27",
+      "expected_path": "tests/ui/style-golden/macos-27/editor-light-2560x1600-scale-120.png",
       "expected_png_sha256": "c4d666e82f10828dc41a1df5fddbc113de0e59f5df2373ac3618114a8dd08431",
       "metrics": {
         "actual_dimensions": {
@@ -1428,10 +1428,72 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/snap-overlay/snap-overlay-dark.png",
+      "actual_image": "actual/editor-chrome-macos-27/editor-chrome-dark.png",
+      "actual_png_sha256": "ccc19a2a6a5a15065708d8bd590938f07944e441bade505a2f15db3a8d134f35",
+      "category": "editor-chrome-macos-27",
+      "expected_path": "tests/editor/chrome-golden/macos-27/editor-chrome-dark.png",
+      "expected_png_sha256": "ccc19a2a6a5a15065708d8bd590938f07944e441bade505a2f15db3a8d134f35",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-chrome-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/editor_chrome_render",
+      "renderer_sha256": "946b40be2433cb44adf80988f64a2455b4b7b0419b98ad328443747f67bf6fd7",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-chrome-macos-27/editor-chrome-light.png",
+      "actual_png_sha256": "3cdfbc4d5bfc69a14cbeafd1cdec00ec48b2fab7191ff20ac10eaddc02c5d3c6",
+      "category": "editor-chrome-macos-27",
+      "expected_path": "tests/editor/chrome-golden/macos-27/editor-chrome-light.png",
+      "expected_png_sha256": "3cdfbc4d5bfc69a14cbeafd1cdec00ec48b2fab7191ff20ac10eaddc02c5d3c6",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-chrome-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/editor_chrome_render",
+      "renderer_sha256": "946b40be2433cb44adf80988f64a2455b4b7b0419b98ad328443747f67bf6fd7",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/snap-overlay-macos-27/snap-overlay-dark.png",
       "actual_png_sha256": "d8b36b035e76682596c981872a9c4cafc55fc716d3b291f65e87669199775936",
-      "category": "snap-overlay",
-      "expected_path": "tests/editor/snap-overlay-golden/snap-overlay-dark.png",
+      "category": "snap-overlay-macos-27",
+      "expected_path": "tests/editor/snap-overlay-golden/macos-27/snap-overlay-dark.png",
       "expected_png_sha256": "d8b36b035e76682596c981872a9c4cafc55fc716d3b291f65e87669199775936",
       "metrics": {
         "actual_dimensions": {
@@ -1459,10 +1521,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/snap-overlay/snap-overlay-light.png",
+      "actual_image": "actual/snap-overlay-macos-27/snap-overlay-light.png",
       "actual_png_sha256": "8a54362e026eda8848c8999c86e0c85ae13abd3145f8462ca71e67ae36f306da",
-      "category": "snap-overlay",
-      "expected_path": "tests/editor/snap-overlay-golden/snap-overlay-light.png",
+      "category": "snap-overlay-macos-27",
+      "expected_path": "tests/editor/snap-overlay-golden/macos-27/snap-overlay-light.png",
       "expected_png_sha256": "8a54362e026eda8848c8999c86e0c85ae13abd3145f8462ca71e67ae36f306da",
       "metrics": {
         "actual_dimensions": {
@@ -1490,10 +1552,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/accessibility-localization/accessibility-chrome-dark-200.png",
+      "actual_image": "actual/accessibility-localization-macos-27/accessibility-chrome-dark-200.png",
       "actual_png_sha256": "3f6f509ad70d8514df316a5bf4137015292ce34a010a841b25996c3541dd1046",
-      "category": "accessibility-localization",
-      "expected_path": "tests/editor/accessibility-localization-golden/accessibility-chrome-dark-200.png",
+      "category": "accessibility-localization-macos-27",
+      "expected_path": "tests/editor/accessibility-localization-golden/macos-27/accessibility-chrome-dark-200.png",
       "expected_png_sha256": "3f6f509ad70d8514df316a5bf4137015292ce34a010a841b25996c3541dd1046",
       "metrics": {
         "actual_dimensions": {
@@ -1521,10 +1583,10 @@
       "result": "pass"
     },
     {
-      "actual_image": "actual/accessibility-localization/accessibility-chrome-light-200.png",
+      "actual_image": "actual/accessibility-localization-macos-27/accessibility-chrome-light-200.png",
       "actual_png_sha256": "f01bdb311ce18775614b8fcb54d61f629ebe555b9566f1327704a345726f3004",
-      "category": "accessibility-localization",
-      "expected_path": "tests/editor/accessibility-localization-golden/accessibility-chrome-light-200.png",
+      "category": "accessibility-localization-macos-27",
+      "expected_path": "tests/editor/accessibility-localization-golden/macos-27/accessibility-chrome-light-200.png",
       "expected_png_sha256": "f01bdb311ce18775614b8fcb54d61f629ebe555b9566f1327704a345726f3004",
       "metrics": {
         "actual_dimensions": {
@@ -1571,19 +1633,25 @@
     "macos_version": "27.0",
     "os": "macOS-27.0-arm64-arm-64bit",
     "source_branch": "integrate/final-ui-docs",
-    "source_commit": "acfe224645b29d8e98623e69b17b407cfba05f94"
+    "source_commit": "7f72d11016d24d6f395045edd4cd4955271b7d7e"
   },
   "purpose": "Diagnostic image comparison only; expected UI goldens and checks are read-only.",
   "schema_version": 1,
   "summary": {
     "categories": {
-      "accessibility-localization": {
+      "accessibility-localization-macos-27": {
         "compared": 2,
         "mismatch_names": [],
         "mismatches": 0,
         "unbaselined": 0
       },
-      "editor-style": {
+      "editor-chrome-macos-27": {
+        "compared": 2,
+        "mismatch_names": [],
+        "mismatches": 0,
+        "unbaselined": 0
+      },
+      "editor-style-macos-27": {
         "compared": 32,
         "mismatch_names": [],
         "mismatches": 0,
@@ -1595,15 +1663,15 @@
         "mismatches": 0,
         "unbaselined": 0
       },
-      "snap-overlay": {
+      "snap-overlay-macos-27": {
         "compared": 2,
         "mismatch_names": [],
         "mismatches": 0,
         "unbaselined": 0
       }
     },
-    "exact_matches": 50,
-    "images_compared": 50,
+    "exact_matches": 52,
+    "images_compared": 52,
     "mismatches": 0,
     "unbaselined": 0
   }

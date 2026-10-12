@@ -397,3 +397,22 @@
 - Fresh independent GPT-6.1 Sol review passes candidate `c507075` with no
   unresolved local source or evidence findings. Hosted macOS 15 capture/profile,
   hosted CI, and nightly sanitizer checks remain required before merge.
+
+- Hosted PR run `38207350150` confirmed macOS 15.7.9/build 24G830 native output
+  is fixed 1x and retained all 14 captures. It also found six strict one-channel
+  differences in editor style, snap overlay, and accessibility, plus a failing
+  editor-chrome family that the initial diagnostic matrix did not capture.
+  Full exact macOS 15/27 profiles and audit coverage now include all five
+  failing screenshot families; the second local 52-image audit is exact. The
+  follow-up PR run must verify these baselines and capture editor-chrome.
+
+- Update 2026-10-12: Follow-up resolved the hosted Mac 15 diagnostic gaps in the
+  profile layout. The five-family audit now compares 52 images locally on macOS
+  27 with 52/52 exact results. Across the OS-profile manifests, all 102 entries
+  validate by hash; 68 identical profile copies now resolve to shared baseline
+  PNGs, while actual OS-dependent captures remain separate. The six retained
+  pixel-difference rows now identify their screenshot names and families.
+  Focused screenshot CTests pass 6/6, `./dev verify` passes 82 CTests and 303
+  Python tests, and `./dev test-fast` passes 303/303. Fresh Sol 6.1 review passes
+  these changes and the work-order scope. Mac 15 editor-chrome capture and green
+  hosted CI/nightly sanitizer checks are still required before merge.

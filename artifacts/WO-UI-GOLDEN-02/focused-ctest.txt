@@ -1,18 +1,18 @@
 Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/build/mac-debug
 Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs/build/mac-debug
     Start 26: native-shell-goldens
-1/6 Test #26: native-shell-goldens ........................   Passed    0.96 sec
+1/6 Test #26: native-shell-goldens ........................   Passed    1.14 sec
     Start 35: editor-chrome
-2/6 Test #35: editor-chrome ...............................   Passed    0.18 sec
+2/6 Test #35: editor-chrome ...............................   Passed    0.20 sec
     Start 52: editor-style-goldens
-3/6 Test #52: editor-style-goldens ........................   Passed    1.29 sec
+3/6 Test #52: editor-style-goldens ........................   Passed    1.43 sec
     Start 69: ui-timeline-goldens
-4/6 Test #69: ui-timeline-goldens .........................   Passed    0.26 sec
+4/6 Test #69: ui-timeline-goldens .........................   Passed    0.27 sec
     Start 78: editor-snap-overlay-goldens
-5/6 Test #78: editor-snap-overlay-goldens .................   Passed    0.10 sec
+5/6 Test #78: editor-snap-overlay-goldens .................   Passed    0.11 sec
     Start 82: editor-accessibility-localization-goldens
-6/6 Test #82: editor-accessibility-localization-goldens ...   Passed    0.27 sec
+6/6 Test #82: editor-accessibility-localization-goldens ...   Passed    0.30 sec
 
 100% tests passed, 0 tests failed out of 6
 
-Total Test time (real) =   3.07 sec
+Total Test time (real) =   3.46 sec

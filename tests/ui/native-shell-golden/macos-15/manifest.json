@@ -1,0 +1,119 @@
+{
+  "macos_major": 15,
+  "pixel_scale": 1,
+  "screenshots": {
+    "app-icon-dark.png": {
+      "height": 256,
+      "renderer": "offscreen AppKit content view",
+      "screen": "app-icon",
+      "sha256": "7b71ee7b93fec95ade36de3f0d42c2a35dc4d2521585e4f04f6c0c88319ef06e",
+      "theme": "dark",
+      "width": 256
+    },
+    "app-icon-light.png": {
+      "height": 256,
+      "renderer": "offscreen AppKit content view",
+      "screen": "app-icon",
+      "sha256": "39f7af49587833cd508d19a963e6ae415eec624ccdce4f8fc8ed509a0b856655",
+      "theme": "light",
+      "width": 256
+    },
+    "feedback-dark.png": {
+      "height": 480,
+      "renderer": "offscreen AppKit content view",
+      "screen": "feedback",
+      "sha256": "fd5d6aaf410660d06b29cb9a250869f8413b88d446190a2d878b9b0cc333d3db",
+      "theme": "dark",
+      "width": 620
+    },
+    "feedback-light.png": {
+      "height": 480,
+      "renderer": "offscreen AppKit content view",
+      "screen": "feedback",
+      "sha256": "c77d567b3a86e03bfcb61ad5d7945e94bd7d15815644104e744789dc75ce2eb2",
+      "theme": "light",
+      "width": 620
+    },
+    "help-dark.png": {
+      "height": 360,
+      "renderer": "offscreen AppKit content view",
+      "screen": "help",
+      "sha256": "56f8cfee17c94e48195c431c14f83a4f5bbaf34ec6858c293f827e9e07858974",
+      "theme": "dark",
+      "width": 520
+    },
+    "help-light.png": {
+      "height": 360,
+      "renderer": "offscreen AppKit content view",
+      "screen": "help",
+      "sha256": "bdb74539041158f814f29f48160c6b3dcbc53a2cff56d5d66aeb4289b5d7f5b2",
+      "theme": "light",
+      "width": 520
+    },
+    "settings-canvas-dark.png": {
+      "height": 380,
+      "renderer": "offscreen AppKit content view",
+      "screen": "settings-canvas",
+      "sha256": "529bd3f8aef1249d79755ab0bf0d664d3f9f6110838b1c0511186492357c8c65",
+      "theme": "dark",
+      "width": 560
+    },
+    "settings-canvas-light.png": {
+      "height": 380,
+      "renderer": "offscreen AppKit content view",
+      "screen": "settings-canvas",
+      "sha256": "b5d6fd7a70f128b5e5b9f6a22c8a603e3aee6ed009f03230207363d6e2e5380c",
+      "theme": "light",
+      "width": 560
+    },
+    "settings-general-dark.png": {
+      "height": 380,
+      "renderer": "offscreen AppKit content view",
+      "screen": "settings-general",
+      "sha256": "4ee6e3b4d8187eaa1ffa52a67c6416966c5a84fb50e16c5324e948da7bdd3f6e",
+      "theme": "dark",
+      "width": 560
+    },
+    "settings-general-light.png": {
+      "height": 380,
+      "renderer": "offscreen AppKit content view",
+      "screen": "settings-general",
+      "sha256": "d6f9986a767a5be90ee75d8cc087b5295b429d1d87ee1a74ab9c6470e0ed259e",
+      "theme": "light",
+      "width": 560
+    },
+    "welcome-empty-dark.png": {
+      "height": 650,
+      "renderer": "offscreen AppKit content view",
+      "screen": "welcome-empty",
+      "sha256": "0d0d708d22dfe27b9d72812dcb423e7722fc7937a4843c408a90f8551fef830d",
+      "theme": "dark",
+      "width": 600
+    },
+    "welcome-empty-light.png": {
+      "height": 650,
+      "renderer": "offscreen AppKit content view",
+      "screen": "welcome-empty",
+      "sha256": "ea25d66a984ff83cfc7eb253f87f28194ed29a59c40e008261388ac20b0b3a7e",
+      "theme": "light",
+      "width": 600
+    },
+    "welcome-recent-dark.png": {
+      "height": 650,
+      "renderer": "offscreen AppKit content view",
+      "screen": "welcome-recent",
+      "sha256": "3e7530d55963a61994b146ef6ff4d7b992df84c00a77db4ebafb55c87f8b1770",
+      "theme": "dark",
+      "width": 600
+    },
+    "welcome-recent-light.png": {
+      "height": 650,
+      "renderer": "offscreen AppKit content view",
+      "screen": "welcome-recent",
+      "sha256": "7ed687c3435044631e9b86144af8573f8656c15928cbd34a50f28ca354fa191a",
+      "theme": "light",
+      "width": 600
+    }
+  },
+  "version": 2
+}

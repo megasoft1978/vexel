@@ -1,0 +1,16 @@
+{
+  "macos_major": 15,
+  "screenshots": {
+    "snap-overlay-dark.png": {
+      "height": 800,
+      "sha256": "029993a7e04071b84d2a7fdb252d60c644175cd98aa7450ff1575287871080b1",
+      "width": 1280
+    },
+    "snap-overlay-light.png": {
+      "height": 800,
+      "sha256": "1f447b99b99affc56c5223750f7fd8b1fe29fc0a8d6bcf761f724b52c37f377a",
+      "width": 1280
+    }
+  },
+  "version": 2
+}

@@ -1,189 +1,78 @@
 {
   "work_order": "WO-UI-GOLDEN-02",
   "frozen_base": "1ddaac358e510fe7d12cf05ea58a3952390512b1",
+  "source_commit": "7f72d11016d24d6f395045edd4cd4955271b7d7e",
   "host": {
     "os": "macOS-27.0-arm64-arm-64bit",
     "macos": "27.0",
     "build": "26A425",
     "architecture": "arm64",
-    "native_profile": "macos-27",
     "native_pixel_scale": 1
   },
-  "native_profile_selection": "sw_vers macOS major; only 15 and 27 accepted; fixed 1x output; unknown major rejection probe recorded",
+  "profile_selection": "sw_vers macOS major; exact 15 and 27 profiles for all five screenshot families; unsupported majors fail",
   "results": {
-    "ui_audit": "50/50 exact; zero mismatches/unbaselined",
+    "macos27_audit": {
+      "images": 52,
+      "exact": 52,
+      "mismatches": 0,
+      "unbaselined": 0
+    },
     "focused_ctest": "6/6 passed",
-    "dev_verify": "82/82 CTests and 303/303 Python tests passed",
+    "dev_verify": "82/82 CTests and 303/303 Python tests passed after shared-golden links",
     "dev_asan": "82/82 CTests passed",
     "dev_ubsan": "82/82 CTests passed",
-    "dev_test_fast": "303/303 Python tests passed; ledger valid",
-    "native_repeat_renders": "14/14 image pairs byte-identical; see native-repeat-renders.json"
+    "dev_test_fast": "303/303 Python tests passed after shared-golden links; ledger valid",
+    "native_repeat_renders": "14/14 image pairs byte-identical in both themes"
   },
   "evidence": {
-    "ui_audit": "artifacts/WO-UI-GOLDEN-02/local-macos-27-report.json",
-    "focused_ctest": "artifacts/WO-UI-GOLDEN-02/focused-ctest.txt",
-    "verification_logs": {
-      "verify": "artifacts/WO-UI-GOLDEN-02/verify.txt",
-      "asan": "artifacts/WO-UI-GOLDEN-02/asan.txt",
-      "ubsan": "artifacts/WO-UI-GOLDEN-02/ubsan.txt",
-      "test_fast": "artifacts/WO-UI-GOLDEN-02/test-fast.txt"
-    },
-    "profile_rejection": "artifacts/WO-UI-GOLDEN-02/bootstrap-exit-selftest.json",
-    "repeat_render_hashes": "artifacts/WO-UI-GOLDEN-02/native-repeat-renders.json",
-    "pixel_metrics": "artifacts/WO-UI-GOLDEN-02/comparison-metrics.json",
-    "comparison_sheets": [
-      "artifacts/WO-UI-GOLDEN-02/native-comparison-sheet-light.png",
-      "artifacts/WO-UI-GOLDEN-02/native-comparison-sheet-dark.png",
-      "artifacts/WO-UI-GOLDEN-02/timeline-comparison-sheet.png"
-    ]
+    "local_audit": "artifacts/WO-UI-GOLDEN-02/local-macos-27-report.json",
+    "hosted_macos15_first_capture": "artifacts/WO-UI-GOLDEN-02/hosted-macos-15/run-38207350150/",
+    "hosted_pixel_diffs": "artifacts/WO-UI-GOLDEN-02/macos15-headless-differences.png",
+    "repeat_hashes": "artifacts/WO-UI-GOLDEN-02/native-repeat-renders.json",
+    "comparison_metrics": "artifacts/WO-UI-GOLDEN-02/comparison-metrics.json"
   },
-  "hosted_macos15": "pending candidate PR CI; bootstrap audit is set to preserve actuals and report unbaselined images",
-  "native_images": [
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/app-icon-dark.png",
-      "sha256": "ca0cd932dbc68fa24b2eb2f01e18c2c2dd458c15bd745ff6593549a5f869b02d",
-      "dimensions": [
-        256,
-        256
-      ]
+  "hosted_macos15": "native/style/snap/accessibility captured; editor-chrome still pending next PR run",
+  "ci": "first PR run intentionally failed bootstrap/profile checks; next push reruns all jobs",
+  "macos27_profiles": {
+    "tests/ui/native-shell-golden": {
+      "entries": 14,
+      "manifest_sha256": "8c8ccf11e66ab9518b701431a99f0f77565c62132f4215f48dbfcc69c5d13cff"
     },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/app-icon-light.png",
-      "sha256": "f83462729236ff7668aaa004f4a48c7e2c55e9425028d5c85bfa585fcfba6342",
-      "dimensions": [
-        256,
-        256
-      ]
+    "tests/ui/style-golden": {
+      "entries": 32,
+      "manifest_sha256": "31f831924ad83d2ae1efbdc18a04d41dea629578d809998ffa3a9f01f7413df9"
     },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/feedback-dark.png",
-      "sha256": "0481e4d6f41aac604bb2fb9f346ad449e9c99a7235deca2dbdd2847a8231c573",
-      "dimensions": [
-        620,
-        480
-      ]
+    "tests/editor/chrome-golden": {
+      "entries": 2,
+      "manifest_sha256": "86b4cab4904b984406e26f2505b3c5ece8760079e713cf8b789c9c399f7e4f4e"
     },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/feedback-light.png",
-      "sha256": "e96835f465666a28d8a322604f9e3372e0bb3988c00987622fe65b243e1d395f",
-      "dimensions": [
-        620,
-        480
-      ]
+    "tests/editor/snap-overlay-golden": {
+      "entries": 2,
+      "manifest_sha256": "b66aac67465042b2115ff93da607cbb1b2a51d024e6b31c6234c5076c5582109"
     },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/help-dark.png",
-      "sha256": "b1615676a217448ecf61e0f900993fc19592032fdbc820addc397eeb2863097c",
-      "dimensions": [
-        520,
-        360
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/help-light.png",
-      "sha256": "ab8f8461c6706576212d2e0b7e9263bf0ffbff88445f99a8771b38e5cc26c2c5",
-      "dimensions": [
-        520,
-        360
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/settings-canvas-dark.png",
-      "sha256": "15cdf0a430e182193ff067d75638c8e1b6069a466f8731aef8a9e13753df1dff",
-      "dimensions": [
-        560,
-        380
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/settings-canvas-light.png",
-      "sha256": "cd7d907f2882105c68464c492624ff22fc4eeffe1804a29db08473ee2428545b",
-      "dimensions": [
-        560,
-        380
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/settings-general-dark.png",
-      "sha256": "6c3317f4883856a850ff6539f45a3f7b26d14b9edddba5014189246915248a7f",
-      "dimensions": [
-        560,
-        380
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/settings-general-light.png",
-      "sha256": "19e91015d6d363a82f4b54ea872034f1b438f8bcb2fad7a9b54ae5a9af7a4562",
-      "dimensions": [
-        560,
-        380
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/welcome-empty-dark.png",
-      "sha256": "c0c95668065616dff903843c831c53c41d409c2047071a29ca815b56897c676d",
-      "dimensions": [
-        600,
-        650
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/welcome-empty-light.png",
-      "sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b",
-      "dimensions": [
-        600,
-        650
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/welcome-recent-dark.png",
-      "sha256": "536b3edd8042d0843da81831bcae516c0b4283d32bea91ae5b36d50924056b94",
-      "dimensions": [
-        600,
-        650
-      ]
-    },
-    {
-      "path": "tests/ui/native-shell-golden/macos-27/welcome-recent-light.png",
-      "sha256": "31845ed5820500ce53f0c3362728043cf93f01179c41b64d2077ec9c1cb2bd86",
-      "dimensions": [
-        600,
-        650
-      ]
+    "tests/editor/accessibility-localization-golden": {
+      "entries": 2,
+      "manifest_sha256": "99520cf0958c44d56419e2389bb81bc4ce78bf5c5a483ccda9956c40acdc87fa"
     }
-  ],
-  "timeline_images": [
-    {
-      "path": "tests/ui/timeline-golden/timeline-dark-1x.png",
-      "sha256": "066fd27f407d62ba9d65c6ae501d5511099aabcd4bfa636bb918290253bec432",
-      "dimensions": [
-        1280,
-        800
-      ]
+  },
+  "macos15_profiles": {
+    "tests/ui/native-shell-golden": {
+      "entries": 14,
+      "manifest_sha256": "bb7bedd78bbb97c0e73ba451b45bc61b16e1e9bcbddaf66ceba5f3d0eab6b3e4"
     },
-    {
-      "path": "tests/ui/timeline-golden/timeline-dark-2x.png",
-      "sha256": "d1384f18638b00920a4b9b70a0c3a7debff69494f94f85b9d82af294236affa6",
-      "dimensions": [
-        2560,
-        1600
-      ]
+    "tests/ui/style-golden": {
+      "entries": 32,
+      "manifest_sha256": "9b0b4749ddb3d6afb7cda6109ce78da8626d6f3991a7c114cb2ea1ffcd8ceb80"
     },
-    {
-      "path": "tests/ui/timeline-golden/timeline-light-1x.png",
-      "sha256": "82a8373de164c99930d80a075811fb5ff5060ac293bcc7eb6f2b0a123148fd1b",
-      "dimensions": [
-        1280,
-        800
-      ]
+    "tests/editor/snap-overlay-golden": {
+      "entries": 2,
+      "manifest_sha256": "48f78db41fe85842a73bcfd4829d46c5c9f13b09250a921030a14b2a48b1731e"
     },
-    {
-      "path": "tests/ui/timeline-golden/timeline-light-2x.png",
-      "sha256": "b8ae916552d41ebfaeac1150345e9df372790628f395343e0049ae5a4b5c60f9",
-      "dimensions": [
-        2560,
-        1600
-      ]
+    "tests/editor/accessibility-localization-golden": {
+      "entries": 2,
+      "manifest_sha256": "c6c53e5a1caa91e8301ad880e80571fb2326ac21ffc4ab22b2959d6cf8479055"
     }
-  ]
+  },
+  "profile_storage": "68 byte-identical profile PNG copies replaced by symlinks to shared baselines; profile manifests remain complete",
+  "sol_review": "PASS on shared baseline reuse and evidence labels; hosted Mac15 editor-chrome pending"
 }

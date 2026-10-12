@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import struct
 import subprocess
 import zlib
@@ -15,6 +16,19 @@ ROOT = Path(__file__).resolve().parents[2]
 GOLDEN_DIR = ROOT / "tests/editor/chrome-golden"
 WIDTH = 1280
 HEIGHT = 800
+
+
+def profile_dir() -> tuple[int, Path]:
+    try:
+        version = subprocess.run(["sw_vers", "-productVersion"], check=True,
+                                 capture_output=True, text=True, timeout=15).stdout.strip()
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SystemExit(f"cannot determine editor chrome macOS profile: {exc}") from exc
+    match = re.match(r"^(\d+)\.", version)
+    if match is None or int(match.group(1)) not in {15, 27}:
+        raise SystemExit(f"no editor chrome profile is defined for macOS {version!r}")
+    major = int(match.group(1))
+    return major, GOLDEN_DIR / f"macos-{major}"
 
 
 def chunk(kind: bytes, data: bytes) -> bytes:
@@ -43,25 +57,27 @@ def main() -> int:
     binary = args.binary.resolve()
     if not binary.is_file():
         raise SystemExit(f"missing editor renderer: {binary}")
+    major, profile = profile_dir()
     entries = {}
     for theme in ("dark", "light"):
         name = f"editor-chrome-{theme}.png"
         content = render(binary, theme)
         digest = hashlib.sha256(content).hexdigest()
-        path = GOLDEN_DIR / name
+        path = profile / name
         if args.update:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
         elif not path.is_file() or path.read_bytes() != content:
             raise SystemExit(f"{theme} editor chrome differs from its golden")
         entries[name] = {"sha256": digest, "width": WIDTH, "height": HEIGHT}
-    manifest = json.dumps({"version": 1, "screenshots": entries}, sort_keys=True, indent=2) + "\n"
-    manifest_path = GOLDEN_DIR / "manifest.json"
+    manifest = json.dumps({"version": 2, "macos_major": major,
+                           "screenshots": entries}, sort_keys=True, indent=2) + "\n"
+    manifest_path = profile / "manifest.json"
     if args.update:
         manifest_path.write_text(manifest, encoding="utf-8")
     elif not manifest_path.is_file() or manifest_path.read_text(encoding="utf-8") != manifest:
         raise SystemExit("editor chrome golden manifest does not match rendered screenshots")
-    print("editor chrome goldens match: dark, light (1280x800)")
+    print(f"editor chrome goldens match: macOS {major}, dark/light (1280x800)")
     return 0
 
 
