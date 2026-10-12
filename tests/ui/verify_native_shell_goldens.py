@@ -22,13 +22,25 @@ SCREENS = (
     "app-icon",
 )
 THEMES = ("light", "dark")
+# Goldens are headless renders. Denying WindowServer keeps AppKit at a 1x
+# backing scale with headless text rasterization on hosts that have a display.
+HEADLESS_PROFILE = (
+    '(version 1)(allow default)'
+    '(deny mach-lookup (global-name "com.apple.windowserver.active"))'
+    '(deny mach-lookup (global-name-regex #"^com\\.apple\\.CARenderServer"))'
+)
 
 
 def render(binary: Path, screen: str, theme: str, recent_fixture: Path) -> bytes:
     command = [str(binary), screen, theme]
     if screen in {"welcome-recent", "app-icon"}:
         command.append(str(recent_fixture))
-    completed = subprocess.run(command, check=True, capture_output=True, timeout=30)
+    completed = subprocess.run(["/usr/bin/sandbox-exec", "-p", HEADLESS_PROFILE, *command],
+                               capture_output=True, timeout=30)
+    if completed.returncode != 0 and b"sandbox_apply" in completed.stderr:
+        # Already inside a sandbox that forbids nesting; that host is headless.
+        completed = subprocess.run(command, capture_output=True, timeout=30)
+    completed.check_returncode()
     if not completed.stdout.startswith(b"\x89PNG\r\n\x1a\n"):
         raise ValueError(f"renderer returned invalid PNG data for {screen}-{theme}")
     return completed.stdout
