@@ -1,90 +1,83 @@
 # Blockers
 
-Active: none for WO-M4-06. On 2026-10-12, revision 5 passed the fresh verifier and merged (`b04981c`), after WO-UI-GOLDEN-01 made the native goldens host-independent. The M4-06 sections below are history.
+Active blockers: **none** for any merged work order. Everything below is either a
+resolved item kept for history or an open *defect* with its own work order.
 
-## WO-M4-06 closure attempt 2026-10-12 — current status
+Last full gate: `./dev final` passed on 2026-10-12 at `bcdc3fa` (log
+`.cache/final-gate-2026-10-12.log`; summary in `STATE.md`). Six work orders
+failed independent review and are `blocked` in the ledger; see defect 4.
 
-All renderer gates pass on `main` at `0f615c0`. `clip-union` and the other 47
-librsvg fixtures pass the unchanged thresholds, and 23/23 focused tests pass.
-New tests prove the exact 1 MiB `<use>` job boundary, the 4 KiB clip-wrapper
-bound, source-hash preservation and exact gradient pixels. AC-4 is still
-blocked: CTest reports 78/79 in Debug, ASan, UBSan and `./dev verify`.
-`native-shell-goldens` fails because `native_ui_render` follows the host
-backing scale. On a Retina host every native render is exactly 2× the 1×
-golden size, for example 1200×1300 versus 600×650. Fixing this means forcing
-a 1× offscreen backing scale in the native renderer. That is outside the
-M4-06 allowlist, so it needs its own work order; do not regenerate the
-goldens. The runner path guard and a fresh verifier have not run.
-Evidence: `artifacts/WO-M4-06/closure/`.
+## Open defects
 
-## Resolved: WO-M1-04 shutdown lifetime contract
+### 1. Multi-million-edge drawings exceed one document-wide edge array
 
-WO-M1-04 revision 1's reviewer identified that a raw queue pointer cannot
-protect a caller paused before API admission from a concurrent destroy.
-Planner authority amended the contract to require owner quiescence, defined
-concurrent entry during destroy as undefined behavior, and required a
-debug-assert active-call counter with a deterministic death test. ADR-0006 and
-WO-M1-04 revision 2 record that decision.
+`SVG_SHAPE_MAX_EDGES` is 4,194,304 flattened edges. The CAD corpus file
+`generated/cad_t2` (10.6 MB) now reaches that bound at byte 9,365,917 and is
+refused. Raising the constant again buys a larger constant, not a fix: a viewer
+for large documents should not need every edge of every element resident in one
+array. The fix is per-element edge storage or a streaming traversal, and it is a
+design change rather than a budget change. No work order exists for this yet; `work/WO-M4-10.md` covers only the 16 MiB source cap.
 
-Revision 2 then exposed a pre-existing flaky native pointer-down test in both
-the accepted M1-03 binary and its own candidate. The comparison is retained in
-`artifacts/WO-M1-04/baseline-ui-smoke-comparison.json`. Revision 3 added a
-test-only direct dispatch to the target view while preserving the event type,
-coordinate, bounds, and button assertions; ADR-0007 records that change.
+The real-drawing budgets that were previously far too small are now documented
+and finite: edges 4M, per-path commands 4M, elements 65,536, document text bytes
+64 MiB (64 KiB per token), glyphs 1M document / 65,536 per run, transform
+operations 1M. Each was raised only after a symbol-resolving probe identified the
+exact site that was refusing ordinary drawings.
 
-WO-M1-04 revision 3 passed all nine frozen commands and two fresh read-only
-reviews, then merged at `91ff611782c843428fb5bdc4ba874e3ccdd37f94`. Final
-verifier evidence is under
-`artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/`.
+### 2. Corpus documents still refused for real content reasons
 
-## WO-M4-06 revision 2
+After the budget work, 3 of the 39 render-tested corpus files render. The
+remaining verdicts are 13 `limit`, 13 `unsupported`, 8 `xml`, 2 `viewport`
+(19 further files are larger than the sweep's `--max-bytes` and were not
+render-tested, which is recorded per file rather than dropped). The
+`unsupported` and `xml` groups are the known constructs: unknown non-namespaced
+attributes failing closed, `<meta>`, `<!DOCTYPE>`/DTD, and `writing-mode`.
+Per-file detail: `artifacts/WO-M4-10/render-diagnostics.{json,md}`.
 
-- Candidate: `fb09369fa77475707d8a1e9cde0736f033bf7130`; branch
-  `wo/WO-M4-06`; not merged.
-- Owner/planner amendment: ADR-0013 and WO-M4-06 revision 2 allow only
-  compile-time-bounded synthetic buffers <=4 KiB, containing generated
-  constants/syntax only. Source document bytes may not be copied/rewritten.
-- Independent review `artifacts/WO-M4-06/manual-review-r2/verdict.json` fails
-  AC-9: use expansion copies source spans into a dynamically-sized generated
-  document (16 MiB cap); clip parsing copies source child intervals into a
-  second generated document (16 MiB cap). Reference source maps also grow to
-  1,048,576 entries with expansion. A safe fix requires replacing generated
-  document construction with original-source/token traversal, not changing the
-  cap.
-- Review also finds incorrect userSpaceOnUse gradient defaults and missing
-  exact endpoint/interpolation and independent-reference evidence.
-- All 18 frozen commands passed in a clean runner worktree; Debug and Release
-  fresh builds plus 199 Python tests passed in the independent review worktree.
-  The first verification attempt stopped at `./dev verify` because revision 1
-  lacked a terminal ledger event; ledger now records r1 blocked and r2 ready.
-  Fuzz rerun: 1,000,000 ASan+UBSan cases in 73.008 s, zero crashes, invariants,
-  or reports.
-- Do not merge or start M4-06b until source traversal, gradient defaults and
-  evidence gaps are fixed and a fresh verifier passes.
+### 3. Native goldens follow the host backing scale
 
-## WO-M4-06 merge integration review brief 6 — current status
+`native_ui_render` follows the host backing scale, so on a Retina host every
+native render is exactly 2× the 1× golden size (for example 1200×1300 versus
+600×650). The fix is to force a 1× offscreen backing scale in the native
+renderer. Do not regenerate those goldens. Carried over from WO-M4-06; the work
+order that would fix it is not yet written.
 
-The three librsvg threshold regressions are repaired. Round-4
-`mark_varying_shape_bounds` promoted every pixel in a gradient or clip shape
-bound to 4×4 sampling; removing it restores center sampling away from the
-existing shape/clip boundary map. Scratch `0732b8e`, `9bae63e`, and current
-outputs are byte-identical on the three affected fixtures. The updated scalar
-reference remains uncullled and now uses the same boundary-map sampling choice.
-All 47 librsvg comparisons pass unchanged thresholds, and the added
-culled-versus-reference fixture checks and 120 seeded paint/clip differential
-cases pass.
+### 4. Six shipped work orders fail their acceptance criteria
 
-Debug and Release builds, `shape_test`, the focused Python renderer suite
-(20/20), the 1,000,000-case ASan+UBSan fuzz run, and corpus run/check pass.
-Debug, ASan, UBSan, and `./dev verify` each report 18/20 CTests: the two
-sandbox-only failures are `native-viewer-smoke` (LaunchServices connection)
-and `index-replay` (offscreen Metal device/queue unavailable). `./dev test-fast`
-reports 202/212 passing, with 8 failures and 2 errors in benchmark
-process-policy/timeout and platform-driver tests. Detailed evidence is in
-`artifacts/WO-M4-06/` and the current `HANDOFF.md`.
+WO-UI-01 r2, UI-02, UI-03, BUG-01, M4-10 and HYGIENE-01 were implemented and
+self-reported as passing, but a fresh read-only review failed each one (verdicts in
+`artifacts/retro-verification-2026-10-12/`). Examples: the workspace names differ
+from the spec, there is no settings round-trip test, `editor-smoke` was recorded
+7/10 not 10/10, the archive tags point at the root `d97da2f`, and stream-token
+exhaustion maps to `SVG_SHAPE_ERROR_XML` rather than `LIMIT`. All six are `blocked`
+pending gap-closure orders or an owner decision to supersede.
 
-The repaired four solid-workload outputs are identical to `9bae63e` and their
-paired median changes are within observed noise. The 58-file corpus still has
-two successful previews and 56 unsupported files. Git index, branch, and commit
-state remain unchanged per the user's instruction. The post-merge runner path
-guard remains unverified.
+## Resolved
+
+- **WO-M4-06 closure** — revision 5 passed a fresh verifier and merged
+  (`b04981c`) on 2026-10-12, after WO-UI-GOLDEN-01 made the native goldens
+  host-independent for the tested path.
+- **WO-M1-04 shutdown lifetime contract** — the contract was amended to require
+  owner quiescence; concurrent entry during destroy is defined as undefined
+  behaviour. Revision 2 exposed a pre-existing flaky native pointer-down test in
+  both the accepted M1-03 binary and its own candidate; the comparison is
+  retained in `artifacts/WO-M1-04/baseline-ui-smoke-comparison.json`. Revision 3
+  added a test-only direct dispatch to the target view while preserving the
+  event type, coordinate, bounds and button assertions (ADR-0007 records that
+  change). Revision 3 passed all nine frozen commands and two fresh read-only
+  reviews and merged at
+  `91ff611782c843428fb5bdc4ba874e3ccdd37f94`; final verifier evidence is under
+  `artifacts/runs/WO-M1-04/verify-e71955ec-d0a3-4888-8fa2-4355f82ce469/`.
+- **Editor save data loss** — a canvas gesture that missed its target left the
+  selection on the document root, and composing a transform onto the root
+  rewrote the whole document, so the saved file lost its shapes. The transform
+  now refuses a root target, with a regression test that fails on the unguarded
+  code.
+- **`Control-Tab` swallowed by macOS** — the workspace cycle uses Blender's own
+  `Control-PageUp`/`Control-PageDown`; `Control-Tab` is an alias only.
+- **Duplicate accessible label** — the tool-options strip rendered the same label
+  as the tool rail button, so any label lookup could resolve to the wrong node.
+- **Escape ordering** — the Adjust Last Operation dismissal ran before the canvas
+  gesture cancel, so a gesture could survive an Escape and mutate later.
+- **Interrupted round** — a ledger append path outside the repository is
+  rejected; entries are written from `.cache/` instead.

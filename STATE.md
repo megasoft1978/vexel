@@ -443,7 +443,7 @@
   source below is repository-relative and verified by the offline validator", which is no longer true
   for the living row rendered beneath it. None affects a measurement or hash.
 
-- Update 2026-10-13: **WO-UI-01** implements the first Blender-alignment increment: task workspaces and
+- Update 2026-10-12: **WO-UI-01** implements the first Blender-alignment increment: task workspaces and
   one consolidated status bar. A workspace strip (`Draw · Nodes · Animate · Inspect`) replaces the
   duplicated tool-hint row; each workspace declaratively selects pane visibility and an inspector group,
   `Control-Tab`/`Control-Shift-Tab` cycle with wrap, the choice persists through the settings store
@@ -453,15 +453,27 @@
   a recorded baseline change (`artifacts/WO-UI-01/golden-changes.md`, pixdiff comparisons). 81/81 CTests
   pass. Evidence: `artifacts/WO-UI-01/`.
 
-- Update 2026-10-13: **WO-UI-02** adds Blender-style properties tabs to the inspector
+- Update 2026-10-12: **WO-UI-02** adds Blender-style properties tabs to the inspector
   (`Object`, `Fill`, `Stroke`, `Document`). `Object` keeps the name, geometry and every attribute
   no other tab owns, so nothing becomes unreachable; `Document` keeps the document's own
   `width`/`height`/`viewBox` editable alongside the size readout, Fit Canvas and Actual Size; a
   filtered tab is its own group selector. Mutation evidence: making the `Object` tab accept
   appearance attributes fails the structure test with code 46.
-- Update 2026-10-13: **WO-UI-03** adds Blender's Info-editor pattern, a bounded
+- Update 2026-10-12: **WO-UI-03** adds Blender's Info-editor pattern, a bounded
   operator/warning/error log pane above the status bar, toggled from the toolbar or with
   `Option-Command-L`. Commands record their own widget label; errors record their message; the ring
   holds 64 entries of 128 bytes and drops the oldest. The log is UI state and never changes document
   bytes. Mutation evidence: raising `EDITOR_LOG_CAP` fails the overflow assertion. Both orders:
   81/81 CTests pass, `./dev verify`, `./dev t --all` and `./dev editor-smoke` exit 0.
+
+- Update 2026-10-12 (reconciliation): the three Blender-alignment updates above were recorded as passing by their
+  implementer. A fresh read-only review at `bcdc3fa` (`artifacts/retro-verification-2026-10-12/`) failed
+  WO-UI-01 r2, WO-UI-02, WO-UI-03, WO-BUG-01, WO-M4-10 and WO-HYGIENE-01 on specific acceptance
+  criteria; all six are `blocked` in the ledger pending gap-closure orders. Their dates above were
+  mislabelled 2026-10-13 and are corrected here. Commits `071e0ec`..`bcdc3fa` are described by
+  WO-RETRO-01 (accepted). `./dev final` passed at `bcdc3fa` in 480 s (338 Python tests, 83/83 CTest
+  in debug, asan and ubsan, all fuzzers, e2e, soak, both native smokes); the log is `.cache/final-gate-2026-10-12.log`.
+  The earlier final-gate failures were a stale 16 MiB fuzz-probe bound, a missing UBSan link option on
+  `viewer_workspace_test`, and three hand-counted label lengths (now linted by `tests/test_literal_lengths.py`).
+  17 ledger entries (lines 502-518 at the time) carry mislabelled 2026-10-13 timestamps with `duration_s: 0`;
+  the ledger is append-only, so they stand uncorrected pending an owner decision.
