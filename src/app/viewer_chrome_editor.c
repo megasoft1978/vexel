@@ -52,6 +52,41 @@ static void editor_set_node_bounds(viewer_editor *editor, uint32_t id, ui_rect b
     }
 }
 
+/* Docked strips are positioned by overriding their laid-out bounds. The tree
+ * stores absolute child bounds, so a strip's direct children have to move with
+ * it. The snapping popover is painted from geometry recomputed on every request,
+ * so it is not part of this shift. */
+static void editor_move_children(viewer_editor *editor, uint32_t parent,
+    int64_t delta_x, int64_t delta_y)
+{
+    for (size_t index = 0U; index < editor->tree.count; ++index) {
+        ui_node *node = &editor->tree.nodes[index];
+        if (node->spec.parent_id != parent) continue;
+        int64_t x = (int64_t)node->bounds.x + delta_x;
+        int64_t y = (int64_t)node->bounds.y + delta_y;
+        node->bounds.x = x > 0 ? (uint32_t)x : 0U;
+        node->bounds.y = y > 0 ? (uint32_t)y : 0U;
+    }
+}
+
+static void editor_set_node_bounds_docked(viewer_editor *editor, uint32_t id,
+    ui_rect bounds)
+{
+    int64_t origin_x = 0, origin_y = 0;
+    bool found = false;
+    for (size_t index = 0U; index < editor->tree.count; ++index) {
+        if (editor->tree.nodes[index].spec.id != id) continue;
+        origin_x = editor->tree.nodes[index].bounds.x;
+        origin_y = editor->tree.nodes[index].bounds.y;
+        editor->tree.nodes[index].bounds = bounds;
+        found = true;
+        break;
+    }
+    if (found)
+        editor_move_children(editor, id, (int64_t)bounds.x - origin_x,
+            (int64_t)bounds.y - origin_y);
+}
+
 static bool editor_draw_tool_selected(viewer_editor *editor,
                                       viewer_editor_draw_tool tool)
 {
@@ -319,20 +354,6 @@ void editor_build_tree_modern(viewer_editor *editor)
                 UI_STATE_CHECKED : 0U,
             EDITOR_BUTTON_WORKSPACE_BASE + (uint32_t)workspace_index);
     }
-    if (okay && editor->node_edit_active && editor->path_node_corner_available)
-        okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_CORNER,
-            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
-            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
-            "Corner", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_CORNER);
-    if (okay && editor->node_edit_active && editor->path_node_smooth_available)
-        okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_SMOOTH,
-            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
-            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
-            "Smooth", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_SMOOTH);
-    if (okay)
-        okay = editor_add_icon(editor, EDITOR_BUTTON_SNAPPING, EDITOR_NODE_TOOL_OPTIONS,
-            UI_ICON_SNAP, "Snapping settings · Grid, Objects, Guides",
-            editor->snap_enabled ? UI_STATE_CHECKED : 0U);
     /* Blender's Active Tool / Tool Settings region: the active tool, its
      * shortcut and the options that belong to it. */
     char tool_label[64] = {0};
@@ -348,6 +369,20 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, tool_label,
             strlen(tool_label), NULL, 0U, 0U, 0U);
     if (!okay) return;
+    if (okay && editor->node_edit_active && editor->path_node_corner_available)
+        okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_CORNER,
+            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
+            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+            "Corner", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_CORNER);
+    if (okay && editor->node_edit_active && editor->path_node_smooth_available)
+        okay = editor_add_widget_node(editor, EDITOR_BUTTON_NODE_SMOOTH,
+            EDITOR_NODE_TOOL_OPTIONS, UI_AXIS_HORIZONTAL, 72U, 24U, 0U, 0U, 0U,
+            UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+            "Smooth", 6U, NULL, 0U, 0U, EDITOR_BUTTON_NODE_SMOOTH);
+    if (okay)
+        okay = editor_add_icon(editor, EDITOR_BUTTON_SNAPPING, EDITOR_NODE_TOOL_OPTIONS,
+            UI_ICON_SNAP, "Snapping settings · Grid, Objects, Guides",
+            editor->snap_enabled ? UI_STATE_CHECKED : 0U);
     okay = okay && editor_add_node(editor, EDITOR_NODE_WORKSPACE, UI_ROOT_ID,
             UI_AXIS_HORIZONTAL, 0U, 0U, 0U, 0U, 0U, UI_ROLE_GROUP,
             NULL, 0U, NULL, 0U, 0U, 0U) &&
@@ -579,7 +614,8 @@ void editor_build_tree_modern(viewer_editor *editor)
     if (okay && ui_tree_layout(&editor->tree, editor->width, editor->height)) {
         editor_set_node_bounds(editor, EDITOR_NODE_TOOLBAR, layout.toolbar);
         editor_set_node_bounds(editor, EDITOR_NODE_OPTIONS, layout.options);
-        editor_set_node_bounds(editor, EDITOR_NODE_TOOL_OPTIONS, layout.tool_options);
+        editor_set_node_bounds_docked(editor, EDITOR_NODE_TOOL_OPTIONS,
+            layout.tool_options);
         editor_set_node_bounds(editor, EDITOR_NODE_WORKSPACE, layout.workspace);
         editor_set_node_bounds(editor, EDITOR_NODE_TOOL_RAIL, layout.rail);
         if (layout.structure_visible) {

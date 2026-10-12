@@ -113,6 +113,7 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     /* The stream owns this vector, so it is released with free(), not through
      * the shape allocator; accounting still includes it. */
     svg_shape_alloc_note_external(tokens, token_bytes);
+    (void)svg_shape_alloc_set_tag(tokens, SVG_SHAPE_ALLOC_TAG_TOKEN_ARRAY);
 
     shape_traversal traversal = {
         .source = source,

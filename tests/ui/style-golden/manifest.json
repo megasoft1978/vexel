@@ -3,7 +3,7 @@
     "editor-dark-1280x800-editing-field.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "sha256": "371da851b578d07045b1940d4eaa905be6c4e2f16520f27855c97a59fe474fe7",
       "state": "editing-field",
       "theme": "dark",
       "viewport_width": 1280,
@@ -12,7 +12,7 @@
     "editor-dark-1280x800-empty.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "a933e0cb6ea1b3c7ad77933c4108ae15c0d8db437ec2d65e6922eeef73a921b7",
+      "sha256": "45c9b5bc3ffc14351c3f6256e3e362e7aacc3f57b5bb1ea89ca46c9f2100b75c",
       "state": "empty",
       "theme": "dark",
       "viewport_width": 1280,
@@ -21,7 +21,7 @@
     "editor-dark-1280x800-error.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "sha256": "371da851b578d07045b1940d4eaa905be6c4e2f16520f27855c97a59fe474fe7",
       "state": "error",
       "theme": "dark",
       "viewport_width": 1280,
@@ -30,7 +30,7 @@
     "editor-dark-1280x800-narrow.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "b9d96a4f284228c708961963c8060e45dff69be8bc4a5a528566ff06a60189a5",
+      "sha256": "995ad7a28f36c953f87f9d83caa05fab218cc1530cccc20dc74f39606a97e437",
       "state": "narrow",
       "theme": "dark",
       "viewport_width": 450,
@@ -39,7 +39,7 @@
     "editor-dark-1280x800-node-edit.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "801c3a926e7bd29129dc9f19aeca849e517da37b23386ef15d1a0d17ff033591",
+      "sha256": "5872e7d8d44c3813a2dd7297656f1dc3f4624c37931dd617d9ade10fa60bad29",
       "state": "node-edit",
       "theme": "dark",
       "viewport_width": 1280,
@@ -48,7 +48,7 @@
     "editor-dark-1280x800-scale-110.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "439f290d60f8cfc707f9d81961f480245da7149603254d789991401d5cc2ce8c",
+      "sha256": "95193fe519a754f6d090ab31d251186eecae0bb41186fae07151f34d40f780b3",
       "state": "scale-110",
       "theme": "dark",
       "viewport_width": 1280,
@@ -57,7 +57,7 @@
     "editor-dark-1280x800-scale-120.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "45c9d22e553120d0f239b4acfccb170fbfc726279078ddf2fe02370c90d41973",
+      "sha256": "563ecfd20de77b23df29c02ad819dd7ea9754b6b18bbbb1497beb155530b00e4",
       "state": "scale-120",
       "theme": "dark",
       "viewport_width": 1280,
@@ -66,7 +66,7 @@
     "editor-dark-1280x800-selection.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "sha256": "371da851b578d07045b1940d4eaa905be6c4e2f16520f27855c97a59fe474fe7",
       "state": "selection",
       "theme": "dark",
       "viewport_width": 1280,
@@ -75,7 +75,7 @@
     "editor-dark-2560x1600-editing-field.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "sha256": "23ab4ce14eea1f305f08ceca23ab318cc27f45269307b11bd283ceb2e9a6e8e3",
       "state": "editing-field",
       "theme": "dark",
       "viewport_width": 2560,
@@ -84,7 +84,7 @@
     "editor-dark-2560x1600-empty.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "ef8d9bcbeb882b246eec4e1d691d6e4cb32f76e94ccd5a569575a9603c3e2dd5",
+      "sha256": "6785e6c3d26f7ee183b97d3d746bc549563c67582d5b037b812eccd9ec08f4d1",
       "state": "empty",
       "theme": "dark",
       "viewport_width": 2560,
@@ -93,7 +93,7 @@
     "editor-dark-2560x1600-error.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "sha256": "23ab4ce14eea1f305f08ceca23ab318cc27f45269307b11bd283ceb2e9a6e8e3",
       "state": "error",
       "theme": "dark",
       "viewport_width": 2560,
@@ -102,7 +102,7 @@
     "editor-dark-2560x1600-narrow.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "caf806a5d12fe71ab143441e8dc0c6d4069b08f06d555552b2060cf4dd358634",
+      "sha256": "4afcb4eaca9e3d625decbf4735ea2640c71e651f3ecb68518d2a262b9308d8b8",
       "state": "narrow",
       "theme": "dark",
       "viewport_width": 900,
@@ -111,7 +111,7 @@
     "editor-dark-2560x1600-node-edit.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "d97b7ff896946a3ec0f8f73622d06cf6038cb63604a78f14d1c5b879b4ee7311",
+      "sha256": "e6e240660ed042c8c737bbd37225451637b63ee5ddc2d788b3665dd57036359d",
       "state": "node-edit",
       "theme": "dark",
       "viewport_width": 2560,
@@ -120,7 +120,7 @@
     "editor-dark-2560x1600-scale-110.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "521b0edb2b1d59732508a0b06a6cbd5e02093e311819a5c65ab32a4b648b9a65",
+      "sha256": "e13bda314a6c7cb0428fc968303053e570201f723c5e433754afd2b1869067e8",
       "state": "scale-110",
       "theme": "dark",
       "viewport_width": 2560,
@@ -129,7 +129,7 @@
     "editor-dark-2560x1600-scale-120.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "58bd420e8478f04cf08298524d3dfda0c683e157aec472d926794ad782e311ef",
+      "sha256": "911f81d7d7e93f41c1a3b64115596f73951707b9a29c28b21409e31e2f0eb023",
       "state": "scale-120",
       "theme": "dark",
       "viewport_width": 2560,
@@ -138,7 +138,7 @@
     "editor-dark-2560x1600-selection.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "sha256": "23ab4ce14eea1f305f08ceca23ab318cc27f45269307b11bd283ceb2e9a6e8e3",
       "state": "selection",
       "theme": "dark",
       "viewport_width": 2560,
@@ -147,7 +147,7 @@
     "editor-light-1280x800-editing-field.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "sha256": "9593ea82ac3561bb701598aa2fd2a28f51e91c4c2c5ec3feda1de7bd21212930",
       "state": "editing-field",
       "theme": "light",
       "viewport_width": 1280,
@@ -156,7 +156,7 @@
     "editor-light-1280x800-empty.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "72eceaaa2f634e85c4d229df29dbccb8a5aaab1c0741993f3b04b40151fbab65",
+      "sha256": "ace35e06be244b0328238f40b40136e746a7fb5c8818ce6535fe6f1a23ed8ac2",
       "state": "empty",
       "theme": "light",
       "viewport_width": 1280,
@@ -165,7 +165,7 @@
     "editor-light-1280x800-error.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "sha256": "9593ea82ac3561bb701598aa2fd2a28f51e91c4c2c5ec3feda1de7bd21212930",
       "state": "error",
       "theme": "light",
       "viewport_width": 1280,
@@ -174,7 +174,7 @@
     "editor-light-1280x800-narrow.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "a35215c3fab94740ac3030f8840f3b0bdabb8e134942929afa9fe726b0488ccc",
+      "sha256": "4ac7dabf1d7182a2eacd7a141d309f017cc052ba447cc77cec8db4e0565e3c27",
       "state": "narrow",
       "theme": "light",
       "viewport_width": 450,
@@ -183,7 +183,7 @@
     "editor-light-1280x800-node-edit.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "86da3b91f641c62fddcd86d5b6a61a4271edb25f9df41e7946495adfc995ba6e",
+      "sha256": "798cb7d915cf2406aa32ad4df8ec1068df0b4da6c59a82c647e433d0a1136957",
       "state": "node-edit",
       "theme": "light",
       "viewport_width": 1280,
@@ -192,7 +192,7 @@
     "editor-light-1280x800-scale-110.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "78dc176875d63a701ee8efa0f253c3c96456f3c5e5f6288c386de1369ab616cb",
+      "sha256": "926171f8a0d0f2de7042a23657ab1e633ac73d9dea5c07dea42a6c8f5d61813e",
       "state": "scale-110",
       "theme": "light",
       "viewport_width": 1280,
@@ -201,7 +201,7 @@
     "editor-light-1280x800-scale-120.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "ac99e098f63a00d7a9a16d05129f7c20a46b1b44d65f0e0ae4cc81ea56c93701",
+      "sha256": "4081666e57415751036a18c1e84dde75e6dadbcc386cf67b5eb6fa83ef0e76a4",
       "state": "scale-120",
       "theme": "light",
       "viewport_width": 1280,
@@ -210,7 +210,7 @@
     "editor-light-1280x800-selection.png": {
       "height": 800,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "sha256": "9593ea82ac3561bb701598aa2fd2a28f51e91c4c2c5ec3feda1de7bd21212930",
       "state": "selection",
       "theme": "light",
       "viewport_width": 1280,
@@ -219,7 +219,7 @@
     "editor-light-2560x1600-editing-field.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "sha256": "3fae772f570c986db78113eddb8a19f15903154e680a4c0790e0cdd4fc7784e1",
       "state": "editing-field",
       "theme": "light",
       "viewport_width": 2560,
@@ -228,7 +228,7 @@
     "editor-light-2560x1600-empty.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "a4c46f0a109775236dbb5d04ccb22f9bd4dc341424a34b9726efacfbbffdd065",
+      "sha256": "178ef1933de8a3d4bf38807f15d48d6bb375815f9df1e9c0ebf1816df620c39b",
       "state": "empty",
       "theme": "light",
       "viewport_width": 2560,
@@ -237,7 +237,7 @@
     "editor-light-2560x1600-error.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "sha256": "3fae772f570c986db78113eddb8a19f15903154e680a4c0790e0cdd4fc7784e1",
       "state": "error",
       "theme": "light",
       "viewport_width": 2560,
@@ -246,7 +246,7 @@
     "editor-light-2560x1600-narrow.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "9fbe8f6dcd66120c51501e25f81e9e1d8d57aac9a38efc8ecf4337d52cf52c83",
+      "sha256": "6e640044caff2b1926aeb414f58b14fbfa6acf63ec43d8b5ef56ca4c592ba934",
       "state": "narrow",
       "theme": "light",
       "viewport_width": 900,
@@ -255,7 +255,7 @@
     "editor-light-2560x1600-node-edit.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "9557cee090366ea42afba92b4491b92aad23dd1ff6a582370b5ac499329b34c7",
+      "sha256": "938bfd99e16cb29bd72df674ea5ee41c18793c76bbdda1373a92c33894c4378e",
       "state": "node-edit",
       "theme": "light",
       "viewport_width": 2560,
@@ -264,7 +264,7 @@
     "editor-light-2560x1600-scale-110.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "6969c62fb8e718c9ea924d116ca37add7517e67527289f240ee72bbd9b9d88f3",
+      "sha256": "e0238db2abce877d3d590cad3aea223524a8d487051980a33baf2f77ffc95431",
       "state": "scale-110",
       "theme": "light",
       "viewport_width": 2560,
@@ -273,7 +273,7 @@
     "editor-light-2560x1600-scale-120.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "c4d666e82f10828dc41a1df5fddbc113de0e59f5df2373ac3618114a8dd08431",
+      "sha256": "37f141848bf233f99cc40d7fb252b14daa1dcea98f487d21df84a8c5d394b17e",
       "state": "scale-120",
       "theme": "light",
       "viewport_width": 2560,
@@ -282,7 +282,7 @@
     "editor-light-2560x1600-selection.png": {
       "height": 1600,
       "renderer": "deterministic scalar text and cached path icons",
-      "sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "sha256": "3fae772f570c986db78113eddb8a19f15903154e680a4c0790e0cdd4fc7784e1",
       "state": "selection",
       "theme": "light",
       "viewport_width": 2560,
