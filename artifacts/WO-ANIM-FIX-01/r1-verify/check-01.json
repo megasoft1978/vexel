@@ -1,0 +1,12 @@
+{
+  "index": 1,
+  "argv": [
+    "cmake",
+    "--preset",
+    "mac-debug"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.10506045800866559,
+  "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-ANIM-FIX-01-c49e1762-3053-4204-8d6f-447bc3ef1f83/build/mac-debug\n",
+  "stderr": ""
+}

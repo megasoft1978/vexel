@@ -1,0 +1,13 @@
+{
+  "index": 8,
+  "argv": [
+    "python3",
+    "scripts/wo_validate.py",
+    "WO-ANIM-FIX-01",
+    "--ready"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.025859624991426244,
+  "stdout": "valid WO-ANIM-FIX-01 revision 1 sha256 4e529e3b1a8208132b6c9d5567da25dc674f3fcdc2cd1886235e2f3a93ac6512\n",
+  "stderr": ""
+}
