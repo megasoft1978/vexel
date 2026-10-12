@@ -34,6 +34,15 @@ render-tested, which is recorded per file rather than dropped). The
 attributes failing closed, `<meta>`, `<!DOCTYPE>`/DTD, and `writing-mode`.
 Per-file detail: `artifacts/WO-M4-10/render-diagnostics.{json,md}`.
 
+Update (WO-CORPUS-01): unknown non-namespaced attributes, `<meta>`, `<!DOCTYPE>`
+(with or without an internal subset, never expanded) and `writing-mode` are now
+ignored for rendering and reported (`render-frame` prints one `note: ignored`
+line per kind). The sweep still renders 3 of 39 (limit 17, path 2, unsupported 11,
+viewport 2, xml 4), so the defect stays open: the formerly blocked files now fail
+on later constructs. Next blocker per file: `artifacts/WO-CORPUS-01/residual-causes.md`;
+histogram delta: `artifacts/WO-CORPUS-01/delta.json`. The order's stop condition
+applies and the next step needs planner review.
+
 ### 3. Native goldens follow the host backing scale
 
 `native_ui_render` follows the host backing scale, so on a Retina host every

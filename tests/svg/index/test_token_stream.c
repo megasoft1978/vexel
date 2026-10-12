@@ -58,8 +58,40 @@ static void check_split_utf8_budget(void)
     svg_xml_token_stream_destroy(stream);
 }
 
+static void check_doctype_stream(void)
+{
+    static const uint8_t source[] =
+        "<?xml version=\"1.0\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"x.dtd\" [\n"
+        "<!-- ]> \">\" --><!ENTITY e \"a>b]\"><?pi ]> ?>]>\n<svg><g/></svg>";
+    base_bytes input = {source, sizeof(source) - 1U};
+    svg_xml_token reference[16] = {{0}};
+    svg_xml_result expected = svg_xml_tokenize(input, svg_xml_default_options(), reference, 16U);
+    CHECK(expected.diagnostic.category == SVG_XML_ERROR_NONE);
+    bool saw_doctype = false;
+    for (size_t i = 0U; i < expected.token_count; ++i)
+        saw_doctype |= reference[i].kind == SVG_XML_TOKEN_DOCTYPE;
+    CHECK(saw_doctype);
+    for (size_t budget = 3U; budget <= 9U; ++budget) {
+        svg_xml_token_stream *stream = NULL;
+        CHECK(svg_xml_token_stream_start(input, 16U * sizeof(svg_xml_token), NULL, NULL,
+                                         &stream) == SVG_XML_STREAM_OK);
+        svg_xml_stream_status status = SVG_XML_STREAM_OK;
+        for (size_t step = 0U; status == SVG_XML_STREAM_OK && step < 4000U; ++step)
+            status = svg_xml_token_stream_step(stream, budget);
+        CHECK(status == SVG_XML_STREAM_COMPLETE);
+        svg_xml_token *actual = NULL;
+        size_t count = 0U;
+        CHECK(svg_xml_token_stream_take(stream, &actual, &count));
+        CHECK(count == expected.token_count);
+        for (size_t i = 0U; i < count; ++i) CHECK(token_equal(&actual[i], &reference[i]));
+        free(actual);
+        svg_xml_token_stream_destroy(stream);
+    }
+}
+
 int main(void)
 {
+    check_doctype_stream();
     check_validation_and_parsing_share_budget();
     check_split_utf8_budget();
     const size_t run = 128U * 1024U;

@@ -480,3 +480,26 @@ static bool stream_parse_end(xml_scanner *s, size_t limit)
     s->stream_end_prefix_progress = 0U;
     return true;
 }
+
+static bool stream_parse_doctype(xml_scanner *s, size_t limit)
+{
+    if (s->pending_kind != XML_STREAM_PENDING_DOCTYPE || s->pending_start != s->cursor) {
+        if (!doctype_allowed(s, s->cursor)) return false;
+        stream_pending_start(s, XML_STREAM_PENDING_DOCTYPE, s->cursor, s->cursor + 9U);
+        s->doctype = (xml_doctype_state){0};
+    }
+    size_t p = s->pending_cursor;
+    while (p < limit && p < s->input.len) {
+        xml_doctype_result r = xml_doctype_step(&s->doctype, byte_at(s, p));
+        if (r == XML_DOCTYPE_BAD) { fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, p); return false; }
+        ++p;
+        if (r == XML_DOCTYPE_DONE) {
+            if (!emit_doctype(s, p)) return false;
+            stream_pending_clear(s);
+            return true;
+        }
+    }
+    s->pending_cursor = p;
+    if (p == s->input.len) fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, s->cursor);
+    return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
+}

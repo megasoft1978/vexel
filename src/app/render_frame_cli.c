@@ -420,6 +420,16 @@ static void report_load_failure(const char *path, const viewer_loaded_document *
     }
 }
 
+static void report_ignored(const char *path, const svg_shape_document *shape)
+{
+    for (unsigned k = 0U; k < SVG_SHAPE_IGNORED_KIND_COUNT; ++k) {
+        if (shape->ignored[k].count == 0U) continue;
+        (void)fprintf(stderr, "render-frame: %s: note: ignored %s x%zu, first at byte %zu\n",
+                      path, svg_shape_ignored_kind_name((svg_shape_ignored_kind)k),
+                      shape->ignored[k].count, shape->ignored[k].first_offset);
+    }
+}
+
 int app_run_render_frame(int argc, char *argv[])
 {
     render_options options = {0};
@@ -521,6 +531,7 @@ int app_run_render_frame(int argc, char *argv[])
         return 1;
     }
     if (!loaded) report_load_failure(options.input_path, &document);
+    else report_ignored(options.input_path, &document.shape);
     viewer_loaded_document_destroy(&document);
     return loaded ? 0 : 1;
 }

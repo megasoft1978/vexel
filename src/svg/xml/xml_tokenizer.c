@@ -1,6 +1,7 @@
 #include "xml_tokenizer.h"
 #include "xml_internal.h"
 #include "xml_tokenizer_private.h"
+#include "xml_doctype.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -16,6 +17,7 @@ typedef enum xml_stream_pending_kind {
     XML_STREAM_PENDING_COMMENT,
     XML_STREAM_PENDING_CDATA,
     XML_STREAM_PENDING_PI,
+    XML_STREAM_PENDING_DOCTYPE,
     XML_STREAM_PENDING_TAG
 } xml_stream_pending_kind;
 typedef struct xml_scanner {
@@ -41,6 +43,8 @@ typedef struct xml_scanner {
     bool pending_nonspace;
     bool pending_declaration;
     bool pending_pi_data_ready;
+    bool doctype_seen;
+    xml_doctype_state doctype;
     bool stream_start_active;
     bool stream_start_separated;
     bool stream_end_active;
@@ -373,6 +377,8 @@ static bool parse_pi(xml_scanner *s)
     s->cursor=p+2; return true;
 }
 
+#include "xml_doctype_parse.inc"
+
 static bool parse_text(xml_scanner *s)
 {
     size_t start=s->cursor,p=start;
@@ -549,7 +555,8 @@ static bool tokenize(xml_scanner *s)
             continue;
         }
         if(starts(s,p,"<![CDATA[",9)) { if(!parse_cdata(s))return false;continue; }
-        if(starts(s,p,"<!DOCTYPE",9)||starts(s,p,"<!ENTITY",8)) { fail(s,SVG_XML_ERROR_UNSUPPORTED_DTD,p);return false; }
+        if(starts(s,p,"<!DOCTYPE",9)) { if(!parse_doctype(s))return false;continue; }
+        if(starts(s,p,"<!ENTITY",8)) { fail(s,SVG_XML_ERROR_UNSUPPORTED_DTD,p);return false; }
         if(starts(s,p,"</",2)) { if(!parse_end(s))return false;continue; }
         if(starts(s,p,"<!",2)) { fail(s,SVG_XML_ERROR_MALFORMED_SYNTAX,p);return false; }
         if(!parse_start(s))return false;
@@ -615,7 +622,9 @@ static bool stream_parse_next(xml_scanner *s, size_t limit)
         return stream_parse_pi(s, limit);
     if (s->pending_kind == XML_STREAM_PENDING_CDATA || starts(s, p, "<![CDATA[", 9U))
         return stream_parse_cdata(s, limit);
-    if (starts(s, p, "<!DOCTYPE", 9U) || starts(s, p, "<!ENTITY", 8U)) {
+    if (s->pending_kind == XML_STREAM_PENDING_DOCTYPE || starts(s, p, "<!DOCTYPE", 9U))
+        return stream_parse_doctype(s, limit);
+    if (starts(s, p, "<!ENTITY", 8U)) {
         fail(s, SVG_XML_ERROR_UNSUPPORTED_DTD, p);
         return false;
     }

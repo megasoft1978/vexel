@@ -15,7 +15,9 @@ typedef enum svg_xml_token_kind {
     SVG_XML_TOKEN_EMPTY_ELEMENT,
     SVG_XML_TOKEN_ATTRIBUTE,
     SVG_XML_TOKEN_TEXT,
-    SVG_XML_TOKEN_CDATA
+    SVG_XML_TOKEN_CDATA,
+    /* A skipped <!DOCTYPE>; source spans the whole declaration, never expanded. */
+    SVG_XML_TOKEN_DOCTYPE
 } svg_xml_token_kind;
 
 typedef enum svg_xml_error {

@@ -29,6 +29,13 @@ svg_shape_error svg_shape_decode_source_with_token_budget(
     base_bytes source, size_t token_budget_bytes, svg_shape_document *out,
     svg_shape_diagnostic *diagnostic);
 
+/* Root-document sink for ignored constructs. `seen` is a lazily allocated bit
+ * per token so a revisited element (use, switch, mask, pattern) counts once. */
+typedef struct svg_shape_ignored_state {
+    svg_shape_document *document;
+    uint8_t *seen;
+} svg_shape_ignored_state;
+
 typedef struct shape_traversal {
     base_bytes source;
     base_bytes system_language;
@@ -70,6 +77,7 @@ typedef struct shape_traversal {
     size_t transform_node_capacity;
     double viewport_width;
     double viewport_height;
+    svg_shape_ignored_state *ignored; /* shared with nested mask/pattern traversals */
     bool root_seen;
 } shape_traversal;
 
@@ -124,6 +132,12 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal,
                                     geom_affine parent_transform,
                                     const svg_css_paint *parent_paint,
                                     size_t render_depth);
+/* Like svg_reference_attributes_supported, but unknown non-namespaced attributes
+ * and writing-mode are ignored and recorded instead of failing. */
+bool svg_shape_traverse_attributes_supported(shape_traversal *traversal,
+                                             size_t element, bool root);
+void svg_shape_ignored_scan(base_bytes source, const svg_xml_token *tokens,
+                            size_t token_count, svg_shape_document *document);
 bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first,
                                    size_t limit,
                                    geom_affine parent_transform,

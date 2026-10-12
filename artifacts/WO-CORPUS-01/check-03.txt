@@ -1,0 +1,43 @@
+command: ctest --test-dir build/mac-debug --output-on-failure -E "^native-viewer-smoke$"
+exit code: 0
+--- last 40 output lines ---
+      Start 68: viewer-png-export
+68/85 Test #68: viewer-png-export ...........................   Passed    0.01 sec
+      Start 69: editor-canvas-fuzz
+69/85 Test #69: editor-canvas-fuzz ..........................   Passed    0.82 sec
+      Start 70: viewer-timeline
+70/85 Test #70: viewer-timeline .............................   Passed    0.01 sec
+      Start 71: ui-timeline-goldens
+71/85 Test #71: ui-timeline-goldens .........................   Passed    0.26 sec
+      Start 72: editor-followups
+72/85 Test #72: editor-followups ............................   Passed    0.01 sec
+      Start 73: editor-media-providers
+73/85 Test #73: editor-media-providers ......................   Passed    0.01 sec
+      Start 74: shape-render-large-work
+74/85 Test #74: shape-render-large-work .....................   Passed    2.96 sec
+      Start 75: editor-command-palette
+75/85 Test #75: editor-command-palette ......................   Passed    0.01 sec
+      Start 76: editor-command-overlay-golden
+76/85 Test #76: editor-command-overlay-golden ...............   Passed    0.51 sec
+      Start 77: document-edit-history
+77/85 Test #77: document-edit-history .......................   Passed    0.00 sec
+      Start 78: editor-ux-selection-snap
+78/85 Test #78: editor-ux-selection-snap ....................   Passed    0.02 sec
+      Start 79: editor-snap-popover-goldens
+79/85 Test #79: editor-snap-popover-goldens .................   Passed    0.18 sec
+      Start 80: editor-snap-overlay-goldens
+80/85 Test #80: editor-snap-overlay-goldens .................   Passed    0.11 sec
+      Start 81: animation-authoring
+81/85 Test #81: animation-authoring .........................   Passed    0.01 sec
+      Start 82: animation-authoring-edge
+82/85 Test #82: animation-authoring-edge ....................   Passed    0.00 sec
+      Start 83: viewer-timeline-keyframes
+83/85 Test #83: viewer-timeline-keyframes ...................   Passed    0.10 sec
+      Start 84: editor-accessibility-localization
+84/85 Test #84: editor-accessibility-localization ...........   Passed    0.01 sec
+      Start 85: editor-accessibility-localization-goldens
+85/85 Test #85: editor-accessibility-localization-goldens ...   Passed    0.28 sec
+
+100% tests passed, 0 tests failed out of 85
+
+Total Test time (real) =  22.36 sec

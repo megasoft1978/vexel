@@ -49,6 +49,42 @@ static bool span_is(const char *source, svg_xml_span span, const char *expected)
     return span.length==n&&memcmp(source+span.offset,expected,n)==0;
 }
 
+static void check_doctype(void)
+{
+    svg_xml_token tokens[64];
+    static const char *const accepted[] = {
+        "<!DOCTYPE a><a/>",
+        "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\n \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\"><a/>",
+        "<!DOCTYPE svg [\n<!ENTITY ns \"http://www.w3.org/2000/svg\">\n]><a/>",
+        "<!DOCTYPE svg [<!-- ]> \">\" --><!ENTITY e \"a>b]\"><?pi ]> ?>]><a/>",
+        "<?xml version='1.0'?>\n<!DOCTYPE svg [<!ELEMENT a ANY>]>\n<a/>"};
+    for(size_t i=0;i<sizeof(accepted)/sizeof(accepted[0]);++i) {
+        svg_xml_result r=run(accepted[i],svg_xml_default_options(),tokens,64);
+        CHECK(r.diagnostic.category==SVG_XML_ERROR_NONE);
+        size_t found=SIZE_MAX;
+        for(size_t k=0;k<r.token_count;++k)if(tokens[k].kind==SVG_XML_TOKEN_DOCTYPE)found=k;
+        CHECK(found!=SIZE_MAX);
+        const char *end=strstr(accepted[i],"<a/>");
+        CHECK(end!=NULL);
+        size_t start=(size_t)(strstr(accepted[i],"<!DOCTYPE")-accepted[i]);
+        size_t stop=(size_t)(end-accepted[i]);
+        while(accepted[i][stop-1]=='\n')--stop;
+        CHECK(tokens[found].source.offset==start&&tokens[found].source.length==stop-start);
+        CHECK(r.element_count==1);
+    }
+    /* A declared entity is skipped, never expanded: its reference still fails. */
+    expect_error("<!DOCTYPE a [<!ENTITY e \"x\">]><a>&e;</a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!DOCTYPE a [<!ENTITY e \"x\">]><a v='&e;'/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!DOCTYPE a><a/><!DOCTYPE b>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a/><!DOCTYPE a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<a><!DOCTYPE a></a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!DOCTYPE a><!DOCTYPE a><a/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!DOCTYPEa><a/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!DOCTYPE a [<!ENTITY e \"x\"><a/>",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!DOCTYPE a",SVG_XML_ERROR_MALFORMED_SYNTAX);
+    expect_error("<!ENTITY e \"x\"><a/>",SVG_XML_ERROR_UNSUPPORTED_DTD);
+}
+
 int main(void)
 {
     const char source[]="<?xml version='1.0' encoding=\"UTF-8\"?>\r\n<!--c--><?p data?><a:root xmlns:a='urn:x' a:k=\"v&amp;x\">x\r\ny<![CDATA[z]]><a:child/></a:root>";
@@ -86,7 +122,7 @@ int main(void)
     expect_error("<a><b></a>",SVG_XML_ERROR_MISMATCHED_TAG);
     expect_error("<a/><b/>",SVG_XML_ERROR_MULTIPLE_ROOTS);
     expect_error("<a>",SVG_XML_ERROR_INCOMPLETE_DOCUMENT);
-    expect_error("<!DOCTYPE a><a/>",SVG_XML_ERROR_UNSUPPORTED_DTD);
+    check_doctype();
     expect_error("<a><!-- -- --></a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
     expect_error("<a><?x nope</a>",SVG_XML_ERROR_MALFORMED_SYNTAX);
     expect_error("<a><![CDATA[x</a>",SVG_XML_ERROR_MALFORMED_SYNTAX);

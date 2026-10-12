@@ -1,0 +1,4 @@
+command: python3 scripts/corpus_render_report.py --corpus /Users/megasoft78/Desktop/Freelance/vexel-corpus-real --binary build/mac-debug/bin/svgworkbench --output-json artifacts/WO-M4-10/render-diagnostics.json --output-markdown artifacts/WO-M4-10/render-diagnostics.md
+exit code: 0
+--- last 40 output lines ---
+corpus-render-report: 58 files, 3 rendered, histogram {'limit': 17, 'ok': 3, 'path': 2, 'skipped': 19, 'unsupported': 11, 'viewport': 2, 'xml': 4}

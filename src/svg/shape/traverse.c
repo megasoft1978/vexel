@@ -66,6 +66,7 @@ static bool metadata_element(base_bytes source, const svg_xml_token *token)
     return svg_shape_traverse_element_name(source, token, "title") ||
            svg_shape_traverse_element_name(source, token, "desc") ||
            svg_shape_traverse_element_name(source, token, "metadata") ||
+           svg_shape_traverse_element_name(source, token, "meta") ||
            (token->prefix.length != 0U &&
             svg_shape_traverse_span_eq(source, token->prefix, "sodipodi") &&
             svg_shape_traverse_span_eq(source, token->local_name, "namedview"));
@@ -420,9 +421,7 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
         return svg_shape_traverse_resolve_use(traversal, element, parent_transform,
                            parent_paint, render_depth);
 
-    if (!svg_reference_attributes_supported(
-            traversal->source, traversal->tokens, traversal->token_count,
-            element, root, token->local_name)) {
+    if (!svg_shape_traverse_attributes_supported(traversal, element, root)) {
         svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
              token->name.offset);
         return false;

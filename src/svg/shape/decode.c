@@ -117,7 +117,9 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     svg_shape_alloc_note_external(tokens, token_bytes);
     (void)svg_shape_alloc_set_tag(tokens, SVG_SHAPE_ALLOC_TAG_TOKEN_ARRAY);
 
+    svg_shape_ignored_state ignored_state = {.document = out};
     shape_traversal traversal = {
+        .ignored = &ignored_state,
         .source = source,
         .system_language = system_language,
         .tokens = tokens,
@@ -126,6 +128,7 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         .media = providers,
         .selection_element = SIZE_MAX
     };
+    svg_shape_ignored_scan(source, tokens, xml.token_count, out);
     svg_shape_error error = svg_reference_index_create(
         source, tokens, xml.token_count, &traversal.references, diagnostic);
     if (error != SVG_SHAPE_ERROR_NONE) goto cleanup;
@@ -192,6 +195,7 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     error = SVG_SHAPE_ERROR_NONE;
 
 cleanup:
+    svg_shape_free(ignored_state.seen);
     svg_shape_text_cache_destroy(traversal.text_cache);
     svg_paint_cache_destroy(traversal.paint_cache);
     svg_css_sheet_destroy(traversal.css);

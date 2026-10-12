@@ -1,4 +1,5 @@
 #include "xml_reader.h"
+#include "xml_doctype.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -6,8 +7,8 @@
 #define XML_READER_MAX_SOURCE_BYTES (1024U * 1024U * 1024U)
 #define XML_READER_MAX_STEP_BYTES (64U * 1024U)
 
-typedef enum reader_mode { MODE_TEXT, MODE_PROBE, MODE_TAG, MODE_COMMENT, MODE_CDATA, MODE_PI } reader_mode;
-typedef enum probe_kind { PROBE_NONE, PROBE_COMMENT, PROBE_CDATA } probe_kind;
+typedef enum reader_mode { MODE_TEXT, MODE_PROBE, MODE_TAG, MODE_COMMENT, MODE_CDATA, MODE_PI, MODE_DOCTYPE } reader_mode;
+typedef enum probe_kind { PROBE_NONE, PROBE_COMMENT, PROBE_CDATA, PROBE_DOCTYPE } probe_kind;
 
 struct svg_xml_reader {
     base_bytes source;
@@ -26,6 +27,9 @@ struct svg_xml_reader {
     bool self_closing;
     uint8_t quote;
     bool complete;
+    bool element_seen;
+    bool doctype_seen;
+    xml_doctype_state doctype;
     svg_xml_diagnostic diagnostic;
 };
 
@@ -51,6 +55,7 @@ static bool emit_tag(svg_xml_reader *r, size_t end, svg_xml_reader_tag_fn callba
         reader_fail(r, SVG_XML_ERROR_INVALID_NAME, r->name_offset);
         return false;
     }
+    if (!r->closing) r->element_seen = true;
     if (callback != NULL) {
         svg_xml_reader_tag tag = {
             r->closing ? SVG_XML_TOKEN_END_ELEMENT :
@@ -118,10 +123,21 @@ svg_xml_reader_status svg_xml_reader_step(svg_xml_reader *r, size_t byte_budget,
             } else if (r->probe == PROBE_NONE) {
                 if (c == '-') { r->probe = PROBE_COMMENT; r->probe_position = 1U; }
                 else if (c == '[') { r->probe = PROBE_CDATA; r->probe_position = 1U; }
+                else if (c == 'D' && !r->doctype_seen && !r->element_seen) {
+                    r->probe = PROBE_DOCTYPE; r->probe_position = 1U;
+                }
                 else reader_fail(r, SVG_XML_ERROR_UNSUPPORTED_DTD, r->token_start);
             } else if (r->probe == PROBE_COMMENT) {
                 if (c != '-') reader_fail(r, SVG_XML_ERROR_MALFORMED_SYNTAX, r->token_start);
                 else r->mode = MODE_COMMENT;
+            } else if (r->probe == PROBE_DOCTYPE) {
+                static const char tail[] = "OCTYPE";
+                if (c != (uint8_t)tail[r->probe_position - 1U])
+                    reader_fail(r, SVG_XML_ERROR_UNSUPPORTED_DTD, r->token_start);
+                else if (r->probe_position == sizeof(tail) - 1U) {
+                    r->mode = MODE_DOCTYPE; r->doctype_seen = true;
+                    r->doctype = (xml_doctype_state){0};
+                } else ++r->probe_position;
             } else {
                 static const char tail[] = "CDATA[";
                 if (r->probe_position > sizeof(tail) - 1U ||
@@ -158,6 +174,10 @@ svg_xml_reader_status svg_xml_reader_step(svg_xml_reader *r, size_t byte_budget,
         } else if (r->mode == MODE_CDATA && c == '>' && at >= 2U &&
                    r->source.ptr[at - 1U] == ']' && r->source.ptr[at - 2U] == ']') {
             r->mode = MODE_TEXT;
+        } else if (r->mode == MODE_DOCTYPE) {
+            xml_doctype_result d = xml_doctype_step(&r->doctype, c);
+            if (d == XML_DOCTYPE_BAD) reader_fail(r, SVG_XML_ERROR_MALFORMED_SYNTAX, at);
+            else if (d == XML_DOCTYPE_DONE) r->mode = MODE_TEXT;
         } else if (r->mode == MODE_PI && c == '>' && at > 0U && r->source.ptr[at - 1U] == '?') {
             r->mode = MODE_TEXT;
         }

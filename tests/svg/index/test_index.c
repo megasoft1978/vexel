@@ -163,7 +163,7 @@ static bool check_diagnostic_equivalence(void)
         "<svg><rect/></bad>",
         "<svg><rect width=1/></svg>",
         "<svg><!-- -- --></svg>",
-        "<!DOCTYPE svg><svg/>",
+        "<!ENTITY e \"x\"><svg/>",
         "<svg><rect x='1' x='2'/></svg>",
         "<svg><rect"
     };
@@ -194,9 +194,26 @@ static bool check_frozen_fixture_equivalence(int argc, char **argv)
     return true;
 }
 
+static bool check_doctype_indexed(void)
+{
+    static const uint8_t source[] =
+        "<?xml version='1.0'?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"x.dtd\" [\n"
+        "<!-- ]> \">\" --><!ENTITY e \"a>b]\">\n]>\n<svg><rect/></svg>";
+    svg_index_session *session = NULL;
+    if (svg_index_start((base_bytes){source, sizeof(source) - 1U}, 1U, &session) != SVG_INDEX_OK)
+        return false;
+    svg_index_status status = SVG_INDEX_OK;
+    while (status == SVG_INDEX_OK) status = svg_index_step(session, 5U);
+    svg_index_progress p = svg_index_get_progress(session);
+    bool okay = status == SVG_INDEX_COMPLETE && p.element_count == 2U;
+    svg_index_destroy(session);
+    return okay;
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 1) return check_frozen_fixture_equivalence(argc, argv) ? 0 : 1;
+    if (!check_doctype_indexed()) return fail("DOCTYPE with internal subset was not indexed");
     if (!check_diagnostic_equivalence()) return fail("incremental diagnostic category or offset differs from one-shot tokenizer");
     static const uint8_t source[] =
         "<svg width='2' height='2'><rect width='2' height='2'/><custom/><path d='M0 0'/></svg>";

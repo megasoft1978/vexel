@@ -336,6 +336,9 @@ target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(shape_decode_budget_test tests/svg/shape/test_decode_budget.c)
 target_link_libraries(shape_decode_budget_test PRIVATE vexel_shape)
+add_executable(shape_ignored_test tests/svg/shape/test_ignored.c)
+target_link_libraries(shape_ignored_test PRIVATE vexel_shape)
+set_target_properties(shape_ignored_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_target_properties(shape_decode_budget_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # lane: w6-anim
 target_sources(vexel_mcp PRIVATE src/mcp/mcp_broker_animation.c)
@@ -365,6 +368,7 @@ target_sources(vexel_shape PRIVATE
     src/svg/shape/traverse_switch.c
     src/svg/shape/marker.c
     src/svg/shape/decode.c
+    src/svg/shape/ignored.c
     src/raster/shape_filter.c)
 target_sources(shape_test PRIVATE tests/svg/shape/w5_reference.c)
 
@@ -519,6 +523,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(shape_render_stats_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_decode_budget_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(shape_ignored_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(svg_anim_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(animation_eval_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(animation_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -566,7 +571,7 @@ if(VEXEL_SANITIZER)
     endforeach()
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test shape_decode_budget_test svg_anim_test animation_eval_cli animation_fuzz animation_render_cli css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test shape_decode_budget_test shape_ignored_test svg_anim_test animation_eval_cli animation_fuzz animation_render_cli css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -628,6 +633,10 @@ if(BUILD_TESTING)
     add_test(NAME document-edit COMMAND document_edit_test)
     add_test(NAME shape-render COMMAND shape_test)
     add_test(NAME shape-decode-budget COMMAND shape_decode_budget_test)
+    add_test(NAME shape-ignored-constructs COMMAND shape_ignored_test)
+    add_test(NAME render-frame-ignored-note COMMAND ${CMAKE_COMMAND} -E env
+        VEXEL_SVGWORKBENCH=$<TARGET_FILE:svgworkbench> python3
+        ${CMAKE_SOURCE_DIR}/tests/svg/shape/test_render_frame_ignored.py -v)
     # lane: w6-anim
     add_test(NAME svg-animation COMMAND svg_anim_test)
     add_test(NAME svg-animation-python-reference COMMAND python3

@@ -204,6 +204,21 @@ typedef enum svg_shape_error {
 } svg_shape_error;
 
 typedef struct svg_shape_diagnostic { svg_shape_error category; size_t offset; } svg_shape_diagnostic;
+/* Constructs the decoder deliberately ignores for rendering (ADR-0016 decision 5).
+ * The source is untouched; this only reports what was skipped. */
+typedef enum svg_shape_ignored_kind {
+    SVG_SHAPE_IGNORED_UNKNOWN_ATTRIBUTE = 0,
+    SVG_SHAPE_IGNORED_META,
+    SVG_SHAPE_IGNORED_DOCTYPE,
+    SVG_SHAPE_IGNORED_WRITING_MODE,
+    SVG_SHAPE_IGNORED_KIND_COUNT
+} svg_shape_ignored_kind;
+typedef struct svg_shape_ignored {
+    size_t count;
+    size_t first_offset; /* meaningful only when count != 0 */
+} svg_shape_ignored;
+const char *svg_shape_ignored_kind_name(svg_shape_ignored_kind kind);
+
 struct svg_shape_document {
     uint32_t width;
     uint32_t height;
@@ -254,6 +269,7 @@ struct svg_shape_document {
     svg_shape_clip **clips;
     bool has_clips;
     size_t clip_bytes;
+    svg_shape_ignored ignored[SVG_SHAPE_IGNORED_KIND_COUNT];
     svg_anim_document animation;
     base_bytes source; /* borrowed; caller keeps source alive with document */
 };

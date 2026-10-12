@@ -76,7 +76,13 @@ node-editing correspondence. The source bytes remain borrowed and unchanged.
 `<defs>`, `<title>`, `<desc>`, `<metadata>`, and Inkscape's
 `sodipodi:namedview` are non-rendering; metadata subtrees are structurally
 tokenized and then skipped. Unknown prefixed export attributes are ignored
-without changing their borrowed source bytes. `<symbol>` is
+without changing their borrowed source bytes. `<meta>`, a `<!DOCTYPE>`
+(never expanded), `writing-mode` and unknown non-namespaced attributes that are
+not SVG rendering attributes are also ignored for rendering (ADR-0016 decision
+5). `svg_shape_document.ignored[]` records a count and first byte offset per
+kind, and `render-frame` prints one `note: ignored <kind> xN, first at byte M`
+line per kind on success. Known rendering attributes the decoder does not
+support still fail closed. `<symbol>` is
 non-rendering unless reached by a live `<use>`. Local `href="#id"` and
 root-bound `xlink:href="#id"` references
 traverse the original token array at the use position. The ID table supports up

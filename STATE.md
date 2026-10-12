@@ -493,3 +493,14 @@
   `artifacts/WO-UI-01/golden-changes.md` have side-by-side images; the readout change regenerated four golden
   suites (`artifacts/WO-GAP-UI-01/golden-changes.md`). Debug build, 84/84 CTest, `./dev verify`, `./dev t --all`
   pass. `./dev editor-smoke` was NOT verified: the macOS session was locked (`artifacts/WO-GAP-UI-01/smoke-blocked.md`).
+
+- Update 2026-10-12 (WO-CORPUS-01): unknown non-namespaced attributes, `<meta>`, `<!DOCTYPE>` (internal subset
+  skipped, entities never expanded; new `SVG_XML_TOKEN_DOCTYPE`) and `writing-mode` are ignored for rendering and
+  reported in `svg_shape_document.ignored[]`; `render-frame` prints `note: ignored <kind> xN, first at byte M` on
+  success. New CTests `shape-ignored-constructs` and `render-frame-ignored-note`; two old assertions that pinned
+  DOCTYPE rejection were changed (`artifacts/WO-CORPUS-01/test-changes.md`). Corpus sweep: `ok` stayed 3 of 39
+  (AC-3 NOT met; stop condition applies); formerly blocked files now fail later, see
+  `artifacts/WO-CORPUS-01/residual-causes.md` and `delta.json`. Debug build, CTest, `./dev verify|asan|ubsan|t --all`,
+  `./dev fuzz-xml --duration 300 --seed 1` and `./dev shape-fuzz --seed 1` pass (bare `./dev shape-fuzz` exits 2:
+  the script requires `--seed`). `./dev editor-smoke` and `./dev viewer-smoke` were NOT run (macOS session locked).
+  Independent verifier verdict pending.

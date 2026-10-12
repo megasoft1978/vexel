@@ -62,8 +62,13 @@ Accepted syntax includes XML 1.0 documents encoded as UTF-8 with an optional
 leading BOM, XML declaration,
 PI, comments, element and empty-element tags, quoted attributes, character
 data, and CDATA. Predefined and numeric references are retained lexically;
-custom entity references are rejected because DTDs are unsupported. Every
-DOCTYPE/ENTITY declaration is rejected at its opening byte. No namespace URI
+custom entity references are rejected because DTDs are unsupported. A single
+`<!DOCTYPE>` before the root element, with or without an internal subset, is
+skipped unprocessed and emitted as one `SVG_XML_TOKEN_DOCTYPE` token whose
+source span covers the declaration (`xml_doctype.h` holds the shared skipper);
+no entity is declared or expanded, so a reference to a non-predefined entity
+still fails as malformed syntax. A DOCTYPE after the root, a second DOCTYPE and
+a bare `<!ENTITY` are still rejected. No namespace URI
 resolution, DTD, external entity, serializer, or tree is provided. XML 1.0
 character and Name character ranges are validated; encoding declarations must
 say UTF-8. Line endings and entity spellings are never normalized.
