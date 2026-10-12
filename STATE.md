@@ -393,3 +393,7 @@
   `artifacts/WO-UI-GOLDEN-02/`. Unknown macOS profile rejection and missing
   baseline diagnostic behavior are also checked. Hosted macOS 15 images and
   final exact-candidate review remain pending before push/merge.
+
+- Fresh independent GPT-6.1 Sol review passes candidate `c507075` with no
+  unresolved local source or evidence findings. Hosted macOS 15 capture/profile,
+  hosted CI, and nightly sanitizer checks remain required before merge.
