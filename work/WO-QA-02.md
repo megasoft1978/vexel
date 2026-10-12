@@ -1,12 +1,12 @@
 ---
 id: WO-QA-02
-revision: 5
+revision: 6
 status: READY
 milestone: M2
 owner: project-owner
 executor: deepseek-flash
-base_sha: ac950d1231585b8d9c3dd2610603b55bd9dd333a
-spec_sha256: 09fdffe1d9622cb61d96faf88d635097f98a838e6678168492a3d1cabf604a59
+base_sha: ef09a95423604fc4b41a9802bb9a4f3c94511cc7
+spec_sha256: fd4a95b5fc5ffcc4a55d9d4d28ae77eab0032774a5a48c25ed53e5b293bb25a4
 parallel_safe: false
 network: false
 ---
@@ -38,17 +38,18 @@ Close two real gaps in the test process: the animation and XML tokenizer fuzzers
 - `STATE.md`
 - `LEDGER.md`
 - `ledger.jsonl`
+- `work/WO-QA-02.md` (this order's own frozen spec)
 
 # Protected paths
 - `work/**`, `OWNER-DIRECTIVES.md`, `AGENTS.md`, `docs/adr/**`, `src/**`, `app/**`, `CMakeLists.txt`, `tests/oracle/**`, `tests/golden/**`, `bench/**`, `reports/**` and every existing `artifacts/WO-*` path, including `artifacts/WO-M2-03/pr-smoke.json` and `artifacts/WO-M4-04/fuzz-report.json`, which must end this order byte-identical to their committed state.
 
 # Required implementation
-1. Change `./dev fuzz-xml` so its default reports go under `.cache/qa/` (for example `.cache/qa/xml-fuzz-pr-smoke.json` and `.cache/qa/xml-fuzz-scheduled.json`). Add an explicit `--output PATH` option so a maintainer can still deliberately write the pinned WO-M2-03 paths when refreshing that packet; without `--output`, no path under `artifacts/` may be written. Relax `scripts/xml_fuzz_campaign.py`'s output confinement from `.cache/WO-M2-03` + `artifacts/WO-M2-03` to the whole ignored `.cache/**` tree plus `artifacts/WO-M2-03/**`, so routine campaigns may write under `.cache/qa/` while the pinned packet stays the only permitted `artifacts/` destination.
+1. Change `./dev fuzz-xml` so its default reports go under `.cache/qa/`, and make **all** of its evidence follow the report path: `scripts/xml_fuzz_campaign.py` currently writes failure inputs and raw output to the fixed directory `artifacts/WO-M2-03/failures/**` regardless of `--output`, including the tracked `failures/synthetic-canary/**` canary files. Derive the failure directory from the requested report's parent instead, so a campaign without an explicit `--output` writes nothing under `artifacts/`. (for example `.cache/qa/xml-fuzz-pr-smoke.json` and `.cache/qa/xml-fuzz-scheduled.json`). Add an explicit `--output PATH` option so a maintainer can still deliberately write the pinned WO-M2-03 paths when refreshing that packet; without `--output`, no path under `artifacts/` may be written. Relax `scripts/xml_fuzz_campaign.py`'s output confinement from `.cache/WO-M2-03` + `artifacts/WO-M2-03` to the whole ignored `.cache/**` tree plus `artifacts/WO-M2-03/**`, so routine campaigns may write under `.cache/qa/` while the pinned packet stays the only permitted `artifacts/` destination.
 2. Change `tests/fuzz/shape/shape_fuzz.py` so its default `--output` is under `.cache/qa/` rather than an `artifacts/WO-M4-04/` path.
 3. Add a `./dev animation-fuzz [cases] [seed]` command with documented defaults (suggested: 200000 cases and seed 20261012), building the ASan `animation_fuzz` target and running it, with argument validation matching the other fuzz commands.
 4. Add both fuzzers to the `./dev final` gate: an XML campaign step and an animation campaign step with fixed seeds, placed after the existing shape-fuzz step. Keep the whole gate bounded (suggested 30 s XML and 200000 animation cases).
 5. Update the usage text, `docs/testing.md`'s final-gate description, and `.github/workflows/fuzz.yml` so every referenced report path still exists and no workflow expects a file the new defaults no longer write. The workflow keeps writing the pinned `artifacts/WO-M2-03/` packet, but must now do so with an explicit `--output`, because CI produces triage artifacts and `scripts/check_fuzz_workflow.py` confines failure logs to the task evidence directory; the local default is unchanged at `.cache/qa/`. Add the missing `push` trigger to `fuzz.yml` so the workflow satisfies `scripts/check_ci.py`'s required trigger set (`push`, `pull_request`, `workflow_dispatch`), matching `nightly.yml`.
-6. Extend `tests/e2e/test_dev_final.py` to assert that the final gate runs the XML and animation fuzz steps with seeds, and that no `./dev` command writes a default report under `artifacts/`.
+6. Extend `tests/e2e/test_dev_final.py` so each of the four fuzzer steps is asserted against its exact bound and seed (`--seed 20261010` for shape, `--duration 30 --seed 20261010` for XML, `200000 20261010` for animation and MCP), the XML failure directory follows the report path, and no `./dev` command writes a default report under `artifacts/`. Assertions must not be vacuous: a step that drops its bound or seed must fail the test. Pass the MCP bound and seed explicitly in the final gate so they are assertable.
 7. Run `python3 scripts/check_ci.py .github/workflows/fuzz.yml` and confirm it passes, and confirm `git diff --name-only` lists no `artifacts/WO-M2-03/` or `artifacts/WO-M4-04/` path.
 
 # Acceptance criteria (machine-checkable)
