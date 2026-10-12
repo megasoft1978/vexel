@@ -1,0 +1,4 @@
+command: python3 scripts/wo_validate.py WO-GAP-M4-10 --ready
+exit: 0
+--- last 40 lines ---
+valid WO-GAP-M4-10 revision 1 sha256 59d72ead910c6608d99fe96d8abb5118ade883484a37f7cc7a0b635229089157

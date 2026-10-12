@@ -1,0 +1,4 @@
+command: python3 scripts/wo_validate.py WO-M4-10 --ready
+exit: 0
+--- last 40 lines ---
+valid WO-M4-10 revision 1 sha256 ec26c9bd58eea98fc645989bf1528f937e104bd90a2c7edd9ebfd19581ca7fda

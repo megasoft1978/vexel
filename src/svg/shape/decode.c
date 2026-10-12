@@ -35,7 +35,7 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     base_bytes source, const svg_shape_media_providers *providers,
     svg_shape_document *out, svg_shape_diagnostic *diagnostic,
     svg_shape_decode_memory_bounds *memory_bounds,
-    base_bytes system_language)
+    base_bytes system_language, size_t token_budget_bytes)
 {
     svg_shape_diagnostic local_diagnostic;
     if (diagnostic == NULL) diagnostic = &local_diagnostic;
@@ -71,9 +71,9 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
      * from the source length. Pre-allocating source.len / 2 tokens needed about
      * 4.7 GiB for a 94 MiB document, which is what made large real-world files
      * fail at the old 16 MiB source cap. Storage is now bounded by
-     * SHAPE_MAX_TOKEN_BYTES and grows geometrically inside the stream. */
+     * the token budget and grows geometrically inside the stream. */
     svg_xml_token_stream *stream = NULL;
-    if (svg_xml_token_stream_start(source, SHAPE_MAX_TOKEN_BYTES, NULL, NULL,
+    if (svg_xml_token_stream_start(source, token_budget_bytes, NULL, NULL,
             &stream) != SVG_XML_STREAM_OK || stream == NULL) {
         svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
         return SVG_SHAPE_ERROR_OOM;
@@ -84,14 +84,16 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     svg_xml_result xml = svg_xml_token_stream_result(stream);
     if (stream_status != SVG_XML_STREAM_COMPLETE) {
         size_t offset = xml.diagnostic.offset;
+        /* Exhausted token storage and cancellation are resource limits; only
+         * genuine grammar failures keep the XML mapping. */
+        svg_shape_error failure =
+            (stream_status == SVG_XML_STREAM_CANCELED ||
+             xml.diagnostic.category == SVG_XML_ERROR_NONE ||
+             xml.diagnostic.category == SVG_XML_ERROR_OUTPUT_EXHAUSTED) ?
+                SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_XML;
         svg_xml_token_stream_destroy(stream);
-        svg_shape_traverse_fail(diagnostic,
-            stream_status == SVG_XML_STREAM_CANCELED ? SVG_SHAPE_ERROR_LIMIT :
-                (xml.diagnostic.category == SVG_XML_ERROR_NONE ?
-                    SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_XML), offset);
-        return stream_status == SVG_XML_STREAM_CANCELED ? SVG_SHAPE_ERROR_LIMIT :
-            (xml.diagnostic.category == SVG_XML_ERROR_NONE ?
-                SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_XML);
+        svg_shape_traverse_fail(diagnostic, failure, offset);
+        return failure;
     }
     if (xml.diagnostic.category != SVG_XML_ERROR_NONE) {
         size_t offset = xml.diagnostic.offset;
@@ -205,7 +207,8 @@ svg_shape_error svg_shape_decode_source_with_system_language(
     svg_shape_diagnostic *diagnostic)
 {
     return decode_source_with_language_and_media_and_bounds(
-        source, NULL, out, diagnostic, NULL, system_language);
+        source, NULL, out, diagnostic, NULL, system_language,
+        SHAPE_MAX_TOKEN_BYTES);
 }
 
 svg_shape_error svg_shape_decode_source_with_media_and_bounds(
@@ -216,5 +219,17 @@ svg_shape_error svg_shape_decode_source_with_media_and_bounds(
     static const uint8_t default_language[] = {'e', 'n'};
     return decode_source_with_language_and_media_and_bounds(
         source, providers, out, diagnostic, memory_bounds,
-        (base_bytes){default_language, sizeof(default_language)});
+        (base_bytes){default_language, sizeof(default_language)},
+        SHAPE_MAX_TOKEN_BYTES);
+}
+
+svg_shape_error svg_shape_decode_source_with_token_budget(
+    base_bytes source, size_t token_budget_bytes, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic)
+{
+    static const uint8_t default_language[] = {'e', 'n'};
+    return decode_source_with_language_and_media_and_bounds(
+        source, NULL, out, diagnostic, NULL,
+        (base_bytes){default_language, sizeof(default_language)},
+        token_budget_bytes);
 }

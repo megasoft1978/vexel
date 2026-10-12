@@ -1,0 +1,91 @@
+{
+  "after": {
+    "histogram": {
+      "limit": 13,
+      "ok": 3,
+      "skipped": 19,
+      "unsupported": 13,
+      "viewport": 2,
+      "xml": 8
+    },
+    "rendered_count": 3,
+    "source": "reports/M4/render-diagnostics.json"
+  },
+  "before": {
+    "histogram": {
+      "limit": 26,
+      "ok": 1,
+      "skipped": 19,
+      "unsupported": 8,
+      "xml": 4
+    },
+    "rendered_count": 1,
+    "source": "git show 5894cb4:reports/M4/render-diagnostics.json"
+  },
+  "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
+  "mapping_effect": "Corpus run on HEAD 3d1b3cf (old mapping) vs this change: zero per-file verdict differences, so no file moved xml->limit and nothing else changed due to the mapping fix.",
+  "per_category_delta": {
+    "limit": -13,
+    "ok": 2,
+    "skipped": 0,
+    "unsupported": 5,
+    "viewport": 2,
+    "xml": 4
+  },
+  "per_file_transitions": {
+    "commons-1-42-polytope-7-cube-svg": [
+      "limit",
+      "xml"
+    ],
+    "commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg": [
+      "limit",
+      "ok"
+    ],
+    "commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg": [
+      "limit",
+      "viewport"
+    ],
+    "commons-amhara-topographic-map-svg": [
+      "limit",
+      "unsupported"
+    ],
+    "commons-cambodia-geographic-map-en-svg": [
+      "limit",
+      "unsupported"
+    ],
+    "commons-chuaattractormodified-svg": [
+      "limit",
+      "xml"
+    ],
+    "commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg": [
+      "limit",
+      "unsupported"
+    ],
+    "commons-corvuscoraxiucn-svg": [
+      "limit",
+      "unsupported"
+    ],
+    "commons-dukesofhohenbergarms-svg": [
+      "limit",
+      "unsupported"
+    ],
+    "commons-france-osm-mapnik-svg": [
+      "limit",
+      "xml"
+    ],
+    "commons-geographic-map-of-norway-sweden-finland-and-denmark-svg": [
+      "limit",
+      "viewport"
+    ],
+    "commons-germany-districts-municipalities-location-map-2013-svg": [
+      "limit",
+      "xml"
+    ],
+    "generated-cnc_t1": [
+      "limit",
+      "ok"
+    ]
+  },
+  "rendered_count_after": 3,
+  "rendered_count_before": 1
+}

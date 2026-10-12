@@ -1,0 +1,5 @@
+command: cmake --build --preset mac-debug
+exit: 0
+--- last 40 lines ---
+[1/2] Building C object CMakeFiles/shape_decode_budget_test.dir/tests/svg/shape/test_decode_budget.c.o
+[2/2] Linking C executable bin/shape_decode_budget_test

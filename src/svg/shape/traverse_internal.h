@@ -6,6 +6,9 @@
 /* The tokenizer streams, so the source limit is the tokenizer's own 1 GiB input
  * limit; token storage is bounded separately and taken from the stream. */
 #define SHAPE_MAX_SOURCE_BYTES (1024U * 1024U * 1024U)
+/* Token-storage budget for the decode path: 256 MiB, which at
+ * sizeof(svg_xml_token) == 96 bytes holds SHAPE_MAX_TOKEN_BYTES /
+ * sizeof(svg_xml_token) = 2,796,202 tokens (floor of 2,796,202.67). */
 #define SHAPE_MAX_TOKEN_BYTES (256U * 1024U * 1024U)
 #define SHAPE_MAX_BYTES SHAPE_MAX_SOURCE_BYTES
 #define SHAPE_MAX_XML_DEPTH 64U
@@ -19,6 +22,12 @@
 #define SHAPE_MAX_TRANSFORM_NODES 4194304U
 #define SHAPE_MAX_REFERENCE_BYTES (64U * 1024U)
 #define SHAPE_MAX_JOB_REFERENCE_BYTES (1024U * 1024U)
+
+/* Test-only: svg_shape_decode with an explicit token-storage budget in bytes.
+ * svg_shape_decode itself uses SHAPE_MAX_TOKEN_BYTES. */
+svg_shape_error svg_shape_decode_source_with_token_budget(
+    base_bytes source, size_t token_budget_bytes, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic);
 
 typedef struct shape_traversal {
     base_bytes source;

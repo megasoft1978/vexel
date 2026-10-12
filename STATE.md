@@ -477,3 +477,9 @@
   `viewer_workspace_test`, and three hand-counted label lengths (now linted by `tests/test_literal_lengths.py`).
   17 ledger entries (lines 502-518 at the time) carry mislabelled 2026-10-13 timestamps with `duration_s: 0`;
   the ledger is append-only, so they stand uncorrected pending an owner decision.
+- Update 2026-10-12 (WO-GAP-M4-10): token-storage exhaustion and cancellation in `svg_shape_decode` now map
+  to `SVG_SHAPE_ERROR_LIMIT` (grammar failures stay `xml`); the 256 MiB token budget is documented as 2,796,202
+  tokens; `shape-decode-budget` CTest covers >16 MiB decode, tiny budget, 1 GiB + 1 ceiling and allocation
+  balance. Corpus render report: rendered 1 -> 3 of 39 against the `5894cb4` baseline (limit 26 -> 13);
+  the mapping change moved no file verdict. Evidence: `artifacts/WO-M4-10/` and `artifacts/WO-GAP-M4-10/`.
+  The independent verifier verdict is pending.

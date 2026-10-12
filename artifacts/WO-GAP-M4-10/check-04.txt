@@ -1,0 +1,43 @@
+command: ./dev verify
+exit: 0
+--- last 40 lines ---
+                      [--input-root INPUT_ROOT]
+test_runner.py: error: report path must stay below repository .cache/e2e
+usage: test_runner.py [-h] {bundle,dmg,icon} ...
+test_runner.py: error: the following arguments are required: command
+usage: test_runner.py [-h] {bundle,dmg,icon} ...
+test_runner.py: error: unrecognized arguments: --unexpected
+usage: test_runner.py [-h] [--minutes MINUTES] [--seed SEED] [--output OUTPUT]
+test_runner.py: error: minutes must be in 1..20
+usage: test_runner.py [-h] [--minutes MINUTES] [--seed SEED] [--output OUTPUT]
+test_runner.py: error: minutes must be in 1..20
+usage: test_runner.py [-h] [--minutes MINUTES] [--seed SEED] [--output OUTPUT]
+test_runner.py: error: seed must be an unsigned 32-bit integer
+usage: test_runner.py [-h] [--minutes MINUTES] [--seed SEED] [--output OUTPUT]
+test_runner.py: error: output must stay below repository .cache/soak
+corpus-render-report: corpus manifest digest mismatch: expected 9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30, found aa7d2c0b3856f61fab9364b17e811f0ebdf7759f13a8183aeed2ac5ba629c35c. Refusing to report on different inputs.
+corpus-render-report: render binary not found: /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpozc0wqfw/does-not-exist
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+usage: test_runner.py [-h] [--duration DURATION] [--seed SEED]
+                      [--binary BINARY] [--output OUTPUT] [--self-test-crash]
+                      [--self-test-timeout]
+test_runner.py: error: duration must be 1..600 and seed must be uint32
+Ran 338 tests in 40.228s
+
+OK
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpxicurjjt/build/Vexel.app (version 1.2.3, identity -)
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmp7fs8sco5/build/Vexel.dmg
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmp5jm0sw_o/build/Vexel.dmg
+presented frames: 2
+byte-exact readback: pass
+resize/reset: pass
+native smoke elapsed seconds: 0.157227
+20 frames with identical readback hashes and stable offscreen frame order
+readback sha256: 3d636badd712ea35b36c861871517af1a2a0809d0a0a418efd5419b4f4c1196c
+native replay elapsed seconds: 0.132927
+raster differential seed=20261011 generated=200 paint-clip-seed=20261013 paint-clip-generated=160 tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40
+Ran 338 tests: 338 passed, 0 failed, 0 errors, 0 skipped; 40.315s
+valid ledger: 555 entries
