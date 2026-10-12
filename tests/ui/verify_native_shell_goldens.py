@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import platform
+import re
 import struct
 import subprocess
 from pathlib import Path
@@ -34,6 +36,24 @@ def render(binary: Path, screen: str, theme: str, recent_fixture: Path) -> bytes
     return completed.stdout
 
 
+def os_profile() -> tuple[int, str]:
+    """Select the exact screenshot profile for the running macOS major."""
+    try:
+        version = subprocess.run(
+            ["sw_vers", "-productVersion"], check=True,
+            capture_output=True, text=True, timeout=15,
+        ).stdout
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise SystemExit(f"cannot determine native golden macOS profile: {exc}") from exc
+    match = re.match(r"^(\d+)\.", version.strip())
+    if match is None:
+        raise SystemExit(f"unrecognized macOS version for native golden profile: {version.strip()!r}")
+    major = int(match.group(1))
+    if major not in {15, 27}:
+        raise SystemExit(f"no native golden profile is defined for macOS {major}")
+    return major, f"macos-{major}"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--binary", type=Path, required=True)
@@ -50,19 +70,32 @@ def main() -> int:
     if not binary.is_file() or not fixture.is_file() or not icon.is_file():
         raise SystemExit("missing native renderer, recent SVG fixture, or app icon PNG")
 
+    major, profile = os_profile()
+    profile_dir = GOLDEN_DIR / profile
+
     screenshots: dict[str, dict[str, object]] = {}
     for screen in SCREENS:
         for theme in THEMES:
             name = f"{screen}-{theme}.png"
             resource = icon if screen == "app-icon" else fixture
             content = render(binary, screen, theme, resource)
-            if args.update:
-                GOLDEN_DIR.mkdir(parents=True, exist_ok=True)
-                (GOLDEN_DIR / name).write_bytes(content)
-            elif not (GOLDEN_DIR / name).is_file() or \
-                    (GOLDEN_DIR / name).read_bytes() != content:
-                raise SystemExit(f"{name} differs from its native UI golden")
             width, height = struct.unpack(">II", content[16:24])
+            logical_width, logical_height = ((256, 256) if screen == "app-icon" else
+                ((600, 650) if screen.startswith("welcome-") else
+                 ((560, 380) if screen.startswith("settings-") else
+                  ((520, 360) if screen == "help" else (620, 480)))))
+            expected_dimensions = (logical_width, logical_height)
+            if (width, height) != expected_dimensions:
+                raise SystemExit(
+                    f"{name} has dimensions {width}x{height}; fixed 1x profile "
+                    f"requires {expected_dimensions[0]}x{expected_dimensions[1]}"
+                )
+            golden_path = profile_dir / name
+            if args.update:
+                profile_dir.mkdir(parents=True, exist_ok=True)
+                golden_path.write_bytes(content)
+            elif not golden_path.is_file() or golden_path.read_bytes() != content:
+                raise SystemExit(f"{name} differs from its native UI golden")
             screenshots[name] = {
                 "sha256": hashlib.sha256(content).hexdigest(),
                 "width": width,
@@ -72,14 +105,15 @@ def main() -> int:
                 "renderer": "offscreen AppKit content view",
             }
 
-    manifest = json.dumps({"version": 1, "screenshots": screenshots},
+    manifest = json.dumps({"version": 2, "macos_major": major,
+                           "pixel_scale": 1, "screenshots": screenshots},
                           sort_keys=True, indent=2) + "\n"
-    manifest_path = GOLDEN_DIR / "manifest.json"
+    manifest_path = profile_dir / "manifest.json"
     if args.update:
         manifest_path.write_text(manifest, encoding="utf-8")
     elif not manifest_path.is_file() or manifest_path.read_text(encoding="utf-8") != manifest:
         raise SystemExit("native shell golden manifest does not match its images")
-    print("native shell goldens match: 14 offscreen AppKit renders, light/dark")
+    print(f"native shell goldens match: 14 offscreen AppKit renders, macOS {major}, fixed 1x")
     return 0
 
 

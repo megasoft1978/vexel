@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 NSView *platform_welcome_golden_view(void);
 NSView *platform_settings_golden_view(NSInteger pane);
@@ -100,12 +101,32 @@ int main(int argc, char **argv)
         view.frame = host.bounds;
         [host addSubview:view];
         [host layoutSubtreeIfNeeded];
-        NSBitmapImageRep *bitmap = [host bitmapImageRepForCachingDisplayInRect:host.bounds];
+        /* Allocate the test raster at one pixel per logical point. AppKit's
+         * convenience allocator follows the active screen backing scale, so
+         * its output changes when a Retina or virtual display is selected. */
+        NSRect bounds = host.bounds;
+        NSInteger width = (NSInteger)ceil(NSWidth(bounds));
+        NSInteger height = (NSInteger)ceil(NSHeight(bounds));
+        NSBitmapImageRep *bitmap = [[NSBitmapImageRep alloc]
+            initWithBitmapDataPlanes:NULL
+            pixelsWide:width pixelsHigh:height
+            bitsPerSample:8 samplesPerPixel:4 hasAlpha:YES isPlanar:NO
+            colorSpaceName:NSCalibratedRGBColorSpace
+            bitmapFormat:0 bytesPerRow:0 bitsPerPixel:0];
         if (bitmap == nil) {
             fprintf(stderr, "could not allocate offscreen bitmap\n");
             return 1;
         }
-        [host cacheDisplayInRect:host.bounds toBitmapImageRep:bitmap];
+        NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep:bitmap];
+        if (context == nil) {
+            fprintf(stderr, "could not create offscreen graphics context\n");
+            return 1;
+        }
+        [NSGraphicsContext saveGraphicsState];
+        [NSGraphicsContext setCurrentContext:context];
+        [host displayRectIgnoringOpacity:bounds inContext:context];
+        [context flushGraphics];
+        [NSGraphicsContext restoreGraphicsState];
         NSData *png = [bitmap representationUsingType:NSBitmapImageFileTypePNG properties:@{}];
         if (png == nil || fwrite(png.bytes, 1U, png.length, stdout) != png.length) {
             fprintf(stderr, "could not write rendered PNG\n");

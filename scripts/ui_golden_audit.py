@@ -205,6 +205,32 @@ def _box_downsample_2x(png: bytes) -> bytes:
 
 def _capture(output: Path, category: str, name: str, expected_path: Path,
              actual_png: bytes, executable: Path) -> dict[str, Any]:
+    if not expected_path.is_file():
+        row: dict[str, Any] = {
+            "category": category,
+            "name": name,
+            "expected_path": expected_path.relative_to(ROOT).as_posix(),
+            "expected_png_sha256": None,
+            "actual_png_sha256": _sha(actual_png),
+            "png_byte_equal": None,
+            "renderer_path": executable.relative_to(ROOT).as_posix(),
+            "renderer_sha256": _sha(executable.read_bytes()),
+            "metrics": {
+                "actual_dimensions": {
+                    "width": struct.unpack_from(">I", actual_png, 16)[0],
+                    "height": struct.unpack_from(">I", actual_png, 20)[0],
+                },
+                "baseline_available": False,
+            },
+            "result": "unbaselined",
+        }
+        stem = f"{category}/{Path(name).stem}"
+        actual_path = output / "actual" / f"{stem}.png"
+        actual_path.parent.mkdir(parents=True, exist_ok=True)
+        actual_path.write_bytes(actual_png)
+        row["actual_image"] = actual_path.relative_to(output).as_posix()
+        return row
+
     expected_png = expected_path.read_bytes()
     if actual_png == expected_png:
         width, height = struct.unpack_from(">II", expected_png, 16)
@@ -315,8 +341,10 @@ def capture(output: Path, build: Path) -> dict[str, Any]:
                 name = f"{screen}-{theme}.png"
                 resource = icon if screen == "app-icon" else recent
                 actual = native.render(bins["native"], screen, theme, resource)
-                rows.append(_capture(output, "native-shell", name,
-                                     native.GOLDEN_DIR / name, actual, bins["native"]))
+                major, profile = native.os_profile()
+                rows.append(_capture(output, f"native-shell-{profile}", name,
+                                     native.GOLDEN_DIR / profile / name,
+                                     actual, bins["native"]))
     finally:
         os.chdir(old_cwd)
 
@@ -350,6 +378,7 @@ def capture(output: Path, build: Path) -> dict[str, Any]:
             "images_compared": len(rows),
             "exact_matches": sum(row["result"] == "pass" for row in rows),
             "mismatches": sum(row["result"] == "fail" for row in rows),
+            "unbaselined": sum(row["result"] == "unbaselined" for row in rows),
             "categories": {},
         },
         "images": rows,
@@ -359,6 +388,7 @@ def capture(output: Path, build: Path) -> dict[str, Any]:
         report["summary"]["categories"][category] = {
             "compared": len(items),
             "mismatches": sum(row["result"] == "fail" for row in items),
+            "unbaselined": sum(row["result"] == "unbaselined" for row in items),
             "mismatch_names": [row["name"] for row in items if row["result"] == "fail"],
         }
     report_path = output / "report.json"
@@ -387,7 +417,8 @@ def main() -> int:
         print(f"UI golden audit capture failed: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 2
     print(json.dumps(report["summary"], sort_keys=True))
-    return 1 if report["summary"]["mismatches"] else 0
+    return 1 if (report["summary"]["mismatches"] or
+                 report["summary"]["unbaselined"]) else 0
 
 
 if __name__ == "__main__":

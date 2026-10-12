@@ -1,0 +1,5 @@
+{
+  "case": "unbaselined-only report",
+  "expected_exit": 1,
+  "actual_exit": 1
+}

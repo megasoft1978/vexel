@@ -381,3 +381,15 @@
   targets deterministic 1x native screenshot capture and exact macOS 15/27
   profiles, resolves the integrated screenshot failures, and regenerates the
   timeline images. Implementation has not started.
+
+- Update 2026-10-12: `WO-UI-GOLDEN-02` implementation now passes all available
+  local gates. Native output is fixed at 1x and keyed by explicit macOS major;
+  macOS 27's 14-image profile passes exact comparison and all 14 repeated
+  light/dark captures are byte-identical. The full image audit is 50/50 exact;
+  focused CTest passes 6/6; `./dev verify` passes 82 CTests and 303 Python
+  tests; `./dev asan` and `./dev ubsan` each pass 82 CTests; `./dev test-fast`
+  passes 303 Python tests. Timeline pre-change images, native prior images,
+  before/after hashes, pixel metrics, and visual sheets are retained under
+  `artifacts/WO-UI-GOLDEN-02/`. Unknown macOS profile rejection and missing
+  baseline diagnostic behavior are also checked. Hosted macOS 15 images and
+  final exact-candidate review remain pending before push/merge.

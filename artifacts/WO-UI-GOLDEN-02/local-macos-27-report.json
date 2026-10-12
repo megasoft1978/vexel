@@ -1,0 +1,1610 @@
+{
+  "comparison_policy": "Captures every image in all four renderer matrices even after a mismatch; this is diagnostic coverage beyond each verifier's fail-fast behavior.",
+  "images": [
+    {
+      "actual_image": "actual/native-shell-macos-27/welcome-empty-light.png",
+      "actual_png_sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/welcome-empty-light.png",
+      "expected_png_sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 390000,
+        "expected_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "welcome-empty-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/welcome-empty-dark.png",
+      "actual_png_sha256": "c0c95668065616dff903843c831c53c41d409c2047071a29ca815b56897c676d",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/welcome-empty-dark.png",
+      "expected_png_sha256": "c0c95668065616dff903843c831c53c41d409c2047071a29ca815b56897c676d",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 390000,
+        "expected_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "welcome-empty-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/welcome-recent-light.png",
+      "actual_png_sha256": "31845ed5820500ce53f0c3362728043cf93f01179c41b64d2077ec9c1cb2bd86",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/welcome-recent-light.png",
+      "expected_png_sha256": "31845ed5820500ce53f0c3362728043cf93f01179c41b64d2077ec9c1cb2bd86",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 390000,
+        "expected_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "welcome-recent-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/welcome-recent-dark.png",
+      "actual_png_sha256": "536b3edd8042d0843da81831bcae516c0b4283d32bea91ae5b36d50924056b94",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/welcome-recent-dark.png",
+      "expected_png_sha256": "536b3edd8042d0843da81831bcae516c0b4283d32bea91ae5b36d50924056b94",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 390000,
+        "expected_dimensions": {
+          "height": 650,
+          "width": 600
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "welcome-recent-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/settings-general-light.png",
+      "actual_png_sha256": "19e91015d6d363a82f4b54ea872034f1b438f8bcb2fad7a9b54ae5a9af7a4562",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/settings-general-light.png",
+      "expected_png_sha256": "19e91015d6d363a82f4b54ea872034f1b438f8bcb2fad7a9b54ae5a9af7a4562",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 212800,
+        "expected_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "settings-general-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/settings-general-dark.png",
+      "actual_png_sha256": "6c3317f4883856a850ff6539f45a3f7b26d14b9edddba5014189246915248a7f",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/settings-general-dark.png",
+      "expected_png_sha256": "6c3317f4883856a850ff6539f45a3f7b26d14b9edddba5014189246915248a7f",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 212800,
+        "expected_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "settings-general-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/settings-canvas-light.png",
+      "actual_png_sha256": "cd7d907f2882105c68464c492624ff22fc4eeffe1804a29db08473ee2428545b",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/settings-canvas-light.png",
+      "expected_png_sha256": "cd7d907f2882105c68464c492624ff22fc4eeffe1804a29db08473ee2428545b",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 212800,
+        "expected_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "settings-canvas-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/settings-canvas-dark.png",
+      "actual_png_sha256": "15cdf0a430e182193ff067d75638c8e1b6069a466f8731aef8a9e13753df1dff",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/settings-canvas-dark.png",
+      "expected_png_sha256": "15cdf0a430e182193ff067d75638c8e1b6069a466f8731aef8a9e13753df1dff",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 212800,
+        "expected_dimensions": {
+          "height": 380,
+          "width": 560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "settings-canvas-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/help-light.png",
+      "actual_png_sha256": "ab8f8461c6706576212d2e0b7e9263bf0ffbff88445f99a8771b38e5cc26c2c5",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/help-light.png",
+      "expected_png_sha256": "ab8f8461c6706576212d2e0b7e9263bf0ffbff88445f99a8771b38e5cc26c2c5",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 360,
+          "width": 520
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 187200,
+        "expected_dimensions": {
+          "height": 360,
+          "width": 520
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "help-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/help-dark.png",
+      "actual_png_sha256": "b1615676a217448ecf61e0f900993fc19592032fdbc820addc397eeb2863097c",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/help-dark.png",
+      "expected_png_sha256": "b1615676a217448ecf61e0f900993fc19592032fdbc820addc397eeb2863097c",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 360,
+          "width": 520
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 187200,
+        "expected_dimensions": {
+          "height": 360,
+          "width": 520
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "help-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/feedback-light.png",
+      "actual_png_sha256": "e96835f465666a28d8a322604f9e3372e0bb3988c00987622fe65b243e1d395f",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/feedback-light.png",
+      "expected_png_sha256": "e96835f465666a28d8a322604f9e3372e0bb3988c00987622fe65b243e1d395f",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 480,
+          "width": 620
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 297600,
+        "expected_dimensions": {
+          "height": 480,
+          "width": 620
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "feedback-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/feedback-dark.png",
+      "actual_png_sha256": "0481e4d6f41aac604bb2fb9f346ad449e9c99a7235deca2dbdd2847a8231c573",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/feedback-dark.png",
+      "expected_png_sha256": "0481e4d6f41aac604bb2fb9f346ad449e9c99a7235deca2dbdd2847a8231c573",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 480,
+          "width": 620
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 297600,
+        "expected_dimensions": {
+          "height": 480,
+          "width": 620
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "feedback-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/app-icon-light.png",
+      "actual_png_sha256": "f83462729236ff7668aaa004f4a48c7e2c55e9425028d5c85bfa585fcfba6342",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/app-icon-light.png",
+      "expected_png_sha256": "f83462729236ff7668aaa004f4a48c7e2c55e9425028d5c85bfa585fcfba6342",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 256,
+          "width": 256
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 65536,
+        "expected_dimensions": {
+          "height": 256,
+          "width": 256
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "app-icon-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/native-shell-macos-27/app-icon-dark.png",
+      "actual_png_sha256": "ca0cd932dbc68fa24b2eb2f01e18c2c2dd458c15bd745ff6593549a5f869b02d",
+      "category": "native-shell-macos-27",
+      "expected_path": "tests/ui/native-shell-golden/macos-27/app-icon-dark.png",
+      "expected_png_sha256": "ca0cd932dbc68fa24b2eb2f01e18c2c2dd458c15bd745ff6593549a5f869b02d",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 256,
+          "width": 256
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 65536,
+        "expected_dimensions": {
+          "height": 256,
+          "width": 256
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "app-icon-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/native_ui_render",
+      "renderer_sha256": "5f9571ad3c073966fb0a17f8ef0d175fb2527988919c73a3b4bc78b9fb32477a",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-empty.png",
+      "actual_png_sha256": "a933e0cb6ea1b3c7ad77933c4108ae15c0d8db437ec2d65e6922eeef73a921b7",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-empty.png",
+      "expected_png_sha256": "a933e0cb6ea1b3c7ad77933c4108ae15c0d8db437ec2d65e6922eeef73a921b7",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-empty.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-selection.png",
+      "actual_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-selection.png",
+      "expected_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-selection.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-editing-field.png",
+      "actual_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-editing-field.png",
+      "expected_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-editing-field.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-error.png",
+      "actual_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-error.png",
+      "expected_png_sha256": "7939cae725a18b725d94aa5503c7c4443f7fac59a241e114547ad3f1222472b3",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-error.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-narrow.png",
+      "actual_png_sha256": "b9d96a4f284228c708961963c8060e45dff69be8bc4a5a528566ff06a60189a5",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-narrow.png",
+      "expected_png_sha256": "b9d96a4f284228c708961963c8060e45dff69be8bc4a5a528566ff06a60189a5",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-narrow.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-node-edit.png",
+      "actual_png_sha256": "801c3a926e7bd29129dc9f19aeca849e517da37b23386ef15d1a0d17ff033591",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-node-edit.png",
+      "expected_png_sha256": "801c3a926e7bd29129dc9f19aeca849e517da37b23386ef15d1a0d17ff033591",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-node-edit.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-scale-110.png",
+      "actual_png_sha256": "439f290d60f8cfc707f9d81961f480245da7149603254d789991401d5cc2ce8c",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-scale-110.png",
+      "expected_png_sha256": "439f290d60f8cfc707f9d81961f480245da7149603254d789991401d5cc2ce8c",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-scale-110.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-1280x800-scale-120.png",
+      "actual_png_sha256": "45c9d22e553120d0f239b4acfccb170fbfc726279078ddf2fe02370c90d41973",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-1280x800-scale-120.png",
+      "expected_png_sha256": "45c9d22e553120d0f239b4acfccb170fbfc726279078ddf2fe02370c90d41973",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-1280x800-scale-120.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-empty.png",
+      "actual_png_sha256": "72eceaaa2f634e85c4d229df29dbccb8a5aaab1c0741993f3b04b40151fbab65",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-empty.png",
+      "expected_png_sha256": "72eceaaa2f634e85c4d229df29dbccb8a5aaab1c0741993f3b04b40151fbab65",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-empty.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-selection.png",
+      "actual_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-selection.png",
+      "expected_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-selection.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-editing-field.png",
+      "actual_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-editing-field.png",
+      "expected_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-editing-field.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-error.png",
+      "actual_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-error.png",
+      "expected_png_sha256": "26aa58966805e66c643693826d376803500c353ff9f901271f99ba197d91edcf",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-error.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-narrow.png",
+      "actual_png_sha256": "a35215c3fab94740ac3030f8840f3b0bdabb8e134942929afa9fe726b0488ccc",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-narrow.png",
+      "expected_png_sha256": "a35215c3fab94740ac3030f8840f3b0bdabb8e134942929afa9fe726b0488ccc",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-narrow.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-node-edit.png",
+      "actual_png_sha256": "86da3b91f641c62fddcd86d5b6a61a4271edb25f9df41e7946495adfc995ba6e",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-node-edit.png",
+      "expected_png_sha256": "86da3b91f641c62fddcd86d5b6a61a4271edb25f9df41e7946495adfc995ba6e",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-node-edit.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-scale-110.png",
+      "actual_png_sha256": "78dc176875d63a701ee8efa0f253c3c96456f3c5e5f6288c386de1369ab616cb",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-scale-110.png",
+      "expected_png_sha256": "78dc176875d63a701ee8efa0f253c3c96456f3c5e5f6288c386de1369ab616cb",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-scale-110.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-1280x800-scale-120.png",
+      "actual_png_sha256": "ac99e098f63a00d7a9a16d05129f7c20a46b1b44d65f0e0ae4cc81ea56c93701",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-1280x800-scale-120.png",
+      "expected_png_sha256": "ac99e098f63a00d7a9a16d05129f7c20a46b1b44d65f0e0ae4cc81ea56c93701",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-1280x800-scale-120.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-empty.png",
+      "actual_png_sha256": "ef8d9bcbeb882b246eec4e1d691d6e4cb32f76e94ccd5a569575a9603c3e2dd5",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-empty.png",
+      "expected_png_sha256": "ef8d9bcbeb882b246eec4e1d691d6e4cb32f76e94ccd5a569575a9603c3e2dd5",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-empty.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-selection.png",
+      "actual_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-selection.png",
+      "expected_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-selection.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-editing-field.png",
+      "actual_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-editing-field.png",
+      "expected_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-editing-field.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-error.png",
+      "actual_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-error.png",
+      "expected_png_sha256": "981c2d360f56334b06e7ce8d97fe3226fc3a1ee511ff60f2f72c054f741fecc0",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-error.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-narrow.png",
+      "actual_png_sha256": "caf806a5d12fe71ab143441e8dc0c6d4069b08f06d555552b2060cf4dd358634",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-narrow.png",
+      "expected_png_sha256": "caf806a5d12fe71ab143441e8dc0c6d4069b08f06d555552b2060cf4dd358634",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-narrow.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-node-edit.png",
+      "actual_png_sha256": "d97b7ff896946a3ec0f8f73622d06cf6038cb63604a78f14d1c5b879b4ee7311",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-node-edit.png",
+      "expected_png_sha256": "d97b7ff896946a3ec0f8f73622d06cf6038cb63604a78f14d1c5b879b4ee7311",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-node-edit.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-scale-110.png",
+      "actual_png_sha256": "521b0edb2b1d59732508a0b06a6cbd5e02093e311819a5c65ab32a4b648b9a65",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-scale-110.png",
+      "expected_png_sha256": "521b0edb2b1d59732508a0b06a6cbd5e02093e311819a5c65ab32a4b648b9a65",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-scale-110.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-dark-2560x1600-scale-120.png",
+      "actual_png_sha256": "58bd420e8478f04cf08298524d3dfda0c683e157aec472d926794ad782e311ef",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-dark-2560x1600-scale-120.png",
+      "expected_png_sha256": "58bd420e8478f04cf08298524d3dfda0c683e157aec472d926794ad782e311ef",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-dark-2560x1600-scale-120.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-empty.png",
+      "actual_png_sha256": "a4c46f0a109775236dbb5d04ccb22f9bd4dc341424a34b9726efacfbbffdd065",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-empty.png",
+      "expected_png_sha256": "a4c46f0a109775236dbb5d04ccb22f9bd4dc341424a34b9726efacfbbffdd065",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-empty.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-selection.png",
+      "actual_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-selection.png",
+      "expected_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-selection.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-editing-field.png",
+      "actual_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-editing-field.png",
+      "expected_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-editing-field.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-error.png",
+      "actual_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-error.png",
+      "expected_png_sha256": "be08e7868d5981affd8417101df6a752179768210ee98e58809d47b29f8a1ba1",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-error.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-narrow.png",
+      "actual_png_sha256": "9fbe8f6dcd66120c51501e25f81e9e1d8d57aac9a38efc8ecf4337d52cf52c83",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-narrow.png",
+      "expected_png_sha256": "9fbe8f6dcd66120c51501e25f81e9e1d8d57aac9a38efc8ecf4337d52cf52c83",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-narrow.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-node-edit.png",
+      "actual_png_sha256": "9557cee090366ea42afba92b4491b92aad23dd1ff6a582370b5ac499329b34c7",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-node-edit.png",
+      "expected_png_sha256": "9557cee090366ea42afba92b4491b92aad23dd1ff6a582370b5ac499329b34c7",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-node-edit.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-scale-110.png",
+      "actual_png_sha256": "6969c62fb8e718c9ea924d116ca37add7517e67527289f240ee72bbd9b9d88f3",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-scale-110.png",
+      "expected_png_sha256": "6969c62fb8e718c9ea924d116ca37add7517e67527289f240ee72bbd9b9d88f3",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-scale-110.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/editor-style/editor-light-2560x1600-scale-120.png",
+      "actual_png_sha256": "c4d666e82f10828dc41a1df5fddbc113de0e59f5df2373ac3618114a8dd08431",
+      "category": "editor-style",
+      "expected_path": "tests/ui/style-golden/editor-light-2560x1600-scale-120.png",
+      "expected_png_sha256": "c4d666e82f10828dc41a1df5fddbc113de0e59f5df2373ac3618114a8dd08431",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 4096000,
+        "expected_dimensions": {
+          "height": 1600,
+          "width": 2560
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "editor-light-2560x1600-scale-120.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/viewer_chrome_render",
+      "renderer_sha256": "5ae08e8034a614189f310723a7ba1210f43a88b675f431097c6375c85a02e49d",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/snap-overlay/snap-overlay-dark.png",
+      "actual_png_sha256": "d8b36b035e76682596c981872a9c4cafc55fc716d3b291f65e87669199775936",
+      "category": "snap-overlay",
+      "expected_path": "tests/editor/snap-overlay-golden/snap-overlay-dark.png",
+      "expected_png_sha256": "d8b36b035e76682596c981872a9c4cafc55fc716d3b291f65e87669199775936",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "snap-overlay-dark.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/editor_snap_overlay_render",
+      "renderer_sha256": "5b4a177cc907639654fdc522217b906d190688af51ddf8dda04ea34ed81ba925",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/snap-overlay/snap-overlay-light.png",
+      "actual_png_sha256": "8a54362e026eda8848c8999c86e0c85ae13abd3145f8462ca71e67ae36f306da",
+      "category": "snap-overlay",
+      "expected_path": "tests/editor/snap-overlay-golden/snap-overlay-light.png",
+      "expected_png_sha256": "8a54362e026eda8848c8999c86e0c85ae13abd3145f8462ca71e67ae36f306da",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "snap-overlay-light.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/editor_snap_overlay_render",
+      "renderer_sha256": "5b4a177cc907639654fdc522217b906d190688af51ddf8dda04ea34ed81ba925",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/accessibility-localization/accessibility-chrome-dark-200.png",
+      "actual_png_sha256": "3f6f509ad70d8514df316a5bf4137015292ce34a010a841b25996c3541dd1046",
+      "category": "accessibility-localization",
+      "expected_path": "tests/editor/accessibility-localization-golden/accessibility-chrome-dark-200.png",
+      "expected_png_sha256": "3f6f509ad70d8514df316a5bf4137015292ce34a010a841b25996c3541dd1046",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "accessibility-chrome-dark-200.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/editor_chrome_render",
+      "renderer_sha256": "946b40be2433cb44adf80988f64a2455b4b7b0419b98ad328443747f67bf6fd7",
+      "result": "pass"
+    },
+    {
+      "actual_image": "actual/accessibility-localization/accessibility-chrome-light-200.png",
+      "actual_png_sha256": "f01bdb311ce18775614b8fcb54d61f629ebe555b9566f1327704a345726f3004",
+      "category": "accessibility-localization",
+      "expected_path": "tests/editor/accessibility-localization-golden/accessibility-chrome-light-200.png",
+      "expected_png_sha256": "f01bdb311ce18775614b8fcb54d61f629ebe555b9566f1327704a345726f3004",
+      "metrics": {
+        "actual_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "bounding_box": null,
+        "differing_channels": 0,
+        "differing_pixels": 0,
+        "dimensions_equal": true,
+        "exact_equal_pixels": 1024000,
+        "expected_dimensions": {
+          "height": 800,
+          "width": 1280
+        },
+        "maximum_channel_delta": 0,
+        "mean_absolute_channel_delta": 0,
+        "metrics_note": "PNG bytes match exactly; pixel decoding was unnecessary.",
+        "pixel_samples_equal": true
+      },
+      "name": "accessibility-chrome-light-200.png",
+      "png_byte_equal": true,
+      "renderer_path": "build/mac-debug/bin/editor_chrome_render",
+      "renderer_sha256": "946b40be2433cb44adf80988f64a2455b4b7b0419b98ad328443747f67bf6fd7",
+      "result": "pass"
+    }
+  ],
+  "metadata": {
+    "apple_interface_scale_factor": null,
+    "architecture": "arm64",
+    "display_scale_note": "Renderer paths are offscreen/headless; display data is context, not a proven cause.",
+    "display_scale_summary": {
+      "available": true,
+      "display_count_hint": 1,
+      "scale_lines": [
+        "Resolution: 1920 x 1080 (1080p FHD - Full High Definition)",
+        "UI Looks like: 1920 x 1080 @ 60.00Hz",
+        "Main Display: Yes",
+        "Mirror: Off",
+        "Online: Yes"
+      ]
+    },
+    "macos_build": "26A425",
+    "macos_version": "27.0",
+    "os": "macOS-27.0-arm64-arm-64bit",
+    "source_branch": "integrate/final-ui-docs",
+    "source_commit": "acfe224645b29d8e98623e69b17b407cfba05f94"
+  },
+  "purpose": "Diagnostic image comparison only; expected UI goldens and checks are read-only.",
+  "schema_version": 1,
+  "summary": {
+    "categories": {
+      "accessibility-localization": {
+        "compared": 2,
+        "mismatch_names": [],
+        "mismatches": 0,
+        "unbaselined": 0
+      },
+      "editor-style": {
+        "compared": 32,
+        "mismatch_names": [],
+        "mismatches": 0,
+        "unbaselined": 0
+      },
+      "native-shell-macos-27": {
+        "compared": 14,
+        "mismatch_names": [],
+        "mismatches": 0,
+        "unbaselined": 0
+      },
+      "snap-overlay": {
+        "compared": 2,
+        "mismatch_names": [],
+        "mismatches": 0,
+        "unbaselined": 0
+      }
+    },
+    "exact_matches": 50,
+    "images_compared": 50,
+    "mismatches": 0,
+    "unbaselined": 0
+  }
+}

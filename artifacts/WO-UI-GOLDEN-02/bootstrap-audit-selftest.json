@@ -1,0 +1,6 @@
+{
+  "case": "missing macOS 15 native profile",
+  "result": "unbaselined",
+  "actual_image_retained": "actual/native-shell-macos-15/welcome-empty-light.png",
+  "sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b"
+}
