@@ -8,8 +8,7 @@
   "tests.e2e.test_dev_final"
  ],
  "exit_code": 0,
- "duration_s": 0.032433271408081055,
+ "duration_s": 0.058506011962890625,
  "stdout": "",
- "stderr": ".\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n",
- "note": "Re-executed after the revision-2 spec corrected the module path (tests.test_dev_final does not exist)."
+ "stderr": ".\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n"
 }

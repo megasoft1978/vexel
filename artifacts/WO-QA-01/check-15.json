@@ -8,7 +8,7 @@
   "--ready"
  ],
  "exit_code": 0,
- "duration_s": 0.029217004776000977,
- "stdout": "valid WO-QA-01 revision 1 sha256 e6566e887cd0ec343c14f854b0b25f2d745fe5252f4041383198ececb4561177\n",
+ "duration_s": 0.02680516242980957,
+ "stdout": "valid WO-QA-01 revision 2 sha256 2d778c85910dbf1720f76b7937da0839e177d3f87dcce7f2ddf7dae28ba666cf\n",
  "stderr": ""
 }
