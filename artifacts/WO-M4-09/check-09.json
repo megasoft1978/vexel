@@ -1,0 +1,13 @@
+{
+ "index": 9,
+ "frozen_command": "git diff --check",
+ "argv": [
+  "git",
+  "diff",
+  "--check"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.012243986129760742,
+ "stdout": "",
+ "stderr": ""
+}

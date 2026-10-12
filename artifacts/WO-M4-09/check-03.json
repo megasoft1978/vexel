@@ -1,0 +1,14 @@
+{
+ "index": 3,
+ "frozen_command": "cmake --build --preset mac-release",
+ "argv": [
+  "cmake",
+  "--build",
+  "--preset",
+  "mac-release"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.019195079803466797,
+ "stdout": "ninja: no work to do.\n",
+ "stderr": ""
+}

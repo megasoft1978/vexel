@@ -23,6 +23,32 @@ reported as `unmapped sources` so the map cannot silently rot. Add a prefix when
   box, max/mean channel delta, the first differing pixels with both colours, and a red-highlight image.
   Exit status 0 means identical within tolerance. Use it for golden failures and before/after UI work.
 
+## Real-corpus render diagnostics
+
+`scripts/corpus_render_report.py` measures a **full-document render** for every file in the pinned
+real corpus and records the error category and source offset when the render fails. It exists because
+`reports/M4/head-to-head.md` measures a synthetic single-element preview built by
+`svg_index_make_preview_source`, which is not file coverage; see
+`docs/adr/0016-product-target-and-gates.md`.
+
+```sh
+python3 scripts/corpus_render_report.py \
+  --corpus /Users/megasoft78/Desktop/Freelance/vexel-corpus-real \
+  --output-json reports/M4/render-diagnostics.json \
+  --output-markdown reports/M4/render-diagnostics.md
+```
+
+* The corpus lives outside the repository and is read-only; nothing is copied in.
+* The manifest SHA-256 is pinned in the script. A mismatch aborts with a non-zero exit and writes no
+  report, so the tool can never silently describe different inputs.
+* Files larger than `--max-bytes` (default 32 MiB) are recorded as `skipped` with a reason, so the
+  report always accounts for every manifest entry.
+* The JSON output is byte-reproducible: wall-clock timing is excluded by design and only the Markdown
+  summary reports elapsed milliseconds.
+* `tests/test_corpus_render_report.py` covers the digest guard, diagnostic parsing and verdict
+  mapping, size/skip accounting, the missing-source path, and JSON determinism, using an injected
+  fake runner so it needs neither the corpus nor a built binary.
+
 ## Rules of thumb
 
 * Write the regression test first and confirm it fails before the fix (`./dev t -k name`).

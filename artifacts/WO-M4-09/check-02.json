@@ -1,0 +1,13 @@
+{
+ "index": 2,
+ "frozen_command": "cmake --preset mac-release",
+ "argv": [
+  "cmake",
+  "--preset",
+  "mac-release"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.09645390510559082,
+ "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Release\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-release\n",
+ "stderr": ""
+}

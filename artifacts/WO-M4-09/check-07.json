@@ -1,0 +1,14 @@
+{
+ "index": 7,
+ "frozen_command": "python3 scripts/ledger.py validate ledger.jsonl",
+ "argv": [
+  "python3",
+  "scripts/ledger.py",
+  "validate",
+  "ledger.jsonl"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.06604504585266113,
+ "stdout": "valid ledger: 467 entries\n",
+ "stderr": ""
+}
