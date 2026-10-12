@@ -1,0 +1,4 @@
+ok   build              0.1s
+ok   ctest -R all              3.3s  100% tests passed, 0 tests failed out of 82
+ok   python mcp.agent_scenarios.   2.5s  Ran 70 tests in 2.452s
+PASS  total 6.0s   (slow Python skipped; --full or ./dev t -k <name>)

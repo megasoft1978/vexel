@@ -1,0 +1,19 @@
+ok   build              4.6s
+FAIL ctest -R viewer-timelin   0.4s  50% tests passed, 1 tests failed out of 2
+  failed: viewer-timeline
+  --- first failure: viewer-timeline
+  Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/build/mac-debug
+  Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/build/mac-debug
+      Start 67: viewer-timeline
+  1/1 Test #67: viewer-timeline ..................***Failed    0.00 sec
+  /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/tests/app/viewer_timeline_test.c:507: check failed: timeline.first_track == 1U
+
+
+  0% tests passed, 1 tests failed out of 1
+
+  Total Test time (real) =   0.00 sec
+
+  The following tests FAILED:
+   67 - viewer-timeline (Failed)
+ok   python python                 0.2s  Ran 0 tests in 0.000s
+FAIL  total 5.2s

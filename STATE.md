@@ -1,5 +1,7 @@
 # Project state
 
+- WO-UI-DOCS-01 revision 3 is committed and pushed on `wo/WO-UI-DOCS-01` at `51f7198f3735c1f7a3dc2195ef4062e620767c56`. It contains scoped timeline scrolling/reveal, controls, track labels, README/Pages content, and three verified demo assets. Its independent review failed on clipped Fit/Loop glyphs; no merge or Pages publication. WO-UI-DOCS-02 revision 1 is active on that commit and replaces the fixed-size atlas calls with scale-aware local glyphs. Committed at `7af65064598830fe18380866bd7fff63f0af364e`; the new mask regression passes at 1×/2×, focused tests/goldens pass, and the full suite passes 82/82 CTests and 70/70 Python. Fresh independent review passed with no findings. Pushed as `wo/WO-UI-DOCS-02` at `0647e4991fe18c2ac1d7d6e3c533d0ea82b3ca73`; integration remains pending. Evidence: `artifacts/WO-UI-DOCS-01/` and `artifacts/WO-UI-DOCS-02/`. M4-06 remains superseded without acceptance.
+
 - Update 2026-10-11: `WO-CI-NIGHTLY-01` implements the frozen parallel-safe
   nightly CI correction from base `c43fa82`, with implementation commit
   `0253955`. Workflow structural checks,

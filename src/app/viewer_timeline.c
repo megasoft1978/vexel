@@ -248,11 +248,27 @@ bool viewer_timeline_track_label(const viewer_timeline *timeline, size_t track_i
     char tag[VIEWER_TIMELINE_TAG_CAP] = "element";
     char id[VIEWER_TIMELINE_ID_CAP] = {0};
     (void)read_target_name(timeline, track, tag, id);
-    const char *attribute = svg_anim_attribute_name(track->attribute);
+    const char *attribute = track->kind == SVG_ANIM_KIND_TRANSFORM ? "transform" :
+        svg_anim_attribute_name(track->attribute);
     if (attribute == NULL || attribute[0] == '\0') attribute = "animation";
     int amount = id[0] != '\0' ?
         snprintf(buffer, capacity, "%s#%s / %s", tag, id, attribute) :
         snprintf(buffer, capacity, "%s / %s", tag, attribute);
+    base_bytes source = timeline->document->animation.source;
+    if (track->id.length > 0U && track->id.offset <= source.len &&
+        track->id.length <= source.len - track->id.offset &&
+        track->id.length <= 4096U) {
+        const char *type = track->kind == SVG_ANIM_KIND_TRANSFORM ?
+            (track->transform_type == SVG_ANIM_TRANSFORM_TRANSLATE ? "translate" :
+             track->transform_type == SVG_ANIM_TRANSFORM_SCALE ? "scale" :
+             track->transform_type == SVG_ANIM_TRANSFORM_ROTATE ? "rotate" :
+             track->transform_type == SVG_ANIM_TRANSFORM_SKEW_X ? "skewX" : "skewY") :
+            track->kind == SVG_ANIM_KIND_MOTION ? "motion" :
+            track->kind == SVG_ANIM_KIND_SET ? "set" : "animate";
+        amount = snprintf(buffer, capacity, "#%.*s / %s (%s)",
+            (int)track->id.length, (const char *)source.ptr + track->id.offset,
+            attribute, type);
+    }
     size_t same_attribute_before = 0U;
     for (size_t index = 0U; index < track_index; ++index) {
         const svg_anim_track *prior = &timeline->document->animation.tracks[index];
@@ -423,13 +439,28 @@ void viewer_timeline_sync_selection(viewer_timeline *timeline, viewer_editor *ed
         const svg_anim_track *track = &timeline->document->animation.tracks[index];
         if (track->target_offset >= selection.offset &&
             track->target_offset - selection.offset < selection.length) {
+            if (timeline->selected_track != index)
+                timeline->reveal_selection_pending = true;
             timeline->selected_track = index;
-            if (index < timeline->first_track ||
-                index - timeline->first_track >= VIEWER_TIMELINE_VISIBLE_TRACK_CAP)
-                timeline->first_track = index;
             return;
         }
     }
+}
+
+void viewer_timeline_reveal_selected(viewer_timeline *timeline,
+    const viewer_timeline_layout *layout)
+{
+    if (timeline == NULL || layout == NULL || layout->collapsed ||
+        layout->visible_row_capacity == 0U ||
+        timeline->selected_track >= layout->track_count) return;
+    size_t rows = layout->visible_row_capacity;
+    size_t maximum = layout->track_count > rows ? layout->track_count - rows : 0U;
+    size_t first = layout->first_track;
+    if (timeline->selected_track < first) first = timeline->selected_track;
+    else if (timeline->selected_track - first >= rows)
+        first = timeline->selected_track - rows + 1U;
+    timeline->first_track = first > maximum ? maximum : first;
+    timeline->reveal_selection_pending = false;
 }
 
 uint32_t viewer_timeline_key_hit_radius(double backing_scale)

@@ -1,0 +1,97 @@
+[
+  {
+    "document": "README.md",
+    "link": "docs/examples/README.md",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "src/app/README.md",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "src/svg/animation/README.md",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "src/mcp/README.md",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "docs/examples/un-cuore-per-due-vector-rig-preview-v3.gif",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "docs/examples/un-cuore-per-due-vector-rig-v2.svg",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "docs/examples/un-cuore-per-due-vector-rig-preview-v3.gif",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "docs/examples/v3-contact-sheet-8fps.png",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "docs/examples/README.md",
+    "exists": true
+  },
+  {
+    "document": "README.md",
+    "link": "LICENSE",
+    "exists": true
+  },
+  {
+    "document": "docs/index.html",
+    "link": "examples/README.md",
+    "exists": true
+  },
+  {
+    "document": "docs/index.html",
+    "link": "examples/un-cuore-per-due-vector-rig-preview-v3.gif",
+    "exists": true
+  },
+  {
+    "document": "docs/index.html",
+    "link": "examples/un-cuore-per-due-vector-rig-v2.svg",
+    "exists": true
+  },
+  {
+    "document": "docs/index.html",
+    "link": "examples/un-cuore-per-due-vector-rig-preview-v3.gif",
+    "exists": true
+  },
+  {
+    "document": "docs/index.html",
+    "link": "examples/v3-contact-sheet-8fps.png",
+    "exists": true
+  },
+  {
+    "document": "docs/index.html",
+    "link": "examples/README.md",
+    "exists": true
+  },
+  {
+    "document": "docs/examples/README.md",
+    "link": "un-cuore-per-due-vector-rig-v2.svg",
+    "exists": true
+  },
+  {
+    "document": "docs/examples/README.md",
+    "link": "un-cuore-per-due-vector-rig-preview-v3.gif",
+    "exists": true
+  },
+  {
+    "document": "docs/examples/README.md",
+    "link": "v3-contact-sheet-8fps.png",
+    "exists": true
+  }
+]

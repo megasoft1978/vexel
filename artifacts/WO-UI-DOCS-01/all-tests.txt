@@ -1,0 +1,19 @@
+ok   build              0.1s
+FAIL ctest -R all              3.3s  99% tests passed, 1 tests failed out of 82
+  failed: native-shell-goldens
+  --- first failure: native-shell-goldens
+  Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/build/mac-debug
+  Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/build/mac-debug
+      Start 26: native-shell-goldens
+  1/1 Test #26: native-shell-goldens .............***Failed    0.10 sec
+  welcome-empty-light.png differs from its native UI golden
+
+
+  0% tests passed, 1 tests failed out of 1
+
+  Total Test time (real) =   0.10 sec
+
+  The following tests FAILED:
+   26 - native-shell-goldens (Failed)
+ok   python mcp.agent_scenarios.   2.4s  Ran 70 tests in 2.371s
+FAIL  total 6.0s   (slow Python skipped; --full or ./dev t -k <name>)

@@ -36,6 +36,9 @@ typedef struct viewer_timeline {
     double zoom_factor;
     double playback_speed;
     double drag_start_y;
+    double hover_x;
+    double hover_y;
+    bool hover_valid;
     size_t first_track;
     size_t selected_track;
     uint16_t dock_height_points;
@@ -49,6 +52,7 @@ typedef struct viewer_timeline {
     size_t dragging_key_index;
     ui_widget_number_field easing_fields[4];
     svg_anim_calc_mode easing_mode;
+    bool reveal_selection_pending;
     bool playing;
     bool loop;
     bool dock_open;
@@ -89,6 +93,7 @@ typedef struct viewer_timeline_layout {
     ui_rect track_rows[VIEWER_TIMELINE_VISIBLE_TRACK_CAP];
     size_t first_track;
     size_t visible_track_count;
+    size_t visible_row_capacity;
     size_t track_count;
     bool collapsed;
     bool compact;
@@ -129,6 +134,11 @@ bool viewer_timeline_dock_set_open(viewer_timeline *timeline, bool open);
 bool viewer_timeline_dock_resize(viewer_timeline *timeline, int32_t delta_points);
 void viewer_timeline_set_reduced_motion(viewer_timeline *timeline, bool reduced_motion);
 void viewer_timeline_sync_selection(viewer_timeline *timeline, viewer_editor *editor);
+bool viewer_timeline_tooltip(const viewer_timeline *timeline,
+    const viewer_timeline_layout *layout, uint32_t width, uint32_t height,
+    char *buffer, size_t capacity, ui_rect *out_bounds);
+void viewer_timeline_reveal_selected(viewer_timeline *timeline,
+    const viewer_timeline_layout *layout);
 uint32_t viewer_timeline_key_hit_radius(double backing_scale);
 double viewer_timeline_view_duration(const viewer_timeline *timeline);
 bool viewer_timeline_toggle_play(viewer_timeline *timeline, double now_seconds);

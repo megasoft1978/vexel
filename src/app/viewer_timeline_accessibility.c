@@ -2,12 +2,13 @@
 
 #include "platform/macos/platform_accessibility.h"
 #include "viewer_editor.h"
+#include "platform/platform_localization.h"
 
 #include <stdio.h>
 #include <string.h>
 
 #define VIEWER_TIMELINE_A11Y_BASE UINT32_C(0x71000000)
-#define VIEWER_TIMELINE_A11Y_TEXT_LIMIT 512U
+#define VIEWER_TIMELINE_A11Y_TEXT_LIMIT 4096U
 
 enum {
     TIMELINE_A11Y_PANEL = VIEWER_TIMELINE_A11Y_BASE + 1U,
@@ -88,6 +89,10 @@ static bool add_timeline_node(ui_tree *tree, uint32_t id, uint32_t parent,
     ui_role role, const char *label, const char *value, uint32_t state,
     ui_rect bounds)
 {
+    char localized[4096] = {0};
+    size_t localized_length = 0U;
+    if (label != NULL && platform_localization_copy_default(label, strlen(label),
+            localized, sizeof(localized), &localized_length)) label = localized;
     size_t label_length = label == NULL ? 0U : strlen(label);
     size_t value_length = value == NULL ? 0U : strlen(value);
     ui_node_spec spec = {
@@ -194,6 +199,13 @@ static bool build_timeline_tree(viewer_timeline *timeline,
         char speed[16];
         int speed_amount = snprintf(speed, sizeof(speed), "%.2g×", timeline->playback_speed);
         if (speed_amount < 0 || (size_t)speed_amount >= sizeof(speed)) return false;
+        char track_range[128];
+        size_t before = layout->first_track;
+        size_t after = layout->track_count - before - layout->visible_track_count;
+        int range_amount = snprintf(track_range, sizeof(track_range),
+            "%zu tracks; %zu visible; %zu above; %zu below",
+            layout->track_count, layout->visible_track_count, before, after);
+        if (range_amount < 0 || (size_t)range_amount >= sizeof(track_range)) return false;
         if (!add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_PLAY,
                 TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON,
                 timeline->playing ? "Pause animation" : "Play animation", NULL, 0U,
@@ -211,7 +223,7 @@ static bool build_timeline_tree(viewer_timeline *timeline,
                 TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON, "Fit timeline to work area",
                 NULL, 0U, layout->fit_button) ||
             !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_TRACKS,
-                TIMELINE_A11Y_PANEL, UI_ROLE_LIST, "Animation tracks", NULL, 0U,
+                TIMELINE_A11Y_PANEL, UI_ROLE_LIST, "Animation tracks", track_range, 0U,
                 layout->panel)) return false;
         if (!add_easing_semantics(&timeline_accessibility_tree, timeline, layout))
             return false;
@@ -220,7 +232,7 @@ static bool build_timeline_tree(viewer_timeline *timeline,
     for (size_t row = 0U; row < row_limit; ++row) {
         if (layout->collapsed) break;
         size_t track_index = layout->first_track + row;
-        char label[128] = {0};
+        char label[4096] = {0};
         size_t label_length = 0U;
         if (!viewer_timeline_track_label(timeline, track_index, label,
                 sizeof(label), &label_length)) return false;

@@ -1,0 +1,68 @@
+{
+  "images": [
+    {
+      "file": "timeline-dark-1x.png",
+      "size": [
+        1280,
+        800
+      ],
+      "before_sha256": "3a4a1e9b75a476537cf4d571a46b20524b32e1be6c90e484d59512b4ec2075c0",
+      "after_sha256": "6027d83990b19af481d11c2fb2dedd7cdb205dcd970ad94fd765dc9feb4f74cb",
+      "changed_bbox": [
+        359,
+        590,
+        369,
+        600
+      ],
+      "changed_pixel_count": 56
+    },
+    {
+      "file": "timeline-dark-2x.png",
+      "size": [
+        2560,
+        1600
+      ],
+      "before_sha256": "287781dabbbb373da3c867e475fc02842c7648c5139324f5ec7c71063cd8cabc",
+      "after_sha256": "4e2f61349f26b5e50716b8553d86ab2b358fdb67b01838e5c4d1c335348311ff",
+      "changed_bbox": [
+        718,
+        1180,
+        738,
+        1200
+      ],
+      "changed_pixel_count": 188
+    },
+    {
+      "file": "timeline-light-1x.png",
+      "size": [
+        1280,
+        800
+      ],
+      "before_sha256": "2c1d2bb65c9b0f95e6a54d7c13b4a3e4032f5ed9e5426c8ab7a0bbe9aaded51b",
+      "after_sha256": "7945f5844f9845738c125b7e54b8f68f5b2e2c8d803546f3a63d326abd75f474",
+      "changed_bbox": [
+        359,
+        590,
+        369,
+        600
+      ],
+      "changed_pixel_count": 56
+    },
+    {
+      "file": "timeline-light-2x.png",
+      "size": [
+        2560,
+        1600
+      ],
+      "before_sha256": "12349236e256301e32d6c086695678f950f0567a2a203b5fa0f5906324b85fd4",
+      "after_sha256": "9d94a9a5216d6ef55a9d9cc0ec022b23b92e03e9a0969fed2cc1c55b092b876f",
+      "changed_bbox": [
+        718,
+        1180,
+        738,
+        1200
+      ],
+      "changed_pixel_count": 188
+    }
+  ]
+}

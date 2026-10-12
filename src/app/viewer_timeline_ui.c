@@ -2,6 +2,7 @@
 
 #include "platform/platform_text_ui.h"
 #include "ui/ui_draw.h"
+#include "ui/ui_widget_paint_internal.h"
 #include "ui/ui_widgets.h"
 #include "viewer_chrome.h"
 #include "viewer_editor.h"
@@ -313,7 +314,7 @@ static void paint_track_lane(ui_widget_canvas *canvas,
             paint_hline(canvas, row_rect.x, row_rect.y, row_rect.width,
                 canvas->tokens.control_edge);
     }
-    char label[128] = {0};
+    char label[4096] = {0};
     size_t label_length = 0U;
     if (viewer_timeline_track_label(timeline, track_index, label,
             sizeof(label), &label_length)) {
@@ -427,6 +428,108 @@ static size_t utf8_prefix(const char *text, size_t length, size_t maximum)
     return amount;
 }
 
+static void paint_fit_glyph(const ui_widget_canvas *canvas, ui_rect glyph,
+    uint32_t color)
+{
+    uint32_t stroke = glyph.width >= 14U ? 2U : 1U;
+    uint32_t inset = stroke;
+    uint32_t arm = glyph.width / 3U;
+    if (arm <= stroke) arm = stroke + 1U;
+    uint32_t right = glyph.x + glyph.width - inset - arm;
+    uint32_t bottom = glyph.y + glyph.height - inset - arm;
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, glyph.y + inset, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, glyph.y + inset, stroke, arm}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, glyph.y + inset, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right + arm - stroke, glyph.y + inset, stroke, arm}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, bottom + arm - stroke, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){glyph.x + inset, bottom, stroke, arm}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, bottom + arm - stroke, arm, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right + arm - stroke, bottom, stroke, arm}, color);
+}
+
+static void paint_loop_glyph(const ui_widget_canvas *canvas, ui_rect glyph,
+    uint32_t color)
+{
+    uint32_t stroke = glyph.width >= 14U ? 2U : 1U;
+    uint32_t left = glyph.x + 2U;
+    uint32_t right = glyph.x + glyph.width - 2U - stroke;
+    uint32_t top = glyph.y + 2U;
+    uint32_t bottom = glyph.y + glyph.height - 2U - stroke;
+    uint32_t middle_left = glyph.x + glyph.width / 4U;
+    uint32_t middle_right = glyph.x + (glyph.width * 3U) / 4U - stroke;
+    ui_widget_paint_rect(canvas,
+        (ui_rect){middle_left + stroke, top, middle_right - middle_left, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, top + stroke, stroke, glyph.height / 4U}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right, glyph.y + glyph.height / 2U,
+            stroke, glyph.height / 4U}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){middle_left + stroke, bottom,
+            middle_right - middle_left, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){left, glyph.y + glyph.height / 2U,
+            stroke, glyph.height / 4U}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){left, top + stroke, stroke, glyph.height / 4U}, color);
+    /* Arrowhead at the upper right marks the repeating direction. */
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right - stroke, glyph.y + 1U, stroke * 2U + 1U, stroke}, color);
+    ui_widget_paint_rect(canvas,
+        (ui_rect){right + stroke, glyph.y + 1U, stroke, stroke * 2U + 1U}, color);
+}
+
+/* Project-authored media glyphs; isolated from the shared icon atlas. */
+static void paint_media_control(ui_widget_canvas *canvas, ui_rect pixels,
+    bool pause, viewer_timeline_mode mode, bool playback, bool fit)
+{
+    ui_rect button;
+    if (!rect_to_widget(pixels, canvas->backing_scale, &button)) return;
+    ui_widget_draw_spec spec = {.kind = UI_WIDGET_BUTTON_SECONDARY,
+        .bounds = button, .state = UI_CONTROL_REST};
+    (void)ui_widget_paint(canvas, &spec);
+    uint32_t side = 16U;
+    uint32_t extent = button.width < button.height ? button.width : button.height;
+    if (extent < side + 12U) side = extent > 12U ? extent - 12U : extent;
+    ui_rect glyph = {button.x + (button.width - side) / 2U,
+        button.y + (button.height - side) / 2U, side, side};
+    uint32_t color = canvas->tokens.text_primary;
+    if (fit) { paint_fit_glyph(canvas, glyph, color); return; }
+    if (!playback && mode == VIEWER_TIMELINE_MODE_LOOP) {
+        paint_loop_glyph(canvas, glyph, color);
+        return;
+    }
+    if (!playback && mode == VIEWER_TIMELINE_MODE_PING_PONG) {
+        ui_widget_paint_rect(canvas, (ui_rect){glyph.x, glyph.y + side / 2U,
+            side, 1U}, color);
+        for (uint32_t row = 0U; row < side / 4U; ++row) {
+            ui_widget_paint_rect(canvas, (ui_rect){glyph.x + row,
+                glyph.y + side / 2U - row, 1U, row * 2U + 1U}, color);
+            ui_widget_paint_rect(canvas, (ui_rect){glyph.x + side - row - 1U,
+                glyph.y + side / 2U - row, 1U, row * 2U + 1U}, color);
+        }
+        return;
+    }
+    if (playback && pause) {
+        ui_widget_paint_rect(canvas, (ui_rect){glyph.x + 2U, glyph.y, 4U, side}, color);
+        ui_widget_paint_rect(canvas, (ui_rect){glyph.x + side - 6U, glyph.y, 4U, side}, color);
+        return;
+    }
+    for (uint32_t row = 0U; row < side; ++row) {
+        uint32_t distance = row < side / 2U ? row : side - row - 1U;
+        ui_widget_paint_rect(canvas, (ui_rect){glyph.x + 2U, glyph.y + row,
+            distance + 1U, 1U}, color);
+    }
+}
+
 static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
     viewer_editor *editor, uint8_t *rgba, size_t capacity, uint32_t width,
     uint32_t height, size_t stride, double backing_scale, ui_theme theme,
@@ -451,6 +554,12 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
     viewer_timeline_layout layout;
     if (!viewer_timeline_layout_compute(timeline, width, height,
             backing_scale, &layout)) return false;
+    timeline->first_track = layout.first_track;
+    if (timeline->reveal_selection_pending && !layout.collapsed) {
+        viewer_timeline_reveal_selected(timeline, &layout);
+        if (!viewer_timeline_layout_compute(timeline, width, height,
+                backing_scale, &layout)) return false;
+    }
     uint32_t widget_scale = widget_scale_for(backing_scale);
     ui_widget_canvas canvas;
     if (!ui_widget_canvas_init(&canvas, rgba, capacity, width, height, stride,
@@ -478,11 +587,6 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
                     timeline->time_seconds, duration));
         if (time_amount < 0 || (size_t)time_amount >= sizeof(time_text))
             (void)snprintf(time_text, sizeof(time_text), "-- / --s");
-        const char *mode = layout.compact ?
-            (timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Loop" :
-                timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ? "Bounce" : "Once") :
-            (timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Loop" :
-                timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ? "Ping-Pong" : "One Shot");
         char speed[16];
         int speed_amount = snprintf(speed, sizeof(speed), "%.2g×", timeline->playback_speed);
         if (speed_amount < 0 || (size_t)speed_amount >= sizeof(speed))
@@ -493,18 +597,16 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
             timeline->preview_failed ? "Preview unavailable" : time_text,
             timeline->preview_failed ? sizeof("Preview unavailable") - 1U : strlen(time_text),
             NULL, 0U, 0.0, false);
-        (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY, layout.play_button,
-            UI_CONTROL_REST, timeline->playing ? "Pause" : "Play",
-            timeline->playing ? sizeof("Pause") - 1U : sizeof("Play") - 1U,
-            NULL, 0U, 0.0, false);
+        paint_media_control(&canvas, layout.play_button, timeline->playing,
+            timeline->mode, true, false);
         if (layout.mode_button.width > 0U)
-            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.mode_button,
-                UI_CONTROL_REST, mode, strlen(mode), NULL, 0U, 0.0, false);
+            paint_media_control(&canvas, layout.mode_button, false,
+                timeline->mode, false, false);
         if (layout.speed_button.width > 0U)
             (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.speed_button,
                 UI_CONTROL_REST, speed, strlen(speed), NULL, 0U, 0.0, false);
-        (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.fit_button,
-            UI_CONTROL_REST, "Fit", sizeof("Fit") - 1U, NULL, 0U, 0.0, false);
+        paint_media_control(&canvas, layout.fit_button, false,
+            timeline->mode, false, true);
         paint_ruler(&canvas, timeline, &layout);
         for (size_t row = 0U; row < layout.visible_track_count; ++row) {
             paint_track_lane(&canvas, timeline, &layout, row, layout.first_track + row);
@@ -516,6 +618,12 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
     viewer_timeline_easing_layout easing_layout;
     if (viewer_timeline_easing_layout_compute(&layout, &easing_layout))
         viewer_timeline_easing_paint(timeline, &layout, &easing_layout, &canvas);
+    char tooltip[4096] = {0};
+    ui_rect tooltip_bounds;
+    if (viewer_timeline_tooltip(timeline, &layout, width, height,
+            tooltip, sizeof(tooltip), &tooltip_bounds))
+        (void)paint_widget(&canvas, UI_WIDGET_TOOLTIP, tooltip_bounds,
+            UI_CONTROL_REST, tooltip, strlen(tooltip), NULL, 0U, 0.0, false);
     (void)viewer_timeline_publish_accessibility(timeline, editor, &layout, width, height,
         backing_scale, theme, increased_contrast);
     return true;

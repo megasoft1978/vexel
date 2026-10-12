@@ -1,0 +1,16 @@
+{
+  "pristine_base": {
+    "sha256": "011d21b2a99f4ba6a7cbd7d2dc666f11344e8dfc3f55ba3a3824e3d7b1c07fab",
+    "bytes": 77050
+  },
+  "candidate": {
+    "sha256": "011d21b2a99f4ba6a7cbd7d2dc666f11344e8dfc3f55ba3a3824e3d7b1c07fab",
+    "bytes": 77050
+  },
+  "protected_golden": {
+    "sha256": "51e3d5c6af3745b64205f24e2825857f0aa395cfb381b4a51e9809175bc42c0b",
+    "bytes": 30968
+  },
+  "candidate_matches_pristine_base": true,
+  "golden_unchanged": true
+}
