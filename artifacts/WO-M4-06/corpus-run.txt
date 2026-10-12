@@ -6,7 +6,7 @@ Preset CMake variables:
 
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-release
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M4-06-f7efb3fc-329c-477a-8575-5de83f1f78f2/build/mac-release
 ninja: no work to do.
 Preset CMake variables:
 
@@ -16,7 +16,7 @@ Preset CMake variables:
 
 -- Configuring done (0.0s)
 -- Generating done (0.0s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/build/mac-debug
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-M4-06-f7efb3fc-329c-477a-8575-5de83f1f78f2/build/mac-debug
 ninja: no work to do.
 generated-cad_t1: unsupported,unsupported,unsupported
 generated-cad_t2: unsupported,unsupported,unsupported
@@ -77,3 +77,4 @@ commons-spain-languages-de-svg: unsupported
 natural-earth-world-map-blank: ok,ok,ok
 natural-earth-world-map-countries: ok,ok,ok
 reported 58 files / 116 fresh trials
+exit=0

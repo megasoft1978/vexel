@@ -1,0 +1,50 @@
+{
+  "work_order": "WO-M4-06 revision 5",
+  "baseline_commit": "fb09369fa77475707d8a1e9cde0736f033bf7130",
+  "candidate_report": "reports/M4/head-to-head.json",
+  "manifest_entries": 58,
+  "per_tier": {
+    "T1": {
+      "baseline": {
+        "ok": 2,
+        "unsupported": 10
+      },
+      "candidate": {
+        "ok": 2,
+        "unsupported": 10
+      }
+    },
+    "T2": {
+      "baseline": {
+        "ok": 0,
+        "unsupported": 17
+      },
+      "candidate": {
+        "ok": 0,
+        "unsupported": 17
+      }
+    },
+    "T3": {
+      "baseline": {
+        "ok": 0,
+        "unsupported": 26
+      },
+      "candidate": {
+        "ok": 0,
+        "unsupported": 26
+      }
+    },
+    "T4": {
+      "baseline": {
+        "ok": 0,
+        "unsupported": 3
+      },
+      "candidate": {
+        "ok": 0,
+        "unsupported": 3
+      }
+    }
+  },
+  "supported_file_delta": 0,
+  "limitation": "Open/index plus first supported preview only; not full-render parity. Gradient/clip/use support did not make additional corpus files previewable because each still contains other unsupported features."
+}

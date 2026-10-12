@@ -1,237 +1,301 @@
 {
-  "work_order": "WO-M4-06 revision 4",
-  "tested_worktree_base_commit": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
-  "tested_changes_committed": false,
-  "status": "five P2 findings repaired; merge content resolved in worktree; acceptance incomplete due sandbox CTest services and Git index lock",
-  "review_finding_repairs": {
-    "use_transform_order": "fixed composition to use.transform \u00b7 translate(x,y) \u00b7 symbol viewBox mapping; non-commuting scale/rotate/symbol regression and rsvg fixture pass",
-    "transformed_paint_and_clip_units": "current inverse affine is passed through resolution/sampling; userSpaceOnUse maps samples to element user space; objectBoundingBox uses untransformed local bounds; singular transforms return unsupported",
-    "stop_style_and_class": "stop-color/stop-opacity use CSS cascade; inline and class styles pass; currentColor, inherit, unresolved classes, and matched unsupported declarations diagnose unsupported",
-    "declared_group_clips": "clip-path is cleared from inherited style; group/use clips use whole subtree bounds, resolve once per declaration, and intersect with nested clips",
-    "allocation_tests": "actual allocator hook measures decode+render total/peak, token arrays, fixed index, bounded clip copies, and exact 8x8 output; source hashes are checked around live use/paint/clip documents",
-    "indexed_paint_clip_lookup": "paint and clip references use the prebuilt id index; 512 late-gradient shapes are bounded by a probe counter",
-    "documentation": "paint, clip, CSS, shape, and traversal READMEs describe transform, group clip, stop style, wrapper, and stricter byte/instance limits"
-  },
-  "reference_traversal_bounds": {
-    "source_bytes_max": 16777216,
-    "source_map_bytes": 0,
-    "full_document_rewrite_bytes": 0,
-    "use_subtree_copy_bytes": 0,
-    "use_reference_depth_max": 16,
-    "use_target_span_limit_bytes": 65536,
-    "use_target_span_65536_accepted": true,
-    "use_target_span_65537_limit_diagnostic": true,
-    "aggregate_use_span_limit_bytes": 1048576,
-    "use_instances_max": 65536,
-    "use_instances_65536_accepted": true,
-    "use_instances_65537_limit_diagnostic": true,
-    "instance_boundary_target_bytes": 11,
-    "maximum_target_size_for_all_65536_instances_under_1MiB": 16,
-    "clip_child_span_limit_bytes": 65536,
-    "clip_child_span_65536_accepted": true,
-    "clip_child_span_65537_limit_diagnostic": true,
-    "clip_job_scratch_limit_bytes": 524288,
-    "clip_job_scratch_524288_accepted": true,
-    "clip_job_scratch_over_524288_limit_diagnostic": true,
-    "clip_scratch_accounting_includes_wrapper_and_nul": true,
-    "clip_wrapper_prefix_buffer_bytes": 192,
-    "clip_generated_wrapper_syntax_max_bytes": 197,
-    "max_xml_depth": 64,
-    "max_active_element_visits": 4194304,
-    "max_transform_operations": 4096,
-    "bound_exhaustion_diagnostic": "SVG_SHAPE_ERROR_LIMIT"
-  },
-  "decode_allocation_bounds": {
-    "actual_allocator_hook": "test-only wrappers count allocations during decode+render and report total, peak, token-array, fixed-index, clip-copy, and output bytes",
-    "baseline_token_array": "one source-sized decoder token array with capacity source_length / 2 + 2; measured token-array delta between small and padded source equals this exact formula",
-    "id_index": {
-      "capacity_slots": 131072,
-      "slot_bytes": 4,
-      "max_bytes": 524288,
-      "sizing": "fixed, independent of source length"
+  "current": {
+    "work_order": "WO-M4-06 revision 5",
+    "status": "all 18 frozen verification commands pass in a fresh runner worktree; closure evidence refreshed",
+    "verifier_run": "artifacts/runs/WO-M4-06/verify-f7efb3fc-329c-477a-8575-5de83f1f78f2",
+    "candidate_base": "eb0dfc779709c8a7c37a5f30992a17f82e484d96",
+    "check_exit_codes": {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0
     },
-    "use_path_additional_source_sized_token_arrays": 0,
-    "bounded_clip_decode_token_array": "clip child wrapper is separately parsed; its token allocation is bounded by the 64 KiB child span plus fixed wrapper syntax",
-    "rewritten_source_bytes": 0,
-    "source_map_bytes": 0,
-    "output_tile_allocation_bytes_for_8x8": 256,
-    "clip_child_copy_budget_bytes_per_job": 524288,
-    "use_growth_assertion": "total and peak growth between one and 32 same-size uses are each capped at 2048 bytes per additional instance",
-    "group_clip_assertion": "clip-copy bytes are equal for a group with one and 16 child shapes, confirming one resolution per group declaration",
-    "source_sha256_before_after_decode_render": "pass for live use + gradient + clip documents; original pointer and length retained"
-  },
-  "reference_tests": {
-    "focused_shape_test": "pass",
-    "use_transform_scale_rotate_symbol": "pass",
-    "transformed_user_space_and_object_bbox_linear_radial_paint_clip": "pass",
-    "singular_gradient_and_clip_diagnostics": "unsupported category asserted",
-    "stop_inline_style_and_class": "pass",
-    "unsupported_stop_currentColor_class_and_stylesheet": "unsupported category asserted",
-    "group_clip_whole_subtree_bbox_and_nested_intersection": "pass",
-    "clip_resolved_once_per_group": "pass; one versus 16 descendants allocates equal clip scratch",
-    "use_span_64KiB_and_64KiB_plus_one": "pass",
-    "clip_span_64KiB_and_64KiB_plus_one": "pass",
-    "clip_job_scratch_512KiB_and_over": "pass",
-    "instances_65536_and_65537": "pass",
-    "allocator_total_peak_index_clip_and_output_checks": "pass",
-    "indexed_paint_lookup_512_late_gradient_shapes": "pass; probe count bounded to at most twice the shape count",
-    "source_sha256_before_after_decode_render": "pass"
-  },
-  "differential_fixtures": {
-    "renderer": "rsvg-convert version 2.63.2",
-    "fixture_count": 47,
-    "new_fixtures": [
-      "use-transform-order",
-      "user-space-transform",
-      "object-bbox-transform",
-      "use-user-space-transform",
-      "stop-style-class",
-      "clip-group-object-bbox",
-      "clip-nested-intersection",
-      "gradient-stop-alpha-overpaint"
-    ],
-    "interior_differences": 0,
-    "max_jointly_covered_straight_rgb_delta": 1,
-    "max_edge_diff_pixels": 96,
-    "edge_threshold_pixels": 120,
-    "frozen_thresholds_changed": false,
-    "status": "47/47 fixtures pass"
-  },
-  "shape_checks": {
-    "debug_configure_build": "pass",
-    "debug_build": "pass",
-    "debug_ctest": "18/20; native-viewer-smoke failed on LaunchServices/Hiservices, index-replay lacks offscreen Metal",
-    "focused_python_shape_render": "18/18 pass; includes 200 seeded culling comparisons",
-    "debug_shape_test": "pass",
-    "asan_ctest": "18/20; same two environment failures",
-    "ubsan_ctest": "18/20; same two environment failures",
-    "release_configure_build": "pass",
-    "verify": "Debug build passes; CTest 18/20 and exits nonzero on same two environment failures",
-    "full_python_suite": "not part of this brief verification command list; not rerun"
-  },
-  "fuzz": {
-    "cases": 1000000,
-    "duration_seconds": 31.433,
-    "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
-    "crashes": 0,
-    "sanitizer_reports": 0,
-    "invariant_failures": 0,
-    "result": "pass",
-    "source_revision": "0732b8e; worktree changes uncommitted"
-  },
-  "corpus": {
-    "files": 58,
-    "trials": 116,
-    "previewable": 2,
-    "unsupported": 56,
-    "limit": 0,
-    "crash": 0,
-    "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
-    "baseline_sha256": "3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba",
-    "first_preview_100_mib_gate": "fail_no_preview",
-    "maximum_main_thread_step": "pass",
-    "peak_rss_100_mib_gate": "pass",
-    "supported_previews": 2,
-    "tier_summary": {
-      "T1": "2/12 supported",
-      "T2": "0/17 supported",
-      "T3": "0/26 supported",
-      "T4": "0/3 supported"
+    "ac9_tests": {
+      "use_job_total_exact_1MiB": "pass (16x65,535 + 16 bytes decodes; +1 byte returns limit)",
+      "use_per_reference_64KiB": "pass",
+      "clip_per_reference_64KiB_and_job_512KiB": "pass",
+      "clip_wrapper_4KiB": "_Static_assert in src/svg/clip/clip.c plus runtime extreme-viewBox decode",
+      "source_sha256_unchanged": "asserted around every use/clip boundary decode"
     },
-    "new_supported_files_vs_frozen_baseline": 0
-  },
-  "benchmark": {
-    "status": "complete",
-    "trials_per_workload": 21,
-    "performance_claim": false,
-    "frozen_base_comparison": "basic-solid has a separate frozen-base measurement; new reference and paint workloads have no comparable base",
-    "frozen_base_basic_solid": {
-      "median_seconds": 0.007590667000840767,
-      "p95_seconds": 0.008109917000183486,
-      "stable_output": true,
-      "peak_process_rss": "unavailable: frozen-base CLI does not support --metrics"
+    "gradient_exact_pixels": {
+      "linear_x0": [
+        247,
+        0,
+        8,
+        255
+      ],
+      "linear_x8": [
+        120,
+        0,
+        135,
+        255
+      ],
+      "linear_x15": [
+        8,
+        0,
+        247,
+        255
+      ],
+      "stop_opacity_mid_x8": [
+        120,
+        0,
+        135,
+        255
+      ]
     },
-    "workloads": [
-      {
-        "name": "basic-solid",
-        "median_seconds": 0.0070427919999929145,
-        "p95_seconds": 0.008884750001016073,
-        "throughput_pixels_per_second_median": 37221601.88747073,
-        "peak_process_rss_bytes_max": 3162112,
-        "stable_hash": true,
-        "frozen_base_comparison": "same workload measured only for basic-solid"
-      },
-      {
-        "name": "local-use",
-        "median_seconds": 0.0069962910001777345,
-        "p95_seconds": 0.007587250000142376,
-        "throughput_pixels_per_second_median": 37468996.07139561,
-        "peak_process_rss_bytes_max": 3194880,
-        "stable_hash": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
-      },
-      {
-        "name": "linear-gradient",
-        "median_seconds": 0.0089947079995909,
-        "p95_seconds": 0.009451374999116524,
-        "throughput_pixels_per_second_median": 29144247.930218846,
-        "peak_process_rss_bytes_max": 3227648,
-        "stable_hash": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
-      },
-      {
-        "name": "radial-gradient",
-        "median_seconds": 0.009746584000822622,
-        "p95_seconds": 0.011490708000565064,
-        "throughput_pixels_per_second_median": 26895987.350837458,
-        "peak_process_rss_bytes_max": 3244032,
-        "stable_hash": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
-      },
-      {
-        "name": "clip-path",
-        "median_seconds": 0.008946457999627455,
-        "p95_seconds": 0.011342709000018658,
-        "throughput_pixels_per_second_median": 29301428.566580884,
-        "peak_process_rss_bytes_max": 3276800,
-        "stable_hash": true,
-        "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
-      }
-    ]
+    "reference_comparison": "artifacts/WO-M4-06/reference-comparison.json (all fixtures pass unchanged thresholds)",
+    "corpus": "artifacts/WO-M4-06/corpus-delta.json (supported-file delta 0)",
+    "path_guard": "artifacts/WO-M4-06/path-guard.json (pass)"
   },
-  "path_scope": "Pre-merge 68-path allow/protect audit passed; post-merge guard not rerun. Protected oracle/golden diff remains empty.",
-  "commit_status": "No commit created; git staging failed to create .git/worktrees/WO-M4-06/index.lock. Resolved merge contents are in the worktree.",
-  "independent_review": "not rerun; user prohibited launching nested codex exec",
-  "overall_gate_note": "Five requested P2 repairs and merge conflict content are present. Work remains incomplete because two platform-dependent CTests fail in this sandbox, the merge cannot be staged, and the post-merge path guard is unverified.",
-  "merge_target": {
-    "merge_commit": "10a98782c43bbdb0174ea0485a7539c62b9fe90f",
-    "requested_raster_commit": "ae2b67329550d0126e7ea5e8bd50fc842047aaea",
-    "requested_commit_is_second_parent": true,
-    "worktree_conflicts_resolved": true,
-    "git_index_staged": false,
-    "reason": "Git cannot create .git/worktrees/WO-M4-06/index.lock in this sandbox"
-  },
-  "review_findings_brief_3": {
-    "symbol_clip_path": "stable unsupported diagnostic; attribute and CSS cases tested",
-    "gradient_href": "plain href and bound/unbound xlink:href rejected at attribute offset",
-    "clip_child_css_clip_path": "clipPath child style uses stylesheet and inline cascade; nested clip diagnosed",
-    "gradient_source_over": "opaque base plus stop-opacity 0.5 pixel test; independent librsvg fixture passes",
-    "gradient_cache_and_work": "bounded per-decode cache keyed by gradient token index; token visits counted; 512 shapes and thousands of comments bounded linearly"
-  },
-  "brief_3_verification": {
-    "debug_configure_build": "pass",
-    "debug_ctest": "18/20; native-viewer-smoke LaunchServices/Hiservices unavailable, index-replay offscreen Metal unavailable",
-    "focused_python": "18/18 pass; includes 200 seeded culling comparisons",
-    "shape_test": "pass",
-    "asan_ctest": "18/20; same two environment failures",
-    "ubsan_ctest": "18/20; same two environment failures",
-    "release_configure_build": "pass",
-    "verify": "Debug build passes; CTest 18/20 and exits nonzero on same two environment failures",
-    "fuzz": "1,000,000 ASan+UBSan cases, 31.433 s, zero crashes/invariants/reports",
-    "corpus": "58 files / 116 trials, 2 supported previews, 56 unsupported, 0 limit/crash; run and check pass",
-    "librsvg_fixture_count": 47,
-    "oracle_golden_diff": "empty; thresholds unchanged",
-    "shape_c_lines": 799,
-    "post_merge_path_guard": "not rerun; pre-merge artifact is stale"
+  "revision_4_history": {
+    "work_order": "WO-M4-06 revision 4",
+    "tested_worktree_base_commit": "2a484b195f8264b7b71632ef8eed6ea6cb881331",
+    "tested_changes_committed": false,
+    "status": "five P2 findings repaired; merge content resolved in worktree; acceptance incomplete due sandbox CTest services and Git index lock",
+    "review_finding_repairs": {
+      "use_transform_order": "fixed composition to use.transform \u00b7 translate(x,y) \u00b7 symbol viewBox mapping; non-commuting scale/rotate/symbol regression and rsvg fixture pass",
+      "transformed_paint_and_clip_units": "current inverse affine is passed through resolution/sampling; userSpaceOnUse maps samples to element user space; objectBoundingBox uses untransformed local bounds; singular transforms return unsupported",
+      "stop_style_and_class": "stop-color/stop-opacity use CSS cascade; inline and class styles pass; currentColor, inherit, unresolved classes, and matched unsupported declarations diagnose unsupported",
+      "declared_group_clips": "clip-path is cleared from inherited style; group/use clips use whole subtree bounds, resolve once per declaration, and intersect with nested clips",
+      "allocation_tests": "actual allocator hook measures decode+render total/peak, token arrays, fixed index, bounded clip copies, and exact 8x8 output; source hashes are checked around live use/paint/clip documents",
+      "indexed_paint_clip_lookup": "paint and clip references use the prebuilt id index; 512 late-gradient shapes are bounded by a probe counter",
+      "documentation": "paint, clip, CSS, shape, and traversal READMEs describe transform, group clip, stop style, wrapper, and stricter byte/instance limits"
+    },
+    "reference_traversal_bounds": {
+      "source_bytes_max": 16777216,
+      "source_map_bytes": 0,
+      "full_document_rewrite_bytes": 0,
+      "use_subtree_copy_bytes": 0,
+      "use_reference_depth_max": 16,
+      "use_target_span_limit_bytes": 65536,
+      "use_target_span_65536_accepted": true,
+      "use_target_span_65537_limit_diagnostic": true,
+      "aggregate_use_span_limit_bytes": 1048576,
+      "use_instances_max": 65536,
+      "use_instances_65536_accepted": true,
+      "use_instances_65537_limit_diagnostic": true,
+      "instance_boundary_target_bytes": 11,
+      "maximum_target_size_for_all_65536_instances_under_1MiB": 16,
+      "clip_child_span_limit_bytes": 65536,
+      "clip_child_span_65536_accepted": true,
+      "clip_child_span_65537_limit_diagnostic": true,
+      "clip_job_scratch_limit_bytes": 524288,
+      "clip_job_scratch_524288_accepted": true,
+      "clip_job_scratch_over_524288_limit_diagnostic": true,
+      "clip_scratch_accounting_includes_wrapper_and_nul": true,
+      "clip_wrapper_prefix_buffer_bytes": 192,
+      "clip_generated_wrapper_syntax_max_bytes": 197,
+      "max_xml_depth": 64,
+      "max_active_element_visits": 4194304,
+      "max_transform_operations": 4096,
+      "bound_exhaustion_diagnostic": "SVG_SHAPE_ERROR_LIMIT"
+    },
+    "decode_allocation_bounds": {
+      "actual_allocator_hook": "test-only wrappers count allocations during decode+render and report total, peak, token-array, fixed-index, clip-copy, and output bytes",
+      "baseline_token_array": "one source-sized decoder token array with capacity source_length / 2 + 2; measured token-array delta between small and padded source equals this exact formula",
+      "id_index": {
+        "capacity_slots": 131072,
+        "slot_bytes": 4,
+        "max_bytes": 524288,
+        "sizing": "fixed, independent of source length"
+      },
+      "use_path_additional_source_sized_token_arrays": 0,
+      "bounded_clip_decode_token_array": "clip child wrapper is separately parsed; its token allocation is bounded by the 64 KiB child span plus fixed wrapper syntax",
+      "rewritten_source_bytes": 0,
+      "source_map_bytes": 0,
+      "output_tile_allocation_bytes_for_8x8": 256,
+      "clip_child_copy_budget_bytes_per_job": 524288,
+      "use_growth_assertion": "total and peak growth between one and 32 same-size uses are each capped at 2048 bytes per additional instance",
+      "group_clip_assertion": "clip-copy bytes are equal for a group with one and 16 child shapes, confirming one resolution per group declaration",
+      "source_sha256_before_after_decode_render": "pass for live use + gradient + clip documents; original pointer and length retained"
+    },
+    "reference_tests": {
+      "focused_shape_test": "pass",
+      "use_transform_scale_rotate_symbol": "pass",
+      "transformed_user_space_and_object_bbox_linear_radial_paint_clip": "pass",
+      "singular_gradient_and_clip_diagnostics": "unsupported category asserted",
+      "stop_inline_style_and_class": "pass",
+      "unsupported_stop_currentColor_class_and_stylesheet": "unsupported category asserted",
+      "group_clip_whole_subtree_bbox_and_nested_intersection": "pass",
+      "clip_resolved_once_per_group": "pass; one versus 16 descendants allocates equal clip scratch",
+      "use_span_64KiB_and_64KiB_plus_one": "pass",
+      "clip_span_64KiB_and_64KiB_plus_one": "pass",
+      "clip_job_scratch_512KiB_and_over": "pass",
+      "instances_65536_and_65537": "pass",
+      "allocator_total_peak_index_clip_and_output_checks": "pass",
+      "indexed_paint_lookup_512_late_gradient_shapes": "pass; probe count bounded to at most twice the shape count",
+      "source_sha256_before_after_decode_render": "pass"
+    },
+    "differential_fixtures": {
+      "renderer": "rsvg-convert version 2.63.2",
+      "fixture_count": 47,
+      "new_fixtures": [
+        "use-transform-order",
+        "user-space-transform",
+        "object-bbox-transform",
+        "use-user-space-transform",
+        "stop-style-class",
+        "clip-group-object-bbox",
+        "clip-nested-intersection",
+        "gradient-stop-alpha-overpaint"
+      ],
+      "interior_differences": 0,
+      "max_jointly_covered_straight_rgb_delta": 1,
+      "max_edge_diff_pixels": 96,
+      "edge_threshold_pixels": 120,
+      "frozen_thresholds_changed": false,
+      "status": "47/47 fixtures pass"
+    },
+    "shape_checks": {
+      "debug_configure_build": "pass",
+      "debug_build": "pass",
+      "debug_ctest": "18/20; native-viewer-smoke failed on LaunchServices/Hiservices, index-replay lacks offscreen Metal",
+      "focused_python_shape_render": "18/18 pass; includes 200 seeded culling comparisons",
+      "debug_shape_test": "pass",
+      "asan_ctest": "18/20; same two environment failures",
+      "ubsan_ctest": "18/20; same two environment failures",
+      "release_configure_build": "pass",
+      "verify": "Debug build passes; CTest 18/20 and exits nonzero on same two environment failures",
+      "full_python_suite": "not part of this brief verification command list; not rerun"
+    },
+    "fuzz": {
+      "cases": 1000000,
+      "duration_seconds": 31.433,
+      "sanitizer": "AddressSanitizer + UndefinedBehaviorSanitizer",
+      "crashes": 0,
+      "sanitizer_reports": 0,
+      "invariant_failures": 0,
+      "result": "pass",
+      "source_revision": "0732b8e; worktree changes uncommitted"
+    },
+    "corpus": {
+      "files": 58,
+      "trials": 116,
+      "previewable": 2,
+      "unsupported": 56,
+      "limit": 0,
+      "crash": 0,
+      "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
+      "baseline_sha256": "3bb506d86b65726e2efc4bedd725e09ed2d180caf661351e655c0c797edfc3ba",
+      "first_preview_100_mib_gate": "fail_no_preview",
+      "maximum_main_thread_step": "pass",
+      "peak_rss_100_mib_gate": "pass",
+      "supported_previews": 2,
+      "tier_summary": {
+        "T1": "2/12 supported",
+        "T2": "0/17 supported",
+        "T3": "0/26 supported",
+        "T4": "0/3 supported"
+      },
+      "new_supported_files_vs_frozen_baseline": 0
+    },
+    "benchmark": {
+      "status": "complete",
+      "trials_per_workload": 21,
+      "performance_claim": false,
+      "frozen_base_comparison": "basic-solid has a separate frozen-base measurement; new reference and paint workloads have no comparable base",
+      "frozen_base_basic_solid": {
+        "median_seconds": 0.007590667000840767,
+        "p95_seconds": 0.008109917000183486,
+        "stable_output": true,
+        "peak_process_rss": "unavailable: frozen-base CLI does not support --metrics"
+      },
+      "workloads": [
+        {
+          "name": "basic-solid",
+          "median_seconds": 0.0070427919999929145,
+          "p95_seconds": 0.008884750001016073,
+          "throughput_pixels_per_second_median": 37221601.88747073,
+          "peak_process_rss_bytes_max": 3162112,
+          "stable_hash": true,
+          "frozen_base_comparison": "same workload measured only for basic-solid"
+        },
+        {
+          "name": "local-use",
+          "median_seconds": 0.0069962910001777345,
+          "p95_seconds": 0.007587250000142376,
+          "throughput_pixels_per_second_median": 37468996.07139561,
+          "peak_process_rss_bytes_max": 3194880,
+          "stable_hash": true,
+          "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        },
+        {
+          "name": "linear-gradient",
+          "median_seconds": 0.0089947079995909,
+          "p95_seconds": 0.009451374999116524,
+          "throughput_pixels_per_second_median": 29144247.930218846,
+          "peak_process_rss_bytes_max": 3227648,
+          "stable_hash": true,
+          "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        },
+        {
+          "name": "radial-gradient",
+          "median_seconds": 0.009746584000822622,
+          "p95_seconds": 0.011490708000565064,
+          "throughput_pixels_per_second_median": 26895987.350837458,
+          "peak_process_rss_bytes_max": 3244032,
+          "stable_hash": true,
+          "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        },
+        {
+          "name": "clip-path",
+          "median_seconds": 0.008946457999627455,
+          "p95_seconds": 0.011342709000018658,
+          "throughput_pixels_per_second_median": 29301428.566580884,
+          "peak_process_rss_bytes_max": 3276800,
+          "stable_hash": true,
+          "frozen_base_comparison": "not comparable: feature workload was unsupported at frozen base"
+        }
+      ]
+    },
+    "path_scope": "Pre-merge 68-path allow/protect audit passed; post-merge guard not rerun. Protected oracle/golden diff remains empty.",
+    "commit_status": "No commit created; git staging failed to create .git/worktrees/WO-M4-06/index.lock. Resolved merge contents are in the worktree.",
+    "independent_review": "not rerun; user prohibited launching nested codex exec",
+    "overall_gate_note": "Five requested P2 repairs and merge conflict content are present. Work remains incomplete because two platform-dependent CTests fail in this sandbox, the merge cannot be staged, and the post-merge path guard is unverified.",
+    "merge_target": {
+      "merge_commit": "10a98782c43bbdb0174ea0485a7539c62b9fe90f",
+      "requested_raster_commit": "ae2b67329550d0126e7ea5e8bd50fc842047aaea",
+      "requested_commit_is_second_parent": true,
+      "worktree_conflicts_resolved": true,
+      "git_index_staged": false,
+      "reason": "Git cannot create .git/worktrees/WO-M4-06/index.lock in this sandbox"
+    },
+    "review_findings_brief_3": {
+      "symbol_clip_path": "stable unsupported diagnostic; attribute and CSS cases tested",
+      "gradient_href": "plain href and bound/unbound xlink:href rejected at attribute offset",
+      "clip_child_css_clip_path": "clipPath child style uses stylesheet and inline cascade; nested clip diagnosed",
+      "gradient_source_over": "opaque base plus stop-opacity 0.5 pixel test; independent librsvg fixture passes",
+      "gradient_cache_and_work": "bounded per-decode cache keyed by gradient token index; token visits counted; 512 shapes and thousands of comments bounded linearly"
+    },
+    "brief_3_verification": {
+      "debug_configure_build": "pass",
+      "debug_ctest": "18/20; native-viewer-smoke LaunchServices/Hiservices unavailable, index-replay offscreen Metal unavailable",
+      "focused_python": "18/18 pass; includes 200 seeded culling comparisons",
+      "shape_test": "pass",
+      "asan_ctest": "18/20; same two environment failures",
+      "ubsan_ctest": "18/20; same two environment failures",
+      "release_configure_build": "pass",
+      "verify": "Debug build passes; CTest 18/20 and exits nonzero on same two environment failures",
+      "fuzz": "1,000,000 ASan+UBSan cases, 31.433 s, zero crashes/invariants/reports",
+      "corpus": "58 files / 116 trials, 2 supported previews, 56 unsupported, 0 limit/crash; run and check pass",
+      "librsvg_fixture_count": 47,
+      "oracle_golden_diff": "empty; thresholds unchanged",
+      "shape_c_lines": 799,
+      "post_merge_path_guard": "not rerun; pre-merge artifact is stale"
+    }
   }
 }
