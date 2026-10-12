@@ -2,22 +2,22 @@
   "screenshots": {
     "history-dark.png": {
       "height": 800,
-      "sha256": "1f208aa8a3644d34026e4a67e31be3f5516caf07e77025c8ec62bc4638ba7639",
+      "sha256": "9fb1977899205cc26a52b13020f5dbf56d5101c8f2634bbb5fea75fef34f3f1e",
       "width": 1280
     },
     "history-light.png": {
       "height": 800,
-      "sha256": "59a12afeb344aa8c7e9846c05e54b24b2bf42b196546b99b9b386082ad33d376",
+      "sha256": "42c67ffe129b9c1b303abb5b5cff27c9a9e62d8a50deecbe54ab939d0987ab75",
       "width": 1280
     },
     "palette-dark.png": {
       "height": 800,
-      "sha256": "e81291b13a477b95e562b8aa494fd91207be557db74f4d3809318e6593344662",
+      "sha256": "3dafd7226b86f6e8e9c1cf50aa28d6ef9c7ae019da7d13b54688258cd803fda5",
       "width": 1280
     },
     "palette-light.png": {
       "height": 800,
-      "sha256": "a1da1ee21d95f05a9ab57dc7e08a6b0acfb298e5072e217b06aa654cf30c0b30",
+      "sha256": "0856b92a3f72fc24a9d746256cdc433614aa8c0b7f11ee7a75339b1988fdb6b7",
       "width": 1280
     }
   },
