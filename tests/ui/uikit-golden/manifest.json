@@ -3,7 +3,7 @@
     "components-dark-1x.png": {
       "height": 1444,
       "scale": 1,
-      "sha256": "f66e67374872ceff9ed113dfcefa0f6ec9ee091080ac78ff392f0317c7c28268",
+      "sha256": "dd8c1825948c1a4fa9915638c72a7c57b163cc4fe3ec5ec2db486b701c32029a",
       "sheet": "components",
       "theme": "dark",
       "width": 1284
@@ -11,7 +11,7 @@
     "components-dark-2x.png": {
       "height": 2888,
       "scale": 2,
-      "sha256": "e75dd9fa511c5420037db4e325943845b7f869d19ec262a6d30161a5768154ca",
+      "sha256": "f6744faf496dcd8abd9462b280c9f2a894cfb460550d764d1dd9bf9cf8ce6049",
       "sheet": "components",
       "theme": "dark",
       "width": 2568
@@ -19,7 +19,7 @@
     "components-light-1x.png": {
       "height": 1444,
       "scale": 1,
-      "sha256": "df9f2b22c471dbfdacfa834ba892c2f5c0e61e88dd688c9cedfcb3e694e7d072",
+      "sha256": "b52ca1e6aedbe63bce6a0d70517b89ab9ce5935961a3a613bea7ee8676bc9704",
       "sheet": "components",
       "theme": "light",
       "width": 1284
@@ -27,7 +27,7 @@
     "components-light-2x.png": {
       "height": 2888,
       "scale": 2,
-      "sha256": "694704a747ee0f65e884705d551bbc0f66aed6941c536d61f9878ef11128aa0e",
+      "sha256": "9a180cbd04c7ef779bd1c990da90ec8cf7d5d6f121c4e3f7a6de76b6a6b2fdca",
       "sheet": "components",
       "theme": "light",
       "width": 2568

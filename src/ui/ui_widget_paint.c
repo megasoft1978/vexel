@@ -252,7 +252,7 @@ static bool draw_button(const ui_widget_canvas *canvas, const ui_widget_draw_spe
     }
     if (surface != 0U) ui_widget_paint_round(canvas, spec->bounds, 6U, surface, 0U, 0U);
     if (icon_only) {
-        uint32_t icon_size = spec->icon == UI_ICON_CLOSE ? 14U : 22U;
+        uint32_t icon_size = spec->icon == UI_ICON_CLOSE ? 14U : 15U;
         if (icon_size > spec->bounds.width) icon_size = spec->bounds.width;
         if (icon_size > spec->bounds.height) icon_size = spec->bounds.height;
         ui_rect icon_bounds = {spec->bounds.x + (spec->bounds.width - icon_size) / 2U,
@@ -677,8 +677,8 @@ static bool paint_component(ui_widget_canvas *canvas, const ui_widget_draw_spec 
             ui_widget_paint_round(canvas, spec->bounds, 6U, canvas->tokens.panel_raised,
                 canvas->tokens.separator, 1U);
             return ui_widget_paint_text(canvas, spec->label, spec->label_length,
-                inset(spec->bounds, 10U, 0U, 10U, 0U), foreground,
-                UI_FONT_SYSTEM, UI_FONT_REGULAR, 12U);
+                inset(spec->bounds, 6U, 0U, 6U, 0U), foreground,
+                UI_FONT_SYSTEM, UI_FONT_REGULAR, 10U);
         case UI_WIDGET_DIVIDER: {
             ui_rect line = spec->bounds;
             if (line.height > line.width) {
