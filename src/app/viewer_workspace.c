@@ -2,11 +2,12 @@
 
 #include <string.h>
 
+/* Sections name real inspector sections so the choice is actually applied. */
 static const viewer_workspace_spec workspace_table[VIEWER_WORKSPACE_COUNT] = {
-    {"draw", "Draw", "Object", true, true, false},
+    {"draw", "Draw", "Geometry", true, true, false},
     {"nodes", "Nodes", "Geometry", true, true, false},
-    {"animate", "Animate", "Object", true, true, true},
-    {"inspect", "Inspect", "Document", true, true, false}
+    {"animate", "Animate", "Appearance", true, true, true},
+    {"inspect", "Inspect", "Attributes", true, true, false}
 };
 
 const viewer_workspace_spec *viewer_workspace_table(void)
@@ -46,6 +47,11 @@ viewer_workspace_kind viewer_workspace_from_name(const char *name, size_t length
 const char *viewer_workspace_name(viewer_workspace_kind kind)
 {
     return viewer_workspace_get(kind)->name;
+}
+
+const char *viewer_workspace_shortcut_hint(void)
+{
+    return "Control-Tab";
 }
 
 viewer_workspace_kind viewer_workspace_cycle(viewer_workspace_kind current, bool backwards)

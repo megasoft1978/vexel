@@ -27,6 +27,8 @@ snapping. Holding Space pans and hides selection and snap overlays until release
 
 | Input | Action |
 |---|---|
+| `Control-Tab` | Next task workspace (Draw, Nodes, Animate, Inspect) |
+| `Control-Shift-Tab` | Previous task workspace |
 | `V` | Select tool |
 | `H` or hold Space | Pan tool |
 | `Z` | Zoom tool |
@@ -90,6 +92,18 @@ The clipboard uses SVG fragment text and `public.svg-image`; pasted content is
 limited to one validated root element and 64 KiB. PNG export uses the existing
 renderer and ImageIO, allows document or selection output at 1×/2×/4×, and is
 bounded to 4096 pixels per axis and 16 million pixels.
+
+## Workspaces and the status bar
+
+The tab strip under the toolbar switches between four task workspaces. A workspace
+selects pane visibility and the expanded inspector section only; the document and
+the editing model are untouched, and a workspace switch never marks the document
+dirty. `Control-Tab` and `Control-Shift-Tab` cycle with wrap, and the choice is
+remembered when `rememberWorkspace` is enabled.
+
+The status bar carries the active-tool hint on the left, the running operation and
+its Cancel button in the centre, and the save state, selection count and zoom on
+the right.
 
 ## Current limits
 

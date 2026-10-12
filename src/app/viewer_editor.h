@@ -166,6 +166,10 @@ bool viewer_editor_copy_full_id(const viewer_editor *editor, uint8_t *buffer,
 void viewer_editor_set_motion_time(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_tick(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_active(const viewer_editor *editor);
+/* Drives the status bar's progress region and its cancel affordance. */
+void viewer_editor_set_operation_progress(viewer_editor *editor, bool active,
+    const char *message);
+
 /* Notified after a workspace change so the platform layer can persist it. */
 typedef void (*viewer_editor_workspace_callback)(void *context, const char *name);
 void viewer_editor_set_workspace_callback(viewer_editor *editor,

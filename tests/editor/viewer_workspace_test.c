@@ -3,6 +3,7 @@
 #include "viewer_editor.h"
 #include "viewer_editor_internal.h"
 #include "viewer_workspace.h"
+#include "ui/ui_core.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -22,17 +23,17 @@ static int check_table(void)
         const char *name, *label, *group;
         bool structure, inspector, timeline;
     } expected[4] = {
-        {"draw", "Draw", "Object", true, true, false},
+        {"draw", "Draw", "Geometry", true, true, false},
         {"nodes", "Nodes", "Geometry", true, true, false},
-        {"animate", "Animate", "Object", true, true, true},
-        {"inspect", "Inspect", "Document", true, true, false}
+        {"animate", "Animate", "Appearance", true, true, true},
+        {"inspect", "Inspect", "Attributes", true, true, false}
     };
     for (size_t index = 0U; index < 4U; ++index) {
         const viewer_workspace_spec *spec =
             viewer_workspace_get((viewer_workspace_kind)index);
         if (strcmp(spec->name, expected[index].name) != 0 ||
             strcmp(spec->label, expected[index].label) != 0 ||
-            strcmp(spec->inspector_group, expected[index].group) != 0 ||
+            strcmp(spec->inspector_section, expected[index].group) != 0 ||
             spec->structure != expected[index].structure ||
             spec->inspector != expected[index].inspector ||
             spec->timeline != expected[index].timeline) return 3;
@@ -42,6 +43,7 @@ static int check_table(void)
     /* An out-of-range kind degrades to the default rather than reading out of bounds. */
     if (viewer_workspace_get((viewer_workspace_kind)99) !=
         viewer_workspace_get(VIEWER_WORKSPACE_DRAW)) return 5;
+    if (strcmp(viewer_workspace_shortcut_hint(), "Control-Tab") != 0) return 6;
     return 0;
 }
 
@@ -95,6 +97,11 @@ static int check_editor(void)
         goto done;
     }
     if (viewer_editor_workspace(editor) != VIEWER_WORKSPACE_DRAW) { result = 3; goto done; }
+    /* Every entry point tolerates NULL rather than crashing. */
+    if (viewer_editor_set_workspace(NULL, VIEWER_WORKSPACE_NODES) ||
+        viewer_editor_cycle_workspace(NULL, false) ||
+        viewer_editor_apply_workspace_name(NULL, "draw", 4U) ||
+        viewer_editor_workspace(NULL) != VIEWER_WORKSPACE_DRAW) { result = 11; goto done; }
     /* Each workspace applies exactly the panes it documents. */
     for (size_t index = 0U; index < viewer_workspace_count(); ++index) {
         viewer_workspace_kind kind = (viewer_workspace_kind)index;
@@ -107,7 +114,26 @@ static int check_editor(void)
             result = 6;
             goto done;
         }
+        if (strcmp(editor->workspace_inspector_section, spec->inspector_section) != 0) {
+            result = 12;
+            goto done;
+        }
+        bool geometry = strcmp(spec->inspector_section, "Geometry") == 0;
+        bool appearance = strcmp(spec->inspector_section, "Appearance") == 0;
+        bool attributes = strcmp(spec->inspector_section, "Attributes") == 0;
+        if (editor->inspector_geometry_expanded != geometry ||
+            editor->inspector_appearance_expanded != appearance ||
+            editor->inspector_other_attributes_expanded != attributes) {
+            result = 13;
+            goto done;
+        }
     }
+    /* The timeline follows the workspace once a timeline is available. */
+    if (!viewer_editor_set_timeline_state(editor, true, false, 220U)) { result = 14; goto done; }
+    (void)viewer_editor_set_workspace(editor, VIEWER_WORKSPACE_ANIMATE);
+    if (!editor->timeline_visible) { result = 15; goto done; }
+    (void)viewer_editor_set_workspace(editor, VIEWER_WORKSPACE_INSPECT);
+    if (editor->timeline_visible) { result = 16; goto done; }
     /* Cycle forward through every workspace and wrap back to the start. */
     (void)viewer_editor_set_workspace(editor, VIEWER_WORKSPACE_DRAW);
     for (size_t step = 0U; step < viewer_workspace_count(); ++step)
@@ -128,6 +154,69 @@ done:
     return result;
 }
 
+/* The workspace strip and the three status regions must be visible to the
+ * accessibility tree, not only painted. */
+static int check_semantics(void)
+{
+    viewer_editor *editor = viewer_editor_create_styled((base_bytes){source,
+        sizeof(source) - 1U}, UI_THEME_DARK, 1280U, 800U, true);
+    if (editor == NULL) return 1;
+    ui_semantics_snapshot *snapshot = malloc(sizeof(*snapshot));
+    size_t pixels = 0U;
+    uint8_t *frame = malloc(1280U * 800U * 4U);
+    int result = 0;
+    if (snapshot == NULL || frame == NULL ||
+        !viewer_editor_semantics(editor, snapshot)) { result = 2; goto done; }
+    (void)pixels; (void)frame;
+    size_t tabs = 0U, hint = 0U, report = 0U, readout = 0U;
+    bool draw_checked = false, hint_value = false;
+    for (size_t index = 0U; index < snapshot->count; ++index) {
+        const ui_semantics_node *node = &snapshot->nodes[index];
+        if (node->id >= 24520U && node->id < 24524U) {
+            tabs++;
+            const char *full = NULL; size_t length = 0U;
+            const char *value = NULL; size_t value_length = 0U;
+            if (!ui_semantics_text(snapshot, node, false, &full, &length)) continue;
+            (void)ui_semantics_text(snapshot, node, true, &value, &value_length);
+            if (node->id == 24520U) {
+                draw_checked = (node->state & UI_STATE_CHECKED) != 0U &&
+                    length == 4U && memcmp(full, "Draw", 4U) == 0;
+                hint_value = value != NULL && value_length == 11U &&
+                    memcmp(value, "Control-Tab", 11U) == 0;
+            }
+        }
+        if (node->id == 24530U) hint++;
+        if (node->id == 24531U) report++;
+        if (node->id == 24532U) readout++;
+        if (node->id == 24533U) result = 5; /* the cancel affordance is hidden */
+    }
+    if (tabs != 4U) result = 3;
+    else if (!draw_checked) result = 4;
+    else if (!hint_value) result = 6;
+    else if (hint != 1U || report != 1U || readout != 1U) result = 7;
+    /* The report region carries the operation message and its cancel button. */
+    if (result == 0) {
+        viewer_editor_set_operation_progress(editor, true, "Indexing 42%");
+        if (!viewer_editor_semantics(editor, snapshot)) { result = 8; goto done; }
+        bool cancel = false, message = false;
+        for (size_t index = 0U; index < snapshot->count; ++index) {
+            const ui_semantics_node *node = &snapshot->nodes[index];
+            const char *full = NULL; size_t length = 0U;
+            if (!ui_semantics_text(snapshot, node, false, &full, &length)) continue;
+            if (node->id == 24533U) cancel = true;
+            if (node->id == 24531U && length == 12U &&
+                memcmp(full, "Indexing 42%", 12U) == 0) message = true;
+        }
+        if (!cancel) result = 9;
+        else if (!message) result = 10;
+    }
+done:
+    free(frame);
+    free(snapshot);
+    viewer_editor_destroy(editor);
+    return result;
+}
+
 int main(void)
 {
     int result = check_table();
@@ -136,8 +225,10 @@ int main(void)
     if (result != 0) { fprintf(stderr, "workspace names failed: %d\n", result); return 1; }
     result = check_cycle();
     if (result != 0) { fprintf(stderr, "workspace cycling failed: %d\n", result); return 1; }
+    result = check_semantics();
+    if (result != 0) { fprintf(stderr, "workspace semantics failed: %d\n", result); return 1; }
     result = check_editor();
     if (result != 0) { fprintf(stderr, "workspace editor failed: %d\n", result); return 1; }
-    printf("workspace tests passed: table, names, cycling, panes, document invariance\n");
+    printf("workspace tests passed: table, names, cycling, semantics, panes, document invariance\n");
     return 0;
 }

@@ -1,122 +1,142 @@
 [
  {
   "fixture": "tests/editor/accessibility-localization-golden/accessibility-chrome-dark-200.png",
-  "after_sha256": "74133af1bd973273c0f9d8f64fa74f2b8f979f04bfc767b7c85a8682f834b228",
-  "before_sha256": "1c953ac46d869f004a875328a305afeeab6f8929c6cae194c04ad02137700949",
+  "before_sha256": "74133af1bd973273c0f9d8f64fa74f2b8f979f04bfc767b7c85a8682f834b228",
+  "after_sha256": "9f9ce8ae11cde8a398cfead34a8faabf27a735d1d5e0fe0fcfd7b2acb98c9b3b",
   "diff_image": "artifacts/WO-UI-01/diff-accessibility-chrome-dark-200.png",
   "pixdiff": [
-   "15930 of 1024000 pixels differ (1.556%), max delta 203, mean delta 107.7, bbox x16..1172 y96..788",
-   "  (23,96) (41, 46, 55) vs (41, 48, 59)",
-   "  (24,96) (41, 46, 55) vs (40, 52, 69)"
-  ],
-  "exit": 1
+   "4532 of 1024000 pixels differ (0.443%), max delta 200, mean delta 118.6, bbox x25..1110 y764..788",
+   "(753,764) (41, 46, 55) vs (50, 55, 64)",
+   "(754,764) (41, 46, 55) vs (61, 66, 75)"
+  ]
  },
  {
   "fixture": "tests/editor/accessibility-localization-golden/accessibility-chrome-light-200.png",
-  "after_sha256": "928b7218e760c08525163fc30242d30fe86860a1bd2183fbc9328a968303862b",
-  "before_sha256": "06fb2ac3dcf7f116980f80fdf23904e210119e8e17a6cb9988dc7f40724efc28",
+  "before_sha256": "928b7218e760c08525163fc30242d30fe86860a1bd2183fbc9328a968303862b",
+  "after_sha256": "f02667988c48cd6841131855c50e5a452e12f57afd1c0cc9849ea02cbbf91220",
   "diff_image": "artifacts/WO-UI-01/diff-accessibility-chrome-light-200.png",
   "pixdiff": [
-   "15930 of 1024000 pixels differ (1.556%), max delta 206, mean delta 107.9, bbox x16..1172 y96..788",
-   "  (23,96) (237, 240, 244) vs (235, 239, 245)",
-   "  (24,96) (237, 240, 244) vs (230, 237, 249)"
-  ],
-  "exit": 1
+   "4532 of 1024000 pixels differ (0.443%), max delta 206, mean delta 122.2, bbox x25..1110 y764..788",
+   "(753,764) (237, 240, 244) vs (227, 231, 235)",
+   "(754,764) (237, 240, 244) vs (216, 220, 224)"
+  ]
+ },
+ {
+  "fixture": "tests/editor/accessibility-localization-golden/manifest.json",
+  "before_sha256": "77e38a81d7334f12652201c9aab4208a50cb3931b6f1fb6c182099207c6567d2",
+  "after_sha256": "a1a146208a0fe4fb44e94607bb7210c2109bf07f7348d3d24bd919bd0060d1ea"
  },
  {
   "fixture": "tests/editor/chrome-golden/editor-chrome-dark.png",
-  "after_sha256": "a515b28335ca91801fd8572c50a9d503ffeab3541777c4b29dd52caf39d0892f",
-  "before_sha256": "7437d32760258d859113fde9e964d08ae851f90f7110bfc862d747bbc22d8295",
+  "before_sha256": "a515b28335ca91801fd8572c50a9d503ffeab3541777c4b29dd52caf39d0892f",
+  "after_sha256": "c23b22cb37c0481a67327e73df44bc76cc876e3ae03111e483a8549ce34fe2d9",
   "diff_image": "artifacts/WO-UI-01/diff-editor-chrome-dark.png",
   "pixdiff": [
-   "5697 of 1024000 pixels differ (0.556%), max delta 203, mean delta 86.6, bbox x8..1226 y48..793",
-   "  (11,48) (41, 46, 55) vs (40, 52, 69)",
-   "  (12,48) (41, 46, 55) vs (39, 57, 82)"
-  ],
-  "exit": 1
+   "1395 of 1024000 pixels differ (0.136%), max delta 200, mean delta 86.5, bbox x1007..1195 y782..793",
+   "(1007,782) (97, 101, 109) vs (41, 46, 55)",
+   "(1008,782) (106, 110, 118) vs (41, 46, 55)"
+  ]
  },
  {
   "fixture": "tests/editor/chrome-golden/editor-chrome-light.png",
-  "after_sha256": "c97e3a2bc38b3df3ffa8472595fc8d0e577ef94fa66b5807d95c4f873c279792",
-  "before_sha256": "39306343dcb04277dfa40bdf0fa4d5818dfcb469af8f0610d14e9d6f26d487cc",
+  "before_sha256": "c97e3a2bc38b3df3ffa8472595fc8d0e577ef94fa66b5807d95c4f873c279792",
+  "after_sha256": "e9912300aa4311bfb50ae4bbcf4ab0982c628767dc55e0349ec8d5e66290fe37",
   "diff_image": "artifacts/WO-UI-01/diff-editor-chrome-light.png",
   "pixdiff": [
-   "5697 of 1024000 pixels differ (0.556%), max delta 206, mean delta 87.3, bbox x8..1226 y48..793",
-   "  (11,48) (237, 240, 244) vs (230, 237, 249)",
-   "  (12,48) (237, 240, 244) vs (223, 235, 253)"
-  ],
-  "exit": 1
+   "1395 of 1024000 pixels differ (0.136%), max delta 206, mean delta 89.1, bbox x1007..1195 y782..793",
+   "(1007,782) (180, 184, 190) vs (237, 240, 244)",
+   "(1008,782) (170, 175, 181) vs (237, 240, 244)"
+  ]
+ },
+ {
+  "fixture": "tests/editor/chrome-golden/manifest.json",
+  "before_sha256": "3efff40cf2e3069aeda57ea7df6cf2160f747b4f7a3fee441f14659eea7f51b8",
+  "after_sha256": "ec99d70973ed699582379303f253a6f743bbad72a8bb915acc67167d2bc121cd"
+ },
+ {
+  "fixture": "tests/editor/snapping-golden/manifest.json",
+  "before_sha256": "5439a1e804eb5e178c50ab00fde01a13005dfa0d002c22b251e73af0193e6402",
+  "after_sha256": "2bb8d79a8de67562ceb6bb4e1ce4b9cf21805a58e6f805c0d2844429e62facaa"
  },
  {
   "fixture": "tests/editor/snapping-golden/snapping-dark.png",
-  "after_sha256": "ac44cc2273f4b8088aa7b4a14802b3be1b856a090c9418fea23d7df989b39db2",
-  "before_sha256": "b498c743d8c5a4c08f378231df3b30bf06adc08aa50b3b74ca267c0608e3097a",
+  "before_sha256": "ac44cc2273f4b8088aa7b4a14802b3be1b856a090c9418fea23d7df989b39db2",
+  "after_sha256": "49ab4faa3387713227f104b53529f5e3ba8bb32babcaaa7450235f210cf40365",
   "diff_image": "artifacts/WO-UI-01/diff-snapping-dark.png",
   "pixdiff": [
-   "5557 of 1024000 pixels differ (0.543%), max delta 203, mean delta 86.8, bbox x8..1234 y48..793",
-   "  (11,48) (41, 46, 55) vs (40, 52, 69)",
-   "  (12,48) (41, 46, 55) vs (39, 57, 82)"
-  ],
-  "exit": 1
+   "1204 of 1024000 pixels differ (0.118%), max delta 200, mean delta 92.5, bbox x1035..1215 y782..793",
+   "(1035,782) (97, 101, 109) vs (41, 46, 55)",
+   "(1036,782) (106, 110, 118) vs (41, 46, 55)"
+  ]
  },
  {
   "fixture": "tests/editor/snapping-golden/snapping-light.png",
-  "after_sha256": "633817909d9bee413d0b10c63d3dd9fe5868e2810b7d11965623e6eb425c7fe4",
-  "before_sha256": "e38180699909be1e6fa2c1bf89fc3255c0d3a3bca446b8b317f3b712e62b0a06",
+  "before_sha256": "633817909d9bee413d0b10c63d3dd9fe5868e2810b7d11965623e6eb425c7fe4",
+  "after_sha256": "62d551e96641db0ced5e2cc14380961da523b2e70ad3b17de27819f418b9074d",
   "diff_image": "artifacts/WO-UI-01/diff-snapping-light.png",
   "pixdiff": [
-   "5557 of 1024000 pixels differ (0.543%), max delta 206, mean delta 87.5, bbox x8..1234 y48..793",
-   "  (11,48) (237, 240, 244) vs (230, 237, 249)",
-   "  (12,48) (237, 240, 244) vs (223, 235, 253)"
-  ],
-  "exit": 1
+   "1204 of 1024000 pixels differ (0.118%), max delta 206, mean delta 95.3, bbox x1035..1215 y782..793",
+   "(1035,782) (180, 184, 190) vs (237, 240, 244)",
+   "(1036,782) (170, 175, 181) vs (237, 240, 244)"
+  ]
+ },
+ {
+  "fixture": "tests/editor/viewer_chrome_test.c",
+  "before_sha256": "53ef1cf35fa4c2969b8857a1eb8b0a0a67d7b0c6d95099e8d3704655f875331f",
+  "after_sha256": "574bbdc113886bf454373a151975f39ca6e6cb1e387440db9f6538ae3d75cb70"
+ },
+ {
+  "fixture": "tests/editor/viewer_workspace_test.c",
+  "before_sha256": "e50363617552bfb7e311efae042515f3f8baf76c82b8915425c3a52b35c2bc12",
+  "after_sha256": "f81b3f26900c2caf6b135086af44e89a803e506077fdeec305922a906f643ea6"
  },
  {
   "fixture": "tests/ui/command-overlay-golden/history-dark.png",
-  "after_sha256": "2e6fce839bedae406015f0f503e6a3e47f1d1d30a4b34deb72473ade0ea9dde9",
-  "before_sha256": "c8b520bf79df968221c0d38c8c596312a5ca589fe01db47f4e09ff9d5bfee01b",
+  "before_sha256": "2e6fce839bedae406015f0f503e6a3e47f1d1d30a4b34deb72473ade0ea9dde9",
+  "after_sha256": "f9a25a1fadf0f8de67afe5decaa2e6985411ee1f5ced2d4e07e6c03a22a48116",
   "diff_image": "artifacts/WO-UI-01/diff-history-dark.png",
   "pixdiff": [
-   "4197 of 1024000 pixels differ (0.410%), max delta 117, mean delta 49.4, bbox x8..1226 y48..793",
-   "  (11,48) (23, 26, 31) vs (23, 30, 40)",
-   "  (12,48) (23, 26, 31) vs (22, 33, 47)"
-  ],
-  "exit": 1
+   "1850 of 1024000 pixels differ (0.181%), max delta 116, mean delta 52.1, bbox x936..1204 y782..793",
+   "(938,782) (45, 48, 53) vs (23, 26, 31)",
+   "(939,782) (80, 82, 86) vs (23, 26, 31)"
+  ]
  },
  {
   "fixture": "tests/ui/command-overlay-golden/history-light.png",
-  "after_sha256": "638522d29ccb3f96e152249a202e3376a23232aaf7b98c6728434b57fb3746ab",
-  "before_sha256": "be07614707df3a48b8f96f6634d1c96ec2bada40692e0b8271d95f04bea98629",
+  "before_sha256": "638522d29ccb3f96e152249a202e3376a23232aaf7b98c6728434b57fb3746ab",
+  "after_sha256": "66366dd6f4bacf4b167863b8af31528f13f10b4067d730d8737b4673c16fb04e",
   "diff_image": "artifacts/WO-UI-01/diff-history-light.png",
   "pixdiff": [
-   "4193 of 1024000 pixels differ (0.409%), max delta 120, mean delta 49.9, bbox x8..1226 y48..793",
-   "  (11,48) (137, 139, 141) vs (133, 137, 144)",
-   "  (12,48) (137, 139, 141) vs (129, 136, 146)"
-  ],
-  "exit": 1
+   "1850 of 1024000 pixels differ (0.181%), max delta 120, mean delta 53.6, bbox x936..1204 y782..793",
+   "(938,782) (114, 116, 120) vs (137, 139, 141)",
+   "(939,782) (79, 82, 87) vs (137, 139, 141)"
+  ]
+ },
+ {
+  "fixture": "tests/ui/command-overlay-golden/manifest.json",
+  "before_sha256": "3a99c2945f6bc083f91cbbcb5ee94895dd8394e560ae766d71f316bd0ba8d5cb",
+  "after_sha256": "7b492d19b2e075c3e7da3ad792bb798c81edb1069db4a6f0364b29ac7aa7745a"
  },
  {
   "fixture": "tests/ui/command-overlay-golden/palette-dark.png",
-  "after_sha256": "711b50aab413f475df53827d20d64b370a80a73d74e0a9980266588f30611dc8",
-  "before_sha256": "8741605a0c636fb69c03579d3805ae313e104b952d0c0c6df317d69a6aab2283",
+  "before_sha256": "711b50aab413f475df53827d20d64b370a80a73d74e0a9980266588f30611dc8",
+  "after_sha256": "f5c158b5718403f2f7d36bd3c0606d6291dfad876587a48fee32774b8cac555b",
   "diff_image": "artifacts/WO-UI-01/diff-palette-dark.png",
   "pixdiff": [
-   "5556 of 1024000 pixels differ (0.543%), max delta 117, mean delta 50.6, bbox x8..1234 y48..793",
-   "  (11,48) (23, 26, 31) vs (23, 30, 40)",
-   "  (12,48) (23, 26, 31) vs (22, 33, 47)"
-  ],
-  "exit": 1
+   "1204 of 1024000 pixels differ (0.118%), max delta 116, mean delta 53.9, bbox x1035..1215 y782..793",
+   "(1035,782) (56, 58, 63) vs (23, 26, 31)",
+   "(1036,782) (61, 63, 68) vs (23, 26, 31)"
+  ]
  },
  {
   "fixture": "tests/ui/command-overlay-golden/palette-light.png",
-  "after_sha256": "4deb28ff993de79294ae50b6b02a47cf38b5f295f3b7564a806c0c88eed99f92",
-  "before_sha256": "827e5332475049fa944f2519e0e8318a12e493b21f895f9d2988b92f8e0207af",
+  "before_sha256": "4deb28ff993de79294ae50b6b02a47cf38b5f295f3b7564a806c0c88eed99f92",
+  "after_sha256": "f5f4f4d175ffe44e7f7edd8ee47824fd23d592d77ede382a5efd2c53b4a5acd7",
   "diff_image": "artifacts/WO-UI-01/diff-palette-light.png",
   "pixdiff": [
-   "5556 of 1024000 pixels differ (0.543%), max delta 120, mean delta 50.8, bbox x8..1234 y48..793",
-   "  (11,48) (137, 139, 141) vs (133, 137, 144)",
-   "  (12,48) (137, 139, 141) vs (129, 136, 146)"
-  ],
-  "exit": 1
+   "1203 of 1024000 pixels differ (0.117%), max delta 120, mean delta 55.4, bbox x1035..1215 y782..793",
+   "(1035,782) (104, 106, 110) vs (137, 139, 141)",
+   "(1036,782) (98, 101, 104) vs (137, 139, 141)"
+  ]
  }
 ]

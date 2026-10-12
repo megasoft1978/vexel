@@ -129,7 +129,8 @@ enum {
     EDITOR_BUTTON_WORKSPACE_BASE = 24520U,
     EDITOR_NODE_STATUS_HINT = 24530U,
     EDITOR_NODE_STATUS_REPORT = 24531U,
-    EDITOR_NODE_STATUS_READOUT = 24532U
+    EDITOR_NODE_STATUS_READOUT = 24532U,
+    EDITOR_BUTTON_STATUS_CANCEL = 24533U
 };
 
 typedef enum editor_field_kind {
@@ -224,6 +225,8 @@ struct viewer_editor {
     viewer_workspace_kind workspace;
     viewer_editor_workspace_callback workspace_changed;
     void *workspace_context;
+    char workspace_inspector_section[24];
+    bool status_operation_active;
     document_handle selected;
     document_handle outline[EDITOR_OUTLINE_CAP];
     uint16_t outline_depth[EDITOR_OUTLINE_CAP];

@@ -561,7 +561,8 @@ uint16_t viewer_editor_ui_scale_percent(const viewer_editor *editor)
 
 bool viewer_editor_set_workspace(viewer_editor *editor, viewer_workspace_kind workspace)
 {
-    if (editor == NULL || (size_t)workspace >= viewer_workspace_count())
+    if (editor == NULL) return false;
+    if ((size_t)workspace >= viewer_workspace_count())
         workspace = viewer_workspace_default();
     const viewer_workspace_spec *spec = viewer_workspace_get(workspace);
     bool changed = editor->workspace != workspace;
@@ -575,6 +576,18 @@ bool viewer_editor_set_workspace(viewer_editor *editor, viewer_workspace_kind wo
     if (editor->timeline_available && editor->timeline_visible != spec->timeline)
         (void)viewer_editor_set_timeline_state(editor, true, spec->timeline,
             editor->timeline_height_points);
+    /* The workspace also selects which inspector section is expanded. */
+    size_t section_length = strlen(spec->inspector_section);
+    if (section_length >= sizeof(editor->workspace_inspector_section))
+        section_length = sizeof(editor->workspace_inspector_section) - 1U;
+    memcpy(editor->workspace_inspector_section, spec->inspector_section, section_length);
+    editor->workspace_inspector_section[section_length] = '\0';
+    editor->inspector_geometry_expanded =
+        strcmp(spec->inspector_section, "Geometry") == 0;
+    editor->inspector_appearance_expanded =
+        strcmp(spec->inspector_section, "Appearance") == 0;
+    editor->inspector_other_attributes_expanded =
+        strcmp(spec->inspector_section, "Attributes") == 0;
     if (editor->workspace_changed != NULL)
         editor->workspace_changed(editor->workspace_context,
             viewer_workspace_name(workspace));
@@ -590,6 +603,19 @@ bool viewer_editor_cycle_workspace(viewer_editor *editor, bool backwards)
     if (editor == NULL) return false;
     return viewer_editor_set_workspace(editor,
         viewer_workspace_cycle(editor->workspace, backwards));
+}
+
+void viewer_editor_set_operation_progress(viewer_editor *editor, bool active,
+    const char *message)
+{
+    if (editor == NULL) return;
+    editor->status_operation_active = active;
+    if (active && message != NULL && message[0] != '\0')
+        editor_set_text(editor->status, sizeof(editor->status), message);
+    else if (!active)
+        editor->status[0] = '\0';
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
 }
 
 void viewer_editor_set_workspace_callback(viewer_editor *editor,

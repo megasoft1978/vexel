@@ -18,7 +18,7 @@ typedef enum viewer_workspace_kind {
 typedef struct viewer_workspace_spec {
     const char *name;          /* Stable identifier stored in settings. */
     const char *label;         /* User-visible tab label. */
-    const char *inspector_group; /* Inspector group this workspace focuses. */
+    const char *inspector_section; /* Inspector section this workspace expands. */
     bool structure;            /* Layers/structure panel visible. */
     bool inspector;            /* Inspector panel visible. */
     bool timeline;             /* Animation timeline visible. */
@@ -33,5 +33,7 @@ viewer_workspace_kind viewer_workspace_from_name(const char *name, size_t length
 const char *viewer_workspace_name(viewer_workspace_kind kind);
 /* Wraps in both directions; an out-of-range kind is treated as the default. */
 viewer_workspace_kind viewer_workspace_cycle(viewer_workspace_kind current, bool backwards);
+/* The keyboard hint shown for cycling workspaces. */
+const char *viewer_workspace_shortcut_hint(void);
 
 #endif

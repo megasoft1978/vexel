@@ -1,5 +1,28 @@
 # UI lane
 
+## Task workspaces
+
+The editor chrome has four Blender-style task workspaces, shown as a tab strip in
+the band under the toolbar: `Draw`, `Nodes`, `Animate` and `Inspect`. A workspace
+only selects which panes are visible and which inspector section is expanded; it
+never changes the editing model or the document bytes. `Control-Tab` and
+`Control-Shift-Tab` cycle forward and backward with wrap.
+
+- `draw` — structure panel, inspector, inspector section `Geometry`, no timeline
+- `nodes` — structure panel, inspector, inspector section `Geometry`, no timeline
+- `animate` — structure panel, inspector, inspector section `Appearance`, timeline visible
+- `inspect` — structure panel, inspector, inspector section `Attributes`, no timeline
+
+The active workspace is stored in the macOS defaults under
+`VexelSettings.v1.workspace` as the workspace name (`draw`, `nodes`, `animate`,
+`inspect`). It is only restored when the existing `rememberWorkspace` preference
+is on; an unknown or missing name falls back to `draw`.
+
+The status bar is a single bar with Blender's three regions: the active-tool hint
+on the left, the operation report (with a Cancel button while an operation runs)
+in the centre, and the save state, selection count and zoom on the right. The
+tool hint is not duplicated anywhere else in the chrome.
+
 See [the w4-ui style implementation](../lanes/ui-style.md) for the production
 editor palette, layout, CoreText path, accessibility bridge, computed contrast
 report, new 1×/2× style goldens, and remaining integration limits.

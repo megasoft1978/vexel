@@ -556,7 +556,7 @@ int main(void)
     const ui_semantics_node *tool_hint = find_label(snapshot,
         "Selection tool · choose a layer or edit it on the canvas · V");
     const ui_semantics_node *status_readout = find_label(snapshot,
-        "Ready · Saved · No selection");
+        "Saved · No selection");
     if (selected_row_count(snapshot) != 0U || tool_hint == NULL ||
         tool_hint->frame.x != 12U ||
         status_readout == NULL || status_readout->frame.height < 16U ||
