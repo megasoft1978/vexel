@@ -1,12 +1,12 @@
 ---
 id: WO-MOTION-03
-revision: 3
+revision: 4
 status: READY
 milestone: M7
 owner: project-owner
 executor: codex-gpt-6
 base_sha: 4ea7404dc3441f0e3e3546faf2935d1e628be6c1
-spec_sha256: 0a31e2f5825f796dff2ae093564963ec9cebeb223a52f151dbf97022af6d965e
+spec_sha256: b749985fb7acbc37c253588d96a5674d43cda1320d5148fc66585bf288d879e0
 parallel_safe: false
 network: false
 ---
@@ -14,7 +14,7 @@ network: false
 Add source-preserving, transactional editing commands for supported SMIL keyframes and tracks.
 
 # Repair note
-The closure verifier for revision 2 rejected the implementation already on `main`. Revision 3 is a repair revision based on current `main`. Besides evidence and records, the candidate may edit `src/svg/animation/authoring.{h,c}`, `src/svg/animation/README.md` and `tests/anim/animation_authoring_test.c` to fix exactly these findings. No other behavior, golden or oracle may change, and no existing assertion may be weakened.
+The closure verifier for revision 2 rejected the implementation already on `main`, and revision 3 could not be verified because its allowlist used brace patterns that the runner path guard does not expand. Revision 4 is the repair revision, based on the commit before the repair. Besides evidence and records, the candidate may edit `src/svg/animation/authoring.h`, `authoring.c`, the new `authoring_create.c` and `authoring_internal.h` beside them, `src/svg/animation/README.md`, `tests/anim/animation_authoring_test.c`, the new `tests/anim/animation_authoring_edge_test.c`, and the `# lane: w14-keyframes` block of `CMakeLists.txt` to fix exactly these findings. No other behavior, golden or oracle may change, and no existing assertion may be weakened.
 
 1. Spline tracks must support key edits. In `authoring.c`, `set_key_sequence`, `move_key` and `delete_key` stop rejecting spline tracks. `set_key_sequence` takes the keySplines bytes to write. A spline track keeps exactly key_count-1 keySplines tuples: value edit and move pass the original bytes through unchanged; add duplicates the tuple of the interval it splits; delete drops one tuple (key 0 drops tuple 0, the last key drops tuple N-2, any other key k drops tuple k). Deleting down to one key removes keySplines and sets `calcMode="linear"`, because the parser rejects a one-key spline track. A keySplines value over 64 KiB returns the existing limit error before the source is modified. Document this in the animation README.
 2. Bound and edge tests. Add tests for: NULL output patch; track index at track_count; corrupt source spans (offset at source length, length past the end, offset not on `<`); open tags over 64 KiB or over 128 attributes; key index at key_count; empty, `;`-containing or over-64 KiB values; add-key times at begin, at begin+dur, NaN, Inf, and equal to an existing key; move-key on the first, last or only key, outside the neighbouring keys, and to the same time; deleting the only key; timing with NaN, Inf, non-positive duration and begin+dur over 3600; spline NaN, negative and out-of-range interval; unsupported create-track kinds, attributes and seed values. Each rejection also asserts that the patch has no replacement.
@@ -33,11 +33,14 @@ The closure verifier for revision 2 rejected the implementation already on `main
 - Static property edits never create animation implicitly. A track is created only by an explicit command and contains an explicit time-zero seed.
 
 # Files allowed to touch
+- `tests/anim/animation_authoring_edge_test.c`
+- `src/svg/animation/authoring_internal.h`
+- `src/svg/animation/authoring_create.c`
 - `work/WO-MOTION-03.md`
-- `src/svg/animation/authoring.{h,c}`
+- `src/svg/animation/authoring.h, src/svg/animation/authoring.c`
 - `src/svg/animation/README.md`
-- `src/app/viewer_anim_edit*.{h,c}`
-- `src/app/viewer_timeline.{h,c}`
+- `src/app/viewer_anim_edit*.h, src/app/viewer_anim_edit*.c`
+- `src/app/viewer_timeline.h, src/app/viewer_timeline.c`
 - `src/app/viewer_timeline_ui.c`
 - `src/app/viewer_events.c` (localized timeline mutation handoff only)
 - `tests/anim/animation_authoring_test.c`
