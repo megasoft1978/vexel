@@ -51,7 +51,7 @@ const char *viewer_workspace_name(viewer_workspace_kind kind)
 
 const char *viewer_workspace_shortcut_hint(void)
 {
-    return "Control-Tab";
+    return "Control-PageDown";
 }
 
 viewer_workspace_kind viewer_workspace_cycle(viewer_workspace_kind current, bool backwards)

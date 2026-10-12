@@ -5,8 +5,8 @@
 The editor chrome has four Blender-style task workspaces, shown as a tab strip in
 the band under the toolbar: `Draw`, `Nodes`, `Animate` and `Inspect`. A workspace
 only selects which panes are visible and which inspector section is expanded; it
-never changes the editing model or the document bytes. `Control-Tab` and
-`Control-Shift-Tab` cycle forward and backward with wrap.
+never changes the editing model or the document bytes. `Control-PageDown` and
+`Control-PageUp` cycle forward and backward with wrap (`Control-Tab` works as an alias).
 
 - `draw` — structure panel, inspector, inspector section `Geometry`, no timeline
 - `nodes` — structure panel, inspector, inspector section `Geometry`, no timeline

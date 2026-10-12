@@ -296,12 +296,23 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len)
 {
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
-    /* Control-Tab cycles task workspaces, as in Blender's topbar tabs. */
-    if (key_code == 48U && (modifiers & PLATFORM_MODIFIER_CONTROL) != 0U &&
+    /* Control-PageUp / Control-PageDown cycle task workspaces, as in Blender's
+     * topbar tabs; Control-Tab and Control-Shift-Tab are kept as aliases. */
+    if ((modifiers & PLATFORM_MODIFIER_CONTROL) != 0U &&
         (modifiers & PLATFORM_MODIFIER_COMMAND) == 0U) {
-        (void)viewer_editor_cycle_workspace(editor,
-            (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U);
-        return VIEWER_EDITOR_HANDLED;
+        if (key_code == 121U) {
+            (void)viewer_editor_cycle_workspace(editor, false);
+            return VIEWER_EDITOR_HANDLED;
+        }
+        if (key_code == 116U) {
+            (void)viewer_editor_cycle_workspace(editor, true);
+            return VIEWER_EDITOR_HANDLED;
+        }
+        if (key_code == 48U) {
+            (void)viewer_editor_cycle_workspace(editor,
+                (modifiers & PLATFORM_MODIFIER_SHIFT) != 0U);
+            return VIEWER_EDITOR_HANDLED;
+        }
     }
     if (editor->command_palette_open || editor->history_popover_open)
         return editor_overlay_key(editor, key_code, modifiers, text, text_len);

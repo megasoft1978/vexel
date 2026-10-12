@@ -1,12 +1,12 @@
 ---
 id: WO-UI-01
-revision: 1
+revision: 2
 status: READY
 milestone: M6
 owner: project-owner
 executor: deepseek-flash
 base_sha: e31084f396d4d6ddabcfffb99f346d741f3a8349
-spec_sha256: ee4ea903c5d423453f07e6e349529e74fb73748e6541234454d8a829909b6b54
+spec_sha256: 2c5b47bef3e920d2d90b77126f7b6fd47a159fe4775eb9532edcd631995e4595
 parallel_safe: false
 network: false
 ---
@@ -54,16 +54,17 @@ Adopt the first two Blender-alignment patterns from `docs/adr/0017-ui-direction-
 4. **Consolidate status and feedback into one status bar.** Remove the duplicated full-width tool-hint row. The status bar gains three regions: left = active-tool hint and shortcut, centre = progress message with a cancel affordance when an operation is in progress and transient report text otherwise, right = readouts (selection count, zoom, document size). Long-running operations already present (open/index, export, render) must route their message into the centre region rather than into the removed hint row or the window status text.
 5. Add focused tests covering: the four workspaces exist with the documented pane visibility; switching changes exactly the documented panes; cycling wraps in both directions; the active workspace persists across a settings save/load round-trip; an unknown stored name falls back to `Draw`; the status bar exposes hint, progress and readout regions and the removed hint row no longer exists; and a workspace-switch sequence leaves the document bytes unchanged.
 6. Update `docs/ui/editor-interaction.md` with the workspace shortcuts and the status-bar regions, and `docs/ui/README.md` with the settings key.
-7. Update or add deterministic fixtures for the chrome in dark and light at 1× and 2×, and record the baseline change: for every changed PNG, the reason and the side-by-side comparison; for every new PNG, the state it captures.
+7. Update or add deterministic fixtures for the chrome in dark and light at 1× and 2×, and record the baseline change for **every** changed fixture, manifests included: the reason, the before/after SHA-256, and a red-highlight comparison for each PNG.
+8. The tab strip exposes the cycle shortcut and the workspace applies a real inspector section; the status bar's centre region offers a cancel affordance while an operation runs, and its message is not repeated in the right-hand readout.
 
 # Acceptance criteria (machine-checkable)
 - AC-1 `cmake --preset mac-debug && cmake --build --preset mac-debug && ctest --test-dir build/mac-debug --output-on-failure` exits 0.
 - AC-2 `./dev verify` exits 0 (Debug and Release builds, all CTest, all Python tests).
 - AC-3 `./dev t --all` exits 0.
-- AC-4 The new focused workspace/status tests run under CTest and fail against the pre-change binary for the right reason (record the pre-change failure).
+- AC-4 The new focused workspace/status tests are registered under CTest. Because the workspace model does not exist at the base revision, record the pre-change failure as the compile-time diagnostic from building `tests/editor/viewer_workspace_test.c` against `base_sha` (`viewer_workspace.h` not found) in `artifacts/WO-UI-01/pre-change.md`, instead of a runtime failure.
 - AC-5 `python3 -m unittest tests.test_ui_chrome_golden` and `python3 -m unittest tests.test_w15_accessibility_localization` exit 0.
-- AC-6 `./dev editor-smoke` exits 0 and exercises a workspace switch from the keyboard in a real window.
-- AC-7 Workspace switching leaves the document unchanged: a recorded check switches through all four workspaces and saves byte-identically to the original file.
+- AC-6 `./dev editor-smoke` exits 0 and switches workspaces from the keyboard in a real window: it sends the cycle shortcut, asserts the newly active tab through the live layout dump, cycles back with wrap, and the run starts from a pinned workspace so a remembered user choice cannot change the fixture.
+- AC-7 Workspace switching leaves the document unchanged, verified through a real save: the smoke switches through every workspace and the save assertion that follows compares the file written to disk with the previously saved bytes.
 - AC-8 `artifacts/WO-UI-01/golden-changes.md` lists every changed or added fixture with its reason and side-by-side comparison; no fixture changed without an entry.
 - AC-9 `python3 scripts/ledger.py validate ledger.jsonl`, `python3 scripts/wo_validate.py WO-UI-01 --ready` and `git diff --check` exit 0.
 - AC-10 A fresh read-only verifier reports pass against the exact candidate commit.

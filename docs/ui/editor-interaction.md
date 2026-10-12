@@ -27,8 +27,9 @@ snapping. Holding Space pans and hides selection and snap overlays until release
 
 | Input | Action |
 |---|---|
-| `Control-Tab` | Next task workspace (Draw, Nodes, Animate, Inspect) |
-| `Control-Shift-Tab` | Previous task workspace |
+| `Control-PageDown` | Next task workspace (Draw, Nodes, Animate, Inspect) |
+| `Control-PageUp` | Previous task workspace |
+| `Control-Tab` / `Control-Shift-Tab` | Aliases for next / previous workspace |
 | `V` | Select tool |
 | `H` or hold Space | Pan tool |
 | `Z` | Zoom tool |
@@ -98,7 +99,7 @@ bounded to 4096 pixels per axis and 16 million pixels.
 The tab strip under the toolbar switches between four task workspaces. A workspace
 selects pane visibility and the expanded inspector section only; the document and
 the editing model are untouched, and a workspace switch never marks the document
-dirty. `Control-Tab` and `Control-Shift-Tab` cycle with wrap, and the choice is
+dirty. `Control-PageDown` and `Control-PageUp` cycle with wrap, and the choice is
 remembered when `rememberWorkspace` is enabled.
 
 The status bar carries the active-tool hint on the left, the running operation and

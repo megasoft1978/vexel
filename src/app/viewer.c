@@ -364,7 +364,13 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         platform_settings_get(&preferences);
         viewer_editor_set_workspace_callback(next_editor,
             viewer_persist_workspace, NULL);
-        if (preferences.remember_workspace && preferences.workspace[0] != '\0')
+        /* Tests pin the starting workspace so a remembered user choice cannot
+         * change the fixture layout between runs. */
+        const char *test_workspace = getenv("VEXEL_TEST_WORKSPACE");
+        if (test_workspace != NULL && test_workspace[0] != '\0')
+            (void)viewer_editor_apply_workspace_name(next_editor,
+                test_workspace, strlen(test_workspace));
+        else if (preferences.remember_workspace && preferences.workspace[0] != '\0')
             (void)viewer_editor_apply_workspace_name(next_editor,
                 preferences.workspace, strlen(preferences.workspace));
         (void)viewer_editor_set_sidebar_visibility(next_editor,

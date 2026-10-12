@@ -43,7 +43,7 @@ static int check_table(void)
     /* An out-of-range kind degrades to the default rather than reading out of bounds. */
     if (viewer_workspace_get((viewer_workspace_kind)99) !=
         viewer_workspace_get(VIEWER_WORKSPACE_DRAW)) return 5;
-    if (strcmp(viewer_workspace_shortcut_hint(), "Control-Tab") != 0) return 6;
+    if (strcmp(viewer_workspace_shortcut_hint(), "Control-PageDown") != 0) return 6;
     return 0;
 }
 
@@ -181,8 +181,8 @@ static int check_semantics(void)
             if (node->id == 24520U) {
                 draw_checked = (node->state & UI_STATE_CHECKED) != 0U &&
                     length == 4U && memcmp(full, "Draw", 4U) == 0;
-                hint_value = value != NULL && value_length == 11U &&
-                    memcmp(value, "Control-Tab", 11U) == 0;
+                hint_value = value != NULL && value_length == 16U &&
+                    memcmp(value, "Control-PageDown", 16U) == 0;
             }
         }
         if (node->id == 24530U) hint++;
