@@ -161,7 +161,10 @@ keys 'keystroke "s" using {command down}'
 sleep 0.3
 assert_untouched_save
 python3 "$mouse" click-node "$layout_dump" "Rectangle #box" visibility
-python3 "$mouse" wait-node "$layout_dump" "Rectangle #box" value=
+# Selection deliberately survives hiding and locking (see the locked-move step
+# below), so a selected row keeps the "Selected on canvas" state value. Assert
+# the specific state this step toggled rather than an empty value.
+python3 "$mouse" wait-node "$layout_dump" "Rectangle #box" not-contains=Hidden
 
 # Locking blocks canvas translation without changing the editable source.
 python3 "$mouse" click-node "$layout_dump" "Rectangle #box" lock
@@ -175,7 +178,7 @@ keys 'keystroke "s" using {command down}'
 sleep 0.3
 assert_untouched_save
 python3 "$mouse" click-node "$layout_dump" "Rectangle #box" lock
-python3 "$mouse" wait-node "$layout_dump" "Rectangle #box" value=
+python3 "$mouse" wait-node "$layout_dump" "Rectangle #box" not-contains=Locked
 
 # Edit X and Fill in the inspector, and verify both the live fields and saved SVG.
 python3 "$mouse" click-node "$layout_dump" X

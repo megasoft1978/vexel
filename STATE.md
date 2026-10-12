@@ -376,3 +376,18 @@
   fidelity is measured by full-document renders; the M0 and M3 gates proceed on synthetic and
   public-corpus evidence without user interviews or user files, knowingly carrying that risk;
   and the M13 animation demand gate is retired in favour of ordinary work orders.
+
+- Update 2026-10-12: **WO-QA-01** records the first complete full-gate baseline and repairs
+  `./dev editor-smoke`. Baseline: `verify`, `asan`, `ubsan`, `shape-fuzz`, `mcp-fuzz`, `e2e`,
+  `soak`, `viewer-smoke`, `fuzz-xml` and `animation_fuzz` (1,000,000 cases) all passed;
+  `editor-smoke` failed on a stale assertion. The W15 accessibility lane added a
+  `Selected on canvas` layer-row value, while the scenario asserted an empty row value after
+  re-showing and unlocking a row. Selection deliberately survives hiding and locking (the
+  scenario's own locked-move step requires it), so the driver gained a `not-contains=`
+  condition and the two assertions now check the state each step toggles. No product code
+  changed. Sixteen frozen commands pass, including CTest 80/80 and Python 328/328. Evidence:
+  `artifacts/WO-QA-01/`.
+- Update 2026-10-12: two further work orders are frozen: **WO-M4-10** replaces the 16 MiB
+  full-render source cap with a bounded token-storage budget (the largest measured corpus
+  blocker: 11 files fail at offset 16777216), and **WO-HYGIENE-01** archives the disconnected
+  second-root branch lineage as tags and prunes the 21 GB of stale worktrees.

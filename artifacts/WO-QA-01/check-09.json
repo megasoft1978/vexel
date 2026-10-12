@@ -1,0 +1,16 @@
+{
+ "index": 9,
+ "frozen_command": "./dev shape-fuzz --seed 20261010 --output .cache/qa/shape-fuzz-final.json",
+ "argv": [
+  "./dev",
+  "shape-fuzz",
+  "--seed",
+  "20261010",
+  "--output",
+  ".cache/qa/shape-fuzz-final.json"
+ ],
+ "exit_code": 0,
+ "duration_s": 42.87797808647156,
+ "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n  VEXEL_SANITIZER=\"asan-ubsan\"\n\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-asan\nninja: no work to do.\n{\"binary\": \"/Users/megasoft78/Desktop/Freelance/vexel/build/mac-asan/bin/shape_fuzz\", \"cap_exhaustion_cases\": 1, \"cap_exhaustion_input_bytes\": 327730, \"cases\": 1000000, \"compiler\": \"Apple clang version 21.0.0 (clang-2100.3.34.2)\", \"crashes\": 0, \"duration_seconds\": 42.706, \"evenodd_cases\": 250000, \"evenodd_renders\": 7813, \"feature_coverage\": {\"anchor\": {\"cases\": 3241, \"renders\": 97}, \"blend_modes\": {\"cases\": 3258, \"renders\": 91}, \"colors\": {\"cases\": 9556, \"renders\": 306}, \"crisp_edges\": {\"cases\": 3161, \"renders\": 107}, \"css_selectors\": {\"cases\": 3084, \"renders\": 85}, \"filter\": {\"cases\": 3318, \"renders\": 99}, \"gradients\": {\"cases\": 16153, \"renders\": 494}, \"image\": {\"cases\": 12856, \"renders\": 186}, \"join_fallbacks\": {\"cases\": 3150, \"renders\": 87}, \"length_units\": {\"cases\": 12705, \"renders\": 379}, \"marker\": {\"cases\": 3236, \"renders\": 114}, \"mask\": {\"cases\": 3252, \"renders\": 99}, \"nested_viewport\": {\"cases\": 3160, \"renders\": 110}, \"opacity\": {\"cases\": 6274, \"renders\": 174}, \"paint_order\": {\"cases\": 3229, \"renders\": 85}, \"path_stroke\": {\"cases\": 15966, \"renders\": 499}, \"pattern\": {\"cases\": 3215, \"renders\": 88}, \"rounded_rect\": {\"cases\": 6266, \"renders\": 208}, \"switch\": {\"cases\": 3139, \"renders\": 97}, \"text\": {\"cases\": 9773, \"renders\": 178}, \"transforms\": {\"cases\": 9674, \"renders\": 326}, \"vector_effect\": {\"cases\": 3136, \"renders\": 107}}, \"fractional_cases\": 750000, \"fractional_renders\": 7813, \"host\": {\"machine\": \"arm64\", \"macos_version\": \"27.0\", \"platform\": \"macOS-27.0-arm64-arm-64bit\"}, \"input_max_bytes\": 327730, \"invariant_failures\": 0, \"metric_availability\": {\"peak_rss\": \"not collected by the bounded fuzz harness\"}, \"nonzero_cases\": 250000, \"nonzero_renders\": 7813, \"peak_rss_bytes\": null, \"process_cpu_seconds\": 42.509, \"random_input_max_bytes\": 4096, \"renderer\": \"Vexel scalar 4x4 shape rasterizer\", \"result\": \"pass\", \"sanitizer\": \"AddressSanitizer + UndefinedBehaviorSanitizer\", \"sanitizer_reports\": 0, \"sanitizer_stderr\": \".cache/qa/shape-fuzz-final.stderr.txt\", \"sanitizer_stderr_bytes\": 0, \"seed\": 20261010, \"source_revision\": \"5894cb40acfaf0aac10127d82c30fb8be9d38cb4\", \"stroke_cases\": 31913, \"stroke_renders\": 995}\n",
+ "stderr": ""
+}

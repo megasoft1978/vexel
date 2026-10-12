@@ -140,6 +140,13 @@ def assert_node(layout, label, condition):
         if any(int(node.get("state", 0)) & CHECKED_STATE for node in nodes):
             return
         raise AssertionError(f"node {label!r} is not selected")
+    if condition.startswith("not-contains="):
+        expected = condition[len("not-contains="):]
+        if all(expected not in node.get("value", "") for node in nodes):
+            return
+        values = [node.get("value", "") for node in nodes]
+        raise AssertionError(
+            f"node {label!r} values {values!r} still contain {expected!r}")
     if condition.startswith("contains="):
         expected = condition[len("contains="):]
         if any(expected in node.get("value", "") for node in nodes):

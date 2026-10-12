@@ -1,0 +1,13 @@
+{
+ "index": 13,
+ "frozen_command": "build/mac-asan/bin/animation_fuzz 1000000 20261012",
+ "argv": [
+  "build/mac-asan/bin/animation_fuzz",
+  "1000000",
+  "20261012"
+ ],
+ "exit_code": 0,
+ "duration_s": 596.2481019496918,
+ "stdout": "animation hierarchy fuzz: 1000000 cases, parsed=1000000, tracked=91541, decoded=1000000, rendered=1000000, kinds=250186/250419/249670/249725, hierarchies=166616/166348/167382/166507/166616/166531, seed-final=12123669796587611457\n",
+ "stderr": ""
+}
