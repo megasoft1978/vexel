@@ -433,3 +433,12 @@
   pass, a mutated frozen input failing, a mutated living input not failing, the packet recording
   the living input without a hash, and the committed packet matching the generator. Evidence:
   `artifacts/WO-QA-03/`.
+
+- Update 2026-10-12: **WO-QA-03 merged.** The M3 packet validator passes again. Three non-blocking
+  findings from its verifier are open follow-ups for the documentation pass: (a)
+  `validate_schema` accepts a living path presented in frozen `{path, sha256}` shape, so the
+  frozen/living invariant is not schema-enforced; (b) `tests/test_m3_packet.py`'s living-input
+  case asserts the returned source list rather than the packet table directly (the table shape is
+  asserted by a separate test); (c) `reports/M3/decision.md`'s boilerplate still reads "Every packet
+  source below is repository-relative and verified by the offline validator", which is no longer true
+  for the living row rendered beneath it. None affects a measurement or hash.
