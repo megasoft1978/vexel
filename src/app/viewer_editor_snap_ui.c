@@ -57,6 +57,17 @@ static bool snap_popover_geometry_get(viewer_editor *editor,
     return true;
 }
 
+/* Exposed so tests can ask where the popover really is instead of recomputing
+ * the placement rules, which include a flip when it would not fit below. */
+bool editor_snap_popover_panel(viewer_editor *editor, ui_rect *out_panel)
+{
+    snap_popover_geometry geometry;
+    if (out_panel == NULL || !snap_popover_geometry_get(editor, &geometry))
+        return false;
+    *out_panel = geometry.panel;
+    return true;
+}
+
 static bool snap_popover_contains(ui_rect bounds, uint32_t x, uint32_t y)
 {
     return x >= bounds.x && y >= bounds.y &&

@@ -356,10 +356,14 @@ static int test_snap_popover_independent_toggles_and_master_shortcut(void)
         VIEWER_EDITOR_HANDLED) != 0U && editor->snap_popover_open,
         "Snapping button opens the category popover");
     viewer_editor_pointer_up(editor);
-    uint32_t panel_x = trigger->bounds.x;
-    uint32_t panel_y = trigger->bounds.y + trigger->bounds.height + 4U;
+    /* Ask the editor where the popover is: it flips above the trigger when it
+     * would not fit below, so recomputing the placement here would be wrong. */
+    ui_rect panel = {0};
+    CHECK(editor_snap_popover_panel(editor, &panel),
+        "resolve snapping popover geometry");
+    uint32_t panel_x = panel.x;
     uint32_t row_x = panel_x + 16U;
-    uint32_t grid_y = panel_y + 28U + 15U;
+    uint32_t grid_y = panel.y + 28U + 15U;
     uint32_t objects_y = grid_y + 30U;
     editor_snap_popover_pointer_move(editor, row_x, grid_y);
     CHECK(editor->snap_popover_hovered &&

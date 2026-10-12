@@ -88,6 +88,11 @@ static bool test_randomized_gesture_fuzz(void)
         double start_x = 9.0 + (double)(random % 14000U) / 1000.0;
         random = next_random(&random_state);
         double start_y = 9.0 + (double)(random % 10000U) / 1000.0;
+        if (cycle % 1000U == 999U) {
+            /* Aim the mutating cycle's drag at the rectangle's interior. */
+            start_x = 16.0;
+            start_y = 14.0;
+        }
         geom_point start = screen_point(&navigation, start_x, start_y);
         CHECK((viewer_editor_canvas_pointer_down(editor, &document, &navigation,
             start.x, start.y, 0U) & VIEWER_EDITOR_HANDLED) != 0U);
@@ -97,6 +102,12 @@ static bool test_randomized_gesture_fuzz(void)
         random = next_random(&random_state);
         double end_y = start_y + (double)((int32_t)(random % 5001U) - 2500) / 1000.0;
         if (cycle % 1000U == 999U) {
+            /* The mutating cycle starts its drag inside the rectangle, because a
+             * gesture resolves its target at pointer_down. A drag from empty
+             * space leaves the selection on the document root, and transforming
+             * the root is refused: it used to rewrite the whole document. */
+            start_x = 16.0;
+            start_y = 14.0;
             end_x = start_x + 3.0;
             end_y = start_y + 2.0;
         }

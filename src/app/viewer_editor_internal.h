@@ -232,6 +232,9 @@ typedef struct editor_path_node_ref {
 
 /* Density-dependent metric helpers; the chrome asks for these instead of
  * hard-coding a height so a single preference changes every list and field. */
+/* Where the snapping popover is actually placed, flip included. */
+bool editor_snap_popover_panel(viewer_editor *editor, ui_rect *out_panel);
+
 uint32_t editor_row_height(const viewer_editor *editor);
 uint32_t editor_field_height(const viewer_editor *editor);
 uint32_t editor_section_height(const viewer_editor *editor);

@@ -337,13 +337,6 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
     }
     if (editor->command_palette_open || editor->history_popover_open)
         return editor_overlay_key(editor, key_code, modifiers, text, text_len);
-    if (key_code == 53U && editor->last_operation.valid &&
-        !editor->last_operation.dismissed) {
-        editor->last_operation.dismissed = true;
-        editor->tree_ready = false;
-        editor->redraw_requested = true;
-        return VIEWER_EDITOR_HANDLED;
-    }
     if (key_code == 53U && editor->zoom_menu_open) {
         editor->zoom_menu_open = false;
         editor->tree_ready = false;
@@ -356,6 +349,13 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
         return viewer_editor_open_command_palette(editor) ? VIEWER_EDITOR_HANDLED : 0U;
     if (key_code == 53U && editor->canvas_gesture != EDITOR_CANVAS_GESTURE_NONE)
         return viewer_editor_cancel_canvas_gesture(editor);
+    if (key_code == 53U && editor->last_operation.valid &&
+        !editor->last_operation.dismissed) {
+        editor->last_operation.dismissed = true;
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (key_code == 53U && editor->snap_popover_open) {
         editor->snap_popover_open = false;
         editor->snap_popover_hovered = false;

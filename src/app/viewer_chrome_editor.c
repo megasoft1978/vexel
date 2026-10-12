@@ -357,7 +357,9 @@ void editor_build_tree_modern(viewer_editor *editor)
     /* Blender's Active Tool / Tool Settings region: the active tool, its
      * shortcut and the options that belong to it. */
     char tool_label[64] = {0};
-    int tool_amount = snprintf(tool_label, sizeof(tool_label), "%s tool · %s",
+    /* Distinct from the tool rail's "<name> tool · <key>" so that a label
+     * lookup cannot resolve to the wrong node, in the interface or in a test. */
+    int tool_amount = snprintf(tool_label, sizeof(tool_label), "Active tool · %s · %s",
         editor_tool_name(editor), editor_tool_key(editor));
     if (tool_amount < 0 || (size_t)tool_amount >= sizeof(tool_label))
         snprintf(tool_label, sizeof(tool_label), "%s", editor_tool_name(editor));
