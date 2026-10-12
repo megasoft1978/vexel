@@ -1,7 +1,7 @@
 # WO-M4-09 evidence — corpus full-render diagnostics
 
 Frozen spec revision 2, spec SHA-256
-`2f780b2b7d9629db177804a4e650a3ee8f5dd957d71584f60e5750722015ec5f`.
+`3817a27f1dc7fd1a1784de56d651cb547d6f0783761572062d937e5c342409b9`.
 
 All **ten** frozen verification commands exited 0 on the candidate tree, in the
 order the spec lists them.
@@ -81,15 +81,16 @@ an interpretation of the offsets, not a field in the JSON.
 
 ## Record sequencing
 
-`STATE.md` is updated in the implementation commit. The ledger events after
-`run_started` are written after the verifier verdict, because
-`scripts/ledger.py`'s transition table only permits
-`run_started -> run_finished -> verified -> accepted -> merged`, and the
-`verified`/`accepted`/`merged` entries must name the accepted candidate commit.
-The post-verification commit therefore appends `run_finished`, `verified`,
-`accepted` and `merged`, adds the `LEDGER.md` row, and refreshes
-`artifacts/WO-M4-09/executor-report.json` so that its `head_sha` names the
-verified candidate commit and its counts match `check-05.json`.
+`STATE.md` and the `ready`, `run_started` and `run_finished` ledger events are
+written before verification. `scripts/ledger.py`'s transition table only permits
+`run_started -> run_finished -> verified -> accepted -> merged`, so the
+`verified`, `accepted` and `merged` entries cannot precede the verdict. The
+post-verification evidence commit therefore appends those three events, adds the
+`LEDGER.md` row, and refreshes `artifacts/WO-M4-09/executor-report.json` so that
+its `head_sha` names the verified candidate commit and its counts match
+`check-05.json`. The already-committed `run_finished` entry names that
+candidate's parent, because a ledger entry cannot name the commit that contains
+it; that asymmetry is deliberate and recorded here.
 
 ## Known stale text in history
 
