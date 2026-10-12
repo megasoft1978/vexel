@@ -1,0 +1,5 @@
+ok   build              0.2s
+ok   ctest -R all              3.7s  100% tests passed, 0 tests failed out of 79
+ok   python mcp.test_e2e,svg.sha   3.1s  Ran 69 tests in 2.964s
+PASS  total 7.0s   (slow Python skipped; --full or ./dev t -k <name>)
+exit=0

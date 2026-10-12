@@ -1,17 +1,20 @@
 ---
 id: WO-MOTION-03
-revision: 1
-spec_sha256: f85617a5ad3c05d1e3df8fe5e2d89f670fb867ba5eb6f34a96659d265611ad7f
+revision: 2
 status: READY
 milestone: M7
 owner: project-owner
 executor: codex-gpt-6
-base_sha: 3739b0b2dcce1dae5c4959452565d1a4dfdb2188
+base_sha: 5c2d0ed69d5f1c45d0faf0211949fff9222f92e4
+spec_sha256: 325a504610098ddf1ac7d180254bcdc4f712267ae63d297becfc41bbdcd52f40
 parallel_safe: false
 network: false
 ---
 # Goal
 Add source-preserving, transactional editing commands for supported SMIL keyframes and tracks.
+
+# Closure note
+The executor run for the prior revision finished without a verified ledger outcome: its output stayed uncommitted, and the implementation reached `main` later through lane integration. This closure revision is based on current `main`, which already contains the implementation. The candidate may add only retained evidence and records under the allowlist. The full frozen verification commands must pass on the candidate tree, and a fresh verifier must review the acceptance evidence. No test, golden or oracle may change.
 
 # Context pointers
 - Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/CODING_STANDARD.md`, `docs/testing.md`, `src/svg/animation/README.md`, and the WO-MOTION-03 section of the supplied `r4-motion.md` research report.
@@ -63,6 +66,19 @@ Add source-preserving, transactional editing commands for supported SMIL keyfram
 2. Run focused timeline/animation Python and C tests.
 3. Run `./dev t --all` and ledger/diff validation.
 4. Record exact output under `artifacts/WO-MOTION-03/` and update `STATE.md`, `LEDGER.md`, and the lane note.
+
+# Verification commands
+Run sequentially from the repository root.
+
+```text
+cmake --preset mac-debug
+cmake --build --preset mac-debug
+ctest --test-dir build/mac-debug --output-on-failure
+./dev t --all
+python3 scripts/ledger.py validate ledger.jsonl
+python3 scripts/wo_validate.py WO-MOTION-03 --ready
+git diff --check
+```
 
 # Non-goals
 Path (`d`) editing, motion-path editing, CSS animation, implicit track creation from static-field edits, native-window automation, new dependencies, non-macOS support, and commits.

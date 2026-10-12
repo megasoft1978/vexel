@@ -1,0 +1,74 @@
+[1/67] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_m4_06_evidence.c.o
+[2/67] Building C object CMakeFiles/vexel_shape.dir/src/svg/clip/clip.c.o
+[3/67] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_reference.c.o
+[4/67] Building C object CMakeFiles/shape_test.dir/tests/svg/shape/test_shape.c.o
+[5/67] Linking C static library libvexel_shape.a
+[6/67] Linking C executable bin/svg_text_image_test
+[7/67] Linking C executable bin/vexel-mcp
+[8/67] Linking C executable bin/animation_fuzz
+[9/67] Linking C executable bin/ui_demo_interaction_test
+[10/67] Linking C executable bin/svg_marker_realloc_test
+[11/67] Linking C executable bin/shape_render_cli
+[12/67] Linking C executable bin/ui_interaction_test
+[13/67] Linking C executable bin/svg_anim_test
+[14/67] Linking C executable bin/animation_eval_cli
+[15/67] Linking C executable bin/ui_demo_render
+[16/67] Linking C executable bin/shape_test
+[17/67] Linking C executable bin/ui_focus_bench
+[18/67] Linking C executable bin/mcp_fuzz
+[19/67] Linking C executable bin/mcp_protocol_test
+[20/67] Linking C executable bin/mcp_headless_broker
+[21/67] Linking C executable bin/ui_core_test
+[22/67] Linking C executable bin/animation_render_cli
+[23/67] Linking C executable bin/editor_chrome_render
+[24/67] Linking C executable bin/css_test
+[25/67] Linking C executable bin/shape_render_stats_cli
+[26/67] Linking C executable bin/viewer_home_test
+[27/67] Linking C executable bin/shape_fuzz
+[28/67] Linking C executable bin/shape_render_reference_cli
+[29/67] Linking C executable bin/svg_index_bench
+[30/67] Linking C executable bin/shape_media_render_cli
+[31/67] Linking C executable bin/editor_state_test
+[32/67] Linking C executable bin/viewer_home_render
+[33/67] Linking C executable bin/viewer_home_layout_fuzz
+[34/67] Linking C executable bin/mcp_features_test
+[35/67] Linking C executable bin/render_soak_driver
+[36/67] Linking C executable bin/viewer_frame_test
+[37/67] Linking C executable bin/ui_tokens_contrast_test
+[38/67] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a', 'libvexel_platform_media.a', 'libvexel_shape.a', 'libvexel_ui_state.a'
+[39/67] Linking C executable bin/ui_widget_fuzz
+[40/67] Linking C executable bin/ui_kit_test
+[41/67] Linking C executable bin/ui_gallery
+[42/67] Linking C executable bin/ui_icon_gallery
+[43/67] Linking C executable bin/editor_media_provider_test
+[44/67] Linking C executable bin/raster_large_render_test
+[45/67] Linking C executable bin/editor_clipboard_ids_test
+[46/67] Linking C executable bin/editor_selection_render
+[47/67] Linking C executable bin/viewer_chrome_test
+[48/67] Linking C executable bin/viewer_chrome_render
+[49/67] Linking C executable bin/viewer_visual_test
+[50/67] Linking C executable bin/viewer_editor_guides_test
+[51/67] Linking C executable bin/viewer_export_test
+ld: warning: ignoring duplicate libraries: 'libvexel_platform_media.a', 'libvexel_shape.a'
+[52/67] Linking C executable bin/viewer_timeline_render
+ld: warning: ignoring duplicate libraries: 'libvexel_shape.a'
+[53/67] Linking C executable bin/editor_canvas_fuzz_test
+[54/67] Linking C executable bin/viewer_sessions_test
+[55/67] Linking C executable bin/editor_canvas_test
+[56/67] Linking C executable bin/editor_snap_popover_render
+[57/67] Linking C executable bin/viewer_timeline_test
+ld: warning: ignoring duplicate libraries: 'libvexel_shape.a'
+[58/67] Linking C executable bin/editor_followups_test
+[59/67] Linking C executable bin/editor_command_palette_test
+[60/67] Linking C executable bin/animation_authoring_test
+ld: warning: ignoring duplicate libraries: 'libvexel_document.a', 'libvexel_shape.a'
+[61/67] Linking C executable bin/viewer_guides_render
+[62/67] Linking C executable bin/editor_command_overlay_render
+[63/67] Linking C executable bin/viewer_editor_ux_test
+[64/67] Linking C executable bin/editor_snap_overlay_render
+[65/67] Linking C executable bin/viewer_timeline_keyframe_test
+ld: warning: ignoring duplicate libraries: 'libvexel_shape.a'
+[66/67] Linking C executable bin/editor_accessibility_localization_test
+[67/67] Generating Vexel.app/Contents/Info.plist
+exit=0
