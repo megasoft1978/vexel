@@ -1,5 +1,13 @@
 # Project state
 
+- Update 2026-10-11: `WO-CI-NIGHTLY-01` implements the frozen parallel-safe
+  nightly CI correction from base `c43fa82`, with implementation commit
+  `0253955`. Workflow structural checks,
+  actionlint, the main CI policy checker, six `tests.test_dev` tests, frozen WO
+  and ledger validation, and scoped path checks pass. No hosted rerun was
+  triggered. The four image-golden mismatches from run `38147398376` remain
+  unresolved and outside this order's scope.
+
 - Update 2026-10-11: MCP integration continuation is in the uncommitted
   `integrate/mcp-next` worktree. The M0 live host, M1 scene tools, M2 view and
   animation changes, and five M3 real-stdio scenarios are integrated. The

@@ -1,0 +1,5 @@
+$ actionlint .github/workflows/nightly.yml
+exit 0
+$ python3 scripts/check_ci.py .github/workflows/ci.yml
+macOS-only CI policy: pass
+exit 0

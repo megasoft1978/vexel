@@ -19,9 +19,15 @@ jobs:
     name: ASan, UBSan, XML and shape fuzz
     runs-on: macos-15
     timeout-minutes: 60
+    env:
+      VEXEL_OWNER_STEP_LIMIT_MS: "500"
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install librsvg (reference renderer for differential tests)
+        run: brew install librsvg
+      - name: Build Debug binaries for Python subprocess tests
+        run: ./dev build
       - name: Run seeded headless SVG render matrix
         run: ./dev e2e
       - name: Run AddressSanitizer and UndefinedBehaviorSanitizer
