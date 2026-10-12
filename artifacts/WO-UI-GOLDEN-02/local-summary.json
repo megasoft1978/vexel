@@ -1,7 +1,7 @@
 {
   "work_order": "WO-UI-GOLDEN-02",
   "frozen_base": "1ddaac358e510fe7d12cf05ea58a3952390512b1",
-  "source_commit": "c3d3aad57920789b5cec0416648589e74fe5a9d5",
+  "source_commit": "13a6dd4",
   "host": {
     "os": "macOS-27.0-arm64-arm-64bit",
     "macos": "27.0",
@@ -76,5 +76,5 @@
     }
   },
   "profile_storage": "68 byte-identical profile PNG copies replaced by symlinks to shared baselines; profile manifests remain complete",
-  "sol_review": "PASS: fresh Sol 6.1 review validates Mac15 editor-chrome capture, hashes, dimensions, scope, and local evidence"
+  "sol_review": "PASS on candidate 13a6dd4: Mac15 editor-chrome capture/profile, exact hashes/dimensions, scope, and local gates"
 }
