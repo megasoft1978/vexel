@@ -1,0 +1,12 @@
+{
+  "index": 4,
+  "argv": [
+    "./dev",
+    "t",
+    "--all"
+  ],
+  "exit_code": 0,
+  "duration_s": 6.57769149998785,
+  "stdout": "ok   build              0.1s\nok   ctest -R all              3.6s  100% tests passed, 0 tests failed out of 80\nok   python mcp.test_e2e,svg.sha   2.8s  Ran 69 tests in 2.742s\nPASS  total 6.5s   (slow Python skipped; --full or ./dev t -k <name>)\n",
+  "stderr": ""
+}
