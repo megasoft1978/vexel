@@ -2,6 +2,21 @@
 
 Active: WO-M4-06 environment-limited native CTests and full `test-fast` suite.
 
+## WO-M4-06 closure attempt 2026-10-12 — current status
+
+All renderer gates pass on `main` at `0f615c0`. `clip-union` and the other 47
+librsvg fixtures pass the unchanged thresholds, and 23/23 focused tests pass.
+New tests prove the exact 1 MiB `<use>` job boundary, the 4 KiB clip-wrapper
+bound, source-hash preservation and exact gradient pixels. AC-4 is still
+blocked: CTest reports 78/79 in Debug, ASan, UBSan and `./dev verify`.
+`native-shell-goldens` fails because `native_ui_render` follows the host
+backing scale. On a Retina host every native render is exactly 2× the 1×
+golden size, for example 1200×1300 versus 600×650. Fixing this means forcing
+a 1× offscreen backing scale in the native renderer. That is outside the
+M4-06 allowlist, so it needs its own work order; do not regenerate the
+goldens. The runner path guard and a fresh verifier have not run.
+Evidence: `artifacts/WO-M4-06/closure/`.
+
 ## Resolved: WO-M1-04 shutdown lifetime contract
 
 WO-M1-04 revision 1's reviewer identified that a raw queue pointer cannot

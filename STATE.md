@@ -313,3 +313,5 @@
   lifecycle event was added because no W16 frozen work order exists. No live
   window, keyboard/mouse automation, or screenshot was used. Maintainer window
   checks remain listed in `docs/lanes/integrate.md`.
+
+- Update 2026-10-12: WO-M4-06 closure attempt on `main` at `0f615c0`. All renderer gates pass and new exact boundary and gradient tests landed. The ledger records `blocked` because CTest is 78/79: `native-shell-goldens` renders at the host's 2x backing scale against 1x goldens on a Retina host. See `BLOCKERS.md`.

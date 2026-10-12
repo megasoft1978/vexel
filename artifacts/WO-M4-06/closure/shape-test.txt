@@ -1,0 +1,2 @@
+shape decoder and 4x4 antialiased raster checks passed
+exit=0

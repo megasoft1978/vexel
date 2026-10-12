@@ -1,0 +1,2 @@
+valid ledger: 412 entries
+exit=0

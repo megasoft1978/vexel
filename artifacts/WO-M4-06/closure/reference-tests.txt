@@ -1,0 +1,7 @@
+.......................
+----------------------------------------------------------------------
+Ran 23 tests in 12.431s
+
+OK
+raster differential seed=20261011 generated=200 paint-clip-seed=20261013 paint-clip-generated=160 tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40
+exit=0
