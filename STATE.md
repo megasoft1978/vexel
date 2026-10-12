@@ -323,3 +323,36 @@
 - Update 2026-10-12: **WO-MOTION-03 merged** (revision 4). Spline-track key editing, edge-bound tests and byte-exact undo/redo evidence landed. `authoring.c` was split (`authoring_create.c`, `authoring_internal.h`). Real-window timeline checks remain with the maintainer.
 
 - Update 2026-10-12: **WO-MOTION-04 merged** (revision 3). The easing editor's numeric field editing now works from the keyboard and rejected or uncommitted drafts no longer leak into other fields. Real-window timeline checks remain with the maintainer.
+
+- Update 2026-10-12: **WO-ANIM-FIX-01 revision 1 and WO-M1-01 revision 3 (closure) merged.**
+  The M1-01 closure verifier's `./dev asan` run had found an AddressSanitizer
+  heap-use-after-free (`authoring.c:113`, reached through
+  `animation_authoring_edge_test.c:468`) because the test freed the borrowed animation
+  source before `svg_anim_authoring_add_key`. WO-ANIM-FIX-01 corrected the test
+  lifetime (`c95ad83`) and both orders were then closed. All frozen commands pass:
+  Debug/Release configure and build, Debug CTest 80/80, `./dev asan` 80/80,
+  `./dev ubsan` 80/80, `./dev verify` (CTest 80/80, Python 302/302), `./dev t --all`
+  (CTest 80/80, Python 69/69), 13 focused platform-driver tests, the 100-cycle native
+  smoke (3.174 s), ledger validation (459 entries), `wo_validate`, and
+  `git diff --check`. Fresh read-only verification ran in rounds; every finding was an
+  evidence defect (a trailing blank line that failed `git diff --check`, a missing AC-7
+  verdict, a benchmark record that contradicted the built binary, and a stale value in
+  one summary row). All were corrected, the round-1 failures are retained rather than
+  erased, and the final rounds passed. No product code changed. Evidence:
+  `artifacts/WO-ANIM-FIX-01/r1-verify/` and `artifacts/WO-M1-01/r3-verify/`.
+  No work order remains open in `ledger.jsonl`.
+
+- Update 2026-10-12: **Owner-requested deep project review** recorded in
+  `reports/PROJECT-REVIEW-2026-10-12.md`. Headline finding: the corpus benchmark's
+  "first preview" renders a synthetic one-element document built by
+  `svg_index_make_preview_source` (`src/svg/index/index.c:419-440`), so
+  `reports/M4/head-to-head.md`'s 2/58 "previewable" result and its 41.6x/30.4x ratios
+  do not measure rendering the files. A direct `svgworkbench --render-frame` sweep of
+  the 39 pinned corpus files under 30 MB rendered 1. Dominant blockers are policy caps
+  (`limit` 26/39) and fatal unknown non-namespaced attributes rather than missing
+  renderer features. The review also records governance findings (34 lane merges
+  touching 240/310 `src` files with no frozen work order; only 45/432 commits name a
+  work order; WO-M6-01/02 have no front matter and cannot be ledgered), status-document
+  contradictions, 21 GB of worktrees, a second-root branch lineage, and the fact that
+  every owner gate (M0, M3, M4 scope, M6, M8, M10, M13) is still open while M13 shipped
+  without its demand ADR.
