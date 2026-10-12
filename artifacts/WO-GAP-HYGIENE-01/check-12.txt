@@ -1,0 +1,43 @@
+COMMAND: ./dev verify
+EXIT_CODE: 1
+--- last 40 output lines ---
+  File "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-GAP-HYGIENE-01/tests/test_platform_driver.py", line 149, in test_100_cycles
+    self.fail(f"native 100-cycle smoke exited {result.returncode}:\n{details}")
+AssertionError: native 100-cycle smoke exited 2:
+error: native smoke failed with exit 1: 2026-10-12 22:57:42.191 svgworkbench[19338:1549886] Failure on line 688 in function id scheduleApplicationNotification(LSNotificationCode, NSWorkspaceNotificationCenter *): noErr == _LSModifyNotification(notificationID, 1, &code, 0, NULL, NULL, NULL)
+2026-10-12 22:57:42.283 svgworkbench[19338:1549899] Connection Invalid error for service com.apple.hiservices-xpcservice.
+2026-10-12 22:57:42.283 svgworkbench[19338:1549886] Error received in message reply handler: Connection invalid
+native smoke: i
+
+
+2026-10-12 22:57:42.191 svgworkbench[19338:1549886] Failure on line 688 in function id scheduleApplicationNotification(LSNotificationCode, NSWorkspaceNotificationCenter *): noErr == _LSModifyNotification(notificationID, 1, &code, 0, NULL, NULL, NULL)
+2026-10-12 22:57:42.283 svgworkbench[19338:1549899] Connection Invalid error for service com.apple.hiservices-xpcservice.
+2026-10-12 22:57:42.283 svgworkbench[19338:1549886] Error received in message reply handler: Connection invalid
+native smoke: initial events open=1 scale=0
+native smoke: cycle 1 command 1 failed
+
+
+FAILED tests.test_platform_driver.PlatformDriverTests.test_native_metal_exact_readback_and_resized_frame
+Traceback (most recent call last):
+  File "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-GAP-HYGIENE-01/tests/test_platform_driver.py", line 188, in test_native_metal_exact_readback_and_resized_frame
+    elapsed = driver.native_metal_smoke(out)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-GAP-HYGIENE-01/app/test_driver/driver.py", line 676, in native_metal_smoke
+    raise DriverError(f"native Metal smoke failed with exit {result.returncode}: {result.stderr.strip()[:500]}")
+driver.DriverError: native Metal smoke failed with exit 1: 2026-10-12 22:57:42.327 svgworkbench[19339:1549903] Failure on line 688 in function id scheduleApplicationNotification(LSNotificationCode, NSWorkspaceNotificationCenter *): noErr == _LSModifyNotification(notificationID, 1, &code, 0, NULL, NULL, NULL)
+Metal smoke: Metal device unavailable
+
+FAILED tests.test_platform_driver.PlatformDriverTests.test_native_metal_replay_submits_twenty_identical_frames
+Traceback (most recent call last):
+  File "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-GAP-HYGIENE-01/tests/test_platform_driver.py", line 98, in test_native_metal_replay_submits_twenty_identical_frames
+    elapsed = driver.native_metal_replay(out, 20, build_type="debug")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-GAP-HYGIENE-01/app/test_driver/driver.py", line 353, in native_metal_replay
+    raise DriverError(f"native Metal replay failed with exit {result.returncode}: {result.stderr.strip()[:500]}")
+driver.DriverError: native Metal replay failed with exit 1: Metal replay: offscreen Metal device or queue unavailable
+
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpdnfluj9b/build/Vexel.app (version 1.2.3, identity -)
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpc_xne16m/build/Vexel.dmg
+Built /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpvh578b0w/build/Vexel.dmg
+raster differential seed=20261011 generated=200 paint-clip-seed=20261013 paint-clip-generated=160 tile-sizes=16x16,24x16,24x24,32x24,48x32,64x40
+Ran 338 tests: 327 passed, 8 failed, 2 errors, 1 skipped; 37.765s

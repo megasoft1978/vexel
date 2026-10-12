@@ -1,0 +1,6 @@
+COMMAND: git tag --list archive/* --format=...
+EXIT_CODE: 0
+--- last 40 output lines ---
+refs/tags/archive/origin-main-9896eb5 commit  9896eb54b8440658dcb3ff88e51da8db3f7da015
+refs/tags/archive/second-lineage commit  d97da2f4e12e02d482af99c837e12b3234ce9606
+refs/tags/archive/second-lineage-final commit  09c8663fecac15ba5c803e6d2fa1d169bd961aaf

@@ -1,0 +1,13 @@
+COMMAND: git for-each-ref --contains f3e28cdc2f465cbab3ec0ecc55490a44cd7800c0 --format='%(refname)'
+EXIT_CODE: 0
+--- last 40 output lines ---
+refs/heads/fix/ui-polish
+refs/heads/integrate/mcp-candidate
+refs/heads/integrate/mcp-next
+refs/heads/integrate/w16
+refs/heads/main
+refs/heads/wo/WO-GAP-HYGIENE-01
+refs/remotes/origin/HEAD
+refs/remotes/origin/fix/ui-polish
+refs/remotes/origin/integrate/mcp-next
+refs/remotes/origin/main

@@ -1,0 +1,8 @@
+COMMAND: git status --porcelain
+EXIT_CODE: 0
+--- last 40 output lines ---
+ M LEDGER.md
+ M STATE.md
+ M ledger.jsonl
+?? artifacts/WO-GAP-HYGIENE-01/
+?? artifacts/WO-HYGIENE-01/

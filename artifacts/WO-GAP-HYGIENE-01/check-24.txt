@@ -1,0 +1,4 @@
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT_CODE: 0
+--- last 40 output lines ---
+valid ledger: 551 entries

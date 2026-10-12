@@ -1,0 +1,730 @@
+{
+  "reconstructed": true,
+  "source": "artifacts/hygiene-worktrees-before.json",
+  "worktrees": [
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel",
+      "head": "c1ddee9eadfb8a452e0687bc09d9d0a1a06d26c5",
+      "branch": "refs/heads/main",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/private/tmp/vexel-baseline-native-shell",
+      "head": "f3e28cdc2f465cbab3ec0ecc55490a44cd7800c0",
+      "branch": "",
+      "prunable": true,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/app-v1",
+      "head": "2bf3a9d32126a9ea39cccde3a7e1fd630e47aa27",
+      "branch": "refs/heads/lane/app-v1",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/ci-nightly",
+      "head": "c30a57b7f0fec64661b532c1aea07e5f41a5fbc1",
+      "branch": "refs/heads/plan/ci-nightly",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/final-ui-docs",
+      "head": "09c8663fecac15ba5c803e6d2fa1d169bd961aaf",
+      "branch": "refs/heads/integrate/final-ui-docs",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/lane-B-M6-01",
+      "head": "1e851daed38a035df8e073d039d6274927c59d09",
+      "branch": "refs/heads/lane/B-M6-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/lane-B-M6-02",
+      "head": "91cf830bd6334d26aaf166862d0fda27d2f87de0",
+      "branch": "refs/heads/lane/B-M6-02",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/m0-live",
+      "head": "7735f51ad651249e206af8b0e01f70e00150845f",
+      "branch": "refs/heads/lane/m0-live",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/m1-scene",
+      "head": "7735f51ad651249e206af8b0e01f70e00150845f",
+      "branch": "refs/heads/lane/m1-scene",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/m2-view-anim",
+      "head": "0e81b39e05e013d8ca2281b6e30477b053692e18",
+      "branch": "refs/heads/lane/m2-view-anim",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/m3-agent",
+      "head": "811ec5262eb360d0733e3735a5f6db6c6fe6537c",
+      "branch": "refs/heads/lane/m3-agent",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/main-migration",
+      "head": "55594ddf31f9949238e948ba1fb1ff615e302d72",
+      "branch": "refs/heads/integrate/vexel-main-migration",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/mcp-candidate",
+      "head": "f3e28cdc2f465cbab3ec0ecc55490a44cd7800c0",
+      "branch": "refs/heads/integrate/mcp-candidate",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/mcp-next",
+      "head": "2b053aadfd42a44d1d0f4b04076ab60ffea2db8b",
+      "branch": "refs/heads/integrate/mcp-next",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/raster-perf",
+      "head": "ae2b67329550d0126e7ea5e8bd50fc842047aaea",
+      "branch": "refs/heads/lane/raster-perf",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/ui-golden-audit",
+      "head": "524c5a56b1f22afacd376b329b88665c1c0c9f73",
+      "branch": "refs/heads/plan/ui-golden-audit",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/ui-polish",
+      "head": "0379ea582dc46c6de08249977514095409a14fd4",
+      "branch": "refs/heads/fix/ui-polish",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/ui-polish/.worktrees/ui-polish-main",
+      "head": "f50ac4a34b30a4e0ae54bfa0421c161a3debc866",
+      "branch": "refs/heads/fix/ui-polish-main",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-manual-WO-M4-05",
+      "head": "d79cc0a19abf1089a6e515aa3879656c757aa289",
+      "branch": "",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-manual-WO-M4-05-round2",
+      "head": "9209ae3b670911470100e97b9538daf83dfa509d",
+      "branch": "",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-ANIM-FIX-01-4af6a5f1-22c8-46da-b6e5-0a36ba3b7287",
+      "head": "248fbfac44fade380b15522393cf7c6c7ab7cbf1",
+      "branch": "",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w10-polish",
+      "head": "a2a0e71506ca2f52062a5f216c2792de435ea3ed",
+      "branch": "refs/heads/lane/w10-polish",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w11-smoke",
+      "head": "19e16ca612e61db4536f2cfb1b73981b318ecab4",
+      "branch": "refs/heads/lane/w11-smoke",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w12-polish2",
+      "head": "d7b5e56d672425dd7b1488795c2be61c4e823699",
+      "branch": "refs/heads/lane/w12-polish2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w13-flake",
+      "head": "3739b0b2dcce1dae5c4959452565d1a4dfdb2188",
+      "branch": "refs/heads/lane/w13-flake",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-keyframes",
+      "head": "54f27dcd60821ffbafe324da4cd7168806d41b6d",
+      "branch": "refs/heads/lane/w14-keyframes",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-nodes",
+      "head": "a2465c933e9c9411831840efe16b4fda48cf79fd",
+      "branch": "refs/heads/lane/w14-nodes",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-palette",
+      "head": "c62874328ea173c7ef2dcc5485e4aaff855e4b3c",
+      "branch": "refs/heads/lane/w14-palette",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-rulers",
+      "head": "61ac3b5d0304c401f2692b66de4028054dc08bc9",
+      "branch": "refs/heads/lane/w14-rulers",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-select",
+      "head": "0cf2bbb3a19e45c19a1ccbaad449160a28c0aa4e",
+      "branch": "refs/heads/lane/w14-select",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-timeline",
+      "head": "a582296d6a547e959a7badaa0a30a24643a52bfc",
+      "branch": "refs/heads/lane/w14-timeline",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w14-windows",
+      "head": "7735f51ad651249e206af8b0e01f70e00150845f",
+      "branch": "refs/heads/lane/w14-windows",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w15-a11y",
+      "head": "257a7fc3bae156fb81431ac0f8f42a0ebbc5d27f",
+      "branch": "refs/heads/lane/w15-a11y",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w15-native",
+      "head": "a545012847bf793dc48f9eddc9426b05bf4378ce",
+      "branch": "refs/heads/lane/w15-native",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w15-visual",
+      "head": "4dee22a3791cf4309e3ef7148783c9db3b824ec0",
+      "branch": "refs/heads/lane/w15-visual",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w16-integrate",
+      "head": "f3e28cdc2f465cbab3ec0ecc55490a44cd7800c0",
+      "branch": "refs/heads/integrate/w16",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w2-bundle",
+      "head": "5a28f9184b425a49f8ad3e7c550906ad8cecf56b",
+      "branch": "refs/heads/lane/w2-bundle",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w2-decode",
+      "head": "dd90d8764ee16691e6d22683ce200fc088df4434",
+      "branch": "refs/heads/lane/w2-decode",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w2-editcore",
+      "head": "de953ded9b72012d30a0e47fd623cc14065fe0d8",
+      "branch": "refs/heads/lane/w2-editcore",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w2-integrate",
+      "head": "3a8ffbf29502d04aa2880ac41635120104a9123b",
+      "branch": "refs/heads/integrate/w2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w2-platform-media",
+      "head": "bd92fe1560c6186f45fc1e49344c033f37dd2212",
+      "branch": "refs/heads/lane/w2-platform-media",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w2-viewer2",
+      "head": "f8e5ab0b30ddbf9e90b866d88c5b53dae8650296",
+      "branch": "refs/heads/lane/w2-viewer2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w3-decode2",
+      "head": "2b9c1788aabc4552995c27f66aae30fa3dab3946",
+      "branch": "refs/heads/lane/w3-decode2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w3-editor",
+      "head": "9964d5438d693d21e4133b5c55e107118263f488",
+      "branch": "refs/heads/lane/w3-editor",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w4-mcp",
+      "head": "08430923ad85ab182258d9f445ff70bd5722cd20",
+      "branch": "refs/heads/lane/w4-mcp",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w4-text",
+      "head": "e237f7c98ef778f1a4519b2b845546c06fcaf35c",
+      "branch": "refs/heads/lane/w4-text",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w4-ui",
+      "head": "b1739ad8bb2cf563fd379826e29c680e9646b698",
+      "branch": "refs/heads/lane/w4-ui",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w5-editor",
+      "head": "a77410eaf8e81770987d25ff8810d8137c272b06",
+      "branch": "refs/heads/lane/w5-editor",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w5-filters",
+      "head": "331e6b0435b11354e246e1ed59986292d0db9a1e",
+      "branch": "refs/heads/lane/w5-filters",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w5-fixes",
+      "head": "46944247feee0f9e92d4a5a9f3e2ff75ab08b822",
+      "branch": "refs/heads/lane/w5-fixes",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w6-anim",
+      "head": "e9835e1b4a431787b6db0db926a3801f38ff1c41",
+      "branch": "refs/heads/lane/w6-anim",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w6-editor2",
+      "head": "8d37b17edb26dfcbd54f179c9b3c7a40a3deff0f",
+      "branch": "refs/heads/lane/w6-editor2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w6-secfix",
+      "head": "919f49e1ebb725f1bbf143a341a8eaec9c128895",
+      "branch": "refs/heads/fix/marker-uaf",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w7-animfix",
+      "head": "826906c64051cae9e0cb6ddbe11381670e4f92e4",
+      "branch": "refs/heads/lane/w7-animfix",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w7-testing",
+      "head": "2c13e80e6cd77f7aad40a7893c4a792f536bcb1e",
+      "branch": "refs/heads/lane/w7-testing",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w7-uikit",
+      "head": "447fad851342273ffb47d350eafcf40839619a13",
+      "branch": "refs/heads/lane/w7-uikit",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w8-chrome",
+      "head": "390a98ecbfdbbe61c63a364ced0b2d3b58cb8c5a",
+      "branch": "refs/heads/lane/w8-chrome",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w8-edit4",
+      "head": "179114b4ffc37630bf6b4973116884531927986c",
+      "branch": "refs/heads/lane/w8-edit4",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w8-perf",
+      "head": "a58e8e58a64a51330f14153611c18d3a06bcf449",
+      "branch": "refs/heads/lane/w8-perf",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w8-testhook",
+      "head": "f29858bd554133a9f6d687e61ef19c23bf6571ae",
+      "branch": "refs/heads/lane/w8-testhook",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w8-timeline",
+      "head": "21fa454908a3f0db4b2f49f773784a36da554cb4",
+      "branch": "refs/heads/lane/w8-timeline",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/w9-qa",
+      "head": "1343c50fd8c5f92b277b307013401374ec346856",
+      "branch": "refs/heads/lane/w9-qa",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-05",
+      "head": "5a5a2db8dee69b2636e0dd20ac18b95719fa86be",
+      "branch": "refs/heads/wo/WO-BOOT-05",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-06",
+      "head": "2d3a0c56ab913495391480e3b7674edd53766316",
+      "branch": "refs/heads/wo/WO-BOOT-06",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-07",
+      "head": "5ec521fcee0f848cd77db86e365cec65011e2611",
+      "branch": "refs/heads/wo/WO-BOOT-07",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-BOOT-08",
+      "head": "9eec0e433bc8f3420e18dac3b801b08226e4cde7",
+      "branch": "refs/heads/wo/WO-BOOT-08",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-01",
+      "head": "6d5af96d73c946a1bd91ab7817a69e22eba79630",
+      "branch": "refs/heads/wo/WO-M0-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-02",
+      "head": "0f24ab6f4a5a9ab6f7ff3846ae3d6339316287a9",
+      "branch": "refs/heads/wo/WO-M0-02",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-03",
+      "head": "6bff91bec9f1358b9caa9780d5c47ad8139ac7c6",
+      "branch": "refs/heads/wo/WO-M0-03",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M0-04",
+      "head": "a678dd190f6b303af5948c7471020ac30fb437c5",
+      "branch": "refs/heads/wo/WO-M0-04",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-01",
+      "head": "c7b76fc9b0230876c5c2bfe6c758f4cb69ead1e4",
+      "branch": "refs/heads/wo/WO-M1-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-02",
+      "head": "8f777a0de1a4383d1c70c931ac88b879ebae2501",
+      "branch": "refs/heads/wo/WO-M1-02",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-02-r2",
+      "head": "8cba068c0e4fcb5ee19521ff8e5887be8e390bec",
+      "branch": "refs/heads/wo/WO-M1-02-r2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-03",
+      "head": "734c23ba42d405354d2408dcf8de69ef19a29b39",
+      "branch": "refs/heads/wo/WO-M1-03",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-03-r1",
+      "head": "b9fc2f7fc89ba77e79e24b81ca4b64a1f052bf48",
+      "branch": "refs/heads/wo/WO-M1-03-r1",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-04",
+      "head": "91ff611782c843428fb5bdc4ba874e3ccdd37f94",
+      "branch": "refs/heads/wo/WO-M1-04",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M1-04-r1",
+      "head": "181b62743e3373ba511c6732463eff283b5eeba2",
+      "branch": "refs/heads/wo/WO-M1-04-r1",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-03",
+      "head": "f53cc4322d86c7228287578affa6825154f1f1e5",
+      "branch": "refs/heads/wo/WO-M2-03",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-04",
+      "head": "44945019b06bb09e67881abe645c2e453b979427",
+      "branch": "refs/heads/wo/WO-M2-04",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M2-05",
+      "head": "4a105eb6fd8633a488ee61f8b15f24387b0e0463",
+      "branch": "refs/heads/wo/WO-M2-05",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-01",
+      "head": "f876d99910a8755ed06684cb8c042b804106ea98",
+      "branch": "refs/heads/wo/WO-M3-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-02",
+      "head": "75a77af5b896ec9f82e8f256c9ef16d6bba26a25",
+      "branch": "refs/heads/wo/WO-M3-02",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-03",
+      "head": "9651c616a957e3e6a1a3b38e741b9ed514f5bc98",
+      "branch": "refs/heads/wo/WO-M3-03",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-04",
+      "head": "331e27da9f1885bb27d53f7e7a4e3f1fe86264d1",
+      "branch": "refs/heads/wo/WO-M3-04",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M3-05",
+      "head": "903f4eb5ac65e6e903df6f3409212b814135befe",
+      "branch": "refs/heads/wo/WO-M3-05",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-01",
+      "head": "c7aa4c9fa2966b90deaa08e4cb848c78db29de1b",
+      "branch": "refs/heads/wo/WO-M4-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-02",
+      "head": "2d19d27960f524c9ff7fd888185ec7f7b3ca295f",
+      "branch": "refs/heads/wo/WO-M4-02",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03",
+      "head": "74581f13e44ea5465596b738099f14e77216c068",
+      "branch": "refs/heads/wo/WO-M4-03",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-03-r2",
+      "head": "bf006b4833e66533bcf8eaef45dad8119332eb8b",
+      "branch": "refs/heads/wo/WO-M4-03-r2",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-04",
+      "head": "dac63d6e8f8cd08787f3ee7e71099d0655ee258e",
+      "branch": "refs/heads/wo/WO-M4-04",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-05",
+      "head": "81f2008311e886d3b8dc8da262fe3f40f2f9b14b",
+      "branch": "refs/heads/wo/WO-M4-05",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06",
+      "head": "4cf722e4c83d0a675b2b4f3905a132c46a3c5b1e",
+      "branch": "refs/heads/wo/WO-M4-06",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M4-06/.cache/M4-06/frozen-base",
+      "head": "81f2008311e886d3b8dc8da262fe3f40f2f9b14b",
+      "branch": "",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-01",
+      "head": "f3c36f6cc03d66f4f67db74315f89dc570b46eba",
+      "branch": "refs/heads/wo/WO-M5-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/WO-M5-02",
+      "head": "fd9735d5ffa1885876234bbdc620ec654bea71fd",
+      "branch": "refs/heads/wo/WO-M5-02",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01",
+      "head": "51f7198f3735c1f7a3dc2195ef4062e620767c56",
+      "branch": "refs/heads/wo/WO-UI-DOCS-01",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-01/.cache/ui-docs-pristine",
+      "head": "c43fa826c0fbc8910e8dc0c09b4139c8aa615995",
+      "branch": "",
+      "prunable": false,
+      "detached": false
+    },
+    {
+      "path": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/wo-UI-DOCS-02/wo-UI-DOCS-02",
+      "head": "4b133afde13a7029f739c0d1c054b3ca53f8ac3d",
+      "branch": "refs/heads/wo/WO-UI-DOCS-02",
+      "prunable": false,
+      "detached": false
+    }
+  ],
+  "second_lineage_tips": [
+    {
+      "name": "integrate/final-ui-docs",
+      "sha": "09c8663fecac15ba5c803e6d2fa1d169bd961aaf"
+    },
+    {
+      "name": "integrate/vexel-main-migration",
+      "sha": "55594ddf31f9949238e948ba1fb1ff615e302d72"
+    },
+    {
+      "name": "worktree-agent-ac9b3f7832e7ddfc2",
+      "sha": "9896eb54b8440658dcb3ff88e51da8db3f7da015"
+    },
+    {
+      "name": "plan/ci-nightly",
+      "sha": "c30a57b7f0fec64661b532c1aea07e5f41a5fbc1"
+    },
+    {
+      "name": "plan/ui-golden-audit",
+      "sha": "524c5a56b1f22afacd376b329b88665c1c0c9f73"
+    },
+    {
+      "name": "wo/WO-UI-DOCS-01",
+      "sha": "51f7198f3735c1f7a3dc2195ef4062e620767c56"
+    },
+    {
+      "name": "wo/WO-UI-DOCS-02",
+      "sha": "4b133afde13a7029f739c0d1c054b3ca53f8ac3d"
+    },
+    {
+      "name": "fix/ui-polish-main",
+      "sha": "f50ac4a34b30a4e0ae54bfa0421c161a3debc866"
+    }
+  ],
+  "not_recorded_and_cannot_be_recovered": [
+    "pre-pruning git branch -vv output",
+    "pre-pruning git rev-list --all --count"
+  ]
+}
