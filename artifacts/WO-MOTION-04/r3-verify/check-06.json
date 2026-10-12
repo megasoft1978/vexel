@@ -1,0 +1,13 @@
+{
+  "index": 6,
+  "argv": [
+    "python3",
+    "scripts/wo_validate.py",
+    "WO-MOTION-04",
+    "--ready"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.02543591699213721,
+  "stdout": "valid WO-MOTION-04 revision 3 sha256 7a4fb7c62ee15e06fe2692d0955fdc10a25ca0e47c3bc81d25fea888656a7cd9\n",
+  "stderr": ""
+}
