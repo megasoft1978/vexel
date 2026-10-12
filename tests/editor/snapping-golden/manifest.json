@@ -2,12 +2,12 @@
   "screenshots": {
     "snapping-dark.png": {
       "height": 800,
-      "sha256": "35c7850f404ca6cb3251c21029731c824dce44645eb1d06b30a3a61af3f0fa3e",
+      "sha256": "9f30c826079202d50a7a1aa8339404ad44b92c3ae8646549e826bca4d1c5da76",
       "width": 1280
     },
     "snapping-light.png": {
       "height": 800,
-      "sha256": "b29763961b6a39c4fc207e654de2b8df16727a36093c33a3fe81617e297fc5dd",
+      "sha256": "78f7dc9d888294e230f506bf180c8c2649e9a422ddc890476cd7a6d5821bda2d",
       "width": 1280
     }
   },

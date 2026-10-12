@@ -385,6 +385,8 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
                 EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
                 tokens->panel, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
                 "Size", 4U, document_size, strlen(document_size), 0U, 0U) &&
+            /* The document's own attributes stay editable here. */
+            editor_add_attribute_rows(editor, tokens) &&
             editor_add_node(editor, EDITOR_BUTTON_FIT_CANVAS,
                 EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
                 tokens->panel_raised, UI_ROLE_BUTTON, "Fit Canvas", 10U,
@@ -395,25 +397,16 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
                 NULL, 0U, 0U, EDITOR_BUTTON_ACTUAL_SIZE);
     }
     if (!editor->selection_active) {
-        if (editor->inspector_tab == EDITOR_INSPECTOR_TAB_FILL ||
-            editor->inspector_tab == EDITOR_INSPECTOR_TAB_STROKE)
-            return editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
+        /* Document fields live on the Document tab, so the Object tab is honest
+         * about having nothing to describe. */
+        return editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
                 EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
                 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
-                "No selection", 12U, NULL, 0U, 0U, 0U);
-        if (!editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
+                "No selection", 12U, NULL, 0U, 0U, 0U) &&
+            editor_add_widget_node(editor, EDITOR_NODE_INSPECTOR_DOCUMENT_SIZE,
                 EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
-                0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, "Document",
-                8U, NULL, 0U, 0U, 0U) || !editor_add_attribute_rows(editor, tokens))
-            return false;
-        return editor_add_node(editor, EDITOR_BUTTON_FIT_CANVAS,
-                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
-                tokens->panel_raised, UI_ROLE_BUTTON, "Fit Canvas", 10U,
-                NULL, 0U, 0U, EDITOR_BUTTON_FIT_CANVAS) &&
-            editor_add_node(editor, EDITOR_BUTTON_ACTUAL_SIZE,
-                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
-                tokens->panel_raised, UI_ROLE_BUTTON, "Actual Size", 11U,
-                NULL, 0U, 0U, EDITOR_BUTTON_ACTUAL_SIZE);
+                0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
+                "Select an element to edit it.", 29U, NULL, 0U, 0U, 0U);
     }
     char type[UI_TEXT_MAX_BYTES] = {0};
     size_t type_length = selected_type_label(editor, type);

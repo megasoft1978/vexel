@@ -217,6 +217,64 @@ done:
     return result;
 }
 
+/* WO-UI-03: the bounded operator/warning/error log. */
+static int check_log(void)
+{
+    viewer_editor *editor = viewer_editor_create_styled((base_bytes){source,
+        sizeof(source) - 1U}, UI_THEME_DARK, 1280U, 800U, true);
+    if (editor == NULL) return 1;
+    int result = 0;
+    if (viewer_editor_log_count(editor) != 0U || viewer_editor_log_open(editor)) {
+        result = 2;
+        goto done;
+    }
+    viewer_editor_log(editor, VIEWER_EDITOR_LOG_OPERATION, "Set Fill", 8U);
+    viewer_editor_log(editor, VIEWER_EDITOR_LOG_WARNING, "Unsaved changes", 15U);
+    viewer_editor_log(editor, VIEWER_EDITOR_LOG_ERROR, "Invalid argument", 16U);
+    if (viewer_editor_log_count(editor) != 3U) { result = 3; goto done; }
+    uint8_t severity = 0U;
+    char text[128] = {0};
+    size_t length = 0U;
+    if (!viewer_editor_log_at(editor, 2U, &severity, text, sizeof(text), &length) ||
+        severity != VIEWER_EDITOR_LOG_ERROR || length != 16U ||
+        memcmp(text, "Invalid argument", 16U) != 0) { result = 4; goto done; }
+    /* The bound is real: overflow keeps the newest entries and drops the oldest. */
+    for (size_t index = 0U; index < 200U; ++index)
+        viewer_editor_log(editor, VIEWER_EDITOR_LOG_INFORMATION, "Chunk", 5U);
+    if (viewer_editor_log_count(editor) != 64U) { result = 5; goto done; }
+    if (!viewer_editor_log_at(editor, 63U, &severity, text, sizeof(text), &length) ||
+        length != 5U || memcmp(text, "Chunk", 5U) != 0) { result = 6; goto done; }
+    /* Toggling shows and hides the pane without touching the document. */
+    uint8_t *before = malloc(sizeof(source));
+    uint8_t *after = malloc(sizeof(source));
+    size_t before_length = 0U, after_length = 0U;
+    if (before == NULL || after == NULL ||
+        !viewer_editor_materialize(editor, before, sizeof(source), &before_length)) {
+        result = 7;
+        free(before); free(after);
+        goto done;
+    }
+    viewer_editor_set_log_open(editor, true);
+    ui_semantics_snapshot *snapshot = malloc(sizeof(*snapshot));
+    const ui_semantics_node *node = NULL;
+    if (snapshot == NULL || !viewer_editor_semantics(editor, snapshot)) {
+        result = 8;
+    } else {
+        for (size_t index = 0U; index < snapshot->count; ++index)
+            if (snapshot->nodes[index].id == 24570U) node = &snapshot->nodes[index];
+        if (node == NULL || node->frame.height == 0U) result = 9;
+    }
+    free(snapshot);
+    if (!viewer_editor_materialize(editor, after, sizeof(source), &after_length) ||
+        after_length != before_length || memcmp(before, after, before_length) != 0)
+        result = 10;
+    free(before); free(after);
+    if (result == 0 && (viewer_editor_set_log_open(editor, false) == false)) result = 11;
+done:
+    viewer_editor_destroy(editor);
+    return result;
+}
+
 int main(void)
 {
     int result = check_table();
@@ -227,8 +285,10 @@ int main(void)
     if (result != 0) { fprintf(stderr, "workspace cycling failed: %d\n", result); return 1; }
     result = check_semantics();
     if (result != 0) { fprintf(stderr, "workspace semantics failed: %d\n", result); return 1; }
+    result = check_log();
+    if (result != 0) { fprintf(stderr, "log pane failed: %d\n", result); return 1; }
     result = check_editor();
     if (result != 0) { fprintf(stderr, "workspace editor failed: %d\n", result); return 1; }
-    printf("workspace tests passed: table, names, cycling, semantics, panes, document invariance\n");
+    printf("workspace tests passed: table, names, cycling, semantics, log, panes, document invariance\n");
     return 0;
 }

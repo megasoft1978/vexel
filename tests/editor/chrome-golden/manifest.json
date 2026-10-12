@@ -2,12 +2,12 @@
   "screenshots": {
     "editor-chrome-dark.png": {
       "height": 800,
-      "sha256": "1a8e3ad398c5f2afbd34a4cc2b0a42a0f1d0df1873338df97f44e9f1ee956c43",
+      "sha256": "4a6d6aa85bf98194f9a7eb276f2b36bfa4615c7a1bfe73f1ba2c806a07640bb1",
       "width": 1280
     },
     "editor-chrome-light.png": {
       "height": 800,
-      "sha256": "32515e9169de03c107029c35c96fe01eed5ba6c91ec910316fdfa16024c4d72f",
+      "sha256": "6b219ecf1f7643b80cbaa5013c08a4ba105a4197349ce59a9591e0bd4f120f93",
       "width": 1280
     }
   },

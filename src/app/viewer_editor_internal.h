@@ -11,6 +11,10 @@
 #define EDITOR_FIELD_CAP (64U * 1024U)
 #define EDITOR_NAME_CAP 128U
 #define EDITOR_STATUS_CAP 192U
+#define EDITOR_LOG_CAP 64U
+#define EDITOR_LOG_TEXT_CAP 128U
+#define EDITOR_LOG_VISIBLE 8U
+#define EDITOR_LOG_ROW_HEIGHT_POINTS 20U
 #define EDITOR_DEPTH_CAP 256U
 #define EDITOR_CANVAS_SELECTION_CAP 128U
 #define EDITOR_SNAP_GUIDE_CAP 128U
@@ -138,7 +142,11 @@ enum {
     /* Properties icon tabs, as in Blender's Properties editor. */
     EDITOR_NODE_INSPECTOR_TABS = 24540U,
     EDITOR_BUTTON_INSPECTOR_TAB_BASE = 24550U,
-    EDITOR_NODE_INSPECTOR_DOCUMENT_SIZE = 24560U
+    EDITOR_NODE_INSPECTOR_DOCUMENT_SIZE = 24560U,
+    /* Operator/warning/error log pane. */
+    EDITOR_NODE_LOG = 24570U,
+    EDITOR_NODE_LOG_ROW_BASE = 24580U,
+    EDITOR_BUTTON_TOGGLE_LOG = 530U
 };
 
 typedef enum editor_field_kind {
@@ -219,6 +227,20 @@ typedef struct editor_path_node_ref {
     char command;
 } editor_path_node_ref;
 
+typedef enum editor_log_severity {
+    EDITOR_LOG_OPERATION = 0,
+    EDITOR_LOG_INFORMATION,
+    EDITOR_LOG_WARNING,
+    EDITOR_LOG_ERROR
+} editor_log_severity;
+
+typedef struct editor_log_entry {
+    char text[EDITOR_LOG_TEXT_CAP];
+    size_t length;
+    uint32_t sequence;
+    uint8_t severity;
+} editor_log_entry;
+
 typedef struct editor_control_transition {
     uint32_t id;
     ui_control_state from_state, to_state;
@@ -235,6 +257,11 @@ struct viewer_editor {
     void *workspace_context;
     char workspace_inspector_section[24];
     uint8_t inspector_tab;
+    editor_log_entry log[EDITOR_LOG_CAP];
+    size_t log_count;
+    size_t log_start;
+    uint32_t log_next_sequence;
+    bool log_open;
     bool status_operation_active;
     document_handle selected;
     document_handle outline[EDITOR_OUTLINE_CAP];

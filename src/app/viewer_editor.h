@@ -166,6 +166,20 @@ bool viewer_editor_copy_full_id(const viewer_editor *editor, uint8_t *buffer,
 void viewer_editor_set_motion_time(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_tick(viewer_editor *editor, double seconds);
 bool viewer_editor_motion_active(const viewer_editor *editor);
+/* Bounded operator/warning/error log (Blender's Info editor). */
+void viewer_editor_log(viewer_editor *editor, uint8_t severity,
+    const char *text, size_t length);
+size_t viewer_editor_log_count(const viewer_editor *editor);
+bool viewer_editor_log_at(const viewer_editor *editor, size_t index,
+    uint8_t *out_severity, char *out_text, size_t capacity, size_t *out_length);
+bool viewer_editor_log_open(const viewer_editor *editor);
+bool viewer_editor_set_log_open(viewer_editor *editor, bool open);
+bool viewer_editor_toggle_log(viewer_editor *editor);
+#define VIEWER_EDITOR_LOG_OPERATION 0U
+#define VIEWER_EDITOR_LOG_INFORMATION 1U
+#define VIEWER_EDITOR_LOG_WARNING 2U
+#define VIEWER_EDITOR_LOG_ERROR 3U
+
 /* Drives the status bar's progress region and its cancel affordance. */
 void viewer_editor_set_operation_progress(viewer_editor *editor, bool active,
     const char *message);

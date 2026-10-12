@@ -15,6 +15,9 @@ static size_t bounded_status_length(const char *text, size_t capacity)
 void editor_status_error(viewer_editor *editor, document_edit_error error)
 {
     if (editor == NULL) return;
+    viewer_editor_log(editor, EDITOR_LOG_ERROR,
+        editor->status[0] != '\0' ? editor->status : "Edit failed",
+        strlen(editor->status[0] != '\0' ? editor->status : "Edit failed"));
     editor->status_error = true;
     editor->status_saved = false;
     editor->status_ready = false;

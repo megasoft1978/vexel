@@ -275,7 +275,8 @@ target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_stat
 # lane: w3-editor
 add_library(vexel_editor_ui STATIC src/app/viewer_editor.c
     src/app/viewer_editor_view.c src/app/viewer_editor_input.c
-    src/app/viewer_chrome.c src/app/viewer_workspace.c)
+    src/app/viewer_chrome.c src/app/viewer_workspace.c
+    src/app/viewer_editor_log.c)
 target_include_directories(vexel_editor_ui PUBLIC src src/app src/ui src/document)
 target_link_libraries(vexel_editor_ui PUBLIC vexel_document vexel_ui_core)
 set_target_properties(vexel_editor_ui PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES

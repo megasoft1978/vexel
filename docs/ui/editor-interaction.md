@@ -27,6 +27,7 @@ snapping. Holding Space pans and hides selection and snap overlays until release
 
 | Input | Action |
 |---|---|
+| `Option-Command-L` | Show or hide the operator log |
 | `Control-PageDown` | Next task workspace (Draw, Nodes, Animate, Inspect) |
 | `Control-PageUp` | Previous task workspace |
 | `Control-Tab` / `Control-Shift-Tab` | Aliases for next / previous workspace |

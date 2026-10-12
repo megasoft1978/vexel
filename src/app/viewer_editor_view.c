@@ -7,6 +7,7 @@
 #include "platform/platform_text_ui.h"
 
 #include <math.h>
+#include <stdio.h>
 #include <string.h>
 
 size_t editor_copy_slice(char *destination, size_t capacity, base_bytes bytes)
@@ -249,8 +250,32 @@ void viewer_editor_paint_scalar(viewer_editor *editor, uint8_t *rgba,
         editor_paint_active_selection(editor, rgba, stride, editor->width, editor->height);
 }
 
+static uint32_t editor_dispatch_action(viewer_editor *editor, uint32_t action);
+
+/* Names an action from the label the tree already carries, so the log cannot
+ * drift from the interface. Actions without a node fall back to their id. */
+static void editor_log_action(viewer_editor *editor, uint32_t action)
+{
+    if (editor == NULL) return;
+    for (size_t index = 0U; index < editor->tree.count; ++index) {
+        const ui_node *node = &editor->tree.nodes[index];
+        if (node->spec.command_id != action || node->spec.label == NULL ||
+            node->spec.label_len == 0U) continue;
+        viewer_editor_log(editor, EDITOR_LOG_OPERATION, node->spec.label,
+            node->spec.label_len);
+        return;
+    }
+    char fallback[32] = {0};
+    int amount = snprintf(fallback, sizeof(fallback), "Command %u", action);
+    if (amount > 0 && (size_t)amount < sizeof(fallback))
+        viewer_editor_log(editor, EDITOR_LOG_OPERATION, fallback, (size_t)amount);
+}
+
 static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
 {
+    if (action == EDITOR_BUTTON_TOGGLE_LOG)
+        return viewer_editor_toggle_log(editor) ? VIEWER_EDITOR_HANDLED :
+            VIEWER_EDITOR_HANDLED;
     if (action == EDITOR_BUTTON_HISTORY)
         return viewer_editor_open_history(editor) ? VIEWER_EDITOR_HANDLED : 0U;
     if (action == EDITOR_BUTTON_ZOOM_HUD) {
@@ -558,8 +583,17 @@ uint32_t viewer_editor_pointer_down_click_count(viewer_editor *editor,
         return prior | VIEWER_EDITOR_HANDLED;
     }
     if (hit->spec.role == UI_ROLE_BUTTON)
-        return prior | editor_run_action(editor, hit->spec.command_id);
+        return prior | editor_dispatch_action(editor, hit->spec.command_id);
     return prior | VIEWER_EDITOR_HANDLED;
+}
+
+/* Records the action before dispatch so the log names what the user did. */
+static uint32_t editor_dispatch_action(viewer_editor *editor, uint32_t action)
+{
+    uint32_t result = editor_run_action(editor, action);
+    if ((result & VIEWER_EDITOR_HANDLED) != 0U && action != EDITOR_BUTTON_TOGGLE_LOG)
+        editor_log_action(editor, action);
+    return result;
 }
 
 uint32_t viewer_editor_pointer_down(viewer_editor *editor, uint32_t x, uint32_t y,

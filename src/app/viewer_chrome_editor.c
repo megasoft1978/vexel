@@ -251,6 +251,9 @@ void editor_build_tree_modern(viewer_editor *editor)
             EDITOR_BUTTON_TOGGLE_TIMELINE, EDITOR_NODE_TOOLBAR, UI_ICON_RULER,
             "Animation timeline", editor->timeline_visible ? UI_STATE_CHECKED : 0U))
         return;
+    if (!editor_add_icon(editor, EDITOR_BUTTON_TOGGLE_LOG, EDITOR_NODE_TOOLBAR,
+            UI_ICON_TEXT, "Log · Option-Command-L",
+            editor->log_open ? UI_STATE_CHECKED : 0U)) return;
     okay = editor_add_node(editor, EDITOR_NODE_OPTIONS, UI_ROOT_ID,
         UI_AXIS_HORIZONTAL, 0U, VIEWER_CHROME_OPTIONS_POINTS, 8U, 8U,
         tokens->panel_raised, UI_ROLE_GROUP, NULL, 0U, NULL, 0U, 0U, 0U);
@@ -407,6 +410,38 @@ void editor_build_tree_modern(viewer_editor *editor)
                 tokens->panel, UI_ROLE_GROUP, "Animation timeline", 18U,
                 NULL, 0U, 0U, 0U)) return;
     }
+    uint32_t log_height_points = 0U;
+    if (editor->log_open) {
+        size_t rows = editor->log_count < EDITOR_LOG_VISIBLE ?
+            editor->log_count : EDITOR_LOG_VISIBLE;
+        log_height_points = 22U + (uint32_t)rows * EDITOR_LOG_ROW_HEIGHT_POINTS;
+        okay = editor_add_node(editor, EDITOR_NODE_LOG, UI_ROOT_ID,
+                UI_AXIS_VERTICAL, 0U, log_height_points, 4U, 2U,
+                tokens->panel, UI_ROLE_GROUP, "Log", 3U, NULL, 0U, 0U, 0U);
+        if (!okay) return;
+        size_t first = editor->log_count - rows;
+        for (size_t index = first; index < editor->log_count; ++index) {
+            uint8_t severity = 0U;
+            char text[EDITOR_LOG_TEXT_CAP] = {0};
+            size_t length = 0U;
+            if (!viewer_editor_log_at(editor, index, &severity, text,
+                    sizeof(text), &length)) continue;
+            static const char *const severity_names[] = {
+                "Operation", "Info", "Warning", "Error"};
+            const char *severity_name = severity < 4U ?
+                severity_names[severity] : "Info";
+            char row[EDITOR_LOG_TEXT_CAP + 16] = {0};
+            int amount = snprintf(row, sizeof(row), "%s · %s", severity_name, text);
+            if (amount < 0 || (size_t)amount >= sizeof(row)) continue;
+            okay = editor_add_widget_node(editor,
+                EDITOR_NODE_LOG_ROW_BASE + (uint32_t)index, EDITOR_NODE_LOG,
+                UI_AXIS_HORIZONTAL, 0U, EDITOR_LOG_ROW_HEIGHT_POINTS, 2U, 0U,
+                0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
+                row, strlen(row), NULL, 0U,
+                severity == EDITOR_LOG_ERROR ? UI_STATE_INVALID : 0U, 0U);
+            if (!okay) return;
+        }
+    }
     char status[EDITOR_STATUS_CAP] = {0};
     char selection[PLATFORM_LOCALIZATION_TEXT_CAP] = {0};
     char save_state[128] = {0};
@@ -483,6 +518,13 @@ void editor_build_tree_modern(viewer_editor *editor)
             editor_set_node_bounds(editor, EDITOR_NODE_INSPECTOR, layout.inspector);
         }
         editor_set_node_bounds(editor, EDITOR_NODE_STATUS, layout.status);
+        if (editor->log_open && log_height_points > 0U) {
+            uint32_t height = (uint32_t)ceil((double)log_height_points / (scale * ui_scale));
+            uint32_t top = layout.status.y > height ? layout.status.y - height : 0U;
+            ui_rect log_rect = {layout.workspace.x, top, layout.workspace.width,
+                height};
+            editor_set_node_bounds(editor, EDITOR_NODE_LOG, log_rect);
+        }
         editor_reveal_layout_nodes(editor);
         if (editor->focus_id != 0U) {
             for (size_t index = 0U; index < editor->tree.count; ++index) {

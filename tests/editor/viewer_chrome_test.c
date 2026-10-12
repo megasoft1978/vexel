@@ -253,11 +253,30 @@ static bool send_text(viewer_editor *editor, const char *text)
 
 static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapshot)
 {
+    /* With nothing selected the Object tab says so, and the document fields
+     * belong to the Document tab. */
     if (!viewer_editor_semantics(editor, snapshot) || selected_row_count(snapshot) != 0U ||
-        find_label(snapshot, "Name") != NULL || find_label(snapshot, "Width") == NULL ||
-        find_label(snapshot, "Height") == NULL || find_label(snapshot, "ViewBox") == NULL ||
-        find_label(snapshot, "Fit Canvas") == NULL || find_label(snapshot, "Actual Size") == NULL)
+        find_role_label(snapshot, UI_ROLE_TEXT, "No selection") == NULL ||
+        find_label(snapshot, "Name") != NULL || find_label(snapshot, "Fit Canvas") != NULL)
         return 30;
+    const ui_semantics_node *document_tab = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index)
+        if (snapshot->nodes[index].id == EDITOR_BUTTON_INSPECTOR_TAB_BASE + 3U)
+            document_tab = &snapshot->nodes[index];
+    if (document_tab == NULL ||
+        !click_node(editor, document_tab, document_tab->frame.width / 2U) ||
+        !viewer_editor_semantics(editor, snapshot) ||
+        find_label(snapshot, "Width") == NULL || find_label(snapshot, "Height") == NULL ||
+        find_label(snapshot, "ViewBox") == NULL ||
+        find_label(snapshot, "Fit Canvas") == NULL ||
+        find_label(snapshot, "Actual Size") == NULL) return 30;
+    const ui_semantics_node *object_tab = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index)
+        if (snapshot->nodes[index].id == EDITOR_BUTTON_INSPECTOR_TAB_BASE)
+            object_tab = &snapshot->nodes[index];
+    if (object_tab == NULL ||
+        !click_node(editor, object_tab, object_tab->frame.width / 2U) ||
+        !viewer_editor_semantics(editor, snapshot)) return 30;
     const ui_semantics_node *undo = find_label(snapshot, "Undo · Command-Z");
     const ui_semantics_node *redo = find_label(snapshot, "Redo · Shift-Command-Z");
     const ui_semantics_node *duplicate = find_label(snapshot, "Duplicate · Command-D");

@@ -11,6 +11,17 @@ unreachable; `Fill` shows `fill` and `fill-opacity`; `Stroke` shows `stroke`,
 A filtered tab is itself the group selector, so its group is always open; the
 `Object` tab keeps the collapsible Geometry and Additional attributes sections.
 
+## Operator log
+
+An operator/warning/error log follows Blender's Info editor: a bounded pane above
+the status bar, hidden by default, toggled from the toolbar or with
+`Option-Command-L`. Every dispatched command records one line named from the
+widget's own label, every edit error records one line, and callers can record
+warnings and information. The log holds 64 entries of 128 bytes; the oldest entry
+is dropped on overflow, so it can never grow without bound. Each row carries its
+severity as a word as well as a colour. The log is UI state: it never changes
+document bytes and is not part of undo history.
+
 ## Task workspaces
 
 The editor chrome has four Blender-style task workspaces, shown as a tab strip in

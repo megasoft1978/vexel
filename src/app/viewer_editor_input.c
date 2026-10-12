@@ -296,6 +296,12 @@ uint32_t viewer_editor_key(viewer_editor *editor, uint16_t key_code,
                            uint32_t modifiers, const char *text, size_t text_len)
 {
     if (editor == NULL || (text_len > 0U && text == NULL)) return 0U;
+    if (key_code == 37U &&
+        (modifiers & (PLATFORM_MODIFIER_OPTION | PLATFORM_MODIFIER_COMMAND)) ==
+            (PLATFORM_MODIFIER_OPTION | PLATFORM_MODIFIER_COMMAND)) {
+        (void)viewer_editor_toggle_log(editor);
+        return VIEWER_EDITOR_HANDLED;
+    }
     /* Control-PageUp / Control-PageDown cycle task workspaces, as in Blender's
      * topbar tabs; Control-Tab and Control-Shift-Tab are kept as aliases. */
     if ((modifiers & PLATFORM_MODIFIER_CONTROL) != 0U &&
