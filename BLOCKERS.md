@@ -1,6 +1,6 @@
 # Blockers
 
-Active: WO-M4-06 environment-limited native CTests and full `test-fast` suite.
+Active: none for WO-M4-06. On 2026-10-12, revision 5 passed the fresh verifier and merged (`b04981c`), after WO-UI-GOLDEN-01 made the native goldens host-independent. The M4-06 sections below are history.
 
 ## WO-M4-06 closure attempt 2026-10-12 — current status
 

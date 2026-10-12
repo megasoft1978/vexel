@@ -47,3 +47,5 @@ Verification:
 The work remains uncommitted. No branch, index, or commit state was changed.
 Evidence for this round is under `artifacts/WO-M4-06/`, including
 `verify-round7.txt`.
+
+> 2026-10-12: Superseded. WO-M4-06 revision 5 merged; see `BLOCKERS.md` and `artifacts/WO-M4-06/r5-verify/`.

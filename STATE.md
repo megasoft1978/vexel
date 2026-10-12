@@ -317,3 +317,5 @@
 - Update 2026-10-12: WO-M4-06 closure attempt on `main` at `0f615c0`. All renderer gates pass and new exact boundary and gradient tests landed. The ledger records `blocked` because CTest is 78/79: `native-shell-goldens` renders at the host's 2x backing scale against 1x goldens on a Retina host. See `BLOCKERS.md`.
 
 - Update 2026-10-12: WO-UI-GOLDEN-01 merged. The native shell golden check renders headless via `sandbox-exec`, and CTest passes 79/79 on Retina hosts that have WindowServer access.
+
+- Update 2026-10-12: **WO-M4-06 merged** (revision 5, `b04981c`). Bounded references, gradients and clipping are accepted and every frozen gate passes. The corpus supported-file delta is 0: gradient, clip and use support alone makes no additional real-corpus file previewable. Next roadmap items are M4-07 (renderer bake-off) and the M4-08 fidelity gate, which needs an owner decision on scope.
