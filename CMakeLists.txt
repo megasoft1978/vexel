@@ -818,6 +818,10 @@ target_link_libraries(viewer_workspace_test PRIVATE vexel_editor_ui)
 set_target_properties(viewer_workspace_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_workspace_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_workspace_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
 add_executable(viewer_visual_test tests/editor/viewer_visual_test.c)
 target_include_directories(viewer_visual_test PRIVATE src/app)
 target_link_libraries(viewer_visual_test PRIVATE vexel_editor_ui)

@@ -409,7 +409,7 @@ static bool add_palette_nodes(viewer_editor *editor)
     if (okay && visible_count == 0U) {
         okay = add_overlay_node(editor, EDITOR_PALETTE_RESULT_BASE,
             EDITOR_PALETTE_PANEL, 520U, 34U, UI_ROLE_TEXT, UI_WIDGET_LABEL,
-            "No matching commands", 21U, NULL, 0U, 0U, 0U);
+            "No matching commands", sizeof("No matching commands") - 1U, NULL, 0U, 0U, 0U);
     }
     for (size_t slot = 0U; okay && slot < visible_count; ++slot) {
         size_t result_index = editor->palette_first_visible + slot;

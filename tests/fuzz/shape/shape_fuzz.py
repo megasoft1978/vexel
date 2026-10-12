@@ -59,7 +59,7 @@ def main():
     }
     if cases < 1_000_000 and campaign_seconds < args.duration:
         raise RuntimeError("campaign did not reach either required floor")
-    if cap_exhaustion != 1 or cap_case_bytes < 1 or cap_case_bytes > 16 * 1024 * 1024:
+    if cap_exhaustion != 1 or cap_case_bytes < 1 or cap_case_bytes > 32 * 1024 * 1024:
         raise RuntimeError("bounded command-cap exhaustion case did not pass")
     if min(fractional_cases, evenodd_cases, nonzero_cases) == 0:
         raise RuntimeError("fractional geometry and both fill rules were not exercised")

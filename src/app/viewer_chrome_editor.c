@@ -482,7 +482,8 @@ void editor_build_tree_modern(viewer_editor *editor)
         okay = editor_add_widget_node(editor, EDITOR_NODE_CANVAS + 100U,
             EDITOR_NODE_CANVAS, UI_AXIS_VERTICAL, 0U, 0U, 0U, 0U,
             0U, UI_ROLE_GROUP, UI_WIDGET_EMPTY_STATE, UI_ICON_LAYERS,
-            "Empty canvas", 12U, "Add a shape or open an SVG document.", 34U,
+            "Empty canvas", 12U, "Add a shape or open an SVG document.",
+            sizeof("Add a shape or open an SVG document.") - 1U,
             0U, 0U);
         if (!okay) return;
     }
@@ -496,7 +497,8 @@ void editor_build_tree_modern(viewer_editor *editor)
         if (adjust_amount > 0 && (size_t)adjust_amount < sizeof(adjust) &&
             !editor_add_node(editor, EDITOR_NODE_ADJUST, EDITOR_NODE_CANVAS,
                 UI_AXIS_HORIZONTAL, 0U, 28U, 6U, 0U, tokens->panel_raised,
-                UI_ROLE_GROUP, "Adjust last operation", 22U, NULL, 0U, 0U, 0U))
+                UI_ROLE_GROUP, "Adjust last operation",
+                sizeof("Adjust last operation") - 1U, NULL, 0U, 0U, 0U))
             return;
         if (adjust_amount > 0 && (size_t)adjust_amount < sizeof(adjust) &&
             !editor_add_widget_node(editor, EDITOR_NODE_ADJUST + 1U,
@@ -604,7 +606,8 @@ void editor_build_tree_modern(viewer_editor *editor)
             EDITOR_BUTTON_STATUS_CANCEL, EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL,
             76U, 20U, 6U, 0U, tokens->panel_raised, UI_ROLE_BUTTON,
             UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE, "Cancel", 6U,
-            "Cancel the running operation", 30U, 0U,
+            "Cancel the running operation",
+            sizeof("Cancel the running operation") - 1U, 0U,
             EDITOR_BUTTON_STATUS_CANCEL)) &&
         editor_add_widget_node(editor, EDITOR_NODE_STATUS_READOUT,
             EDITOR_NODE_STATUS, UI_AXIS_HORIZONTAL, readout_width, 24U, 0U, 0U,

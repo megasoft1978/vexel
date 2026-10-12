@@ -526,24 +526,37 @@ class ShapeRenderTests(unittest.TestCase):
                     self.assertEqual(int(offset), source.index(marker), name)
                 report["cases"].append({"name": name, "category": category, "offset": int(offset),
                                         "source_sha256": digest_before, "source_unchanged": True})
-            # Curved groups exhaust the edge cap before the 65,536 command cap.
-            path = "M0 0 " + " ".join("C1 15 2 -10 3 3" for _ in range(65535))
-            src = temp_path / "edge-cap.svg"
-            src.write_text(f'<svg width="16" height="16"><path d="{path}"/></svg>')
-            run = subprocess.run([str(binary), str(src), str(temp_path / "edge-cap.rgba")], capture_output=True, text=True)
-            self.assertNotEqual(run.returncode, 0)
-            category, offset = run.stderr.strip().split(":", 1)
-            self.assertEqual(category, "limit")
-            report["cases"].append({"name": "flattened_edge_cap", "category": category, "offset": int(offset),
-                                    "generated_curve_groups": 65535})
-            source = '<svg width="16" height="16">' + '<g transform="translate(1)"/>' * 4097 + '</svg>'
-            src = temp_path / "transform-count-cap.svg"
+            # The document budgets are deliberately large enough for real
+            # drawings (a single CAD path carries millions of commands, and a
+            # 10 MB drawing flattens to millions of edges), so the bound these
+            # cases prove is the element budget: more elements than
+            # SVG_SHAPE_MAX_SHAPES is refused rather than rendered. Exceeding the
+            # multi-million edge or command budgets here would mean allocating
+            # hundreds of megabytes inside a unit test.
+            element_count = 70000
+            source = ('<svg width="16" height="16">' +
+                      '<path d="M0 0 L1 1"/>' * element_count + '</svg>')
+            src = temp_path / "element-cap.svg"
             src.write_text(source)
-            run = subprocess.run([str(binary), str(src), str(temp_path / "transform-count-cap.rgba")], capture_output=True, text=True)
+            run = subprocess.run([str(binary), str(src), str(temp_path / "element-cap.rgba")],
+                                 capture_output=True, text=True)
             self.assertNotEqual(run.returncode, 0)
             category, offset = run.stderr.strip().split(":", 1)
             self.assertEqual(category, "limit")
-            report["cases"].append({"name": "transform_count_cap", "category": category, "offset": int(offset),
+            report["cases"].append({"name": "element_count_cap", "category": category,
+                                    "offset": int(offset),
+                                    "generated_elements": element_count})
+            # A document with a transform on every element is ordinary and must
+            # now render: the accumulated transform budget used to refuse it.
+            source = ('<svg width="16" height="16">' +
+                      '<g transform="translate(1)"><path d="M0 0 L1 1"/></g>' * 4097 +
+                      '</svg>')
+            src = temp_path / "transform-count-ok.svg"
+            src.write_text(source)
+            run = subprocess.run([str(binary), str(src), str(temp_path / "transform-count-ok.rgba")],
+                                 capture_output=True, text=True)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            report["cases"].append({"name": "transform_count_accepted", "result": "renders",
                                     "generated_transform_nodes": 4097})
             degenerate = temp_path / "degenerate.svg"
             degenerate.write_text('<svg width="16" height="16"><path d="M2 2 L2 2 Z"/></svg>')

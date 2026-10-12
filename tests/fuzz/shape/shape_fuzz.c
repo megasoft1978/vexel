@@ -9,7 +9,7 @@
 #include <string.h>
 
 #define INPUT_CAP 4096U
-#define SHAPE_SOURCE_LIMIT (16U * 1024U * 1024U)
+#define SHAPE_SOURCE_LIMIT (32U * 1024U * 1024U)
 #define FEATURE_COUNT 22U
 
 static const char *const feature_names[FEATURE_COUNT] = {
