@@ -1,20 +1,25 @@
 ---
 id: WO-MOTION-03
-revision: 2
+revision: 3
 status: READY
 milestone: M7
 owner: project-owner
 executor: codex-gpt-6
-base_sha: 5c2d0ed69d5f1c45d0faf0211949fff9222f92e4
-spec_sha256: 325a504610098ddf1ac7d180254bcdc4f712267ae63d297becfc41bbdcd52f40
+base_sha: 4ea7404dc3441f0e3e3546faf2935d1e628be6c1
+spec_sha256: 0a31e2f5825f796dff2ae093564963ec9cebeb223a52f151dbf97022af6d965e
 parallel_safe: false
 network: false
 ---
 # Goal
 Add source-preserving, transactional editing commands for supported SMIL keyframes and tracks.
 
-# Closure note
-The executor run for the prior revision finished without a verified ledger outcome: its output stayed uncommitted, and the implementation reached `main` later through lane integration. This closure revision is based on current `main`, which already contains the implementation. The candidate may add only retained evidence and records under the allowlist. The full frozen verification commands must pass on the candidate tree, and a fresh verifier must review the acceptance evidence. No test, golden or oracle may change.
+# Repair note
+The closure verifier for revision 2 rejected the implementation already on `main`. Revision 3 is a repair revision based on current `main`. Besides evidence and records, the candidate may edit `src/svg/animation/authoring.{h,c}`, `src/svg/animation/README.md` and `tests/anim/animation_authoring_test.c` to fix exactly these findings. No other behavior, golden or oracle may change, and no existing assertion may be weakened.
+
+1. Spline tracks must support key edits. In `authoring.c`, `set_key_sequence`, `move_key` and `delete_key` stop rejecting spline tracks. `set_key_sequence` takes the keySplines bytes to write. A spline track keeps exactly key_count-1 keySplines tuples: value edit and move pass the original bytes through unchanged; add duplicates the tuple of the interval it splits; delete drops one tuple (key 0 drops tuple 0, the last key drops tuple N-2, any other key k drops tuple k). Deleting down to one key removes keySplines and sets `calcMode="linear"`, because the parser rejects a one-key spline track. A keySplines value over 64 KiB returns the existing limit error before the source is modified. Document this in the animation README.
+2. Bound and edge tests. Add tests for: NULL output patch; track index at track_count; corrupt source spans (offset at source length, length past the end, offset not on `<`); open tags over 64 KiB or over 128 attributes; key index at key_count; empty, `;`-containing or over-64 KiB values; add-key times at begin, at begin+dur, NaN, Inf, and equal to an existing key; move-key on the first, last or only key, outside the neighbouring keys, and to the same time; deleting the only key; timing with NaN, Inf, non-positive duration and begin+dur over 3600; spline NaN, negative and out-of-range interval; unsupported create-track kinds, attributes and seed values. Each rejection also asserts that the patch has no replacement.
+3. Byte-exact undo and redo. The shared undo helper compares the undone source with the original, and the redone source with the edited source, byte for byte. Use it for add, edit, move, delete, timing, color, transform, spline and calc-mode edits. Track create and remove assert byte-exact undo and redo too.
+4. Tests for spline key edits: after each of add, edit, move and delete on a spline track, the source re-parses with `calcMode` spline and key_count-1 tuples, and untouched tuples are byte-identical.
 
 # Context pointers
 - Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/CODING_STANDARD.md`, `docs/testing.md`, `src/svg/animation/README.md`, and the WO-MOTION-03 section of the supplied `r4-motion.md` research report.
