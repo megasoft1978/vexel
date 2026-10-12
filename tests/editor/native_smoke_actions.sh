@@ -120,8 +120,10 @@ PY
 
 # Select, move, and resize through document-to-screen coordinates from the live
 # editor dump. These points are in document pixels, independent of chrome size.
-# System Events key codes 9, 15, and 16 are the physical V, R, and Y keys.
-keys 'key code 9'
+# The select tool is chosen by clicking the rail button: a pointer action does
+# not depend on the window being the key window, whereas a bare keystroke does,
+# and losing that keystroke used to make this step fail intermittently.
+python3 "$mouse" click-node "$layout_dump" "Selection tool · V"
 python3 "$mouse" wait-node "$layout_dump" "Selection tool · V" state=checked
 python3 "$mouse" click-doc "$layout_dump" 16 14
 python3 "$mouse" drag-doc "$layout_dump" 16 14 18 16
@@ -148,7 +150,7 @@ cp "$document" "$temp_dir/core-saved.svg"
 capture core-selection
 
 # The layer row selects the rectangle; eye visibility only changes the preview.
-keys 'key code 9'
+python3 "$mouse" click-node "$layout_dump" "Selection tool · V"
 python3 "$mouse" wait-node "$layout_dump" "Selection tool · V" state=checked
 python3 "$mouse" click-node "$layout_dump" "Rectangle #box" select
 python3 "$mouse" wait-node "$layout_dump" "Rectangle #box" state=checked
