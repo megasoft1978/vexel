@@ -177,6 +177,22 @@ def main(argv):
         start = document_point(layout, float(argv[3]), float(argv[4]))
         end = document_point(layout, float(argv[5]), float(argv[6]))
         drag(*start, *end)
+    elif len(argv) == 4 and argv[1] == "click-value":
+        # Clicks the node labelled <label> that carries a value, so a property row
+        # can be distinguished from a tab or header of the same name.
+        layout = read_layout(argv[2])
+        target = None
+        for node in layout["nodes"]:
+            if node.get("label") == argv[3] and node.get("value"):
+                target = node
+                break
+        if target is None:
+            raise SystemExit(f"no valued node labelled {argv[3]!r}")
+        rect = target["bounds"]
+        local_x = float(rect["x"]) + float(rect["width"]) * 0.5
+        local_y = float(rect["y"]) + float(rect["height"]) * 0.5
+        x, y = screen_point(layout, local_x, local_y)
+        drag(x, y, x, y, 1)
     elif len(argv) in (4, 5) and argv[1] == "click-node":
         target = argv[4] if len(argv) == 5 else "bounds"
         x, y = node_point(read_layout(argv[2]), argv[3], target)

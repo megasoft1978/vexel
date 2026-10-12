@@ -452,3 +452,16 @@
   asserted by byte comparison in the new `viewer-workspaces` CTest. Ten golden fixtures were updated with
   a recorded baseline change (`artifacts/WO-UI-01/golden-changes.md`, pixdiff comparisons). 81/81 CTests
   pass. Evidence: `artifacts/WO-UI-01/`.
+
+- Update 2026-10-13: **WO-UI-02** adds Blender-style properties tabs to the inspector
+  (`Object`, `Fill`, `Stroke`, `Document`). `Object` keeps the name, geometry and every attribute
+  no other tab owns, so nothing becomes unreachable; `Document` keeps the document's own
+  `width`/`height`/`viewBox` editable alongside the size readout, Fit Canvas and Actual Size; a
+  filtered tab is its own group selector. Mutation evidence: making the `Object` tab accept
+  appearance attributes fails the structure test with code 46.
+- Update 2026-10-13: **WO-UI-03** adds Blender's Info-editor pattern, a bounded
+  operator/warning/error log pane above the status bar, toggled from the toolbar or with
+  `Option-Command-L`. Commands record their own widget label; errors record their message; the ring
+  holds 64 entries of 128 bytes and drops the oldest. The log is UI state and never changes document
+  bytes. Mutation evidence: raising `EDITOR_LOG_CAP` fails the overflow assertion. Both orders:
+  81/81 CTests pass, `./dev verify`, `./dev t --all` and `./dev editor-smoke` exit 0.

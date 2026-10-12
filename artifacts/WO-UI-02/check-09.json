@@ -1,0 +1,8 @@
+{
+ "index": 9,
+ "label": "python3 scripts/wo_validate.py WO-UI-03 --ready",
+ "exit": 0,
+ "seconds": 0.0,
+ "stdout_tail": "valid WO-UI-03 revision 1 sha256 a6f94c92c7f117a60b62112f648adcde06083f683694701ee334398fd5ba2f73\n",
+ "stderr_tail": ""
+}

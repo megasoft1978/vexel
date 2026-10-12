@@ -1,0 +1,8 @@
+{
+ "index": 5,
+ "label": "./dev t --all",
+ "exit": 0,
+ "seconds": 7.2,
+ "stdout_tail": "ok   build              0.2s\nok   ctest -R all              3.9s  100% tests passed, 0 tests failed out of 81\nok   python mcp.test_e2e,svg.sha   3.0s  Ran 69 tests in 2.916s\nPASS  total 7.1s   (slow Python skipped; --full or ./dev t -k <name>)\n",
+ "stderr_tail": ""
+}

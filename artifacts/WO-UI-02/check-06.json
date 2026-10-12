@@ -1,0 +1,8 @@
+{
+ "index": 6,
+ "label": "./dev editor-smoke",
+ "exit": 1,
+ "seconds": 10.8,
+ "stdout_tail": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.1s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug\nninja: no work to do.\n",
+ "stderr_tail": "editor smoke exited with status 1\nnative editor smoke diagnostic: phase=interactive editor smoke\nrunner pid=33396 state=exited 1\nprocess group:\nPID  PPID  PGID STAT ELAPSED COMMAND\nsmoke log tail:\nsaved SVG changed bytes outside the selected transform: b'<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'64\\' height=\\'64\\' viewBox=\\'0 0 64 64\\' transform=\"matrix(1 0 0 1 1.91194969 2)\"></svg>\\n'\nsmoke log retained at: /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/vexel-editor-smoke-pvszm5ph.log\n"
+}

@@ -5,6 +5,7 @@
 #include "viewer_workspace.h"
 #include "ui/ui_core.h"
 
+#define _GNU_SOURCE
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -275,6 +276,43 @@ done:
     return result;
 }
 
+/* A canvas gesture whose hit test missed leaves the selection on the document
+ * root. Transforming the root used to rewrite the whole document, dropping the
+ * shapes; it must now be refused with the document left untouched. */
+static int check_root_transform_is_refused(void)
+{
+    viewer_editor *editor = viewer_editor_create_styled((base_bytes){source,
+        sizeof(source) - 1U}, UI_THEME_DARK, 1280U, 800U, true);
+    if (editor == NULL) return 1;
+    int result = 0;
+    uint8_t *before = malloc(sizeof(source));
+    uint8_t *after = malloc(sizeof(source));
+    if (before == NULL || after == NULL) { result = 2; goto cleanup; }
+    size_t before_length = 0U, after_length = 0U;
+    if (!viewer_editor_materialize(editor, before, sizeof(source), &before_length)) {
+        result = 3;
+        goto cleanup;
+    }
+    /* Nothing was selected, so the selection is the document root, which is
+     * exactly the state a missed canvas hit test leaves behind. */
+    (void)editor_commit_transform(editor, 2.0, 2.0, 1.0, 1.0, 0.0, 0.0, 0.0);
+    if (!viewer_editor_materialize(editor, after, sizeof(source), &after_length) ||
+        after_length != before_length || memcmp(before, after, before_length) != 0) {
+        result = 4;   /* the document was rewritten: the defect */
+        goto cleanup;
+    }
+    /* The shape survives and the root carries no matrix. */
+    if (memmem(after, after_length, "<rect", 5U) == NULL) { result = 5; goto cleanup; }
+    if (memmem(after, after_length, "transform=\"matrix(", 17U) != NULL) {
+        result = 6;
+        goto cleanup;
+    }
+cleanup:
+    free(before); free(after);
+    viewer_editor_destroy(editor);
+    return result;
+}
+
 int main(void)
 {
     int result = check_table();
@@ -285,10 +323,12 @@ int main(void)
     if (result != 0) { fprintf(stderr, "workspace cycling failed: %d\n", result); return 1; }
     result = check_semantics();
     if (result != 0) { fprintf(stderr, "workspace semantics failed: %d\n", result); return 1; }
+    result = check_root_transform_is_refused();
+    if (result != 0) { fprintf(stderr, "root transform guard failed: %d\n", result); return 1; }
     result = check_log();
     if (result != 0) { fprintf(stderr, "log pane failed: %d\n", result); return 1; }
     result = check_editor();
     if (result != 0) { fprintf(stderr, "workspace editor failed: %d\n", result); return 1; }
-    printf("workspace tests passed: table, names, cycling, semantics, log, panes, document invariance\n");
+    printf("workspace tests passed: table, names, cycling, semantics, log, root-guard, panes, document invariance\n");
     return 0;
 }

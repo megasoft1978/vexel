@@ -75,6 +75,17 @@ uint32_t editor_commit_transform(viewer_editor *editor,
         editor_status_ok(editor, "Unlock the selected layer to transform it");
         return VIEWER_EDITOR_HANDLED;
     }
+    /* Never compose a matrix onto the document root. A canvas gesture whose
+     * hit test missed leaves the selection on the root, and rewriting the root
+     * element rewrites the whole document: the saved file lost its shapes and
+     * kept only the matrix. Refusing here is both correct and safe. */
+    base_bytes target_tag = {0};
+    if (!document_edit_tag_name(editor->edit, editor->selected, &target_tag) ||
+        target_tag.len == 0U ||
+        (target_tag.len == 3U && memcmp(target_tag.ptr, "svg", 3U) == 0)) {
+        editor_status_ok(editor, "Select an element to transform it");
+        return VIEWER_EDITOR_HANDLED;
+    }
     double cosine = cos(rotate_radians), sine = sin(rotate_radians);
     geom_affine next = {
         cosine * scale_x, sine * scale_x,

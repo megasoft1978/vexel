@@ -1,0 +1,8 @@
+{
+ "index": 10,
+ "label": "git diff --check",
+ "exit": 0,
+ "seconds": 0.0,
+ "stdout_tail": "",
+ "stderr_tail": ""
+}

@@ -1,0 +1,74 @@
+{
+ "facts": [
+  {
+   "index": 1,
+   "label": "cmake --preset mac-debug",
+   "exit": 0,
+   "seconds": 0.2,
+   "facts": {}
+  },
+  {
+   "index": 2,
+   "label": "cmake --build --preset mac-debug",
+   "exit": 0,
+   "seconds": 0.1,
+   "facts": {}
+  },
+  {
+   "index": 3,
+   "label": "ctest --test-dir build/mac-debug --output-on-failure",
+   "exit": 0,
+   "seconds": 30.5,
+   "facts": {}
+  },
+  {
+   "index": 4,
+   "label": "./dev verify",
+   "exit": 0,
+   "seconds": 74.4,
+   "facts": {}
+  },
+  {
+   "index": 5,
+   "label": "./dev t --all",
+   "exit": 0,
+   "seconds": 7.2,
+   "facts": {}
+  },
+  {
+   "index": 6,
+   "label": "./dev editor-smoke",
+   "exit": 1,
+   "seconds": 10.8,
+   "facts": {}
+  },
+  {
+   "index": 7,
+   "label": "python3 scripts/ledger.py validate ledger.jsonl",
+   "exit": 0,
+   "seconds": 0.1,
+   "facts": {}
+  },
+  {
+   "index": 8,
+   "label": "python3 scripts/wo_validate.py WO-UI-02 --ready",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {}
+  },
+  {
+   "index": 9,
+   "label": "python3 scripts/wo_validate.py WO-UI-03 --ready",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {}
+  },
+  {
+   "index": 10,
+   "label": "git diff --check",
+   "exit": 0,
+   "seconds": 0.0,
+   "facts": {}
+  }
+ ]
+}

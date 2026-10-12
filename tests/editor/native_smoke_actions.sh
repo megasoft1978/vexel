@@ -202,10 +202,10 @@ expected = (b"<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' "
 if re.sub(rb" transform=\"[^\"]*\"", b"", saved) != expected:
     raise SystemExit("inspector X value was not saved without unrelated SVG changes")
 PY
-# The Draw workspace starts with the Appearance section collapsed, so expand it
-# the way a user would before editing the fill.
-python3 "$mouse" click-node "$layout_dump" Appearance
+# The fill lives on the Fill property tab, so open that tab first the way a user
+# would, then click the valued row (the tab carries the same label).
 python3 "$mouse" click-node "$layout_dump" Fill
+python3 "$mouse" click-value "$layout_dump" Fill
 keys 'keystroke "a" using {command down}'
 python3 "$mouse" type-text '#35a74b'
 keys 'key code 36'
