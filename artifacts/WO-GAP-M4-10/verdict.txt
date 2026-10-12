@@ -1,0 +1,17 @@
+VERDICT: pass
+Parent AC-1 pass — `check-04.txt` records `./dev verify` exit 0.
+Parent AC-2 pass — `check-05.txt` and `check-06.txt` record ASan and UBSan exit 0.
+Parent AC-3 pass — `check-07.txt` records `./dev t --all` exit 0.
+Parent AC-4 pass — `pre-change.md` records the over-16-MiB test failing at base `5894cb4` for the old cap, and the tiny-budget test failing at `27e7781` with XML instead of LIMIT; it identifies (c) and (d) as passing guards.
+Parent AC-5 pass — `check-08.txt` records the corpus command exit 0; `corpus-delta.json` contains the required manifest digest, before/after counts, histograms, and category deltas.
+Parent AC-6 pass under the work-order mapping — `scope.md` lists `071e0ec`’s in- and out-of-allowlist paths and assigns the latter to WO-RETRO-01; `check-09.txt` shows this order’s HEAD commit lists only allowed paths.
+Parent AC-7 pass — `check-10.txt`, `check-11.txt`, and `check-13.txt` record ledger validation, parent work-order validation, and `git diff --check` exiting 0.
+Parent AC-8 pass — this review re-judges the parent criteria against HEAD `f2d4a28`.
+Gap AC-1 pass — `check-04.txt` through `check-07.txt` record verify, ASan, UBSan, and `t --all` exiting 0.
+Gap AC-2 pass — `test_decode_budget.c` covers (a)–(d), CTest registers `shape-decode-budget`, and `check-03.txt` records 84/84 tests passing; `pre-change.md` records the requested pre-change results.
+Gap AC-3 pass — the corpus command and digest are recorded in `check-08.txt` and `corpus-delta.json` has the required fields.
+Gap AC-4 pass — `check-09.txt` lists only allowlisted paths for HEAD; `scope.md` documents the earlier implementation commit’s scope.
+Gap AC-5 pass — `check-10.txt` through `check-13.txt` record all four required commands exiting 0.
+Gap AC-6 pass — this fresh read-only review covers parent AC-1–AC-8 and gap AC-1–AC-5; the controller will record the verdict afterward.
+
+Defects: none.
