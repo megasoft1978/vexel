@@ -2,7 +2,7 @@
   "current": {
     "work_order": "WO-M4-06 revision 5",
     "status": "all 18 frozen verification commands pass in a fresh runner worktree; closure evidence refreshed",
-    "verifier_run": "artifacts/runs/WO-M4-06/verify-f7efb3fc-329c-477a-8575-5de83f1f78f2",
+    "verifier_run": "artifacts/WO-M4-06/r5-verify/ (copied from the gitignored runs directory)",
     "candidate_base": "eb0dfc779709c8a7c37a5f30992a17f82e484d96",
     "check_exit_codes": {
       "1": 0,

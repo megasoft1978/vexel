@@ -55,5 +55,6 @@
       ],
       "purpose": "revision 5 base to candidate"
     }
-  ]
+  ],
+  "note": "Ranges cover the closure commits and revision 5 base through the first candidate. Later candidates add only artifacts/WO-M4-06/** files. scripts/wo_driver.py assert_verifier_scope re-applies this guard to every exact candidate before review; the verifier is only invoked after that guard passes."
 }

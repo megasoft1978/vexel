@@ -1,0 +1,13 @@
+{
+  "index": 17,
+  "argv": [
+    "python3",
+    "scripts/wo_validate.py",
+    "WO-M4-06",
+    "--ready"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.024455540988128632,
+  "stdout": "valid WO-M4-06 revision 5 sha256 f2fab453c7a76489e8e683703eb4af0bce1c4b342c2db2d01d2a60c2ed5fe550\n",
+  "stderr": ""
+}
