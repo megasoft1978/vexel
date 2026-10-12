@@ -7,8 +7,8 @@ full-document render per manifest file through the render CLI, recording the
 error category and source offset when the render fails.
 
 Corpus files are borrowed and read-only. Nothing is copied into the repository.
-The JSON output is byte-reproducible: wall-clock timing is excluded by design,
-and only the Markdown summary reports elapsed milliseconds.
+The JSON output is byte-reproducible: wall-clock timing is excluded from both
+outputs by design.
 """
 
 from __future__ import annotations

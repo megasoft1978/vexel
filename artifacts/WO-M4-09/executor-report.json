@@ -1,7 +1,7 @@
 {
  "status": "complete",
  "base_sha": "2d43a937527fa92700e72216952da75f8ea581a6",
- "head_sha": "454c09d1d06424e5135fbd8771ae1f53cccd32ff",
+ "head_sha": "cb3c11213659d8a64ddd3e2cdcc8ba7125e9b041",
  "acceptance": {
   "AC-1": {
    "commands": [
@@ -166,5 +166,5 @@
    ]
   }
  },
- "summary": "Adds scripts/corpus_render_report.py, which renders every pinned corpus file in full and records the error category and source offset for each failure. 26 focused tests pass; ./dev verify reports CTest 80/80 and Python 327/327; ASan and UBSan each pass 80/80. The committed report accounts for all 58 manifest files: 39 render-tested (1 renders, 26 limit, 8 unsupported, 4 xml) and 19 skipped above the 32 MiB threshold. Two runs produced byte-identical JSON (sha256 8c209813...c5fd, recorded in determinism.json). Key finding: the full-render path is hard-capped at 16 MiB by SHAPE_MAX_BYTES, and 11 files fail at exactly offset 16777216. No renderer, parser, raster, policy or platform code changed."
+ "summary": "Adds scripts/corpus_render_report.py, which renders every pinned corpus file in full and records the error category and source offset for each failure. 26 focused tests pass; ./dev verify reports CTest 80/80 and Python 328/328; ASan and UBSan each pass 80/80. The committed report accounts for all 58 manifest files: 39 render-tested (1 renders, 26 limit, 8 unsupported, 4 xml) and 19 skipped above the 32 MiB threshold. Two runs produced byte-identical JSON (sha256 2f780b2b\u2026ec5f, recorded in determinism.json). Key finding: the full-render path is hard-capped at 16 MiB by SHAPE_MAX_BYTES, and 11 files fail at exactly offset 16777216. No renderer, parser, raster, policy or platform code changed."
 }

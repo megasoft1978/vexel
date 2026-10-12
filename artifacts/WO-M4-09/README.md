@@ -1,14 +1,14 @@
 # WO-M4-09 evidence — corpus full-render diagnostics
 
 Frozen spec revision 2, spec SHA-256
-`3817a27f1dc7fd1a1784de56d651cb547d6f0783761572062d937e5c342409b9`.
+`2f780b2b7d9629db177804a4e650a3ee8f5dd957d71584f60e5750722015ec5f`.
 
 All **ten** frozen verification commands exited 0 on the candidate tree, in the
 order the spec lists them.
 
 | # | frozen command | exit | record |
 |---|---|---:|---|
-| 1 | `python3 -m unittest tests.test_corpus_render_report` | 0 | `check-01.json` (25 tests) |
+| 1 | `python3 -m unittest tests.test_corpus_render_report` | 0 | `check-01.json` (26 tests) |
 | 2 | `cmake --preset mac-release` | 0 | `check-02.json` |
 | 3 | `cmake --build --preset mac-release` | 0 | `check-03.json` |
 | 4 | `python3 scripts/corpus_render_report.py --corpus ... --output-json reports/M4/render-diagnostics.json --output-markdown reports/M4/render-diagnostics.md` | 0 | `check-04.json` |
@@ -23,7 +23,7 @@ order the spec lists them.
 
 `reports/M4/render-diagnostics.json` and `reports/M4/render-diagnostics.md`,
 produced at `--size 128x128` with the default 32 MiB size threshold. JSON
-SHA-256 `8c209813acaca2622434466be3a26871ecba5388d45dd49d1bf08dc77206c5fd`.
+SHA-256 `2f780b2b7d9629db177804a4e650a3ee8f5dd957d71584f60e5750722015ec5f`.
 
 | Verdict | Files |
 |---|---:|
@@ -44,7 +44,7 @@ and were not attempted.
 
 AC-3 determinism is recorded in `determinism.json`: two independent runs over
 the identical corpus produced JSON with the same SHA-256
-(`8c209813…c5fd`), byte-identical to the committed report.
+(`2f780b2b…ec5f`), byte-identical to the committed report.
 
 ## Findings usable for sequencing
 
@@ -81,13 +81,21 @@ an interpretation of the offsets, not a field in the JSON.
 
 ## Record sequencing
 
-`STATE.md` is updated in the implementation commit. `LEDGER.md` and `ledger.jsonl`
-carry the `verified`, `accepted` and `merged` events, so they are written after the
-verifier verdict and name the accepted candidate commit; the transition table in
-`scripts/ledger.py` requires that order. The schema-valid executor report is
-retained under `artifacts/WO-M4-09/` and names the verified candidate commit.
+`STATE.md` is updated in the implementation commit. The ledger events after
+`run_started` are written after the verifier verdict, because
+`scripts/ledger.py`'s transition table only permits
+`run_started -> run_finished -> verified -> accepted -> merged`, and the
+`verified`/`accepted`/`merged` entries must name the accepted candidate commit.
+The post-verification commit therefore appends `run_finished`, `verified`,
+`accepted` and `merged`, adds the `LEDGER.md` row, and refreshes
+`artifacts/WO-M4-09/executor-report.json` so that its `head_sha` names the
+verified candidate commit and its counts match `check-05.json`.
 
 ## Known stale text in history
+
+The commit message of `cb3c112` says the executor report counts were corrected to
+327 while the recorded `./dev verify` total is 328; the message is
+immutable history and is corrected in the evidence instead.
 
 The commit message of `85e7d17` says "13 real files fail at exactly 16777216".
 That count was wrong; the measured value is 11, as recorded in the committed JSON
