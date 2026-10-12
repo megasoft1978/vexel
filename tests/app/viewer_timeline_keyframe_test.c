@@ -419,7 +419,12 @@ static bool key_event(viewer_timeline *timeline, viewer_editor *editor,
     return viewer_timeline_easing_process_event(timeline, editor, &event, layout);
 }
 
-/* Splits the keySplines attribute of edited into trimmed tuples. */
+/* Raw (untrimmed) keySplines tuples of field_edit_source, split on ';' only. */
+static const char *const original_tuples[3] = {
+    "0.10 0.20 0.30 0.40", " 0.22 0.32 0.42 0.52", "0.40 0.50 0.60 0.70"
+};
+
+/* Splits the keySplines attribute of edited into raw tuples, no trimming. */
 static bool split_splines(const char *edited, char tuples[3][96])
 {
     const char *start = strstr(edited, "keySplines='");
@@ -428,17 +433,21 @@ static bool split_splines(const char *edited, char tuples[3][96])
     const char *end = strchr(start, '\'');
     if (end == NULL) return false;
     for (size_t index = 0U; index < 3U; ++index) {
-        while (start < end && *start == ' ') start++;
         const char *stop = start;
         while (stop < end && *stop != ';') stop++;
-        const char *trim = stop;
-        while (trim > start && trim[-1] == ' ') trim--;
-        if ((size_t)(trim - start) >= 96U) return false;
-        memcpy(tuples[index], start, (size_t)(trim - start));
-        tuples[index][trim - start] = '\0';
+        if ((size_t)(stop - start) >= 96U) return false;
+        memcpy(tuples[index], start, (size_t)(stop - start));
+        tuples[index][stop - start] = '\0';
+        if (index < 2U && stop == end) return false;
         start = stop < end ? stop + 1 : stop;
     }
-    return true;
+    return start == end;
+}
+
+static bool tuple_bytes_equal(const char *actual, const char *expected)
+{
+    size_t length = strlen(expected);
+    return strlen(actual) == length && memcmp(actual, expected, length) == 0;
 }
 
 /* Types input into easing field 0 of key 1 and commits with Return. */
@@ -505,8 +514,8 @@ static bool check_accepted_field_value(const char *input, double expected)
     double decoded = -1.0;
     CHECK(type_into_field(input, &mutated, tuples, &decoded, &snapshot_matches));
     CHECK(mutated);
-    CHECK(strcmp(tuples[0], "0.10 0.20 0.30 0.40") == 0);
-    CHECK(strcmp(tuples[2], "0.40 0.50 0.60 0.70") == 0);
+    CHECK(tuple_bytes_equal(tuples[0], original_tuples[0]));
+    CHECK(tuple_bytes_equal(tuples[2], original_tuples[2]));
     char *rest = NULL;
     CHECK(strtod(tuples[1], &rest) == expected);
     CHECK(strtod(rest, &rest) == 0.32 && strtod(rest, &rest) == 0.42 &&
@@ -523,9 +532,8 @@ static bool check_rejected_field_value(const char *input)
     double decoded = -1.0;
     CHECK(type_into_field(input, &mutated, tuples, &decoded, &snapshot_matches));
     CHECK(!mutated);
-    CHECK(strcmp(tuples[0], "0.10 0.20 0.30 0.40") == 0);
-    CHECK(strcmp(tuples[1], "0.22 0.32 0.42 0.52") == 0);
-    CHECK(strcmp(tuples[2], "0.40 0.50 0.60 0.70") == 0);
+    for (size_t index = 0U; index < 3U; ++index)
+        CHECK(tuple_bytes_equal(tuples[index], original_tuples[index]));
     CHECK(decoded == 0.22);
     return true;
 }
@@ -610,8 +618,8 @@ static bool check_unentered_field_does_not_leak(const char *draft, bool press_re
         if (tuple[0] != 0.22)
             (void)fprintf(stderr, "draft '%s': x1 became %.17g\n", draft, tuple[0]);
         okay = tuple[0] == 0.22 && tuple[1] == 0.32 && tuple[2] == 0.41 &&
-            tuple[3] == 0.52 && strcmp(tuples[0], "0.10 0.20 0.30 0.40") == 0 &&
-            strcmp(tuples[2], "0.40 0.50 0.60 0.70") == 0;
+            tuple[3] == 0.52 && tuple_bytes_equal(tuples[0], original_tuples[0]) &&
+            tuple_bytes_equal(tuples[2], original_tuples[2]);
     }
     free(edited);
     svg_shape_document_destroy(&decoded);
