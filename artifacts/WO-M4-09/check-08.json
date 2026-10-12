@@ -1,14 +1,14 @@
 {
  "index": 8,
- "frozen_command": "python3 scripts/wo_validate.py WO-M4-09 --ready",
+ "frozen_command": "python3 scripts/ledger.py validate ledger.jsonl",
  "argv": [
   "python3",
-  "scripts/wo_validate.py",
-  "WO-M4-09",
-  "--ready"
+  "scripts/ledger.py",
+  "validate",
+  "ledger.jsonl"
  ],
  "exit_code": 0,
- "duration_s": 0.024728059768676758,
- "stdout": "valid WO-M4-09 revision 2 sha256 3817a27f1dc7fd1a1784de56d651cb547d6f0783761572062d937e5c342409b9\n",
+ "duration_s": 0.0692901611328125,
+ "stdout": "valid ledger: 467 entries\n",
  "stderr": ""
 }

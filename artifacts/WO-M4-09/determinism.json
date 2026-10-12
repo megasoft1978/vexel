@@ -1,0 +1,41 @@
+{
+ "command": "python3 scripts/corpus_render_report.py --corpus /Users/megasoft78/Desktop/Freelance/vexel-corpus-real --output-json <tmp> --output-markdown <tmp>",
+ "runs": 2,
+ "json_sha256_run_1": "8c209813acaca2622434466be3a26871ecba5388d45dd49d1bf08dc77206c5fd",
+ "json_sha256_run_2": "8c209813acaca2622434466be3a26871ecba5388d45dd49d1bf08dc77206c5fd",
+ "byte_identical": true,
+ "committed_report_sha256": "8c209813acaca2622434466be3a26871ecba5388d45dd49d1bf08dc77206c5fd",
+ "counts": {
+  "files_at_offset_16777216": 11,
+  "files_at_offset_0": 2,
+  "coverage": {
+   "not_render_tested": 19,
+   "reason_not_render_tested": "sources larger than --max-bytes (33554432) are recorded as skipped and were not rendered",
+   "render_tested": 39
+  },
+  "histogram": {
+   "limit": 26,
+   "ok": 1,
+   "skipped": 19,
+   "unsupported": 8,
+   "xml": 4
+  }
+ },
+ "ids_at_offset_16777216": [
+  "commons-1-42-polytope-7-cube-svg",
+  "commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg",
+  "commons-cambodia-geographic-map-en-svg",
+  "commons-chuaattractormodified-svg",
+  "commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg",
+  "commons-corvuscoraxiucn-svg",
+  "commons-dukesofhohenbergarms-svg",
+  "commons-france-osm-mapnik-svg",
+  "commons-geographic-map-of-norway-sweden-finland-and-denmark-svg",
+  "commons-germany-districts-municipalities-location-map-2013-svg",
+  "commons-ideogram-human-chromosome-20-svg"
+ ],
+ "ids_at_offset_0": [
+  "generated-embedded_t2",
+  "generated-science_t1"
+ ]
+}

@@ -8,7 +8,7 @@
   "mac-release"
  ],
  "exit_code": 0,
- "duration_s": 0.019195079803466797,
+ "duration_s": 0.021891117095947266,
  "stdout": "ninja: no work to do.\n",
  "stderr": ""
 }

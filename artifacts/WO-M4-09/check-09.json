@@ -1,13 +1,14 @@
 {
  "index": 9,
- "frozen_command": "git diff --check",
+ "frozen_command": "python3 scripts/wo_validate.py WO-M4-09 --ready",
  "argv": [
-  "git",
-  "diff",
-  "--check"
+  "python3",
+  "scripts/wo_validate.py",
+  "WO-M4-09",
+  "--ready"
  ],
  "exit_code": 0,
- "duration_s": 0.012243986129760742,
- "stdout": "",
+ "duration_s": 0.026008129119873047,
+ "stdout": "valid WO-M4-09 revision 2 sha256 3817a27f1dc7fd1a1784de56d651cb547d6f0783761572062d937e5c342409b9\n",
  "stderr": ""
 }

@@ -8,7 +8,7 @@
   "tests.test_corpus_render_report"
  ],
  "exit_code": 0,
- "duration_s": 0.04579281806945801,
+ "duration_s": 0.0563657283782959,
  "stdout": "",
- "stderr": ".................\n----------------------------------------------------------------------\nRan 17 tests in 0.004s\n\nOK\n"
+ "stderr": "...........corpus-render-report: corpus manifest digest mismatch: expected 9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30, found aa7d2c0b3856f61fab9364b17e811f0ebdf7759f13a8183aeed2ac5ba629c35c. Refusing to report on different inputs.\n.corpus-render-report: render binary not found: /var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpeql6h0v_/does-not-exist\n.............\n----------------------------------------------------------------------\nRan 25 tests in 0.008s\n\nOK\n"
 }

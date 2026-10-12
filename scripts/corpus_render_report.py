@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -32,7 +33,10 @@ DEFAULT_TIMEOUT = 120.0
 EXCERPT_PAD = 48
 EXCERPT_LIMIT = 160
 
-DIAGNOSTIC_RE = re.compile(r": (?P<category>[a-z][a-z0-9_-]*) at byte (?P<offset>\d+)\s*$")
+DIAGNOSTIC_RE = re.compile(
+    r"^render-frame: (?P<path>.*): (?P<category>[a-z][a-z0-9_-]*) at byte (?P<offset>\d+)\s*$"
+)
+FAILURE_LINE_RE = re.compile(r"^render-frame: (?P<path>.*): (?P<message>.+?)\s*$")
 USAGE_RE = re.compile(r"^(?P<width>\d{1,5})x(?P<height>\d{1,5})$")
 KNOWN_CATEGORIES = (
     "none",
@@ -66,13 +70,68 @@ def parse_size(text: str) -> tuple[int, int]:
     return width, height
 
 
-def parse_diagnostic(stderr: str) -> tuple[str | None, int | None]:
-    """Return (category, offset) from the render CLI's stderr, or (None, None)."""
+def _same_file(reported: str, expected: Path | None) -> bool:
+    """True when a reported path and the rendered file denote the same file.
+
+    The CLI echoes the path it was given, so an exact comparison normally
+    succeeds. The trailing-components fallback tolerates a caller that passed a
+    relative path; it can never match a differently named file.
+    """
+    if expected is None:
+        return True
+    if Path(reported) == expected:
+        return True
+    try:
+        if Path(reported).resolve() == expected.resolve():
+            return True
+    except OSError:
+        pass
+    reported_parts = Path(reported).parts
+    expected_parts = expected.parts
+    if not reported_parts or not expected_parts:
+        return False
+    if reported_parts[-1] != expected_parts[-1]:
+        return False
+    return reported_parts[-2:] == expected_parts[-2:] or len(reported_parts) == 1
+
+
+def parse_diagnostic(
+    stderr: str, expected: Path | None = None
+) -> tuple[str | None, int | None]:
+    """Return (category, offset) for the rendered file, or (None, None).
+
+    A diagnostic naming a different file is ignored rather than attributed to the
+    current record.
+    """
     for line in reversed(stderr.splitlines()):
-        match = DIAGNOSTIC_RE.search(line)
-        if match is not None:
+        match = DIAGNOSTIC_RE.match(line)
+        if match is not None and _same_file(match.group("path"), expected):
             return match.group("category"), int(match.group("offset"))
     return None, None
+
+
+def failure_note(stderr: str, expected: Path | None = None) -> str | None:
+    """Return a bounded note for a failure that carried no located diagnostic."""
+    for line in reversed(stderr.splitlines()):
+        match = FAILURE_LINE_RE.match(line)
+        if match is not None and _same_file(match.group("path"), expected):
+            return match.group("message").strip()[:200]
+    stripped = [line for line in stderr.strip().splitlines() if line.strip()]
+    if not stripped:
+        return None
+    last = stripped[-1]
+    mismatch = FAILURE_LINE_RE.match(last)
+    if mismatch is not None and not _same_file(mismatch.group("path"), expected):
+        return None
+    return last[:200]
+
+
+#: Verdict vocabulary fixed by the work order. The raw category is preserved
+#: separately in ``diagnostic_category``.
+REPORTED_VERDICTS = (
+    "ok", "unsupported", "limit", "xml", "number", "viewport", "path", "oom",
+    "timeout", "error", "skipped",
+)
 
 
 def verdict_for(category: str | None, exit_code: int, timed_out: bool) -> str:
@@ -82,11 +141,9 @@ def verdict_for(category: str | None, exit_code: int, timed_out: bool) -> str:
         return SUCCESS
     if category is None:
         return ERROR
-    if category in KNOWN_CATEGORIES:
-        return "none" if category == "none" else category
     if category.startswith("unsupported"):
         return "unsupported"
-    return ERROR
+    return category if category in REPORTED_VERDICTS else ERROR
 
 
 def excerpt(data: bytes, offset: int | None) -> str | None:
@@ -150,7 +207,7 @@ def run_trial(
 ) -> dict[str, Any]:
     argv = [str(binary), "--render-frame", str(source), "--size", size, "--out", str(scratch)]
     exit_code, stderr, timed_out = runner(argv, timeout)
-    category, offset = parse_diagnostic(stderr)
+    category, offset = parse_diagnostic(stderr, source)
     verdict = verdict_for(category, exit_code, timed_out)
     record: dict[str, Any] = {
         "verdict": verdict,
@@ -158,8 +215,13 @@ def run_trial(
         "timed_out": timed_out,
         "diagnostic_category": category,
         "diagnostic_offset": offset,
+        "diagnostic_note": None,
     }
     if verdict not in (SUCCESS, SKIPPED):
+        if timed_out:
+            record["diagnostic_note"] = f"render exceeded the {timeout:g} s timeout"
+        elif category is None:
+            record["diagnostic_note"] = failure_note(stderr, source) or "no diagnostic output"
         try:
             payload = source.read_bytes()
         except OSError:
@@ -196,7 +258,7 @@ def build_report(
                     "timed_out": False,
                     "diagnostic_category": None,
                     "diagnostic_offset": None,
-                    "skip_reason": f"source exceeds --max-bytes ({max_bytes})",
+                    "diagnostic_note": f"not render-tested: source exceeds --max-bytes ({max_bytes})",
                 }
             )
         else:
@@ -209,13 +271,16 @@ def build_report(
                         "timed_out": False,
                         "diagnostic_category": None,
                         "diagnostic_offset": None,
-                        "skip_reason": "manifest path is missing on disk",
+                        "diagnostic_note": "manifest path is missing on disk",
                     }
                 )
             else:
                 record.update(run_trial(binary, source, size, timeout, scratch, runner))
         histogram[record["verdict"]] = histogram.get(record["verdict"], 0) + 1
         files.append(record)
+    render_tested = sum(
+        1 for item in files if item["verdict"] not in (SKIPPED,)
+    )
     return {
         "schema_version": 1,
         "tool": "scripts/corpus_render_report.py",
@@ -225,19 +290,31 @@ def build_report(
         "max_bytes": max_bytes,
         "timeout_seconds": timeout,
         "file_count": len(files),
+        "coverage": {
+            "render_tested": render_tested,
+            "not_render_tested": len(files) - render_tested,
+            "reason_not_render_tested": (
+                f"sources larger than --max-bytes ({max_bytes}) are recorded as "
+                f"{SKIPPED} and were not rendered"
+            ),
+        },
         "histogram": {key: histogram[key] for key in sorted(histogram)},
         "files": files,
     }
 
 
 def render_markdown(report: dict[str, Any]) -> str:
+    coverage = report["coverage"]
     lines = [
         "# Real-corpus full-render diagnostics",
         "",
         f"Corpus manifest SHA-256: `{report['manifest_sha256']}`.",
         f"Render binary: `{report['binary']}` at `{report['render_size']}`.",
         f"Size threshold: {report['max_bytes']} bytes (larger files are recorded as `skipped`).",
-        f"Files accounted for: {report['file_count']}.",
+        f"Files accounted for: {report['file_count']}; "
+        f"render-tested: {coverage['render_tested']}; "
+        f"not render-tested: {coverage['not_render_tested']} "
+        f"({coverage['reason_not_render_tested']}).",
         "",
         "Unlike `head-to-head.md`, this report measures a full-document render, not a"
         " synthetic single-element preview.",
@@ -260,9 +337,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines += ["", "## Per-file results", "", "| ID | Kind | Tier | Bytes | Verdict | Diagnostic | Offset | Excerpt |",
               "|---|---|---|---:|---|---|---:|---|"]
     for item in report["files"]:
-        category = item.get("diagnostic_category") or item.get("skip_reason") or ""
+        category = item.get("diagnostic_category") or ""
         offset = item.get("diagnostic_offset")
-        excerpt_cell = (item.get("excerpt") or "").replace("|", "\\|")
+        excerpt_cell = (item.get("excerpt") or item.get("diagnostic_note") or "").replace("|", "\\|")
         lines.append(
             f"| `{item['id']}` | {item.get('kind') or ''} | {item.get('tier') or ''} | {item['bytes']} | "
             f"`{item['verdict']}` | {category} | {'' if offset is None else offset} | `{excerpt_cell}` |"
@@ -303,10 +380,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ReportError(f"render binary not found: {binary}")
         entries, _ = load_manifest(corpus)
         scratch_dir = Path(tempfile.mkdtemp(prefix="vexel-corpus-render-"))
-        report = build_report(
-            entries, corpus, binary, args.size, args.max_bytes, args.timeout,
-            scratch_dir / "frame.ppm",
-        )
+        try:
+            report = build_report(
+                entries, corpus, binary, args.size, args.max_bytes, args.timeout,
+                scratch_dir / "frame.ppm",
+            )
+        finally:
+            shutil.rmtree(scratch_dir, ignore_errors=True)
     except ReportError as exc:
         print(f"corpus-render-report: {exc}", file=sys.stderr)
         return 2
