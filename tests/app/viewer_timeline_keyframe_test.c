@@ -450,6 +450,50 @@ static bool tuple_bytes_equal(const char *actual, const char *expected)
     return strlen(actual) == length && memcmp(actual, expected, length) == 0;
 }
 
+static bool source_equals_original(const uint8_t *edited, size_t length)
+{
+    return length == sizeof(field_edit_source) - 1U &&
+        memcmp(edited, field_edit_source, length) == 0;
+}
+
+/* Byte span of the second keySplines tuple inside source. */
+static bool tuple1_span(const char *source, size_t *out_start, size_t *out_end)
+{
+    const char *attribute = strstr(source, "keySplines='");
+    if (attribute == NULL) return false;
+    const char *first = strchr(attribute, ';');
+    const char *second = first == NULL ? NULL : strchr(first + 1, ';');
+    if (second == NULL) return false;
+    *out_start = (size_t)(first + 1 - source);
+    *out_end = (size_t)(second - source);
+    return true;
+}
+
+/* Edited source may differ from the original only inside tuple 1. */
+static bool source_differs_only_in_tuple1(const uint8_t *edited, size_t length)
+{
+    size_t start = 0U, end = 0U, original_start = 0U, original_end = 0U;
+    if (!tuple1_span((const char *)edited, &start, &end) ||
+        !tuple1_span(field_edit_source, &original_start, &original_end) ||
+        start != original_start) return false;
+    size_t original_length = sizeof(field_edit_source) - 1U;
+    return length - end == original_length - original_end &&
+        memcmp(edited, field_edit_source, start) == 0 &&
+        memcmp(edited + end, field_edit_source + original_end, length - end) == 0;
+}
+
+static bool editor_source_equals_original(viewer_editor *editor)
+{
+    size_t capacity = viewer_editor_byte_length(editor) + 1U;
+    uint8_t *edited = malloc(capacity);
+    if (edited == NULL) return false;
+    size_t length = 0U;
+    bool okay = viewer_editor_materialize(editor, edited, capacity, &length) &&
+        source_equals_original(edited, length);
+    free(edited);
+    return okay;
+}
+
 /* Types input into easing field 0 of key 1 and commits with Return. */
 static bool type_into_field(const char *input, bool *out_mutated,
     char tuples[3][96], double *out_decoded, bool *out_snapshot_matches)
@@ -489,7 +533,9 @@ static bool type_into_field(const char *input, bool *out_mutated,
     size_t length = 0U;
     CHECK(viewer_editor_materialize(editor, edited, capacity, &length));
     edited[length] = 0U;
-    bool okay = split_splines((const char *)edited, tuples);
+    bool okay = (*out_mutated ? source_differs_only_in_tuple1(edited, length) :
+        source_equals_original(edited, length)) &&
+        split_splines((const char *)edited, tuples);
     svg_shape_document decoded = {0};
     okay = okay && decode((const char *)edited, &decoded);
     if (okay) *out_decoded = decoded.animation.tracks[0].splines[1][0];
@@ -594,8 +640,10 @@ static bool check_unentered_field_does_not_leak(const char *draft, bool press_re
     viewer_timeline_easing_layout easing;
     CHECK(viewer_timeline_easing_layout_compute(&layout, &easing));
     CHECK(click_field(&timeline, editor, &layout, &easing, 0U));
-    if (press_return) CHECK(type_and_return(&timeline, editor, &layout, draft));
-    else {
+    if (press_return) {
+        CHECK(type_and_return(&timeline, editor, &layout, draft));
+        CHECK(editor_source_equals_original(editor));
+    } else {
         for (size_t index = 0U; index < 24U; ++index)
             CHECK(key_event(&timeline, editor, &layout, 51U, '\0'));
         for (const char *cursor = draft; *cursor != '\0'; ++cursor)
@@ -611,7 +659,8 @@ static bool check_unentered_field_does_not_leak(const char *draft, bool press_re
     edited[length] = 0U;
     char tuples[3][96];
     svg_shape_document decoded = {0};
-    bool okay = split_splines((const char *)edited, tuples) &&
+    bool okay = source_differs_only_in_tuple1(edited, length) &&
+        split_splines((const char *)edited, tuples) &&
         decode((const char *)edited, &decoded);
     if (okay) {
         const double *tuple = decoded.animation.tracks[0].splines[1];
