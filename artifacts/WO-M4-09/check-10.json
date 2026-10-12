@@ -7,7 +7,8 @@
   "--check"
  ],
  "exit_code": 0,
- "duration_s": 0.015758275985717773,
+ "duration_s": 0.007029056549072266,
  "stdout": "",
- "stderr": ""
+ "stderr": "",
+ "note": "Re-executed on the clean committed tree after the final evidence write."
 }
