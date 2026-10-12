@@ -1,0 +1,12 @@
+{
+  "index": 1,
+  "argv": [
+    "cmake",
+    "--preset",
+    "mac-debug"
+  ],
+  "exit_code": 0,
+  "duration_s": 0.115774041012628,
+  "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.1s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/verify-WO-MOTION-03-b8f7974c-ce07-4def-a66e-abf8b353e33e/build/mac-debug\n",
+  "stderr": ""
+}

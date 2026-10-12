@@ -1,7 +1,7 @@
 # WO-MOTION-03 revision 2 closure evidence (2026-10-12)
 
 Implementation: `src/svg/animation/authoring.{h,c}`, `src/app/viewer_anim_edit.{h,c}`, already on `main` at `5c2d0ed`.
-Logs here come from a clean `main` run of the revision-2 verification commands (all exit 0): Debug CTest 79/79, `./dev t --all` (79/79 CTests, 69/69 Python), ledger valid, `git diff --check` clean.
+Per-command output is retained in `../r2-verify/` (exact runner records, all exit 0).
 
 | AC | Evidence |
 |---|---|

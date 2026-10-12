@@ -1,8 +1,0 @@
-  Test #12: svg-animation
-  Test #13: svg-animation-python-reference
-  Test #14: svg-animation-rsvg-reference
-  Test #65: viewer-timeline
-  Test #66: ui-timeline-goldens
-  Test #76: animation-authoring
-  Test #77: viewer-timeline-keyframes
-exit=0
