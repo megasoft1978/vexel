@@ -1,12 +1,12 @@
 ---
 id: WO-QA-03
-revision: 2
+revision: 3
 status: READY
 milestone: M3
 owner: project-owner
 executor: deepseek-flash
 base_sha: ef09a95423604fc4b41a9802bb9a4f3c94511cc7
-spec_sha256: e4983d56fb6ec7fc580875d22b191a46d70d9a4d0b8498dfbcd318c442230ce8
+spec_sha256: 5165c21af5a911f6d13ff37896e767e352274e5fe41807bad04ded92985ac14b
 parallel_safe: false
 network: false
 ---
@@ -48,7 +48,7 @@ Restore a passing, deterministic M3 owner-packet validator. `python3 reports/M3/
 # Acceptance criteria (machine-checkable)
 - AC-1 `python3 reports/M3/validate_packet.py --check` exits 0 and reports the same number of sources as before this order.
 - AC-2 `python3 -m unittest tests.test_m3_packet` exits 0 and covers the four cases in Required implementation item 4.
-- AC-3 `git diff --name-status` lists only allowlisted paths, and no frozen input besides the packet's two derived outputs changed: in particular `git diff --name-only -- bench/ artifacts/ docs/PERF.md work/` is empty.
+- AC-3 `git diff --name-status` lists only allowlisted paths, and no frozen input besides the packet's two derived outputs changed: in particular `git diff --name-only -- bench/ docs/PERF.md work/` is empty, and the only paths changed under `artifacts/` are this order's own evidence directory (`artifacts/WO-QA-03/`).
 - AC-4 `./dev verify` and `./dev t --all` exit 0.
 - AC-5 `python3 scripts/ledger.py validate ledger.jsonl`, `python3 scripts/wo_validate.py WO-QA-03 --ready` and `git diff --check` exit 0.
 - AC-6 A fresh read-only verifier reports pass against the exact candidate commit and confirms no frozen measurement or hash was altered.
