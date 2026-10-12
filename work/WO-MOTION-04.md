@@ -1,17 +1,20 @@
 ---
 id: WO-MOTION-04
-revision: 1
-spec_sha256: 04e49cfa822c12a9eb01ae345fd035b741b0e19561e3a45694088ead0beca5a4
+revision: 2
 status: READY
 milestone: M7
 owner: project-owner
 executor: codex-gpt-6
-base_sha: 3739b0b2dcce1dae5c4959452565d1a4dfdb2188
+base_sha: 7acf10de51f43e9094ad3a0041646cd00d78785b
+spec_sha256: dba5781de5d8a62b99c622ed8b1ff5cbe276bf9f301f0d6d8c69a40a01402553
 parallel_safe: false
 network: false
 ---
 # Goal
 Add a contextual, keyboard-operable SMIL easing editor for the selected key's outgoing interval.
+
+# Closure note
+The executor run for the prior revision finished without a verified ledger outcome: its output stayed uncommitted, and the implementation reached `main` later through lane integration. This closure revision is based on current `main`, which already contains the implementation. The candidate may add only retained evidence and records under the allowlist. The full frozen verification commands must pass on the candidate tree, and a fresh verifier must review the acceptance evidence. No test, golden or oracle may change.
 
 # Context pointers
 - Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/CODING_STANDARD.md`, `docs/testing.md`, `src/ui/README.md`, and the WO-MOTION-04 section of the supplied `r4-motion.md` research report.
@@ -26,11 +29,11 @@ Add a contextual, keyboard-operable SMIL easing editor for the selected key's ou
 
 # Files allowed to touch
 - `work/WO-MOTION-04.md`
-- `src/app/viewer_timeline.{h,c}`
+- `src/app/viewer_timeline.h, src/app/viewer_timeline.c`
 - `src/app/viewer_timeline_ui.c`
 - `src/app/viewer_timeline_easing.c`
-- `src/app/viewer_anim_edit*.{h,c}`
-- `src/ui/ui_widgets.{h,c}` and `src/ui/ui_widget_paint*.c` only if required by the implementation
+- `src/app/viewer_anim_edit*.h, src/app/viewer_anim_edit*.c`
+- `src/ui/ui_widgets.h, src/ui/ui_widgets.c` and `src/ui/ui_widget_paint*.c` only if required by the implementation
 - `tests/app/viewer_timeline_test.c`
 - `tests/anim/animation_authoring_test.c`
 - `tests/anim/test_animation.py`
@@ -63,6 +66,19 @@ Add a contextual, keyboard-operable SMIL easing editor for the selected key's ou
 2. Run focused timeline/animation tests and compare the three graph goldens.
 3. Run `./dev t --all` and ledger/diff validation.
 4. Record exact output under `artifacts/WO-MOTION-04/` and update `STATE.md`, `LEDGER.md`, and the lane note.
+
+# Verification commands
+Run sequentially from the repository root.
+
+```text
+cmake --preset mac-debug
+cmake --build --preset mac-debug
+ctest --test-dir build/mac-debug --output-on-failure
+./dev t --all
+python3 scripts/ledger.py validate ledger.jsonl
+python3 scripts/wo_validate.py WO-MOTION-04 --ready
+git diff --check
+```
 
 # Non-goals
 Graph workspace, arbitrary SMIL timing editing, spline modes for unsupported source, native-window automation, new dependencies, non-macOS support, and commits.
