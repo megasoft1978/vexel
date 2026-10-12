@@ -1,21 +1,23 @@
 ---
 id: WO-MOTION-04
-revision: 2
+revision: 3
 status: READY
 milestone: M7
 owner: project-owner
 executor: codex-gpt-6
 base_sha: 7acf10de51f43e9094ad3a0041646cd00d78785b
-spec_sha256: dba5781de5d8a62b99c622ed8b1ff5cbe276bf9f301f0d6d8c69a40a01402553
+spec_sha256: 7a4fb7c62ee15e06fe2692d0955fdc10a25ca0e47c3bc81d25fea888656a7cd9
 parallel_safe: false
 network: false
 ---
 # Goal
 Add a contextual, keyboard-operable SMIL easing editor for the selected key's outgoing interval.
 
-# Closure note
-The executor run for the prior revision finished without a verified ledger outcome: its output stayed uncommitted, and the implementation reached `main` later through lane integration. This closure revision is based on current `main`, which already contains the implementation. The candidate may add only retained evidence and records under the allowlist. The full frozen verification commands must pass on the candidate tree, and a fresh verifier must review the acceptance evidence. No test, golden or oracle may change.
+# Repair note
+The closure verifier for revision 2 found no test that edits an easing numeric field from the keyboard, so the field-edit path, its [0,1] bounds and its exact numeric round trip are unproven. Revision 3 is a repair revision based on the same commit as revision 2. Besides evidence and records, the candidate may edit `tests/app/viewer_timeline_keyframe_test.c` (where the easing editor tests live) and, only if a real defect is found, `src/app/viewer_timeline_easing.c` and `src/app/viewer_anim_edit*` to fix exactly these gaps. No golden or oracle may change, and no existing assertion may be weakened.
 
+1. Add a headless test that focuses an easing numeric field, enters a value from the keyboard, commits it, and asserts the edited source holds that exact value in the selected interval's `keySplines` tuple while every other tuple stays byte-identical. Cover a value that round-trips exactly (for example 0.37), values at the bounds 0 and 1, and out-of-range or malformed input (for example 1.5, -0.1, empty, `abc`), which must be rejected or clamped as the implementation defines, leaving the source unchanged on rejection.
+2. Assert that a committed field value is reflected by the accessibility snapshot value and by a fresh decode of the edited source.
 # Context pointers
 - Read: `AGENTS.md`, `OWNER-DIRECTIVES.md`, `STATE.md`, `docs/CODING_STANDARD.md`, `docs/testing.md`, `src/ui/README.md`, and the WO-MOTION-04 section of the supplied `r4-motion.md` research report.
 - Reuse the existing animation evaluator, widget system, theme tokens, and accessibility snapshot model.
@@ -28,6 +30,7 @@ The executor run for the prior revision finished without a verified ledger outco
 - Headless tests cover both themes and increased contrast. Do not automate or capture the shared native window.
 
 # Files allowed to touch
+- `tests/app/viewer_timeline_keyframe_test.c`
 - `work/WO-MOTION-04.md`
 - `src/app/viewer_timeline.h, src/app/viewer_timeline.c`
 - `src/app/viewer_timeline_ui.c`
