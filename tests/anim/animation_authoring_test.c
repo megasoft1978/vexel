@@ -57,6 +57,9 @@ static bool apply_and_check_undo(base_bytes source,
                                  const svg_anim_authoring_patch *patch,
                                  uint8_t **out_after, size_t *out_length)
 {
+    uint8_t *expected = NULL;
+    size_t expected_length = 0U;
+    CHECK(apply_patch_copy(source, patch, &expected, &expected_length));
     document_edit_result created = document_edit_create(source,
         document_edit_default_limits());
     CHECK(created.error == DOCUMENT_EDIT_OK && created.edit != NULL);
@@ -64,21 +67,24 @@ static bool apply_and_check_undo(base_bytes source,
         (document_source_span){patch->offset, patch->remove_length},
         (base_bytes){patch->replacement, patch->replacement_length}) == DOCUMENT_EDIT_OK);
     size_t capacity = source.len + patch->replacement_length + 32U;
-    uint8_t *after = malloc(capacity);
-    CHECK(after != NULL);
-    size_t after_length = 0U;
-    CHECK(document_edit_materialize(created.edit, after, capacity, &after_length));
+    uint8_t *edited = malloc(capacity);
+    uint8_t *scratch = malloc(capacity);
+    CHECK(edited != NULL && scratch != NULL);
+    size_t edited_length = 0U, scratch_length = 0U;
+    CHECK(document_edit_materialize(created.edit, edited, capacity, &edited_length));
+    CHECK(edited_length == expected_length &&
+        memcmp(edited, expected, edited_length) == 0);
     CHECK(document_edit_undo(created.edit) == DOCUMENT_EDIT_OK);
-    size_t restored_length = 0U;
-    CHECK(document_edit_materialize(created.edit, after, capacity, &restored_length));
-    CHECK(restored_length == source.len &&
-        memcmp(after, source.ptr, source.len) == 0);
+    CHECK(document_edit_materialize(created.edit, scratch, capacity, &scratch_length));
+    CHECK(scratch_length == source.len && memcmp(scratch, source.ptr, source.len) == 0);
     CHECK(document_edit_redo(created.edit) == DOCUMENT_EDIT_OK);
-    CHECK(document_edit_materialize(created.edit, after, capacity, &restored_length));
-    CHECK(restored_length == after_length);
-    *out_after = after;
-    *out_length = after_length;
+    CHECK(document_edit_materialize(created.edit, scratch, capacity, &scratch_length));
+    CHECK(scratch_length == edited_length && memcmp(scratch, edited, edited_length) == 0);
+    *out_after = edited;
+    *out_length = edited_length;
     document_edit_destroy(created.edit);
+    free(scratch);
+    free(expected);
     return true;
 }
 
@@ -169,7 +175,7 @@ static bool test_key_lifecycle_and_byte_preservation(void)
     CHECK(parse_animation(source, &animation));
     CHECK(svg_anim_authoring_set_key_value(&animation, 0U, 1U,
         (base_bytes){(const uint8_t *)"8", 1U}, &patch) == SVG_ANIM_AUTHORING_OK);
-    CHECK(apply_patch_copy(source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(source, &patch, &after, &after_length));
     edited = (base_bytes){after, after_length};
     CHECK(contains(edited, "values='0;8'") && contains(edited, "dur='2s'"));
     svg_anim_document_destroy(&parsed);
@@ -205,7 +211,7 @@ static bool test_key_lifecycle_and_byte_preservation(void)
     CHECK(parse_animation(move_source, &animation));
     CHECK(svg_anim_authoring_move_key(&animation, 0U, 1U, 1.5, &patch) ==
         SVG_ANIM_AUTHORING_OK);
-    CHECK(apply_patch_copy(move_source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(move_source, &patch, &after, &after_length));
     CHECK(contains((base_bytes){after, after_length}, "keyTimes='0;0.75;1'"));
     free(after);
     svg_anim_authoring_patch_destroy(&patch);
@@ -214,7 +220,7 @@ static bool test_key_lifecycle_and_byte_preservation(void)
     CHECK(parse_animation(source, &animation));
     CHECK(svg_anim_authoring_delete_key(&animation, 0U, 1U, &patch) ==
         SVG_ANIM_AUTHORING_OK);
-    CHECK(apply_patch_copy(source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(source, &patch, &after, &after_length));
     CHECK(!contains((base_bytes){after, after_length}, "keyTimes=") &&
         contains((base_bytes){after, after_length}, "values='0'"));
     free(after);
@@ -253,7 +259,7 @@ static bool test_track_timing_edit_and_limits(void)
         SVG_ANIM_AUTHORING_OK);
     uint8_t *after = NULL;
     size_t after_length = 0U;
-    CHECK(apply_patch_copy(source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(source, &patch, &after, &after_length));
     base_bytes edited = {after, after_length};
     CHECK(contains(edited, "begin=\"0.5s\"") && contains(edited, "dur='3s'") &&
         contains(edited, "data-extra='unchanged'") && contains(edited, "<!--keep-->"));
@@ -311,7 +317,7 @@ static bool test_untouched_numeric_lexemes_survive_key_edits(void)
         (base_bytes){(const uint8_t *)"5", 1U}, &patch) == SVG_ANIM_AUTHORING_OK);
     uint8_t *after = NULL;
     size_t after_length = 0U;
-    CHECK(apply_patch_copy(source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(source, &patch, &after, &after_length));
     CHECK(contains((base_bytes){after, after_length}, "values='0.00;5;10.000'"));
     free(after);
     svg_anim_authoring_patch_destroy(&patch);
@@ -412,9 +418,20 @@ static bool test_editor_animation_commands_undo_and_order(void)
     flags = viewer_editor_animation_remove_track(editor, &animation, 2U);
     CHECK((flags & VIEWER_EDITOR_MUTATED) != 0U);
     svg_anim_document_destroy(&animation);
+    uint8_t *removed_source = malloc(viewer_editor_byte_length(editor));
+    CHECK(removed_source != NULL);
+    size_t removed_length = 0U;
+    CHECK(viewer_editor_materialize(editor, removed_source,
+        viewer_editor_byte_length(editor), &removed_length));
+    base_bytes removed = {removed_source, removed_length};
     CHECK((viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "z", 1U) &
         VIEWER_EDITOR_MUTATED) != 0U);
     CHECK(editor_source_equals(editor, added));
+    CHECK((viewer_editor_key(editor, 0U,
+        PLATFORM_MODIFIER_COMMAND | PLATFORM_MODIFIER_SHIFT, "z", 1U) &
+        VIEWER_EDITOR_MUTATED) != 0U);
+    CHECK(editor_source_equals(editor, removed));
+    free(removed_source);
     svg_anim_document_destroy(&animation);
     viewer_editor_destroy(editor);
     free(with_track);
@@ -435,7 +452,7 @@ static bool test_color_transform_and_track_creation(void)
         (base_bytes){(const uint8_t *)"#00FF00", 7U}, &patch) == SVG_ANIM_AUTHORING_OK);
     uint8_t *after = NULL;
     size_t after_length = 0U;
-    CHECK(apply_patch_copy(color_bytes, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(color_bytes, &patch, &after, &after_length));
     CHECK(contains((base_bytes){after, after_length}, "values='red;#00FF00'"));
     free(after);
     svg_anim_authoring_patch_destroy(&patch);
@@ -448,7 +465,7 @@ static bool test_color_transform_and_track_creation(void)
     CHECK(parse_animation(transform_bytes, &animation));
     CHECK(svg_anim_authoring_set_key_value(&animation, 0U, 1U,
         (base_bytes){(const uint8_t *)"4 2", 3U}, &patch) == SVG_ANIM_AUTHORING_OK);
-    CHECK(apply_patch_copy(transform_bytes, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(transform_bytes, &patch, &after, &after_length));
     CHECK(contains((base_bytes){after, after_length}, "values='0 0;4 2'"));
     free(after);
     svg_anim_authoring_patch_destroy(&patch);
@@ -484,6 +501,17 @@ static bool test_color_transform_and_track_creation(void)
     CHECK(parse_animation((base_bytes){materialized, length}, &animation));
     CHECK(animation.track_count == 1U && animation.tracks[0].key_count == 3U);
     svg_anim_document_destroy(&animation);
+    uint8_t *scratch = malloc(capacity);
+    CHECK(scratch != NULL);
+    size_t scratch_length = 0U;
+    CHECK(document_edit_undo(edit.edit) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_materialize(edit.edit, scratch, capacity, &scratch_length));
+    CHECK(scratch_length == sizeof(target) - 1U &&
+        memcmp(scratch, target, scratch_length) == 0);
+    CHECK(document_edit_redo(edit.edit) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_materialize(edit.edit, scratch, capacity, &scratch_length));
+    CHECK(scratch_length == length && memcmp(scratch, materialized, length) == 0);
+    free(scratch);
     free(materialized);
     free(fragment);
     document_edit_destroy(edit.edit);
@@ -505,7 +533,7 @@ static bool test_spline_isolation_modes_and_rejection(void)
         SVG_ANIM_AUTHORING_OK);
     uint8_t *after = NULL;
     size_t after_length = 0U;
-    CHECK(apply_patch_copy(source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(source, &patch, &after, &after_length));
     base_bytes edited = {after, after_length};
     CHECK(contains(edited, "keySplines='0.10 0.20 0.30 0.40;") &&
         contains(edited, ";0.40 0.50 0.60 0.70'"));
@@ -524,7 +552,7 @@ static bool test_spline_isolation_modes_and_rejection(void)
         SVG_ANIM_CALC_LINEAR, &mode_patch) == SVG_ANIM_AUTHORING_OK);
     uint8_t *linear_bytes = NULL;
     size_t linear_length = 0U;
-    CHECK(apply_patch_copy(edited, &mode_patch, &linear_bytes, &linear_length));
+    CHECK(apply_and_check_undo(edited, &mode_patch, &linear_bytes, &linear_length));
     svg_anim_authoring_patch_destroy(&mode_patch);
     svg_anim_document_destroy(&animation);
     CHECK(parse_animation((base_bytes){linear_bytes, linear_length}, &animation));
@@ -535,7 +563,7 @@ static bool test_spline_isolation_modes_and_rejection(void)
         SVG_ANIM_CALC_DISCRETE, &mode_patch) == SVG_ANIM_AUTHORING_OK);
     uint8_t *discrete_bytes = NULL;
     size_t discrete_length = 0U;
-    CHECK(apply_patch_copy((base_bytes){linear_bytes, linear_length}, &mode_patch,
+    CHECK(apply_and_check_undo((base_bytes){linear_bytes, linear_length}, &mode_patch,
         &discrete_bytes, &discrete_length));
     svg_anim_authoring_patch_destroy(&mode_patch);
     svg_anim_document_destroy(&animation);
@@ -555,7 +583,7 @@ static bool test_spline_isolation_modes_and_rejection(void)
         SVG_ANIM_AUTHORING_INVALID_ARGUMENT);
     CHECK(svg_anim_authoring_set_calc_mode(&animation, 0U,
         SVG_ANIM_CALC_LINEAR, &patch) == SVG_ANIM_AUTHORING_OK);
-    CHECK(apply_patch_copy(source, &patch, &after, &after_length));
+    CHECK(apply_and_check_undo(source, &patch, &after, &after_length));
     CHECK(!contains((base_bytes){after, after_length}, "keySplines=") &&
         contains((base_bytes){after, after_length}, "calcMode='linear'"));
     free(after);

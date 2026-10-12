@@ -1372,7 +1372,9 @@ endif()
 target_sources(svgworkbench PRIVATE src/app/viewer_timeline_accessibility.c)
 target_sources(viewer_timeline_test PRIVATE src/app/viewer_timeline_accessibility.c)
 target_sources(viewer_timeline_render PRIVATE src/app/viewer_timeline_accessibility.c)
-target_sources(vexel_shape PRIVATE src/svg/animation/authoring.c)
+target_sources(vexel_shape PRIVATE
+    src/svg/animation/authoring.c
+    src/svg/animation/authoring_create.c)
 target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_anim_edit.c
     src/app/viewer_timeline_easing.c)
@@ -1390,6 +1392,20 @@ if(VEXEL_SANITIZER)
 endif()
 if(BUILD_TESTING)
     add_test(NAME animation-authoring COMMAND animation_authoring_test)
+endif()
+add_executable(animation_authoring_edge_test tests/anim/animation_authoring_edge_test.c)
+target_include_directories(animation_authoring_edge_test PRIVATE src src/document src/app)
+target_link_libraries(animation_authoring_edge_test PRIVATE vexel_shape vexel_document vexel_editor_ui)
+set_target_properties(animation_authoring_edge_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(animation_authoring_edge_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(animation_authoring_edge_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(animation_authoring_edge_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME animation-authoring-edge COMMAND animation_authoring_edge_test)
 endif()
 add_executable(viewer_timeline_keyframe_test
     tests/app/viewer_timeline_keyframe_test.c

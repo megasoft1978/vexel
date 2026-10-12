@@ -1,6 +1,6 @@
 #include "authoring.h"
 
-#include "animation_internal.h"
+#include "authoring_internal.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -8,16 +8,8 @@
 #include <string.h>
 
 #define AUTHORING_TAG_LIMIT (64U * 1024U)
-#define AUTHORING_VALUE_LIMIT (64U * 1024U)
-#define AUTHORING_PATCH_LIMIT (1024U * 1024U)
 #define AUTHORING_ATTRIBUTE_CAP 128U
 #define AUTHORING_MOD_CAP 8U
-
-typedef struct authoring_builder {
-    uint8_t *bytes;
-    size_t length;
-    size_t capacity;
-} authoring_builder;
 
 typedef struct authoring_attribute {
     size_t whitespace_start;
@@ -63,7 +55,7 @@ static bool builder_reserve(authoring_builder *builder, size_t additional)
     return true;
 }
 
-static bool builder_append(authoring_builder *builder,
+bool authoring_builder_append(authoring_builder *builder,
                            const uint8_t *bytes, size_t length)
 {
     if (length > 0U && bytes == NULL) return false;
@@ -72,15 +64,15 @@ static bool builder_append(authoring_builder *builder,
     builder->length += length;
     return true;
 }
-static bool builder_byte(authoring_builder *builder, uint8_t byte)
+bool authoring_builder_byte(authoring_builder *builder, uint8_t byte)
 {
-    return builder_append(builder, &byte, 1U);
+    return authoring_builder_append(builder, &byte, 1U);
 }
-static bool builder_cstr(authoring_builder *builder, const char *text)
+bool authoring_builder_cstr(authoring_builder *builder, const char *text)
 {
-    return text != NULL && builder_append(builder, (const uint8_t *)text, strlen(text));
+    return text != NULL && authoring_builder_append(builder, (const uint8_t *)text, strlen(text));
 }
-static bool builder_attribute_value(authoring_builder *builder, base_bytes value,
+bool authoring_builder_attribute_value(authoring_builder *builder, base_bytes value,
                                     uint8_t quote)
 {
     if (!base_bytes_valid(value) || value.len > AUTHORING_VALUE_LIMIT ||
@@ -97,9 +89,9 @@ static bool builder_attribute_value(authoring_builder *builder, base_bytes value
             escaped = "&apos;"; escaped_length = 6U;
         }
         if (escaped != NULL) {
-            if (!builder_append(builder, (const uint8_t *)escaped, escaped_length))
+            if (!authoring_builder_append(builder, (const uint8_t *)escaped, escaped_length))
                 return false;
-        } else if (!builder_byte(builder, byte)) return false;
+        } else if (!authoring_builder_byte(builder, byte)) return false;
     }
     return true;
 }
@@ -209,7 +201,7 @@ static bool apply_modifications(base_bytes source, size_t tag_offset,
             }
         }
         size_t prefix_end = attribute->whitespace_start;
-        if (prefix_end < cursor || !builder_append(&output,
+        if (prefix_end < cursor || !authoring_builder_append(&output,
                 source.ptr + cursor, prefix_end - cursor)) goto fail;
         if (mod != NULL && mod->remove) {
             cursor = attribute->end;
@@ -218,28 +210,28 @@ static bool apply_modifications(base_bytes source, size_t tag_offset,
         size_t value_start = attribute->value_offset;
         size_t value_end = value_start + attribute->value_length;
         if (value_start < prefix_end || value_end > tag_offset + tag_length ||
-            !builder_append(&output, source.ptr + prefix_end,
+            !authoring_builder_append(&output, source.ptr + prefix_end,
                 value_start - prefix_end)) goto fail;
         if (mod != NULL) {
-            if (!builder_attribute_value(&output, mod->value, attribute->quote)) goto fail;
-        } else if (!builder_append(&output, source.ptr + value_start,
+            if (!authoring_builder_attribute_value(&output, mod->value, attribute->quote)) goto fail;
+        } else if (!authoring_builder_append(&output, source.ptr + value_start,
                 attribute->value_length)) goto fail;
-        if (!builder_append(&output, source.ptr + value_end,
+        if (!authoring_builder_append(&output, source.ptr + value_end,
                 attribute->end - value_end)) goto fail;
         cursor = attribute->end;
     }
-    if (cursor > insertion || !builder_append(&output,
+    if (cursor > insertion || !authoring_builder_append(&output,
             source.ptr + cursor, insertion - cursor)) goto fail;
     for (size_t index = 0U; index < mod_count; ++index) {
         if (mods[index].remove || mods[index].found) continue;
-        if (!builder_byte(&output, ' ') ||
-            !builder_append(&output, (const uint8_t *)mods[index].name,
-                strlen(mods[index].name)) || !builder_append(&output,
+        if (!authoring_builder_byte(&output, ' ') ||
+            !authoring_builder_append(&output, (const uint8_t *)mods[index].name,
+                strlen(mods[index].name)) || !authoring_builder_append(&output,
                 (const uint8_t *)"=\"", 2U) ||
-            !builder_attribute_value(&output, mods[index].value, '"') ||
-            !builder_byte(&output, '"')) goto fail;
+            !authoring_builder_attribute_value(&output, mods[index].value, '"') ||
+            !authoring_builder_byte(&output, '"')) goto fail;
     }
-    if (!builder_append(&output, source.ptr + insertion,
+    if (!authoring_builder_append(&output, source.ptr + insertion,
             tag_offset + tag_length - insertion)) goto fail;
     out_patch->replacement = output.bytes;
     out_patch->replacement_length = output.length;
@@ -265,12 +257,12 @@ static bool make_track_patch(const svg_anim_document *document,
     out_patch->remove_length = tag_length;
     return true;
 }
-static bool append_number(authoring_builder *builder, double value)
+bool authoring_append_number(authoring_builder *builder, double value)
 {
     char text[64];
     int amount = snprintf(text, sizeof(text), "%.17g", value);
     return isfinite(value) && amount > 0 && (size_t)amount < sizeof(text) &&
-        builder_append(builder, (const uint8_t *)text, (size_t)amount);
+        authoring_builder_append(builder, (const uint8_t *)text, (size_t)amount);
 }
 static bool append_value(authoring_builder *builder,
     const svg_anim_document *document, const svg_anim_keyframe *key)
@@ -278,7 +270,7 @@ static bool append_value(authoring_builder *builder,
     const svg_anim_value *value = &key->value;
     if (value->raw_length > 0U) {
         if (!checked_range(document->source, value->raw_offset, value->raw_length)) return false;
-        return builder_append(builder, document->source.ptr + value->raw_offset,
+        return authoring_builder_append(builder, document->source.ptr + value->raw_offset,
             value->raw_length);
     }
     if (value->kind == SVG_ANIM_VALUE_NUMBER && key->source_length > 0U) {
@@ -286,10 +278,10 @@ static bool append_value(authoring_builder *builder,
         if (checked_range(document->source, key->source_offset, key->source_length) &&
             source_number(document->source, (svg_xml_span){key->source_offset,
                 key->source_length}, &raw_number) && raw_number == value->number[0])
-            return builder_append(builder, document->source.ptr + key->source_offset,
+            return authoring_builder_append(builder, document->source.ptr + key->source_offset,
                 key->source_length);
     }
-    if (value->kind == SVG_ANIM_VALUE_NUMBER) return append_number(builder, value->number[0]);
+    if (value->kind == SVG_ANIM_VALUE_NUMBER) return authoring_append_number(builder, value->number[0]);
     if (value->kind == SVG_ANIM_VALUE_COLOR) {
         char color[10];
         int amount = value->rgba[3] == 255U ?
@@ -298,15 +290,15 @@ static bool append_value(authoring_builder *builder,
             snprintf(color, sizeof(color), "#%02X%02X%02X%02X", value->rgba[0],
                 value->rgba[1], value->rgba[2], value->rgba[3]);
         return amount > 0 && (size_t)amount < sizeof(color) &&
-            builder_append(builder, (const uint8_t *)color, (size_t)amount);
+            authoring_builder_append(builder, (const uint8_t *)color, (size_t)amount);
     }
     if (value->kind == SVG_ANIM_VALUE_TRANSFORM) {
         if (!isfinite(value->number[3]) || value->number[3] < 1.0 ||
             value->number[3] > 3.0) return false;
         size_t count = (size_t)value->number[3];
         for (size_t index = 0U; index < count; ++index) {
-            if (index > 0U && !builder_byte(builder, ' ')) return false;
-            if (!append_number(builder, value->number[index])) return false;
+            if (index > 0U && !authoring_builder_byte(builder, ' ')) return false;
+            if (!authoring_append_number(builder, value->number[index])) return false;
         }
         return true;
     }
@@ -387,31 +379,37 @@ void svg_anim_authoring_patch_destroy(svg_anim_authoring_patch *patch)
 }
 static svg_anim_authoring_error set_key_sequence(const svg_anim_document *document,
     const svg_anim_track *track, const svg_anim_keyframe *keys, size_t key_count,
-    size_t override_index, base_bytes override_value,
+    size_t override_index, base_bytes override_value, base_bytes splines,
     svg_anim_authoring_patch *out_patch)
 {
-    if (key_count == 0U || key_count > SVG_ANIM_MAX_VALUES ||
-        track->calc_mode == SVG_ANIM_CALC_SPLINE) return SVG_ANIM_AUTHORING_UNSUPPORTED;
+    if (key_count == 0U || key_count > SVG_ANIM_MAX_VALUES)
+        return SVG_ANIM_AUTHORING_UNSUPPORTED;
+    if (splines.len > AUTHORING_VALUE_LIMIT) return SVG_ANIM_AUTHORING_LIMIT;
     authoring_builder values = {0}, times = {0};
     for (size_t index = 0U; index < key_count; ++index) {
-        if (index > 0U && !builder_byte(&values, ';')) goto limit;
+        if (index > 0U && !authoring_builder_byte(&values, ';')) goto limit;
         if (index == override_index) {
-            if (!builder_append(&values, override_value.ptr, override_value.len)) goto limit;
+            if (!authoring_builder_append(&values, override_value.ptr, override_value.len)) goto limit;
         } else if (!append_value(&values, document, &keys[index])) goto unsupported;
         if (key_count > 1U) {
-            if (index > 0U && !builder_byte(&times, ';')) goto limit;
-            if (!append_number(&times, keys[index].time)) goto limit;
+            if (index > 0U && !authoring_builder_byte(&times, ';')) goto limit;
+            if (!authoring_append_number(&times, keys[index].time)) goto limit;
         }
     }
+    if (values.length > AUTHORING_VALUE_LIMIT) goto limit;
     {
+        /* A spline track keeps its tuples; dropping to one key reverts to linear. */
+        bool revert = track->calc_mode == SVG_ANIM_CALC_SPLINE && splines.len == 0U;
         authoring_modification mods[] = {
             {"values", {values.bytes, values.length}, false, false},
             {"keyTimes", {times.bytes, times.length}, key_count == 1U, false},
             {"from", {0}, true, false}, {"to", {0}, true, false},
-            {"by", {0}, true, false}, {"keySplines", {0}, true, false}
+            {"by", {0}, true, false},
+            {"keySplines", splines, splines.len == 0U, false},
+            {"calcMode", {(const uint8_t *)"linear", 6U}, false, false}
         };
-        if (!make_track_patch(document, track, mods,
-                sizeof(mods) / sizeof(mods[0]), out_patch)) goto unsupported;
+        if (!make_track_patch(document, track, mods, revert ? 7U : 6U,
+                out_patch)) goto unsupported;
     }
     free(values.bytes); free(times.bytes);
     return SVG_ANIM_AUTHORING_OK;
@@ -421,6 +419,63 @@ limit:
 unsupported:
     free(values.bytes); free(times.bytes);
     return SVG_ANIM_AUTHORING_UNSUPPORTED;
+}
+/* Splits the raw keySplines tuples of a spline track; spans are untrimmed. */
+static bool collect_spline_pieces(const svg_anim_document *document,
+    const svg_anim_track *track, svg_xml_span pieces[SVG_ANIM_MAX_VALUES],
+    size_t *out_count)
+{
+    authoring_attribute attrs[AUTHORING_ATTRIBUTE_CAP] = {0}, attr;
+    size_t count = 0U, tag_length = 0U, piece = 0U, start = 0U;
+    if (!parse_open_tag(document->source, track->element_offset,
+            track->element_offset + track->element_length, attrs, &count,
+            &tag_length) || !find_attribute(document->source, attrs, count,
+            "keySplines", &attr)) return false;
+    const uint8_t *raw = document->source.ptr + attr.value_offset;
+    for (size_t cursor = 0U; cursor <= attr.value_length; ++cursor) {
+        if (cursor < attr.value_length && raw[cursor] != ';') continue;
+        size_t left = start, right = cursor;
+        while (left < right && source_space(raw[left])) left++;
+        while (right > left && source_space(raw[right - 1U])) right--;
+        if (piece >= track->key_count - 1U || left == right) return false;
+        pieces[piece++] = (svg_xml_span){attr.value_offset + start, cursor - start};
+        start = cursor + 1U;
+    }
+    *out_count = piece;
+    return piece == track->key_count - 1U;
+}
+
+/* Rewrites a key sequence of the track. Spline tuples follow the keys: tuple
+ * `dup` (SIZE_MAX for none) is repeated and tuple `drop` removed. */
+static svg_anim_authoring_error commit_keys(const svg_anim_document *document,
+    const svg_anim_track *track, const svg_anim_keyframe *keys, size_t key_count,
+    size_t override_index, base_bytes override_value, size_t dup, size_t drop,
+    svg_anim_authoring_patch *out_patch)
+{
+    authoring_builder splines = {0};
+    svg_xml_span pieces[SVG_ANIM_MAX_VALUES];
+    size_t count = 0U;
+    if (track->calc_mode == SVG_ANIM_CALC_SPLINE) {
+        if (!collect_spline_pieces(document, track, pieces, &count))
+            return SVG_ANIM_AUTHORING_UNSUPPORTED;
+        for (size_t index = 0U; index < count && key_count > 1U; ++index) {
+            for (size_t copy = 0U; copy < (index == dup ? 2U : 1U); ++copy) {
+                if (index == drop) break;
+                if ((splines.length > 0U && !authoring_builder_byte(&splines, ';')) ||
+                    !authoring_builder_append(&splines,
+                        document->source.ptr + pieces[index].offset,
+                        pieces[index].length)) {
+                    free(splines.bytes);
+                    return SVG_ANIM_AUTHORING_LIMIT;
+                }
+            }
+        }
+    }
+    svg_anim_authoring_error error = set_key_sequence(document, track, keys,
+        key_count, override_index, override_value,
+        (base_bytes){splines.bytes, splines.length}, out_patch);
+    free(splines.bytes);
+    return error;
 }
 static bool parse_typed_value(const svg_anim_track *track, base_bytes text,
                               svg_anim_value *parsed)
@@ -466,8 +521,8 @@ svg_anim_authoring_error svg_anim_authoring_set_key_value(
          (current->kind == SVG_ANIM_VALUE_TRANSFORM &&
           memcmp(current->number, requested.number, sizeof(current->number)) == 0)))
         return SVG_ANIM_AUTHORING_NO_OP;
-    return set_key_sequence(document, track, track->keys, track->key_count,
-        key_index, value, out_patch);
+    return commit_keys(document, track, track->keys, track->key_count,
+        key_index, value, SIZE_MAX, SIZE_MAX, out_patch);
 }
 
 static bool key_time_from_seconds(const svg_anim_track *track, double seconds,
@@ -505,8 +560,8 @@ svg_anim_authoring_error svg_anim_authoring_add_key(
     keys[insertion] = (svg_anim_keyframe){.time = normalized};
     for (size_t index = insertion; index < track->key_count; ++index)
         keys[index + 1U] = track->keys[index];
-    return set_key_sequence(document, track, keys, track->key_count + 1U,
-        insertion, value, out_patch);
+    return commit_keys(document, track, keys, track->key_count + 1U, insertion,
+        value, insertion - 1U, SIZE_MAX, out_patch);
 }
 
 svg_anim_authoring_error svg_anim_authoring_move_key(
@@ -521,7 +576,6 @@ svg_anim_authoring_error svg_anim_authoring_move_key(
         key_index >= track->key_count - 1U ||
         !key_time_from_seconds(track, time_seconds, &normalized))
         return SVG_ANIM_AUTHORING_UNSUPPORTED;
-    if (track->calc_mode == SVG_ANIM_CALC_SPLINE) return SVG_ANIM_AUTHORING_UNSUPPORTED;
     if (normalized <= track->keys[key_index - 1U].time ||
         normalized >= track->keys[key_index + 1U].time)
         return SVG_ANIM_AUTHORING_INVALID_ARGUMENT;
@@ -529,8 +583,8 @@ svg_anim_authoring_error svg_anim_authoring_move_key(
     svg_anim_keyframe keys[SVG_ANIM_MAX_VALUES];
     memcpy(keys, track->keys, track->key_count * sizeof(*keys));
     keys[key_index].time = normalized;
-    return set_key_sequence(document, track, keys, track->key_count,
-        SIZE_MAX, (base_bytes){0}, out_patch);
+    return commit_keys(document, track, keys, track->key_count,
+        SIZE_MAX, (base_bytes){0}, SIZE_MAX, SIZE_MAX, out_patch);
 }
 
 svg_anim_authoring_error svg_anim_authoring_delete_key(
@@ -542,8 +596,7 @@ svg_anim_authoring_error svg_anim_authoring_delete_key(
     const svg_anim_track *track = NULL;
     if (!track_and_source(document, track_index, &track) || key_index >= track->key_count)
         return SVG_ANIM_AUTHORING_UNSUPPORTED;
-    if (track->calc_mode == SVG_ANIM_CALC_SPLINE || track->key_count == 1U)
-        return SVG_ANIM_AUTHORING_UNSUPPORTED;
+    if (track->key_count == 1U) return SVG_ANIM_AUTHORING_UNSUPPORTED;
     svg_anim_keyframe keys[SVG_ANIM_MAX_VALUES];
     size_t count = 0U;
     for (size_t index = 0U; index < track->key_count; ++index)
@@ -557,8 +610,9 @@ svg_anim_authoring_error svg_anim_authoring_delete_key(
         keys[0].time = 0.0;
         keys[count - 1U].time = 1.0;
     }
-    return set_key_sequence(document, track, keys, count, SIZE_MAX,
-        (base_bytes){0}, out_patch);
+    return commit_keys(document, track, keys, count, SIZE_MAX, (base_bytes){0},
+        SIZE_MAX, key_index == track->key_count - 1U ? key_index - 1U : key_index,
+        out_patch);
 }
 
 static bool spline_values_valid(const double spline[4])
@@ -573,8 +627,8 @@ static bool spline_values_valid(const double spline[4])
 static bool append_spline(authoring_builder *builder, const double spline[4])
 {
     for (size_t index = 0U; index < 4U; ++index) {
-        if (index > 0U && !builder_byte(builder, ' ')) return false;
-        if (!append_number(builder, spline[index])) return false;
+        if (index > 0U && !authoring_builder_byte(builder, ' ')) return false;
+        if (!authoring_append_number(builder, spline[index])) return false;
     }
     return true;
 }
@@ -603,10 +657,10 @@ static bool spline_attribute_value(const svg_anim_document *document,
             while (left < right && source_space(raw.ptr[left])) left++;
             while (right > left && source_space(raw.ptr[right - 1U])) right--;
             if (piece >= expected || left == right) return false;
-            if (piece > 0U && !builder_byte(value, ';')) return false;
+            if (piece > 0U && !authoring_builder_byte(value, ';')) return false;
             if (piece == interval) {
                 if (!append_spline(value, selected)) return false;
-            } else if (!builder_append(value, raw.ptr + start, cursor - start)) return false;
+            } else if (!authoring_builder_append(value, raw.ptr + start, cursor - start)) return false;
             start = cursor + 1U;
             piece++;
         }
@@ -614,7 +668,7 @@ static bool spline_attribute_value(const svg_anim_document *document,
     }
     static const double ease_in_out[4] = {0.42, 0.0, 0.58, 1.0};
     for (size_t index = 0U; index < expected; ++index) {
-        if (index > 0U && !builder_byte(value, ';')) return false;
+        if (index > 0U && !authoring_builder_byte(value, ';')) return false;
         if (!append_spline(value, index == interval ? selected : ease_in_out)) return false;
     }
     return expected > 0U;
@@ -706,93 +760,4 @@ svg_anim_authoring_error svg_anim_authoring_set_timing(
     return count == 0U ? SVG_ANIM_AUTHORING_NO_OP :
         make_track_patch(document, track, mods, count, out_patch) ?
             SVG_ANIM_AUTHORING_OK : SVG_ANIM_AUTHORING_UNSUPPORTED;
-}
-
-static const char *transform_name(svg_anim_transform_type type)
-{
-    switch (type) {
-        case SVG_ANIM_TRANSFORM_TRANSLATE: return "translate";
-        case SVG_ANIM_TRANSFORM_SCALE: return "scale";
-        case SVG_ANIM_TRANSFORM_ROTATE: return "rotate";
-        case SVG_ANIM_TRANSFORM_SKEW_X: return "skewX";
-        case SVG_ANIM_TRANSFORM_SKEW_Y: return "skewY";
-    }
-    return NULL;
-}
-
-static bool validate_new_value(base_bytes text, svg_anim_attribute attribute,
-    svg_anim_kind kind, const char *type)
-{
-    if (!base_bytes_valid(text) || text.len == 0U || text.len > AUTHORING_VALUE_LIMIT)
-        return false;
-    for (size_t index = 0U; index < text.len; ++index)
-        if (text.ptr[index] == ';' || text.ptr[index] == '\0') return false;
-    svg_anim_value parsed;
-    return svg_anim_parse_value(text, (svg_xml_span){0U, text.len}, attribute,
-        kind, type, &parsed);
-}
-
-svg_anim_authoring_error svg_anim_authoring_create_track(
-    base_bytes source, size_t target_offset, svg_anim_attribute attribute,
-    svg_anim_kind kind, svg_anim_transform_type transform_type,
-    base_bytes initial_value, base_bytes first_value, double time_seconds,
-    double duration_seconds, uint8_t **out_fragment, size_t *out_length)
-{
-    if (out_fragment == NULL || out_length == NULL) return SVG_ANIM_AUTHORING_INVALID_ARGUMENT;
-    *out_fragment = NULL; *out_length = 0U;
-    if (!base_bytes_valid(source) || target_offset >= source.len ||
-        !isfinite(time_seconds) || time_seconds <= 0.0 ||
-        !isfinite(duration_seconds) || duration_seconds <= 0.0 ||
-        duration_seconds > SVG_ANIM_MAX_TIMELINE_SECONDS || time_seconds > duration_seconds)
-        return SVG_ANIM_AUTHORING_INVALID_ARGUMENT;
-    const char *attribute_text = svg_anim_attribute_name(attribute);
-    const char *type_text = transform_name(transform_type);
-    if (attribute == SVG_ANIM_ATTR_D || attribute == SVG_ANIM_ATTR_MOTION ||
-        (kind != SVG_ANIM_KIND_ANIMATE && kind != SVG_ANIM_KIND_TRANSFORM) ||
-        (kind == SVG_ANIM_KIND_TRANSFORM && (attribute != SVG_ANIM_ATTR_TRANSFORM ||
-            type_text == NULL)) ||
-        (kind == SVG_ANIM_KIND_ANIMATE && attribute == SVG_ANIM_ATTR_TRANSFORM))
-        return SVG_ANIM_AUTHORING_UNSUPPORTED;
-    if (!validate_new_value(initial_value, attribute, kind,
-            type_text == NULL ? "translate" : type_text) ||
-        !validate_new_value(first_value, attribute, kind,
-            type_text == NULL ? "translate" : type_text))
-        return SVG_ANIM_AUTHORING_INVALID_ARGUMENT;
-    double position = time_seconds / duration_seconds;
-    if (!isfinite(position) || position <= 0.0 || position > 1.0)
-        return SVG_ANIM_AUTHORING_INVALID_ARGUMENT;
-    authoring_builder fragment = {0};
-    const char *element = kind == SVG_ANIM_KIND_TRANSFORM ? "animateTransform" : "animate";
-    char duration_text[64];
-    int duration_amount = snprintf(duration_text, sizeof(duration_text), "%.17gs", duration_seconds);
-    if (duration_amount <= 0 || (size_t)duration_amount >= sizeof(duration_text) ||
-        !builder_byte(&fragment, '<') || !builder_cstr(&fragment, element) ||
-        !builder_cstr(&fragment, " attributeName=\"") ||
-        !builder_cstr(&fragment, attribute_text) ||
-        !builder_byte(&fragment, '"')) goto oom;
-    if (kind == SVG_ANIM_KIND_TRANSFORM &&
-        (!builder_cstr(&fragment, " type=\"") || !builder_cstr(&fragment, type_text) ||
-         !builder_byte(&fragment, '"'))) goto oom;
-    if (!builder_cstr(&fragment, " values=\"") ||
-        !builder_attribute_value(&fragment, initial_value, '"') ||
-        !builder_byte(&fragment, ';') ||
-        !builder_attribute_value(&fragment, first_value, '"')) goto oom;
-    if (position < 1.0 &&
-        (!builder_byte(&fragment, ';') ||
-         !builder_attribute_value(&fragment, first_value, '"'))) goto oom;
-    if (!builder_cstr(&fragment, "\" begin=\"0s\" keyTimes=\"0;") ||
-        !append_number(&fragment, position)) goto oom;
-    if (position < 1.0 && !builder_append(&fragment,
-            (const uint8_t *)";1", 2U)) goto oom;
-    if (!builder_cstr(&fragment, "\" dur=\"") ||
-        !builder_append(&fragment, (const uint8_t *)duration_text,
-            (size_t)duration_amount) ||
-        !builder_cstr(&fragment, "\" calcMode=\"linear\" fill=\"freeze\"/>"))
-        goto oom;
-    *out_fragment = fragment.bytes;
-    *out_length = fragment.length;
-    return SVG_ANIM_AUTHORING_OK;
-oom:
-    free(fragment.bytes);
-    return SVG_ANIM_AUTHORING_OUT_OF_MEMORY;
 }

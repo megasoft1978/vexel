@@ -48,6 +48,16 @@ at 256 values, tags and individual values at 64 KiB, and one patch at 1 MiB.
 Rejected and no-op operations produce no patch. Easing handles are finite and
 in [0,1]; an interval edit preserves the raw text of other spline tuples.
 
+Spline tracks accept key edits and keep exactly key_count-1 keySplines tuples,
+passing each tuple's raw bytes through unchanged. A value edit or key move
+keeps all tuples. Adding a key splits an interval and repeats that interval's
+tuple. Deleting key 0 drops tuple 0, the last key drops the last tuple, and any
+other key k drops tuple k. Deleting a spline track down to one key removes
+keySplines and sets calcMode="linear", because a one-key spline track does not
+parse. A keySplines or values result over 64 KiB returns the limit error before
+any patch exists. authoring_create.c holds track creation; both files share
+authoring_internal.h.
+
 Track creation returns one bounded animate fragment with explicit initial
 and authored values, begin="0s", finite duration, and linear interpolation.
 The editor inserts/removes it with the document edit transaction API. The
