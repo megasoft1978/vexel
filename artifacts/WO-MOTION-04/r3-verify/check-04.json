@@ -6,7 +6,7 @@
     "--all"
   ],
   "exit_code": 0,
-  "duration_s": 6.374103249981999,
-  "stdout": "ok   build              0.1s\nok   ctest -R all              3.5s  100% tests passed, 0 tests failed out of 80\nok   python mcp.test_e2e,svg.sha   2.7s  Ran 69 tests in 2.644s\nPASS  total 6.3s   (slow Python skipped; --full or ./dev t -k <name>)\n",
+  "duration_s": 7.253936249995604,
+  "stdout": "ok   build              0.2s\nok   ctest -R all              4.2s  100% tests passed, 0 tests failed out of 80\nok   python mcp.test_e2e,svg.sha   2.8s  Ran 69 tests in 2.748s\nPASS  total 7.2s   (slow Python skipped; --full or ./dev t -k <name>)\n",
   "stderr": ""
 }
