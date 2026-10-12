@@ -535,7 +535,8 @@ bool svg_shape_text_render_element(
         if ((token->kind != SVG_XML_TOKEN_TEXT &&
              token->kind != SVG_XML_TOKEN_CDATA) ||
             token->depth != tokens[element].depth + 1U) continue;
-        if (token->value.length > SVG_SHAPE_MEDIA_MAX_TEXT_BYTES -
+        if (token->value.length > SVG_SHAPE_MEDIA_MAX_TEXT_BYTES ||
+            token->value.length > SVG_SHAPE_MEDIA_MAX_DOCUMENT_TEXT_BYTES -
                                   builder->text_bytes) {
             svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT,
                            token->value.offset);
@@ -565,9 +566,9 @@ bool svg_shape_text_render_element(
             svg_shape_free(normalized);
             return false;
         }
-        if (layout.glyph_count > SVG_SHAPE_MEDIA_MAX_GLYPHS -
+        if (layout.glyph_count > SVG_SHAPE_MEDIA_MAX_DOCUMENT_GLYPHS -
                                  builder->text_glyphs ||
-            layout.command_count > SVG_SHAPE_MEDIA_MAX_PATH_COMMANDS -
+            layout.command_count > SVG_SHAPE_MEDIA_MAX_DOCUMENT_PATH_COMMANDS -
                                    builder->text_commands) {
             if (!cached) svg_shape_text_layout_release(builder->media, &layout);
             svg_shape_free(normalized);

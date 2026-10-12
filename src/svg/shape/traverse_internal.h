@@ -12,7 +12,10 @@
 #define SHAPE_MAX_REFERENCE_DEPTH 16U
 #define SHAPE_MAX_USE_INSTANCES 65536U
 #define SHAPE_MAX_TRAVERSAL_VISITS 4194304U
-#define SHAPE_MAX_TRANSFORM_OPERATIONS 4096U
+/* Accumulated transform operations across the whole document. Real drawings
+ * carry a transform on most elements, so 4096 refused ordinary files; the bound
+ * stays finite so a pathological input is still refused. */
+#define SHAPE_MAX_TRANSFORM_OPERATIONS (1024U * 1024U)
 #define SHAPE_MAX_TRANSFORM_NODES 4194304U
 #define SHAPE_MAX_REFERENCE_BYTES (64U * 1024U)
 #define SHAPE_MAX_JOB_REFERENCE_BYTES (1024U * 1024U)

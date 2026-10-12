@@ -7,9 +7,19 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* Per text token budget. */
 #define SVG_SHAPE_MEDIA_MAX_TEXT_BYTES (64U * 1024U)
-#define SVG_SHAPE_MEDIA_MAX_GLYPHS 16384U
+/* Document text budget. The accumulated budget used to be the per-token 64 KiB,
+ * which refused any drawing with more than about 64 KiB of labels. */
+#define SVG_SHAPE_MEDIA_MAX_DOCUMENT_TEXT_BYTES (64U * 1024U * 1024U)
+/* Per text-run budgets: a single span or layout run stays bounded. */
+#define SVG_SHAPE_MEDIA_MAX_GLYPHS 65536U
 #define SVG_SHAPE_MEDIA_MAX_PATH_COMMANDS 262144U
+/* Document budgets. Real drawings carry thousands of labels, so a document-wide
+ * budget of 16384 glyphs refused documents a viewer must render; these stay
+ * finite so a pathological input is still bounded. */
+#define SVG_SHAPE_MEDIA_MAX_DOCUMENT_GLYPHS (1024U * 1024U)
+#define SVG_SHAPE_MEDIA_MAX_DOCUMENT_PATH_COMMANDS (4U * 1024U * 1024U)
 #define SVG_SHAPE_MEDIA_MAX_FAMILIES 32U
 #define SVG_SHAPE_MEDIA_MAX_IMAGE_PIXELS (64U * 1024U * 1024U)
 
