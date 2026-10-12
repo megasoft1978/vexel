@@ -1,0 +1,14 @@
+{
+ "index": 6,
+ "frozen_command": "python3 -m unittest tests.test_ui_chrome_golden",
+ "argv": [
+  "python3",
+  "-m",
+  "unittest",
+  "tests.test_ui_chrome_golden"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.13701105117797852,
+ "stdout": "",
+ "stderr": ".\n----------------------------------------------------------------------\nRan 1 test in 0.103s\n\nOK\n"
+}

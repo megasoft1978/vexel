@@ -442,3 +442,13 @@
   asserted by a separate test); (c) `reports/M3/decision.md`'s boilerplate still reads "Every packet
   source below is repository-relative and verified by the offline validator", which is no longer true
   for the living row rendered beneath it. None affects a measurement or hash.
+
+- Update 2026-10-13: **WO-UI-01** implements the first Blender-alignment increment: task workspaces and
+  one consolidated status bar. A workspace strip (`Draw · Nodes · Animate · Inspect`) replaces the
+  duplicated tool-hint row; each workspace declaratively selects pane visibility and an inspector group,
+  `Control-Tab`/`Control-Shift-Tab` cycle with wrap, the choice persists through the settings store
+  honouring `rememberWorkspace`, and an unknown remembered name falls back to `Draw`. The status bar now
+  has Blender's three regions: hint, report, readout. Switching workspaces never touches the document,
+  asserted by byte comparison in the new `viewer-workspaces` CTest. Ten golden fixtures were updated with
+  a recorded baseline change (`artifacts/WO-UI-01/golden-changes.md`, pixdiff comparisons). 81/81 CTests
+  pass. Evidence: `artifacts/WO-UI-01/`.

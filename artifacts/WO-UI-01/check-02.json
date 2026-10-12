@@ -1,0 +1,14 @@
+{
+ "index": 2,
+ "frozen_command": "cmake --build --preset mac-debug",
+ "argv": [
+  "cmake",
+  "--build",
+  "--preset",
+  "mac-debug"
+ ],
+ "exit_code": 0,
+ "duration_s": 0.018526792526245117,
+ "stdout": "ninja: no work to do.\n",
+ "stderr": ""
+}

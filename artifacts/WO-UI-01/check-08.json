@@ -1,0 +1,12 @@
+{
+ "index": 8,
+ "frozen_command": "./dev editor-smoke",
+ "argv": [
+  "./dev",
+  "editor-smoke"
+ ],
+ "exit_code": 0,
+ "duration_s": 23.648319005966187,
+ "stdout": "Preset CMake variables:\n\n  CMAKE_BUILD_TYPE=\"Debug\"\n  CMAKE_OSX_ARCHITECTURES=\"arm64\"\n  CMAKE_OSX_DEPLOYMENT_TARGET=\"13.0\"\n\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug\nninja: no work to do.\neditor canvas save: selected move/resize and rectangle/polygon draw/undo passed\neditor chrome save: numeric X and fill edits saved; visibility and lock remained UI-only\nnative editor smoke: live canvas mapping, layers, visibility, lock, inspector, draw/undo, and exact save passed\n",
+ "stderr": ""
+}
