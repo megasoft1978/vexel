@@ -433,11 +433,51 @@ static int test_layer_tree(viewer_editor *editor, ui_semantics_snapshot *snapsho
         return 44;
     rectangle = find_role_label(snapshot, UI_ROLE_ROW, "Rectangle #shape");
     const ui_semantics_node *geometry = find_label(snapshot, "Geometry");
-    const ui_semantics_node *appearance = find_label(snapshot, "Appearance");
-    if (rectangle == NULL || geometry == NULL || appearance == NULL ||
-        find_label(snapshot, "Name") == NULL || find_label(snapshot, "Fill") == NULL ||
-        find_label(snapshot, "Stroke") == NULL || find_label(snapshot, "Id") != NULL ||
+    if (rectangle == NULL || geometry == NULL ||
+        find_label(snapshot, "Name") == NULL || find_label(snapshot, "Id") != NULL ||
         find_label(snapshot, "Content") != NULL) return 45;
+    /* Properties are tabbed: Fill and Stroke live on their own tabs, so the
+     * Object tab must not show them. */
+    if (find_role_label(snapshot, UI_ROLE_TEXT_FIELD, "Fill") != NULL ||
+        find_role_label(snapshot, UI_ROLE_TEXT_FIELD, "Stroke") != NULL) return 46;
+    const ui_semantics_node *fill_tab = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index) {
+        if (snapshot->nodes[index].id == EDITOR_BUTTON_INSPECTOR_TAB_BASE + 1U) {
+            fill_tab = &snapshot->nodes[index];
+            break;
+        }
+    }
+    if (fill_tab == NULL) return 55;
+    if (fill_tab->frame.width == 0U) return 56;
+    if (!click_node(editor, fill_tab, fill_tab->frame.width / 2U)) return 57;
+    if (!viewer_editor_semantics(editor, snapshot)) return 58;
+    if (find_role_label(snapshot, UI_ROLE_TEXT_FIELD, "Fill") == NULL ||
+        find_role_label(snapshot, UI_ROLE_TEXT_FIELD, "Stroke") != NULL) return 49;
+    const ui_semantics_node *stroke_tab = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index)
+        if (snapshot->nodes[index].id == EDITOR_BUTTON_INSPECTOR_TAB_BASE + 2U)
+            stroke_tab = &snapshot->nodes[index];
+    if (stroke_tab == NULL || !click_node(editor, stroke_tab, stroke_tab->frame.width / 2U) ||
+        !viewer_editor_semantics(editor, snapshot)) return 50;
+    if (find_role_label(snapshot, UI_ROLE_TEXT_FIELD, "Stroke") == NULL ||
+        find_role_label(snapshot, UI_ROLE_TEXT_FIELD, "Fill") != NULL) return 51;
+    const ui_semantics_node *document_tab_node = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index)
+        if (snapshot->nodes[index].id == EDITOR_BUTTON_INSPECTOR_TAB_BASE + 3U)
+            document_tab_node = &snapshot->nodes[index];
+    if (document_tab_node == NULL ||
+        !click_node(editor, document_tab_node, document_tab_node->frame.width / 2U) ||
+        !viewer_editor_semantics(editor, snapshot)) return 52;
+    if (find_label(snapshot, "Actual Size") == NULL) return 53;
+    /* Return to the Object tab so the later assertions keep their subject. */
+    const ui_semantics_node *object_tab_node = NULL;
+    for (size_t index = 0U; index < snapshot->count; ++index)
+        if (snapshot->nodes[index].id == EDITOR_BUTTON_INSPECTOR_TAB_BASE + 0U)
+            object_tab_node = &snapshot->nodes[index];
+    if (object_tab_node == NULL ||
+        !click_node(editor, object_tab_node, object_tab_node->frame.width / 2U) ||
+        !viewer_editor_semantics(editor, snapshot) ||
+        find_label(snapshot, "Geometry") == NULL) return 54;
 
     if ((viewer_editor_key(editor, 120U, 0U, NULL, 0U) & VIEWER_EDITOR_HANDLED) == 0U ||
         (viewer_editor_key(editor, 0U, PLATFORM_MODIFIER_COMMAND, "a", 1U) &

@@ -1,5 +1,16 @@
 # UI lane
 
+## Properties tabs
+
+The inspector carries Blender-style property tabs across the top of the pane:
+`Object`, `Fill`, `Stroke` and `Document`. `Object` shows the element name, its
+geometry and any attribute that no other tab owns, so nothing becomes
+unreachable; `Fill` shows `fill` and `fill-opacity`; `Stroke` shows `stroke`,
+`stroke-width`, `stroke-opacity`, `stroke-linecap` and `stroke-linejoin`; and
+`Document` shows the document size with the Fit Canvas and Actual Size actions.
+A filtered tab is itself the group selector, so its group is always open; the
+`Object` tab keeps the collapsible Geometry and Additional attributes sections.
+
 ## Task workspaces
 
 The editor chrome has four Blender-style task workspaces, shown as a tab strip in

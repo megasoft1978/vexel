@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 static size_t editor_full_attribute_value(viewer_editor *editor,
@@ -120,6 +121,45 @@ static uint8_t editor_attribute_section(base_bytes name)
     return 2U;
 }
 
+/* Object, Fill, Stroke and Document, as in Blender's Properties editor. */
+#define EDITOR_INSPECTOR_TAB_OBJECT 0U
+#define EDITOR_INSPECTOR_TAB_FILL 1U
+#define EDITOR_INSPECTOR_TAB_STROKE 2U
+#define EDITOR_INSPECTOR_TAB_DOCUMENT 3U
+#define EDITOR_INSPECTOR_TAB_COUNT 4U
+
+static const char *inspector_tab_title(uint8_t tab)
+{
+    static const char *const titles[EDITOR_INSPECTOR_TAB_COUNT] = {
+        "Object", "Fill", "Stroke", "Document"};
+    return tab < EDITOR_INSPECTOR_TAB_COUNT ? titles[tab] : titles[0];
+}
+
+/* The node id and the command id differ: the node id names the widget, the
+ * command id is what the dispatcher acts on. */
+static uint32_t inspector_tab_node(uint8_t tab)
+{
+    return EDITOR_BUTTON_INSPECTOR_TAB_BASE + (uint32_t)tab;
+}
+
+static uint32_t inspector_tab_action(uint8_t tab)
+{
+    return EDITOR_BUTTON_INSPECTOR_TAB_OBJECT + (uint32_t)tab;
+}
+
+/* A tab accepts an attribute when it owns that attribute's group. Object keeps
+ * geometry and the catch-all attributes so nothing becomes unreachable. */
+static bool inspector_tab_accepts(uint8_t tab, base_bytes name, uint8_t section)
+{
+    if (tab == EDITOR_INSPECTOR_TAB_OBJECT) return section != 1U;
+    if (tab == EDITOR_INSPECTOR_TAB_DOCUMENT) return false;
+    bool wants_fill = tab == EDITOR_INSPECTOR_TAB_FILL;
+    size_t prefix = wants_fill ? 4U : 6U;
+    const char *wanted = wants_fill ? "fill" : "stroke";
+    if (section != 1U || name.len < prefix) return false;
+    return memcmp(name.ptr, wanted, prefix) == 0;
+}
+
 static const char *section_title(uint8_t section)
 {
     if (section == 0U) return "Geometry";
@@ -192,16 +232,20 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
             if (!document_edit_attribute_at(editor->edit, editor->selected,
                     index, &attribute) ||
                 !document_edit_span_bytes(editor->edit, attribute.name, &name)) return false;
-            if (!editor_is_identity_attribute(name) &&
-                editor_attribute_section(name) == section) {
+            uint8_t name_section = editor_attribute_section(name);
+            if (!editor_is_identity_attribute(name) && name_section == section &&
+                inspector_tab_accepts(editor->inspector_tab, name, name_section)) {
                 has_section = true;
                 break;
             }
         }
         if (!has_section) continue;
-        bool expanded = section == 0U ? editor->inspector_geometry_expanded :
-            section == 1U ? editor->inspector_appearance_expanded :
-                editor->inspector_other_attributes_expanded;
+        /* A filtered tab is itself the group selector, so its group is always
+         * open; only the Object tab honours the collapsible section state. */
+        bool expanded = editor->inspector_tab != EDITOR_INSPECTOR_TAB_OBJECT ? true :
+            (section == 0U ? editor->inspector_geometry_expanded :
+                section == 1U ? editor->inspector_appearance_expanded :
+                    editor->inspector_other_attributes_expanded);
         uint32_t action = section == 0U ? EDITOR_BUTTON_INSPECTOR_GEOMETRY :
             section == 1U ? EDITOR_BUTTON_INSPECTOR_APPEARANCE :
                 EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES;
@@ -223,8 +267,9 @@ static bool editor_add_attribute_rows(viewer_editor *editor, const ui_tokens *to
             if (!document_edit_attribute_at(editor->edit, editor->selected,
                     attribute_index, &attribute) ||
                 !document_edit_span_bytes(editor->edit, attribute.name, &name)) return false;
-            if (editor_is_identity_attribute(name) ||
-                editor_attribute_section(name) != section) continue;
+            uint8_t name_section = editor_attribute_section(name);
+            if (editor_is_identity_attribute(name) || name_section != section ||
+                !inspector_tab_accepts(editor->inspector_tab, name, name_section)) continue;
             size_t label_length = editor_attribute_label(name, label);
             if (editor->field_kind == EDITOR_FIELD_ATTRIBUTE &&
                 editor->field_attribute == attribute_index) {
@@ -310,7 +355,52 @@ bool editor_build_inspector_panel(viewer_editor *editor, const ui_tokens *tokens
             "Hide inspector panel", 20U, NULL, 0U, 0U,
             EDITOR_BUTTON_HIDE_INSPECTOR);
     if (!okay) return false;
+    /* Vertical icon tabs, as in Blender's Properties editor. */
+    if (!editor_add_node(editor, EDITOR_NODE_INSPECTOR_TABS, EDITOR_NODE_INSPECTOR,
+            UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U, 0U, UI_ROLE_GROUP,
+            "Properties", 10U, NULL, 0U, 0U, 0U)) return false;
+    for (uint8_t tab = 0U; tab < EDITOR_INSPECTOR_TAB_COUNT; ++tab) {
+        const char *title = inspector_tab_title(tab);
+        uint32_t tab_width = (uint32_t)(strlen(title) * 8U + 20U);
+        if (!editor_add_widget_node(editor, inspector_tab_node(tab),
+                EDITOR_NODE_INSPECTOR_TABS, UI_AXIS_HORIZONTAL, tab_width, 24U, 4U, 0U,
+                tab == editor->inspector_tab ? tokens->panel_raised : 0U,
+                UI_ROLE_BUTTON, UI_WIDGET_BUTTON_SECONDARY, UI_ICON_NONE,
+                title, strlen(title), NULL, 0U,
+                tab == editor->inspector_tab ? UI_STATE_CHECKED : 0U,
+                inspector_tab_action(tab))) return false;
+    }
+    /* The Document tab always describes the document, selection or not. */
+    if (editor->inspector_tab == EDITOR_INSPECTOR_TAB_DOCUMENT) {
+        char document_size[64] = {0};
+        int amount = snprintf(document_size, sizeof(document_size), "%u × %u",
+            editor->canvas_document_width, editor->canvas_document_height);
+        if (amount < 0 || (size_t)amount >= sizeof(document_size))
+            document_size[0] = '\0';
+        return editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
+                0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, "Document",
+                8U, NULL, 0U, 0U, 0U) &&
+            editor_add_widget_node(editor, EDITOR_NODE_INSPECTOR_DOCUMENT_SIZE,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                tokens->panel, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
+                "Size", 4U, document_size, strlen(document_size), 0U, 0U) &&
+            editor_add_node(editor, EDITOR_BUTTON_FIT_CANVAS,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                tokens->panel_raised, UI_ROLE_BUTTON, "Fit Canvas", 10U,
+                NULL, 0U, 0U, EDITOR_BUTTON_FIT_CANVAS) &&
+            editor_add_node(editor, EDITOR_BUTTON_ACTUAL_SIZE,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 30U, 4U, 0U,
+                tokens->panel_raised, UI_ROLE_BUTTON, "Actual Size", 11U,
+                NULL, 0U, 0U, EDITOR_BUTTON_ACTUAL_SIZE);
+    }
     if (!editor->selection_active) {
+        if (editor->inspector_tab == EDITOR_INSPECTOR_TAB_FILL ||
+            editor->inspector_tab == EDITOR_INSPECTOR_TAB_STROKE)
+            return editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
+                EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
+                0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE,
+                "No selection", 12U, NULL, 0U, 0U, 0U);
         if (!editor_add_widget_node(editor, EDITOR_NODE_SELECTED_TAG,
                 EDITOR_NODE_INSPECTOR, UI_AXIS_HORIZONTAL, 0U, 26U, 4U, 0U,
                 0U, UI_ROLE_TEXT, UI_WIDGET_LABEL, UI_ICON_NONE, "Document",

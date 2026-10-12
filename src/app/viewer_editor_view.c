@@ -339,6 +339,13 @@ static uint32_t editor_run_action(viewer_editor *editor, uint32_t action)
             (viewer_workspace_kind)(action - EDITOR_BUTTON_WORKSPACE_BASE));
         return VIEWER_EDITOR_HANDLED;
     }
+    if (action >= EDITOR_BUTTON_INSPECTOR_TAB_OBJECT &&
+        action <= EDITOR_BUTTON_INSPECTOR_TAB_DOCUMENT) {
+        editor->inspector_tab = (uint8_t)(action - EDITOR_BUTTON_INSPECTOR_TAB_OBJECT);
+        editor->tree_ready = false;
+        editor->redraw_requested = true;
+        return VIEWER_EDITOR_HANDLED;
+    }
     if (action == EDITOR_BUTTON_TOGGLE_STRUCTURE || action == EDITOR_BUTTON_HIDE_STRUCTURE) {
         (void)viewer_editor_set_sidebar_visibility(editor,
             !editor->want_structure, editor->want_inspector);

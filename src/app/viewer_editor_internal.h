@@ -87,6 +87,10 @@ enum {
     EDITOR_BUTTON_INSPECTOR_OTHER_ATTRIBUTES = 500U,
     EDITOR_BUTTON_INSPECTOR_GEOMETRY = 501U,
     EDITOR_BUTTON_INSPECTOR_APPEARANCE = 502U,
+    EDITOR_BUTTON_INSPECTOR_TAB_OBJECT = 510U,
+    EDITOR_BUTTON_INSPECTOR_TAB_FILL = 511U,
+    EDITOR_BUTTON_INSPECTOR_TAB_STROKE = 512U,
+    EDITOR_BUTTON_INSPECTOR_TAB_DOCUMENT = 513U,
     EDITOR_BUTTON_ZOOM_HUD = 600U,
     EDITOR_BUTTON_ZOOM_PRESET_BASE = 610U,
     EDITOR_CONTEXT_EDIT_NODES = 630U,
@@ -130,7 +134,11 @@ enum {
     EDITOR_NODE_STATUS_HINT = 24530U,
     EDITOR_NODE_STATUS_REPORT = 24531U,
     EDITOR_NODE_STATUS_READOUT = 24532U,
-    EDITOR_BUTTON_STATUS_CANCEL = 24533U
+    EDITOR_BUTTON_STATUS_CANCEL = 24533U,
+    /* Properties icon tabs, as in Blender's Properties editor. */
+    EDITOR_NODE_INSPECTOR_TABS = 24540U,
+    EDITOR_BUTTON_INSPECTOR_TAB_BASE = 24550U,
+    EDITOR_NODE_INSPECTOR_DOCUMENT_SIZE = 24560U
 };
 
 typedef enum editor_field_kind {
@@ -226,6 +234,7 @@ struct viewer_editor {
     viewer_editor_workspace_callback workspace_changed;
     void *workspace_context;
     char workspace_inspector_section[24];
+    uint8_t inspector_tab;
     bool status_operation_active;
     document_handle selected;
     document_handle outline[EDITOR_OUTLINE_CAP];
