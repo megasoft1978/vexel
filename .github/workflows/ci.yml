@@ -27,3 +27,18 @@ jobs:
           # Shared hosted runners jitter; the strict 100 ms owner-step gate stays the local default.
           VEXEL_OWNER_STEP_LIMIT_MS: "500"
         run: ./dev verify
+      - name: Capture UI golden diagnostics
+        if: always()
+        run: |
+          cmake --preset mac-debug
+          cmake --build build/mac-debug --target native_ui_render viewer_chrome_render editor_snap_overlay_render editor_chrome_render
+          python3 scripts/ui_golden_audit.py \
+            --build-dir build/mac-debug \
+            --output ".cache/ui-golden-audit/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+      - name: Upload UI golden diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vexel-ui-golden-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .cache/ui-golden-audit/${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn

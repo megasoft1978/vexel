@@ -333,3 +333,32 @@
   lifecycle event was added because no W16 frozen work order exists. No live
   window, keyboard/mouse automation, or screenshot was used. Maintainer window
   checks remain listed in `docs/lanes/integrate.md`.
+
+- Update 2026-10-11: WO-UI-GOLDEN-01 revision 1 is frozen READY on
+  `c43fa826c0fbc8910e8dc0c09b4139c8aa615995`, parallel-safe true. It diagnoses
+  the four UI golden CTest failures from CI run 38147398376 by capturing actual
+  images and pixel metrics while preserving all expected images and assertions.
+  Historical run artifacts were not attached; instrumentation will be added to
+  the main CI workflow so a subsequent run can retain diagnostic images.
+
+- Update 2026-10-11: WO-UI-GOLDEN-01 diagnostic capture is complete. On this
+  macOS 27.0 arm64 host, the full 50-image matrix has 14/14 native-shell PNG
+  size mismatches (actual dimensions are 2x expected) and 36/36 exact matches
+  across style, snapping overlay, and accessibility localization. The local
+  focused CTest selection is 3/4: only native-shell-goldens fails. A retained
+  2x2 box-average diagnostic comparison reports 7,750/390,000 differing pixels
+  (1.987%) for the first Welcome image; raw and normalized images, red diff
+  PNGs, per-image metrics, and CTest output are in
+  `artifacts/WO-UI-GOLDEN-01/local-macos-27/`. The host reports one 2x main
+  display; BetterDisplay causality is not established. Historical GitHub run
+  38147398376 has no downloadable image artifact. The first instrumented
+  macOS 15 run, 38149075199, retained all 50 comparisons: 30 exact matches and
+  20 mismatches (14 native-shell, 2 node-edit style, 2 snap-overlay, and 2
+  accessibility). Native-shell uses expected dimensions on macOS 15; the three
+  editor-category mismatches are one-channel-value deltas at one or two pixels
+  each. Native-shell differences span each image. This localizes the failures
+  but does not establish a cause. The full report and PNGs are in
+  `artifacts/WO-UI-GOLDEN-01/hosted-macos-15/run-38149075199/`. CI capture and
+  upload succeeded after verification failed. BetterDisplay causality is not
+  established. Goldens, manifests, assertions, thresholds, and `nightly.yml`
+  are unchanged.
