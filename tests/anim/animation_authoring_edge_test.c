@@ -462,12 +462,15 @@ static bool test_spline_output_limit(void)
     memcpy(text + sizeof(head) - 1U + PAD, tail, sizeof(tail) - 1U);
     svg_anim_document animation = {0};
     svg_anim_authoring_patch patch = {0};
+    /* The decoded animation borrows `text`; free it only after the last use. */
     bool parsed = parse_animation((base_bytes){text, length}, &animation);
-    free(text);
-    CHECK(parsed && svg_anim_authoring_track_editable(&animation, 0U));
-    REJECT(svg_anim_authoring_add_key(&animation, 0U, 0.5, BYTES("7"), &patch),
-        SVG_ANIM_AUTHORING_LIMIT, patch);
+    bool ok = parsed && svg_anim_authoring_track_editable(&animation, 0U);
+    svg_anim_authoring_error error = ok ? svg_anim_authoring_add_key(&animation, 0U,
+        0.5, BYTES("7"), &patch) : SVG_ANIM_AUTHORING_UNSUPPORTED;
+    ok = ok && error == SVG_ANIM_AUTHORING_LIMIT && patch.replacement == NULL;
     svg_anim_document_destroy(&animation);
+    free(text);
+    CHECK(ok);
     return true;
 }
 
