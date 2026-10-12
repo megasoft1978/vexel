@@ -817,9 +817,10 @@ set_target_properties(viewer_chrome_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-add_executable(viewer_workspace_test tests/editor/viewer_workspace_test.c)
-target_include_directories(viewer_workspace_test PRIVATE src/app)
-target_link_libraries(viewer_workspace_test PRIVATE vexel_editor_ui)
+add_executable(viewer_workspace_test tests/editor/viewer_workspace_test.c
+    src/platform/macos/platform_settings.m)
+target_include_directories(viewer_workspace_test PRIVATE src src/app)
+target_link_libraries(viewer_workspace_test PRIVATE vexel_editor_ui ${COCOA_FRAMEWORK})
 set_target_properties(viewer_workspace_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")

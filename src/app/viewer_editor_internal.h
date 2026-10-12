@@ -267,7 +267,6 @@ struct viewer_editor {
     viewer_workspace_kind workspace;
     viewer_editor_workspace_callback workspace_changed;
     void *workspace_context;
-    char workspace_inspector_section[24];
     uint8_t inspector_tab;
     editor_log_entry log[EDITOR_LOG_CAP];
     size_t log_count;
@@ -419,6 +418,7 @@ struct viewer_editor {
     double backing_scale;
     ui_tree tree;
     char status[EDITOR_STATUS_CAP];
+    char operation_message[EDITOR_STATUS_CAP];
     char display_text[EDITOR_FIELD_CAP + 1U];
     bool tree_ready;
     bool command_palette_open;
@@ -519,6 +519,7 @@ struct viewer_editor {
 };
 
 void editor_set_text(char *target, size_t capacity, const char *source);
+void editor_format_byte_size(size_t bytes, char *out, size_t capacity);
 size_t editor_copy_slice(char *destination, size_t capacity, base_bytes bytes);
 bool editor_add_node(viewer_editor *editor, uint32_t id, uint32_t parent,
                      ui_axis axis, uint32_t width, uint32_t height,

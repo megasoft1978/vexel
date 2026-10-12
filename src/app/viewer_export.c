@@ -97,9 +97,8 @@ static bool crop_selection(const raster_tile *source, svg_shape_rect bounds,
     return true;
 }
 
-bool viewer_export_png(viewer_app *app, bool copy_to_clipboard)
+static bool export_png_run(viewer_app *app, bool copy_to_clipboard)
 {
-    if (app == NULL || app->editor == NULL || !app->document_visible) return false;
     size_t source_length = viewer_editor_byte_length(app->editor);
     if (source_length == 0U || source_length > VIEWER_EXPORT_SOURCE_LIMIT) {
         export_error(app, "The current SVG exceeds the 64 MiB export limit");
@@ -167,6 +166,8 @@ bool viewer_export_png(viewer_app *app, bool copy_to_clipboard)
         export_error(app, "The selected PNG scale exceeds the 4096 pixel limit");
         return false;
     }
+    viewer_editor_set_operation_progress(app->editor, true,
+        copy_to_clipboard ? "Copying PNG" : "Exporting PNG");
     svg_shape_document render_document = document;
     render_document.width *= scale;
     render_document.height *= scale;
@@ -216,4 +217,12 @@ bool viewer_export_png(viewer_app *app, bool copy_to_clipboard)
         "Could not write the PNG to the system clipboard" :
         "Could not save the PNG file");
     return saved;
+}
+
+bool viewer_export_png(viewer_app *app, bool copy_to_clipboard)
+{
+    if (app == NULL || app->editor == NULL || !app->document_visible) return false;
+    bool result = export_png_run(app, copy_to_clipboard);
+    viewer_editor_set_operation_progress(app->editor, false, NULL);
+    return result;
 }

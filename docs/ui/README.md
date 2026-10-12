@@ -30,19 +30,22 @@ only selects which panes are visible and which inspector section is expanded; it
 never changes the editing model or the document bytes. `Control-PageDown` and
 `Control-PageUp` cycle forward and backward with wrap (`Control-Tab` works as an alias).
 
-- `draw` — structure panel, inspector, inspector section `Geometry`, no timeline
-- `nodes` — structure panel, inspector, inspector section `Geometry`, no timeline
-- `animate` — structure panel, inspector, inspector section `Appearance`, timeline visible
-- `inspect` — structure panel, inspector, inspector section `Attributes`, no timeline
+- `draw` — structure panel, inspector on the `Object` tab, no timeline
+- `nodes` — structure panel, inspector on the `Object` tab with the `Geometry`
+  (geometry/path) section expanded, no timeline
+- `animate` — structure panel, inspector (keeps its current tab and section), timeline visible
+- `inspect` — structure panel, inspector on the `Document` tab, no timeline
 
 The active workspace is stored in the macOS defaults under
 `VexelSettings.v1.workspace` as the workspace name (`draw`, `nodes`, `animate`,
 `inspect`). It is only restored when the existing `rememberWorkspace` preference
-is on; an unknown or missing name falls back to `draw`.
+is on; an unknown or missing name falls back to `draw`, and restoring it performs
+no settings write. Settings key: `VexelSettings.v1.workspace`.
 
 The status bar is a single bar with Blender's three regions: the active-tool hint
 on the left, the operation report (with a Cancel button while an operation runs)
-in the centre, and the save state, selection count and zoom on the right. The
+in the centre, and the save state, selection count, zoom and document size (source bytes with a unit, e.g. `1.2 MB`) on the
+right. Open/index, export and render messages appear in the centre region. The
 tool hint is not duplicated anywhere else in the chrome.
 
 See [the w4-ui style implementation](../lanes/ui-style.md) for the production

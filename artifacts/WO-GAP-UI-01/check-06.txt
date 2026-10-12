@@ -1,0 +1,8 @@
+command: python3 -m unittest tests.test_ui_chrome_golden tests.test_w15_accessibility_localization
+exit code: 0
+last 40 output lines:
+.......
+----------------------------------------------------------------------
+Ran 7 tests in 0.107s
+
+OK

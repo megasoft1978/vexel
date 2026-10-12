@@ -614,8 +614,14 @@ int main(void)
      * right-aligned; the tool hint is no longer duplicated above the canvas. */
     const ui_semantics_node *tool_hint = find_label(snapshot,
         "Selection tool · choose a layer or edit it on the canvas · V");
-    const ui_semantics_node *status_readout = find_label(snapshot,
-        "Saved · No selection");
+    /* The readout also carries the document size (source bytes with a unit). */
+    char readout_label[64];
+    char readout_size[32];
+    editor_format_byte_size(viewer_editor_byte_length(editor), readout_size,
+        sizeof(readout_size));
+    (void)snprintf(readout_label, sizeof(readout_label), "Saved · No selection · %s",
+        readout_size);
+    const ui_semantics_node *status_readout = find_label(snapshot, readout_label);
     if (selected_row_count(snapshot) != 0U || tool_hint == NULL ||
         tool_hint->frame.x != 12U ||
         status_readout == NULL || status_readout->frame.height < 16U ||

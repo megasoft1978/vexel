@@ -214,6 +214,21 @@ static void editor_canvas_status(viewer_editor *editor,
     }
 }
 
+/* Source byte length with a binary unit, e.g. "812 B", "3.4 KB", "1.2 MB". */
+void editor_format_byte_size(size_t bytes, char *out, size_t capacity)
+{
+    if (out == NULL || capacity == 0U) return;
+    if (bytes < 1024U)
+        (void)snprintf(out, capacity, "%zu B", bytes);
+    else if (bytes < 1024U * 1024U)
+        (void)snprintf(out, capacity, "%.1f KB", (double)bytes / 1024.0);
+    else if (bytes < 1024U * 1024U * 1024U)
+        (void)snprintf(out, capacity, "%.1f MB", (double)bytes / (1024.0 * 1024.0));
+    else
+        (void)snprintf(out, capacity, "%.1f GB",
+            (double)bytes / (1024.0 * 1024.0 * 1024.0));
+}
+
 static void editor_status_labels(viewer_editor *editor,
                                  char primary[EDITOR_STATUS_CAP],
                                  char secondary[PLATFORM_LOCALIZATION_TEXT_CAP],
@@ -572,11 +587,15 @@ void editor_build_tree_modern(viewer_editor *editor)
     }
     /* The readout never repeats the report message: state, selection, zoom. */
     char readout[EDITOR_STATUS_CAP] = {0};
+    char document_size[32] = {0};
+    editor_format_byte_size(viewer_editor_byte_length(editor), document_size,
+        sizeof(document_size));
     const char *readout_state = save_state[0] == '\0' ? status : save_state;
     int readout_amount = editor->canvas_zoom > 0.0 ?
-        snprintf(readout, sizeof(readout), "%s · %s · %.0f%%", readout_state,
-            selection, editor->canvas_zoom * 100.0) :
-        snprintf(readout, sizeof(readout), "%s · %s", readout_state, selection);
+        snprintf(readout, sizeof(readout), "%s · %s · %.0f%% · %s", readout_state,
+            selection, editor->canvas_zoom * 100.0, document_size) :
+        snprintf(readout, sizeof(readout), "%s · %s · %s", readout_state, selection,
+            document_size);
     if (readout_amount < 0 || (size_t)readout_amount >= sizeof(readout))
         editor_set_text(readout, sizeof(readout), selection);
     uint32_t selection_width = (uint32_t)(strlen(selection) * 7U + 20U);

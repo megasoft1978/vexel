@@ -2,12 +2,15 @@
 
 #include <string.h>
 
-/* Sections name real inspector sections so the choice is actually applied. */
+/* Tabs and sections name real inspector tabs/sections so the choice is applied.
+ * Draw: Object tab. Nodes: Object tab with the geometry/path section open.
+ * Animate: keeps the current tab and section, only the timeline appears.
+ * Inspect: Document tab. */
 static const viewer_workspace_spec workspace_table[VIEWER_WORKSPACE_COUNT] = {
-    {"draw", "Draw", "Geometry", true, true, false},
-    {"nodes", "Nodes", "Geometry", true, true, false},
-    {"animate", "Animate", "Appearance", true, true, true},
-    {"inspect", "Inspect", "Attributes", true, true, false}
+    {"draw", "Draw", "Object", NULL, true, true, false},
+    {"nodes", "Nodes", "Object", "Geometry", true, true, false},
+    {"animate", "Animate", NULL, NULL, true, true, true},
+    {"inspect", "Inspect", "Document", NULL, true, true, false}
 };
 
 const viewer_workspace_spec *viewer_workspace_table(void)

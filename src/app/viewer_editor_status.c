@@ -123,3 +123,25 @@ void editor_status_ok(viewer_editor *editor, const char *message)
     editor->tree_ready = false;
     editor->redraw_requested = true;
 }
+
+void viewer_editor_set_operation_progress(viewer_editor *editor, bool active,
+    const char *message)
+{
+    if (editor == NULL) return;
+    editor->status_operation_active = active;
+    if (active && message != NULL && message[0] != '\0') {
+        editor_set_text(editor->status, sizeof(editor->status), message);
+        editor_set_text(editor->operation_message,
+            sizeof(editor->operation_message), message);
+        editor->status_error = false;
+    } else if (!active) {
+        /* Only clear the progress text itself; a result or error reported
+         * since then must survive the end of the operation. */
+        if (editor->operation_message[0] != '\0' &&
+            strcmp(editor->status, editor->operation_message) == 0)
+            editor->status[0] = '\0';
+        editor->operation_message[0] = '\0';
+    }
+    editor->tree_ready = false;
+    editor->redraw_requested = true;
+}

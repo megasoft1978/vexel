@@ -1,0 +1,7 @@
+command: ./dev t --all
+exit code: 0
+last 40 output lines:
+ok   build              0.1s
+ok   ctest -R all              3.2s  100% tests passed, 0 tests failed out of 84
+ok   python mcp.test_e2e,svg.sha   2.2s  Ran 69 tests in 2.145s
+PASS  total 5.6s   (slow Python skipped; --full or ./dev t -k <name>)

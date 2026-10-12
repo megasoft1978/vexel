@@ -37,6 +37,51 @@ static NSString *const VexelSettingsPrefix = @"VexelSettings.v1.";
 
 static VexelSettingsController *settings_controller;
 
+static NSUserDefaults *settings_test_defaults;
+static NSString *settings_test_domain;
+static size_t settings_write_total;
+
+/* All reads and writes go through here so a test can redirect them to a
+ * throwaway domain and the user's real preferences are never touched. */
+static NSUserDefaults *settings_defaults(void)
+{
+    return settings_test_defaults != nil ? settings_test_defaults :
+        [NSUserDefaults standardUserDefaults];
+}
+
+static void settings_note_write(void)
+{
+    settings_write_total++;
+}
+
+void platform_settings_use_test_domain(const char *domain)
+{
+    if (![NSThread isMainThread]) return;
+    if (settings_test_defaults != nil && settings_test_domain != nil) {
+        [settings_test_defaults removePersistentDomainForName:settings_test_domain];
+        [settings_test_defaults synchronize];
+        NSString *plist = [[NSHomeDirectory()
+            stringByAppendingPathComponent:@"Library/Preferences"]
+            stringByAppendingPathComponent:
+                [settings_test_domain stringByAppendingString:@".plist"]];
+        [[NSFileManager defaultManager] removeItemAtPath:plist error:nil];
+    }
+    settings_test_defaults = nil;
+    settings_test_domain = nil;
+    settings_write_total = 0U;
+    if (domain == NULL || domain[0] == '\0') return;
+    NSString *name = [NSString stringWithUTF8String:domain];
+    if (name == nil || name.length == 0U) return;
+    [[NSUserDefaults standardUserDefaults] removePersistentDomainForName:name];
+    settings_test_defaults = [[NSUserDefaults alloc] initWithSuiteName:name];
+    settings_test_domain = name;
+}
+
+size_t platform_settings_write_count(void)
+{
+    return settings_write_total;
+}
+
 static NSString *settings_key(NSString *suffix)
 {
     return [VexelSettingsPrefix stringByAppendingString:suffix];
@@ -44,23 +89,24 @@ static NSString *settings_key(NSString *suffix)
 
 static NSString *settings_string(NSString *key, NSString *fallback)
 {
-    id stored = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    id stored = [settings_defaults() objectForKey:key];
     if (![stored isKindOfClass:[NSString class]]) return fallback;
     return (NSString *)stored;
 }
 
 static BOOL settings_bool(NSString *key, BOOL fallback)
 {
-    id stored = [[NSUserDefaults standardUserDefaults] objectForKey:key];
+    id stored = [settings_defaults() objectForKey:key];
     return stored == nil ? fallback : [stored boolValue];
 }
 
 static void settings_seed_defaults(void)
 {
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = settings_defaults();
     id version = [defaults objectForKey:VexelSettingsVersionKey];
     if ([version respondsToSelector:@selector(integerValue)] &&
         [version integerValue] == 1) return;
+    settings_note_write();
     [defaults setInteger:1 forKey:VexelSettingsVersionKey];
     [defaults setBool:YES forKey:settings_key(@"showWelcome")];
     [defaults setBool:YES forKey:settings_key(@"rememberWorkspace")];
@@ -86,7 +132,7 @@ void platform_settings_get(platform_settings_values *out_values)
         .default_pixel_grid = settings_bool(settings_key(@"pixelGrid"), NO),
         .modifier_scroll_zooms = settings_bool(settings_key(@"modifierScrollZooms"), YES),
         .workspace = {0},
-        .density = (uint8_t)[[NSUserDefaults standardUserDefaults]
+        .density = (uint8_t)[settings_defaults()
             integerForKey:settings_key(@"density")]
     };
     if (remember) {
@@ -106,9 +152,10 @@ void platform_settings_store_density(uint8_t density)
 {
     if (![NSThread isMainThread]) return;
     settings_seed_defaults();
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = settings_defaults();
     if (!settings_bool(settings_key(@"rememberWorkspace"), YES)) return;
     if ((uint8_t)[defaults integerForKey:settings_key(@"density")] == density) return;
+    settings_note_write();
     [defaults setInteger:(NSInteger)density forKey:settings_key(@"density")];
 }
 
@@ -116,13 +163,15 @@ void platform_settings_store_workspace(const char *name)
 {
     if (![NSThread isMainThread]) return;
     settings_seed_defaults();
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = settings_defaults();
     if (!settings_bool(settings_key(@"rememberWorkspace"), YES)) return;
     NSString *key = settings_key(@"workspace");
     NSString *value = name == NULL ? @"" : [NSString stringWithUTF8String:name];
     NSString *current = settings_string(key, @"");
-    if (value != nil && ![current isEqualToString:value])
+    if (value != nil && ![current isEqualToString:value]) {
+        settings_note_write();
         [defaults setObject:value forKey:key];
+    }
 }
 
 void platform_settings_store_sidebar_visibility(bool structure_visible,
@@ -130,14 +179,18 @@ void platform_settings_store_sidebar_visibility(bool structure_visible,
 {
     if (![NSThread isMainThread]) return;
     settings_seed_defaults();
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = settings_defaults();
     if (!settings_bool(settings_key(@"rememberWorkspace"), YES)) return;
     NSString *structure_key = settings_key(@"structureVisible");
     NSString *inspector_key = settings_key(@"inspectorVisible");
-    if ([defaults boolForKey:structure_key] != structure_visible)
+    if ([defaults boolForKey:structure_key] != structure_visible) {
+        settings_note_write();
         [defaults setBool:structure_visible forKey:structure_key];
-    if ([defaults boolForKey:inspector_key] != inspector_visible)
+    }
+    if ([defaults boolForKey:inspector_key] != inspector_visible) {
+        settings_note_write();
         [defaults setBool:inspector_visible forKey:inspector_key];
+    }
 }
 
 static NSButton *settings_checkbox(NSString *title, VexelSettingTag tag,
@@ -215,7 +268,7 @@ static NSStackView *settings_stack(void)
     self.modifierScrollZooms = settings_checkbox(@"Command or Control scroll zooms the canvas",
         VexelSettingModifierScrollZooms, self, @selector(settingChanged:));
     [self refreshControls];
-    self.activePane = (NSInteger)[[NSUserDefaults standardUserDefaults]
+    self.activePane = (NSInteger)[settings_defaults()
         integerForKey:settings_key(@"lastPane")];
     if (self.activePane < 0 || self.activePane > 1) self.activePane = 0;
     self.paneSelector.selectedSegment = self.activePane;
@@ -283,7 +336,7 @@ static NSStackView *settings_stack(void)
     NSInteger pane = self.paneSelector.selectedSegment;
     if (pane < 0 || pane > 1) return;
     self.activePane = pane;
-    [[NSUserDefaults standardUserDefaults] setInteger:pane forKey:settings_key(@"lastPane")];
+    [settings_defaults() setInteger:pane forKey:settings_key(@"lastPane")];
     [self rebuildPane];
 }
 
@@ -291,7 +344,7 @@ static NSStackView *settings_stack(void)
 {
     if (![sender isKindOfClass:[NSButton class]]) return;
     NSButton *button = (NSButton *)sender;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = settings_defaults();
     platform_viewer_action changed_action = PLATFORM_ACTION_NONE;
     switch ((VexelSettingTag)button.tag) {
         case VexelSettingShowWelcome:
@@ -322,7 +375,7 @@ static NSStackView *settings_stack(void)
 - (void)resetDefaults:(id)sender
 {
     (void)sender;
-    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSUserDefaults *defaults = settings_defaults();
     [defaults removeObjectForKey:VexelSettingsVersionKey];
     for (NSString *suffix in @[@"showWelcome", @"rememberWorkspace", @"structureVisible",
             @"inspectorVisible", @"checkerboard", @"pixelGrid", @"modifierScrollZooms"])

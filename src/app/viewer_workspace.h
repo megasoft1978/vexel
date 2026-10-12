@@ -18,7 +18,8 @@ typedef enum viewer_workspace_kind {
 typedef struct viewer_workspace_spec {
     const char *name;          /* Stable identifier stored in settings. */
     const char *label;         /* User-visible tab label. */
-    const char *inspector_section; /* Inspector section this workspace expands. */
+    const char *inspector_tab;     /* Inspector tab activated; NULL keeps the current tab. */
+    const char *inspector_section; /* Section expanded in that tab; NULL keeps the current ones. */
     bool structure;            /* Layers/structure panel visible. */
     bool inspector;            /* Inspector panel visible. */
     bool timeline;             /* Animation timeline visible. */

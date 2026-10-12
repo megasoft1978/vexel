@@ -483,3 +483,13 @@
   balance. Corpus render report: rendered 1 -> 3 of 39 against the `5894cb4` baseline (limit 26 -> 13);
   the mapping change moved no file verdict. Evidence: `artifacts/WO-M4-10/` and `artifacts/WO-GAP-M4-10/`.
   The independent verifier verdict is pending.
+
+- Update 2026-10-12 (WO-GAP-UI-01): closes the WO-UI-01 r2 gaps by fixing code to spec. Workspace table is now
+  Draw=Object tab, Nodes=Object tab + Geometry open, Animate=keeps tab/section + timeline, Inspect=Document tab;
+  `viewer_workspace_test` covers the table, a settings round-trip against a throwaway defaults domain
+  (`platform_settings_use_test_domain`), and an unknown stored name loading as Draw with zero writes; the status
+  readout shows document size and open/export/render progress goes through
+  `viewer_editor_set_operation_progress` (`artifacts/WO-GAP-UI-01/progress-routing.md`); the 10 PNG rows of
+  `artifacts/WO-UI-01/golden-changes.md` have side-by-side images; the readout change regenerated four golden
+  suites (`artifacts/WO-GAP-UI-01/golden-changes.md`). Debug build, 84/84 CTest, `./dev verify`, `./dev t --all`
+  pass. `./dev editor-smoke` was NOT verified: the macOS session was locked (`artifacts/WO-GAP-UI-01/smoke-blocked.md`).

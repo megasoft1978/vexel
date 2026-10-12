@@ -98,14 +98,16 @@ bounded to 4096 pixels per axis and 16 million pixels.
 ## Workspaces and the status bar
 
 The tab strip under the toolbar switches between four task workspaces. A workspace
-selects pane visibility and the expanded inspector section only; the document and
+selects pane visibility and the inspector tab/section only (Draw: Object tab; Nodes:
+Object tab with Geometry open; Animate: keeps the current tab and shows the timeline;
+Inspect: Document tab); the document and
 the editing model are untouched, and a workspace switch never marks the document
 dirty. `Control-PageDown` and `Control-PageUp` cycle with wrap, and the choice is
 remembered when `rememberWorkspace` is enabled.
 
 The status bar carries the active-tool hint on the left, the running operation and
-its Cancel button in the centre, and the save state, selection count and zoom on
-the right.
+its Cancel button in the centre, and the save state, selection count, zoom and
+document size (source bytes with a unit, e.g. `1.2 MB`) on the right.
 
 ## Current limits
 

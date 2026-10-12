@@ -214,20 +214,43 @@ keys 'key code 36'
 sleep 0.5
 python3 "$mouse" wait-node "$layout_dump" Fill value=#35a74b
 capture inspector-fill-edited
-# Task workspaces: Control-PageDown cycles the tab strip and Control-PageUp cycles
-# back, with wrap. The save and byte comparison below run after these switches,
-# so assert_final_save also proves a workspace switch never edits the document.
+# Task workspaces. The run starts from the pinned Draw workspace
+# (VEXEL_TEST_WORKSPACE=draw). Save first and keep a copy of the bytes on disk,
+# then walk every workspace from the keyboard, then save again and compare: a
+# workspace switch must never edit the document.
+python3 "$mouse" wait-node "$layout_dump" "Draw" state=checked
+keys 'keystroke "s" using {command down}'
+sleep 0.5
+assert_final_save
+cp "$document" "$temp_dir/before-workspaces.svg"
+# Control-PageUp from Draw wraps backward to the last workspace, Inspect, which
+# also activates the Document inspector tab.
+keys 'key code 116 using {control down}'
+python3 "$mouse" wait-node "$layout_dump" "Inspect" state=checked
+python3 "$mouse" wait-node "$layout_dump" "Document" state=checked
+# Control-PageDown from Inspect wraps forward to Draw and its Object tab.
+keys 'key code 121 using {control down}'
+python3 "$mouse" wait-node "$layout_dump" "Draw" state=checked
+python3 "$mouse" wait-node "$layout_dump" "Object" state=checked
 keys 'key code 121 using {control down}'
 python3 "$mouse" wait-node "$layout_dump" "Nodes" state=checked
+python3 "$mouse" wait-node "$layout_dump" "Object" state=checked
 keys 'key code 121 using {control down}'
 python3 "$mouse" wait-node "$layout_dump" "Animate" state=checked
-keys 'key code 116 using {control down}'
-python3 "$mouse" wait-node "$layout_dump" "Nodes" state=checked
-keys 'key code 116 using {control down}'
+keys 'key code 121 using {control down}'
+python3 "$mouse" wait-node "$layout_dump" "Inspect" state=checked
+python3 "$mouse" wait-node "$layout_dump" "Document" state=checked
+capture workspace-inspect
+keys 'key code 121 using {control down}'
 python3 "$mouse" wait-node "$layout_dump" "Draw" state=checked
 capture workspace-cycled
 keys 'keystroke "s" using {command down}'
 sleep 0.5
+cmp -s "$document" "$temp_dir/before-workspaces.svg" || {
+    echo "workspace switching changed the saved file" >&2
+    cat "$log_file" >&2
+    exit 1
+}
 assert_final_save
 capture inspector-saved
 

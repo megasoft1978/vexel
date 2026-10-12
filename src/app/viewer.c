@@ -260,6 +260,8 @@ bool viewer_request_open(viewer_app *app, const char *path, bool initial)
     app->render_ms = 0.0;
     (void)ui_viewer_progress_update(&app->progress, app->generation, 0U,
         UI_PROGRESS_ACTIVE, "Loading SVG", 11U);
+    if (app->editor != NULL)
+        viewer_editor_set_operation_progress(app->editor, true, "Loading SVG");
     app->frame_dirty = true;
     (void)viewer_set_window_title(app);
     return true;
@@ -369,8 +371,6 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     if (next_editor != NULL) {
         platform_settings_values preferences = {0};
         platform_settings_get(&preferences);
-        viewer_editor_set_workspace_callback(next_editor,
-            viewer_persist_workspace, NULL);
         viewer_editor_set_density_callback(next_editor, viewer_persist_density, NULL);
         viewer_editor_set_density(next_editor, preferences.density);
         /* Tests pin the starting workspace so a remembered user choice cannot
@@ -382,6 +382,10 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
         else if (preferences.remember_workspace && preferences.workspace[0] != '\0')
             (void)viewer_editor_apply_workspace_name(next_editor,
                 preferences.workspace, strlen(preferences.workspace));
+        /* Installed after the initial apply so restoring a remembered (or
+         * pinned test) workspace never writes back to the settings store. */
+        viewer_editor_set_workspace_callback(next_editor,
+            viewer_persist_workspace, NULL);
         (void)viewer_editor_set_sidebar_visibility(next_editor,
             preferences.structure_visible, preferences.inspector_visible);
         (void)viewer_editor_set_timeline_state(next_editor,
@@ -476,6 +480,10 @@ static void service_job(viewer_app *app)
     app->job = NULL;
     bool document_load = job->kind == VIEWER_JOB_LOAD ||
         job->kind == VIEWER_JOB_NEW_DOCUMENT;
+    /* The centre status region only shows progress for the current operation. */
+    if (current && app->editor != NULL &&
+        (document_load || job->kind == VIEWER_JOB_EDIT_RENDER))
+        viewer_editor_set_operation_progress(app->editor, false, NULL);
     if (current && succeeded && document_load) {
         finish_load(app, job, true);
     } else if (current && document_load) {
@@ -670,6 +678,7 @@ static void start_editor_render(viewer_app *app)
         return;
     }
     app->editor_render_requested = false;
+    viewer_editor_set_operation_progress(app->editor, true, "Rendering preview");
 }
 
 static void start_pending_new_document(viewer_app *app)
