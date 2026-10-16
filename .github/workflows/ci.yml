@@ -38,9 +38,13 @@ jobs:
           fi
       - name: Fetch dependencies for the offline bundle smoke
         if: github.event_name == 'workflow_dispatch'
+        env:
+          CARGO_HOME: ${{ github.workspace }}/.cache/cargo
         run: cargo fetch --locked
       - name: Bundle, DMG, SBOM and install smoke (ad-hoc signed, no GUI launch)
         if: github.event_name == 'workflow_dispatch'
+        env:
+          CARGO_HOME: ${{ github.workspace }}/.cache/cargo
         run: |
           cargo run -p vexel-dev --locked -- bundle
           cargo run -p vexel-dev --locked -- dmg
