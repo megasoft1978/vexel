@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" viewBox="0 0 64 48">
+  <defs>
+    <mask id="m" maskContentUnits="objectBoundingBox">
+      <rect x="0.1" y="0.1" width="0.8" height="0.8" fill="white"/>
+      <rect x="0.4" y="0.4" width="0.2" height="0.2" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="64" height="48" fill="#f4f4f4"/>
+  <g transform="translate(8 6) rotate(15) scale(1.2 0.8)" mask="url(#m)">
+    <rect x="0" y="0" width="30" height="30" fill="#a02080"/>
+    <rect x="12" y="10" width="30" height="30" fill="#2080a0"/>
+  </g>
+</svg>

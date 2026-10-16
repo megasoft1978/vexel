@@ -56,19 +56,27 @@ fn filter_unreferenced_preserved_untouched_with_shapes_published() {
     ));
 }
 
+// WO-RUST-SVG-MASK-01 deliberately lifts the earlier fail-closed behaviour: a referenced
+// mask on a shape or group now decodes and publishes a group carrying the mask.
 #[test]
-fn mask_referenced_fail_closed_unsupported_at_mask_element() {
+fn mask_referenced_decodes_and_publishes_group_mask() {
     let on_rect = format!(
         "{HEAD}<defs><mask id='m'><rect width='4' height='4' fill='white'/></mask></defs>\
 <rect width='8' height='8' mask='url(#m)'/></svg>"
     );
-    assert_fail_closed_at_element(&on_rect, "mask");
     let on_group = format!(
         "{HEAD}<defs><mask id='m' x='0' y='0' width='16' height='16' maskUnits='userSpaceOnUse'>\
 <rect width='4' height='4' fill='white'/></mask></defs>\
 <g mask='url(#m)'><rect width='8' height='8'/></g></svg>"
     );
-    assert_fail_closed_at_element(&on_group, "mask");
+    for svg in [&on_rect, &on_group] {
+        let graph = decode_ok(svg);
+        let scene = graph.root();
+        assert_eq!(graph.source(), svg.as_bytes(), "source bytes untouched");
+        assert_eq!(scene.masks.len(), 1);
+        assert_eq!(scene.groups.len(), 1);
+        assert!(scene.groups[0].mask.is_some());
+    }
 }
 
 #[test]

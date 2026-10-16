@@ -1,0 +1,120 @@
+{
+  "generator": "svgworkbench debug build (frozen legacy C), native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha)",
+  "legacy_tag": "legacy-c-final",
+  "legacy_tag_ref": "cb9661144907e909a0e7950243e9dc3fcfefb5bc",
+  "legacy_tag_ref_source": ".git/refs/tags/legacy-c-final read as a file (git is refused in the worker sandbox, so `git rev-parse` was not run)",
+  "binary": "build/mac-debug/bin/svgworkbench",
+  "binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "toolchain": {
+    "cmake": "cmake version 3.31.6",
+    "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+    "macos": "macOS 27.0.1 (26A434), arm64"
+  },
+  "build_commands": [
+    "git archive legacy-c-final | tar -x -C <legacy>",
+    "cd <legacy> && cmake --preset mac-debug",
+    "cmake --build --preset mac-debug --target svgworkbench"
+  ],
+  "scene_dump": "C svg_shape_decode on each fixture; shapes, groups, masks and clips transcribed into tests/common/group_data.rs",
+  "goldens": [
+    {
+      "fixture_id": "group-opacity",
+      "source": "rust/fixtures/render-mask/group-opacity.svg",
+      "source_origin": "legacy tests/svg/shape/fixtures (copied unchanged)",
+      "source_sha256": "54b03e5e8d0e0663ac1079fa1839b116bc00a63ccf03a00b5a8087dff1460eb3",
+      "ppm": "rust/fixtures/render-mask/group-opacity.ppm",
+      "ppm_sha256": "b62699ba90e70bd55b04151c09dbaea7e8e7c61590e6b1246044b2814d79d9be",
+      "width": 40,
+      "height": 32,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "nested-opacity",
+      "source": "rust/fixtures/render-mask/nested-opacity.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "dd15171d11005d29e1eabafeb43c6cf29c12e0087623089735646d046ff9a2c1",
+      "ppm": "rust/fixtures/render-mask/nested-opacity.ppm",
+      "ppm_sha256": "de6d92408242b7dc168109b0f33ae0aaf0dd03d57083d564e63648bf46e4b618",
+      "width": 48,
+      "height": 40,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "clip-group-object-bbox",
+      "source": "rust/fixtures/render-mask/clip-group-object-bbox.svg",
+      "source_origin": "legacy tests/svg/shape/fixtures (copied unchanged)",
+      "source_sha256": "bf8b1aaef88f5c94812033d43c61c4d03d296bf58ccca1a50a88aec8854f4c12",
+      "ppm": "rust/fixtures/render-mask/clip-group-object-bbox.ppm",
+      "ppm_sha256": "c9dc1b61a48f349cd5c6ca9c9e46c8911f4215bed250d6bf196b485b001b1fc6",
+      "width": 20,
+      "height": 10,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "clip-group-userspace",
+      "source": "rust/fixtures/render-mask/clip-group-userspace.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "c5d2f035fd150a2b031e3c85fe7f915aebf11379bc626d1ac19b1ea7e7b7f1a3",
+      "ppm": "rust/fixtures/render-mask/clip-group-userspace.ppm",
+      "ppm_sha256": "f4c9b61749b7caf6367fc32a9ecbd048df989a2d3fc04f9e77d08519e9d32f79",
+      "width": 64,
+      "height": 48,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "mask-luminance",
+      "source": "rust/fixtures/render-mask/mask-luminance.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "46160beda2fc7880684df68bdfdcc6b43df703fdfb66f34b6c2492df39641264",
+      "ppm": "rust/fixtures/render-mask/mask-luminance.ppm",
+      "ppm_sha256": "2e4db1900f19e04c65ec89f03f62ae168d6f9ec983603d8cb9a4fb87fdbea425",
+      "width": 64,
+      "height": 48,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "mask-alpha",
+      "source": "rust/fixtures/render-mask/mask-alpha.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "fb8df18bd712e2bba8ba55a9ba43f558f01f2e10b016d2e2e16b8c3f07e58124",
+      "ppm": "rust/fixtures/render-mask/mask-alpha.ppm",
+      "ppm_sha256": "11b10d555c8585372cd5896717ecca51d5dd53eb017471a2e40e5fb68aacd2f2",
+      "width": 64,
+      "height": 48,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "mask-userspace",
+      "source": "rust/fixtures/render-mask/mask-userspace.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "e0ee1210ce51ca65bfff8e9bb2282da19f2cc60e11d5a7335fc4ec169448e27e",
+      "ppm": "rust/fixtures/render-mask/mask-userspace.ppm",
+      "ppm_sha256": "eb8852ce37c5dc03e675fd3b2a9ab1c7bb4abf76281de2c16042b22e1b2ddb4b",
+      "width": 64,
+      "height": 48,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "mask-transformed-group",
+      "source": "rust/fixtures/render-mask/mask-transformed-group.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "a434c9c7f3e0ee662f2433dd31a5eae97d3bb47780e13fedb59518f630d5444e",
+      "ppm": "rust/fixtures/render-mask/mask-transformed-group.ppm",
+      "ppm_sha256": "6c5472e10ee6974fa5606105319abb42051cdfd17635b6ac9c2ef777f7c05c57",
+      "width": 64,
+      "height": 48,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "mask-opacity-combined",
+      "source": "rust/fixtures/render-mask/mask-opacity-combined.svg",
+      "source_origin": "project-authored",
+      "source_sha256": "35f94be968c42eb590a3f6ad91951ed2eee1f10be185f5cad381319e7dc6c088",
+      "ppm": "rust/fixtures/render-mask/mask-opacity-combined.ppm",
+      "ppm_sha256": "fd6995675a3a9bc73143f9b2fbe12e1e2a2a0bb50694c884361ce37adac0b9bd",
+      "width": 64,
+      "height": 48,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}

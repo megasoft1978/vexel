@@ -30,7 +30,10 @@ pub fn polygon(points: &[(f64, f64)]) -> Vec<FlatEdge> {
 
 /// Open polyline: one edge per consecutive pair, no closing edge.
 pub fn polyline(points: &[(f64, f64)]) -> Vec<FlatEdge> {
-    points.windows(2).map(|w| edge(w[0].0, w[0].1, w[1].0, w[1].1)).collect()
+    points
+        .windows(2)
+        .map(|w| edge(w[0].0, w[0].1, w[1].0, w[1].1))
+        .collect()
 }
 
 pub fn empty_tile(width: u32, height: u32) -> Tile {
@@ -58,8 +61,22 @@ pub fn fill_shape<'a>(edges: &'a [FlatEdge], rgba: [u8; 4], evenodd: bool) -> Re
     }
 }
 
-pub fn style(rgba: [u8; 4], width: f64, cap: Linecap, join: Linejoin, miter_limit: f64) -> StrokeStyle {
-    StrokeStyle { rgba, width, miter_limit, dash_offset: 0.0, cap, join, crisp_edges: false }
+pub fn style(
+    rgba: [u8; 4],
+    width: f64,
+    cap: Linecap,
+    join: Linejoin,
+    miter_limit: f64,
+) -> StrokeStyle {
+    StrokeStyle {
+        rgba,
+        width,
+        miter_limit,
+        dash_offset: 0.0,
+        cap,
+        join,
+        crisp_edges: false,
+    }
 }
 
 /// Unfilled stroked path.
@@ -94,7 +111,12 @@ pub fn with_subpaths<'a>(
 /// Square `size` x `size` tile whose view box is `0 0 size size` (scale 1).
 pub fn unit_view(size: u32) -> ViewMap {
     ViewMap::from_viewbox(
-        ViewBox { x: 0.0, y: 0.0, width: f64::from(size), height: f64::from(size) },
+        ViewBox {
+            x: 0.0,
+            y: 0.0,
+            width: f64::from(size),
+            height: f64::from(size),
+        },
         size,
         size,
         None,

@@ -266,7 +266,6 @@ fn size_limits_are_typed() {
 fn filter_mask_and_text_fixtures_yield_unsupported() {
     for (name, feature) in [
         ("unsupported-filter.svg", "filter"),
-        ("unsupported-mask.svg", "mask"),
         ("unsupported-text.svg", "text"),
     ] {
         match compose_svg(&fixture(name), 40, 40) {
@@ -281,6 +280,16 @@ fn filter_mask_and_text_fixtures_yield_unsupported() {
             }
             other => panic!("{name}: expected Unsupported({feature}), got {other:?}"),
         }
+    }
+    // WO-RUST-SVG-MASK-01: a mask now decodes, so the compose-level rejection is for the
+    // resulting opacity group until the SVG wiring order routes groups to the renderer.
+    match compose_svg(&fixture("unsupported-mask.svg"), 40, 40) {
+        Err(ComposeError::Unsupported {
+            feature,
+            offset: None,
+            element: None,
+        }) => assert_eq!(feature, "opacity group"),
+        other => panic!("unsupported-mask.svg: expected Unsupported(opacity group), got {other:?}"),
     }
 }
 

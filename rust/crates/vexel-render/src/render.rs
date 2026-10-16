@@ -2,6 +2,7 @@
 //! (C `raster_shape_render_flat` with solid paint only).
 
 use crate::bounds::shape_bounds;
+use crate::clip::ClipList;
 use crate::dash::Pattern;
 use crate::composite::{SAMPLE_COUNT, resolve_samples, source_over};
 use crate::fill::inside;
@@ -19,6 +20,7 @@ struct ShapePass<'a, 'b> {
     prims: Option<StrokePrims>,
     inverse: Option<Affine>,
     fill_visible: bool,
+    clips: ClipList<'a>,
 }
 
 /// Rasterizes `shapes` in document order into the empty `tile`.
@@ -32,7 +34,7 @@ pub fn render_shapes(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    render_with(shapes, &[], view, tile, control)
+    render_core(shapes, &[], &[], view, tile, control)
 }
 
 /// A shape plus its `stroke-dasharray` values (document units, before the
@@ -63,16 +65,32 @@ pub fn render_dashed_shapes(
         patterns.push(Pattern::new(item.dashes, offset)?);
         plain.push(item.shape);
     }
-    render_with(&plain, &patterns, view, tile, control)
+    render_core(&plain, &patterns, &[], view, tile, control)
 }
 
-fn render_with(
+/// [`render_shapes`] with a per-shape clip chain: `clips` is empty or parallel
+/// to `shapes`, and a sample paints a shape only inside every clip of its list.
+pub(crate) fn render_shapes_clipped(
     shapes: &[RenderShape<'_>],
-    patterns: &[Option<Pattern>],
+    clips: &[ClipList<'_>],
     view: ViewMap,
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
+    render_core(shapes, &[], clips, view, tile, control)
+}
+
+fn render_core(
+    shapes: &[RenderShape<'_>],
+    patterns: &[Option<Pattern>],
+    clips: &[ClipList<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    if !clips.is_empty() && clips.len() != shapes.len() {
+        return Err(RenderError::InvalidGeometry);
+    }
     let mut budget = validate(shapes, patterns, &view, tile)?;
     let width = tile.width() as usize;
     let mut active: Vec<usize> = Vec::new();
@@ -97,6 +115,7 @@ fn render_with(
             prims,
             inverse,
             fill_visible: shape.filled && shape.fill_rgba[3] != 0,
+            clips: clips.get(shape_index).copied().unwrap_or(&[]),
         };
         active.clear();
         active.try_reserve(shape.edges.len()).map_err(|_| RenderError::LimitExceeded)?;
@@ -142,6 +161,9 @@ fn render_with(
 /// C `paint_sample_result` for solid paint: fill first, then stroke on top.
 fn paint_sample(pass: &ShapePass<'_, '_>, active: &[usize], px: f64, py: f64, out: &mut [u8; 4]) {
     let shape = pass.shape;
+    if !pass.clips.iter().all(|clip| clip.contains(px, py)) {
+        return;
+    }
     if pass.fill_visible && inside(shape.edges, active, shape.evenodd, px, py) {
         source_over(out, shape.fill_rgba);
     }

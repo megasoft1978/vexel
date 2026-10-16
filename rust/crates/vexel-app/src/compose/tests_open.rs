@@ -240,7 +240,7 @@ fn view_failures_are_typed_status_text_and_keep_the_last_document() {
     let mut revision = 1000;
     for (name, expect) in [
         ("unsupported-filter.svg", "unsupported in V1: filter"),
-        ("unsupported-mask.svg", "unsupported in V1: mask"),
+        ("unsupported-mask.svg", "unsupported in V1: opacity group"),
         ("unsupported-text.svg", "unsupported in V1: text"),
     ] {
         revision += 1;

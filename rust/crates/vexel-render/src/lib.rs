@@ -15,9 +15,12 @@
 
 mod adapter;
 mod bounds;
+mod clip;
 mod composite;
 mod dash;
 mod fill;
+mod group;
+mod mask;
 mod presentation;
 mod render;
 mod stroke;
@@ -25,7 +28,13 @@ mod validate;
 mod view;
 
 pub use adapter::{SceneFeatures, from_scene_shape, from_scene_shape_with_dashes};
+pub use clip::{ClipShape, MAX_CLIP_CHAIN, MAX_CLIP_EDGES, RenderClip};
 pub use dash::MAX_DASH_VALUES;
+pub use group::{
+    GROUP_SCRATCH_LIMIT, MAX_GROUP_DEPTH, MAX_MASK_DEPTH, MAX_MASK_INSTANCES, RenderGroup, RenderNode,
+    render_groups,
+};
+pub use mask::RenderMask;
 pub use presentation::{OFFSCREEN_BACKING_SCALE, offscreen_tile_size, render_offscreen};
 pub use render::{DashedShape, render_dashed_shapes, render_shapes};
 pub use view::{PreserveAspect, ViewBox, ViewMap};

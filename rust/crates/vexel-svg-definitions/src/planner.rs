@@ -692,6 +692,24 @@ impl DefinitionPlanner {
                     };
                     ProductionDefinitionPlan::Definition(plan)
                 }
+                DefinitionTarget::Group(group) if kind == DefinitionKind::Mask => {
+                    // The decoder attaches the mask to this group when the definition
+                    // finishes; planning only needs a live shape of the group for validation.
+                    let view = ctx.builder.traversal_scene(ctx.scene)?;
+                    let first = view.group(group).ok_or_else(|| bad(0))?.shapes.first;
+                    let shape = view.shape_id(first).ok_or_else(|| unsupported(0))?;
+                    let (plan, _) = self.plan_inner(
+                        ctx,
+                        kind,
+                        element,
+                        shape,
+                        transform,
+                        bounds,
+                        control,
+                        &mut charges,
+                    )?;
+                    ProductionDefinitionPlan::Definition(plan)
+                }
                 DefinitionTarget::Group(_) => return Err(unsupported(0)),
             })
         })();

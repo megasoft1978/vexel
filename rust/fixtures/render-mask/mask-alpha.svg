@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" viewBox="0 0 64 48">
+  <defs>
+    <mask id="m" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="48">
+      <rect x="4" y="4" width="28" height="40" fill="black"/>
+      <rect x="32" y="4" width="28" height="40" fill="black" fill-opacity="0.4"/>
+    </mask>
+  </defs>
+  <rect width="64" height="48" fill="#e0e0e0"/>
+  <g mask="url(#m)">
+    <rect x="0" y="8" width="64" height="32" fill="#c02020"/>
+    <circle cx="32" cy="24" r="14" fill="#2040c0"/>
+  </g>
+</svg>
