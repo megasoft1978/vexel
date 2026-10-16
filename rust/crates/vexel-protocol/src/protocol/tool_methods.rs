@@ -56,6 +56,7 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             "save",
             "save_as",
             "export_svg",
+            "render_png",
         ]
         .contains(&name.as_str())
     {
@@ -146,6 +147,22 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
                 "invalid_arguments",
             );
         }
+    }
+    if session.live_preview
+        && name == "render_png"
+        && !doc
+            .object_get(args, b"path")
+            .and_then(|v| doc.decoded_string(v))
+            .is_some_and(|path| !path.is_empty() && path.len() < 1024 && !path.contains(&0))
+    {
+        return append_tool_error(
+            out,
+            doc,
+            id,
+            session.modern,
+            "render_png requires a path",
+            "invalid_arguments",
+        );
     }
     if session.live_preview && name == "export_animation" {
         let number = |key: &[u8]| {

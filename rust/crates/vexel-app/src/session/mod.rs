@@ -14,6 +14,7 @@
 mod grants;
 mod hooks;
 mod mcp;
+pub(crate) mod mcp_png;
 mod mcp_tools;
 #[cfg(test)]
 mod tests;

@@ -132,6 +132,11 @@ impl McpHost {
                 doc.add_path_with_id(&d, &fill, &stroke, width, id)
             }),
             Operation::ExportSvg => export_svg(app),
+            Operation::RenderPng {
+                path,
+                width,
+                height,
+            } => super::mcp_png::render_png(app, &self.policy, &path, width, height),
             Operation::Export {
                 path,
                 fps,

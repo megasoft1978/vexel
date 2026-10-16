@@ -1,0 +1,74 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_protocol-25dc03d68d1d3ba0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/mcp_preview_profile.rs (.cache/target/aarch64-apple-darwin/debug/deps/mcp_preview_profile-02fd8d4750be15ab)
+
+running 8 tests
+test preview_modern_discovery_omits_unavailable_capabilities ... ok
+test live_preview_accepts_shipping_codex_handshake_version ... ok
+test live_preview_rejects_unadvertised_tools_and_shape_templates ... ok
+test preview_animation_tools_validate_bounded_fragments_and_controls ... ok
+test preview_export_animation_validates_gif_fps_duration_and_path ... ok
+test default_profile_keeps_full_schema_resources_prompts_and_reset_profile ... ok
+test live_preview_advertises_only_supported_tools_and_narrow_shapes ... FAILED
+test live_preview_forwards_routed_file_edit_and_line_path_calls ... FAILED
+
+failures:
+
+---- live_preview_advertises_only_supported_tools_and_narrow_shapes stdout ----
+
+thread 'live_preview_advertises_only_supported_tools_and_narrow_shapes' (43677965) panicked at rust/crates/vexel-protocol/tests/mcp_preview_profile.rs:71:5:
+assertion `left == right` failed
+  left: 16
+ right: 15
+
+---- live_preview_forwards_routed_file_edit_and_line_path_calls stdout ----
+
+thread 'live_preview_forwards_routed_file_edit_and_line_path_calls' (43677966) panicked at rust/crates/vexel-protocol/tests/mcp_preview_profile.rs:316:5:
+assertion failed: String::from_utf8_lossy(&out).contains("unknown tool")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    live_preview_advertises_only_supported_tools_and_narrow_shapes
+    live_preview_forwards_routed_file_edit_and_line_path_calls
+
+test result: FAILED. 6 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vexel-protocol --test mcp_preview_profile`
+     Running tests/parity.rs (.cache/target/aarch64-apple-darwin/debug/deps/parity-844f9c802eb9363f)
+
+running 9 tests
+test legacy_progress_is_monotone_bounded_and_atomic ... ok
+test notifications_do_not_emit_and_unknown_requests_do ... ok
+test current_discovery_metadata_merging_original_ids_and_task_capability_reset ... ok
+test every_tool_schema_and_validation_registry_is_available ... ok
+test sync_fallback_malformed_backends_metadata_and_legacy_deferred_cancel ... ok
+test legacy_lifecycle_sync_discovery_tools_resources_prompts_and_reset ... ok
+test flat_task_create_detailed_terminal_empty_cancel_and_rpc_error_are_distinct ... ok
+test request_rate_limit_is_per_session_and_has_an_rpc_error_envelope ... ok
+test async_payload_limits_content_shapes_timestamps_ids_and_cancel_ack ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/render_png_listing.rs (.cache/target/aarch64-apple-darwin/debug/deps/render_png_listing-7a999f422e0c1ad2)
+
+running 3 tests
+test preview_listing_has_render_png_with_its_schema ... ok
+test bad_arguments_are_invalid_arguments_and_valid_calls_reach_the_backend ... ok
+test standard_listing_keeps_the_original_render_png_schema ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: 1 target failed:
+    `-p vexel-protocol --test mcp_preview_profile`

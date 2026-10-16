@@ -1,0 +1,11 @@
+{
+  "AC1": {"status": "pass", "tests": ["vexel-png/tests/encode.rs::checksum_known_vectors", "one_pixel_stored_is_byte_exact"]},
+  "AC2": {"status": "pass", "tests": ["round_trips_exactly", "stored_crosses_the_block_boundary", "fixed_uses_far_and_long_matches", "large_flat_image_splits_idat"]},
+  "AC3": {"status": "pass", "tests": ["fixed_shrinks_flat_and_never_exceeds_stored_on_random"]},
+  "AC4": {"status": "pass", "tests": ["typed_errors_without_panics"]},
+  "AC5": {"status": "pass", "tests": ["vexel-app/tests/mcp_render_png.rs (5 tests)"]},
+  "AC6": {"status": "pass", "tests": ["read_only_directory_keeps_the_existing_file_and_leaves_no_temp"]},
+  "AC7": {"status": "partial", "pass": "preview tools/list includes render_png with schema, bad args -> invalid_arguments, non-preview list unchanged (vexel-protocol/tests/render_png_listing.rs, 3 tests)", "fail": "existing mcp_preview_profile.rs tests assert render_png unlisted/unknown in preview (2 fail)"},
+  "AC8": {"status": "partial", "pass": "no display needed, no unsafe, cargo tree -p vexel-png has no dependencies", "fail": "6 pre-existing tests fail on render_png-absence assertions (protocol 2, app mcp_tools_edit 2, app walkthrough 2)"},
+  "AC9": {"status": "pass", "file": "result.md"}
+}

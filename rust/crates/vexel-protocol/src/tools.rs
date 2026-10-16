@@ -161,7 +161,7 @@ pub(super) const TOOLS: &[ToolSchema] = &[
         description: "Render a bounded image of an open SVG region.",
         properties: "{\"documentId\":{\"type\":\"string\"},\"region\":{\"type\":\"object\"},\"scale\":{\"type\":\"number\",\"minimum\":0.01,\"maximum\":16},\"time\":{\"type\":\"number\",\"minimum\":0,\"maximum\":3600}}",
         required: "documentId",
-        fields: "documentId:string;region:object;scale:number;time:number",
+        fields: "documentId:string;region:object;scale:number;time:number;path:string;width:integer;height:integer",
     },
     ToolSchema {
         name: "animation_list",
@@ -346,6 +346,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
                             | "save"
                             | "save_as"
                             | "export_svg"
+                            | "render_png"
                     ))
         })
         .collect();
@@ -361,6 +362,8 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
             "Add a rectangle, ellipse, line, or path to the live preview document."
         } else if preview && tool.name == "export_animation" {
             "Export the live preview loop as a GIF inside a granted directory."
+        } else if preview && tool.name == "render_png" {
+            "Render the open document to a PNG file inside a granted directory."
         } else {
             tool.description
         };
@@ -376,6 +379,8 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
                 r#"{"documentId":{"type":"string"},"action":{"type":"string","enum":["play","pause","seek"]},"timeMs":{"type":"number","minimum":0,"maximum":10000}}"#
             } else if preview && tool.name == "export_animation" {
                 r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif"]},"fps":{"type":"integer","minimum":1,"maximum":30},"duration":{"type":"number","minimum":0.01,"maximum":10}}"#
+            } else if preview && tool.name == "render_png" {
+                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"width":{"type":"integer","minimum":1,"maximum":4096},"height":{"type":"integer","minimum":1,"maximum":4096}}"#
             } else {
                 tool.properties
             };
@@ -386,6 +391,8 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         out.literal("[").map_err(ProtocolError::Buffer)?;
         let required = if preview && tool.name == "element_add" {
             "documentId,parentId,template,attributes"
+        } else if preview && tool.name == "render_png" {
+            "documentId,path"
         } else if preview && tool.name == "animation_control" {
             "documentId,action"
         } else {

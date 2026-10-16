@@ -84,6 +84,11 @@ pub enum Operation {
         width: f64,
     },
     ExportSvg,
+    RenderPng {
+        path: String,
+        width: Option<u32>,
+        height: Option<u32>,
+    },
 }
 
 /// One validated `attribute_set` change (names limited to the walkthrough set).
@@ -541,6 +546,7 @@ pub(super) fn parse_operation(
         "document_info" => Ok(Operation::Info),
         "save" => Ok(Operation::Save),
         "export_svg" => Ok(Operation::ExportSvg),
+        "render_png" => crate::session::mcp_png::parse(doc, args),
         "save_as" => args::save_as(doc, args),
         "attribute_set" => args::attribute_set(doc, args),
         "element_delete" => args::delete(doc, args),
