@@ -5,10 +5,21 @@ use vexel_json::{JsonDocument, JsonType};
 use vexel_protocol::{ProtocolBackend, ToolResponse};
 use vexel_v1_document::{V1Document, V1DocumentError};
 
+mod animation;
+#[cfg(test)]
+pub(crate) use animation::rasterize;
+pub(crate) use animation::{
+    animation_list_json, document_duration, rasterize_at, validate_animation_fragment,
+    validate_shape,
+};
+
 pub const DOCUMENT_ID: &str = "preview-document";
 pub const SCENE_LIMIT: usize = 128;
 pub const CANVAS_SIZE: u32 = 512;
 const HISTORY_LIMIT: usize = 128;
+const ANIMATION_LIMIT: usize = 16;
+const ANIMATION_XML_LIMIT: usize = 4096;
+const SOURCE_LIMIT: usize = 64 * 1024;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Shape {
@@ -33,17 +44,46 @@ pub enum Operation {
     List,
     Info,
     Add(Shape),
+    AnimationAdd { target_id: String, xml: Vec<u8> },
+    AnimationList,
+    Control(Control),
     Undo,
     Redo,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Control {
+    Play,
+    Pause,
+    Seek(f64),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct AnimationFragment {
+    target_id: String,
+    xml: Vec<u8>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+struct Snapshot {
+    shapes: Vec<Shape>,
+    element_ids: Vec<String>,
+    animations: Vec<AnimationFragment>,
 }
 
 #[derive(Debug)]
 pub struct PreviewState {
     document: V1Document,
     shapes: Vec<Shape>,
-    undo: Vec<Vec<Shape>>,
-    redo: Vec<Vec<Shape>>,
+    element_ids: Vec<String>,
+    next_element_id: u64,
+    animations: Vec<AnimationFragment>,
+    undo: Vec<Snapshot>,
+    redo: Vec<Snapshot>,
     dirty: bool,
+    playing: bool,
+    time_seconds: f64,
+    duration_seconds: f64,
 }
 
 impl PreviewState {
@@ -51,13 +91,22 @@ impl PreviewState {
         Ok(Self {
             document: V1Document::new(512, 512).map_err(document_error)?,
             shapes: Vec::new(),
+            element_ids: Vec::new(),
+            next_element_id: 1,
+            animations: Vec::new(),
             undo: Vec::new(),
             redo: Vec::new(),
             dirty: false,
+            playing: false,
+            time_seconds: 0.0,
+            duration_seconds: 0.0,
         })
     }
     pub fn shapes(&self) -> &[Shape] {
         &self.shapes
+    }
+    pub fn element_ids(&self) -> &[String] {
+        &self.element_ids
     }
     pub fn is_dirty(&self) -> bool {
         self.dirty
@@ -65,10 +114,55 @@ impl PreviewState {
     pub fn source(&self) -> Result<Vec<u8>, &'static str> {
         self.document.source().map_err(document_error)
     }
+    pub fn playback(&self) -> (bool, f64, f64) {
+        (self.playing, self.time_seconds, self.duration_seconds)
+    }
+    pub fn set_frame_time(&mut self, seconds: f64) {
+        self.time_seconds = if self.duration_seconds > 0.0 {
+            seconds.rem_euclid(self.duration_seconds)
+        } else {
+            0.0
+        };
+    }
 
     /// Build an entire replacement before changing the main-thread-owned state.
     pub fn stage(&self, operation: &Operation) -> Result<(Self, String), &'static str> {
-        let (shapes, undo, redo, message) = match operation {
+        if let Operation::Control(control) = operation {
+            let mut next = PreviewState {
+                document: animation::rebuild_document(
+                    &self.shapes,
+                    &self.element_ids,
+                    &self.animations,
+                )?,
+                shapes: clone_shapes(&self.shapes)?,
+                element_ids: clone_ids(&self.element_ids)?,
+                next_element_id: self.next_element_id,
+                animations: clone_animations(&self.animations)?,
+                undo: clone_history(&self.undo)?,
+                redo: clone_history(&self.redo)?,
+                dirty: self.dirty,
+                playing: self.playing,
+                time_seconds: self.time_seconds,
+                duration_seconds: self.duration_seconds,
+            };
+            match *control {
+                Control::Play => {
+                    if next.duration_seconds <= 0.0 {
+                        return Err("no preview animation to play");
+                    }
+                    next.playing = true;
+                }
+                Control::Pause => next.playing = false,
+                Control::Seek(seconds) => {
+                    if !seconds.is_finite() || !(0.0..=10.0).contains(&seconds) {
+                        return Err("invalid preview animation time");
+                    }
+                    next.set_frame_time(seconds);
+                }
+            }
+            return Ok((next, "Animation playback updated".to_owned()));
+        }
+        let (shapes, element_ids, animations, undo, redo, message) = match operation {
             Operation::Add(shape) => {
                 validate_shape(*shape)?;
                 if self.shapes.len() >= SCENE_LIMIT {
@@ -79,33 +173,86 @@ impl PreviewState {
                     .try_reserve(1)
                     .map_err(|_| "preview allocation failed")?;
                 shapes.push(*shape);
+                let mut element_ids = clone_ids(&self.element_ids)?;
+                element_ids
+                    .try_reserve(1)
+                    .map_err(|_| "preview allocation failed")?;
+                element_ids.push(object_id(self.next_element_id));
                 let mut undo = clone_history(&self.undo)?;
                 if undo.len() == HISTORY_LIMIT {
                     undo.remove(0);
                 }
                 undo.try_reserve(1)
                     .map_err(|_| "preview allocation failed")?;
-                undo.push(clone_shapes(&self.shapes)?);
-                (shapes, undo, Vec::new(), "Shape added")
+                undo.push(self.snapshot()?);
+                (
+                    shapes,
+                    element_ids,
+                    clone_animations(&self.animations)?,
+                    undo,
+                    Vec::new(),
+                    "Shape added",
+                )
+            }
+            Operation::AnimationAdd { target_id, xml } => {
+                let mut animations = clone_animations(&self.animations)?;
+                if animations.len() >= ANIMATION_LIMIT {
+                    return Err("preview animation limit reached");
+                }
+                if !self
+                    .shapes
+                    .iter()
+                    .enumerate()
+                    .any(|(i, _)| self.element_ids.get(i) == Some(target_id))
+                {
+                    return Err("unknown preview animation target");
+                }
+                validate_animation_fragment(xml)?;
+                animations
+                    .try_reserve(1)
+                    .map_err(|_| "preview allocation failed")?;
+                animations.push(AnimationFragment {
+                    target_id: target_id.clone(),
+                    xml: xml.clone(),
+                });
+                let mut undo = clone_history(&self.undo)?;
+                if undo.len() == HISTORY_LIMIT {
+                    undo.remove(0);
+                }
+                undo.try_reserve(1)
+                    .map_err(|_| "preview allocation failed")?;
+                undo.push(self.snapshot()?);
+                (
+                    clone_shapes(&self.shapes)?,
+                    clone_ids(&self.element_ids)?,
+                    animations,
+                    undo,
+                    Vec::new(),
+                    "Animation added",
+                )
             }
             Operation::Undo => {
                 let Some(previous) = self.undo.last() else {
                     return Err("nothing to undo");
                 };
-                let shapes = clone_shapes(previous)?;
+                let shapes = clone_shapes(&previous.shapes)?;
+                let element_ids = clone_ids(&previous.element_ids)?;
+                let animations = clone_animations(&previous.animations)?;
                 let mut undo = clone_history(&self.undo)?;
                 undo.pop();
                 let mut redo = clone_history(&self.redo)?;
                 redo.try_reserve(1)
                     .map_err(|_| "preview allocation failed")?;
-                redo.push(clone_shapes(&self.shapes)?);
-                (shapes, undo, redo, "Undo complete")
+                redo.push(self.snapshot()?);
+                (shapes, element_ids, animations, undo, redo, "Undo complete")
             }
             Operation::Redo => {
                 let Some(next) = self.redo.last() else {
                     return Err("nothing to redo");
                 };
-                let shapes = clone_shapes(next)?;
+                let shapes = clone_shapes(&next.shapes)?;
+                let element_ids = clone_ids(&next.element_ids)?;
+                let animations = clone_animations(&next.animations)?;
                 let mut redo = clone_history(&self.redo)?;
                 redo.pop();
                 let mut undo = clone_history(&self.undo)?;
@@ -114,20 +261,38 @@ impl PreviewState {
                 }
                 undo.try_reserve(1)
                     .map_err(|_| "preview allocation failed")?;
-                undo.push(clone_shapes(&self.shapes)?);
-                (shapes, undo, redo, "Redo complete")
+                undo.push(self.snapshot()?);
+                (shapes, element_ids, animations, undo, redo, "Redo complete")
             }
             _ => return Err("read-only operation cannot be staged"),
         };
-        let document = rebuild_document(&shapes)?;
+        let document = animation::rebuild_document(&shapes, &element_ids, &animations)?;
         let dirty = !shapes.is_empty();
+        let duration_seconds = document_duration(&document)?;
+        let next_element_id = if matches!(operation, Operation::Add(_)) {
+            self.next_element_id
+                .checked_add(1)
+                .ok_or("preview stable ID limit reached")?
+        } else {
+            self.next_element_id
+        };
         Ok((
             Self {
                 document,
                 shapes,
+                element_ids,
+                next_element_id,
+                animations,
                 undo,
                 redo,
                 dirty,
+                playing: self.playing && duration_seconds > 0.0,
+                time_seconds: if duration_seconds > 0.0 {
+                    self.time_seconds.rem_euclid(duration_seconds)
+                } else {
+                    0.0
+                },
+                duration_seconds,
             },
             message.to_owned(),
         ))
@@ -144,8 +309,32 @@ impl PreviewState {
                 self.document.source().map_err(document_error)?.len(),
                 self.dirty
             )),
+            Operation::AnimationList => animation_list_json(&self.document, &self.element_ids),
+            Operation::Control(control) => {
+                let (playing, time) = match *control {
+                    Control::Play => (self.duration_seconds > 0.0, self.time_seconds),
+                    Control::Pause => (false, self.time_seconds),
+                    Control::Seek(seconds)
+                        if seconds.is_finite() && (0.0..=10.0).contains(&seconds) =>
+                    {
+                        (self.playing, seconds)
+                    }
+                    Control::Seek(_) => return Err("invalid preview animation time"),
+                };
+                Ok(format!(
+                    "{{\"ok\":true,\"playing\":{playing},\"timeSeconds\":{time:.3}}}"
+                ))
+            }
             _ => Err("operation changes the preview"),
         }
+    }
+
+    fn snapshot(&self) -> Result<Snapshot, &'static str> {
+        Ok(Snapshot {
+            shapes: clone_shapes(&self.shapes)?,
+            element_ids: clone_ids(&self.element_ids)?,
+            animations: clone_animations(&self.animations)?,
+        })
     }
 }
 
@@ -153,13 +342,13 @@ fn document_error(error: V1DocumentError) -> &'static str {
     match error {
         V1DocumentError::InvalidDimensions
         | V1DocumentError::InvalidGeometry
-        | V1DocumentError::InvalidColor => "shape validation failed",
+        | V1DocumentError::InvalidColor
+        | V1DocumentError::InvalidStableId
+        | V1DocumentError::MissingStableId => "shape validation failed",
+        V1DocumentError::InvalidAnimationFragment => "invalid preview animation fragment",
         V1DocumentError::Allocation | V1DocumentError::FormattingLimit => {
             "preview allocation or formatting failed"
         }
-        V1DocumentError::InvalidStableId
-        | V1DocumentError::MissingStableId
-        | V1DocumentError::InvalidAnimationFragment => "animation validation failed",
         V1DocumentError::Edit(_) => "document edit failed",
     }
 }
@@ -170,116 +359,45 @@ fn clone_shapes(input: &[Shape]) -> Result<Vec<Shape>, &'static str> {
     v.extend_from_slice(input);
     Ok(v)
 }
-fn clone_history(input: &[Vec<Shape>]) -> Result<Vec<Vec<Shape>>, &'static str> {
+fn clone_history(input: &[Snapshot]) -> Result<Vec<Snapshot>, &'static str> {
     let mut v = Vec::new();
     v.try_reserve_exact(input.len())
         .map_err(|_| "preview allocation failed")?;
     for s in input {
-        v.push(clone_shapes(s)?);
+        v.push(Snapshot {
+            shapes: clone_shapes(&s.shapes)?,
+            element_ids: clone_ids(&s.element_ids)?,
+            animations: clone_animations(&s.animations)?,
+        });
     }
     Ok(v)
 }
-fn shape_rgb(shape: Shape) -> u32 {
-    match shape {
-        Shape::Rect { rgb, .. } | Shape::Ellipse { rgb, .. } => rgb,
-    }
-}
-fn rebuild_document(shapes: &[Shape]) -> Result<V1Document, &'static str> {
-    let mut doc = V1Document::new(512, 512).map_err(document_error)?;
-    for shape in shapes {
-        let mut color = [0u8; 7];
-        color[0] = b'#';
-        const HEX: &[u8; 16] = b"0123456789ABCDEF";
-        let rgb = shape_rgb(*shape);
-        for (index, shift) in [20, 16, 12, 8, 4, 0].into_iter().enumerate() {
-            color[index + 1] = HEX[((rgb >> shift) & 0xf) as usize];
-        }
-        let color = std::str::from_utf8(&color).map_err(|_| "preview color encoding failed")?;
-        match *shape {
-            Shape::Rect {
-                x,
-                y,
-                width,
-                height,
-                ..
-            } => doc.add_rectangle(x, y, x + width, y + height, &color),
-            Shape::Ellipse { cx, cy, rx, ry, .. } => {
-                doc.add_ellipse(cx - rx, cy - ry, cx + rx, cy + ry, &color)
-            }
-        }
-        .map_err(document_error)?;
-    }
-    Ok(doc)
-}
-fn validate_shape(shape: Shape) -> Result<(), &'static str> {
-    let (l, t, r, b) = match shape {
-        Shape::Rect {
-            x,
-            y,
-            width,
-            height,
-            ..
-        } => (x, y, x + width, y + height),
-        Shape::Ellipse { cx, cy, rx, ry, .. } => (cx - rx, cy - ry, cx + rx, cy + ry),
-    };
-    if shape_rgb(shape) > 0x00ff_ffff
-        || ![l, t, r, b].into_iter().all(f64::is_finite)
-        || l < 0.0
-        || t < 0.0
-        || r > 512.0
-        || b > 512.0
-        || r <= l
-        || b <= t
-    {
-        return Err("shape geometry must be finite, non-degenerate, and inside 512x512");
-    }
-    Ok(())
-}
-
-/// Deterministic fixed-size renderer for the intentionally limited preview scene.
-pub fn rasterize(shapes: &[Shape]) -> Result<Vec<u8>, &'static str> {
-    if shapes.len() > SCENE_LIMIT {
-        return Err("preview scene limit reached");
-    }
-    let mut pixels = Vec::new();
-    pixels
-        .try_reserve_exact(512 * 512 * 4)
+fn clone_ids(input: &[String]) -> Result<Vec<String>, &'static str> {
+    let mut v = Vec::new();
+    v.try_reserve_exact(input.len())
         .map_err(|_| "preview allocation failed")?;
-    pixels.resize(512 * 512 * 4, 255);
-    for s in shapes {
-        validate_shape(*s)?;
-        let rgb = shape_rgb(*s);
-        let color = [(rgb >> 16) as u8, (rgb >> 8) as u8, rgb as u8];
-        let (l, t, r, b) = match *s {
-            Shape::Rect {
-                x,
-                y,
-                width,
-                height,
-                ..
-            } => (x, y, x + width, y + height),
-            Shape::Ellipse { cx, cy, rx, ry, .. } => (cx - rx, cy - ry, cx + rx, cy + ry),
-        };
-        for y in t.floor().max(0.0) as u32..b.ceil().min(512.0) as u32 {
-            for x in l.floor().max(0.0) as u32..r.ceil().min(512.0) as u32 {
-                let (px, py) = (f64::from(x) + 0.5, f64::from(y) + 0.5);
-                let inside = match *s {
-                    Shape::Rect { .. } => px >= l && px < r && py >= t && py < b,
-                    Shape::Ellipse { cx, cy, rx, ry, .. } => {
-                        ((px - cx) / rx).powi(2) + ((py - cy) / ry).powi(2) <= 1.0
-                    }
-                };
-                if inside {
-                    let at = (y as usize * 512 + x as usize) * 4;
-                    pixels[at..at + 3].copy_from_slice(&color);
-                    pixels[at + 3] = 255;
-                }
-            }
-        }
-    }
-    Ok(pixels)
+    v.extend(input.iter().cloned());
+    Ok(v)
 }
-
+fn clone_animations(input: &[AnimationFragment]) -> Result<Vec<AnimationFragment>, &'static str> {
+    let mut v = Vec::new();
+    v.try_reserve_exact(input.len())
+        .map_err(|_| "preview allocation failed")?;
+    for animation in input {
+        let mut xml = Vec::new();
+        xml.try_reserve_exact(animation.xml.len())
+            .map_err(|_| "preview allocation failed")?;
+        xml.extend_from_slice(&animation.xml);
+        v.push(AnimationFragment {
+            target_id: animation.target_id.clone(),
+            xml,
+        });
+    }
+    Ok(v)
+}
+pub(crate) fn object_id(index: u64) -> String {
+    format!("vexel-object-{index}")
+}
 pub struct UiRequest {
     pub operation: Operation,
     pub reply: std::sync::mpsc::SyncSender<Result<String, &'static str>>,
@@ -358,8 +476,78 @@ pub(super) fn parse_operation(
     }
     match name {
         "document_info" => Ok(Operation::Info),
+        "animation_list" => Ok(Operation::AnimationList),
         "undo" => Ok(Operation::Undo),
         "redo" => Ok(Operation::Redo),
+        "animation_add" => {
+            let target_id =
+                string_field(doc, args, b"targetId").ok_or("invalid preview tool arguments")?;
+            if target_id.len() > 128 || !target_id.starts_with("vexel-object-") {
+                return Err("invalid preview tool arguments");
+            }
+            let token = doc
+                .object_get(args, b"xml")
+                .ok_or("invalid preview tool arguments")?;
+            if doc
+                .raw_token(token)
+                .is_none_or(|raw| raw.len() > ANIMATION_XML_LIMIT * 6 + 2)
+            {
+                return Err("invalid preview tool arguments");
+            }
+            let xml = doc
+                .decoded_string(token)
+                .ok_or("invalid preview tool arguments")?;
+            validate_animation_fragment(&xml)?;
+            Ok(Operation::AnimationAdd { target_id, xml })
+        }
+        "animation_control" => {
+            let action = string_field(doc, args, b"action")
+                .or_else(|| string_field(doc, args, b"operation"))
+                .ok_or("invalid preview tool arguments")?;
+            let control = match action.as_str() {
+                "play" => Control::Play,
+                "pause" => Control::Pause,
+                "seek" => {
+                    let token = doc
+                        .object_get(args, b"timeMs")
+                        .ok_or("invalid preview tool arguments")?;
+                    if doc
+                        .token(token)
+                        .is_none_or(|t| !matches!(t.kind, JsonType::Number | JsonType::String))
+                    {
+                        return Err("invalid preview tool arguments");
+                    }
+                    let raw = if doc.token(token).is_some_and(|t| t.kind == JsonType::String) {
+                        String::from_utf8(
+                            doc.decoded_string(token)
+                                .ok_or("invalid preview tool arguments")?,
+                        )
+                        .map_err(|_| "invalid preview tool arguments")?
+                    } else {
+                        std::str::from_utf8(
+                            doc.raw_token(token)
+                                .ok_or("invalid preview tool arguments")?,
+                        )
+                        .map_err(|_| "invalid preview tool arguments")?
+                        .to_owned()
+                    };
+                    if raw.len() > 32 {
+                        return Err("invalid preview tool arguments");
+                    }
+                    let milliseconds = raw
+                        .parse::<f64>()
+                        .ok()
+                        .filter(|n| n.is_finite())
+                        .ok_or("invalid preview tool arguments")?;
+                    if !(0.0..=10_000.0).contains(&milliseconds) {
+                        return Err("invalid preview tool arguments");
+                    }
+                    Control::Seek(milliseconds / 1000.0)
+                }
+                _ => return Err("invalid preview tool arguments"),
+            };
+            Ok(Operation::Control(control))
+        }
         "element_add" => {
             if string_field(doc, args, b"parentId")
                 .as_deref()
@@ -457,166 +645,5 @@ fn parse_color(value: &str) -> Result<u32, &'static str> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn raster_bounds_mapping_and_pixel_change() {
-        let p = rasterize(&[Shape::Rect {
-            x: 10.,
-            y: 20.,
-            width: 30.,
-            height: 40.,
-            rgb: 0x123456,
-        }])
-        .unwrap();
-        assert_eq!(
-            &p[(25 * 512 + 20) * 4..(25 * 512 + 20) * 4 + 4],
-            &[0x12, 0x34, 0x56, 255]
-        );
-        assert_eq!(&p[..4], &[255, 255, 255, 255]);
-        let e = rasterize(&[Shape::Ellipse {
-            cx: 100.,
-            cy: 100.,
-            rx: 20.,
-            ry: 10.,
-            rgb: 0xff0000,
-        }])
-        .unwrap();
-        assert_eq!(
-            &e[(100 * 512 + 100) * 4..(100 * 512 + 100) * 4 + 3],
-            &[255, 0, 0]
-        );
-    }
-    #[test]
-    fn invalid_operation_does_not_change_source_or_history() {
-        let s = PreviewState::new().unwrap();
-        let source = s.source().unwrap();
-        assert!(
-            s.stage(&Operation::Add(Shape::Rect {
-                x: 510.,
-                y: 1.,
-                width: 5.,
-                height: 2.,
-                rgb: 0
-            }))
-            .is_err()
-        );
-        assert_eq!(s.source().unwrap(), source);
-        assert!(!s.is_dirty());
-        let edited = s
-            .stage(&Operation::Add(Shape::Rect {
-                x: 2.,
-                y: 2.,
-                width: 2.,
-                height: 2.,
-                rgb: 0,
-            }))
-            .unwrap()
-            .0;
-        let (restored, _) = edited.stage(&Operation::Undo).unwrap();
-        assert_eq!(restored.source().unwrap(), source);
-        assert!(!restored.is_dirty());
-    }
-    #[test]
-    fn undo_redo_restore_exact_source_and_branch_order() {
-        let blank = PreviewState::new().unwrap();
-        let first = Operation::Add(Shape::Rect {
-            x: 1.,
-            y: 1.,
-            width: 2.,
-            height: 2.,
-            rgb: 1,
-        });
-        let (one, _) = blank.stage(&first).unwrap();
-        let source = one.source().unwrap();
-        let (two, _) = one
-            .stage(&Operation::Add(Shape::Ellipse {
-                cx: 8.,
-                cy: 8.,
-                rx: 2.,
-                ry: 3.,
-                rgb: 2,
-            }))
-            .unwrap();
-        let (back, _) = two.stage(&Operation::Undo).unwrap();
-        assert_eq!(back.shapes().len(), 1);
-        assert_eq!(back.source().unwrap(), source);
-        let (redo, _) = back.stage(&Operation::Redo).unwrap();
-        assert_eq!(redo.source().unwrap(), two.source().unwrap());
-        let (branched, _) = back.stage(&first).unwrap();
-        assert!(branched.stage(&Operation::Redo).is_err());
-    }
-    #[test]
-    fn rejects_invalid_shapes_and_caps_scene() {
-        for s in [
-            Shape::Rect {
-                x: f64::NAN,
-                y: 0.,
-                width: 1.,
-                height: 1.,
-                rgb: 0,
-            },
-            Shape::Rect {
-                x: 0.,
-                y: 0.,
-                width: 0.,
-                height: 1.,
-                rgb: 0,
-            },
-            Shape::Ellipse {
-                cx: 511.,
-                cy: 2.,
-                rx: 2.,
-                ry: 1.,
-                rgb: 0,
-            },
-        ] {
-            assert!(validate_shape(s).is_err())
-        }
-        let mut state = PreviewState::new().unwrap();
-        for _ in 0..SCENE_LIMIT {
-            state = state
-                .stage(&Operation::Add(Shape::Rect {
-                    x: 1.,
-                    y: 1.,
-                    width: 1.,
-                    height: 1.,
-                    rgb: 0,
-                }))
-                .unwrap()
-                .0;
-        }
-        assert!(
-            state
-                .stage(&Operation::Add(Shape::Rect {
-                    x: 2.,
-                    y: 2.,
-                    width: 1.,
-                    height: 1.,
-                    rgb: 0
-                }))
-                .is_err()
-        );
-    }
-
-    #[test]
-    fn request_mapping_rejects_non_finite_color_and_extra_attributes() {
-        fn parse(attributes: &str) -> Result<Operation, &'static str> {
-            let json = format!(
-                "{{\"documentId\":\"{DOCUMENT_ID}\",\"parentId\":\"root\",\"template\":\"rect\",\"attributes\":{attributes}}}"
-            );
-            let doc = JsonDocument::parse_owned(json.as_bytes()).unwrap();
-            parse_operation(&doc, doc.root(), "element_add")
-        }
-        assert!(
-            parse(r##"{"x":"1e999","y":"1","width":"2","height":"3","fill":"#AABBCC"}"##).is_err()
-        );
-        assert!(parse(r#"{"x":"1","y":"1","width":"2","height":"3","fill":"red"}"#).is_err());
-        assert!(
-            parse(
-                r##"{"x":"1","y":"1","width":"2","height":"3","fill":"#AABBCC","opacity":"0.5"}"##
-            )
-            .is_err()
-        );
-    }
-}
+#[path = "preview_tests.rs"]
+mod tests;

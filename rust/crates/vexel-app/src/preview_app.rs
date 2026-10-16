@@ -7,7 +7,7 @@ use std::{
     num::NonZeroUsize,
     sync::mpsc::{self, SyncSender, TryRecvError},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use vexel_platform_apple::{
     MainThread, NativeApp, RgbaFrame, TextEmphasis, TextFace, WindowConfig, WindowEvent,
@@ -66,7 +66,18 @@ pub fn run() -> Result<(), &'static str> {
     let mut closing = false;
     let mut pending: Option<Pending> = None;
     let mut status = String::from("Waiting for MCP client");
+    let mut playback_epoch = Instant::now();
+    let mut last_frame = playback_epoch;
     while !closing {
+        if state.playback().0 && last_frame.elapsed() >= Duration::from_millis(33) {
+            let duration = state.playback().2;
+            if duration > 0.0 {
+                state.set_frame_time(playback_epoch.elapsed().as_secs_f64());
+                status = format!("Playing · {:.2}s / {:.2}s", state.playback().1, duration);
+                dirty = true;
+            }
+            last_frame = Instant::now();
+        }
         if pending.is_none() {
             match rx.try_recv() {
                 Ok(request) => {
@@ -93,6 +104,10 @@ pub fn run() -> Result<(), &'static str> {
             if let Some(p) = pending.take() {
                 if let Some(committed) = p.state {
                     state = committed;
+                    if state.playback().0 {
+                        playback_epoch =
+                            Instant::now() - Duration::from_secs_f64(state.playback().1);
+                    }
                 }
                 let _ = p.reply.send(Ok(p.response));
             }
@@ -186,7 +201,7 @@ fn handle_request(
 ) -> Result<(), &'static str> {
     let UiRequest { operation, reply } = request;
     match operation {
-        operation @ (Operation::List | Operation::Info) => {
+        operation @ (Operation::List | Operation::Info | Operation::AnimationList) => {
             let response = match state.read_result(&operation) {
                 Ok(response) => response,
                 Err(error) => {
@@ -217,16 +232,39 @@ fn handle_request(
             let count = draft.shapes().len();
             let safe_message = match message.as_str() {
                 "Shape added" => "Shape added",
+                "Animation added" => "Animation added",
+                "Animation playback updated" => "Animation playback updated",
                 "Undo complete" => "Undo complete",
                 "Redo complete" => "Redo complete",
                 _ => "Preview updated",
             };
-            let response =
-                format!("{{\"ok\":true,\"shapeCount\":{count},\"message\":\"{safe_message}\"}}");
-            *status = format!(
-                "{safe_message} · {count} visible shape{}",
-                if count == 1 { "" } else { "s" }
-            );
+            let response = match &operation {
+                Operation::Control(_) => draft.read_result(&operation)?,
+                Operation::Add(_) => format!(
+                    "{{\"ok\":true,\"shapeCount\":{count},\"elementId\":\"{}\",\"message\":\"{safe_message}\"}}",
+                    draft
+                        .element_ids()
+                        .last()
+                        .ok_or("preview stable ID missing")?
+                ),
+                _ => {
+                    format!("{{\"ok\":true,\"shapeCount\":{count},\"message\":\"{safe_message}\"}}")
+                }
+            };
+            *status = if matches!(operation, Operation::Control(_)) {
+                let (playing, time, duration) = draft.playback();
+                format!(
+                    "{} · {:.2}s / {:.2}s",
+                    if playing { "Playing" } else { "Paused" },
+                    time,
+                    duration
+                )
+            } else {
+                format!(
+                    "{safe_message} · {count} visible shape{}",
+                    if count == 1 { "" } else { "s" }
+                )
+            };
             *pending = Some(Pending {
                 state: Some(draft),
                 reply,
@@ -285,7 +323,7 @@ fn preview_frame(
         base.width(),
         base.height(),
         scale,
-        "Basic-shape MCP preview",
+        "Live animation preview",
         (110, 11, 300, 26),
         tokens.text_secondary,
         12,
@@ -330,7 +368,7 @@ fn preview_frame(
         (x, y, size, size),
         0xFFFFFFFF,
     );
-    let raster = preview::rasterize(state.shapes())?;
+    let raster = preview::rasterize_at(state, state.playback().1)?;
     for dy in 0..size {
         let sy = (dy as usize * 512 / size as usize).min(511);
         for dx in 0..size {
@@ -469,6 +507,7 @@ mod tests {
         assert!(state.shapes().is_empty());
         let staged = pending.take().unwrap();
         assert_eq!(staged.state.as_ref().unwrap().shapes().len(), 1);
+        assert!(staged.response.contains("vexel-object-1"));
         staged.reply.send(Ok(staged.response)).unwrap();
         assert!(rx.recv().unwrap().unwrap().contains("shapeCount"));
     }
@@ -503,8 +542,9 @@ mod tests {
         request
             .reply
             .send(Ok(format!(
-                "{{\"ok\":true,\"shapeCount\":{}}}",
-                staged.shapes().len()
+                "{{\"ok\":true,\"shapeCount\":{},\"elementId\":\"{}\"}}",
+                staged.shapes().len(),
+                staged.element_ids()[0]
             )))
             .unwrap();
         let response = worker.join().unwrap();
