@@ -195,6 +195,7 @@ dependencies = [
  "vexel-mcp-access",
  "vexel-mcp-stdio",
  "vexel-platform-apple",
+ "vexel-png",
  "vexel-project",
  "vexel-project-io",
  "vexel-protocol",
@@ -325,6 +326,10 @@ version = "0.1.0"
 dependencies = [
  "vexel-base",
 ]
+
+[[package]]
+name = "vexel-png"
+version = "0.1.0"
 
 [[package]]
 name = "vexel-project"
