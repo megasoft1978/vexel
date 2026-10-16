@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod compose;
 mod file_flow;
 mod file_ui;
 mod model;
@@ -17,15 +18,16 @@ use vexel_platform_apple::{
 };
 
 fn main() {
-    let preview = std::env::args_os()
-        .skip(1)
-        .any(|arg| arg == "--mcp-preview");
-    let result = if preview { preview_app::run() } else { run() };
+    let result = match compose::parse_launch(std::env::args_os().skip(1)) {
+        compose::Launch::McpPreview => preview_app::run(),
+        compose::Launch::Shell { open } => run(open),
+        compose::Launch::Usage(message) => Err(message),
+    };
     if let Err(message) = result {
         eprintln!("Vexel shell stopped: {message}");
     }
 }
-fn run() -> Result<(), &'static str> {
+fn run(mut pending_open: Option<std::path::PathBuf>) -> Result<(), &'static str> {
     let main_thread =
         MainThread::acquire().map_err(|_| "launch must begin on the macOS main thread")?;
     let mut app = NativeApp::start(main_thread).map_err(|_| "macOS application startup failed")?;
@@ -75,10 +77,22 @@ fn run() -> Result<(), &'static str> {
     files
         .install(&mut app, window.id())
         .map_err(|_| "could not install the File menu")?;
+    let mut doc = compose::DocumentView::new();
     let mut dirty = true;
     let event_budget = NonZeroUsize::new(128).ok_or("invalid event budget")?;
     let mut closing = false;
     while !closing {
+        if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
+            let stage = (layout.stage.width, layout.stage.height);
+            if let Some(path) = pending_open.take() {
+                doc.open(&path, stage);
+                dirty = true;
+            }
+            doc.resize(stage);
+        }
+        if doc.poll() {
+            dirty = true;
+        }
         if dirty || model.dirty {
             let (draw_size, draw_scale) = if geometry_valid {
                 (logical, scale as u32)
@@ -87,6 +101,10 @@ fn run() -> Result<(), &'static str> {
             };
             match render::render(draw_size.0, draw_size.1, draw_scale, &model) {
                 Ok(frame) => {
+                    let frame = match Layout::new(draw_size.0, draw_size.1, model.mode) {
+                        Some(layout) => compose::blit_document(frame, &doc, &layout, model.dark),
+                        None => frame,
+                    };
                     window
                         .present_rgba(frame)
                         .map_err(|_| "native frame presentation failed")?;
@@ -187,10 +205,8 @@ fn run() -> Result<(), &'static str> {
                         && pointer.logical.1 >= 0
                     {
                         if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
-                            if model.pointer(
-                                &layout,
-                                (pointer.logical.0 as u32, pointer.logical.1 as u32),
-                            ) {
+                            let point = (pointer.logical.0 as u32, pointer.logical.1 as u32);
+                            if model.pointer(&layout, point) || doc.pointer(layout.stage, point) {
                                 dirty = true;
                             }
                         }

@@ -1,0 +1,14 @@
+{
+  "work_order": "WO-RUST-V1-APP-COMPOSE-01",
+  "env": {"CARGO_HOME": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/cargo", "CARGO_TARGET_DIR": "<worktree>/.cache/target"},
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-app --locked --offline", "exit": 0, "log": "check.log"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "log": "test.log", "passed": 62, "failed": 0},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check", "exit": 0, "log": "fmt.log"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-APP-COMPOSE-01 --ready", "exit": 0, "log": "wo-validate.log"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0, "log": "ledger.log"},
+    {"cmd": "git diff --check", "exit": 0, "log": "diff-check.log"}
+  ],
+  "cargo_tree": "tree.log (cargo tree -p vexel-app -e normal; new deps are workspace vexel-* only)",
+  "not_run": ["live window / Retina", "File > Open menu (no platform API)"]
+}

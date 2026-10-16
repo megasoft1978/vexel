@@ -1,0 +1,69 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/main.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel-3fc26dfdb2538021)
+
+running 62 tests
+test compose::tests::canvas_doc_canvas_round_trip_within_1e9_for_meet_slice_none ... ok
+test compose::tests::cancellation_returns_cancelled_and_never_a_frame ... ok
+test compose::tests::invalid_utf8_and_malformed_xml_are_typed ... ok
+test compose::tests::points_outside_the_viewport_report_none ... ok
+test compose::tests::filter_mask_and_text_fixtures_yield_unsupported ... ok
+test compose::tests_open::launch_keeps_mcp_preview_and_adds_a_file_argument ... ok
+test compose::tests::size_limits_are_typed ... ok
+test compose::tests::unsupported_error_text_names_feature_and_location ... ok
+test compose::tests_open::open_path_rejects_missing_directory_oversize_and_bad_paths ... ok
+test compose::tests::deferred_shapes_are_skipped_and_disclosed_not_dropped_silently ... ok
+test compose::tests_open::worker_drop_joins_while_work_is_in_flight ... ok
+test compose::tests_parity::parity_path_relative_commands ... ok
+test compose::tests_parity::parity_harness_rejects_a_shifted_render ... ok
+test compose::tests_parity::parity_shapes_basic ... ok
+test compose::tests_parity::parity_shapes_lines_polygons ... ok
+test compose::tests::render_agrees_with_pointer_map ... ok
+test model::tests::compact_bounds_hide_inspector_and_keep_stage_valid ... ok
+test model::tests::compact_painted_control_geometry_stays_inside_panels_in_both_modes ... ok
+test model::tests::inspector_is_omitted_until_its_fixed_content_fits ... ok
+test model::tests::mode_selection_works_by_keyboard_pointer_and_is_idempotent ... ok
+test model::tests::pointer_hit_testing_is_deterministic_and_ignores_unavailable_actions ... ok
+test model::tests::rejects_unsupported_backing_scales_and_oversized_frames ... ok
+test model::tests::standard_workbench_keeps_stage_dominant_and_timeline_docked ... ok
+test preview::tests::invalid_operation_does_not_change_source_or_history ... ok
+test preview::tests::request_mapping_rejects_non_finite_color_and_extra_attributes ... ok
+test preview::tests::undo_redo_restore_exact_source_and_branch_order ... ok
+test preview::tests::raster_bounds_mapping_and_pixel_change ... ok
+test preview_app::tests::reply_follows_staged_state_and_is_only_committed_for_frame ... ok
+test preview_app::tests::backend_call_waits_until_the_ui_reports_frame_presentation ... ok
+test compose::tests_parity::parity_shapes_rounded ... ok
+test compose::tests::every_truncated_prefix_is_handled_without_panic ... ok
+test project_session::tests::dirty_tracking_edit_save_and_undo_past_saved_point ... ok
+test project_session::tests::edit_undo_edit_save_reopen_yields_post_edit_state ... ok
+test project_session::tests::missing_directory_and_bad_paths_fail_typed ... ok
+test compose::tests::compose_fixture_pixels_match_independent_expectations ... ok
+test project_session::tests::save_without_path_is_typed_error_and_keeps_dirty ... ok
+test compose::tests_parity::parity_style_presentation_attributes ... ok
+test project_session::tests::shortcuts_map_to_file_actions ... ok
+test compose::tests::compose_fixture_matches_frozen_ppm_and_requested_size ... ok
+test project_session::tests::mcp_preview_state_keeps_working_after_save_and_open ... ok
+test compose::tests_open::view_open_composes_reports_status_and_maps_clicks ... ok
+test project_session::tests::unsaved_changes_prompt_text ... ok
+test compose::tests_parity::parity_path_line_curves ... ok
+test compose::tests_open::worker_delivers_only_the_newest_generation ... ok
+test compose::tests::hit_test_picks_topmost_shape_at_known_points ... ok
+test project_session::tests::round_trip_preserves_source_ids_order_and_animation ... ok
+test render::geometry_tests::timeline_rows_are_omitted_until_their_full_bounds_fit ... ok
+test tests::only_primary_button_can_activate_modes ... ok
+test project_session::tests::undo_save_redo_and_history_cursor ... ok
+test project_session::tests::unknown_source_survives_byte_for_byte ... ok
+test project_session::tests::valid_bundle_with_non_svg_scene_is_invalid_scene ... ok
+test project_session::tests::failed_opens_are_typed_and_leave_the_document_untouched ... ok
+test project_session::tests::unedited_foreign_source_saves_and_reopens_identically ... ok
+test project_session::tests::resave_replaces_atomically_and_leaves_no_temp_files ... ok
+test project_session::tests::unwritable_directory_fails_without_touching_state_or_existing_file ... ok
+test compose::tests_open::view_failures_are_typed_status_text_and_keep_the_last_document ... ok
+test compose::tests_open::view_resize_supersedes_and_never_shows_a_stale_size ... ok
+test compose::tests::compose_is_byte_identical_across_runs ... ok
+test compose::tests_open::open_path_reads_a_file_and_names_it ... ok
+test compose::tests_open::worker_cancel_discards_pending_and_inflight_results ... ok
+test compose::tests::frame_size_equals_request_for_other_sizes_and_letterboxes ... ok
+test preview::tests::rejects_invalid_shapes_and_caps_scene ... ok
+
+test result: ok. 62 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.93s
+

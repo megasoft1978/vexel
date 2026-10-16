@@ -13,3 +13,10 @@ rendering, save/reopen, import/export, animation, or the full editor controls.
 The app crate is safe Rust. Its native boundary is provided by
 `vexel-platform-apple`, including bounded CoreText text rasterization and owned
 RGBA frame presentation.
+
+## Opening an SVG
+
+`vexel <file.svg>` opens one SVG (ADR-0029 subset, at most 8 MiB) in the shell stage:
+decode, scene, scalar render at 1 pixel per point, then presentation. Deferred
+features are reported in the status bar, never dropped silently. Retina output
+is pixel-replicated, not re-rendered. There is no File > Open... menu yet.

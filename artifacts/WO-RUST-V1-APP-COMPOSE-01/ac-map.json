@@ -1,0 +1,72 @@
+{
+  "work_order": "WO-RUST-V1-APP-COMPOSE-01",
+  "module_prefix": "compose::",
+  "acceptance_criteria": {
+    "AC1": {
+      "status": "pass",
+      "tests": [
+        "tests::compose_fixture_matches_frozen_ppm_and_requested_size",
+        "tests::compose_is_byte_identical_across_runs",
+        "tests::compose_fixture_pixels_match_independent_expectations",
+        "tests::frame_size_equals_request_for_other_sizes_and_letterboxes"
+      ],
+      "fixtures": ["rust/fixtures/v1/compose/compose-v1.svg", "rust/fixtures/v1/compose/compose-v1.ppm"]
+    },
+    "AC2": {
+      "status": "pass",
+      "tests": [
+        "tests_parity::parity_shapes_basic",
+        "tests_parity::parity_shapes_rounded",
+        "tests_parity::parity_shapes_lines_polygons",
+        "tests_parity::parity_path_line_curves",
+        "tests_parity::parity_path_relative_commands",
+        "tests_parity::parity_style_presentation_attributes",
+        "tests_parity::parity_harness_rejects_a_shifted_render"
+      ],
+      "note": "max_delta 0 on all six; goldens are svgworkbench --render-animation PPMs (as supplied by RENDER-01), not --render-frame; the RENDER-01 edge-dilation clause is replaced by a stricter no-stray-coverage clause",
+      "fixtures": ["rust/fixtures/v1/compose/c-reference/"]
+    },
+    "AC3": {
+      "status": "pass",
+      "tests": [
+        "tests::canvas_doc_canvas_round_trip_within_1e9_for_meet_slice_none",
+        "tests::points_outside_the_viewport_report_none",
+        "tests::render_agrees_with_pointer_map",
+        "tests::hit_test_picks_topmost_shape_at_known_points"
+      ]
+    },
+    "AC4": {
+      "status": "pass",
+      "tests": [
+        "tests::invalid_utf8_and_malformed_xml_are_typed",
+        "tests::size_limits_are_typed",
+        "tests::filter_mask_and_text_fixtures_yield_unsupported",
+        "tests::unsupported_error_text_names_feature_and_location",
+        "tests::deferred_shapes_are_skipped_and_disclosed_not_dropped_silently",
+        "tests::cancellation_returns_cancelled_and_never_a_frame",
+        "tests::every_truncated_prefix_is_handled_without_panic",
+        "tests_open::open_path_rejects_missing_directory_oversize_and_bad_paths",
+        "tests_open::view_failures_are_typed_status_text_and_keep_the_last_document"
+      ]
+    },
+    "AC5": {
+      "status": "partial",
+      "tests": [
+        "tests_open::open_path_reads_a_file_and_names_it",
+        "tests_open::launch_keeps_mcp_preview_and_adds_a_file_argument",
+        "tests_open::view_open_composes_reports_status_and_maps_clicks"
+      ],
+      "blocker": "vexel-platform-apple exposes no open-panel or menu API (NSOpenPanel is only a cargo feature flag); File > Open... cannot be wired without platform changes outside the allowed paths. The CLI path and DocumentView::open both go through the single open_path; a menu action only needs to call DocumentView::open."
+    },
+    "AC6": {
+      "status": "pass",
+      "tests": ["all compose:: tests run without a display", "31 pre-existing vexel-app tests still pass"],
+      "counts": {"total": 62, "pre_existing": 31, "new": 31}
+    },
+    "AC7": {
+      "status": "pass",
+      "evidence": ["#![forbid(unsafe_code)] unchanged, no unsafe added", "tree.log: new vexel-app deps are all in-workspace vexel-* crates; no external package added"]
+    },
+    "AC8": {"status": "pass", "evidence": "result.md"}
+  }
+}

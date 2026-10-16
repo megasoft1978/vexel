@@ -1,0 +1,12 @@
+{
+  "work_order": "WO-RUST-V1-APP-COMPOSE-01",
+  "commit_1_manifest_registration": ["Cargo.lock", "rust/crates/vexel-app/Cargo.toml"],
+  "commit_2_feature": [
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-app/src/compose/**",
+    "rust/fixtures/v1/compose/**",
+    "artifacts/WO-RUST-V1-APP-COMPOSE-01/**"
+  ],
+  "disclosure": "Cargo.lock and vexel-app Cargo.toml were edited by the worker in the isolated worktree (task instruction) to add path deps vexel-svg-engine, vexel-svg-decode, vexel-scene, vexel-render, vexel-geometry; no other manifest or crate touched. Fixtures under c-reference/ are unchanged copies of bench/corpus/fixtures/*.svg and vexel-render/tests/golden/*.ppm.",
+  "protected_paths_touched": []
+}
