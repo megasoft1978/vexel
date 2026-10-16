@@ -4,6 +4,12 @@
 use std::{fmt, fmt::Write as FmtWrite, io::Write as IoWrite, sync::Arc};
 use vexel_document_edit::{EditError, EditLimits, Editor, TemplateAttribute, TemplateKind};
 
+mod draw;
+mod path_data;
+
+pub use draw::{ElementKind, HIT_TOLERANCE};
+pub use path_data::{MAX_PATH_DATA_BYTES, MAX_PATH_SEGMENTS, validate_path_data};
+
 const MAX_DIMENSION: u32 = 4096;
 const MAX_STABLE_ID_BYTES: usize = 128;
 const MAX_ANIMATION_FRAGMENT_BYTES: usize = 8 * 1024;
@@ -19,6 +25,10 @@ pub enum V1DocumentError {
     InvalidStableId,
     MissingStableId,
     InvalidAnimationFragment,
+    InvalidPathData,
+    InvalidStrokeWidth,
+    Unsupported,
+    UnsupportedTransform,
     Edit(EditError),
 }
 
@@ -461,5 +471,7 @@ impl fmt::Write for FixedText {
     }
 }
 
+#[cfg(test)]
+mod draw_tests;
 #[cfg(test)]
 mod tests;

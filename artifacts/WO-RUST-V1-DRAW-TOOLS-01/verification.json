@@ -1,0 +1,14 @@
+{
+  "work_order": "WO-RUST-V1-DRAW-TOOLS-01",
+  "env": {"CARGO_HOME": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/cargo", "CARGO_TARGET_DIR": "<worktree>/.cache/target", "flags": "--locked --offline"},
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-app --locked --offline", "exit": 0, "log": "check-vexel-app.log", "warnings": 0},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "log": "test-vexel-app.log", "passed": 59},
+    {"cmd": "cargo +stable test -p vexel-v1-document --locked --offline", "exit": 0, "log": "test-vexel-v1-document.log", "passed": 31},
+    {"cmd": "cargo +stable test -p vexel-document-edit --locked --offline", "exit": 0, "log": "test-vexel-document-edit.log", "passed": 45},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app --package vexel-v1-document -- --check", "exit": 0, "log": "fmt-check.log"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-DRAW-TOOLS-01 --ready", "exit": 0, "log": "wo-validate.log"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0, "log": "ledger-validate.log"},
+    {"cmd": "git diff --check", "exit": null, "note": "git blocked by sandbox hook; trailing-whitespace grep over all new/edited files found nothing"}
+  ]
+}

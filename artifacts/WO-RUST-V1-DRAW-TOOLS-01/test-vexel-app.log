@@ -1,0 +1,67 @@
+   Compiling vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a213c70f81ae75fca/rust/crates/vexel-app)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.58s
+     Running unittests src/main.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel-f2dfc2aea803fc29)
+
+running 59 tests
+test model::tests::compact_bounds_hide_inspector_and_keep_stage_valid ... ok
+test model::tests::inspector_is_omitted_until_its_fixed_content_fits ... ok
+test model::tests::compact_painted_control_geometry_stays_inside_panels_in_both_modes ... ok
+test model::tests::line_tool_is_the_fifth_rail_slot_and_fits_in_every_layout ... ok
+test model::tests::pointer_hit_testing_is_deterministic_and_ignores_unavailable_actions ... ok
+test model::tests::mode_selection_works_by_keyboard_pointer_and_is_idempotent ... ok
+test model::tests::standard_workbench_keeps_stage_dominant_and_timeline_docked ... ok
+test model::tests::rejects_unsupported_backing_scales_and_oversized_frames ... ok
+test preview::tests::invalid_operation_does_not_change_source_or_history ... ok
+test preview_app::tests::reply_follows_staged_state_and_is_only_committed_for_frame ... ok
+test preview::tests::request_mapping_rejects_non_finite_color_and_extra_attributes ... ok
+test preview::tests::undo_redo_restore_exact_source_and_branch_order ... ok
+test project_session::tests::save_without_path_is_typed_error_and_keeps_dirty ... ok
+test preview_app::tests::backend_call_waits_until_the_ui_reports_frame_presentation ... ok
+test preview::tests::raster_bounds_mapping_and_pixel_change ... ok
+test project_session::tests::shortcuts_map_to_file_actions ... ok
+test project_session::tests::missing_directory_and_bad_paths_fail_typed ... ok
+test project_session::tests::unsaved_changes_prompt_text ... ok
+test tests::only_primary_button_can_activate_modes ... ok
+test render::geometry_tests::timeline_rows_are_omitted_until_their_full_bounds_fit ... ok
+test tools::tests::a_drag_released_off_canvas_uses_the_last_valid_point ... ok
+test project_session::tests::edit_undo_edit_save_reopen_yields_post_edit_state ... ok
+test tools::tests::clicks_cancels_escape_and_off_canvas_input_add_nothing ... ok
+test project_session::tests::round_trip_preserves_source_ids_order_and_animation ... ok
+test tools::tests::document_errors_surface_as_typed_tool_errors_and_leave_no_gesture ... ok
+test project_session::tests::undo_save_redo_and_history_cursor ... ok
+test project_session::tests::mcp_preview_state_keeps_working_after_save_and_open ... ok
+test tools::tests::flat_drags_do_not_create_degenerate_boxes ... ok
+test tools::tests::ids_skip_ids_already_present_in_the_document ... ok
+test tools::tests::pen_click_drag_sets_a_cubic_handle_with_a_mirrored_incoming_control ... ok
+test project_session::tests::unedited_foreign_source_saves_and_reopens_identically ... ok
+test tools::tests::pen_close_path_adds_z_and_the_current_fill ... ok
+test tools::tests::pen_double_click_finishes_without_a_duplicate_vertex ... ok
+test project_session::tests::unknown_source_survives_byte_for_byte ... ok
+test tools::tests::pen_with_fewer_than_two_vertices_or_escape_commits_nothing ... ok
+test tools::tests::pen_three_clicks_and_enter_make_an_m_l_l_path ... ok
+test tools::tests::reverse_drags_and_repeated_shapes_get_unique_ids ... ok
+test tools::tests::rectangle_ellipse_and_line_drags_add_one_exact_element_through_a_scaled_map ... ok
+test tools::tests::pen_vertices_are_capped_and_the_longest_path_is_accepted_by_the_document ... ok
+test project_session::tests::dirty_tracking_edit_save_and_undo_past_saved_point ... ok
+test tools::tests::switching_tools_abandons_the_gesture ... ok
+test tools::tests_edit::delete_removes_the_selection_and_empty_clicks_clear_it ... ok
+test project_session::tests::unwritable_directory_fails_without_touching_state_or_existing_file ... ok
+test tools::tests_edit::live_pointer_routing_is_limited_to_the_stage_rectangle ... ok
+test tools::tests_edit::scale_map_rejects_invalid_parameters_and_out_of_artboard_points ... ok
+test project_session::tests::valid_bundle_with_non_svg_scene_is_invalid_scene ... ok
+test tools::tests_edit::invalid_colours_widths_and_ids_return_typed_errors_and_keep_source_identical ... ok
+test tools::tests_edit::escape_without_a_gesture_deselects_and_stale_selection_is_dropped_after_undo ... ok
+test tools::tests_edit::down_selects_the_topmost_shape_and_drag_moves_it_by_the_mapped_delta ... ok
+test tools::tests_edit::set_fill_and_set_stroke_recolour_only_the_selection_and_update_defaults ... ok
+test tools::tests_edit::unsupported_targets_and_transforms_return_typed_errors_without_changes ... ok
+test tools::tests_edit::dragging_a_path_adds_a_translate_and_keeps_the_d_bytes ... ok
+test tools::tests::undo_and_redo_restore_exact_bytes_for_every_drawing_action ... ok
+test tools::tests_edit::a_document_built_only_through_tools_reopens_with_equal_bytes_and_ids ... ok
+test tools::tests_edit::tool_edits_preserve_untouched_bytes_of_a_foreign_fixture_through_undo_redo ... ok
+test project_session::tests::resave_replaces_atomically_and_leaves_no_temp_files ... ok
+test project_session::tests::failed_opens_are_typed_and_leave_the_document_untouched ... ok
+test tools::tests_edit::ten_thousand_synthetic_events_keep_preview_state_bounded_and_commit_nothing ... ok
+test preview::tests::rejects_invalid_shapes_and_caps_scene ... ok
+
+test result: ok. 59 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 19.16s
+

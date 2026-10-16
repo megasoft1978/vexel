@@ -1,0 +1,8 @@
+check-vexel-app exit=0
+test-vexel-app exit=0
+test-vexel-v1-document exit=0
+test-vexel-document-edit exit=0
+fmt-check exit=0
+cargo-tree-vexel-app exit=0
+wo-validate exit=0
+ledger-validate exit=0

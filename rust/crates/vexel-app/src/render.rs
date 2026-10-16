@@ -197,9 +197,15 @@ pub fn render(
         }
 
         c.paint_rect(layout.rail, tokens.panel);
-        for (i, tool) in [Tool::Select, Tool::Pen, Tool::Rectangle, Tool::Ellipse]
-            .iter()
-            .enumerate()
+        for (i, tool) in [
+            Tool::Select,
+            Tool::Pen,
+            Tool::Rectangle,
+            Tool::Ellipse,
+            Tool::Line,
+        ]
+        .iter()
+        .enumerate()
         {
             let r = layout.tools[i];
             c.paint_round(r, 5, tokens.panel_raised, tokens.separator, 1);
@@ -208,6 +214,7 @@ pub fn render(
                 Tool::Pen => "Pen",
                 Tool::Rectangle => "▭",
                 Tool::Ellipse => "○",
+                Tool::Line => "Line",
             };
             label(
                 &mut c,
@@ -230,6 +237,7 @@ pub fn render(
                         Tool::Pen => "Pen",
                         Tool::Rectangle => "Rect",
                         Tool::Ellipse => "Ellipse",
+                        Tool::Line => "Line",
                     },
                     Rect {
                         x: r.x + 1,

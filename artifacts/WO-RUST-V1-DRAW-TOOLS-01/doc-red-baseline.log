@@ -1,0 +1,142 @@
+   Compiling vexel-v1-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a213c70f81ae75fca/rust/crates/vexel-v1-document)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.58s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_v1_document-cfe18239765989b9)
+
+running 31 tests
+test draw_tests::path_data_size_and_segment_limits_are_enforced ... FAILED
+test draw_tests::set_fill_changes_only_the_fill_attribute ... FAILED
+test draw_tests::add_line_rejects_bad_input_atomically ... FAILED
+test draw_tests::translate_updates_coordinates_or_a_translate_transform ... FAILED
+test draw_tests::add_path_writes_exact_source_and_validates_the_grammar ... FAILED
+test draw_tests::edits_leave_untouched_source_bytes_identical_including_undo_redo ... FAILED
+test tests::animation_fragment_rejects_missing_ids_and_non_animation_xml_atomically ... ok
+test draw_tests::hit_test_returns_topmost_shape_with_documented_tolerance ... FAILED
+test draw_tests::element_kind_classifies_by_tag ... FAILED
+test draw_tests::hit_test_follows_translate_only_and_ignores_other_transforms ... FAILED
+test draw_tests::translate_refuses_unsupported_targets_transforms_and_values ... FAILED
+test draw_tests::tool_built_documents_reopen_with_equal_bytes_and_ids ... FAILED
+test draw_tests::add_line_writes_exact_source_in_one_undoable_entry ... FAILED
+test draw_tests::delete_removes_one_element_and_undo_restores_exact_bytes ... FAILED
+test tests::animation_fragment_inserts_under_stable_shape_id_and_undoes_redoes_exactly ... ok
+test draw_tests::set_stroke_changes_stroke_and_width_as_one_edit ... FAILED
+test tests::blank_svg_is_valid_and_exact ... ok
+test tests::dimensions_are_bounded ... ok
+test tests::all_drag_directions_insert_identical_one_step_rectangle ... ok
+test tests::ellipse_undo_redo_and_saved_state_restore_exact_source ... ok
+test tests::all_drag_directions_insert_identical_one_step_ellipse ... ok
+test tests::from_source_opens_exact_bytes_clean_with_empty_history ... ok
+test tests::explicit_shape_ids_use_the_same_bounds_and_reject_duplicates ... ok
+test tests::fractional_geometry_has_fixed_scientific_values ... ok
+test tests::from_source_rejects_bad_roots_dimensions_and_xml ... ok
+test tests::invalid_inputs_do_not_change_source_history_or_dirty_state ... ok
+test tests::invalid_ellipse_inputs_are_atomic ... ok
+test tests::smallest_positive_subnormal_formats_bounded_and_round_trips ... ok
+test tests::explicit_shape_ids_are_preserved_and_can_be_animation_targets ... ok
+test tests::undo_redo_restore_byte_identical_sources_and_saved_state ... ok
+test tests::editor_allocation_failures_are_atomic ... ok
+
+failures:
+
+---- draw_tests::path_data_size_and_segment_limits_are_enforced stdout ----
+
+thread 'draw_tests::path_data_size_and_segment_limits_are_enforced' (42721987) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:126:5:
+assertion `left == right` failed
+  left: Ok(())
+ right: Err(InvalidPathData)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- draw_tests::set_fill_changes_only_the_fill_attribute stdout ----
+
+thread 'draw_tests::set_fill_changes_only_the_fill_attribute' (42721988) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:32:13:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::add_line_rejects_bad_input_atomically stdout ----
+
+thread 'draw_tests::add_line_rejects_bad_input_atomically' (42721979) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:23:5:
+assertion `left == right` failed
+  left: Err(Unsupported)
+ right: Err(InvalidGeometry)
+
+---- draw_tests::translate_updates_coordinates_or_a_translate_transform stdout ----
+
+thread 'draw_tests::translate_updates_coordinates_or_a_translate_transform' (42721992) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:32:13:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::add_path_writes_exact_source_and_validates_the_grammar stdout ----
+
+thread 'draw_tests::add_path_writes_exact_source_and_validates_the_grammar' (42721981) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:32:13:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::edits_leave_untouched_source_bytes_identical_including_undo_redo stdout ----
+
+thread 'draw_tests::edits_leave_untouched_source_bytes_identical_including_undo_redo' (42721983) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:287:72:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::hit_test_returns_topmost_shape_with_documented_tolerance stdout ----
+
+thread 'draw_tests::hit_test_returns_topmost_shape_with_documented_tolerance' (42721986) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:249:5:
+assertion `left == right` failed
+  left: None
+ right: Some("front")
+
+---- draw_tests::element_kind_classifies_by_tag stdout ----
+
+thread 'draw_tests::element_kind_classifies_by_tag' (42721984) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:232:9:
+assertion `left == right` failed
+  left: Err(Unsupported)
+ right: Ok(Rect)
+
+---- draw_tests::hit_test_follows_translate_only_and_ignores_other_transforms stdout ----
+
+thread 'draw_tests::hit_test_follows_translate_only_and_ignores_other_transforms' (42721985) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:274:5:
+assertion `left == right` failed
+  left: None
+ right: Some("moved")
+
+---- draw_tests::translate_refuses_unsupported_targets_transforms_and_values stdout ----
+
+thread 'draw_tests::translate_refuses_unsupported_targets_transforms_and_values' (42721991) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:23:5:
+assertion `left == right` failed
+  left: Err(Unsupported)
+ right: Err(UnsupportedTransform)
+
+---- draw_tests::tool_built_documents_reopen_with_equal_bytes_and_ids stdout ----
+
+thread 'draw_tests::tool_built_documents_reopen_with_equal_bytes_and_ids' (42721990) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:348:74:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::add_line_writes_exact_source_in_one_undoable_entry stdout ----
+
+thread 'draw_tests::add_line_writes_exact_source_in_one_undoable_entry' (42721980) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:32:13:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::delete_removes_one_element_and_undo_restores_exact_bytes stdout ----
+
+thread 'draw_tests::delete_removes_one_element_and_undo_restores_exact_bytes' (42721982) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:32:13:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+---- draw_tests::set_stroke_changes_stroke_and_width_as_one_edit stdout ----
+
+thread 'draw_tests::set_stroke_changes_stroke_and_width_as_one_edit' (42721989) panicked at rust/crates/vexel-v1-document/src/draw_tests.rs:32:13:
+called `Result::unwrap()` on an `Err` value: Unsupported
+
+
+failures:
+    draw_tests::add_line_rejects_bad_input_atomically
+    draw_tests::add_line_writes_exact_source_in_one_undoable_entry
+    draw_tests::add_path_writes_exact_source_and_validates_the_grammar
+    draw_tests::delete_removes_one_element_and_undo_restores_exact_bytes
+    draw_tests::edits_leave_untouched_source_bytes_identical_including_undo_redo
+    draw_tests::element_kind_classifies_by_tag
+    draw_tests::hit_test_follows_translate_only_and_ignores_other_transforms
+    draw_tests::hit_test_returns_topmost_shape_with_documented_tolerance
+    draw_tests::path_data_size_and_segment_limits_are_enforced
+    draw_tests::set_fill_changes_only_the_fill_attribute
+    draw_tests::set_stroke_changes_stroke_and_width_as_one_edit
+    draw_tests::tool_built_documents_reopen_with_equal_bytes_and_ids
+    draw_tests::translate_refuses_unsupported_targets_transforms_and_values
+    draw_tests::translate_updates_coordinates_or_a_translate_transform
+
+test result: FAILED. 17 passed; 14 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vexel-v1-document --lib`

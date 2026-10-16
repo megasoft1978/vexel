@@ -1,0 +1,36 @@
+{
+  "work_order": "WO-RUST-V1-DRAW-TOOLS-01",
+  "new_vexel_v1_document_api": {
+    "note": "Each API was first added as a stub returning Unsupported with its tests failing (doc-red-baseline.log: 14 failed, 17 passed), then implemented.",
+    "apis": ["add_line", "add_line_with_id", "add_path", "add_path_with_id", "set_fill", "set_stroke", "delete", "translate", "element_kind", "hit_test", "validate_path_data", "ElementKind", "HIT_TOLERANCE", "MAX_PATH_DATA_BYTES", "MAX_PATH_SEGMENTS"],
+    "new_error_variants": ["InvalidPathData", "InvalidStrokeWidth", "Unsupported", "UnsupportedTransform"],
+    "failing_test_per_api": {
+      "add_line/add_line_with_id": "draw_tests::add_line_writes_exact_source_in_one_undoable_entry, add_line_rejects_bad_input_atomically",
+      "add_path/add_path_with_id/validate_path_data": "draw_tests::add_path_writes_exact_source_and_validates_the_grammar, path_data_size_and_segment_limits_are_enforced",
+      "set_fill": "draw_tests::set_fill_changes_only_the_fill_attribute",
+      "set_stroke": "draw_tests::set_stroke_changes_stroke_and_width_as_one_edit",
+      "delete": "draw_tests::delete_removes_one_element_and_undo_restores_exact_bytes",
+      "translate": "draw_tests::translate_updates_coordinates_or_a_translate_transform, translate_refuses_unsupported_targets_transforms_and_values",
+      "element_kind": "draw_tests::element_kind_classifies_by_tag",
+      "hit_test": "draw_tests::hit_test_returns_topmost_shape_with_documented_tolerance, hit_test_follows_translate_only_and_ignores_other_transforms"
+    }
+  },
+  "vexel_document_edit_changes": "none",
+  "cargo_manifest_or_lock_changes": "none",
+  "files_added": [
+    "rust/crates/vexel-v1-document/src/draw.rs",
+    "rust/crates/vexel-v1-document/src/path_data.rs",
+    "rust/crates/vexel-v1-document/src/draw_tests.rs",
+    "rust/crates/vexel-app/src/tools/{mod,controller,map,pen,tests,tests_edit,tests_support}.rs",
+    "rust/fixtures/v1/draw/preserve.svg",
+    "artifacts/WO-RUST-V1-DRAW-TOOLS-01/*"
+  ],
+  "files_modified": [
+    {"path": "rust/crates/vexel-v1-document/src/lib.rs", "change": "module decls, re-exports, 4 error variants"},
+    {"path": "rust/crates/vexel-app/src/model.rs", "change": "Tool::Line, tools array 5 slots, one layout test", "allowed": true},
+    {"path": "rust/crates/vexel-app/src/main.rs", "change": "mod tools; only", "allowed": true},
+    {"path": "rust/crates/vexel-app/src/render.rs", "change": "rail array and two match arms for Tool::Line (forced by exhaustive match)", "allowed": false},
+    {"path": "rust/crates/vexel-app/src/preview.rs", "change": "document_error arm for new error variants (forced by exhaustive match)", "allowed": false}
+  ],
+  "git": "commits were refused by the sandbox hook in this session; nothing staged or committed"
+}

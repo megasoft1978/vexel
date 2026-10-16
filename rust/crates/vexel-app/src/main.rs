@@ -9,6 +9,7 @@ mod preview;
 mod preview_app;
 mod project_session;
 mod render;
+mod tools;
 
 use file_flow::FlowOutcome;
 use file_ui::FileUi;

@@ -351,7 +351,11 @@ fn document_error(error: V1DocumentError) -> &'static str {
         | V1DocumentError::InvalidGeometry
         | V1DocumentError::InvalidColor
         | V1DocumentError::InvalidStableId
-        | V1DocumentError::MissingStableId => "shape validation failed",
+        | V1DocumentError::MissingStableId
+        | V1DocumentError::InvalidPathData
+        | V1DocumentError::InvalidStrokeWidth
+        | V1DocumentError::Unsupported
+        | V1DocumentError::UnsupportedTransform => "shape validation failed",
         V1DocumentError::InvalidAnimationFragment => "invalid preview animation fragment",
         V1DocumentError::Allocation | V1DocumentError::FormattingLimit => {
             "preview allocation or formatting failed"

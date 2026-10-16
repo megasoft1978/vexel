@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- header comment: keep me -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:x="urn:example:x" width="200" height="100" viewBox="0 0 200 100">
+  <!-- before rect -->
+  <metadata><x:note x:keep="yes">unknown element</x:note></metadata>
+  <defs><linearGradient id="g1"><stop offset="0" stop-color="#000000"/></linearGradient></defs>
+  <rect id="base"   x="10"  y="10" width="50" height="40" fill="#112233" inkscape:label="Base"   x:custom="a b"/>
+  <!-- between shapes -->
+  <polygon id="poly" points="0,0 10,0 5,8" fill="#445566"/>
+  <path id="p1" d="M 100 20 L 140 20 L 120 60 Z" fill="#778899"  x:flag="1"/>
+  <x:widget id="w1" size="3"/>
+  <!-- tail comment -->
+</svg>

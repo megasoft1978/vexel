@@ -13,6 +13,7 @@ pub enum Tool {
     Pen,
     Rectangle,
     Ellipse,
+    Line,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Target {
@@ -34,7 +35,7 @@ pub struct Layout {
     pub timeline: Option<Rect>,
     pub activity: Rect,
     pub status: Rect,
-    pub tools: [Rect; 4],
+    pub tools: [Rect; 5],
 }
 impl Layout {
     pub fn new(width: u32, height: u32, mode: Mode) -> Option<Self> {
@@ -82,7 +83,7 @@ impl Layout {
             width: stage_w,
             height: timeline_h,
         });
-        let tool_h = 42.min(content_h.saturating_sub(24) / 4);
+        let tool_h = 42.min(content_h.saturating_sub(24) / 5);
         let tool_gap = if tool_h < 42 { 2 } else { 5 };
         let tools = std::array::from_fn(|i| Rect {
             x: 5,
@@ -149,7 +150,13 @@ impl Layout {
         for (index, rect) in self.tools.iter().enumerate() {
             if contains(*rect, point) {
                 return Some(Target::Tool(
-                    [Tool::Select, Tool::Pen, Tool::Rectangle, Tool::Ellipse][index],
+                    [
+                        Tool::Select,
+                        Tool::Pen,
+                        Tool::Rectangle,
+                        Tool::Ellipse,
+                        Tool::Line,
+                    ][index],
                 ));
             }
         }
@@ -315,5 +322,25 @@ mod tests {
             l.hit_test((l.animate_mode.x, l.animate_mode.y)),
             Some(Target::AnimateMode)
         );
+    }
+    #[test]
+    fn line_tool_is_the_fifth_rail_slot_and_fits_in_every_layout() {
+        for mode in [Mode::Draw, Mode::Animate] {
+            for (w, h) in [(440, 300), (900, 520), (1280, 820)] {
+                let l = Layout::new(w, h, mode).unwrap();
+                let line = l.tools[4];
+                assert_eq!(
+                    l.hit_test((line.x + 2, line.y + 2)),
+                    Some(Target::Tool(Tool::Line))
+                );
+                for pair in l.tools.windows(2) {
+                    assert!(
+                        pair[0].y + pair[0].height <= pair[1].y,
+                        "rail slots must not overlap"
+                    );
+                }
+                assert!(line.y + line.height <= l.rail.y + l.rail.height);
+            }
+        }
     }
 }
