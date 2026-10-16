@@ -6,6 +6,8 @@ use crate::clip::ClipList;
 use crate::dash::Pattern;
 use crate::composite::{SAMPLE_COUNT, resolve_samples, source_over};
 use crate::fill::inside;
+use crate::pattern::{PatternPaint, sample as sample_pattern};
+use crate::pattern_boundary::{mark_boundaries, pixel_fully_in_view};
 use crate::stroke::{self, StrokePrims};
 use crate::validate::validate;
 use crate::{RenderError, RenderShape, SAMPLES_PER_AXIS, ViewMap};
@@ -21,7 +23,12 @@ struct ShapePass<'a, 'b> {
     inverse: Option<Affine>,
     fill_visible: bool,
     clips: ClipList<'a>,
+    fill_pattern: Option<PatternPaint<'a>>,
+    stroke_pattern: Option<PatternPaint<'a>>,
 }
+
+/// Pattern paints of one shape (fill, stroke); `None` means solid paint.
+pub(crate) type ShapePaints<'a> = (Option<PatternPaint<'a>>, Option<PatternPaint<'a>>);
 
 /// Rasterizes `shapes` in document order into the empty `tile`.
 ///
@@ -34,7 +41,7 @@ pub fn render_shapes(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    render_core(shapes, &[], &[], view, tile, control)
+    render_core(shapes, &[], &[], &[], view, tile, control)
 }
 
 /// A shape plus its `stroke-dasharray` values (document units, before the
@@ -65,7 +72,7 @@ pub fn render_dashed_shapes(
         patterns.push(Pattern::new(item.dashes, offset)?);
         plain.push(item.shape);
     }
-    render_core(&plain, &patterns, &[], view, tile, control)
+    render_core(&plain, &patterns, &[], &[], view, tile, control)
 }
 
 /// [`render_shapes`] with a per-shape clip chain: `clips` is empty or parallel
@@ -77,13 +84,16 @@ pub(crate) fn render_shapes_clipped(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    render_core(shapes, &[], clips, view, tile, control)
+    render_core(shapes, &[], clips, &[], view, tile, control)
 }
 
-fn render_core(
+/// [`render_shapes`] with optional per-shape pattern paints; `paints` is empty
+/// (all solid) or parallel to `shapes`.
+pub(crate) fn render_core(
     shapes: &[RenderShape<'_>],
     patterns: &[Option<Pattern>],
     clips: &[ClipList<'_>],
+    paints: &[ShapePaints<'_>],
     view: ViewMap,
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
@@ -94,12 +104,19 @@ fn render_core(
     let mut budget = validate(shapes, patterns, &view, tile)?;
     let width = tile.width() as usize;
     let mut active: Vec<usize> = Vec::new();
+    let boundary = if paints.iter().any(|(fill, stroke)| fill.is_some() || stroke.is_some()) {
+        Some(mark_boundaries(shapes, &view)?)
+    } else {
+        None
+    };
     for (shape_index, shape) in shapes.iter().enumerate() {
+        let (fill_pattern, stroke_pattern) = paints.get(shape_index).copied().unwrap_or((None, None));
         if control() {
             return Err(RenderError::Cancelled);
         }
         let style = shape.stroke.filter(|s| stroke::is_visible(s) && !shape.edges.is_empty());
-        let inverse = style.and_then(|_| stroke::invert(shape.transform));
+        let patterned = fill_pattern.is_some() || stroke_pattern.is_some();
+        let inverse = if style.is_some() || patterned { stroke::invert(shape.transform) } else { None };
         let Some(bounds) = shape_bounds(shape, &view, inverse)? else {
             continue;
         };
@@ -114,8 +131,10 @@ fn render_core(
             shape,
             prims,
             inverse,
-            fill_visible: shape.filled && shape.fill_rgba[3] != 0,
+            fill_visible: shape.filled && (fill_pattern.is_some() || shape.fill_rgba[3] != 0),
             clips: clips.get(shape_index).copied().unwrap_or(&[]),
+            fill_pattern,
+            stroke_pattern,
         };
         active.clear();
         active.try_reserve(shape.edges.len()).map_err(|_| RenderError::LimitExceeded)?;
@@ -134,7 +153,27 @@ fn render_core(
                 }
             }
             for x in bounds.x_first..=bounds.x_last {
+                // C samples pattern paint once at the centre of pixels that no
+                // edge touches (see `pattern_boundary`).
+                let center_only = (pass.fill_pattern.is_some() || pass.stroke_pattern.is_some())
+                    && boundary.as_ref().is_some_and(|mask| {
+                        pixel_fully_in_view(&view, x, y) && !mask.is_marked(x, y)
+                    });
                 let mut samples = [[0u8; 4]; SAMPLE_COUNT];
+                if center_only {
+                    let (sample_x, sample_y) = (f64::from(x) + 0.5, f64::from(y) + 0.5);
+                    if view.sample_in_view(sample_x, sample_y) {
+                        let (px, py) = view.to_user(sample_x, sample_y);
+                        let mut center = [0u8; 4];
+                        paint_sample(&pass, &active, px, py, &mut center);
+                        let offset = (y as usize * width + x as usize) * 4;
+                        let pixel: &mut [u8; 4] = (&mut tile.rgba_mut()[offset..offset + 4])
+                            .try_into()
+                            .map_err(|_| RenderError::InvalidGeometry)?;
+                        source_over(pixel, center);
+                    }
+                    continue;
+                }
                 for (sy, location_y) in SAMPLE_LOCATIONS.iter().enumerate() {
                     let sample_y = f64::from(y) + location_y;
                     for (sx, location_x) in SAMPLE_LOCATIONS.iter().enumerate() {
@@ -158,20 +197,38 @@ fn render_core(
     Ok(())
 }
 
-/// C `paint_sample_result` for solid paint: fill first, then stroke on top.
+/// C `paint_sample_result`: fill first, then stroke on top; a pattern paint
+/// replaces the solid colour of its channel.
 fn paint_sample(pass: &ShapePass<'_, '_>, active: &[usize], px: f64, py: f64, out: &mut [u8; 4]) {
     let shape = pass.shape;
     if !pass.clips.iter().all(|clip| clip.contains(px, py)) {
         return;
     }
+    let local = pass.inverse.and_then(|inverse| affine_map_point(inverse, Point { x: px, y: py }));
     if pass.fill_visible && inside(shape.edges, active, shape.evenodd, px, py) {
-        source_over(out, shape.fill_rgba);
+        match pass.fill_pattern {
+            Some(paint) => {
+                if let Some(sampled) = local.and_then(|p| sample_pattern(&paint, p))
+                    && sampled[3] != 0
+                {
+                    source_over(out, sampled);
+                }
+            }
+            None => source_over(out, shape.fill_rgba),
+        }
     }
-    if let (Some(prims), Some(inverse), Some(style)) =
-        (pass.prims.as_ref(), pass.inverse, shape.stroke.as_ref())
-        && let Some(local) = affine_map_point(inverse, Point { x: px, y: py })
+    if let (Some(prims), Some(style), Some(local)) = (pass.prims.as_ref(), shape.stroke.as_ref(), local)
         && prims.contains(local.x, local.y)
     {
-        source_over(out, style.rgba);
+        match pass.stroke_pattern {
+            Some(paint) => {
+                if let Some(sampled) = sample_pattern(&paint, local)
+                    && sampled[3] != 0
+                {
+                    source_over(out, sampled);
+                }
+            }
+            None => source_over(out, style.rgba),
+        }
     }
 }

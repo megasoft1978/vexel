@@ -1,0 +1,11 @@
+{
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-render --locked --offline", "exit": 0, "log": "check.log"},
+    {"cmd": "cargo +stable test -p vexel-render --locked --offline", "exit": 0, "log": "test-render.log"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "log": "test-app.log"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-SVG-PATTERN-01 --ready", "exit": 0, "log": "wo_validate.log"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0, "log": "ledger.log"},
+    {"cmd": "git diff --check", "exit": 0},
+    {"cmd": "rustfmt --edition 2024 --check <new src and common files>", "exit": 0}
+  ]
+}

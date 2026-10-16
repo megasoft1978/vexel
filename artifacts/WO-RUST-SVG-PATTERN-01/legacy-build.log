@@ -1,0 +1,6 @@
+legacy binary prebuilt by the coordinator outside the repo (not rebuilt by the worker)
+binary: build/mac-debug/bin/svgworkbench
+sha256: f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590
+cmake 3.31.6 (Ninja, Debug); Apple clang 21.0.0 arm64; macOS 27.0.1 (26A434)
+per fixture: svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir>
+render-animation: wrote 1 PPM frames at 1 fps over 1 seconds   (x5: user-space, object-bounds, transform, stroke, viewbox)

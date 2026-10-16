@@ -1,0 +1,10 @@
+{
+  "AC1": {"status": "pass", "evidence": "tests/pattern_parity.rs; 5 fixtures max_delta=0 differing=0 outside_dilation=0; negative harness test fails as required"},
+  "AC2": {"status": "pass", "evidence": "tests/pattern_units.rs 13 tests: integer/fractional tile, rotate/scale, bbox vs user space, zero/negative, 1025 instances, over-axis/pixel, cancellation"},
+  "AC3": {"status": "pass", "evidence": "solid_shapes_render_identically_through_both_entry_points over all CASES and EXTRA"},
+  "AC4": {"status": "pass", "evidence": "tests/errors.rs unchanged and passing"},
+  "AC5": {"status": "pass", "evidence": "all pre-existing vexel-render tests pass unmodified; goldens untouched"},
+  "AC6": {"status": "pass", "evidence": "rust/fixtures/render-pattern/manifest.json; manifest_records_provenance_and_every_file_hash"},
+  "AC7": {"status": "pass", "evidence": "cargo-tree.txt shows no new package; no unsafe (forbid(unsafe_code))"},
+  "AC8": {"status": "pass", "evidence": "result.md"}
+}

@@ -1,0 +1,63 @@
+{
+  "generator": "svgworkbench debug build, native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha)",
+  "legacy_tag": "legacy-c-final",
+  "legacy_tag_commit": "cb9661144907e909a0e7950243e9dc3fcfefb5bc (value of .git/refs/tags/legacy-c-final read from the main checkout; git was unavailable to the worker, so an annotated tag is not peeled)",
+  "legacy_binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "legacy_binary": "build/mac-debug/bin/svgworkbench (prepared by the coordinator outside the repository, not rebuilt by the worker)",
+  "legacy_build_commands": [
+    "mkdir legacy && git archive legacy-c-final | tar -x -C legacy",
+    "cd legacy && cmake --preset mac-debug && cmake --build --preset mac-debug --target svgworkbench",
+    "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+  ],
+  "cmake": "cmake version 3.31.6 (Ninja generator, CMAKE_BUILD_TYPE=Debug)",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2), arm64-apple-darwin27.0.0",
+  "macos": "macOS 27.0.1 (26A434)",
+  "children_note": "tests/common/pattern_data.rs holds the C flattened parent shapes and the pattern content document captured immediately before raster_shape_render in a local copy of pattern.c (read-only hook, outside the repository); the C tile bytes were also compared with the Rust tile during development",
+  "goldens": [
+    {
+      "fixture_id": "pattern-user-space",
+      "source": "tests/realworld/fixtures/w5/pattern-user-space.svg (legacy tree, copied unchanged)",
+      "source_sha256": "ecf4c3dfdf10c3496965616a7a818f9e3caf8a945f1170e175d49e9872e85f4f",
+      "ppm_sha256": "e8d485633d8eb4a5fa80620f6c5c6813ad7e41bb6cd1d69132a77199c380475d",
+      "width": 96,
+      "height": 64,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "pattern-object-bounds",
+      "source": "tests/realworld/fixtures/w5/pattern-object-bounds.svg (legacy tree, copied unchanged)",
+      "source_sha256": "78574e07c54ce0e90deeed085bc816e8e70a668f1c03f7e571d3799d96552a65",
+      "ppm_sha256": "79c96fe019e813ab43a1e23343bce75ead278f4bb5281710efca66d51a87d4d8",
+      "width": 96,
+      "height": 64,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "pattern-transform",
+      "source": "tests/realworld/fixtures/w5/pattern-transform.svg (legacy tree, copied unchanged)",
+      "source_sha256": "8054de1a540c5f3b872c538d869b2fb6cddd050da59b26b97a06e9f1410b4984",
+      "ppm_sha256": "268e0d50104ecd565ef0fd8bdf0baf5fce6187cef6d78f924b7864c008fd8d2a",
+      "width": 96,
+      "height": 64,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "pattern-stroke",
+      "source": "tests/realworld/fixtures/w5/pattern-stroke.svg (legacy tree, copied unchanged)",
+      "source_sha256": "5081f83aa218f837fa5f2571a7da71828f9f884a110f65790bc3a04f244613e1",
+      "ppm_sha256": "e7ad37ba88ecfe19cb203eb1a7985311a3341fa60c8948ec987fd70da18538ae",
+      "width": 96,
+      "height": 64,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "pattern-viewbox",
+      "source": "tests/realworld/fixtures/w5/pattern-viewbox.svg (legacy tree, copied unchanged)",
+      "source_sha256": "1cabc1788def22a09ddc5030f5bac9bde8c0cbbdae200642f50658d98a8fd5cb",
+      "ppm_sha256": "7499fcea37556f5f019b97af83d8fda38ca899071e14950f027ca3269d06fcf3",
+      "width": 96,
+      "height": 64,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}

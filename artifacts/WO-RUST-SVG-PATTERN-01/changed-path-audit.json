@@ -1,0 +1,17 @@
+{
+  "modified": [
+    "rust/crates/vexel-render/src/lib.rs",
+    "rust/crates/vexel-render/src/render.rs"
+  ],
+  "added": [
+    "rust/crates/vexel-render/src/pattern.rs",
+    "rust/crates/vexel-render/src/pattern_boundary.rs",
+    "rust/crates/vexel-render/tests/pattern_parity.rs",
+    "rust/crates/vexel-render/tests/pattern_units.rs",
+    "rust/crates/vexel-render/tests/common/pattern_data.rs",
+    "rust/crates/vexel-render/tests/common/sha256.rs",
+    "rust/fixtures/render-pattern/",
+    "artifacts/WO-RUST-SVG-PATTERN-01/"
+  ],
+  "protected_touched": []
+}

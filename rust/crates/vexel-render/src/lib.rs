@@ -21,6 +21,8 @@ mod dash;
 mod fill;
 mod group;
 mod mask;
+mod pattern;
+mod pattern_boundary;
 mod presentation;
 mod render;
 mod stroke;
@@ -35,6 +37,11 @@ pub use group::{
     render_groups,
 };
 pub use mask::RenderMask;
+pub use pattern::{
+    PATTERN_MAX_AXIS, PATTERN_MAX_INSTANCES, PATTERN_MAX_PIXELS, PATTERN_MAX_TILE_EXTENT,
+    PatternPaint, PatternPaintShape, PatternTileSpec, from_scene_shape_with_pattern,
+    pattern_pixel_size, render_pattern_shapes, render_pattern_tile, render_pattern_tiles,
+};
 pub use presentation::{OFFSCREEN_BACKING_SCALE, offscreen_tile_size, render_offscreen};
 pub use render::{DashedShape, render_dashed_shapes, render_shapes};
 pub use view::{PreserveAspect, ViewBox, ViewMap};
