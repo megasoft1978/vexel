@@ -1730,3 +1730,7 @@ resolution of `objc2-image-io`):
   `_can_redo`, `_can_undo`, `_select_at_source_offset`, `_selection_span` are declared in
   `src/app/viewer_editor.h` but defined nowhere. C is frozen; not fixed. Recorded so the C
   tree is not mistaken for green.
+
+## 2026-10-16 — V1 critical path: decode, render, save accepted
+
+Integrated on main after fresh read-only reviews (all ACCEPT-WITH-AMENDMENT, no blockers): WO-RUST-V1-DECODE-SUBSET-01 (`8ea3e78b`; vexel-svg-engine, decoder 93 / engine 38 / definitions 40 tests), WO-RUST-V1-RENDER-01 (`5e67bb50`; vexel-render, 49 tests, byte-exact vs C goldens on 7 fixtures), WO-RUST-V1-SAVE-01 (vexel-app project_session, 48 app+document tests). WO-RUST-SVG-DECODE-01 superseded. Open: native Save/Open panels, filters/mask-on-group/patterns/dash, app composition, animation+GIF, MCP walkthrough.
