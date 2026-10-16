@@ -22,12 +22,15 @@ verified, and recorded in `STATE.md` and the ledgers.
 
 - `app/`: executable composition.
 - `src/`: base, platform, XML/SVG, scene, raster, document, UI modules as added.
-- `docs/research-r4/`: authoritative operating model and roadmap.
+- `docs/research-r4/`: historical operating model and roadmap (superseded by the Rust
+  plan in `docs/product/`); older material is in `docs/archive/`.
+- `rust/`: Cargo workspace (`crates/`, `tools/`, `fixtures/`); the active implementation.
 - `docs/research-r3/plan/`: architecture and coding guidance where r4 is silent.
 - `docs/adr/`: accepted decisions; `work/`: immutable ready work orders.
 - `tests/`: unit, property, fuzz, UI, and oracle tests as introduced.
 - `bench/`: corpus metadata, generators, runners, and results.
-- `artifacts/`: work-order evidence; `build/` and `.cache/` are generated.
+- `artifacts/`: retained harness evidence (see `artifacts/README.md`); older evidence is in
+  git history at tag `legacy-c-final`. `build/` and `.cache/` are generated.
 
 ## Commands
 
