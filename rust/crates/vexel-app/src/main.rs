@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+mod animation;
 mod compose;
 mod file_flow;
 mod file_ui;

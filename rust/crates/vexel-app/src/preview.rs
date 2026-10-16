@@ -6,12 +6,11 @@ use vexel_protocol::{ProtocolBackend, ToolResponse};
 use vexel_v1_document::{V1Document, V1DocumentError};
 
 mod animation;
-#[cfg(test)]
-pub(crate) use animation::rasterize;
 pub(crate) use animation::{
-    animation_list_json, document_duration, rasterize_at, validate_animation_fragment,
-    validate_shape,
+    animation_list_json, document_duration, validate_animation_fragment, validate_shape,
 };
+#[cfg(test)]
+pub(crate) use animation::{rasterize, rasterize_at};
 
 pub const DOCUMENT_ID: &str = "preview-document";
 pub const SCENE_LIMIT: usize = 128;
@@ -44,9 +43,17 @@ pub enum Operation {
     List,
     Info,
     Add(Shape),
-    AnimationAdd { target_id: String, xml: Vec<u8> },
+    AnimationAdd {
+        target_id: String,
+        xml: Vec<u8>,
+    },
     AnimationList,
     Control(Control),
+    Export {
+        path: String,
+        fps: u32,
+        duration: f64,
+    },
     Undo,
     Redo,
 }
@@ -452,6 +459,7 @@ fn tool_error(message: &str) -> ToolResponse {
         "unsupported preview shape" => message,
         "unknown preview document" => message,
         "invalid preview fill color" => message,
+        m if m.starts_with("export ") => m,
         _ => "invalid preview tool arguments",
     };
     let mut s = b"{\"error\":\"".to_vec();
@@ -547,6 +555,46 @@ pub(super) fn parse_operation(
                 _ => return Err("invalid preview tool arguments"),
             };
             Ok(Operation::Control(control))
+        }
+        "export_animation" => {
+            let path = doc
+                .object_get(args, b"path")
+                .filter(|t| {
+                    doc.raw_token(*t)
+                        .is_some_and(|raw| raw.len() <= 1023 * 6 + 2)
+                })
+                .and_then(|t| doc.decoded_string(t))
+                .and_then(|bytes| String::from_utf8(bytes).ok())
+                .filter(|p| !p.is_empty() && p.len() < 1024)
+                .ok_or("invalid preview tool arguments")?;
+            if string_field(doc, args, b"format").as_deref() != Some("gif") {
+                return Err("invalid preview tool arguments");
+            }
+            let json_number = |key: &[u8]| {
+                doc.object_get(args, key)
+                    .filter(|t| {
+                        doc.token(*t)
+                            .is_some_and(|tok| tok.kind == JsonType::Number)
+                    })
+                    .and_then(|t| doc.raw_token(t))
+                    .filter(|raw| raw.len() <= 32)
+                    .and_then(|raw| std::str::from_utf8(raw).ok()?.parse::<f64>().ok())
+                    .filter(|n| n.is_finite())
+                    .ok_or("invalid preview tool arguments")
+            };
+            let fps = json_number(b"fps")?;
+            let duration = json_number(b"duration")?;
+            if fps.fract() != 0.0
+                || !(1.0..=30.0).contains(&fps)
+                || !(0.01..=10.0).contains(&duration)
+            {
+                return Err("invalid preview tool arguments");
+            }
+            Ok(Operation::Export {
+                path,
+                fps: fps as u32,
+                duration,
+            })
         }
         "element_add" => {
             if string_field(doc, args, b"parentId")

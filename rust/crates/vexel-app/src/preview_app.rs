@@ -1,13 +1,20 @@
+#[cfg(test)]
+use crate::preview;
 use crate::{
+    animation::{
+        self,
+        job::ExportJob,
+        playback::{LoopClock, MonotonicClock},
+    },
     model::{Layout, Mode, Model, checked_pixel_geometry},
-    preview::{self, LiveBackend, Operation, PreviewState, UiRequest},
+    preview::{LiveBackend, Operation, PreviewState, UiRequest},
 };
 use std::{
     io::{BufReader, BufWriter},
     num::NonZeroUsize,
     sync::mpsc::{self, SyncSender, TryRecvError},
     thread,
-    time::{Duration, Instant},
+    time::Duration,
 };
 use vexel_platform_apple::{
     MainThread, NativeApp, RgbaFrame, TextEmphasis, TextFace, WindowConfig, WindowEvent,
@@ -66,20 +73,45 @@ pub fn run() -> Result<(), &'static str> {
     let mut closing = false;
     let mut pending: Option<Pending> = None;
     let mut status = String::from("Waiting for MCP client");
-    let mut playback_epoch = Instant::now();
+    let clock = MonotonicClock::new();
+    let mut playback_epoch = clock.now_seconds();
     let mut last_frame = playback_epoch;
+    let mut export: Option<ExportJob> = None;
     while !closing {
-        if state.playback().0 && last_frame.elapsed() >= Duration::from_millis(33) {
+        if let Some(done) = export.as_mut().and_then(ExportJob::poll) {
+            export = None;
+            status = done;
+            dirty = true;
+        }
+        if state.playback().0 && clock.now_seconds() - last_frame >= 0.033 {
             let duration = state.playback().2;
             if duration > 0.0 {
-                state.set_frame_time(playback_epoch.elapsed().as_secs_f64());
+                state.set_frame_time(clock.now_seconds() - playback_epoch);
                 status = format!("Playing · {:.2}s / {:.2}s", state.playback().1, duration);
                 dirty = true;
             }
-            last_frame = Instant::now();
+            last_frame = clock.now_seconds();
         }
-        if pending.is_none() {
+        if pending.is_none() && export.is_none() {
             match rx.try_recv() {
+                Ok(UiRequest {
+                    operation:
+                        Operation::Export {
+                            path,
+                            fps,
+                            duration,
+                        },
+                    reply,
+                }) => match start_export(&state, path, fps, duration, reply) {
+                    Ok(job) => {
+                        export = Some(job);
+                        status = "Exporting GIF…".to_owned();
+                        dirty = true;
+                    }
+                    Err((reply, message)) => {
+                        let _ = reply.send(Err(message));
+                    }
+                },
                 Ok(request) => {
                     handle_request(request, &state, &mut pending, &mut status, &mut dirty)?
                 }
@@ -105,8 +137,7 @@ pub fn run() -> Result<(), &'static str> {
                 if let Some(committed) = p.state {
                     state = committed;
                     if state.playback().0 {
-                        playback_epoch =
-                            Instant::now() - Duration::from_secs_f64(state.playback().1);
+                        playback_epoch = clock.now_seconds() - state.playback().1;
                     }
                 }
                 let _ = p.reply.send(Ok(p.response));
@@ -168,10 +199,33 @@ pub fn run() -> Result<(), &'static str> {
     if let Some(p) = pending.take() {
         let _ = p.reply.send(Err("preview window is closed"));
     }
+    if let Some(job) = export.as_ref() {
+        job.cancel();
+    }
     app.destroy_window(window.id())
         .map_err(|_| "native preview shutdown failed")?;
     app.shutdown()
         .map_err(|_| "native application shutdown failed")
+}
+
+type Reply = SyncSender<Result<String, &'static str>>;
+
+/// Starts the background GIF export of the committed preview document inside
+/// a granted directory; on failure the unsent reply is handed back.
+fn start_export(
+    state: &PreviewState,
+    path: String,
+    fps: u32,
+    duration: f64,
+    reply: Reply,
+) -> Result<ExportJob, (Reply, &'static str)> {
+    let source = match state.source() {
+        Ok(source) => source,
+        Err(message) => return Err((reply, message)),
+    };
+    let policy = vexel_mcp_access::AccessPolicy::from_environment();
+    ExportJob::spawn(source, policy, path.into(), fps, duration, reply.clone())
+        .map_err(|message| (reply, message))
 }
 
 fn start_server(requests: SyncSender<UiRequest>) -> Result<(), &'static str> {
@@ -368,7 +422,7 @@ fn preview_frame(
         (x, y, size, size),
         0xFFFFFFFF,
     );
-    let raster = preview::rasterize_at(state, state.playback().1)?;
+    let raster = animation::present::raster_at(&state.source()?, state.playback().1)?;
     for dy in 0..size {
         let sy = (dy as usize * 512 / size as usize).min(511);
         for dx in 0..size {

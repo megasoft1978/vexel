@@ -361,3 +361,32 @@ fn animation_tool_mapping_uses_milliseconds_and_bounded_fragments() {
         Ok(Operation::AnimationAdd { .. })
     ));
 }
+
+#[test]
+fn export_animation_mapping_is_gif_only_with_bounded_fps_and_duration() {
+    let ok = br#"{"documentId":"preview-document","path":"/tmp/x.gif","format":"gif","fps":10,"duration":1.5}"#;
+    let doc = JsonDocument::parse_owned(ok).unwrap();
+    assert_eq!(
+        parse_operation(&doc, doc.root(), "export_animation").unwrap(),
+        Operation::Export {
+            path: "/tmp/x.gif".to_owned(),
+            fps: 10,
+            duration: 1.5
+        }
+    );
+    for bad in [
+        r#"{"documentId":"preview-document","path":"/tmp/x.gif","format":"frames","fps":10,"duration":1}"#,
+        r#"{"documentId":"preview-document","path":"/tmp/x.gif","format":"gif","fps":31,"duration":1}"#,
+        r#"{"documentId":"preview-document","path":"/tmp/x.gif","format":"gif","fps":2.5,"duration":1}"#,
+        r#"{"documentId":"preview-document","path":"/tmp/x.gif","format":"gif","fps":10,"duration":10.5}"#,
+        r#"{"documentId":"preview-document","path":"","format":"gif","fps":10,"duration":1}"#,
+        r#"{"documentId":"preview-document","path":"/tmp/x.gif","format":"gif","fps":"10","duration":1}"#,
+        r#"{"documentId":"other","path":"/tmp/x.gif","format":"gif","fps":10,"duration":1}"#,
+    ] {
+        let doc = JsonDocument::parse_owned(bad.as_bytes()).unwrap();
+        assert!(
+            parse_operation(&doc, doc.root(), "export_animation").is_err(),
+            "{bad}"
+        );
+    }
+}
