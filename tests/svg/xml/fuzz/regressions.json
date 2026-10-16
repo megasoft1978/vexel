@@ -1,8 +1,0 @@
-{
-  "regressions": [],
-  "synthetic_canary": {
-    "label": "synthetic harness crash; not a tokenizer defect",
-    "seed_file": "seeds/synthetic-canary.seed",
-    "input_sha256": "bbef9cba4eb563495b41dc9168278425790a92c6d923dac64ea7701109efc4b1"
-  }
-}

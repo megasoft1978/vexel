@@ -1,1 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="12"><rect x="0" y="2" width="8" height="8" fill="#219ebc"><animate id="first" attributeName="x" from="0" to="40" dur="2s" repeatCount="2" fill="freeze"/><animate attributeName="opacity" from="1" to="0.4" dur="0.5s" begin="first.end+0.25s" fill="freeze"/></rect></svg>

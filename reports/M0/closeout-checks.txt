@@ -1,9 +1,0 @@
-AC-4 closeout checks run sequentially from repository root; all exit 0.
-$ python3 scripts/ledger.py validate ledger.jsonl
-valid ledger: 113 entries
-[exit 0]
-$ python3 scripts/wo_validate.py WO-M0-04 --ready
-valid WO-M0-04 revision 1 sha256 06f879083906e5863a0936deaba948b399d696ce3419c6b93e32f4932c52d468
-[exit 0]
-$ git diff --check
-[exit 0]

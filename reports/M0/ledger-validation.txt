@@ -1,3 +1,0 @@
-$ python3 scripts/ledger.py validate ledger.jsonl
-valid ledger: 113 entries
-[exit 0]

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <defs>
-    <rect id="hidden-rect" x="0" y="0" width="8" height="8" fill="#ff0000"/>
-    <symbol id="unused-symbol"><circle cx="12" cy="8" r="3" fill="#0000ff"/></symbol>
-  </defs>
-  <rect x="2" y="2" width="4" height="4" fill="#00aa44"/>
-</svg>

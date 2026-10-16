@@ -72,7 +72,7 @@ fn every_c_function_is_mapped_to_a_symbol_and_test_or_a_named_deferral() {
 
 /// Function definitions found by a column-0 heuristic in a C source file.
 fn defined_in(file: &str) -> Vec<String> {
-    let path = format!("{}/../../../src/raster/{file}", env!("CARGO_MANIFEST_DIR"));
+    let path = format!("{}/../../fixtures/legacy/c-raster/{file}", env!("CARGO_MANIFEST_DIR"));
     let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
     let mut names = Vec::new();
     for line in text.lines() {

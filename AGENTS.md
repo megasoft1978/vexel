@@ -13,7 +13,7 @@ verified, and recorded in `STATE.md` and the ledgers.
   stubs for unsupported operating systems.
 - Rust for all first-party code is the active owner-approved migration target.
   MPL-2.0, minimal pinned dependencies, custom-drawn UI, and an owned SVG
-  parser/rasterizer remain locked. Legacy C17 code is preserved as migration
+  parser/rasterizer remain locked. The legacy C17 code was removed after V1; it remains at tag `legacy-c-final` as a migration
   reference; do not resume old C implementation orders. See ADR-0022.
 - Never read, fetch, or copy GPL SVG-editor source. Do not fetch external SVG
   resources from the application. Record provenance for external algorithms.
@@ -34,17 +34,16 @@ verified, and recorded in `STATE.md` and the ledgers.
 
 ## Commands
 
-The commands below are the preserved legacy C workflow. Rust workspace/build
-commands become authoritative only through their implementation orders.
+Rust is the only implementation. From the repository root (macOS, pinned toolchain):
 
-- `./dev build`: configure and build Debug.
-- `./dev test-fast`: run local Python tests and validate the ledger.
-- `./dev verify`: run the Debug build and fast tests.
-- `cmake --preset mac-release && cmake --build --preset mac-release`: Release.
-- `python3 scripts/ledger.py validate ledger.jsonl`: validate work history.
-- `python3 -m unittest`: run Python harness tests when present.
-- `bench`, `fmt`, `lint`, `asan`, and `fuzz` become authoritative only when
-  their work orders implement them; do not claim missing commands run.
+- `cargo check --workspace --locked` and `cargo test --workspace --locked`
+- `cargo run -p vexel-app` runs the editor; `--mcp-preview` serves MCP over stdio;
+  `--grant-dir <dir>` authorizes a directory for MCP file access.
+- `python3 scripts/ledger.py validate ledger.jsonl` validates work history;
+  `python3 scripts/wo_validate.py --ready WO-ID` validates a frozen work order;
+  `python3 -m unittest tests.test_ledger tests.test_wo_runner` runs the harness tests.
+- The legacy C workflow (`./dev`, CMake) was removed; the last tree containing it is
+  tag `legacy-c-final`.
 
 ## Engineering and safety
 

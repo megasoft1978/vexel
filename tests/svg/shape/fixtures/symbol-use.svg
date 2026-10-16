@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16" height="16" viewBox="0 0 16 16">
-  <defs>
-    <symbol id="mark" viewBox="0 0 2 2">
-      <rect width="2" height="2"/>
-    </symbol>
-  </defs>
-  <use xlink:href="#mark" x="3" y="3" width="8" height="8" fill="#30a060"/>
-</svg>

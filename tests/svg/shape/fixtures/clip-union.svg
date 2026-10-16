@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <defs>
-    <clipPath id="holes" clipPathUnits="userSpaceOnUse">
-      <rect x="1" y="1" width="5" height="12"/>
-      <circle cx="11" cy="8" r="3"/>
-    </clipPath>
-  </defs>
-  <rect width="16" height="16" fill="#30a060" clip-path="url(#holes)"/>
-</svg>

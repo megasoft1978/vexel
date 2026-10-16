@@ -1,2 +1,0 @@
-$ python3 -c import json; d=json.load(open('reports/M0/evidence.json')); assert d['counts']['owner_provided_files_and_tasks']==0 and d['counts']['recorded_interviews']==0 and d['counts']['user_outcome_records']==0 and d['counts']['requested_owner_examples']>=5
-[exit 0]

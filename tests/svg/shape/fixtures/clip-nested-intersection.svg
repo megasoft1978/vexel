@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10">
-  <defs>
-    <clipPath id="outer" clipPathUnits="userSpaceOnUse"><rect width="10" height="10"/></clipPath>
-    <clipPath id="inner" clipPathUnits="userSpaceOnUse"><rect x="5" width="10" height="10"/></clipPath>
-  </defs>
-  <g clip-path="url(#outer)"><g clip-path="url(#inner)">
-    <rect width="20" height="10" fill="red"/>
-  </g></g>
-</svg>

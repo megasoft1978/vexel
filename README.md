@@ -28,52 +28,21 @@ capabilities on the product website and here. Recording and publication come
 after feature work and final UI/end-to-end and release acceptance; the showcase
 has not yet been recorded or published.
 
-## Rust port
+## Build and run
 
-The active implementation is the Rust workspace in `rust/` (see `HANDOFF.md`). The preview
-app runs with `cargo run -p vexel-app`; it currently supports a basic-shape MCP live
-preview only. The C code below is the legacy reference and will be removed after parity.
-
-## Usage (legacy C build)
+Requirements: Apple Silicon Mac, macOS 13 or later, the pinned Rust toolchain
+(`rust-toolchain.toml`, installed by rustup). No other tools.
 
 ```sh
-./build/mac-release/bin/svgworkbench file.svg
+cargo build --release -p vexel-app
+./build/rust/aarch64-apple-darwin/release/vexel path/to/file.svg   # open an SVG
+./build/rust/aarch64-apple-darwin/release/vexel --mcp-preview       # serve MCP on stdio
 ```
 
-The editor supports fit, zoom, pan, drawing, selection and transform, layer
-visibility and locking, a tabbed inspector, task workspaces, an operator log, a
-command palette, and clean quit. To build and launch
-the Release executable in one step, run `./dev run file.svg`. A headless PPM
-frame can be rendered with:
-
-```sh
-svgworkbench --render-frame file.svg --size 1280x800 --out frame.ppm
-```
-
-## Requirements
-
-- Apple Silicon Mac running macOS 13 or later
-- Xcode Command Line Tools (Apple Clang and macOS SDK)
-- CMake 3.25 or later and Ninja
-
-No third-party libraries or configure-time downloads are used.
-
-## Configure and build
-
-```sh
-./dev build
-```
-
-Equivalent commands:
-
-```sh
-cmake --preset mac-debug
-cmake --build --preset mac-debug
-./build/mac-debug/bin/svgworkbench --version
-```
-
-The version command prints `svgworkbench 0.0.1`. Additional configure/build
-presets are `mac-release` and `mac-size`.
+`--grant-dir <dir>` (repeatable) authorizes a directory for MCP file access.
+Tests: `cargo test --workspace --locked`. The workspace lives in `rust/`; see
+`HANDOFF.md` for current status and `docs/product/` for the plan. The earlier C
+implementation was removed; it is preserved at git tag `legacy-c-final`.
 
 ## License
 
