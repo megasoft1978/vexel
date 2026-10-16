@@ -1,0 +1,10 @@
+{
+  "AC1": {"status": "pass", "note": "five fixtures bit-exact; dash-dots uses 0.01 6 because the C parser rejects 0", "tests": "tests/dash_parity.rs::{stroke_dashes,stroke_dash_join,stroke_dash_closed_seam,dashed_cubic,dash_dots}"},
+  "AC2": {"status": "pass", "tests": "src/dash/tests.rs (8) and tests/dash_parity.rs::{dots_draw_with_round_cap_and_nothing_with_butt,seventeen_dash_values_is_a_limit_error_and_nan_renders_solid}"},
+  "AC3": {"status": "pass", "tests": "tests/dash_parity.rs::empty_dashes_match_render_shapes_on_every_parity_case (6 parity + render-extra)"},
+  "AC4": {"status": "pass", "tests": "tests/errors.rs unchanged; tests/dash_adapter.rs"},
+  "AC5": {"status": "pass", "note": "49 pre-existing vexel-render tests pass unmodified; no existing golden touched"},
+  "AC6": {"status": "pass", "tests": "tests/dash_parity.rs::manifest_hashes_match_the_fixture_files (source and ppm sha256, legacy commit, binary sha256)"},
+  "AC7": {"status": "pass", "note": "cargo tree unchanged; no unsafe; largest new file 588 lines"},
+  "AC8": {"status": "pass", "file": "result.md"}
+}

@@ -2,6 +2,7 @@
 //! (C `raster_shape_render_flat` with solid paint only).
 
 use crate::bounds::shape_bounds;
+use crate::dash::Pattern;
 use crate::composite::{SAMPLE_COUNT, resolve_samples, source_over};
 use crate::fill::inside;
 use crate::stroke::{self, StrokePrims};
@@ -31,10 +32,51 @@ pub fn render_shapes(
     tile: &mut Tile,
     control: &dyn Fn() -> bool,
 ) -> Result<(), RenderError> {
-    validate(shapes, &view, tile)?;
+    render_with(shapes, &[], view, tile, control)
+}
+
+/// A shape plus its `stroke-dasharray` values (document units, before the
+/// shape transform as for the stroke width). `StrokeStyle::dash_offset` is
+/// the `stroke-dashoffset`. An empty slice, a negative or non-finite entry or
+/// an all-zero pattern renders solid; an odd count repeats; more than
+/// [`crate::MAX_DASH_VALUES`] entries is [`RenderError::LimitExceeded`].
+#[derive(Debug, Clone, Copy)]
+pub struct DashedShape<'a> {
+    pub shape: RenderShape<'a>,
+    pub dashes: &'a [f64],
+}
+
+/// Same contract as [`render_shapes`], with dashed strokes. With every
+/// `dashes` slice empty the output is byte-identical to [`render_shapes`].
+pub fn render_dashed_shapes(
+    shapes: &[DashedShape<'_>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    let mut plain: Vec<RenderShape<'_>> = Vec::new();
+    plain.try_reserve_exact(shapes.len()).map_err(|_| RenderError::LimitExceeded)?;
+    let mut patterns: Vec<Option<Pattern>> = Vec::new();
+    patterns.try_reserve_exact(shapes.len()).map_err(|_| RenderError::LimitExceeded)?;
+    for item in shapes {
+        let offset = item.shape.stroke.map_or(0.0, |s| s.dash_offset);
+        patterns.push(Pattern::new(item.dashes, offset)?);
+        plain.push(item.shape);
+    }
+    render_with(&plain, &patterns, view, tile, control)
+}
+
+fn render_with(
+    shapes: &[RenderShape<'_>],
+    patterns: &[Option<Pattern>],
+    view: ViewMap,
+    tile: &mut Tile,
+    control: &dyn Fn() -> bool,
+) -> Result<(), RenderError> {
+    let mut budget = validate(shapes, patterns, &view, tile)?;
     let width = tile.width() as usize;
     let mut active: Vec<usize> = Vec::new();
-    for shape in shapes {
+    for (shape_index, shape) in shapes.iter().enumerate() {
         if control() {
             return Err(RenderError::Cancelled);
         }
@@ -44,7 +86,10 @@ pub fn render_shapes(
             continue;
         };
         let prims = match (style.as_ref(), inverse) {
-            (Some(style), Some(inverse)) => Some(StrokePrims::build(shape, style, inverse)?),
+            (Some(style), Some(inverse)) => {
+                let pattern = patterns.get(shape_index).and_then(Option::as_ref);
+                Some(StrokePrims::build(shape, style, inverse, pattern, &mut budget)?)
+            }
             _ => None,
         };
         let pass = ShapePass {

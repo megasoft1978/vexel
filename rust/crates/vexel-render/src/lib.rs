@@ -4,7 +4,8 @@
 //! A direct port of the C reference (`src/raster/shape_render*.c`): a 4x4
 //! sample grid per pixel, nonzero/evenodd fill, stroke with caps, joins and
 //! miter limit, and per-shape source-over compositing in document order.
-//! Dashes, non-solid paint, clips, masks, filters, opacity groups, text,
+//! Dashes are available through [`render_dashed_shapes`]; [`render_shapes`] and
+//! [`from_scene_shape`] stay solid-only. Non-solid paint, clips, masks, filters, opacity groups, text,
 //! animation, SMIL and crisp edges are deferred and reported as
 //! [`RenderError::Unsupported`]. No performance claim is made.
 //!
@@ -15,6 +16,7 @@
 mod adapter;
 mod bounds;
 mod composite;
+mod dash;
 mod fill;
 mod presentation;
 mod render;
@@ -22,9 +24,10 @@ mod stroke;
 mod validate;
 mod view;
 
-pub use adapter::{SceneFeatures, from_scene_shape};
+pub use adapter::{SceneFeatures, from_scene_shape, from_scene_shape_with_dashes};
+pub use dash::MAX_DASH_VALUES;
 pub use presentation::{OFFSCREEN_BACKING_SCALE, offscreen_tile_size, render_offscreen};
-pub use render::render_shapes;
+pub use render::{DashedShape, render_dashed_shapes, render_shapes};
 pub use view::{PreserveAspect, ViewBox, ViewMap};
 
 use std::ops::Range;
@@ -64,8 +67,8 @@ impl From<vexel_geometry::Edge> for FlatEdge {
 /// Solid stroke parameters; mirrors `vexel_scene::Stroke` without
 /// `dash_values`, `paint_server` and `paint_order`.
 ///
-/// `dash_offset` is validated as finite (as the C renderer does) and is
-/// otherwise unused because dashes are deferred. `crisp_edges: true` makes
+/// `dash_offset` is validated as finite (as the C renderer does) and is only
+/// used by [`render_dashed_shapes`]. `crisp_edges: true` makes
 /// [`render_shapes`] return `Unsupported(CrispEdges)`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StrokeStyle {

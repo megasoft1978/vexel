@@ -1,6 +1,7 @@
 //! Input validation and work bounds, mirroring the entry checks of
 //! `raster_shape_render_flat` and the dash-cache limits.
 
+use crate::dash::{Budget, Pattern};
 use crate::stroke::{self, JOIN_BYTES, RANGE_BYTES, SEGMENT_BYTES};
 use crate::{
     MAX_COORDINATE, MAX_EDGES, MAX_SHAPES, MAX_STROKE_BYTES, MAX_STROKE_STEPS, MAX_SUBPATHS,
@@ -50,12 +51,15 @@ fn validate_shape(shape: &RenderShape<'_>) -> Result<(), RenderError> {
     Ok(())
 }
 
-/// Validates everything before any pixel is written.
+/// Validates everything before any pixel is written. `patterns` is empty or
+/// parallel to `shapes`; dashed shapes are charged while their primitives are
+/// built, so only solid shapes are counted here. Returns the budget spent.
 pub(crate) fn validate(
     shapes: &[RenderShape<'_>],
+    patterns: &[Option<Pattern>],
     view: &ViewMap,
     tile: &Tile,
-) -> Result<(), RenderError> {
+) -> Result<Budget, RenderError> {
     if tile.width() != view.width() || tile.height() != view.height() {
         return Err(RenderError::InvalidGeometry);
     }
@@ -63,14 +67,15 @@ pub(crate) fn validate(
         return Err(RenderError::LimitExceeded);
     }
     let (mut edges, mut subpaths, mut steps, mut bytes) = (0usize, 0usize, 0usize, 0usize);
-    for shape in shapes {
+    for (index, shape) in shapes.iter().enumerate() {
         validate_shape(shape)?;
         edges = add(edges, shape.edges.len())?;
         subpaths = add(subpaths, shape.subpaths.len())?;
         if edges > MAX_EDGES || subpaths > MAX_SUBPATHS {
             return Err(RenderError::LimitExceeded);
         }
-        if shape.stroke.as_ref().is_some_and(stroke::is_visible) {
+        let dashed = patterns.get(index).is_some_and(Option::is_some);
+        if !dashed && shape.stroke.as_ref().is_some_and(stroke::is_visible) {
             for index in 0..stroke::range_count(shape) {
                 let (segments, joins) = stroke::range_at(shape, index).primitive_counts();
                 steps = add(steps, add(segments, joins)?)?;
@@ -85,5 +90,5 @@ pub(crate) fn validate(
     if tile.rgba().iter().any(|byte| *byte != 0) {
         return Err(RenderError::TileNotEmpty);
     }
-    Ok(())
+    Ok(Budget { steps, bytes })
 }

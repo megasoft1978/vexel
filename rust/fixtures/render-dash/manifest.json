@@ -1,0 +1,62 @@
+{
+  "generator": "svgworkbench debug build from the frozen legacy tree, native-size frame-0000.ppm of --render-animation (the C write_tile_ppm output: rgb + 255 - alpha over white); never hand-edited or Rust-generated",
+  "legacy_tag": "legacy-c-final",
+  "legacy_commit": "cb9661144907e909a0e7950243e9dc3fcfefb5bc",
+  "legacy_commit_source": "git rev-parse legacy-c-final (tag and ^{commit} agree)",
+  "build_commands": [
+    "mkdir legacy && git archive legacy-c-final | tar -x -C legacy (prepared outside the repository by the coordinator; the worker used the extracted tree read-only)",
+    "cd legacy && cmake --preset mac-debug && cmake --build --preset mac-debug --target svgworkbench"
+  ],
+  "binary": "build/mac-debug/bin/svgworkbench",
+  "binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "cmake_version": "3.31.6",
+  "compiler": "AppleClang 21.0.0.21000334 (Apple clang version 21.0.0 clang-2100.3.34.2)",
+  "goldens": [
+    {
+      "fixture_id": "stroke-dashes",
+      "source": "tests/svg/shape/fixtures/stroke-dashes.svg at legacy-c-final",
+      "source_sha256": "f0f2fbdcc1572d2fef775671281a8280078fcdd3d34c798921d9708ff7971439",
+      "ppm_sha256": "40521bf9378361bdca68dd12642fe4c5a50c2cd1b08ebb5d30a3761bb5f08092",
+      "width": 16,
+      "height": 16,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "stroke-dash-join",
+      "source": "tests/svg/shape/fixtures/stroke-dash-join.svg at legacy-c-final",
+      "source_sha256": "cd6910af92f16b0d71eda3866f21cd055768eed0f6a9ab82b05f8bbd4dc7f13d",
+      "ppm_sha256": "f9c293cd26ac15702d001280007ccf78bcf7addf87bd026b3306ceaa0217aa14",
+      "width": 16,
+      "height": 16,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "stroke-dash-closed-seam",
+      "source": "tests/svg/shape/fixtures/stroke-dash-closed-seam.svg at legacy-c-final",
+      "source_sha256": "99b7e9c0afbf8030b76542b6bfd8223aa505cae29ba452cb414224e9400fd579",
+      "ppm_sha256": "4da6fc1362835a2500a02e21da48f3cc7e43ea96879be4fa1a41a1dfe39abf46",
+      "width": 16,
+      "height": 16,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "dashed-cubic",
+      "source": "tests/realworld/fixtures/special/dashed-cubic.svg at legacy-c-final",
+      "source_sha256": "2e4613631a450223f24e1ed8176cd6838c447d8d089549a2972bf6612d34755e",
+      "ppm_sha256": "998c16329ca19a92436406cb5d3e74ee3707f962b2fae1f7247325ef1e0366db",
+      "width": 96,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "dash-dots",
+      "source": "project-authored; round-cap dot pattern on a circle (0.01 6, offset -2) and an odd-length array on a rect (5 2 3, offset -4)",
+      "note": "The legacy parser rejects zero dash entries (parse_dasharray: value <= 0.0 fails, 'number at byte 201' for 0 6), so the C reference cannot render a literal 0 6 pattern. 0.01 is the smallest practical dot that C accepts; true zero-length dots are covered by unit tests only.",
+      "source_sha256": "ccf7d53547584d85d516fa60b8aa9ea21b3a32c80895fe2387834865ac4d18c4",
+      "ppm_sha256": "2d834fecf8ad06bf75c622cd78d72dfcd2a06d0107ff8d86f0d9c67385aed713",
+      "width": 96,
+      "height": 64,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}

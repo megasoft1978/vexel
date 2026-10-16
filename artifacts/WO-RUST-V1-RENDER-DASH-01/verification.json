@@ -1,0 +1,20 @@
+{
+  "work_order": "WO-RUST-V1-RENDER-DASH-01",
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-render --locked --offline", "result": "pass", "log": "check.log"},
+    {"cmd": "cargo +stable test -p vexel-render --locked --offline", "result": "pass", "tests": 70, "preexisting": 49, "new": 21, "log": "test-vexel-render.log"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "result": "pass", "tests": 203},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-RENDER-DASH-01 --ready", "result": "pass"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "result": "pass", "entries": 1884},
+    {"cmd": "git diff --check", "result": "not run: sandbox refuses git status/diff; checked trailing whitespace with grep instead (none)"},
+    {"cmd": "rustfmt --check --edition 2024 <new files>", "result": "pass"},
+    {"cmd": "cargo tree -p vexel-render", "result": "pass", "new_packages": 0}
+  ],
+  "parity": {
+    "stroke-dashes": {"max_delta": 0, "differing": 0, "outside_dilation": 0},
+    "stroke-dash-join": {"max_delta": 0, "differing": 0, "outside_dilation": 0},
+    "stroke-dash-closed-seam": {"max_delta": 0, "differing": 0, "outside_dilation": 0},
+    "dashed-cubic": {"max_delta": 0, "differing": 0, "outside_dilation": 0},
+    "dash-dots": {"max_delta": 0, "differing": 0, "outside_dilation": 0}
+  }
+}

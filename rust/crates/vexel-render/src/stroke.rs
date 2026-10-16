@@ -6,6 +6,7 @@
 //! segment and join predicates below decide every sample, so it is not
 //! ported (see parity-map.json).
 
+use crate::dash::{self, Budget, Pattern};
 use crate::{Linecap, Linejoin, RenderError, RenderShape, StrokeStyle};
 use vexel_geometry::{Affine, Point, affine_map_point, affine_valid};
 
@@ -91,17 +92,18 @@ impl StrokeRange {
 }
 
 #[derive(Clone, Copy)]
-struct Segment {
-    a: Point,
-    b: Point,
-    cap: Linecap,
+pub(crate) struct Segment {
+    pub a: Point,
+    pub b: Point,
+    pub start_cap: Linecap,
+    pub end_cap: Linecap,
 }
 
 #[derive(Clone, Copy)]
-struct Join {
-    previous: Point,
-    vertex: Point,
-    next: Point,
+pub(crate) struct Join {
+    pub previous: Point,
+    pub vertex: Point,
+    pub next: Point,
 }
 
 /// Local-space stroke primitives of one shape.
@@ -114,17 +116,21 @@ pub(crate) struct StrokePrims {
     join_reach: f64,
 }
 
-fn reserve<T>(vec: &mut Vec<T>, additional: usize) -> Result<(), RenderError> {
+pub(crate) fn reserve<T>(vec: &mut Vec<T>, additional: usize) -> Result<(), RenderError> {
     vec.try_reserve_exact(additional).map_err(|_| RenderError::LimitExceeded)
 }
 
 impl StrokePrims {
     /// Maps edges through the stroke inverse (C `prepare_local_stroke_edges`)
-    /// and builds the solid segment and join lists (C `build_solid_range`).
+    /// and builds the segment and join lists: solid ranges (C
+    /// `build_solid_range`) or, with a `pattern`, dashed ranges (C
+    /// `dash_cache_build_range`).
     pub(crate) fn build(
         shape: &RenderShape<'_>,
         stroke: &StrokeStyle,
         inverse: Affine,
+        pattern: Option<&Pattern>,
+        budget: &mut Budget,
     ) -> Result<Self, RenderError> {
         let mut local: Vec<(Point, Point)> = Vec::new();
         reserve(&mut local, shape.edges.len())?;
@@ -144,6 +150,20 @@ impl StrokePrims {
             if count == 0 {
                 continue;
             }
+            if let Some(pattern) = pattern {
+                let edges = &local[range.first..range.first + range.count];
+                let seam = range.closed && dash::joins_seam(pattern, edges);
+                dash::build_range(
+                    &mut segments,
+                    &mut joins,
+                    budget,
+                    pattern,
+                    stroke.cap,
+                    &edges[..count],
+                    seam,
+                )?;
+                continue;
+            }
             let (segment_count, join_count) = range.primitive_counts();
             reserve(&mut segments, segment_count)?;
             reserve(&mut joins, join_count)?;
@@ -154,7 +174,7 @@ impl StrokePrims {
                     Linecap::Butt
                 };
                 let (a, b) = local[range.first + index];
-                segments.push(Segment { a, b, cap });
+                segments.push(Segment { a, b, start_cap: cap, end_cap: cap });
             }
             for index in 0..join_count {
                 let next = if range.closed { (index + 1) % count } else { index + 1 };
@@ -172,9 +192,18 @@ impl StrokePrims {
     pub(crate) fn contains(&self, px: f64, py: f64) -> bool {
         let radius = self.radius;
         for segment in &self.segments {
-            let margin = if segment.cap == Linecap::Square { radius * SQRT_2 } else { radius };
+            let square = segment.start_cap == Linecap::Square || segment.end_cap == Linecap::Square;
+            let margin = if square { radius * SQRT_2 } else { radius };
             if edge_box_contains(segment.a, segment.b, px, py, margin)
-                && segment_hit_caps(segment.a, segment.b, px, py, radius, segment.cap, segment.cap)
+                && segment_hit_caps(
+                    segment.a,
+                    segment.b,
+                    px,
+                    py,
+                    radius,
+                    segment.start_cap,
+                    segment.end_cap,
+                )
             {
                 return true;
             }

@@ -1,0 +1,8 @@
+legacy tree: extracted by the coordinator outside git from tag legacy-c-final (cb9661144907e909a0e7950243e9dc3fcfefb5bc), read-only for the worker
+build: cmake --preset mac-debug && cmake --build --preset mac-debug --target svgworkbench (run by the coordinator; not re-run by the worker)
+binary: build/mac-debug/bin/svgworkbench sha256 f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590
+cmake 3.31.6, AppleClang 21.0.0.21000334
+render-animation is headless (no window opened); per fixture:
+  svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir>
+  render-animation: wrote 1 PPM frames at 1 fps over 1 seconds   (stroke-dashes, stroke-dash-join, stroke-dash-closed-seam, dashed-cubic, dash-dots)
+literal "0 6" dasharray: render-frame: dash-dots.svg: number at byte 201 (rc=1) -> legacy parser rejects zero entries; fixture uses 0.01 6

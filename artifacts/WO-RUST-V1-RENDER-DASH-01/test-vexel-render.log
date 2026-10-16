@@ -1,0 +1,146 @@
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-affc3e8dbf59d7f62/rust/crates/vexel-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.87s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_render-b24d0e063d095000)
+
+running 8 tests
+test dash::tests::closed_rect_joins_the_seam_when_on_at_both_ends ... ok
+test dash::tests::more_than_sixteen_values_is_a_limit_error ... ok
+test dash::tests::dashes_restart_per_subpath ... ok
+test dash::tests::offset_is_taken_modulo_the_period ... ok
+test dash::tests::zero_negative_and_nan_entries_mean_solid ... ok
+test dash::tests::odd_counts_repeat ... ok
+test dash::tests::zero_length_on_interval_is_a_dot_drawn_only_with_a_cap ... ok
+test dash::tests::step_and_byte_budgets_are_enforced ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/dash_adapter.rs (.cache/target/aarch64-apple-darwin/debug/deps/dash_adapter-66cc79a948eaa8fa)
+
+running 2 tests
+test with_dashes_requires_a_matching_slice_and_plain_conversion_still_rejects_dashes ... ok
+test with_dashes_carries_the_pattern_and_offset ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/dash_parity.rs (.cache/target/aarch64-apple-darwin/debug/deps/dash_parity-c80c68c27c7959ff)
+
+running 11 tests
+test sha256_matches_the_known_vector ... ok
+DASH PARITY stroke-dash-join: pixels=256 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test stroke_dash_join ... ok
+DASH PARITY stroke-dashes: pixels=256 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test stroke_dashes ... ok
+DASH PARITY stroke-dash-closed-seam: pixels=256 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test stroke_dash_closed_seam ... ok
+test dots_draw_with_round_cap_and_nothing_with_butt ... ok
+test manifest_hashes_match_the_fixture_files ... ok
+test seventeen_dash_values_is_a_limit_error_and_nan_renders_solid ... ok
+DASH PARITY dash-dots: pixels=6144 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test dash_dots ... ok
+DASH PARITY dashed-cubic: pixels=9216 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test dashed_cubic ... ok
+DASH PARITY negative (dashed-cubic shifted +0.5px): Report { total: 9216, max_delta: 127, differing: 424, over_two: 424, outside_dilation: 0 }
+test dashes_change_the_picture_and_a_shift_fails_the_harness ... ok
+test empty_dashes_match_render_shapes_on_every_parity_case ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+
+     Running tests/errors.rs (.cache/target/aarch64-apple-darwin/debug/deps/errors-927ad69ad0f3ebde)
+
+running 11 tests
+test non_empty_tile_is_rejected_without_touching_it ... ok
+test adapter_reports_dash_image_paint_order_and_paint_server ... ok
+test crisp_edges_is_unsupported_at_render_time ... ok
+test adapter_accepts_a_solid_shape_and_inverts_the_stroke_transform ... ok
+test adapter_reports_each_unsupported_paint_kind ... ok
+test empty_inputs_are_valid_and_leave_the_tile_empty ... ok
+test non_finite_and_overflowing_geometry_is_invalid ... ok
+test scene_level_features_each_have_their_kind ... ok
+test view_and_tile_size_mismatch_is_invalid ... ok
+test cancellation_stops_at_row_granularity ... ok
+test over_limit_input_returns_limit_exceeded ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+     Running tests/fill.rs (.cache/target/aarch64-apple-darwin/debug/deps/fill-7ef262b4b7cb5978)
+
+running 8 tests
+test rgb_is_averaged_over_nontransparent_samples_only ... ok
+test half_pixel_rectangle_covers_8_of_16_samples ... ok
+test unfilled_shape_paints_no_fill_even_with_a_fill_colour ... ok
+test half_pixel_in_x_and_quarter_coverage ... ok
+test shapes_composite_source_over_in_document_order ... ok
+test nested_ring_opposite_direction_is_a_hole_for_both_rules ... ok
+test nested_ring_same_direction_nonzero_fills_evenodd_holes ... ok
+test self_intersecting_star_nonzero_vs_evenodd ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/offscreen.rs (.cache/target/aarch64-apple-darwin/debug/deps/offscreen-9f493680f92e396c)
+
+running 5 tests
+test offscreen_size_ignores_any_simulated_host_scale ... ok
+test offscreen_module_never_reads_a_host_scale ... ok
+test render_offscreen_uses_the_one_to_one_tile ... ok
+test view_mapping_slice_and_none ... ok
+test identical_input_renders_byte_identical_tiles ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/parity.rs (.cache/target/aarch64-apple-darwin/debug/deps/parity-f0e21ab35a8c122f)
+
+running 9 tests
+test every_golden_is_listed_in_the_manifest_with_its_size ... ok
+PARITY shapes-lines-polygons: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test shapes_lines_polygons ... ok
+PARITY shapes-basic: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test shapes_basic ... ok
+PARITY path-relative-commands: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test path_relative_commands ... ok
+PARITY negative (shapes-basic shifted +0.5px): Report { total: 12288, max_delta: 128, differing: 218, over_two: 218, outside_dilation: 0 }
+test harness_rejects_a_deliberately_shifted_shape ... ok
+PARITY shapes-rounded: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test shapes_rounded ... ok
+PARITY style-presentation-attributes: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test style_presentation_attributes ... ok
+PARITY render-extra: pixels=16000 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test render_extra ... ok
+PARITY path-line-curves: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+test path_line_curves ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/parity_map.rs (.cache/target/aarch64-apple-darwin/debug/deps/parity_map-3729f4f03cedd2fc)
+
+running 3 tests
+test every_c_function_is_mapped_to_a_symbol_and_test_or_a_named_deferral ... ok
+test parity_map_lists_exactly_the_functions_defined_in_the_c_files ... ok
+test mapped_symbols_and_tests_exist_in_the_crate ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/stroke.rs (.cache/target/aarch64-apple-darwin/debug/deps/stroke-a4a4195b16750504)
+
+running 13 tests
+test zero_width_or_transparent_stroke_draws_nothing ... ok
+test odd_width_gives_half_coverage_rows ... ok
+test bevel_join_cuts_the_outer_corner ... ok
+test round_join_is_a_disc_at_the_vertex ... ok
+test width_covers_exact_band ... ok
+test square_cap_extends_by_half_width ... ok
+test round_cap_is_a_half_disc ... ok
+test miter_join_fills_the_outer_corner ... ok
+test stroke_is_painted_over_fill ... ok
+test zero_length_segment_follows_the_cap ... ok
+test explicit_subpath_closed_flags_are_honoured ... ok
+test closed_subpath_joins_the_seam_open_does_not ... ok
+test miter_limit_crossing_falls_back_to_bevel ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

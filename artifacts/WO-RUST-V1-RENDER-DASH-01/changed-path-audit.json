@@ -1,0 +1,22 @@
+{
+  "modified": [
+    "rust/crates/vexel-render/src/lib.rs",
+    "rust/crates/vexel-render/src/adapter.rs",
+    "rust/crates/vexel-render/src/render.rs",
+    "rust/crates/vexel-render/src/stroke.rs",
+    "rust/crates/vexel-render/src/validate.rs",
+    "rust/crates/vexel-render/tests/common/mod.rs"
+  ],
+  "added": [
+    "rust/crates/vexel-render/src/dash.rs",
+    "rust/crates/vexel-render/src/dash/tests.rs",
+    "rust/crates/vexel-render/tests/dash_parity.rs",
+    "rust/crates/vexel-render/tests/dash_adapter.rs",
+    "rust/crates/vexel-render/tests/common/dash_data.rs",
+    "rust/fixtures/render-dash/ (5 svg, 5 ppm, manifest.json)",
+    "artifacts/WO-RUST-V1-RENDER-DASH-01/"
+  ],
+  "decoder_change": "none",
+  "protected_paths_touched": [],
+  "git_status_check": "git status/diff refused by the sandbox in this worktree; list derived from the edits made"
+}

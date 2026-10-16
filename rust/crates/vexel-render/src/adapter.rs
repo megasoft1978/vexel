@@ -2,7 +2,7 @@
 //! deferred feature as a typed error instead of skipping it.
 
 use crate::stroke::{invert, is_visible};
-use crate::{FlatEdge, RenderError, RenderShape, StrokeStyle, UnsupportedKind};
+use crate::{DashedShape, FlatEdge, RenderError, RenderShape, StrokeStyle, UnsupportedKind};
 use std::ops::Range;
 use vexel_geometry::affine_identity;
 use vexel_scene::{Paint, PaintKind, Shape};
@@ -36,6 +36,41 @@ pub fn from_scene_shape<'a>(
     subpaths: &'a [Range<usize>],
     subpath_closed: &'a [bool],
 ) -> Result<RenderShape<'a>, RenderError> {
+    convert(shape, fill_rgba, fill_paints, stroke_paints, edges, subpaths, subpath_closed, false)
+}
+
+/// Like [`from_scene_shape`] but accepts dashed strokes. `dashes` is the
+/// shape's slice of the scene dash table (`SceneView::shape_dashes`); its
+/// length must equal the scene stroke's `dash_values.count`.
+pub fn from_scene_shape_with_dashes<'a>(
+    shape: &Shape,
+    fill_rgba: [u8; 4],
+    fill_paints: &[Paint],
+    stroke_paints: &[Paint],
+    edges: &'a [FlatEdge],
+    subpaths: &'a [Range<usize>],
+    subpath_closed: &'a [bool],
+    dashes: &'a [f64],
+) -> Result<DashedShape<'a>, RenderError> {
+    if dashes.len() != shape.stroke.dash_values.count {
+        return Err(RenderError::InvalidGeometry);
+    }
+    let shape =
+        convert(shape, fill_rgba, fill_paints, stroke_paints, edges, subpaths, subpath_closed, true)?;
+    Ok(DashedShape { shape, dashes })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn convert<'a>(
+    shape: &Shape,
+    fill_rgba: [u8; 4],
+    fill_paints: &[Paint],
+    stroke_paints: &[Paint],
+    edges: &'a [FlatEdge],
+    subpaths: &'a [Range<usize>],
+    subpath_closed: &'a [bool],
+    allow_dashes: bool,
+) -> Result<RenderShape<'a>, RenderError> {
     if edges.len() != shape.edges.count || subpaths.len() != shape.subpaths.count {
         return Err(RenderError::InvalidGeometry);
     }
@@ -51,7 +86,7 @@ pub fn from_scene_shape<'a>(
     if scene_stroke.paint_server && shape.stroke_paint.is_none() {
         return Err(RenderError::Unsupported(UnsupportedKind::GradientPaint));
     }
-    if scene_stroke.dash_values.count != 0 {
+    if !allow_dashes && scene_stroke.dash_values.count != 0 {
         return Err(RenderError::Unsupported(UnsupportedKind::Dash));
     }
     if scene_stroke.paint_order != 0 {

@@ -1,6 +1,7 @@
 //! Shared hand-built shape helpers for the vexel-render tests.
 #![allow(dead_code)]
 
+pub mod dash_data;
 pub mod parity_data;
 
 use std::ops::Range;
