@@ -195,6 +195,8 @@ pub enum WindowEvent {
         all_buttons_up: bool,
     },
     CloseRequested,
+    /// File menu item activated; the value is the application-chosen tag.
+    MenuCommand(u32),
     AnimationTick {
         monotonic_seconds: f64,
     },

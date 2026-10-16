@@ -1,0 +1,54 @@
+   Compiling vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-platform-apple)
+   Compiling vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-app)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.14s
+     Running unittests src/main.rs (.cache/target-wo/aarch64-apple-darwin/debug/deps/vexel-f2dfc2aea803fc29)
+
+running 45 tests
+test file_flow::tests::near_miss_shortcuts_map_to_nothing ... ok
+test model::tests::compact_bounds_hide_inspector_and_keep_stage_valid ... ok
+test model::tests::mode_selection_works_by_keyboard_pointer_and_is_idempotent ... ok
+test model::tests::compact_painted_control_geometry_stays_inside_panels_in_both_modes ... ok
+test model::tests::inspector_is_omitted_until_its_fixed_content_fits ... ok
+test file_flow::tests::menu_table_drives_shortcuts_titles_and_keys ... ok
+test model::tests::pointer_hit_testing_is_deterministic_and_ignores_unavailable_actions ... ok
+test model::tests::rejects_unsupported_backing_scales_and_oversized_frames ... ok
+test model::tests::standard_workbench_keeps_stage_dominant_and_timeline_docked ... ok
+test file_ui::tests::key_and_menu_routes_reach_the_flow ... ok
+test preview::tests::request_mapping_rejects_non_finite_color_and_extra_attributes ... ok
+test file_flow::tests::a_panel_error_alerts_instead_of_acting ... ok
+test preview::tests::invalid_operation_does_not_change_source_or_history ... ok
+test preview_app::tests::reply_follows_staged_state_and_is_only_committed_for_frame ... ok
+test preview::tests::undo_redo_restore_exact_source_and_branch_order ... ok
+test preview_app::tests::backend_call_waits_until_the_ui_reports_frame_presentation ... ok
+test preview::tests::raster_bounds_mapping_and_pixel_change ... ok
+test project_session::tests::missing_directory_and_bad_paths_fail_typed ... ok
+test file_flow::tests::menu_enablement_table ... ok
+test file_flow::tests::close_request_follows_the_dirty_state ... ok
+test file_flow::tests::open_on_a_clean_session_loads_the_fixture ... ok
+test project_session::tests::save_without_path_is_typed_error_and_keeps_dirty ... ok
+test file_flow::tests::failed_save_during_open_keeps_the_document_and_aborts ... ok
+test file_flow::tests::cancelling_any_panel_changes_nothing ... ok
+test file_flow::tests::save_without_path_shows_save_panel_then_writes ... ok
+test project_session::tests::edit_undo_edit_save_reopen_yields_post_edit_state ... ok
+test project_session::tests::shortcuts_map_to_file_actions ... ok
+test project_session::tests::mcp_preview_state_keeps_working_after_save_and_open ... ok
+test file_flow::tests::save_as_always_shows_the_panel_and_updates_the_path ... ok
+test file_flow::tests::save_with_path_writes_without_any_panel ... ok
+test project_session::tests::unsaved_changes_prompt_text ... ok
+test file_flow::tests::open_on_a_dirty_session_prompts_first ... ok
+test project_session::tests::dirty_tracking_edit_save_and_undo_past_saved_point ... ok
+test render::geometry_tests::timeline_rows_are_omitted_until_their_full_bounds_fit ... ok
+test tests::only_primary_button_can_activate_modes ... ok
+test project_session::tests::round_trip_preserves_source_ids_order_and_animation ... ok
+test project_session::tests::undo_save_redo_and_history_cursor ... ok
+test file_flow::tests::failures_alert_with_the_user_message_and_change_nothing ... ok
+test project_session::tests::unedited_foreign_source_saves_and_reopens_identically ... ok
+test project_session::tests::unknown_source_survives_byte_for_byte ... ok
+test project_session::tests::failed_opens_are_typed_and_leave_the_document_untouched ... ok
+test project_session::tests::valid_bundle_with_non_svg_scene_is_invalid_scene ... ok
+test project_session::tests::unwritable_directory_fails_without_touching_state_or_existing_file ... ok
+test project_session::tests::resave_replaces_atomically_and_leaves_no_temp_files ... ok
+test preview::tests::rejects_invalid_shapes_and_caps_scene ... ok
+
+test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.25s
+

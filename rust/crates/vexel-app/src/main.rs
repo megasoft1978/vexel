@@ -1,14 +1,20 @@
 #![forbid(unsafe_code)]
 
+mod file_flow;
+mod file_ui;
 mod model;
 mod preview;
 mod preview_app;
 mod project_session;
 mod render;
 
+use file_flow::FlowOutcome;
+use file_ui::FileUi;
 use model::{Layout, Mode, Model};
 use std::{num::NonZeroUsize, thread, time::Duration};
-use vexel_platform_apple::{MainThread, NativeApp, PointerKind, WindowConfig, WindowEvent};
+use vexel_platform_apple::{
+    MainThread, NativeApp, NativePanels, PointerKind, WindowConfig, WindowEvent,
+};
 
 fn main() {
     let preview = std::env::args_os()
@@ -64,6 +70,11 @@ fn run() -> Result<(), &'static str> {
     let dark = window.is_dark_appearance().unwrap_or(true);
     let mut model = Model::new(dark);
     model.status = initial_status;
+    let mut files =
+        FileUi::new(NativePanels::new(main_thread)).ok_or("blank document unavailable")?;
+    files
+        .install(&mut app, window.id())
+        .map_err(|_| "could not install the File menu")?;
     let mut dirty = true;
     let event_budget = NonZeroUsize::new(128).ok_or("invalid event budget")?;
     let mut closing = false;
@@ -80,7 +91,7 @@ fn run() -> Result<(), &'static str> {
                         .present_rgba(frame)
                         .map_err(|_| "native frame presentation failed")?;
                     window
-                        .set_title("Vexel".to_owned())
+                        .set_title(files.title())
                         .map_err(|_| "could not update the Vexel window title")?;
                 }
                 Err(problem) => {
@@ -154,9 +165,18 @@ fn run() -> Result<(), &'static str> {
                         model.status = "Backing scale rejected: unsupported pixel geometry";
                     }
                 }
-                WindowEvent::KeyDown { code, .. } => {
-                    if model.key(code) {
+                WindowEvent::KeyDown {
+                    code, modifiers, ..
+                } => {
+                    if let Some(outcome) = files.key(code, modifiers) {
+                        apply_file_outcome(outcome, &mut model, &files, &app, &mut dirty);
+                    } else if model.key(code) {
                         dirty = true;
+                    }
+                }
+                WindowEvent::MenuCommand(tag) => {
+                    if let Some(outcome) = files.menu(tag) {
+                        apply_file_outcome(outcome, &mut model, &files, &app, &mut dirty);
                     }
                 }
                 WindowEvent::Pointer(pointer)
@@ -177,8 +197,10 @@ fn run() -> Result<(), &'static str> {
                     }
                 }
                 WindowEvent::CloseRequested => {
-                    closing = true;
-                    break;
+                    if files.close() == FlowOutcome::CloseWindow {
+                        closing = true;
+                        break;
+                    }
                 }
                 WindowEvent::QueueFault(_) => return Err("native input queue reported a fault"),
                 _ => {}
@@ -192,6 +214,19 @@ fn run() -> Result<(), &'static str> {
         .map_err(|_| "native window shutdown failed")?;
     app.shutdown()
         .map_err(|_| "native application shutdown failed")
+}
+fn apply_file_outcome(
+    outcome: FlowOutcome,
+    model: &mut Model,
+    files: &FileUi<NativePanels>,
+    app: &NativeApp,
+    dirty: &mut bool,
+) {
+    if let Some(status) = outcome.status() {
+        model.status = status;
+    }
+    let _ = files.refresh_menu(app);
+    *dirty = true;
 }
 fn pointer_accepts_mode(button: Option<u8>) -> bool {
     button == Some(0)

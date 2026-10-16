@@ -62,6 +62,7 @@ pub struct NativeApp {
     pub(crate) state: Rc<RefCell<AppState>>,
     main_thread: MainThread,
     application: Retained<NSApplication>,
+    file_menu: Option<super::file_menu::FileMenu>,
 }
 impl NativeApp {
     pub fn start(main_thread: MainThread) -> Result<Self, WindowError> {
@@ -100,7 +101,31 @@ impl NativeApp {
             state,
             main_thread,
             application,
+            file_menu: None,
         })
+    }
+    /// Installs the main menu with a File menu for window `id`; activation
+    /// queues `WindowEvent::MenuCommand(tag)` on that window.
+    pub fn install_file_menu(
+        &mut self,
+        id: WindowId,
+        items: &[super::file_menu::MenuItemSpec<'_>],
+    ) -> Result<(), WindowError> {
+        let route = record(&self.state.borrow(), id)?.route.clone();
+        self.file_menu = Some(super::file_menu::FileMenu::install(
+            self.main_thread,
+            &self.application,
+            &route,
+            items,
+        )?);
+        Ok(())
+    }
+    /// Enables/disables File menu items in table order.
+    pub fn set_file_menu_enabled(&self, enabled: &[bool]) -> Result<(), WindowError> {
+        match &self.file_menu {
+            Some(menu) => menu.set_enabled(enabled),
+            None => Err(WindowError::InvalidConfig),
+        }
     }
     #[allow(deprecated)] // Baseline activation API, available on macOS13.
     pub fn create_window(&mut self, config: WindowConfig) -> Result<Window, WindowError> {

@@ -1,0 +1,5 @@
+{
+  "check": 0, "test_vexel_app": 0, "test_vexel_platform_apple": 0, "fmt_check": 0,
+  "wo_validate_ready": 0, "ledger_validate": 0, "git_diff_check": 0, "cargo_tree": 0,
+  "logs": ["check.log", "test-app.log", "test-platform.log", "fmt.log", "wo_validate.log", "ledger.log", "diff-check.log", "tree.log"]
+}

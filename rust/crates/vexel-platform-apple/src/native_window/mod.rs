@@ -1,11 +1,14 @@
 mod app;
 mod callbacks;
 mod cursor;
+mod file_menu;
 mod frame;
 mod geometry;
 mod ime;
 mod ime_native;
 mod input;
+#[cfg(test)]
+mod non_editing_tests;
 mod queue;
 mod route;
 mod teardown;
@@ -14,11 +17,10 @@ mod ticks;
 mod types;
 #[cfg(test)]
 mod verification_tests;
-#[cfg(test)]
-mod non_editing_tests;
 mod window;
 
 pub use app::{NativeApp, Window};
+pub use file_menu::{MAX_MENU_ITEMS, MenuItemSpec};
 pub use frame::{RgbaFrame, RgbaFrameError};
 pub use text::{TextEmphasis, TextError, TextFace, draw_text_rgba};
 pub use types::{

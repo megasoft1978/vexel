@@ -1,0 +1,17 @@
+{
+  "modified": [
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-platform-apple/src/lib.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/app.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/mod.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/types.rs"
+  ],
+  "added": [
+    "rust/crates/vexel-app/src/file_flow/",
+    "rust/crates/vexel-app/src/file_ui.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/file_menu.rs",
+    "rust/crates/vexel-platform-apple/src/panels/",
+    "artifacts/WO-RUST-V1-NATIVE-PANELS-01/"
+  ],
+  "protected_paths_touched": []
+}

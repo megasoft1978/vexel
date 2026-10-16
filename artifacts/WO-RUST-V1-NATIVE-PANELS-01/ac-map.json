@@ -1,0 +1,11 @@
+{
+  "AC1": ["file_flow::tests::save_without_path_shows_save_panel_then_writes", "save_with_path_writes_without_any_panel", "save_as_always_shows_the_panel_and_updates_the_path", "cancelling_any_panel_changes_nothing"],
+  "AC2": ["open_on_a_clean_session_loads_the_fixture", "open_on_a_dirty_session_prompts_first", "failed_save_during_open_keeps_the_document_and_aborts"],
+  "AC3": ["close_request_follows_the_dirty_state"],
+  "AC4": ["failures_alert_with_the_user_message_and_change_nothing", "a_panel_error_alerts_instead_of_acting"],
+  "AC5": ["menu_table_drives_shortcuts_titles_and_keys", "near_miss_shortcuts_map_to_nothing", "menu_enablement_table", "file_ui::tests::key_and_menu_routes_reach_the_flow"],
+  "AC6": ["panels::tests::path_is_bounded_and_rejects_nul", "extension_is_appended_only_when_missing", "extension_append_respects_the_path_bound", "native_calls_are_rejected_off_the_main_thread"],
+  "AC7": "all tests display-free; vexel-app 45 pass, vexel-platform-apple 48+5+1+6 pass",
+  "AC8": "tree.log; no Cargo.toml/Cargo.lock change",
+  "AC9": "result.md"
+}

@@ -1,0 +1,96 @@
+vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-app)
+├── vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-json)
+│   └── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+├── vexel-mcp-stdio v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-mcp-stdio)
+│   ├── vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-json) (*)
+│   └── vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-protocol)
+│       ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│       └── vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-json) (*)
+├── vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-platform-apple)
+│   ├── bitflags v2.13.2
+│   ├── block2 v0.6.2
+│   │   └── objc2 v0.6.5
+│   │       ├── objc2-encode v4.1.0
+│   │       └── objc2-exception-helper v0.1.1
+│   │           [build-dependencies]
+│   │           └── cc v1.8.0
+│   │               ├── find-msvc-tools v0.1.14
+│   │               └── shlex v2.0.1
+│   ├── objc2 v0.6.5 (*)
+│   ├── objc2-app-kit v0.3.2
+│   │   ├── bitflags v2.13.2
+│   │   ├── block2 v0.6.2 (*)
+│   │   ├── objc2 v0.6.5 (*)
+│   │   ├── objc2-core-graphics v0.3.2
+│   │   │   ├── bitflags v2.13.2
+│   │   │   ├── objc2 v0.6.5 (*)
+│   │   │   └── objc2-core-foundation v0.3.2
+│   │   │       ├── bitflags v2.13.2
+│   │   │       └── objc2 v0.6.5 (*)
+│   │   ├── objc2-foundation v0.3.2
+│   │   │   ├── bitflags v2.13.2
+│   │   │   ├── block2 v0.6.2 (*)
+│   │   │   ├── objc2 v0.6.5 (*)
+│   │   │   └── objc2-core-foundation v0.3.2 (*)
+│   │   └── objc2-quartz-core v0.3.2
+│   │       ├── bitflags v2.13.2
+│   │       ├── objc2 v0.6.5 (*)
+│   │       ├── objc2-core-foundation v0.3.2 (*)
+│   │       ├── objc2-core-graphics v0.3.2 (*)
+│   │       ├── objc2-foundation v0.3.2 (*)
+│   │       └── objc2-metal v0.3.2
+│   │           ├── bitflags v2.13.2
+│   │           ├── block2 v0.6.2 (*)
+│   │           ├── objc2 v0.6.5 (*)
+│   │           └── objc2-foundation v0.3.2 (*)
+│   ├── objc2-core-foundation v0.3.2 (*)
+│   ├── objc2-core-graphics v0.3.2 (*)
+│   ├── objc2-core-text v0.3.2
+│   │   ├── bitflags v2.13.2
+│   │   ├── objc2 v0.6.5 (*)
+│   │   ├── objc2-core-foundation v0.3.2 (*)
+│   │   └── objc2-core-graphics v0.3.2 (*)
+│   ├── objc2-encode v4.1.0
+│   ├── objc2-exception-helper v0.1.1 (*)
+│   ├── objc2-foundation v0.3.2 (*)
+│   ├── objc2-image-io v0.3.2
+│   │   ├── objc2 v0.6.5 (*)
+│   │   ├── objc2-core-foundation v0.3.2 (*)
+│   │   └── objc2-core-graphics v0.3.2 (*)
+│   ├── objc2-metal v0.3.2 (*)
+│   └── objc2-quartz-core v0.3.2 (*)
+│   [build-dependencies]
+│   ├── cc v1.8.0 (*)
+│   ├── find-msvc-tools v0.1.14
+│   └── shlex v2.0.1
+├── vexel-project v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-project)
+│   └── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+├── vexel-project-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-project-io)
+│   ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│   ├── vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-platform-macos)
+│   │   └── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│   └── vexel-project v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-project) (*)
+├── vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-protocol) (*)
+├── vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-raster)
+│   └── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+├── vexel-svg-animation v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-svg-animation)
+│   ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│   └── vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-xml)
+│       └── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+├── vexel-ui v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-ui)
+│   ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│   └── vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-raster) (*)
+├── vexel-v1-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-v1-document)
+│   └── vexel-document-edit v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-document-edit)
+│       ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│       ├── vexel-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-document)
+│       │   ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│       │   └── vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-xml) (*)
+│       ├── vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-document-io)
+│       │   ├── vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-base)
+│       │   ├── vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-platform-macos) (*)
+│       │   └── vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-xml) (*)
+│       └── vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-xml) (*)
+└── vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-xml) (*)
+
+vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ab9944b81c84b90b7/rust/crates/vexel-platform-apple) (*)
