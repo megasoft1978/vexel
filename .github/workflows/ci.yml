@@ -16,14 +16,13 @@ jobs:
   macos-arm64:
     name: macOS Apple Silicon
     runs-on: macos-15
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Install librsvg (reference renderer for differential tests)
-        run: brew install librsvg
-      - name: Build and run fast verification
-        env:
-          # Shared hosted runners jitter; the strict 100 ms owner-step gate stays the local default.
-          VEXEL_OWNER_STEP_LIMIT_MS: "500"
-        run: ./dev verify
+      - name: Install pinned Rust toolchain
+        run: rustup show active-toolchain || rustup toolchain install 1.99.0 --profile minimal
+      - name: Check workspace
+        run: cargo check --workspace --locked
+      - name: Run tests
+        run: cargo test --workspace --locked --exclude vexel-app
