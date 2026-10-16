@@ -1,0 +1,23 @@
+{
+  "changed": [
+    "rust/crates/vexel-app/src/file_flow/mod.rs",
+    "rust/crates/vexel-app/src/file_flow/dedup.rs",
+    "rust/crates/vexel-app/src/file_flow/tests.rs",
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-app/src/preview.rs",
+    "rust/crates/vexel-app/src/preview_app.rs",
+    "rust/crates/vexel-app/src/project_session/mod.rs",
+    "rust/crates/vexel-app/src/tools/mod.rs",
+    "rust/crates/vexel-app/src/session/mcp.rs",
+    "rust/crates/vexel-app/src/session/tests_mcp.rs",
+    "rust/crates/vexel-app/src/session/tests_playback.rs",
+    "rust/crates/vexel-protocol/src/tools.rs",
+    "rust/crates/vexel-protocol/tests/mcp_preview_profile.rs"
+  ],
+  "outside_listed_scope_minimal": [
+    "rust/crates/vexel-app/src/session/mod.rs (removed blanket allow, required by AC5)",
+    "rust/crates/vexel-app/src/session/tests.rs (unused Path import exposed by lint change)",
+    "rust/crates/vexel-app/src/preview/animation.rs (item-level cfg_attr allow on 3 test-only fns)"
+  ],
+  "mcp_symbol_search": "McpHost::handle( callers: session/tests_mcp.rs, session/tests_playback.rs only"
+}

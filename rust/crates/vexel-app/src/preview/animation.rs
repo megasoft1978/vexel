@@ -308,9 +308,12 @@ pub(crate) fn validate_shape(shape: Shape) -> Result<(), &'static str> {
 }
 
 /// Deterministic fixed-size renderer for the intentionally limited preview scene.
+// Test-only: the shell renders through `compose`, not this preview rasterizer.
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn rasterize(shapes: &[Shape]) -> Result<Vec<u8>, &'static str> {
     rasterize_with_opacity(shapes, &vec![1.0; shapes.len()])
 }
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn rasterize_at(
     state: &PreviewState,
     time_seconds: f64,
@@ -354,6 +357,7 @@ pub(crate) fn rasterize_at(
     }
     rasterize_with_opacity(&shapes, &opacity)
 }
+#[cfg_attr(not(test), allow(dead_code))]
 fn rasterize_with_opacity(shapes: &[Shape], opacity: &[f64]) -> Result<Vec<u8>, &'static str> {
     if shapes.len() > SCENE_LIMIT {
         return Err("preview scene limit reached");

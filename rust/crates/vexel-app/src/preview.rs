@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::sync::mpsc::SyncSender;
 use vexel_json::{JsonDocument, JsonType};
 use vexel_protocol::{ProtocolBackend, ToolResponse};

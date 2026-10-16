@@ -4,7 +4,7 @@ use std::{
     num::NonZeroUsize,
     sync::mpsc::{self, Receiver},
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 use vexel_app::animation::{
     driver::{Driver, TickOutcome},
@@ -13,10 +13,11 @@ use vexel_app::animation::{
     playback::MonotonicClock,
     strip::{self, Strip, StripPointer},
 };
-use vexel_app::file_flow::FlowOutcome;
+use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
 use vexel_app::model::{self, Layout, Mode, Model, Target};
 use vexel_app::preview::{self, Operation, UiRequest};
+use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
 use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
 use vexel_app::{compose, preview_app, render};
@@ -114,6 +115,8 @@ fn run(
     let mut driver = Driver::new(MonotonicClock::new());
     let mut strip = Strip::default();
     let mut was_playing = false;
+    let mut dedup = ShortcutDedup::new();
+    let started = Instant::now();
     let mut menu_revision = files.document().revision();
     let mut dirty = true;
     let event_budget = NonZeroUsize::new(128).ok_or("invalid event budget")?;
@@ -323,7 +326,9 @@ fn run(
                             EditAction::Redo => files.document_mut().redo(),
                         };
                         dirty = true;
-                    } else if let Some(outcome) = files.key(code, modifiers) {
+                    } else if let Some(outcome) =
+                        file_key(&mut files, &mut dedup, started.elapsed(), code, modifiers)
+                    {
                         apply_file_outcome(
                             outcome, &mut model, &files, &app, &mut dirty, &mut tools,
                         );
@@ -341,7 +346,8 @@ fn run(
                     }
                 }
                 WindowEvent::MenuCommand(tag) => {
-                    if let Some(outcome) = files.menu(tag) {
+                    if let Some(outcome) = file_menu(&mut files, &mut dedup, started.elapsed(), tag)
+                    {
                         apply_file_outcome(
                             outcome, &mut model, &files, &app, &mut dirty, &mut tools,
                         );
@@ -378,6 +384,35 @@ fn run(
         .map_err(|_| "native window shutdown failed")?;
     app.shutdown()
         .map_err(|_| "native application shutdown failed")
+}
+/// A file shortcut, unless the menu just delivered the same action (one press,
+/// two delivery paths). A suppressed press reports `Cancelled`: nothing changes.
+fn file_key(
+    files: &mut FileUi<NativePanels>,
+    dedup: &mut ShortcutDedup,
+    now: Duration,
+    code: u16,
+    modifiers: Modifiers,
+) -> Option<FlowOutcome> {
+    let action = shortcut_action(code, modifiers)?;
+    if !dedup.allow_key(action, now) {
+        return Some(FlowOutcome::Cancelled);
+    }
+    files.key(code, modifiers)
+}
+
+/// A File menu activation, with the same duplicate guard as [`file_key`].
+fn file_menu(
+    files: &mut FileUi<NativePanels>,
+    dedup: &mut ShortcutDedup,
+    now: Duration,
+    tag: u32,
+) -> Option<FlowOutcome> {
+    let action = action_for_tag(tag)?;
+    if !dedup.allow_menu(action, now) {
+        return Some(FlowOutcome::Cancelled);
+    }
+    files.menu(tag)
 }
 fn apply_file_outcome(
     outcome: FlowOutcome,

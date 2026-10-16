@@ -4,7 +4,7 @@
 use super::*;
 use crate::animation::driver::{Driver, TickOutcome};
 use crate::animation::keys::{PlaybackKey, apply};
-use crate::animation::playback::{LoopClock, ManualClock};
+use crate::animation::playback::ManualClock;
 use crate::preview::{Control, Operation, Shape};
 
 const ANIM: &[u8] = b"<animate attributeName=\"x\" values=\"10;20\" dur=\"2s\"/>";
@@ -26,14 +26,15 @@ fn reply(outcome: Result<McpOutcome, &'static str>) -> String {
 fn animated() -> (AppDocument, McpHost) {
     let mut app = AppDocument::new(512, 512).unwrap();
     let mut host = McpHost::new();
-    reply(host.handle(&mut app, Operation::Add(RECT), 0.0));
-    reply(host.handle(
+    let mut driver = Driver::new(ManualClock::default());
+    reply(host.handle_with(&mut app, Operation::Add(RECT), &mut driver));
+    reply(host.handle_with(
         &mut app,
         Operation::AnimationAdd {
             target_id: "vexel-object-1".to_owned(),
             xml: ANIM.to_vec(),
         },
-        0.0,
+        &mut driver,
     ));
     (app, host)
 }
@@ -82,27 +83,6 @@ fn mcp_controls_steer_the_shared_driver_with_the_integrate_replies() {
         Err("invalid preview animation time")
     );
     assert_eq!(driver.time(), 1.25);
-    // The host kept no clock of its own.
-    assert!(!host.is_playing());
-}
-
-#[test]
-fn handle_and_handle_with_reply_alike_for_the_same_inputs() {
-    let (mut app, mut host) = animated();
-    let mut driver = Driver::new(ManualClock::default());
-    let mut legacy = McpHost::new();
-    for (control_op, advance) in [
-        (Control::Play, 0.0),
-        (Control::Pause, 0.5),
-        (Control::Seek(1.25), 0.0),
-        (Control::Play, 0.0),
-    ] {
-        driver.playback().clock().advance(advance);
-        let now = driver.playback().clock().now_seconds();
-        let a = host.handle_with(&mut app, Operation::Control(control_op), &mut driver);
-        let b = legacy.handle(&mut app, Operation::Control(control_op), now);
-        assert_eq!(a, b, "{control_op:?}");
-    }
 }
 
 #[test]

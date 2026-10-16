@@ -1,22 +1,23 @@
-#![allow(dead_code, unused_imports)]
 //! Pure Open / Save / Save As / close flow over `ProjectSession`.
 //!
 //! All dialogs go through [`PanelBackend`], so tests drive the whole flow with a
 //! fake. Every cancel leaves the session untouched; a failed save or open never
 //! replaces the live document.
 
+mod dedup;
 mod menu;
 #[cfg(test)]
 mod tests;
 
+pub use dedup::{DEDUP_WINDOW, ShortcutDedup};
 pub use menu::{FILE_MENU, MenuEntry, action_for_tag, menu_enabled, menu_specs};
 
 use crate::project_session::{FileAction, ProjectSession, SessionError, unsaved_changes_prompt};
 use vexel_platform_apple::{PanelBackend, PanelResult, UnsavedChoice, UnsavedText};
 
-/// Extensions the Open panel offers. A chosen `.svg` path still opens (untitled),
-/// but the panel filter stays `.vexel` until its NATIVE-PANELS test is revised.
-pub const OPEN_EXTENSIONS: &[&str] = &["vexel"];
+/// Extensions the Open panel offers: `.svg` opens as an untitled import
+/// (compose path), `.vexel` as a project.
+pub const OPEN_EXTENSIONS: &[&str] = &["svg", "vexel"];
 
 /// What the caller must do after a flow step.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

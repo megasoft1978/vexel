@@ -222,6 +222,42 @@ fn cancelling_any_panel_changes_nothing() {
     assert!(fresh.is_dirty());
 }
 
+// Open filter offers .svg and .vexel (deliberate change, HANDOFF lesson 3).
+
+#[test]
+fn open_filter_offers_svg_and_vexel_and_each_path_kind_opens() {
+    assert_eq!(OPEN_EXTENSIONS, ["svg", "vexel"]);
+    let dir = Dir::new();
+
+    let svg = dir.file("import.svg");
+    fs::write(
+        &svg,
+        include_bytes!("../../../../fixtures/v1/save/foreign.svg"),
+    )
+    .unwrap();
+    let mut session = blank();
+    let backend = Fake::default();
+    backend.picks_open(&svg);
+    assert_eq!(
+        handle(FileAction::Open, &mut session, &backend),
+        FlowOutcome::Opened
+    );
+    assert_eq!(backend.calls(), ["open:svg,vexel"]);
+    // Compose path: untitled import that remembers its origin.
+    assert_eq!(session.path(), None);
+    assert_eq!(session.svg_origin(), Some(bytes(&svg)));
+
+    let (project, _, _) = fixture(&dir, "fx.vexel");
+    let backend = Fake::default();
+    backend.picks_open(&project);
+    assert_eq!(
+        handle(FileAction::Open, &mut session, &backend),
+        FlowOutcome::Opened
+    );
+    assert_eq!(session.path(), Some(bytes(&project)));
+    assert_eq!(session.svg_origin(), None);
+}
+
 // AC2
 
 #[test]
@@ -236,7 +272,7 @@ fn open_on_a_clean_session_loads_the_fixture() {
         handle(FileAction::Open, &mut session, &backend),
         FlowOutcome::Opened
     );
-    assert_eq!(backend.calls(), ["open:vexel"]);
+    assert_eq!(backend.calls(), ["open:svg,vexel"]);
     assert_eq!(session.document().source().unwrap(), saved);
     assert_eq!(session.path(), Some(bytes(&path)));
     assert!(!session.is_dirty());
@@ -259,7 +295,10 @@ fn open_on_a_dirty_session_prompts_first() {
         handle(FileAction::Open, &mut session, &backend),
         FlowOutcome::Opened
     );
-    assert_eq!(backend.calls(), ["confirm:Save As\u{2026}", "open:vexel"]);
+    assert_eq!(
+        backend.calls(),
+        ["confirm:Save As\u{2026}", "open:svg,vexel"]
+    );
     assert_eq!(session.document().source().unwrap(), saved);
 
     // Cancel: nothing happens, no panel.
@@ -295,7 +334,7 @@ fn open_on_a_dirty_session_prompts_first() {
         [
             "confirm:Save As\u{2026}",
             "save:Untitled.vexel",
-            "open:vexel"
+            "open:svg,vexel"
         ]
     );
     assert_eq!(

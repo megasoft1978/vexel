@@ -1,4 +1,3 @@
-#![allow(dead_code, unused_imports)]
 //! Window-free save/open session for the editable `.vexel` project.
 //!
 //! The bundle stores the exact `V1Document::source()` bytes as its scene.

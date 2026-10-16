@@ -14,7 +14,6 @@ use crate::preview::{
     Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
     object_id, validate_animation_fragment, validate_shape,
 };
-use std::cell::Cell;
 use vexel_mcp_access::AccessPolicy;
 use vexel_v1_document::{V1Document, V1DocumentError};
 
@@ -35,16 +34,6 @@ pub enum McpOutcome {
     },
 }
 
-/// Seconds supplied by the caller (the legacy `handle` clock argument).
-#[derive(Default)]
-struct ExternalClock(Cell<f64>);
-
-impl LoopClock for ExternalClock {
-    fn now_seconds(&self) -> f64 {
-        self.0.get()
-    }
-}
-
 /// Id allocation for the MCP session. Playback is not kept here: the shell
 /// passes the one shared [`Driver`] (keyboard, strip and MCP use the same
 /// clock) to [`McpHost::handle_with`]. The document itself lives only in the
@@ -54,9 +43,6 @@ pub struct McpHost {
     /// The one grant policy of this process: every path tool and the GIF
     /// export job use it. Fixed at construction.
     policy: AccessPolicy,
-    /// Driver for the clock-argument [`McpHost::handle`] form (tests, callers
-    /// without a shell driver); the shell never uses it.
-    standalone: Option<Driver<ExternalClock>>,
 }
 
 impl Default for McpHost {
@@ -73,39 +59,12 @@ impl McpHost {
     }
 
     pub fn with_policy(policy: AccessPolicy) -> Self {
-        Self {
-            next_id: 1,
-            policy,
-            standalone: None,
-        }
+        Self { next_id: 1, policy }
     }
 
     /// The grant policy used by path tools; hand a clone to `ExportJob::spawn`.
     pub fn policy(&self) -> &AccessPolicy {
         &self.policy
-    }
-
-    /// Whether the standalone driver of [`McpHost::handle`] is playing.
-    pub fn is_playing(&self) -> bool {
-        self.standalone.as_ref().is_some_and(Driver::is_playing)
-    }
-
-    /// [`McpHost::handle_with`] on the host's standalone driver, whose clock
-    /// reads `now` (the caller's monotonic seconds).
-    pub fn handle(
-        &mut self,
-        app: &mut AppDocument,
-        operation: Operation,
-        now: f64,
-    ) -> Result<McpOutcome, &'static str> {
-        let mut driver = self
-            .standalone
-            .take()
-            .unwrap_or_else(|| Driver::new(ExternalClock::default()));
-        driver.playback().clock().0.set(now);
-        let outcome = self.handle_with(app, operation, &mut driver);
-        self.standalone = Some(driver);
-        outcome
     }
 
     /// Applies one request; play/pause/seek steer `driver`.

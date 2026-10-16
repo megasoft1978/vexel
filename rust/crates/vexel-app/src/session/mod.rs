@@ -10,7 +10,6 @@
 //! Hook boundary (see [`hooks`]): drawing tools and animation reach the
 //! document only through [`AppDocument::edit`] / [`AppDocument::apply`]; this
 //! module depends on neither.
-#![allow(dead_code, unused_imports)]
 
 mod grants;
 mod hooks;

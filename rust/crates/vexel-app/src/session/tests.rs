@@ -8,7 +8,7 @@ use crate::tools::{CanvasMap, Key, Outcome, PointerInput, ToolController};
 use std::cell::Cell;
 use std::fs;
 use std::os::unix::ffi::OsStrExt;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 use vexel_platform_apple::{PanelBackend, PanelResult, UnsavedChoice, UnsavedText};

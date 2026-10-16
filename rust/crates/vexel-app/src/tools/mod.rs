@@ -4,7 +4,6 @@
 //! with undo/redo; the document is the only shape store. Live canvas wiring
 //! (pointer events from the native window into [`ToolController`]) is an
 //! integration step that follows the compose mapping; see [`map`].
-#![allow(dead_code, unused_imports)]
 
 mod controller;
 mod map;

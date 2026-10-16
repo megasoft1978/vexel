@@ -1,0 +1,43 @@
+   Compiling vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-aafada19c225c4b5b/rust/crates/vexel-protocol)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_protocol-25dc03d68d1d3ba0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/mcp_preview_profile.rs (.cache/target/aarch64-apple-darwin/debug/deps/mcp_preview_profile-02fd8d4750be15ab)
+
+running 8 tests
+test live_preview_accepts_shipping_codex_handshake_version ... ok
+test preview_modern_discovery_omits_unavailable_capabilities ... ok
+test preview_animation_tools_validate_bounded_fragments_and_controls ... ok
+test live_preview_rejects_unadvertised_tools_and_shape_templates ... ok
+test live_preview_forwards_routed_file_edit_and_line_path_calls ... ok
+test preview_export_animation_validates_gif_fps_duration_and_path ... ok
+test default_profile_keeps_full_schema_resources_prompts_and_reset_profile ... ok
+test live_preview_advertises_only_supported_tools_and_narrow_shapes ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity.rs (.cache/target/aarch64-apple-darwin/debug/deps/parity-844f9c802eb9363f)
+
+running 9 tests
+test legacy_progress_is_monotone_bounded_and_atomic ... ok
+test notifications_do_not_emit_and_unknown_requests_do ... ok
+test current_discovery_metadata_merging_original_ids_and_task_capability_reset ... ok
+test every_tool_schema_and_validation_registry_is_available ... ok
+test sync_fallback_malformed_backends_metadata_and_legacy_deferred_cancel ... ok
+test flat_task_create_detailed_terminal_empty_cancel_and_rpc_error_are_distinct ... ok
+test legacy_lifecycle_sync_discovery_tools_resources_prompts_and_reset ... ok
+test request_rate_limit_is_per_session_and_has_an_rpc_error_envelope ... ok
+test async_payload_limits_content_shapes_timestamps_ids_and_cancel_ack ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests vexel_protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

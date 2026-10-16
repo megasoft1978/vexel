@@ -358,7 +358,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         out.literal(",\"description\":")
             .map_err(ProtocolError::Buffer)?;
         let description = if preview && tool.name == "element_add" {
-            "Add a rectangle or ellipse to the live preview document."
+            "Add a rectangle, ellipse, line, or path to the live preview document."
         } else if preview && tool.name == "export_animation" {
             "Export the live preview loop as a GIF inside a granted directory."
         } else {
@@ -368,7 +368,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         out.literal(",\"inputSchema\":{\"type\":\"object\",\"properties\":")
             .map_err(ProtocolError::Buffer)?;
         if preview && tool.name == "element_add" {
-            out.literal(r#"{"documentId":{"type":"string"},"parentId":{"type":"string"},"template":{"type":"string","enum":["rect","ellipse"]},"attributes":{"type":"object","additionalProperties":{"type":"string"}}}"#).map_err(ProtocolError::Buffer)?;
+            out.literal(r#"{"documentId":{"type":"string"},"parentId":{"type":"string"},"template":{"type":"string","enum":["rect","ellipse","line","path"]},"attributes":{"type":"object","additionalProperties":{"type":"string"}}}"#).map_err(ProtocolError::Buffer)?;
         } else {
             let properties = if preview && tool.name == "animation_add" {
                 r#"{"documentId":{"type":"string"},"targetId":{"type":"string","minLength":1,"maxLength":128},"xml":{"type":"string","maxLength":4096,"pattern":"^<animate\\s[^>]*\\s/>$"}}"#

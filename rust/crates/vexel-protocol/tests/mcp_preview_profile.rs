@@ -111,10 +111,13 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
         )
         .contains("circle")
     );
-    assert!(String::from_utf8_lossy(&listing).contains("\"enum\":[\"rect\",\"ellipse\"]"));
     assert!(
         String::from_utf8_lossy(&listing)
-            .contains("Add a rectangle or ellipse to the live preview document.")
+            .contains("\"template\":{\"type\":\"string\",\"enum\":[\"rect\",\"ellipse\",\"line\",\"path\"]}")
+    );
+    assert!(
+        String::from_utf8_lossy(&listing)
+            .contains("Add a rectangle, ellipse, line, or path to the live preview document.")
     );
     assert!(
         String::from_utf8_lossy(&listing)
@@ -258,7 +261,10 @@ fn default_profile_keeps_full_schema_resources_prompts_and_reset_profile() {
         &mut backend,
         r#"{"jsonrpc":"2.0","id":5,"method":"tools/list","params":{}}"#,
     );
-    assert!(String::from_utf8_lossy(&reset_listing).contains("\"enum\":[\"rect\",\"ellipse\"]"));
+    assert!(
+        String::from_utf8_lossy(&reset_listing)
+            .contains("\"enum\":[\"rect\",\"ellipse\",\"line\",\"path\"]")
+    );
 }
 
 #[test]

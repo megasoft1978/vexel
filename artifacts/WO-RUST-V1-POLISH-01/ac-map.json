@@ -1,0 +1,10 @@
+{
+  "AC1": "file_flow::tests::open_filter_offers_svg_and_vexel_and_each_path_kind_opens + 3 updated open:svg,vexel pins",
+  "AC2": "file_flow::dedup::tests (6 tests); main.rs file_key/file_menu",
+  "AC3": "vexel-protocol tests/mcp_preview_profile.rs (listing enum+description, reset listing enum)",
+  "AC4": "grep for 3-arg handle: no hits; mcp.rs handle removed",
+  "AC5": "preview_app.rs only start_server; no #![allow(dead_code; retained item allows listed in result.md",
+  "AC6": "vexel-app lib 178 passed; vexel-protocol all ok; 2 dead-code tests deleted (result.md)",
+  "AC7": "no unsafe added; cargo tree unchanged (no manifest edits)",
+  "AC8": "result.md"
+}

@@ -1,0 +1,12 @@
+{
+  "work_order": "WO-RUST-V1-POLISH-01",
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-app --locked --offline", "exit": 0, "log": "check.txt"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "log": "test-app.txt"},
+    {"cmd": "cargo +stable test -p vexel-protocol --locked --offline", "exit": 0, "log": "test-protocol.txt"},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check", "exit": 0, "log": "fmt.txt"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-POLISH-01 --ready", "exit": 0},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0},
+    {"cmd": "git diff --check", "exit": 0}
+  ]
+}
