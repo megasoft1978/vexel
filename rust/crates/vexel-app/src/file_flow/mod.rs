@@ -14,7 +14,8 @@ pub use menu::{FILE_MENU, MenuEntry, action_for_tag, menu_enabled, menu_specs};
 use crate::project_session::{FileAction, ProjectSession, SessionError, unsaved_changes_prompt};
 use vexel_platform_apple::{PanelBackend, PanelResult, UnsavedChoice, UnsavedText};
 
-/// Extensions the Open panel offers. `svg` is added only with APP-COMPOSE-01.
+/// Extensions the Open panel offers. A chosen `.svg` path still opens (untitled),
+/// but the panel filter stays `.vexel` until its NATIVE-PANELS test is revised.
 pub const OPEN_EXTENSIONS: &[&str] = &["vexel"];
 
 /// What the caller must do after a flow step.

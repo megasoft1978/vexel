@@ -1,0 +1,16 @@
+{
+  "work_order": "WO-RUST-V1-INTEGRATE-01",
+  "acceptance": {
+    "AC1": {"status": "pass", "tests": ["session::tests::edit_renders_from_the_single_session_source"], "note": "API shape: DocumentView::show(bytes, revision, stage), no source field"},
+    "AC2": {"status": "pass", "tests": ["session::tests::open_svg_is_untitled_clean_and_renders_like_the_svg", "session::tests::open_vexel_renders_like_its_scene_bytes_and_is_clean"]},
+    "AC3": {"status": "pass", "tests": ["session::tests::failed_open_is_typed_and_changes_nothing"]},
+    "AC4": {"status": "pass", "tests": ["session::tests::window_title_is_pure", "session::tests::dirty_follows_edit_save_undo_redo_and_reopen"]},
+    "AC5": {"status": "pass", "tests": ["session::tests::undo_and_redo_bump_revision_and_restore_frames", "session::tests::edit_shortcuts_map_undo_and_redo_only"]},
+    "AC6": {"status": "pass", "tests": ["session::tests_mcp::shape_add_mutates_the_session_marks_dirty_and_renders", "session::tests_mcp::animation_fragment_is_applied_through_the_session", "session::tests_mcp::undo_redo_info_and_ids_go_through_the_document", "session::tests_mcp::invalid_requests_leave_the_session_unchanged"]},
+    "AC7": {"status": "pass", "tests": ["session::tests::editors_drive_edit_and_noops_do_not_bump_revision", "session::tests::playback_host_requests_frames_from_the_session_source", "session::tests::tool_controller_edits_through_the_session_with_the_compose_map", "session::tests::point_map_as_canvas_map_agrees_with_hit_testing"], "note": "no DocumentView::hit exists; compared with Composed::hit_test"},
+    "AC8": {"status": "pass", "tests": ["compose::tests_stale::stale_worker_events_never_replace_a_newer_frame", "compose::tests_open::view_resize_supersedes_and_never_shows_a_stale_size"]},
+    "AC9": {"status": "pass_with_note", "note": "all file_flow, file_ui and project_session tests pass unmodified; OPEN_EXTENSIONS kept as [vexel] because two file_flow tests assert it. Compose view tests in compose/tests_open.rs were adapted to the new DocumentView API, assertions preserved."},
+    "AC10": {"status": "pass", "evidence": ["cargo-tree-vexel-app.log"], "note": "no manifest change; no unsafe"},
+    "AC11": {"status": "pass", "evidence": ["result.md"]}
+  }
+}

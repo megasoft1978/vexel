@@ -1,0 +1,15 @@
+{
+  "work_order": "WO-RUST-V1-INTEGRATE-01",
+  "env": {"CARGO_HOME": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/cargo", "CARGO_TARGET_DIR": "<worktree>/.cache/target", "flags": "--locked --offline"},
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-app --locked --offline", "exit": 0, "log": "check-vexel-app.log"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "log": "test-vexel-app.log", "passed": 146},
+    {"cmd": "cargo +stable test -p vexel-v1-document --locked --offline", "exit": 0, "log": "test-vexel-v1-document.log", "passed": 31},
+    {"cmd": "cargo +stable test -p vexel-project-io --locked --offline", "exit": 0, "log": "test-vexel-project-io.log", "passed": 16},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app --package vexel-v1-document -- --check", "exit": 0},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-INTEGRATE-01 --ready", "exit": 0},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0},
+    {"cmd": "cargo +stable tree -p vexel-app --locked --offline", "exit": 0, "log": "cargo-tree-vexel-app.log", "note": "Cargo.toml and Cargo.lock untouched; no new package"},
+    {"cmd": "git diff --check", "exit": null, "note": "git refused by the sandbox hook; nothing committed"}
+  ]
+}

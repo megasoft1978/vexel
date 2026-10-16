@@ -19,6 +19,8 @@ mod tests;
 mod tests_open;
 #[cfg(test)]
 mod tests_parity;
+#[cfg(test)]
+mod tests_stale;
 
 pub use decode::MAX_SVG_BYTES;
 pub use error::{ComposeError, Disclosure};
@@ -27,7 +29,7 @@ pub use open::{OpenError, open_path};
 pub use pointer::PointMap;
 pub use present::{DocumentView, blit_document, status_text};
 pub use shapes::OwnedShape;
-pub use worker::ComposeWorker;
+pub use worker::{ComposeWorker, WorkerEvent};
 
 use vexel_render::{
     PreserveAspect, RenderError, SceneFeatures, ViewBox, offscreen_tile_size, render_offscreen,

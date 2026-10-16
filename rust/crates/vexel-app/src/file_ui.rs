@@ -1,28 +1,40 @@
-//! Glue between the native window and `file_flow`: owns the session, routes
-//! shortcuts, menu activations and close requests, and keeps menu state current.
+//! Glue between the native window and `file_flow`: owns the document session,
+//! routes shortcuts, menu activations and close requests, and keeps menu state
+//! current.
 
 use crate::file_flow::{
     FlowOutcome, action_for_tag, handle, handle_close, menu_enabled, menu_specs,
 };
-use crate::project_session::{ProjectSession, shortcut_action};
+use crate::project_session::{FileAction, shortcut_action};
+use crate::session::AppDocument;
 use vexel_platform_apple::{Modifiers, NativeApp, PanelBackend, WindowError, WindowId};
-use vexel_v1_document::V1Document;
 
 const BLANK_SIZE: (u32, u32) = (800, 600);
 
 pub struct FileUi<B: PanelBackend> {
-    session: ProjectSession,
+    doc: AppDocument,
     backend: B,
 }
 
 impl<B: PanelBackend> FileUi<B> {
     /// Starts with a blank, clean, untitled document.
     pub fn new(backend: B) -> Option<Self> {
-        let document = V1Document::new(BLANK_SIZE.0, BLANK_SIZE.1).ok()?;
+        Self::with_size(backend, BLANK_SIZE)
+    }
+
+    pub fn with_size(backend: B, size: (u32, u32)) -> Option<Self> {
         Some(Self {
-            session: ProjectSession::new(document),
+            doc: AppDocument::new(size.0, size.1).ok()?,
             backend,
         })
+    }
+
+    pub fn document(&self) -> &AppDocument {
+        &self.doc
+    }
+
+    pub fn document_mut(&mut self) -> &mut AppDocument {
+        &mut self.doc
     }
 
     /// Installs the File menu on `window` and applies the initial enablement.
@@ -32,32 +44,34 @@ impl<B: PanelBackend> FileUi<B> {
     }
 
     pub fn refresh_menu(&self, app: &NativeApp) -> Result<(), WindowError> {
-        app.set_file_menu_enabled(&menu_enabled(&self.session))
+        app.set_file_menu_enabled(&menu_enabled(self.doc.session()))
     }
 
-    /// Window title: app name plus the document name once it has a path.
+    /// Window title: app name, document name once it has a path, dirty marker.
     pub fn title(&self) -> String {
-        match self.session.path() {
-            Some(path) => {
-                let name = path.rsplit(|b| *b == b'/').next().unwrap_or_default();
-                format!("Vexel \u{2014} {}", String::from_utf8_lossy(name))
-            }
-            None => "Vexel".to_owned(),
+        self.doc.title()
+    }
+
+    fn run(&mut self, action: FileAction) -> FlowOutcome {
+        let outcome = handle(action, self.doc.session_for_flow(), &self.backend);
+        if outcome == FlowOutcome::Opened {
+            self.doc.mark_replaced();
         }
+        outcome
     }
 
     pub fn key(&mut self, code: u16, modifiers: Modifiers) -> Option<FlowOutcome> {
         let action = shortcut_action(code, modifiers)?;
-        Some(handle(action, &mut self.session, &self.backend))
+        Some(self.run(action))
     }
 
     pub fn menu(&mut self, tag: u32) -> Option<FlowOutcome> {
         let action = action_for_tag(tag)?;
-        Some(handle(action, &mut self.session, &self.backend))
+        Some(self.run(action))
     }
 
     pub fn close(&mut self) -> FlowOutcome {
-        handle_close(&mut self.session, &self.backend)
+        handle_close(self.doc.session_for_flow(), &self.backend)
     }
 }
 

@@ -1,0 +1,25 @@
+{
+  "work_order": "WO-RUST-V1-INTEGRATE-01",
+  "note": "git unavailable (sandbox hook); list compiled by hand. All paths are inside the allowed set.",
+  "added": [
+    "rust/crates/vexel-app/src/session/mod.rs",
+    "rust/crates/vexel-app/src/session/hooks.rs",
+    "rust/crates/vexel-app/src/session/mcp.rs",
+    "rust/crates/vexel-app/src/session/tests.rs",
+    "rust/crates/vexel-app/src/session/tests_mcp.rs",
+    "rust/crates/vexel-app/src/compose/tests_stale.rs",
+    "artifacts/WO-RUST-V1-INTEGRATE-01/*"
+  ],
+  "modified": [
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-app/src/file_ui.rs",
+    "rust/crates/vexel-app/src/file_flow/mod.rs (doc comment only)",
+    "rust/crates/vexel-app/src/project_session/mod.rs (svg import, svg_origin)",
+    "rust/crates/vexel-app/src/compose/mod.rs",
+    "rust/crates/vexel-app/src/compose/present.rs",
+    "rust/crates/vexel-app/src/compose/tests_open.rs",
+    "rust/crates/vexel-app/src/preview_app.rs (start_server pub(crate), module doc, allow(dead_code))"
+  ],
+  "other_crates": [],
+  "manifests": []
+}

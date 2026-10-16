@@ -5,8 +5,9 @@
 //! fills the same logical area but is not rendered at native sharpness (a
 //! disclosed later item).
 
-use super::{ComposeError, ComposeWorker, Composed, Disclosure, open_path};
+use super::{ComposeError, ComposeWorker, Composed, Disclosure, WorkerEvent};
 use crate::model::Layout;
+use crate::session::AppDocument;
 use std::path::Path;
 use std::sync::Arc;
 use vexel_platform_apple::{RgbaFrame, TextEmphasis, TextFace, draw_text_rgba};
@@ -14,12 +15,17 @@ use vexel_ui::{Rect, Theme, theme_tokens};
 
 const MAX_LISTED_DISCLOSURES: usize = 3;
 
-/// The opened document, its latest composed frame and a status message.
+/// The latest composed frame of the session document and a status message.
+///
+/// The view keeps no copy of the document source: the session supplies bytes
+/// and a revision through [`DocumentView::show`], and the worker composes them.
 pub struct DocumentView {
     worker: Option<ComposeWorker>,
-    source: Option<(String, Arc<Vec<u8>>)>,
+    name: Option<String>,
+    /// Revision last handed to `show`; `None` until something is shown.
+    revision: Option<u64>,
     stage: (u32, u32),
-    generation: u64,
+    pub(super) generation: u64,
     composed: Option<Composed>,
     status: Option<(String, bool)>,
 }
@@ -34,7 +40,8 @@ impl DocumentView {
     pub fn new() -> Self {
         Self {
             worker: ComposeWorker::new(),
-            source: None,
+            name: None,
+            revision: None,
             stage: (0, 0),
             generation: 0,
             composed: None,
@@ -54,52 +61,62 @@ impl DocumentView {
     }
 
     pub fn name(&self) -> Option<&str> {
-        self.source.as_ref().map(|(name, _)| name.as_str())
+        self.name.as_deref()
     }
 
-    /// Opens `path` (the one entry for CLI and menu open) and starts composing
-    /// at `stage` size. On failure the previous document stays and the status
-    /// reports the typed error.
-    pub fn open(&mut self, path: &Path, stage: (u32, u32)) {
-        match open_path(path) {
-            Ok(opened) => {
-                let name = opened.display_name();
-                self.source = Some((name, Arc::new(opened.bytes)));
-                self.stage = stage;
-                self.composed = None;
-                self.request();
-            }
-            Err(error) => {
-                let name = path.file_name().map_or_else(
-                    || path.display().to_string(),
-                    |n| n.to_string_lossy().into_owned(),
-                );
-                self.status = Some((format!("Cannot open {name}: {error}"), true));
-            }
+    pub fn set_name(&mut self, name: &str) {
+        if self.name.as_deref() != Some(name) {
+            self.name = Some(name.to_owned());
         }
     }
 
-    /// Recomposes at a new stage size, superseding any in-flight work.
-    pub fn resize(&mut self, stage: (u32, u32)) {
-        if stage != self.stage {
-            self.stage = stage;
-            if self.source.is_some() {
-                self.composed = None;
-                self.request();
-            }
-        }
+    /// True when `show(_, revision, stage)` would not start new work.
+    pub fn is_current(&self, revision: u64, stage: (u32, u32)) -> bool {
+        self.revision == Some(revision) && self.stage == stage
     }
 
-    fn request(&mut self) {
-        let Some((name, bytes)) = &self.source else {
+    /// Composes the session's `bytes` at `stage` size, superseding any
+    /// in-flight work. A repeat of the same revision and stage is ignored.
+    pub fn show(&mut self, bytes: &[u8], revision: u64, stage: (u32, u32)) {
+        if self.is_current(revision, stage) {
             return;
-        };
-        let (w, h) = self.stage;
+        }
+        self.revision = Some(revision);
+        self.stage = stage;
+        self.composed = None;
+        let name = self.name().unwrap_or("Untitled").to_owned();
         self.status = Some((format!("Composing {name}..."), false));
         match &self.worker {
-            Some(worker) => self.generation = worker.request(bytes.clone(), w, h),
+            Some(worker) => {
+                self.generation = worker.request(Arc::new(bytes.to_vec()), stage.0, stage.1);
+            }
             None => self.status = Some(("Cannot start the compose worker".to_owned(), true)),
         }
+    }
+
+    /// Opens `path` into the session (the one entry for the CLI argument) and
+    /// shows it at `stage` size. On failure the session and the previous frame
+    /// stay and the status reports the typed error.
+    pub fn open(&mut self, app: &mut AppDocument, path: &Path, stage: (u32, u32)) {
+        let name = path.file_name().map_or_else(
+            || path.display().to_string(),
+            |n| n.to_string_lossy().into_owned(),
+        );
+        let failure = match app.open_path(path) {
+            Ok(()) => match app.source_bytes() {
+                Ok(bytes) => {
+                    self.name = Some(name);
+                    self.show(&bytes, app.revision(), stage);
+                    return;
+                }
+                Err(error) => error,
+            },
+            Err(error) => error,
+        };
+        self.status = Some((
+            format!("Cannot open {name}: {}", failure.user_message()),
+            true,
+        ));
     }
 
     /// Takes a finished result for the newest request. True when state changed.
@@ -107,6 +124,12 @@ impl DocumentView {
         let Some(event) = self.worker.as_ref().and_then(ComposeWorker::poll) else {
             return false;
         };
+        self.accept(event)
+    }
+
+    /// Applies a worker event; results of any generation but the newest
+    /// request are dropped. True when state changed.
+    pub(super) fn accept(&mut self, event: WorkerEvent) -> bool {
         if event.generation != self.generation {
             return false;
         }

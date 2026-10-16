@@ -1,6 +1,7 @@
 //! Open path, launch parsing, worker supersession and the shell view state.
 use super::tests::{fixture, fixture_path};
 use super::*;
+use crate::session::AppDocument;
 use std::ffi::OsString;
 use std::os::unix::ffi::OsStringExt;
 use std::path::{Path, PathBuf};
@@ -191,8 +192,9 @@ fn view_open_composes_reports_status_and_maps_clicks() {
     let dir = TempDir::new();
     let path = dir.file("scene.svg", &fixture("compose-v1.svg"));
     let mut view = DocumentView::new();
+    let mut app = AppDocument::new(10, 10).unwrap();
     assert!(view.status().is_none());
-    view.open(&path, (STAGE.width, STAGE.height));
+    view.open(&mut app, &path, (STAGE.width, STAGE.height));
     assert_eq!(view.status().map(|s| s.1), Some(false));
     wait_for(&mut view, |v| v.composed().is_some());
     let (text, error) = view.status().unwrap();
@@ -223,37 +225,43 @@ fn view_failures_are_typed_status_text_and_keep_the_last_document() {
     let dir = TempDir::new();
     let good = dir.file("good.svg", &fixture("compose-v1.svg"));
     let mut view = DocumentView::new();
-    view.open(&good, (160, 120));
+    let mut app = AppDocument::new(10, 10).unwrap();
+    view.open(&mut app, &good, (160, 120));
     wait_for(&mut view, |v| v.composed().is_some());
-    view.open(&dir.0.join("missing.svg"), (160, 120));
+    let revision = app.revision();
+    view.open(&mut app, &dir.0.join("missing.svg"), (160, 120));
+    assert_eq!(app.revision(), revision, "failed open leaves the session");
     let (text, error) = view.status().unwrap();
     assert!(
         error && text.starts_with("Cannot open missing.svg"),
         "{text}"
     );
     assert!(view.composed().is_some(), "previous document stays");
+    let mut revision = 1000;
     for (name, expect) in [
         ("unsupported-filter.svg", "unsupported in V1: filter"),
         ("unsupported-mask.svg", "unsupported in V1: mask"),
         ("unsupported-text.svg", "unsupported in V1: text"),
     ] {
-        let path = dir.file(name, &fixture(name));
-        view.open(&path, (80, 80));
+        revision += 1;
+        view.set_name(name);
+        view.show(&fixture(name), revision, (80, 80));
         wait_for(&mut view, |v| v.status().is_some_and(|s| s.1));
         assert!(view.composed().is_none());
         let text = view.status().unwrap().0.to_owned();
         assert!(text.starts_with(name) && text.contains(expect), "{text}");
     }
-    let bad = dir.file("bad.svg", b"<svg \xff/>");
-    view.open(&bad, (80, 80));
+    revision += 1;
+    view.show(b"<svg \xff/>", revision, (80, 80));
     wait_for(&mut view, |v| {
         v.status().is_some_and(|s| s.0.contains("UTF-8"))
     });
-    let xml = dir.file(
-        "xml.svg",
+    revision += 1;
+    view.show(
         b"<svg xmlns='http://www.w3.org/2000/svg'><rect></svg>",
+        revision,
+        (80, 80),
     );
-    view.open(&xml, (80, 80));
     wait_for(&mut view, |v| {
         v.status().is_some_and(|s| s.0.contains("malformed SVG"))
     });
@@ -262,9 +270,15 @@ fn view_failures_are_typed_status_text_and_keep_the_last_document() {
 #[test]
 fn view_resize_supersedes_and_never_shows_a_stale_size() {
     let mut view = DocumentView::new();
-    view.open(Path::new(&fixture_path("compose-v1.svg")), (400, 300));
+    let mut app = AppDocument::new(10, 10).unwrap();
+    view.open(
+        &mut app,
+        Path::new(&fixture_path("compose-v1.svg")),
+        (400, 300),
+    );
+    let bytes = app.source_bytes().unwrap();
     for width in [301, 302, 303, 200] {
-        view.resize((width, 150));
+        view.show(&bytes, app.revision(), (width, 150));
     }
     wait_for(&mut view, |v| v.composed().is_some());
     let frame = &view.composed().unwrap().frame;

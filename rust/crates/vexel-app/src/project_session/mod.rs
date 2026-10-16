@@ -125,6 +125,9 @@ pub fn write_project(
 pub struct ProjectSession {
     document: V1Document,
     path: Option<Vec<u8>>,
+    /// Path of the `.svg` this untitled document was imported from, if any.
+    /// Display only: Save never writes to it.
+    svg_origin: Option<Vec<u8>>,
 }
 
 impl ProjectSession {
@@ -132,6 +135,7 @@ impl ProjectSession {
         Self {
             document,
             path: None,
+            svg_origin: None,
         }
     }
     pub fn document(&self) -> &V1Document {
@@ -142,6 +146,10 @@ impl ProjectSession {
     }
     pub fn path(&self) -> Option<&[u8]> {
         self.path.as_deref()
+    }
+    /// The imported `.svg` path for an untitled document opened from one.
+    pub fn svg_origin(&self) -> Option<&[u8]> {
+        self.svg_origin.as_deref()
     }
     pub fn is_dirty(&self) -> bool {
         self.document.is_dirty()
@@ -157,6 +165,7 @@ impl ProjectSession {
     pub fn save_as(&mut self, path: &[u8]) -> Result<(), SessionError> {
         self.write(path)?;
         self.path = Some(path.to_vec());
+        self.svg_origin = None;
         Ok(())
     }
 
@@ -167,14 +176,38 @@ impl ProjectSession {
         Ok(())
     }
 
-    /// Opens a project into a fresh clean session with empty history.
+    /// Opens `path` into a fresh clean session with empty history. A `.svg`
+    /// extension imports the SVG as an untitled document (Save then asks for a
+    /// name and never overwrites the SVG); anything else is a `.vexel` project.
     pub fn open(path: &[u8]) -> Result<Self, SessionError> {
+        if path.len() > 4 && path[path.len() - 4..].eq_ignore_ascii_case(b".svg") {
+            return Self::open_svg(path);
+        }
         let loaded = project_file_load(path).map_err(load_error)?;
         let document =
             V1Document::from_source(loaded.view().scene_svg).map_err(SessionError::InvalidScene)?;
         Ok(Self {
             document,
             path: Some(path.to_vec()),
+            svg_origin: None,
+        })
+    }
+
+    fn open_svg(path: &[u8]) -> Result<Self, SessionError> {
+        use std::os::unix::ffi::OsStrExt;
+        let opened =
+            crate::compose::open_path(std::path::Path::new(std::ffi::OsStr::from_bytes(path)))
+                .map_err(|error| match error {
+                    crate::compose::OpenError::InvalidPath => SessionError::InvalidPath,
+                    crate::compose::OpenError::TooLarge => SessionError::TooLarge,
+                    _ => SessionError::Unreadable,
+                })?;
+        let document =
+            V1Document::from_source(&opened.bytes).map_err(SessionError::InvalidScene)?;
+        Ok(Self {
+            document,
+            path: None,
+            svg_origin: Some(path.to_vec()),
         })
     }
 

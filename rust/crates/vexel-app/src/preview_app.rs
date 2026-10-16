@@ -1,3 +1,6 @@
+//! Legacy stand-alone MCP preview window. `--mcp-preview` now runs the shell
+//! (see `session::McpHost`); only `start_server` is still used.
+#![allow(dead_code)]
 #[cfg(test)]
 use crate::preview;
 use crate::{
@@ -228,7 +231,7 @@ fn start_export(
         .map_err(|message| (reply, message))
 }
 
-fn start_server(requests: SyncSender<UiRequest>) -> Result<(), &'static str> {
+pub(crate) fn start_server(requests: SyncSender<UiRequest>) -> Result<(), &'static str> {
     thread::Builder::new()
         .name("vexel-mcp-stdio".to_owned())
         .spawn(move || {
