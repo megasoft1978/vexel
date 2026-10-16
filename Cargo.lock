@@ -191,6 +191,8 @@ dependencies = [
  "vexel-json",
  "vexel-mcp-stdio",
  "vexel-platform-apple",
+ "vexel-project",
+ "vexel-project-io",
  "vexel-protocol",
  "vexel-raster",
  "vexel-svg-animation",
