@@ -18,6 +18,8 @@ mod mcp;
 mod tests;
 #[cfg(test)]
 mod tests_mcp;
+#[cfg(test)]
+mod tests_playback;
 
 pub use hooks::{DocumentEditor, EditAction, EditOutcome, PlaybackHost, edit_shortcut};
 pub use mcp::{McpHost, McpOutcome};

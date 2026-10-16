@@ -158,15 +158,30 @@ impl AnimatedScene {
 
     /// `evaluate_frame` + scalar render at `time_seconds`; returns straight-alpha RGBA.
     pub fn render(&self, time_seconds: f64, cancel: &AtomicBool) -> Result<Tile, AnimationError> {
+        self.render_sized(time_seconds, self.size(), cancel)
+    }
+
+    /// Like [`AnimatedScene::render`] into a `size` canvas (the stage), with
+    /// the same view box and aspect mapping the static compose path uses.
+    pub fn render_sized(
+        &self,
+        time_seconds: f64,
+        size: (u32, u32),
+        cancel: &AtomicBool,
+    ) -> Result<Tile, AnimationError> {
         use std::sync::atomic::Ordering::Relaxed;
         let frame = self.evaluate(time_seconds, cancel)?;
         let view = frame.view();
         let stop = || cancel.load(Relaxed);
-        render_view(&view, &stop)
+        render_view(&view, size, &stop)
     }
 }
 
-fn render_view(view: &SceneView<'_>, stop: &dyn Fn() -> bool) -> Result<Tile, AnimationError> {
+fn render_view(
+    view: &SceneView<'_>,
+    size: (u32, u32),
+    stop: &dyn Fn() -> bool,
+) -> Result<Tile, AnimationError> {
     let features = SceneFeatures {
         clips: view.clips.len(),
         opacity_groups: view.groups.len(),
@@ -254,8 +269,8 @@ fn render_view(view: &SceneView<'_>, stop: &dyn Fn() -> bool) -> Result<Tile, An
         &shapes,
         view_box,
         aspect,
-        f64::from(vp.width),
-        f64::from(vp.height),
+        f64::from(size.0),
+        f64::from(size.1),
         stop,
     )
     .map_err(|e| match e {

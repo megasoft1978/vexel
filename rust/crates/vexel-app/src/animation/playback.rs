@@ -3,9 +3,8 @@
 //! No wall clock is read here: callers supply a [`LoopClock`]. Production
 //! code uses [`MonotonicClock`]; tests use [`ManualClock`].
 
-// `Playback`, `FrameQueue` and `ManualClock` are exercised by the headless
-// tests; the preview window still drives playback from `PreviewState`, so they
-// are not yet referenced from the non-test build.
+// `ManualClock` is only used by the headless tests; some accessors are not
+// referenced from the non-test build.
 #![cfg_attr(not(test), allow(dead_code))]
 
 use std::cell::Cell;
@@ -61,6 +60,7 @@ pub struct Playback<C: LoopClock> {
     clock: C,
     duration: f64,
     mode: Mode,
+    looping: bool,
 }
 
 impl<C: LoopClock> Playback<C> {
@@ -74,7 +74,67 @@ impl<C: LoopClock> Playback<C> {
             clock,
             duration,
             mode: Mode::Paused { at: 0.0 },
+            looping: true,
         }
+    }
+
+    pub fn duration(&self) -> f64 {
+        self.duration
+    }
+
+    pub fn is_looping(&self) -> bool {
+        self.looping
+    }
+
+    /// Loop (default) or play once: a play-once run stops at the end frame
+    /// (call [`Playback::settle`] to pause it there).
+    pub fn set_looping(&mut self, looping: bool) {
+        let time = self.time();
+        self.looping = looping;
+        self.rebase(time);
+    }
+
+    /// Changes the loop length. Time is clamped into the new loop; with no
+    /// loop left, playback pauses at 0. Play state is otherwise kept.
+    pub fn set_duration(&mut self, duration: f64) {
+        let time = self.time();
+        self.duration = if duration.is_finite() && duration > 0.0 {
+            duration
+        } else {
+            0.0
+        };
+        if self.duration <= 0.0 {
+            self.mode = Mode::Paused { at: 0.0 };
+        } else {
+            self.rebase(time.min(self.duration));
+        }
+    }
+
+    fn rebase(&mut self, time: f64) {
+        if self.is_playing() && self.duration > 0.0 {
+            self.mode = Mode::Playing {
+                clock_start: self.clock.now_seconds(),
+                time_start: time.min(self.duration),
+            };
+        } else if !self.is_playing() {
+            self.mode = Mode::Paused { at: time };
+        }
+    }
+
+    /// Pauses a play-once run that reached the end frame. True when it did.
+    pub fn settle(&mut self) -> bool {
+        if let Mode::Playing {
+            clock_start,
+            time_start,
+        } = self.mode
+        {
+            let elapsed = (self.clock.now_seconds() - clock_start).max(0.0);
+            if !self.looping && time_start + elapsed >= self.duration {
+                self.mode = Mode::Paused { at: self.duration };
+                return true;
+            }
+        }
+        false
     }
 
     pub fn clock(&self) -> &C {
@@ -94,7 +154,11 @@ impl<C: LoopClock> Playback<C> {
                 time_start,
             } => {
                 let elapsed = (self.clock.now_seconds() - clock_start).max(0.0);
-                (time_start + elapsed).rem_euclid(self.duration)
+                if self.looping {
+                    (time_start + elapsed).rem_euclid(self.duration)
+                } else {
+                    (time_start + elapsed).min(self.duration)
+                }
             }
         }
     }
@@ -105,7 +169,10 @@ impl<C: LoopClock> Playback<C> {
             return false;
         }
         if !self.is_playing() {
-            let time_start = self.time().rem_euclid(self.duration);
+            let mut time_start = self.time().rem_euclid(self.duration);
+            if !self.looping && self.time() >= self.duration {
+                time_start = 0.0; // play-once restarts from the beginning
+            }
             self.mode = Mode::Playing {
                 clock_start: self.clock.now_seconds(),
                 time_start,
@@ -128,7 +195,11 @@ impl<C: LoopClock> Playback<C> {
         self.mode = if self.is_playing() {
             Mode::Playing {
                 clock_start: self.clock.now_seconds(),
-                time_start: at.rem_euclid(self.duration),
+                time_start: if self.looping {
+                    at.rem_euclid(self.duration)
+                } else {
+                    at
+                },
             }
         } else {
             Mode::Paused { at }

@@ -1,0 +1,27 @@
+{
+  "order": "WO-RUST-V1-PLAYBACK-01",
+  "note": "hand-listed; git was refused by the sandbox hook",
+  "modified": [
+    "rust/crates/vexel-app/README.md",
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-app/src/animation/mod.rs",
+    "rust/crates/vexel-app/src/animation/playback.rs",
+    "rust/crates/vexel-app/src/animation/frame.rs",
+    "rust/crates/vexel-app/src/compose/mod.rs",
+    "rust/crates/vexel-app/src/compose/present.rs",
+    "rust/crates/vexel-app/src/session/mod.rs",
+    "rust/crates/vexel-app/src/session/mcp.rs",
+    "rust/crates/vexel-app/src/tools/controller.rs"
+  ],
+  "added": [
+    "rust/crates/vexel-app/src/animation/driver.rs",
+    "rust/crates/vexel-app/src/animation/keys.rs",
+    "rust/crates/vexel-app/src/animation/strip.rs",
+    "rust/crates/vexel-app/src/animation/tests_driver.rs",
+    "rust/crates/vexel-app/src/animation/tests_ui.rs",
+    "rust/crates/vexel-app/src/session/tests_playback.rs",
+    "rust/fixtures/v1/playback/loop2.svg",
+    "artifacts/WO-RUST-V1-PLAYBACK-01/*"
+  ],
+  "protected_paths_touched": []
+}

@@ -1,0 +1,52 @@
+    Checking vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ad4e310da896e8e77/rust/crates/vexel-app)
+warning: unused import: `decode::MAX_SVG_BYTES`
+  --> rust/crates/vexel-app/src/compose/mod.rs:25:9
+   |
+25 | pub use decode::MAX_SVG_BYTES;
+   |         ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `status_text`
+  --> rust/crates/vexel-app/src/compose/mod.rs:30:54
+   |
+30 | pub use present::{DocumentView, blit_document, fill, status_text};
+   |                                                      ^^^^^^^^^^^
+
+warning: function `compose_svg` is never used
+  --> rust/crates/vexel-app/src/compose/mod.rs:69:8
+   |
+69 | pub fn compose_svg(bytes: &[u8], width: u32, height: u32) -> Result<Frame, ComposeError> {
+   |        ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `display_name` is never used
+  --> rust/crates/vexel-app/src/compose/open.rs:47:12
+   |
+45 | impl OpenedSvg {
+   | -------------- method in this implementation
+46 |     /// Final path component for display, lossy-free because paths are UTF-8.
+47 |     pub fn display_name(&self) -> String {
+   |            ^^^^^^^^^^^^
+
+warning: method `doc_to_canvas` is never used
+  --> rust/crates/vexel-app/src/compose/pointer.rs:71:12
+   |
+21 | impl PointMap {
+   | ------------- method in this implementation
+...
+71 |     pub fn doc_to_canvas(&self, x: f64, y: f64) -> (f64, f64) {
+   |            ^^^^^^^^^^^^^
+
+warning: method `cancel` is never used
+  --> rust/crates/vexel-app/src/compose/worker.rs:77:12
+   |
+46 | impl ComposeWorker {
+   | ------------------ method in this implementation
+...
+77 |     pub fn cancel(&self) -> u64 {
+   |            ^^^^^^
+
+warning: `vexel-app` (bin "vexel") generated 6 warnings (run `cargo fix --bin "vexel" -p vexel-app` to apply 2 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.84s

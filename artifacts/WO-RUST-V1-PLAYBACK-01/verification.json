@@ -1,0 +1,12 @@
+{
+  "order": "WO-RUST-V1-PLAYBACK-01",
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-app --locked --offline", "exit": 0, "log": "check-vexel-app.log"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "result": "174 passed, 0 failed", "log": "test-vexel-app.log"},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check", "exit": 0, "log": "fmt.log"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-PLAYBACK-01 --ready", "exit": 0, "result": "valid revision 1"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0, "result": "valid ledger: 1869 entries"},
+    {"cmd": "git diff --check", "exit": null, "result": "not run: sandbox hook refused git"},
+    {"cmd": "cargo tree -p vexel-app --locked --offline", "exit": 0, "result": "package set identical to INTEGRATE-01", "log": "cargo-tree-vexel-app.log"}
+  ]
+}

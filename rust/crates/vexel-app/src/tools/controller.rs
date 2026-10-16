@@ -125,6 +125,12 @@ impl ToolController {
         }
     }
 
+    /// True while a gesture or an unfinished pen path is in progress, so the
+    /// shell must not take plain keys (playback shortcuts) from the tool.
+    pub fn owns_keys(&self) -> bool {
+        !matches!(self.gesture, Gesture::None) || !self.pen.vertices().is_empty()
+    }
+
     pub fn tool(&self) -> Tool {
         self.tool
     }

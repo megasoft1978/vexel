@@ -27,7 +27,7 @@ pub use error::{ComposeError, Disclosure};
 pub use launch::{Launch, parse_launch};
 pub use open::{OpenError, open_path};
 pub use pointer::PointMap;
-pub use present::{DocumentView, blit_document, status_text};
+pub use present::{DocumentView, blit_document, fill, status_text};
 pub use shapes::OwnedShape;
 pub use worker::{ComposeWorker, WorkerEvent};
 

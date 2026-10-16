@@ -5,7 +5,7 @@
 //! fills the same logical area but is not rendered at native sharpness (a
 //! disclosed later item).
 
-use super::{ComposeError, ComposeWorker, Composed, Disclosure, WorkerEvent};
+use super::{ComposeError, ComposeWorker, Composed, Disclosure, Frame, WorkerEvent};
 use crate::model::Layout;
 use crate::session::AppDocument;
 use std::path::Path;
@@ -27,6 +27,8 @@ pub struct DocumentView {
     stage: (u32, u32),
     pub(super) generation: u64,
     composed: Option<Composed>,
+    /// True while `composed.frame` holds an animated frame (not the static one).
+    animated: bool,
     status: Option<(String, bool)>,
 }
 
@@ -45,8 +47,33 @@ impl DocumentView {
             stage: (0, 0),
             generation: 0,
             composed: None,
+            animated: false,
             status: None,
         }
+    }
+
+    /// True while the stage shows a frame set by [`DocumentView::present_animated`].
+    pub fn animated_shown(&self) -> bool {
+        self.animated
+    }
+
+    /// Replaces the pixels of the composed frame with an animated frame of the
+    /// same `revision`, keeping the pointer map and hit-test shapes. Refused
+    /// (false) for any other revision, before the static compose finished, or
+    /// when the size differs from the composed frame's.
+    pub fn present_animated(&mut self, revision: u64, frame: Frame) -> bool {
+        let Some(composed) = self.composed.as_mut() else {
+            return false;
+        };
+        if self.revision != Some(revision)
+            || (composed.frame.width, composed.frame.height) != (frame.width, frame.height)
+            || frame.rgba.len() != composed.frame.rgba.len()
+        {
+            return false;
+        }
+        composed.frame.rgba = frame.rgba;
+        self.animated = true;
+        true
     }
 
     pub fn composed(&self) -> Option<&Composed> {
@@ -84,6 +111,7 @@ impl DocumentView {
         self.revision = Some(revision);
         self.stage = stage;
         self.composed = None;
+        self.animated = false;
         let name = self.name().unwrap_or("Untitled").to_owned();
         self.status = Some((format!("Composing {name}..."), false));
         match &self.worker {
@@ -138,10 +166,12 @@ impl DocumentView {
             Ok(composed) => {
                 self.status = Some((status_text(&name, &composed), false));
                 self.composed = Some(composed);
+                self.animated = false;
             }
             Err(ComposeError::Cancelled) => return false,
             Err(error) => {
                 self.composed = None;
+                self.animated = false;
                 self.status = Some((format!("{name}: {error}"), true));
             }
         }
@@ -216,7 +246,7 @@ pub fn status_text(name: &str, composed: &Composed) -> String {
     text
 }
 
-fn fill(pixels: &mut [u8], width: u32, scale: u32, rect: Rect, color: u32) {
+pub fn fill(pixels: &mut [u8], width: u32, scale: u32, rect: Rect, color: u32) {
     let rgba = color.to_be_bytes();
     let s = scale as usize;
     for row in rect.y as usize * s..(rect.y + rect.height) as usize * s {

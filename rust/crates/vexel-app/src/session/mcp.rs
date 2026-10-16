@@ -7,10 +7,13 @@
 //! from the document source, so opened documents work too.
 
 use super::AppDocument;
+use crate::animation::driver::Driver;
+use crate::animation::playback::LoopClock;
 use crate::preview::{
     Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
     object_id, validate_animation_fragment, validate_shape,
 };
+use std::cell::Cell;
 use vexel_v1_document::{V1Document, V1DocumentError};
 
 const SOURCE_LIMIT: usize = 64 * 1024;
@@ -30,15 +33,26 @@ pub enum McpOutcome {
     },
 }
 
-/// Playback bookkeeping and id allocation for the MCP session. The document
-/// itself lives only in the [`AppDocument`] passed to [`McpHost::handle`].
-#[derive(Debug, Default)]
+/// Seconds supplied by the caller (the legacy `handle` clock argument).
+#[derive(Default)]
+struct ExternalClock(Cell<f64>);
+
+impl LoopClock for ExternalClock {
+    fn now_seconds(&self) -> f64 {
+        self.0.get()
+    }
+}
+
+/// Id allocation for the MCP session. Playback is not kept here: the shell
+/// passes the one shared [`Driver`] (keyboard, strip and MCP use the same
+/// clock) to [`McpHost::handle_with`]. The document itself lives only in the
+/// [`AppDocument`].
+#[derive(Default)]
 pub struct McpHost {
     next_id: u64,
-    playing: bool,
-    /// Loop time at `anchor.0` seconds on the caller's clock.
-    time: f64,
-    anchor: f64,
+    /// Driver for the clock-argument [`McpHost::handle`] form (tests, callers
+    /// without a shell driver); the shell never uses it.
+    standalone: Option<Driver<ExternalClock>>,
 }
 
 impl McpHost {
@@ -49,25 +63,35 @@ impl McpHost {
         }
     }
 
+    /// Whether the standalone driver of [`McpHost::handle`] is playing.
     pub fn is_playing(&self) -> bool {
-        self.playing
+        self.standalone.as_ref().is_some_and(Driver::is_playing)
     }
 
-    /// Current loop time on the caller's clock.
-    pub fn time(&self, now: f64, duration: f64) -> f64 {
-        if self.playing && duration > 0.0 {
-            (self.time + (now - self.anchor).max(0.0)).rem_euclid(duration)
-        } else {
-            self.time
-        }
-    }
-
-    /// Applies one request. `now` is the caller's monotonic clock in seconds.
+    /// [`McpHost::handle_with`] on the host's standalone driver, whose clock
+    /// reads `now` (the caller's monotonic seconds).
     pub fn handle(
         &mut self,
         app: &mut AppDocument,
         operation: Operation,
         now: f64,
+    ) -> Result<McpOutcome, &'static str> {
+        let mut driver = self
+            .standalone
+            .take()
+            .unwrap_or_else(|| Driver::new(ExternalClock::default()));
+        driver.playback().clock().0.set(now);
+        let outcome = self.handle_with(app, operation, &mut driver);
+        self.standalone = Some(driver);
+        outcome
+    }
+
+    /// Applies one request; play/pause/seek steer `driver`.
+    pub fn handle_with<C: LoopClock>(
+        &mut self,
+        app: &mut AppDocument,
+        operation: Operation,
+        driver: &mut Driver<C>,
     ) -> Result<McpOutcome, &'static str> {
         match operation {
             Operation::List => {
@@ -100,7 +124,7 @@ impl McpHost {
                 .redo()
                 .map_err(|_| "nothing to redo")
                 .and_then(|()| changed(app, "Redo complete")),
-            Operation::Control(control) => self.control(app, control, now),
+            Operation::Control(control) => control_playback(app, control, driver),
             Operation::Export {
                 path,
                 fps,
@@ -140,47 +164,40 @@ impl McpHost {
             ids.len() + 1
         )))
     }
+}
 
-    fn control(
-        &mut self,
-        app: &AppDocument,
-        control: Control,
-        now: f64,
-    ) -> Result<McpOutcome, &'static str> {
-        let duration = document_duration(app.document())?;
-        let current = self.time(now, duration);
-        let shown = match control {
-            Control::Play => {
-                if duration <= 0.0 {
-                    return Err("no preview animation to play");
-                }
-                self.playing = true;
-                self.time = current;
-                current
-            }
-            Control::Pause => {
-                self.playing = false;
-                self.time = current;
-                current
-            }
-            Control::Seek(seconds) => {
-                if !seconds.is_finite() || !(0.0..=10.0).contains(&seconds) {
-                    return Err("invalid preview animation time");
-                }
-                self.time = if duration > 0.0 {
-                    seconds.rem_euclid(duration)
-                } else {
-                    0.0
-                };
-                seconds
-            }
-        };
-        self.anchor = now;
-        Ok(McpOutcome::Reply(format!(
-            "{{\"ok\":true,\"playing\":{},\"timeSeconds\":{shown:.3}}}",
-            self.playing
-        )))
+fn control_playback<C: LoopClock>(
+    app: &AppDocument,
+    control: Control,
+    driver: &mut Driver<C>,
+) -> Result<McpOutcome, &'static str> {
+    let duration = document_duration(app.document())?;
+    if !driver.knows(app.revision()) {
+        driver.sync(app.revision(), &source(app)?);
     }
+    let shown = match control {
+        Control::Play => {
+            if duration <= 0.0 || !driver.play() {
+                return Err("no preview animation to play");
+            }
+            driver.time()
+        }
+        Control::Pause => {
+            driver.pause();
+            driver.time()
+        }
+        Control::Seek(seconds) => {
+            if !seconds.is_finite() || !(0.0..=10.0).contains(&seconds) {
+                return Err("invalid preview animation time");
+            }
+            driver.seek(seconds);
+            seconds
+        }
+    };
+    Ok(McpOutcome::Reply(format!(
+        "{{\"ok\":true,\"playing\":{},\"timeSeconds\":{shown:.3}}}",
+        driver.is_playing()
+    )))
 }
 
 fn source(app: &AppDocument) -> Result<Vec<u8>, &'static str> {

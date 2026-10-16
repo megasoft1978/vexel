@@ -20,3 +20,13 @@ RGBA frame presentation.
 decode, scene, scalar render at 1 pixel per point, then presentation. Deferred
 features are reported in the status bar, never dropped silently. Retina output
 is pixel-replicated, not re-rendered. There is no File > Open... menu yet.
+
+## Animation playback
+
+A document with a loop (at most 10 s) shows a timeline strip at the bottom of
+the stage: play/pause button, scrub bar and a `m:ss.cs / m:ss.cs` label.
+Playback is not document state (no dirty marker, not saved). Keys, with no
+modifier: Space play/pause, Home seek to 0, Left/Right step one frame while
+paused, L loop / play-once. They are ignored while a tool gesture is active.
+MCP `animation_control` and the strip drive the same clock. Frames are 30 fps
+and are rendered on the UI thread at the stage size.

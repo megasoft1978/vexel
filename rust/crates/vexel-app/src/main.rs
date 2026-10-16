@@ -13,8 +13,11 @@ mod session;
 mod tools;
 
 use animation::{
+    driver::{Driver, TickOutcome},
     job::ExportJob,
-    playback::{LoopClock, MonotonicClock},
+    keys::{self, playback_key},
+    playback::MonotonicClock,
+    strip::{self, Strip, StripPointer},
 };
 use file_flow::FlowOutcome;
 use file_ui::FileUi;
@@ -114,7 +117,9 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
     };
     let mut mcp_host = McpHost::new();
     let mut export: Option<ExportJob> = None;
-    let clock = MonotonicClock::new();
+    let mut driver = Driver::new(MonotonicClock::new());
+    let mut strip = Strip::default();
+    let mut was_playing = false;
     let mut menu_revision = files.document().revision();
     let mut dirty = true;
     let event_budget = NonZeroUsize::new(128).ok_or("invalid event budget")?;
@@ -133,7 +138,7 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
             if let Some(UiRequest { operation, reply }) =
                 mcp_rx.as_ref().and_then(|rx| rx.try_recv().ok())
             {
-                match mcp_host.handle(files.document_mut(), operation, clock.now_seconds()) {
+                match mcp_host.handle_with(files.document_mut(), operation, &mut driver) {
                     Ok(McpOutcome::Reply(json)) => {
                         let _ = reply.send(Ok(json));
                     }
@@ -181,6 +186,29 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
                     dirty = true;
                 }
             }
+            // Playback: the driver renders the current loop time at stage size
+            // once the static compose of this revision is on screen.
+            driver.set_size(stage);
+            if revision > 0 && doc.is_current(revision, stage) && doc.composed().is_some() {
+                if !doc.animated_shown() {
+                    driver.invalidate();
+                }
+                if !driver.knows(revision) {
+                    let time = driver.time();
+                    let _ = files.document().request_frame(&mut driver, time);
+                }
+                if let TickOutcome::Frame(animated) = driver.tick(revision, &[]) {
+                    if doc.present_animated(animated.revision, animated.frame) {
+                        dirty = true;
+                    } else {
+                        driver.invalidate();
+                    }
+                }
+            }
+            if driver.is_playing() != was_playing {
+                was_playing = driver.is_playing();
+                dirty = true;
+            }
         }
         if files.document().revision() != menu_revision {
             menu_revision = files.document().revision();
@@ -199,7 +227,13 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
             match render::render(draw_size.0, draw_size.1, draw_scale, &model) {
                 Ok(frame) => {
                     let frame = match Layout::new(draw_size.0, draw_size.1, model.mode) {
-                        Some(layout) => compose::blit_document(frame, &doc, &layout, model.dark),
+                        Some(layout) => {
+                            let frame = compose::blit_document(frame, &doc, &layout, model.dark);
+                            match strip::layout(layout.stage).filter(|_| driver.strip_visible()) {
+                                Some(bar) => strip::draw(frame, &bar, &driver, model.dark),
+                                None => frame,
+                            }
+                        }
                         None => frame,
                     };
                     window
@@ -293,6 +327,10 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
                         apply_file_outcome(
                             outcome, &mut model, &files, &app, &mut dirty, &mut tools,
                         );
+                    } else if playback_key(code, modifiers)
+                        .is_some_and(|key| keys::apply(&mut driver, key, false, tools.owns_keys()))
+                    {
+                        dirty = true;
                     } else if let Some(key) = tool_key(code, modifiers) {
                         let result = files
                             .document_mut()
@@ -312,7 +350,13 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
                 WindowEvent::Pointer(pointer) => {
                     if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
                         dirty |= route_pointer(
-                            &pointer, &layout, &mut model, &mut doc, &mut files, &mut tools,
+                            &pointer,
+                            &layout,
+                            &mut model,
+                            &mut doc,
+                            &mut files,
+                            &mut tools,
+                            (&mut driver, &mut strip),
                         );
                     }
                 }
@@ -382,9 +426,22 @@ fn route_pointer(
     doc: &mut compose::DocumentView,
     files: &mut FileUi<NativePanels>,
     tools: &mut ToolController,
+    (driver, strip): (&mut Driver<MonotonicClock>, &mut Strip),
 ) -> bool {
     let primary = pointer_accepts_mode(pointer.button);
     let mut redraw = false;
+    // The timeline strip overlays the stage bottom and takes its pointer events.
+    if let Some(bar) = strip::layout(layout.stage).filter(|_| driver.strip_visible()) {
+        let kind = match pointer.kind {
+            PointerKind::Down if primary => Some(StripPointer::Down),
+            PointerKind::Move => Some(StripPointer::Move),
+            PointerKind::Up if primary => Some(StripPointer::Up),
+            _ => None,
+        };
+        if kind.is_some_and(|kind| strip.pointer(kind, pointer.logical, &bar, driver)) {
+            return true;
+        }
+    }
     let point = (pointer.logical.0 >= 0 && pointer.logical.1 >= 0)
         .then(|| (pointer.logical.0 as u32, pointer.logical.1 as u32));
     if pointer.kind == PointerKind::Down && primary {

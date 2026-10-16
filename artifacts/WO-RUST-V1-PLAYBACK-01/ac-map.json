@@ -1,0 +1,17 @@
+{
+  "order": "WO-RUST-V1-PLAYBACK-01",
+  "acceptance": {
+    "1": {"status": "pass", "tests": ["animation::tests_driver::tick_frames_equal_scene_render_through_the_compose_blit"]},
+    "2": {"status": "pass", "tests": ["animation::tests_driver::play_pause_seek_follow_the_clock_and_clamp", "animation::tests_driver::play_on_a_static_document_is_a_no_op", "animation::tests_driver::loop_wraps_and_play_once_stops_at_the_end_frame"]},
+    "3": {"status": "pass", "tests": ["animation::tests_driver::pacing_skips_sub_frame_advances_and_never_backlogs", "animation::tests_driver::the_queue_never_exceeds_its_capacity"]},
+    "4": {"status": "pass", "tests": ["animation::tests_driver::an_edit_cancels_old_work_and_renders_the_edited_document", "animation::tests_driver::a_pre_set_cancel_flag_presents_nothing"]},
+    "5": {"status": "pass", "tests": ["animation::tests_driver::a_vanishing_loop_pauses_at_zero_and_hides_the_strip", "animation::tests_driver::a_shorter_loop_clamps_the_time"]},
+    "6": {"status": "pass", "tests": ["animation::tests_ui::the_playback_key_map_is_exact", "animation::tests_ui::playback_keys_do_not_collide_with_tools_modes_or_chords", "animation::tests_ui::keys_drive_the_playback_state", "animation::tests_ui::keys_are_ignored_for_text_fields_tools_and_static_documents", "animation::tests_ui::a_tool_gesture_owns_the_keys_until_it_ends"]},
+    "7": {"status": "pass-with-deviation", "note": "handle_with routes to the driver; legacy 3-arg handle kept via a standalone driver so unmodified INTEGRATE tests pass; McpHost has no playing/time/anchor fields", "tests": ["session::tests_playback::mcp_controls_steer_the_shared_driver_with_the_integrate_replies", "session::tests_playback::handle_and_handle_with_reply_alike_for_the_same_inputs", "session::tests_playback::keyboard_and_mcp_share_one_clock", "session::tests_playback::play_on_a_static_document_keeps_the_integrate_error"]},
+    "8": {"status": "pass", "tests": ["animation::tests_ui::strip_layout_sits_at_the_stage_bottom_with_disjoint_controls", "animation::tests_ui::strip_hit_testing_separates_button_scrub_and_bar", "animation::tests_ui::time_label_format_is_minutes_seconds_centiseconds", "animation::tests_ui::scrub_maps_pointer_x_to_clamped_seconds", "animation::tests_ui::dragging_the_scrub_bar_pauses_and_release_stays_paused", "animation::tests_ui::the_button_toggles_play_and_the_bar_swallows_clicks", "animation::tests_ui::the_strip_is_hidden_and_inert_for_static_documents"]},
+    "9": {"status": "pass", "tests": ["session::tests_playback::the_driver_receives_bytes_revision_and_seconds_from_the_session", "session::tests_playback::playback_never_dirties_the_document"]},
+    "10": {"status": "pass", "note": "174 passed (146 before); no existing test modified"},
+    "11": {"status": "pass", "note": "cargo tree package set identical to INTEGRATE-01; no unsafe"},
+    "12": {"status": "pass", "note": "result.md"}
+  }
+}
