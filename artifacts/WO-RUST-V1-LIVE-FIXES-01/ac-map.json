@@ -1,0 +1,12 @@
+{
+ "AC1": "pass: chrome.rs tests + compose/tests_chrome.rs",
+ "AC2": "pass: chrome::tests::status_label_stays_inside_the_status_bar_and_off_the_rail",
+ "AC3": "pass: vexel-svg-decode/tests/curve_flatness.rs (5 tests)",
+ "AC4": "pass: goldens.json",
+ "AC5": "pass: chrome::tests::rail_buttons_never_show_the_same_string_twice, inspector::tests pen/line glyph pixels",
+ "AC6": "pass (via DocumentView select pick, not ToolController ids): compose/tests_chrome.rs",
+ "AC7": "partial: activation plan unit test; real activation unexecuted",
+ "AC8": "script delivered, not run",
+ "AC9": "pass: counts increased, no unsafe, no manifest change",
+ "AC10": "pass: result.md"
+}

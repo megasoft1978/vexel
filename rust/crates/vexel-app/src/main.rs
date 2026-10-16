@@ -13,9 +13,10 @@ use vexel_app::animation::{
     playback::MonotonicClock,
     strip::{self, Strip, StripPointer},
 };
+use vexel_app::chrome::{self, AppState};
 use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
-use vexel_app::model::{self, Layout, Mode, Model, Target};
+use vexel_app::model::{self, Layout, Mode, Model, Target, Tool};
 use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
@@ -75,7 +76,7 @@ fn run(
                     scale,
                     valid,
                     if valid {
-                        "No document open"
+                        ""
                     } else {
                         "Initial window geometry is unsupported"
                     },
@@ -221,6 +222,13 @@ fn run(
         if doc.poll() {
             dirty = true;
         }
+        // Title, top bar, status bar and inspector derive from the open
+        // document; resize and scale handlers never write them.
+        let chrome_text = chrome::chrome_text(&AppState::from_session(files.document(), &doc));
+        if chrome_text != model.chrome {
+            model.chrome = chrome_text;
+            dirty = true;
+        }
         if dirty || model.dirty {
             let (draw_size, draw_scale) = if geometry_valid {
                 (logical, scale as u32)
@@ -243,7 +251,7 @@ fn run(
                         .present_rgba(frame)
                         .map_err(|_| "native frame presentation failed")?;
                     window
-                        .set_title(files.title())
+                        .set_title(model.chrome.title.clone())
                         .map_err(|_| "could not update the Vexel window title")?;
                 }
                 Err(problem) => {
@@ -283,7 +291,7 @@ fn run(
                             == Some((pixels.width, pixels.height))
                             && Layout::new(logical.0, logical.1, model.mode).is_some();
                         model.status = if geometry_valid {
-                            "No document open"
+                            ""
                         } else {
                             "Resize rejected: unsupported pixel geometry"
                         };
@@ -306,7 +314,7 @@ fn run(
                         scale = next_scale;
                         geometry_valid = Layout::new(logical.0, logical.1, model.mode).is_some();
                         model.status = if geometry_valid {
-                            "No document open"
+                            ""
                         } else {
                             "Resize rejected: window is too small for the shell"
                         };
@@ -330,13 +338,16 @@ fn run(
                         file_key(&mut files, &mut dedup, started.elapsed(), code, modifiers)
                     {
                         apply_file_outcome(
-                            outcome, &mut model, &files, &app, &mut dirty, &mut tools,
+                            outcome, &mut model, &files, &app, &mut dirty, &mut tools, &mut doc,
                         );
                     } else if playback_key(code, modifiers)
                         .is_some_and(|key| keys::apply(&mut driver, key, false, tools.owns_keys()))
                     {
                         dirty = true;
                     } else if let Some(key) = tool_key(code, modifiers) {
+                        if key == Key::Escape {
+                            doc.deselect();
+                        }
                         let result = files
                             .document_mut()
                             .edit(|document| tools.key(key, document));
@@ -349,7 +360,7 @@ fn run(
                     if let Some(outcome) = file_menu(&mut files, &mut dedup, started.elapsed(), tag)
                     {
                         apply_file_outcome(
-                            outcome, &mut model, &files, &app, &mut dirty, &mut tools,
+                            outcome, &mut model, &files, &app, &mut dirty, &mut tools, &mut doc,
                         );
                     }
                 }
@@ -421,11 +432,13 @@ fn apply_file_outcome(
     app: &NativeApp,
     dirty: &mut bool,
     tools: &mut ToolController,
+    doc: &mut compose::DocumentView,
 ) {
     if let Some(status) = outcome.status() {
         model.status = status;
     }
     if outcome == FlowOutcome::Opened {
+        doc.deselect();
         // Selection ids belong to the replaced document; keep only the tool.
         let tool = tools.tool();
         *tools = ToolController::new();
@@ -485,7 +498,8 @@ fn route_pointer(
                 tools.set_tool(tool);
                 redraw = true;
             }
-            redraw |= model.pointer(layout, point) || doc.pointer(layout.stage, point);
+            let select = tools.tool() == Tool::Select;
+            redraw |= model.pointer(layout, point) || doc.pointer_with(layout.stage, point, select);
         }
     }
     if model.mode != Mode::Draw {

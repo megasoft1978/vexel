@@ -104,6 +104,12 @@ impl AppDocument {
             .and_then(file_name)
     }
 
+    /// Full path of the project, or of the SVG an untitled document was
+    /// imported from; `None` for a blank document.
+    pub fn origin_path(&self) -> Option<&[u8]> {
+        self.session.path().or_else(|| self.session.svg_origin())
+    }
+
     /// Window title: named by the project path only (an imported SVG is
     /// untitled), with a dirty marker.
     pub fn title(&self) -> String {

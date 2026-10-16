@@ -1,3 +1,5 @@
+use crate::chrome::{rail_glyph, status_label_rect, top_label_rect};
+use crate::inspector::draw_inspector;
 use crate::model::{Layout, Mode, Model, Tool, checked_pixel_geometry};
 use std::cell::Cell;
 use vexel_platform_apple::{RgbaFrame, TextEmphasis, TextFace, draw_text_rgba};
@@ -121,13 +123,8 @@ pub fn render(
         if width_points >= 1000 {
             label(
                 &mut c,
-                "No document open",
-                Rect {
-                    x: 98,
-                    y: 10,
-                    width: 150,
-                    height: 26,
-                },
+                &model.chrome.top,
+                top_label_rect(&layout),
                 tokens.text_secondary,
                 12,
                 FontWeight::Regular,
@@ -209,13 +206,7 @@ pub fn render(
         {
             let r = layout.tools[i];
             c.paint_round(r, 5, tokens.panel_raised, tokens.separator, 1);
-            let glyph = match tool {
-                Tool::Select => "↖",
-                Tool::Pen => "Pen",
-                Tool::Rectangle => "▭",
-                Tool::Ellipse => "○",
-                Tool::Line => "Line",
-            };
+            let (glyph, caption) = rail_glyph(*tool);
             label(
                 &mut c,
                 glyph,
@@ -232,13 +223,7 @@ pub fn render(
             if r.height >= 42 {
                 label(
                     &mut c,
-                    match tool {
-                        Tool::Select => "Select",
-                        Tool::Pen => "Pen",
-                        Tool::Rectangle => "Rect",
-                        Tool::Ellipse => "Ellipse",
-                        Tool::Line => "Line",
-                    },
+                    caption,
                     Rect {
                         x: r.x + 1,
                         y: r.y + 23,
@@ -303,7 +288,7 @@ pub fn render(
             );
         }
         if let Some(panel) = layout.inspector {
-            draw_inspector(&mut c, panel);
+            draw_inspector(&mut c, panel, &model.chrome.inspector);
         }
         draw_activity(&mut c, layout.activity, model.status);
         c.paint_rect(layout.status, tokens.panel_raised);
@@ -322,13 +307,8 @@ pub fn render(
         );
         label(
             &mut c,
-            "No document open",
-            Rect {
-                x: 84,
-                y: layout.status.y + 3,
-                width: 180,
-                height: 22,
-            },
+            &model.chrome.status,
+            status_label_rect(&layout),
             tokens.text_secondary,
             11,
             FontWeight::Regular,
@@ -357,7 +337,7 @@ pub fn render(
     RgbaFrame::new(width, height, scale as f64, pixels)
         .map_err(|_| "native frame constructor rejected geometry")
 }
-fn label(
+pub(crate) fn label(
     c: &mut WidgetCanvas<'_>,
     text: &str,
     bounds: Rect,
@@ -467,176 +447,6 @@ fn timeline_content_rows(r: Rect) -> [Option<Rect>; 3] {
             height: 18,
         }),
     ]
-}
-fn draw_inspector(c: &mut WidgetCanvas<'_>, r: Rect) {
-    let tokens = c.tokens;
-    c.paint_rect(r, tokens.panel);
-    c.paint_rect(
-        Rect {
-            x: r.x,
-            y: r.y,
-            width: 1,
-            height: r.height,
-        },
-        tokens.separator,
-    );
-    // The full inspector has fixed rows through y=374. On compact layouts the
-    // layout omits it; keep this guard so future callers cannot paint them past
-    // a shorter panel or turn one bad label into a failed whole-frame render.
-    if r.height < 414 {
-        return;
-    }
-    label(
-        c,
-        "Inspector",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 14,
-            width: r.width - 28,
-            height: 24,
-        },
-        tokens.text_primary,
-        14,
-        FontWeight::Semibold,
-    );
-    c.paint_rect(
-        Rect {
-            x: r.x + 14,
-            y: r.y + 48,
-            width: r.width - 28,
-            height: 1,
-        },
-        tokens.separator,
-    );
-    label(
-        c,
-        "Nothing selected",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 62,
-            width: r.width - 28,
-            height: 22,
-        },
-        tokens.text_secondary,
-        12,
-        FontWeight::Regular,
-    );
-    label(
-        c,
-        "Properties appear when an object is selected.",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 94,
-            width: r.width - 32,
-            height: 48,
-        },
-        tokens.text_tertiary,
-        11,
-        FontWeight::Regular,
-    );
-    label(
-        c,
-        "Fill",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 166,
-            width: r.width - 32,
-            height: 20,
-        },
-        tokens.text_secondary,
-        11,
-        FontWeight::Semibold,
-    );
-    c.paint_round(
-        Rect {
-            x: r.x + 16,
-            y: r.y + 190,
-            width: r.width - 32,
-            height: 32,
-        },
-        4,
-        tokens.panel_raised,
-        tokens.separator,
-        1,
-    );
-    label(
-        c,
-        "Unavailable",
-        Rect {
-            x: r.x + 24,
-            y: r.y + 196,
-            width: r.width - 48,
-            height: 20,
-        },
-        tokens.disabled_text,
-        11,
-        FontWeight::Regular,
-    );
-    label(
-        c,
-        "Stroke",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 242,
-            width: r.width - 32,
-            height: 20,
-        },
-        tokens.text_secondary,
-        11,
-        FontWeight::Semibold,
-    );
-    c.paint_round(
-        Rect {
-            x: r.x + 16,
-            y: r.y + 266,
-            width: r.width - 32,
-            height: 30,
-        },
-        4,
-        tokens.panel_raised,
-        tokens.separator,
-        1,
-    );
-    label(
-        c,
-        "Unavailable",
-        Rect {
-            x: r.x + 24,
-            y: r.y + 271,
-            width: r.width - 48,
-            height: 20,
-        },
-        tokens.disabled_text,
-        11,
-        FontWeight::Regular,
-    );
-    label(
-        c,
-        "Transform",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 318,
-            width: r.width - 32,
-            height: 20,
-        },
-        tokens.text_secondary,
-        11,
-        FontWeight::Semibold,
-    );
-    for i in 0..2 {
-        c.paint_round(
-            Rect {
-                x: r.x + 16,
-                y: r.y + 344 + i * 40,
-                width: (r.width - 38) / 2,
-                height: 30,
-            },
-            4,
-            tokens.panel_raised,
-            tokens.separator,
-            1,
-        );
-    }
 }
 fn draw_activity(c: &mut WidgetCanvas<'_>, r: Rect, status: &str) {
     let tokens = c.tokens;

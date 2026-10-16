@@ -1,0 +1,112 @@
+{
+ "goldens": [
+  {
+   "path": "rust/crates/vexel-render/tests/golden/manifest.json",
+   "sha256_before": "e33150788fa859bfb23e940618e814a62359787804601ab813a09a04ed1151d5",
+   "sha256_after": "e33150788fa859bfb23e940618e814a62359787804601ab813a09a04ed1151d5",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/path-line-curves.ppm",
+   "sha256_before": "0437ea65b62239dd11f6aaf5c18f5964b1ca87090d610d2fb53ab550ae8d1ffd",
+   "sha256_after": "0437ea65b62239dd11f6aaf5c18f5964b1ca87090d610d2fb53ab550ae8d1ffd",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/path-relative-commands.ppm",
+   "sha256_before": "1f01a78258e94b8ff01d0003a0400219a48339286a1b4d38189c880e24b74543",
+   "sha256_after": "1f01a78258e94b8ff01d0003a0400219a48339286a1b4d38189c880e24b74543",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/render-extra.ppm",
+   "sha256_before": "c0d63c6252ea53a44e8c8fb77112b0ac79fb86c42d7fac5f997b3d33a11b11b2",
+   "sha256_after": "c0d63c6252ea53a44e8c8fb77112b0ac79fb86c42d7fac5f997b3d33a11b11b2",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/shapes-basic.ppm",
+   "sha256_before": "fd17c64c48366c94d5462b803119c5016db36a27ea8e58a40840131385752cc4",
+   "sha256_after": "fd17c64c48366c94d5462b803119c5016db36a27ea8e58a40840131385752cc4",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/shapes-lines-polygons.ppm",
+   "sha256_before": "3b9b27515a5999c4399ac486a3ac1505c0df229e99d50cd18147a9927535b6b2",
+   "sha256_after": "3b9b27515a5999c4399ac486a3ac1505c0df229e99d50cd18147a9927535b6b2",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/shapes-rounded.ppm",
+   "sha256_before": "fef874139223b2dffa9e1c48e7ab7833bc095b1cf0213630070542d5d4ae9f7f",
+   "sha256_after": "fef874139223b2dffa9e1c48e7ab7833bc095b1cf0213630070542d5d4ae9f7f",
+   "changed": false
+  },
+  {
+   "path": "rust/crates/vexel-render/tests/golden/style-presentation-attributes.ppm",
+   "sha256_before": "df9f3775fc0d9c6967505b687c179fd10bfdcce2eebf610e91e541d5863c4a8a",
+   "sha256_after": "df9f3775fc0d9c6967505b687c179fd10bfdcce2eebf610e91e541d5863c4a8a",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/legacy/path/baseline-golden.txt",
+   "sha256_before": "ce852a8bd74a88ce108cf019000325f34b8d727b905f65a4789bb62a5738cbc9",
+   "sha256_after": "ce852a8bd74a88ce108cf019000325f34b8d727b905f65a4789bb62a5738cbc9",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/v1/compose/c-reference/path-line-curves.ppm",
+   "sha256_before": "0437ea65b62239dd11f6aaf5c18f5964b1ca87090d610d2fb53ab550ae8d1ffd",
+   "sha256_after": "0437ea65b62239dd11f6aaf5c18f5964b1ca87090d610d2fb53ab550ae8d1ffd",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/v1/compose/c-reference/path-relative-commands.ppm",
+   "sha256_before": "1f01a78258e94b8ff01d0003a0400219a48339286a1b4d38189c880e24b74543",
+   "sha256_after": "1f01a78258e94b8ff01d0003a0400219a48339286a1b4d38189c880e24b74543",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/v1/compose/c-reference/shapes-basic.ppm",
+   "sha256_before": "fd17c64c48366c94d5462b803119c5016db36a27ea8e58a40840131385752cc4",
+   "sha256_after": "0df948d9ad22c49f8073edef1582a19262b6b163183389f7718b999fb8ed6d36",
+   "changed": true,
+   "max_channel_diff": 64,
+   "differing_pixels": 132,
+   "total_pixels": 12288,
+   "fixture": "rust/fixtures/v1/compose/c-reference/shapes-basic.svg",
+   "fixture_contains_circle_or_ellipse": true,
+   "justification": "C parity facets superseded by 0.1 px bound (circle/ellipse flattened to <=0.08 device px radial error); regenerated from the Rust renderer after the flattening change"
+  },
+  {
+   "path": "rust/fixtures/v1/compose/c-reference/shapes-lines-polygons.ppm",
+   "sha256_before": "3b9b27515a5999c4399ac486a3ac1505c0df229e99d50cd18147a9927535b6b2",
+   "sha256_after": "3b9b27515a5999c4399ac486a3ac1505c0df229e99d50cd18147a9927535b6b2",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/v1/compose/c-reference/shapes-rounded.ppm",
+   "sha256_before": "fef874139223b2dffa9e1c48e7ab7833bc095b1cf0213630070542d5d4ae9f7f",
+   "sha256_after": "fef874139223b2dffa9e1c48e7ab7833bc095b1cf0213630070542d5d4ae9f7f",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/v1/compose/c-reference/style-presentation-attributes.ppm",
+   "sha256_before": "df9f3775fc0d9c6967505b687c179fd10bfdcce2eebf610e91e541d5863c4a8a",
+   "sha256_after": "df9f3775fc0d9c6967505b687c179fd10bfdcce2eebf610e91e541d5863c4a8a",
+   "changed": false
+  },
+  {
+   "path": "rust/fixtures/v1/compose/compose-v1.ppm",
+   "sha256_before": "dba55dc5b3edda8961900071a65dcc25f0414ed5595620dab53f66d754fb31e0",
+   "sha256_after": "c985fbdd502019baeb8656aab11f59d43466d5878101a2a9d6d12e559731bb8f",
+   "changed": true,
+   "max_channel_diff": 127,
+   "differing_pixels": 288,
+   "total_pixels": 19200,
+   "fixture": "rust/fixtures/v1/compose/compose-v1.svg",
+   "fixture_contains_circle_or_ellipse": true,
+   "justification": "C parity facets superseded by 0.1 px bound (circle/ellipse flattened to <=0.08 device px radial error); regenerated from the Rust renderer after the flattening change"
+  }
+ ]
+}

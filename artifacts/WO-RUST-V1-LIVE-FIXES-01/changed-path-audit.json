@@ -1,0 +1,18 @@
+{
+ "modified": [
+  "rust/crates/vexel-app/src/{lib,main,model,render,session/mod,compose/mod,compose/present,compose/tests_open}.rs",
+  "rust/crates/vexel-svg-decode/src/geometry.rs",
+  "rust/crates/vexel-platform-apple/src/native_window/app.rs",
+  "rust/fixtures/v1/compose/compose-v1.ppm",
+  "rust/fixtures/v1/compose/c-reference/shapes-basic.ppm"
+ ],
+ "added": [
+  "rust/crates/vexel-app/src/chrome.rs",
+  "rust/crates/vexel-app/src/inspector.rs",
+  "rust/crates/vexel-app/src/compose/tests_chrome.rs",
+  "rust/crates/vexel-svg-decode/tests/curve_flatness.rs",
+  "scripts/live_check.sh",
+  "artifacts/WO-RUST-V1-LIVE-FIXES-01/*"
+ ],
+ "note": "tests_open.rs only widened visibility of TempDir/wait_for helpers"
+}

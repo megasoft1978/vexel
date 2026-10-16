@@ -5,7 +5,12 @@ use super::{
     types::*,
 };
 use crate::{MainThread, guard_native_call};
-use objc2::{MainThreadOnly, rc::Retained, runtime::ProtocolObject};
+use objc2::{
+    MainThreadOnly,
+    rc::Retained,
+    runtime::{NSObjectProtocol, ProtocolObject},
+    sel,
+};
 use objc2_app_kit::{
     NSApplication, NSApplicationActivationPolicy, NSAutoresizingMaskOptions, NSBackingStoreType,
     NSEventMask, NSView, NSVisualEffectBlendingMode, NSVisualEffectMaterial, NSVisualEffectState,
@@ -19,6 +24,54 @@ use objc2_quartz_core::CALayer;
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
 use std::rc::{Rc, Weak};
+
+/// One documented AppKit call used to bring a new window to the front.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum ActivationStep {
+    MakeKeyAndOrderFront,
+    OrderFrontRegardless,
+    ActivateIgnoringOtherApps,
+    /// Cooperative activation, macOS 14 and later only.
+    Activate,
+}
+
+/// Steps that make a new window key and the app frontmost even when the
+/// process was started by a non-GUI parent (terminal, harness): the window is
+/// ordered front regardless of activation, the app is activated, and the
+/// window is made key again because a window of an inactive app cannot become
+/// key. `Activate` exists only on macOS 14+, so it is used only when the
+/// running system responds to it (the deployment target is macOS 13).
+pub(crate) fn activation_plan(cooperative_activate: bool) -> Vec<ActivationStep> {
+    let mut plan = vec![
+        ActivationStep::MakeKeyAndOrderFront,
+        ActivationStep::OrderFrontRegardless,
+        ActivationStep::ActivateIgnoringOtherApps,
+    ];
+    if cooperative_activate {
+        plan.push(ActivationStep::Activate);
+    }
+    plan.push(ActivationStep::MakeKeyAndOrderFront);
+    plan
+}
+
+#[cfg(test)]
+mod activation_tests {
+    use super::*;
+
+    #[test]
+    fn plan_orders_front_then_activates_then_makes_key_again() {
+        let old = activation_plan(false);
+        assert_eq!(old.first(), Some(&ActivationStep::MakeKeyAndOrderFront));
+        assert_eq!(old.last(), Some(&ActivationStep::MakeKeyAndOrderFront));
+        assert!(old.contains(&ActivationStep::ActivateIgnoringOtherApps));
+        assert!(!old.contains(&ActivationStep::Activate), "macOS 13 safe");
+        let new = activation_plan(true);
+        let activate = new.iter().position(|s| *s == ActivationStep::Activate);
+        let last_key = new.len() - 1;
+        assert!(activate.is_some_and(|i| i < last_key));
+        assert_eq!(new[last_key], ActivationStep::MakeKeyAndOrderFront);
+    }
+}
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum AppPhase {
@@ -200,11 +253,22 @@ impl NativeApp {
                 (record.native.clone(), record.view.clone())
             };
             let shown = guard_native_call(|| {
-                native.makeKeyAndOrderFront(None);
-                if !native.makeFirstResponder(Some(&view)) {
-                    return Err(WindowError::InvalidConfig);
+                let cooperative = self.application.respondsToSelector(sel!(activate));
+                for step in activation_plan(cooperative) {
+                    match step {
+                        ActivationStep::MakeKeyAndOrderFront => native.makeKeyAndOrderFront(None),
+                        ActivationStep::OrderFrontRegardless => native.orderFrontRegardless(),
+                        ActivationStep::ActivateIgnoringOtherApps => {
+                            self.application.activateIgnoringOtherApps(true)
+                        }
+                        ActivationStep::Activate => self.application.activate(),
+                    }
+                    if step == ActivationStep::MakeKeyAndOrderFront
+                        && !native.makeFirstResponder(Some(&view))
+                    {
+                        return Err(WindowError::InvalidConfig);
+                    }
                 }
-                self.application.activateIgnoringOtherApps(true);
                 Ok(())
             })
             .map_err(WindowError::Native)

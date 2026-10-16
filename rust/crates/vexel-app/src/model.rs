@@ -1,3 +1,4 @@
+use crate::chrome::ChromeText;
 use vexel_ui::Rect;
 
 const INSPECTOR_MIN_CONTENT_HEIGHT: u32 = 414;
@@ -190,7 +191,10 @@ pub struct Model {
     pub mode: Mode,
     pub dark: bool,
     pub dirty: bool,
+    /// Shell notice shown in the activity strip; empty when there is none.
     pub status: &'static str,
+    /// Document-derived text, refreshed by the shell from the open document.
+    pub chrome: ChromeText,
 }
 impl Model {
     pub fn new(dark: bool) -> Self {
@@ -198,7 +202,8 @@ impl Model {
             mode: Mode::Draw,
             dark,
             dirty: true,
-            status: "No document open",
+            status: "",
+            chrome: ChromeText::default(),
         }
     }
     pub fn select_mode(&mut self, mode: Mode) -> bool {

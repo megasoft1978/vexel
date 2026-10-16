@@ -5,12 +5,12 @@
 //! fills the same logical area but is not rendered at native sharpness (a
 //! disclosed later item).
 
-use super::{ComposeError, ComposeWorker, Composed, Disclosure, Frame, WorkerEvent};
+use super::{ComposeError, ComposeWorker, Composed, Disclosure, Frame, OwnedShape, WorkerEvent};
 use crate::model::Layout;
 use crate::session::AppDocument;
 use std::path::Path;
 use std::sync::Arc;
-use vexel_platform_apple::{RgbaFrame, TextEmphasis, TextFace, draw_text_rgba};
+use vexel_platform_apple::RgbaFrame;
 use vexel_ui::{Rect, Theme, theme_tokens};
 
 const MAX_LISTED_DISCLOSURES: usize = 3;
@@ -30,6 +30,9 @@ pub struct DocumentView {
     /// True while `composed.frame` holds an animated frame (not the static one).
     animated: bool,
     status: Option<(String, bool)>,
+    /// Scene index of the shape picked with the select tool, shown by the
+    /// inspector.
+    selected: Option<usize>,
 }
 
 impl Default for DocumentView {
@@ -49,7 +52,22 @@ impl DocumentView {
             composed: None,
             animated: false,
             status: None,
+            selected: None,
         }
+    }
+
+    /// The picked shape, if it still exists in the composed document.
+    pub fn selected_shape(&self) -> Option<&OwnedShape> {
+        let index = self.selected?;
+        self.composed
+            .as_ref()?
+            .shapes
+            .iter()
+            .find(|s| s.scene_index == index)
+    }
+
+    pub fn deselect(&mut self) {
+        self.selected = None;
     }
 
     /// True while the stage shows a frame set by [`DocumentView::present_animated`].
@@ -134,6 +152,7 @@ impl DocumentView {
             Ok(()) => match app.source_bytes() {
                 Ok(bytes) => {
                     self.name = Some(name);
+                    self.selected = None;
                     self.show(&bytes, app.revision(), stage);
                     return;
                 }
@@ -165,6 +184,12 @@ impl DocumentView {
         match event.result {
             Ok(composed) => {
                 self.status = Some((status_text(&name, &composed), false));
+                if self
+                    .selected
+                    .is_some_and(|i| !composed.shapes.iter().any(|s| s.scene_index == i))
+                {
+                    self.selected = None;
+                }
                 self.composed = Some(composed);
                 self.animated = false;
             }
@@ -193,6 +218,13 @@ impl DocumentView {
 
     /// Handles a primary click in the window. True when the status changed.
     pub fn pointer(&mut self, stage: Rect, logical: (u32, u32)) -> bool {
+        self.pointer_with(stage, logical, false)
+    }
+
+    /// Like [`DocumentView::pointer`]; with `select` (the select tool is
+    /// active) the click also picks the topmost shape under it, or clears the
+    /// selection when it lands on empty canvas.
+    pub fn pointer_with(&mut self, stage: Rect, logical: (u32, u32), select: bool) -> bool {
         let Some(composed) = &self.composed else {
             return false;
         };
@@ -206,10 +238,14 @@ impl DocumentView {
             return false;
         };
         let name = self.name().unwrap_or("document");
-        let text = match composed.hit_test(cx, cy) {
+        let hit = composed.hit_test(cx, cy);
+        let text = match hit {
             Some(index) => format!("{name}: shape {index} at ({dx:.1}, {dy:.1})"),
             None => format!("{name}: no shape at ({dx:.1}, {dy:.1})"),
         };
+        if select {
+            self.selected = hit;
+        }
         self.status = Some((text, false));
         true
     }
@@ -259,9 +295,11 @@ pub fn fill(pixels: &mut [u8], width: u32, scale: u32, rect: Rect, color: u32) {
     }
 }
 
-/// Copies the composed frame over white into the stage and writes the status
-/// into the status bar. Returns the original frame when nothing is open or
-/// the composed copy cannot be built; a status text failure only omits text.
+/// Copies the composed frame over white into the stage. Returns the original
+/// frame when nothing is open or the composed copy cannot be built. The status
+/// text is drawn by `render` from the document-derived chrome text, inside the
+/// status bar (the old label here was positioned in points on a pixel buffer,
+/// so it landed at mid-height over the tool rail on Retina backings).
 pub fn blit_document(
     frame: RgbaFrame,
     view: &DocumentView,
@@ -296,32 +334,6 @@ pub fn blit_document(
         }
     } else {
         fill(&mut pixels, width, scale, layout.stage, tokens.canvas_well);
-    }
-    if let Some((text, error)) = view.status() {
-        let bar = Rect {
-            width: layout.status.width.saturating_sub(176),
-            ..layout.status
-        };
-        fill(&mut pixels, width, scale, bar, tokens.panel_raised);
-        let clip = (14, bar.y + 3, bar.width.saturating_sub(14), 22);
-        let color = if error {
-            tokens.error
-        } else {
-            tokens.text_secondary
-        };
-        let _ = draw_text_rgba(
-            &mut pixels,
-            width,
-            height,
-            width as usize * 4,
-            scale,
-            text,
-            clip,
-            color,
-            TextFace::System,
-            TextEmphasis::Regular,
-            11,
-        );
     }
     RgbaFrame::new(width, height, f64::from(scale), pixels).unwrap_or(frame)
 }

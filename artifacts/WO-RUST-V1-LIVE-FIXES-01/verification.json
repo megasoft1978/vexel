@@ -1,0 +1,12 @@
+{
+ "check_app": "pass",
+ "test_vexel_app": {"passed": 216, "failed": 0},
+ "test_vexel_svg_decode": {"passed": 98, "failed": 0},
+ "test_vexel_render": {"passed": 49, "failed": 0},
+ "test_vexel_platform_apple": {"passed": 61, "failed": 0},
+ "fmt_check": "pass",
+ "wo_validate": "pass",
+ "ledger_validate": "pass",
+ "git_diff_check": "not run (git refused by sandbox hook)",
+ "logs": "*.log in this directory"
+}

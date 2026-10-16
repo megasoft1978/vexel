@@ -5,6 +5,10 @@ use vexel_geometry::{Affine, Point};
 use vexel_scene::{Diagnostic, ErrorKind, LimitKind, Result};
 use vexel_svg_path::{ParseOptions, PathDocument};
 use vexel_xml::{XmlSpan, XmlToken};
+/// Device-pixel flatness rule shared with paths and arcs (C-reference).
+const LEGACY_DEVICE_ERROR: f64 = 0.25;
+/// Maximum radial error of a flattened circle or ellipse, in device px.
+const CURVE_DEVICE_ERROR: f64 = 0.08;
 #[derive(Debug)]
 pub struct Geometry {
     pub path: PathDocument,
@@ -399,7 +403,17 @@ pub fn element_geometry_controlled(
         if rx == 0.0 || ry == 0.0 {
             return Ok(b.finish(true, true, 0));
         }
-        let tolerance = crate::transformed_flatness_tolerance(transform);
+        // Circle/ellipse flattening bound (supersedes the C-parity 0.25 px rule,
+        // which produced visible facets): the sagitta of each chord, i.e. the
+        // maximum radial error against the analytic curve, is at most
+        // `CURVE_DEVICE_ERROR` (0.08) device px. The transform's scale bound
+        // (sqrt(row_norm * column_norm) >= the largest singular value, floored
+        // at 1) turns the device bound into local units, so the error stays
+        // <= 0.08 px under any scale. With radius R and tolerance t, the step
+        // angle is 2*acos(1 - t/R) and steps = ceil(2*pi / angle), floor 12,
+        // cap 4096 edges (over the cap is the Limit error).
+        let tolerance = crate::transformed_flatness_tolerance(transform)
+            * (CURVE_DEVICE_ERROR / LEGACY_DEVICE_ERROR);
         let radius = rx.max(ry);
         let angle = if radius <= tolerance {
             6.283185307179586

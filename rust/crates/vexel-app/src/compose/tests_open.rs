@@ -10,10 +10,10 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{Duration, Instant};
 use vexel_ui::Rect;
 
-struct TempDir(PathBuf);
+pub(super) struct TempDir(pub(super) PathBuf);
 
 impl TempDir {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         static NEXT: AtomicU32 = AtomicU32::new(0);
         let dir = std::env::temp_dir().join(format!(
             "vexel-compose-test-{}-{}",
@@ -23,7 +23,7 @@ impl TempDir {
         std::fs::create_dir_all(&dir).unwrap();
         Self(dir)
     }
-    fn file(&self, name: &str, bytes: &[u8]) -> PathBuf {
+    pub(super) fn file(&self, name: &str, bytes: &[u8]) -> PathBuf {
         let path = self.0.join(name);
         std::fs::write(&path, bytes).unwrap();
         path
@@ -36,7 +36,7 @@ impl Drop for TempDir {
     }
 }
 
-fn wait_for(view: &mut DocumentView, done: impl Fn(&DocumentView) -> bool) {
+pub(super) fn wait_for(view: &mut DocumentView, done: impl Fn(&DocumentView) -> bool) {
     let deadline = Instant::now() + Duration::from_secs(20);
     while !done(view) {
         assert!(
