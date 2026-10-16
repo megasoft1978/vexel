@@ -354,3 +354,31 @@ fn explicit_shape_ids_use_the_same_bounds_and_reject_duplicates() {
     );
     assert_eq!(doc.history_count(), 1);
 }
+
+#[test]
+fn from_source_opens_exact_bytes_clean_with_empty_history() {
+    let mut doc = V1Document::from_source(DRAWN).unwrap();
+    assert_eq!((doc.width(), doc.height()), (100, 80));
+    assert_eq!(doc.source().unwrap(), DRAWN);
+    assert!(!doc.is_dirty());
+    assert_eq!(doc.history_count(), 0);
+    assert_eq!(
+        doc.undo(),
+        Err(V1DocumentError::Edit(EditError::InvalidOperation))
+    );
+}
+
+#[test]
+fn from_source_rejects_bad_roots_dimensions_and_xml() {
+    for bad in [
+        &b"<svg xmlns=\"http://www.w3.org/2000/svg\"/>"[..],
+        b"<svg width=\"0\" height=\"5\"/>",
+        b"<svg width=\"4097\" height=\"5\"/>",
+        b"<svg width=\"1.5\" height=\"5\"/>",
+        b"<g width=\"5\" height=\"5\"/>",
+        b"<svg width=\"5\" height=\"5\">",
+        b"",
+    ] {
+        assert!(V1Document::from_source(bad).is_err(), "{bad:?}");
+    }
+}

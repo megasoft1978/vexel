@@ -3,6 +3,7 @@
 mod model;
 mod preview;
 mod preview_app;
+mod project_session;
 mod render;
 
 use model::{Layout, Mode, Model};

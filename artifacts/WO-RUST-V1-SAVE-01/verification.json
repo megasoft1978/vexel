@@ -1,0 +1,9 @@
+{"order":"WO-RUST-V1-SAVE-01","commands":[
+{"cmd":"cargo +stable check -p vexel-app --locked --offline","result":"pass"},
+{"cmd":"cargo +stable test -p vexel-app --locked --offline","result":"pass","passed":31,"failed":0},
+{"cmd":"cargo +stable test -p vexel-v1-document --locked --offline","result":"pass","passed":17,"failed":0},
+{"cmd":"cargo +stable test -p vexel-project-io --locked --offline","result":"pass","passed":16,"failed":0},
+{"cmd":"cargo +stable fmt --package vexel-app --package vexel-v1-document -- --check","result":"pass"},
+{"cmd":"python3 scripts/wo_validate.py WO-RUST-V1-SAVE-01 --ready","result":"pass"},
+{"cmd":"python3 scripts/ledger.py validate ledger.jsonl","result":"pass","entries":1827},
+{"cmd":"git diff --check","result":"pass"}]}

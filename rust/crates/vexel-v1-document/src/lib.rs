@@ -65,6 +65,50 @@ impl V1Document {
         })
     }
 
+    /// Opens existing SVG source byte-for-byte. The root element must be `svg`
+    /// with integer `width` and `height` attributes from 1 through 4096.
+    /// History starts empty and the document is clean.
+    pub fn from_source(source: &[u8]) -> Result<Self, V1DocumentError> {
+        let mut owned = Vec::new();
+        owned
+            .try_reserve_exact(source.len())
+            .map_err(|_| V1DocumentError::Allocation)?;
+        owned.extend_from_slice(source);
+        let result = Editor::create(&Arc::new(owned), EditLimits::default());
+        if result.error != EditError::Ok {
+            return Err(V1DocumentError::Edit(result.error));
+        }
+        let editor = result
+            .editor
+            .ok_or(V1DocumentError::Edit(EditError::InvalidOperation))?;
+        let root = editor
+            .root()
+            .ok_or(V1DocumentError::Edit(EditError::InvalidOperation))?;
+        if editor.tag_name(root) != Some(b"svg") {
+            return Err(V1DocumentError::InvalidDimensions);
+        }
+        let (mut width, mut height) = (None, None);
+        for index in 0..editor.attribute_count(root) {
+            let Some(attribute) = editor.attribute_at(root, index) else {
+                continue;
+            };
+            let slot = match editor.span_bytes(attribute.name) {
+                Some(b"width") => &mut width,
+                Some(b"height") => &mut height,
+                _ => continue,
+            };
+            *slot = editor.span_bytes(attribute.value).and_then(parse_dimension);
+        }
+        match (width, height) {
+            (Some(width), Some(height)) => Ok(Self {
+                width,
+                height,
+                editor,
+            }),
+            _ => Err(V1DocumentError::InvalidDimensions),
+        }
+    }
+
     pub const fn width(&self) -> u32 {
         self.width
     }
@@ -350,6 +394,16 @@ impl V1Document {
     pub fn redo(&mut self) -> Result<(), V1DocumentError> {
         self.editor.redo().map_err(Into::into)
     }
+}
+
+fn parse_dimension(value: &[u8]) -> Option<u32> {
+    if value.is_empty() || value.len() > 4 || !value.iter().all(u8::is_ascii_digit) {
+        return None;
+    }
+    let parsed = value
+        .iter()
+        .fold(0u32, |acc, digit| acc * 10 + u32::from(digit - b'0'));
+    (1..=MAX_DIMENSION).contains(&parsed).then_some(parsed)
 }
 
 fn is_animation_element(fragment: &[u8]) -> bool {

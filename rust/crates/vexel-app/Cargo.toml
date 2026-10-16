@@ -20,3 +20,5 @@ vexel-mcp-stdio = { path = "../vexel-mcp-stdio" }
 vexel-v1-document = { path = "../vexel-v1-document" }
 vexel-xml = { path = "../vexel-xml" }
 vexel-svg-animation = { path = "../vexel-svg-animation" }
+vexel-project = { path = "../vexel-project" }
+vexel-project-io = { path = "../vexel-project-io" }

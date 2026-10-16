@@ -1,0 +1,9 @@
+{"AC1":{"status":"pass","tests":["round_trip_preserves_source_ids_order_and_animation"]},
+"AC2":{"status":"pass","tests":["unknown_source_survives_byte_for_byte","unedited_foreign_source_saves_and_reopens_identically"]},
+"AC3":{"status":"pass","tests":["undo_save_redo_and_history_cursor","edit_undo_edit_save_reopen_yields_post_edit_state"],"note":"history reset on reopen"},
+"AC4":{"status":"pass","tests":["dirty_tracking_edit_save_and_undo_past_saved_point","save_without_path_is_typed_error_and_keeps_dirty"]},
+"AC5":{"status":"pass","tests":["failed_opens_are_typed_and_leave_the_document_untouched","valid_bundle_with_non_svg_scene_is_invalid_scene","unwritable_directory_fails_without_touching_state_or_existing_file","missing_directory_and_bad_paths_fail_typed"],"note":"read-only directory used; io hooks are private"},
+"AC6":{"status":"pass-with-deviation","tests":["unwritable_directory_fails_without_touching_state_or_existing_file","resave_replaces_atomically_and_leaves_no_temp_files"],"note":"no public injection hook; read-only directory fallback per AC5"},
+"AC7":{"status":"pass","note":"no display used; counts app 31, v1-document 17, project-io 16"},
+"AC8":{"status":"pass","note":"only first-party path crates added; no new external package; no unsafe"},
+"AC9":{"status":"pass","file":"result.md"}}

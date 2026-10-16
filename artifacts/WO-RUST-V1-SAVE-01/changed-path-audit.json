@@ -1,0 +1,3 @@
+{"allowed":["rust/crates/vexel-app/Cargo.toml","rust/crates/vexel-app/src/main.rs","rust/crates/vexel-app/src/project_session/mod.rs","rust/crates/vexel-app/src/project_session/actions.rs","rust/crates/vexel-app/src/project_session/tests.rs","rust/crates/vexel-v1-document/src/lib.rs","rust/crates/vexel-v1-document/src/tests.rs","rust/fixtures/v1/save/foreign.svg","artifacts/WO-RUST-V1-SAVE-01/*"],
+"protected_touched":["Cargo.lock (two dependency lines for vexel-app; required by --locked; separate commit)"],
+"v1_document_accessor":"V1Document::from_source (additive; open was impossible otherwise)"}
