@@ -44,8 +44,9 @@ bool raster_shape_render_scanline_fill_shape(
     const raster_fill_pixel_run *runs =
         raster_fill_scanline_cache_pixel_runs(fill_cache, &run_count);
     if (runs == NULL || run_count == 0U) return false;
-    bool gradient = document->paints != NULL &&
-                    document->paints[shape].kind != SVG_SHAPE_PAINT_SOLID;
+    const svg_shape_paint *paint = svg_shape_paint_for_shape(document, shape);
+    bool gradient = paint != NULL &&
+                    paint->kind != SVG_SHAPE_PAINT_SOLID;
     for (size_t interval_index = 0U;
          interval_index < fill_cache->interval_counts[2U]; interval_index++) {
         const raster_fill_scanline_interval *interval = fill_cache->intervals +

@@ -169,8 +169,55 @@ static bool compose_marker_transform(geom_point position, double angle,
     return true;
 }
 
+static bool marker_definition_parent_style(shape_traversal *traversal,
+                                          size_t marker,
+                                          svg_css_paint *out_parent)
+{
+    size_t ancestors[SHAPE_MAX_XML_DEPTH + 1U];
+    size_t ancestor_count = 0U;
+    for (size_t i = 0U; i < marker; ++i) {
+        if (traversal->marker_style_token_visits >=
+                SHAPE_MAX_TRAVERSAL_VISITS) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
+                 traversal->tokens[marker].name.offset);
+            return false;
+        }
+        traversal->marker_style_token_visits++;
+        if ((i & 255U) == 0U && svg_shape_traverse_cancelled(
+                traversal, traversal->tokens[i].source.offset)) return false;
+        const svg_xml_token *token = &traversal->tokens[i];
+        if (token->kind == SVG_XML_TOKEN_START_ELEMENT) {
+            while (ancestor_count != 0U &&
+                   traversal->tokens[ancestors[ancestor_count - 1U]].depth >=
+                       token->depth) ancestor_count--;
+            if (ancestor_count == sizeof(ancestors) / sizeof(ancestors[0])) {
+                fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT,
+                     token->name.offset);
+                return false;
+            }
+            ancestors[ancestor_count++] = i;
+        } else if (token->kind == SVG_XML_TOKEN_EMPTY_ELEMENT ||
+                   token->kind == SVG_XML_TOKEN_END_ELEMENT) {
+            while (ancestor_count != 0U &&
+                   traversal->tokens[ancestors[ancestor_count - 1U]].depth >=
+                       token->depth) ancestor_count--;
+        }
+    }
+    svg_css_paint inherited = svg_css_initial_paint();
+    bool has_parent = false;
+    for (size_t i = 0U; i < ancestor_count; ++i) {
+        svg_css_paint computed;
+        if (!svg_shape_traverse_compute_style(
+                traversal, ancestors[i], has_parent ? &inherited : NULL,
+                &computed)) return false;
+        inherited = computed;
+        has_parent = true;
+    }
+    *out_parent = inherited;
+    return true;
+}
+
 static bool make_marker(shape_traversal *traversal, size_t marker,
-                        const svg_css_paint *parent_style,
                         size_t shape, marker_position_kind kind,
                         geom_point position, double tangent,
                         geom_affine source_transform,
@@ -199,9 +246,11 @@ static bool make_marker(shape_traversal *traversal, size_t marker,
              traversal->tokens[marker].name.offset);
         return false;
     }
-    svg_css_paint marker_style;
-    if (!svg_shape_traverse_compute_style(traversal, marker, parent_style,
-                                          &marker_style)) return false;
+    svg_css_paint marker_parent_style, marker_style;
+    if (!marker_definition_parent_style(traversal, marker,
+                                        &marker_parent_style) ||
+        !svg_shape_traverse_compute_style(traversal, marker,
+            &marker_parent_style, &marker_style)) return false;
     marker_style.values[SVG_CSS_MARKER] = (svg_css_value){0};
     marker_style.values[SVG_CSS_MARKER_START] = (svg_css_value){0};
     marker_style.values[SVG_CSS_MARKER_MID] = (svg_css_value){0};
@@ -374,8 +423,8 @@ static bool emit_marker(shape_traversal *traversal, size_t shape,
         fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED, value.offset);
         return false;
     }
-    return make_marker(traversal, marker, style, shape, kind, point,
-                       tangent, source_transform, render_depth);
+    return make_marker(traversal, marker, shape, kind, point, tangent,
+                       source_transform, render_depth);
 }
 
 static bool emit_mid_marker(shape_traversal *traversal, size_t shape,

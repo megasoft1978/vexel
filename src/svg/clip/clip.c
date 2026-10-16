@@ -8,6 +8,7 @@
 #include <string.h>
 
 #define CLIP_MAX_CHILDREN 64U
+#define CLIP_MAX_DEPTH 256U
 #define CLIP_MAX_REFERENCE_BYTES (64U * 1024U)
 #define CLIP_MAX_JOB_REFERENCE_BYTES (512U * 1024U)
 #define CLIP_WRAPPER_BUFFER_BYTES 192U
@@ -68,11 +69,11 @@ static size_t element_end(const svg_xml_token *tokens, size_t count, size_t star
 
 static svg_shape_error check_clip_child_style(
     svg_css_sheet *css, base_bytes source, const svg_xml_token *tokens,
-    size_t token_count, size_t element, svg_shape_diagnostic *diagnostic)
+    size_t token_count, size_t element, const svg_css_paint *parent,
+    svg_css_paint *computed, svg_shape_diagnostic *diagnostic)
 {
-    svg_css_paint style;
     svg_css_error css_error = svg_css_compute(css, source, tokens, token_count,
-                                              element, NULL, &style);
+                                              element, parent, computed);
     if (css_error != SVG_CSS_OK) {
         svg_shape_error error = css_error == SVG_CSS_LIMIT ?
             SVG_SHAPE_ERROR_LIMIT : css_error == SVG_CSS_OOM ?
@@ -82,13 +83,77 @@ static svg_shape_error check_clip_child_style(
         return error;
     }
     for (size_t property = 0U; property < SVG_CSS_PROPERTY_COUNT; ++property) {
-        if (style.values[property].present) {
+        if (property != SVG_CSS_CLIP_RULE &&
+            computed->values[property].present) {
             if (diagnostic != NULL)
                 *diagnostic = (svg_shape_diagnostic){
                     SVG_SHAPE_ERROR_UNSUPPORTED,
-                    style.values[property].span.offset};
+                    computed->values[property].span.offset};
             return SVG_SHAPE_ERROR_UNSUPPORTED;
         }
+    }
+    return SVG_SHAPE_ERROR_NONE;
+}
+
+static svg_shape_error clip_rule_map(
+    svg_css_sheet *css, base_bytes source, const svg_xml_token *tokens,
+    size_t token_count, size_t target, size_t end_token, size_t child_start,
+    size_t child_length, uint8_t *rule_by_offset,
+    svg_shape_diagnostic *diagnostic)
+{
+    svg_css_paint clip_style;
+    svg_shape_error error = check_clip_child_style(css, source, tokens,
+        token_count, target, NULL, &clip_style, diagnostic);
+    if (error != SVG_SHAPE_ERROR_NONE) return error;
+    svg_css_value rule_stack[CLIP_MAX_DEPTH] = {0};
+    svg_xml_span rule = {0};
+    if (svg_css_paint_value(&clip_style, SVG_CSS_CLIP_RULE, &rule)) {
+        if (!svg_css_keyword_equals(source, rule, "nonzero") &&
+            !svg_css_keyword_equals(source, rule, "evenodd")) {
+            if (diagnostic != NULL)
+                *diagnostic = (svg_shape_diagnostic){
+                    SVG_SHAPE_ERROR_UNSUPPORTED, rule.offset};
+            return SVG_SHAPE_ERROR_UNSUPPORTED;
+        }
+        rule_stack[0] = clip_style.values[SVG_CSS_CLIP_RULE];
+    }
+    for (size_t i = target + 1U; i < end_token; ++i) {
+        if (tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT &&
+            tokens[i].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) continue;
+        if (tokens[i].depth <= tokens[target].depth) continue;
+        size_t depth = (size_t)(tokens[i].depth - tokens[target].depth);
+        if (depth >= CLIP_MAX_DEPTH) {
+            if (diagnostic != NULL)
+                *diagnostic = (svg_shape_diagnostic){
+                    SVG_SHAPE_ERROR_LIMIT, tokens[i].name.offset};
+            return SVG_SHAPE_ERROR_LIMIT;
+        }
+        svg_css_paint parent = {0};
+        parent.values[SVG_CSS_CLIP_RULE] = rule_stack[depth - 1U];
+        svg_css_paint computed;
+        error = check_clip_child_style(css, source, tokens, token_count, i,
+                                       &parent, &computed, diagnostic);
+        if (error != SVG_SHAPE_ERROR_NONE) return error;
+        rule = (svg_xml_span){0};
+        if (svg_css_paint_value(&computed, SVG_CSS_CLIP_RULE, &rule) &&
+            !svg_css_keyword_equals(source, rule, "nonzero") &&
+            !svg_css_keyword_equals(source, rule, "evenodd")) {
+            if (diagnostic != NULL)
+                *diagnostic = (svg_shape_diagnostic){
+                    SVG_SHAPE_ERROR_UNSUPPORTED, rule.offset};
+            return SVG_SHAPE_ERROR_UNSUPPORTED;
+        }
+        rule_stack[depth] = computed.values[SVG_CSS_CLIP_RULE];
+        size_t offset = tokens[i].source.offset;
+        if (offset < child_start || offset - child_start >= child_length) {
+            if (diagnostic != NULL)
+                *diagnostic = (svg_shape_diagnostic){
+                    SVG_SHAPE_ERROR_XML, tokens[i].name.offset};
+            return SVG_SHAPE_ERROR_XML;
+        }
+        rule_by_offset[offset - child_start] =
+            svg_css_paint_value(&computed, SVG_CSS_CLIP_RULE, &rule) &&
+            svg_css_keyword_equals(source, rule, "evenodd") ? 1U : 0U;
     }
     return SVG_SHAPE_ERROR_NONE;
 }
@@ -143,6 +208,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
         return SVG_SHAPE_ERROR_INVALID_ARGUMENT;
     }
     *out = NULL;
+    uint8_t *rule_by_offset = NULL;
     svg_xml_span id;
     if (!parse_reference(source, value, &id)) goto unsupported;
     size_t target;
@@ -162,18 +228,25 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
         else goto unsupported;
     }
     size_t end_token = element_end(tokens, token_count, target);
-    for (size_t i = target + 1U; i < end_token; ++i) {
-        if (tokens[i].kind != SVG_XML_TOKEN_START_ELEMENT &&
-            tokens[i].kind != SVG_XML_TOKEN_EMPTY_ELEMENT) continue;
-        svg_shape_error style_error = check_clip_child_style(
-            css, source, tokens, token_count, i, diagnostic);
-        if (style_error != SVG_SHAPE_ERROR_NONE) return style_error;
-        if (attr(source, tokens, token_count, i, "style", &id) ||
-            (eq(source, tokens[i].local_name, "style") && tokens[i].source.length != 0U))
-            goto unsupported;
-    }
     size_t child_start = tokens[target].source.offset + tokens[target].source.length;
     size_t child_end = end_token == target ? child_start : tokens[end_token].source.offset;
+    if (child_start > child_end || child_end > source.len) goto unsupported;
+    size_t child_length = child_end - child_start;
+    if (child_length > CLIP_MAX_REFERENCE_BYTES) goto limit;
+    if (child_length == 0U) goto unsupported;
+    rule_by_offset = svg_shape_calloc(child_length, sizeof(*rule_by_offset));
+    if (rule_by_offset == NULL) {
+        if (diagnostic != NULL)
+            *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, value.offset};
+        return SVG_SHAPE_ERROR_OOM;
+    }
+    svg_shape_error style_error = clip_rule_map(
+        css, source, tokens, token_count, target, end_token, child_start,
+        child_length, rule_by_offset, diagnostic);
+    if (style_error != SVG_SHAPE_ERROR_NONE) {
+        svg_shape_free(rule_by_offset);
+        return style_error;
+    }
     size_t child_count = 0U;
     for (size_t i = target + 1U; i < end_token; ++i) {
         if ((tokens[i].kind == SVG_XML_TOKEN_START_ELEMENT ||
@@ -183,7 +256,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
                 attr(source, tokens, token_count, i, "clip-path", &units)) goto limit;
         }
     }
-    if (child_count == 0U || child_start > child_end || child_end > source.len) goto unsupported;
+    if (child_count == 0U) goto unsupported;
     /* The prefix permits 191 payload bytes; suffix and NUL count in scratch. */
     char prefix_pattern[CLIP_WRAPPER_BUFFER_BYTES];
     int prefix_result = object_box
@@ -196,9 +269,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     if (prefix_result < 0 || (size_t)prefix_result >= sizeof(prefix_pattern)) goto limit;
     size_t prefix_length = (size_t)prefix_result;
     static const char suffix[] = "</svg>";
-    size_t child_length = child_end - child_start;
-    if (child_length > CLIP_MAX_REFERENCE_BYTES ||
-        prefix_length > SIZE_MAX - sizeof(suffix) - child_length) goto limit;
+    if (prefix_length > SIZE_MAX - sizeof(suffix) - child_length) goto limit;
     size_t total = prefix_length + child_length + sizeof(suffix) - 1U;
     if (total >= CLIP_MAX_JOB_REFERENCE_BYTES) goto limit;
     size_t allocation_bytes = total + 1U;
@@ -208,6 +279,7 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
     svg_shape_clip *clip = svg_shape_calloc(1U, sizeof(*clip));
     if (scratch == NULL || clip == NULL) {
         svg_shape_free(scratch); svg_shape_free(clip);
+        svg_shape_free(rule_by_offset);
         if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_OOM, value.offset};
         return SVG_SHAPE_ERROR_OOM;
     }
@@ -236,17 +308,31 @@ svg_shape_error svg_clip_resolve(base_bytes source, const svg_xml_token *tokens,
                 ? child_start + generated - prefix_length : value.offset;
         }
         svg_clip_destroy(clip);
+        svg_shape_free(rule_by_offset);
         return error;
     }
-    if (clip->geometry.edge_count > CLIP_MAX_EDGES) { svg_clip_destroy(clip); goto limit; }
+    if (clip->geometry.edge_count > CLIP_MAX_EDGES) {
+        svg_clip_destroy(clip); goto limit;
+    }
+    for (size_t shape = 0U; shape < clip->geometry.shape_count; ++shape) {
+        size_t offset = clip->geometry.shape_sources[shape].offset;
+        if (offset < prefix_length || offset - prefix_length >= child_length) {
+            svg_clip_destroy(clip); goto unsupported;
+        }
+        clip->geometry.shape_evenodd[shape] =
+            rule_by_offset[offset - prefix_length] != 0U;
+    }
+    svg_shape_free(rule_by_offset);
     *document_clip_bytes += allocation_bytes;
     document->has_clips = true;
     *out = clip;
     return SVG_SHAPE_ERROR_NONE;
 limit:
+    svg_shape_free(rule_by_offset);
     if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, value.offset};
     return SVG_SHAPE_ERROR_LIMIT;
 unsupported:
+    svg_shape_free(rule_by_offset);
     if (diagnostic != NULL) *diagnostic = (svg_shape_diagnostic){SVG_SHAPE_ERROR_UNSUPPORTED, value.offset};
     return SVG_SHAPE_ERROR_UNSUPPORTED;
 }

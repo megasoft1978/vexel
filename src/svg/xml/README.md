@@ -47,6 +47,23 @@ the one-shot tokenizer while checking the byte budget on every step.
 character validation) so other threads can safely determine whether an early
 source span has been validated. If validation fails, the error offset bounds
 which earlier spans remain valid.
+`svg_xml_token_stream_start_visitor` provides discard-mode delivery. It keeps
+fixed scanner state plus scratch for one element (one start token and at most
+4,096 attribute tokens), then calls the visitor with the finalized start or
+empty-element token followed by its attributes in source order. Thus token
+scratch is bounded independently of document token count. Other token kinds
+are delivered after validation. Callback spans borrow immutable source bytes;
+the caller must keep the input alive and unchanged through stream destruction.
+Returning false from a callback cancels delivery. Earlier callbacks can have
+occurred when later input fails, so only `SVG_XML_STREAM_COMPLETE` means the
+entire document validated. `svg_xml_token_stream_visitor_storage_bytes` reports
+the fixed per-element scratch allocation.
+
+`svg_xml_decode_attribute_value` decodes predefined and decimal/hexadecimal
+numeric XML references into caller-owned UTF-8 storage. It does not expand
+custom entities or resolve external resources. On failure it reports the
+offending byte offset relative to the supplied raw attribute span; output
+capacity is checked before every write.
 
 `svg_xml_reader` is a resumable source scanner for large documents. It borrows
 the immutable source, retains lexical state across calls, and advances no more

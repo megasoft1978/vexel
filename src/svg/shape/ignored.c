@@ -94,7 +94,7 @@ void svg_shape_ignored_scan(base_bytes source, const svg_xml_token *tokens,
 static bool affects_rendering(base_bytes source, svg_xml_span name)
 {
     static const char *const known[] = {
-        "alignment-baseline", "baseline-shift", "clip", "clip-rule",
+        "alignment-baseline", "baseline-shift", "clip",
         "color-interpolation", "color-rendering", "cursor", "direction",
         "dominant-baseline", "enable-background", "flood-color",
         "flood-opacity", "font", "font-size-adjust", "font-stretch",

@@ -8,7 +8,9 @@ bool viewer_set_window_title(viewer_app *app)
     if (app == NULL) return false;
     char next[VIEWER_TITLE_CAP];
     int amount;
-    const char *dirty = viewer_editor_is_dirty(app->editor) ? "*" : "";
+    const char *dirty = viewer_editor_is_dirty(app->editor) ||
+        project_timeline_session_is_dirty(app->document.timeline_session) ||
+        project_bundle_asset_overlay_is_dirty(&app->document.asset_overlay) ? "*" : "";
     if (app->load_result_handled && app->load_status != VIEWER_LOAD_OK) {
         amount = snprintf(next, sizeof(next), "vexel — %s%s — error: %s",
             app->display_name, dirty, viewer_error_reason(app));

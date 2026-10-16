@@ -349,5 +349,5 @@ bool mcp_broker_animation_call(mcp_broker *broker, const mcp_json_doc *request,
     if (strcmp(tool, "animation_add") == 0 || strcmp(tool, "animation_set") == 0 ||
         strcmp(tool, "animation_remove") == 0)
         return animation_edit(broker, document, request, args, tool, out);
-    return mcp_broker_export_animation(document, request, args, out);
+    return mcp_broker_export_animation(broker, document, request, args, out);
 }

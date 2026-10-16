@@ -512,8 +512,9 @@ bool platform_window_open_panel(platform_window *window)
     @autoreleasepool {
         NSOpenPanel *panel = [NSOpenPanel openPanel];
         UTType *svg_type = [UTType typeWithFilenameExtension:@"svg"];
-        if (svg_type == nil) return false;
-        panel.allowedContentTypes = @[svg_type];
+        UTType *project_type = [UTType typeWithFilenameExtension:@"vexel"];
+        if (svg_type == nil || project_type == nil) return false;
+        panel.allowedContentTypes = @[svg_type, project_type];
         panel.canChooseFiles = YES;
         panel.canChooseDirectories = NO;
         panel.allowsMultipleSelection = NO;

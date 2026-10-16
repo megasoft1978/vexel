@@ -45,6 +45,9 @@ static bool compute_stroke_work(const svg_shape_document *doc,
         const svg_shape_stroke *stroke = &doc->strokes[shape];
         if (stroke->rgba[3] == 0U || stroke->width <= 0.0) continue;
         if (stroke->dash_count > SVG_SHAPE_MAX_DASH_VALUES) return false;
+        if (stroke->dash_count != 0U &&
+            svg_shape_stroke_dash_values_for_shape(doc, shape) == NULL)
+            return false;
         if (dash_cache == NULL || dash_cache->shapes == NULL ||
             shape >= dash_cache->shape_count) return false;
         const raster_dash_shape_range *range = &dash_cache->shapes[shape];
@@ -74,6 +77,73 @@ static bool pixel_is_fully_in_view(const svg_shape_document *doc, uint32_t x,
     return (double)x >= offset_x && (double)y >= offset_y &&
            (double)x + 1.0 <= offset_x + content_width &&
            (double)y + 1.0 <= offset_y + content_height;
+}
+
+static void composite_source_over(uint8_t destination[4],
+                                  const uint8_t source[4])
+{
+    uint32_t source_alpha = source[3];
+    if (source_alpha == 0U) return;
+    uint32_t destination_alpha = destination[3];
+    uint32_t inverse_source_alpha = 255U - source_alpha;
+    uint32_t output_alpha_numerator = source_alpha * 255U +
+        destination_alpha * inverse_source_alpha;
+    for (size_t channel = 0U; channel < 3U; ++channel) {
+        uint32_t numerator = (uint32_t)source[channel] * source_alpha * 255U +
+            (uint32_t)destination[channel] * destination_alpha *
+                inverse_source_alpha;
+        destination[channel] = (uint8_t)((numerator +
+            output_alpha_numerator / 2U) / output_alpha_numerator);
+    }
+    destination[3] = (uint8_t)((output_alpha_numerator + 127U) / 255U);
+}
+
+/* Resolve one shape's antialias coverage before blending the next shape. */
+static void resolve_shape_sample(const uint8_t *samples,
+                                 uint8_t rgba[4])
+{
+    uint32_t alpha_sum = 0U;
+    uint32_t premultiplied[3] = {0U, 0U, 0U};
+    for (size_t sample = 0U; sample < RASTER_SAMPLE_COUNT; ++sample) {
+        const uint8_t *pixel = samples + sample * 4U;
+        uint32_t alpha = pixel[3];
+        alpha_sum += alpha;
+        for (size_t channel = 0U; channel < 3U; ++channel)
+            premultiplied[channel] += (uint32_t)pixel[channel] * alpha;
+    }
+    if (alpha_sum == 0U) {
+        memset(rgba, 0, 4U);
+        return;
+    }
+    for (size_t channel = 0U; channel < 3U; ++channel)
+        rgba[channel] = (uint8_t)((premultiplied[channel] + alpha_sum / 2U) /
+                                  alpha_sum);
+    rgba[3] = (uint8_t)((alpha_sum + RASTER_SAMPLE_COUNT / 2U) /
+                        RASTER_SAMPLE_COUNT);
+}
+
+static void composite_shape_row(const svg_shape_document *doc,
+                                const raster_pixel_bounds *box, uint32_t y,
+                                double scale_x, double scale_y,
+                                double offset_x, double offset_y,
+                                const raster_boundary_mask *boundary,
+                                const uint8_t *center_samples,
+                                const uint8_t *subpixel_samples,
+                                raster_tile *output)
+{
+    for (uint32_t x = box->x_first; x <= box->x_last; ++x) {
+        size_t pixel = (size_t)y * output->width + x;
+        uint8_t source[4];
+        if (pixel_is_fully_in_view(doc, x, y, scale_x, scale_y,
+                                   offset_x, offset_y) &&
+            !raster_boundary_mask_test(boundary, pixel)) {
+            memcpy(source, center_samples + (size_t)x * 4U, 4U);
+        } else {
+            size_t sample_offset = (size_t)x * RASTER_SAMPLE_COUNT * 4U;
+            resolve_shape_sample(subpixel_samples + sample_offset, source);
+        }
+        composite_source_over(output->rgba + pixel * 4U, source);
+    }
 }
 
 static size_t active_count_for(const size_t *shape_offsets, size_t stride,
@@ -330,20 +400,6 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
     (void)svg_shape_alloc_set_tag(out->rgba, SVG_SHAPE_ALLOC_TAG_OUTPUT);
     memset(out->rgba, 0, out->byte_count);
     for (uint32_t y = 0U; y < doc->height; y++) {
-        for (uint32_t x = 0U; x < doc->width; x++) {
-            size_t pixel = (size_t)y * doc->width + x;
-            bool center_only = pixel_is_fully_in_view(doc, x, y, scale_x,
-                                                      scale_y,
-                                                      offset_x, offset_y) &&
-                               !raster_boundary_mask_test(&boundary, pixel);
-            if (center_only) {
-                memset(center_samples + (size_t)x * 4U, 0, 4U);
-            } else {
-                size_t sample_offset = (size_t)x * RASTER_SAMPLE_COUNT * 4U;
-                memset(subpixel_samples + sample_offset, 0,
-                       RASTER_SAMPLE_COUNT * 4U);
-            }
-        }
         size_t active_shape_count = 0U;
         if (!raster_scanline_index_build_row(&scanlines, y, shape_offsets,
                                              active_edges, edge_slot_count,
@@ -355,6 +411,23 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
         for (size_t active = 0U; active < active_shape_count; active++) {
             size_t shape = active_shapes[active];
             const raster_pixel_bounds *box = &bounds.shapes[shape].pixels;
+            if (box->x_first > box->x_last || box->x_last >= doc->width ||
+                y < box->y_first || y > box->y_last) {
+                if (diag != NULL)
+                    *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
+                goto cleanup;
+            }
+            size_t center_offset = (size_t)box->x_first * 4U;
+            size_t center_length =
+                ((size_t)box->x_last - box->x_first + 1U) * 4U;
+            size_t sample_offset = (size_t)box->x_first *
+                                   RASTER_SAMPLE_COUNT * 4U;
+            size_t sample_length =
+                ((size_t)box->x_last - box->x_first + 1U) *
+                RASTER_SAMPLE_COUNT * 4U;
+            memset(center_samples + center_offset, 0, center_length);
+            memset(subpixel_samples + sample_offset, 0, sample_length);
+            bool scanline_filled = false;
             if (raster_fill_scanline_cache_is_eligible(&fill_cache, shape) &&
                 raster_fill_scanline_cache_build_row(&fill_cache, doc, shape, y,
                     scale_y, offset_y, shape_offsets, active_edges, stride,
@@ -370,9 +443,10 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
                         *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_LIMIT, 0};
                     goto cleanup;
                 }
-                continue;
+                scanline_filled = true;
             }
-            for (uint32_t x = box->x_first; x <= box->x_last; x++) {
+            for (uint32_t x = box->x_first;
+                 !scanline_filled && x <= box->x_last; x++) {
                 size_t pixel_index = (size_t)y * doc->width + x;
                 bool center_only = pixel_is_fully_in_view(doc, x, y, scale_x,
                                                           scale_y,
@@ -406,8 +480,15 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
                                        center_samples + (size_t)x * 4U);
                     continue;
                 }
-                bool gradient = doc->paints != NULL &&
-                    doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID;
+                const svg_shape_paint *fill_paint =
+                    svg_shape_paint_for_shape(doc, shape);
+                const svg_shape_paint *stroke_paint =
+                    svg_shape_stroke_paint_for_shape(doc, shape);
+                bool gradient = (fill_paint != NULL &&
+                    fill_paint->kind != SVG_SHAPE_PAINT_SOLID) ||
+                    (stroke_paint != NULL &&
+                    (stroke_paint->kind == SVG_SHAPE_PAINT_LINEAR ||
+                     stroke_paint->kind == SVG_SHAPE_PAINT_RADIAL));
                 double paint_x = 0.0, paint_y = 0.0;
                 if (gradient) {
                     double center_x = (double)x + 0.5;
@@ -446,36 +527,9 @@ bool raster_shape_render_flat(const svg_shape_document *doc,
                     }
                 }
             }
-        }
-        for (uint32_t x = 0U; x < doc->width; x++) {
-            size_t pixel_index = (size_t)y * doc->width + x;
-            size_t destination = pixel_index * 4U;
-            if (pixel_is_fully_in_view(doc, x, y, scale_x, scale_y,
-                                       offset_x, offset_y) &&
-                !raster_boundary_mask_test(&boundary, pixel_index)) {
-                memcpy(out->rgba + destination, center_samples + (size_t)x * 4U, 4U);
-                continue;
-            }
-            uint32_t red = 0U, green = 0U, blue = 0U, alpha = 0U, covered = 0U;
-            for (size_t sample = 0U; sample < RASTER_SAMPLE_COUNT; sample++) {
-                const uint8_t *rgba = subpixel_samples +
-                    ((size_t)x * RASTER_SAMPLE_COUNT + sample) * 4U;
-                if (rgba[3] != 0U) {
-                    red += rgba[0];
-                    green += rgba[1];
-                    blue += rgba[2];
-                    covered++;
-                }
-                alpha += rgba[3];
-            }
-            out->rgba[destination] = covered == 0U ? 0U :
-                (uint8_t)((red + covered / 2U) / covered);
-            out->rgba[destination + 1U] = covered == 0U ? 0U :
-                (uint8_t)((green + covered / 2U) / covered);
-            out->rgba[destination + 2U] = covered == 0U ? 0U :
-                (uint8_t)((blue + covered / 2U) / covered);
-            out->rgba[destination + 3U] =
-                (uint8_t)((alpha + RASTER_SAMPLE_COUNT / 2U) / RASTER_SAMPLE_COUNT);
+            composite_shape_row(doc, box, y, scale_x, scale_y,
+                                offset_x, offset_y, &boundary, center_samples,
+                                subpixel_samples, out);
         }
     }
     if (diag != NULL) *diag = (svg_shape_diagnostic){SVG_SHAPE_ERROR_NONE, 0};

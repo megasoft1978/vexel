@@ -94,13 +94,15 @@ size_t svg_shape_traverse_matching_end(const shape_traversal *traversal,
     return SIZE_MAX;
 }
 
-static bool source_element_span(const shape_traversal *traversal,
+static bool source_element_span(shape_traversal *traversal,
                                 size_t element, size_t *offset,
                                 size_t *length)
 {
     if (element >= traversal->token_count || offset == NULL || length == NULL)
         return false;
-    size_t end = svg_shape_traverse_matching_end(traversal, element);
+    size_t end;
+    if (!svg_shape_traverse_matching_end_cancellable(traversal, element,
+                                                      &end)) return false;
     if (end == SIZE_MAX) return false;
     size_t start_offset = traversal->tokens[element].source.offset;
     size_t end_offset = traversal->tokens[end].source.offset;
@@ -112,21 +114,20 @@ static bool source_element_span(const shape_traversal *traversal,
     *length = end_offset + end_length - start_offset;
     return true;
 }
-
 static bool assign_shape_source(shape_traversal *traversal,
                                 size_t first_shape, size_t end_shape,
                                 size_t element)
 {
     size_t offset = 0U, length = 0U;
     if (!source_element_span(traversal, element, &offset, &length)) {
-        svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_XML,
-             traversal->tokens[element].name.offset);
+        if (!traversal->canceled)
+            svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_XML,
+                 traversal->tokens[element].name.offset);
         return false;
     }
     return svg_shape_source_assign(traversal->builder.doc, first_shape,
                                    end_shape, offset, length);
 }
-
 static bool authored_transform(shape_traversal *traversal, size_t element,
                                geom_affine *out)
 {
@@ -518,8 +519,9 @@ bool svg_shape_traverse_render_node(shape_traversal *traversal, size_t element,
             size_t source_offset = 0U, source_length = 0U;
             if (!source_element_span(traversal, handle, &source_offset,
                                      &source_length)) {
-                svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_XML,
-                     token->name.offset);
+                if (!traversal->canceled)
+                    svg_shape_traverse_fail(traversal->diagnostic,
+                        SVG_SHAPE_ERROR_XML, token->name.offset);
                 traversal->text_state = previous_state;
                 svg_shape_traverse_finish_opacity_group(traversal, opacity_group);
                 return false;
@@ -713,6 +715,8 @@ bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first, siz
     size_t i = first;
     while (i < limit) {
         svg_xml_token *token = &traversal->tokens[i];
+        if (svg_shape_traverse_cancelled(traversal, token->source.offset))
+            return false;
         if (token->kind == SVG_XML_TOKEN_PROCESSING_INSTRUCTION) {
             svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
                  token->name.offset);
@@ -733,6 +737,8 @@ bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first, siz
                 continue;
             }
             for (size_t j = 0U; j < token->value.length; ++j) {
+                if ((j & 255U) == 0U && svg_shape_traverse_cancelled(
+                    traversal, token->value.offset + j)) return false;
                 uint8_t byte = traversal->source.ptr[token->value.offset + j];
                 if (byte != ' ' && byte != '\t' && byte != '\r' && byte != '\n') {
                     svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_UNSUPPORTED,
@@ -748,7 +754,9 @@ bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first, siz
             i++;
             continue;
         }
-        size_t end = svg_shape_traverse_matching_end(traversal, i);
+        size_t end;
+        if (!svg_shape_traverse_matching_end_cancellable(traversal, i, &end))
+            return false;
         if (end == SIZE_MAX || end >= limit) {
             svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_XML,
                  token->name.offset);
@@ -760,7 +768,6 @@ bool svg_shape_traverse_walk_range(shape_traversal *traversal, size_t first, siz
             return false;
         }
         traversal->element_visits++;
-
         size_t definition_end;
         if (svg_reference_definition_end(traversal->source, traversal->tokens,
                                          traversal->token_count, i,

@@ -83,6 +83,8 @@ typedef struct svg_xml_result {
 } svg_xml_result;
 
 typedef bool (*svg_xml_cancel_check_fn)(void *context);
+/* Returning false cancels visitor delivery. Token spans borrow immutable input. */
+typedef bool (*svg_xml_token_visitor_fn)(void *context, const svg_xml_token *token);
 
 typedef struct svg_xml_token_stream svg_xml_token_stream;
 typedef enum svg_xml_stream_status {
@@ -103,15 +105,26 @@ svg_xml_result svg_xml_tokenize_large_cancelable(base_bytes input, svg_xml_token
 /* Borrows immutable input until destroy; max_storage_bytes bounds its token vector. */
 svg_xml_stream_status svg_xml_token_stream_start(base_bytes input, size_t max_storage_bytes,
     svg_xml_cancel_check_fn canceled, void *cancel_context, svg_xml_token_stream **out_stream);
+/* Discard-mode stream; retains only fixed scanner state and the active tag's bounded tokens. */
+svg_xml_stream_status svg_xml_token_stream_start_visitor(base_bytes input,
+    svg_xml_token_visitor_fn visitor, void *visitor_context,
+    svg_xml_cancel_check_fn canceled, void *cancel_context,
+    svg_xml_token_stream **out_stream);
 /* Resumes validation/token emission under one shared byte budget, capped at 64 KiB. */
 svg_xml_stream_status svg_xml_token_stream_step(svg_xml_token_stream *stream, size_t byte_budget);
 svg_xml_result svg_xml_token_stream_result(const svg_xml_token_stream *stream);
 /* Grammar-validated source prefix; safe to query between worker steps. */
 size_t svg_xml_token_stream_bytes_read(const svg_xml_token_stream *stream);
+/* Retained tag scratch bytes in visitor mode; independent of document token count. */
+size_t svg_xml_token_stream_visitor_storage_bytes(const svg_xml_token_stream *stream);
 /* Transfers the completed vector to the caller; destroy frees it otherwise. */
 bool svg_xml_token_stream_take(svg_xml_token_stream *stream, svg_xml_token **out_tokens,
                                size_t *out_token_count);
 void svg_xml_token_stream_destroy(svg_xml_token_stream *stream);
+/* Decodes a raw attribute value span into caller storage; offsets are relative to raw_value. */
+bool svg_xml_decode_attribute_value(base_bytes input, svg_xml_span raw_value,
+    uint8_t *output, size_t output_capacity, size_t *output_length,
+    size_t *error_offset);
 const char *svg_xml_error_name(svg_xml_error error);
 
 #endif

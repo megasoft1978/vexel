@@ -1,16 +1,13 @@
 #include "document_edit.h"
 #include "document_edit_internal.h"
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
 #define CHECK(condition) do { if (!(condition)) { \
     (void)fprintf(stderr, "FAIL %s:%d: %s\n", __FILE__, __LINE__, #condition); \
     return 1; } } while (0)
-
 static bool contains(base_bytes bytes, const char *needle)
 {
     size_t length = strlen(needle);
@@ -58,6 +55,67 @@ static bool find_id(document_edit *edit, const char *id, document_handle *out)
     return document_edit_find_id(edit,
         (base_bytes){(const uint8_t *)id, strlen(id)}, out);
 }
+static int test_generated_object_ids(void)
+{
+    static const uint8_t source[] =
+        "<svg><rect id='vexel-object-1'/><g id='layer'/></svg>";
+    document_edit *edit = create_edit((base_bytes){source, sizeof(source) - 1U});
+    CHECK(edit != NULL);
+    document_handle layer, inserted;
+    CHECK(find_id(edit, "layer", &layer));
+    CHECK(document_edit_insert_template(edit, layer,
+        DOCUMENT_EDIT_TEMPLATE_PATH, NULL, 0U, &inserted) == DOCUMENT_EDIT_OK);
+    CHECK(find_id(edit, "vexel-object-2", &inserted));
+    uint8_t output[512];
+    base_bytes current;
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        contains(current, "<path id=\"vexel-object-2\"/>"));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK &&
+        materialize(edit, output, sizeof(output), &current) &&
+        equal_bytes(current, (base_bytes){source, sizeof(source) - 1U}));
+    CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_OK &&
+        find_id(edit, "vexel-object-2", &inserted));
+    static const uint8_t fragment[] = "<g><path d='M0 0L1 1'/></g>";
+    CHECK(find_id(edit, "layer", &layer));
+    uint8_t before_fragment[512];
+    CHECK(materialize(edit, before_fragment, sizeof(before_fragment), &current));
+    size_t before_length = current.len;
+    CHECK(document_edit_insert_xml_fragment(edit, layer,
+        (base_bytes){fragment, sizeof(fragment) - 1U}, &inserted) == DOCUMENT_EDIT_OK);
+    CHECK(find_id(edit, "vexel-object-3", &inserted));
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        contains(current, "<g id=\"vexel-object-3\"><path d='M0 0L1 1'/></g>"));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK &&
+        materialize(edit, output, sizeof(output), &current) &&
+        !contains(current, "vexel-object-3") && current.len == before_length &&
+        memcmp(current.ptr, before_fragment, before_length) == 0);
+    CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_OK &&
+        find_id(edit, "vexel-object-3", &inserted));
+    static const uint8_t supplied[] = "<circle id='artist-id'/>";
+    CHECK(find_id(edit, "layer", &layer));
+    CHECK(document_edit_insert_xml_fragment(edit, layer,
+        (base_bytes){supplied, sizeof(supplied) - 1U}, &inserted) == DOCUMENT_EDIT_OK);
+    CHECK(find_id(edit, "artist-id", &inserted));
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        contains(current, "<circle id='artist-id'/>"));
+    size_t history = document_edit_history_count(edit);
+    static const uint8_t duplicate[] = "<ellipse id='artist-id'/>";
+    CHECK(find_id(edit, "layer", &layer));
+    CHECK(document_edit_insert_xml_fragment(edit, layer,
+        (base_bytes){duplicate, sizeof(duplicate) - 1U}, &inserted) ==
+        DOCUMENT_EDIT_DUPLICATE_ID);
+    CHECK(document_edit_history_count(edit) == history);
+    static const uint8_t metadata[] =
+        "<defs><metadata><title>keep</title></metadata></defs>";
+    CHECK(find_id(edit, "layer", &layer));
+    CHECK(document_edit_insert_xml_fragment(edit, layer,
+        (base_bytes){metadata, sizeof(metadata) - 1U}, &inserted) == DOCUMENT_EDIT_OK);
+    CHECK(materialize(edit, output, sizeof(output), &current) &&
+        contains(current, "<defs><metadata><title>keep</title></metadata></defs>") &&
+        !contains(current, "defs id=") && !contains(current, "metadata id="));
+    document_edit_destroy(edit);
+    return 0;
+}
 
 static int test_queries_and_attributes(void)
 {
@@ -100,7 +158,6 @@ static int test_queries_and_attributes(void)
     document_handle mapped;
     CHECK(document_edit_element_at_offset(edit, rect_offset, &mapped));
     CHECK(mapped.slot == rectangle.slot && mapped.generation == rectangle.generation);
-
     uint8_t rejected_value[] = {0x01U};
     CHECK(document_edit_set_attribute(edit, rectangle,
         (base_bytes){(const uint8_t *)"x", 1U},
@@ -110,7 +167,6 @@ static int test_queries_and_attributes(void)
     base_bytes unchanged;
     CHECK(materialize(edit, unchanged_output, sizeof(unchanged_output), &unchanged));
     CHECK(equal_bytes(unchanged, original));
-
     static const uint8_t value[] = "<&'\"";
     CHECK(document_edit_set_attribute(edit, rectangle,
         (base_bytes){(const uint8_t *)"x", 1U},
@@ -133,7 +189,6 @@ static int test_queries_and_attributes(void)
     CHECK(contains(edited, "\xef\xbb\xbf<?xml version='1.0'?>\r\n"));
     CHECK(contains(edited, "\t<!--preserve-->"));
     CHECK(contains(edited, "xmlns:x='urn:x'"));
-
     CHECK(find_id(edit, "one", &rectangle));
     CHECK(document_edit_add_attribute(edit, rectangle,
         (base_bytes){(const uint8_t *)"class", 5U},
@@ -152,7 +207,6 @@ static int test_queries_and_attributes(void)
     CHECK(find_id(edit, "one", &rectangle));
     CHECK(document_edit_remove_attribute(edit, rectangle,
         (base_bytes){(const uint8_t *)"missing", 7U}) == DOCUMENT_EDIT_NOT_FOUND);
-
     CHECK(find_id(edit, "txt", &text_node));
     static const uint8_t new_text[] = "hello <&>";
     CHECK(document_edit_set_text_content(edit, text_node,
@@ -168,7 +222,6 @@ static int test_queries_and_attributes(void)
     document_edit_destroy(edit);
     return 0;
 }
-
 static int test_structural_operations(void)
 {
     static const uint8_t source[] =
@@ -189,7 +242,6 @@ static int test_structural_operations(void)
     CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &bytes) && tokenize(bytes));
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
-
     CHECK(find_id(edit, "a", &a));
     CHECK(document_edit_duplicate_element(edit, a, &changed) == DOCUMENT_EDIT_OK);
     CHECK(document_edit_tag_name(edit, changed, &(base_bytes){0}));
@@ -204,7 +256,6 @@ static int test_structural_operations(void)
     CHECK(materialize(edit, output, sizeof(output), &bytes) && tokenize(bytes));
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &bytes) && equal_bytes(bytes, original));
-
     CHECK(find_id(edit, "b", &b));
     CHECK(document_edit_delete_element(edit, b) == DOCUMENT_EDIT_OK);
     CHECK(!find_id(edit, "b", &changed));
@@ -212,7 +263,6 @@ static int test_structural_operations(void)
     CHECK(materialize(edit, output, sizeof(output), &bytes) && equal_bytes(bytes, original));
     CHECK(document_edit_root(edit, &changed));
     CHECK(document_edit_delete_element(edit, changed) == DOCUMENT_EDIT_ROOT_DELETE);
-
     CHECK(find_id(edit, "layer", &changed));
     static const uint8_t attr_name[] = "width";
     static const uint8_t attr_value[] = "50";
@@ -224,9 +274,8 @@ static int test_structural_operations(void)
     CHECK(document_edit_tag_name(edit, c, &tag) && tag.len == 4U &&
           memcmp(tag.ptr, "path", 4U) == 0);
     CHECK(materialize(edit, output, sizeof(output), &bytes) &&
-          contains(bytes, "<path width=\"50\"/>"));
+          contains(bytes, "<path width=\"50\" id=\"vexel-object-1\"/>"));
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
-
     static const char *const template_names[] = {
         "rect", "circle", "ellipse", "line", "path", "g", "text"
     };
@@ -239,7 +288,6 @@ static int test_structural_operations(void)
               memcmp(tag.ptr, template_names[kind], tag.len) == 0);
         CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     }
-
     CHECK(find_id(edit, "layer", &changed));
     document_edit_template_attribute text_attribute = {
         {(const uint8_t *)"id", 2U}, {(const uint8_t *)"new-text", 8U}
@@ -252,7 +300,6 @@ static int test_structural_operations(void)
           contains(bytes, "<text id=\"new-text\">A&lt;&amp;&gt;</text>"));
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
-
     static const uint8_t self_closing[] = "<svg/>";
     document_edit_destroy(edit);
     edit = create_edit((base_bytes){self_closing, sizeof(self_closing) - 1U});
@@ -260,7 +307,8 @@ static int test_structural_operations(void)
     CHECK(document_edit_insert_template(edit, changed, DOCUMENT_EDIT_TEMPLATE_CIRCLE,
         NULL, 0U, &c) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &bytes) &&
-          equal_bytes(bytes, (base_bytes){(const uint8_t *)"<svg><circle/></svg>", 20U}));
+          equal_bytes(bytes, (base_bytes){(const uint8_t *)
+              "<svg><circle id=\"vexel-object-1\"/></svg>", 40U}));
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &bytes) &&
           equal_bytes(bytes, (base_bytes){self_closing, sizeof(self_closing) - 1U}));
@@ -287,7 +335,6 @@ static int test_empty_text_and_xml_fragment(void)
     CHECK(document_edit_text_content(edit, text_node, text_buffer,
         sizeof(text_buffer), &text_length) && text_length == 0U);
     document_edit_destroy(edit);
-
     static const uint8_t source[] = "<svg/>";
     base_bytes original = {source, sizeof(source) - 1U};
     edit = create_edit(original);
@@ -310,7 +357,6 @@ static int test_empty_text_and_xml_fragment(void)
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &current) && equal_bytes(current, original));
-
     static const uint8_t malformed[] = "<g><text></g>";
     CHECK(document_edit_root(edit, &root));
     CHECK(document_edit_insert_xml_fragment(edit, root,
@@ -357,7 +403,6 @@ static int test_replace_xml_region(void)
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &current) &&
         equal_bytes(current, (base_bytes){source, sizeof(source) - 1U}));
-
     static const uint8_t malformed[] = "<circle><rect></circle>";
     CHECK(find_id(edit, "group", &group) && find_id(edit, "a", &first) &&
         find_id(edit, "b", &second));
@@ -417,7 +462,7 @@ static int test_insert_text_element(void)
         (base_bytes){(const uint8_t *)"A<&>", 4U}, &inserted) == DOCUMENT_EDIT_OK);
     CHECK(document_edit_history_count(edit) == 1U);
     static const uint8_t expected[] =
-        "<svg><text x=\"12\" fill=\"#ffffff\">A&lt;&amp;&gt;</text></svg>";
+        "<svg><text x=\"12\" fill=\"#ffffff\" id=\"vexel-object-1\">A&lt;&amp;&gt;</text></svg>";
     uint8_t output[256];
     base_bytes current;
     CHECK(materialize(edit, output, sizeof(output), &current) &&
@@ -459,7 +504,6 @@ static int test_history_and_save(void)
     CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_OK);
     CHECK(materialize(edit, output, sizeof(output), &bytes) && contains(bytes, "x='2'"));
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
-
     char path[] = "/tmp/vexel-edit-save-XXXXXX";
     int fd = mkstemp(path);
     CHECK(fd >= 0);
@@ -484,7 +528,6 @@ static int test_history_and_save(void)
     CHECK(read_length > 0 && close(fd) == 0);
     CHECK(contains((base_bytes){saved_bytes, (size_t)read_length}, "x='3'"));
     CHECK(unlink(path) == 0);
-
     char directory_template[] = "/tmp/vexel-edit-new-XXXXXX";
     char *directory = mkdtemp(directory_template);
     CHECK(directory != NULL);
@@ -507,6 +550,35 @@ static int test_history_and_save(void)
     CHECK(unlink(new_path) == 0 && rmdir(directory) == 0);
     CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK && document_edit_is_dirty(edit));
     document_edit_destroy(edit);
+    return 0;
+}
+
+static int test_mark_saved_checkpoint(void)
+{
+    static const uint8_t source[] = "<svg><rect id='r' x='0'/></svg>";
+    document_edit *edit = create_edit((base_bytes){source, sizeof(source) - 1U});
+    CHECK(edit != NULL && !document_edit_is_dirty(edit));
+    document_handle rect;
+    CHECK(find_id(edit, "r", &rect));
+    CHECK(document_edit_set_attribute(edit, rect,
+        (base_bytes){(const uint8_t *)"x", 1U},
+        (base_bytes){(const uint8_t *)"1", 1U}) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_is_dirty(edit));
+    document_edit_mark_saved(edit);
+    CHECK(!document_edit_is_dirty(edit));
+    CHECK(find_id(edit, "r", &rect));
+    CHECK(document_edit_set_attribute(edit, rect,
+        (base_bytes){(const uint8_t *)"x", 1U},
+        (base_bytes){(const uint8_t *)"2", 1U}) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_is_dirty(edit));
+    CHECK(document_edit_undo(edit) == DOCUMENT_EDIT_OK);
+    CHECK(!document_edit_is_dirty(edit));
+    CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_OK);
+    CHECK(document_edit_is_dirty(edit));
+    document_edit_mark_saved(edit);
+    CHECK(!document_edit_is_dirty(edit));
+    document_edit_destroy(edit);
+    document_edit_mark_saved(NULL);
     return 0;
 }
 
@@ -543,7 +615,6 @@ static int test_history_bounds(void)
         1U, false, DOCUMENT_EDIT_HISTORY_ACTION_EDIT_ATTRIBUTE) == DOCUMENT_EDIT_OK);
     CHECK(document_edit_redo(edit) == DOCUMENT_EDIT_INVALID_OPERATION);
     document_edit_destroy(edit);
-
     limits = (document_edit_limits){10U, 2U};
     created = document_edit_create(original, limits);
     CHECK(created.error == DOCUMENT_EDIT_OK && created.edit != NULL);
@@ -710,6 +781,8 @@ static int test_randomized_xml_fragments(void)
 
 int main(void)
 {
+    CHECK(test_generated_object_ids() == 0);
+    if (test_mark_saved_checkpoint() != 0) return 1;
     CHECK(test_queries_and_attributes() == 0);
     CHECK(test_structural_operations() == 0);
     CHECK(test_empty_text_and_xml_fragment() == 0);

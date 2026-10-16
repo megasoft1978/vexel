@@ -1,9 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
-
 #include "viewer.h"
 #include "viewer_internal.h"
-
-
 #include "frame_compose.h"
 #include "mcp_broker_hook.h"
 #include "platform/platform_metal.h"
@@ -16,35 +13,30 @@
 #include "viewer_quality.h"
 #include "viewer_chrome.h"
 #include "viewer_canvas_geometry.h"
-
 #include <math.h>
 #include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
-
-/* Persists a density change through the platform settings store. */
 static void viewer_persist_density(void *context, uint8_t density)
 {
     (void)context;
     platform_settings_store_density(density);
 }
-
 /* Persists a workspace change through the platform settings store. */
 static void viewer_persist_workspace(void *context, const char *name)
 {
     (void)context;
     platform_settings_store_workspace(name);
 }
-
 static double monotonic_ms(void)
 {
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0.0;
     return (double)now.tv_sec * 1000.0 + (double)now.tv_nsec / 1000000.0;
 }
-
 const char *viewer_error_reason(const viewer_app *app)
 {
     if (app->load_error[0] != '\0') return app->load_error;
@@ -55,7 +47,6 @@ const char *viewer_error_reason(const viewer_app *app)
     return app->document.load_error[0] == '\0' ? "document load failed" :
         app->document.load_error;
 }
-
 bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height)
 {
     if (app == NULL || width == 0U || height == 0U ||
@@ -74,7 +65,6 @@ bool viewer_allocate_frame(viewer_app *app, uint32_t width, uint32_t height)
     app->frame_dirty = true;
     return true;
 }
-
 bool viewer_bump_generation(viewer_app *app)
 {
     uint64_t next = 0U;
@@ -85,7 +75,6 @@ bool viewer_bump_generation(viewer_app *app)
     app->sharp_plan_ready = false;
     return true;
 }
-
 bool viewer_sync_canvas_geometry(viewer_app *app, bool refit)
 {
     if (app == NULL) return false;
@@ -199,8 +188,13 @@ static bool viewer_job_callback(void *context, const platform_task_cancel_token 
     if (job->kind == VIEWER_JOB_LOAD) {
         job->load_status = viewer_load_document(job->path, token, &job->loaded);
         succeeded = job->load_status != VIEWER_LOAD_CANCELED;
+        if (succeeded) viewer_recovery_after_open(job, token);
     } else if (job->kind == VIEWER_JOB_SHARP_TILE) {
         succeeded = render_sharp_region(job, token);
+    } else if (job->kind == VIEWER_JOB_RECOVERY) {
+        succeeded = viewer_recovery_job_run(job, token);
+    } else if (job->kind == VIEWER_JOB_RECOVERY_LOAD) {
+        succeeded = viewer_recovery_load_job_run(job, token);
     } else {
         uint8_t *source = job->source_snapshot;
         job->source_snapshot = NULL;
@@ -227,10 +221,11 @@ static void viewer_job_destroy(viewer_job *job)
     viewer_loaded_document_destroy(&job->loaded);
     free(job->source_snapshot);
     free(job->sharp_tile.rgba);
+    viewer_recovery_job_destroy(job);
     free(job);
 }
 
-static bool submit_job(viewer_app *app, viewer_job *job)
+bool viewer_submit_job(viewer_app *app, viewer_job *job)
 {
     if (app->job != NULL || job == NULL) return false;
     atomic_init(&job->cleanup_complete, false);
@@ -297,7 +292,7 @@ static void start_pending_load(viewer_app *app)
         goto failed;
     }
     memcpy(job->path, app->pending_path, length + 1U);
-    if (!submit_job(app, job)) {
+    if (!viewer_submit_job(app, job)) {
         viewer_job_destroy(job);
         goto failed;
     }
@@ -365,10 +360,12 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     next_timeline.mode = app->timeline.mode;
     next_timeline.playback_speed = app->timeline.playback_speed;
     next_timeline.reduced_motion = app->timeline.reduced_motion;
-    viewer_timeline_reset(&next_timeline, &job->loaded.shape);
+    (void)viewer_timeline_reset_for_document(&next_timeline, &job->loaded.shape,
+        job->loaded.native_project, job->loaded.timeline_session, &job->loaded.project);
     viewer_editor *next_editor = viewer_editor_create((base_bytes){job->loaded.source,
         job->loaded.source_length}, app->theme, app->width, app->height);
     if (next_editor != NULL) {
+        if (job->recovery_document) viewer_editor_mark_unsaved(next_editor);
         platform_settings_values preferences = {0};
         platform_settings_get(&preferences);
         viewer_editor_set_density_callback(next_editor, viewer_persist_density, NULL);
@@ -384,12 +381,14 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
                 preferences.workspace, strlen(preferences.workspace));
         /* Installed after the initial apply so restoring a remembered (or
          * pinned test) workspace never writes back to the settings store. */
-        viewer_editor_set_workspace_callback(next_editor,
-            viewer_persist_workspace, NULL);
+        viewer_editor_set_workspace_callback(next_editor, viewer_persist_workspace, NULL);
+        viewer_editor_set_history_callback(next_editor, viewer_history_callback, app);
         (void)viewer_editor_set_sidebar_visibility(next_editor,
             preferences.structure_visible, preferences.inspector_visible);
         (void)viewer_editor_set_timeline_state(next_editor,
-            viewer_timeline_track_count(&next_timeline) > 0U,
+            (job->loaded.native_project &&
+                job->loaded.timeline_session != NULL) ||
+                viewer_timeline_track_count(&next_timeline) > 0U,
             next_timeline.dock_open, next_timeline.dock_height_points);
         viewer_editor_resize(next_editor, app->width, app->height,
             app->backing_scale);
@@ -434,7 +433,10 @@ static void finish_load(viewer_app *app, viewer_job *job, bool worker_succeeded)
     app->render_source = NULL;
     app->document = job->loaded;
     job->loaded = (viewer_loaded_document){0};
-    viewer_timeline_reset(&app->timeline, &app->document.shape);
+    app->recovered_document = job->recovery_document;
+    (void)viewer_timeline_reset_for_document(&app->timeline,
+        &app->document.shape, app->document.native_project,
+        app->document.timeline_session, &app->document.project);
     app->load_ms = job->elapsed_ms;
     app->navigation_canvas = next_canvas;
     app->navigation = next_navigation;
@@ -479,13 +481,16 @@ static void service_job(viewer_app *app)
         result.generation == job->generation && result.succeeded;
     app->job = NULL;
     bool document_load = job->kind == VIEWER_JOB_LOAD ||
-        job->kind == VIEWER_JOB_NEW_DOCUMENT;
+        job->kind == VIEWER_JOB_NEW_DOCUMENT ||
+        job->kind == VIEWER_JOB_RECOVERY_LOAD;
     /* The centre status region only shows progress for the current operation. */
     if (current && app->editor != NULL &&
         (document_load || job->kind == VIEWER_JOB_EDIT_RENDER))
         viewer_editor_set_operation_progress(app->editor, false, NULL);
     if (current && succeeded && document_load) {
         finish_load(app, job, true);
+        if (job->kind == VIEWER_JOB_LOAD)
+            viewer_recovery_consider(app, job);
     } else if (current && document_load) {
         if (job->load_status == VIEWER_LOAD_CANCELED)
             app->load_status = VIEWER_LOAD_FAILED;
@@ -504,19 +509,37 @@ static void service_job(viewer_app *app)
         if (job->diagnostic[0] != '\0')
             (void)fprintf(stderr, "viewer: sharp preview stopped: %s\n", job->diagnostic);
         app->frame_dirty = true;
+    } else if (current && job->kind == VIEWER_JOB_RECOVERY) {
+        if (app->editor != NULL)
+            viewer_editor_set_status(app->editor, succeeded ?
+                "Recovery snapshot saved" : "Recovery snapshot failed");
+        if (succeeded) app->external_change_pending = false;
     } else if (current && succeeded && job->kind == VIEWER_JOB_EDIT_RENDER) {
         viewer_timeline_reset(&app->timeline, NULL);
         svg_shape_document_destroy(&app->document.shape);
         raster_tile_destroy(&app->document.tile);
         free(app->render_source);
-        app->render_source = job->loaded.source;
+        app->render_source = job->loaded.source_owner == NULL ?
+            job->loaded.source : job->loaded.source_owner;
         job->loaded.source = NULL;
+        job->loaded.source_owner = NULL;
         app->document.shape = job->loaded.shape;
         job->loaded.shape = (svg_shape_document){0};
-        viewer_timeline_reset(&app->timeline, &app->document.shape);
+        (void)viewer_timeline_reset_for_document(&app->timeline,
+            &app->document.shape, app->document.native_project,
+            app->document.timeline_session, &app->document.project);
+        if (app->document.native_project && app->document.timeline_session != NULL &&
+            !viewer_timeline_refresh_native_context(&app->timeline,
+                app->document.shape.source)) {
+            viewer_editor_set_status(app->editor,
+                "Native animation preview unavailable: timeline targets no longer match the edited scene");
+            app->frame_dirty = true;
+        }
         if (app->editor != NULL)
             (void)viewer_editor_set_timeline_state(app->editor,
-                viewer_timeline_track_count(&app->timeline) > 0U,
+                (app->document.native_project &&
+                    app->document.timeline_session != NULL) ||
+                    viewer_timeline_track_count(&app->timeline) > 0U,
                 app->timeline.dock_open, app->timeline.dock_height_points);
         app->document.tile = job->loaded.tile;
         job->loaded.tile = (raster_tile){0};
@@ -579,7 +602,7 @@ static void start_next_sharp_tile(viewer_app *app)
     job->generation = app->generation;
     job->sharp_tile.region = region;
     job->navigation = viewer_navigation_for_frame(app);
-    if (!submit_job(app, job)) {
+    if (!viewer_submit_job(app, job)) {
         viewer_job_destroy(job);
         app->sharp_plan_ready = false;
     }
@@ -614,8 +637,14 @@ static void poll_file_changes(viewer_app *app)
     (void)viewer_file_stamp_read(app->path, &current);
     bool changed = current.valid != app->file_stamp.valid ||
         (current.valid && !viewer_file_stamp_equal(&current, &app->file_stamp));
+    if (app->job != NULL && app->job->kind == VIEWER_JOB_RECOVERY) {
+        if (changed) app->external_change_pending = true;
+        return;
+    }
     if (changed) {
-        if (viewer_editor_is_dirty(app->editor)) {
+        if (viewer_editor_is_dirty(app->editor) ||
+            project_timeline_session_is_dirty(app->document.timeline_session) ||
+            project_bundle_asset_overlay_is_dirty(&app->document.asset_overlay)) {
             if (!app->external_change_pending) {
                 viewer_editor_set_status(app->editor,
                     "File changed on disk; save your edits before reloading");
@@ -670,7 +699,7 @@ static void start_editor_render(viewer_app *app)
     job->generation = app->generation;
     job->source_snapshot = source;
     job->source_snapshot_length = materialized;
-    if (!submit_job(app, job)) {
+    if (!viewer_submit_job(app, job)) {
         viewer_job_destroy(job);
         viewer_editor_set_status(app->editor, "Preview update failed: worker queue unavailable");
         app->frame_dirty = true;
@@ -701,7 +730,7 @@ static void start_pending_new_document(viewer_app *app)
     job->app = app;
     job->kind = VIEWER_JOB_NEW_DOCUMENT;
     job->generation = app->generation;
-    if (!submit_job(app, job)) {
+    if (!viewer_submit_job(app, job)) {
         viewer_job_destroy(job);
         goto failed;
     }
@@ -722,6 +751,7 @@ void viewer_app_tick(viewer_app *app)
 {
     if (app == NULL || !app->running) return;
     service_job(app);
+    viewer_recovery_tick(app);
     if (app->pending_new_document && app->job == NULL)
         start_pending_new_document(app);
     if (app->pending_open && app->job == NULL) start_pending_load(app);

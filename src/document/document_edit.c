@@ -249,6 +249,7 @@ document_edit_result document_edit_create(base_bytes source, document_edit_limit
     edit->state_id = 1U;
     edit->saved_state_id = 1U;
     edit->next_state_id = 2U;
+    edit->next_auto_object_id = 1U;
     if (source.len > 0U) {
         edit->pieces = calloc(1U, sizeof(*edit->pieces));
         if (edit->pieces == NULL) {
@@ -601,6 +602,7 @@ const char *document_edit_error_name(document_edit_error error)
         case DOCUMENT_EDIT_STALE_HANDLE: return "stale_handle";
         case DOCUMENT_EDIT_NOT_FOUND: return "not_found";
         case DOCUMENT_EDIT_DUPLICATE_ATTRIBUTE: return "duplicate_attribute";
+        case DOCUMENT_EDIT_DUPLICATE_ID: return "duplicate_id";
         case DOCUMENT_EDIT_INVALID_NAME: return "invalid_name";
         case DOCUMENT_EDIT_MALFORMED_XML: return "malformed_xml";
         case DOCUMENT_EDIT_ROOT_DELETE: return "root_delete";

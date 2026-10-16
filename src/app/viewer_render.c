@@ -4,6 +4,7 @@
 #include "platform/platform_metal.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static bool make_status_text(const viewer_app *app, char out[VIEWER_STATUS_CAP])
@@ -26,7 +27,8 @@ static bool make_status_text(const viewer_app *app, char out[VIEWER_STATUS_CAP])
 
 bool viewer_compose_and_present(viewer_app *app)
 {
-    if (app->editor != NULL && viewer_timeline_track_count(&app->timeline) > 0U) {
+    if (app->editor != NULL && (app->timeline.native_project ||
+            viewer_timeline_track_count(&app->timeline) > 0U)) {
         bool requested_open = viewer_editor_timeline_visible(app->editor);
         if (requested_open != app->timeline.dock_open)
             (void)viewer_timeline_dock_set_open(&app->timeline, requested_open);
@@ -50,9 +52,34 @@ bool viewer_compose_and_present(viewer_app *app)
     bool animation_tracks = kind == VIEWER_FRAME_DOCUMENT &&
         viewer_timeline_track_count(&app->timeline) > 0U;
     if (animation_tracks) {
-        const raster_tile *animated = viewer_timeline_prepare_frame(&app->timeline);
+        const raster_tile *animated = NULL;
+        if (app->timeline.native_project) {
+            bool already_failed = app->timeline.preview_failed;
+            if (viewer_timeline_native_preview_is_current(&app->timeline)) {
+                animated = &app->timeline.preview;
+            } else {
+                size_t length = viewer_editor_byte_length(app->editor);
+                size_t capacity = length <= SIZE_MAX - VIEWER_EDITOR_PREVIEW_EXTRA_BYTES ?
+                    length + VIEWER_EDITOR_PREVIEW_EXTRA_BYTES : 0U;
+                uint8_t *snapshot = capacity == 0U ? NULL : malloc(capacity);
+                size_t materialized = 0U;
+                if (snapshot != NULL && viewer_editor_materialize_preview(app->editor,
+                        snapshot, capacity, &materialized))
+                    animated = viewer_timeline_prepare_native_frame(&app->timeline,
+                        (base_bytes){snapshot, materialized});
+                free(snapshot);
+            }
+            if (animated == NULL) app->timeline.preview_failed = true;
+            if (animated == NULL && !already_failed)
+                viewer_editor_set_status(app->editor,
+                    "Native animation preview unavailable: current scene snapshot could not be rendered");
+        } else animated = viewer_timeline_prepare_frame(&app->timeline);
         if (animated != NULL) tile = animated;
-        else animation_tracks = false;
+        else if (app->timeline.native_project) {
+            kind = VIEWER_FRAME_ERROR;
+            tile = NULL;
+            message = "Native animation preview unavailable";
+        } else animation_tracks = false;
     }
     viewer_sharp_tile frame_tiles[VIEWER_SHARP_CACHE_ENTRIES];
     size_t tile_count = 0U;
@@ -98,7 +125,7 @@ bool viewer_compose_and_present(viewer_app *app)
         viewer_editor_paint_canvas_overlay(app->editor, &app->document.shape,
             &app->navigation, app->navigation_canvas, app->frame,
             app->width, app->height, (size_t)app->width * 4U);
-    if (app->editor != NULL && kind == VIEWER_FRAME_DOCUMENT)
+    if (app->editor != NULL && app->document_visible)
         (void)viewer_timeline_paint(&app->timeline, app->editor, app->frame,
             app->frame_bytes, app->width, app->height,
             (size_t)app->width * 4U, app->backing_scale);

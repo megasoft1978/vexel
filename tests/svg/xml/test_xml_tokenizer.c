@@ -85,8 +85,50 @@ static void check_doctype(void)
     expect_error("<!ENTITY e \"x\"><a/>",SVG_XML_ERROR_UNSUPPORTED_DTD);
 }
 
+static void check_attribute_decoder(void)
+{
+    static const uint8_t source[] = "a&amp;&#65;&#x1f600;z";
+    uint8_t output[32] = {0};
+    size_t length = 0U, error = SIZE_MAX;
+    CHECK(svg_xml_decode_attribute_value((base_bytes){source, sizeof(source) - 1U},
+        (svg_xml_span){0U, sizeof(source) - 1U}, output, sizeof(output),
+        &length, &error));
+    static const uint8_t expected[] = "a&A\xf0\x9f\x98\x80z";
+    CHECK(length == sizeof(expected) - 1U &&
+          memcmp(output, expected, sizeof(expected) - 1U) == 0);
+    static const uint8_t named[] = "&lt;&gt;&quot;&apos;&amp;";
+    CHECK(svg_xml_decode_attribute_value((base_bytes){named, sizeof(named) - 1U},
+        (svg_xml_span){0U, sizeof(named) - 1U}, output, sizeof(output),
+        &length, &error));
+    static const uint8_t named_expected[] = "<>\"'&";
+    CHECK(length == sizeof(named_expected) - 1U &&
+          memcmp(output, named_expected, sizeof(named_expected) - 1U) == 0);
+    static const char *const invalid[] = {
+        "&unknown;", "&#;", "&#x;", "&#1114112;", "&#x110000;",
+        "&#xD800;", "&#0;", "&amp", "&#999999999999999999;"
+    };
+    for (size_t i = 0U; i < sizeof(invalid) / sizeof(invalid[0]); ++i) {
+        base_bytes input = {(const uint8_t *)invalid[i], strlen(invalid[i])};
+        CHECK(!svg_xml_decode_attribute_value(input,
+            (svg_xml_span){0U, input.len}, output, sizeof(output),
+            &length, &error));
+        CHECK(error == 0U);
+    }
+    static const uint8_t too_small[] = "&#x1f600;";
+    CHECK(!svg_xml_decode_attribute_value((base_bytes){too_small,
+        sizeof(too_small) - 1U}, (svg_xml_span){0U, sizeof(too_small) - 1U},
+        output, 3U, &length, &error));
+    CHECK(error == 0U);
+    static const uint8_t prefixed[] = "xx&bad;";
+    CHECK(!svg_xml_decode_attribute_value((base_bytes){prefixed,
+        sizeof(prefixed) - 1U}, (svg_xml_span){2U, sizeof(prefixed) - 3U},
+        output, sizeof(output), &length, &error));
+    CHECK(error == 0U);
+}
+
 int main(void)
 {
+    check_attribute_decoder();
     const char source[]="<?xml version='1.0' encoding=\"UTF-8\"?>\r\n<!--c--><?p data?><a:root xmlns:a='urn:x' a:k=\"v&amp;x\">x\r\ny<![CDATA[z]]><a:child/></a:root>";
     char original[sizeof(source)];memcpy(original,source,sizeof(source));
     svg_xml_token tokens[64];svg_xml_result r=run(source,svg_xml_default_options(),tokens,64);

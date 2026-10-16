@@ -120,8 +120,8 @@ static bool fill_contains(const svg_shape_document *document, size_t shape,
     size_t count = document->shape_edge_count[shape];
     int winding = 0;
     bool parity = false;
-    bool visible = document->paints != NULL &&
-        document->paints[shape].kind == SVG_SHAPE_PAINT_IMAGE;
+    const svg_shape_paint *paint = svg_shape_paint_for_shape(document, shape);
+    bool visible = paint != NULL && paint->kind == SVG_SHAPE_PAINT_IMAGE;
     for (size_t i = first; i < first + count; ++i) {
         if (document->colors[i * 4U + 3U] != 0U) visible = true;
         geom_edge edge = document->edges[i];

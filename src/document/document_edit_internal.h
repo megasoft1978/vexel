@@ -90,6 +90,7 @@ struct document_edit {
     uint64_t state_id;
     uint64_t saved_state_id;
     uint64_t next_state_id;
+    uint64_t next_auto_object_id;
     uint8_t *snapshot;
     size_t snapshot_length;
     document_model *model;

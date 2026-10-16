@@ -26,6 +26,18 @@
     <array>
         <dict>
             <key>CFBundleTypeExtensions</key>
+            <array><string>vexel</string></array>
+            <key>CFBundleTypeName</key>
+            <string>Vexel Project</string>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>LSHandlerRank</key>
+            <string>Owner</string>
+            <key>LSItemContentTypes</key>
+            <array><string>com.vexel.project</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeExtensions</key>
             <array><string>svg</string></array>
             <key>CFBundleTypeName</key>
             <string>SVG Image</string>
@@ -35,6 +47,19 @@
             <string>Alternate</string>
             <key>LSItemContentTypes</key>
             <array><string>public.svg-image</string></array>
+        </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>
+            <string>com.vexel.project</string>
+            <key>UTTypeDescription</key>
+            <string>Vexel Project</string>
+            <key>UTTypeConformsTo</key>
+            <array><string>public.data</string></array>
+            <key>UTTypeTagSpecification</key>
+            <dict><key>public.filename-extension</key><array><string>vexel</string></array></dict>
         </dict>
     </array>
     <key>LSApplicationCategoryType</key>

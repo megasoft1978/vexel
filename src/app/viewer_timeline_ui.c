@@ -1,6 +1,8 @@
 #include "viewer_timeline.h"
 
 #include "platform/platform_text_ui.h"
+#include "project/project_animation_render.h"
+#include "raster/shape_render.h"
 #include "ui/ui_draw.h"
 #include "ui/ui_widgets.h"
 #include "viewer_chrome.h"
@@ -16,9 +18,30 @@ static bool paint_widget(ui_widget_canvas *canvas, ui_widget_kind kind,
     double numeric_value, bool checked);
 static size_t utf8_prefix(const char *text, size_t length, size_t maximum);
 
+const raster_tile *viewer_timeline_prepare_frame(viewer_timeline *timeline)
+{
+    if (timeline != NULL && timeline->native_project) return NULL;
+    if (timeline == NULL || timeline->document == NULL ||
+        viewer_timeline_track_count(timeline) == 0U) return NULL;
+    if (timeline->preview_valid && timeline->preview_time_seconds == timeline->time_seconds)
+        return &timeline->preview;
+    raster_tile_destroy(&timeline->preview);
+    timeline->preview_valid = false;
+    svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
+    if (!raster_shape_render_at(timeline->document, timeline->time_seconds,
+            &timeline->preview, &diagnostic)) {
+        timeline->preview_failed = true;
+        return NULL;
+    }
+    timeline->preview_time_seconds = timeline->time_seconds;
+    timeline->preview_valid = true;
+    timeline->preview_failed = false;
+    return &timeline->preview;
+}
+
 static bool timeline_is_indefinite(const viewer_timeline *timeline)
 {
-    if (timeline == NULL || timeline->document == NULL) return false;
+    if (timeline == NULL || timeline->native_project || timeline->document == NULL) return false;
     size_t count = viewer_timeline_track_count(timeline);
     for (size_t index = 0U; index < count; ++index) {
         const svg_anim_track *track = &timeline->document->animation.tracks[index];
@@ -298,6 +321,79 @@ static void paint_track_lane(ui_widget_canvas *canvas,
     const viewer_timeline *timeline, const viewer_timeline_layout *layout,
     size_t row, size_t track_index)
 {
+    if (timeline->native_project) {
+        project_timeline_track_view track;
+        if (!viewer_timeline_native_track_at(timeline, track_index, &track)) return;
+        ui_rect row_rect = layout->track_rows[row];
+        uint32_t row_center = row_rect.y + row_rect.height / 2U;
+        paint_hline(canvas, layout->track_gutter.x,
+            row_rect.y + row_rect.height - 1U, layout->track_gutter.width,
+            canvas->tokens.separator);
+        paint_hline(canvas, layout->time_grid.x,
+            row_rect.y + row_rect.height - 1U, layout->time_grid.width,
+            canvas->tokens.separator);
+        char label[128] = {0};
+        size_t label_length = 0U;
+        if (viewer_timeline_track_label(timeline, track_index, label,
+                sizeof(label), &label_length)) {
+            ui_rect label_bounds = {layout->track_gutter.x, row_rect.y,
+                layout->track_gutter.width, row_rect.height};
+            (void)paint_widget(canvas, UI_WIDGET_BUTTON_SECONDARY, label_bounds,
+                track_index == timeline->selected_track ? UI_CONTROL_SELECTED :
+                    UI_CONTROL_REST, label,
+                utf8_prefix(label, label_length, UI_WIDGET_LABEL_MAX_BYTES),
+                NULL, 0U, 0.0, false);
+        }
+        double end = timeline->duration_seconds;
+        double range_start = timeline->view_start_seconds;
+        double range_end = range_start + viewer_timeline_view_duration(timeline);
+        if (end >= range_start && timeline->view_start_seconds <= end) {
+            double x0 = time_to_x(timeline, layout,
+                range_start > 0.0 ? range_start : 0.0);
+            double x1 = time_to_x(timeline, layout,
+                end < range_end ? end : range_end);
+            if (isfinite(x0) && isfinite(x1) && x1 >= x0) {
+                uint32_t left = x0 < layout->time_grid.x ? layout->time_grid.x :
+                    (uint32_t)lround(x0);
+                uint32_t right = x1 > (double)(layout->time_grid.x +
+                    layout->time_grid.width) ? layout->time_grid.x +
+                    layout->time_grid.width : (uint32_t)lround(x1);
+                if (right >= left) paint_hline(canvas, left, row_center,
+                    right - left + 1U, track.visible ? canvas->tokens.accent :
+                    canvas->tokens.control_edge);
+            }
+        }
+        const size_t marker_cap = 512U;
+        size_t count = track.item_count < marker_cap ? track.item_count : marker_cap;
+        uint32_t radius = viewer_timeline_key_hit_radius(layout->backing_scale);
+        project_timeline_iterator iterator = {0};
+        for (size_t index = 0U; index < count; ++index) {
+            project_timeline_item_view item;
+            if (!project_timeline_item_next(&timeline->native_view,
+                    track_index, &iterator, &item)) break;
+            bool dragged = timeline->native_dragging_item &&
+                timeline->native_drag_track == track_index &&
+                timeline->native_drag_from_tick == item.tick;
+            uint32_t marker_tick = dragged ? timeline->native_drag_to_tick : item.tick;
+            double seconds = (double)marker_tick /
+                (double)timeline->native_ticks_per_second;
+            if (seconds < range_start || seconds > range_end) continue;
+            double marker_x = time_to_x(timeline, layout, seconds);
+            if (!isfinite(marker_x) || marker_x < layout->time_grid.x ||
+                marker_x >= layout->time_grid.x + layout->time_grid.width ||
+                marker_x > INT32_MAX) continue;
+            paint_diamond(canvas, (int32_t)lround(marker_x),
+                (int32_t)row_center, radius, dragged ? canvas->tokens.warning :
+                track.visible ? canvas->tokens.accent : canvas->tokens.control_edge);
+        }
+        if (track.item_count > marker_cap) {
+            int32_t x = (int32_t)(layout->time_grid.x +
+                layout->time_grid.width - (radius + 2U));
+            paint_square(canvas, x, (int32_t)row_center, radius,
+                canvas->tokens.warning);
+        }
+        return;
+    }
     const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
     ui_rect row_rect = layout->track_rows[row];
     uint32_t row_center = row_rect.y + row_rect.height / 2U;
@@ -434,7 +530,8 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
     ui_widget_text_draw_fn text_draw)
 {
     if (timeline == NULL || editor == NULL || rgba == NULL ||
-        viewer_timeline_track_count(timeline) == 0U ||
+        (viewer_timeline_track_count(timeline) == 0U &&
+            (!timeline->native_project || timeline->native_session == NULL)) ||
         !isfinite(backing_scale) || backing_scale < 0.5 || backing_scale > 4.0 ||
         (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT))
         return false;
@@ -469,7 +566,18 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
         char time_text[64];
         double duration = viewer_timeline_duration(timeline);
         bool indefinite = timeline_is_indefinite(timeline);
-        int time_amount = indefinite ? (layout.compact ?
+        uint32_t current_tick = 0U;
+        if (timeline->native_project)
+            (void)viewer_timeline_seconds_to_native_tick(timeline,
+                timeline->time_seconds, &current_tick);
+        int time_amount = timeline->native_project ? (layout.compact ?
+            snprintf(time_text, sizeof(time_text), "t%u/%u @%u", current_tick,
+                timeline->native_duration_ticks, timeline->native_ticks_per_second) :
+            snprintf(time_text, sizeof(time_text),
+                "%.2fs / %.2fs · tick %u of %u at %u Hz", timeline->time_seconds,
+                duration, current_tick, timeline->native_duration_ticks,
+                timeline->native_ticks_per_second)) :
+            indefinite ? (layout.compact ?
             snprintf(time_text, sizeof(time_text), "%.2f/INF", timeline->time_seconds) :
             snprintf(time_text, sizeof(time_text), "%.2fs / INF", timeline->time_seconds)) :
             (layout.compact ? snprintf(time_text, sizeof(time_text), "%.2f/%.2fs",
@@ -505,16 +613,89 @@ static bool viewer_timeline_paint_with_text(viewer_timeline *timeline,
                 UI_CONTROL_REST, speed, strlen(speed), NULL, 0U, 0.0, false);
         (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY, layout.fit_button,
             UI_CONTROL_REST, "Fit", sizeof("Fit") - 1U, NULL, 0U, 0.0, false);
+        if (timeline->native_project && layout.onion_button.width > 0U) {
+            char onion_label[16];
+            int onion_amount = timeline->native_onion_before ==
+                    timeline->native_onion_after ?
+                snprintf(onion_label, sizeof(onion_label), "Onion %u",
+                    timeline->native_onion_before) :
+                snprintf(onion_label, sizeof(onion_label), "Onion %u/%u",
+                    timeline->native_onion_before, timeline->native_onion_after);
+            if (onion_amount < 0 || (size_t)onion_amount >= sizeof(onion_label))
+                (void)snprintf(onion_label, sizeof(onion_label), "Onion");
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY,
+                layout.onion_button, UI_CONTROL_REST, onion_label,
+                strlen(onion_label), NULL, 0U, 0.0, false);
+        }
+        if (timeline->native_project && layout.key_opacity_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY,
+                layout.key_opacity_button, UI_CONTROL_REST, "Key Opacity",
+                sizeof("Key Opacity") - 1U, NULL, 0U, 0.0, false);
+        if (timeline->native_project && layout.key_transform_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY,
+                layout.key_transform_button, UI_CONTROL_REST, "Key Transform",
+                sizeof("Key Transform") - 1U, NULL, 0U, 0.0, false);
+        if (timeline->native_project && layout.key_fill_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY,
+                layout.key_fill_button, UI_CONTROL_REST, "Key Fill",
+                sizeof("Key Fill") - 1U, NULL, 0U, 0.0, false);
+        if (timeline->native_project && layout.key_stroke_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY,
+                layout.key_stroke_button, UI_CONTROL_REST, "Key Stroke",
+                sizeof("Key Stroke") - 1U, NULL, 0U, 0.0, false);
+        if (timeline->native_project && layout.key_visibility_button.width > 0U)
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY,
+                layout.key_visibility_button, UI_CONTROL_REST, "Key Visibility",
+                sizeof("Key Visibility") - 1U, NULL, 0U, 0.0, false);
+        if (timeline->native_project && layout.drawing_asset_button.width > 0U) {
+            project_bundle_asset asset = {0};
+            char asset_label[64U] = "Drawing Asset";
+            size_t label_length = sizeof("Drawing Asset") - 1U;
+            if (viewer_timeline_native_selected_asset(timeline, &asset)) {
+                static const char prefix[] = "Asset: ";
+                size_t name_length = asset.name.len;
+                if (name_length > sizeof(asset_label) - sizeof(prefix))
+                    name_length = sizeof(asset_label) - sizeof(prefix);
+                memcpy(asset_label, prefix, sizeof(prefix) - 1U);
+                memcpy(asset_label + sizeof(prefix) - 1U, asset.name.ptr,
+                    name_length);
+                label_length = sizeof(prefix) - 1U + name_length;
+            }
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_SECONDARY,
+                layout.drawing_asset_button, UI_CONTROL_REST, asset_label,
+                label_length, NULL, 0U, 0.0, false);
+        }
+        if (timeline->native_project && layout.add_cel_button.width > 0U) {
+            const char *drawing_action =
+                viewer_timeline_native_drawing_action_label(timeline);
+            (void)paint_widget(&canvas, UI_WIDGET_BUTTON_PRIMARY,
+                layout.add_cel_button, UI_CONTROL_REST, drawing_action,
+                strlen(drawing_action), NULL, 0U, 0.0, false);
+        }
         paint_ruler(&canvas, timeline, &layout);
+        if (timeline->native_project &&
+            viewer_timeline_track_count(timeline) == 0U) {
+            uint32_t message_y = layout.track_gutter.y +
+                layout.track_gutter.height / 2U;
+            ui_rect message = {layout.track_gutter.x + 8U, message_y,
+                layout.track_gutter.width > 8U ?
+                    layout.track_gutter.width - 8U : 0U, 18U};
+            (void)paint_widget(&canvas, UI_WIDGET_LABEL, message,
+                UI_CONTROL_REST, "Choose an identified object to create its first key.",
+                sizeof("Choose an identified object to create its first key.") - 1U,
+                NULL, 0U, 0.0, false);
+        }
         for (size_t row = 0U; row < layout.visible_track_count; ++row) {
             paint_track_lane(&canvas, timeline, &layout, row, layout.first_track + row);
-            viewer_timeline_easing_paint_key_markers(timeline, &layout,
-                layout.first_track + row, row, &canvas);
+            if (!timeline->native_project)
+                viewer_timeline_easing_paint_key_markers(timeline, &layout,
+                    layout.first_track + row, row, &canvas);
         }
         paint_playhead(&canvas, timeline, &layout);
     }
     viewer_timeline_easing_layout easing_layout;
-    if (viewer_timeline_easing_layout_compute(&layout, &easing_layout))
+    if (!timeline->native_project &&
+        viewer_timeline_easing_layout_compute(&layout, &easing_layout))
         viewer_timeline_easing_paint(timeline, &layout, &easing_layout, &canvas);
     (void)viewer_timeline_publish_accessibility(timeline, editor, &layout, width, height,
         backing_scale, theme, increased_contrast);

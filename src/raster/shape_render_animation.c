@@ -223,13 +223,14 @@ static bool apply_matrix_to_shape(svg_shape_document *document, size_t shape,
                                  &composed)) return false;
         document->shape_stroke_inverse[shape] = composed;
     }
-    if (document->paints != NULL &&
-        document->paints[shape].kind != SVG_SHAPE_PAINT_SOLID) {
+    svg_shape_paint *paint =
+        svg_shape_paint_for_shape_mutable(document, shape);
+    if (paint != NULL && paint->kind != SVG_SHAPE_PAINT_SOLID) {
         geom_affine composed;
         if (!affine_inverse(matrix, &inverse) ||
-            !geom_affine_compose(document->paints[shape].user_inverse, inverse,
+            !geom_affine_compose(paint->user_inverse, inverse,
                                  &composed)) return false;
-        document->paints[shape].user_inverse = composed;
+        paint->user_inverse = composed;
     }
     return true;
 }
@@ -289,8 +290,9 @@ static bool refresh_object_paint_bounds(svg_shape_document *document,
                                         geom_affine world_transform,
                                         size_t *work)
 {
-    if (document->paints == NULL) return true;
-    svg_shape_paint *paint = &document->paints[shape];
+    svg_shape_paint *paint =
+        svg_shape_paint_for_shape_mutable(document, shape);
+    if (paint == NULL) return true;
     if (!paint->object_bounding_box ||
         (paint->kind != SVG_SHAPE_PAINT_LINEAR &&
          paint->kind != SVG_SHAPE_PAINT_RADIAL)) return true;
@@ -527,8 +529,9 @@ static bool apply_track(svg_shape_document *document,
                 effect_limited) return false;
             if (!matrix_for_numeric(document, shape, track, &item->value,
                                     world_transforms[shape], &matrix, work) ||
-                (document->paints != NULL &&
-                 document->paints[shape].kind == SVG_SHAPE_PAINT_PATTERN) ||
+                (svg_shape_paint_for_shape(document, shape) != NULL &&
+                 svg_shape_paint_for_shape(document, shape)->kind ==
+                    SVG_SHAPE_PAINT_PATTERN) ||
                 !apply_geometry_matrix(document, shape, matrix, work) ||
                 !refresh_object_paint_bounds(document, shape,
                                              world_transforms[shape], work) ||
@@ -585,8 +588,9 @@ bool raster_shape_render_at(const svg_shape_document *document,
         !checked_bytes(document->shape_count, sizeof(*document->strokes), &stroke_bytes) ||
         !checked_bytes(document->shape_count, sizeof(*document->shape_stroke_inverse),
                        &inverse_bytes) ||
-        !checked_bytes(document->shape_count, sizeof(*document->paints), &paint_bytes) ||
-        !checked_bytes(document->shape_count, sizeof(*document->stroke_paints),
+        !checked_bytes(document->paint_count, sizeof(*document->paints), &paint_bytes) ||
+        !checked_bytes(document->stroke_paint_count,
+                       sizeof(*document->stroke_paints),
                        &stroke_paint_bytes) ||
         !checked_bytes(document->transform_node_count,
                        sizeof(*document->transform_nodes), &transform_bytes) ||
@@ -667,6 +671,7 @@ bool raster_shape_render_at(const svg_shape_document *document,
         if (evaluated.stroke_paints == NULL) goto oom;
         memcpy(evaluated.stroke_paints, document->stroke_paints,
                stroke_paint_bytes);
+        evaluated.stroke_paint_capacity = document->stroke_paint_count;
     }
     if (transform_bytes != 0U && document->transform_nodes != NULL) {
         evaluated.transform_nodes = malloc(transform_bytes);

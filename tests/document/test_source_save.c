@@ -29,12 +29,21 @@ struct injected {
     bool fail_rename;
     bool short_write;
     unsigned calls;
+    const char *observe_absent_path;
+    bool observed_absent;
 };
 
 static ssize_t test_write(int fd, const void *bytes, size_t length, void *context)
 {
     struct injected *state = context;
     state->calls++;
+    if (state->observe_absent_path != NULL) {
+        if (access(state->observe_absent_path, F_OK) == 0) {
+            errno = EEXIST;
+            return -1;
+        }
+        state->observed_absent = true;
+    }
     if (state->fail_write) {
         state->fail_write = false;
         errno = EIO;
@@ -160,6 +169,36 @@ static bool test_save_and_failures(const char *directory)
     CHECK(target_is(missing_target, fixture, sizeof(fixture) - 1U, 0600));
     CHECK(temp_count(directory) == 0U);
 
+    char atomic_target[1024];
+    written = snprintf(atomic_target, sizeof(atomic_target), "%s/atomic.svg", directory);
+    CHECK(written > 0 && (size_t)written < sizeof(atomic_target));
+    struct injected atomic_state = {
+        .short_write = true, .observe_absent_path = atomic_target};
+    platform_atomic_new_file_hooks atomic_hooks = {
+        .write = test_write, .context = &atomic_state};
+    base_bytes atomic_path = {(const uint8_t *)atomic_target, strlen(atomic_target)};
+    platform_atomic_new_file_result atomic = platform_atomic_file_create_new(
+        atomic_path, source, &atomic_hooks);
+    CHECK(atomic.error == PLATFORM_ATOMIC_NEW_FILE_OK && atomic.published &&
+        atomic.directory_fsynced && atomic_state.calls > 1U &&
+        atomic_state.observed_absent);
+    CHECK(target_is(atomic_target, fixture, sizeof(fixture) - 1U, 0600));
+    CHECK(temp_count(directory) == 0U);
+    CHECK(unlink(atomic_target) == 0);
+
+    char atomic_failed_target[1024];
+    written = snprintf(atomic_failed_target, sizeof(atomic_failed_target),
+        "%s/atomic-failed.svg", directory);
+    CHECK(written > 0 && (size_t)written < sizeof(atomic_failed_target));
+    atomic_state = (struct injected){.fail_write = true,
+        .observe_absent_path = atomic_failed_target};
+    atomic = platform_atomic_file_create_new(
+        (base_bytes){(const uint8_t *)atomic_failed_target,
+            strlen(atomic_failed_target)}, source, &atomic_hooks);
+    CHECK(atomic.error == PLATFORM_ATOMIC_NEW_FILE_IO && !atomic.published &&
+        atomic_state.observed_absent && access(atomic_failed_target, F_OK) != 0);
+    CHECK(temp_count(directory) == 0U);
+
     char malformed_target[1024];
     written = snprintf(malformed_target, sizeof(malformed_target),
         "%s/malformed.svg", directory);
@@ -233,7 +272,12 @@ int main(int argc, char **argv)
     if (argc == 4 && strcmp(argv[1], "--save") == 0)
         return save_paths(argv[2], argv[3]);
     if (argc != 1) return 2;
-    char template[] = "/tmp/vexel-source-save-XXXXXX";
+    char cwd[1024], template[1024];
+    if (getcwd(cwd, sizeof(cwd)) == NULL ||
+        (mkdir(".cache", 0700) != 0 && errno != EEXIST)) return 1;
+    int length = snprintf(template, sizeof(template),
+        "%s/.cache/vexel-source-save-XXXXXX", cwd);
+    if (length <= 0 || (size_t)length >= sizeof(template)) return 1;
     char *directory = mkdtemp(template);
     if (directory == NULL) return 1;
     bool passed = test_save_and_failures(directory);

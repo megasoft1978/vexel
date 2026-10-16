@@ -6,9 +6,12 @@
 #include "ui/viewer_controls.h"
 #include "viewer_editor.h"
 #include "viewer_load.h"
+#include "project/project_file.h"
 #include "viewer_quality.h"
 #include "viewer_timeline.h"
 #include "viewer_home.h"
+#include "platform/platform_recovery_store.h"
+#include "project/project_recovery.h"
 
 #include <stdatomic.h>
 #include <stdbool.h>
@@ -26,9 +29,14 @@
 #define VIEWER_AUTORELOAD_INTERVAL_MS 250.0
 
 typedef struct viewer_app viewer_app;
+typedef struct viewer_file_stamp {
+    off_t size;
+    struct timespec modified;
+    bool valid;
+} viewer_file_stamp;
 typedef enum viewer_job_kind {
     VIEWER_JOB_LOAD, VIEWER_JOB_NEW_DOCUMENT, VIEWER_JOB_SHARP_TILE,
-    VIEWER_JOB_EDIT_RENDER
+    VIEWER_JOB_EDIT_RENDER, VIEWER_JOB_RECOVERY, VIEWER_JOB_RECOVERY_LOAD
 } viewer_job_kind;
 
 typedef struct viewer_job {
@@ -38,6 +46,27 @@ typedef struct viewer_job {
     char path[PLATFORM_PATH_CAP];
     uint8_t *source_snapshot;
     size_t source_snapshot_length;
+    document_edit_snapshot *recovery_scene;
+    project_timeline_source_lease *recovery_timeline;
+    project_bundle_asset *recovery_assets;
+    size_t recovery_asset_count;
+    base_bytes recovery_manifest;
+    char recovery_path[PLATFORM_RECOVERY_STORE_PATH_MAX];
+    char recovery_source_path[PLATFORM_PATH_CAP];
+    off_t recovery_source_size;
+    struct timespec recovery_source_modified;
+    uint64_t recovery_captured_time_ns;
+    project_recovery_result recovery_result;
+    viewer_file_stamp recovery_stamp;
+    uint8_t *recovery_bytes;
+    size_t recovery_length;
+    uint64_t recovery_source_size_on_disk;
+    int64_t recovery_source_mtime_seconds;
+    uint32_t recovery_source_mtime_nanoseconds;
+    bool recovery_available;
+    bool recovery_conflict;
+    bool recovery_document;
+    char recovery_notice[192];
     viewer_loaded_document loaded;
     viewer_load_status load_status;
     viewer_sharp_tile sharp_tile;
@@ -46,12 +75,6 @@ typedef struct viewer_job {
     double elapsed_ms;
     atomic_bool cleanup_complete;
 } viewer_job;
-
-typedef struct viewer_file_stamp {
-    off_t size;
-    struct timespec modified;
-    bool valid;
-} viewer_file_stamp;
 
 struct viewer_app {
     platform_window *window;
@@ -87,6 +110,7 @@ struct viewer_app {
     double pointer_doc_y;
     struct timespec last_file_poll;
     viewer_file_stamp file_stamp;
+    struct timespec last_recovery;
     platform_recent_file recent_files[PLATFORM_RECENT_FILES_MAX];
     size_t recent_file_count;
     viewer_load_status load_status;
@@ -112,7 +136,9 @@ struct viewer_app {
     bool external_change_pending;
     bool running;
     bool fatal_error;
+    atomic_bool project_save_cancel_requested;
     bool smoke_mode;
+    bool recovered_document;
     bool smoke_scripted;
     bool smoke_passed;
     bool test_layout_dump_failed;
@@ -141,6 +167,9 @@ bool viewer_confirm_unsaved_changes(viewer_app *app, const char *title,
                                     const char *message);
 size_t viewer_event_path_length(const char *path, size_t limit);
 bool viewer_save_document(viewer_app *app, bool force_save_as);
+bool viewer_save_project_file(viewer_app *app, const char *path, size_t path_length);
+/* Thread-safe cancellation hook for an in-progress native project save. */
+void viewer_cancel_project_save(viewer_app *app);
 void viewer_request_close(viewer_app *app);
 void viewer_close_confirmed(viewer_app *app);
 void viewer_apply_action(viewer_app *app, platform_viewer_action action);
@@ -152,8 +181,30 @@ void viewer_request_reload_or_open(viewer_app *app);
 void viewer_apply_synthetic_key(viewer_app *app, uint16_t key_code,
     uint32_t modifiers, const char *text, size_t text_len);
 void viewer_process_editor_result(viewer_app *app, uint32_t result);
+bool viewer_history_callback(void *context, bool redo, bool execute);
 void viewer_apply_command(viewer_app *app, viewer_command_id command);
 void viewer_app_tick(viewer_app *app);
+void viewer_recovery_tick(viewer_app *app);
+bool viewer_recovery_job_run(viewer_job *job,
+    const platform_task_cancel_token *token);
+bool viewer_recovery_load_job_run(viewer_job *job,
+    const platform_task_cancel_token *token);
+void viewer_recovery_after_open(viewer_job *job,
+    const platform_task_cancel_token *token);
+void viewer_recovery_job_destroy(viewer_job *job);
+bool viewer_recovery_probe(viewer_job *job, const char *capsule_path,
+    const platform_task_cancel_token *token);
+bool viewer_recovery_discover(viewer_job *job,
+    const platform_task_cancel_token *token);
+void viewer_recovery_consider(viewer_app *app, viewer_job *job);
+bool viewer_recovery_remove_for_path(const char *source_path);
+bool viewer_recovery_cleanup_after_save(viewer_app *app,
+    const char *previous_path, const char *target_path);
+bool viewer_recovery_cleanup_capsule_paths(viewer_app *app,
+    const char *previous_capsule_path, const char *target_capsule_path);
+bool viewer_submit_job(viewer_app *app, viewer_job *job);
+int viewer_recovery_test_run(viewer_job *job,
+    const platform_task_cancel_token *token);
 void viewer_app_destroy(viewer_app *app);
 void navigation_changed(viewer_app *app, const ui_viewer_navigation *previous);
 void apply_navigation_fit(viewer_app *app, platform_viewer_action action);

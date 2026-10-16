@@ -227,6 +227,23 @@ class W5ShapeRenderTests(unittest.TestCase):
         self.assertEqual(pixel(actual, 5, 16), bytes((255, 0, 0, 255)))
         self.assertEqual(pixel(actual, 5, 16), pixel(expected, 5, 16))
 
+    def test_marker_children_inherit_definition_ancestors_not_referencing_path(self):
+        source = ('<svg width="40" height="40" fill="#287d67"><defs>'
+                  '<linearGradient id="g"><stop stop-color="#f4c96b"/>'
+                  '<stop offset="1" stop-color="#3289a7"/></linearGradient>'
+                  '<marker id="m" markerWidth="6" markerHeight="6" '
+                  'refX="5" refY="3" markerUnits="userSpaceOnUse" orient="0">'
+                  '<path d="M0 0L6 3L0 6z"/></marker></defs>'
+                  '<path d="M8 10L32 10L32 12Z M8 24L32 24" '
+                  'fill="url(#g)" marker-end="url(#m)"/></svg>')
+        width, height, actual, expected = self._render_w5_pair(
+            source, "marker-definition-style-inheritance")
+        self.assertEqual((width, height), (40, 40))
+        pixel = lambda image, x, y: image[(y * width + x) * 4:(y * width + x) * 4 + 4]
+        marker_pixel = bytes((40, 125, 103, 255))
+        self.assertEqual(pixel(actual, 28, 24), marker_pixel)
+        self.assertEqual(pixel(actual, 28, 24), pixel(expected, 28, 24))
+
     def test_marker_shorthand_maps_to_start_mid_and_end(self):
         source = ('<svg width="32" height="24"><defs><marker id="m" '
                   'markerWidth="8" markerHeight="8" refX="8" refY="4" '

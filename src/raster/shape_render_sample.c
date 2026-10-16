@@ -171,20 +171,33 @@ static void paint_stroke_sample(const svg_shape_document *document,
                                 const bool *dash_seams,
                                 const raster_shape_dash_cache *dash_cache,
                                 bool allowed, double px, double py,
+                                double paint_x, double paint_y,
                                 bool scalar_oracle_alpha,
                                 uint8_t sample_rgba[4])
 {
     if (!allowed || !raster_shape_stroke_contains(
             document, shape, local_edges, dash_seams, dash_cache, px, py))
         return;
-    if (document->stroke_paints != NULL &&
-        document->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN) {
+    const svg_shape_paint *stroke_paint =
+        svg_shape_stroke_paint_for_shape(document, shape);
+    if (stroke_paint != NULL &&
+        stroke_paint->kind == SVG_SHAPE_PAINT_PATTERN) {
         uint8_t sampled_stroke[4];
         if (pattern_sample(document, shape,
-                document->stroke_paints[shape].pattern_index,
-                document->stroke_paints[shape].pattern_inverse,
-                document->stroke_paints[shape].pattern_opacity,
+                stroke_paint->pattern_index,
+                stroke_paint->pattern_inverse,
+                stroke_paint->pattern_opacity,
                 px, py, sampled_stroke) && sampled_stroke[3] != 0U)
+            composite_source_over(sample_rgba, sampled_stroke);
+    } else if (stroke_paint != NULL &&
+        (stroke_paint->kind == SVG_SHAPE_PAINT_LINEAR ||
+         stroke_paint->kind == SVG_SHAPE_PAINT_RADIAL)) {
+        uint8_t sampled_stroke[4] = {0U, 0U, 0U, 0U};
+        svg_paint_sample(stroke_paint,
+            document->paint_stops, paint_x, paint_y, sampled_stroke);
+        sampled_stroke[3] = (uint8_t)(((uint32_t)sampled_stroke[3] *
+            document->strokes[shape].rgba[3] + 127U) / 255U);
+        if (sampled_stroke[3] != 0U)
             composite_source_over(sample_rgba, sampled_stroke);
     } else if (scalar_oracle_alpha) {
         memcpy(sample_rgba, document->strokes[shape].rgba, 4U);
@@ -207,12 +220,15 @@ static void paint_sample_result(const svg_shape_document *doc, size_t shape,
                         doc->strokes[shape].paint_order == 1U;
     if (stroke_first)
         paint_stroke_sample(doc, shape, local_edges, dash_seams, dash_cache,
-                            allowed, px, py, scalar_oracle_alpha, sample_rgba);
+                            allowed, px, py, paint_x, paint_y,
+                            scalar_oracle_alpha, sample_rgba);
     uint8_t sampled_fill[4];
-    bool image = doc->paints != NULL &&
-                 doc->paints[shape].kind == SVG_SHAPE_PAINT_IMAGE;
-    bool pattern = doc->paints != NULL &&
-                   doc->paints[shape].kind == SVG_SHAPE_PAINT_PATTERN;
+    const svg_shape_paint *fill_paint =
+        svg_shape_paint_for_shape(doc, shape);
+    bool image = fill_paint != NULL &&
+                 fill_paint->kind == SVG_SHAPE_PAINT_IMAGE;
+    bool pattern = fill_paint != NULL &&
+                   fill_paint->kind == SVG_SHAPE_PAINT_PATTERN;
     if (inside && allowed && image) {
         uint8_t sampled_image[4];
         if (image_sample(doc, shape, px, py, sampled_image) &&
@@ -220,18 +236,18 @@ static void paint_sample_result(const svg_shape_document *doc, size_t shape,
             composite_source_over(sample_rgba, sampled_image);
     } else if (inside && allowed && pattern) {
         uint8_t sampled_pattern[4];
-        if (pattern_sample(doc, shape, doc->paints[shape].pattern_index,
-                           doc->paints[shape].pattern_inverse,
-                           doc->paints[shape].pattern_opacity,
+        if (pattern_sample(doc, shape, fill_paint->pattern_index,
+                           fill_paint->pattern_inverse,
+                           fill_paint->pattern_opacity,
                            px, py, sampled_pattern) &&
             sampled_pattern[3] != 0U)
             composite_source_over(sample_rgba, sampled_pattern);
     } else if (inside && allowed && fill[3] != 0U) {
         memcpy(sampled_fill, fill, sizeof(sampled_fill));
-        bool gradient = doc->paints != NULL &&
-            doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID;
+        bool gradient = fill_paint != NULL &&
+            fill_paint->kind != SVG_SHAPE_PAINT_SOLID;
         if (gradient) {
-            svg_paint_sample(&doc->paints[shape], doc->paint_stops,
+            svg_paint_sample(fill_paint, doc->paint_stops,
                              paint_x, paint_y, sampled_fill);
         }
         if (scalar_oracle_alpha && !gradient) {
@@ -241,7 +257,8 @@ static void paint_sample_result(const svg_shape_document *doc, size_t shape,
     }
     if (!stroke_first)
         paint_stroke_sample(doc, shape, local_edges, dash_seams, dash_cache,
-                            allowed, px, py, scalar_oracle_alpha, sample_rgba);
+                            allowed, px, py, paint_x, paint_y,
+                            scalar_oracle_alpha, sample_rgba);
 }
 
 void raster_shape_paint_sample(const svg_shape_document *doc, size_t shape,

@@ -8,13 +8,11 @@
 
 static const char *disabled_reason(viewer_editor *editor, viewer_command_id id)
 {
-    size_t cursor = document_edit_history_cursor(editor->edit);
-    size_t count = document_edit_history_count(editor->edit);
     bool selected = editor->canvas_selection_count > 0U ||
         (editor->selection_active && editor->selected_index > 0U);
     switch (id) {
-        case VIEWER_COMMAND_UNDO: return cursor == 0U ? "Nothing to undo" : NULL;
-        case VIEWER_COMMAND_REDO: return cursor >= count ? "Nothing to redo" : NULL;
+        case VIEWER_COMMAND_UNDO: return viewer_editor_can_undo(editor) ? NULL : "Nothing to undo";
+        case VIEWER_COMMAND_REDO: return viewer_editor_can_redo(editor) ? NULL : "Nothing to redo";
         case VIEWER_COMMAND_DELETE:
         case VIEWER_COMMAND_DUPLICATE:
         case VIEWER_COMMAND_COPY:
@@ -509,7 +507,7 @@ static bool add_history_nodes(viewer_editor *editor)
             NULL, 0U, NULL, 0U, 0U, 0U) &&
         add_overlay_node(editor, EDITOR_HISTORY_TITLE, EDITOR_HISTORY_PANEL,
             350U, 24U, UI_ROLE_TEXT, UI_WIDGET_LABEL,
-            "Undo History", 12U, NULL, 0U, 0U, 0U) &&
+            "SVG Undo History", 12U, NULL, 0U, 0U, 0U) &&
         add_overlay_node(editor, EDITOR_HISTORY_CURRENT, EDITOR_HISTORY_PANEL,
             350U, 18U, UI_ROLE_TEXT, UI_WIDGET_LABEL,
             current, strlen(current), NULL, 0U, 0U, 0U) &&

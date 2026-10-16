@@ -5,6 +5,7 @@
 #include "source_save.h"
 
 typedef struct document_edit document_edit;
+typedef struct document_edit_snapshot document_edit_snapshot;
 
 typedef struct document_edit_limits {
     size_t history_commands;
@@ -17,6 +18,7 @@ typedef enum document_edit_error {
     DOCUMENT_EDIT_STALE_HANDLE,
     DOCUMENT_EDIT_NOT_FOUND,
     DOCUMENT_EDIT_DUPLICATE_ATTRIBUTE,
+    DOCUMENT_EDIT_DUPLICATE_ID,
     DOCUMENT_EDIT_INVALID_NAME,
     DOCUMENT_EDIT_MALFORMED_XML,
     DOCUMENT_EDIT_ROOT_DELETE,
@@ -103,7 +105,21 @@ bool document_edit_element_path(document_edit *edit, document_handle node,
 size_t document_edit_byte_length(const document_edit *edit);
 bool document_edit_materialize(const document_edit *edit, uint8_t *buffer,
                                size_t capacity, size_t *out_length);
+/* Snapshot creation copies piece descriptors, not document bytes. Materialize
+ * may run on a worker while the owner continues editing. Keep `edit` and its
+ * borrowed original source alive until the snapshot has been destroyed. */
+document_edit_error document_edit_snapshot_create(document_edit *edit,
+    document_edit_snapshot **out_snapshot);
+size_t document_edit_snapshot_byte_length(const document_edit_snapshot *snapshot);
+bool document_edit_snapshot_materialize(const document_edit_snapshot *snapshot,
+    uint8_t *buffer, size_t capacity, size_t *out_length);
+void document_edit_snapshot_destroy(document_edit_snapshot *snapshot);
 bool document_edit_is_dirty(const document_edit *edit);
+/* Call only after the current state has been durably published to its file. */
+void document_edit_mark_saved(document_edit *edit);
+/* Mark the current state as recovered from a separate snapshot and therefore
+ * unsaved relative to the source file, without adding an undo command. */
+void document_edit_mark_unsaved(document_edit *edit);
 size_t document_edit_history_count(const document_edit *edit);
 size_t document_edit_history_cursor(const document_edit *edit);
 bool document_edit_history_entry_at(const document_edit *edit, size_t index,

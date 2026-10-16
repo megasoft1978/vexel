@@ -35,8 +35,11 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     base_bytes source, const svg_shape_media_providers *providers,
     svg_shape_document *out, svg_shape_diagnostic *diagnostic,
     svg_shape_decode_memory_bounds *memory_bounds,
-    base_bytes system_language, size_t token_budget_bytes)
+    base_bytes system_language, size_t token_budget_bytes,
+    svg_xml_cancel_check_fn canceled, void *cancel_context,
+    bool *out_canceled)
 {
+    if (out_canceled != NULL) *out_canceled = false;
     svg_shape_diagnostic local_diagnostic;
     if (diagnostic == NULL) diagnostic = &local_diagnostic;
     if (memory_bounds != NULL)
@@ -73,7 +76,8 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
      * fail at the old 16 MiB source cap. Storage is now bounded by
      * the token budget and grows geometrically inside the stream. */
     svg_xml_token_stream *stream = NULL;
-    if (svg_xml_token_stream_start(source, token_budget_bytes, NULL, NULL,
+    if (svg_xml_token_stream_start(source, token_budget_bytes, canceled,
+            cancel_context,
             &stream) != SVG_XML_STREAM_OK || stream == NULL) {
         svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_OOM, 0U);
         return SVG_SHAPE_ERROR_OOM;
@@ -86,8 +90,10 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         size_t offset = xml.diagnostic.offset;
         /* Exhausted token storage and cancellation are resource limits; only
          * genuine grammar failures keep the XML mapping. */
+        bool was_canceled = stream_status == SVG_XML_STREAM_CANCELED;
+        if (was_canceled && out_canceled != NULL) *out_canceled = true;
         svg_shape_error failure =
-            (stream_status == SVG_XML_STREAM_CANCELED ||
+            (was_canceled ||
              xml.diagnostic.category == SVG_XML_ERROR_NONE ||
              xml.diagnostic.category == SVG_XML_ERROR_OUTPUT_EXHAUSTED) ?
                 SVG_SHAPE_ERROR_LIMIT : SVG_SHAPE_ERROR_XML;
@@ -100,6 +106,12 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         svg_xml_token_stream_destroy(stream);
         svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_XML, offset);
         return SVG_SHAPE_ERROR_XML;
+    }
+    if (canceled != NULL && canceled(cancel_context)) {
+        if (out_canceled != NULL) *out_canceled = true;
+        svg_xml_token_stream_destroy(stream);
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, 0U);
+        return SVG_SHAPE_ERROR_LIMIT;
     }
     svg_xml_token *tokens = NULL;
     size_t token_count = 0U;
@@ -126,6 +138,8 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         .token_count = xml.token_count,
         .diagnostic = diagnostic,
         .media = providers,
+        .cancel_check = canceled,
+        .cancel_context = cancel_context,
         .selection_element = SIZE_MAX
     };
     svg_shape_ignored_scan(source, tokens, xml.token_count, out);
@@ -135,12 +149,24 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
     if (memory_bounds != NULL)
         memory_bounds->reference_index_bytes =
             svg_reference_index_storage_bytes(&traversal.references);
+    if (canceled != NULL && canceled(cancel_context)) {
+        traversal.canceled = true;
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, 0U);
+        error = SVG_SHAPE_ERROR_LIMIT;
+        goto cleanup;
+    }
     svg_css_error css_error = svg_css_sheet_create(
         source, tokens, xml.token_count, &traversal.css);
     if (css_error != SVG_CSS_OK) {
         error = css_error == SVG_CSS_LIMIT ? SVG_SHAPE_ERROR_LIMIT :
                                             SVG_SHAPE_ERROR_OOM;
         svg_shape_traverse_fail(diagnostic, error, 0U);
+        goto cleanup;
+    }
+    if (canceled != NULL && canceled(cancel_context)) {
+        traversal.canceled = true;
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, 0U);
+        error = SVG_SHAPE_ERROR_LIMIT;
         goto cleanup;
     }
     if (providers != NULL && providers->layout_text != NULL) {
@@ -192,9 +218,16 @@ static svg_shape_error decode_source_with_language_and_media_and_bounds(
         svg_shape_traverse_fail(diagnostic, error, animation_error_offset);
         goto cleanup;
     }
+    if (canceled != NULL && canceled(cancel_context)) {
+        traversal.canceled = true;
+        svg_shape_traverse_fail(diagnostic, SVG_SHAPE_ERROR_LIMIT, source.len);
+        error = SVG_SHAPE_ERROR_LIMIT;
+        goto cleanup;
+    }
     error = SVG_SHAPE_ERROR_NONE;
 
 cleanup:
+    if (traversal.canceled && out_canceled != NULL) *out_canceled = true;
     svg_shape_free(ignored_state.seen);
     svg_shape_text_cache_destroy(traversal.text_cache);
     svg_paint_cache_destroy(traversal.paint_cache);
@@ -212,7 +245,7 @@ svg_shape_error svg_shape_decode_source_with_system_language(
 {
     return decode_source_with_language_and_media_and_bounds(
         source, NULL, out, diagnostic, NULL, system_language,
-        SHAPE_MAX_TOKEN_BYTES);
+        SHAPE_MAX_TOKEN_BYTES, NULL, NULL, NULL);
 }
 
 svg_shape_error svg_shape_decode_source_with_media_and_bounds(
@@ -224,7 +257,7 @@ svg_shape_error svg_shape_decode_source_with_media_and_bounds(
     return decode_source_with_language_and_media_and_bounds(
         source, providers, out, diagnostic, memory_bounds,
         (base_bytes){default_language, sizeof(default_language)},
-        SHAPE_MAX_TOKEN_BYTES);
+        SHAPE_MAX_TOKEN_BYTES, NULL, NULL, NULL);
 }
 
 svg_shape_error svg_shape_decode_source_with_token_budget(
@@ -235,5 +268,17 @@ svg_shape_error svg_shape_decode_source_with_token_budget(
     return decode_source_with_language_and_media_and_bounds(
         source, NULL, out, diagnostic, NULL,
         (base_bytes){default_language, sizeof(default_language)},
-        token_budget_bytes);
+        token_budget_bytes, NULL, NULL, NULL);
+}
+
+svg_shape_error svg_shape_decode_cancellable(
+    base_bytes source, svg_xml_cancel_check_fn canceled, void *cancel_context,
+    bool *out_canceled, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic)
+{
+    static const uint8_t default_language[] = {'e', 'n'};
+    return decode_source_with_language_and_media_and_bounds(
+        source, NULL, out, diagnostic, NULL,
+        (base_bytes){default_language, sizeof(default_language)},
+        SHAPE_MAX_TOKEN_BYTES, canceled, cancel_context, out_canceled);
 }

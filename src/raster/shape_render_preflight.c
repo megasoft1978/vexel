@@ -7,8 +7,42 @@
 #include <math.h>
 #include <stdint.h>
 
-#define RASTER_PREFLIGHT_MAX_WORK 200000000U
+/*
+ * Work budget of the native-resolution raster preflight, in work units.
+ * budget(pixels) = min(CAP, BASE + max(0, pixels - RAMP_START) * PER_PIXEL).
+ *   BASE         200,000,000     budget of every canvas up to RAMP_START
+ *   RAMP_START   1,048,576 px    1024 x 1024, the largest canvas whose old
+ *                                fixed-budget refusals are pinned by tests
+ *   PER_PIXEL    24,576          units added per pixel above RAMP_START
+ *   CAP          16,000,000,000  absolute ceiling, reached at 1,691,479 px
+ * 1600 x 1000 (1,600,000 px) gets 13,751,796,224.
+ * Worst case: a document that just fits the cap does 1.6e10 units. Measured
+ * on the corpus (Release, Apple Silicon) at about 1.3 s per 1e9 units, so
+ * about 21 s. The preflight and render allocate no per-unit memory (measured
+ * 77 MB and 382 MB maximum RSS for 1.05e10 and 4.5e8 units), so the bytes
+ * bound is the canvas plus the fixed per-shape tables, not the cap.
+ * A document over the budget still fails with SVG_SHAPE_ERROR_LIMIT.
+ */
+#define RASTER_PREFLIGHT_BASE_WORK 200000000ULL
+#define RASTER_PREFLIGHT_RAMP_START_PIXELS 1048576ULL
+#define RASTER_PREFLIGHT_WORK_PER_PIXEL 24576ULL
+#define RASTER_PREFLIGHT_WORK_CAP 16000000000ULL
 #define RASTER_PREFLIGHT_SAMPLES_PER_AXIS 4U
+
+static _Thread_local size_t preflight_work_limit = RASTER_PREFLIGHT_BASE_WORK;
+
+size_t raster_preflight_work_budget(uint32_t width, uint32_t height)
+{
+    unsigned long long pixels = (unsigned long long)width * height;
+    if (pixels <= RASTER_PREFLIGHT_RAMP_START_PIXELS)
+        return (size_t)RASTER_PREFLIGHT_BASE_WORK;
+    unsigned long long extra = pixels - RASTER_PREFLIGHT_RAMP_START_PIXELS;
+    unsigned long long room = RASTER_PREFLIGHT_WORK_CAP - RASTER_PREFLIGHT_BASE_WORK;
+    if (extra > room / RASTER_PREFLIGHT_WORK_PER_PIXEL)
+        return (size_t)RASTER_PREFLIGHT_WORK_CAP;
+    return (size_t)(RASTER_PREFLIGHT_BASE_WORK +
+                    extra * RASTER_PREFLIGHT_WORK_PER_PIXEL);
+}
 
 static const double sample_locations[RASTER_PREFLIGHT_SAMPLES_PER_AXIS] = {
     0.125, 0.375, 0.625, 0.875
@@ -16,8 +50,8 @@ static const double sample_locations[RASTER_PREFLIGHT_SAMPLES_PER_AXIS] = {
 
 static bool work_add(size_t *total, size_t amount)
 {
-    if (*total > (size_t)RASTER_PREFLIGHT_MAX_WORK ||
-        amount > (size_t)RASTER_PREFLIGHT_MAX_WORK - *total) return false;
+    if (*total > preflight_work_limit ||
+        amount > preflight_work_limit - *total) return false;
     *total += amount;
     return true;
 }
@@ -78,19 +112,29 @@ static size_t sample_aux_work(const svg_shape_document *document, size_t shape,
         *ok = false;
         return 0U;
     }
-    if (document->paints != NULL &&
-        document->paints[shape].kind != SVG_SHAPE_PAINT_SOLID &&
-        !checked_add_size(work, document->paints[shape].stop_count +
-            (document->paints[shape].kind == SVG_SHAPE_PAINT_PATTERN ? 4U : 0U),
-            &work)) {
+    const svg_shape_paint *fill_paint =
+        svg_shape_paint_for_shape(document, shape);
+    if (fill_paint != NULL &&
+        fill_paint->kind != SVG_SHAPE_PAINT_SOLID &&
+        !checked_add_size(work, fill_paint->stop_count +
+            (fill_paint->kind == SVG_SHAPE_PAINT_PATTERN ? 4U : 0U), &work)) {
         *ok = false;
         return 0U;
     }
-    if (document->stroke_paints != NULL &&
-        document->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN &&
-        !checked_add_size(work, 4U, &work)) {
-        *ok = false;
-        return 0U;
+    const svg_shape_paint *stroke_paint =
+        svg_shape_stroke_paint_for_shape(document, shape);
+    if (stroke_paint != NULL &&
+        stroke_paint->kind != SVG_SHAPE_PAINT_SOLID) {
+        size_t stroke_work = stroke_paint->stop_count;
+        if (stroke_paint->kind == SVG_SHAPE_PAINT_PATTERN &&
+            !checked_add_size(stroke_work, 4U, &stroke_work)) {
+            *ok = false;
+            return 0U;
+        }
+        if (!checked_add_size(work, stroke_work, &work)) {
+            *ok = false;
+            return 0U;
+        }
     }
     return work;
 }
@@ -177,6 +221,8 @@ bool raster_shape_render_work_preflight(
         (size_t)document->width > SIZE_MAX / (size_t)document->height) return false;
     size_t total = 0U;
     size_t pixels = (size_t)document->width * (size_t)document->height;
+    preflight_work_limit =
+        raster_preflight_work_budget(document->width, document->height);
     if (!work_add(&total, pixels) || !work_add(&total, bounds->pixel_count) ||
         !work_add(&total, boundary->mark_work) ||
         !work_add(&total, document->edge_count) ||

@@ -9,6 +9,8 @@ rejection, and save-as to a brand-new path. The seeded 200,000-action history
 test validates every current document, confirms untouched prefix/suffix bytes,
 and round-trips undo and redo. A second seeded 200,000-case campaign exercises
 successful, malformed, and multi-root fragment inputs.
+The auto-ID regression checks unique generated IDs for template and fragment
+insertion, preservation/rejection of supplied IDs, and exact undo/redo bytes.
 
 The editor also uses `document_edit_replace_xml_region` for atomic multi-sibling
 edits, `document_edit_replace_source_span` for path number changes, and

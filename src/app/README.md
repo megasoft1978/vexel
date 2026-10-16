@@ -70,6 +70,20 @@ Edited source snapshots are decoded and rasterized on the existing worker queue
 with generation cancellation. A failed edited preview leaves the last good
 canvas visible and reports the decoder diagnostic in the editor status bar.
 
+Dirty native projects with a saved on-disk baseline receive a best-effort
+background recovery capsule every 30 seconds. The worker materializes an
+immutable scene snapshot, reads a pinned timeline source, and serializes copied
+asset descriptors with retained payload bytes. Captures preserve dirty and
+undo state; source-file changes during capture prevent publication. Opening an
+existing native project checks its validated capsule and asks whether to
+restore, discard, or keep it. A changed source is reported as a conflict;
+restore loads the complete recovered project as dirty work without writing the
+source. Explicit discard and successful project save remove the keyed capsule;
+cleanup failures are reported. Still outstanding: missing-source discovery
+(the store key requires an existing canonical source), capsule retention and
+expiry, project-version migration policy, measured peak memory for very large
+recovery snapshots, and final comprehensive UI/E2E acceptance.
+
 The editor supports Shift-click, marquee, and Cmd+A selection, up to 128
 rendered elements. Group move, resize, rotate, nudge, delete, duplicate, and
 z-order edits work for selected siblings under one parent and one bounded

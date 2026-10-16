@@ -204,7 +204,8 @@ bool svg_reference_definition_end(base_bytes source,
         tokens[start].prefix.length != 0U ||
         (!name_is(source, tokens[start].local_name, "defs") &&
          !name_is(source, tokens[start].local_name, "symbol") &&
-         !name_is(source, tokens[start].local_name, "marker"))) return false;
+         !name_is(source, tokens[start].local_name, "marker") &&
+         !name_is(source, tokens[start].local_name, "clipPath"))) return false;
     if (tokens[start].kind == SVG_XML_TOKEN_EMPTY_ELEMENT) {
         *end = start;
         return true;

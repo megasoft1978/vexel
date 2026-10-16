@@ -265,6 +265,8 @@ typedef struct editor_control_transition {
 struct viewer_editor {
     document_edit *edit;
     viewer_workspace_kind workspace;
+    viewer_editor_history_callback history_callback;
+    void *history_context;
     viewer_editor_workspace_callback workspace_changed;
     void *workspace_context;
     uint8_t inspector_tab;

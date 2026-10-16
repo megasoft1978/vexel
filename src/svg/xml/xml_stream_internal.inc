@@ -278,9 +278,12 @@ static bool stream_parse_pi(xml_scanner *s, size_t limit)
     token.depth = s->depth;
     (void)span_at(s->cursor, p + 2U, &token.source);
     if (!s->pending_declaration && !count_node(s, s->cursor)) return false;
+    if (s->pending_declaration && s->visitor != NULL) {
+        if (!validate_decl_encoding(s, &token) || s->canceled) return false;
+    }
     if (!emit(s, token, s->cursor)) return false;
-    size_t index = s->result.token_count - 1U;
-    if (s->pending_declaration && !validate_decl_encoding(s, &s->tokens[index])) return false;
+    if (s->pending_declaration && s->visitor == NULL &&
+        !validate_decl_encoding(s, &s->tokens[s->result.token_count - 1U])) return false;
     s->cursor = p + 2U;
     stream_pending_clear(s);
     return true;
@@ -288,7 +291,8 @@ static bool stream_parse_pi(xml_scanner *s, size_t limit)
 
 static bool stream_finish_start(xml_scanner *s, size_t end, bool empty)
 {
-    svg_xml_token *token = &s->tokens[s->stream_start_token_index];
+    svg_xml_token *token = s->visitor != NULL ? &s->tag_tokens[0] :
+        &s->tokens[s->stream_start_token_index];
     token->source.length = end - s->cursor;
     if (empty) token->kind = SVG_XML_TOKEN_EMPTY_ELEMENT;
     else {
@@ -296,6 +300,7 @@ static bool stream_finish_start(xml_scanner *s, size_t end, bool empty)
         ++s->depth;
     }
     ++s->result.element_count;
+    if (!flush_tag_tokens(s, s->cursor)) return false;
     s->cursor = end;
     s->stream_start_active = false;
     s->stream_start_name_ready = false;
@@ -332,7 +337,7 @@ static bool stream_parse_start(xml_scanner *s, size_t limit)
         token.local_name = s->stream_start_local_name;
         token.depth = s->depth;
         (void)span_at(s->cursor, p, &token.source);
-        if (!emit(s, token, s->cursor)) return false;
+        if (!stage_tag_token(s, token, s->cursor)) return false;
         s->stream_start_token_index = s->result.token_count - 1U;
         s->stream_start_local_attributes = 0U;
         s->stream_start_separated = false;
@@ -366,9 +371,15 @@ static bool stream_parse_start(xml_scanner *s, size_t limit)
                              &name_complete)) return false;
             if (!name_complete) break;
             if (!valid_qname(s, s->stream_attribute_prefix, s->stream_attribute_local_name)) return false;
-            for (size_t i = s->stream_start_token_index + 1U; i < s->result.token_count; ++i) {
-                if (s->tokens[i].kind == SVG_XML_TOKEN_ATTRIBUTE &&
-                    qname_equal(s, s->stream_attribute_name, s->tokens[i].name)) {
+            size_t attr_begin = s->visitor != NULL ? 1U :
+                s->stream_start_token_index + 1U;
+            size_t attr_end = s->visitor != NULL ? s->tag_token_count :
+                s->result.token_count;
+            for (size_t i = attr_begin; i < attr_end; ++i) {
+                const svg_xml_token *prior = s->visitor != NULL ?
+                    &s->tag_tokens[i] : &s->tokens[i];
+                if (prior->kind == SVG_XML_TOKEN_ATTRIBUTE &&
+                    qname_equal(s, s->stream_attribute_name, prior->name)) {
                     fail(s, SVG_XML_ERROR_DUPLICATE_ATTRIBUTE, s->stream_start_attribute_offset);
                     return false;
                 }
@@ -412,7 +423,7 @@ static bool stream_parse_start(xml_scanner *s, size_t limit)
             attribute.depth = s->depth;
             (void)span_at(s->stream_start_attribute_offset, p + 1U, &attribute.source);
             (void)span_at(s->stream_start_value_offset, p, &attribute.value);
-            if (!emit(s, attribute, s->stream_start_attribute_offset)) return false;
+            if (!stage_tag_token(s, attribute, s->stream_start_attribute_offset)) return false;
             ++s->stream_start_local_attributes;
             ++s->total_attributes;
             ++s->result.attribute_count;
@@ -502,4 +513,73 @@ static bool stream_parse_doctype(xml_scanner *s, size_t limit)
     s->pending_cursor = p;
     if (p == s->input.len) fail(s, SVG_XML_ERROR_MALFORMED_SYNTAX, s->cursor);
     return s->result.diagnostic.category == SVG_XML_ERROR_NONE;
+}
+
+/* Public discard-mode stream lifecycle helpers. */
+
+svg_xml_stream_status svg_xml_token_stream_start_visitor(base_bytes input,
+    svg_xml_token_visitor_fn visitor, void *visitor_context,
+    svg_xml_cancel_check_fn canceled, void *cancel_context,
+    svg_xml_token_stream **out_stream)
+{
+    if (out_stream == NULL) return SVG_XML_STREAM_FAILED;
+    *out_stream = NULL;
+    if (!base_bytes_valid(input) || input.len > 1024U * 1024U * 1024U ||
+        visitor == NULL) return SVG_XML_STREAM_FAILED;
+    svg_xml_token_stream *stream = calloc(1U, sizeof(*stream));
+    if (stream == NULL) return SVG_XML_STREAM_FAILED;
+    xml_scanner *s = &stream->scanner;
+    s->tag_token_capacity = XML_MAX_ATTRIBUTES_PER_ELEMENT + 1U;
+    size_t scratch_bytes = 0U;
+    if (!base_size_mul(s->tag_token_capacity, sizeof(*s->tag_tokens),
+                       &scratch_bytes)) {
+        free(stream);
+        return SVG_XML_STREAM_FAILED;
+    }
+    s->tag_tokens = malloc(scratch_bytes);
+    if (s->tag_tokens == NULL) {
+        free(stream);
+        return SVG_XML_STREAM_FAILED;
+    }
+    s->input = input;
+    s->options = svg_xml_default_options();
+    s->options.limits.input_bytes = 1024U * 1024U * 1024U;
+    s->result.diagnostic.category = SVG_XML_ERROR_NONE;
+    s->visitor = visitor;
+    s->visitor_context = visitor_context;
+    s->cancel_check = canceled;
+    s->cancel_context = cancel_context;
+    if (starts(s, 0U, "\xef\xbb\xbf", 3U)) s->cursor = 3U;
+    *out_stream = stream;
+    return SVG_XML_STREAM_OK;
+}
+
+size_t svg_xml_token_stream_visitor_storage_bytes(const svg_xml_token_stream *stream)
+{
+    if (stream == NULL || stream->scanner.visitor == NULL) return 0U;
+    return stream->scanner.tag_token_capacity * sizeof(*stream->scanner.tag_tokens);
+}
+
+bool svg_xml_token_stream_take(svg_xml_token_stream *stream, svg_xml_token **out_tokens,
+                               size_t *out_token_count)
+{
+    if (out_tokens == NULL || out_token_count == NULL) return false;
+    *out_tokens = NULL;
+    *out_token_count = 0U;
+    if (stream == NULL || stream->scanner.visitor != NULL ||
+        !stream->scanner.stream_complete) return false;
+    *out_tokens = stream->scanner.tokens;
+    *out_token_count = stream->scanner.result.token_count;
+    stream->scanner.tokens = NULL;
+    stream->scanner.capacity = 0U;
+    stream->scanner.owns_tokens = false;
+    return true;
+}
+
+void svg_xml_token_stream_destroy(svg_xml_token_stream *stream)
+{
+    if (stream == NULL) return;
+    if (stream->scanner.owns_tokens) free(stream->scanner.tokens);
+    free(stream->scanner.tag_tokens);
+    free(stream);
 }

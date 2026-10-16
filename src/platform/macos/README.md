@@ -86,3 +86,13 @@ a queued task is discarded, and never while the queue mutex is held. Failed
 submissions do not call cleanup. Queue slots are released under the mutex
 before cleanup runs, so cleanup can safely release snapshots or update module
 accounting without extending the queue critical section.
+
+`platform_recovery_store.m` resolves an existing native-project path through
+`realpath`, hashes its canonical filesystem representation with CommonCrypto
+SHA-256, and returns a `.vxrecover` path below the current user's
+`~/Library/Application Support/Vexel/Recovery`. Tests can provide an isolated
+Application Support root. The `Vexel` and `Recovery` directories are created
+with mode 0700 and opened without following symlinks; existing components must
+belong to the current user and have no group/other permissions. This module
+chooses a location only; background snapshots and restart recovery remain app
+integration work.

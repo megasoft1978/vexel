@@ -32,6 +32,12 @@ elliptical corners. Curves are flattened with a transformed 0.25-unit tolerance
 and a recursion cap of 16. Paths are limited to 65,536 commands and documents
 to 262,144 edges.
 
+Path operands may be separated by whitespace, commas, an explicit sign, or an
+adjacent decimal point when the previous numeric token has already ended; for
+example, `M-.4.6` means the points `(-0.4, 0.6)`. The decoder retains the exact
+source and each numeric literal's original byte span instead of normalizing the
+path text.
+
 Transforms include matrix, translate, scale, rotate (including a center point),
 `skewX`, and `skewY`. The paint CSS cascade covers fill/stroke rules, color and
 opacity properties, visibility, display, clips, and gradient stops. The shared
@@ -96,6 +102,11 @@ subtree AABB. Nested clip declarations inside clip geometry and external
 references fail closed. Raster work, clip geometry, stylesheet data, and
 references retain their fixed budgets; unsupported XML/CSS semantics return
 stable diagnostics rather than dropping source or fetching resources.
+Local `<clipPath>` definitions are skipped as non-rendering content wherever
+they appear in the SVG tree, while remaining available for local reference
+resolution when nested outside `<defs>`. The inherited SVG `clip-rule` property
+is applied to geometry inside the referenced clip path through the supported
+CSS cascade; it does not inherit from the drawable that references the clip.
 
 The deterministic scalar 4×4 rasterizer is compared with librsvg using small
 fixtures. Text uses structural, ink-bound, and ink-area tolerances because
@@ -118,6 +129,19 @@ start, mid, and end positions work on paths, lines, polylines, and polygons;
 `auto-start-reverse`, numeric orientation, reference points, and marker viewBox
 mapping are included.
 
+Local linear and radial gradients are supported on fills and strokes, including
+gradient stop opacity and stroke opacity. Gradient strokes use the same
+document-space center sampling as gradient fills; unresolved and unsupported
+paint-server references fail with a source diagnostic.
+
+Default solid fills and strokes do not allocate a full paint-server record per
+shape; the decoder keeps compact per-shape indices and stores only non-default
+fill and stroke paints. Dash descriptors store an offset/count, and values are
+kept in a bounded document array only for strokes that specify a dash pattern;
+the per-pattern maximum remains 16 values. The shape-count ceiling remains
+65,536; remaining large-document metadata costs and process RSS still require
+measurement.
+
 Filters support bounded `feGaussianBlur`, `feOffset`, `feFlood`, `feBlend`,
 `feComposite`, `feMerge`, `feColorMatrix`, and `feDropShadow` chains. Filter
 and primitive units, regions, named results, `SourceGraphic`, `SourceAlpha`,
@@ -130,7 +154,7 @@ the first supported `systemLanguage` child; the default language is `en`, and
 pass-through container. Existing `<symbol>` viewBox traversal also accepts
 the W5 paint properties.
 
-The CSS cascade recognizes 38 properties, including W5 effects, markers,
+The CSS cascade recognizes 39 properties, including W5 effects, markers,
 masking, blending, paint order, shape rendering, and vector effects. Crisp-edge
 rendering uses the deterministic center sample. Non-scaling strokes currently
 support uniform affine and viewport scales. `stroke-linejoin: arcs` and

@@ -196,8 +196,12 @@ static bool image_geometry(svg_shape_builder *builder, void *opaque)
 
     if (values[2] == 0.0 || values[3] == 0.0) {
         builder->doc->images[builder->shape_index] = image;
-        builder->doc->paints[builder->shape_index].kind =
-            SVG_SHAPE_PAINT_IMAGE;
+        if (!svg_shape_ensure_fill_paint(builder, builder->shape_index,
+                tokens[element].name.offset)) return false;
+        svg_shape_paint *paint = svg_shape_paint_for_shape_mutable(
+            builder->doc, builder->shape_index);
+        if (paint == NULL) return false;
+        paint->kind = SVG_SHAPE_PAINT_IMAGE;
         return true;
     }
     svg_xml_span href = {0};
@@ -288,7 +292,12 @@ static bool image_geometry(svg_shape_builder *builder, void *opaque)
             (image.height - image.draw_height) * aspect.align_y;
     }
     builder->doc->images[builder->shape_index] = image;
-    builder->doc->paints[builder->shape_index].kind = SVG_SHAPE_PAINT_IMAGE;
+    if (!svg_shape_ensure_fill_paint(builder, builder->shape_index,
+            tokens[element].name.offset)) return false;
+    svg_shape_paint *paint = svg_shape_paint_for_shape_mutable(
+        builder->doc, builder->shape_index);
+    if (paint == NULL) return false;
+    paint->kind = SVG_SHAPE_PAINT_IMAGE;
     return true;
 }
 

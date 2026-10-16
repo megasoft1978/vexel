@@ -50,89 +50,6 @@ static bool text_attribute(base_bytes source, const svg_xml_token *tokens,
     return false;
 }
 
-static bool append_utf8(uint32_t codepoint, uint8_t *out, size_t capacity,
-                        size_t *length)
-{
-    uint8_t bytes[4];
-    size_t count;
-    if (codepoint <= 0x7FU) {
-        bytes[0] = (uint8_t)codepoint; count = 1U;
-    } else if (codepoint <= 0x7FFU) {
-        bytes[0] = (uint8_t)(0xC0U | (codepoint >> 6U));
-        bytes[1] = (uint8_t)(0x80U | (codepoint & 0x3FU)); count = 2U;
-    } else if (codepoint <= 0xFFFFU &&
-               !(codepoint >= 0xD800U && codepoint <= 0xDFFFU)) {
-        bytes[0] = (uint8_t)(0xE0U | (codepoint >> 12U));
-        bytes[1] = (uint8_t)(0x80U | ((codepoint >> 6U) & 0x3FU));
-        bytes[2] = (uint8_t)(0x80U | (codepoint & 0x3FU)); count = 3U;
-    } else if (codepoint <= 0x10FFFFU) {
-        bytes[0] = (uint8_t)(0xF0U | (codepoint >> 18U));
-        bytes[1] = (uint8_t)(0x80U | ((codepoint >> 12U) & 0x3FU));
-        bytes[2] = (uint8_t)(0x80U | ((codepoint >> 6U) & 0x3FU));
-        bytes[3] = (uint8_t)(0x80U | (codepoint & 0x3FU)); count = 4U;
-    } else return false;
-    if (count > capacity - *length) return false;
-    memcpy(out + *length, bytes, count);
-    *length += count;
-    return true;
-}
-
-static bool decode_entity(base_bytes source, size_t *cursor, size_t end,
-                          uint8_t *out, size_t capacity, size_t *length,
-                          size_t *error_offset)
-{
-    size_t start = *cursor;
-    size_t semicolon = start + 1U;
-    while (semicolon < end && semicolon - start <= 16U &&
-           source.ptr[semicolon] != ';') semicolon++;
-    if (semicolon >= end || semicolon - start > 16U ||
-        source.ptr[semicolon] != ';') {
-        *error_offset = start;
-        return false;
-    }
-    size_t body = start + 1U;
-    size_t body_length = semicolon - body;
-    uint32_t codepoint = 0U;
-    if (body_length == 3U && memcmp(source.ptr + body, "amp", 3U) == 0)
-        codepoint = '&';
-    else if (body_length == 2U && memcmp(source.ptr + body, "lt", 2U) == 0)
-        codepoint = '<';
-    else if (body_length == 2U && memcmp(source.ptr + body, "gt", 2U) == 0)
-        codepoint = '>';
-    else if (body_length == 4U && memcmp(source.ptr + body, "quot", 4U) == 0)
-        codepoint = '"';
-    else if (body_length == 4U && memcmp(source.ptr + body, "apos", 4U) == 0)
-        codepoint = '\'';
-    else if (body_length >= 2U && source.ptr[body] == '#') {
-        size_t i = body + 1U;
-        unsigned radix = 10U;
-        if (i < semicolon && (source.ptr[i] == 'x' || source.ptr[i] == 'X')) {
-            radix = 16U; i++;
-        }
-        if (i == semicolon) { *error_offset = start; return false; }
-        for (; i < semicolon; ++i) {
-            uint8_t byte = source.ptr[i];
-            unsigned digit;
-            if (byte >= '0' && byte <= '9') digit = (unsigned)(byte - '0');
-            else if (radix == 16U && byte >= 'a' && byte <= 'f')
-                digit = (unsigned)(byte - 'a') + 10U;
-            else if (radix == 16U && byte >= 'A' && byte <= 'F')
-                digit = (unsigned)(byte - 'A') + 10U;
-            else { *error_offset = start; return false; }
-            if (codepoint > (0x10FFFFU - digit) / radix) {
-                *error_offset = start; return false;
-            }
-            codepoint = codepoint * radix + digit;
-        }
-    } else { *error_offset = start; return false; }
-    if (!append_utf8(codepoint, out, capacity, length)) {
-        *error_offset = start;
-        return false;
-    }
-    *cursor = semicolon + 1U;
-    return true;
-}
-
 static bool normalize_text(base_bytes source, svg_xml_span raw,
                            bool preserve, svg_shape_text_state *state,
                            uint8_t **out_bytes, size_t *out_length,
@@ -145,18 +62,12 @@ static bool normalize_text(base_bytes source, svg_xml_span raw,
     uint8_t *decoded = svg_shape_malloc(raw.length == 0U ? 1U : raw.length);
     if (decoded == NULL) return false;
     size_t decoded_length = 0U;
-    size_t cursor = raw.offset;
-    size_t end = raw.offset + raw.length;
-    while (cursor < end) {
-        if (source.ptr[cursor] == '&') {
-            if (!decode_entity(source, &cursor, end, decoded, raw.length,
-                               &decoded_length, error_offset)) {
-                svg_shape_free(decoded);
-                return false;
-            }
-        } else {
-            decoded[decoded_length++] = source.ptr[cursor++];
-        }
+    size_t decode_error = 0U;
+    if (!svg_xml_decode_attribute_value(source, raw, decoded, raw.length,
+                                        &decoded_length, &decode_error)) {
+        *error_offset = raw.offset + decode_error;
+        svg_shape_free(decoded);
+        return false;
     }
     if (preserve) {
         if (decoded_length != 0U) state->has_position = true;

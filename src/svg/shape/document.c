@@ -1,4 +1,5 @@
 #include "shape.h"
+#include "../paint/paint.h"
 #include "shape_internal.h"
 
 #include "../clip/clip.h"
@@ -98,10 +99,65 @@ void svg_shape_document_destroy(svg_shape_document *document)
     svg_shape_free(document->shape_stroke_inverse);
     svg_shape_free(document->strokes);
     svg_shape_free(document->paints);
+    svg_shape_free(document->paint_indices_by_shape);
     svg_shape_free(document->stroke_paints);
+    svg_shape_free(document->stroke_paint_indices_by_shape);
+    svg_shape_free(document->stroke_dash_values);
     svg_shape_free(document->paint_stops);
     svg_shape_free(document->clips);
     *document = (svg_shape_document){0};
+}
+
+const svg_shape_paint *svg_shape_paint_for_shape(
+    const svg_shape_document *document, size_t shape_index)
+{
+    if (document == NULL || shape_index >= document->shape_count ||
+        document->paint_indices_by_shape == NULL || document->paints == NULL)
+        return NULL;
+    uint32_t stored = document->paint_indices_by_shape[shape_index];
+    if (stored == 0U || (size_t)(stored - 1U) >= document->paint_count)
+        return NULL;
+    return &document->paints[stored - 1U];
+}
+
+svg_shape_paint *svg_shape_paint_for_shape_mutable(
+    svg_shape_document *document, size_t shape_index)
+{
+    return (svg_shape_paint *)svg_shape_paint_for_shape(document, shape_index);
+}
+
+const svg_shape_paint *svg_shape_stroke_paint_for_shape(
+    const svg_shape_document *document, size_t shape_index)
+{
+    if (document == NULL || shape_index >= document->shape_count ||
+        document->stroke_paint_indices_by_shape == NULL ||
+        document->stroke_paints == NULL)
+        return NULL;
+    uint32_t stored = document->stroke_paint_indices_by_shape[shape_index];
+    if (stored == 0U || (size_t)(stored - 1U) >= document->stroke_paint_count)
+        return NULL;
+    return &document->stroke_paints[stored - 1U];
+}
+
+svg_shape_paint *svg_shape_stroke_paint_for_shape_mutable(
+    svg_shape_document *document, size_t shape_index)
+{
+    return (svg_shape_paint *)svg_shape_stroke_paint_for_shape(
+        document, shape_index);
+}
+
+const double *svg_shape_stroke_dash_values_for_shape(
+    const svg_shape_document *document, size_t shape_index)
+{
+    if (document == NULL || shape_index >= document->shape_count ||
+        document->strokes == NULL) return NULL;
+    const svg_shape_stroke *stroke = &document->strokes[shape_index];
+    if (stroke->dash_count == 0U ||
+        stroke->dash_value_start > document->stroke_dash_value_count ||
+        stroke->dash_count > document->stroke_dash_value_count -
+            stroke->dash_value_start || document->stroke_dash_values == NULL)
+        return NULL;
+    return &document->stroke_dash_values[stroke->dash_value_start];
 }
 
 const char *svg_shape_error_name(svg_shape_error error)

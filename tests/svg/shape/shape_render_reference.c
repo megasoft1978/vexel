@@ -47,16 +47,19 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
             if (!checked_mul_size(count, 2U, &cost) ||
                 stroke->dash_count > SVG_SHAPE_MAX_DASH_VALUES) return false;
             if (stroke->dash_count > 0U) {
+                const double *dash_values =
+                    svg_shape_stroke_dash_values_for_shape(doc, shape);
+                if (dash_values == NULL) return false;
                 size_t expanded = stroke->dash_count +
                     (stroke->dash_count & 1U ? stroke->dash_count : 0U);
                 size_t pattern_work;
                 if (!checked_mul_size(expanded, 2U, &pattern_work) ||
                     !checked_add_size(cost, pattern_work, &cost)) return false;
-                double min_dash = stroke->dash[0];
+                double min_dash = dash_values[0];
                 for (size_t d = 0U; d < stroke->dash_count; d++) {
-                    if (!isfinite(stroke->dash[d]) || stroke->dash[d] <= 0.0)
+                    if (!isfinite(dash_values[d]) || dash_values[d] <= 0.0)
                         return false;
-                    if (stroke->dash[d] < min_dash) min_dash = stroke->dash[d];
+                    if (dash_values[d] < min_dash) min_dash = dash_values[d];
                 }
                 size_t first = doc->shape_edge_start[shape];
                 for (size_t edge = 0U; edge < count; edge++) {
@@ -82,15 +85,19 @@ static bool render_work_is_bounded(const svg_shape_document *doc)
             !checked_add_size(auxiliary_per_sample,
                               svg_clip_work_units(doc->clips[shape]),
                               &auxiliary_per_sample)) return false;
-        if (doc->paints != NULL &&
-            doc->paints[shape].kind != SVG_SHAPE_PAINT_SOLID &&
+        const svg_shape_paint *fill_paint =
+            svg_shape_paint_for_shape(doc, shape);
+        if (fill_paint != NULL &&
+            fill_paint->kind != SVG_SHAPE_PAINT_SOLID &&
             !checked_add_size(auxiliary_per_sample,
-                              doc->paints[shape].stop_count +
-                                  (doc->paints[shape].kind ==
+                              fill_paint->stop_count +
+                                  (fill_paint->kind ==
                                        SVG_SHAPE_PAINT_PATTERN ? 4U : 0U),
                               &auxiliary_per_sample)) return false;
-        if (doc->stroke_paints != NULL &&
-            doc->stroke_paints[shape].kind == SVG_SHAPE_PAINT_PATTERN &&
+        const svg_shape_paint *stroke_paint =
+            svg_shape_stroke_paint_for_shape(doc, shape);
+        if (stroke_paint != NULL &&
+            stroke_paint->kind == SVG_SHAPE_PAINT_PATTERN &&
             !checked_add_size(auxiliary_per_sample, 4U,
                               &auxiliary_per_sample)) return false;
     }

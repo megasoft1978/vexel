@@ -158,6 +158,10 @@ bool svg_shape_builder_add_custom_element(
     geom_affine transform, svg_shape_custom_geometry_fn geometry,
     void *geometry_context);
 bool svg_shape_builder_begin_shape(svg_shape_builder *builder, bool evenodd);
+bool svg_shape_ensure_stroke_paint(svg_shape_builder *builder,
+                                   size_t shape_index, size_t error_offset);
+bool svg_shape_ensure_fill_paint(svg_shape_builder *builder,
+                                 size_t shape_index, size_t error_offset);
 bool svg_shape_builder_add_edge(svg_shape_builder *builder,
                                 geom_point from, geom_point to);
 bool svg_shape_builder_add_curve(svg_shape_builder *builder,
@@ -195,10 +199,10 @@ bool svg_shape_parse_style_color(base_bytes source, svg_xml_span value,
 bool svg_shape_parse_opacity(base_bytes source, svg_xml_span value,
                              double *out);
 void svg_shape_multiply_alpha(uint8_t rgba[4], double opacity);
-bool svg_shape_parse_stroke(base_bytes source, svg_shape_stroke *stroke,
+bool svg_shape_parse_stroke(svg_shape_builder *builder,
+                            base_bytes source, svg_shape_stroke *stroke,
                             const svg_css_paint *paint,
-                            double percentage_reference,
-                            svg_shape_diagnostic *diagnostic);
+                            double percentage_reference);
 bool svg_shape_apply_vector_effect(base_bytes source,
                                    const svg_css_paint *style,
                                    geom_affine transform,

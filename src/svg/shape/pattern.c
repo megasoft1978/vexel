@@ -605,32 +605,29 @@ bool svg_shape_pattern_resolve(svg_shape_builder *builder, base_bytes source,
         return false;
     }
     if (stroke_paint) {
-        if (builder->doc->stroke_paints == NULL) {
-            size_t capacity = builder->shape_capacity;
-            if (capacity == 0U || capacity > SIZE_MAX /
-                    sizeof(*builder->doc->stroke_paints)) {
-                fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, fill.offset);
-                return false;
-            }
-            builder->doc->stroke_paints = svg_shape_calloc(
-                capacity, sizeof(*builder->doc->stroke_paints));
-            if (builder->doc->stroke_paints == NULL) {
-                fail(traversal->diagnostic, SVG_SHAPE_ERROR_OOM, fill.offset);
-                return false;
-            }
-            builder->doc->stroke_paint_capacity = capacity;
-        }
-        if (shape_index >= builder->doc->stroke_paint_capacity) {
+        if (!svg_shape_ensure_stroke_paint(builder, shape_index, fill.offset))
+            return false;
+        svg_shape_paint *paint = svg_shape_stroke_paint_for_shape_mutable(
+            builder->doc, shape_index);
+        if (paint == NULL) {
             fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, fill.offset);
             return false;
         }
-        builder->doc->stroke_paints[shape_index] = (svg_shape_paint){
+        *paint = (svg_shape_paint){
             .kind = SVG_SHAPE_PAINT_PATTERN,
             .pattern_index = pattern_index,
             .pattern_inverse = pattern_inverse_pixels,
             .pattern_opacity = opacity};
     } else {
-        builder->doc->paints[shape_index] = (svg_shape_paint){
+        if (!svg_shape_ensure_fill_paint(builder, shape_index, fill.offset))
+            return false;
+        svg_shape_paint *paint = svg_shape_paint_for_shape_mutable(
+            builder->doc, shape_index);
+        if (paint == NULL) {
+            fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, fill.offset);
+            return false;
+        }
+        *paint = (svg_shape_paint){
             .kind = SVG_SHAPE_PAINT_PATTERN,
             .pattern_index = pattern_index,
             .pattern_inverse = pattern_inverse_pixels,

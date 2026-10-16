@@ -24,6 +24,11 @@ typedef struct xml_scanner {
     base_bytes input;
     svg_xml_options options;
     svg_xml_token *tokens;
+    svg_xml_token *tag_tokens;
+    size_t tag_token_count;
+    size_t tag_token_capacity;
+    svg_xml_token_visitor_fn visitor;
+    void *visitor_context;
     size_t capacity;
     svg_xml_result result;
     size_t cursor;
@@ -136,6 +141,14 @@ static bool emit(xml_scanner *s, svg_xml_token token, size_t at)
         fail(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, at);
         return false;
     }
+    if (s->visitor != NULL) {
+        if (!s->visitor(s->visitor_context, &token)) {
+            s->canceled = true;
+            return false;
+        }
+        s->result.token_count = next;
+        return true;
+    }
     if (next > s->capacity && s->owns_tokens) {
         size_t capacity = s->capacity == 0U ? 256U : s->capacity;
         while (capacity < next) {
@@ -164,6 +177,34 @@ static bool emit(xml_scanner *s, svg_xml_token token, size_t at)
     }
     s->tokens[s->result.token_count] = token;
     s->result.token_count = next;
+    return true;
+}
+
+static bool stage_tag_token(xml_scanner *s, svg_xml_token token, size_t at)
+{
+    if (s->visitor == NULL) return emit(s, token, at);
+    size_t next = 0U;
+    if (s->tag_token_count >= s->tag_token_capacity ||
+        !add_size(s->result.token_count, 1U, &next)) {
+        fail(s, SVG_XML_ERROR_OUTPUT_EXHAUSTED, at);
+        return false;
+    }
+    s->tag_tokens[s->tag_token_count++] = token;
+    s->result.token_count = next;
+    return true;
+}
+
+static bool flush_tag_tokens(xml_scanner *s, size_t at)
+{
+    if (s->visitor == NULL) return true;
+    for (size_t i = 0U; i < s->tag_token_count; ++i) {
+        if (!s->visitor(s->visitor_context, &s->tag_tokens[i])) {
+            s->canceled = true;
+            return false;
+        }
+    }
+    s->tag_token_count = 0U;
+    (void)at;
     return true;
 }
 
@@ -738,28 +779,6 @@ svg_xml_result svg_xml_token_stream_result(const svg_xml_token_stream *stream)
 size_t svg_xml_token_stream_bytes_read(const svg_xml_token_stream *stream)
 {
     return stream == NULL ? 0U : stream_frontier(&stream->scanner);
-}
-
-bool svg_xml_token_stream_take(svg_xml_token_stream *stream, svg_xml_token **out_tokens,
-                               size_t *out_token_count)
-{
-    if (out_tokens == NULL || out_token_count == NULL) return false;
-    *out_tokens = NULL;
-    *out_token_count = 0U;
-    if (stream == NULL || !stream->scanner.stream_complete) return false;
-    *out_tokens = stream->scanner.tokens;
-    *out_token_count = stream->scanner.result.token_count;
-    stream->scanner.tokens = NULL;
-    stream->scanner.capacity = 0U;
-    stream->scanner.owns_tokens = false;
-    return true;
-}
-
-void svg_xml_token_stream_destroy(svg_xml_token_stream *stream)
-{
-    if (stream == NULL) return;
-    if (stream->scanner.owns_tokens) free(stream->scanner.tokens);
-    free(stream);
 }
 
 svg_xml_result svg_xml_tokenizer_run(base_bytes input, svg_xml_options options,

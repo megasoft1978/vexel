@@ -83,6 +83,36 @@ static const mcp_tool_schema tools[] = {
     {"animation_remove", "Remove one animation track through the edit engine.",
      "{\"documentId\":{\"type\":\"string\"},\"animationId\":{\"type\":\"string\"}}",
      "documentId,animationId", "documentId:string;animationId:string"},
+    {"native_timeline_get", "Read the active native-v1 project's timing, tracks, and drawing cels.",
+     "{\"documentId\":{\"type\":\"string\"}}", "documentId", "documentId:string"},
+    {"native_timeline_add_track", "Add an undoable drawing track to the active native-v1 project.",
+     "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"targetId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"assetName\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"name\":{\"type\":\"string\",\"maxLength\":256}}",
+     "documentId,trackId,targetId,assetName", "documentId:string;trackId:string;targetId:string;assetName:string;name:string"},
+    {"native_timeline_add_drawing_asset", "Add a validated vector drawing asset to the active native-v1 project for use by drawing tracks and cels.",
+     "{\"documentId\":{\"type\":\"string\"},\"assetName\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"svg\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":1048576}}",
+     "documentId,assetName,svg", "documentId:string;assetName:string;svg:string"},
+    {"native_timeline_add_property_track", "Create an undoable native property track with its initial tick-zero value.",
+     "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"targetId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"property\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"valueType\":{\"type\":\"string\",\"enum\":[\"scalar\",\"rgba\",\"transform2d\",\"boolean\"]},\"interpolation\":{\"type\":\"string\",\"enum\":[\"step\",\"linear\",\"cubic\"]},\"value\":{\"type\":[\"number\",\"boolean\",\"array\"]},\"name\":{\"type\":\"string\",\"maxLength\":256}}",
+     "documentId,trackId,targetId,property,valueType,interpolation,value", "documentId:string;trackId:string;targetId:string;property:string;valueType:string;interpolation:string;value:number|boolean|array;name:string"},
+    {"native_timeline_set_loop", "Set the active native-v1 project's undoable playback mode.",
+     "{\"documentId\":{\"type\":\"string\"},\"mode\":{\"type\":\"string\",\"enum\":[\"once\",\"loop\",\"ping_pong\"]}}",
+     "documentId,mode", "documentId:string;mode:string"},
+    {"native_timeline_set_property_key", "Set or replace one undoable native property key at an integer tick.",
+     "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"value\":{\"type\":[\"number\",\"boolean\",\"array\"]}}",
+     "documentId,trackId,tick,value", "documentId:string;trackId:string;tick:integer;value:number|boolean|array"},
+    {"native_timeline_set_cel", "Set an undoable drawing exposure at a timeline tick.",
+     "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"assetName\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"label\":{\"type\":\"string\",\"maxLength\":256}}",
+     "documentId,trackId,tick,assetName", "documentId:string;trackId:string;tick:integer;assetName:string;label:string"},
+    {"native_timeline_remove_cel", "Remove an undoable drawing exposure from a timeline tick.",
+     "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"tick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}",
+     "documentId,trackId,tick", "documentId:string;trackId:string;tick:integer"},
+    {"native_timeline_move_item", "Move an existing native drawing cel or property key to another integer tick.",
+     "{\"documentId\":{\"type\":\"string\"},\"trackId\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":256},\"fromTick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295},\"toTick\":{\"type\":\"integer\",\"minimum\":0,\"maximum\":4294967295}}",
+     "documentId,trackId,fromTick,toTick", "documentId:string;trackId:string;fromTick:integer;toTick:integer"},
+    {"native_timeline_undo", "Undo the latest native timeline edit in the active project.",
+     "{\"documentId\":{\"type\":\"string\"}}", "documentId", "documentId:string"},
+    {"native_timeline_redo", "Redo the next native timeline edit in the active project.",
+     "{\"documentId\":{\"type\":\"string\"}}", "documentId", "documentId:string"},
     {"export_animation", "Export a bounded animation as a GIF or PNG frame sequence inside a granted directory.",
      "{\"documentId\":{\"type\":\"string\"},\"path\":{\"type\":\"string\"},\"format\":{\"type\":\"string\",\"enum\":[\"gif\",\"frames\"]},\"fps\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":30},\"duration\":{\"type\":\"number\",\"minimum\":0.01,\"maximum\":3600}}",
      "documentId,path,format,fps,duration", "documentId:string;path:string;format:string;fps:integer;duration:number"},
@@ -154,7 +184,7 @@ static const char *field_type(const char *fields, const char *key)
     return NULL;
 }
 
-static bool type_is(const mcp_json_doc *doc, size_t token, const char *type)
+static bool type_is_one(const mcp_json_doc *doc, size_t token, const char *type)
 {
     if (token >= doc->token_count) return false;
     mcp_json_type actual = doc->tokens[token].type;
@@ -166,6 +196,23 @@ static bool type_is(const mcp_json_doc *doc, size_t token, const char *type)
     if (strcmp(type, "integer") == 0) {
         uint64_t number = 0U;
         return actual == MCP_JSON_NUMBER && mcp_json_uint(doc, token, &number);
+    }
+    return false;
+}
+
+static bool type_is(const mcp_json_doc *doc, size_t token, const char *types)
+{
+    const char *cursor = types;
+    while (*cursor != '\0') {
+        const char *end = strchr(cursor, '|');
+        size_t length = end == NULL ? strlen(cursor) : (size_t)(end - cursor);
+        char type[24];
+        if (length == 0U || length >= sizeof(type)) return false;
+        memcpy(type, cursor, length);
+        type[length] = '\0';
+        if (type_is_one(doc, token, type)) return true;
+        if (end == NULL) break;
+        cursor = end + 1;
     }
     return false;
 }
@@ -195,13 +242,26 @@ bool mcp_tool_validate(const mcp_json_doc *doc, size_t arguments,
             return false;
         }
         size_t expected_length = strcspn(expected, ";");
-        char expected_type[16];
+        char expected_type[32];
         if (expected_length == 0U || expected_length >= sizeof(expected_type)) return false;
         memcpy(expected_type, expected, expected_length);
         expected_type[expected_length] = '\0';
         if (!type_is(doc, value, expected_type)) {
             if (out_error != NULL) *out_error = "argument has the wrong type";
             return false;
+        }
+        if (strcmp(tool_name, "native_timeline_set_loop") == 0 &&
+            strcmp(key_buffer, "mode") == 0) {
+            char mode[32];
+            size_t mode_length = 0U;
+            if (!mcp_json_string_copy(doc, value, mode, sizeof(mode),
+                    &mode_length) ||
+                !((mode_length == 4U && memcmp(mode, "once", 4U) == 0) ||
+                  (mode_length == 4U && memcmp(mode, "loop", 4U) == 0) ||
+                  (mode_length == 9U && memcmp(mode, "ping_pong", 9U) == 0))) {
+                if (out_error != NULL) *out_error = "mode is not a supported native loop value";
+                return false;
+            }
         }
         if ((strcmp(tool_name, "element_add") == 0 && strcmp(key_buffer, "attributes") == 0) ||
             (strcmp(tool_name, "transaction") == 0 && strcmp(key_buffer, "edits") == 0)) {

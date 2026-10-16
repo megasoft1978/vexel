@@ -280,6 +280,7 @@ document_edit_error document_edit_commit_replace(document_edit *edit,
 
     bool coalesce = coalescible_attribute && edit->command_cursor == edit->command_count &&
         edit->command_count > 0U &&
+        edit->saved_state_id != edit->state_id &&
         edit->commands[edit->command_count - 1U].coalescible_attribute &&
         edit->commands[edit->command_count - 1U].target_slot == target_slot &&
         edit->commands[edit->command_count - 1U].offset == offset;

@@ -49,6 +49,12 @@ can be inserted into self-closing elements and cleared again through the same
 undoable operation. `document_edit_insert_xml_fragment` accepts one top-level
 element in a well-formed fragment up to 64 KiB; it validates the containing
 parent before committing and returns a fresh handle for the inserted element.
+New SVG graphics roots without an `id` receive the next available
+`vexel-object-N` identifier in that same undoable edit. Existing IDs in the
+document are skipped; a supplied ID is preserved when unique and rejected
+with `duplicate_id` when it would make lookup ambiguous. Definitions and
+metadata are not assigned IDs. Undo and redo remove and restore the generated
+identifier with the element.
 
 The command log defaults to 1,000 commands and 64 MiB of before/after command
 bytes. Consecutive sets of the same attribute coalesce. A successful edit,
@@ -72,4 +78,18 @@ a bounded child region with one validated fragment in one command, and
 complete resulting XML. The latter keeps path node edits limited to their
 retained numeric tokens. `document_edit_insert_text_element` escapes attribute
 values and text, validates the resulting element in its parent context, and
-inserts it as one undoable command.
+inserts it as one undoable command, including a generated ID when the caller
+does not supply one.
+
+## Immutable edit snapshots
+
+`document_edit_snapshot` copies the current piece descriptors and retains their
+immutable inserted-byte blobs; it does not materialize the full SVG during
+snapshot creation. A worker can materialize the snapshot while the owning edit
+model continues to accept edits, undo, and redo. The snapshot borrows the
+original source buffer and the edit model for blob accounting, so both must
+remain alive until the snapshot is destroyed. In Vexel, the app's single worker
+job lifecycle provides that ordering. Snapshot creation cost scales with the
+number of piece descriptors; document-byte copying occurs only on the worker
+when materialization is requested. Native recovery scheduling and project
+bundle composition are later application work.

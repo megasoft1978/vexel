@@ -20,10 +20,17 @@ typedef enum platform_unsaved_choice {
     PLATFORM_UNSAVED_CANCEL = 2
 } platform_unsaved_choice;
 
+typedef enum platform_recovery_choice {
+    PLATFORM_RECOVERY_ERROR = -1,
+    PLATFORM_RECOVERY_RESTORE = 0,
+    PLATFORM_RECOVERY_DISCARD = 1,
+    PLATFORM_RECOVERY_CANCEL = 2
+} platform_recovery_choice;
+
 /* Main-thread-only. On accept, out_path is a NUL-terminated UTF-8 path and
- * out_path_length excludes the terminator. The suggested filename is made to
- * end in .svg before the panel is shown. */
-platform_dialog_status platform_dialog_save_svg(const char *suggested_name_utf8,
+ * out_path_length excludes the terminator. The suggested name must use .svg or
+ * .vexel; extensionless names receive .svg. */
+platform_dialog_status platform_dialog_save_document(const char *suggested_name_utf8,
     size_t suggested_name_length, char *out_path, size_t out_path_capacity,
     size_t *out_path_length);
 platform_dialog_status platform_dialog_save_png(const char *suggested_name_utf8,
@@ -36,6 +43,12 @@ platform_unsaved_choice platform_dialog_unsaved_changes(
     const char *title_utf8, size_t title_length,
     const char *message_utf8, size_t message_length);
 
+/* Main-thread-only. Conflict choices restore the recovered project as unsaved
+ * work while leaving the changed source untouched. */
+platform_recovery_choice platform_dialog_recovery_choice(
+    const char *title_utf8, size_t title_length,
+    const char *message_utf8, size_t message_length, bool conflict);
+
 /* Main-thread-only. Returns false for invalid input or a call from another
  * thread; true once the alert has been dismissed. */
 bool platform_dialog_show_error(const char *title_utf8, size_t title_length,
@@ -44,7 +57,7 @@ bool platform_dialog_show_error(const char *title_utf8, size_t title_length,
 #if defined(PLATFORM_DIALOG_TESTING)
 typedef struct platform_dialog_test_hooks {
     void *context;
-    platform_dialog_status (*save_svg)(void *context,
+    platform_dialog_status (*save_document)(void *context,
         const char *suggested_name_utf8, size_t suggested_name_length,
         char *out_path, size_t out_path_capacity, size_t *out_path_length);
     platform_dialog_status (*save_png)(void *context,
@@ -54,6 +67,9 @@ typedef struct platform_dialog_test_hooks {
     platform_unsaved_choice (*unsaved_changes)(void *context,
         const char *title_utf8, size_t title_length,
         const char *message_utf8, size_t message_length);
+    platform_recovery_choice (*recovery_choice)(void *context,
+        const char *title_utf8, size_t title_length,
+        const char *message_utf8, size_t message_length, bool conflict);
     bool (*show_error)(void *context, const char *title_utf8,
         size_t title_length, const char *message_utf8, size_t message_length);
 } platform_dialog_test_hooks;

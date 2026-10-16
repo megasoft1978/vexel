@@ -22,8 +22,9 @@ bool platform_path_supported_internal(const char *path, size_t length)
         memchr(path, '\0', length) != NULL) return false;
     NSString *value = [[NSString alloc] initWithBytes:path length:length
         encoding:NSUTF8StringEncoding];
-    return value != nil &&
-        [[value.pathExtension lowercaseString] isEqualToString:@"svg"];
+    NSString *extension = [value.pathExtension lowercaseString];
+    return value != nil && ([extension isEqualToString:@"svg"] ||
+        [extension isEqualToString:@"vexel"]);
 }
 
 static bool startup_append(const char *path, size_t length, platform_event_type type)
@@ -95,7 +96,7 @@ bool platform_queue_test_open_from_environment(void)
     if (length == 0U || length >= PLATFORM_PATH_CAP ||
         !platform_path_supported_internal(path, length)) {
         (void)fprintf(stderr,
-            "platform: VEXEL_TEST_OPEN must be a UTF-8 .svg path shorter than %u bytes\n",
+            "platform: VEXEL_TEST_OPEN must be a UTF-8 .svg or .vexel path shorter than %u bytes\n",
             PLATFORM_PATH_CAP);
         return false;
     }

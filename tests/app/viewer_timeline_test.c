@@ -11,8 +11,7 @@
 
 #define CHECK(expression) do { \
     if (!(expression)) { \
-        (void)fprintf(stderr, "%s:%d: check failed: %s\n", \
-            __FILE__, __LINE__, #expression); \
+        (void)fprintf(stderr, "%s:%d: check failed: %s\n", __FILE__, __LINE__, #expression); \
         return false; \
     } \
 } while (0)
@@ -146,9 +145,17 @@ static bool test_frame_preview_and_bounds(void)
     CHECK(middle != NULL && middle->width == 16U && middle->height == 8U);
     CHECK(middle->rgba[(size_t)2U * middle->width * 4U + 6U * 4U + 3U] == 255U);
     CHECK(middle->rgba[(size_t)2U * middle->width * 4U + 2U * 4U + 3U] == 0U);
+    CHECK(timeline.preview_valid);
+    CHECK(viewer_timeline_prepare_frame(&timeline) == middle);
     CHECK(!viewer_timeline_seek(&timeline, NAN));
     CHECK(!viewer_timeline_seek(&timeline, INFINITY));
     CHECK(fabs(timeline.time_seconds - 1.0) < 1.0e-9);
+    document.width = RASTER_TILE_MAX_AXIS + 1U;
+    CHECK(viewer_timeline_seek(&timeline, 1.5));
+    CHECK(viewer_timeline_prepare_frame(&timeline) == NULL &&
+        !timeline.preview_valid && timeline.preview_failed);
+    CHECK(viewer_timeline_prepare_frame(&timeline) == NULL &&
+        !timeline.preview_valid);
 
     viewer_timeline_destroy(&timeline);
     svg_shape_document_destroy(&document);
@@ -188,6 +195,7 @@ static bool snapshot_has_value_fragment(const ui_semantics_snapshot *snapshot,
     }
     return false;
 }
+
 
 static bool test_accessibility_labels(void)
 {

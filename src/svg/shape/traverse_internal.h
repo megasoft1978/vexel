@@ -60,6 +60,7 @@ typedef struct shape_traversal {
     size_t active_markers[8];
     size_t active_marker_depth;
     size_t marker_instances;
+    size_t marker_style_token_visits;
     size_t element_visits;
     size_t paint_token_visits;
     size_t transform_operations;
@@ -78,11 +79,47 @@ typedef struct shape_traversal {
     double viewport_width;
     double viewport_height;
     svg_shape_ignored_state *ignored; /* shared with nested mask/pattern traversals */
+    svg_xml_cancel_check_fn cancel_check;
+    void *cancel_context;
+    bool canceled;
     bool root_seen;
 } shape_traversal;
 
 void svg_shape_traverse_fail(svg_shape_diagnostic *diagnostic,
                              svg_shape_error category, size_t offset);
+static inline bool svg_shape_traverse_cancelled(shape_traversal *traversal,
+                                                size_t offset)
+{
+    if (traversal->cancel_check == NULL ||
+        !traversal->cancel_check(traversal->cancel_context)) return false;
+    traversal->canceled = true;
+    svg_shape_traverse_fail(traversal->diagnostic, SVG_SHAPE_ERROR_LIMIT, offset);
+    return true;
+}
+static inline bool svg_shape_traverse_matching_end_cancellable(
+    shape_traversal *traversal, size_t element, size_t *out_end)
+{
+    if (traversal->tokens[element].kind == SVG_XML_TOKEN_EMPTY_ELEMENT) {
+        *out_end = element;
+        return true;
+    }
+    *out_end = SIZE_MAX;
+    for (size_t index = element + 1U; index < traversal->token_count; ++index) {
+        if ((index & 255U) == 0U && traversal->cancel_check != NULL &&
+            traversal->cancel_check(traversal->cancel_context)) {
+            traversal->canceled = true;
+            svg_shape_traverse_fail(traversal->diagnostic,
+                SVG_SHAPE_ERROR_LIMIT, traversal->tokens[index].source.offset);
+            return false;
+        }
+        if (traversal->tokens[index].kind == SVG_XML_TOKEN_END_ELEMENT &&
+            traversal->tokens[index].depth == traversal->tokens[element].depth) {
+            *out_end = index;
+            break;
+        }
+    }
+    return true;
+}
 bool svg_shape_traverse_span_eq(base_bytes source, svg_xml_span span,
                                 const char *text);
 bool svg_shape_traverse_attr(base_bytes source, svg_xml_token *tokens,

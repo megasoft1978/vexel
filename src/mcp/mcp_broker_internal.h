@@ -67,7 +67,11 @@ bool mcp_broker_render_png(mcp_broker *broker, mcp_broker_document *document,
 bool mcp_broker_animation_call(mcp_broker *broker, const mcp_json_doc *request,
                                size_t args, const char *tool,
                                mcp_tool_response *out);
-bool mcp_broker_export_animation(mcp_broker_document *document,
+bool mcp_broker_native_timeline_call(mcp_broker *broker,
+    mcp_broker_document *document, const mcp_json_doc *request, size_t args,
+    const char *tool, mcp_tool_response *out);
+bool mcp_broker_export_animation(mcp_broker *broker,
+                                 mcp_broker_document *document,
                                  const mcp_json_doc *request, size_t args,
                                  mcp_tool_response *out);
 bool mcp_broker_documents_call(mcp_broker *broker, const mcp_json_doc *request,

@@ -391,6 +391,10 @@ void viewer_process_event(viewer_app *app, const platform_event *event)
         if (viewer_timeline_take_editor_mutation(&app->timeline))
             viewer_process_editor_result(app,
                 VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED);
+        if (viewer_timeline_take_native_mutation(&app->timeline)) {
+            (void)viewer_set_window_title(app);
+            app->frame_dirty = true;
+        }
         app->frame_dirty = true;
         (void)viewer_sync_canvas_geometry(app, false);
         return;

@@ -188,6 +188,9 @@ void editor_cancel_field(viewer_editor *editor)
 
 uint32_t editor_history(viewer_editor *editor, bool redo)
 {
+    if (editor->history_callback != NULL &&
+        editor->history_callback(editor->history_context, redo, true))
+        return VIEWER_EDITOR_HANDLED | VIEWER_EDITOR_MUTATED;
     size_t old_offset = editor->selected_offset;
     size_t node_anchor = editor->path_node_anchor_segment;
     bool restore_node_anchor = editor->node_edit_active;

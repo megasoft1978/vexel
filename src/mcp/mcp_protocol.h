@@ -2,6 +2,7 @@
 #define VEXEL_MCP_PROTOCOL_H
 
 #include "mcp_json.h"
+#include "mcp_protocol_async.h"
 
 typedef struct mcp_protocol_session {
     char protocol_version[16];
@@ -32,6 +33,10 @@ typedef struct mcp_protocol_backend {
 void mcp_protocol_session_reset(mcp_protocol_session *session);
 bool mcp_protocol_handle(mcp_protocol_session *session, const uint8_t *line,
                          size_t length, const mcp_protocol_backend *backend,
+                         mcp_json_buffer *response);
+bool mcp_protocol_handle_async(mcp_protocol_session *session, const uint8_t *line,
+                         size_t length, const mcp_protocol_backend *backend,
+                         const mcp_protocol_async_backend *async_backend,
                          mcp_json_buffer *response);
 bool mcp_protocol_request_expects_response(const uint8_t *line, size_t length);
 bool mcp_tools_list_json(mcp_json_buffer *out);

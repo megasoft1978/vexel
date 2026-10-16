@@ -3,10 +3,12 @@
 #include "viewer_timeline.h"
 
 #include "raster/shape_render.h"
+#include "project/project_timeline_session.h"
 #include "viewer_anim_edit.h"
 #include "viewer_editor.h"
 #include "viewer_chrome.h"
 
+#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -23,6 +25,29 @@ static double timeline_monotonic_seconds(void)
     struct timespec now;
     if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return 0.0;
     return (double)now.tv_sec + (double)now.tv_nsec / 1000000000.0;
+}
+
+double viewer_timeline_time_from_x(const viewer_timeline *timeline,
+    const viewer_timeline_layout *layout, double x)
+{
+    if (timeline == NULL || layout == NULL) return 0.0;
+    double span = viewer_timeline_view_duration(timeline);
+    if (!(span > 0.0) || layout->ruler.width == 0U) return 0.0;
+    double fraction = (x - (double)layout->ruler.x) /
+        (double)layout->ruler.width;
+    if (!isfinite(fraction) || fraction < 0.0) fraction = 0.0;
+    if (fraction > 1.0) fraction = 1.0;
+    double value = timeline->view_start_seconds + fraction * span;
+    if (!isfinite(value) || value < 0.0) value = 0.0;
+    double duration = viewer_timeline_duration(timeline);
+    return value > duration ? duration : value;
+}
+
+double viewer_timeline_track_start_time(const svg_anim_track *track)
+{
+    if (track == NULL || track->has_begin_sync) return 0.0;
+    return isfinite(track->begin_offset) && track->begin_offset > 0.0 ?
+        track->begin_offset : 0.0;
 }
 
 static bool timeline_rect_contains(ui_rect rect, double x, double y)
@@ -129,6 +154,119 @@ void viewer_timeline_reset(viewer_timeline *timeline,
     timeline->playback_direction = 1;
 }
 
+bool viewer_timeline_refresh_native(viewer_timeline *timeline)
+{
+    if (timeline == NULL || !timeline->native_project ||
+        timeline->native_session == NULL) return false;
+    size_t previous_track_count = timeline->native_view.track_count;
+    viewer_timeline_mode previous_mode = timeline->mode;
+    timeline->native_view = (project_timeline_view){0};
+    memset(timeline->native_tracks, 0, sizeof(timeline->native_tracks));
+    timeline->native_context_valid = false;
+    project_timeline_view view = {0};
+    if (project_timeline_session_decode(timeline->native_session, &view).error !=
+            PROJECT_TIMELINE_OK) return false;
+    project_timeline_track_view tracks[PROJECT_TIMELINE_MAX_TRACKS] = {0};
+    for (size_t index = 0U; index < view.track_count; ++index)
+        if (!project_timeline_track_at(&view, index, &tracks[index])) return false;
+    timeline->native_view = view;
+    memcpy(timeline->native_tracks, tracks,
+        view.track_count * sizeof(timeline->native_tracks[0]));
+    for (size_t index = view.track_count;
+         index < PROJECT_TIMELINE_MAX_TRACKS; ++index)
+        timeline->native_tracks[index] = (project_timeline_track_view){0};
+    timeline->native_ticks_per_second = view.ticks_per_second;
+    timeline->native_duration_ticks = view.duration_ticks;
+    timeline->mode = (viewer_timeline_mode)view.loop_mode;
+    timeline->loop = timeline->mode == VIEWER_TIMELINE_MODE_LOOP;
+    if (previous_mode != timeline->mode) timeline->playback_direction = 1;
+    timeline->native_onion_before = view.onion_before;
+    timeline->native_onion_after = view.onion_after;
+    timeline->native_onion_key_valid = false;
+    timeline->native_context_valid = true;
+    timeline->duration_seconds = view.ticks_per_second == 0U ? 0.0 :
+        (double)view.duration_ticks / (double)view.ticks_per_second;
+    if (!isfinite(timeline->duration_seconds) || timeline->duration_seconds <= 0.0)
+        return false;
+    if (previous_track_count == 0U && view.track_count > 0U &&
+        !timeline->dock_state_explicit)
+        timeline->dock_open = true;
+    if (timeline->time_seconds > timeline->duration_seconds)
+        timeline->time_seconds = timeline->duration_seconds;
+    timeline->preview_valid = false;
+    timeline->preview_failed = false;
+    raster_tile_destroy(&timeline->preview);
+    return true;
+}
+
+bool viewer_timeline_refresh_native_context(viewer_timeline *timeline,
+    base_bytes current_scene_svg)
+{
+    if (timeline == NULL || !timeline->native_project ||
+        timeline->native_session == NULL || timeline->native_bundle == NULL ||
+        !base_bytes_valid(current_scene_svg)) return false;
+    project_timeline_edit_result refreshed =
+        project_timeline_session_refresh_context(timeline->native_session,
+            timeline->native_bundle, current_scene_svg, NULL, NULL);
+    if (refreshed.error != PROJECT_TIMELINE_OK) {
+        timeline->native_context_valid = false;
+        viewer_timeline_invalidate_preview(timeline);
+        timeline->preview_failed = true;
+        return false;
+    }
+    timeline->native_context_valid = true;
+    return viewer_timeline_refresh_native(timeline);
+}
+
+void viewer_timeline_invalidate_preview(viewer_timeline *timeline)
+{
+    if (timeline == NULL) return;
+    raster_tile_destroy(&timeline->preview);
+    timeline->preview_valid = false;
+    timeline->preview_failed = false;
+    timeline->native_onion_key_valid = false;
+}
+
+bool viewer_timeline_native_track_at(const viewer_timeline *timeline,
+    size_t track_index, project_timeline_track_view *out_track)
+{
+    if (timeline == NULL || !timeline->native_project || out_track == NULL ||
+        track_index >= timeline->native_view.track_count) return false;
+    *out_track = timeline->native_tracks[track_index];
+    return true;
+}
+
+bool viewer_timeline_native_item_at(const viewer_timeline *timeline,
+    size_t track_index, size_t item_index, project_timeline_item_view *out_item)
+{
+    return timeline != NULL && timeline->native_project && out_item != NULL &&
+        project_timeline_item_at(&timeline->native_view, track_index, item_index,
+            out_item);
+}
+
+bool viewer_timeline_seconds_to_native_tick(const viewer_timeline *timeline,
+    double seconds, uint32_t *out_tick)
+{
+    if (out_tick != NULL) *out_tick = 0U;
+    if (timeline == NULL || !timeline->native_project || out_tick == NULL ||
+        timeline->native_ticks_per_second == 0U ||
+        timeline->native_duration_ticks == 0U || !isfinite(seconds) ||
+        seconds < 0.0) return false;
+    double scaled = seconds * (double)timeline->native_ticks_per_second;
+    if (!isfinite(scaled) || scaled < 0.0) return false;
+    double nearest_tick = round(scaled);
+    double tolerance = 4.0 * DBL_EPSILON * fmax(fabs(scaled), 1.0);
+    if (fabs(scaled - nearest_tick) <= tolerance) scaled = nearest_tick;
+    scaled = floor(scaled);
+    if (scaled >= (double)timeline->native_duration_ticks) {
+        *out_tick = timeline->native_duration_ticks - 1U;
+        return true;
+    }
+    uint64_t tick = (uint64_t)scaled;
+    *out_tick = (uint32_t)tick;
+    return true;
+}
+
 void viewer_timeline_destroy(viewer_timeline *timeline)
 {
     if (timeline == NULL) return;
@@ -138,7 +276,8 @@ void viewer_timeline_destroy(viewer_timeline *timeline)
 
 size_t viewer_timeline_track_count(const viewer_timeline *timeline)
 {
-    return timeline == NULL ? 0U :
+    if (timeline == NULL) return 0U;
+    return timeline->native_project ? timeline->native_view.track_count :
         timeline_track_count_for_document(timeline->document);
 }
 
@@ -244,6 +383,25 @@ bool viewer_timeline_track_label(const viewer_timeline *timeline, size_t track_i
     if (out_length != NULL) *out_length = 0U;
     if (timeline == NULL || buffer == NULL || capacity == 0U ||
         track_index >= viewer_timeline_track_count(timeline)) return false;
+    if (timeline->native_project) {
+        project_timeline_track_view track;
+        if (!viewer_timeline_native_track_at(timeline, track_index, &track))
+            return false;
+        uint8_t name[PROJECT_TIMELINE_MAX_STRING_BYTES];
+        size_t name_length = 0U;
+        base_bytes label = track.name.len == 0U ? track.id : track.name;
+        if (!project_timeline_string_copy(label,
+                (base_mut_bytes){name, sizeof(name)}, &name_length) ||
+            name_length == 0U) return false;
+        size_t copied = name_length < capacity - 1U ? name_length : capacity - 1U;
+        while (copied > 0U && copied < name_length &&
+            (name[copied] & 0xc0U) == 0x80U) copied--;
+        if (copied == 0U) return false;
+        memcpy(buffer, name, copied);
+        buffer[copied] = '\0';
+        if (out_length != NULL) *out_length = copied;
+        return true;
+    }
     const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
     char tag[VIEWER_TIMELINE_TAG_CAP] = "element";
     char id[VIEWER_TIMELINE_ID_CAP] = {0};
@@ -304,6 +462,14 @@ bool viewer_timeline_set_mode(viewer_timeline *timeline, viewer_timeline_mode mo
     if (timeline == NULL || viewer_timeline_track_count(timeline) == 0U ||
         mode < VIEWER_TIMELINE_MODE_ONE_SHOT ||
         mode > VIEWER_TIMELINE_MODE_PING_PONG || timeline->mode == mode) return false;
+    if (timeline->native_project) {
+        project_timeline_edit_result changed = project_timeline_session_set_loop(
+            timeline->native_session, (project_timeline_loop_mode)mode);
+        if (changed.error != PROJECT_TIMELINE_OK ||
+            !viewer_timeline_refresh_native(timeline)) return false;
+        timeline->native_mutation_pending = true;
+        return true;
+    }
     timeline->mode = mode;
     timeline->loop = mode == VIEWER_TIMELINE_MODE_LOOP;
     timeline->playback_direction = 1;
@@ -417,6 +583,7 @@ void viewer_timeline_sync_selection(viewer_timeline *timeline, viewer_editor *ed
 {
     if (timeline == NULL || editor == NULL || viewer_timeline_track_count(timeline) == 0U)
         return;
+    if (timeline->native_project) return;
     document_source_span selection = {0};
     if (!viewer_editor_selection_span(editor, &selection)) return;
     for (size_t index = 0U; index < viewer_timeline_track_count(timeline); ++index) {
@@ -453,6 +620,7 @@ bool viewer_timeline_toggle_play(viewer_timeline *timeline, double now_seconds)
     else if (!timeline->playing && timeline->time_seconds >= timeline->duration_seconds)
         timeline->playback_direction = -1;
     timeline->playing = !timeline->playing;
+    if (timeline->native_project) timeline->native_onion_key_valid = false;
     timeline->dragging_scrubber = false;
     timeline->last_tick_seconds = now_seconds;
     timeline->last_frame_tick_seconds = now_seconds;
@@ -545,10 +713,14 @@ bool viewer_timeline_process_event(viewer_timeline *timeline,
                                    double backing_scale)
 {
     if (timeline == NULL || event == NULL || editor == NULL ||
-        viewer_timeline_track_count(timeline) == 0U) return false;
+        (viewer_timeline_track_count(timeline) == 0U &&
+            (!timeline->native_project || timeline->native_session == NULL)))
+        return false;
     viewer_timeline_layout layout;
     if (!viewer_timeline_layout_compute(timeline, width, height, backing_scale,
             &layout)) return false;
+    if (event->type == PLATFORM_EVENT_POINTER_UP && timeline->native_dragging_item)
+        return viewer_timeline_native_move_finish(timeline, editor);
     if (event->type == PLATFORM_EVENT_POINTER_UP && timeline->dragging_key) {
         size_t track_index = timeline->dragging_key_track;
         size_t key_index = timeline->dragging_key_index;
@@ -611,22 +783,10 @@ bool viewer_timeline_take_editor_mutation(viewer_timeline *timeline)
     return changed;
 }
 
-const raster_tile *viewer_timeline_prepare_frame(viewer_timeline *timeline)
+bool viewer_timeline_take_native_mutation(viewer_timeline *timeline)
 {
-    if (timeline == NULL || timeline->document == NULL ||
-        viewer_timeline_track_count(timeline) == 0U) return NULL;
-    if (timeline->preview_valid && timeline->preview_time_seconds == timeline->time_seconds)
-        return &timeline->preview;
-    raster_tile_destroy(&timeline->preview);
-    timeline->preview_valid = false;
-    svg_shape_diagnostic diagnostic = {SVG_SHAPE_ERROR_NONE, 0U};
-    if (!raster_shape_render_at(timeline->document, timeline->time_seconds,
-            &timeline->preview, &diagnostic)) {
-        timeline->preview_failed = true;
-        return NULL;
-    }
-    timeline->preview_time_seconds = timeline->time_seconds;
-    timeline->preview_valid = true;
-    timeline->preview_failed = false;
-    return &timeline->preview;
+    if (timeline == NULL) return false;
+    bool changed = timeline->native_mutation_pending;
+    timeline->native_mutation_pending = false;
+    return changed;
 }

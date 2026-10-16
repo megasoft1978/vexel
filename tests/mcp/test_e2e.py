@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import base64
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
 import signal
+import select
+import socket
 import subprocess
 import struct
 import tempfile
@@ -16,6 +19,406 @@ import zlib
 ROOT = Path(__file__).resolve().parents[2]
 BIN = ROOT / "build/mac-debug/bin"
 PROTOCOL_VERSION = "2026-07-28"
+
+
+class McpStdioRelayTests(unittest.TestCase):
+    """Public executable transport checks; the fixture implements no MCP tools."""
+
+    MAX_BYTES = 2 * 1024 * 1024
+    WAIT_SECONDS = 5.0
+
+    def setUp(self) -> None:
+        # Keep sun_path short even when the host's TMPDIR has a long prefix.
+        temporary = tempfile.TemporaryDirectory(prefix="vxm-", dir="/tmp")
+        self.addCleanup(temporary.cleanup)
+        self.socket_path = Path(temporary.name) / "m.sock"
+        listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.addCleanup(listener.close)
+        try:
+            listener.bind(str(self.socket_path))
+        except PermissionError:
+            self.skipTest("execution sandbox denies Unix-domain socket bind (EPERM)")
+        self.socket_path.chmod(0o600)
+        listener.listen(1)
+        listener.settimeout(self.WAIT_SECONDS)
+        environment = dict(os.environ, VEXEL_MCP_SOCKET=str(self.socket_path))
+        self.server = subprocess.Popen(
+            [str(BIN / "vexel-mcp")], cwd=ROOT, env=environment,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            bufsize=0)
+        self.addCleanup(self._stop_server)
+        self.broker, _ = listener.accept()
+        self.broker.settimeout(self.WAIT_SECONDS)
+        self.addCleanup(self.broker.close)
+        self.pool = ThreadPoolExecutor(max_workers=1)
+        self.addCleanup(self.pool.shutdown, wait=True)
+        self.stdout_tail = bytearray()
+        self.broker_tail = bytearray()
+
+    def _stop_server(self) -> None:
+        if self.server.poll() is None:
+            self.server.terminate()
+            try:
+                self.server.wait(timeout=self.WAIT_SECONDS)
+            except subprocess.TimeoutExpired:
+                self.server.kill()
+                self.server.wait(timeout=self.WAIT_SECONDS)
+        for pipe in (self.server.stdin, self.server.stdout, self.server.stderr):
+            pipe.close()
+
+    @staticmethod
+    def wire(message: dict[str, object]) -> bytes:
+        return json.dumps(message, separators=(",", ":")).encode() + b"\n"
+
+    def send_client(self, data: bytes) -> None:
+        view = memoryview(data)
+        deadline = time.monotonic() + self.WAIT_SECONDS
+        descriptor = self.server.stdin.fileno()
+        os.set_blocking(descriptor, False)
+        try:
+            while view:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0 or not select.select([], [descriptor], [], remaining)[1]:
+                    raise AssertionError("relay stopped accepting client input")
+                try:
+                    count = os.write(descriptor, view[:8192])
+                except BlockingIOError:
+                    continue
+                view = view[count:]
+        finally:
+            os.set_blocking(descriptor, True)
+
+    def read_line(self, descriptor: int, tail: bytearray) -> bytes:
+        deadline = time.monotonic() + self.WAIT_SECONDS
+        while b"\n" not in tail:
+            remaining = deadline - time.monotonic()
+            self.assertGreater(remaining, 0, "timed out waiting for relay line")
+            self.assertTrue(select.select([descriptor], [], [], remaining)[0],
+                            "timed out waiting for relay line")
+            chunk = os.read(descriptor, 8192)
+            self.assertTrue(chunk, "relay closed before a complete line")
+            tail.extend(chunk)
+        end = tail.index(b"\n") + 1
+        line = bytes(tail[:end])
+        del tail[:end]
+        return line
+
+    def client_line(self) -> bytes:
+        return self.read_line(self.server.stdout.fileno(), self.stdout_tail)
+
+    def broker_line(self) -> bytes:
+        return self.read_line(self.broker.fileno(), self.broker_tail)
+
+    def finish(self, expected_code: int = 0) -> bytes:
+        self.server.stdin.close()
+        self.broker.shutdown(socket.SHUT_WR)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), expected_code)
+        rest = bytes(self.stdout_tail) + self.server.stdout.read()
+        self.stdout_tail.clear()
+        error = self.server.stderr.read()
+        if expected_code == 0:
+            self.assertEqual(error, b"")
+        else:
+            self.assertIn(b"bounded stdio/socket relay failed", error)
+        return rest
+
+    def test_partial_coalesced_progress_and_out_of_order_response_ids(self) -> None:
+        first = self.wire({"jsonrpc": "2.0", "id": "first", "method": "slow"})
+        second = self.wire({"jsonrpc": "2.0", "id": 42, "method": "later"})
+        self.send_client(first[:13])
+        self.send_client(first[13:] + second)
+        self.assertEqual(self.broker_line(), first)
+        self.assertEqual(self.broker_line(), second)
+        progress = self.wire({"jsonrpc": "2.0", "method": "notifications/progress",
+                              "params": {"progressToken": "p", "progress": 1}})
+        later = self.wire({"jsonrpc": "2.0", "id": 42, "result": {}})
+        earlier = self.wire({"jsonrpc": "2.0", "id": "first", "result": {}})
+        self.broker.sendall(progress[:17])
+        # Round trip a notification while the broker line is incomplete.
+        barrier = self.wire({"jsonrpc": "2.0", "method": "barrier"})
+        self.send_client(barrier)
+        self.assertEqual(self.broker_line(), barrier)
+        self.assertFalse(self.stdout_tail)
+        self.assertFalse(select.select([self.server.stdout], [], [], 0)[0])
+        self.broker.sendall(progress[17:] + later + earlier)
+        self.assertEqual([self.client_line() for _ in range(3)], [progress, later, earlier])
+        self.assertEqual(self.finish(), b"")
+
+    def test_cancellation_while_pending_has_no_synthetic_response(self) -> None:
+        original = self.wire({"jsonrpc": "2.0", "id": "cancel-me", "method": "slow"})
+        self.send_client(original)
+        self.assertEqual(self.broker_line(), original)
+        progress = self.wire({"jsonrpc": "2.0", "method": "notifications/progress",
+                              "params": {"progressToken": "pending", "progress": 1}})
+        self.broker.sendall(progress)
+        self.assertEqual(self.client_line(), progress)
+        cancelled = self.wire({"jsonrpc": "2.0", "method": "notifications/cancelled",
+                               "params": {"requestId": "cancel-me", "reason": "test"}})
+        later = self.wire({"jsonrpc": "2.0", "id": "next", "method": "ping"})
+        self.send_client(cancelled + later)
+        self.assertEqual(self.broker_line(), cancelled)
+        self.assertEqual(self.broker_line(), later)
+        response = self.wire({"jsonrpc": "2.0", "id": "next", "result": {}})
+        self.broker.sendall(response)
+        self.assertEqual(self.client_line(), response)
+        # Closure proves the entire stdout contains no reply for cancel-me.
+        self.assertEqual(self.finish(), b"")
+
+    def test_stdin_eof_half_closes_and_drains_broker(self) -> None:
+        request = self.wire({"jsonrpc": "2.0", "id": 7, "method": "last"})
+        self.send_client(request[:-1])
+        self.server.stdin.close()
+        self.assertEqual(self.broker_line(), request)
+        self.assertEqual(self.broker.recv(1), b"", "broker input was not half-closed")
+        progress = self.wire({"jsonrpc": "2.0", "method": "notifications/progress"})
+        response = self.wire({"jsonrpc": "2.0", "id": 7, "result": {}})
+        self.broker.sendall(progress + response[:11])
+        self.assertEqual(self.client_line(), progress)
+        self.broker.sendall(response[11:])
+        self.assertEqual(self.client_line(), response)
+        self.assertEqual(self.finish(), b"")
+
+    def test_silent_broker_is_bounded_for_pending_request(self) -> None:
+        request = self.wire({"jsonrpc": "2.0", "id": "silent", "method": "slow"})
+        self.send_client(request)
+        self.assertEqual(self.broker_line(), request)
+        self.assertEqual(self.server.wait(timeout=32.0), 1)
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+        self.assertEqual(self.server.stdout.read(), b"")
+
+    def test_later_client_traffic_does_not_renew_silent_broker_deadline(self) -> None:
+        first = self.wire({"jsonrpc": "2.0", "id": "first", "method": "slow"})
+        self.send_client(first)
+        self.assertEqual(self.broker_line(), first)
+        time.sleep(20.0)
+        later = self.wire({"jsonrpc": "2.0", "id": "later", "method": "slow"})
+        self.send_client(later)
+        self.assertEqual(self.broker_line(), later)
+        self.assertEqual(self.server.wait(timeout=12.0), 1)
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_broker_progress_renews_and_completion_and_cancel_return_to_idle(self) -> None:
+        first = self.wire({"jsonrpc": "2.0", "id": "first", "method": "slow"})
+        self.send_client(first)
+        self.assertEqual(self.broker_line(), first)
+        time.sleep(20.0)
+        progress = self.wire({"jsonrpc": "2.0", "method": "notifications/progress"})
+        self.broker.sendall(progress)
+        self.assertEqual(self.client_line(), progress)
+        time.sleep(12.0)
+        self.assertIsNone(self.server.poll(), "broker progress did not renew inactivity")
+        response = self.wire({"jsonrpc": "2.0", "id": "first", "result": {}})
+        self.broker.sendall(response)
+        self.assertEqual(self.client_line(), response)
+        cancelled_request = b'{"jsonrpc":"2.0","id":"a\\u0062","method":"slow"}\n'
+        self.send_client(cancelled_request)
+        self.assertEqual(self.broker_line(), cancelled_request)
+        cancelled = self.wire({"jsonrpc": "2.0", "method": "notifications/cancelled",
+                               "params": {"requestId": "ab"}})
+        self.send_client(cancelled)
+        self.assertEqual(self.broker_line(), cancelled)
+        time.sleep(31.0)
+        self.assertIsNone(self.server.poll(), "completion or cancellation left pending idle state")
+        self.assertEqual(self.finish(), b"")
+
+    def test_invalid_client_id_and_broker_null_error_are_forwarded_then_recover(self) -> None:
+        invalid = b'{"jsonrpc":"2.0","id":{},"method":"invalid"}\n'
+        self.send_client(invalid)
+        self.assertEqual(self.broker_line(), invalid)
+        error = b'{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"invalid id"}}\n'
+        self.broker.sendall(error)
+        self.assertEqual(self.client_line(), error)
+        request = self.wire({"jsonrpc": "2.0", "id": 2, "method": "ping"})
+        self.send_client(request)
+        self.assertEqual(self.broker_line(), request)
+        response = self.wire({"jsonrpc": "2.0", "id": 2, "result": {}})
+        self.broker.sendall(response)
+        self.assertEqual(self.client_line(), response)
+        self.assertEqual(self.finish(), b"")
+
+    def test_duplicate_active_id_is_rejected_before_forwarding_and_types_differ(self) -> None:
+        numeric = self.wire({"jsonrpc": "2.0", "id": 1, "method": "first"})
+        string = self.wire({"jsonrpc": "2.0", "id": "1", "method": "second"})
+        duplicate = self.wire({"jsonrpc": "2.0", "id": 1, "method": "duplicate"})
+        self.send_client(numeric + string + duplicate)
+        self.assertEqual(self.broker_line(), numeric)
+        self.assertEqual(self.broker_line(), string)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), 1)
+        self.assertEqual(self.broker.recv(1), b"",
+                         "duplicate active request reached the broker")
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_broker_request_with_active_id_does_not_retire_client_request(self) -> None:
+        first = self.wire({"jsonrpc": "2.0", "id": "same", "method": "slow"})
+        self.send_client(first)
+        self.assertEqual(self.broker_line(), first)
+        server_request = self.wire({"jsonrpc": "2.0", "id": "same", "method": "server/request"})
+        self.broker.sendall(server_request)
+        self.assertEqual(self.client_line(), server_request)
+        duplicate = self.wire({"jsonrpc": "2.0", "id": "same", "method": "duplicate"})
+        self.send_client(duplicate)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), 1)
+        self.assertEqual(self.broker.recv(1), b"",
+                         "server-initiated request retired client request accounting")
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_aggregate_id_storage_rejects_before_forwarding_at_line_limit(self) -> None:
+        prefix = b'{"jsonrpc":"2.0","id":"'
+        suffix = b'","method":"slow"}\n'
+        request = prefix + b"i" * (self.MAX_BYTES - len(prefix) - len(suffix)) + suffix
+        self.assertEqual(len(request), self.MAX_BYTES)
+        self.send_client(request)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), 1)
+        self.assertEqual(self.broker.recv(1), b"",
+                         "over-budget request ID reached the broker")
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_pending_slot_capacity_rejects_257th_request_before_forwarding(self) -> None:
+        requests = [self.wire({"jsonrpc": "2.0", "id": index, "method": "slow"})
+                    for index in range(256)]
+        for request in requests:
+            self.send_client(request)
+            self.assertEqual(self.broker_line(), request)
+        rejected = self.wire({"jsonrpc": "2.0", "id": 256, "method": "slow"})
+        self.send_client(rejected)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), 1)
+        self.assertEqual(self.broker.recv(1), b"",
+                         "over-capacity request reached the broker")
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_unknown_duplicate_cancel_and_late_response_preserve_other_pending_id(self) -> None:
+        first = self.wire({"jsonrpc": "2.0", "id": "first", "method": "slow"})
+        second = self.wire({"jsonrpc": "2.0", "id": "second", "method": "slow"})
+        self.send_client(first + second)
+        self.assertEqual(self.broker_line(), first)
+        self.assertEqual(self.broker_line(), second)
+        unknown = self.wire({"jsonrpc": "2.0", "method": "notifications/cancelled",
+                             "params": {"requestId": "unknown"}})
+        cancel_first = self.wire({"jsonrpc": "2.0", "method": "notifications/cancelled",
+                                  "params": {"requestId": "first"}})
+        self.send_client(unknown + cancel_first + cancel_first)
+        self.assertEqual(self.broker_line(), unknown)
+        self.assertEqual(self.broker_line(), cancel_first)
+        self.assertEqual(self.broker_line(), cancel_first)
+        late = self.wire({"jsonrpc": "2.0", "id": "first", "result": {}})
+        self.broker.sendall(late)
+        self.assertEqual(self.client_line(), late)
+        self.assertEqual(self.server.wait(timeout=32.0), 1)
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_complete_response_clears_pending_before_slow_stdout_drain(self) -> None:
+        request = self.wire({"jsonrpc": "2.0", "id": 1, "method": "large"})
+        self.send_client(request)
+        self.assertEqual(self.broker_line(), request)
+        prefix = b'{"jsonrpc":"2.0","id":1,"result":"'
+        response = prefix + b"a" * (self.MAX_BYTES - len(prefix) - 2) + b'"}\n'
+        future = self.pool.submit(self.broker.sendall, response)
+        descriptor = self.server.stdout.fileno()
+        received = 0
+        while received < len(response):
+            self.assertTrue(select.select([descriptor], [], [], self.WAIT_SECONDS)[0],
+                            "timed out draining large response")
+            chunk = os.read(descriptor, min(8192, len(response) - received))
+            self.assertTrue(chunk, "relay closed before slow stdout drain completed")
+            received += len(chunk)
+            time.sleep(0.15)
+        future.result(timeout=self.WAIT_SECONDS)
+        self.assertIsNone(self.server.poll(), "complete response remained pending during stdout drain")
+        self.assertEqual(self.finish(), b"")
+
+    def test_oversized_stdin_discards_once_and_recovers(self) -> None:
+        self.send_client(b"x" * (self.MAX_BYTES + 8192))
+        # Delimiter plus next line in one write proves discard-tail retention.
+        valid = self.wire({"jsonrpc": "2.0", "id": 9, "method": "ping"})
+        self.send_client(b"ignored\n" + valid.replace(b"\n", b"\r\n"))
+        error = json.loads(self.client_line())
+        self.assertEqual(error["id"], None)
+        self.assertEqual(error["error"]["code"], -32700)
+        self.assertEqual(self.broker_line(), valid)
+        response = self.wire({"jsonrpc": "2.0", "id": 9, "result": {}})
+        self.broker.sendall(response)
+        self.assertEqual(self.client_line(), response)
+        self.assertEqual(self.finish(), b"")
+
+    def test_oversized_stdin_at_eof_emits_one_parse_error(self) -> None:
+        self.send_client(b"x" * (self.MAX_BYTES + 1))
+        self.server.stdin.close()
+        self.assertEqual(json.loads(self.client_line())["error"]["code"], -32700)
+        self.assertEqual(self.broker.recv(1), b"")
+        self.assertEqual(self.finish(), b"")
+
+    def test_oversized_broker_line_fails_without_partial_json(self) -> None:
+        def send_oversized() -> None:
+            try:
+                self.broker.sendall(b"x" * (self.MAX_BYTES + 1) + b"\n")
+            except BrokenPipeError:
+                pass  # Relay may close as soon as the first excess byte arrives.
+        future = self.pool.submit(send_oversized)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), 1)
+        future.result(timeout=self.WAIT_SECONDS)
+        self.assertEqual(self.server.stdout.read(), b"")
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_truncated_broker_line_fails_without_partial_json(self) -> None:
+        self.broker.sendall(b'{"jsonrpc":"2.0","id":1')
+        self.broker.shutdown(socket.SHUT_WR)
+        self.assertEqual(self.server.wait(timeout=self.WAIT_SECONDS), 1)
+        self.assertEqual(self.server.stdout.read(), b"")
+        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
+
+    def test_exact_limit_lines_are_preserved_in_both_directions(self) -> None:
+        prefix = b'{"jsonrpc":"2.0","id":1,"result":"'
+        line = prefix + b"a" * (self.MAX_BYTES - len(prefix) - 2) + b'"}\n'
+        future = self.pool.submit(self.send_client, line)
+        self.assertEqual(self.broker_line(), line)
+        future.result(timeout=self.WAIT_SECONDS)
+        future = self.pool.submit(self.broker.sendall, line)
+        self.assertEqual(self.client_line(), line)
+        future.result(timeout=self.WAIT_SECONDS)
+        self.assertEqual(self.finish(), b"")
+
+    def test_socket_backpressure_still_forwards_broker_progress(self) -> None:
+        prefix = b'{"jsonrpc":"2.0","id":1,"method":"slow","params":{"pad":"'
+        request = prefix + b"p" * (self.MAX_BYTES - len(prefix) - 3) + b'"}}\n'
+        future = self.pool.submit(self.send_client, request)
+        future.result(timeout=self.WAIT_SECONDS)
+        # No broker reads yet: a 2 MiB request exceeds the socket send buffer.
+        progress = self.wire({"jsonrpc": "2.0", "method": "notifications/progress",
+                              "params": {"progressToken": "p", "progress": 1}})
+        self.broker.sendall(progress)
+        self.assertEqual(self.client_line(), progress)
+        self.assertEqual(self.broker_line(), request)
+        self.assertEqual(self.finish(), b"")
+
+    def test_local_parse_error_never_splits_broker_stdout_line(self) -> None:
+        prefix = b'{"jsonrpc":"2.0","id":1,"result":"'
+        response = prefix + b"p" * (self.MAX_BYTES - len(prefix) - 2) + b'"}\n'
+        future = self.pool.submit(self.broker.sendall, response)
+        future.result(timeout=self.WAIT_SECONDS)
+        self.send_client(b"x" * (self.MAX_BYTES + 1) + b"\n")
+        lines = [self.client_line(), self.client_line()]
+        self.assertIn(response, lines)
+        error = json.loads(next(line for line in lines if line != response))
+        self.assertEqual(error["error"]["code"], -32700)
+        self.assertEqual(self.finish(), b"")
+
+    def test_stdout_backpressure_still_forwards_cancellation(self) -> None:
+        original = self.wire({"jsonrpc": "2.0", "id": 1, "method": "slow"})
+        self.send_client(original)
+        self.assertEqual(self.broker_line(), original)
+        prefix = b'{"jsonrpc":"2.0","method":"notifications/progress","params":{"pad":"'
+        progress = prefix + b"p" * (self.MAX_BYTES - len(prefix) - 3) + b'"}}\n'
+        future = self.pool.submit(self.broker.sendall, progress)
+        future.result(timeout=self.WAIT_SECONDS)
+        # The maximum-size line cannot fit in the unread stdout pipe.
+        # Don't consume stdout until the cancellation has reached the broker.
+        cancelled = self.wire({"jsonrpc": "2.0", "method": "notifications/cancelled",
+                               "params": {"requestId": 1}})
+        self.send_client(cancelled)
+        self.assertEqual(self.broker_line(), cancelled)
+        self.assertEqual(self.client_line(), progress)
+        future.result(timeout=self.WAIT_SECONDS)
+        self.assertEqual(self.finish(), b"")
 
 
 class McpStdioEndToEndTests(unittest.TestCase):
@@ -130,6 +533,11 @@ class McpStdioEndToEndTests(unittest.TestCase):
             "element_group", "element_ungroup", "transaction", "undo", "redo", "save",
             "save_as", "render_png", "animation_list", "animation_add", "animation_set",
             "animation_remove", "export_animation", "selection_get", "selection_set", "export_svg",
+            "native_timeline_get", "native_timeline_add_track",
+            "native_timeline_add_drawing_asset", "native_timeline_add_property_track",
+            "native_timeline_set_property_key", "native_timeline_set_cel",
+            "native_timeline_remove_cel", "native_timeline_move_item",
+            "native_timeline_set_loop", "native_timeline_undo", "native_timeline_redo",
         }
         self.assertEqual(tool_names, expected)
         for tool in listed:

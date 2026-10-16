@@ -48,6 +48,9 @@ void viewer_process_editor_result(viewer_app *app, uint32_t result)
     bool document_mutated = (result & VIEWER_EDITOR_MUTATED) != 0U;
     bool preview_changed = (result & VIEWER_EDITOR_PREVIEW_CHANGED) != 0U;
     if (document_mutated || preview_changed) {
+        viewer_timeline_invalidate_preview(&app->timeline);
+        if (app->timeline.native_project)
+            app->timeline.native_context_valid = false;
         if (!viewer_bump_generation(app)) {
             app->fatal_error = true;
             app->running = false;

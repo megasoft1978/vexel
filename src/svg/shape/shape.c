@@ -50,6 +50,7 @@ bool svg_shape_path_operand_boundary(number_reader *r, bool previous_number,
     svg_shape_skip_path_separators(r);
     if (!previous_number || r->i != before) return true;
     if (r->i < r->n && (r->p[r->i] == '+' || r->p[r->i] == '-')) return true;
+    if (r->i < r->n && r->p[r->i] == '.') return true;
     return command == 'A' &&
            ((argument == 4U) || (argument == 5U && previous_arc_flag));
 }

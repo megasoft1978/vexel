@@ -111,7 +111,7 @@ bool viewer_timeline_easing_layout_compute(const viewer_timeline_layout *layout,
 
 bool viewer_timeline_easing_enabled(const viewer_timeline *timeline)
 {
-    if (timeline == NULL || timeline->document == NULL ||
+    if (timeline == NULL || timeline->native_project || timeline->document == NULL ||
         timeline->selected_track >= timeline->document->animation.track_count)
         return false;
     const svg_anim_track *track =

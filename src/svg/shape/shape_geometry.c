@@ -98,22 +98,31 @@ bool svg_shape_builder_begin_shape(builder *b, bool evenodd)
         svg_shape_stroke *strokes = svg_shape_realloc(b->doc->strokes, next * sizeof(*strokes));
         if (strokes == NULL) { svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->strokes = strokes;
-        svg_shape_paint *paints = svg_shape_realloc(b->doc->paints, next * sizeof(*paints));
-        if (paints == NULL) { svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
-        b->doc->paints = paints;
-        if (b->doc->stroke_paints != NULL) {
-            size_t old_capacity = b->doc->stroke_paint_capacity;
-            svg_shape_paint *stroke_paints = svg_shape_realloc(
-                b->doc->stroke_paints, next * sizeof(*stroke_paints));
-            if (stroke_paints == NULL) {
-                svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
-                return false;
-            }
-            b->doc->stroke_paints = stroke_paints;
-            memset(stroke_paints + old_capacity, 0,
-                   (next - old_capacity) * sizeof(*stroke_paints));
-            b->doc->stroke_paint_capacity = next;
+        if (next > SIZE_MAX / sizeof(*b->doc->paint_indices_by_shape)) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, b->offset);
+            return false;
         }
+        size_t old_paint_map_capacity = b->shape_capacity;
+        uint32_t *paint_indices = svg_shape_realloc(
+            b->doc->paint_indices_by_shape,
+            next * sizeof(*paint_indices));
+        if (paint_indices == NULL) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
+            return false;
+        }
+        b->doc->paint_indices_by_shape = paint_indices;
+        memset(paint_indices + old_paint_map_capacity, 0,
+            (next - old_paint_map_capacity) * sizeof(*paint_indices));
+        uint32_t *stroke_indices = svg_shape_realloc(
+            b->doc->stroke_paint_indices_by_shape,
+            next * sizeof(*stroke_indices));
+        if (stroke_indices == NULL) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset);
+            return false;
+        }
+        b->doc->stroke_paint_indices_by_shape = stroke_indices;
+        memset(stroke_indices + old_paint_map_capacity, 0,
+            (next - old_paint_map_capacity) * sizeof(*stroke_indices));
         svg_shape_clip **clips = svg_shape_realloc(b->doc->clips, next * sizeof(*clips));
         if (clips == NULL) { svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, b->offset); return false; }
         b->doc->clips = clips;
@@ -160,8 +169,99 @@ bool svg_shape_builder_begin_shape(builder *b, bool evenodd)
         .width = 1.0, .miter_limit = 4.0, .cap = SVG_SHAPE_CAP_BUTT,
         .join = SVG_SHAPE_JOIN_MITER
     };
-    b->doc->paints[b->shape_index] = (svg_shape_paint){.kind = SVG_SHAPE_PAINT_SOLID};
+    b->doc->paint_indices_by_shape[b->shape_index] = 0U;
+    b->doc->stroke_paint_indices_by_shape[b->shape_index] = 0U;
     b->doc->clips[b->shape_index] = NULL;
+    return true;
+}
+
+bool svg_shape_ensure_stroke_paint(builder *b, size_t shape_index,
+                                   size_t error_offset)
+{
+    if (b == NULL || b->doc == NULL || shape_index >= b->doc->shape_count) {
+        svg_shape_fail(b == NULL ? NULL : b->diag,
+            SVG_SHAPE_ERROR_INVALID_ARGUMENT, error_offset);
+        return false;
+    }
+    if (b->doc->stroke_paint_indices_by_shape == NULL ||
+        shape_index >= b->shape_capacity) {
+        svg_shape_fail(b->diag, SVG_SHAPE_ERROR_INVALID_ARGUMENT,
+                       error_offset);
+        return false;
+    }
+    if (b->doc->stroke_paint_indices_by_shape[shape_index] != 0U)
+        return true;
+    if (b->doc->stroke_paint_count >= UINT32_MAX) {
+        svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, error_offset);
+        return false;
+    }
+    if (b->doc->stroke_paint_count == b->doc->stroke_paint_capacity) {
+        size_t next = b->doc->stroke_paint_capacity == 0U ? 8U :
+            b->doc->stroke_paint_capacity * 2U;
+        if (next < b->doc->stroke_paint_capacity ||
+            next > SVG_SHAPE_MAX_SHAPES) next = SVG_SHAPE_MAX_SHAPES;
+        if (next <= b->doc->stroke_paint_capacity ||
+            next > SIZE_MAX / sizeof(*b->doc->stroke_paints)) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, error_offset);
+            return false;
+        }
+        svg_shape_paint *paints = svg_shape_realloc(b->doc->stroke_paints,
+            next * sizeof(*paints));
+        if (paints == NULL) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, error_offset);
+            return false;
+        }
+        b->doc->stroke_paints = paints;
+        b->doc->stroke_paint_capacity = next;
+    }
+    size_t paint_index = b->doc->stroke_paint_count++;
+    b->doc->stroke_paints[paint_index] =
+        (svg_shape_paint){.kind = SVG_SHAPE_PAINT_SOLID};
+    b->doc->stroke_paint_indices_by_shape[shape_index] =
+        (uint32_t)(paint_index + 1U);
+    return true;
+}
+
+bool svg_shape_ensure_fill_paint(builder *b, size_t shape_index,
+                                 size_t error_offset)
+{
+    if (b == NULL || b->doc == NULL ||
+        shape_index >= b->doc->shape_count ||
+        b->doc->paint_indices_by_shape == NULL ||
+        shape_index >= b->shape_capacity) {
+        svg_shape_fail(b == NULL ? NULL : b->diag,
+            SVG_SHAPE_ERROR_INVALID_ARGUMENT, error_offset);
+        return false;
+    }
+    if (b->doc->paint_indices_by_shape[shape_index] != 0U) return true;
+    if (b->doc->paint_count >= UINT32_MAX) {
+        svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, error_offset);
+        return false;
+    }
+    if (b->doc->paint_count == b->doc->paint_capacity) {
+        size_t next = b->doc->paint_capacity == 0U ? 8U :
+            b->doc->paint_capacity * 2U;
+        if (next < b->doc->paint_capacity || next > SVG_SHAPE_MAX_SHAPES)
+            next = SVG_SHAPE_MAX_SHAPES;
+        if (next <= b->doc->paint_capacity ||
+            next > SIZE_MAX / sizeof(*b->doc->paints)) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_LIMIT, error_offset);
+            return false;
+        }
+        svg_shape_paint *paints = svg_shape_realloc(b->doc->paints,
+            next * sizeof(*paints));
+        if (paints == NULL) {
+            svg_shape_fail(b->diag, SVG_SHAPE_ERROR_OOM, error_offset);
+            return false;
+        }
+        b->doc->paints = paints;
+        b->doc->paint_capacity = next;
+    }
+    size_t paint_index = b->doc->paint_count++;
+    b->doc->paints[paint_index] =
+        (svg_shape_paint){.kind = SVG_SHAPE_PAINT_SOLID};
+    b->doc->paint_indices_by_shape[shape_index] =
+        (uint32_t)(paint_index + 1U);
     return true;
 }
 static geom_point midpoint(geom_point a, geom_point z)
@@ -305,9 +405,9 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
     if (invertible) out->shape_stroke_inverse[builder->shape_index] = user_inverse;
     double normalized_diagonal = hypot(builder->viewport_width,
                                        builder->viewport_height) / sqrt(2.0);
-    if (!svg_shape_parse_stroke(source,
+    if (!svg_shape_parse_stroke(builder, source,
             &out->strokes[builder->shape_index], style,
-            normalized_diagonal, builder->diag)) return false;
+            normalized_diagonal)) return false;
     if (!svg_shape_apply_vector_effect(
             source, style, transform, out,
             &out->strokes[builder->shape_index], builder->diag,
@@ -553,13 +653,16 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
                 builder->shape_index, transform, false,
                 &pattern_resolved)) return false;
         if (!pattern_resolved) {
+            if (!svg_shape_ensure_fill_paint(builder,
+                    builder->shape_index, fill.offset)) return false;
             svg_shape_error result = svg_paint_resolve_fill(
                 source, tokens, token_count, builder->references, builder->css,
                 builder->paint_cache, builder->paint_token_visits, fill,
                 svg_paint_edge_span(out, before, out->edge_count - before, NULL),
                 out->edge_count - before, user_inverse,
                 builder->viewport_width, builder->viewport_height,
-                &out->paints[builder->shape_index], &out->paint_stops,
+                svg_shape_paint_for_shape_mutable(out,
+                    builder->shape_index), &out->paint_stops,
                 &out->paint_stop_count, builder->diag);
             if (result != SVG_SHAPE_ERROR_NONE) return false;
         }
@@ -574,9 +677,18 @@ bool svg_shape_builder_add_element(svg_shape_builder *builder,
                 builder->shape_index, transform, true, &stroke_resolved))
             return false;
         if (!stroke_resolved) {
-            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED,
-                           stroke_value.offset);
-            return false;
+            if (!svg_shape_ensure_stroke_paint(builder,
+                    builder->shape_index, stroke_value.offset)) return false;
+            svg_shape_error error = svg_paint_resolve_fill(
+                source, tokens, token_count, builder->references, builder->css,
+                builder->paint_cache, builder->paint_token_visits, stroke_value,
+                svg_paint_edge_span(out, before, out->edge_count - before, NULL),
+                out->edge_count - before, user_inverse,
+                builder->viewport_width, builder->viewport_height,
+                svg_shape_stroke_paint_for_shape_mutable(
+                    out, builder->shape_index), &out->paint_stops,
+                &out->paint_stop_count, builder->diag);
+            if (error != SVG_SHAPE_ERROR_NONE) return false;
         }
     }
     svg_xml_span clip_value;

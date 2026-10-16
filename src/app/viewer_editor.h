@@ -16,6 +16,8 @@
 
 typedef struct viewer_editor viewer_editor;
 struct viewer_chrome_layout;
+typedef bool (*viewer_editor_history_callback)(void *context, bool redo,
+                                                bool execute);
 
 typedef enum viewer_editor_draw_tool {
     VIEWER_EDITOR_TOOL_SELECT,
@@ -110,6 +112,8 @@ void viewer_editor_destroy(viewer_editor *editor);
 bool viewer_editor_is_dirty(const viewer_editor *editor);
 bool viewer_editor_can_undo(const viewer_editor *editor);
 bool viewer_editor_can_redo(const viewer_editor *editor);
+void viewer_editor_set_history_callback(viewer_editor *editor,
+    viewer_editor_history_callback callback, void *context);
 bool viewer_editor_has_selection(const viewer_editor *editor);
 bool viewer_editor_sidebar_visibility(const viewer_editor *editor,
                                      bool *out_structure, bool *out_inspector);
@@ -143,11 +147,35 @@ bool viewer_editor_materialize_preview(viewer_editor *editor, uint8_t *buffer,
                                        size_t capacity, size_t *out_length);
 document_edit_save_result viewer_editor_save(viewer_editor *editor,
                                              base_bytes path);
+document_edit_error viewer_editor_snapshot_create(viewer_editor *editor,
+    document_edit_snapshot **out_snapshot);
+void viewer_editor_mark_unsaved(viewer_editor *editor);
 bool viewer_editor_select_at_source_offset(viewer_editor *editor, size_t offset);
 bool viewer_editor_select_all(viewer_editor *editor,
                               const svg_shape_document *document);
 bool viewer_editor_selection_span(viewer_editor *editor,
                                   document_source_span *out_span);
+/* Copies the single selected node's stable SVG id and effective presentation
+ * opacity. Missing opacity defaults to 1.0; unsupported inline style fails. */
+bool viewer_editor_selected_opacity_target(viewer_editor *editor,
+    uint8_t *id_buffer, size_t id_capacity, size_t *out_id_length,
+    double *out_opacity);
+/* Returns the unique selected node id and affine matrix. Only identity or SVG
+ * matrix(...) transforms are accepted; each coefficient is bounded to +/-1e9. */
+bool viewer_editor_selected_transform_target(viewer_editor *editor,
+    uint8_t *id_buffer, size_t id_capacity, size_t *out_id_length,
+    double out_matrix[6]);
+/* Copies the selected object's unique ID and an explicit fill/stroke paint
+ * attribute as normalized RGBA. CSS/style, inherited, and unsupported paints
+ * are rejected rather than resolved approximately. */
+bool viewer_editor_selected_paint_target(viewer_editor *editor,
+    const char *property, uint8_t *id_buffer, size_t id_capacity,
+    size_t *out_id_length, double out_rgba[4]);
+/* Captures the selected node's effective SVG visibility when it can be
+ * established from the local visibility attributes without CSS overrides. */
+bool viewer_editor_selected_visibility_target(viewer_editor *editor,
+    uint8_t *id_buffer, size_t id_capacity, size_t *out_id_length,
+    bool *out_visible);
 bool viewer_editor_semantics(viewer_editor *editor,
                              ui_semantics_snapshot *out_snapshot);
 bool viewer_editor_set_appearance(viewer_editor *editor, ui_theme theme,

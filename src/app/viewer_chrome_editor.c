@@ -156,10 +156,8 @@ static const char *editor_tool_key(const viewer_editor *editor)
 static uint32_t editor_toolbar_action_state(const viewer_editor *editor,
                                              uint32_t action)
 {
-    size_t cursor = document_edit_history_cursor(editor->edit);
-    size_t history = document_edit_history_count(editor->edit);
-    if ((action == EDITOR_BUTTON_UNDO && cursor == 0U) ||
-        (action == EDITOR_BUTTON_REDO && cursor >= history))
+    if ((action == EDITOR_BUTTON_UNDO && !viewer_editor_can_undo(editor)) ||
+        (action == EDITOR_BUTTON_REDO && !viewer_editor_can_redo(editor)))
         return UI_STATE_DISABLED;
     if (action == EDITOR_BUTTON_DELETE && editor->node_edit_active &&
         (editor->path_selected_node_segment == SIZE_MAX ||
@@ -310,7 +308,7 @@ void editor_build_tree_modern(viewer_editor *editor)
             UI_ICON_REDO, "Redo · Shift-Command-Z",
             editor_toolbar_action_state(editor, EDITOR_BUTTON_REDO)) &&
         editor_add_icon(editor, EDITOR_BUTTON_HISTORY, EDITOR_NODE_TOOLBAR,
-            UI_ICON_CHEVRON_DOWN, "Undo History",
+            UI_ICON_CHEVRON_DOWN, "SVG Undo History",
             editor_toolbar_action_state(editor, EDITOR_BUTTON_HISTORY)) &&
         editor_add_icon(editor, EDITOR_BUTTON_DUPLICATE, EDITOR_NODE_TOOLBAR,
             UI_ICON_DUPLICATE, "Duplicate · Command-D",

@@ -359,11 +359,17 @@ static bool make_subset(const svg_shape_document *source, size_t first_shape,
     view->shape_stroke_closed = source->shape_stroke_closed + first_shape;
     view->shape_stroke_inverse = source->shape_stroke_inverse + first_shape;
     view->strokes = source->strokes + first_shape;
-    view->paints = source->paints == NULL ? NULL : source->paints + first_shape;
-    view->stroke_paints = source->stroke_paints == NULL ? NULL :
-                          source->stroke_paints + first_shape;
-    view->stroke_paint_capacity = source->stroke_paints == NULL ? 0U :
-                                  shape_count;
+    view->paints = source->paints;
+    view->paint_indices_by_shape = source->paint_indices_by_shape == NULL ?
+        NULL : source->paint_indices_by_shape + first_shape;
+    view->paint_count = source->paint_count;
+    view->paint_capacity = source->paint_capacity;
+    view->stroke_paints = source->stroke_paints;
+    view->stroke_paint_indices_by_shape =
+        source->stroke_paint_indices_by_shape == NULL ? NULL :
+        source->stroke_paint_indices_by_shape + first_shape;
+    view->stroke_paint_count = source->stroke_paint_count;
+    view->stroke_paint_capacity = source->stroke_paint_capacity;
     view->clips = source->clips == NULL ? NULL : source->clips + first_shape;
     view->opacity_groups = NULL;
     view->opacity_group_count = 0U;

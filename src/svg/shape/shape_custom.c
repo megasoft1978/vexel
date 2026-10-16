@@ -68,8 +68,8 @@ bool svg_shape_builder_add_custom_element(
     if (invertible) builder->doc->shape_stroke_inverse[shape] = inverse;
     double diagonal = hypot(builder->viewport_width, builder->viewport_height) /
                       sqrt(2.0);
-    if (!svg_shape_parse_stroke(source, &builder->doc->strokes[shape], style,
-                                diagonal, builder->diag)) return false;
+    if (!svg_shape_parse_stroke(builder, source,
+            &builder->doc->strokes[shape], style, diagonal)) return false;
     if (!svg_shape_apply_vector_effect(
             source, style, transform, builder->doc,
             &builder->doc->strokes[shape], builder->diag,
@@ -85,8 +85,10 @@ bool svg_shape_builder_add_custom_element(
     builder->doc->shape_edge_start[shape] = first_edge;
     builder->doc->shape_edge_count[shape] =
         builder->doc->edge_count - first_edge;
-    if (gradient_fill && builder->doc->paints[shape].kind !=
-                             SVG_SHAPE_PAINT_IMAGE) {
+    const svg_shape_paint *current_fill_paint =
+        svg_shape_paint_for_shape(builder->doc, shape);
+    if (gradient_fill && (current_fill_paint == NULL ||
+        current_fill_paint->kind != SVG_SHAPE_PAINT_IMAGE)) {
         if (!invertible) {
             svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED,
                            fill.offset);
@@ -97,6 +99,8 @@ bool svg_shape_builder_add_custom_element(
                                        fill, *style, shape, transform, false,
                                        &pattern_resolved)) return false;
         if (!pattern_resolved) {
+            if (!svg_shape_ensure_fill_paint(builder, shape, fill.offset))
+                return false;
             svg_shape_error error = svg_paint_resolve_fill(
                 source, tokens, token_count, builder->references, builder->css,
                 builder->paint_cache, builder->paint_token_visits, fill,
@@ -104,7 +108,8 @@ bool svg_shape_builder_add_custom_element(
                     builder->doc->edge_count - first_edge, NULL),
                 builder->doc->edge_count - first_edge, inverse,
                 builder->viewport_width, builder->viewport_height,
-                &builder->doc->paints[shape], &builder->doc->paint_stops,
+                svg_shape_paint_for_shape_mutable(builder->doc, shape),
+                &builder->doc->paint_stops,
                 &builder->doc->paint_stop_count, builder->diag);
             if (error != SVG_SHAPE_ERROR_NONE) return false;
         }
@@ -118,9 +123,20 @@ bool svg_shape_builder_add_custom_element(
                 builder, source, tokens, token_count, stroke_value, *style,
                 shape, transform, true, &stroke_resolved)) return false;
         if (!stroke_resolved) {
-            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_UNSUPPORTED,
-                           stroke_value.offset);
-            return false;
+            if (!svg_shape_ensure_stroke_paint(builder, shape,
+                    stroke_value.offset)) return false;
+            svg_shape_error error = svg_paint_resolve_fill(
+                source, tokens, token_count, builder->references, builder->css,
+                builder->paint_cache, builder->paint_token_visits, stroke_value,
+                svg_paint_edge_span(builder->doc, first_edge,
+                    builder->doc->edge_count - first_edge, NULL),
+                builder->doc->edge_count - first_edge, inverse,
+                builder->viewport_width, builder->viewport_height,
+                svg_shape_stroke_paint_for_shape_mutable(
+                    builder->doc, shape),
+                &builder->doc->paint_stops,
+                &builder->doc->paint_stop_count, builder->diag);
+            if (error != SVG_SHAPE_ERROR_NONE) return false;
         }
     }
     svg_xml_span clip = {0};

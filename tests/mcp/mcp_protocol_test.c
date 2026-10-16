@@ -88,6 +88,78 @@ int main(void)
     CHECK(mcp_json_parse((const uint8_t *)export_args, strlen(export_args), &doc));
     CHECK(mcp_tool_validate(&doc, doc.root, "export_animation", &validation_error));
     mcp_json_doc_destroy(&doc);
+    const char *native_timeline_args =
+        "{\"documentId\":\"doc\",\"trackId\":\"ink\","
+        "\"tick\":12,\"assetName\":\"cel0\"}";
+    CHECK(mcp_json_parse((const uint8_t *)native_timeline_args,
+        strlen(native_timeline_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root, "native_timeline_set_cel",
+        &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_timeline_optional_args =
+        "{\"documentId\":\"doc\",\"trackId\":\"ink\","
+        "\"tick\":12,\"assetName\":\"cel0\",\"label\":\"pose\"}";
+    CHECK(mcp_json_parse((const uint8_t *)native_timeline_optional_args,
+        strlen(native_timeline_optional_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root, "native_timeline_set_cel",
+        &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_timeline_track_args =
+        "{\"documentId\":\"doc\",\"trackId\":\"ink\","
+        "\"targetId\":\"layer\",\"assetName\":\"cel0\",\"name\":\"Ink\"}";
+    CHECK(mcp_json_parse((const uint8_t *)native_timeline_track_args,
+        strlen(native_timeline_track_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root, "native_timeline_add_track",
+        &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_asset_args =
+        "{\"documentId\":\"doc\",\"assetName\":\"walk-01\","
+        "\"svg\":\"<svg width='2' height='2'/>\"}";
+    CHECK(mcp_json_parse((const uint8_t *)native_asset_args,
+        strlen(native_asset_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root,
+        "native_timeline_add_drawing_asset", &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_property_args =
+        "{\"documentId\":\"doc\",\"trackId\":\"fade\","
+        "\"targetId\":\"shape\",\"property\":\"fill\","
+        "\"valueType\":\"rgba\",\"interpolation\":\"linear\","
+        "\"value\":[1,0.5,0,1]}";
+    CHECK(mcp_json_parse((const uint8_t *)native_property_args,
+        strlen(native_property_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root,
+        "native_timeline_add_property_track", &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_loop_args =
+        "{\"documentId\":\"doc\",\"mode\":\"ping_pong\"}";
+    CHECK(mcp_json_parse((const uint8_t *)native_loop_args,
+        strlen(native_loop_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root, "native_timeline_set_loop",
+        &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_bad_loop_args =
+        "{\"documentId\":\"doc\",\"mode\":\"bounce\"}";
+    CHECK(mcp_json_parse((const uint8_t *)native_bad_loop_args,
+        strlen(native_bad_loop_args), &doc));
+    CHECK(!mcp_tool_validate(&doc, doc.root, "native_timeline_set_loop",
+        &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_property_key_args =
+        "{\"documentId\":\"doc\",\"trackId\":\"fade\","
+        "\"tick\":12,\"value\":false}";
+    CHECK(mcp_json_parse((const uint8_t *)native_property_key_args,
+        strlen(native_property_key_args), &doc));
+    CHECK(mcp_tool_validate(&doc, doc.root,
+        "native_timeline_set_property_key", &validation_error));
+    mcp_json_doc_destroy(&doc);
+    const char *native_bad_property_key_args =
+        "{\"documentId\":\"doc\",\"trackId\":\"fade\","
+        "\"tick\":12,\"value\":{\"unexpected\":1}}";
+    CHECK(mcp_json_parse((const uint8_t *)native_bad_property_key_args,
+        strlen(native_bad_property_key_args), &doc));
+    CHECK(!mcp_tool_validate(&doc, doc.root,
+        "native_timeline_set_property_key", &validation_error));
+    mcp_json_doc_destroy(&doc);
     const char *bad_args = "{\"documentId\":\"doc\",\"elementId\":\"rect\",\"name\":4,\"value\":\"red\",\"extra\":true}";
     CHECK(mcp_json_parse((const uint8_t *)bad_args, strlen(bad_args), &doc));
     CHECK(!mcp_tool_validate(&doc, doc.root, "attribute_set", &validation_error));

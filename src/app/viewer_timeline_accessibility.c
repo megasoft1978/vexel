@@ -18,12 +18,20 @@ enum {
     TIMELINE_A11Y_FIT,
     TIMELINE_A11Y_COLLAPSE,
     TIMELINE_A11Y_TRACKS,
+    TIMELINE_A11Y_ONION,
+    TIMELINE_A11Y_KEY_OPACITY,
+    TIMELINE_A11Y_KEY_TRANSFORM,
+    TIMELINE_A11Y_KEY_FILL,
+    TIMELINE_A11Y_KEY_STROKE,
+    TIMELINE_A11Y_KEY_VISIBILITY,
+    TIMELINE_A11Y_DRAWING_ASSET,
+    TIMELINE_A11Y_ADD_CEL,
     TIMELINE_A11Y_EASING_MODE,
     TIMELINE_A11Y_SPLINE_X1,
     TIMELINE_A11Y_SPLINE_Y1,
     TIMELINE_A11Y_SPLINE_X2,
     TIMELINE_A11Y_SPLINE_Y2,
-    TIMELINE_A11Y_ROW_BASE = VIEWER_TIMELINE_A11Y_BASE + 16U
+    TIMELINE_A11Y_ROW_BASE = VIEWER_TIMELINE_A11Y_BASE + 32U
 };
 
 static ui_tree timeline_accessibility_tree;
@@ -32,7 +40,7 @@ static ui_semantics_snapshot timeline_semantics_scratch;
 
 static bool timeline_is_indefinite(const viewer_timeline *timeline)
 {
-    if (timeline == NULL || timeline->document == NULL) return false;
+    if (timeline == NULL || timeline->native_project || timeline->document == NULL) return false;
     size_t count = viewer_timeline_track_count(timeline);
     for (size_t index = 0U; index < count; ++index) {
         const svg_anim_track *track = &timeline->document->animation.tracks[index];
@@ -132,6 +140,7 @@ static const char *animation_mode_label(svg_anim_calc_mode mode)
 static bool add_easing_semantics(ui_tree *tree, viewer_timeline *timeline,
     const viewer_timeline_layout *layout)
 {
+    if (timeline->native_project) return true;
     viewer_timeline_easing_layout easing;
     if (!viewer_timeline_easing_layout_compute(layout, &easing)) return true;
     if (!easing.visible) return true;
@@ -183,17 +192,40 @@ static bool build_timeline_tree(viewer_timeline *timeline,
         char time_value[64];
         double duration = viewer_timeline_duration(timeline);
         bool indefinite = timeline_is_indefinite(timeline);
+        uint32_t current_tick = 0U;
+        if (timeline->native_project)
+            (void)viewer_timeline_seconds_to_native_tick(timeline,
+                timeline->time_seconds, &current_tick);
         int time_amount = indefinite ? snprintf(time_value, sizeof(time_value),
             "%.2fs; indefinite source; preview 0.00 to %.2fs",
             timeline->time_seconds, duration) :
-            snprintf(time_value, sizeof(time_value), "%.2f / %.2fs",
-                timeline->time_seconds, duration);
+            timeline->native_project ? snprintf(time_value, sizeof(time_value),
+                "%.2f / %.2fs · tick %u/%u at %u Hz",
+                timeline->time_seconds, duration,
+                current_tick,
+                timeline->native_duration_ticks, timeline->native_ticks_per_second) :
+                snprintf(time_value, sizeof(time_value), "%.2f / %.2fs",
+                    timeline->time_seconds, duration);
         if (time_amount < 0 || (size_t)time_amount >= sizeof(time_value)) return false;
         const char *mode = timeline->mode == VIEWER_TIMELINE_MODE_LOOP ? "Loop" :
             timeline->mode == VIEWER_TIMELINE_MODE_PING_PONG ? "Ping-Pong" : "One Shot";
         char speed[16];
         int speed_amount = snprintf(speed, sizeof(speed), "%.2g×", timeline->playback_speed);
         if (speed_amount < 0 || (size_t)speed_amount >= sizeof(speed)) return false;
+        char onion[64];
+        char drawing_asset_value[PROJECT_BUNDLE_MAX_ASSET_NAME_BYTES + 1U] = {0};
+        project_bundle_asset drawing_asset = {0};
+        if (layout->drawing_asset_button.width > 0U &&
+            viewer_timeline_native_selected_asset(timeline, &drawing_asset)) {
+            memcpy(drawing_asset_value, drawing_asset.name.ptr,
+                drawing_asset.name.len);
+        }
+        int onion_amount = timeline->native_project ? snprintf(onion, sizeof(onion),
+            "%u before, %u after%s", timeline->native_onion_before,
+            timeline->native_onion_after,
+            timeline->native_onion_limited ? "; onion preview limited" : "") : 0;
+        if (timeline->native_project &&
+            (onion_amount < 0 || (size_t)onion_amount >= sizeof(onion))) return false;
         if (!add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_PLAY,
                 TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON,
                 timeline->playing ? "Pause animation" : "Play animation", NULL, 0U,
@@ -210,6 +242,48 @@ static bool build_timeline_tree(viewer_timeline *timeline,
             !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_FIT,
                 TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON, "Fit timeline to work area",
                 NULL, 0U, layout->fit_button) ||
+            (timeline->native_project && layout->onion_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_ONION,
+                    TIMELINE_A11Y_PANEL, UI_ROLE_BUTTON, "Onion skin preview",
+                    onion, 0U, layout->onion_button)) ||
+            (timeline->native_project && layout->key_opacity_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_KEY_OPACITY, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON, "Key selected object opacity at playhead",
+                    NULL, 0U, layout->key_opacity_button)) ||
+            (timeline->native_project && layout->key_transform_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_KEY_TRANSFORM, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON, "Key selected object transform at playhead",
+                    NULL, 0U, layout->key_transform_button)) ||
+            (timeline->native_project && layout->key_fill_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_KEY_FILL, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON, "Key selected object fill color at playhead",
+                    NULL, 0U, layout->key_fill_button)) ||
+            (timeline->native_project && layout->key_stroke_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_KEY_STROKE, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON, "Key selected object stroke color at playhead",
+                    NULL, 0U, layout->key_stroke_button)) ||
+            (timeline->native_project && layout->key_visibility_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_KEY_VISIBILITY, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON, "Key selected object visibility at playhead",
+                    NULL, 0U, layout->key_visibility_button)) ||
+            (timeline->native_project && layout->drawing_asset_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_DRAWING_ASSET, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON, "Choose drawing asset",
+                    drawing_asset_value, 0U, layout->drawing_asset_button)) ||
+            (timeline->native_project && layout->add_cel_button.width > 0U &&
+                !add_timeline_node(&timeline_accessibility_tree,
+                    TIMELINE_A11Y_ADD_CEL, TIMELINE_A11Y_PANEL,
+                    UI_ROLE_BUTTON,
+                    viewer_timeline_selected_drawing_track(timeline) ?
+                        "Add drawing cel at playhead" :
+                        "Create drawing track for selected SVG object",
+                    NULL, 0U, layout->add_cel_button)) ||
             !add_timeline_node(&timeline_accessibility_tree, TIMELINE_A11Y_TRACKS,
                 TIMELINE_A11Y_PANEL, UI_ROLE_LIST, "Animation tracks", NULL, 0U,
                 layout->panel)) return false;
@@ -225,18 +299,47 @@ static bool build_timeline_tree(viewer_timeline *timeline,
         if (!viewer_timeline_track_label(timeline, track_index, label,
                 sizeof(label), &label_length)) return false;
         uint32_t state = track_index == timeline->selected_track ? UI_STATE_CHECKED : 0U;
-        const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
         char description[192] = {0};
         const char *value = NULL;
-        if (!track->supported) {
-            state |= UI_STATE_DISABLED;
-            const char *diagnostic = track_diagnostic(timeline, track);
+        if (timeline->native_project) {
+            project_timeline_track_view track;
+            if (!viewer_timeline_native_track_at(timeline, track_index, &track))
+                return false;
             int amount = snprintf(description, sizeof(description),
-                "Unsupported animation track%s%s · preview only",
-                diagnostic == NULL ? "" : ": ",
-                diagnostic == NULL ? "" : diagnostic);
+                "%s track · %zu cels · start ticks:",
+                track.visible ? "Visible" : "Hidden", track.item_count);
             if (amount < 0 || (size_t)amount >= sizeof(description)) return false;
+            size_t used = (size_t)amount;
+            size_t marker_count = track.item_count < 8U ? track.item_count : 8U;
+            for (size_t marker = 0U; marker < marker_count; ++marker) {
+                project_timeline_item_view item;
+                if (!viewer_timeline_native_item_at(timeline, track_index,
+                        marker, &item)) return false;
+                amount = snprintf(description + used, sizeof(description) - used,
+                    "%s%u", marker == 0U ? " " : ", ", item.tick);
+                if (amount < 0 || (size_t)amount >= sizeof(description) - used)
+                    return false;
+                used += (size_t)amount;
+            }
+            if (track.item_count > marker_count) {
+                amount = snprintf(description + used, sizeof(description) - used,
+                    " · %zu additional", track.item_count - marker_count);
+                if (amount < 0 || (size_t)amount >= sizeof(description) - used)
+                    return false;
+            }
             value = description;
+        } else {
+            const svg_anim_track *track = &timeline->document->animation.tracks[track_index];
+            if (!track->supported) {
+                state |= UI_STATE_DISABLED;
+                const char *diagnostic = track_diagnostic(timeline, track);
+                int amount = snprintf(description, sizeof(description),
+                    "Unsupported animation track%s%s · preview only",
+                    diagnostic == NULL ? "" : ": ",
+                    diagnostic == NULL ? "" : diagnostic);
+                if (amount < 0 || (size_t)amount >= sizeof(description)) return false;
+                value = description;
+            }
         }
         if (!add_timeline_node(&timeline_accessibility_tree,
                 TIMELINE_A11Y_ROW_BASE + (uint32_t)row, TIMELINE_A11Y_TRACKS,
@@ -251,7 +354,8 @@ bool viewer_timeline_accessibility_snapshot(viewer_timeline *timeline,
     bool increased_contrast, ui_semantics_snapshot *out_snapshot)
 {
     if (timeline == NULL || layout == NULL || out_snapshot == NULL ||
-        viewer_timeline_track_count(timeline) == 0U ||
+        (viewer_timeline_track_count(timeline) == 0U &&
+            (!timeline->native_project || timeline->native_session == NULL)) ||
         (theme != UI_THEME_DARK && theme != UI_THEME_LIGHT)) return false;
     if (!build_timeline_tree(timeline, layout, theme, increased_contrast,
             layout->visible_track_count)) return false;
@@ -269,6 +373,22 @@ bool viewer_timeline_publish_accessibility(viewer_timeline *timeline,
     if (editor_count == 0U || editor_count > UI_MAX_NODES) return false;
     size_t extras = UI_MAX_NODES - editor_count;
     size_t fixed_nodes = layout->collapsed ? 2U : 8U;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->onion_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->key_opacity_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->key_transform_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->key_fill_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->key_stroke_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->key_visibility_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->drawing_asset_button.width > 0U) fixed_nodes++;
+    if (!layout->collapsed && timeline->native_project &&
+        layout->add_cel_button.width > 0U) fixed_nodes++;
     if (!layout->collapsed) {
         viewer_timeline_easing_layout easing;
         if (viewer_timeline_easing_layout_compute(layout, &easing) && easing.visible)

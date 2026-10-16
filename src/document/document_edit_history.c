@@ -98,6 +98,16 @@ bool document_edit_history_saved_cursor(const document_edit *edit,
     return false;
 }
 
+void document_edit_mark_saved(document_edit *edit)
+{
+    if (edit != NULL) edit->saved_state_id = edit->state_id;
+}
+
+void document_edit_mark_unsaved(document_edit *edit)
+{
+    if (edit != NULL) edit->saved_state_id = 0U;
+}
+
 document_edit_error document_edit_history_jump(document_edit *edit,
                                                 size_t state_cursor)
 {

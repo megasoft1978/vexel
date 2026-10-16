@@ -38,18 +38,20 @@ static bool parse_stroke_number(base_bytes src, svg_xml_span span, double *out)
     return r.i == r.n && isfinite(*out);
 }
 static bool parse_dasharray(base_bytes src, svg_xml_span span,
-                            svg_shape_stroke *stroke, double reference)
+                            double values[SVG_SHAPE_MAX_DASH_VALUES],
+                            uint8_t *out_count, double reference)
 {
+    *out_count = 0U;
     if (svg_css_keyword_equals(src, span, "none")) return true;
     number_reader r = {src.ptr + span.offset, span.length, 0U, span.offset};
     while (true) {
         svg_shape_skip_number_space(&r);
         if (r.i == r.n) break;
-        if (stroke->dash_count == SVG_SHAPE_MAX_DASH_VALUES) return false;
+        if (*out_count == SVG_SHAPE_MAX_DASH_VALUES) return false;
         double value;
         if (!svg_shape_read_length_value(&r, reference, &value) ||
             value <= 0.0 || value > 1000000.0) return false;
-        stroke->dash[stroke->dash_count++] = value;
+        values[(*out_count)++] = value;
         size_t before = r.i;
         svg_shape_skip_number_space(&r);
         bool spaced = r.i != before;
@@ -58,7 +60,57 @@ static bool parse_dasharray(base_bytes src, svg_xml_span span,
             if (r.i == r.n || r.p[r.i] == ',') return false;
         } else if (r.i < r.n && !spaced) return false;
     }
-    if (stroke->dash_count == 0U) return false;
+    if (*out_count == 0U) return false;
+    return true;
+}
+
+static bool store_dash_values(svg_shape_builder *builder,
+                              svg_shape_stroke *stroke,
+                              const double *values, uint8_t count,
+                              size_t error_offset)
+{
+    svg_shape_document *document = builder->doc;
+    const size_t maximum = (size_t)SVG_SHAPE_MAX_SHAPES *
+                          SVG_SHAPE_MAX_DASH_VALUES;
+    size_t needed = document->stroke_dash_value_count;
+    if (needed > maximum || count > maximum - needed ||
+        needed > UINT32_MAX ||
+        count > UINT32_MAX - needed) {
+        svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT, error_offset);
+        return false;
+    }
+    needed += count;
+    if (needed > document->stroke_dash_value_capacity) {
+        size_t capacity = document->stroke_dash_value_capacity == 0U ? 64U :
+            document->stroke_dash_value_capacity;
+        while (capacity < needed) {
+            size_t next = capacity * 2U;
+            if (next < capacity || next > maximum) next = maximum;
+            if (next <= capacity) {
+                svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT,
+                               error_offset);
+                return false;
+            }
+            capacity = next;
+        }
+        if (capacity > SIZE_MAX / sizeof(*document->stroke_dash_values)) {
+            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_LIMIT, error_offset);
+            return false;
+        }
+        double *grown = svg_shape_realloc(document->stroke_dash_values,
+            capacity * sizeof(*grown));
+        if (grown == NULL) {
+            svg_shape_fail(builder->diag, SVG_SHAPE_ERROR_OOM, error_offset);
+            return false;
+        }
+        document->stroke_dash_values = grown;
+        document->stroke_dash_value_capacity = capacity;
+    }
+    stroke->dash_value_start = (uint32_t)document->stroke_dash_value_count;
+    stroke->dash_count = count;
+    memcpy(document->stroke_dash_values + document->stroke_dash_value_count,
+           values, (size_t)count * sizeof(*values));
+    document->stroke_dash_value_count = needed;
     return true;
 }
 
@@ -128,11 +180,14 @@ void svg_shape_multiply_alpha(uint8_t rgba[4], double opacity)
     rgba[3] = (uint8_t)lround((double)rgba[3] * opacity);
 }
 
-bool svg_shape_parse_stroke(base_bytes src, svg_shape_stroke *stroke,
+bool svg_shape_parse_stroke(svg_shape_builder *builder, base_bytes src,
+                            svg_shape_stroke *stroke,
                             const svg_css_paint *paint,
-                            double percentage_reference,
-                            svg_shape_diagnostic *diag)
+                            double percentage_reference)
 {
+    if (builder == NULL || builder->doc == NULL || stroke == NULL)
+        return false;
+    svg_shape_diagnostic *diag = builder->diag;
     svg_xml_span span;
     if (svg_css_paint_value(paint, SVG_CSS_STROKE, &span)) {
         if (paint_server_value(src, span)) {
@@ -181,9 +236,16 @@ bool svg_shape_parse_stroke(base_bytes src, svg_shape_stroke *stroke,
             stroke->join = SVG_SHAPE_JOIN_MITER;
         else { svg_shape_fail(diag, SVG_SHAPE_ERROR_UNSUPPORTED, span.offset); return false; }
     }
-    if (svg_css_paint_value(paint, SVG_CSS_STROKE_DASHARRAY, &span) &&
-        !parse_dasharray(src, span, stroke, percentage_reference)) {
-        svg_shape_fail(diag, SVG_SHAPE_ERROR_NUMBER, span.offset); return false;
+    if (svg_css_paint_value(paint, SVG_CSS_STROKE_DASHARRAY, &span)) {
+        double values[SVG_SHAPE_MAX_DASH_VALUES] = {0.0};
+        uint8_t count = 0U;
+        if (!parse_dasharray(src, span, values, &count,
+                             percentage_reference)) {
+            svg_shape_fail(diag, SVG_SHAPE_ERROR_NUMBER, span.offset);
+            return false;
+        }
+        if (count != 0U && !store_dash_values(builder, stroke, values, count,
+                                              span.offset)) return false;
     }
     if (svg_css_paint_value(paint, SVG_CSS_STROKE_OPACITY, &span)) {
         double opacity;

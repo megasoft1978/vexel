@@ -81,7 +81,8 @@ int main(void) {
         "rect, circle { FiLl: red; fill-rule: evenodd; stroke: /* leading */ "
         "blue /* trailing */; "
         "stroke-width: 2; stroke-linecap: round; stroke-linejoin: bevel; "
-        "stroke-miterlimit: 5; stroke-dasharray: 2 3; stroke-dashoffset: 4; }"
+        "stroke-miterlimit: 5; stroke-dasharray: 2 3; stroke-dashoffset: 4; "
+        "clip-rule:evenodd; }"
         "svg g rect.descendant { clip-path:none; stop-color:currentColor; "
         "stop-opacity:1; fill-opacity:50%; stroke-opacity:.25; opacity:.75; "
         "visibility:hidden; display:inline; color:hsl(240,100%,50%); }"
@@ -132,6 +133,7 @@ int main(void) {
          check_value(source, &computed, SVG_CSS_VISIBILITY, "hidden") &&
          check_value(source, &computed, SVG_CSS_DISPLAY, "inline") &&
          check_value(source, &computed, SVG_CSS_COLOR, "hsl(240,100%,50%)");
+    ok = ok && check_value(source, &computed, SVG_CSS_CLIP_RULE, "evenodd");
     svg_css_paint initial = svg_css_initial_paint();
     for (size_t i = 0; i < SVG_CSS_PROPERTY_COUNT; i++)
         ok = ok && !initial.values[i].present;
@@ -145,6 +147,6 @@ int main(void) {
         fprintf(stderr, "CSS named and functional color checks failed\n");
         return 5;
     }
-    puts("CSS bounded cascade, descendant selectors, 18 properties, and colors passed");
+    puts("CSS bounded cascade, descendant selectors, clip-rule, and colors passed");
     return 0;
 }

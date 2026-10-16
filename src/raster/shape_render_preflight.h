@@ -6,6 +6,9 @@
 #include "shape_scanline.h"
 #include "shape_scanline_fill.h"
 
+/* Finite work budget for a width x height canvas; see the .c header comment. */
+size_t raster_preflight_work_budget(uint32_t width, uint32_t height);
+
 bool raster_shape_render_work_preflight(
     const svg_shape_document *document,
     const raster_shape_bounds_set *bounds,

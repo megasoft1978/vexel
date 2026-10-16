@@ -32,7 +32,7 @@ typedef struct svg_shape_stroke {
     double width;
     double miter_limit;
     double dash_offset;
-    double dash[SVG_SHAPE_MAX_DASH_VALUES];
+    uint32_t dash_value_start;
     uint8_t dash_count;
     svg_shape_linecap cap;
     svg_shape_linejoin join;
@@ -133,6 +133,19 @@ typedef struct svg_shape_aspect {
 typedef struct svg_shape_paint svg_shape_paint;
 typedef struct svg_paint_stop svg_paint_stop;
 typedef struct svg_shape_clip svg_shape_clip;
+
+/* Returns NULL when the shape uses the default solid fill. */
+const svg_shape_paint *svg_shape_paint_for_shape(
+    const svg_shape_document *document, size_t shape_index);
+svg_shape_paint *svg_shape_paint_for_shape_mutable(
+    svg_shape_document *document, size_t shape_index);
+/* Returns NULL when the shape uses the default solid stroke. */
+const svg_shape_paint *svg_shape_stroke_paint_for_shape(
+    const svg_shape_document *document, size_t shape_index);
+svg_shape_paint *svg_shape_stroke_paint_for_shape_mutable(
+    svg_shape_document *document, size_t shape_index);
+const double *svg_shape_stroke_dash_values_for_shape(
+    const svg_shape_document *document, size_t shape_index);
 
 typedef struct svg_shape_source_map {
     size_t offset;
@@ -261,9 +274,17 @@ struct svg_shape_document {
     size_t pattern_bytes;
     geom_affine *shape_stroke_inverse;
     svg_shape_stroke *strokes;
-    svg_shape_paint *paints;
-    svg_shape_paint *stroke_paints; /* allocated only for pattern strokes */
+    svg_shape_paint *paints; /* sparse non-default fill paint records */
+    uint32_t *paint_indices_by_shape; /* zero means implicit solid fill */
+    size_t paint_count;
+    size_t paint_capacity;
+    svg_shape_paint *stroke_paints; /* sparse non-default stroke paint records */
+    uint32_t *stroke_paint_indices_by_shape; /* zero means solid stroke */
+    size_t stroke_paint_count;
     size_t stroke_paint_capacity;
+    double *stroke_dash_values; /* compact dash patterns shared by all shapes */
+    size_t stroke_dash_value_count;
+    size_t stroke_dash_value_capacity;
     svg_paint_stop *paint_stops;
     size_t paint_stop_count;
     svg_shape_clip **clips;
@@ -277,6 +298,12 @@ struct svg_shape_document {
 /* out owns decoded arrays and borrows source until document_destroy. Failure leaves out empty. */
 svg_shape_error svg_shape_decode(base_bytes source, svg_shape_document *out,
                                  svg_shape_diagnostic *diagnostic);
+/* Cancellable variant for long-running validation/import work. Cancellation is
+ * reported through out_canceled and leaves out empty. */
+svg_shape_error svg_shape_decode_cancellable(
+    base_bytes source, svg_xml_cancel_check_fn canceled, void *cancel_context,
+    bool *out_canceled, svg_shape_document *out,
+    svg_shape_diagnostic *diagnostic);
 /* Decodes conditional <switch> children for one injected BCP-47 language. */
 svg_shape_error svg_shape_decode_with_system_language(
     base_bytes source, base_bytes system_language, svg_shape_document *out,

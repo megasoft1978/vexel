@@ -32,18 +32,43 @@ if(VEXEL_SANITIZER)
 endif()
 
 add_executable(svgworkbench app/main.c app/index_replay.c app/test_driver/native_task_tests.c
-    src/app/frame_compose.c src/app/viewer_load.c src/app/viewer.c src/app/render_frame_cli.c
+    src/app/frame_compose.c src/app/viewer_load.c src/app/viewer.c src/app/viewer_recovery.c src/app/render_frame_cli.c
     src/raster/tile.c
     src/platform/macos/platform_task.c src/platform/macos/platform_window.m
     src/platform/macos/platform_metal.m)
+target_sources(svgworkbench PRIVATE src/platform/macos/platform_recovery_store.m)
 target_include_directories(svgworkbench PRIVATE src app)
 set_source_files_properties(src/platform/macos/platform_window.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 set_source_files_properties(src/platform/macos/platform_metal.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_source_files_properties(src/platform/macos/platform_recovery_store.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
 find_library(METAL_FRAMEWORK Metal REQUIRED)
 find_library(QUARTZCORE_FRAMEWORK QuartzCore REQUIRED)
 find_package(Threads REQUIRED)
 target_link_libraries(svgworkbench PRIVATE ${COCOA_FRAMEWORK} ${METAL_FRAMEWORK} ${QUARTZCORE_FRAMEWORK} Threads::Threads)
+add_executable(viewer_recovery_test tests/app/viewer_recovery_test.c
+    src/app/viewer_recovery.c src/app/viewer_editor_document.c
+    src/app/viewer_file_watch.c src/app/viewer_load.c
+    src/app/media_providers.c src/raster/tile.c)
+target_sources(viewer_recovery_test PRIVATE src/platform/macos/platform_recovery_store.m)
+set_source_files_properties(src/platform/macos/platform_recovery_store.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+target_include_directories(viewer_recovery_test PRIVATE src src/app src/document)
+target_link_libraries(viewer_recovery_test PRIVATE vexel_editor_ui vexel_project
+    vexel_platform_media ${COCOA_FRAMEWORK} ${CORETEXT_FRAMEWORK}
+    ${COREGRAPHICS_FRAMEWORK} ${IMAGEIO_FRAMEWORK})
+set_target_properties(viewer_recovery_test PROPERTIES C_STANDARD 17
+    C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_recovery_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_recovery_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_recovery_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-recovery COMMAND viewer_recovery_test)
+endif()
 
 # lane: w15-native
 target_sources(svgworkbench PRIVATE src/app/welcome_model.c src/app/platform_command_policy.c
@@ -230,6 +255,7 @@ add_library(vexel_shape STATIC
     src/raster/shape_render_group.c
     src/raster/shape_render_sample.c
     src/raster/shape_render_stroke.c
+    src/raster/shape_render_dash_cache.c
     # lane: decode2 — bounded stroke candidate grid
     src/raster/shape_render_stroke_grid.c
     src/raster/shape_bounds.c
@@ -274,6 +300,7 @@ target_link_libraries(svgworkbench PRIVATE vexel_shape vexel_index vexel_ui_stat
 
 # lane: w3-editor
 add_library(vexel_editor_ui STATIC src/app/viewer_editor.c
+    src/app/viewer_editor_actions.c
     src/app/viewer_editor_view.c src/app/viewer_editor_input.c
     src/app/viewer_chrome.c src/app/viewer_workspace.c
     src/app/viewer_editor_log.c)
@@ -296,6 +323,7 @@ add_library(vexel_mcp STATIC
     src/mcp/mcp_json.c
     src/mcp/mcp_tools.c
     src/mcp/mcp_protocol.c
+    src/mcp/mcp_protocol_async.c
     src/mcp/mcp_socket.c
     src/mcp/mcp_access.c
     src/mcp/mcp_broker.c
@@ -303,11 +331,14 @@ add_library(vexel_mcp STATIC
     src/mcp/mcp_broker_docs.c
     src/mcp/mcp_broker_edit.c
     src/mcp/mcp_broker_render.c
+    src/mcp/mcp_broker_native_timeline.c
+    src/mcp/mcp_export_snapshot.c
+    src/mcp/mcp_export_job.c
 )
 target_include_directories(vexel_mcp PUBLIC src src/mcp)
-target_link_libraries(vexel_mcp PUBLIC vexel_document vexel_shape)
+target_link_libraries(vexel_mcp PUBLIC vexel_document vexel_shape vexel_project)
 set_target_properties(vexel_mcp PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-target_sources(svgworkbench PRIVATE src/app/mcp_broker_hook.c)
+target_sources(svgworkbench PRIVATE src/app/mcp_broker_hook.c src/app/mcp_broker_io.c)
 target_link_libraries(svgworkbench PRIVATE vexel_mcp)
 add_executable(vexel-mcp app/vexel_mcp_main.c)
 target_link_libraries(vexel-mcp PRIVATE vexel_mcp)
@@ -316,11 +347,39 @@ set_target_properties(vexel-mcp PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
     C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(mcp_protocol_test tests/mcp/mcp_protocol_test.c)
 target_link_libraries(mcp_protocol_test PRIVATE vexel_mcp)
+add_executable(mcp_broker_io_test tests/mcp/mcp_broker_io_test.c src/app/mcp_broker_io.c)
+target_include_directories(mcp_broker_io_test PRIVATE src)
+set_target_properties(mcp_broker_io_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(mcp_protocol_async_test tests/mcp/mcp_protocol_async_test.c)
+target_link_libraries(mcp_protocol_async_test PRIVATE vexel_mcp)
+add_executable(mcp_export_snapshot_test tests/mcp/mcp_export_snapshot_test.c)
+target_link_libraries(mcp_export_snapshot_test PRIVATE vexel_mcp)
+set_target_properties(mcp_export_snapshot_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(mcp_export_snapshot_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(mcp_export_snapshot_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(mcp_export_snapshot_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+add_executable(mcp_export_job_test tests/mcp/mcp_export_job_test.c
+    src/mcp/mcp_export_job.c src/platform/macos/platform_task.c)
+target_link_libraries(mcp_export_job_test PRIVATE vexel_mcp)
+target_compile_definitions(mcp_export_job_test PRIVATE MCP_EXPORT_JOB_TESTING)
+set_target_properties(mcp_export_job_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(mcp_export_job_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(mcp_export_job_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(mcp_export_job_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
 add_executable(mcp_fuzz tests/mcp/mcp_fuzz.c)
 target_link_libraries(mcp_fuzz PRIVATE vexel_mcp)
 add_executable(mcp_headless_broker tests/mcp/mcp_headless_broker.c)
 target_link_libraries(mcp_headless_broker PRIVATE vexel_mcp)
-foreach(mcp_target mcp_protocol_test mcp_fuzz mcp_headless_broker)
+foreach(mcp_target mcp_protocol_test mcp_protocol_async_test mcp_fuzz mcp_headless_broker)
     set_target_properties(${mcp_target} PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
         C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 endforeach()
@@ -334,6 +393,21 @@ add_executable(shape_test tests/svg/shape/test_shape.c tests/svg/shape/test_refe
 target_include_directories(shape_test PRIVATE src/svg/paint)
 target_link_libraries(shape_test PRIVATE vexel_shape)
 set_target_properties(shape_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(gradient_stroke_test tests/svg/shape/gradient_stroke_test.c)
+target_link_libraries(gradient_stroke_test PRIVATE vexel_shape)
+set_target_properties(gradient_stroke_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(stroke_dash_storage_test tests/svg/shape/stroke_dash_storage_test.c)
+target_link_libraries(stroke_dash_storage_test PRIVATE vexel_shape)
+set_target_properties(stroke_dash_storage_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(clip_definition_scope_test
+    tests/svg/shape/clip_definition_scope_test.c)
+target_link_libraries(clip_definition_scope_test PRIVATE vexel_shape)
+set_target_properties(clip_definition_scope_test PROPERTIES C_STANDARD 17
+    C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(path_number_test tests/svg/shape/path_number_test.c)
+target_link_libraries(path_number_test PRIVATE vexel_shape)
+set_target_properties(path_number_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 add_executable(shape_decode_budget_test tests/svg/shape/test_decode_budget.c)
 target_link_libraries(shape_decode_budget_test PRIVATE vexel_shape)
 add_executable(shape_ignored_test tests/svg/shape/test_ignored.c)
@@ -440,11 +514,18 @@ set_target_properties(document_model_test PROPERTIES C_STANDARD 17 C_STANDARD_RE
 target_sources(vexel_document PRIVATE
     src/document/document_edit.c
     src/document/document_edit_ops.c
+    src/document/document_edit_insert.c
     src/document/document_edit_piece_table.c
+    src/document/document_edit_snapshot.c
 )
 add_executable(document_edit_test tests/edit/test_document_edit.c)
 target_link_libraries(document_edit_test PRIVATE vexel_document)
 set_target_properties(document_edit_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+add_executable(document_edit_snapshot_test tests/edit/document_edit_snapshot_test.c)
+target_link_libraries(document_edit_snapshot_test PRIVATE vexel_document Threads::Threads)
+set_target_properties(document_edit_snapshot_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 target_include_directories(vexel_base PUBLIC src/base)
 set_target_properties(vexel_base PROPERTIES
     C_STANDARD 17
@@ -497,10 +578,13 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(ui_interaction_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(ui_demo_interaction_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(document_edit_snapshot_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     # lane: w4-mcp
     target_compile_options(vexel_mcp PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel-mcp PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(mcp_protocol_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(mcp_broker_io_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(mcp_protocol_async_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(mcp_fuzz PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(mcp_headless_broker PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(vexel_shape PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -522,6 +606,10 @@ if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(shape_render_reference_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_render_stats_cli PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(gradient_stroke_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(stroke_dash_storage_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(clip_definition_scope_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+    target_compile_options(path_number_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_decode_budget_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(shape_ignored_test PRIVATE ${VEXEL_STRICT_WARNINGS})
     target_compile_options(svg_anim_test PRIVATE ${VEXEL_STRICT_WARNINGS})
@@ -562,16 +650,18 @@ if(VEXEL_SANITIZER)
     target_link_options(vexel_editor_ui PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_compile_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_document PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(document_edit_snapshot_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(document_edit_snapshot_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
     # lane: w4-mcp
     target_compile_options(vexel_mcp PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_mcp PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(mcp_target vexel-mcp mcp_protocol_test mcp_fuzz mcp_headless_broker)
+    foreach(mcp_target vexel-mcp mcp_protocol_test mcp_protocol_async_test mcp_fuzz mcp_headless_broker)
         target_compile_options(${mcp_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${mcp_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
     target_compile_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
     target_link_options(vexel_shape PRIVATE ${VEXEL_SANITIZER_FLAGS})
-    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test shape_decode_budget_test shape_ignored_test svg_anim_test animation_eval_cli animation_fuzz animation_render_cli css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
+    foreach(xml_target editor_chrome_render editor_state_test ui_demo_render ui_focus_bench ui_core_test ui_interaction_test ui_demo_interaction_test xml_tokenizer_test xml_tokenizer_cli xml_tokenizer_fuzz svg_index_test viewer_navigation_test viewer_frame_test svg_token_stream_test svg_index_bench source_save_test document_model_test document_edit_test shape_render_cli shape_render_reference_cli shape_render_stats_cli shape_test gradient_stroke_test stroke_dash_storage_test clip_definition_scope_test path_number_test shape_decode_budget_test shape_ignored_test svg_anim_test animation_eval_cli animation_fuzz animation_render_cli css_test shape_fuzz spatial_cache_test spatial_cache_bench vexel_spatial vexel_tile_cache vexel_tile_cache_test)
         target_compile_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
         target_link_options(${xml_target} PRIVATE ${VEXEL_SANITIZER_FLAGS})
     endforeach()
@@ -620,9 +710,14 @@ endif()
 if(BUILD_TESTING)
     # lane: w4-mcp
     add_test(NAME mcp-protocol COMMAND mcp_protocol_test)
+    add_test(NAME mcp-broker-io COMMAND mcp_broker_io_test)
+    add_test(NAME mcp-protocol-async COMMAND mcp_protocol_async_test)
+    add_test(NAME mcp-export-snapshot COMMAND mcp_export_snapshot_test)
+    add_test(NAME mcp-export-job COMMAND mcp_export_job_test)
     add_test(NAME mcp-fuzz COMMAND mcp_fuzz 200000 12648430)
-    add_test(NAME mcp-stdio-e2e COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/mcp/test_e2e.py -v)
-    set_tests_properties(mcp-stdio-e2e PROPERTIES
+    add_test(NAME mcp-stdio-relay COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/mcp/test_e2e.py McpStdioRelayTests -v)
+    add_test(NAME mcp-stdio-e2e COMMAND python3 ${CMAKE_SOURCE_DIR}/tests/mcp/test_e2e.py McpStdioEndToEndTests -v)
+    set_tests_properties(mcp-stdio-relay mcp-stdio-e2e PROPERTIES
         SKIP_REGULAR_EXPRESSION "execution sandbox denies Unix-domain socket bind")
     add_test(NAME cli-version COMMAND svgworkbench --version)
     add_test(NAME base-contract COMMAND base_contract_test)
@@ -631,7 +726,12 @@ if(BUILD_TESTING)
     add_test(NAME document-model COMMAND document_model_test)
     # lane: editcore
     add_test(NAME document-edit COMMAND document_edit_test)
+    add_test(NAME document-edit-snapshot COMMAND document_edit_snapshot_test)
     add_test(NAME shape-render COMMAND shape_test)
+    add_test(NAME svg-gradient-stroke COMMAND gradient_stroke_test)
+    add_test(NAME svg-stroke-dash-storage COMMAND stroke_dash_storage_test)
+    add_test(NAME svg-nested-clip-definition COMMAND clip_definition_scope_test)
+    add_test(NAME svg-path-number-lexing COMMAND path_number_test)
     add_test(NAME shape-decode-budget COMMAND shape_decode_budget_test)
     add_test(NAME shape-ignored-constructs COMMAND shape_ignored_test)
     add_test(NAME render-frame-ignored-note COMMAND ${CMAKE_COMMAND} -E env
@@ -955,15 +1055,47 @@ endif()
 if(BUILD_TESTING)
     add_test(NAME mcp-features COMMAND mcp_features_test)
 endif()
+add_executable(mcp_native_timeline_test tests/mcp/mcp_native_timeline_test.c)
+target_include_directories(mcp_native_timeline_test PRIVATE src src/mcp)
+target_link_libraries(mcp_native_timeline_test PRIVATE vexel_mcp vexel_project)
+set_target_properties(mcp_native_timeline_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(mcp_native_timeline_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(mcp_native_timeline_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(mcp_native_timeline_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME mcp-native-timeline COMMAND mcp_native_timeline_test)
+endif()
+add_executable(mcp_async_task_test
+    tests/mcp/mcp_async_task_test.c src/mcp/mcp_task_store.c)
+target_include_directories(mcp_async_task_test PRIVATE src/mcp)
+target_link_libraries(mcp_async_task_test PRIVATE Threads::Threads)
+set_target_properties(mcp_async_task_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(mcp_async_task_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(mcp_async_task_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(mcp_async_task_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME mcp-async-task COMMAND mcp_async_task_test)
+endif()
 
 # lane: w15-visual
 target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_editor_motion.c
     src/app/viewer_editor_reveal.c
-    src/app/viewer_editor_document.c
     src/app/viewer_editor_canvas_pointer.c
     src/app/viewer_editor_tree_legacy.c)
 target_sources(svgworkbench PRIVATE
+    src/app/viewer_editor_document.c
+    src/app/viewer_editor_paint.c
+    src/app/viewer_editor_visibility.c
+    src/app/viewer_history.c
     src/app/viewer_editor_result.c
     src/platform/macos/platform_window_native_shell.m
     src/platform/macos/platform_window_animation.m
@@ -1214,13 +1346,15 @@ endif()
 # lane: w8-timeline
 target_sources(svgworkbench PRIVATE
     src/app/viewer_timeline.c
+    src/app/viewer_timeline_native_move.c
     src/app/viewer_timeline_ui.c)
 add_executable(viewer_timeline_test
     tests/app/viewer_timeline_test.c
     src/app/viewer_timeline.c
+    src/app/viewer_timeline_native_move.c
     src/app/viewer_timeline_ui.c)
 target_include_directories(viewer_timeline_test PRIVATE src src/app)
-target_link_libraries(viewer_timeline_test PRIVATE vexel_shape vexel_editor_ui)
+target_link_libraries(viewer_timeline_test PRIVATE vexel_shape vexel_editor_ui vexel_project)
 set_target_properties(viewer_timeline_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -1232,18 +1366,48 @@ endif()
 if(BUILD_TESTING)
     add_test(NAME viewer-timeline COMMAND viewer_timeline_test)
 endif()
+add_executable(viewer_timeline_native_test
+    tests/app/viewer_timeline_native_test.c
+    tests/app/viewer_editor_visibility_test.c
+    src/app/viewer_timeline.c
+    src/app/viewer_editor_document.c
+    src/app/viewer_editor_paint.c
+    src/app/viewer_editor_visibility.c
+    src/app/viewer_timeline_native_move.c
+    src/app/viewer_timeline_ui.c
+    src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_accessibility.c
+    src/app/viewer_timeline_transform.c)
+target_include_directories(viewer_timeline_native_test PRIVATE src src/app)
+target_link_libraries(viewer_timeline_native_test PRIVATE vexel_shape vexel_editor_ui vexel_project)
+set_target_properties(viewer_timeline_native_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_timeline_native_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_timeline_native_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_timeline_native_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-timeline-native COMMAND viewer_timeline_native_test)
+endif()
 # lane: w14-timeline
 target_sources(svgworkbench PRIVATE
     src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_transform.c
     src/app/viewer_display_name.c)
-target_sources(viewer_timeline_test PRIVATE src/app/viewer_timeline_layout.c)
+target_sources(viewer_timeline_test PRIVATE
+    src/app/viewer_timeline_layout.c src/app/viewer_timeline_transform.c
+    src/app/viewer_timeline_native_move.c)
 add_executable(viewer_timeline_render
     tests/ui/viewer_timeline_render.c
     src/app/viewer_timeline.c
+    src/app/viewer_timeline_native_move.c
     src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_transform.c
     src/app/viewer_timeline_ui.c)
 target_include_directories(viewer_timeline_render PRIVATE src src/app src/ui)
-target_link_libraries(viewer_timeline_render PRIVATE vexel_shape vexel_editor_ui)
+target_link_libraries(viewer_timeline_render PRIVATE vexel_shape vexel_editor_ui vexel_project)
 set_target_properties(viewer_timeline_render PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -1313,6 +1477,20 @@ if(VEXEL_SANITIZER)
 endif()
 if(BUILD_TESTING)
     add_test(NAME shape-render-large-work COMMAND raster_large_render_test)
+endif()
+add_executable(raster_budget_test tests/svg/shape/raster_budget_test.c)
+target_include_directories(raster_budget_test PRIVATE src/raster src/svg/shape)
+target_link_libraries(raster_budget_test PRIVATE vexel_shape)
+set_target_properties(raster_budget_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(raster_budget_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(raster_budget_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(raster_budget_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME shape-render-scaled-budget COMMAND raster_budget_test)
 endif()
 # end lane: w8-perf
 # lane: w14-palette — command palette and bounded undo history
@@ -1423,7 +1601,8 @@ target_sources(vexel_shape PRIVATE
     src/svg/animation/authoring_create.c)
 target_sources(vexel_editor_ui PRIVATE
     src/app/viewer_anim_edit.c
-    src/app/viewer_timeline_easing.c)
+    src/app/viewer_timeline_easing.c
+    src/app/viewer_timeline_cel.c)
 
 add_executable(animation_authoring_test tests/anim/animation_authoring_test.c)
 target_include_directories(animation_authoring_test PRIVATE src src/document src/app)
@@ -1456,12 +1635,14 @@ endif()
 add_executable(viewer_timeline_keyframe_test
     tests/app/viewer_timeline_keyframe_test.c
     src/app/viewer_timeline.c
+    src/app/viewer_timeline_native_move.c
     src/app/viewer_timeline_layout.c
     src/app/viewer_timeline_ui.c
-    src/app/viewer_timeline_accessibility.c)
+    src/app/viewer_timeline_accessibility.c
+    src/app/viewer_timeline_transform.c)
 target_include_directories(viewer_timeline_keyframe_test PRIVATE src src/app)
 target_link_libraries(viewer_timeline_keyframe_test PRIVATE
-    vexel_shape vexel_editor_ui vexel_platform_png)
+    vexel_shape vexel_editor_ui vexel_platform_png vexel_project)
 set_target_properties(viewer_timeline_keyframe_test PROPERTIES
     C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -1511,3 +1692,217 @@ if(BUILD_TESTING)
         --binary $<TARGET_FILE:editor_chrome_render>)
 endif()
 # end lane: w15-a11y
+
+# lane: project-format
+add_library(vexel_project STATIC src/project/project_bundle.c
+    src/project/project_recovery.c
+    src/project/project_bundle_asset_overlay.c src/project/project_file.c
+    src/project/project_timeline.c src/project/project_timeline_json.c
+    src/project/project_timeline_integration.c
+    src/project/project_drawing_asset.c
+    src/project/project_timeline_edit.c src/project/project_timeline_session.c
+    src/project/project_animation_render.c)
+target_link_libraries(vexel_project PUBLIC vexel_base vexel_document vexel_xml
+    vexel_shape)
+target_include_directories(vexel_project PUBLIC src src/project)
+target_link_libraries(svgworkbench PRIVATE vexel_project)
+target_compile_options(vexel_project PRIVATE ${VEXEL_STRICT_WARNINGS})
+set_target_properties(vexel_project PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+add_executable(project_bundle_test tests/project/project_bundle_test.c)
+target_link_libraries(project_bundle_test PRIVATE vexel_project)
+set_target_properties(project_bundle_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_bundle_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_file_test tests/project/project_file_test.c)
+target_link_libraries(project_file_test PRIVATE vexel_project)
+set_target_properties(project_file_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_file_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_recovery_test tests/project/project_recovery_test.c)
+target_link_libraries(project_recovery_test PRIVATE vexel_project)
+set_target_properties(project_recovery_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_recovery_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(platform_recovery_store_test
+    tests/platform/platform_recovery_store_test.m
+    src/platform/macos/platform_recovery_store.m)
+target_include_directories(platform_recovery_store_test PRIVATE src src/platform src/base)
+target_link_libraries(platform_recovery_store_test PRIVATE ${COCOA_FRAMEWORK})
+set_source_files_properties(tests/platform/platform_recovery_store_test.m
+    src/platform/macos/platform_recovery_store.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(platform_recovery_store_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(platform_recovery_store_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_timeline_test tests/project/project_timeline_test.c)
+target_link_libraries(project_timeline_test PRIVATE vexel_project Threads::Threads)
+set_target_properties(project_timeline_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_timeline_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_timeline_integration_test
+    tests/project/project_timeline_integration_test.c)
+target_link_libraries(project_timeline_integration_test PRIVATE vexel_project)
+set_target_properties(project_timeline_integration_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_timeline_integration_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_timeline_edit_test tests/project/project_timeline_edit_test.c)
+target_link_libraries(project_timeline_edit_test PRIVATE vexel_project)
+set_target_properties(project_timeline_edit_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_timeline_edit_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_timeline_move_test tests/project/project_timeline_move_test.c)
+target_link_libraries(project_timeline_move_test PRIVATE vexel_project)
+set_target_properties(project_timeline_move_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_timeline_move_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_timeline_session_test tests/project/project_timeline_session_test.c)
+target_link_libraries(project_timeline_session_test PRIVATE vexel_project)
+set_target_properties(project_timeline_session_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_timeline_session_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+add_executable(project_animation_render_test
+    tests/project/project_animation_render_test.c)
+target_link_libraries(project_animation_render_test PRIVATE vexel_project)
+set_target_properties(project_animation_render_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_animation_render_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(vexel_project PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_bundle_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_bundle_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_file_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_file_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_recovery_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_recovery_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(platform_recovery_store_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(platform_recovery_store_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_timeline_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_timeline_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_timeline_integration_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_timeline_integration_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_timeline_edit_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_timeline_edit_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_timeline_move_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_timeline_move_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_timeline_session_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_timeline_session_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_compile_options(project_animation_render_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_animation_render_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME project-bundle COMMAND project_bundle_test)
+    add_test(NAME project-file COMMAND project_file_test)
+    add_test(NAME project-recovery COMMAND project_recovery_test)
+    add_test(NAME platform-recovery-store COMMAND platform_recovery_store_test)
+    add_test(NAME project-timeline COMMAND project_timeline_test)
+    add_test(NAME project-timeline-integration COMMAND project_timeline_integration_test)
+    add_test(NAME project-timeline-edit COMMAND project_timeline_edit_test)
+    add_test(NAME project-timeline-move COMMAND project_timeline_move_test)
+    add_test(NAME project-timeline-session COMMAND project_timeline_session_test)
+    add_test(NAME project-animation-render COMMAND project_animation_render_test)
+endif()
+add_executable(project_load_test tests/project/project_load_test.c
+    src/app/viewer_load.c src/app/media_providers.c src/raster/tile.c)
+target_link_libraries(project_load_test PRIVATE vexel_project vexel_shape
+    vexel_base vexel_document vexel_xml vexel_index vexel_platform_media
+    ${COCOA_FRAMEWORK} ${CORETEXT_FRAMEWORK} ${COREGRAPHICS_FRAMEWORK} ${IMAGEIO_FRAMEWORK})
+target_include_directories(project_load_test PRIVATE src)
+set_target_properties(project_load_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_load_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(project_load_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_load_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME project-load COMMAND project_load_test)
+endif()
+add_executable(platform_file_route_test tests/platform/platform_file_route_test.m
+    src/platform/macos/platform_window_files.m)
+target_include_directories(platform_file_route_test PRIVATE src src/platform/macos)
+target_link_libraries(platform_file_route_test PRIVATE ${COCOA_FRAMEWORK})
+set_source_files_properties(src/platform/macos/platform_window_files.m
+    PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
+set_target_properties(platform_file_route_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO OBJC_STANDARD 17 OBJC_STANDARD_REQUIRED YES OBJC_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(platform_file_route_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(platform_file_route_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(platform_file_route_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME platform-file-route COMMAND platform_file_route_test)
+endif()
+add_executable(project_save_test tests/app/project_save_test.c src/app/viewer_save.c
+    src/app/viewer_editor_document.c
+    src/app/viewer_timeline.c src/app/viewer_timeline_native_move.c
+    src/app/viewer_timeline_ui.c src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_accessibility.c src/app/viewer_timeline_transform.c)
+target_include_directories(project_save_test PRIVATE src src/app)
+target_link_libraries(project_save_test PRIVATE vexel_editor_ui vexel_project
+    vexel_platform_dialog)
+set_target_properties(project_save_test PROPERTIES C_STANDARD 17 C_STANDARD_REQUIRED YES
+    C_EXTENSIONS NO RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(project_save_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(project_save_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(project_save_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME project-save COMMAND project_save_test)
+endif()
+add_executable(viewer_timeline_bootstrap_test
+    tests/app/viewer_timeline_bootstrap_test.c
+    src/app/viewer_editor_document.c
+    src/app/viewer_timeline.c
+    src/app/viewer_timeline_native_move.c
+    src/app/viewer_timeline_ui.c
+    src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_accessibility.c
+    src/app/viewer_timeline_transform.c)
+target_include_directories(viewer_timeline_bootstrap_test PRIVATE src src/app)
+target_link_libraries(viewer_timeline_bootstrap_test PRIVATE vexel_shape
+    vexel_editor_ui vexel_project)
+set_target_properties(viewer_timeline_bootstrap_test PROPERTIES
+    C_STANDARD 17 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_timeline_bootstrap_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_timeline_bootstrap_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_timeline_bootstrap_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-timeline-bootstrap COMMAND viewer_timeline_bootstrap_test)
+endif()
+add_executable(viewer_history_test tests/app/viewer_history_test.c
+    src/app/viewer_history.c src/app/viewer_editor_document.c
+    src/app/viewer_timeline.c src/app/viewer_timeline_native_move.c
+    src/app/viewer_timeline_ui.c src/app/viewer_timeline_layout.c
+    src/app/viewer_timeline_accessibility.c src/app/viewer_timeline_transform.c)
+target_include_directories(viewer_history_test PRIVATE src src/app)
+target_link_libraries(viewer_history_test PRIVATE vexel_shape vexel_editor_ui
+    vexel_project)
+set_target_properties(viewer_history_test PROPERTIES C_STANDARD 17
+    C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+target_compile_options(viewer_history_test PRIVATE ${VEXEL_STRICT_WARNINGS})
+if(VEXEL_SANITIZER)
+    target_compile_options(viewer_history_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+    target_link_options(viewer_history_test PRIVATE ${VEXEL_SANITIZER_FLAGS})
+endif()
+if(BUILD_TESTING)
+    add_test(NAME viewer-history COMMAND viewer_history_test)
+endif()
+# end lane: project-format
