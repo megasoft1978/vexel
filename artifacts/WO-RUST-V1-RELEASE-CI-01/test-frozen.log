@@ -1,0 +1,514 @@
+   Compiling vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-app)
+warning: variable does not need to be mutable
+   --> rust/crates/vexel-app/src/session/tests_playback.rs:160:10
+    |
+160 |     let (mut app, _host) = animated();
+    |          ----^^^
+    |          |
+    |          help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling vexel-mcp-stdio v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-mcp-stdio)
+   Compiling vexel-svg-engine v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-engine)
+warning: `vexel-app` (lib test) generated 1 warning (run `cargo fix --lib -p vexel-app --tests` to apply 1 suggestion)
+   Compiling vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-protocol)
+   Compiling vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-xml)
+   Compiling vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/tools/vexel-dev)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.55s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_app-667982e72326821e)
+
+running 173 tests
+test animation::tests::nothing_to_play_without_a_loop ... ok
+test animation::tests_driver::a_shorter_loop_clamps_the_time ... ok
+test animation::tests::frame_queue_is_bounded_and_drops_oldest ... ok
+test animation::tests::path_outside_grant_is_denied_and_creates_nothing ... ok
+test animation::tests::animation_fragment_undo_redo_restores_exact_source_bytes ... ok
+test animation::tests::playback_follows_injected_clock_and_wraps_at_the_loop_boundary ... ok
+test animation::tests::pause_scrub_and_resume_without_a_window ... ok
+test animation::tests::evaluate_frame_values_at_start_mid_end_and_wrap ... ok
+test animation::tests::invalid_requests_are_typed_before_any_file_or_render ... ok
+test animation::tests::unsupported_or_invalid_inputs_are_typed_not_approximated ... ok
+test animation::tests_ui::a_tool_gesture_owns_the_keys_until_it_ends ... ok
+test animation::tests_driver::play_on_a_static_document_is_a_no_op ... ok
+test animation::tests::rendered_frames_differ_over_time_and_loop_back ... ok
+test animation::tests_ui::dragging_the_scrub_bar_pauses_and_release_stays_paused ... ok
+test animation::tests_ui::keys_are_ignored_for_text_fields_tools_and_static_documents ... ok
+test animation::tests::cancellation_before_and_during_rendering_leaves_no_file ... ok
+test animation::tests_ui::keys_drive_the_playback_state ... ok
+test animation::tests::cancelled_job_reports_cancellation_and_writes_nothing_partial ... ok
+test animation::tests_ui::playback_keys_do_not_collide_with_tools_modes_or_chords ... ok
+test animation::tests_ui::scrub_maps_pointer_x_to_clamped_seconds ... ok
+test animation::tests_ui::strip_hit_testing_separates_button_scrub_and_bar ... ok
+test animation::tests_ui::strip_layout_sits_at_the_stage_bottom_with_disjoint_controls ... ok
+test animation::tests_ui::the_button_toggles_play_and_the_bar_swallows_clicks ... ok
+test animation::tests_ui::the_playback_key_map_is_exact ... ok
+test animation::tests_ui::time_label_format_is_minutes_seconds_centiseconds ... ok
+test animation::tests_ui::the_strip_is_hidden_and_inert_for_static_documents ... ok
+test compose::tests::canvas_doc_canvas_round_trip_within_1e9_for_meet_slice_none ... ok
+test compose::tests::cancellation_returns_cancelled_and_never_a_frame ... ok
+test compose::tests::deferred_shapes_are_skipped_and_disclosed_not_dropped_silently ... ok
+test compose::tests::filter_mask_and_text_fixtures_yield_unsupported ... ok
+test animation::tests_driver::play_pause_seek_follow_the_clock_and_clamp ... ok
+test compose::tests::every_truncated_prefix_is_handled_without_panic ... ok
+test animation::tests::existing_file_is_kept_without_overwrite_and_replaced_with_it ... ok
+test compose::tests::invalid_utf8_and_malformed_xml_are_typed ... ok
+test compose::tests::points_outside_the_viewport_report_none ... ok
+test animation::tests::frame_count_follows_ceil_duration_times_fps ... ok
+test compose::tests::size_limits_are_typed ... ok
+test compose::tests::unsupported_error_text_names_feature_and_location ... ok
+test animation::tests::export_writes_gif_with_duration_times_fps_frames_matching_rendered_frames ... ok
+test compose::tests_open::launch_keeps_mcp_preview_and_adds_a_file_argument ... ok
+test compose::tests::compose_fixture_pixels_match_independent_expectations ... ok
+test animation::tests::background_job_replies_once_with_json_or_a_fixed_error ... ok
+test compose::tests::render_agrees_with_pointer_map ... ok
+test compose::tests_open::open_path_rejects_missing_directory_oversize_and_bad_paths ... ok
+test animation::tests_driver::loop_wraps_and_play_once_stops_at_the_end_frame ... ok
+test compose::tests::compose_fixture_matches_frozen_ppm_and_requested_size ... ok
+test compose::tests_open::worker_drop_joins_while_work_is_in_flight ... ok
+test compose::tests_parity::parity_harness_rejects_a_shifted_render ... ok
+test animation::tests_driver::a_pre_set_cancel_flag_presents_nothing ... ok
+test compose::tests_parity::parity_shapes_basic ... ok
+test compose::tests_parity::parity_path_relative_commands ... ok
+test compose::tests_parity::parity_shapes_lines_polygons ... ok
+test compose::tests::hit_test_picks_topmost_shape_at_known_points ... ok
+test compose::tests::compose_is_byte_identical_across_runs ... ok
+test file_flow::tests::a_panel_error_alerts_instead_of_acting ... ok
+test animation::tests_driver::pacing_skips_sub_frame_advances_and_never_backlogs ... ok
+test animation::tests_driver::a_vanishing_loop_pauses_at_zero_and_hides_the_strip ... ok
+test compose::tests_parity::parity_shapes_rounded ... ok
+test compose::tests_open::view_open_composes_reports_status_and_maps_clicks ... ok
+test file_flow::tests::cancelling_any_panel_changes_nothing ... ok
+test file_flow::tests::menu_table_drives_shortcuts_titles_and_keys ... ok
+test file_flow::tests::near_miss_shortcuts_map_to_nothing ... ok
+test file_flow::tests::close_request_follows_the_dirty_state ... ok
+test compose::tests_parity::parity_style_presentation_attributes ... ok
+test compose::tests_parity::parity_path_line_curves ... ok
+test file_flow::tests::failed_save_during_open_keeps_the_document_and_aborts ... ok
+test compose::tests_stale::stale_worker_events_never_replace_a_newer_frame ... ok
+test compose::tests_open::worker_delivers_only_the_newest_generation ... ok
+test compose::tests_open::view_failures_are_typed_status_text_and_keep_the_last_document ... ok
+test file_ui::tests::key_and_menu_routes_reach_the_flow ... ok
+test model::tests::compact_bounds_hide_inspector_and_keep_stage_valid ... ok
+test file_flow::tests::menu_enablement_table ... ok
+test model::tests::compact_painted_control_geometry_stays_inside_panels_in_both_modes ... ok
+test file_flow::tests::open_on_a_clean_session_loads_the_fixture ... ok
+test model::tests::inspector_is_omitted_until_its_fixed_content_fits ... ok
+test compose::tests_open::open_path_reads_a_file_and_names_it ... ok
+test model::tests::line_tool_is_the_fifth_rail_slot_and_fits_in_every_layout ... ok
+test model::tests::mode_selection_works_by_keyboard_pointer_and_is_idempotent ... ok
+test model::tests::pointer_hit_testing_is_deterministic_and_ignores_unavailable_actions ... ok
+test model::tests::rejects_unsupported_backing_scales_and_oversized_frames ... ok
+test model::tests::standard_workbench_keeps_stage_dominant_and_timeline_docked ... ok
+test file_flow::tests::save_without_path_shows_save_panel_then_writes ... ok
+test file_flow::tests::open_on_a_dirty_session_prompts_first ... ok
+test preview::tests::animation_tool_mapping_uses_milliseconds_and_bounded_fragments ... ok
+test preview::tests::export_animation_mapping_is_gif_only_with_bounded_fps_and_duration ... ok
+test preview::tests::branching_after_undo_never_reuses_an_element_id ... ok
+test file_flow::tests::save_as_always_shows_the_panel_and_updates_the_path ... ok
+test preview::tests::invalid_operation_does_not_change_source_or_history ... ok
+test preview::tests::request_mapping_rejects_non_finite_color_and_extra_attributes ... ok
+test preview::tests::bounded_values_and_opacity_composite_over_white ... ok
+test preview::tests::generated_ids_survive_rebuild_and_animation_round_trip ... ok
+test preview::tests::playback_stage_updates_state_and_seek_is_bounded ... ok
+test file_flow::tests::failures_alert_with_the_user_message_and_change_nothing ... ok
+test file_flow::tests::save_with_path_writes_without_any_panel ... ok
+test preview_app::tests::reply_follows_staged_state_and_is_only_committed_for_frame ... ok
+test preview::tests::undo_redo_restore_exact_source_and_branch_order ... ok
+test preview::tests::raster_bounds_mapping_and_pixel_change ... ok
+test preview::tests::owned_animation_parser_evaluator_moves_the_raster_at_distinct_times ... ok
+test preview_app::tests::backend_call_waits_until_the_ui_reports_frame_presentation ... ok
+test project_session::tests::missing_directory_and_bad_paths_fail_typed ... ok
+test project_session::tests::shortcuts_map_to_file_actions ... ok
+test project_session::tests::save_without_path_is_typed_error_and_keeps_dirty ... ok
+test compose::tests_open::view_resize_supersedes_and_never_shows_a_stale_size ... ok
+test project_session::tests::unsaved_changes_prompt_text ... ok
+test preview::tests::animation_duration_and_track_count_limits_are_atomic ... ok
+test project_session::tests::edit_undo_edit_save_reopen_yields_post_edit_state ... ok
+test render::geometry_tests::timeline_rows_are_omitted_until_their_full_bounds_fit ... ok
+test project_session::tests::mcp_preview_state_keeps_working_after_save_and_open ... ok
+test project_session::tests::round_trip_preserves_source_ids_order_and_animation ... ok
+test session::tests::edit_shortcuts_map_undo_and_redo_only ... ok
+test project_session::tests::unknown_source_survives_byte_for_byte ... ok
+test session::tests::editors_drive_edit_and_noops_do_not_bump_revision ... ok
+test session::tests::edit_renders_from_the_single_session_source ... ok
+test project_session::tests::dirty_tracking_edit_save_and_undo_past_saved_point ... ok
+test project_session::tests::unedited_foreign_source_saves_and_reopens_identically ... ok
+test project_session::tests::undo_save_redo_and_history_cursor ... ok
+test project_session::tests::valid_bundle_with_non_svg_scene_is_invalid_scene ... ok
+test session::tests::playback_host_requests_frames_from_the_session_source ... ok
+test project_session::tests::resave_replaces_atomically_and_leaves_no_temp_files ... ok
+test session::tests::dirty_follows_edit_save_undo_redo_and_reopen ... ok
+test project_session::tests::unwritable_directory_fails_without_touching_state_or_existing_file ... ok
+test session::tests::window_title_is_pure ... ok
+test session::tests_mcp::invalid_requests_leave_the_session_unchanged ... ok
+test session::tests_mcp::animation_fragment_is_applied_through_the_session ... ok
+test session::tests_mcp::undo_redo_info_and_ids_go_through_the_document ... ok
+test session::tests_playback::keyboard_and_mcp_share_one_clock ... ok
+test session::tests_playback::handle_and_handle_with_reply_alike_for_the_same_inputs ... ok
+test session::tests_playback::play_on_a_static_document_keeps_the_integrate_error ... ok
+test project_session::tests::failed_opens_are_typed_and_leave_the_document_untouched ... ok
+test session::tests::failed_open_is_typed_and_changes_nothing ... ok
+test session::tests_playback::mcp_controls_steer_the_shared_driver_with_the_integrate_replies ... ok
+test tools::tests::a_drag_released_off_canvas_uses_the_last_valid_point ... ok
+test tools::tests::clicks_cancels_escape_and_off_canvas_input_add_nothing ... ok
+test tools::tests::document_errors_surface_as_typed_tool_errors_and_leave_no_gesture ... ok
+test tools::tests::flat_drags_do_not_create_degenerate_boxes ... ok
+test tools::tests::pen_click_drag_sets_a_cubic_handle_with_a_mirrored_incoming_control ... ok
+test tools::tests::ids_skip_ids_already_present_in_the_document ... ok
+test tools::tests::pen_close_path_adds_z_and_the_current_fill ... ok
+test tools::tests::pen_double_click_finishes_without_a_duplicate_vertex ... ok
+test tools::tests::pen_three_clicks_and_enter_make_an_m_l_l_path ... ok
+test tools::tests::pen_with_fewer_than_two_vertices_or_escape_commits_nothing ... ok
+test tools::tests::rectangle_ellipse_and_line_drags_add_one_exact_element_through_a_scaled_map ... ok
+test tools::tests::reverse_drags_and_repeated_shapes_get_unique_ids ... ok
+test tools::tests::switching_tools_abandons_the_gesture ... ok
+test tools::tests::pen_vertices_are_capped_and_the_longest_path_is_accepted_by_the_document ... ok
+test tools::tests::undo_and_redo_restore_exact_bytes_for_every_drawing_action ... ok
+test tools::tests_edit::delete_removes_the_selection_and_empty_clicks_clear_it ... ok
+test tools::tests_edit::a_document_built_only_through_tools_reopens_with_equal_bytes_and_ids ... ok
+test tools::tests_edit::down_selects_the_topmost_shape_and_drag_moves_it_by_the_mapped_delta ... ok
+test tools::tests_edit::dragging_a_path_adds_a_translate_and_keeps_the_d_bytes ... ok
+test tools::tests_edit::escape_without_a_gesture_deselects_and_stale_selection_is_dropped_after_undo ... ok
+test tools::tests_edit::invalid_colours_widths_and_ids_return_typed_errors_and_keep_source_identical ... ok
+test tools::tests_edit::live_pointer_routing_is_limited_to_the_stage_rectangle ... ok
+test tools::tests_edit::scale_map_rejects_invalid_parameters_and_out_of_artboard_points ... ok
+test tools::tests_edit::set_fill_and_set_stroke_recolour_only_the_selection_and_update_defaults ... ok
+test tools::tests_edit::unsupported_targets_and_transforms_return_typed_errors_without_changes ... ok
+test tools::tests_edit::tool_edits_preserve_untouched_bytes_of_a_foreign_fixture_through_undo_redo ... ok
+test tools::tests_edit::ten_thousand_synthetic_events_keep_preview_state_bounded_and_commit_nothing ... ok
+test session::tests::undo_and_redo_bump_revision_and_restore_frames ... ok
+test animation::tests_driver::an_edit_cancels_old_work_and_renders_the_edited_document ... ok
+test session::tests_playback::the_driver_receives_bytes_revision_and_seconds_from_the_session ... ok
+test session::tests::tool_controller_edits_through_the_session_with_the_compose_map ... ok
+test session::tests::point_map_as_canvas_map_agrees_with_hit_testing ... ok
+test session::tests::open_vexel_renders_like_its_scene_bytes_and_is_clean ... ok
+test session::tests_mcp::shape_add_mutates_the_session_marks_dirty_and_renders ... ok
+test session::tests::open_svg_is_untitled_clean_and_renders_like_the_svg ... ok
+test animation::tests_driver::the_queue_never_exceeds_its_capacity ... ok
+test compose::tests_open::worker_cancel_discards_pending_and_inflight_results ... ok
+test compose::tests::frame_size_equals_request_for_other_sizes_and_letterboxes ... ok
+test session::tests_playback::playback_never_dirties_the_document ... ok
+test animation::tests::preview_document_with_agent_added_animation_exports_a_gif ... ok
+test animation::tests_driver::tick_frames_equal_scene_render_through_the_compose_blit ... ok
+test preview::tests::rejects_invalid_shapes_and_caps_scene ... ok
+
+test result: ok. 173 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.55s
+
+     Running unittests src/main.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel-e37aafb0df7d6b2a)
+
+running 1 test
+test tests::only_primary_button_can_activate_modes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/mcp_tools_edit.rs (build/rust/aarch64-apple-darwin/debug/deps/mcp_tools_edit-06aac0decee2a263)
+
+running 16 tests
+test render_png_is_not_routed ... ok
+test library_target_links_and_lists_routed_tools ... ok
+test undo_and_redo_without_history_stay_typed ... ok
+test attribute_set_changes_only_the_named_element ... ok
+test export_svg_returns_source_and_changes_nothing ... ok
+test wrong_document_id_is_rejected_by_save_tools_and_export ... ok
+test element_delete_removes_one_element ... ok
+test element_delete_rejections ... ok
+test host_driver_follows_routed_edits ... ok
+test every_routed_edit_resyncs_the_shared_driver ... ok
+test element_add_line_and_path_use_stable_ids ... ok
+test attribute_set_fill_stroke_width_and_translate ... ok
+test attribute_set_translate_both_spellings ... ok
+test attribute_set_rejections ... ok
+test element_add_line_and_path_rejections ... ok
+test export_svg_too_large_is_typed ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.18s
+
+     Running tests/mcp_tools_files.rs (build/rust/aarch64-apple-darwin/debug/deps/mcp_tools_files-6b2ea5a4ea2f79c5)
+
+running 9 tests
+test grant_dir_flag_parsing ... ok
+test explicit_grants_combine_with_environment_and_config_file ... ok
+test open_svg_replaces_the_document_and_ids_continue_after_it ... ok
+test missing_grant_refuses_every_path_tool ... ok
+test export_svg_decodes_and_equals_the_source ... ok
+test save_as_then_open_in_a_fresh_document_is_byte_identical ... ok
+test symlinks_cannot_escape_the_grant ... ok
+test path_tool_failures_are_typed_and_leave_the_document_untouched ... ok
+test export_job_and_tool_share_the_grant_policy ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.64s
+
+     Running tests/perf_gate.rs (build/rust/aarch64-apple-darwin/debug/deps/perf_gate-530f60c930616664)
+
+running 1 test
+test workloads_stay_within_baseline_max_ms ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.94s
+
+     Running tests/walkthrough.rs (build/rust/aarch64-apple-darwin/debug/deps/walkthrough-10a312d8830cf7d9)
+
+running 4 tests
+test step_i_open_and_edit_an_svg_and_disclose_unsupported_content ... ok
+test negative_paths_return_typed_errors_and_change_nothing ... ok
+test walkthrough_steps_a_to_h ... ok
+test walkthrough_outputs_are_byte_identical_across_runs ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.43s
+
+     Running unittests src/main.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_dev-2082b9082e8b5a95)
+
+running 24 tests
+test args::tests::existing_commands_still_parse ... ok
+test args::tests::bundle_accepts_out_and_icon_in_any_order ... ok
+test args::tests::argument_errors_are_typed_and_readable ... ok
+test args::tests::release_commands_take_only_out ... ok
+test bundle::tests::cargo_env_prefers_environment_then_repo_local ... ok
+test bundle::tests::plan_places_every_piece_inside_the_bundle ... ok
+test plist::tests::key_set_is_exact_without_icon ... ok
+test plist::tests::required_values_and_version_are_rendered ... ok
+test bundle::tests::release_build_is_locked_offline_and_release ... ok
+test plist::tests::values_are_xml_escaped ... ok
+test release::tests::sbom_invokes_the_script_in_the_repo_root ... ok
+test runner::fake::run_checked_reports_the_failing_command ... ok
+test plist::tests::icon_key_appears_only_with_an_icon ... ok
+test release::tests::dmg_stages_creates_then_verifies ... ok
+test release::tests::failed_attach_never_detaches ... ok
+test release::tests::dmg_requires_a_bundle_and_cleans_staging_on_failure ... ok
+test release::tests::install_smoke_runs_the_full_sequence_and_detaches_last ... ok
+test release::tests::exec_bit_is_required ... ok
+test bundle::tests::assemble_lays_out_bundle_then_signs_and_verifies ... ok
+test release::tests::forced_failure_still_detaches ... ok
+test release::tests::failed_detach_is_retried_with_force_and_reported_if_it_persists ... ok
+test release::tests::missing_arm64_fails_and_detaches ... ok
+test bundle::tests::a_failing_codesign_stops_before_verify ... ok
+test bundle::tests::assemble_copies_icon_and_names_it_in_the_plist ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_mcp_stdio-5d3eb89b8887ebed)
+
+running 8 tests
+test tests::malformed_json_gets_protocol_parse_error ... ok
+test tests::partial_reads_writes_and_reader_failure ... ok
+test tests::writer_failure_propagates_after_protocol_response ... ok
+test tests::sync_multiple_crlf_eof_and_notification ... ok
+test tests::async_route_calls_actual_protocol_async_handler ... ok
+test tests::empty_and_oversized_frames_rejected_before_dispatch ... ok
+test tests::maximum_payload_with_crlf_is_accepted ... ok
+test tests::maximum_payload_crlf_split_across_reader_chunks_is_accepted ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/fuzz_stdio.rs (build/rust/aarch64-apple-darwin/debug/deps/fuzz_stdio-9b231c2206883bdd)
+
+running 3 tests
+test reproducer ... ignored, demonstrates the failure report format; run with --ignored
+test seed_streams_are_accepted ... ok
+test mutated_line_streams_terminate_with_parseable_responses ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_protocol-25dc03d68d1d3ba0)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/fuzz_jsonrpc.rs (build/rust/aarch64-apple-darwin/debug/deps/fuzz_jsonrpc-51a7f6d27732f902)
+
+running 3 tests
+test reproducer ... ignored, demonstrates the failure report format; run with --ignored
+test seed_requests_reply_with_valid_json ... ok
+test mutated_requests_get_typed_errors_or_parseable_replies ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/mcp_preview_profile.rs (build/rust/aarch64-apple-darwin/debug/deps/mcp_preview_profile-02fd8d4750be15ab)
+
+running 8 tests
+test live_preview_accepts_shipping_codex_handshake_version ... ok
+test preview_modern_discovery_omits_unavailable_capabilities ... ok
+test preview_animation_tools_validate_bounded_fragments_and_controls ... ok
+test live_preview_rejects_unadvertised_tools_and_shape_templates ... ok
+test live_preview_forwards_routed_file_edit_and_line_path_calls ... ok
+test preview_export_animation_validates_gif_fps_duration_and_path ... ok
+test default_profile_keeps_full_schema_resources_prompts_and_reset_profile ... ok
+test live_preview_advertises_only_supported_tools_and_narrow_shapes ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/parity.rs (build/rust/aarch64-apple-darwin/debug/deps/parity-844f9c802eb9363f)
+
+running 9 tests
+test legacy_progress_is_monotone_bounded_and_atomic ... ok
+test notifications_do_not_emit_and_unknown_requests_do ... ok
+test current_discovery_metadata_merging_original_ids_and_task_capability_reset ... ok
+test every_tool_schema_and_validation_registry_is_available ... ok
+test sync_fallback_malformed_backends_metadata_and_legacy_deferred_cancel ... ok
+test flat_task_create_detailed_terminal_empty_cancel_and_rpc_error_are_distinct ... ok
+test legacy_lifecycle_sync_discovery_tools_resources_prompts_and_reset ... ok
+test request_rate_limit_is_per_session_and_has_an_rpc_error_envelope ... ok
+test async_payload_limits_content_shapes_timestamps_ids_and_cancel_ack ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_svg_engine-1f3f4e1339b7f65b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/decoder.rs (build/rust/aarch64-apple-darwin/debug/deps/decoder-b74af6520d11bdb1)
+
+running 6 tests
+test actual_image_request_unsupported_error_points_to_image_element ... ok
+test actual_text_request_unsupported_error_points_to_text_element ... ok
+test real_decoder_publishes_vector_shapes_transform_solid_channels_and_source ... ok
+test engine_operations_plan_real_clip_through_definition_planner ... ok
+test actual_clip_planner_completes_supported_clip_at_zero ... ok
+test real_decoder_resolves_local_gradient_through_cached_paint_path ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/deferred_features.rs (build/rust/aarch64-apple-darwin/debug/deps/deferred_features-7bffffc31216e118)
+
+running 12 tests
+test unknown_rendered_element_fail_closed_unsupported_at_element ... ok
+test external_reference_fail_closed_unsupported_at_value_inside_host_element ... ok
+test marker_referenced_fail_closed_unsupported_at_marker_element ... ok
+test mask_unreferenced_preserved_untouched_with_shapes_published ... ok
+test filter_unreferenced_preserved_untouched_with_shapes_published ... ok
+test pattern_unreferenced_preserved_untouched_with_shapes_published ... ok
+test marker_unreferenced_preserved_untouched_with_shapes_published ... ok
+test text_fail_closed_unsupported_at_text_element ... ok
+test pattern_referenced_pending_never_success_until_resumed ... ok
+test style_selector_and_smil_animation_decode_without_panic_and_preserve_source ... ok
+test filter_referenced_fail_closed_unsupported_at_filter_element ... ok
+test mask_referenced_fail_closed_unsupported_at_mask_element ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/malformed_limits.rs (build/rust/aarch64-apple-darwin/debug/deps/malformed_limits-ce9eab2fcb95cd1c)
+
+running 8 tests
+test truncated_open_tag_reports_xml_error_at_the_unterminated_element ... ok
+test cancel_mid_step_fails_the_decoder_and_finish_cannot_publish ... ok
+test rejected_documents_leave_no_partial_state_for_a_following_decode ... ok
+test non_numeric_path_data_is_a_path_error_inside_the_d_value ... ok
+test huge_coordinates_are_rejected_with_a_typed_error ... ok
+test nan_and_infinite_lengths_are_number_errors_at_the_value ... ok
+test every_truncation_of_a_valid_document_is_a_typed_error ... ok
+test cancel_at_every_work_point_returns_canceled_and_never_a_scene ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.15s
+
+     Running tests/mutation_fuzz.rs (build/rust/aarch64-apple-darwin/debug/deps/mutation_fuzz-ca974726a0e6d4de)
+
+running 3 tests
+test reproducer ... ignored, demonstrates the failure report format; run with --ignored
+test fixture_seeds_include_the_corpus ... ok
+test mutated_svg_decodes_or_fails_with_a_typed_error ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running tests/session_contract.rs (build/rust/aarch64-apple-darwin/debug/deps/session_contract-edc31ac2a5a12087)
+
+running 6 tests
+test finish_before_complete_is_rejected_at_every_step_boundary ... ok
+test finish_succeeds_only_after_complete ... ok
+test pending_pattern_finish_is_rejected_without_resume ... ok
+test clip_owner_publishes_a_clip_with_geometry ... ok
+test step_is_bounded_by_the_quantum ... ok
+test pending_pattern_is_never_success_and_failed_render_rolls_back ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/subset_decode.rs (build/rust/aarch64-apple-darwin/debug/deps/subset_decode-2e39928856c61ed8)
+
+running 6 tests
+test unknown_elements_namespace_attributes_and_editor_metadata_preserve_source ... ok
+test preserved_element_offsets_match_text_and_published_source_equals_input ... ok
+test subset_publishes_solid_fill_and_stroke_channels ... ok
+test subset_publishes_root_viewport_from_viewbox ... ok
+test subset_publishes_exact_shape_kinds_in_source_order ... ok
+test subset_resolves_group_transforms_and_user_space_edges ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_xml-d5f5c5326d5ab57c)
+
+running 31 tests
+test stream::tests::budget_one_name_decode_can_cancel_at_each_partial_scalar_boundary ... ok
+test stream::tests::byte_storage_budget_bounds_actual_token_capacity_at_every_boundary ... ok
+test stream::tests::budget_one_name_scans_measure_real_source_reads_and_decoder_inputs ... ok
+test stream::name_budget_tests::pi_decode_and_two_operand_end_matching_cancel_without_extra_name_reads ... ok
+test stream::tests::invalid_utf8_and_xml_scalars_have_exact_batch_and_stream_diagnostics ... ok
+test stream::tests::cancellation_can_interrupt_each_partial_utf8_scalar_between_bytes ... ok
+test stream::tests::terminal_failure_and_cancellation_remove_previously_exposed_tokens ... ok
+test stream::tests::bounded_token_storage_survives_cancel_and_visitor_stacks_report_capacity ... ok
+test tests::name_start_and_name_char_ranges_match_xml_10 ... ok
+test tests::processing_instruction_target_keeps_legacy_colon_and_digit_name_behavior ... ok
+test stream::tests::one_byte_steps_preserve_two_three_and_four_byte_scalars_and_names ... ok
+test stream::name_budget_tests::all_name_reads_include_end_and_attribute_equality_with_budget_one ... ok
+test tests::reader_accepts_4096_byte_names_and_rejects_4097_at_name_start_offset ... ok
+test tests::reader_preserves_byte_spans_and_emits_tags_across_every_chunk_size ... ok
+test stream::name_budget_tests::cached_pi_and_entity_classes_preserve_exact_batch_results_and_diagnostics ... ok
+test tests::reader_rejects_zero_budget_and_reports_completion_idempotently ... ok
+test tests::reader_reports_stable_malformed_categories_offsets_and_callback_failure ... ok
+test tests::reader_skips_doctype_without_expanding_or_interpreting_subset ... ok
+test tests::reader_hard_caps_large_step_budgets_at_64_kib ... ok
+test tests::tokenizer_covers_output_callbacks_input_limits_and_error_names ... ok
+test tests::tokenizer_emits_byte_exact_tokens_and_preserves_qname_and_raw_values ... ok
+test tests::tokenizer_limits_capacity_and_attribute_decoder_are_bounded ... ok
+test stream::tests::cancelable_batch_and_stream_match_batch_tokens_errors_limits_and_capacity ... ok
+test tests::tokenizer_preserves_doctype_lexically_without_entity_expansion ... ok
+test tests::tokenizer_reports_frozen_error_categories_and_offsets ... ok
+test tests::utf8_decoder_accepts_scalars_and_preserves_position_on_bad_input ... ok
+test tests::xml_character_ranges_and_whitespace_match_xml_10 ... ok
+test stream::name_budget_tests::maximum_byte_length_name_matching_uses_fixed_state_and_budgeted_reads ... ok
+test tests::token_stream_is_resumable_cancellable_and_storage_bounded ... ok
+test stream::tests::batch_cancelable_apis_cancel_inside_long_lexical_parsing_after_validation ... ok
+test tests::every_unicode_scalar_matches_the_xml_10_range_tables ... ok
+
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+     Running tests/mutation_fuzz.rs (build/rust/aarch64-apple-darwin/debug/deps/mutation_fuzz-5ac530cce213df39)
+
+running 3 tests
+test reproducer ... ignored, demonstrates the failure report format; run with --ignored
+test unmutated_seeds_are_accepted_by_the_property ... ok
+test mutated_documents_end_in_typed_status_with_monotonic_offsets ... ok
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests vexel_app
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_mcp_stdio
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_protocol
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_svg_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_xml
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,114 @@
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev bundle`
++ rustc +stable --version
+rustc 1.99.0 (b940084d7 2026-09-28)
++ cargo +stable build -p vexel-app --release --locked --offline --target aarch64-apple-darwin
+   Compiling vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-base)
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.14
+   Compiling vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-xml)
+   Compiling cc v1.8.0
+   Compiling objc2 v0.6.5
+   Compiling objc2-exception-helper v0.1.1
+   Compiling objc2-encode v4.1.0
+   Compiling vexel-geometry v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-geometry)
+   Compiling bitflags v2.13.2
+   Compiling vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-values)
+   Compiling vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-raster)
+   Compiling vexel-svg-path v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-path)
+   Compiling objc2-core-foundation v0.3.2
+   Compiling vexel-svg-reference v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-reference)
+   Compiling vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-css)
+   Compiling vexel-svg-animation v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-animation)
+   Compiling objc2-core-graphics v0.3.2
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-scene)
+   Compiling block2 v0.6.2
+   Compiling vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-platform-macos)
+   Compiling objc2-foundation v0.3.2
+   Compiling objc2-metal v0.3.2
+   Compiling vexel-svg-color v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-color)
+   Compiling objc2-quartz-core v0.3.2
+   Compiling vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-document-io)
+   Compiling vexel-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-document)
+   Compiling vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-json)
+   Compiling vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-protocol)
+   Compiling vexel-document-edit v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-document-edit)
+   Compiling objc2-app-kit v0.3.2
+   Compiling vexel-svg-paint v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-paint)
+   Compiling vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-decode)
+   Compiling vexel-svg-definitions v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-definitions)
+   Compiling objc2-image-io v0.3.2
+   Compiling objc2-core-text v0.3.2
+   Compiling vexel-project v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-project)
+   Compiling vexel-project-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-project-io)
+   Compiling vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-platform-apple)
+   Compiling vexel-svg-engine v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-engine)
+   Compiling vexel-v1-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-v1-document)
+   Compiling vexel-mcp-stdio v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-mcp-stdio)
+   Compiling vexel-svg-animation-frame v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-animation-frame)
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-render)
+   Compiling vexel-mcp-access v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-mcp-access)
+   Compiling vexel-ui v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-ui)
+   Compiling vexel-gif v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-gif)
+   Compiling vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-app)
+    Finished `release` profile [optimized] target(s) in 17.79s
++ codesign --force --sign - --timestamp=none /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app
+/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app: replacing existing signature
++ codesign --verify --strict --verbose=2 /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app
+/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app: valid on disk
+/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app: satisfies its Designated Requirement
+bundle: /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app
+== dmg
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev dmg`
++ ditto /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/dmg-staging/Vexel.app
++ hdiutil create -volname Vexel -srcfolder /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/dmg-staging -format UDZO -ov /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.dmg
+created: /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.dmg
+hdiutil: WARNING: 'hdiutil create -volname -format ...' is deprecated. Please use 'diskutil image create from/blank --volumeName --format ...' instead.
++ hdiutil verify /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.dmg
+Checksumming Protective Master Boot Record (MBR : 0)…
+Protective Master Boot Record (MBR :: verified CRC32 $B30AE2D8
+Checksumming GPT Header (Primary GPT Header : 1)…
+ GPT Header (Primary GPT Header : 1): verified CRC32 $FEE9C628
+Checksumming GPT Partition Data (Primary GPT Table : 2)…
+GPT Partition Data (Primary GPT Tabl: verified CRC32 $FDECB538
+Checksumming  (Apple_Free : 3)…
+                    (Apple_Free : 3): verified CRC32 $00000000
+Checksumming disk image (Apple_APFS : 4)…
+         disk image (Apple_APFS : 4): verified CRC32 $4B679E94
+Checksumming  (Apple_Free : 5)…
+                    (Apple_Free : 5): verified CRC32 $00000000
+Checksumming GPT Partition Data (Backup GPT Table : 6)…
+GPT Partition Data (Backup GPT Table: verified CRC32 $FDECB538
+Checksumming GPT Header (Backup GPT Header : 7)…
+  GPT Header (Backup GPT Header : 7): verified CRC32 $BFD4B1B8
+verified CRC32 $241ECCB4
+hdiutil: verify: checksum of "/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.dmg" is VALID
+dmg: /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.dmg
+== sbom
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev sbom`
++ python3 scripts/make_sbom.py --binary /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.app/Contents/MacOS/vexel --out /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/sbom.cyclonedx.json
+wrote /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/sbom.cyclonedx.json with 11 components
+sbom: /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/sbom.cyclonedx.json
+== install-smoke
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev install-smoke`
++ hdiutil attach -readonly -nobrowse -noverify -mountpoint /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/mnt /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/Vexel.dmg
+/dev/disk10         	EF57347C-0000-11AA-AA11-0030654	
+/dev/disk10s1       	41504653-0000-11AA-AA11-0030654	/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/mnt
+/dev/disk9          	GUID_partition_scheme          	
+/dev/disk9s1        	Apple_APFS
+hdiutil: WARNING: 'hdiutil attach -readonly -nobrowse -mountpoint ...' is deprecated. Please use 'diskutil image attach --readOnly --mountOptions nobrowse --mountPoint ...' instead.
++ ditto /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/mnt/Vexel.app /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app
++ plutil -lint /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app/Contents/Info.plist
+/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app/Contents/Info.plist: OK
++ codesign --verify --strict --verbose=2 /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app
+/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app: valid on disk
+/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app: satisfies its Designated Requirement
++ lipo -archs /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/Applications/Vexel.app/Contents/MacOS/vexel
+arm64
++ hdiutil detach /Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/build/release/install-smoke/mnt
+"disk9" ejected.
+hdiutil: WARNING: 'hdiutil detach ...' is deprecated. Please use 'diskutil eject ...' instead.
+install-smoke: pass

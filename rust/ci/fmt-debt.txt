@@ -1,0 +1,29 @@
+# Workspace members with known rustfmt drift, awaiting a later mechanical formatting order.
+# Do not add new crates here; format them instead. Move a crate to fmt-clean.txt once formatted.
+vexel-base
+vexel-document
+vexel-document-io
+vexel-geometry
+vexel-json
+vexel-mcp-access
+vexel-mcp-tasks
+vexel-platform-macos
+vexel-platform-tasks
+vexel-project
+vexel-project-io
+vexel-protocol
+vexel-raster
+vexel-render
+vexel-scene
+vexel-spatial
+vexel-svg-animation
+vexel-svg-animation-frame
+vexel-svg-color
+vexel-svg-css
+vexel-svg-index
+vexel-svg-path
+vexel-svg-reference
+vexel-svg-scalar-sample
+vexel-timeline
+vexel-ui
+vexel-xml

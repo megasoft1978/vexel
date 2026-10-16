@@ -1,0 +1,7 @@
+{
+  "AC1": "pass", "AC2": "pass (4 fixture tests)", "AC3": "pass",
+  "AC4": "pass (24 vexel-dev tests)",
+  "AC5": "pass (4 targets, 2000 cases each, ignored reproducer shows report)",
+  "AC6": "pass", "AC7": "pass",
+  "AC8": "pass (no new packages, no unsafe, files < 800 lines)", "AC9": "pass"
+}

@@ -1,0 +1,18 @@
+{
+  "changed": [
+    ".github/workflows/ci.yml",
+    "scripts/check_rust_fmt.py",
+    "scripts/make_sbom.py",
+    "rust/ci/fmt-clean.txt",
+    "rust/ci/fmt-debt.txt",
+    "rust/ci/perf-baseline.json",
+    "rust/tools/vexel-dev/src/*.rs",
+    "rust/crates/vexel-xml/tests/mutation_fuzz.rs",
+    "rust/crates/vexel-svg-engine/tests/mutation_fuzz.rs",
+    "rust/crates/vexel-protocol/tests/fuzz_jsonrpc.rs",
+    "rust/crates/vexel-mcp-stdio/tests/fuzz_stdio.rs",
+    "rust/crates/vexel-app/tests/perf_gate.rs",
+    "artifacts/WO-RUST-V1-RELEASE-CI-01/*"
+  ],
+  "protected_paths_touched": []
+}

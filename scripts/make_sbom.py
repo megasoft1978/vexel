@@ -17,7 +17,19 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.1.0"
+
+
+def workspace_version() -> str:
+    """Workspace package version from the root Cargo.toml."""
+    text = (ROOT / "Cargo.toml").read_text(encoding="utf-8")
+    section = re.search(r"^\[workspace\.package\]\s*$(.*?)(?=^\[|\Z)", text, re.MULTILINE | re.DOTALL)
+    match = re.search(r'^version\s*=\s*"([^"]+)"', section[1] if section else "", re.MULTILINE)
+    if match is None:
+        raise SystemExit("no [workspace.package] version in Cargo.toml")
+    return match[1]
+
+
+VERSION = workspace_version()
 SYSTEM_PREFIXES = ("/usr/lib/", "/System/Library/")
 
 
@@ -89,13 +101,13 @@ def build_sbom(binary: Path, source_root: Path) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--binary", type=Path,
-                        default=ROOT / "build" / "mac-release" / "bin" / "svgworkbench")
+                        default=ROOT / "build" / "release" / "Vexel.app" / "Contents" / "MacOS" / "vexel")
     parser.add_argument("--out", type=Path,
-                        default=ROOT / "artifacts" / "release" / "sbom.cyclonedx.json")
+                        default=ROOT / "build" / "release" / "sbom.cyclonedx.json")
     arguments = parser.parse_args()
     binary = arguments.binary
     if not binary.is_file():
-        raise SystemExit(f"no built binary at {binary}; run ./dev build first")
+        raise SystemExit(f"no built binary at {binary}; run `cargo run -p vexel-dev -- bundle` first")
     sbom = build_sbom(binary, ROOT)
     arguments.out.parent.mkdir(parents=True, exist_ok=True)
     arguments.out.write_text(json.dumps(sbom, indent=2) + "\n")

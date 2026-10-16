@@ -1,0 +1,17 @@
+# Workspace members that must stay rustfmt-clean (checked by scripts/check_rust_fmt.py).
+vexel-app
+vexel-dev
+vexel-document-edit
+vexel-gif
+vexel-mcp-stdio
+vexel-platform-apple
+vexel-scene-query
+vexel-svg-decode
+vexel-svg-definitions
+vexel-svg-engine
+vexel-svg-media
+vexel-svg-paint
+vexel-svg-scalar-index
+vexel-svg-values
+vexel-tile-cache
+vexel-v1-document

@@ -1,0 +1,11 @@
+{
+  "check_ci": "pass",
+  "check_rust_fmt": "pass (16 clean-listed)",
+  "check_rust_fmt_self_test": "4 pass",
+  "cargo_check": "pass",
+  "frozen_tests": {"passed": 330, "failed": 0, "ignored": 4},
+  "bundle": "pass", "dmg": "pass", "sbom": "pass", "install-smoke": "pass",
+  "wo_validate": "pass",
+  "ledger_validate": "pass (1884 entries)",
+  "git_diff_check": "not run (git refused by hook); trailing-whitespace scan clean"
+}

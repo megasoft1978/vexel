@@ -1,0 +1,64 @@
+framework       : 704
+driver          : 704
+images          : 3
+================================================
+image-path      : /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/3e800c38767f9f2c5fc86acdad7adf44565e051a.asset/AssetData/Restore/043-70362-657.dmg
+image-alias     : /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/3e800c38767f9f2c5fc86acdad7adf44565e051a.asset/AssetData/Restore/043-70362-657.dmg
+shadow-path     : <none>
+icon-path       : <none>
+image-type      : read-only disk image
+system-image    : false
+blockcount      : 36249667
+blocksize       : 512
+writeable       : false
+autodiskmount   : false
+removable       : TRUE
+image-encrypted : false
+mounting user   : root
+mounting mode   : -r--r----- 
+process ID      : 30166
+framework name  : DiskImages2
+/dev/disk4	GUID_partition_scheme	
+/dev/disk4s1	7C3457EF-0000-11AA-AA11-00306543ECAC	
+/dev/disk5	EF57347C-0000-11AA-AA11-00306543ECAC	
+/dev/disk5s1	41504653-0000-11AA-AA11-00306543ECAC	/Library/Developer/CoreSimulator/Volumes/iOS_24A434
+================================================
+image-path      : /System/Library/AssetsV2/com_apple_MobileAsset_MetalToolchain/389a215aea89fda945178f9fb8bcdc6aa0e20570.asset/AssetData/Restore/022-20184-410.dmg
+image-alias     : /System/Library/AssetsV2/com_apple_MobileAsset_MetalToolchain/389a215aea89fda945178f9fb8bcdc6aa0e20570.asset/AssetData/Restore/022-20184-410.dmg
+shadow-path     : <none>
+icon-path       : <none>
+image-type      : <unknown>
+system-image    : false
+blockcount      : 6438979
+blocksize       : 512
+writeable       : false
+autodiskmount   : false
+removable       : TRUE
+image-encrypted : <false>
+mounting user   : root
+mounting mode   : <unknown>
+process ID      : <in-kernel>
+framework name  : DiskImages
+/dev/disk6	GUID_partition_scheme	
+/dev/disk6s1	7C3457EF-0000-11AA-AA11-00306543ECAC	
+/dev/disk7	EF57347C-0000-11AA-AA11-00306543ECAC	
+/dev/disk7s1	41504653-0000-11AA-AA11-00306543ECAC	/private/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.1.266.1.3JPR7u
+================================================
+image-path      : /Users/megasoft78/Desktop/Freelance/mosaic-byte-compression-lab/results/desktop-sprint1/vm/UTM-4.7.5.dmg
+image-alias     : /Users/megasoft78/Desktop/Freelance/mosaic-byte-compression-lab/results/desktop-sprint1/vm/UTM-4.7.5.dmg
+shadow-path     : <none>
+icon-path       : /System/Library/PrivateFrameworks/DiskImages.framework/Resources/CDiskImage.icns
+image-type      : UDIF read-only compressed (zlib)
+system-image    : false
+blockcount      : 3638272
+blocksize       : 512
+writeable       : false
+autodiskmount   : TRUE
+removable       : TRUE
+image-encrypted : false
+mounting user   : megasoft78
+mounting mode   : <unknown>
+process ID      : 21906
+framework name  : DiskImages
+/dev/disk8	GUID_partition_scheme	
+/dev/disk8s1	48465300-0000-11AA-AA11-00306543ECAC	/Users/megasoft78/Desktop/Freelance/mosaic-byte-compression-lab/results/desktop-sprint1/vm/utm-mount

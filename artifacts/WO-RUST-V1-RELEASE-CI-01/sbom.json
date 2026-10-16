@@ -1,0 +1,126 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "vexel",
+      "version": "0.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ]
+    },
+    "tools": [
+      {
+        "name": "scripts/make_sbom.py",
+        "version": "0.1.0"
+      }
+    ]
+  },
+  "components": [
+    {
+      "type": "application",
+      "bom-ref": "pkg:generic/vexel@0.1.0",
+      "name": "vexel",
+      "version": "0.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "MPL-2.0"
+          }
+        }
+      ],
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "86bb0027487d8fe8a8cc4ffdde614f4486cf05a26da006f33b4caab48e56b80b"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/AppKit?os=macos",
+      "name": "AppKit",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/CoreFoundation?os=macos",
+      "name": "CoreFoundation",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/CoreGraphics?os=macos",
+      "name": "CoreGraphics",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/CoreText?os=macos",
+      "name": "CoreText",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/Foundation?os=macos",
+      "name": "Foundation",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/Metal?os=macos",
+      "name": "Metal",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/QuartzCore?os=macos",
+      "name": "QuartzCore",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/Security?os=macos",
+      "name": "Security",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/libSystem.B.dylib?os=macos",
+      "name": "libSystem.B.dylib",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:generic/libobjc.A.dylib?os=macos",
+      "name": "libobjc.A.dylib",
+      "version": "system",
+      "scope": "required",
+      "description": "macOS system library"
+    }
+  ]
+}

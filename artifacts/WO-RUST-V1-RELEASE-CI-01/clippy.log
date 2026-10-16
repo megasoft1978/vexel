@@ -1,0 +1,2921 @@
+    Checking vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-base)
+    Checking vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-platform-apple)
+warning: manual implementation of `.is_multiple_of()`
+   --> rust/crates/vexel-base/src/lib.rs:355:16
+    |
+355 |             && handle.offset % alignment == 0
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `handle.offset.is_multiple_of(alignment)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_is_multiple_of
+    = note: `#[warn(clippy::manual_is_multiple_of)]` on by default
+
+warning: `vexel-base` (lib) generated 1 warning (run `cargo clippy --fix --lib -p vexel-base -- ` to apply 1 suggestion)
+    Checking vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-xml)
+warning: this looks like an `else if` but the `else` is missing
+  --> rust/crates/vexel-xml/src/tokenizer.rs:89:127
+   |
+89 | ...   if cp == 0x3a { if qname && colon.is_some() { return self.fault(XmlError::InvalidName, colon.unwrap_or(before)); } if colon.is...
+   |                                                                                                                         ^
+   |
+   = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+   = note: `#[warn(clippy::possible_missing_else)]` on by default
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/tokenizer.rs:190:156
+    |
+190 | ...s(p,b"]]>" ) { return self.fault(XmlError::MalformedSyntax,p) } if self.src[p]==b'&' { self.reference(&mut p)?; } else { p+=1; } }
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/tokenizer.rs:197:212
+    |
+197 | ...lf.depth==0{return self.fault(XmlError::MalformedSyntax,start)} if p-(start+9)>self.limits.text_run_bytes{return self.fault(XmlE...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/tokenizer.rs:200:309
+    |
+200 | ...ase(b"xml"){return self.fault(XmlError::MalformedSyntax,start)}if declaration&&start!=0&&!(start==3&&self.starts(0,b"\xef\xbb\xb...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/tokenizer.rs:200:430
+    |
+200 | ...\xbb\xbf")){return self.fault(XmlError::MalformedSyntax,start)} if p>=self.src.len()||(!is_xml_whitespace(self.src[p])&&!self.st...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/tokenizer.rs:200:557
+    |
+200 | ...tarts(p,b"?>")){return self.fault(XmlError::MalformedSyntax,p)} if declaration&&self.starts(p,b"?>"){return self.fault(XmlError:...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/tokenizer.rs:214:240
+    |
+214 | ....'|b'_'|b'-')){return Err(Fault(XmlError::MalformedSyntax,vs))}if !value.eq_ignore_ascii_case(b"utf-8"){return Err(Fault(XmlErro...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:207:56
+    |
+207 | ...   if self.canceled{return StreamStatus::Canceled} if self.result.diagnostic.category!=XmlError::None{return StreamStatus::Failed}
+    |                                                      ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:208:50
+    |
+208 |         if budget==0{return StreamStatus::Failed} if self.complete{return StreamStatus::Complete}
+    |                                                  ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:280:306
+    |
+280 | .....XmlToken::default()};if !self.count_node(start){return false}if !self.emit(t,start,visitor){return false}self.cursor=end;retur...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:288:303
+    |
+288 | .....XmlToken::default()};if !self.count_node(start){return false}if !self.emit(t,start,visitor){return false}self.cursor=end;retur...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:299:325
+    |
+299 | ...folded{self.fail(XmlError::MalformedSyntax,start);return false}if declaration&&start!=0&&!(start==3&&self.source.starts_with(b"\...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:328:138
+    |
+328 | ...   if self.depth>=self.limits.nesting_depth||self.depth>=MAX_DEPTH{self.fail(XmlError::DepthLimit,t.start);return false}if !self...
+    |                                                                                                                            ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:364:197
+    |
+364 | ...s>=limit&&t.pos<self.source.len(){self.tag=Some(t);return true}if t.pos>=self.source.len()||self.source[t.pos]!=b'='{self.fail(X...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:365:200
+    |
+365 | ...s>=limit&&t.pos<self.source.len(){self.tag=Some(t);return true}if t.pos>=self.source.len()||!matches!(self.source[t.pos],b'\''|b...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:367:101
+    |
+367 | ...   if paused||(t.pos==limit&&t.pos<self.source.len()){self.tag=Some(t);return true}if t.pos>=self.source.len(){self.fail(XmlErro...
+    |                                                                                       ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:366:193
+    |
+366 | ...e{if cancel(){self.tag=Some(t);self.canceled=true;return false}if self.source[t.pos]==b'<'{self.fail(XmlError::MalformedSyntax,t...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:366:277
+    |
+366 | ...==b'<'{self.fail(XmlError::MalformedSyntax,t.pos);return false}if self.source[t.pos]==b'&'{let scan=t.reference.get_or_insert_wi...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:370:201
+    |
+370 | ...s>=limit&&t.pos<self.source.len(){self.tag=Some(t);return true}if t.pos>=self.source.len()||self.source[t.pos]!=b'>'{self.fail(X...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:382:29
+    |
+382 |         if !ok{return false}if !empty{
+    |                             ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: unnecessary `>= y + 1` or `x - 1 >=`
+   --> rust/crates/vexel-xml/src/stream.rs:400:16
+    |
+400 |             if self.tag_scratch.len()>=MAX_ATTRIBUTES_PER_ELEMENT+1
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: change it to: `self.tag_scratch.len() > MAX_ATTRIBUTES_PER_ELEMENT`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#int_plus_one
+    = note: `#[warn(clippy::int_plus_one)]` on by default
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:434:115
+    |
+434 | ...   let position=if let Some(t)=&self.tag{let mut p=t.pos;if let Some(r)=t.reference{p=p.max(ref_frontier(r))}if let Some(n)=t.na...
+    |                                                                                                                 ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:434:157
+    |
+434 | ...max(ref_frontier(r))}if let Some(n)=t.name_scan{p=p.max(n.pos)}if let Some(n)=t.attr_scan{p=p.max(n.pos)}p}else{match &self.pend...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:507:65
+    |
+507 | ...   if scan.pos==limit&&limit<src.len(){return Ok(None)}if *digits==0||src.get(scan.pos)!=Some(&b';'){return Err((XmlError::Malfo...
+    |                                                           ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:507:162
+    |
+507 | ...Some(&b';'){return Err((XmlError::MalformedSyntax,scan.start))}if !is_xml_char(*value){return Err((XmlError::InvalidCharacter,sc...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like an `else if` but the `else` is missing
+   --> rust/crates/vexel-xml/src/stream.rs:509:228
+    |
+509 | ...s=name.pos;if scan.pos==limit&&limit<src.len(){return Ok(None)}if src.get(scan.pos)!=Some(&b';')||!parts.entity_known{return Err...
+    |                                                                   ^
+    |
+    = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: the following explicit lifetimes could be elided: 'a
+  --> rust/crates/vexel-xml/src/tokenizer.rs:42:18
+   |
+42 |     pub fn slice<'a>(self, source: &'a [u8]) -> Option<&'a [u8]> { source.get(self.offset..self.end()?) }
+   |                  ^^                 ^^                  ^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_lifetimes
+   = note: `#[warn(clippy::needless_lifetimes)]` on by default
+help: elide the lifetimes
+   |
+42 -     pub fn slice<'a>(self, source: &'a [u8]) -> Option<&'a [u8]> { source.get(self.offset..self.end()?) }
+42 +     pub fn slice(self, source: &[u8]) -> Option<&[u8]> { source.get(self.offset..self.end()?) }
+   |
+
+warning: this `impl` can be derived
+  --> rust/crates/vexel-xml/src/tokenizer.rs:48:1
+   |
+48 | impl Default for TokenKind { fn default() -> Self { Self::Declaration } }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#derivable_impls
+   = note: `#[warn(clippy::derivable_impls)]` on by default
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+14 + #[derive(Default)]
+15 ~ pub enum TokenKind { #[default]
+16 | Declaration = 1, ProcessingInstruction, Comment, StartElement, EndElement,
+   |
+
+warning: this `impl` can be derived
+  --> rust/crates/vexel-xml/src/tokenizer.rs:59:1
+   |
+59 | impl Default for XmlError { fn default() -> Self { Self::None } }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#derivable_impls
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+19 + #[derive(Default)]
+20 ~ pub enum XmlError { #[default]
+21 | None, InvalidArgument, InputLimit, InvalidUtf8, InvalidCharacter,
+   |
+
+warning: struct update has no effect, all the fields in the struct have already been specified
+   --> rust/crates/vexel-xml/src/tokenizer.rs:163:254
+    |
+163 | ...tart, length: p - value_start }, depth: self.depth, ..XmlToken::default() }, attr_start)?;
+    |                                                          ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_update
+    = note: `#[warn(clippy::needless_update)]` on by default
+
+warning: struct update has no effect, all the fields in the struct have already been specified
+   --> rust/crates/vexel-xml/src/stream.rs:368:292
+    |
+368 | ...1),value:span(t.value_start,t.pos),depth:self.depth,..XmlToken::default()};
+    |                                                          ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_update
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-xml/src/stream.rs:380:42
+    |
+380 | ...   for tok in &self.tag_scratch{if let Some(cb)=visitor.as_deref_mut(){if !cb(tok){self.canceled=true;return false}}}self.tag_sc...
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+380 -             for tok in &self.tag_scratch{if let Some(cb)=visitor.as_deref_mut(){if !cb(tok){self.canceled=true;return false}}}self.tag_scratch.clear();true
+380 +             for tok in &self.tag_scratch{if let Some(cb)=visitor.as_deref_mut()&& !cb(tok){self.canceled=true;return false}}self.tag_scratch.clear();true
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-xml/src/stream.rs:410:30
+    |
+410 |         if self.visitor_mode{if let Some(cb)=visitor.as_deref_mut(){if !cb(&t){self.canceled=true;return false}}}
+    |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+410 -         if self.visitor_mode{if let Some(cb)=visitor.as_deref_mut(){if !cb(&t){self.canceled=true;return false}}}
+410 +         if self.visitor_mode{if let Some(cb)=visitor.as_deref_mut()&& !cb(&t){self.canceled=true;return false}}
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-xml/src/stream.rs:416:9
+    |
+416 | /         if storage.len()==storage.capacity(){
+417 | |             if storage.try_reserve_exact(1).is_err() || storage.capacity()>capacity_limit {
+418 | |                 *storage=Vec::new();
+419 | |                 return false
+420 | |             }
+421 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+416 ~         if storage.len()==storage.capacity()
+417 ~             && (storage.try_reserve_exact(1).is_err() || storage.capacity()>capacity_limit) {
+418 |                 *storage=Vec::new();
+419 |                 return false
+420 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-xml/src/stream.rs:477:9
+    |
+477 | /         if let Some(colon)=scan.first_colon {
+478 | |             if at==colon+1{scan.local_first_valid=Some(is_name_start(cp))}
+479 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+477 ~         if let Some(colon)=scan.first_colon
+478 ~             && at==colon+1{scan.local_first_valid=Some(is_name_start(cp))}
+    |
+
+warning: initializer for `thread_local` value can be made `const`
+  --> rust/crates/vexel-platform-apple/src/native_window/app.rs:50:63
+   |
+50 | thread_local! {static ACTIVE:RefCell<Weak<RefCell<AppState>>>=RefCell::new(Weak::new());}
+   |                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace with: `const { RefCell::new(Weak::new()) }`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#missing_const_for_thread_local
+   = note: `#[warn(clippy::missing_const_for_thread_local)]` on by default
+
+warning: `vexel-xml` (lib) generated 35 warnings (run `cargo clippy --fix --lib -p vexel-xml -- ` to apply 8 suggestions)
+    Checking vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-raster)
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-platform-apple/src/native_window/app.rs:329:13
+    |
+329 | /             if let Some(record) = record {
+330 | |                 if let Err(f) = super::teardown::destroy(record) {
+331 | |                     fault.get_or_insert(f);
+332 | |                 }
+333 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+329 ~             if let Some(record) = record
+330 ~                 && let Err(f) = super::teardown::destroy(record) {
+331 |                     fault.get_or_insert(f);
+332 ~                 }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-platform-apple/src/native_window/callbacks.rs:252:5
+    |
+252 | /     if route.active.get() && route.tick_generation.get() == generation {
+253 | |         if let Some(seconds) = route.timestamp(seconds) {
+254 | |             route.emit(
+255 | |                 WindowEvent::AnimationTick {
+...   |
+261 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+252 ~     if route.active.get() && route.tick_generation.get() == generation
+253 ~         && let Some(seconds) = route.timestamp(seconds) {
+254 |             route.emit(
+...
+259 |             );
+260 ~         }
+    |
+
+warning: using `chunks_exact_mut` with a constant chunk size
+  --> rust/crates/vexel-platform-apple/src/native_window/frame.rs:85:29
+   |
+85 |         for pixel in pixels.chunks_exact_mut(BYTES_PER_PIXEL) {
+   |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using `as_chunks_mut` instead: `as_chunks_mut::<BYTES_PER_PIXEL>().0`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+   = note: `#[warn(clippy::chunks_exact_to_as_chunks)]` on by default
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-platform-apple/src/native_window/teardown.rs:11:5
+   |
+11 | /     if let Some(timer) = record.timer.take() {
+12 | |         if let Err(f) = super::ticks::cancel(&timer.0) {
+13 | |             fault = Some(f);
+14 | |         }
+15 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+   |
+11 ~     if let Some(timer) = record.timer.take()
+12 ~         && let Err(f) = super::ticks::cancel(&timer.0) {
+13 |             fault = Some(f);
+14 ~         }
+   |
+
+warning: this function has too many arguments (11/7)
+   --> rust/crates/vexel-platform-apple/src/native_window/text.rs:196:1
+    |
+196 | / pub fn draw_text_rgba(
+197 | |     rgba: &mut [u8],
+198 | |     width: u32,
+199 | |     height: u32,
+...   |
+207 | |     size_pixels: u32,
+208 | | ) -> Result<(), TextError> {
+    | |__________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-platform-apple/src/native_window/text.rs:394:1
+    |
+394 | / fn validate(
+395 | |     width: u32,
+396 | |     height: u32,
+397 | |     stride: usize,
+...   |
+402 | |     size_pixels: u32,
+403 | | ) -> Result<(), TextError> {
+    | |__________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: using `chunks_exact_mut` with a constant chunk size
+   --> rust/crates/vexel-platform-apple/src/native_window/text.rs:461:42
+    |
+461 |         for pixel in out[dst..dst + row].chunks_exact_mut(4) {
+    |                                          ^^^^^^^^^^^^^^^^^^^ help: consider using `as_chunks_mut` instead: `as_chunks_mut::<4>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+
+warning: using `chunks_exact_mut` with a constant chunk size
+   --> rust/crates/vexel-platform-apple/src/native_window/text.rs:481:50
+    |
+481 |         for pixel in source[src..src + copy_len].chunks_exact_mut(4) {
+    |                                                  ^^^^^^^^^^^^^^^^^^^ help: consider using `as_chunks_mut` instead: `as_chunks_mut::<4>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+
+warning: manual checked division
+   --> rust/crates/vexel-platform-apple/src/native_window/text.rs:483:16
+    |
+483 |             if alpha == 0 {
+    |                ^^^^^^^^^^ check performed here
+...
+487 |                     *channel = ((u16::from(*channel) * 255 + alpha / 2) / alpha).min(255) as u8;
+    |                                ------------------------------------------------- division performed here
+    |
+    = help: consider using `checked_div`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_checked_ops
+    = note: `#[warn(clippy::manual_checked_ops)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-platform-apple/src/native_window/window.rs:272:9
+    |
+272 | /         if let Some(timer) = previous {
+273 | |             if let Err(fault) = super::ticks::cancel(&timer.0) {
+274 | |                 let mut state = owner.borrow_mut();
+275 | |                 if let Ok(slot) = slot_mut(&mut state, self.id) {
+...   |
+280 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+272 ~         if let Some(timer) = previous
+273 ~             && let Err(fault) = super::ticks::cancel(&timer.0) {
+274 |                 let mut state = owner.borrow_mut();
+...
+278 |                 return Err(WindowError::Native(fault));
+279 ~             }
+    |
+
+warning: `vexel-platform-apple` (lib) generated 11 warnings (run `cargo clippy --fix --lib -p vexel-platform-apple -- ` to apply 8 suggestions)
+    Checking vexel-geometry v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-geometry)
+    Checking vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-css)
+    Checking vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-values)
+warning: order comparisons between booleans can be simplified
+   --> rust/crates/vexel-svg-css/src/lib.rs:348:9
+    |
+348 |         declaration.important > old.important
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `declaration.important & !old.important`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#bool_comparison
+    = note: `#[warn(clippy::bool_comparison)]` on by default
+
+warning: `vexel-svg-css` (lib) generated 1 warning (run `cargo clippy --fix --lib -p vexel-svg-css -- ` to apply 1 suggestion)
+    Checking vexel-svg-animation v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-animation)
+warning: the loop variable `index` is used to index `values`
+   --> rust/crates/vexel-svg-values/src/transform.rs:117:26
+    |
+117 |             for index in 0..count {
+    |                          ^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_range_loop
+    = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+    |
+117 -             for index in 0..count {
+117 +             for (index, <item>) in values.iter_mut().enumerate().take(count) {
+    |
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-values/src/viewport.rs:155:1
+    |
+155 | / pub fn viewbox_transform(
+156 | |     view_x: f64,
+157 | |     view_y: f64,
+158 | |     view_width: f64,
+...   |
+164 | |     mut aspect: Aspect,
+165 | | ) -> Result<Affine, MappingError> {
+    | |_________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-values/src/viewport.rs:211:5
+    |
+211 | /     if let Some(namespace) = attributes.get(b"xmlns") {
+212 | |         if attributes.value(namespace) != Some(SVG_NAMESPACE) {
+213 | |             return Err(err(MappingErrorKind::Unsupported, namespace.start));
+214 | |         }
+215 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+211 ~     if let Some(namespace) = attributes.get(b"xmlns")
+212 ~         && attributes.value(namespace) != Some(SVG_NAMESPACE) {
+213 |             return Err(err(MappingErrorKind::Unsupported, namespace.start));
+214 ~         }
+    |
+
+warning: `vexel-svg-values` (lib) generated 3 warnings (run `cargo clippy --fix --lib -p vexel-svg-values -- ` to apply 1 suggestion)
+    Checking vexel-svg-path v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-path)
+warning: large size difference between variants
+  --> rust/crates/vexel-svg-path/src/flatten.rs:77:1
+   |
+77 | / pub(crate) enum GeometryCursor {
+78 | |     Line(Point, Point),
+79 | |     Curve(CurveCursor),
+   | |     ------------------ the largest variant contains at least 1272 bytes
+80 | |     Arc(ArcCursor),
+   | |     -------------- the second-largest variant contains at least 136 bytes
+81 | | }
+   | |_^ the entire enum is at least 1272 bytes
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+   = note: `#[warn(clippy::large_enum_variant)]` on by default
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+   |
+79 -     Curve(CurveCursor),
+79 +     Curve(Box<CurveCursor>),
+   |
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-svg-animation/src/control.rs:30:9
+   |
+30 | /         if let Some(control) = self.control.as_deref_mut() {
+31 | |             if let Err(stop) = control.checkpoint() {
+32 | |                 self.stopped = Some(stop);
+33 | |                 return false;
+34 | |             }
+35 | |         }
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+   = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+   |
+30 ~         if let Some(control) = self.control.as_deref_mut()
+31 ~             && let Err(stop) = control.checkpoint() {
+32 |                 self.stopped = Some(stop);
+33 |                 return false;
+34 ~             }
+   |
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-svg-animation/src/control.rs:44:13
+   |
+44 | /             if let Some(control) = self.control.as_deref_mut() {
+45 | |                 if let Err(stop) = control.charge(kind, batch) {
+46 | |                     self.stopped = Some(stop);
+47 | |                     return false;
+48 | |                 }
+49 | |             }
+   | |_____________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+   |
+44 ~             if let Some(control) = self.control.as_deref_mut()
+45 ~                 && let Err(stop) = control.charge(kind, batch) {
+46 |                     self.stopped = Some(stop);
+47 |                     return false;
+48 ~                 }
+   |
+
+warning: this function has too many arguments (11/7)
+  --> rust/crates/vexel-svg-path/src/arc.rs:18:5
+   |
+18 | /     pub fn prepare(
+19 | |         edges: &mut Vec<Edge>, from: Point, rx: f64, ry: f64, rotation: f64,
+20 | |         large: bool, sweep: bool, to: Point, tolerance: f64, max_edges: usize, offset: usize,
+21 | |     ) -> Result<ArcPlan, ControlledError<Diagnostic>> {
+   | |_____________________________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+   = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: field assignment outside of initializer for an instance created with Default::default()
+  --> rust/crates/vexel-svg-animation/src/parse.rs:24:5
+   |
+24 |     t.id = attr0(src, tokens, i, b"id", meter);
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: consider initializing the variable with `Track { id: attr0(src, tokens, i, b"id", meter), target: element_span(tokens, parent, meter)?, element: element_span(tokens, i, meter)?, ..Default::default() }` and removing relevant reassignments
+  --> rust/crates/vexel-svg-animation/src/parse.rs:23:5
+   |
+23 |     let mut t = Track::default();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#field_reassign_with_default
+   = note: `#[warn(clippy::field_reassign_with_default)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-animation/src/parse.rs:514:17
+    |
+514 | /                 if x.kind == TokenKind::Text {
+515 | |                     if let Some(b) = span(source, x.value) {
+516 | |                         let mut matched = false;
+517 | |                         for needle in [b"@keyframes".as_slice(), b"animation:", b"transition:"] {
+...   |
+534 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+514 ~                 if x.kind == TokenKind::Text
+515 ~                     && let Some(b) = span(source, x.value) {
+516 |                         let mut matched = false;
+...
+532 |                         }
+533 ~                     }
+    |
+
+warning: `vexel-svg-path` (lib) generated 2 warnings
+    Checking vexel-svg-reference v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-reference)
+warning: the loop variable `i` is used to index `b`
+   --> rust/crates/vexel-svg-animation/src/parse_values.rs:549:14
+    |
+549 |     for i in dot + 1..b.len() {
+    |              ^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_range_loop
+    = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+    |
+549 -     for i in dot + 1..b.len() {
+549 +     for (i, <item>) in b.iter().enumerate().skip(dot + 1) {
+    |
+
+warning: `vexel-svg-animation` (lib) generated 5 warnings (run `cargo clippy --fix --lib -p vexel-svg-animation -- ` to apply 3 suggestions)
+    Checking vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-platform-macos)
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-reference/src/build.rs:107:13
+    |
+107 | /             if charged > 0 && charged % 256 == 0 {
+108 | |                 if let Err(stop) = control.checkpoint() {
+109 | |                     return self.fail(stop.into());
+110 | |                 }
+111 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+107 ~             if charged > 0 && charged % 256 == 0
+108 ~                 && let Err(stop) = control.checkpoint() {
+109 |                     return self.fail(stop.into());
+110 ~                 }
+    |
+
+warning: manual implementation of `.is_multiple_of()`
+   --> rust/crates/vexel-svg-reference/src/build.rs:107:31
+    |
+107 |             if charged > 0 && charged % 256 == 0 {
+    |                               ^^^^^^^^^^^^^^^^^^ help: replace with: `charged.is_multiple_of(256)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_is_multiple_of
+    = note: `#[warn(clippy::manual_is_multiple_of)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-reference/src/find.rs:102:13
+    |
+102 | /             if charged > 0 && charged % 256 == 0 {
+103 | |                 if let Err(e) = control.checkpoint() {
+104 | |                     return self.fail(e.into());
+105 | |                 }
+106 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+102 ~             if charged > 0 && charged % 256 == 0
+103 ~                 && let Err(e) = control.checkpoint() {
+104 |                     return self.fail(e.into());
+105 ~                 }
+    |
+
+warning: manual implementation of `.is_multiple_of()`
+   --> rust/crates/vexel-svg-reference/src/find.rs:102:31
+    |
+102 |             if charged > 0 && charged % 256 == 0 {
+    |                               ^^^^^^^^^^^^^^^^^^ help: replace with: `charged.is_multiple_of(256)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_is_multiple_of
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-platform-macos/src/atomic_files/create_new.rs:127:32
+    |
+127 |     let directory_gate = match hooks.as_deref_mut() {
+    |                                ^^^^^^^^^^^^^^^^^^^^ help: try: `hooks`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+    = note: `#[warn(clippy::needless_option_as_deref)]` on by default
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-platform-macos/src/atomic_files/replace.rs:150:32
+    |
+150 |     let directory_gate = match hooks.as_deref_mut() {
+    |                                ^^^^^^^^^^^^^^^^^^^^ help: try: `hooks`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: `vexel-svg-reference` (lib) generated 4 warnings (run `cargo clippy --fix --lib -p vexel-svg-reference -- ` to apply 4 suggestions)
+    Checking vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-scene)
+warning: `vexel-platform-macos` (lib) generated 2 warnings (run `cargo clippy --fix --lib -p vexel-platform-macos -- ` to apply 2 suggestions)
+    Checking vexel-svg-color v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-color)
+warning: this looks like an `else if` but the `else` is missing
+  --> rust/crates/vexel-svg-color/src/lib.rs:51:21
+   |
+51 |   if eneg {exp=-exp} if !(-324..=308).contains(&exp){return None} value*=10f64.powi(exp);if negative{value=-value}if !value.is_finit...
+   |                     ^
+   |
+   = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+   = note: `#[warn(clippy::possible_missing_else)]` on by default
+
+warning: this looks like an `else if` but the `else` is missing
+  --> rust/crates/vexel-svg-color/src/lib.rs:51:115
+   |
+51 |   if eneg {exp=-exp} if !(-324..=308).contains(&exp){return None} value*=10f64.powi(exp);if negative{value=-value}if !value.is_finit...
+   |                                                                                                                   ^
+   |
+   = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: this looks like you are trying to use `.. -= ..`, but you really are doing `.. = (- ..)`
+  --> rust/crates/vexel-svg-color/src/lib.rs:51:15
+   |
+51 |   if eneg {exp=-exp} if !(-324..=308).contains(&exp){return None} value*=10f64.powi(exp);if negative{value=-value}if !value.is_finit...
+   |               ^^
+   |
+   = note: to remove this lint, use either `-=` or `= -`
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#suspicious_assignment_formatting
+   = note: `#[warn(clippy::suspicious_assignment_formatting)]` on by default
+
+warning: this looks like you are trying to use `.. -= ..`, but you really are doing `.. = (- ..)`
+  --> rust/crates/vexel-svg-color/src/lib.rs:51:107
+   |
+51 |   if eneg {exp=-exp} if !(-324..=308).contains(&exp){return None} value*=10f64.powi(exp);if negative{value=-value}if !value.is_finit...
+   |                                                                                                           ^^
+   |
+   = note: to remove this lint, use either `-=` or `= -`
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#suspicious_assignment_formatting
+
+warning: this looks like an `else if` but the `else` is missing
+  --> rust/crates/vexel-svg-color/src/lib.rs:65:278
+   |
+65 | ....9}else if eq_ci(u,b"turn"){a[0].value*=360.0}else{return None}}if !a[1].percent||!a[2].percent{return None}}else if a[..3].iter(...
+   |                                                                    ^
+   |
+   = note: to remove this lint, add the missing `else` or add a new line before the second `if`
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#possible_missing_else
+
+warning: the following explicit lifetimes could be elided: 'a
+  --> rust/crates/vexel-svg-color/src/lib.rs:58:14
+   |
+58 | fn part_unit<'a>(p:Part,b:&'a[u8])->&'a[u8]{&b[p.suffix.0..p.suffix.1]}
+   |              ^^            ^^        ^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_lifetimes
+   = note: `#[warn(clippy::needless_lifetimes)]` on by default
+help: elide the lifetimes
+   |
+58 - fn part_unit<'a>(p:Part,b:&'a[u8])->&'a[u8]{&b[p.suffix.0..p.suffix.1]}
+58 + fn part_unit(p:Part,b:&[u8])->&[u8]{&b[p.suffix.0..p.suffix.1]}
+   |
+
+warning: the loop variable `i` is used to index `a`
+  --> rust/crates/vexel-svg-color/src/lib.rs:63:11
+   |
+63 |  for i in 0..3 {a[i]=r.number()?;if i==0 {let spaced=r.spaces();if r.peek()==Some(b','){comma=true;r.i+=1;r.skip()}else if !spaced{r...
+   |           ^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_range_loop
+   = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+   |
+63 -  for i in 0..3 {a[i]=r.number()?;if i==0 {let spaced=r.spaces();if r.peek()==Some(b','){comma=true;r.i+=1;r.skip()}else if !spaced{return None}}else if i==1 {let spaced=r.spaces();if comma{if r.peek()!=Some(b','){return None}r.i+=1;r.skip()}else if !spaced{return None}}}
+63 +  for (i, <item>) in a.iter_mut().enumerate().take(3) {a[i]=r.number()?;if i==0 {let spaced=r.spaces();if r.peek()==Some(b','){comma=true;r.i+=1;r.skip()}else if !spaced{return None}}else if i==1 {let spaced=r.spaces();if comma{if r.peek()!=Some(b','){return None}r.i+=1;r.skip()}else if !spaced{return None}}}
+   |
+
+warning: `vexel-svg-color` (lib) generated 7 warnings (run `cargo clippy --fix --lib -p vexel-svg-color -- ` to apply 1 suggestion)
+    Checking vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-document-io)
+warning: derefed type is same as origin
+   --> rust/crates/vexel-document-io/src/source_save.rs:134:29
+    |
+134 |         let created = match hooks.as_deref_mut() {
+    |                             ^^^^^^^^^^^^^^^^^^^^ help: try: `hooks`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+    = note: `#[warn(clippy::needless_option_as_deref)]` on by default
+
+warning: `vexel-document-io` (lib) generated 1 warning (run `cargo clippy --fix --lib -p vexel-document-io -- ` to apply 1 suggestion)
+    Checking vexel-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-document)
+warning: manual saturating add detected
+   --> rust/crates/vexel-document/src/model.rs:142:17
+    |
+142 |                 if node.generation != u32::MAX { node.generation += 1; }
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use instead: `node.generation = node.generation.saturating_add(1);`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#implicit_saturating_add
+    = note: `#[warn(clippy::implicit_saturating_add)]` on by default
+
+warning: the following explicit lifetimes could be elided: 'a
+   --> rust/crates/vexel-document/src/parse.rs:258:17
+    |
+258 | fn checked_span<'a>(span: XmlSpan, source: &'a [u8]) -> Option<&'a [u8]> {
+    |                 ^^                          ^^                  ^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_lifetimes
+    = note: `#[warn(clippy::needless_lifetimes)]` on by default
+help: elide the lifetimes
+    |
+258 - fn checked_span<'a>(span: XmlSpan, source: &'a [u8]) -> Option<&'a [u8]> {
+258 + fn checked_span(span: XmlSpan, source: &[u8]) -> Option<&[u8]> {
+    |
+
+warning: `vexel-document` (lib) generated 2 warnings (run `cargo clippy --fix --lib -p vexel-document -- ` to apply 2 suggestions)
+    Checking vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-json)
+    Checking vexel-project v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-project)
+warning: using `contains()` instead of `iter().any()` is more efficient
+   --> rust/crates/vexel-project/src/bundle.rs:356:12
+    |
+356 |         if names.iter().any(|name| *name == asset.name) {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `names.contains(&asset.name)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_contains
+    = note: `#[warn(clippy::manual_contains)]` on by default
+
+warning: `vexel-project` (lib) generated 1 warning (run `cargo clippy --fix --lib -p vexel-project -- ` to apply 1 suggestion)
+    Checking vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-protocol)
+warning: this `impl` can be derived
+  --> rust/crates/vexel-protocol/src/async_protocol.rs:10:1
+   |
+10 | impl Default for AsyncDisposition { fn default() -> Self { Self::Unhandled } }
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#derivable_impls
+   = note: `#[warn(clippy::derivable_impls)]` on by default
+help: replace the manual implementation with a derive attribute and mark the default variant
+   |
+ 9 + #[derive(Default)]
+10 ~ pub enum AsyncDisposition { #[default]
+11 | Unhandled, Result, Error, Deferred, Failed }
+   |
+
+warning: this returns a `Result<_, ()>`
+  --> rust/crates/vexel-protocol/src/async_protocol.rs:22:1
+   |
+22 | pub fn validate_async_payload(data: &[u8], kind: AsyncPayloadKind) -> Result<bool, ()> {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: use a custom `Error` type instead
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#result_unit_err
+   = note: `#[warn(clippy::result_unit_err)]` on by default
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> rust/crates/vexel-protocol/src/protocol/tool_methods.rs:132:51
+    |
+132 |             .and_then(|bytes| std::str::from_utf8(&bytes).ok())
+    |                                                   ^^^^^^ help: change this to: `bytes`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_borrow
+    = note: `#[warn(clippy::needless_borrow)]` on by default
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> rust/crates/vexel-protocol/src/protocol/tool_methods.rs:154:55
+    |
+154 |                 .and_then(|bytes| std::str::from_utf8(&bytes).ok())
+    |                                                       ^^^^^^ help: change this to: `bytes`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_borrow
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-protocol/src/protocol/tool_methods.rs:208:22
+    |
+208 |     if let Some(a) = async_backend.as_deref_mut() {
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `async_backend`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+    = note: `#[warn(clippy::needless_option_as_deref)]` on by default
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-protocol/src/protocol/tool_methods.rs:226:19
+    |
+226 |     let Some(b) = backend.as_deref_mut() else {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^ help: try: `backend`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-protocol/src/protocol/tool_methods.rs:313:1
+    |
+313 | / fn async_callback_response(
+314 | |     doc: &JsonDocument<'_>,
+315 | |     id: usize,
+316 | |     modern: bool,
+...   |
+322 | |     out: &mut JsonBuffer,
+323 | | ) -> Result<(), ProtocolError> {
+    | |______________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-protocol/src/protocol.rs:116:9
+    |
+116 | /         if let Some(id) = id {
+117 | |             if valid_id {
+118 | |                 append_error(
+119 | |                     &mut out,
+...   |
+126 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+116 ~         if let Some(id) = id
+117 ~             && valid_id {
+118 |                 append_error(
+...
+124 |                 )?;
+125 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-protocol/src/protocol.rs:222:9
+    |
+222 | /         if !has_id && session.initialized && !session.modern {
+223 | |             if let (Some(a), Some(p)) = (async_backend.as_deref_mut(), params) {
+224 | |                 if doc.token(p).is_some_and(|t| t.kind == JsonType::Object) {
+225 | |                     if let Some(req) = doc.object_get(p, b"requestId").filter(|v| {
+...   |
+233 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+222 ~         if !has_id && session.initialized && !session.modern
+223 ~             && let (Some(a), Some(p)) = (async_backend.as_deref_mut(), params) {
+224 |                 if doc.token(p).is_some_and(|t| t.kind == JsonType::Object) {
+...
+231 |                 }
+232 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-protocol/src/protocol.rs:223:13
+    |
+223 | /             if let (Some(a), Some(p)) = (async_backend.as_deref_mut(), params) {
+224 | |                 if doc.token(p).is_some_and(|t| t.kind == JsonType::Object) {
+225 | |                     if let Some(req) = doc.object_get(p, b"requestId").filter(|v| {
+226 | |                         doc.token(*v)
+...   |
+232 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+223 ~             if let (Some(a), Some(p)) = (async_backend.as_deref_mut(), params)
+224 ~                 && doc.token(p).is_some_and(|t| t.kind == JsonType::Object) {
+225 |                     if let Some(req) = doc.object_get(p, b"requestId").filter(|v| {
+...
+230 |                     }
+231 ~                 }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-protocol/src/protocol.rs:224:17
+    |
+224 | /                 if doc.token(p).is_some_and(|t| t.kind == JsonType::Object) {
+225 | |                     if let Some(req) = doc.object_get(p, b"requestId").filter(|v| {
+226 | |                         doc.token(*v)
+227 | |                             .is_some_and(|t| matches!(t.kind, JsonType::String | JsonType::Number))
+...   |
+231 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+224 ~                 if doc.token(p).is_some_and(|t| t.kind == JsonType::Object)
+225 ~                     && let Some(req) = doc.object_get(p, b"requestId").filter(|v| {
+226 |                         doc.token(*v)
+...
+229 |                         a.cancel_request(&doc, req);
+230 ~                     }
+    |
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-protocol/src/protocol.rs:279:21
+    |
+279 |                     async_backend.as_deref_mut(),
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `async_backend`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-protocol/src/protocol.rs:300:17
+    |
+300 |                 backend.as_deref_mut(),
+    |                 ^^^^^^^^^^^^^^^^^^^^^^ help: try: `backend`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: `vexel-protocol` (lib) generated 13 warnings (run `cargo clippy --fix --lib -p vexel-protocol -- ` to apply 11 suggestions)
+    Checking vexel-document-edit v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-document-edit)
+warning: manual implementation of an assign operation
+   --> rust/crates/vexel-scene/src/builder.rs:294:9
+    |
+294 |         self.stats.live_bytes = self.stats.live_bytes - (before - after);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace it with: `self.stats.live_bytes -= (before - after)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#assign_op_pattern
+    = note: `#[warn(clippy::assign_op_pattern)]` on by default
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-scene/src/model.rs:233:5
+    |
+233 | /     pub(crate) fn view<'a, V: Copy, A: Copy>(
+234 | |         &'a self,
+235 | |         owner: u64,
+236 | |         slot: usize,
+...   |
+241 | |         ignored: [Ignored; 4],
+242 | |     ) -> SceneView<'a, V, A> {
+    | |____________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-scene/src/model.rs:321:5
+    |
+321 | /     pub(crate) fn overlay<'b>(
+322 | |         &'b self,
+323 | |         edges: Option<&'b [Edge]>,
+324 | |         colors: Option<&'b [[u8; 4]]>,
+...   |
+329 | |         clips: Option<&'b [Clip]>,
+330 | |     ) -> SceneView<'b, V, A> {
+    | |____________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-scene/src/validate.rs:75:5
+   |
+75 | /     if let Some(parent) = value.parent {
+76 | |         if builder.traversal_scene(id)?.transform(parent).is_none() {
+77 | |             return Err(invalid(value.source_offset));
+78 | |         }
+79 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+   = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+   |
+75 ~     if let Some(parent) = value.parent
+76 ~         && builder.traversal_scene(id)?.transform(parent).is_none() {
+77 |             return Err(invalid(value.source_offset));
+78 ~         }
+   |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:136:5
+    |
+136 | /     if let Some(pattern) = value.pattern {
+137 | |         if scene.pattern(pattern).is_none() {
+138 | |             return Err(invalid(0));
+139 | |         }
+140 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+136 ~     if let Some(pattern) = value.pattern
+137 ~         && scene.pattern(pattern).is_none() {
+138 |             return Err(invalid(0));
+139 ~         }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:164:5
+    |
+164 | /     if let Some(node) = value.source.transform_node {
+165 | |         if scene.transform(node).is_none() {
+166 | |             return Err(invalid(0));
+167 | |         }
+168 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+164 ~     if let Some(node) = value.source.transform_node
+165 ~         && scene.transform(node).is_none() {
+166 |             return Err(invalid(0));
+167 ~         }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:169:5
+    |
+169 | /     if let Some(clip) = value.clip {
+170 | |         if scene.clip(clip).is_none() {
+171 | |             return Err(invalid(0));
+172 | |         }
+173 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+169 ~     if let Some(clip) = value.clip
+170 ~         && scene.clip(clip).is_none() {
+171 |             return Err(invalid(0));
+172 ~         }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:285:5
+    |
+285 | /     if let Some(offset) = value.command_offset {
+286 | |         if offset < value.source.start
+287 | |             || offset >= value.source.end
+288 | |             || source.get(offset).map(u8::to_ascii_uppercase)
+...   |
+293 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+285 ~     if let Some(offset) = value.command_offset
+286 ~         && (offset < value.source.start
+287 |             || offset >= value.source.end
+288 |             || source.get(offset).map(u8::to_ascii_uppercase)
+289 ~                 != Some(value.command.to_ascii_uppercase()))
+290 |         {
+291 |             return Err(invalid(offset));
+292 ~         }
+    |
+
+warning: using `chunks_exact` with a constant chunk size
+   --> rust/crates/vexel-scene/src/validate.rs:306:61
+    |
+306 |         for pixel in row[..value.pixels.width as usize * 4].chunks_exact(4) {
+    |                                                             ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<4>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#chunks_exact_to_as_chunks
+    = note: `#[warn(clippy::chunks_exact_to_as_chunks)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:353:5
+    |
+353 | /     if let Some(node) = value.owner_node {
+354 | |         if scene.transform(node).is_none() {
+355 | |             return Err(invalid(0));
+356 | |         }
+357 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+353 ~     if let Some(node) = value.owner_node
+354 ~         && scene.transform(node).is_none() {
+355 |             return Err(invalid(0));
+356 ~         }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:438:13
+    |
+438 | /             if let FilterInput::Result(result) = input {
+439 | |                 if result >= index {
+440 | |                     return Err(invalid(p.source_offset));
+441 | |                 }
+442 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+438 ~             if let FilterInput::Result(result) = input
+439 ~                 && result >= index {
+440 |                     return Err(invalid(p.source_offset));
+441 ~                 }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:481:5
+    |
+481 | /     if let Some(filter) = value.filter {
+482 | |         if scene.filter(filter).is_none() {
+483 | |             return Err(invalid(0));
+484 | |         }
+485 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+481 ~     if let Some(filter) = value.filter
+482 ~         && scene.filter(filter).is_none() {
+483 |             return Err(invalid(0));
+484 ~         }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/validate.rs:486:5
+    |
+486 | /     if let Some(mask) = value.mask {
+487 | |         if scene.mask(mask).is_none() {
+488 | |             return Err(invalid(0));
+489 | |         }
+490 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+486 ~     if let Some(mask) = value.mask
+487 ~         && scene.mask(mask).is_none() {
+488 |             return Err(invalid(0));
+489 ~         }
+    |
+
+warning: large size difference between variants
+   --> rust/crates/vexel-scene/src/decode_contract.rs:176:1
+    |
+176 | / pub enum Continuation {
+177 | |     Enter(TraversalFrame),
+    | |     --------------------- the largest variant contains at least 1168 bytes
+178 | |     Exit(PostOperation),
+    | |     ------------------- the second-largest variant contains at least 160 bytes
+179 | |     AwaitPattern(PatternTicket),
+180 | | }
+    | |_^ the entire enum is at least 1168 bytes
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+    = note: `#[warn(clippy::large_enum_variant)]` on by default
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+    |
+177 -     Enter(TraversalFrame),
+177 +     Enter(Box<TraversalFrame>),
+    |
+
+warning: large size difference between variants
+   --> rust/crates/vexel-scene/src/decode_contract.rs:182:1
+    |
+182 | / pub enum DecodeEvent<'a> {
+183 | |     Progress { charged_units: u64 },
+    | |     ------------------------------- the second-largest variant contains at least 8 bytes
+184 | |     NeedPattern(PatternRequest<'a>),
+    | |     ------------------------------- the largest variant contains at least 792 bytes
+185 | |     Complete,
+186 | | }
+    | |_^ the entire enum is at least 792 bytes
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+    |
+184 -     NeedPattern(PatternRequest<'a>),
+184 +     NeedPattern(Box<PatternRequest<'a>>),
+    |
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/decode_contract.rs:303:5
+    |
+303 | /     fn plan_definition<'src, 'ctx>(
+304 | |         &mut self,
+305 | |         ctx: &mut DefinitionContext<'src, 'ctx>,
+306 | |         kind: DefinitionKind,
+...   |
+312 | |         control: &mut dyn WorkControl,
+313 | |     ) -> Result<DefinitionPlan<'src>>;
+    | |_____________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/source_context.rs:171:17
+    |
+171 | /                 if let Some(value) = parent.value(property) {
+172 | |                     if value.span.slice(self.source) != Some(value.bytes) {
+173 | |                         return Err(invalid(value.span.offset));
+174 | |                     }
+175 | |                 }
+    | |_________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+171 ~                 if let Some(value) = parent.value(property)
+172 ~                     && value.span.slice(self.source) != Some(value.bytes) {
+173 |                         return Err(invalid(value.span.offset));
+174 ~                     }
+    |
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-scene/src/draft.rs:33:9
+   |
+33 | /         if let Some(parent) = self.active_draft() {
+34 | |             if scene.index() < parent.scene_count {
+35 | |                 return Err(invalid(0));
+36 | |             }
+37 | |         }
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+   |
+33 ~         if let Some(parent) = self.active_draft()
+34 ~             && scene.index() < parent.scene_count {
+35 |                 return Err(invalid(0));
+36 ~             }
+   |
+
+warning: called `Iterator::last` on a `DoubleEndedIterator`; this will needlessly iterate the entire iterator
+  --> rust/crates/vexel-scene/src/draft.rs:88:21
+   |
+88 |           let first = self.requests[..self.request_depth]
+   |  _____________________^
+89 | |             .iter()
+90 | |             .flatten()
+91 | |             .filter(|r| r.token.draft == token.nonce)
+92 | |             .last()
+   | |___________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#double_ended_iterator_last
+   = note: `#[warn(clippy::double_ended_iterator_last)]` on by default
+help: try
+   |
+92 -             .last()
+92 +             .next_back()
+   |
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:170:5
+    |
+170 | /     fn resolve_cached<'cache>(
+171 | |         &'cache mut self,
+172 | |         source: &mut DecodeSource<'_>,
+173 | |         ledger: &mut ChargeLedger,
+...   |
+178 | |         control: &mut dyn WorkControl,
+179 | |     ) -> Result<CachedPaint<'cache>>;
+    | |____________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:182:1
+    |
+182 | / pub fn resolve_publish_cached(
+183 | |     resolver: &mut dyn CachedPaintResolver,
+184 | |     source: &mut DecodeSource<'_>,
+185 | |     ledger: &mut ChargeLedger,
+...   |
+193 | |     control: &mut dyn WorkControl,
+194 | | ) -> Result<usize> {
+    | |__________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: large size difference between variants
+   --> rust/crates/vexel-scene/src/production_decode.rs:209:1
+    |
+209 | /  pub enum ProductionDefinitionPlan<'src> {
+210 | |      Definition(DefinitionPlan<'src>),
+    | |      -------------------------------- the second-largest variant contains at least 384 bytes
+211 | |/     Pattern {
+212 | ||         plan: DefinitionPlan<'src>,
+213 | ||         mapping: PatternMapping,
+214 | ||     },
+    | ||_____- the largest variant contains at least 696 bytes
+215 | |  }
+    | |__^ the entire enum is at least 696 bytes
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+    |
+212 -         plan: DefinitionPlan<'src>,
+212 +         plan: Box<DefinitionPlan<'src>>,
+    |
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:219:5
+    |
+219 | /     fn plan_owned_definition<'src>(
+220 | |         &mut self,
+221 | |         ctx: &mut DefinitionContext<'src, '_>,
+222 | |         kind: DefinitionKind,
+...   |
+228 | |         control: &mut dyn WorkControl,
+229 | |     ) -> Result<ProductionDefinitionPlan<'src>>;
+    | |_______________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:235:5
+    |
+235 | /     fn plan_owned_pattern_definition<'src>(
+236 | |         &mut self,
+237 | |         ctx: &mut DefinitionContext<'src, '_>,
+238 | |         element: ElementId,
+...   |
+244 | |         control: &mut dyn WorkControl,
+245 | |     ) -> Result<ProductionDefinitionPlan<'src>>;
+    | |_______________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:311:1
+    |
+311 | / pub fn plan_production_definition<'src>(
+312 | |     planner: &mut dyn DefinitionPlanner,
+313 | |     ctx: &mut DefinitionContext<'src, '_>,
+314 | |     kind: DefinitionKind,
+...   |
+320 | |     control: &mut dyn WorkControl,
+321 | | ) -> Result<ProductionDefinitionPlan<'src>> {
+    | |___________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:329:1
+    |
+329 | / pub fn plan_channel_aware_definition<'src>(
+330 | |     planner: &mut dyn ChannelAwareProductionDecodeOperations,
+331 | |     ctx: &mut DefinitionContext<'src, '_>,
+332 | |     kind: DefinitionKind,
+...   |
+338 | |     control: &mut dyn WorkControl,
+339 | | ) -> Result<ProductionDefinitionPlan<'src>> {
+    | |___________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:350:1
+    |
+350 | / pub fn plan_production_pattern<'src>(
+351 | |     planner: &mut dyn PaintChannelDefinitionPlanner,
+352 | |     ctx: &mut DefinitionContext<'src, '_>,
+353 | |     element: ElementId,
+...   |
+359 | |     control: &mut dyn WorkControl,
+360 | | ) -> Result<ProductionDefinitionPlan<'src>> {
+    | |___________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:367:1
+    |
+367 | / pub fn plan_channel_aware_pattern<'src>(
+368 | |     planner: &mut dyn ChannelAwareProductionDecodeOperations,
+369 | |     ctx: &mut DefinitionContext<'src, '_>,
+370 | |     element: ElementId,
+...   |
+376 | |     control: &mut dyn WorkControl,
+377 | | ) -> Result<ProductionDefinitionPlan<'src>> {
+    | |___________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-scene/src/production_decode.rs:382:1
+    |
+382 | / fn validate_production_plan<'src>(
+383 | |     ctx: &mut DefinitionContext<'src, '_>,
+384 | |     kind: DefinitionKind,
+385 | |     element: ElementId,
+...   |
+391 | |     plan: impl FnOnce(&mut DefinitionContext<'src, '_>, &mut dyn WorkControl) -> Result<ProductionDefinitionPlan<'src>>,
+392 | | ) -> Result<ProductionDefinitionPlan<'src>> {
+    | |___________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+  --> rust/crates/vexel-scene/src/pattern_publication.rs:67:5
+   |
+67 | /     pub fn request_mapped<'a>(
+68 | |         &mut self,
+69 | |         builder: &'a SceneBuilder,
+70 | |         draft: &DraftToken,
+...  |
+78 | |         control: &mut dyn WorkControl,
+79 | |     ) -> Result<PatternRequest<'a>> {
+   | |___________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+  --> rust/crates/vexel-scene/src/pattern_publication.rs:84:5
+   |
+84 | /     pub fn request_mapped_traversal<'a>(
+85 | |         &mut self,
+86 | |         builder: &'a SceneBuilder,
+87 | |         draft: &DraftToken,
+...  |
+95 | |         control: &mut dyn WorkControl,
+96 | |     ) -> Result<PatternRequest<'a, Option<Viewport>, Option<AnimationView<'a>>>> {
+   | |________________________________________________________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (12/7)
+   --> rust/crates/vexel-scene/src/pattern_publication.rs:101:5
+    |
+101 | /     pub(crate) fn request_mapped_view<'a, V: ViewportRead, A: Copy>(
+102 | |         &mut self,
+103 | |         builder: &'a SceneBuilder,
+104 | |         draft: &DraftToken,
+...   |
+113 | |         control: &mut dyn WorkControl,
+114 | |     ) -> Result<PatternRequest<'a, V, A>> {
+    | |_________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/pattern_publication.rs:200:13
+    |
+200 | /             if let Ok(output) = result {
+201 | |                 if output.validate(job).is_ok() {
+202 | |                     job.release(output.pixels)?;
+203 | |                 }
+204 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+200 ~             if let Ok(output) = result
+201 ~                 && output.validate(job).is_ok() {
+202 |                     job.release(output.pixels)?;
+203 ~                 }
+    |
+
+warning: the `Err`-variant returned from this function is very large
+   --> rust/crates/vexel-scene/src/raster_job.rs:150:41
+    |
+150 |     pub fn new(ledger: ChargeLedger) -> std::result::Result<Self, JobStartError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `Err`-variant is at least 328 bytes
+    |
+    = help: try reducing the size of `raster_job::JobStartError`, for example by boxing large elements or replacing it with `Box<raster_job::JobStartError>`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#result_large_err
+    = note: `#[warn(clippy::result_large_err)]` on by default
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-scene/src/raster_job.rs:181:13
+    |
+181 | /             if s.pool == RasterPool::Grid {
+182 | |                 if let Some((kind, _)) = s.data.grid_kind() {
+183 | |                     self.legacy_cache[kind + 1] = self.legacy_cache[kind + 1]
+184 | |                         - old / s.data.element_size()
+...   |
+187 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+181 ~             if s.pool == RasterPool::Grid
+182 ~                 && let Some((kind, _)) = s.data.grid_kind() {
+183 |                     self.legacy_cache[kind + 1] = self.legacy_cache[kind + 1]
+184 |                         - old / s.data.element_size()
+185 |                         + new_bytes / s.data.element_size();
+186 ~                 }
+    |
+
+warning: large size difference between variants
+   --> rust/crates/vexel-scene/src/decode_initialization.rs:417:1
+    |
+417 | / pub enum DecodedScene {
+418 | |     Drawable(SceneGraph),
+    | |     -------------------- the second-largest variant contains at least 264 bytes
+419 | |     Hidden(HiddenScene),
+    | |     ------------------- the largest variant contains at least 31648 bytes
+420 | | }
+    | |_^ the entire enum is at least 31648 bytes
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+    |
+419 -     Hidden(HiddenScene),
+419 +     Hidden(Box<HiddenScene>),
+    |
+
+warning: this function has too many arguments (11/7)
+  --> rust/crates/vexel-scene/src/static_pattern.rs:81:5
+   |
+81 | /     pub fn request_mapped_static<'a>(
+82 | |         &mut self,
+83 | |         builder: &'a SceneBuilder,
+84 | |         draft: &DraftToken,
+...  |
+92 | |         control: &mut dyn WorkControl,
+93 | |     ) -> Result<StaticPatternRequest<'a>> {
+   | |_________________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: large size difference between variants
+  --> rust/crates/vexel-scene/src/scoped_media.rs:31:1
+   |
+31 | / pub enum ScopedDecodeEvent<'a> {
+32 | |     Progress,
+   | |     -------- the second-largest variant carries no data at all
+33 | |     Pattern(StaticPatternRequest<'a>),
+   | |     --------------------------------- the largest variant contains at least 840 bytes
+34 | |     Complete,
+35 | | }
+   | |_^ the entire enum is at least 840 bytes
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+   |
+33 -     Pattern(StaticPatternRequest<'a>),
+33 +     Pattern(Box<StaticPatternRequest<'a>>),
+   |
+
+warning: `vexel-scene` (lib) generated 38 warnings (run `cargo clippy --fix --lib -p vexel-scene -- ` to apply 16 suggestions)
+    Checking vexel-svg-paint v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-paint)
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-document-edit/src/history.rs:52:9
+   |
+52 | /         if self.cursor == self.history.len() {
+53 | |             if let Some(command) = self.history.last_mut() {
+54 | |                 command.label = action.label();
+55 | |             }
+56 | |         }
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+   = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+   |
+52 ~         if self.cursor == self.history.len()
+53 ~             && let Some(command) = self.history.last_mut() {
+54 |                 command.label = action.label();
+55 ~             }
+   |
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-document-edit/src/storage.rs:84:5
+   |
+84 | /     if let Some(last) = out.last_mut() {
+85 | |         if last.owner.same(&piece.owner) && last.start.checked_add(last.len) == Some(piece.start) {
+86 | |             last.len = last.len.checked_add(piece.len).ok_or(EditError::Limit)?;
+87 | |             return Ok(());
+88 | |         }
+89 | |     }
+   | |_____^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+   |
+84 ~     if let Some(last) = out.last_mut()
+85 ~         && last.owner.same(&piece.owner) && last.start.checked_add(last.len) == Some(piece.start) {
+86 |             last.len = last.len.checked_add(piece.len).ok_or(EditError::Limit)?;
+87 |             return Ok(());
+88 ~         }
+   |
+
+warning: the following explicit lifetimes could be elided: 'a
+  --> rust/crates/vexel-document-edit/src/view.rs:28:26
+   |
+28 | pub fn document_view_tag<'a>(
+   |                          ^^
+29 |     view: &'a OwnedDocumentModel,
+   |            ^^
+30 |     node: DocumentHandle,
+31 | ) -> Option<&'a [u8]> {
+   |              ^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_lifetimes
+   = note: `#[warn(clippy::needless_lifetimes)]` on by default
+help: elide the lifetimes
+   |
+28 ~ pub fn document_view_tag(
+29 ~     view: &OwnedDocumentModel,
+30 |     node: DocumentHandle,
+31 ~ ) -> Option<&[u8]> {
+   |
+
+warning: the following explicit lifetimes could be elided: 'a
+  --> rust/crates/vexel-document-edit/src/view.rs:37:35
+   |
+37 | pub fn document_view_attribute_at<'a>(
+   |                                   ^^
+38 |     view: &'a OwnedDocumentModel,
+   |            ^^
+...
+41 | ) -> Option<(&'a [u8], &'a [u8])> {
+   |               ^^        ^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_lifetimes
+help: elide the lifetimes
+   |
+37 ~ pub fn document_view_attribute_at(
+38 ~     view: &OwnedDocumentModel,
+39 |     node: DocumentHandle,
+40 |     index: usize,
+41 ~ ) -> Option<(&[u8], &[u8])> {
+   |
+
+warning: `vexel-document-edit` (lib) generated 4 warnings (run `cargo clippy --fix --lib -p vexel-document-edit -- ` to apply 4 suggestions)
+    Checking vexel-svg-definitions v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-definitions)
+warning: the loop variable `channel` is used to index `output`
+  --> rust/crates/vexel-svg-paint/src/paint.rs:99:20
+   |
+99 |     for channel in 0..4 {
+   |                    ^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_range_loop
+   = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+   |
+99 -     for channel in 0..4 {
+99 +     for (channel, <item>) in output.iter_mut().enumerate() {
+   |
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-paint/src/cache.rs:193:1
+    |
+193 | / pub(crate) fn insert_template(
+194 | |     cache: &mut PaintCache,
+195 | |     source: &SourceOwner,
+196 | |     definition: ElementId,
+...   |
+202 | |     offset: usize,
+203 | | ) -> Result<usize> {
+    | |__________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-svg-paint/src/cache.rs:213:1
+    |
+213 | / fn insert_inner(
+214 | |     cache: &mut PaintCache,
+215 | |     source: &SourceOwner,
+216 | |     definition: ElementId,
+...   |
+221 | |     offset: usize,
+222 | | ) -> Result<usize> {
+    | |__________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-svg-paint/src/gradient_data.rs:90:13
+   |
+90 | /             if let Some(style) = attr(source, tokens, i, b"style") {
+91 | |                 if !supported_stop_inline_style(source, style) {
+92 | |                     return Err(unsupported(offset));
+93 | |                 }
+94 | |             }
+   | |_____________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+   = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+   |
+90 ~             if let Some(style) = attr(source, tokens, i, b"style")
+91 ~                 && !supported_stop_inline_style(source, style) {
+92 |                     return Err(unsupported(offset));
+93 ~                 }
+   |
+
+warning: the loop variable `i` is used to index `tokens`
+   --> rust/crates/vexel-svg-paint/src/gradient_data.rs:199:14
+    |
+199 |     for i in start.saturating_add(1)..tokens.len() {
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_range_loop
+help: consider using an iterator and enumerate()
+    |
+199 -     for i in start.saturating_add(1)..tokens.len() {
+199 +     for (i, <item>) in tokens.iter().enumerate().skip(start.saturating_add(1)) {
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-paint/src/gradient_data.rs:217:9
+    |
+217 | /         if !units {
+218 | |             if let Some(value) = attr(source, tokens, element.0, b"gradientUnits") {
+219 | |                 if eq(source, value, b"userSpaceOnUse") {
+220 | |                     paint.object_bounding_box = false;
+...   |
+226 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+217 ~         if !units
+218 ~             && let Some(value) = attr(source, tokens, element.0, b"gradientUnits") {
+219 |                 if eq(source, value, b"userSpaceOnUse") {
+...
+224 |                 units = true;
+225 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-paint/src/gradient_data.rs:227:9
+    |
+227 | /         if !spread {
+228 | |             if let Some(value) = attr(source, tokens, element.0, b"spreadMethod") {
+229 | |                 paint.spread = if eq(source, value, b"reflect") {
+230 | |                     Spread::Reflect
+...   |
+240 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+227 ~         if !spread
+228 ~             && let Some(value) = attr(source, tokens, element.0, b"spreadMethod") {
+229 |                 paint.spread = if eq(source, value, b"reflect") {
+...
+238 |                 spread = true;
+239 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-paint/src/gradient_data.rs:241:9
+    |
+241 | /         if !transform {
+242 | |             if let Some(value) = attr(source, tokens, element.0, b"gradientTransform") {
+243 | |                 let span = Span::from_offset_length(value.offset, value.length)
+244 | |                     .ok_or_else(|| invalid(offset))?;
+...   |
+251 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+241 ~         if !transform
+242 ~             && let Some(value) = attr(source, tokens, element.0, b"gradientTransform") {
+243 |                 let span = Span::from_offset_length(value.offset, value.length)
+...
+249 |                 transform = true;
+250 ~             }
+    |
+
+warning: this manual char comparison can be written more succinctly
+   --> rust/crates/vexel-svg-paint/src/gradient_data.rs:412:40
+    |
+412 |     let text = text.trim_start_matches(|c| matches!(c, ' ' | '\t' | '\r' | '\n' | '\u{000c}'));
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using an array of `char`: `[' ', '\t', '\r', '\n', '\u{000c}']`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#manual_pattern_char_comparison
+    = note: `#[warn(clippy::manual_pattern_char_comparison)]` on by default
+
+warning: the `Err`-variant returned from this function is very large
+   --> rust/crates/vexel-svg-paint/src/handoff.rs:163:10
+    |
+163 |     ) -> std::result::Result<(), (vexel_scene::Diagnostic, Self)> {
+    |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the `Err`-variant is at least 392 bytes
+    |
+    = help: try reducing the size of `(vexel_scene::Diagnostic, handoff::OwnedPaint)`, for example by boxing large elements or replacing it with `Box<(vexel_scene::Diagnostic, handoff::OwnedPaint)>`
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#result_large_err
+    = note: `#[warn(clippy::result_large_err)]` on by default
+
+warning: this function has too many arguments (8/7)
+  --> rust/crates/vexel-svg-paint/src/resolver.rs:66:1
+   |
+66 | / pub fn resolve_cached_fill<'cache>(
+67 | |     shared: &mut DecodeSource<'_>,
+68 | |     cache: &'cache mut PaintCache,
+69 | |     ledger: &mut ChargeLedger,
+...  |
+74 | |     work: &mut dyn WorkControl,
+75 | | ) -> Result<CachedPaint<'cache>> {
+   | |________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: `vexel-svg-paint` (lib) generated 11 warnings (run `cargo clippy --fix --lib -p vexel-svg-paint -- ` to apply 5 suggestions)
+    Checking vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-abba31c1457930a6f/rust/crates/vexel-svg-decode)
+warning: the following explicit lifetimes could be elided: 'a
+   --> rust/crates/vexel-svg-definitions/src/color.rs:182:14
+    |
+182 | fn part_unit<'a>(p: Part, b: &'a [u8]) -> &'a [u8] {
+    |              ^^               ^^           ^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_lifetimes
+    = note: `#[warn(clippy::needless_lifetimes)]` on by default
+help: elide the lifetimes
+    |
+182 - fn part_unit<'a>(p: Part, b: &'a [u8]) -> &'a [u8] {
+182 + fn part_unit(p: Part, b: &[u8]) -> &[u8] {
+    |
+
+warning: the loop variable `i` is used to index `a`
+   --> rust/crates/vexel-svg-definitions/src/color.rs:203:14
+    |
+203 |     for i in 0..3 {
+    |              ^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_range_loop
+    = note: `#[warn(clippy::needless_range_loop)]` on by default
+help: consider using an iterator and enumerate()
+    |
+203 -     for i in 0..3 {
+203 +     for (i, <item>) in a.iter_mut().enumerate().take(3) {
+    |
+
+warning: redundant closure
+   --> rust/crates/vexel-svg-definitions/src/filter.rs:104:22
+    |
+104 |             .map_err(|stop| crate::planner_support::stopped(stop))?;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the function itself: `crate::planner_support::stopped`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#redundant_closure
+    = note: `#[warn(clippy::redundant_closure)]` on by default
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-svg-definitions/src/filter.rs:198:45
+    |
+198 |     if let (Some(ledger), Some(charges)) = (ledger.as_deref_mut(), charges.as_deref_mut()) {
+    |                                             ^^^^^^^^^^^^^^^^^^^^^ help: try: `ledger`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+    = note: `#[warn(clippy::needless_option_as_deref)]` on by default
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-svg-definitions/src/filter.rs:198:68
+    |
+198 |     if let (Some(ledger), Some(charges)) = (ledger.as_deref_mut(), charges.as_deref_mut()) {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^ help: try: `charges`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-definitions/src/filter.rs:383:5
+    |
+383 | /     if kind == FilterKind::Blend {
+384 | |         if let Some(s) = attr(source, tokens, element, b"mode") {
+385 | |             p.mode = match span_bytes(source, s).unwrap_or_default() {
+386 | |                 b"normal" => 0,
+...   |
+394 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+383 ~     if kind == FilterKind::Blend
+384 ~         && let Some(s) = attr(source, tokens, element, b"mode") {
+385 |             p.mode = match span_bytes(source, s).unwrap_or_default() {
+...
+392 |             };
+393 ~         }
+    |
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-svg-definitions/src/filter.rs:427:76
+    |
+427 |             if let (Some(ledger), Some(charges)) = (ledger.as_deref_mut(), charges.as_deref_mut()) {
+    |                                                                            ^^^^^^^^^^^^^^^^^^^^^^ help: try: `charges`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: derefed type is same as origin
+   --> rust/crates/vexel-svg-definitions/src/filter.rs:430:35
+    |
+430 |             if let Some(ledger) = ledger.as_deref_mut() {
+    |                                   ^^^^^^^^^^^^^^^^^^^^^ help: try: `ledger`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_option_as_deref
+
+warning: float has excessive precision
+ --> rust/crates/vexel-svg-definitions/src/marker.rs:8:17
+  |
+8 | const PI: f64 = 3.14159265358979323846;
+  |                 ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#excessive_precision
+  = note: `#[warn(clippy::excessive_precision)]` on by default
+help: consider changing the type or truncating it to
+  |
+8 - const PI: f64 = 3.14159265358979323846;
+8 + const PI: f64 = 3.141_592_653_589_793;
+  |
+
+error: approximate value of `f{32, 64}::consts::PI` found
+ --> rust/crates/vexel-svg-definitions/src/marker.rs:8:17
+  |
+8 | const PI: f64 = 3.14159265358979323846;
+  |                 ^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = help: consider using the constant directly
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#approx_constant
+  = note: `#[deny(clippy::approx_constant)]` on by default
+
+warning: unnecessary closure used to substitute value for `Option::None`
+   --> rust/crates/vexel-svg-definitions/src/marker.rs:159:23
+    |
+159 |               let end = a.offset.checked_add(a.length).ok_or_else(|| Diagnostic {
+    |  _______________________^
+160 | |                 kind: ErrorKind::InvalidArgument,
+161 | |                 offset: a.offset,
+162 | |             })?;
+    | |______________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#unnecessary_lazy_evaluations
+    = note: `#[warn(clippy::unnecessary_lazy_evaluations)]` on by default
+help: use `ok_or` instead
+    |
+159 ~             let end = a.offset.checked_add(a.length).ok_or(Diagnostic {
+160 +                 kind: ErrorKind::InvalidArgument,
+161 +                 offset: a.offset,
+162 ~             })?;
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-definitions/src/marker.rs:742:5
+    |
+742 | /     if first.is_some() {
+743 | |         if let Some(end) = *last {
+744 | |             push(
+745 | |                 out,
+...   |
+753 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+742 ~     if first.is_some()
+743 ~         && let Some(end) = *last {
+744 |             push(
+...
+751 |             )?;
+752 ~         }
+    |
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-svg-definitions/src/pattern.rs:183:1
+    |
+183 | / pub(crate) fn pattern_descriptor_from_mapping(
+184 | |     source: &[u8],
+185 | |     tokens: &[XmlToken],
+186 | |     mapping: PatternMapping,
+...   |
+191 | |     charges: &mut crate::planner::AllocationJournal,
+192 | | ) -> Result<PatternDescriptor> {
+    | |______________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+    = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-definitions/src/planner.rs:90:5
+    |
+ 90 | /     pub fn plan<'src, 'ctx>(
+ 91 | |         &mut self,
+ 92 | |         ctx: &mut DefinitionContext<'src, 'ctx>,
+ 93 | |         kind: DefinitionKind,
+...   |
+ 99 | |         control: &mut dyn WorkControl,
+100 | |     ) -> Result<DefinitionPlan<'src>> {
+    | |_____________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-definitions/src/planner.rs:134:5
+    |
+134 | /     fn plan_inner<'src, 'ctx>(
+135 | |         &mut self,
+136 | |         ctx: &mut DefinitionContext<'src, 'ctx>,
+137 | |         kind: DefinitionKind,
+...   |
+143 | |         charges: &mut AllocationJournal,
+144 | |     ) -> Result<(DefinitionPlan<'src>, Option<crate::PatternMapping>)> {
+    | |______________________________________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: using `clone` on type `CssPaint<'_>` which implements the `Copy` trait
+   --> rust/crates/vexel-svg-definitions/src/planner.rs:498:36
+    |
+498 |                 let marker_style = def_style.clone().without_inherited_markers();
+    |                                    ^^^^^^^^^^^^^^^^^ help: try removing the `clone` call: `def_style`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#clone_on_copy
+    = note: `#[warn(clippy::clone_on_copy)]` on by default
+
+warning: this function has too many arguments (10/7)
+   --> rust/crates/vexel-svg-definitions/src/planner.rs:573:5
+    |
+573 | /     fn plan_owned_production<'src>(
+574 | |         &mut self,
+575 | |         ctx: &mut DefinitionContext<'src, '_>,
+576 | |         kind: DefinitionKind,
+...   |
+583 | |         control: &mut dyn WorkControl,
+584 | |     ) -> Result<ProductionDefinitionPlan<'src>> {
+    | |_______________________________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-svg-definitions/src/planner_support.rs:109:1
+    |
+109 | / pub(super) fn add_expansions<'src>(
+110 | |     ctx: &mut DefinitionContext<'src, '_>,
+111 | |     root: usize,
+112 | |     end: usize,
+...   |
+117 | |     control: &mut dyn WorkControl,
+118 | | ) -> Result<()> {
+    | |_______________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: using `clone` on type `CssPaint<'_>` which implements the `Copy` trait
+   --> rust/crates/vexel-svg-definitions/src/planner_support.rs:174:29
+    |
+174 |     stack.push((root_depth, root_style.clone()));
+    |                             ^^^^^^^^^^^^^^^^^^ help: try dereferencing it: `*root_style`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#clone_on_copy
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-definitions/src/planner_support.rs:213:5
+    |
+213 | /     if let Some(v) = style.value(Property::ClipRule) {
+214 | |         if !v.bytes.eq_ignore_ascii_case(b"nonzero") && !v.bytes.eq_ignore_ascii_case(b"evenodd") {
+215 | |             return Err(unsupported(v.span.offset));
+216 | |         }
+217 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+213 ~     if let Some(v) = style.value(Property::ClipRule)
+214 ~         && !v.bytes.eq_ignore_ascii_case(b"nonzero") && !v.bytes.eq_ignore_ascii_case(b"evenodd") {
+215 |             return Err(unsupported(v.span.offset));
+216 ~         }
+    |
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-svg-definitions/src/planner_support.rs:282:1
+    |
+282 | / pub(super) fn pattern_descriptor(
+283 | |     src: &[u8],
+284 | |     tokens: &[XmlToken],
+285 | |     mapping: crate::PatternMapping,
+...   |
+290 | |     ledger: &mut ChargeLedger,
+291 | | ) -> Result<PatternDescriptor> {
+    | |______________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: unnecessary closure used to substitute value for `Option::None`
+   --> rust/crates/vexel-svg-definitions/src/lib.rs:127:5
+    |
+127 | /     tokens
+128 | |         .iter()
+129 | |         .enumerate()
+130 | |         .skip(element + 1)
+...   |
+134 | |             offset: t.name.offset,
+135 | |         })
+    | |__________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#unnecessary_lazy_evaluations
+help: use `ok_or` instead
+    |
+132 ~         .ok_or(Diagnostic {
+133 +             kind: ErrorKind::Xml(vexel_xml::XmlError::MalformedSyntax),
+134 +             offset: t.name.offset,
+135 +         })
+    |
+
+warning: redundant closure
+   --> rust/crates/vexel-svg-definitions/src/lib.rs:154:22
+    |
+154 |             .map_err(|stop| crate::planner_support::stopped(stop))?;
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the function itself: `crate::planner_support::stopped`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#redundant_closure
+
+warning: `vexel-svg-definitions` (lib) generated 22 warnings
+error: could not compile `vexel-svg-definitions` (lib) due to 1 previous error; 22 warnings emitted
+warning: build failed, waiting for other jobs to finish...
+warning: this function has too many arguments (13/7)
+  --> rust/crates/vexel-svg-decode/src/custom_publication.rs:13:1
+   |
+13 | / fn append_custom_guarded(
+14 | |     shared: &mut crate::decode::Shared<'_, '_>,
+15 | |     cache: &mut PaintCache,
+16 | |     ledger: &mut ChargeLedger,
+...  |
+26 | |     control: &mut dyn WorkControl,
+27 | | ) -> Result<(ResolvedStyle, [bool; 2], usize)> {
+   | |______________________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+   = note: `#[warn(clippy::too_many_arguments)]` on by default
+
+warning: this function has too many arguments (8/7)
+   --> rust/crates/vexel-svg-decode/src/custom_publication.rs:103:5
+    |
+103 | /     pub fn enqueue_custom_geometry(
+104 | |         &mut self,
+105 | |         scene: SceneId,
+106 | |         host: ElementId,
+...   |
+111 | |         control: &mut dyn WorkControl,
+112 | |     ) -> Result<()> {
+    | |___________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+   --> rust/crates/vexel-svg-decode/src/custom_publication.rs:174:5
+    |
+174 | /     pub(crate) fn publish_custom_task(
+175 | |         &mut self,
+176 | |         scene: SceneId,
+177 | |         request: RequestToken,
+...   |
+184 | |         control: &mut dyn WorkControl,
+185 | |     ) -> Result<()> {
+    | |___________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+   --> rust/crates/vexel-svg-decode/src/custom_publication.rs:197:5
+    |
+197 | /     fn publish_custom_task_inner(
+198 | |         &mut self,
+199 | |         scene: SceneId,
+200 | |         request: RequestToken,
+...   |
+207 | |         control: &mut dyn WorkControl,
+208 | |     ) -> Result<()> {
+    | |___________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> rust/crates/vexel-svg-decode/src/custom_publication.rs:222:13
+    |
+222 |             &draft,
+    |             ^^^^^^ help: change this to: `draft`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_borrow
+    = note: `#[warn(clippy::needless_borrow)]` on by default
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> rust/crates/vexel-svg-decode/src/custom_publication.rs:299:56
+    |
+299 |             if let Err(error) = builder.commit_request(&draft, request, control) {
+    |                                                        ^^^^^^ help: change this to: `draft`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_borrow
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> rust/crates/vexel-svg-decode/src/custom_publication.rs:300:42
+    |
+300 |                 builder.rollback_request(&draft, request)?;
+    |                                          ^^^^^^ help: change this to: `draft`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_borrow
+
+warning: large size difference between variants
+  --> rust/crates/vexel-svg-decode/src/decode.rs:38:1
+   |
+38 | / pub enum TraversalDecodeEvent<'a> {
+39 | |     Progress { charged_units: u64 },
+   | |     ------------------------------- the second-largest variant contains at least 8 bytes
+40 | |     NeedPattern(PatternRequest<'a, Option<Viewport>, Option<AnimationView<'a>>>),
+   | |     ---------------------------------------------------------------------------- the largest variant contains at least 792 bytes
+41 | |     Complete,
+42 | | }
+   | |_^ the entire enum is at least 792 bytes
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+   = note: `#[warn(clippy::large_enum_variant)]` on by default
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+   |
+40 -     NeedPattern(PatternRequest<'a, Option<Viewport>, Option<AnimationView<'a>>>),
+40 +     NeedPattern(Box<PatternRequest<'a, Option<Viewport>, Option<AnimationView<'a>>>>),
+   |
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+   --> rust/crates/vexel-svg-decode/src/decode.rs:593:13
+    |
+593 |             &draft,
+    |             ^^^^^^ help: change this to: `draft`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#needless_borrow
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/decode.rs:769:5
+    |
+769 | /     if let Some((child, token)) = children.last() {
+770 | |         if *child == scene {
+771 | |             return Ok(token);
+772 | |         }
+773 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+    = note: `#[warn(clippy::collapsible_if)]` on by default
+help: collapse nested if block
+    |
+769 ~     if let Some((child, token)) = children.last()
+770 ~         && *child == scene {
+771 |             return Ok(token);
+772 ~         }
+    |
+
+warning: this function has too many arguments (8/7)
+  --> rust/crates/vexel-svg-decode/src/definition_work.rs:32:5
+   |
+32 | /     pub(crate) fn queue_definition(
+33 | |         &mut self,
+34 | |         kind: DefinitionKind,
+35 | |         value: vexel_xml::XmlSpan,
+...  |
+40 | |         control: &mut dyn WorkControl,
+41 | |     ) -> Result<()> {
+   | |___________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (10/7)
+   --> rust/crates/vexel-svg-decode/src/definition_work.rs:214:5
+    |
+214 | /     fn enqueue_plan(
+215 | |         &mut self,
+216 | |         kind: DefinitionKind,
+217 | |         definition: ElementId,
+...   |
+224 | |         control: &mut dyn WorkControl,
+225 | |     ) -> Result<()> {
+    | |___________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> rust/crates/vexel-svg-decode/src/definition_work.rs:255:5
+    |
+255 | /     fn enqueue_admitted(
+256 | |         &mut self,
+257 | |         kind: DefinitionKind,
+258 | |         definition: ElementId,
+...   |
+266 | |         control: &mut dyn WorkControl,
+267 | |     ) -> Result<()> {
+    | |___________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+error: approximate value of `f{32, 64}::consts::TAU` found
+   --> rust/crates/vexel-svg-decode/src/geometry.rs:405:13
+    |
+405 |             6.283185307179586
+    |             ^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using the constant directly
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#approx_constant
+    = note: `#[deny(clippy::approx_constant)]` on by default
+
+error: approximate value of `f{32, 64}::consts::TAU` found
+   --> rust/crates/vexel-svg-decode/src/geometry.rs:409:20
+    |
+409 |         let raw = (6.283185307179586 / angle).ceil();
+    |                    ^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using the constant directly
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#approx_constant
+
+error: approximate value of `f{32, 64}::consts::TAU` found
+   --> rust/crates/vexel-svg-decode/src/geometry.rs:416:25
+    |
+416 |             let theta = 6.283185307179586 * i as f64 / steps as f64;
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = help: consider using the constant directly
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#approx_constant
+
+warning: this function has too many arguments (10/7)
+  --> rust/crates/vexel-svg-decode/src/groups.rs:9:5
+   |
+ 9 | /     pub(crate) fn begin_group(
+10 | |         &mut self,
+11 | |         style: CssPaint<'src>,
+12 | |         scene: SceneId,
+...  |
+19 | |         control: &mut dyn WorkControl,
+20 | |     ) -> Result<Option<GroupId>> {
+   | |________________________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/groups.rs:195:9
+    |
+195 | /         if let Some(target) = node.reference {
+196 | |             if self.active.uses.pop() != Some(target) {
+197 | |                 return Err(crate::invalid(0));
+198 | |             }
+199 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+195 ~         if let Some(target) = node.reference
+196 ~             && self.active.uses.pop() != Some(target) {
+197 |                 return Err(crate::invalid(0));
+198 ~             }
+    |
+
+warning: this function has too many arguments (10/7)
+  --> rust/crates/vexel-svg-decode/src/operations.rs:10:5
+   |
+10 | /     pub fn publish_paint(
+11 | |         &mut self,
+12 | |         ctx: &mut ResolveContext<'_, '_>,
+13 | |         builder: &mut SceneBuilder,
+...  |
+20 | |         control: &mut dyn WorkControl,
+21 | |     ) -> Result<usize> {
+   | |______________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> rust/crates/vexel-svg-decode/src/publication.rs:6:1
+   |
+ 6 | / pub fn append_geometry(
+ 7 | |     ctx: &mut ResolveContext<'_, '_>,
+ 8 | |     builder: &mut SceneBuilder,
+ 9 | |     scene: SceneId,
+...  |
+15 | |     control: &mut dyn WorkControl,
+16 | | ) -> Result<ShapeId> {
+   | |____________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> rust/crates/vexel-svg-decode/src/publication.rs:30:1
+   |
+30 | / pub fn append_geometry_production(
+31 | |     ctx: &mut ResolveContext<'_, '_>,
+32 | |     builder: &mut SceneBuilder,
+33 | |     scene: SceneId,
+...  |
+39 | |     control: &mut dyn WorkControl,
+40 | | ) -> Result<ShapeId> {
+   | |____________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+  --> rust/crates/vexel-svg-decode/src/publication.rs:53:1
+   |
+53 | / pub(crate) fn append_geometry_internal(
+54 | |     ctx: &mut ResolveContext<'_, '_>,
+55 | |     builder: &mut SceneBuilder,
+56 | |     scene: SceneId,
+...  |
+62 | |     control: &mut dyn WorkControl,
+63 | | ) -> Result<ShapeId> {
+   | |____________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+  --> rust/crates/vexel-svg-decode/src/publication.rs:69:1
+   |
+69 | / pub(crate) fn append_admitted_geometry_internal(
+70 | |     ctx: &mut ResolveContext<'_, '_>,
+71 | |     builder: &mut SceneBuilder,
+72 | |     draft: &DraftToken,
+...  |
+80 | |     control: &mut dyn WorkControl,
+81 | | ) -> Result<ShapeId> {
+   | |____________________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (12/7)
+   --> rust/crates/vexel-svg-decode/src/publication.rs:97:1
+    |
+ 97 | / pub(crate) fn append_admitted_custom_geometry_internal(
+ 98 | |     ctx: &mut ResolveContext<'_, '_>,
+ 99 | |     builder: &mut SceneBuilder,
+100 | |     draft: &DraftToken,
+...   |
+109 | |     deferred_pattern_channels: [bool; 2],
+110 | | ) -> Result<ShapeId> {
+    | |____________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> rust/crates/vexel-svg-decode/src/publication.rs:126:1
+    |
+126 | / fn append_geometry_with_admission_internal(
+127 | |     ctx: &mut ResolveContext<'_, '_>,
+128 | |     builder: &mut SceneBuilder,
+129 | |     scene: SceneId,
+...   |
+137 | |     deferred_pattern_channels: [bool; 2],
+138 | | ) -> Result<ShapeId> {
+    | |____________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (11/7)
+   --> rust/crates/vexel-svg-decode/src/publication.rs:159:1
+    |
+159 | / fn append_admitted_geometry(
+160 | |     ctx: &mut ResolveContext<'_, '_>,
+161 | |     builder: &mut SceneBuilder,
+162 | |     scene: SceneId,
+...   |
+170 | |     deferred_pattern_channels: [bool; 2],
+171 | | ) -> Result<ShapeId> {
+    | |____________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-decode/src/publication.rs:308:1
+    |
+308 | / pub fn append_custom_element(
+309 | |     ctx: &mut ResolveContext<'_, '_>,
+310 | |     builder: &mut SceneBuilder,
+311 | |     scene: SceneId,
+...   |
+317 | |     control: &mut dyn WorkControl,
+318 | | ) -> Result<Option<ShapeId>> {
+    | |____________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-decode/src/publication.rs:347:1
+    |
+347 | / pub fn append_custom_element_production(
+348 | |     ctx: &mut ResolveContext<'_, '_>,
+349 | |     builder: &mut SceneBuilder,
+350 | |     scene: SceneId,
+...   |
+356 | |     control: &mut dyn WorkControl,
+357 | | ) -> Result<Option<ShapeId>> {
+    | |____________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: this `if` statement can be collapsed
+  --> rust/crates/vexel-svg-decode/src/requests.rs:14:9
+   |
+14 | /         if let Some((active_scene, request, _)) = top {
+15 | |             if active_scene == scene {
+16 | |                 return Ok(request);
+17 | |             }
+18 | |         }
+   | |_________^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+   |
+14 ~         if let Some((active_scene, request, _)) = top
+15 ~             && active_scene == scene {
+16 |                 return Ok(request);
+17 ~             }
+   |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/session.rs:181:9
+    |
+181 | /         if completed.is_err() {
+182 | |             if let Some(pixels) = owned {
+183 | |                 if job.slice(pixels).is_ok() {
+184 | |                     job.release(pixels)?;
+...   |
+187 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+181 ~         if completed.is_err()
+182 ~             && let Some(pixels) = owned {
+183 |                 if job.slice(pixels).is_ok() {
+184 |                     job.release(pixels)?;
+185 |                 }
+186 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/session.rs:182:13
+    |
+182 | /             if let Some(pixels) = owned {
+183 | |                 if job.slice(pixels).is_ok() {
+184 | |                     job.release(pixels)?;
+185 | |                 }
+186 | |             }
+    | |_____________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+182 ~             if let Some(pixels) = owned
+183 ~                 && job.slice(pixels).is_ok() {
+184 |                     job.release(pixels)?;
+185 ~                 }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/session.rs:227:9
+    |
+227 | /         if let Some(t) = self.draft.take() {
+228 | |             if let Err(e) = self.builder_mut()?.commit_draft(&t, control) {
+229 | |                 let _ = self.builder_mut()?.rollback_draft(t);
+230 | |                 return Err(e);
+231 | |             }
+232 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+227 ~         if let Some(t) = self.draft.take()
+228 ~             && let Err(e) = self.builder_mut()?.commit_draft(&t, control) {
+229 |                 let _ = self.builder_mut()?.rollback_draft(t);
+230 |                 return Err(e);
+231 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/style.rs:436:5
+    |
+436 | /     if let Some(v) = paint.value(Property::PaintOrder) {
+437 | |         if !v.bytes.eq_ignore_ascii_case(b"normal") {
+438 | |             let mut seen = [false; 3];
+439 | |             let mut count = 0;
+...   |
+476 | |     }
+    | |_____^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+436 ~     if let Some(v) = paint.value(Property::PaintOrder)
+437 ~         && !v.bytes.eq_ignore_ascii_case(b"normal") {
+438 |             let mut seen = [false; 3];
+...
+474 |             }
+475 ~         }
+    |
+
+warning: large size difference between variants
+  --> rust/crates/vexel-svg-decode/src/tasks.rs:31:1
+   |
+31 | /  pub(crate) enum Task<'src> {
+32 | |      Walk {
+33 | |          cursor: usize,
+34 | |          limit: usize,
+...  |
+43 | |/     Markers {
+44 | ||         node: Finish<'src>,
+45 | ||         values: [Option<vexel_xml::XmlSpan>; 3],
+46 | ||         cursor: usize,
+47 | ||         seen: [Option<ElementId>; 3],
+48 | ||     },
+   | ||_____- the second-largest variant contains at least 3048 bytes
+...  |
+54 | |      DefinitionDone(crate::definition_work::DefinitionWork<'src>),
+   | |      ------------------------------------------------------------ the largest variant contains at least 3680 bytes
+...  |
+79 | |      },
+80 | |  }
+   | |__^ the entire enum is at least 3680 bytes
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#large_enum_variant
+help: consider boxing the large fields or introducing indirection in some other way to reduce the total size of the enum
+   |
+54 -     DefinitionDone(crate::definition_work::DefinitionWork<'src>),
+54 +     DefinitionDone(Box<crate::definition_work::DefinitionWork<'src>>),
+   |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/traversal.rs:264:16
+    |
+264 |           } else if element != self.root_index || parent.depth != 0 {
+    |  ________________^
+265 | |             if !crate::ignored::attributes_supported(
+266 | |                 source,
+267 | |                 self.shared.tokens(),
+...   |
+279 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+264 ~         } else if (element != self.root_index || parent.depth != 0) {
+265 ~             && !crate::ignored::attributes_supported(
+266 |                 source,
+...
+277 |                 });
+278 ~             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/traversal.rs:506:21
+    |
+506 | /                     if let Some(value) = server {
+507 | |                         if value
+508 | |                             .slice(source)
+509 | |                             .is_some_and(|v| v.starts_with(b"url(#") && v.last() == Some(&b')'))
+...   |
+531 | |                     }
+    | |_____________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+506 ~                     if let Some(value) = server
+507 ~                         && value
+508 |                             .slice(source)
+...
+529 |                             }
+530 ~                         }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/traversal.rs:692:25
+    |
+692 | /                         if owns_request {
+693 | |                             if let Some(request) = request {
+694 | |                                 builder.rollback_request(draft, request)?;
+695 | |                                 self.clear_shape_request_top();
+696 | |                             }
+697 | |                         }
+    | |_________________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+692 ~                         if owns_request
+693 ~                             && let Some(request) = request {
+694 |                                 builder.rollback_request(draft, request)?;
+695 |                                 self.clear_shape_request_top();
+696 ~                             }
+    |
+
+warning: this `if` statement can be collapsed
+   --> rust/crates/vexel-svg-decode/src/traversal.rs:740:9
+    |
+740 | /         if let Some(values) = markers {
+741 | |             if values.iter().any(Option::is_some) {
+742 | |                 self.push(
+743 | |                     Task::Markers {
+...   |
+752 | |         }
+    | |_________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+help: collapse nested if block
+    |
+740 ~         if let Some(values) = markers
+741 ~             && values.iter().any(Option::is_some) {
+742 |                 self.push(
+...
+750 |                 )?;
+751 ~             }
+    |
+
+warning: this function has too many arguments (9/7)
+   --> rust/crates/vexel-svg-decode/src/viewport.rs:92:1
+    |
+ 92 | / pub fn viewbox_transform(
+ 93 | |     vx: f64,
+ 94 | |     vy: f64,
+ 95 | |     vw: f64,
+...   |
+101 | |     a: Aspect,
+102 | | ) -> Result<Affine> {
+    | |___________________^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#too_many_arguments
+
+warning: `vexel-svg-decode` (lib) generated 36 warnings
+error: could not compile `vexel-svg-decode` (lib) due to 3 previous errors; 36 warnings emitted
