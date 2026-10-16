@@ -1,0 +1,11 @@
+sha256 of walkthrough outputs, three consecutive `cargo test -p vexel-app --test walkthrough` runs
+(each run also compares two in-process walks; WALKTHROUGH_OUT writes the files)
+run1  walk.vexel 4f670887f9bc46a11d4b20df19adaf25812ba5de3856967685268245e81890ea
+run2  walk.vexel 4f670887f9bc46a11d4b20df19adaf25812ba5de3856967685268245e81890ea
+run3  walk.vexel 4f670887f9bc46a11d4b20df19adaf25812ba5de3856967685268245e81890ea
+run1  walk.gif   58530cfc83687f382f53bc1e7417f30fb7a4b8c5d60856798b30ff6b82656900
+run2  walk.gif   58530cfc83687f382f53bc1e7417f30fb7a4b8c5d60856798b30ff6b82656900
+run3  walk.gif   58530cfc83687f382f53bc1e7417f30fb7a4b8c5d60856798b30ff6b82656900
+run1  walk.svg   48903ed30e6fc1210dd0d666ca9fe3ec29a7b55b49631cdef05b5783e7257c6c
+run2  walk.svg   48903ed30e6fc1210dd0d666ca9fe3ec29a7b55b49631cdef05b5783e7257c6c
+run3  walk.svg   48903ed30e6fc1210dd0d666ca9fe3ec29a7b55b49631cdef05b5783e7257c6c

@@ -1,0 +1,11 @@
+{
+  "order": "WO-RUST-V1-WALKTHROUGH-02",
+  "added": [
+    "rust/crates/vexel-app/tests/walkthrough.rs",
+    "rust/fixtures/v1/walkthrough/inkscape-subset.svg",
+    "artifacts/WO-RUST-V1-WALKTHROUGH-02/{result.md,verification.json,cutline-map.json,manual-checklist.md,changed-path-audit.json,hash-table.txt}"
+  ],
+  "modified": [],
+  "src_glue": [],
+  "notes": "Cargo.toml untouched (no dev-deps needed; GIF decoder reused via #[path] from vexel-gif/tests/support/mod.rs, read-only). Reuses existing tests/common/mod.rs rig unchanged. Untracked build dir .wt-target at the worktree root is a local CARGO_TARGET_DIR."
+}

@@ -1,0 +1,19 @@
+{
+  "order": "WO-RUST-V1-WALKTHROUGH-02",
+  "test_file": "rust/crates/vexel-app/tests/walkthrough.rs",
+  "items": [
+    {"cutline": "one document", "covered": "test", "tests": ["walkthrough_steps_a_to_h"], "note": "one AppDocument served through McpHost; step g reopens in a second one"},
+    {"cutline": "one text-free character", "covered": "test", "tests": ["walkthrough_steps_a_to_h"], "note": "step b: 6 shapes (path, ellipses, path, line) with ids vexel-object-1..6; source asserted free of <text"},
+    {"cutline": "few drawing/editing actions", "covered": "test", "tests": ["walkthrough_steps_a_to_h"], "note": "steps b-d: element_add path/ellipse/line, attribute_set fill and translate, element_delete"},
+    {"cutline": "short keyframed loop", "covered": "test", "tests": ["walkthrough_steps_a_to_h"], "note": "step e: 3-key opacity animation, play/seek/pause timeSeconds and playing asserted"},
+    {"cutline": "editable native save/reopen", "covered": "test", "tests": ["walkthrough_steps_a_to_h", "walkthrough_outputs_are_byte_identical_across_runs"], "note": "step g: save_as, fresh document_open byte-equal, animation intact, edit+undo+save; 3-run hash identity"},
+    {"cutline": "basic SVG subset (import/export, unsupported disclosed)", "covered": "test", "tests": ["walkthrough_steps_a_to_h", "step_i_open_and_edit_an_svg_and_disclose_unsupported_content"], "note": "export_svg + render equivalence (h); .svg open/edit with foreign Inkscape metadata preserved (i); unsupported text disclosed by compose_svg only, not by the MCP document_open reply"},
+    {"cutline": "GIF export", "covered": "test", "tests": ["walkthrough_steps_a_to_h"], "note": "step h: frame count, constant delay, NETSCAPE loop, canvas, blink-pixel difference"},
+    {"cutline": "local authorized Codex MCP", "covered": "test + manual", "tests": ["negative_paths_return_typed_errors_and_change_nothing", "walkthrough_steps_a_to_h"], "checklist_rows": ["M9"], "note": "stdio JSON-RPC layer headless; real client launch with --grant-dir is manual row M9"},
+    {"cutline": "visible activity/results", "covered": "manual only", "checklist_rows": ["M10", "M3"], "note": "GAP in automation: native activity display needs a window; not run by worker"},
+    {"cutline": "undo/redo of demonstrated edits", "covered": "test + manual", "tests": ["walkthrough_steps_a_to_h"], "checklist_rows": ["M7"], "note": "step f and g: full-source-byte equality; keyboard shortcuts manual row M7"}
+  ],
+  "deferred_gaps": [
+    {"item": "render_png", "reason": "no PNG encoder in the workspace (MCP-TOOLS-01); not a cutline item"}
+  ]
+}

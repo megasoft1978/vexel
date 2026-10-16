@@ -1,0 +1,13 @@
+{
+  "order": "WO-RUST-V1-WALKTHROUGH-02",
+  "env": "CARGO_HOME=<main>/.cache/cargo, worktree-local CARGO_TARGET_DIR (.wt-target), +stable, --locked --offline",
+  "commands": [
+    {"cmd": "cargo +stable test -p vexel-app --test walkthrough --locked --offline", "result": "pass", "tests": "4 passed; run 4x total (3 hash runs + 1)"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "result": "pass", "tests": "lib 173, bin 1, mcp_tools_edit 16, mcp_tools_files 9, walkthrough 4; 0 failed"},
+    {"cmd": "cargo +stable test -p vexel-mcp-stdio -p vexel-protocol --locked --offline", "result": "pass", "tests": "all suites ok, 0 failed"},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check", "result": "pass", "note": "run from worktree root (no Cargo.toml under rust/); after rustfmt of walkthrough.rs"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-WALKTHROUGH-02 --ready", "result": "pass"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "result": "pass (1879 entries)"},
+    {"cmd": "git diff --check", "result": "not run: sandbox hook refuses git; no commit made"}
+  ]
+}
