@@ -1,0 +1,117 @@
+{
+  "range": "aefb9b70..HEAD",
+  "violations": [],
+  "paths": [
+    {
+      "path": "Cargo.lock",
+      "class": "coordinator-owned manifest/lock (separate disclosed commits b3483387, d76d317f)"
+    },
+    {
+      "path": "Cargo.toml",
+      "class": "coordinator-owned manifest/lock (separate disclosed commits b3483387, d76d317f)"
+    },
+    {
+      "path": "rust/crates/vexel-app/Cargo.toml",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/export.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/frame.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/job.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/mod.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/playback.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/present.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/animation/tests.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/main.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview/animation.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview_app.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview_tests.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/Cargo.toml",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/src/lib.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/src/lzw.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/src/palette.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/tests/limits.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/tests/roundtrip.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/tests/structure.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-gif/tests/support/mod.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-protocol/src/protocol/tool_methods.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-protocol/src/tools.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/crates/vexel-protocol/tests/mcp_preview_profile.rs",
+      "class": "allowed"
+    },
+    {
+      "path": "rust/fixtures/v1/anim/loop.svg",
+      "class": "allowed"
+    }
+  ],
+  "main_checkout_touched": false,
+  "candidate_caches_modified": false,
+  "disclosure": "rust/crates/vexel-app/Cargo.toml gained path deps (vexel-base, vexel-scene, vexel-svg-engine, vexel-svg-animation-frame, vexel-render, vexel-gif, vexel-mcp-access, vexel-svg-decode); workspace Cargo.toml registers vexel-gif; Cargo.lock updated by cargo offline (first-party packages only)."
+}

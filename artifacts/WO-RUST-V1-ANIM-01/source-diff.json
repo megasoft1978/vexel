@@ -1,0 +1,83 @@
+{
+  "base_commit": "aefb9b70",
+  "candidate_base_note": "The candidates' recorded base_sha 19234a03 predates the Rust workspace (no rust/ tree), so candidate-vs-base is not computable; candidates were compared against main at the seed commit instead.",
+  "taken_from_candidates": [
+    {
+      "path": "rust/crates/vexel-app/src/preview.rs",
+      "candidate": "candidate-app/rust/crates/vexel-app/src/preview.rs",
+      "candidate_sha256": "b867f9acc69611c6a2b4e7557bed540c7ecbd8171de04c92d1c7c7afd1841cd6",
+      "taken_verbatim_in_commit": "94048ee4",
+      "sha256_as_taken": "b867f9acc69611c6a2b4e7557bed540c7ecbd8171de04c92d1c7c7afd1841cd6",
+      "sha256_final": "928666a2154301655df5e27005e6f6d2422391d7634883790a08a0c8ab986cc0",
+      "reason": "live animation preview: Operation::AnimationAdd/AnimationList/Control, snapshots with element ids, playback state",
+      "main_at_base_sha256": "1c17311d234d9d1069d4061f67e6209eb5382cbf62bc2310dd6b26dcb1dfc9ef"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview_app.rs",
+      "candidate": "candidate-app/rust/crates/vexel-app/src/preview_app.rs",
+      "candidate_sha256": "d3753e674365ec1a18f55ffc4b478ba168a2a9cc34b07fcff25272a0b007184a",
+      "taken_verbatim_in_commit": "94048ee4",
+      "sha256_as_taken": "d3753e674365ec1a18f55ffc4b478ba168a2a9cc34b07fcff25272a0b007184a",
+      "sha256_final": "faa8ab0968eae9a5e3c57f5927ecb99b0212bb430e97cde894ad7b4a01a8c6d9",
+      "reason": "live animation preview window loop, elementId in replies, playback status",
+      "main_at_base_sha256": "a279129d683afbbafdd3de68c22969a3c7cf8433e5512877fa62f815a831e6e5"
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview_tests.rs",
+      "candidate": "candidate-app/rust/crates/vexel-app/src/preview_tests.rs",
+      "candidate_sha256": "a9fbe94dc5150d4b6f3ceaa67f0c2d906050462bc3d5a4bbf824ad8ad680711b",
+      "taken_verbatim_in_commit": "94048ee4",
+      "sha256_as_taken": "a9fbe94dc5150d4b6f3ceaa67f0c2d906050462bc3d5a4bbf824ad8ad680711b",
+      "sha256_final": "6de2d2af5eda02d3b2a29bbb72297d67ab10b1d583ce4f034fdcab4141459acd",
+      "reason": "headless candidate tests for preview animation, ids, playback, undo/redo",
+      "main_at_base_sha256": null
+    },
+    {
+      "path": "rust/crates/vexel-app/src/preview/animation.rs",
+      "candidate": "candidate-app/rust/crates/vexel-app/src/preview/animation.rs",
+      "candidate_sha256": "eb5861631d30adffe3ec5b6734b7ca6c808489f7741234d275eba527b23c2f3c",
+      "taken_verbatim_in_commit": "94048ee4",
+      "sha256_as_taken": "eb5861631d30adffe3ec5b6734b7ca6c808489f7741234d275eba527b23c2f3c",
+      "sha256_final": "eb5861631d30adffe3ec5b6734b7ca6c808489f7741234d275eba527b23c2f3c",
+      "reason": "track parsing/validation, owned parser+evaluator raster, animation_list JSON",
+      "main_at_base_sha256": null
+    }
+  ],
+  "not_taken": [
+    {
+      "candidate": "candidate-protocol/rust/crates/vexel-protocol",
+      "result": "identical to main at base after rustfmt (src/lib.rs, async_protocol.rs, protocol.rs, tools.rs, protocol/tool_methods.rs, tests/mcp_preview_profile.rs, tests/parity.rs); candidate-app protocol is byte-identical to main. Already integrated; nothing taken."
+    },
+    {
+      "candidate": "candidate-document/rust/crates/vexel-v1-document",
+      "result": "main already contains add_animation_fragment, stable ids and the later from_source API; candidate lib.rs/tests.rs lack from_source. Main is a strict superset; nothing taken."
+    },
+    {
+      "candidate": "candidate-app main.rs/model.rs/render.rs/Cargo.toml",
+      "result": "model.rs and render.rs identical to main; main.rs differs only by main's `mod project_session;`; Cargo.toml lacks main's vexel-project deps. Nothing taken."
+    }
+  ],
+  "new_first_party_files": [
+    "rust/crates/vexel-app/src/animation/export.rs",
+    "rust/crates/vexel-app/src/animation/frame.rs",
+    "rust/crates/vexel-app/src/animation/job.rs",
+    "rust/crates/vexel-app/src/animation/mod.rs",
+    "rust/crates/vexel-app/src/animation/playback.rs",
+    "rust/crates/vexel-app/src/animation/present.rs",
+    "rust/crates/vexel-app/src/animation/tests.rs",
+    "rust/crates/vexel-app/src/preview/animation.rs",
+    "rust/crates/vexel-app/src/preview_tests.rs",
+    "rust/crates/vexel-gif/Cargo.toml",
+    "rust/crates/vexel-gif/src/lib.rs",
+    "rust/crates/vexel-gif/src/lzw.rs",
+    "rust/crates/vexel-gif/src/palette.rs",
+    "rust/crates/vexel-gif/tests/limits.rs",
+    "rust/crates/vexel-gif/tests/roundtrip.rs",
+    "rust/crates/vexel-gif/tests/structure.rs",
+    "rust/crates/vexel-gif/tests/support/mod.rs",
+    "rust/fixtures/v1/anim/loop.svg"
+  ],
+  "tests_with_main_behavior_change": [
+    "rust/crates/vexel-protocol/tests/mcp_preview_profile.rs: preview tool count 8 -> 9 (export_animation added to the preview profile); added preview_export_animation_validates_gif_fps_duration_and_path. No assertion weakened."
+  ]
+}

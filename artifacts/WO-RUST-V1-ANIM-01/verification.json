@@ -1,0 +1,157 @@
+{
+  "env": "CARGO_HOME=/Users/megasoft78/Desktop/Freelance/vexel/.cache/cargo; worktree-local CARGO_TARGET_DIR; macOS aarch64; offline; locked",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-gif -p vexel-app --locked --offline",
+      "exit_code": 0
+    },
+    {
+      "command": "cargo +stable test -p vexel-gif --locked --offline",
+      "exit_code": 0,
+      "results": [
+        {
+          "target": "unittests src/lib.rs",
+          "status": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "tests/limits.rs",
+          "status": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "tests/roundtrip.rs",
+          "status": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "tests/structure.rs",
+          "status": "ok",
+          "passed": 4,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "vexel_gif",
+          "status": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "total_passed": 19,
+      "total_failed": 0
+    },
+    {
+      "command": "cargo +stable test -p vexel-app -p vexel-v1-document -p vexel-protocol -p vexel-mcp-stdio --locked --offline",
+      "exit_code": 0,
+      "results": [
+        {
+          "target": "unittests src/main.rs",
+          "status": "ok",
+          "passed": 56,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "unittests src/lib.rs",
+          "status": "ok",
+          "passed": 8,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "unittests src/lib.rs",
+          "status": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "tests/mcp_preview_profile.rs",
+          "status": "ok",
+          "passed": 7,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "tests/parity.rs",
+          "status": "ok",
+          "passed": 9,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "unittests src/lib.rs",
+          "status": "ok",
+          "passed": 17,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "vexel_mcp_stdio",
+          "status": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "vexel_protocol",
+          "status": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        },
+        {
+          "target": "vexel_v1_document",
+          "status": "ok",
+          "passed": 0,
+          "failed": 0,
+          "ignored": 0
+        }
+      ],
+      "total_passed": 97,
+      "total_failed": 0
+    },
+    {
+      "command": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-gif --package vexel-app -- --check",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-V1-ANIM-01 --ready",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit_code": 0
+    }
+  ],
+  "cargo_tree_external_packages_of_vexel_app_and_vexel_gif": [
+    "bitflags",
+    "block2",
+    "objc2",
+    "objc2-app-kit",
+    "objc2-core-foundation",
+    "objc2-core-graphics",
+    "objc2-core-text",
+    "objc2-encode",
+    "objc2-exception-helper",
+    "objc2-foundation",
+    "objc2-image-io",
+    "objc2-metal",
+    "objc2-quartz-core"
+  ],
+  "cargo_lock_added_packages": [
+    "+name = \"vexel-gif\""
+  ],
+  "unsafe_grep_hits": [
+    "/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-acc6d85be4d52f7cc/rust/crates/vexel-gif/src/lib.rs:1:#![forbid(unsafe_code)]",
+    "/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-acc6d85be4d52f7cc/rust/crates/vexel-app/src/main.rs:1:#![forbid(unsafe_code)]"
+  ]
+}

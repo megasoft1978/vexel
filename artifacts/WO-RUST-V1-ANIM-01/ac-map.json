@@ -1,0 +1,44 @@
+{
+  "AC1": {
+    "status": "pass",
+    "evidence": ["source-diff.json", "verification.json"],
+    "note": "Candidate-app preview files taken verbatim (commit 94048ee4); candidate-document and candidate-protocol were already integrated in main (protocol identical after rustfmt; document superset). vexel-app 56, vexel-v1-document 8, vexel-protocol 7+9, vexel-mcp-stdio 17 tests pass."
+  },
+  "AC2": {
+    "status": "pass",
+    "tests": ["rust/crates/vexel-gif/tests/structure.rs (4)"],
+    "note": "GIF89a, logical screen size, NETSCAPE2.0 loop 0, exactly one GCE per frame, trailer 0x3B; delay = round(100/fps) cs, minimum 1 (30 fps -> 3 cs, 60 fps -> 2 cs)."
+  },
+  "AC3": {
+    "status": "pass",
+    "tests": ["rust/crates/vexel-gif/tests/roundtrip.rs (7)", "rust/crates/vexel-gif/tests/support/mod.rs (test-only LZW decoder)"],
+    "note": "Exact RGBA for 1x1, single colour, 255/256 colours (also with the transparent slot); 257 colours quantize to the fixed 6x7x6 palette with max per-channel error MAX_QUANT_ERROR = 26 (checked exhaustively per channel, bound is tight). Alpha: 0 = transparent, anything else opaque."
+  },
+  "AC4": {
+    "status": "pass",
+    "tests": ["rust/crates/vexel-gif/tests/limits.rs (8)"],
+    "note": "121 frames, 61 fps, 4097 px, 32,000,000 aggregate pixels and empty input return typed errors before pixel data is read; deterministic bytes; 0..=34 x 0..=34 size sweep with random colours and alpha never panics and round-trips. OutputTooLarge (128 MiB) is enforced in the encoder but has no dedicated test (unreachable within the 32M pixel cap in practice)."
+  },
+  "AC5": {
+    "status": "pass",
+    "tests": ["animation::tests::evaluate_frame_values_at_start_mid_end_and_wrap", "playback_follows_injected_clock_and_wraps_at_the_loop_boundary", "pause_scrub_and_resume_without_a_window", "nothing_to_play_without_a_loop", "frame_queue_is_bounded_and_drops_oldest", "rendered_frames_differ_over_time_and_loop_back"],
+    "note": "Keyframed x/opacity loop through the real decoder and evaluate_frame: t=0, 0.25, 0.5, 0.999 and wrap at 1.0; ManualClock injected, no window, no wall clock."
+  },
+  "AC6": {
+    "status": "pass",
+    "tests": ["export_writes_gif_with_duration_times_fps_frames_matching_rendered_frames", "frame_count_follows_ceil_duration_times_fps", "path_outside_grant_is_denied_and_creates_nothing", "existing_file_is_kept_without_overwrite_and_replaced_with_it", "cancellation_before_and_during_rendering_leaves_no_file", "invalid_requests_are_typed_before_any_file_or_render", "background_job_replies_once_with_json_or_a_fixed_error", "cancelled_job_reports_cancellation_and_writes_nothing_partial", "preview_document_with_agent_added_animation_exports_a_gif", "protocol: preview_export_animation_validates_gif_fps_duration_and_path", "preview: export_animation_mapping_is_gif_only_with_bounded_fps_and_duration"],
+    "note": "10 frames at 10 fps x 1 s with 10 cs delays; first/last frames within MAX_QUANT_ERROR of the rendered frames; temp-then-link write leaves no partial file. Independently opened with Pillow (10 frames, 100 ms, loop 0, pixel values as expected) and macOS sips/ImageIO (64x48 gif)."
+  },
+  "AC7": {
+    "status": "pass",
+    "tests": ["animation::tests::animation_fragment_undo_redo_restores_exact_source_bytes", "preview::tests::undo_redo_restore_exact_source_and_branch_order", "preview::tests::generated_ids_survive_rebuild_and_animation_round_trip"]
+  },
+  "AC8": {
+    "status": "pass",
+    "evidence": "verification.json: Cargo.lock adds only first-party vexel-gif; no unsafe (vexel-gif and vexel-app forbid unsafe_code)."
+  },
+  "AC9": {
+    "status": "pass",
+    "evidence": "result.md"
+  }
+}
