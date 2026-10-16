@@ -1,8 +1,0 @@
-{
-  "matching_consumed_parent_pair_rejected": true,
-  "live_parent_opens_and_closes_descendant_after_rejection": true,
-  "valid_live_child_and_mapping_reject_pre_request_sealed_tile": true,
-  "valid_live_child_mints_ticket_for_post_request_sealed_tile": true,
-  "production_source_byte_identical_to_continuation_4": true,
-  "preserved_frozen_tests": true
-}

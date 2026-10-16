@@ -1,3 +1,0 @@
-**ACCEPT.** Both prior wording defects are corrected in [rust-rendering-research.md](/Users/megasoft78/Desktop/Freelance/vexel/docs/product/rust-rendering-research.md:46): the Ng row identifies perceptual discrimination during touch dragging and says it does not establish Vexel or general application performance. The scanline row labels the paper an abstract-only lead pending primary-source review and makes no recommendation.
-
-No edits, tests, builds, network access, or agents used. This is a documentation recheck only; it makes no source implementation or product acceptance claim.

@@ -1,7 +1,0 @@
-{
-  "reason": "Full cross-file editor candidate stops incomplete: structural/ID/history/allocation semantics and original assertions. SolMedium closes named existing scope, no scope reduction.",
-  "model": "gpt-6.1-sol",
-  "effort": "medium",
-  "session": "01a13a63-16d8-72c1-83b5-f66babefeeab",
-  "preserved_initial_candidate": "artifacts/WO-RUST-DOCUMENT-EDIT-01/initial-candidate"
-}

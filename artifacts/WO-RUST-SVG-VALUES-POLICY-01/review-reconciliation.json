@@ -1,8 +1,0 @@
-{
-  "initial_baseline_issue": "git HEAD predates uncommitted Rust foundation; exact launch/main hash handoff resolves it",
-  "recheck_v1_file_omission": "reviewer read number.rs/policy.rs; actual3new regression functions reside in tests/parse_limits.rs",
-  "independent_final_verdict": "recheck-v2-result.md ACCEPT",
-  "fresh_main_test_count": 19,
-  "new_unique_vs_prior12": 7,
-  "assertions_weakened": false
-}

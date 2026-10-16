@@ -1,3 +1,0 @@
-Revised the R2 reports using the canonical baseline and assertion-assignment paths. The JSON now records source hashes, line-numbered definitions and Objective-C methods, block callbacks, and the relevant original suite’s case and assertion hashes with sole future owners. The orders also clarify the Apple crate’s dependency boundary, coordinator module-registration gates, and the accepted `NativeApp`/`Window` lifecycle seams.
-
-The result is 231 words. No production files, manifests, or files outside the report directory were changed; no tests, builds, network access, or GUI actions were run. The reports remain planning evidence only.

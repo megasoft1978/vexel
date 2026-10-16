@@ -1,2 +1,0 @@
-2026-10-14T11:07:38.841813Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/rust/crates/vexel-svg-index/src/lib.rs:
-        status = stream.step_with_visitor_and_cancel(MAX_READER_STEP_BYTES,

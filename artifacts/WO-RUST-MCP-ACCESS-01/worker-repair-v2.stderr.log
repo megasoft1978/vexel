@@ -1,1 +1,0 @@
-2026-10-14T10:47:53.205820Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid hunk at line 2, Update file hunk for path '/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/rust/crates/vexel-mcp-ACCESS-01/tests/access.rs' is empty

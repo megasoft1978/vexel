@@ -1,1 +1,0 @@
-Independent read-only review was not run: this session does not expose the optional Codex CLI execution tool. Implementation and focused verification are complete; review remains pending.

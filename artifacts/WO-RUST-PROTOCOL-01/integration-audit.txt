@@ -1,3 +1,0 @@
-Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
-Integrated only: rust/crates/vexel-protocol/src/lib.rs, rust/crates/vexel-protocol/tests/parity.rs, rust/crates/vexel-protocol/src/tools.rs, rust/crates/vexel-protocol/src/protocol.rs, rust/crates/vexel-protocol/src/async_protocol.rs.
-603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v1.

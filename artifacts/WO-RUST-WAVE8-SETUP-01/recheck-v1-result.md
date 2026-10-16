@@ -1,1 +1,0 @@
-**ACCEPT.** The pending `run_started` state is expected before root records setup acceptance. The helper’s accepted-only manifest check is correctly fail-closed until that gate; it does not indicate a setup defect. After root verification and acceptance, the new writer can launch and old-editor integration can use the accepted registration hashes.

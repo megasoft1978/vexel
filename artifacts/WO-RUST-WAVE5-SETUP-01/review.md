@@ -1,8 +1,0 @@
-**ACCEPT** — registrations and contracts are ready for implementation review; this is not module or application acceptance.
-
-- The XML reader borrows a byte slice, and `XmlTokenStream` borrows its source while providing bounded stepping, cancellation, diagnostics, and token ownership transfer on successful completion. The task queue takes an owned `'static` callback context and passes it a cancellation token. Those APIs support an index session borrowing the caller’s `Arc<Vec<u8>>` while a background worker owns a cloned `Arc`; no self reference or unsafe borrowed thread pointer is required.
-- The index work order preserves the C contract’s independent lexical scan and background validation, storage/component limits, preview validation frontier, delayed token publication, cancellation, and worker join requirements. The document order names the accepted bounded stream, source borrowing, owned bounded tables, and atomic IDs.
-- Both crates are registered with only workspace path dependencies. The workspace is std-only, targets `aarch64-apple-darwin`, sets macOS 13, and uses Rust 1.99. The ledger shows the XML/taskqueue inputs precede these registrations; each new crate has a distinct worktree and one writer.
-- Wave 4’s helper reads wave 5’s manifest hashes only after wave 5 has an accepted ledger event, then compares exact hashes.
-
-The recorded offline setup verification and ready-order hashes are present. It verifies registration and workspace setup only; it does not establish implementation acceptance.

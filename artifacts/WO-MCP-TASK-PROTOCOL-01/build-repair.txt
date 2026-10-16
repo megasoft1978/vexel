@@ -1,6 +1,0 @@
-[1/6] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol_async.c.o
-[2/6] Building C object CMakeFiles/mcp_protocol_async_test.dir/tests/mcp/mcp_protocol_async_test.c.o
-[3/6] Linking C static library libvexel_mcp.a
-[4/6] Linking C executable bin/mcp_protocol_test
-[5/6] Linking C executable bin/mcp_protocol_async_test
-[6/6] Linking C executable bin/vexel-mcp

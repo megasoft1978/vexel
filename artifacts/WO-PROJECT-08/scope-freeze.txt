@@ -1,5 +1,0 @@
-WO-PROJECT-08 revision 1 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: eb581cc286eae92ca0e2831b864483587af2505c534f6d0114efe827adb85ee8
-Allowlist and protected paths are frozen in work/WO-PROJECT-08.md.
-Scope: startup recovery discovery for existing native-project sources, explicit restore/discard/conflict choice, and capsule cleanup after save/discard. Missing-source recovery remains a separate identity/API design.

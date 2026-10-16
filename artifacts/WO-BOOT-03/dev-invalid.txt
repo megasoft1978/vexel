@@ -1,1 +1,0 @@
-usage: ./dev {build|test-fast|test|verify|help}

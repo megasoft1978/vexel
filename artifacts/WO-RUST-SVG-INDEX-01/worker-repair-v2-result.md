@@ -1,7 +1,0 @@
-Implemented the SVG index storage integration. The validator now charges actual collector capacity plus XML token, open-name, and visitor storage using checked arithmetic. Metadata reservations remain detached and are checked before copying or replacing. Each component is capped at 128 MiB, with a checked 256 MiB combined maximum.
-
-The two new regressions cover exact capacity and source-limit boundaries. All six original integration tests remain. **Verification passed:** `cargo +stable check`, `cargo +stable test` (5 unit and 6 integration tests), work-order validation, ledger validation (1,229 entries), and `git diff --check`. Source files remain under 800 lines.
-
-Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/artifacts/WO-RUST-SVG-INDEX-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/artifacts/WO-RUST-SVG-INDEX-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/artifacts/WO-RUST-SVG-INDEX-01/verification.txt).
-
-This remains an **unaccepted candidate**. The coordinator input-hash overlay artifact wasn’t present in this tree, so root review must verify dependency provenance before propagation.

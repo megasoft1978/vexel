@@ -1,9 +1,0 @@
-# Native window lane candidate
-
-This candidate maps the preserved AppKit window shell into Rust-owned safe value APIs backed by opaque, main-thread-only native owners. Source evidence: `src/platform/platform_window.h`; `src/platform/macos/platform_window.m`, `platform_window_geometry.m`, `platform_window_animation.m`, `platform_window_files.m`, `platform_window_native_shell.m`, and `platform_window_internal.h`. Existing seams: `vexel_platform_apple::{MainThread,guard_native_call}`; `vexel_ui::{Rect,Tree,SemanticsSnapshot,TextEdit,WidgetCanvas,TextDraw}`. The exact function parity and bindings are in `parity-map.json`.
-
-The ready order covers startup, windows, value geometry, event translation and bounded delivery, full IME, ticks, callbacks, and teardown. It names focused Rust tests/build checks and defers real GUI/manual acceptance. The queue must make overflow visible and synthesize explicit input reset/close state; release and close requests cannot disappear. Keyboard transitions stay distinct from committed and marked text.
-
-Pinned bindings are already present in the audited crate: objc2 0.6.5, objc2-app-kit/Foundation/CoreFoundation/CoreGraphics/CoreText/Metal/QuartzCore 0.3.2, and block2 0.6.2. Selected declarations and exact local audit paths are linked in the map. Their existence in the current SDK/bindings is not macOS 13 runtime proof. Prefer baseline APIs; guard any newer symbol explicitly.
-
-The accepted binding/native-boundary decision and MainThread/guard_native_call APIs are prerequisites. Separate later gates remain mandatory for files/open-save/drop/reopen/recents, menus/commands, accessibility, text shaping, presenter, unsaved/dialogs, preferences/appearance, and welcome UI; integrated GUI, IME, teardown, and macOS 13 runtime evidence remains final acceptance. The new root kernel contract work is not a peer dependency of this lane. No native window, GUI, runtime, performance, build, or test completion is claimed.

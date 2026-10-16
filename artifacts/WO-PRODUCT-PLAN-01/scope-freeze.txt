@@ -1,7 +1,0 @@
-WO-PRODUCT-PLAN-01 revision 1
-Spec SHA-256: 2236c6b5f0754d7d0c7de87f35fb91a6da97ce509f919a74ed41f42a8035eb9f
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Scope: docs/product/vexel-goal-and-delivery-plan.md; this work order; scoped evidence; STATE.md; LEDGER.md; ledger.jsonl.
-Protected: application, tests, ADRs, README, prior frozen orders/evidence, website and all other paths.
-Checks: work-order hash/READY; ledger validity; diff whitespace; manual agreement with accepted product goal and statuses.
-Tests: none; documentation-only order. Broad UI/E2E remains deferred.

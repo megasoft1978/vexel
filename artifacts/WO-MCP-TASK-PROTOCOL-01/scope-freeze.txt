@@ -1,4 +1,0 @@
-WO-MCP-TASK-PROTOCOL-01 r1
-HEAD 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-spec_sha256 ae319b6d1e1d22771e750ac3870e6137f63fea90ff6c6768bca07f218ab8fdcd
-Bounded Luna High isolated implementation; coordinator merges registrations and ledgers.

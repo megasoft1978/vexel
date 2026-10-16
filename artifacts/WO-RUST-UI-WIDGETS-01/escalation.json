@@ -1,8 +1,0 @@
-{
-  "reason": "Repeated Luna focused review failures; narrow coherent bounds/capacity correction",
-  "model": "gpt-6.1-sol",
-  "effort": "medium",
-  "service": "Standard subscription only",
-  "label": "repair-v3",
-  "scope_unchanged": true
-}

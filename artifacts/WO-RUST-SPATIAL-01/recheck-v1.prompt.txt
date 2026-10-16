@@ -1,7 +1,0 @@
-Targeted read-only final recheck of the original scoped acceptance review. Do not rerun broad audit, edit, test/build, install, network or spawn. Inspect only changed correction paths, exact new regression assertions and updated parity map. Other frozen-scope conclusions remain. Verdict ACCEPT or REJECT <=250 words with remaining concrete blockers and source:line. No whole-app/runtime completion claim. Original worker repair report:
-Moved combined extent overflow validation ahead of duplicate-ID validation, matching C status precedence. Added the exact duplicate-ID regression with records at `x = -f64::MAX` and `x = +f64::MAX`; it expects `SpatialError::Overflow`. Updated the parity map to clarify that IDs are validated in temporary storage and not retained.
-
-Checks passed with rustc 1.99.0: named Cargo check and test, work-order validation, ledger validation, and `git diff --check`. Tests: 8 integration and 1 sizing unit test passed.
-
-Independent narrowed recheck and main integration remain outstanding; this repair does not declare acceptance. Uncommitted; edits stayed within owned Rust tests/source and artifacts.
-Coordinator additional blocking finding was combined-extent Overflow before duplicate-ID Invalid precedence. Confirm finite zero-size records with same ID at x=-MAX/+MAX expect Overflow, matching original C order. Confirm IDs transient validation adaptation corrected in parity-map; this is the narrowed correction beyond your initial ACCEPT.

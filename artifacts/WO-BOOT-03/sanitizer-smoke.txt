@@ -1,3 +1,0 @@
-Command: ./build/mac-asan/bin/svgworkbench --version
-Result: exit 0, output svgworkbench 0.0.1; no sanitizer diagnostic.
-The work order changes shell/Python CI tooling only; no C source changed.

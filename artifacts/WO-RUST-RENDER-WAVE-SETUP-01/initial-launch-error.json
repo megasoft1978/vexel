@@ -1,7 +1,0 @@
-{
-  "status": "preparation interrupted before any new source worker started",
-  "reason": "coordinator launch helper named missing kernel recheck-v2-result.md; actual accepted evidence is recheck-v1-result.md",
-  "worktree_preserved": ".cache/WO-RUST-SVG-DECODE-01/worker",
-  "source_workers_started": 0,
-  "recovery": "correct exact proof path, continue assembly of existing unstarted checkout; no live process restarted"
-}

@@ -1,5 +1,0 @@
-REJECT
-
-The proposal says it preserves a 16,384-glyph Core Text limit, matching `PLATFORM_TEXT_MAX_GLYPHS`; the native text API also sets a 64 KiB input limit, 262,144 path-segment limit, 32-family limit, and only NORMAL/ITALIC/OBLIQUE styles. But it does not reconcile those with the actual C text-input fallback, which switches to scalar rendering at 4,000 codepoints, or state the accepted Rust UI’s root text and style limits. These are compatibility facts to account for, not inferred limits. [platform_text.h](/Users/megasoft78/Desktop/Freelance/vexel/src/platform/media/platform_text.h)
-
-The remaining API proposals are appropriately marked proposed, including the 256-event queue and objc2 dependency. The report also identifies the modifier mismatch, IME requirements, callback unwind boundary, main-thread ownership, Metal resource lifetime, and orderly teardown. It is an architecture review, not module acceptance.

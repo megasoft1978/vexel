@@ -1,3 +1,0 @@
-Added only regression tests and updated the owned artifacts. The accepted baseline and implementation are unchanged. All 19 tests pass: 15 unit and 4 integration. The frozen offline check, work-order validator, ledger validator, and `git diff --check` also pass.
-
-Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-values-policy/artifacts/WO-RUST-SVG-VALUES-POLICY-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-values-policy/artifacts/WO-RUST-SVG-VALUES-POLICY-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-values-policy/artifacts/WO-RUST-SVG-VALUES-POLICY-01/verification.txt).

@@ -1,2 +1,0 @@
-release_svgworkbench_bytes 97040
-release_base_library_bytes 3504

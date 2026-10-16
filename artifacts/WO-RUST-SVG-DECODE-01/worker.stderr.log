@@ -1,4 +1,0 @@
-2026-10-14T18:56:41.654391Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/decode.rs:
-    pub fn state(&self)->DecoderState{self.state}
-    pub fn generation(&self)->u64{self.generation}
-    pub fn builder(&self)->Option<&SceneBuilder>{self.builder.as_ref()}

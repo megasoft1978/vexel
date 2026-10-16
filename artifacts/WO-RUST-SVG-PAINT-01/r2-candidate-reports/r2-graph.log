@@ -1,9 +1,0 @@
-
-running 3 tests
-test cached_publication_survives_rollback_without_stale_graph_ranges_and_owned_payload_is_compatible ... ok
-test every_public_handoff_cancellation_position_cleans_logical_publication ... ok
-test real_40000_instance_fill_stroke_handoff_shares_two_graph_stops ... ok
-
-test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
-
-

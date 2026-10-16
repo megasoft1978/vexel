@@ -1,5 +1,0 @@
-**ACCEPT** — scoped source review of the revision 2 consumer contracts. The `PaintCache` retains its three original fields; owned stops, full context, and a retained `SourceOwner` witness live on each entry. Controlled validation checks source identity, token validity, context, stop ranges and values, slot bounds, limits, and cancellation. Storage accounting measures vector capacities and nested stop capacities without recounting the shared source allocation.
-
-Scene enumeration uses checked owner, scene, slot, and serial identities, including zero-edge shapes. Frame clip replacement validates the complete table against effective transforms and publishes only after validation and budget checks; failures leave frame state and statistics unchanged.
-
-I did not run builds or tests, as instructed. The reported 66 focused tests and baseline preservation are not independently verified here. This review does not accept the resolver, renderer, native, app, or final QA scope.

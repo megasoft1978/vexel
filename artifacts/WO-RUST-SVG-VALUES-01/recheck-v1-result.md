@@ -1,5 +1,0 @@
-**REJECT**
-
-1. **The transform regression does not demonstrate parent/local composition overflow.** The fixture passes `Affine { a: 1.0e12, .. }` as the parent ([transform.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-svg-values/rust/crates/vexel-svg-values/src/transform.rs:215)); that parent is already outside the accepted affine limits. The test therefore does not establish that individually valid parent and local transforms compose to an invalid result at the reported element-name offset. Replace the fixture with individually valid inputs whose composition exceeds the limit, and assert the exact offset. The parity map currently claims this overflow case is covered ([parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-svg-values/artifacts/WO-RUST-SVG-VALUES-01/parity-map.json:27).
-
-The form-feed rejection assertions and aspect-parser source cap are present in the inspected corrections. I did not run tests or builds.

@@ -1,3 +1,0 @@
-COMMAND: python3 scripts/wo_validate.py WO-RUST-V1-DOCUMENT-ELLIPSE-01 --ready
-EXIT: 0
-valid WO-RUST-V1-DOCUMENT-ELLIPSE-01 revision 1 sha256 923827f43ddcba3de170c968fce815b46db439951bdc15cfb6b7d63f48a268fd

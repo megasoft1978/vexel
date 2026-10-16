@@ -1,8 +1,0 @@
-{
- "index": 2,
- "label": "cmake --build --preset mac-debug",
- "exit": 0,
- "seconds": 0.1,
- "stdout_tail": "ninja: no work to do.\n",
- "stderr_tail": ""
-}

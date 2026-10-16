@@ -1,4 +1,0 @@
-COMMAND: python3 scripts/wo_validate.py WO-GAP-HYGIENE-01 --ready
-EXIT_CODE: 0
---- last 40 output lines ---
-valid WO-GAP-HYGIENE-01 revision 1 sha256 68c86cac779914d8c4b0f0b766f2914923349f687258dd3453cd629366b13a65

@@ -1,5 +1,0 @@
-2026-10-14T19:02:29.570602Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/rust/crates/vexel-svg-scalar-sample/src/dash.rs:
-    if !shape.subpaths.slice(view.path_subpaths).unwrap_or(&[]).is_empty() {
-        for (i, subpath) in shape.subpaths.slice(view.path_subpaths).unwrap().iter().enumerate() {
-            if subpath.closed && subpath_closed_seam(view, id, i, edges, control)? { return Ok(true); }
-        }

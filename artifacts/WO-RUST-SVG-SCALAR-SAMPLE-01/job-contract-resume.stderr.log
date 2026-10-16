@@ -1,2 +1,0 @@
-2026-10-14T21:20:56.550157Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/rust/crates/vexel-svg-scalar-sample/src/fill.rs:
-                    let sample = input(resources, scratch, px, py, px, py);

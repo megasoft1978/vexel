@@ -1,9 +1,0 @@
-**BLOCKED — frozen gates remain unmet.**
-
-- **Aggregate fixture:** [lib.rs:317](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PARITY-HARNESS-01/worker/rust/tools/vexel-svg-parity/src/lib.rs:317) generates one declaration and repeatedly plans the same owner. Preserve the C reference’s eight-/nine-declaration inputs and exercise their corresponding owners.
-- **Failure-path immutability:** [lib.rs:279](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PARITY-HARNESS-01/worker/rust/tools/vexel-svg-parity/src/lib.rs:279) uses `?`, so the ninth-call failure bypasses the source comparison at line 290. Assert preservation before returning the error; correct the evidence claiming this is already asserted.
-- **README:** Explicit tested dependency versions and paths are missing; “checked-out versions” does not satisfy that documentation gate.
-
-The production API calls, gradient predicates, single-span boundaries, typed errors/offsets, nested workspace, local-only lockfile, and 325-line source check out. All 41 seed hashes match; root Cargo/config files match the candidate checkout.
-
-The ledger discrepancy is environmental and **can be closed by coordinator root verification**: I independently confirmed root validation passes with 1,711 entries. No files were edited; Cargo verification was assessed from recorded evidence, not rerun.

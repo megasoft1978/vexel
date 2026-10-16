@@ -1,9 +1,0 @@
-WO-RUST-NATIVE-WINDOW-PLAN-01 candidate verification (read-only planning)
-
-Read: OWNER-DIRECTIVES.md; AGENTS.md; frozen work/WO-RUST-NATIVE-WINDOW-PLAN-01.md; accepted artifacts/WO-RUST-NATIVE-PLAN-01/result.md; docs/product/rust-native-bindings-audit.md; binding pin/feature declarations in rust/crates/vexel-platform-apple/Cargo.toml; existing MainThread, guard_native_call, Rust UI geometry/input/tree/semantics sources; native window header, internal header, implementation, geometry, animation, files, shell and menus source; audited local binding symbol index/declarations.
-
-Produced/updated only: artifacts/WO-RUST-NATIVE-WINDOW-PLAN-01/result.md, parity-map.json, ready-window-order.md, verification.txt. Scope covers the declared public window API, native callbacks, geometry, queue/reset/close sequencing, app-owned native records with weak generation handles, owned IME snapshots, animation, and explicit file/menu/AX/text/presenter/unsaved/preferences/welcome gates. The accepted binding/native-boundary decision and MainThread/guard_native_call are prerequisites. Candidate is implementation planning, not implementation.
-
-No source/config/manifests/state/ledger/docs/orders/prior evidence modified. No build, test, network, install, dependency change, GUI, source fetch, agent, reset, stage, commit, or delete performed. The implementation order permits ignored repo-local `.cache/`, `build/`, and `target/` outputs/logs for its required focused build/test checks; it prohibits system/sibling writes and dependency downloads. No native window, GUI, macOS 13 runtime, or performance claim.
-
-Limit: this record is a worker semantic/source coverage statement. Coordinator must independently audit the full parity map and protected baseline before freezing/recording any ready order.

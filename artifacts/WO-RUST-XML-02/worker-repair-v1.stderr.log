@@ -1,6 +1,0 @@
-2026-10-14T07:43:53.085751Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/src/tokenizer.rs:
-use core::mem::size_of;
-2026-10-14T07:46:54.471906Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/src/stream.rs:
-        if t.pos==self.source.len(){let at=if t.phase==TagPhase::AttrValue{t.value_start.saturating_sub(1)}else{t.start};self.fail(XmlError::MalformedSyntax,at);return false}
-        if t.pos==self.source.len(){let at=if t.phase==TagPhase::AttrValue{t.value_start.saturating_sub(1)}else{t.start};self.fail(XmlError::MalformedSyntax,at);return false}
-2026-10-14T07:49:17.003891Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid hunk at line 2, Update file hunk for path '/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/rust/noop' is empty

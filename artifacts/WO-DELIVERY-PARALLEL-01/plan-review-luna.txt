@@ -1,1 +1,0 @@
-Independent Luna Low plan review: all eight ADR-0018 gates retained; two-worker cap, per-task effort/usage, honest unknown account billing, frozen API dependencies and serialized integration clear. Clarifications requested: concrete frozen order links/worker ownership and implementation locks. Both added. No app tests run for planning prose.

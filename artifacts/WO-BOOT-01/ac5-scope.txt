@@ -1,6 +1,0 @@
-git diff --check: pass
-
-Dependency/fetch check:
-CMakeLists.txt, CMakePresets.json, and app/ contain no FetchContent, ExternalProject, download, or third-party references.
-
-Changed paths are limited to the refreshed WO allowlist plus initial status/performance records. The pre-existing OWNER-DIRECTIVES.md remains unmodified and uncommitted.

@@ -1,9 +1,0 @@
-**BLOCKER**
-
-1. **Malformed dash ranges pass the public sample validator.** `DashRange` exposes `segments` and `joins` ranges, but [`SampleInput::validate`](/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene/src/contract_validate.rs:62) never inspects `dash_cache`; [`DashRange`](/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene/src/render_contract.rs:139) has no corresponding validator. Reproducer: construct a `SampleInput` with empty edge/seam slices and a cache containing a range with `segments: TableRange { first: usize::MAX, count: 1 }`; `validate` can return `Ok`. Add checked cache/range validation before lower kernel owners consume this contract.
-
-2. **Element views can’t establish source identity.** [`ElementView`](/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene/src/decode_contract.rs:14) has public source/token fields, and [`validate`](/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene/src/source_context.rs:21) checks that spans fit the supplied bytes, not that those bytes own the tokens. Construct a view from tokens for source A and an equal-length source B: validation accepts it if the spans fit. `DecodeSource::element` creates a canonical view, but the public constructor bypasses that identity guarantee, including in media requests.
-
-3. **Record the interface adaptations before lower owners depend on these traits.** `FlatKernel::render_flat` adds `range` and `ledger`, and `KernelResources` adds controlled fallible methods, differing from the reference signatures in `shared-contracts.json`. These appear useful for grouped rendering, accounting, and cancellation, but I found no adaptation rationale recorded alongside the contracts.
-
-Read-only hash comparison confirms `tests/model.rs` and `tests/support.rs` match the work-order baseline and accepted scene recheck. I did not run tests or builds; the 41 passing tests are coordinator-reported evidence.

@@ -1,5 +1,0 @@
-Repaired the candidate: `CssSheet` retains its source and token slice, and `compute` can no longer receive unrelated replacements. Paints retain source provenance; foreign-source parent paints return `Limit` without copying the source.
-
-All 13 tests pass, including exact assertions for all 39 properties, the original C fixture semantics, equal-length source isolation, and the documented additive CDATA compatibility case. The work-order validator, ledger validator, and `git diff --check` also pass.
-
-Updated [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-css/artifacts/WO-RUST-SVG-CSS-01/parity-map.json), [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-css/artifacts/WO-RUST-SVG-CSS-01/result.md), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-css/artifacts/WO-RUST-SVG-CSS-01/verification.txt). Candidate remains uncommitted for independent review.

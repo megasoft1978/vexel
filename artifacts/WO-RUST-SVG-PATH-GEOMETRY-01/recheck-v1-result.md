@@ -1,1 +1,0 @@
-ACCEPT — `flatten_cubic` docs state that upfront transform or point validation errors leave `out` unchanged; later `Limit` or `OutOfMemory` errors may leave appended edges; and callers needing rollback can save `out.len()` and truncate after failure. No algorithm change is indicated.

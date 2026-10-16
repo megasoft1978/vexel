@@ -1,8 +1,0 @@
-114:    coordinates, or `CGRectZero' if `display' is invalid. */
-115: 
-116: CG_EXTERN CGRect CGDisplayBounds(CGDirectDisplayID display)
-117:     API_AVAILABLE(macos(10.0));
-118: 
-119: /* Return the width in pixels of `display'. */
-120: 
-121: CG_EXTERN size_t CGDisplayPixelsWide(CGDirectDisplayID display)

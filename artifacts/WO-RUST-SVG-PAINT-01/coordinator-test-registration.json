@@ -1,5 +1,0 @@
-{
-  "path": "rust/crates/vexel-svg-paint/tests/graph_publication.rs",
-  "purpose": "Register existing unchanged3 graph proofs under scoped cargo test; uses already accepted main devdependency metadata, no manifest/production algorithm changes.",
-  "sha256": "318d8ac36776a34c349ade66fc73ad7d34a827ccfe20495307ff5980ed25cba1"
-}

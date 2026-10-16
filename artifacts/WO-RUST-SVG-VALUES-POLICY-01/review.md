@@ -1,3 +1,0 @@
-BLOCKER — The recorded verification does not establish the frozen baseline comparison: the stated `base_sha` does not contain `rust/crates/vexel-svg-values/src/number.rs`, so I could not compare the candidate’s 12 prior test functions and assertions verbatim against that revision.
-
-The new tests also leave the policy-aware standalone number, number-list, and length APIs without focused coverage for smaller caller limits and default rejection. The shared validator looks consistent by inspection, but the work order explicitly requires those cases, including error precedence. The large-source integration covers root viewport, viewBox, and preserve-aspect; transform has a separate large-source case.

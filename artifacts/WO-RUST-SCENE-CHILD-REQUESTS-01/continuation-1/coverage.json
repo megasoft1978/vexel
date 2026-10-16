@@ -1,9 +1,0 @@
-{
-  "old_begin_request_rejection": "Preserved verbatim; full Scene integration suite passes the frozen assertions.",
-  "nested_success_and_parent_restoration": "Covered with parent and child requests; parent mutation resumes after child close.",
-  "nested_rollback_and_descendant_cleanup": "Covered by child request rollback, independent draft rollback, then parent request rollback removing committed descendant scene content.",
-  "capacity_bound": "64 active draft/request levels accepted; next draft rejected; cleanup succeeds in reverse order.",
-  "cancellation": "Canceled child commit leaves scope active; abort cleanup succeeds without polling.",
-  "static_request_borrow": "Existing compile-fail E0502 proof retained and run in Scene doc tests.",
-  "limitations": ["The new test does not exercise mapped static child ticket creation.", "No independent Sol review worker was started because the user explicitly prohibited nested workers."]
-}

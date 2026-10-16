@@ -1,4 +1,0 @@
-WO-CORPUS-11 revision 1
-Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 1d726cb1f5dfdaae633c0569a3b4151453c5eefcdf601e01429c2217a8b45fc6
-Bounded dash-cache growth plus one focused stress test and one T1 corpus render.

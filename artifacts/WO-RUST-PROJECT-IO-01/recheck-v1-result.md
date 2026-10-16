@@ -1,5 +1,0 @@
-**REJECT.** The OOM repair is correct: `bundle_decode_failure` maps `OutOfMemory` to `FileError::OutOfMemory`, retains the bundle error, and leaves native errors, bytes, and publication flags at defaults. `Limit` and other decoder errors keep their prior mappings. Production `save_encoded` calls this mapping before filesystem access, and the mapping test checks those result fields without injecting system OOM.
-
-The checksum-corruption regression proves a missing target is not created, but does not prove an existing target is left unchanged. Add that case to the regression: seed the destination, attempt the corrupt encoded save, then assert the original bytes remain intact.
-
-The evidence records eight tests and preserves the original six; I inspected it but did not run tests or builds. No whole-app acceptance was performed.

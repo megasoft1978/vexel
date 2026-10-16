@@ -1,9 +1,0 @@
-# Coordinator source review — 2026-10-15
-
-The active diff was reviewed against WO-RUST-SHAPE-PUBLICATION-01. Admissions reserve real shape/serial and canonical provenance capacity before geometry work, carry source offsets, are bound to request/draft/builder identity, and are consumed once. Registry probes are work-budgeted; lookup by opaque slot is constant time. Request commit rejects unresolved admissions; rollback invalidates post-mark admissions, and append-local rollback avoids scanning a registry that cannot be changed during the exclusive builder borrow. Partial append errors restore table lengths and preserve allocations in accounting; panic recovery requires the documented request rollback.
-
-Canonical provenance is minted from the matching lexical token/source owner and direct `<path d>` range. Shape use-host SourceMap remains unchanged. Sealed scene, frame, and raster views expose canonical path provenance; multiple transformed uses retain the same authored path spans. Wrong-owner, wrong-kind, out-of-range, forged segment/number span, stale, cross-draft, and replay cases reject.
-
-Final independent Sol Medium review: ACCEPT at `final-review.md`; the earlier actionable findings and follow-up are retained in `initial-review.md` and `followup-review.md`. Focused package verification: check PASS; test PASS (221 entries, 0 failures; 22 shape publication cases); work-order validator PASS. Protected audit PASS: 603 legacy source files, 157 frozen suite/fixture entries, unchanged HEAD/index, only allowed Scene changes, no Rust file over 800 lines.
-
-This accepts the bounded Scene publication API and its integration contract. Real production decoder/provider adoption, lower renderer/media integration, UI, MCP runtime, full application delivery, broad final UI/E2E, release packaging and the Codex video remain outstanding under the active full-product goal.

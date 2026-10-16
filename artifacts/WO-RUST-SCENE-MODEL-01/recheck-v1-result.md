@@ -1,5 +1,0 @@
-**BLOCKER — overlapping sibling opacity groups can be published.**
-
-The group validator checks each range and that a child lies within its ancestors, but it never checks that sibling ranges are ordered and disjoint. Reproduce by appending two valid shapes, then two root groups with ranges `[0, 2)` and `[1, 2)`, both with `parent: None`. Both appends and `freeze()` succeed. The published graph assigns shape 1 to overlapping sibling groups, violating the planned contiguous painter-range nesting invariant. See [validate.rs](/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene/src/validate.rs:437) and [validate.rs](/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene/src/validate.rs:605).
-
-The two previous findings are resolved: animation storage includes the source capacity once, and move segments with claimed edges are rejected. I did not run tests or builds.

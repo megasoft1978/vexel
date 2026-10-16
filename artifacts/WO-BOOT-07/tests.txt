@@ -1,7 +1,0 @@
-$ python3 -m unittest tests.test_ui_driver
-......
-----------------------------------------------------------------------
-Ran 6 tests in 1.463s
-
-OK
-[exit 0]

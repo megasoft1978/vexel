@@ -1,7 +1,0 @@
-{
-  "url": "https://crates.io/api/v1/crates/objc2",
-  "retrieved_utc": "2026-10-14T12:44:08.619785+00:00",
-  "status": 200,
-  "sha256": "d2b4e5cb324c14ca6864b0d3c1df2d71b0598fa7fa18f18b54d185555dd281fc",
-  "latest_version": "0.6.5"
-}

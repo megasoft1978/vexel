@@ -1,3 +1,0 @@
-Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
-Integrated only: rust/crates/vexel-xml/src/lib.rs, rust/crates/vexel-xml/src/tests.rs, rust/crates/vexel-xml/src/stream.rs, rust/crates/vexel-xml/src/name_budget_tests.rs, rust/crates/vexel-xml/src/stream_tests.rs, rust/crates/vexel-xml/src/utf8_scan.rs, rust/crates/vexel-xml/src/tokenizer.rs.
-603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v4.

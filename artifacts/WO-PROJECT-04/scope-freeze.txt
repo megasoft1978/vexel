@@ -1,6 +1,0 @@
-WO-PROJECT-04 revision 1 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: f8b36eaa7d4a155b4544ddff21fd34a1232efaaf6801fb42dc1b14a968140aca
-Allowlist: frozen in work/WO-PROJECT-04.md
-Protected: application UI/runtime, platform APIs/implementations, existing project codecs, website/deployment, all other paths; preserve prior dirty state.
-Scope: ADR-0021 plus bounded recovery capsule codec and atomic storage with focused project tests; no autosave scheduling or restore UI.

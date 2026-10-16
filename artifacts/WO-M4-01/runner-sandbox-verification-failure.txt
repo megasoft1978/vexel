@@ -1,1 +1,0 @@
-Initial isolated runner attempt: CTest 10/11; index-replay failed because offscreen Metal device or queue was unavailable in the runner sandbox. The same Debug, ASan, and UBSan suites passed when rerun directly in the isolated worktree (see *-final.txt).

@@ -1,6 +1,0 @@
-{
-  "status": "corrected overly strict coordinator predicate",
-  "reason": "new module declaration inserted beside existing modules, not appended after entire original library text; frozen scope expressly permits declaration and exports",
-  "exact_original_text_after_removing_two_allowed_lines": true,
-  "native_source_not_modified_to_satisfy_audit": true
-}

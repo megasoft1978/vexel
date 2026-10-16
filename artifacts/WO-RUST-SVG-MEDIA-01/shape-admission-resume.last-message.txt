@@ -1,8 +1,0 @@
-Completed the R2 candidate with real Scene shape admission and rollback across errors, cancellation, and unwinding panics.
-
-- All 54 existing tests preserved; **58 tests pass**.
-- Offline check and frozen work-order validation pass.
-- Full 24-symbol/12-case map and prior evidence preserved; reports updated.
-- Native/mixed-renderer gates and root review/audit remain downstream.
-
-The named seed JSON was absent; observed Scene hashes are recorded in `verification.json`. Candidate only—no main integration performed.

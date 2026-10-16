@@ -1,2 +1,0 @@
-2026-10-14T07:40:44.510681Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-svg-values/artifacts/WO-RUST-SVG-VALUES-01/parity-map.json:
-      "parity": "missing transform is identity; local transform composes with parent; parse failure is reported at original attribute value start and parent-composition failure at element name start"

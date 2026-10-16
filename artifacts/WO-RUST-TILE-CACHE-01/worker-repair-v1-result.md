@@ -1,5 +1,0 @@
-Fixed both review findings. Payload accounting now uses `Tile::allocated_byte_count()` for admission, replacement, eviction, and stats. New regressions verify spare-capacity charging, unchanged pixels/pointer/capacity on failure, and metadata charge against the actual `Option<Entry>` layout.
-
-Final checks passed: 3 unit and 8 integration tests, locked offline package check, WO validation, ledger validation (1148 entries), and `git diff --check`. No known blocking findings remain. The candidate still awaits independent narrowed recheck and main audit.
-
-Details: [verification record](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/artifacts/WO-RUST-TILE-CACHE-01/verification.txt), [parity map](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/artifacts/WO-RUST-TILE-CACHE-01/parity-map.json), [result summary](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/artifacts/WO-RUST-TILE-CACHE-01/result.md).

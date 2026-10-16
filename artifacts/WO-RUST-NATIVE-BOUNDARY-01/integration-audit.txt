@@ -1,3 +1,0 @@
-Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
-Integrated only: rust/crates/vexel-platform-apple/src/lib.rs, rust/crates/vexel-platform-apple/tests/native_boundary.rs, rust/crates/vexel-platform-apple/src/native_boundary.rs, rust/crates/vexel-platform-apple/src/main_thread.rs.
-603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v2.

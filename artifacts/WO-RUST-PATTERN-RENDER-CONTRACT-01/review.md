@@ -1,3 +1,0 @@
-ACCEPT — no defect found in the actual baseline diff, source, or tests. Existing test hashes match; source/tests satisfy the <800-line rule. Coordinator protected audit is PASS.
-
-Evidence supports the requested contracts through typed fixtures. Production decoder/media/lower-engine adoption and full/native renderer integration remain outside this order’s proof. Builds/tests were not run during this review.

@@ -1,7 +1,0 @@
-2026-10-14T20:43:47.251425Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/src/lib.rs:
-mod cache;
-mod resolver;
-2026-10-14T20:44:08.147832Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/src/gradient_data.rs:
-use vexel_base::{Span, WorkControl, WorkKind};
-use vexel_geometry::{Affine, affine_identity};
-use vexel_scene::{DecodeSource, ElementId, Paint, PaintKind, PaintStop, Result, Spread, TableRange};

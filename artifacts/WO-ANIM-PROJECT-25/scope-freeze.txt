@@ -1,7 +1,0 @@
-WO-ANIM-PROJECT-25 r2 scope freeze
-Date: 2026-10-13
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 730844098792e74bc7bc664afffe8ef29d2609830ce81f7f45f9296e2be6d463
-Status: ready; implementation started after freeze.
-
-Add the direct user workflow to capture and key a selected SVG object's supported affine transform at the native timeline playhead. The first key must establish a tick-zero baseline; a later first key is rejected rather than fabricating a baseline. Work is limited to the frozen allowlist in work/WO-ANIM-PROJECT-25.md. Final broad UI/E2E acceptance remains deferred.

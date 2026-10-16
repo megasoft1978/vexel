@@ -1,8 +1,0 @@
-[0/1] Re-running CMake...
--- Configuring done (0.1s)
--- Generating done (0.1s)
--- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
-[1/5] Building C object CMakeFiles/vexel-mcp.dir/app/vexel_mcp_main.c.o
-[2/5] Building C object CMakeFiles/mcp_headless_broker.dir/tests/mcp/mcp_headless_broker.c.o
-[3/5] Linking C executable bin/vexel-mcp
-[4/5] Linking C executable bin/mcp_headless_broker

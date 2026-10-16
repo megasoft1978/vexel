@@ -1,3 +1,0 @@
-Replaced the fixed margin with per-kind geometry preflight shared by public compositor entries. TreeRow preserves C’s six-guide limit and full content indent, including 255; valid near-`u32::MAX` Label rectangles still reach the callback.
-
-All 17 tests pass, including prior repairs and new overflow/no-write regressions. All named checks passed. Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/artifacts/WO-RUST-UI-WIDGETS-01/result.md), parity map, and verification evidence. Candidate remains pending independent review and integration.

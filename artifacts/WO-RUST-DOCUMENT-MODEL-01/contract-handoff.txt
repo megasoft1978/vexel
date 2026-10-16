@@ -1,1 +1,0 @@
-Exact accepted XML allocation/storage source copied only while worker terminal; original baseline unchanged. Current known-WO local ledger snapshot excludes unrelated absent orders and validates. Main full ledger remains authoritative. Approved deltas retained; no candidate source/peer edits.

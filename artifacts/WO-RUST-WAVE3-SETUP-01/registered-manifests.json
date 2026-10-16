@@ -1,6 +1,0 @@
-{
-  "Cargo.toml": "2cf8a0876bd506668edeb288871f115e9101c4932b77629f7ba2b2a026f941e2",
-  "Cargo.lock": "f83197d276161879a2192c4379aeaa7078dcd515ab5ed0e6e80690f44e52ee3a",
-  ".cargo/config.toml": "64f73521141b6dacebcc3fe0e0d8fd1a2cec81fab7a2129fa217ee155bfb9827",
-  "rust-toolchain.toml": "515c80a149c1e927d497dbebc399e241822aa0197e8f778c21bf5c136c90afd2"
-}

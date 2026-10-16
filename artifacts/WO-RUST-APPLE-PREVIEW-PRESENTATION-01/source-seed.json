@@ -1,8 +1,0 @@
-{
-  "work_order": "WO-RUST-APPLE-PREVIEW-PRESENTATION-01",
-  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
-  "source_files": {
-    "rust/crates/vexel-platform-apple/src/native_window/app.rs": "840b891fe19c67673d83690ab8a884b1c6fdb47e4ad13a993c6f29c8835edca5"
-  },
-  "candidate_note": "Root integration uses the current uncommitted workspace source; no isolated git worktree can include these untracked Rust workspace files."
-}

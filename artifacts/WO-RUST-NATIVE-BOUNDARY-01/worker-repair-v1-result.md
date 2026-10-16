@@ -1,5 +1,0 @@
-Replaced `mem::forget` with `std::process::abort()` when panic-payload cleanup panics. Added a subprocess regression that confirms the child terminates with `SIGABRT`. Normal boundary behavior remains covered.
-
-Checks passed: 5 integration tests, 2 compile-fail doctests, work-order validation, ledger validation (1,313 entries), and `git diff --check`.
-
-Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary/artifacts/WO-RUST-NATIVE-BOUNDARY-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary/artifacts/WO-RUST-NATIVE-BOUNDARY-01/parity-map.json), and [verification.txt](/Users/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary/artifacts/WO-RUST-NATIVE-BOUNDARY-01/verification.txt).

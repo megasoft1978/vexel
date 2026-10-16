@@ -1,6 +1,0 @@
-test_spatial_cache_contract_binary (tests.test_spatial_cache.SpatialCacheTests.test_spatial_cache_contract_binary) ... ok
-
-----------------------------------------------------------------------
-Ran 1 test in 0.022s
-
-OK

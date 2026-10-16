@@ -1,7 +1,0 @@
-**Candidate updated.** Replacement buffers now stay inside an opaque `TrackedBuffer`; the tracker counts old and new capacities during overlap, enforces the 65,536-record limit, and rejects wrong-source, wrong-ledger, foreign-scope, stale, and duplicate releases. Budget failure preserves the old values and allocation history. The original nine meaningful proofs remain, with three allocation cases added.
-
-Scoped check, tests, and work-order validation passed. The allocation suite now has eight tests; all 12 integration tests passed. Reports cover all 8 selection and 14 allocation symbols in [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/artifacts/WO-RUST-SCENE-QUERY-01/parity-map.json).
-
-**Shared API blocker:** `ChargeLedger` has no transactional reservation with history rollback. The implementation preflights available bytes, performs the fallible physical reserve, then admits actual capacity before publishing. That preserves history if physical reservation fails, but strict lease admission before allocation with rollback on failure requires a coordinator-owned shared API change. This remains a candidate for independent review, not an accepted result.
-
-The original mixed decode/render allocation assertions remain preserved but unexecuted pending renderer adapters. Full app/runtime and release checks also remain later gates.

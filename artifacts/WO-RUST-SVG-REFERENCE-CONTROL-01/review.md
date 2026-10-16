@@ -1,5 +1,0 @@
-BLOCKER
-
-[find.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-reference-control/rust/crates/vexel-svg-reference/src/find.rs:30) marks invalid-span and empty-index lookups complete during `new()`. Then [step()](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-reference-control/rust/crates/vexel-svg-reference/src/find.rs:67) returns that result before checking `quantum` or calling `control.checkpoint()`. So an initial `step(0, ...)` on either case returns `Complete(None)` without observing control, contrary to the work order’s zero-quantum contract. `find_controlled` inherits this: it can return `Ok(None)` without checking a stopped control.
-
-I compared the accepted baseline tests with the current tests; the original test cases and assertions appear semantically preserved, though formatting changed. I did not build or run tests, per your instructions.

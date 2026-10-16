@@ -1,5 +1,0 @@
-WO-PRODUCT-PLAN-02 revision 2 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: c69c0250e84e126060390720b0eff064fdab78900d1fc0ae45556d130c1cbd41
-Allowlist and protected paths are frozen in work/WO-PRODUCT-PLAN-02.md.
-Scope correction: current broker/source docs support an empty text template and text_set insertion; root docs are stale. MCP progress/cancellation and real-client verification remain open.

@@ -1,7 +1,0 @@
-**REJECT.** The public path methods in [lib.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/rust/crates/vexel-mcp-access/src/lib.rs:69) accept `&str`, so they cannot represent every non-NUL byte path accepted by the C `char *` APIs. This breaks path compatibility for valid macOS filenames that are not UTF-8, despite using byte lengths and raw bytes for grant values.
-
-**Required regression:** accept raw `OsStr`/byte paths throughout the four public resolution APIs, then add a fixture with a non-UTF-8 filename under a granted directory. Assert existing-file resolution, permission checking, and save-path behavior, including NUL rejection and the 1023-byte input/output boundary.
-
-The reviewed implementation otherwise matches the C path bounds, canonicalization and symlink handling, save-parent checks, grant component boundaries including `/`, environment length and colon splitting, config ownership/mode/type checks, and bounded 128-chunk config parsing. I found no borrowed-result invalidation or unsafe code. The documented race limitation matches the source’s check-then-use contract; it does not establish stronger security guarantees.
-
-**Nonblocking coverage gaps:** tests do not directly exercise the environment snapshot adapter, wrong-owner config rejection, or exact 1022/1023-byte config trimming and embedded-NUL behavior. I did not run tests or builds. This review covers the named work-order scope only; it does not certify the full app or live MCP behavior.

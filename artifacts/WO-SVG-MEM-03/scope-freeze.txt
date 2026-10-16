@@ -1,5 +1,0 @@
-WO-SVG-MEM-03 revision 1 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 334e01ec47b5e54b6cb6aba64ce7df45bf2f822f85bece030d0194cea481b892
-Allowlist and protected paths are frozen in work/WO-SVG-MEM-03.md.
-Scope: compact storage for SVG stroke dash arrays, with unchanged limits and semantics; broad UI/E2E, corpus, fuzz, and performance suites are excluded.

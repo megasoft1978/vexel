@@ -1,9 +1,0 @@
-{
-  "model": "gpt-6.1-sol",
-  "effort": "medium",
-  "reason": "LunaHigh initial port and first repair failed concrete bounded stream/UTF8/cancellation rechecks; narrow correction reduces rework",
-  "scope": "WO-RUST-XML-02 unchanged full scope",
-  "authorization": "owner model/effort choice and AGENTS repeated-failed-attempt rule",
-  "supervisor_pid": 64032,
-  "subscription_only": true
-}

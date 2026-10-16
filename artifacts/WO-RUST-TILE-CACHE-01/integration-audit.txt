@@ -1,3 +1,0 @@
-Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
-Integrated only: rust/crates/vexel-tile-cache/src/lib.rs, rust/crates/vexel-tile-cache/tests/cache.rs.
-603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v1.

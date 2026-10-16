@@ -1,5 +1,0 @@
-**ACCEPT.** The R2 records show the selected `aarch64-apple-darwin` graph has 16 active packages and 18 lock records. `dispatch2` and `objc2-io-surface` are checksum-recorded, cached, inactive optional records; they are not direct dependencies or active build units. Foundation `NSException` is the only stated feature addition, with defaults disabled.
-
-The frozen NativeBoundary scope is feasible under ADR0026’s ABI limits: use the audited `objc2` catch-all path for Objective-C message exceptions, a Rust unwind guard for panics, and an acquired, thread-confined main-thread capability. Keep payload cleanup, callback fallbacks, and fatal or unsupported cleanup cases within the boundary order’s stated limits; do not claim recovery from raw C/CF, retain/release/Drop, allocator abort, or panic-abort failures.
-
-R2 verification records a successful locked offline workspace check and validates both ready work orders and the ledger. This accepts setup and permits the boundary writer launch; the real Foundation exception, panic/success, and spawned-thread denial probes remain required evidence for the boundary order. No commands were run and no files were changed.

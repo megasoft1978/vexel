@@ -1,6 +1,0 @@
-Review status
-
-Earlier fresh read-only Codex review: no blocking/high findings, but medium findings remained for sequential quadratic access and optional cel labels. Those were addressed.
-A subsequent fresh review found the first cursor implementation still reparsed each item and raised track cursor binding concerns. The code was revised to cache item-array spans/counts/kinds, use explicit iterator state bound to a track, and test 100,000 sequential items plus cross-track reuse.
-A later static review found track_at rescanned the root and recounted; this was changed to use cached spans/counts. It also raised public-view preconditions, now documented and checked for bounds.
-The final review invocation was unusable because it was instructed not to run commands and therefore could not access repository files. Accordingly, AC-4 is not claimed and this work order is not accepted yet.

@@ -1,5 +1,0 @@
-# Resume result — revision 2
-
-The candidate preserves the prior scalar implementation and all 19 original meaningful assertion predicates. Production dash/grid rebuilds use accepted `RasterJob::begin_cache`, `CacheTransaction`, and `CacheGeneration` APIs. The per-generation 16 MiB cap accounts actual retained capacities across shape records, segments, joins, grid cells, and references; the caller ledger independently charges actual physical old/new overlap and registry/history allocations. A near-cap rebuild now succeeds with positive overlap and publishes the replacement generation. Grid refusal/fallback, dash rejection, rollback, cancellation, stale generation checks, partial cleanup, and 100 repeated small rebuilds are covered.
-
-All 51 catalog symbols and 11 assigned case mappings are represented in `parity-map.json` and `coverage.json`. Fresh project-local locked/offline check passed. Fresh tests passed: 11 unit, 8 canonical integration, and 5 aggregate capacity tests (24 total). The work-order validator passed. Mixed full-renderer/librsvg and native-provider suites remain deferred as specified; no UI/E2E or full product completion is claimed.

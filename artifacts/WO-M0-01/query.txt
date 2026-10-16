@@ -1,1 +1,0 @@
-{"feature":"path","fixture_ids":["path-arcs","path-line-curves","path-relative-commands","stress-long-path","stress-nested-groups","use-local-reference"]}

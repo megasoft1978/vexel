@@ -1,5 +1,0 @@
-Repaired controlled parser polling across attribute and element token traversal, style substring matching, timing/string and numeric scans, value splitting, number lists, path validation, motion parsing, mpath attributes and IDs, and syncbase ID comparisons. Each user-sized loop charges accepted work while traversing; no attribute count/fold or source-length precharge stands in for the work. Legacy and controlled APIs use the same engine through Meter's no-stop or caller-control policy. Stop errors take precedence over parse errors; owned source and overlay publication remain success-only. The accepted cycle-inactive behavior is unchanged.
-
-Added six deterministic unit tests that stop inside attribute, element, style, value, number, path, motion and 4 KiB ID scans. All 12 original integration tests/assertions are preserved (verified against the archived baseline after whitespace normalization). Current run: 6 unit + 15 integration tests passed.
-
-Read the root review.md; both blockers are addressed. Prior stale verification was preserved as prior-verification.txt. Independent review and integration remain outstanding.

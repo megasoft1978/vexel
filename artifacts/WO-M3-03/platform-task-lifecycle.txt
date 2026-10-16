@@ -1,7 +1,0 @@
-owned_cleanup_success=1
-owned_cleanup_queued_cancel=1 failed_duplicate_full_cleanup=0
-owned_cleanup_stale_generation=1
-owned_cleanup_shutdown_discard=1
-owned_cleanup_failed_submit=0
-random_seed=1295209779 random_submissions=713 random_cancellations=15
-{"status":"pass","snapshot":"pass","owned_cleanup_cases":4,"failed_submit_cleanup":0,"deterministic_digest":"pass","byte_budget":"pass","generation_filter":"pass","random_seed":1295209779,"random_schedule":"pass"}

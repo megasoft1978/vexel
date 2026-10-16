@@ -1,5 +1,0 @@
-Applied the narrow fix: `match` keeps `_secondary_payload` bound until `std::process::abort()` diverges. The subprocess regression now verifies the original payload creates a secondary payload with a panicking destructor, and that the secondary destructor does not run before `SIGABRT`.
-
-All frozen checks passed: 5 integration tests, 2 compile-fail doctests, work-order validation, ledger validation, and `git diff --check`. I found no standalone independent report in the work-order artifacts and used the blocker quoted in your request.
-
-Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary/artifacts/WO-RUST-NATIVE-BOUNDARY-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary/artifacts/WO-RUST-NATIVE-BOUNDARY-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary/artifacts/WO-RUST-NATIVE-BOUNDARY-01/verification.txt).

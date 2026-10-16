@@ -1,3 +1,0 @@
-command: git diff --check; git diff --cached --check
-exit code: 0
---- last 40 output lines ---

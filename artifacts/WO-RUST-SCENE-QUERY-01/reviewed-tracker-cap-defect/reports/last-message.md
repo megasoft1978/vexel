@@ -1,7 +1,0 @@
-Implemented the candidate in the owned scene-query crate and recorded the symbol mapping, coverage, and verification evidence.
-
-The scoped locked offline check, crate tests, and work-order validator pass. The fixture builder and explicit allocation lease cases are covered; the mixed `measure_allocation_source` renderer assertions remain unexecuted pending coordinator adapters.
-
-One accepted-API blocker prevents full parity: `SceneView` has no way to obtain a `ShapeId` by slot. Queries can recover handles from edge ownership, but zero-edge shapes cannot be selected or returned by source offset. I documented this in the result and parity records; resolving it requires a shared scene API change outside this crate’s allowed scope.
-
-See [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/artifacts/WO-RUST-SCENE-QUERY-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/artifacts/WO-RUST-SCENE-QUERY-01/parity-map.json), [coverage.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/artifacts/WO-RUST-SCENE-QUERY-01/coverage.json), and [verification.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/artifacts/WO-RUST-SCENE-QUERY-01/verification.json).

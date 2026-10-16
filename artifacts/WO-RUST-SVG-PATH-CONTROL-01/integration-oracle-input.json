@@ -1,8 +1,0 @@
-{
-  "input": "artifacts/WO-RUST-SVG-PATH-CONTROL-01/baseline-golden.txt",
-  "sha256": "ce852a8bd74a88ce108cf019000325f34b8d727b905f65a4789bb62a5738cbc9",
-  "required_by": "rust/crates/vexel-svg-path/tests/parity.rs include_str",
-  "copied_byte_identically": true,
-  "unchanged_frozen24_authored_goldens": true,
-  "independent_review_required": true
-}

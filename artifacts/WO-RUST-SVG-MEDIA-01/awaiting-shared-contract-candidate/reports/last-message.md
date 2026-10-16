@@ -1,7 +1,0 @@
-Implemented the MEDIA crate candidate: strict image URI/base64 handling, image geometry and premultiplied bilinear sampling, text parsing and outline geometry, explicit provider calls, and the owned layout cache. The 24-symbol parity map and all 12 assigned original cases are documented.
-
-**Verification:** locked offline check passed; 8 focused tests passed; work-order validation passed. The frozen scope hash and original source/suite hashes match.
-
-One shared-contract blocker remains: `TextDecodeRequest` and `ImageDecodeRequest` lack the use-site source span required to map referenced media to its `<use>` host. The append APIs require that span explicitly; coordinator repair is needed before those original assertions can pass. Native providers and mixed renderer suites remain later gates.
-
-See the [candidate result](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/artifacts/WO-RUST-SVG-MEDIA-01/result.md), [parity map](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/artifacts/WO-RUST-SVG-MEDIA-01/parity-map.json), [coverage](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/artifacts/WO-RUST-SVG-MEDIA-01/coverage.json), and [verification evidence](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/artifacts/WO-RUST-SVG-MEDIA-01/verification.json). This is a candidate, pending the required independent root review.

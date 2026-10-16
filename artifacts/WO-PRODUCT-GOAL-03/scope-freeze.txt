@@ -1,4 +1,0 @@
-WO-PRODUCT-GOAL-03 r1 scope freeze
-Date: 2026-10-13
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Status: ready; documentation inventory reconciliation only.

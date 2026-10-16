@@ -1,5 +1,0 @@
-Implemented the protocol crate in Rust with **9 focused parity tests** covering sync fallback, version and capability negotiation, tool schemas, resources and prompts, rate limiting, async Tasks, legacy progress and cancellation, payload bounds, and JSON-RPC envelopes.
-
-Both locked offline Cargo checks passed. The work order validator, ledger validation, `git diff --check`, and parity-map JSON validation also passed. Compiler: Rust 1.99.0. `rustfmt` and `clippy` were unavailable and were not run.
-
-The behavior map and evidence are in [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol/artifacts/WO-RUST-PROTOCOL-01/parity-map.json) and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol/artifacts/WO-RUST-PROTOCOL-01/verification.txt). App integration remains outside this order; changes are uncommitted.

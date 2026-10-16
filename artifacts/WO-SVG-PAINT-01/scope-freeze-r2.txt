@@ -1,5 +1,0 @@
-WO-SVG-PAINT-01 revision 2 scope correction
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 0c858344ab9dee62c93b2959fb2360770b03748c91b4995e5167ffe2155ab33a
-Revision 1 omitted `src/svg/shape/shape_internal.h`, required for sharing bounded stroke-paint storage setup between standard and custom geometry. Corrected before implementation; revision 1 is superseded before code changes.
-Allowlist and protected paths are frozen in work/WO-SVG-PAINT-01.md.

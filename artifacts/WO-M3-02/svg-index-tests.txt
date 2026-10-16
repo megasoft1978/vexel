@@ -1,7 +1,0 @@
-test_frozen_corpus_incremental_token_equivalence (tests.test_svg_index.SvgIndexTests.test_frozen_corpus_incremental_token_equivalence) ... ok
-test_index_contract_binary (tests.test_svg_index.SvgIndexTests.test_index_contract_binary) ... ok
-
-----------------------------------------------------------------------
-Ran 2 tests in 0.119s
-
-OK

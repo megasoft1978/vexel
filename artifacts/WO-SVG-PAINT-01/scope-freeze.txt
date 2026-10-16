@@ -1,5 +1,0 @@
-WO-SVG-PAINT-01 revision 1 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 4a28204c777e502e4282e041ac110157e5bc318d4289ef93146e4d9002f333ca
-Allowlist and protected paths are frozen in work/WO-SVG-PAINT-01.md.
-Scope: bounded local linear/radial gradients applied to SVG strokes, with focused raster verification; broad UI/E2E, corpus, fuzz, and performance suites are excluded.

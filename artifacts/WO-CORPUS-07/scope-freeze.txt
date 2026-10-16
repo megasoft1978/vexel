@@ -1,4 +1,0 @@
-WO-CORPUS-07 revision 1
-Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: fbb22dda2dceb1ffc0a782afa883a8759346744f9dddae677be079a5c02cb932
-Scope: dash cache storage-growth bound only; T1 exact corpus probe; focused non-UI checks.

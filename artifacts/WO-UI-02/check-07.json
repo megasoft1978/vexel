@@ -1,8 +1,0 @@
-{
- "index": 7,
- "label": "python3 scripts/ledger.py validate ledger.jsonl",
- "exit": 0,
- "seconds": 0.1,
- "stdout_tail": "valid ledger: 515 entries\n",
- "stderr_tail": ""
-}

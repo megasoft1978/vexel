@@ -1,7 +1,0 @@
-Work order: WO-MCP-ASYNC-02 revision 1
-Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Frozen spec SHA-256: 4ba41704d1a614f71ed876a06960a3a691ffc0c037e7b9d4e38c20e3abb29219
-Scope: bounded asynchronous native .vexel GIF export task with visible progress,
-cooperative protocol/UI cancellation, and MCP 2026 Tasks plus legacy 2025 progress.
-Adds editor command dispatch and per-editor cancel-request state omitted from
-the superseded revision. Broad UI/E2E remains deferred.

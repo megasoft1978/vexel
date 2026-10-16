@@ -1,1 +1,0 @@
-PASS: git diff --check -- docs/product/vexel-v1-vertical-slice.md docs/product/rust-port-goal-and-plan.md

@@ -1,7 +1,0 @@
-Implemented the scalar sampling candidate in the allowed crate and order artifacts. The parity map covers all **51 catalog symbols**, and coverage records all **11 assigned original cases**. All Rust source files are under 800 lines.
-
-The required offline check and work-order validation passed; **6 focused Rust tests passed**. The original mixed renderer cases remain deferred integration gates.
-
-This is a **candidate, not an accepted completion**. Two shared-contract blockers remain: `KernelResources::paint_sample` cannot receive `WorkControl`, and the dash cache has no way to retain a `ChargeLedger` lease. The crate enforces its local 16 MiB cache cap, but cannot account those capacities against the shared job reservation.
-
-Evidence: [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/parity-map.json), [coverage.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/coverage.json), and [verification.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/verification.json).

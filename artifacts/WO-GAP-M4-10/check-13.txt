@@ -1,3 +1,0 @@
-command: git diff --check
-exit: 0
---- last 40 lines ---

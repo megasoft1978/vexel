@@ -1,7 +1,0 @@
-WO-SVG-CLIP-02 revision 1
-Spec SHA-256: b12ec66275fafc3d3a9d4a6d5ed4d4b351fba649e0778597fc118f0c39a1e454
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Scope: clip-rule CSS/cascade and clip shape containment; focused synthetic clip/CSS tests; docs and scoped evidence/state/ledgers.
-Verification: Debug, ASan/UBSan, UBSan strict targets; focused shape-render, nested-clip, animation, and CSS CTests only; ledger/test-map/diff/line-count checks.
-Protected: corpus inputs/reports, UI/E2E, fuzz/performance, unrelated clip styles, all paths outside allowlist.
-Normative behavior: W3C SVG 1.1 masking section, https://www.w3.org/TR/SVG11/masking.html

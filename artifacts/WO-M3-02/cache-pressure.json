@@ -1,1 +1,0 @@
-{"insertions":10000,"entry_count":100,"accounted_bytes":6000,"byte_cap":8192,"max_accounted_bytes":6000,"max_entries":100,"ownership_success":true,"ownership_failure":true,"deterministic_lru":true,"clock_rollover":true,"generation_invalidation":true,"scale_invalidation":true}

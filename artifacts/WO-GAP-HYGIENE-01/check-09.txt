@@ -1,4 +1,0 @@
-COMMAND: du -sh ..
-EXIT_CODE: 0
---- last 40 output lines ---
-3.3G	..

@@ -1,7 +1,0 @@
-**ACCEPT.** The edition-2024 formatting correction resolves the previous BLOCK.
-
-- Independent rustfmt check passes for all three files.
-- Prior candidate hashes reproduce exactly with edition-2021 formatting: only five assertion layouts changed; semantics and scope are unchanged.
-- Updated hashes, line counts, and check/test evidence agree: **246 passed**, including 9 observability tests and 10 compile-fail doctests.
-
-Read-only review; no files modified.

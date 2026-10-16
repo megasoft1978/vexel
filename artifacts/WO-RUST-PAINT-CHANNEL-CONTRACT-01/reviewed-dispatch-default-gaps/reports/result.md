@@ -1,5 +1,0 @@
-Added a public channel-aware production pattern planner and validated dispatch. It requires `Fill` or `Stroke`, keeps the compatibility planner and existing mapping/ticket interfaces unchanged, and shares the original production validation implementation. The channel and resolved opacity remain attached to mapped pattern requests through real job output completion and fill/stroke `PatternId` publication.
-
-The new builder/job fixture verifies computed fill `.25`, stroke `.75`, and omitted opacity as `1` independently for both channels. Existing 153 accepted checks/assertions were left unchanged. The owned definitions adapter and planner source were read-only references; neither was modified or relied on for compilation.
-
-Verification passed: locked offline scene check, full locked offline scene tests (152 runtime tests plus two compile-fail doctests), and frozen work-order validator. Exact command output is in `check.log`, `test.log`, and `wo-validate.log`. This is scoped implementation evidence only; no product acceptance is claimed.

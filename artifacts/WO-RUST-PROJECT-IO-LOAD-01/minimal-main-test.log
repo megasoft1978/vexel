@@ -1,4 +1,0 @@
-Coordinator focused package verification
-Command: cargo +stable test --manifest-path .cache/WO-RUST-PROJECT-IO-LOAD-01/worker/target/load-minimal-workspace/Cargo.toml --locked --offline -p vexel-project-io
-Result: PASS; 16 unit tests passed, 0 failed; doc tests 0 passed, 0 failed.
-Scope: isolated minimal verification workspace with exact candidate package and local dependency sources; this is not the main workspace check.

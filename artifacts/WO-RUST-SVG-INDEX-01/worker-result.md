@@ -1,7 +1,0 @@
-# WO-RUST-SVG-INDEX-01 — unaccepted candidate
-
-Corrected the remaining collector growth blocker: doubling and the initial 64-token request now clamp to the floor of `(component budget − actual XML storage) / token size`. Checked subtraction and growth preserve the final legal token slot even when the preferred request exceeds the budget. Fallible detached allocations are checked against actual reserved capacity before copying/replacing; oversized candidates are dropped while the original buffer remains intact.
-
-The accepted XML exact-storage contract remains integrated, with checked 128 MiB component and 256 MiB combined budgets. All eleven prior tests and assertions remain. One deterministic regression adds small test budgets for token capacities 1, 3, 5, and 65; exact and nonmultiple byte remainders; 64-to-65 growth; final-slot exhaustion; checked boundaries; and real owned oversized-candidate rejection. This uses small safe allocations and makes no allocator OOM claim.
-
-The named checks pass: six unit tests and six integration tests, crate check, frozen-order validation, ledger validation (1229 entries), and whitespace check. Immediate malformed ordering, source ownership, background validation, preview, incremental progress, and cancellation behavior remain covered. Only owned source/tests/artifacts changed; source files remain below 800 lines. Candidate only, pending root review and main checks.

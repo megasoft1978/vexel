@@ -1,7 +1,0 @@
-$ python3 -m unittest tests.test_ui_driver.DriverTests.test_invalid_cli_and_jsonl_are_rejected tests.test_ui_driver.DriverTests.test_path_escape_symlink_and_existing_output_are_rejected tests.test_ui_driver.DriverTests.test_bounds_and_command_order_are_enforced
-...
-----------------------------------------------------------------------
-Ran 3 tests in 1.087s
-
-OK
-[exit 0]

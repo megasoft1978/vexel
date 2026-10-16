@@ -1,7 +1,0 @@
-2026-10-14T11:04:26.840598Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/rust/crates/vexel-ui/src/widget_canvas.rs:
- pub fn paint_tree_row(&mut self,spec:&WidgetDrawSpec<'_>)->bool{if !self.valid()||!paint_bounds_preflight(spec.bounds){return false}draw_tree_row(self,spec)}
- pub fn paint_empty_state(&mut self,spec:&WidgetDrawSpec<'_>)->bool{if !self.valid()||!paint_bounds_preflight(spec.bounds){return false}draw_empty(self,spec)}
-2026-10-14T11:04:39.716895Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/rust/crates/vexel-ui/src/widget_canvas.rs:
- pub fn paint_tree_row(&mut self,spec:&WidgetDrawSpec<'_>)->bool{if !self.valid()||!paint_bounds_preflight(spec.bounds){return false}draw_tree_row(self,spec)}
- pub fn paint_empty_state(&mut self,spec:&WidgetDrawSpec<'_>)->bool{if !self.valid()||!paint_bounds_preflight(spec.bounds){return false}draw_empty(self,spec)}
-2026-10-14T11:05:02.749758Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to read file to update /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/artifacts/WO-RUST-UI-WIDGETS-01/artifacts/WO-RUST-UI-WIDGETS-01/parity-map.json: No such file or directory (os error 2)

@@ -1,2 +1,0 @@
-[1/2] Building C object CMakeFiles/job_snapshot_test.dir/tests/jobs/test_job_snapshot.c.o
-[2/2] Linking C executable bin/job_snapshot_test

@@ -1,9 +1,0 @@
-2026-10-14T21:11:40.716603Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-ANIMATION-FRAME-01/worker/rust/crates/vexel-svg-animation-frame/tests/original_clip.rs:
-    );
-    assert_eq!(constrained.memory_stats(), before_stats);
-    let after_clip = constrained.view().clip(clip).unwrap();
-    assert_eq!(after_clip.bounds, before_clip.bounds);
-    assert_eq!(after_clip.user_inverse, before_clip.user_inverse);
-    assert_eq!(after_clip.owner_node, before_clip.owner_node);
-    assert_eq!(after_clip.geometry.edges.len(), before_clip.geometry.edges.len());
-    assert_eq!(after_clip.geometry.shapes.len(), before_clip.geometry.shapes.len());

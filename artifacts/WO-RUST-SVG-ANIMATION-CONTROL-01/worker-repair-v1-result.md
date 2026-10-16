@@ -1,5 +1,0 @@
-Repaired the controlled polling paths for attribute and element traversal, style matching, value splitting, numeric and path scans, motion parsing, mpath IDs, and syncbase IDs. Removed the upfront attribute and token charges; loops now poll while traversing, with work charged in batches no larger than 256. Added six deterministic in-loop cancellation tests.
-
-Verification passed: Rust 1.99 locked offline check; 6 unit and 15 integration tests; work-order and ledger validation; `git diff --check`. All 12 original integration-test bodies match the accepted baseline after whitespace normalization.
-
-Read the root `review.md` and addressed both blockers. The stale verification is preserved in [prior-verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/prior-verification.txt); current evidence is in [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/verification.txt). Independent review and integration remain outstanding.

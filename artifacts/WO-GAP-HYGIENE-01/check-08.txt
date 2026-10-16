@@ -1,4 +1,0 @@
-COMMAND: git rev-list --all --count
-EXIT_CODE: 0
---- last 40 output lines ---
-533

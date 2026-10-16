@@ -1,7 +1,0 @@
-ACCEPT
-
-The Rust task store preserves the reviewed C behavior and limits. `TaskStore::start` uses Apple’s native `fill_random`; entropy errors propagate without a fallback, and collision retries prevent reuse of a live ID. The ten stable slots, lowest vacant slot reuse, oldest-terminal eviction with lowest-index tie breaking, owner isolation, inclusive expiry, cooperative cancellation, progress rules, terminal transitions, saturating TTL arithmetic, opaque result ownership, and capacity rejection are consistent with the C implementation.
-
-The mutex protects state transitions and snapshots. Entropy runs outside the lock; result allocation is fallible and bounded; poisoning returns an explicit error without recovering state. The source files are below 800 lines, forbid unsafe Rust, and add no dependency. The parity map covers every C API and helper, and the original meaningful C assertions are represented. Recorded verification matches the work order. This accepts only the task-store candidate; it does not certify the full app or live MCP.
-
-Meaningful nonblocking coverage gaps: tests do not directly pin oldest-terminal tie eviction, lowest-slot reuse, or the case where `start` evicts a terminal task and then fails at the active cap. The corresponding implementation logic matches the C ordering. No review tests or builds were run.

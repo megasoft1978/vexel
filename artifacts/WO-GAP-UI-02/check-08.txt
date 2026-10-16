@@ -1,4 +1,0 @@
-command: python3 scripts/wo_validate.py WO-GAP-UI-02 --ready
-exit: 0
-last 40 lines:
-valid WO-GAP-UI-02 revision 1 sha256 f157ddfc6a0e9d9b11914bdce1dd2d6d374faca7d73e1ec90d89db987172f876

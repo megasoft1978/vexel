@@ -1,4 +1,0 @@
-command: python3 scripts/wo_validate.py WO-UI-01 --ready
-exit code: 0
-last 40 output lines:
-valid WO-UI-01 revision 2 sha256 2c5b47bef3e920d2d90b77126f7b6fd47a159fe4775eb9532edcd631995e4595

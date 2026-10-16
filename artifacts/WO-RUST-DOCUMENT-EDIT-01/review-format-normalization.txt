@@ -1,1 +1,0 @@
-Independent raw review explicitly begins ## ACCEPT; preserved byte-for-byte in review-raw.md. Plain ACCEPT marker prepended solely for the integration parser; no verdict/finding changes.

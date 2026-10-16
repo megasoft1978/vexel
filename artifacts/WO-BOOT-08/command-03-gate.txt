@@ -1,1 +1,0 @@
-{"comparison": "comparable", "output": ".cache/WO-BOOT-08/result.json", "status": "warning"}

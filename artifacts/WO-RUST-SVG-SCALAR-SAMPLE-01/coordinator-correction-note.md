@@ -1,1 +1,0 @@
-The original-row-completion ledger note says101 restored files. The exact restored-protected-inputs.json contains100 files;100 is the correct count. All unexpected bytes were archived and each replacement matched its original authorized hash. No main-tree protected file changed.

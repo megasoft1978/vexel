@@ -1,2 +1,0 @@
-Original Tile::new body, TileError declaration and all5 external tests/tile.rs cases byte-identical to accepted worker.
-Initial audit wrongly assumed inline #[cfg(test)] block; corrected to actual external test location. Named main commands had already passed before that audit-script ValueError; no source/test change required.

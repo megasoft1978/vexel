@@ -1,3 +1,0 @@
-identical replay digests: 20/20 c46e612bbfa618d18a27693c33a952b9fce16bb941e3d9b6f5048b7bfd280c59
-stable event order: 15 commands; virtual frame steps: 1
-repeat replay elapsed seconds: 0.100976

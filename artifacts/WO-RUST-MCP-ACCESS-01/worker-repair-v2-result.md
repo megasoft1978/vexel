@@ -1,5 +1,0 @@
-Updated the non-UTF-8 fixture to preserve its success assertions when the filesystem permits raw-byte names, and to verify native rejection behavior when creation returns `EILSEQ` or `PermissionDenied`. The fallback checks all four APIs, NUL handling, lossy-path non-substitution, and grant boundaries. Production code was unchanged.
-
-The failed fixture source and prior evidence are archived in the work-order artifacts. All named worker checks now pass; `cargo test` reports 12 passed. This worker exercised the `EPERM` rejection branch; root reported `EILSEQ` outside the sandbox and can independently rerun the updated test there.
-
-The updated [result](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/result.md), [parity map](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/parity-map.json), and [verification record](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/verification.txt) document the adaptation and evidence.

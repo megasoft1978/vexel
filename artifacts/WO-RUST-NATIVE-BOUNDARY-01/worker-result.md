@@ -1,5 +1,0 @@
-Repaired panic-payload cleanup in the native boundary. `MainThread` remains opaque and thread-confined; `guard_native_call` preserves success and contains Rust/objc2 `catch-all` unwinds as before. If dropping a caught payload panics, the secondary unwind guard calls `std::process::abort()` immediately. It neither retains the secondary payload nor permits another unwind across the boundary.
-
-The focused subprocess regression verifies the child terminates with macOS `SIGABRT`: dropping the original panic payload raises a secondary panic with a `SecondaryPanicsOnDrop` payload. The `Err(_secondary_payload)` binding remains live into the divergent abort call, so its destructor does not run. The existing success, Rust panic, spawned-thread denial, and real Foundation `NSString` range-exception regressions remain intact. No dependencies, manifests, unsafe code, or non-owned paths changed.
-
-Raw C/CF operations, retain/release or `Drop` cleanup, foreign cleanup exceptions, and aborting allocator/panic behavior remain outside recoverable containment. No macOS 13 runtime or full application acceptance is claimed.

@@ -1,5 +1,0 @@
-Restored the legacy pan endpoints to the frozen C geometry and added full-mask fingerprints plus endpoint pixel assertions at scales 1–4. The eight original tests remain unchanged.
-
-The final package test passed: **12 passed, 0 failed**; doc tests: 0. The locked offline package check, WO validator, ledger validator (1143 entries), and `git diff --check` passed. The initial review and run evidence, including the first test compile error, remain recorded in [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-ui-draw/artifacts/WO-RUST-UI-DRAW-01/verification.txt).
-
-Updated the [parity map](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-ui-draw/artifacts/WO-RUST-UI-DRAW-01/parity-map.json) and kept the [result summary](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-ui-draw/artifacts/WO-RUST-UI-DRAW-01/result-summary.md) under 300 words. The candidate remains uncommitted; independent narrowed recheck and coordinator audit are pending. Full application completion remains outside this port.

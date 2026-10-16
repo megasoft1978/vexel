@@ -1,4 +1,0 @@
-command: cmake --build --preset mac-debug
-exit: 0
-last 40 lines:
-ninja: no work to do.

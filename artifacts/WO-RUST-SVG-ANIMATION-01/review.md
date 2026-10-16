@@ -1,7 +1,0 @@
-**BLOCKED — do not accept yet.** I found two concrete parity failures.
-
-- **Invalid base values lose the C diagnostic.** For `<rect x="bad"><animate attributeName="x" from="0" to="1" dur="1s"/></rect>`, C rejects the track and records `INVALID_TRACK` at the animation element name ([smil_tracks.c](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/src/svg/animation/smil_tracks.c:183)). Rust returns early through `?` without adding a diagnostic ([parse.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/rust/crates/vexel-svg-animation/src/parse.rs:192)). That changes observable error reporting.
-
-- **Duplicate `mpath` IDs can resolve when C rejects them.** With two matching `<path id="p">` elements—the first lacking `d`, the second having one—C counts both matches and rejects the reference ([motion_path.c](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/src/svg/animation/motion_path.c:237)). Rust uses `found` to detect duplicates, but the first missing `d` leaves it `None`, so the second path can be accepted ([motion.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/rust/crates/vexel-svg-animation/src/motion.rs:240)).
-
-**Material coverage gap:** tests don’t directly verify end timing or additive and accumulated behavior, despite those being in the frozen scope. I reviewed the candidate, C sources, original assertions/fixtures, and the parity artifacts only. I did not run tests or builds.

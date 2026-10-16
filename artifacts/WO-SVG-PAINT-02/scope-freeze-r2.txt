@@ -1,5 +1,0 @@
-WO-SVG-PAINT-02 revision 2 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 66bb819723088a873f2939f39830df5a0dd829a46652253f2793f48e09bd20e6
-Allowlist and protected paths are frozen in work/WO-SVG-PAINT-02.md.
-Scope correction: two coincident half-covered paths should yield about 75% alpha; a repeated stack approaches opaque. The regression checks both reference observations.

@@ -1,5 +1,0 @@
-**ACCEPT — R2 source only.** I traced the request lifecycle and guards, typed definition planning and empty-group filter publication, cache-borrowed paint handoff, mapped pattern suspension and output transfer, and ledger-backed buffer reservation and cleanup. I found no R2 operation defect in those paths. The 744-line test file preserves the requested coverage areas; I did not run tests or builds.
-
-The verification record reports 135 passing entries (111 existing, 24 new) and zero protected-path mismatches. Those are recorded results, not independently rerun evidence.
-
-Later gates remain: real lower parsers, resolver/planner/sampler and root adapters; provider-side effects and external media/cache rollback (the request guard cannot stop a child provider from being used); and the separate post-launch text command budget, cache/scratch borrowing, mask post-processing, quantum, and path-metadata prerequisites. No product acceptance is implied.

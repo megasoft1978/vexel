@@ -1,3 +1,0 @@
-ACCEPT. The public path APIs now take `impl AsRef<OsStr>` and validate and split paths by raw macOS bytes. The repair preserves the 1023-byte boundary and NUL rejection; the non-UTF-8 fixture retains success assertions when native creation works and checks native rejection behavior otherwise, without treating rejection as a UTF-8 validation error or rewriting paths lossily.
-
-The parity map records that adaptation and its filesystem limitation. The verification record reports all original 10 tests plus 2 raw-path tests passing. I did not run tests or builds. This acceptance covers the named work-order scope only; it does not certify the full app or live MCP behavior.

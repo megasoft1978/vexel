@@ -1,2 +1,0 @@
-2026-10-14T05:53:41.717675Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-base/rust/crates/vexel-base/src/lib.rs:
-use std::mem;

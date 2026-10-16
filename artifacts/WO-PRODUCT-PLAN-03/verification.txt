@@ -1,9 +1,0 @@
-WO-PRODUCT-PLAN-03 documentation-only verification
-Date: 2026-10-13
-
-- `python3 scripts/wo_validate.py WO-PRODUCT-PLAN-03 --ready`: passed; revision 1 SHA-256 matches the frozen spec.
-- `python3 scripts/ledger.py validate ledger.jsonl`: passed; 926 entries after closeout.
-- `git diff --check`: passed.
-- Manually compared `docs/mcp.md` tool names, limits, ID behavior, save semantics, and operator status against `src/mcp/README.md` and `src/mcp/mcp_tools.c`.
-- Confirmed the plan cites WO-CORPUS-13's inherited gradient-stroke diagnosis and keeps stable-ID completion separate from the still-open user-authored character workflow, project recovery/compatibility, MCP in-flight progress/cancel and live-client checks, measured large-file work, UI/accessibility, final broad acceptance, and post-acceptance showcase.
-- No application tests or UI/E2E, corpus, performance, sanitizer, fuzz, or release suites were run (frozen docs-only scope).

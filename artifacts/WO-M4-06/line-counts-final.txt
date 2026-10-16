@@ -1,9 +1,0 @@
-     587 src/raster/shape_render.c
-      76 src/raster/shape_render_sample.c
-     455 src/raster/shape_bounds.c
-      56 src/raster/shape_bounds.h
-     799 src/svg/shape/shape.c
-     327 tests/svg/shape/shape_render_reference.c
-     784 tests/svg/shape/test_shape.c
-     790 tests/test_shape_render.py
-    3874 total

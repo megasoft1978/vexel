@@ -1,5 +1,0 @@
-Implemented WO-RUST-DOCUMENT-OWNED-01 as an uncommitted candidate. Borrowed parsing keeps its 16 MiB cap and original assertions; the additive owned and large-source APIs share the document index and preserve the caller’s source bytes. Cancellation is polled during XML processing and index construction.
-
-The required candidate files are [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document/artifacts/WO-RUST-DOCUMENT-OWNED-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document/artifacts/WO-RUST-DOCUMENT-OWNED-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document/artifacts/WO-RUST-DOCUMENT-OWNED-01/verification.txt).
-
-Verification passed: locked offline check, 13 tests, work-order validation, ledger validation (1,260 entries), and `git diff --check`. The parity map records the cancellation-offset adaptation. Root review and integration remain.

@@ -1,5 +1,0 @@
-**Unaccepted: blocked on the XML storage contract.** The accepted `XmlTokenStream` API lacks exact token and open-name storage accounting, so the full 128 MiB validator/token budget cannot be proven. I did not change the XML crate or claim full bounded-memory parity; the remaining dependency is recorded in the artifacts.
-
-The index now returns a completed validator diagnostic before further lexical progress, matching C step ordering. Metadata growth uses a detached candidate vector and checks its actual capacity before copying or replacing; rejection preserves existing records. Deterministic regressions cover both behaviors.
-
-Checks passed: locked offline check, 3 unit regressions, 6 integration tests, work-order validation, ledger validation, and `git diff --check`. See [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/artifacts/WO-RUST-SVG-INDEX-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/artifacts/WO-RUST-SVG-INDEX-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/artifacts/WO-RUST-SVG-INDEX-01/verification.txt).

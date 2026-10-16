@@ -1,9 +1,0 @@
-Implemented the full owned scalar scope, including the cached interval/run fill traversal. `FillRowLayout` carries the five interval counts, stride, maximum edge count, and run count by value; interval and run data stay in admitted same-job buffers. The row path charges its actual comparisons and traversal work through `RasterComposition`.
-
-All 19 focused tests pass: 11 unit and 8 canonical integration tests. They cover all 11 assigned pure predicates, including exact fill work, 4×4 samples, malformed layouts, cancellation, and fractional extent rounding. The 51-symbol parity map and 11-case coverage report distinguish these proofs from deferred renderer integration.
-
-- Checks passed: locked offline `cargo check`, locked offline `cargo test`, scoped `rustfmt --check`, and `wo_validate --ready`.
-- Frozen source and assigned-suite hashes matched 9/9. Scope is unchanged; source and test files remain under 800 lines.
-- Candidate only; independent root review, protected-scope audit, and fresh main checks remain required.
-
-Reports: [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/parity-map.json), [coverage.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/coverage.json), and [verification.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/verification.json).

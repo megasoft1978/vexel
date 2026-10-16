@@ -1,7 +1,0 @@
-Implemented the JSON foundation in the isolated worktree. The C public constants, types, and functions are mapped to Rust APIs and focused tests in [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-json/artifacts/WO-RUST-JSON-01/parity-map.json); exact evidence and API adaptations are in [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-json/artifacts/WO-RUST-JSON-01/verification.txt).
-
-The public API includes `JsonDocument` borrowed and owned parsing, token spans, object/array lookup, decoded strings, raw tokens, `uint` and `bool` accessors, plus bounded `JsonBuffer` serialization. Rust ownership replaces explicit destroy calls; `Option` replaces the no-token sentinel, and checked offsets support safe in-buffer append.
-
-**Checks passed:** Rust 1.99.0; `cargo +stable check -p vexel-json --locked --offline`; `cargo +stable test -p vexel-json --locked --offline` (5 focused tests); work-order readiness validation; ledger validation (1,058 entries); and `git diff --check`. Rustfmt and clippy were unavailable and not installed. Source files are under 800 lines.
-
-Changes are limited to `rust/crates/vexel-json/{src,tests}` and `artifacts/WO-RUST-JSON-01`. Coordinator-owned manifests, ledgers, and shared state were not edited. The work remains uncommitted. MCP protocol and tool behavior remain outside this JSON-core order.

@@ -1,1 +1,0 @@
-**ACCEPT.** `read_asset` advances the cursor through the header and each slice before validating the asset name, media type, and CRC. The CRC failure assertion expects offset 121, matching the C decoder’s consumed record end. The parity map documents this behavior. No remaining issue found in this repair.

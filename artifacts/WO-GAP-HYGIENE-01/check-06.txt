@@ -1,5 +1,0 @@
-COMMAND: git for-each-ref refs/heads/archive refs/remotes/origin/archive
-EXIT_CODE: 0
---- last 40 output lines ---
-09c8663fecac15ba5c803e6d2fa1d169bd961aaf commit	refs/heads/archive/second-lineage-tip
-09c8663fecac15ba5c803e6d2fa1d169bd961aaf commit	refs/remotes/origin/archive/second-lineage-tip

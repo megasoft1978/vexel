@@ -1,8 +1,0 @@
-WO-ANIM-PROJECT-24 r1 scope freeze
-Date: 2026-10-13
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: 5865f77438293b97b0529157d683910c8bf4fafbb90a6ee5e0133ee3dc6c6376
-Status: ready; implementation started after freeze.
-
-Persist the existing native loop mode through project decode, undoable edit/session APIs, native timeline playback, and the active-project MCP surface.
-Only the paths frozen in work/WO-ANIM-PROJECT-24.md are in scope.

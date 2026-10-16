@@ -1,1 +1,0 @@
-{"ambiguous_license_records":0,"features":["basic-shapes","embedded-image","metadata","namespaces","path","stress","style","text","transform"],"fixture_count":24,"well_formed_svg_count":24,"wpt_fixture_count":0,"wpt_license_sha256":"5fac07febb0e2a97fb0d7b0def149ec08b642e1ba4b9c345283ab1cbd2af6570","wpt_revision":"da1355b3fc629f97f8194884ab113da1ba3c7990"}

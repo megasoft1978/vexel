@@ -1,3 +1,0 @@
-ACCEPT — `DefinitionContext<'src, 'ctx>` now gives source/token and accepted `CssSheet<'src>` / `ReferenceIndex<'src>` borrows `'src`, while mutable container, active-stack, counter, and builder borrows use `'ctx`. Both `plan_definition` and `plan` explicitly separate those lifetimes and return `DefinitionPlan<'src>` containing `Vec<Expansion<'src>>` with source-borrowed `CssPaint<'src>`. The source lifetime is independent of the temporary context and control borrows.
-
-The trait method remains object safe: it has lifetime parameters only, no generic type parameters or `Self` in its result. The context and plan contain no callbacks, and ownership semantics are unchanged. The report and contract agree with the accepted CSS/reference source lifetimes.

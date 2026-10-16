@@ -1,3 +1,0 @@
-**BLOCKER:** I can’t verify the required preservation and focused-evidence claims from the files inspected. The method clears exactly the four marker fields by value on a copied `CssPaint`, retaining its source pointer; the tests cover other property values and spans, idempotence, parent retention, and explicit child cascade. The C code performs the same four clears.
-
-However, this read-only review did not establish that all 63 original CSS entries remain byte-identical or that the three new tests pass. I did not run tests or inspect the relevant preservation evidence.

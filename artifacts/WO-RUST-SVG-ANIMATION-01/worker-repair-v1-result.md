@@ -1,5 +1,0 @@
-Fixed both reported parser defects and added regressions that assert exact diagnostic kinds, offsets, and omitted-track outcomes. Added checks for absolute `end`, additive flags, repeat accumulation, and C-matching overlay samples without adding renderer composition.
-
-All 9 integration tests passed. The locked offline check, work-order validator, ledger validation, JSON validation, and `git diff --check` also passed.
-
-Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/artifacts/WO-RUST-SVG-ANIMATION-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/artifacts/WO-RUST-SVG-ANIMATION-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation/artifacts/WO-RUST-SVG-ANIMATION-01/verification.txt). This remains an uncommitted candidate for independent recheck.

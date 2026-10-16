@@ -1,2 +1,0 @@
-2026-10-14T11:21:25.189693Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-document-model/artifacts/WO-RUST-DOCUMENT-MODEL-01/verification.txt:
-Candidate only; independent review and coordinator main checks remain.

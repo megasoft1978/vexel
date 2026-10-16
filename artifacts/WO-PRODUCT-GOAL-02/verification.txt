@@ -1,5 +1,0 @@
-WO-PRODUCT-GOAL-02 documentation verification
-
-The accepted product ADR now requires a reviewed, accessible recording of Codex creating a character and animating it through live MCP while Vexel updates. The delivery plan schedules the video after final software acceptance and requires placement on the product website plus a README link. README states the recording is planned and not yet made.
-
-No application or website was changed, no video was recorded/published, and no UI tests were run.

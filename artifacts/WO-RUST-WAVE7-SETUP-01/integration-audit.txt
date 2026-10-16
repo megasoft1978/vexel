@@ -1,1 +1,0 @@
-Accepted Rust, original legacy files, HEAD/index and registered manifests match recorded hashes. Independent setup ACCEPT; verification commands exit0.

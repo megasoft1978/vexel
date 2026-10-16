@@ -1,1 +1,0 @@
-{"verdict":"pass","findings":[],"summary":"The queue implementation and deterministic checks satisfy the reviewed acceptance criteria. The supplied command results show AC-1 through AC-4 passing; the documented revision-1 preflight block and pending STATE/LEDGER status are not review failures."}

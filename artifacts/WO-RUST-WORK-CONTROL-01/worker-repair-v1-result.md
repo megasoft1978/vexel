@@ -1,3 +1,0 @@
-Added the deterministic live-worker cancellation test and updated only the work-control test and its three artifacts. The implementation and original seven base tests are unchanged.
-
-Verification passed: 7 original tests + 7 work-control tests (14 total), work-order validation, ledger validation (1,332 entries), and `git diff --check`. The test run emitted Xcode environment warnings; it exited successfully.

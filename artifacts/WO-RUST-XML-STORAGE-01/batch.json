@@ -1,9 +1,0 @@
-{
-  "xml-storage": {
-    "wo": "WO-RUST-XML-STORAGE-01",
-    "crate": "vexel-xml",
-    "effort": "high",
-    "model": "gpt-6-luna",
-    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-xml-storage"
-  }
-}

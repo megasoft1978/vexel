@@ -1,2 +1,0 @@
-PASS exact baseline files retained; worker changes only CMakeLists.txt and 3 new allowlisted job paths. Root source baseline intact before copy; HEAD/index unchanged. Root test-map already contained job mapping; retained, not overwritten. Overlay manifest identical. Coordinator serialized CMake integration.
-Changed: ['CMakeLists.txt']

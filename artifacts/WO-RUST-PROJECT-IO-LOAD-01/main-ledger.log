@@ -1,2 +1,0 @@
-Command: python3 scripts/ledger.py validate ledger.jsonl
-Result: valid ledger; 1811 entries.

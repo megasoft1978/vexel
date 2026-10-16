@@ -1,1 +1,0 @@
-ACCEPT. Independent review found no unresolved source or contract blockers; root fresh-main checks remain required.

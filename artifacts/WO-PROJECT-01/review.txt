@@ -1,4 +1,0 @@
-Independent review: PASS
-Reviewer: codex exec, gpt-6.1-sol, read-only.
-Scope: WO-PROJECT-01 native container format, C codec, tests, and CMake target.
-The review confirmed the five prior findings were addressed: overlap with input descriptors and asset descriptor arrays is rejected; duplicate-name test repairs checksum to reach duplicate validation; oversized-length test targets the actual u64 record field; exact size-limit cases are covered; and deterministic round trip decodes then re-encodes and compares bytes. No additional severe correctness, bounds, macOS portability, or checksum findings. The review did not run builds or tests.

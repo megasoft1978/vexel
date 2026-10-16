@@ -1,1 +1,0 @@
-Resolved conflict files scanned for lines beginning with <<<<<<<, =======, or >>>>>>>. No markers found.

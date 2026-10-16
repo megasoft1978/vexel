@@ -1,4 +1,0 @@
-command: python3 scripts/wo_validate.py WO-CORPUS-01 --ready
-exit code: 0
---- last 40 output lines ---
-valid WO-CORPUS-01 revision 1 sha256 43acd9011fb3c91c6d9d2c9459e97a1b7fa421d4070e8d72c2d7f65c620fa64b

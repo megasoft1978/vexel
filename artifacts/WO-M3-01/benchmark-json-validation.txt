@@ -1,1 +1,0 @@
-PASS: python3 -m json.tool bench/results/WO-M3-01.json accepted the complete raw-trial result.

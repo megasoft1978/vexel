@@ -1,2 +1,0 @@
-valid ledger: 65 entries
-valid WO-M0-01 revision 1 sha256 83743b371658022db3a953812934d0a6ef652f56865019cc1ed9dace182107af

@@ -1,4 +1,0 @@
-command: python3 scripts/corpus_render_report.py --corpus /Users/megasoft78/Desktop/Freelance/vexel-corpus-real --output-json reports/M4/render-diagnostics.json --output-markdown reports/M4/render-diagnostics.md
-exit: 0
---- last 40 lines ---
-corpus-render-report: 58 files, 3 rendered, histogram {'limit': 13, 'ok': 3, 'skipped': 19, 'unsupported': 13, 'viewport': 2, 'xml': 8}

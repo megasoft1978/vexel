@@ -1,5 +1,0 @@
-Frozen WO-ANIM-PROJECT-27 revision 1
-Specification SHA-256: fe521d142ea5ced29593c88fda1bbe7fc29a411c1744b992fc03297966bd8414
-Base SHA-1: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-parallel_safe: false
-Source implementation has not started. Preserve the existing dirty worktree.

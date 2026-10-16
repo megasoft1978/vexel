@@ -1,7 +1,0 @@
-Independent review — WO-XML-STREAM-02
-Date: 2026-10-13
-Model: gpt-6.1-sol via read-only `codex exec`
-
-Round 1 found three medium issues: visitor `take()` accepted a missing vector; XML declaration validation ordering changed for the retained full-token API; and cancellation during visitor declaration validation could deliver a token. The implementation was corrected and regressions added for visitor take rejection and cancellation during declaration validation. Full-token emission/validation order was restored.
-
-Final independent source review: PASS. No remaining findings were returned. Review request covered the prior findings, final declaration cancellation guard and regression, bounded storage, callback ordering/spans, shared entity decoder, and shape diagnostic offsets. The reviewer ran no tests or UI automation.

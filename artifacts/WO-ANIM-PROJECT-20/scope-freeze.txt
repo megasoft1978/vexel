@@ -1,9 +1,0 @@
-WO-ANIM-PROJECT-20 r1 scope freeze
-Date: 2026-10-13
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: b86308a167d8cc043ec10906175dbeb919f239229e8a766bc2e4680348b36ef1
-Status: ready; implementation not started at freeze.
-
-Adds live drawing-asset selection and undoable Add Cel to the native timeline,
-with integer playhead placement, responsive controls, accessibility, and focused
-model/render/undo checks. Broad UI/E2E remains deferred.

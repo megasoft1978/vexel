@@ -1,9 +1,0 @@
-Repaired the hook bypass. Hooks are now pre-operation fault/observation gates: an `Ok` always proceeds to native write, sync, consuming checked close, rename, hard-link publication, unlink, and directory sync. Injected errors model control-flow failures, not native syscall failures.
-
-Added regressions confirming successful hooks produce real target contents, expected flags and modes, and temporary-file cleanup. All eight accepted native-service tests remain unchanged; r1 blocker evidence is preserved.
-
-Checks passed with rustc 1.99.0: locked offline package check; tests (19 unit: 17 atomic and 2 existing; 6 integration; 0 doc); WO revision 2 validator; ledger validation (1149 entries); `git diff --check`; artifact JSON and scoped whitespace/source-size checks.
-
-Updated evidence: [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-atomic-files/artifacts/WO-RUST-ATOMIC-FILES-01/parity-map.json), [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-atomic-files/artifacts/WO-RUST-ATOMIC-FILES-01/verification.txt), and [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-atomic-files/artifacts/WO-RUST-ATOMIC-FILES-01/result.md).
-
-The uncommitted candidate awaits narrowed independent review and main-worktree checks. Caller file grants and application/project wiring remain; the full application is not complete.

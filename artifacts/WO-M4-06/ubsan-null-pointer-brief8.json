@@ -1,9 +1,0 @@
-{
-  "mutated_expression": "out->edges + before with edge_count == 0",
-  "build_exit": 0,
-  "shape_test_exit": 0,
-  "sanitizer_report_found": false,
-  "restored_build_exit": 0,
-  "restored_shape_test_exit": 0,
-  "conclusion": "Apple Clang UBSan did not diagnose NULL + 0 in this C17 decode path; deterministic edge-span seam is tested instead."
-}

@@ -1,4 +1,0 @@
-COMMAND: python3 scripts/ledger.py validate ledger.jsonl
-EXIT_CODE: 2
---- last 40 output lines ---
-ledger error: line 549: invalid transition None -> 'run_started' for WO-GAP-HYGIENE-01

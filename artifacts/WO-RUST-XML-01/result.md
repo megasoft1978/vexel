@@ -1,7 +1,0 @@
-Implemented the XML character helpers and bounded reader within the allowed Rust crate. The C-to-Rust symbol map and scope limits are recorded in [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-xml/artifacts/WO-RUST-XML-01/parity-map.json); exact evidence is in [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-xml/artifacts/WO-RUST-XML-01/verification.txt).
-
-The public Rust API includes XML character/name/whitespace predicates, strict UTF-8 decoding, and a borrowing `XmlReader` with progress, tag spans, callback delivery, and matching reader status/diagnostic categories. Rust ownership replaces C allocation/destruction; callbacks are closures, and shared spans use exclusive-end offsets.
-
-**Checks passed:** Rust 1.99.0 offline check; 9 focused tests; work-order validator; ledger validation (1,058 entries); `git diff --check`; parity-map JSON validation.
-
-Only `rust/crates/vexel-xml/src/` and this work order’s artifacts were changed. No manifests, ledgers, legacy sources, or original tests were edited. Changes remain uncommitted. Full tokenizer, entity/numeric attribute decoding, and broader XML validation remain outside this order. Separate agent review was omitted under the no-agent-delegation instruction.

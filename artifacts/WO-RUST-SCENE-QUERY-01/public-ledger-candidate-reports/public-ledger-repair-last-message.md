@@ -1,5 +1,0 @@
-Updated the allocation layer to use the accepted `LedgerBuffer` and `ChargeLedger` APIs. Exact ledger/source identity checks replace the zero-byte probe, and replacements count their overlap against the 65,536-record limit. The tests cover both rejection at the full cap and successful replacement at the boundary, plus reserve failure, cancellation, history retention, and stale or mismatched ownership.
-
-The scoped locked offline check, all 13 integration tests, and work-order validation passed. All 22 catalog symbols are mapped in [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/artifacts/WO-RUST-SCENE-QUERY-01/parity-map.json); every source and test file remains under 800 lines.
-
-The mixed renderer allocation corpus and independent root review remain outstanding, so this is still a candidate. The shared ledger API blocker recorded in the prior result is cleared by the newly accepted preallocation and identity APIs.

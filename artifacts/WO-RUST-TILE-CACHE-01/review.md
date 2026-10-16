@@ -1,7 +1,0 @@
-**REJECT**
-
-- **Payload allocation is under-accounted.** `TileCache::put` charges `tile.byte_count()` ([lib.rs:79–84](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/rust/crates/vexel-tile-cache/src/lib.rs:79)); stats use that same live-byte total ([lib.rs:129](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/rust/crates/vexel-tile-cache/src/lib.rs:129)). But `Tile` stores pixels in a `Vec<u8>` whose reserved capacity may exceed its length; its API exposes only `byte_count()` ([vexel-raster/src/lib.rs:66](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/rust/crates/vexel-raster/src/lib.rs:66)). The work order requires accounting for actual reserved metadata **and payload**. The parity map’s claim that reserved payload is charged is therefore unsupported. Add a focused way to observe or guarantee payload allocation size, charge it in admission and stats, and cover a capacity-over-length case or prove the allocation contract.
-
-The focused tests cover replacement, LRU/tie ordering, rollover, epochs, limits, and returned tile contents. The rollover setup follows the C sequence. The get borrow is tied to the mutable cache borrow, and failed insertion returns the owned tile.
-
-**Nonblocking gap:** the metadata test compares against `Option<(u64, Tile)>`, not the actual `Option<Entry>` layout; it does not independently verify the claimed reserved-capacity accounting.

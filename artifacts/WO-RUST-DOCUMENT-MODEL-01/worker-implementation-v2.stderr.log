@@ -1,4 +1,0 @@
-2026-10-14T11:10:33.157665Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-document-model/rust/crates/vexel-document/src/tests.rs:
-    let path = first.first_child(unknown).expect("path");
-    assert!(name_is(&first, path, b"path"));
-2026-10-14T11:11:57.990584Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid patch: multiple operations target /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-document-model/artifacts/WO-RUST-DOCUMENT-MODEL-01/result.md

@@ -1,6 +1,0 @@
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
-     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_svg_paint-8019a41cc6288ab4)
-     Running tests/cache_handoff.rs (build/rust/aarch64-apple-darwin/debug/deps/cache_handoff-b1b5218787d85802)
-     Running tests/paint_parity.rs (build/rust/aarch64-apple-darwin/debug/deps/paint_parity-26e72a49490e05c6)
-     Running tests/resolver_parity.rs (build/rust/aarch64-apple-darwin/debug/deps/resolver_parity-191117fa60e7f690)
-   Doc-tests vexel_svg_paint

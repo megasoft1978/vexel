@@ -1,9 +1,0 @@
-**ACCEPT — exact full shared source**, with the documented engine and runtime gates still pending.
-
-The source matches the five shared contracts: text use has a separate cumulative 4 Mi counter restored by request and draft rollback; raster composition validates the same-job cache once and exposes checked reads alongside disjoint admitted writes; post-close path overlap is accepted only through canonical segment and source metadata checks; production mask posts carry an opaque source and scope tied target; and decode quantum reports charged work and overshoot across bounded atomic calls.
-
-The new fixture exercises the shared APIs, including reuse of one provider-produced layout, actual row and output writes, forged path metadata, stale mask targets, cancellation, and failure cleanup. The two compile-fail doctests cover buffer escape and release during a live composition. Recorded logs show 135 preserved tests, 16 new tests, two doctests, and the required offline check passing. I did not run builds or tests.
-
-The compact-number fixture contradiction remains separate and does not change this review. No parser behavior was changed.
-
-Lower engine adapters, original decoder assertion rerun after seeding, renderer/native integration, 603/157 oracle execution, and large-file measurements remain downstream gates, as recorded in the [result](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/artifacts/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/result.md) and [verification record](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/artifacts/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/verification.json).

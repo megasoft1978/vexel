@@ -1,7 +1,0 @@
-Reading additional input from stdin...
-2026-10-08T13:27:32.067826Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase
-2026-10-08T13:27:32.077622Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase_prod
-2026-10-08T13:27:33.544596Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server stripe: OAuth refresh token was rejected: Server returned error response: invalid_grant: Invalid refresh token
-2026-10-08T13:27:33.745351Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server vercel: OAuth refresh token was rejected: Server returned error response: invalid_grant: Refresh token is invalid.
-2026-10-08T13:27:33.749483Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server supabase_dev
-2026-10-08T13:27:35.905446Z ERROR codex_rmcp_client::oauth::refresh_transaction: error=failed to refresh OAuth tokens for server jam: OAuth refresh token was rejected: Server returned error response: invalid_grant: Invalid or already used refresh token

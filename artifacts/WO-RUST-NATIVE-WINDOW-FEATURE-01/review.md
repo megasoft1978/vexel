@@ -1,5 +1,0 @@
-**ACCEPT — metadata prerequisite only.** The current Apple manifest differs from `manifest.before` only by the five requested features, all on the existing exact package pins. The cached pinned manifests define those features; nothing in the reviewed feature closure adds a package or enables `dispatch2` or `objc2-io-surface`. The lock records 16 active packages and 18 total lock records, and keeps the target at Apple Silicon macOS 13+.
-
-The preserved source uses `NSVisualEffectView` and gates material visibility to macOS 26+, and defines owned 24 px diagonal and rotate cursors with image, path, and graphics-context APIs. ADR0027 preserves that behavior and does not select `NSGlassEffectView`. ADR0026’s license, ABI, and boundary constraints remain in scope; I found no new unsupported-OS source or licensing/ABI regression.
-
-This accepts only the metadata prerequisite. It does not claim native runtime behavior is complete or verified. No files were changed, and I ran no build or tests.

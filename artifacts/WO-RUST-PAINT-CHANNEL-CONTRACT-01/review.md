@@ -1,9 +1,0 @@
-**ACCEPT — scoped source candidate only.**
-
-Revision 3 respects the owner/definition distinction: the owner’s element is the lexical planning anchor, while dispatch independently validates the resolved definition. The shared validator retains source, context, owner, draft, target, style, transform, bounds, descriptor, mapping, and post checks. Pattern descriptors are bound to the requested definition, and mappings to the owning shape. The combined nonpaint helper rejects pattern routing without a channel.
-
-The tests cover both planner routes with a distinct path owner and pattern definition through real `PatternId` publication; pre-provider rejection and unchanged scene/accounting on failure; the eight fill/stroke opacity and default cases; and pattern plus typed group-filter planning through one combined trait object. The frozen mask case is consistent with the corrected owner semantics. Revision 3 records 156 passing tests and successful named offline checks; I did not rerun them. The reviewed edited source and test files are under 800 lines.
-
-This accepts only the source contract. Later gates remain decoder adoption of explicit Fill/Stroke routing, definitions adapters that resolve the selected opacity including its initial value, engine-backed rendering and publication, and native/runtime integration.
-
-Evidence: [production_decode.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene/src/production_decode.rs), [paint_channel_contracts.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene/tests/paint_channel_contracts.rs), and [revision 3 verification](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/artifacts/WO-RUST-PAINT-CHANNEL-CONTRACT-01/revision3/verification.json).

@@ -1,9 +1,0 @@
-{
-  "path-geometry": {
-    "wo": "WO-RUST-SVG-PATH-GEOMETRY-01",
-    "crate": "vexel-svg-path",
-    "effort": "medium",
-    "model": "gpt-6-luna",
-    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-path-geometry"
-  }
-}

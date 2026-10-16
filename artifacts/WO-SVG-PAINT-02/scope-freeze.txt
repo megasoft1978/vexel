@@ -1,5 +1,0 @@
-WO-SVG-PAINT-02 revision 1 scope freeze
-Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Spec SHA-256: f5f29c15bd57e11e3fb48d5a7a8be2583335ffb08a74042efc28fb72d4d34297
-Allowlist and protected paths are frozen in work/WO-SVG-PAINT-02.md.
-Scope: per-shape antialias coverage compositing, an overlapping-gradient-stroke regression, and focused native/Inkscape comparison. Broad UI/E2E, corpus, fuzz, performance, and release suites are excluded.

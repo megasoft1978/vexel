@@ -1,5 +1,0 @@
-The four public APIs now accept `impl AsRef<OsStr>` and validate, split, and bound paths as raw bytes. Existing `&str` callers remain supported. The exact 1023-byte input/output and NUL boundary tests pass, and the original 10 tests are preserved.
-
-The full test command is **blocked**: 11 of 12 tests pass, but this runner returns `EPERM` when creating the required real non-UTF-8 fixture under `.cache/access-*`. A direct Python filesystem probe reproduced the denial. I left the test explicit rather than skipping or mocking it, so this candidate is not complete until that fixture can run.
-
-`cargo check`, work-order validation, ledger validation, and `git diff --check` pass. The failure and raw-path adaptation are recorded in [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/verification.txt), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/parity-map.json), and [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/result.md).

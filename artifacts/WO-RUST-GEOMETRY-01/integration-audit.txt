@@ -1,3 +1,0 @@
-PASS exact baseline originals retained, changes/newfiles only scoped Rust src/tests; root versions baseline beforecopy, shared manifests/legacy fixtures untouched. HEAD/index preserved. Independent scoped reviewer accepts; original parity map JSON valid; Rust files<800.
-Changed: ['rust/crates/vexel-geometry/src/lib.rs']
-New: []

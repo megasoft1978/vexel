@@ -1,1 +1,0 @@
-Root explicitly authorizes additive CDATA style-body extraction for source-preserving Inkscape SVG compatibility. C reference sheet creator consumes TEXT only. Record difference and regression as Rust supported-feature extension, do not mislabel unchanged C parity or normalize source. No source changes to protected C.

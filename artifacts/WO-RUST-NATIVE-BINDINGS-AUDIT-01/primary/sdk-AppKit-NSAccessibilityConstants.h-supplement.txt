@@ -1,9 +1,0 @@
-599: 
-600: /* Below are keys used for the user info dictionary of the NSAccessibilityPostNotificationWithUserInfo API */
-601: typedef NSString * NSAccessibilityNotificationUserInfoKey NS_TYPED_ENUM;
-602: /* Key used in the user info dictionary for notifications.  The value is an array of elements that is associated with the notification.  For example, a NSAccessibilityLayoutChangedNotification should include an array of elements that have been added/changed using this key.
-
-616:  */
-617: APPKIT_EXTERN void NSAccessibilityPostNotificationWithUserInfo(id element, NSAccessibilityNotificationName notification, NSDictionary<NSAccessibilityNotificationUserInfoKey, id> * _Nullable userInfo) API_AVAILABLE(macos(10.7));
-618: 
-619: 

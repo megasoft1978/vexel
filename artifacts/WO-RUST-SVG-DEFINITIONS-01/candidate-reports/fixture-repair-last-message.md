@@ -1,7 +1,0 @@
-Implemented the frozen 79-symbol scope as a candidate, including typed plans for all five definition kinds, clip scene operations, filter parsing, marker helpers, and owned pattern mapping. Added real-source and scene proofs. All files remain under 800 lines.
-
-Scoped locked offline verification passed: `cargo +stable check`, `cargo +stable test` (21 unit and 5 integration tests), and `wo_validate.py --ready`. The reports cover all 79 symbols and 10 original suites. Hash audits found no changes to the frozen inputs or 26 seeded protected paths.
-
-The candidate remains **incomplete and unaccepted**. The current shared pattern descriptor lacks tile origin and pattern inverse fields; the owned `PatternMapping` preserves them for the coordinator’s paint adapter. Full original renderer/oracle runs and independent review remain required.
-
-Reports: [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/parity-map.json), [coverage.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/coverage.json), and [verification.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/verification.json).

@@ -1,1 +1,0 @@
-Accepted Rust/original legacy/index/HEAD/registered-manifests hashes preserved; setup independent recheck ACCEPT, named verification exit0.

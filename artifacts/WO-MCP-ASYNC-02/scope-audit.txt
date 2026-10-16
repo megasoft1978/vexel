@@ -1,9 +1,0 @@
-Scope audit: 2026-10-13
-
-Revision 1 permits changes to src/mcp/mcp_broker_render.c but that file is
-already 735 lines. The required independent immutable-snapshot export worker,
-frame cancellation/progress, and atomic GIF finalization cannot be added there
-without violating the repository's 800-line source limit. The task store and
-its focused lifecycle test are implemented and pass, but the product workflow
-is not implemented. Preserve this tested slice and move integration to a new
-order that permits a dedicated src/mcp/mcp_broker_async_export.c/.h module.

@@ -1,5 +1,0 @@
-2026-10-14 owner-thread integration preflight
-Current mcp_broker_hook.c has8clients, borrowed per-client protocol state, no outbound queue, no connection owner IDs. send_all polls2000ms on EAGAIN; service_client loops until all input consumed.
-Existing Cancel semantic node is in viewer_chrome_editor.c:623; no editor action for EDITOR_BUTTON_STATUS_CANCEL found in app command handlers. Correct path to allow is viewer_editor_actions.c, not only viewer_editor.c.
-Current mcp_broker_render.c write_new_granted_file uses openat(O_CREAT|O_EXCL), write_all, fsync on final target. This is no-replace but not atomic visibility publication. Existing platform_atomic_file_create_new writes/fsyncs temporary then atomic no-replace publishes; use it in following integration/fix order.
-Root goal tracker nowactive. Current pair uses disjoint owned-job vs protocol paths; parent will merge registrations serially.

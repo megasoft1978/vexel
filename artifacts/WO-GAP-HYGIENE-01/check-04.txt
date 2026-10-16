@@ -1,4 +1,0 @@
-COMMAND: git worktree prune
-EXIT_CODE: 0
---- last 40 output lines ---
-

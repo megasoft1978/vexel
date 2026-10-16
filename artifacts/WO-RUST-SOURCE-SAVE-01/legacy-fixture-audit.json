@@ -1,8 +1,0 @@
-{
-  "file": "tests/document/test_source_save.c",
-  "worker_sha256": "0f32aa5b026962b38df47be97ceb367506292a5d4f14aa16115092dd2497c7a8",
-  "overlay_baseline_sha256": "0f32aa5b026962b38df47be97ceb367506292a5d4f14aa16115092dd2497c7a8",
-  "main_sha256": "0f32aa5b026962b38df47be97ceb367506292a5d4f14aa16115092dd2497c7a8",
-  "legacy_original_sha256": "0f32aa5b026962b38df47be97ceb367506292a5d4f14aa16115092dd2497c7a8",
-  "unchanged": true
-}

@@ -1,3 +1,0 @@
-Command: ./build/mac-asan/bin/svgworkbench --native-platform-smoke --cycles 100 --open native-smoke --resize 640 480 --key down a --key up a --pointer move 12 18 --pointer down 12 18 --pointer up 12 18 --quit
-native smoke events: open resize scale key pointer close
-completed cycles: 100

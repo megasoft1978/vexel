@@ -1,4 +1,0 @@
-Independent read-only review: PASS
-Model/CLI: gpt-6.1-sol / Codex CLI 0.162.1
-Scope: Complete WO-PROJECT-02 integration, after two reported findings were repaired.
-Reviewer confirmed source_owner transfers and clearing in the edit-render handoff, edited scene materialization, saved checkpoint after successful publication, dirty state after pre-publication failure, routing, project payload ownership, atomic create/replace, and work-order scope. No tests run or files modified by reviewer.

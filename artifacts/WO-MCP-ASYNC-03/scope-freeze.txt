@@ -1,8 +1,0 @@
-Work order: WO-MCP-ASYNC-03 revision 1
-Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
-Frozen spec SHA-256: 9a38e129242fccf4f232f0eaaeae2911eb8f84635d3fc42589dffd43d9f04253
-Scope: bounded asynchronous native .vexel GIF export task with visible progress,
-cooperative protocol/UI cancellation, MCP Tasks and legacy progress support.
-Preserve the tested task-store implementation carried forward from WO-MCP-ASYNC-02.
-The immutable snapshot/render/publish pipeline lives in dedicated
-mcp_broker_async_export.c/.h modules so mcp_broker_render.c stays under 800 lines.
