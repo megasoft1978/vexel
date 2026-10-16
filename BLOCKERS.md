@@ -7,6 +7,17 @@ Last full gate: `./dev final` passed on 2026-10-12 at `bcdc3fa` (log
 `.cache/final-gate-2026-10-12.log`; summary in `STATE.md`). Six work orders
 failed independent review and are `blocked` in the ledger; see defect 4.
 
+## Rust port blockers (2026-10-16)
+
+- `vexel-svg-decode` is a stub; WO-RUST-SVG-DECODE-01 shows `running` with no live
+  process (candidate: `.cache/WO-RUST-SVG-DECODE-01/current-continuation-11/`).
+- No renderer crate; the C `src/raster/shape_render*` code is unported.
+- `vexel-app` cannot open SVG, save/reopen `.vexel`, play animation or export GIF.
+- WO-RUST-MCP-LIVE-ANIMATION-01 has candidates in `.cache/` and no ledger entry.
+- Native golden backing-scale defect (3 below) applies to the Rust renderer too.
+- Defect 4 (six failed C orders) and WO-CORPUS-01/02 are now `superseded` by
+  directive 4; they are kept only as history.
+
 ## Open defects
 
 ### 1. `generated/cad_t2` is refused by the element budget, with a further hidden limit

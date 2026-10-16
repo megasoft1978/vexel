@@ -28,7 +28,13 @@ capabilities on the product website and here. Recording and publication come
 after feature work and final UI/end-to-end and release acceptance; the showcase
 has not yet been recorded or published.
 
-## Usage
+## Rust port
+
+The active implementation is the Rust workspace in `rust/` (see `HANDOFF.md`). The preview
+app runs with `cargo run -p vexel-app`; it currently supports a basic-shape MCP live
+preview only. The C code below is the legacy reference and will be removed after parity.
+
+## Usage (legacy C build)
 
 ```sh
 ./build/mac-release/bin/svgworkbench file.svg
