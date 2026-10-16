@@ -95,14 +95,18 @@ fn validate(frames: &[Frame<'_>], fps: u32) -> Result<u16, GifError> {
         }
     }
     let expected = u64::from(first.width) * u64::from(first.height) * 4;
-    if frames.iter().any(|frame| frame.rgba.len() as u64 != expected) {
+    if frames
+        .iter()
+        .any(|frame| frame.rgba.len() as u64 != expected)
+    {
         return Err(GifError::InvalidPixelData);
     }
     Ok(default_delay)
 }
 
 fn reserve(out: &mut Vec<u8>, additional: usize) -> Result<(), GifError> {
-    out.try_reserve(additional).map_err(|_| GifError::OutOfMemory)
+    out.try_reserve(additional)
+        .map_err(|_| GifError::OutOfMemory)
 }
 
 /// Encodes `frames` as a looping GIF89a at `fps`.

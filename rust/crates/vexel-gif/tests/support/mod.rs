@@ -207,7 +207,13 @@ pub fn decode(b: &[u8]) -> Result<Decoded, String> {
             other => return Err(format!("unknown block 0x{other:02x}")),
         }
     }
-    Ok(Decoded { width, height, palette, loop_count, frames })
+    Ok(Decoded {
+        width,
+        height,
+        palette,
+        loop_count,
+        frames,
+    })
 }
 
 /// Deterministic xorshift for test data.
@@ -226,7 +232,12 @@ pub fn n_colors(w: u32, h: u32, colors: u32) -> Vec<u8> {
     let mut v = Vec::new();
     for i in 0..w * h {
         let c = i % colors;
-        v.extend_from_slice(&[(c & 255) as u8, (c >> 8) as u8 + 1, (c * 7 % 251) as u8, 255]);
+        v.extend_from_slice(&[
+            (c & 255) as u8,
+            (c >> 8) as u8 + 1,
+            (c * 7 % 251) as u8,
+            255,
+        ]);
     }
     v
 }

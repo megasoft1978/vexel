@@ -4,7 +4,12 @@ use support::*;
 use vexel_gif::{Frame, MAX_QUANT_ERROR, encode, palette_is_exact};
 
 fn one(rgba: &[u8], w: u32, h: u32) -> Vec<u8> {
-    let f = [Frame { width: w, height: h, rgba, delay_cs: None }];
+    let f = [Frame {
+        width: w,
+        height: h,
+        rgba,
+        delay_cs: None,
+    }];
     encode(&f, 10).unwrap()
 }
 
@@ -27,12 +32,22 @@ fn one_by_one_and_single_colour() {
 fn palette_boundaries_255_256_are_exact_and_257_is_quantized() {
     for colors in [1u32, 2, 3, 4, 5, 16, 17, 254, 255, 256] {
         let px = n_colors(40, 40, colors);
-        let f = [Frame { width: 40, height: 40, rgba: &px, delay_cs: None }];
+        let f = [Frame {
+            width: 40,
+            height: 40,
+            rgba: &px,
+            delay_cs: None,
+        }];
         assert!(palette_is_exact(&f), "{colors} colours");
         assert_exact(&px, 40, 40);
     }
     let px = n_colors(40, 40, 257);
-    let f = [Frame { width: 40, height: 40, rgba: &px, delay_cs: None }];
+    let f = [Frame {
+        width: 40,
+        height: 40,
+        rgba: &px,
+        delay_cs: None,
+    }];
     assert!(!palette_is_exact(&f), "257 colours must quantize");
     assert_within_tolerance(&px, 40, 40);
 }
@@ -42,13 +57,23 @@ fn transparent_slot_counts_against_capacity() {
     // 255 opaque colours + the transparent slot = 256 slots: exact.
     let mut px = n_colors(40, 40, 255);
     px[1599 * 4..1599 * 4 + 4].copy_from_slice(&[0, 0, 0, 0]);
-    let f = [Frame { width: 40, height: 40, rgba: &px, delay_cs: None }];
+    let f = [Frame {
+        width: 40,
+        height: 40,
+        rgba: &px,
+        delay_cs: None,
+    }];
     assert!(palette_is_exact(&f));
     assert_exact(&px, 40, 40);
     // 256 opaque colours + transparent = 257 slots: quantized, transparency kept.
     let mut px = n_colors(40, 40, 256);
     px[1599 * 4..1599 * 4 + 4].copy_from_slice(&[0, 0, 0, 0]);
-    let f = [Frame { width: 40, height: 40, rgba: &px, delay_cs: None }];
+    let f = [Frame {
+        width: 40,
+        height: 40,
+        rgba: &px,
+        delay_cs: None,
+    }];
     assert!(!palette_is_exact(&f));
     let d = decode(&one(&px, 40, 40)).unwrap();
     assert_eq!(&d.rgba(0)[1599 * 4..1599 * 4 + 4], &[0, 0, 0, 0]);
@@ -84,7 +109,10 @@ fn assert_within_tolerance(px: &[u8], w: u32, h: u32) {
             worst = worst.max(a[c].abs_diff(b[c]));
         }
     }
-    assert!(worst <= MAX_QUANT_ERROR, "max per-channel error {worst} > {MAX_QUANT_ERROR}");
+    assert!(
+        worst <= MAX_QUANT_ERROR,
+        "max per-channel error {worst} > {MAX_QUANT_ERROR}"
+    );
 }
 
 #[test]
@@ -101,7 +129,12 @@ fn error_bound_is_tight_for_every_channel_value() {
         px.extend_from_slice(&[v, v, v, 255]);
     }
     let w = (px.len() / 4) as u32;
-    let f = [Frame { width: w, height: 1, rgba: &px, delay_cs: None }];
+    let f = [Frame {
+        width: w,
+        height: 1,
+        rgba: &px,
+        delay_cs: None,
+    }];
     assert!(!palette_is_exact(&f));
     let d = decode(&encode(&f, 10).unwrap()).unwrap();
     let mut worst = 0;
@@ -110,7 +143,10 @@ fn error_bound_is_tight_for_every_channel_value() {
             worst = worst.max(a[c].abs_diff(b[c]));
         }
     }
-    assert!(worst <= MAX_QUANT_ERROR && worst >= MAX_QUANT_ERROR - 2, "worst {worst}");
+    assert!(
+        worst <= MAX_QUANT_ERROR && worst >= MAX_QUANT_ERROR - 2,
+        "worst {worst}"
+    );
 }
 
 #[test]
@@ -118,10 +154,23 @@ fn multi_frame_round_trip_shares_one_palette() {
     let a = n_colors(30, 20, 100);
     let b: Vec<u8> = a.iter().rev().copied().collect::<Vec<_>>();
     // `rev` swaps channels; rebuild as a valid RGBA frame from the same colour set.
-    let b: Vec<u8> = b.chunks_exact(4).flat_map(|p| [p[3], p[2], p[1], p[0]]).collect();
+    let b: Vec<u8> = b
+        .chunks_exact(4)
+        .flat_map(|p| [p[3], p[2], p[1], p[0]])
+        .collect();
     let frames = [
-        Frame { width: 30, height: 20, rgba: &a, delay_cs: None },
-        Frame { width: 30, height: 20, rgba: &b, delay_cs: None },
+        Frame {
+            width: 30,
+            height: 20,
+            rgba: &a,
+            delay_cs: None,
+        },
+        Frame {
+            width: 30,
+            height: 20,
+            rgba: &b,
+            delay_cs: None,
+        },
     ];
     let d = decode(&encode(&frames, 12).unwrap()).unwrap();
     assert_eq!(d.rgba(0), a);

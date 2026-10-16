@@ -72,7 +72,12 @@ impl Palette {
             colors.push([0, 0, 0]);
             (colors.len() - 1) as u8
         });
-        Self { colors, transparent, exact: true, lookup }
+        Self {
+            colors,
+            transparent,
+            exact: true,
+            lookup,
+        }
     }
 
     fn uniform(has_transparent: bool) -> Self {
@@ -92,7 +97,12 @@ impl Palette {
             colors.push([0, 0, 0]);
             (colors.len() - 1) as u8
         });
-        Self { colors, transparent, exact: false, lookup: HashMap::new() }
+        Self {
+            colors,
+            transparent,
+            exact: false,
+            lookup: HashMap::new(),
+        }
     }
 
     pub(crate) fn is_exact(&self) -> bool {

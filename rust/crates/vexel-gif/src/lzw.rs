@@ -57,7 +57,12 @@ pub(crate) fn encode(indices: &[u8], min_code_size: u8, out: &mut Vec<u8>) {
     let clear = 1u32 << min_code_size;
     let end = clear + 1;
     out.push(min_code_size);
-    let mut sink = BitSink { out, block: Vec::with_capacity(255), acc: 0, bits: 0 };
+    let mut sink = BitSink {
+        out,
+        block: Vec::with_capacity(255),
+        acc: 0,
+        bits: 0,
+    };
     let mut width = u32::from(min_code_size) + 1;
     let mut next = end + 1;
     let mut dict: HashMap<u32, u16> = HashMap::new();
