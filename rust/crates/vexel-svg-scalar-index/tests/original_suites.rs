@@ -136,7 +136,7 @@ fn original_reference_same_length_padding_token_growth_fixed_index_and_source_id
 #[test]
 fn original_large_fixture_read_limit_dimensions_and_packed_byte_predicates() {
     let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../tests/realworld/fixtures/maps/map-mosaic-2000.svg");
+        .join("../../fixtures/realworld/maps/map-mosaic-2000.svg");
     let bytes = std::fs::read(fixture).unwrap();
     assert!(!bytes.is_empty());
     assert!(bytes.len() <= 1024 * 1024);
@@ -267,7 +267,7 @@ fn original_benchmark_percentile_and_workload_input_predicates() {
     values.sort_unstable();
     let at = (0.95 * values.len() as f64).ceil() as usize - 1;
     assert_eq!(values[at], 20);
-    let original = include_str!("../../../../tests/bench_raster_culling.py");
+    let original = include_str!("../../../fixtures/legacy/bench_raster_culling.py");
     for name in [
         "circle_640x400",
         "many_shapes_1920x1080",

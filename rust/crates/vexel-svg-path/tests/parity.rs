@@ -47,5 +47,5 @@ fn all_entry_points_match_frozen_pre_rewrite_bitwise_evidence() {
         let mut control = BudgetControl::new(&cancel, u64::MAX);
         assert_eq!(support::fingerprint(original(parse_path_controlled(&case.source, case.span, case.transform, case.options, &mut control))), expected, "{} controlled adapter", case.name);
     }
-    assert_eq!(text, include_str!("../../../../artifacts/WO-RUST-SVG-PATH-CONTROL-01/baseline-golden.txt"));
+    assert_eq!(text, include_str!("../../../fixtures/legacy/path/baseline-golden.txt"));
 }

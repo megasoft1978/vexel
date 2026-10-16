@@ -114,38 +114,38 @@ fn owned_track_limit_error_keeps_source_count_and_evaluation_parity() {
 }
 fn fixture(name: &str) -> String {
     match name {
-        "color-cycle.svg" => include_str!("../../../../tests/anim/fixtures/color-cycle.svg").into(),
+        "color-cycle.svg" => include_str!("../../../fixtures/anim/color-cycle.svg").into(),
         "discrete-opacity.svg" => {
-            include_str!("../../../../tests/anim/fixtures/discrete-opacity.svg").into()
+            include_str!("../../../fixtures/anim/discrete-opacity.svg").into()
         }
         "group-translate.svg" => {
-            include_str!("../../../../tests/anim/fixtures/group-translate.svg").into()
+            include_str!("../../../fixtures/anim/group-translate.svg").into()
         }
         "loader-opacity.svg" => {
-            include_str!("../../../../tests/anim/fixtures/loader-opacity.svg").into()
+            include_str!("../../../fixtures/anim/loader-opacity.svg").into()
         }
         "morph-compatible.svg" => {
-            include_str!("../../../../tests/anim/fixtures/morph-compatible.svg").into()
+            include_str!("../../../fixtures/anim/morph-compatible.svg").into()
         }
-        "motion-line.svg" => include_str!("../../../../tests/anim/fixtures/motion-line.svg").into(),
+        "motion-line.svg" => include_str!("../../../fixtures/anim/motion-line.svg").into(),
         "motion-mpath.svg" => {
-            include_str!("../../../../tests/anim/fixtures/motion-mpath.svg").into()
+            include_str!("../../../fixtures/anim/motion-mpath.svg").into()
         }
         "pulse-radius.svg" => {
-            include_str!("../../../../tests/anim/fixtures/pulse-radius.svg").into()
+            include_str!("../../../fixtures/anim/pulse-radius.svg").into()
         }
-        "repeat-wave.svg" => include_str!("../../../../tests/anim/fixtures/repeat-wave.svg").into(),
-        "set-fill.svg" => include_str!("../../../../tests/anim/fixtures/set-fill.svg").into(),
-        "slide-x.svg" => include_str!("../../../../tests/anim/fixtures/slide-x.svg").into(),
+        "repeat-wave.svg" => include_str!("../../../fixtures/anim/repeat-wave.svg").into(),
+        "set-fill.svg" => include_str!("../../../fixtures/anim/set-fill.svg").into(),
+        "slide-x.svg" => include_str!("../../../fixtures/anim/slide-x.svg").into(),
         "spinner-rotation.svg" => {
-            include_str!("../../../../tests/anim/fixtures/spinner-rotation.svg").into()
+            include_str!("../../../fixtures/anim/spinner-rotation.svg").into()
         }
         "spline-opacity.svg" => {
-            include_str!("../../../../tests/anim/fixtures/spline-opacity.svg").into()
+            include_str!("../../../fixtures/anim/spline-opacity.svg").into()
         }
-        "stroke-dash.svg" => include_str!("../../../../tests/anim/fixtures/stroke-dash.svg").into(),
+        "stroke-dash.svg" => include_str!("../../../fixtures/anim/stroke-dash.svg").into(),
         "unsupported-click.svg" => {
-            include_str!("../../../../tests/anim/fixtures/unsupported-click.svg").into()
+            include_str!("../../../fixtures/anim/unsupported-click.svg").into()
         }
         _ => panic!("fixture"),
     }

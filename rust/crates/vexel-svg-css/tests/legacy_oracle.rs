@@ -1,6 +1,6 @@
 //! Independent parity against the exact current-source baseline saved before editing.
 #[allow(dead_code)]
-#[path = "../../../../artifacts/WO-RUST-SVG-CSS-CONTROL-01/baseline/lib.rs"]
+#[path = "../../../fixtures/legacy/css-baseline/lib.rs"]
 mod original;
 
 use std::sync::atomic::AtomicBool;

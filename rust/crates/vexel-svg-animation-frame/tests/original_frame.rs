@@ -264,7 +264,7 @@ fn original_unsupported_timing_css_and_timeline_limit_keep_diagnostics() {
 #[test]
 fn original_fifteen_authored_fixtures_keep_their_source_token_animation_inputs() {
     let fixtures =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../tests/anim/fixtures");
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/anim");
     let mut paths: Vec<_> = std::fs::read_dir(fixtures)
         .unwrap()
         .map(|entry| entry.unwrap().path())
