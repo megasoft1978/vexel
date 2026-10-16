@@ -1,0 +1,399 @@
+[
+  {
+    "id": "W1986133185",
+    "doi": "10.1145/2461912.2462015",
+    "title": "A 4",
+    "year": 2013,
+    "url": "https://doi.org/10.1145/2461912.2462015",
+    "abstract": "Edge aliasing continues to be one of the most prominent problems in real-time graphics, e.g., in games. We present a novel algorithm that uses shared memory between the GPU and the CPU so that these two units can work in concert to solve the edge aliasing problem rapidly. Our system renders the scene as usual on the GPU with one sample per pixel. At the same time, our novel edge aliasing algorithm is executed asynchronously on the CPU. First, a sparse set of important pixels is created. This set may include pixels with geometric silhouette edges, discontinuities in the frame buffer, and pixels/polygons under user-guided artistic control. After that, the CPU runs our sparse rasterizer and fragment shader, which is parallel and SIMD:ified, and directly accesses shared resources (e.g., render targets created by the GPU). Our system can render a scene with shadow mapping with adaptive anti-aliasing with 16 samples per important pixel faster than the GPU with 8 samples per pixel using multi-sampling anti-aliasing. Since our system consists of an extensive code base, it will be released to the public for exploration and usage.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W2511808302",
+    "doi": "10.5555/2977336.2977339",
+    "title": "SVGPU: real time 3D rendering to vector graphics formats",
+    "year": 2016,
+    "url": "https://www.highperformancegraphics.org/wp-content/uploads/2015/PosterAbstracts/svgpu-3d-rendering-to-vector-graphics.pdf",
+    "abstract": "We focus on the real-time realistic rendering of a 3-D scene to a 2-D vector image. There are several application domains which could benefit substantially from the compact and resolution independent intermediate format that vector graphics provides. In particular, cloud streaming services, which transmit large amounts of video data and notoriously suffer from low resolution and/or high latency. In addition, display resolutions are growing rapidly, exacerbating the issue. Raster images for large displays prove a significant bottleneck when being transported over communication networks. However the alternative of sending a full 3D scene worth of geometry is even more prohibitive. We implement a real time rendering pipeline that utilizes analytic visibility algorithms on the GPU to output a vector graphics representation of a 3D scene. Our system SVGPU (Scalable Vector on the GPU) is fast and efficient on modern hardware, and simple in design. As such we are making a much needed step towards enabling the benefits of vector graphics representations to be reaped by the real time community.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W3114696367",
+    "doi": null,
+    "title": "Aggregate G-Buffer Anti-Aliasing",
+    "year": 2015,
+    "url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.678.4116",
+    "abstract": "Figure 1: Large image rendered with Agregate G-Buffer Anti-Aliasing (AGAA). The AGAA results (red outlines) shade only twice per pixel, give comparable results to the MSAA reference image shaded eight times per pixel, and use 33 % less memory. AGAA reduces aliasing by prefiltering the scene\u2019s sub-pixel geometric detail (foliage, thin railings, etc.) into an aggregate G-buffer that models the distribution of geometry projecting into each pixel. We present Aggregate G-Buffer Anti-Aliasing (AGAA), a new technique for efficient anti-aliased deferred rendering of complex geometry using modern graphics hardware. In geometrically com-plex situations, where many surfaces intersect a pixel, current ren-dering systems shade each contributing surface at least once per pixel. As the sample density and geometric complexity increase, the shading cost becomes prohibitive for real-time rendering. Under deferred shading, so does the required framebuffer memory. AGAA uses the rasterization pipeline to generate a compact, pre-filtered geometric representation inside each pixel. We then shade this at a fixed rate, independent of geometric complexity. By decoupling shading rate from geometric sampling rate, the algorithm reduces the storage and bandwidth costs of a geometry buffer, and allows scaling to high visibility sampling rates for anti-aliasing. AGAA with 2 aggregate surfaces per-pixel generates results comparable to 8x MSAA, but requires 30 % less memory (45 % savings for 16x MSAA), and is up to 1.3x faster.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W4394951804",
+    "doi": "10.31857/s0132347423030044",
+    "title": "SUPPORTING VECTOR TEXTURES IN A GPU PHOTOREALISTIC RENDERING SYSTEM",
+    "year": 2023,
+    "url": "http://dx.doi.org/10.31857/s0132347423030044",
+    "abstract": "Images in vector format are presented as a sequence of analytical descriptions of geometric objects. This approach allows for reproduction of the image in any resolution without loss of quality. Currently, there are no ready-made solutions for using vector images in GPU photorealistic rendering systems. This paper presents an approach to enabling such support using signed distance fields and rasterization as base methods. Analysis of the results shows the effectiveness of the approach based on distance fields for various vector images. However, in some cases, artifacts may appear, in which case it is proposed to use a rasterization-based approach.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W1997146690",
+    "doi": "10.1145/1409060.1409088",
+    "title": "Random-access rendering of general vector graphics",
+    "year": 2008,
+    "url": "https://doi.org/10.1145/1409060.1409088",
+    "abstract": "We introduce a novel representation for random-access rendering of antialiased vector graphics on the GPU, along with efficient encoding and rendering algorithms. The representation supports a broad class of vector primitives, including multiple layers of semitransparent filled and stroked shapes, with quadratic outlines and color gradients. Our approach is to create a coarse lattice in which each cell contains a variable-length encoding of the graphics primitives it overlaps. These cell-specialized encodings are interpreted at runtime within a pixel shader. Advantages include localized memory access and the ability to map vector graphics onto arbitrary surfaces, or under arbitrary deformations. Most importantly, we perform both prefiltering and supersampling within a single pixel shader invocation, achieving inter-primitive antialiasing at no added memory bandwidth cost. We present an efficient encoding algorithm, and demonstrate high-quality real-time rendering of complex, real-world examples.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W2553243490",
+    "doi": "10.1145/2980179.2982434",
+    "title": "Efficient GPU path rendering using scanline rasterization",
+    "year": 2016,
+    "url": "https://doi.org/10.1145/2980179.2982434",
+    "abstract": "We introduce a novel GPU path rendering method based on scan-line rasterization, which is highly work-efficient but traditionally considered as GPU hostile. Our method is parallelized over boundary fragments , i.e., pixels directly intersecting the path boundary. Non-boundary pixels are processed in bulk as horizontal spans like in CPU scanline rasterizers, which saves a significant amount of winding number computation workload. The distinction also allows the majority of our algorithmic steps to focus on boundary fragments only, which leads to highly balanced workload among the GPU threads. In addition, we develop a ray shooting pattern that minimizes the global data dependency when computing winding numbers at anti-aliasing samples. This allows us to shift the majority of winding-number-related workload to the same kernel that consumes its result, which saves a significant amount of GPU memory bandwidth. Experiments show that our method gives a consistent 2.5X speedup over state-of-the-art alternatives for high-quality rendering at Ultra HD resolution, which can increase to more than 30X in extreme cases. We can also get a consistent 10X speedup on animated input.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W2083206766",
+    "doi": "10.1145/2699276.2699285",
+    "title": "Aggregate G-buffer anti-aliasing",
+    "year": 2015,
+    "url": "https://doi.org/10.1145/2699276.2699285",
+    "abstract": "We present Aggregate G-Buffer Anti-Aliasing (AGAA), a new technique for efficient anti-aliased deferred rendering of complex geometry using modern graphics hardware. In geometrically complex situations, where many surfaces intersect a pixel, current rendering systems shade each contributing surface at least once per pixel. As the sample density and geometric complexity increase, the shading cost becomes prohibitive for real-time rendering. Under deferred shading, so does the required framebuffer memory. AGAA uses the rasterization pipeline to generate a compact, pre-filtered geometric representation inside each pixel. We then shade this at a fixed rate, independent of geometric complexity. By decoupling shading rate from geometric sampling rate, the algorithm reduces the storage and bandwidth costs of a geometry buffer, and allows scaling to high visibility sampling rates for anti-aliasing. AGAA with 2 aggregate surfaces per-pixel generates results comparable to 8x MSAA, but requires 30% less memory (45% savings for 16x MSAA), and is up to 1.3x faster.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W2075315695",
+    "doi": "10.1145/2661229.2661274",
+    "title": "Massively-parallel vector graphics",
+    "year": 2014,
+    "url": "https://doi.org/10.1145/2661229.2661274",
+    "abstract": "We present a massively parallel vector graphics rendering pipeline that is divided into two components. The preprocessing component builds a novel adaptive acceleration data structure, the shortcut tree . Tree construction is efficient and parallel at the segment level, enabling dynamic vector graphics. The tree allows efficient random access to the color of individual samples, so the graphics can be warped for special effects. The rendering component processes all samples and pixels in parallel. It was optimized for wide antialiasing filters and a large number of samples per pixel to generate sharp, noise-free images. Our sample scheduler allows pixels with overlapping antialiasing filters to share samples. It groups together samples that can be computed with the same vector operations using little memory or bandwidth. The pipeline is feature-rich, supporting multiple layers of filled paths, each defined by curved outlines (with linear, rational quadratic, and integral cubic B\u00e9zier segments), clipped against other paths, and painted with semi-transparent colors, gradients, or textures. We demonstrate renderings of complex vector graphics in state-of-the-art quality and performance. Finally, we provide full source-code for our implementation as well as the input data used in the paper.",
+    "retrieved_by": [
+      "vector-semantic"
+    ]
+  },
+  {
+    "id": "W3214279542",
+    "doi": null,
+    "title": "Recognizing Vector Graphics without Rasterization.",
+    "year": 2021,
+    "url": "https://arxiv.org/pdf/2111.03281.pdf",
+    "abstract": "In this paper, we consider a different data format for images: vector graphics. In contrast to raster graphics which are widely used in image recognition, vector graphics can be scaled up or down into any resolution without aliasing or information loss, due to the analytic representation of the primitives in the document. Furthermore, vector graphics are able to give extra structural information on how low-level elements group together to form high level shapes or structures. These merits of graphic vectors have not been fully leveraged in existing methods. To explore this data format, we target on the fundamental recognition tasks: object localization and classification. We propose an efficient CNN-free pipeline that does not render the graphic into pixels (i.e. rasterization), and takes textual document of the vector graphics as input, called YOLaT (You Only Look at Text). YOLaT builds multi-graphs to model the structural and spatial information in vector graphics, and a dual-stream graph neural network is proposed to detect objects from the graph. Our experiments show that by directly operating on vector graphics, YOLaT outperforms raster-graphic based object detection baselines in terms of both average precision and efficiency. Code is available at https://github.com/microsoft/YOLaTVectorGraphicsRecognition.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W3211654326",
+    "doi": "10.48550/arxiv.2111.03281",
+    "title": "Recognizing Vector Graphics without Rasterization",
+    "year": 2021,
+    "url": "http://arxiv.org/abs/2111.03281",
+    "abstract": "In this paper, we consider a different data format for images: vector graphics. In contrast to raster graphics which are widely used in image recognition, vector graphics can be scaled up or down into any resolution without aliasing or information loss, due to the analytic representation of the primitives in the document. Furthermore, vector graphics are able to give extra structural information on how low-level elements group together to form high level shapes or structures. These merits of graphic vectors have not been fully leveraged in existing methods. To explore this data format, we target on the fundamental recognition tasks: object localization and classification. We propose an efficient CNN-free pipeline that does not render the graphic into pixels (i.e. rasterization), and takes textual document of the vector graphics as input, called YOLaT (You Only Look at Text). YOLaT builds multi-graphs to model the structural and spatial information in vector graphics, and a dual-stream graph neural network is proposed to detect objects from the graph. Our experiments show that by directly operating on vector graphics, YOLaT out-performs raster-graphic based object detection baselines in terms of both average precision and efficiency.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W2363688641",
+    "doi": null,
+    "title": "Integration of Vector Graphics and Raster Images",
+    "year": 2009,
+    "url": "https://en.cnki.com.cn/Article_en/CJFDTOTAL-SCCH200903003.htm",
+    "abstract": "Based on illustrating the theory of the image pyramid,the function module is developed for the overlay of vector graphics and raster images in one GIS system,using the development tool VC2005.The module can determine whether or not to load raster images and automatically load images with different resolution according to the current vector scope.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W3107232127",
+    "doi": "10.1145/3414685.3417871",
+    "title": "Differentiable vector graphics rasterization for editing and learning",
+    "year": 2020,
+    "url": "https://doi.org/10.1145/3414685.3417871",
+    "abstract": "We introduce a differentiable rasterizer that bridges the vector graphics and raster image domains, enabling powerful raster-based loss functions, optimization procedures, and machine learning techniques to edit and generate vector content. We observe that vector graphics rasterization is differentiable after pixel prefiltering. Our differentiable rasterizer offers two prefiltering options: an analytical prefiltering technique and a multisampling anti-aliasing technique. The analytical variant is faster but can suffer from artifacts such as conflation. The multisampling variant is still efficient, and can render high-quality images while computing unbiased gradients for each pixel with respect to curve parameters. We demonstrate that our rasterizer enables new applications, including a vector graphics editor guided by image metrics, a painterly rendering algorithm that fits vector primitives to an image by minimizing a deep perceptual loss function, new vector graphics editing algorithms that exploit well-known image processing methods such as seam carving, and deep generative models that generate vector content from raster-only supervision under a VAE or GAN training objective.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W7010652886",
+    "doi": null,
+    "title": "Integrating Vector Graphics Software Rasterizer Into QT Quick Ultralite",
+    "year": 2022,
+    "url": "http://www.theseus.fi/handle/10024/785284",
+    "abstract": "Modern microcontrollers are capable of driving high-resolution displays. However, most microcontrollers do not support hardware acceleration for 2D vector graphics. This study discusses a solution for rasterizing 2D vector graphics using software on microcontrollers. The Qt Company commissioned this graduation work to integrate a vector graphics software rasterizer into the Qt Quick Ultralite framework. \\n \\nThe thesis includes a background of computer graphics and a description of a simple 2D rendering pipeline. It also examines 2D vector graphics rendering libraries and a rasterizer used in font rendering library. The study involved reading books, online documentation and code. The solution in this thesis was implemented with C++. \\n \\nThe result was choosing two software rasterizing solutions and integrating them into the Qt Quick Ultralite framework. Benchmark test applications were also created using Qt Quick Ultralite to compare the performance of the rasterizers. One of the used rasterizers offered satisfying performance and is a strong candidate to be used by the Qt Quick Ultralite framework to provide a software fallback for rendering 2D vector graphics on microcontrollers.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W2518678992",
+    "doi": null,
+    "title": "RAVEGRID: RASTER-TO-VECTOR GRAPHICS FOR IMAGE DATA",
+    "year": 2007,
+    "url": "https://www.osti.gov/biblio/1242896",
+    "abstract": "The Internet has revolutionized our world by vastly increasing our means and ability of acquisition, representation, and communication of information.The ubiquity of image data on the Internet, as well as in the wide range of devices, from big screen TV s to hand-held cellular phones that support image display, calls for a scalable and more manipulable representation of imagery.Moreover, with the growing need for automating image-based search, object recognition, and image understanding, it is desirable to represent image content at a semantically higher level by means of tokens that support computer vision tasks.RaveGrid is new software for rapid conversion of raster digital images made up of pixels into vector graphical images comprised of polygons.This affords scalability of images for rendering on various display platforms and screen sizes, economy of representation, and enables object detection, extraction, and recognition .RaveGrid is a novel technology that has applications in Web graphics, image search engines for the Internet, computer vision, and computer art.RaveGrid is compatible with the new scalable vector graphics (SVG) standard of the World Wide Web Consortium, as well as with the well-established and widely used encapsulated postscript (EPS) format. FeaturesRaveGrid (RAster to VEctor GRaphics for Image Data) is software that decomposes a digital image consisting of pixels into polygons that correspond to visual features in the image.The polygonal decomposition can be varied from a high resolution, for high visual fidelity, to a low resolution, for detection and extraction of salient image features.Unlike most image processing software that operate on all the pixels in an image to achieve their goals, RaveGrid uses only a small subset of image pixels, namely edge pixels, to achieve polygonal image decomposition.This makes RaveGrid highly efficient and fast enough for real-time applications .Using geometry and principles of human visual perception, RaveGrid constructs polygons by relating salient image edges that bound each visual feature at any desired resolution .This gives RaveGrid its ability to obtain visually meaningful polygonal decompositions of images.Since the description of image regions in terms of polygons is, in general, more efficient than in terms of pixels, RaveGrid typically reduces the size of an image leading to image compression.The description of images in terms of polygons, termed vectorization, enables the scaling of an image to any arbitrary size, thus accommodating to the display screen of any device, large or small.RaveGrid' s characterization of an image in terms of features rather than pixels allows the querying of images in terms of shape, structure, and color, giving RaveGrid object detection and recognition capabilities.Vector images produced by RaveGrid can be written as text files describing polygons in terms of their vertex coordinates and a fill color.This allows easy reading of high-level structural and color information in images into other programs as well as makes the images available for a)",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W7126504818",
+    "doi": null,
+    "title": "Learning-based Vector Graphics Processing and Synthesis",
+    "year": 2024,
+    "url": "https://hdl.handle.net/2123/32664",
+    "abstract": "In contrast to the significant developments in pixel-space image understanding and generation, vector graphics remain challenging for recent studies. Although rasterization\u2014the process of converting vector graphics into raster images\u2014is relatively straightforward, vectorization from images poses notable challenges due to its inherent challenges. From the recent studies targeting tasks related to vector graphics, we observe that they often face significant hurdles due to the complexity of representations, the scarcity of data, and inherent difficulties associated with the methodologies employed. This thesis aims to provide a comprehensive understanding of the current state of research in related fields, thereby identifying directions for proposing novel learning-based approaches and improving the performance of existing methods for processing and generating different vector representations.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W4308550530",
+    "doi": "10.1109/tvcg.2022.3220575",
+    "title": "A Survey of Smooth Vector Graphics: Recent Advances in Repr esentation, Creation, Rasterization, and Image Vectorization",
+    "year": 2022,
+    "url": "https://doi.org/10.1109/tvcg.2022.3220575",
+    "abstract": "The field of smooth vector graphics explores the representation, creation, rasterization, and automatic generation of light-weight image representations, frequently used for scalable image content. Over the past decades, several conceptual approaches on the representation of images with smooth gradients have emerged that each led to separate research threads, including the popular gradient meshes and diffusion curves. As the computational models matured, the mathematical descriptions diverged and article started to focus more narrowly on subproblems, such as on the representation and creation of vector graphics, or the automatic vectorization from raster images. Most of the work concentrated on a specific mathematical model only. With this survey, we describe the established computational models in a consistent notation to spur further knowledge transfer, leveraging the recent advances in each field. We therefore categorize vector graphics article from the last decades based on their underlying mathematical representations as well as on their contribution to the vector graphics content creation pipeline, comprising representation, creation, rasterization, and automatic image vectorization. This survey is meant as an entry point for both artists and researchers. We conclude this survey with an outlook on promising research directions and challenges to overcome in the future.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W7099871268",
+    "doi": null,
+    "title": "Vectorialisation of raster colour images",
+    "year": 2006,
+    "url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.224.1630",
+    "abstract": "Vector representation of digital images offer a number of advantages over the more common raster representation, such as scalability and resolution independence. Many efforts have been addressed to scalable raster representations for photographic imagery for portable applications. However, they lack the flexibility and simplicity of vector representation. Vector graphics is a new and little explored alternative to the more common raster representation. This paper is devoted to outline our experience in the field of vectorialisation of photographic raster images and to highlight ongoing research. 1.",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W7099006030",
+    "doi": null,
+    "title": "Comparing Scalable Vector Graphics with Flash as Media for the Delivery of Interactive Vector Graphics on the Internet.",
+    "year": 2004,
+    "url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.476.1110",
+    "abstract": "Flash, a proprietary format, is the most widely used vector graphics format on the Internet (Probets et al, 2001). Scalable Vector Graphics (SVG) is an XML namespace and a W3C recommended open standard for describing two-dimensional vector graphics. The current specification (SVG 1.1) released in January 2003 supports interactivity, dynamic content and mobile devices. SVG is data driven, that is it consists of code (in plain text) to be rendered by an application, in the same way as HTML is rendered by a browser, this means that sophisticated vector graphics can be displayed using less bandwidth than equivalent raster based formats (JPEG, PNG or GIF), making it attractive for Internet use. The project undertook a literature review of vector graphics on the Internet, evaluated SVG technology and reviewed current trends in the use of SVG. A primary finding is the very limited extent that SVG is used for developing interactive games. Near identical interactive multimedia games were developed in both formats, the SVG",
+    "retrieved_by": [
+      "vector-keyword"
+    ]
+  },
+  {
+    "id": "W2274839430",
+    "doi": null,
+    "title": "Time/Space Efficient Filtering of Streaming XML Documents Using Incrementally Constructed c",
+    "year": 2007,
+    "url": "http://hdl.handle.net/2324/9449",
+    "abstract": "In this paper, we present a streaming XML document filter named DXAXEN which is based on incremental construction of path-trie. It runs very fast, and processes a large number of XPath queries efficiently. Experimental comparison with XMLTK, a well-known streaming XML document filter, shows that DXAXEN is 2.5 times faster and needs only 5.20 percent of memory.",
+    "retrieved_by": [
+      "parser-semantic"
+    ]
+  },
+  {
+    "id": "W2473574448",
+    "doi": null,
+    "title": "Constant-memory validation of streaming XML documents against DTDs",
+    "year": 2007,
+    "url": "http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.488.6439",
+    "abstract": "Abstract. In this paper we investigate the problem of validating, with constant memory, streaming XML documents with respect to a DTD. Such constant mem-ory validations can only be performed for some but not all DTDs. This paper gives a non trivial interesting step towards characterizing those DTDs for which a constant-memory on-line algorithm exists. 1",
+    "retrieved_by": [
+      "parser-semantic"
+    ]
+  },
+  {
+    "id": "W2042587761",
+    "doi": "10.1145/584792.584816",
+    "title": "Query processing of streamed XML data",
+    "year": 2002,
+    "url": "https://doi.org/10.1145/584792.584816",
+    "abstract": "We are addressing the efficient processing of continuous XML streams, in which the server broadcasts XML data to multiple clients concurrently through a multicast data stream, while each client is fully responsible for processing the stream. In our framework, a server may disseminate XML fragments from multiple documents in the same stream, can repeat or replace fragments, and can introduce new fragments or delete invalid ones. A client uses a light-weight database based on our proposed XML algebra to cache stream data and to evaluate XML queries against these data. The synchronization between clients and servers is achieved through annotations and punctuations transmitted along with the data streams. We are presenting a framework for processing XML queries in XQuery form over continuous XML streams. Our framework is based on a novel XML algebra and a new algebraic optimization framework based on query decorrelation, which is essential for non-blocking stream processing.",
+    "retrieved_by": [
+      "parser-semantic"
+    ]
+  },
+  {
+    "id": "W2095783582",
+    "doi": "10.1109/icadiwt.2008.4664381",
+    "title": "A low-memory streaming algorithm for XSLT processing implemented in Xord framework",
+    "year": 2008,
+    "url": "https://doi.org/10.1109/icadiwt.2008.4664381",
+    "abstract": "We present an implementation of the Xord framework for streaming processing of XSLT transformations based on .Net technologies. Within the framework, we implement an efficient streaming algorithm capable to process a significant subset of top-down XSLT transformations. We exactly characterize this class of transformations. The algorithm uses a stack of the size proportional to the depth of the input XML document. Such memory usage is highly efficient in practice, since real-world XML documents are shallow. The evaluation of the algorithm supports our expectations and shows that a transformation of large but shallow XML documents is processed using a constant size of memory.",
+    "retrieved_by": [
+      "parser-semantic"
+    ]
+  },
+  {
+    "id": "W2409550514",
+    "doi": "10.4242/balisagevol5.probst01",
+    "title": "Processing Arbitrarily Large XML using a Persistent DOM",
+    "year": 2010,
+    "url": "https://doi.org/10.4242/balisagevol5.probst01",
+    "abstract": "As the adoption of XML reaches more and more application domains, data sizes increase, and efficient XML handling gets more and more important. Many applications face scalability problems due to the overhead of XML parsing, the difficulty of effectively finding particular XML nodes, or the sheer size of XML documents, which nowadays can easily exceed gigabytes of data. In particular the latter issue can make certain tasks seemingly impossible to handle, as many applications depend on parsing XML documents completely into a Document Object Model (DOM) memory structure. Parsing XML into a DOM typically requires close to or even more memory as the serialized XML would consume, thus making it prohibitively expensive to handle XML documents in the gigabyte range. Recent research and development suggests that it is possible to modify these applications to run a wide range of tasks in a streaming fashion, thus limiting the memory consumption of individual applications. However this requires not only changes in the underlying tools, but often also in user code, such as XSLT style sheets. These required changes can often be unintuitive and complicate user code. A different approach is to run applications against an efficient, persistent, hard-disk backed DOM implementation that does not require entire documents to be in memory at a time. This talk will discuss such a DOM implementation, EMC's xDB, showing how to use binary XML and efficient backend structures to provide a standards compliant, non-memory-backed, transactional DOM implementation, with little overhead compared to regular memory-based DOMs. It will also give performance comparisons and show how to run existing applications transparently against xDB's DOM implementation, using XSLT stylesheets as an example.",
+    "retrieved_by": [
+      "parser-semantic"
+    ]
+  },
+  {
+    "id": "W2950569977",
+    "doi": "10.48550/arxiv.1012.3311",
+    "title": "Validating XML Documents in the Streaming Model with External Memory",
+    "year": 2010,
+    "url": "http://arxiv.org/abs/1012.3311",
+    "abstract": "We study the problem of validating XML documents of size $N$ against general DTDs in the context of streaming algorithms. The starting point of this work is a well-known space lower bound. There are XML documents and DTDs for which $p$-pass streaming algorithms require $\u03a9(N/p)$ space. We show that when allowing access to external memory, there is a deterministic streaming algorithm that solves this problem with memory space $O(\\log^2 N)$, a constant number of auxiliary read/write streams, and $O(\\log N)$ total number of passes on the XML document and auxiliary streams. An important intermediate step of this algorithm is the computation of the First-Child-Next-Sibling (FCNS) encoding of the initial XML document in a streaming fashion. We study this problem independently, and we also provide memory efficient streaming algorithms for decoding an XML document given in its FCNS encoding. Furthermore, validating XML documents encoding binary trees in the usual streaming model without external memory can be done with sublinear memory. There is a one-pass algorithm using $O(\\sqrt{N \\log N})$ space, and a bidirectional two-pass algorithm using $O(\\log^2 N)$ space performing this task.",
+    "retrieved_by": [
+      "parser-semantic"
+    ]
+  },
+  {
+    "id": "W2133739410",
+    "doi": "10.1145/2380116.2380174",
+    "title": "Designing for low-latency direct-touch input",
+    "year": 2012,
+    "url": "https://doi.org/10.1145/2380116.2380174",
+    "abstract": "Software designed for direct-touch interfaces often utilize a metaphor of direct physical manipulation of pseudo \"real-world\" objects. However, current touch systems typically take 50-200ms to update the display in response to a physi-cal touch action. Utilizing a high performance touch de-monstrator, subjects were able to experience touch latencies ranging from current levels down to about 1ms. Our tests show that users greatly prefer lower latencies, and noticea-ble improvement continued well below 10ms. This level of performance is difficult to achieve in commercial compu-ting systems using current technologies. As an alternative, we propose a hybrid system that provides low-fidelity visu-al feedback immediately, followed by high-fidelity visuals at standard levels of latency.",
+    "retrieved_by": [
+      "interaction-semantic"
+    ]
+  },
+  {
+    "id": "W2988835054",
+    "doi": "10.1145/3359996.3364726",
+    "title": "Effects of Latency in Visual Feedback on Human Performance of Path-Steering Tasks",
+    "year": 2019,
+    "url": "https://doi.org/10.1145/3359996.3364726",
+    "abstract": "Effects of latency in a visual feedback system during path-steering tasks were examined. Input movements were recorded in high speed and projected with controlled latency, while a user was required to drag an object through a tunnel path. We tested the system with 10 people and analyzed the duration based on the steering law and revealed that the latency of visual feedback beyond 64.3 ms was associated with reductions in user performance, which provides suggestions in developing user-oriented interface designs.",
+    "retrieved_by": [
+      "interaction-semantic"
+    ]
+  },
+  {
+    "id": "W2285330908",
+    "doi": "10.1201/9781003059325-22",
+    "title": "How Low Should We Go? Understanding the Perception of Latency While Inking",
+    "year": 2020,
+    "url": "https://doi.org/10.1201/9781003059325-22",
+    "abstract": "Recent advances in hardware have enabled researchers to study the perception of latency. Thus far, latency research has utilized simple touch and stylus-based tasks that do not represent inking activities found in the real world. In this work, we report on two studies that utilized writing and sketching tasks to understand the limits of human perception. Our studies revealed that latency perception while inking is worse (~50 milliseconds) than perception while performing non-inking tasks reported previously (~2\u20137 milliseconds). We also determined that latency perception is not based on the distance from the stylus\u2019 nib to the ink, but rather on the presence of a visual referent such as the hand or stylus. The prior and current work has informed the Latency Perception Model, a framework upon which latency knowledge and the underlying mechanisms of perception can be understood and further explored.",
+    "retrieved_by": [
+      "interaction-semantic",
+      "inking-keyword"
+    ]
+  },
+  {
+    "id": "W2739903624",
+    "doi": "10.1109/whc.2017.7989894",
+    "title": "Effects of visual and haptic latency on touchscreen interaction: A case study using painting task",
+    "year": 2017,
+    "url": "https://doi.org/10.1109/whc.2017.7989894",
+    "abstract": "This paper reports a user study on the effects of latency in visual and haptic feedback on touchscreen interaction for a painting task. Our work was motivated by recently emerging multimodal use of touchscreens and electrostatic friction displays with high-quality 3D graphics. We designed and implemented a painting application on a touchscreen that enabled users to paint a 3D sculpture with their finger pad while perceiving haptic feedback through electrovibration. Software-induced latency was varied from 0 to 120 ms for both visual and haptic feedback. Participants' task was to paint on the 3D sculpture as quickly and accurately as possible. For performance assessment, we measured task completion time and execution error. We also obtained subjective responses to four questions (easiness, responsiveness, pleasantness, and the sense of control) related to user experiences. Experiment results indicated that visual latency is critical for both task completion time and task execution error whereas haptic latency is for task execution error, but not for task completion time. Both latencies affected the subjective responses, but visual latency had more apparent effects.",
+    "retrieved_by": [
+      "interaction-semantic"
+    ]
+  },
+  {
+    "id": "W2076099583",
+    "doi": "10.1145/2556288.2557037",
+    "title": "In the blink of an eye",
+    "year": 2014,
+    "url": "https://doi.org/10.1145/2556288.2557037",
+    "abstract": "While pen computing has become increasingly more popular, device responsiveness, or latency, still plagues such interaction. Although there have been advances in digitizer technology over the last few years, commercial end-to-end latencies are unfortunately similar to those found with touchscreens, i.e., 65 - 120 milliseconds. We report on a prototype stylus-enabled device, the High Performance Stylus System (HPSS), designed to display latencies as low as one millisecond while users ink or perform dragging tasks.",
+    "retrieved_by": [
+      "interaction-semantic"
+    ]
+  },
+  {
+    "id": "W2903442005",
+    "doi": "10.1145/3281505.3281609",
+    "title": "Effects of low video latency between visual information and physical sensation in immersive environments",
+    "year": 2018,
+    "url": "https://doi.org/10.1145/3281505.3281609",
+    "abstract": "This study aims to investigate the impact on the user's performance when there is latency between the user's physical input to the system and the visual feedback. We developed a video latency control system to film the user's hand movements and control the latency when displaying the video (The standard deviation is 0.38 ms). The minimum latency of the system is 4.3 ms, hence this enables us to investigate the performance for unknown low latency ranges. Using this system, we conducted experiments wherein 20 subjects performed a pointing task based on Fitts' law to clarify the effect of video latency, particularly for low latency. Experimental results showed that when the latency is over 24.3 ms, the user performance begins to decrease. This result will be applied to determine a standard limit for video latency in interactive video devices.",
+    "retrieved_by": [
+      "interaction-semantic"
+    ]
+  },
+  {
+    "id": "W2154891655",
+    "doi": "10.1111/j.1467-8659.2011.01863.x",
+    "title": "Combinatorial Bidirectional Path\u2010Tracing for Efficient Hybrid CPU/GPU Rendering",
+    "year": 2011,
+    "url": "https://doi.org/10.1111/j.1467-8659.2011.01863.x",
+    "abstract": "Abstract This paper presents a reformulation of bidirectional path\u2010tracing that adequately divides the algorithm into processes efficiently executed in parallel on both the CPU and the GPU. We thus benefit from high\u2010level optimization techniques such as double buffering, batch processing, and asyncronous execution, as well as from the exploitation of most of the CPU, GPU, and memory bus capabilities. Our approach, while avoiding pure GPU implementation limitations (such as limited complexity of shaders, light or camera models, and processed scene data sets), is more than ten times faster than standard bidirectional path\u2010tracing implementations, leading to performance suitable for production\u2010oriented rendering engines.",
+    "retrieved_by": [
+      "vector-seed-similar"
+    ]
+  },
+  {
+    "id": "W2143203528",
+    "doi": "10.1145/2669062.2669085",
+    "title": "Path rendering for high resolution mobile device",
+    "year": 2014,
+    "url": "https://doi.org/10.1145/2669062.2669085",
+    "abstract": "In this paper, we present a novel path rendering scheme that provides a fast rendering on high resolution mobile device. Because legacy path renderings are memory intensive work, they do not provide enough performance (fps) on high resolution display. To get an acceptable performance, we propose a novel approach for path rendering. Our design policies for the path rendering are two folds: 1) Minimize memory I/O, 2) Highly parallel computational scheme. We propose to use winding number generator for per-pixel winding number calculation which does not require memory intensive activity. Because our scheme effectively reduces memory I/O and it is executed with highly parallel manner, we can get an acceptable high performance on high resolution mobile device.",
+    "retrieved_by": [
+      "vector-seed-similar"
+    ]
+  },
+  {
+    "id": "W2002535619",
+    "doi": "10.1145/2699276.2699291",
+    "title": "Compressed coverage masks for path rendering on mobile GPUs",
+    "year": 2015,
+    "url": "https://doi.org/10.1145/2699276.2699291",
+    "abstract": "We present an algorithm to accelerate resolution independent curve rendering on mobile GPUs. The bottleneck for certain platform independent GPU implementations is in generating grayscale textures on the CPU containing the amount that each pixel is covered by the curve. In this paper, we demonstrate that generating a compressed grayscale texture prior to uploading it to the GPU creates faster rendering times in addition to the memory savings. We implement a real-time compression technique for coverage masks and compare our results against the GPU-based implementation of the highly optimized Skia rendering library. We observe up to a 2X speed improvement over the existing GPU-based methods in addition to up to a 9:1 improvement in GPU memory gains. We demonstrate the performance on multiple mobile platforms.",
+    "retrieved_by": [
+      "vector-seed-similar"
+    ]
+  },
+  {
+    "id": "W2064238313",
+    "doi": "10.1109/icstcc.2014.6982475",
+    "title": "A GPU task generator for rendering",
+    "year": 2014,
+    "url": "https://doi.org/10.1109/icstcc.2014.6982475",
+    "abstract": "We present an original GPU task generator that can be attached to the rasterization based rendering process, in order to provide a dynamic parallelism. Compared to other existing GPU task generators or schedulers our method creates new tasks using the GPU graphics pipeline task scheduler. These are generated in the geometry shader, by means of rasterizing new geometry that produces additional fragments. The parallel processing of these fragments represents the new threads, which are used as general purpose threads. Thus, our solution is extremely lightweight and it can run in parallel with the rasterization based rendering process. By using our generator, work-heavy rendering threads can distribute their load to a sufficiently large group of workers without any CPU interference. By doing this we are effectively reducing the complexity on a per-rendering thread basis and therefore we are able to obtain a performance increase of 1 or even 2 orders of magnitude in critical cases. Tasks such as tracing rays, dynamic geometry generation, expensive BSSRDFs evaluation or ray marching are handled in a unified manner, making it easy to integrate our generator into game engines. In contrast with other GPU task generators and schedulers our method does not occupy all hardware threads nor does it need specialized hardware, only requiring Shader Model 5. Since rarely are dynamic rendering tasks complicated enough to generate dynamic child tasks on their own, our generator can be configured to run as just a simple non recursive task dispatcher.",
+    "retrieved_by": [
+      "vector-seed-similar"
+    ]
+  },
+  {
+    "id": "W2344130469",
+    "doi": "10.1109/tvcg.2016.2516990",
+    "title": "Compressed Coverage Masks for Path Rendering on Mobile GPUs",
+    "year": 2016,
+    "url": "https://doi.org/10.1109/tvcg.2016.2516990",
+    "abstract": "We present an algorithm to accelerate resolution independent curve rendering on mobile GPUs. Recent trends in graphics hardware have created a plethora of compressed texture formats specific to GPU manufacturers. However, certain implementations of platform independent path rendering require generating grayscale textures on the CPU containing the extent that each pixel is covered by the curve. In this paper, we demonstrate that generating a compressed grayscale texture prior to uploading it to the GPU creates faster rendering times in addition to the memory savings. We implement a real-time compression technique for coverage masks and compare our results against the GPU-based implementation of the highly optimized Skia rendering library. We also analyze the worst case properties of our compression algorithms. We observe up to a 2 \u00d7 speed improvement over the existing GPU-based methods in addition to up to a 9:1 improvement in GPU memory gains. We demonstrate the performance on multiple mobile platforms.",
+    "retrieved_by": [
+      "vector-seed-similar"
+    ]
+  },
+  {
+    "id": "W1966923097",
+    "doi": "10.1109/tvcg.2012.151",
+    "title": "Octree Rasterization: Accelerating High-Quality Out-of-Core GPU Volume Rendering",
+    "year": 2012,
+    "url": "https://doi.org/10.1109/tvcg.2012.151",
+    "abstract": "We present a novel approach for GPU-based high-quality volume rendering of large out-of-core volume data. By focusing on the locations and costs of ray traversal, we are able to significantly reduce the rendering time over traditional algorithms. We store a volume in an octree (of bricks); in addition, every brick is further split into regular macrocells. Our solutions move the branch-intensive accelerating structure traversal out of the GPU raycasting loop and introduce an efficient empty-space culling method by rasterizing the proxy geometry of a view-dependent cut of the octree nodes. This rasterization pass can capture all of the bricks that the ray penetrates in a per-pixel list. Since the per-pixel list is captured in a front-to-back order, our raycasting pass needs only to cast rays inside the tighter ray segments. As a result, we achieve two levels of empty space skipping: the brick level and the macrocell level. During evaluation and testing, this technique achieved 2 to 4 times faster rendering speed than a current state-of-the-art algorithm across a variety of data sets.",
+    "retrieved_by": [
+      "vector-seed-similar"
+    ]
+  }
+]

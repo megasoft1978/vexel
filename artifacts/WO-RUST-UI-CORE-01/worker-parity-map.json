@@ -1,0 +1,35 @@
+{
+  "work_order": "WO-RUST-UI-CORE-01",
+  "status": "implemented in this isolated worker worktree; pending coordinator review",
+  "symbols": [
+    {"c": "ui_theme_tokens", "rust": "theme_tokens", "tests": ["tokens_type_scale_and_metrics_match_core_defaults"], "parity": "dark/light palettes, contrast variants, semantic tokens and aliases"},
+    {"c": "ui_theme_tokens_accented", "rust": "theme_tokens_accented", "tests": ["tokens_type_scale_and_metrics_match_core_defaults", "accent_choices_keep_contrast_on_both_surfaces_in_all_modes"], "parity": "all eight legacy accent inputs in light/dark and normal/high contrast; threshold against panel and raised panel (3.0/4.5), accent/selection-edge/focus-ring equality, opaque non-panel selection fill, and zero/transparent fallback"},
+    {"c": "ui_theme_type_scale", "rust": "type_scale", "tests": ["tokens_type_scale_and_metrics_match_core_defaults"], "parity": "font sizes, monospaced geometry and semibold flags"},
+    {"c": "ui_design_metrics", "rust": "design_metrics", "tests": ["tokens_type_scale_and_metrics_match_core_defaults"], "parity": "all fixed dimensions and control metrics"},
+    {"c": "ui_tree_init", "rust": "Tree::new", "tests": ["original_layout_cases_fixed_flexible_overflow_and_trailing_fixed"], "parity": "legacy theme aliases, root id/role/axis/color/Editor label, cleared state"},
+    {"c": "ui_tree_init_accessible", "rust": "Tree::accessible", "tests": ["semantics_are_owned_full_text_and_preserve_defaults_frames"], "parity": "design palette plus contrast and semantic style flags"},
+    {"c": "ui_tree_add", "rust": "Tree::add", "tests": ["original_layout_cases_fixed_flexible_overflow_and_trailing_fixed", "add_caps_duplicate_and_failure_leave_tree_unchanged"], "parity": "128 nodes, unique nonzero ids, parent/root rules, 4096 geometry bounds, icon range, 1 MiB total text, UTF-8-safe 63-byte previews, focus bit clearing, child insertion order and failure atomicity"},
+    {"c": "ui_tree_find", "rust": "Tree::find / Tree::find_mut", "tests": ["original_layout_cases_fixed_flexible_overflow_and_trailing_fixed", "focus_commands_checkboxes_and_disabled_nodes"], "parity": "id lookup over occupied insertion-ordered nodes"},
+    {"c": "ui_tree_layout", "rust": "Tree::layout", "tests": ["original_layout_cases_fixed_flexible_overflow_and_trailing_fixed", "depth_limit_layout_failure_is_atomic_and_retryable"], "parity": "overlay, horizontal/vertical flex allocation, padding/gaps, clipping, checked extent arithmetic and depth 24"},
+    {"c": "ui_tree_render", "rust": "Tree::render", "tests": ["basic_render_and_focus_ring_use_owned_rgba_tile"], "parity": "bounded RGBA tile, insertion-order opaque rectangle fills (matching C's opaque generated fill for every nonzero alpha), zero-alpha skip and one-pixel focused border"},
+    {"c": "ui_focus_next", "rust": "Tree::focus_next", "tests": ["focus_commands_checkboxes_and_disabled_nodes"], "parity": "forward and reverse order/wrap assertions across button, text field, slider, row and checkbox; disabled button skipped"},
+    {"c": "ui_semantics_snapshot_build", "rust": "Tree::semantics", "tests": ["semantics_are_owned_full_text_and_preserve_defaults_frames"], "parity": "insertion order, role/state/command/frame, preview and full text, 1 MiB bound, snapshot ownership"},
+    {"c": "ui_semantics_text", "rust": "SemanticsSnapshot::text", "tests": ["semantics_are_owned_full_text_and_preserve_defaults_frames"], "parity": "full label/value borrowing from the owning snapshot"},
+    {"c": "ui_command_registry_init", "rust": "CommandRegistry::new", "tests": ["focus_commands_checkboxes_and_disabled_nodes"], "parity": "empty 64-entry registry"},
+    {"c": "ui_command_register", "rust": "CommandRegistry::register", "tests": ["focus_commands_checkboxes_and_disabled_nodes"], "parity": "nonzero command/key, four modifier mask, duplicate command/chord rejection and 64-entry bound"},
+    {"c": "ui_dispatch_key", "rust": "Tree::dispatch_key", "tests": ["focus_commands_checkboxes_and_disabled_nodes"], "parity": "Tab/Shift-Tab, Enter/Space, checkbox toggle, focused command and enabled registered shortcuts"}
+  ],
+  "adaptations": [
+    "C pointer+length UTF-8 inputs become owned Rust String values. Invalid UTF-8 byte sequences cannot be represented by this API; valid Unicode byte length and C-compatible preview boundaries are retained.",
+    "C enum values become Rust enums for theme, axis and role, so invalid numeric enum values cannot be passed. Icon kind remains a bounded integer to preserve the C range validation; widget kind is retained as an uninterpreted integer because ui_core.c stores but does not interpret it.",
+    "C fixed arrays and text offsets become bounded Vec/String ownership. Semantics snapshots own full strings and expose borrowed text slices; byte offsets are not public because Rust references carry the lifetime.",
+    "Tree::layout computes into temporary bounds and commits only after success. This preserves successful layout values and makes depth/arithmetic failure nonmutating.",
+    "Basic tree rendering paints solid node rectangles and focus borders directly into the accepted RGBA Tile. It does not port platform text, widget/icon drawing, general SVG rendering, or UI presentation."
+  ],
+  "remaining_scope": [
+    "The original C contrast harness also checks ui_icon_asset_hash; icon asset behavior is outside this ui_core.c order and remains covered by its separate icon scope.",
+    "Functions only declared in ui_core.h and implemented in ui_draw/widgets/icons are future work orders and were not stubbed.",
+    "No native GUI, desktop integration, visual quality, or whole application parity claim."
+  ],
+  "dependencies": "No new dependencies; existing vexel-raster Tile and std only."
+}

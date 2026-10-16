@@ -1,0 +1,39 @@
+WO-SVG-PAINT-02 revision 2 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 66bb819723088a873f2939f39830df5a0dd829a46652253f2793f48e09bd20e6
+
+Scope correction
+- Revision 1 was superseded before implementation because its expectation that two half-covered copies become opaque was incorrect. Revision 2 checks the observed roughly 75% alpha from two copies and near-opaque alpha from a ten-path stack.
+- The test was run before the renderer fix and failed at the new two-copy alpha assertion (expected 191..193). After the fix it passes.
+
+Implementation
+- `src/raster/shape_render.c` now clears bounded row scratch for each active shape, resolves that shape's per-sample colors/alpha, and source-overs the resolved pixel onto the raster destination before processing the next shape. Fill/stroke order within each shape, clip checks, center-only pixels, scanline fill, and existing bounded row buffers remain in use.
+- `tests/svg/shape/gradient_stroke_test.c` adds coincident two-path and ten-path gradient-stroke regressions. The first verifies alpha 191..193; the second verifies alpha >=253.
+- Modified source/test files are 587 and 156 lines respectively (both below 800). Only those two files were edited for renderer/test implementation; `STATE.md`, ledger files and this evidence were updated as required.
+
+Focused builds and checks
+- `cmake --build --preset mac-debug --target shape_render_cli gradient_stroke_test shape_test`: PASS.
+- Same focused targets built with `mac-asan` and `mac-ubsan`: PASS.
+- Same focused targets built with `mac-release`: PASS.
+- `ctest --test-dir build/mac-debug -R '^(svg-gradient-stroke|shape-render)$' --output-on-failure`: PASS, 2/2.
+- Same focused CTest selector in `build/mac-asan`: PASS, 2/2.
+- Same focused CTest selector in `build/mac-ubsan`: PASS, 2/2.
+- `tests/test_map.json` parsed successfully; the `tests/svg/` mapping includes `shape-render|svg-`, including `svg-gradient-stroke`.
+
+Inkscape reference comparisons
+- Oracle: installed Inkscape 1.4.4 (dcaf3e7, 2026-05-05), used only as a rendering binary.
+- Two coincident gradient-stroked paths at 1600x1000: Vexel and Inkscape each report pixel (101,100) alpha 192; `scripts/pixdiff.py --tolerance 2` reports identical within tolerance.
+- Ten coincident paths at 1600x1000: both render pixel (101,100) alpha 255; pixel diff is identical within tolerance 2.
+- Generated T1 input: `/Users/megasoft78/Desktop/Freelance/vexel-corpus-real/files/generated/inkscape_t1.svg`, 979,796 bytes, SHA-256 `3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5`.
+- Inkscape reference PNG is the verified 1600x1000 output from WO-CORPUS-12, SHA-256 `614d90bdc9cc32e4eea9c9367f7281a8a8524fbb483fe303caaeaca915d41c97`.
+- New Vexel output: 1600x1000 RGBA, SHA-256 `2e7c5977426bd3ca111fd396672d357f25d150e1be40dc71813437a1038d4ba5`.
+- Tolerance 2 comparison: 12,526 / 1,600,000 pixels differ (0.783%), max channel delta 149, mean differing-pixel delta 3.3, bbox x4..1599 y0..999. The previous renderer result was 193,585 pixels (12.099%), max delta 151. This is a major candidate improvement, not corpus acceptance; residual differences remain.
+- Two measured native-size Vexel T1 runs took 1.54 s and 2.28 s real time, with 123,895,808 and 123,060,224 bytes max RSS. WO-CORPUS-12's prior one-run baseline was 1.59 s and 121,061,376 bytes. The small sample and run-to-run variation do not establish a performance conclusion; no performance suite was run.
+- Original T1 source is unchanged. No corpus sweep, broad UI/E2E, fuzz, or release gate ran.
+
+Repository checks
+- `python3 scripts/wo_validate.py WO-SVG-PAINT-02 --ready`: valid revision 2, SHA-256 above.
+- `python3 scripts/ledger.py validate ledger.jsonl`: valid after recording transitions.
+- `git diff --check`: PASS.
+- Work remains uncommitted. The comprehensive UI/E2E pass remains deferred until feature work is complete.

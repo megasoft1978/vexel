@@ -1,0 +1,3 @@
+BLOCKER — The accepted-baseline handoff resolves the first blocker, and the candidate preserves the original 12 test functions and assertions verbatim.
+
+The three claimed policy regressions are absent from the actual candidate tests. `number.rs` contains no tests for standalone number, number-list, or length policy behavior; `tests/policy.rs` contains only the large-source viewport integration test. The repair result claims 19 tests and four integration tests, but the checked-in candidate test files do not contain those additions. The second blocker remains unresolved.

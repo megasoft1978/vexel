@@ -1,0 +1,3 @@
+Updated only the shared contracts, render plan report, and result/evidence files. `DefinitionContext<'src, 'ctx>` now uses the accepted source-borrowed `CssSheet<'src>` and `ReferenceIndex<'src>`, with temporary mutable borrows under `'ctx`. Both planner signatures return `DefinitionPlan<'src>`, so the plan does not extend context or control borrows.
+
+The ready validator, ledger validator, `git diff --check`, JSON parsing, and targeted lifetime assertions passed. The ledger changed concurrently and was left untouched; no product code, tests, builds, or agents were used.

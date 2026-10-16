@@ -1,0 +1,13 @@
+2026-10-14T21:35:36.621582Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/tests.rs:
+        let placed = path_placements(
+2026-10-14T21:38:44.054991Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/definition_plans.rs:
+    assert_eq!(fail.0, 3, "failure occurs at the second shape after one finalization");
+    assert_eq!(error.kind, ErrorKind::Limit(LimitKind::Work));
+2026-10-14T21:38:54.487761Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/marker.rs:
+        assert_eq!(
+            path_placements(&[], &[segment], attributes, affine_identity(), 1., &mut control)
+                .unwrap_err()
+                .kind,
+            ErrorKind::Canceled
+        );
+    }

@@ -1,0 +1,81 @@
+--- pre-r2/work/WO-MCP-ASYNC-03.md
++++ work/WO-MCP-ASYNC-03.md
+@@ -1,12 +1,12 @@
+ ---
+ id: WO-MCP-ASYNC-03
+-revision: 1
++revision: 2
+ status: READY
+ milestone: MCP-OBSERVABILITY
+ owner: project-owner
+ executor: codex-gpt-6.1-sol
+ base_sha: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+-spec_sha256: 9a38e129242fccf4f232f0eaaeae2911eb8f84635d3fc42589dffd43d9f04253
++spec_sha256: c964781819f37bf8d36af5486237706916ae8868145b92226b961be2ea653f0f
+ parallel_safe: false
+ network: false
+ ---
+@@ -33,6 +33,7 @@
+ - `src/app/mcp_broker_hook.c`, `src/app/mcp_broker_hook.h`, `src/app/viewer_runtime.c`, `src/app/viewer_editor.c`, `src/app/viewer_editor.h`, `src/app/viewer_editor_internal.h`, `src/app/viewer_editor_status.c`, `src/app/viewer_events.c`, `src/app/viewer_internal.h`
+ - `src/mcp/mcp_protocol.c`, `src/mcp/mcp_protocol.h`, `src/mcp/mcp_broker.c`, `src/mcp/mcp_broker.h`, `src/mcp/mcp_broker_internal.h`, `src/mcp/mcp_broker_render.c`, `src/mcp/mcp_broker_render.h`, `src/mcp/mcp_broker_async_export.c`, `src/mcp/mcp_broker_async_export.h` (new), `src/mcp/mcp_task_store.c`, `src/mcp/mcp_task_store.h`
+ - `tests/mcp/mcp_protocol_test.c`, `tests/mcp/mcp_async_task_test.c` (new), `tests/mcp/mcp_native_timeline_test.c`, `tests/test_map.json`, `CMakeLists.txt`, `docs/mcp.md`
++- `docs/product/vexel-goal-and-delivery-plan.md`
+ - `artifacts/WO-MCP-ASYNC-03/**`, `STATE.md`, `LEDGER.md`, `ledger.jsonl`
+ 
+ # Protected paths
+--- pre-r2/STATE.md
++++ STATE.md
+@@ -2,14 +2,20 @@
+ 
+ ## Current product continuation — 2026-10-13
+ 
+-- `WO-MCP-ASYNC-03` revision 1 execution is blocked before product edits:
+-  required implementation item 6 calls for updating the product inventory at
+-  `docs/product/vexel-goal-and-delivery-plan.md`, absent from the frozen
+-  allowlist. The order and freeze remain unchanged; the existing tested task
+-  store and entire shared dirty tree are preserved. A revised frozen scope
+-  must permit that inventory path or defer its update. No build/CTest or live
+-  client acceptance is claimed. Audit:
+-  `artifacts/WO-MCP-ASYNC-03/scope-audit.txt`.
++- `WO-MCP-ASYNC-03` revision 2 is frozen READY at base
++  `19234a036ed6a8d40c2ccdaec9b8186806d70eca`, spec SHA-256
++  `c964781819f37bf8d36af5486237706916ae8868145b92226b961be2ea653f0f`.
++  It adds only `docs/product/vexel-goal-and-delivery-plan.md` to the allowlist
++  so required item 6 can update the product inventory. Intent, limits,
++  implementation, acceptance, and verification remain identical to revision 1.
++  Frozen scope: `artifacts/WO-MCP-ASYNC-03/scope-freeze-r2.txt`.
++- Revision 1 is superseded for this scope correction after its recorded block
++  before product edits. Its original `scope-freeze.txt`, `scope-audit.txt`,
++  `verification.txt`, and all prior evidence remain preserved under
++  `artifacts/WO-MCP-ASYNC-03/`. The tested task store and shared product/source/
++  test changes are preserved. Revision 2 implementation has not started;
++  no app builds/tests or live-client acceptance are claimed. Revision checks:
++  `artifacts/WO-MCP-ASYNC-03/verification-r2.txt`.
+ 
+ - `WO-MCP-ASYNC-01` was superseded before implementation after scope audit
+   found that its UI-cancel acceptance criterion required
+@@ -28,7 +34,7 @@
+   `mcp_broker_render.c` is already 735 lines and the frozen allowlist lacks a
+   dedicated async-export module needed to honor the 800-line cap. Preserve the
+   tested task-store slice; follow-on scope is `WO-MCP-ASYNC-03`.
+-- `WO-MCP-ASYNC-03` revision 1 is frozen READY at base
++- `WO-MCP-ASYNC-03` historical revision 1 was frozen READY (now superseded) at base
+   `19234a036ed6a8d40c2ccdaec9b8186806d70eca`. It carries forward the passing
+   task-store implementation and assigns immutable native GIF export snapshots,
+   worker rendering, and atomic publication to dedicated
+--- pre-r2/LEDGER.md
++++ LEDGER.md
+@@ -226,3 +226,5 @@
+ | 2026-10-13 | WO-MCP-ASYNC-02 r1 | superseded | `19234a0` | working tree | Added bounded thread-safe task store and focused passing lifecycle test; superseded before integration because the 735-line renderer needs a dedicated async-export module absent from the frozen allowlist. Preserve partial implementation. Audit: `artifacts/WO-MCP-ASYNC-02/scope-audit.txt`. |
+ | 2026-10-13 | WO-MCP-ASYNC-03 r1 | ready; uncommitted | `19234a0` | working tree | Carries forward the tested task store and freezes a dedicated async native GIF export module, MCP Tasks/legacy progress, event-loop responsiveness, visible status, and protocol/UI cancellation. Broad UI/E2E remains deferred. Scope: `artifacts/WO-MCP-ASYNC-03/scope-freeze.txt`. |
+ | 2026-10-13 | WO-MCP-ASYNC-03 r1 | blocked; scope audit | `19234a0` | working tree | Stopped before product edits because required item 6's product inventory, `docs/product/vexel-goal-and-delivery-plan.md`, is outside the frozen allowlist. Preserve the tested task store and shared dirty tree; revise frozen scope before implementation. No build/CTest or live interoperability claim. Evidence: `artifacts/WO-MCP-ASYNC-03/scope-audit.txt` and `verification.txt`. |
++| 2026-10-13 | WO-MCP-ASYNC-03 r1 | superseded; scope correction | `19234a0` | working tree | Superseded after the recorded pre-edit scope block; r2 adds the required product inventory path. Original r1 freeze, audit, verification, and all shared changes/evidence are preserved. No implementation acceptance claimed. Evidence: `artifacts/WO-MCP-ASYNC-03/scope-audit.txt`. |
++| 2026-10-13 | WO-MCP-ASYNC-03 r2 | READY; uncommitted; implementation not started | `19234a0` | working tree | Only allowlist addition is `docs/product/vexel-goal-and-delivery-plan.md` for required item 6; intent, limits, implementation, acceptance, and verification unchanged from r1. Order/freeze/hash, ledger, JSON, preservation/scope audit, and diff checks recorded separately; no app builds/tests run. Evidence: `artifacts/WO-MCP-ASYNC-03/scope-freeze-r2.txt` and `verification-r2.txt`. |
+--- pre-r2/ledger.jsonl
++++ ledger.jsonl
+@@ -975,3 +975,5 @@
+ {"ts":"2026-10-13T19:55:14Z","wo_id":"WO-MCP-ASYNC-03","event":"ready","revision":1,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-async-03-ready-2026-10-13","session_id":"codex-mcp-async-03-2026-10-13","model":"gpt-6.1-sol","cli_version":"codex 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"ready","artifacts":["work/WO-MCP-ASYNC-03.md","artifacts/WO-MCP-ASYNC-03/scope-freeze.txt"],"note":"Corrected async export scope separates the worker pipeline from the near-limit broker renderer and preserves the tested task store."}
+ {"ts":"2026-10-13T19:58:57Z","wo_id":"WO-MCP-ASYNC-03","event":"run_started","revision":1,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-async-03-started-2026-10-13","session_id":"codex-mcp-async-03-2026-10-13","model":"gpt-6.1-sol","cli_version":"codex 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"running","artifacts":["work/WO-MCP-ASYNC-03.md"],"note":"Started bounded async native GIF export implementation after deep delivery review; only focused work-order checks, no broad UI/E2E."}
+ {"ts":"2026-10-13T20:01:24Z","wo_id":"WO-MCP-ASYNC-03","event":"blocked","revision":1,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-async-03-scope-blocked-2026-10-13","session_id":"codex-mcp-async-03-2026-10-13","model":"gpt-6.1-sol","cli_version":"codex 0.162.1","duration_s":67.412,"usage":{"input_tokens":null,"output_tokens":null},"status":"blocked","artifacts":["artifacts/WO-MCP-ASYNC-03/scope-audit.txt","artifacts/WO-MCP-ASYNC-03/verification.txt"],"note":"Stopped before product edits: required item 6 calls for updating docs/product/vexel-goal-and-delivery-plan.md, outside the frozen allowlist. Preserve shared dirty tree and tested task store. Revised frozen scope required; focused build/CTests not run, no interoperability claim."}
++{"ts":"2026-10-13T20:04:45Z","wo_id":"WO-MCP-ASYNC-03","event":"superseded","revision":1,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-async-03-r1-superseded-scope-correction-2026-10-13","session_id":"codex-mcp-async-03-r2-scope-correction-2026-10-13","model":"gpt-6","cli_version":"codex-cli 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"superseded","artifacts":["artifacts/WO-MCP-ASYNC-03/scope-freeze.txt","artifacts/WO-MCP-ASYNC-03/scope-audit.txt","artifacts/WO-MCP-ASYNC-03/verification.txt","artifacts/WO-MCP-ASYNC-03/scope-freeze-r2.txt"],"note":"Supersede blocked revision 1 solely to correct required item 6 scope. Revision 2 adds docs/product/vexel-goal-and-delivery-plan.md to the allowlist. Original r1 freeze/audit/verification, tested task store, shared product/source/test changes, and prior evidence preserved; no implementation or app builds/tests in this correction."}
++{"ts":"2026-10-13T20:04:45Z","wo_id":"WO-MCP-ASYNC-03","event":"ready","revision":2,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-async-03-r2-ready-scope-correction-2026-10-13","session_id":"codex-mcp-async-03-r2-scope-correction-2026-10-13","model":"gpt-6","cli_version":"codex-cli 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"ready","artifacts":["work/WO-MCP-ASYNC-03.md","artifacts/WO-MCP-ASYNC-03/scope-freeze-r2.txt","artifacts/WO-MCP-ASYNC-03/revision-r2-baseline/WO-MCP-ASYNC-03-r1.md"],"note":"Revision 2 READY for scope correction only: add docs/product/vexel-goal-and-delivery-plan.md for required item 6. All r1 intent, limits, implementation, acceptance, and verification preserved. Frozen spec SHA-256 c964781819f37bf8d36af5486237706916ae8868145b92226b961be2ea653f0f. Implementation not started; no app builds/tests, staging, or commit."}

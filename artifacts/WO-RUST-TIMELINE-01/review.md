@@ -1,0 +1,9 @@
+## REJECT
+
+1. **String-copy limit differs from the C contract.** In [json.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/rust/crates/vexel-timeline/src/json.rs:216), `string_copy` accepts decoded strings beyond 4096 bytes when the output buffer is large enough. The C helper enforces `PROJECT_TIMELINE_MAX_STRING_BYTES` at [project_timeline_json.c](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/src/project/project_timeline_json.c:171). Enforce the decoded-byte limit and add regressions showing 4096 bytes succeeds and 4097 fails with ample output capacity.
+
+2. **Cancellation stops being observed after the initial JSON scan.** [schema.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/rust/crates/vexel-timeline/src/schema.rs:67) passes the callback to the initial scan, but later field/array rescans and item validation use readers without it ([json.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/rust/crates/vexel-timeline/src/json.rs:256), [schema.rs](/Users/megasoft78/Desktop/Freelance/vexel/vexel/.worktrees/rust3-timeline/rust/crates/vexel-timeline/src/schema.rs:132)). The C array visitor carries its cancellable reader through those passes at [project_timeline.c](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/src/project/project_timeline.c:145). Propagate polling through validation rescans and add a regression that cancels during a later pass, checking the cancellation flag and offset.
+
+**Nonblocking gap:** Rust tests assert some error categories without checking their exact offsets, including duplicate-field and malformed-surrogate cases. Add exact-offset assertions when addressing the cancellation regressions.
+
+I did not run tests or builds. This is a scoped source review; it makes no runtime or full-product claim.

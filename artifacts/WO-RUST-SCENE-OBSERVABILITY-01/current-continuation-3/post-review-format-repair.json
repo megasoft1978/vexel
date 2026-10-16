@@ -1,0 +1,37 @@
+{
+  "edition_2024_rustfmt_exit": 0,
+  "fresh_cargo_check_exit": 0,
+  "fresh_cargo_test_exit": 0,
+  "scene_test_blocks": 20,
+  "scene_tests_passed": 246,
+  "focused_observability_tests": 9,
+  "compile_fail_doctests": 10,
+  "source_line_counts": {
+    "rust/crates/vexel-scene/src/accounting.rs": 612,
+    "rust/crates/vexel-scene/src/source_context.rs": 331,
+    "rust/crates/vexel-scene/tests/observability_contracts.rs": 281
+  },
+  "root_source_seed_mismatches": [],
+  "candidate_changed_seed_paths": [
+    {
+      "path": "rust/crates/vexel-scene/src/accounting.rs",
+      "sha256": "36c41cd1d1b1c63afbef5f461f254a4df8547a7d5bb933e3f1bcb948cbf5c6bb",
+      "allowed": true
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/source_context.rs",
+      "sha256": "d92f0032cb226c1b87392decc514a0a7b24428e0620ca1cdda8de8b4be594326",
+      "allowed": true
+    },
+    {
+      "path": "rust/crates/vexel-scene/README.md",
+      "sha256": "291c031b26f6b3ed1e96c0a7927652e41b6042bb2b1acc1a30dae068f58983f7",
+      "allowed": true
+    }
+  ],
+  "all_changed_seeded_paths_allowed": true,
+  "new_test_path_allowed": true,
+  "changed_file_trailing_whitespace": [],
+  "package_fmt_check": "known pre-existing protected formatting failures; not rerun after edition-2024 changed-file fix",
+  "git_diff_check": "known protected STATE.md EOF blank line, no candidate fix permitted"
+}

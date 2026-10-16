@@ -1,0 +1,27 @@
+{
+  "status": "FAIL",
+  "audit_status": "LICENSE_POLICY_AND_PROTECTED_RECONCILIATION_GATES",
+  "failures": [
+    "protected mismatch: rust"
+  ],
+  "report_words": 1474,
+  "report_word_limit": 1800,
+  "protected_files": {
+    "legacy": 603,
+    "rust": 130
+  },
+  "primary_packages_verified": 16,
+  "provenance_record_checks": 281,
+  "mapped_scopes": 43,
+  "mapped_symbols": 173,
+  "report_diff_exit_code": 1,
+  "validators": "resume-verification.json",
+  "command": "python3 artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/verify_resume.py",
+  "independent_review": "pending coordinator; no recursive reviewer launched",
+  "result_words": 185,
+  "result_word_limit": 350,
+  "provenance_hash_status": "PASS",
+  "published_symbol_feature_status": "PASS",
+  "legacy_HEAD_index_preservation_status": "PASS",
+  "rust_baseline_preservation_status": "FAIL: one preexisting-baseline mismatch; no source edit by this audit"
+}

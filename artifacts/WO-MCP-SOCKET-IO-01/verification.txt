@@ -1,0 +1,49 @@
+WO-MCP-SOCKET-IO-01 focused verification
+========================================
+
+Baseline and scope
+- Worktree HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca (matches WO base_sha).
+- WO validation: python3 scripts/wo_validate.py WO-MCP-SOCKET-IO-01 --ready
+  => valid revision 1, SHA256 71c0f2cee0289c3cb4d2b8f888393d2e2d9b3b23cd16e861d02b006048c92d43.
+- Implementation changes are limited to the new IO module/header and socketpair
+  test, hook adaptation, and CMake/test-map registrations. No ledger, STATE, MCP
+  protocol, task, broker, or platform source was changed by this implementation.
+- Security review: listener path/private directory checks, socket file ownership
+  and permissions, and getpeereid UID equality remain in mcp_broker_hook.c.
+
+Commands and results
+- cmake --preset mac-debug: passed (AppleClang 21.0.0, arm64, macOS 13 target).
+- cmake --build build/mac-debug --target svgworkbench mcp_broker_io_test: passed.
+- ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-broker-io$':
+  passed, 1/1 tests.
+- ./build/mac-debug/bin/mcp_broker_io_test: passed.
+- python3 -m json.tool tests/test_map.json: passed.
+- python3 scripts/wo_validate.py WO-MCP-SOCKET-IO-01 --ready: passed.
+- python3 scripts/ledger.py validate ledger.jsonl: passed (1028 entries).
+- git diff --check: passed.
+
+Harness evidence
+- Exact saturated poll: 32768 bytes read and 32768 written across 8 clients
+  (65536 combined), 8 complete lines dispatched, and 16 transport syscalls.
+  Each slot recorded exactly 8192 combined bytes. The following poll dispatched
+  8 already-buffered lines with 0 additional transport bytes.
+- A partially sent 2 MiB frame still counts at its full allocation size; adding
+  another 2 MiB terminal frame explicitly closed the client at the 4 MiB cap.
+- Duplicate-fd attach was rejected with slot 0 vacant and the existing client in
+  slot 1. Its owner and connection remained valid; after close, the freed fd was
+  deliberately reused and remained open through pool destruction.
+- The stalled peer poll took 1000 ns in the direct harness run, with 4 transport
+  syscalls and 0 bytes written. Callback time is excluded; the test callback is
+  intentionally trivial.
+- Tests cover fragmented input, CRLF, buffered line fairness, oversized input,
+  EOF with buffered lines, peer reader close/SIGPIPE protection, partial output,
+  frame order/newlines, unsent progress coalescing, partial progress preservation,
+  message and byte queue exhaustion, reserved terminal capacity, invalid terminal
+  frame close, explicit owner close and close-once semantics, callback close/reuse
+  safety, duplicate descriptor rejection and close ownership, stable IDs over slot
+  and pool reuse, and shutdown cleanup.
+
+Source line counts
+- src/app/mcp_broker_io.c: 460 lines.
+- src/app/mcp_broker_io.h: 81 lines.
+- tests/mcp/mcp_broker_io_test.c: 442 lines.

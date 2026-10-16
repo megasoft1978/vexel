@@ -1,0 +1,2306 @@
+{
+  "work_order": "WO-RUST-DOCUMENT-EDIT-01",
+  "revision": 1,
+  "status": "complete_uncommitted_candidate_pending_independent_review",
+  "symbol_count": 112,
+  "pending_items": [],
+  "limits": {
+    "source": "16 MiB; checked before history config at create",
+    "tokens": "64 MiB actual XmlTokenStream capacity",
+    "history": "default 1000 commands / 64 MiB blobs; max 300000 commands / 1 GiB blobs; peak actual Vec capacities include owners retained by pieces, redo and snapshots",
+    "pieces": "1000000; replacement reserves piece_count+3 and merges contiguous equal-owner spans",
+    "fragment": "64 KiB region/replacement/template; empty-parent XML fragment wrapper permits +4096 bytes; template wrapper stays within 64 KiB",
+    "group": "128 nodes, sorted and consecutive siblings",
+    "labels": "64 bytes; 21 original static labels",
+    "attributes": "128 template/text attributes (template over-count InvalidArgument, text over-count Limit)",
+    "ids": "4096 generated-ID attempts; u64 checked; only top-level graphic root; prefixed local tag policy",
+    "depth": "256; original path depth boundary and 4096-byte XML names",
+    "names": "4096 bytes, original probe attribute validation"
+  },
+  "symbols": [
+    {
+      "c_symbol": "size_for_count",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 11,
+      "rust_file": "rust/crates/vexel-document-edit/src/alloc.rs",
+      "rust_symbol": "vector<T>: checked count * size_of<T>",
+      "tests": [
+        "edge_contracts::source_history_depth_and_actual_64mib_token_caps",
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Checked arithmetic; OutOfMemory from fallible significant reserves; zero count allocates nothing.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "token_stream",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 16,
+      "rust_file": "rust/crates/vexel-document-edit/src/cache.rs",
+      "rust_symbol": "parse_tokens",
+      "tests": [
+        "edge_contracts::source_history_depth_and_actual_64mib_token_caps",
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Accepted XmlTokenStream with actual storage cap 64 MiB; preserves tokenizer diagnostics.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_invalidate_index",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 33,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::replace/history_step/jump_to: OnceLock invalidation",
+      "tests": [
+        "edge_contracts::mutation_stale_handles_reject_without_rebuilding_invalidated_cache"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Invalidates every successful source change; no-op, save and marks preserve identity.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "build_index",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 55,
+      "rust_file": "rust/crates/vexel-document-edit/src/cache.rs",
+      "rust_symbol": "Cache::build",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::source_history_depth_and_actual_64mib_token_caps",
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Owned model built with accepted parse_owned_document; token/node/attribute/text spans indexed fallibly; create errors preserve category and offset.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_ensure_index",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 202,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::index",
+      "tests": [
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable",
+        "edge_contracts::cached_slice_text_path_and_view_queries_do_not_allocate"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "One materialization and rebuild after invalidation; successful cache reused; failed build can retry.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_handle_info",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 207,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::handle_index and Cache::node",
+      "tests": [
+        "edge_contracts::mutation_stale_handles_reject_without_rebuilding_invalidated_cache"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Stale/foreign handles reject without rebuilding invalidated mutation cache.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_default_limits",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 217,
+      "rust_file": "rust/crates/vexel-document-edit/src/types.rs",
+      "rust_symbol": "EditLimits::default",
+      "tests": [
+        "original_fixtures::test_history_bounds"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "1000 commands, 64 MiB blobs; zero caller limits select defaults.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_create",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 222,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::create",
+      "tests": [
+        "edge_contracts::source_history_depth_and_actual_64mib_token_caps",
+        "original_fixtures::test_invalid_source",
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Source limit before history-limit checks; malformed parser diagnostic category/offset retained; non-null source enforced by &Arc type.",
+      "ownership": "Borrows caller &Arc<Vec<u8>> during creation, clones owner; original remains alive and Arc::make_mut cannot mutate editor source.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_destroy",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 275,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Drop Editor fields / Blob owners",
+      "tests": [
+        "history_snapshot_view::test_snapshot_stability_and_worker_read",
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Rust RAII releases all resources; snapshots remain valid independently.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "safe_adaptation"
+    },
+    {
+      "c_symbol": "document_edit_model",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 284,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::try_model (model is an existing convenience query)",
+      "tests": [
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable",
+        "history_snapshot_view::document_view_range_original_pagination"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Fallible cache access returns Result instead of nullable pointer. model() convenience documents allocation panic; C parity uses try_model().",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_root",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 289,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::root",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Option replaces bool/out handle; cache failure produces None.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_span_bytes",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 294,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::span_bytes",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Checked offset/length; borrowed slice into immutable owned cache.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_source_span",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 305,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::source_span",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Accepted owned model validates handle identity/generation; returns exact byte span.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_tag_name",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 312,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::tag_name",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Borrowed exact name including namespace prefix; stale handle yields None.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_attribute_count",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 319,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::attribute_count",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact indexed count; invalid handle/cache gives zero.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_attribute_at",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 325,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::attribute_at",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact name/value spans and original quote; invalid handle/index gives None.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "emit_bytes",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 340,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "emit plus measured two-pass output visitors",
+      "tests": [
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Checked output lengths; safe adaptation prevents partial writes on capacity failure.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "encode_codepoint",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 351,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "encode_codepoint",
+      "tests": [
+        "edge_contracts::raw_decoder_matches_c_numeric_rules_while_parser_checks_xml_char"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact C byte encoding for u32 raw numeric references; XML tokenizer separately enforces XML Char for document source.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_decode_bytes",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 369,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "decode_bytes / visit_decoded",
+      "tests": [
+        "edge_contracts::raw_decoder_matches_c_numeric_rules_while_parser_checks_xml_char",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Named entities and decimal/hex (x or X) references; digit/overflow/terminator errors retained; two-pass output avoids partial writes.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_decode_span",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 430,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::decoded_span/decode_span_into",
+      "tests": [
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Preserves required decoded length; output unchanged if capacity is too small.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_span_equals",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 438,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::span_equals",
+      "tests": [
+        "edge_contracts::cached_slice_text_path_and_view_queries_do_not_allocate"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact checked source slice equality.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_find_id",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 447,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::find_id/try_find_id/lookup_id(false)",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::public_decoded_id_lookup_and_internal_raw_collision_priority_match_c"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Public lookup compares decoded IDs; returns the first node in source order, never confuses encoded raw bytes with decoded query.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_element_at_offset",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 475,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::element_at_offset / ops::handle_at_offset",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Deepest containing live element; excludes offsets beyond source.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "append_path_segment",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 498,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "visit_path",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact tag sibling ordinal, decimal digits from fixed stack buffer; no String allocation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_element_path",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 536,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::element_path/element_path_into",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths",
+        "edge_contracts::source_history_depth_and_actual_64mib_token_caps"
+      ],
+      "limits": [
+        "depth",
+        "source"
+      ],
+      "errors_and_behavior": "256-depth boundary retained; complete required length and no partial output are a safe output adaptation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_text_content",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 563,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::text_content/text_content_into / visit_text",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Concatenates text and CDATA in descendant source range; entity decoding; two allocation-free passes after cache build.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_error_name",
+      "c_source": "src/document/document_edit.c",
+      "c_line": 597,
+      "rust_file": "rust/crates/vexel-document-edit/src/types.rs",
+      "rust_symbol": "EditError::as_str",
+      "tests": [
+        "edge_contracts::error_names_preserve_all_original_categories"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "All 14 C categories retained. Invalid enum bit patterns are excluded by safe Rust enum types.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "group_node_compare",
+      "c_source": "src/document/document_edit_group.c",
+      "c_line": 12,
+      "rust_file": "rust/crates/vexel-document-edit/src/group.rs",
+      "rust_symbol": "collect_group_nodes: sort_unstable_by_key(span.offset)",
+      "tests": [
+        "edge_contracts::group_ungroup_sibling_sorting_gap_bytes_and_rejection_rules"
+      ],
+      "limits": [
+        "group",
+        "fragment"
+      ],
+      "errors_and_behavior": "Sorts caller order by exact source offsets without allocation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "handles_equal",
+      "c_source": "src/document/document_edit_group.c",
+      "c_line": 21,
+      "rust_file": "rust/crates/vexel-document-edit/src/group.rs",
+      "rust_symbol": "DocumentHandle derived PartialEq",
+      "tests": [
+        "edge_contracts::group_ungroup_sibling_sorting_gap_bytes_and_rejection_rules"
+      ],
+      "limits": [
+        "group"
+      ],
+      "errors_and_behavior": "Compares document ID, slot and generation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "collect_group_nodes",
+      "c_source": "src/document/document_edit_group.c",
+      "c_line": 27,
+      "rust_file": "rust/crates/vexel-document-edit/src/group.rs",
+      "rust_symbol": "Editor::collect_group_nodes",
+      "tests": [
+        "edge_contracts::group_ungroup_sibling_sorting_gap_bytes_and_rejection_rules",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "group",
+        "fragment"
+      ],
+      "errors_and_behavior": "Zero count InvalidArgument; >128 Limit; stale/root handles StaleHandle; same parent, exact g tag, distinct non-overlapping consecutive siblings required.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "group_region",
+      "c_source": "src/document/document_edit_group.c",
+      "c_line": 79,
+      "rust_file": "rust/crates/vexel-document-edit/src/group.rs",
+      "rust_symbol": "Editor::group_siblings/ungroup_siblings region calculation",
+      "tests": [
+        "edge_contracts::group_ungroup_sibling_sorting_gap_bytes_and_rejection_rules"
+      ],
+      "limits": [
+        "group",
+        "fragment"
+      ],
+      "errors_and_behavior": "Checked first-start/last-end; 64 KiB region cap retained.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_group_siblings",
+      "c_source": "src/document/document_edit_group.c",
+      "c_line": 94,
+      "rust_file": "rust/crates/vexel-document-edit/src/group.rs",
+      "rust_symbol": "Editor::group_siblings",
+      "tests": [
+        "edge_contracts::group_ungroup_sibling_sorting_gap_bytes_and_rejection_rules",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "group",
+        "fragment",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": "Sorted consecutive nodes, inserts only <g>/</g>; exact inter-node gaps preserved; wrapper included in 64 KiB cap.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_ungroup_siblings",
+      "c_source": "src/document/document_edit_group.c",
+      "c_line": 131,
+      "rust_file": "rust/crates/vexel-document-edit/src/group.rs",
+      "rust_symbol": "Editor::ungroup_siblings",
+      "tests": [
+        "edge_contracts::group_ungroup_sibling_sorting_gap_bytes_and_rejection_rules",
+        "allocation_atomicity::undo_and_multi_step_jump_reject_atomically"
+      ],
+      "limits": [
+        "group",
+        "fragment",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": "Drops every selected wrapper including empty g; copies inner bytes and every gap; one command.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_action_label",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 5,
+      "rust_file": "rust/crates/vexel-document-edit/src/types.rs",
+      "rust_symbol": "HistoryAction::label",
+      "tests": [
+        "edge_contracts::labels_noop_and_unsaved_marker_preserve_identity_and_cursors"
+      ],
+      "limits": [
+        "labels"
+      ],
+      "errors_and_behavior": "All 21 original static labels; <64 bytes; no fallible String allocation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_template_action",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 35,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "TemplateKind::action",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "edge_contracts::labels_noop_and_unsaved_marker_preserve_identity_and_cursors"
+      ],
+      "limits": [
+        "labels"
+      ],
+      "errors_and_behavior": "Exact template-to-action mapping; invalid enum values excluded by Rust type.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_relabel_latest",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 50,
+      "rust_file": "rust/crates/vexel-document-edit/src/history.rs",
+      "rust_symbol": "Editor::history_relabel_latest",
+      "tests": [
+        "edge_contracts::labels_noop_and_unsaved_marker_preserve_identity_and_cursors"
+      ],
+      "limits": [
+        "labels",
+        "history"
+      ],
+      "errors_and_behavior": "Relabels only when latest command is at current end; no source mutation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_entry_at",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 63,
+      "rust_file": "rust/crates/vexel-document-edit/src/history.rs",
+      "rust_symbol": "Editor::history_entry",
+      "tests": [
+        "history_snapshot_view::check_recent_entries_and_jump",
+        "edge_contracts::labels_noop_and_unsaved_marker_preserve_identity_and_cursors"
+      ],
+      "limits": [
+        "history",
+        "labels"
+      ],
+      "errors_and_behavior": "Label, state_cursor=index+1, current/saved flags; out-of-range None; static label survives editor.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_saved_cursor",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 79,
+      "rust_file": "rust/crates/vexel-document-edit/src/history.rs",
+      "rust_symbol": "Editor::history_saved_cursor/history_state",
+      "tests": [
+        "history_snapshot_view::check_recent_entries_and_jump",
+        "history_snapshot_view::check_coalescing_and_eviction"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Saved baseline cursor 0 or retained after-state cursor; None after saved state leaves history.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_mark_saved",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 101,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::mark_saved",
+      "tests": [
+        "original_fixtures::test_mark_saved_checkpoint"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Sets saved state ID without command or handle invalidation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_mark_unsaved",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 106,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::mark_unsaved",
+      "tests": [
+        "edge_contracts::labels_noop_and_unsaved_marker_preserve_identity_and_cursors"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Saved ID becomes 0; current state dirty; command/cursor/handles unchanged.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_jump",
+      "c_source": "src/document/document_edit_history.c",
+      "c_line": 111,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::jump_to via history_jump",
+      "tests": [
+        "history_snapshot_view::check_recent_entries_and_jump",
+        "allocation_atomicity::undo_and_multi_step_jump_reject_atomically"
+      ],
+      "limits": [
+        "history",
+        "pieces",
+        "tokens"
+      ],
+      "errors_and_behavior": "Preserves exact intermediate validation and final cursor/state. Safe adaptation stages all descriptors so allocation failure cannot leave a partial jump.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "graphics_tag",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 20,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "graphics_tag",
+      "tests": [
+        "edge_contracts::fragment_graphic_root_policy_prefixes_collisions_and_entities"
+      ],
+      "limits": [
+        "fragment",
+        "ids"
+      ],
+      "errors_and_behavior": "All 12 C graphic local names, including g; strips namespace prefix only for policy decision.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "fragment_tag_end",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 38,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "Editor::prepare_fragment: validated open token end",
+      "tests": [
+        "edge_contracts::fragment_graphic_root_policy_prefixes_collisions_and_entities"
+      ],
+      "limits": [
+        "fragment"
+      ],
+      "errors_and_behavior": "Uses tokenizer open-tag span instead of rescanning quote-delimited >; inserts before / or >.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_id_exists",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 55,
+      "rust_file": "rust/crates/vexel-document-edit/src/query.rs",
+      "rust_symbol": "Editor::id_exists / lookup_id(true)",
+      "tests": [
+        "edge_contracts::public_decoded_id_lookup_and_internal_raw_collision_priority_match_c"
+      ],
+      "limits": [
+        "ids",
+        "source"
+      ],
+      "errors_and_behavior": "Preserves C collision helper raw-equality fast path, then decoded comparison. Allocation/decoder errors propagate.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "prepare_fragment",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 96,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "Editor::prepare_fragment",
+      "tests": [
+        "original_fixtures::test_generated_object_ids",
+        "edge_contracts::fragment_graphic_root_policy_prefixes_collisions_and_entities",
+        "edge_contracts::auto_id_4096_attempts_reject_atomically"
+      ],
+      "limits": [
+        "fragment",
+        "ids",
+        "attributes"
+      ],
+      "errors_and_behavior": "<probe> wrapper, exactly one top-level element, retained comments/text; root-only graphic ID policy and root collision checks; generated counter commits only on success.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "bytes_equal",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 231,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "slice equality in append_attributes",
+      "tests": [
+        "original_fixtures::test_generated_object_ids",
+        "original_fixtures::test_insert_text_element"
+      ],
+      "limits": [
+        "attributes"
+      ],
+      "errors_and_behavior": "Length and exact-byte equality; no allocation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "template_tag",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 237,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "TemplateKind::tag",
+      "tests": [
+        "original_fixtures::test_structural_operations"
+      ],
+      "limits": [
+        "attributes",
+        "fragment"
+      ],
+      "errors_and_behavior": "All seven original tags; templates remain self-closing, including text.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_insert_template",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 251,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "Editor::insert_template/insert_prepared",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "edge_contracts::fragment_and_template_caps_include_generated_id_and_parent_wrapper",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "attributes",
+        "fragment",
+        "ids",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": ">128 attributes InvalidArgument before handle checks; append before parent close; empty-parent wrapper counted in 64 KiB template cap; exact labels and quote escaping.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_insert_xml_fragment",
+      "c_source": "src/document/document_edit_insert.c",
+      "c_line": 367,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "Editor::insert_xml_fragment/insert_prepared",
+      "tests": [
+        "original_fixtures::test_generated_object_ids",
+        "original_fixtures::test_empty_text_and_xml_fragment",
+        "edge_contracts::fragment_and_template_caps_include_generated_id_and_parent_wrapper",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "fragment",
+        "ids",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": "Empty InvalidArgument, oversized Limit, then stale check; malformed vs multiple-root InvalidOperation; fragment parent wrapper may use 64 KiB+4096.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "tokenize_ok",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 7,
+      "rust_file": "rust/crates/vexel-document-edit/src/cache.rs",
+      "rust_symbol": "parse_tokens used by validate_replace",
+      "tests": [
+        "edge_contracts::source_history_depth_and_actual_64mib_token_caps",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Accepted strict stream, 64 MiB storage cap; diagnostic returned by stream without fabricated offsets.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_validate_replace",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 22,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::validate_replace",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "original_fixtures::test_replace_xml_region"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Checked nominated region/patch; optional probe wrapper/start-tag closing; full XML validation in region context. Typed OutOfMemory is surfaced for significant allocation failures.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "emit_escaped",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 102,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "encode",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "original_fixtures::test_insert_text_element"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Original checked 6*N+1 allocation capacity; quotes/ampersand/angle escaping unchanged; actual reserve fallible.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_encode_attribute",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 134,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "encode_attribute",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::xml_region_raw_source_boundaries_names_and_error_priority"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Quote must be single or double; exact quote-specific escaping.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_encode_text",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 141,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "encode_text",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "original_fixtures::test_insert_text_element"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Escapes &, < and >; source tokenizer enforces character/UTF8 validity afterward.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_name_valid",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 147,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "name_valid/checked_name",
+      "tests": [
+        "edge_contracts::xml_region_raw_source_boundaries_names_and_error_priority"
+      ],
+      "limits": [
+        "names",
+        "tokens"
+      ],
+      "errors_and_behavior": "Original probe attribute parse and 4096-byte name bound; production Result distinguishes allocation OOM from invalid name.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "attribute_index",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 165,
+      "rust_file": "rust/crates/vexel-document-edit/src/cache.rs",
+      "rust_symbol": "Cache::attribute",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact indexed attribute-name span equality; original order and quoting retained.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "start_tag_trailing_start",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 179,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "start_tag_trailing_start",
+      "tests": [
+        "edge_contracts::source_whitespace_and_reverse_sibling_order_match_c"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Inserts before trailing whitespace and slash/greater-than delimiter; quoted > does not confuse token span.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "add_attribute_encoded",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 192,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::add_attribute",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Checks stale handle and duplicate name after encoding; preserves original trailing bytes and Add attribute action.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_add_attribute",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 231,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::add_attribute",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::xml_region_raw_source_boundaries_names_and_error_priority",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Invalid-name checks precede stale checks; encoded malformed duplicate value still DuplicateAttribute; localized start-tag validation.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_set_attribute",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 247,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::set_attribute",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Invalid name before stale; missing name dispatches add; original quote and value-only patch; attribute coalescing target/offset retained.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_remove_attribute",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 275,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::remove_attribute",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "edge_contracts::source_whitespace_and_reverse_sibling_order_match_c",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "No extra name validation; NotFound if absent; removes exact attribute source span, retains preceding whitespace.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "handle_is_root",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 294,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "accepted model root comparison",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "edge_contracts::nested_duplicate_ids_and_references_are_byte_identical"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact current document/slot/generation validated before root checks.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_set_text_content",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 300,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::set_text_content",
+      "tests": [
+        "original_fixtures::test_queries_and_attributes",
+        "original_fixtures::test_empty_text_and_xml_fragment",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Single source command, escaped text; self-closing expansion uses original tag including prefix; empty text retained correctly.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_delete_element",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 355,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::delete_element",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Stale first, then RootDelete; parent-context XML validation; no source outside element span changed.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_duplicate_element",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 375,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::duplicate_element",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "edge_contracts::nested_duplicate_ids_and_references_are_byte_identical",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Rejects root; duplicates exact complete subtree bytes, deliberately retaining nested duplicate IDs/references as C does.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "same_parent",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 407,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::reorder_sibling parent equality",
+      "tests": [
+        "edge_contracts::source_whitespace_and_reverse_sibling_order_match_c"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Both nodes must have same parent; roots/foreign/stale reject.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_reorder_sibling",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 416,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::reorder_sibling",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "edge_contracts::source_whitespace_and_reverse_sibling_order_match_c",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact directional gap placement; already-before/after is a no-op retaining handles; one Move command.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_wrap_in_group",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 477,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::wrap_in_group",
+      "tests": [
+        "original_fixtures::test_structural_operations",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Rejects root; unbounded single-node wrapper under source cap (does not substitute the sibling-fragment limit).",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_ungroup",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 514,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::ungroup",
+      "tests": [
+        "edge_contracts::ungroup_root_and_namespace_names_follow_original_rules",
+        "allocation_atomicity::undo_and_multi_step_jump_reject_atomically"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Exact g name only; root uses full-document validation, non-root uses parent fragment; wrappers/attributes removed, inner bytes preserved.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_save_as",
+      "c_source": "src/document/document_edit_ops.c",
+      "c_line": 560,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::save_as",
+      "tests": [
+        "native_save::test_history_and_save",
+        "native_save::save_failures_preserve_state_and_postrename_warning_marks_saved"
+      ],
+      "limits": [
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Accepted source_save_noop; saved on OK OR renamed; durability remains SaveFailed warning; parser diagnostic and exact native error discriminant/flags copied into owned summary.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "release_pieces",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 8,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "Drop Vec<Piece> and Buffer Arc owners",
+      "tests": [
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction",
+        "history_snapshot_view::test_snapshot_stability_and_worker_read"
+      ],
+      "limits": [
+        "pieces",
+        "history"
+      ],
+      "errors_and_behavior": "Final owners alone free blobs; failed preparation drops staged descriptors without source/history mutation.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "safe_adaptation"
+    },
+    {
+      "c_symbol": "document_edit_blob_retain",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 16,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "Arc<Blob>::clone",
+      "tests": [
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction",
+        "history_snapshot_view::test_snapshot_stability_and_worker_read"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Immutable buffer shared by command/piece/snapshot; no data copy.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_blob_release",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 21,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "Blob::drop",
+      "tests": [
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction",
+        "history_snapshot_view::test_snapshot_stability_and_worker_read"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Atomic actual-capacity charge released only on last owner, including worker snapshot drop.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_blob_create",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 34,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "Blob::create",
+      "tests": [
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction",
+        "original_fixtures::test_history_bounds"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "HistoryLimit before blob allocation; actual Vec capacity charged; zero-length None; fallible Vec allocation; only std Arc control-block allocation exception.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "piece_bytes",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 67,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "Piece::bytes",
+      "tests": [
+        "history_snapshot_view::test_snapshot_stability_and_worker_read",
+        "internal_tests::metadata_actual_capacity_and_read_range_guards"
+      ],
+      "limits": [
+        "pieces"
+      ],
+      "errors_and_behavior": "Checked owner-relative offset/length for original and blob buffers.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_read_range",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 83,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "read_range via Editor::read_range",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "internal_tests::metadata_actual_capacity_and_read_range_guards"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Checked input range; materializes only nominated bytes; no full-source query copy.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "append_piece",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 109,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "append_piece",
+      "tests": [
+        "seeded_editor::test_randomized_history_200000"
+      ],
+      "limits": [
+        "pieces"
+      ],
+      "errors_and_behavior": "Drops zero spans; merges adjacent contiguous spans only with same Arc owner; capacity already reserved.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "append_range",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 128,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "append_range",
+      "tests": [
+        "seeded_editor::test_randomized_history_200000"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Intersects requested source interval with descriptors; retains shared owners.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "piece_table_replace_copy",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 148,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "replace_copy",
+      "tests": [
+        "seeded_editor::test_randomized_history_200000",
+        "internal_tests::piece_capacity_rejection_and_state_id_exhaustion_precede_publication"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Reserves original piece_count+3, caps actual descriptor capacity at 1M, merges original-compatible adjacent descriptors; no mutation until preparation succeeds.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_replace_raw",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 182,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "replace_copy then publication in history_step/replace",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "allocation_atomicity::undo_and_multi_step_jump_reject_atomically"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Raw table publication uses already shared blobs; descriptor allocation is before commit.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "command_release",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 198,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Drop Command Arc fields",
+      "tests": [
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction",
+        "allocation_atomicity::redo_blobs_are_charged_before_branch_discard"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Release keeps buffers charged while pieces/snapshots retain them.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "safe_adaptation"
+    },
+    {
+      "c_symbol": "clear_redo",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 205,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::replace: history.truncate(cursor)",
+      "tests": [
+        "history_snapshot_view::check_recent_entries_and_jump",
+        "allocation_atomicity::redo_blobs_are_charged_before_branch_discard"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Redo is discarded only after all fallible preflight work; peak blob charges include redo owners before discard.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "reserve_commands",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 212,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::replace: staged command-table growth",
+      "tests": [
+        "allocation_atomicity::command_table_growth_is_preflighted_without_mutating_history",
+        "internal_tests::metadata_actual_capacity_and_read_range_guards"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Original initial 8 / doubling / configured max growth; actual Vec metadata capacity exposed; staged replacement avoids partial capacity mutation.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "drop_oldest_command",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 231,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::replace: remove(0) at command-count cap",
+      "tests": [
+        "history_snapshot_view::check_coalescing_and_eviction",
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Original command-count trim only (never trims solely to evade blob cap); saved ID retained even when outside history.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "make_piece_copy",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 243,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::copy_range",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "history",
+        "pieces"
+      ],
+      "errors_and_behavior": "Copies inverse bytes as C does; checked range and fallible exact reserve, not a full-document copy.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_commit_replace",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 256,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::commit_replace/replace",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "seeded_editor::test_randomized_history_200000",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "history",
+        "pieces",
+        "source",
+        "labels"
+      ],
+      "errors_and_behavior": "Low-level validated-caller contract; no-op before blobs; unique state IDs; original coalescing rule, peak shared-owner accounting, staged capacity checks and redo/trim publication.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_undo",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 348,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::undo/history_step",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "seeded_editor::test_randomized_history_200000",
+        "allocation_atomicity::undo_and_multi_step_jump_reject_atomically"
+      ],
+      "limits": [
+        "history",
+        "pieces",
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Validates historical whole-source state as C; shares inverse blob; no state/cursor change on failure; cache invalidated after success.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_redo",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 367,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::redo/history_step",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "seeded_editor::test_randomized_history_200000",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "history",
+        "pieces",
+        "source",
+        "tokens"
+      ],
+      "errors_and_behavior": "Validates historical whole-source state; shares inserted blob; exact state ID/cursor; exhausted redo InvalidOperation.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_byte_length",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 386,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::byte_length",
+      "tests": [
+        "original_fixtures::test_history_bounds"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Exact piece-table length; non-null editor enforced by Rust reference.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_materialize",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 391,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::materialize/materialize_into",
+      "tests": [
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths",
+        "seeded_editor::test_randomized_history_200000"
+      ],
+      "limits": [
+        "source",
+        "pieces"
+      ],
+      "errors_and_behavior": "C-style into variant reports required length on insufficient capacity; output unchanged; piece bytes exact.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_is_dirty",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 401,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::is_dirty",
+      "tests": [
+        "edge_contracts::labels_noop_and_unsaved_marker_preserve_identity_and_cursors",
+        "original_fixtures::test_mark_saved_checkpoint"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Compares exact current and saved state IDs; no content canonicalization.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_count",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 406,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::history_count",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "history_snapshot_view::check_recent_entries_and_jump"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Retained command count including redo.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_history_cursor",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 411,
+      "rust_file": "rust/crates/vexel-document-edit/src/piece_table.rs",
+      "rust_symbol": "Editor::history_cursor",
+      "tests": [
+        "original_fixtures::test_history_bounds",
+        "history_snapshot_view::check_recent_entries_and_jump"
+      ],
+      "limits": [
+        "history"
+      ],
+      "errors_and_behavior": "Exact retained-state cursor; branch and trim semantics preserved.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_piece_table_destroy",
+      "c_source": "src/document/document_edit_piece_table.c",
+      "c_line": 416,
+      "rust_file": "rust/crates/vexel-document-edit/src/storage.rs",
+      "rust_symbol": "Drop Editor piece/history fields / Blob final owners",
+      "tests": [
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction",
+        "history_snapshot_view::test_snapshot_stability_and_worker_read"
+      ],
+      "limits": [
+        "pieces",
+        "history"
+      ],
+      "errors_and_behavior": "RAII cleanup; snapshot shared owners remain alive.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "safe_adaptation"
+    },
+    {
+      "c_symbol": "document_edit_replace_xml_region_labeled",
+      "c_source": "src/document/document_edit_region.c",
+      "c_line": 3,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::replace_xml_region_labeled",
+      "tests": [
+        "original_fixtures::test_replace_xml_region",
+        "edge_contracts::xml_region_raw_source_boundaries_names_and_error_priority"
+      ],
+      "limits": [
+        "fragment",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": "Parent containment before fragment cap; parent-context candidate wrapped in probe; preserves supplied action label.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_replace_xml_region",
+      "c_source": "src/document/document_edit_region.c",
+      "c_line": 27,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::replace_xml_region",
+      "tests": [
+        "original_fixtures::test_replace_xml_region",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "fragment",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": "Delegates labeled region with Edit objects; one undo command, exact bytes outside patch.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_replace_source_span",
+      "c_source": "src/document/document_edit_region.c",
+      "c_line": 34,
+      "rust_file": "rust/crates/vexel-document-edit/src/ops.rs",
+      "rust_symbol": "Editor::replace_source_span",
+      "tests": [
+        "original_fixtures::test_replace_source_span",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "fragment",
+        "source",
+        "history"
+      ],
+      "errors_and_behavior": "Ensure index then bounds InvalidOperation, 64 KiB input/removed span caps, full-document validation and Edit path label.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "snapshot_piece_valid",
+      "c_source": "src/document/document_edit_snapshot.c",
+      "c_line": 14,
+      "rust_file": "rust/crates/vexel-document-edit/src/snapshot.rs",
+      "rust_symbol": "Editor::snapshot validation / storage::Piece::bytes",
+      "tests": [
+        "history_snapshot_view::test_snapshot_stability_and_worker_read",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Validates descriptor ranges, nonzero piece spans and exact total before capture.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_snapshot_create",
+      "c_source": "src/document/document_edit_snapshot.c",
+      "c_line": 25,
+      "rust_file": "rust/crates/vexel-document-edit/src/snapshot.rs",
+      "rust_symbol": "Editor::snapshot",
+      "tests": [
+        "history_snapshot_view::test_snapshot_stability_and_worker_read",
+        "allocation_atomicity::create_cache_and_snapshot_gates_are_fallible_and_retryable"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Fallible descriptor-vector copy; non-null self reference excludes invalid C pointer argument; no document-byte copy.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_snapshot_byte_length",
+      "c_source": "src/document/document_edit_snapshot.c",
+      "c_line": 76,
+      "rust_file": "rust/crates/vexel-document-edit/src/snapshot.rs",
+      "rust_symbol": "EditSnapshot::byte_length",
+      "tests": [
+        "history_snapshot_view::test_unedited_snapshot_and_output_capacity"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Exact capture length; nullable pointer case excluded by owned value type.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_snapshot_materialize",
+      "c_source": "src/document/document_edit_snapshot.c",
+      "c_line": 81,
+      "rust_file": "rust/crates/vexel-document-edit/src/snapshot.rs",
+      "rust_symbol": "EditSnapshot::materialize/materialize_into",
+      "tests": [
+        "history_snapshot_view::test_snapshot_stability_and_worker_read",
+        "edge_contracts::output_capacities_never_write_partial_and_report_original_lengths"
+      ],
+      "limits": [
+        "pieces",
+        "source"
+      ],
+      "errors_and_behavior": "Worker-readable shared buffers; into variant sets length=0 on failure; output unchanged for capacity exhaustion.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_snapshot_destroy",
+      "c_source": "src/document/document_edit_snapshot.c",
+      "c_line": 103,
+      "rust_file": "rust/crates/vexel-document-edit/src/snapshot.rs",
+      "rust_symbol": "Drop EditSnapshot fields",
+      "tests": [
+        "history_snapshot_view::test_snapshot_stability_and_worker_read",
+        "allocation_atomicity::blob_accounting_tracks_snapshots_and_live_pieces_after_eviction"
+      ],
+      "limits": [
+        "pieces",
+        "history"
+      ],
+      "errors_and_behavior": "Safe adaptation: snapshot can outlive editor; shared accounting owner allows independent cleanup.",
+      "ownership": "Arc<Blob> charges actual Vec capacity once to a shared AtomicUsize owner; final Drop releases charge even after editor destruction.",
+      "status": "safe_adaptation"
+    },
+    {
+      "c_symbol": "text_fragment_append",
+      "c_source": "src/document/document_edit_text_insert.c",
+      "c_line": 8,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "bounded_append",
+      "tests": [
+        "original_fixtures::test_insert_text_element",
+        "edge_contracts::fragment_and_template_caps_include_generated_id_and_parent_wrapper"
+      ],
+      "limits": [
+        "fragment"
+      ],
+      "errors_and_behavior": "Bounded exact fragment append, rejects >64 KiB before writes to fragment.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_edit_insert_text_element",
+      "c_source": "src/document/document_edit_text_insert.c",
+      "c_line": 18,
+      "rust_file": "rust/crates/vexel-document-edit/src/insert.rs",
+      "rust_symbol": "Editor::insert_text_element",
+      "tests": [
+        "original_fixtures::test_insert_text_element",
+        "allocation_atomicity::failures_before_commit_preserve_source_history_saveflags_and_handles"
+      ],
+      "limits": [
+        "attributes",
+        "fragment",
+        "ids",
+        "history"
+      ],
+      "errors_and_behavior": ">128 attributes Limit; duplicate/name checks and escaped attributes/text; one Add text command, ID prep counter commits only on success.",
+      "ownership": "Immutable Arc source/cache; borrowed queries remain valid only until source changes.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_node_count",
+      "c_source": "src/document/document_view.h",
+      "c_line": 15,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_node_count",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_root",
+      "c_source": "src/document/document_view.h",
+      "c_line": 20,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_root",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_first_child",
+      "c_source": "src/document/document_view.h",
+      "c_line": 25,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_first_child",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_next_sibling",
+      "c_source": "src/document/document_view.h",
+      "c_line": 31,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_next_sibling",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_tag",
+      "c_source": "src/document/document_view.h",
+      "c_line": 37,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_tag",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_attribute_count",
+      "c_source": "src/document/document_view.h",
+      "c_line": 43,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_attribute_count",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_attribute_at",
+      "c_source": "src/document/document_view.h",
+      "c_line": 49,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_attribute_at",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    },
+    {
+      "c_symbol": "document_view_range",
+      "c_source": "src/document/document_view.h",
+      "c_line": 58,
+      "rust_file": "rust/crates/vexel-document-edit/src/view.rs",
+      "rust_symbol": "document_view_range",
+      "tests": [
+        "history_snapshot_view::document_view_range_original_pagination",
+        "history_snapshot_view::view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "limits": [
+        "source"
+      ],
+      "errors_and_behavior": "Allocation-free accepted owned-model view; live stable-slot order; range returns first unexamined slot on capacity exhaustion; invalid bounds reject before writes.",
+      "ownership": "Borrows &OwnedDocumentModel; slices/handles cannot outlive model borrow.",
+      "status": "implemented"
+    }
+  ],
+  "types": {
+    "document_edit": "Editor / DocumentEdit alias",
+    "document_edit_snapshot": "EditSnapshot / DocumentEditSnapshot alias",
+    "document_edit_limits": "EditLimits",
+    "document_edit_error": "EditError (all 14 categories)",
+    "document_edit_result": "EditResult",
+    "document_edit_attribute": "Attribute with exact SourceSpan offsets and u8 quote",
+    "document_edit_template_kind": "TemplateKind; invalid C enum values excluded by type",
+    "document_edit_template_attribute": "TemplateAttribute borrowed slices for call",
+    "document_edit_history_entry": "HistoryEntry; immutable static label and copied flags/cursor",
+    "document_edit_save_result": "SaveResult owned error, original diagnostic, exact native error code and all flags; borrowed token payload intentionally dropped",
+    "document_edit_blob": "storage::Blob (Arc, actual-capacity account, final-owner Drop)",
+    "document_edit_piece": "storage::Piece / Buffer",
+    "document_edit_command": "piece_table::Command (before/after Arc blobs, static label, target, coalescing and state IDs)",
+    "document_edit_history_action": "HistoryAction",
+    "document_edit_node_info": "cache::NodeInfo",
+    "document_edit_attribute_info": "cache::AttributeInfo",
+    "document_edit_text_info": "cache::TextInfo; unused C owner slot replaced by exact node source containment for queries",
+    "document_group_node": "group::GroupNode",
+    "prepared_fragment": "insert::Prepared with borrowed-or-owned Cow",
+    "document_view": "&OwnedDocumentModel",
+    "document_view_row": "DocumentViewRow",
+    "document_source_span": "accepted vexel_document::DocumentSourceSpan, SourceSpan alias"
+  },
+  "original_assertion_coverage": {
+    "tests/edit/test_document_edit.c": {
+      "fixtures": [
+        "test_generated_object_ids",
+        "test_queries_and_attributes",
+        "test_structural_operations",
+        "test_empty_text_and_xml_fragment",
+        "test_replace_xml_region",
+        "test_replace_source_span",
+        "test_insert_text_element",
+        "test_history_and_save",
+        "test_mark_saved_checkpoint",
+        "test_history_bounds",
+        "test_invalid_source",
+        "test_randomized_history",
+        "test_randomized_xml_fragments"
+      ],
+      "rust_files": [
+        "tests/original_fixtures.rs",
+        "tests/native_save.rs",
+        "tests/seeded_editor.rs"
+      ],
+      "stress": [
+        {
+          "test": "test_randomized_history_200000",
+          "cases": 200000,
+          "seed": "0x9e3779b9",
+          "oracles": "Original branch choices, independent accepted XML tokenizer, unchanged prefix/suffix, bounded blob bytes, full undo baseline and redo final round trip"
+        },
+        {
+          "test": "test_randomized_xml_fragments_200000",
+          "cases": 200000,
+          "seed": "0x57465835",
+          "oracles": "Original five branches and exact error classes; accepted/malformed/multi-root branches retained; source length and saved baseline each iteration; exact final bytes"
+        }
+      ],
+      "pending": []
+    },
+    "tests/edit/document_edit_history_test.c": {
+      "rust_file": "tests/history_snapshot_view.rs",
+      "tests": [
+        "check_recent_entries_and_jump",
+        "check_coalescing_and_eviction"
+      ],
+      "oracles": "25 exact captured states, 25 labels/entries, saved baseline, exact jump8, branch9, redo discard, bounds, coalescing and oldest-command eviction",
+      "pending": []
+    },
+    "tests/edit/document_edit_snapshot_test.c": {
+      "rust_file": "tests/history_snapshot_view.rs",
+      "tests": [
+        "test_snapshot_stability_and_worker_read",
+        "test_unedited_snapshot_and_output_capacity"
+      ],
+      "oracles": "1000 worker reads with 60 edit synchronization rounds; frozen exact bytes after undo/redo; capacity no partial output; added editor/source destruction ownership test",
+      "safe_null_adaptation": "Non-null self/source references and owned snapshots exclude C NULL arguments. Optional null snapshot length is expressed by caller Option::map_or(0, EditSnapshot::byte_length); create null-source compile-fail doc proves typed exclusion.",
+      "pending": []
+    },
+    "tests/document/test_document_model.c": {
+      "scope": "document_view inline APIs and pagination assertions",
+      "rust_file": "tests/history_snapshot_view.rs",
+      "tests": [
+        "document_view_range_original_pagination",
+        "view_pagination_skips_dead_slots_without_extra_rows"
+      ],
+      "oracles": "Original attribute name/value, 2 rows, next_slot2, root slot0, depth1; added dead-slot/zero-capacity/invalid bounds checks",
+      "pending": []
+    }
+  },
+  "safe_adaptations": [
+    "Source Arc owner is cloned at construction. Original source and snapshots safely survive caller/editor destruction; no self-reference or unsafe.",
+    "C malloc length becomes actual Vec capacity for blob charge. Metadata actual capacities are exposed and checked against count limits, without incorrectly charging them to the C blob-only history byte cap.",
+    "Shared AtomicUsize accounting owner follows every unique blob until its final piece/command/snapshot owner drops, including after the editor is destroyed.",
+    "All significant local Vec allocations pass fallible reserve and a disabled-by-default thread-local deterministic test gate. Accepted peer parsers/save services retain their accepted fallible contracts; only standard Arc control-block allocation is an infallible exception.",
+    "C boolean-only allocation/validation helpers become typed Results, surfacing OutOfMemory at significant-allocation failures instead of collapsing it into a syntax/name boolean. Frozen meaningful error assertions for malformed XML/name, bounds, duplicates, limits and stale handles are retained.",
+    "Borrowed C caches become a OnceLock-owned model/token/span cache per source state. Mutations invalidate it only after publication; ordinary commits do not materialize/reparse a full model. Returned-handle operations prebuild the same eventual cache before commit so allocation failure cannot reject after mutation.",
+    "Measured two-pass decode/text/path outputs allocate nothing after cache build and avoid partial writes. materialize_into retains C required-length reporting; snapshot materialize_into retains zero length on failure; path capacity failure reports complete required length instead of the C partial-prefix count.",
+    "History labels use the original static strings, removing String allocation while retaining the 64-byte label contract.",
+    "history_jump preflights intermediate descriptors and XML validation, then publishes the final cursor/state once; allocation failure preserves original source, cursor, handles and save flags instead of a partial multi-step jump.",
+    "C NULL pointer/invalid enum combinations are excluded by Rust references, owned values and enums; no shim or unsupported platform stub is introduced.",
+    "Save uses accepted source_save_noop and copies original diagnostic, exact AtomicFileReplaceError discriminant (0..7), renamed/file_synced/directory_synced flags before dropping the borrowed token result. OK OR renamed marks saved; Durability remains SaveFailed with renamed flag."
+  ],
+  "provenance": {
+    "reference": "artifacts/WO-RUST-PLAN-01/source-baseline.json",
+    "legacy_and_frozen_assertions": [
+      {
+        "path": "src/document/document_edit.c",
+        "sha256": "3489efae9f076bad4a5d197f138f79cb45fc9e6eec4ce8e9fc162456c0fc7789",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit.h",
+        "sha256": "b720922c77915b77c9e73dec127e2dbedd8ebf531dc21537645be0d2f2b1d3ee",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_group.c",
+        "sha256": "c8eb63fe69fa385878d379dcb97fa60d52eb1766a95aaa73bd1f01e5072e6e9d",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_history.c",
+        "sha256": "145d942f45a8621e566f8e1724022facb56ecd679feac1b2247a4044e5889e94",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_insert.c",
+        "sha256": "1005fbd82ae771b4d8321fe647d2ce2a3d1288eaa6ba28c588b1cb078a5e137a",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_internal.h",
+        "sha256": "68ff89c1374be048f7bd3f0160a6d56e6d8ebd0ace095da5fd8698b979d20f3d",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_ops.c",
+        "sha256": "94fda54f4bc32062813f0ba515384986949813f17c2ddba3e79323ddbba52f56",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_piece_table.c",
+        "sha256": "9104c30bb4c8c8c73bc8ac4918a5bcb7237bd948a685b13c20b8e3da3169c018",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_region.c",
+        "sha256": "0710bd238c05718a0c49b144a15995ec37f514e816bbbc2d7f00d86ea3b1998d",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_snapshot.c",
+        "sha256": "90375f5f17fc1ae2098b961c2ffc0ce39045f8be8404bfe4b51ad2bb323ad3bc",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_edit_text_insert.c",
+        "sha256": "dd918fc09ea8caa715ab0db383b0f899f74d77dff452b3d60ebad1456e87f4e3",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "src/document/document_view.h",
+        "sha256": "1d0cd16bd71970b814ca8fc9c2e95aacb2e7633742ef8ad05ee92b640ea56706",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "tests/document/test_document_model.c",
+        "sha256": "f00907d6c667fb155efcafd0b771690b0bce5cc235ebad7cc459a19dc3a06c1f",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "tests/edit/document_edit_history_test.c",
+        "sha256": "e6f8076fe765bf9b6e25a2daa82dced1cb129d63559adccd484735a09515af97",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "tests/edit/document_edit_snapshot_test.c",
+        "sha256": "7c2073ad6b633f1ffac63a21171f971b1738c597cf904f1f7f12c849106328d6",
+        "matches_original_dirty_source_baseline": true
+      },
+      {
+        "path": "tests/edit/test_document_edit.c",
+        "sha256": "e9849b09cfe2714345532b5a7d48c9b36f7ed0b874ce6e59a13dfe01c87839ee",
+        "matches_original_dirty_source_baseline": true
+      }
+    ],
+    "external_source": "None; all algorithms ported from owned repository C scope",
+    "candidate_sources": [
+      {
+        "path": "rust/crates/vexel-document-edit/src/alloc.rs",
+        "sha256": "ea9d778c51e40bbc7e127e970415e44012303c54d2bb5b05b118cf896c509a40"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/cache.rs",
+        "sha256": "cc945aa5d2df474d81becb0f931b6348c422f38e3cf4856f48496bbc8574ae14"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/group.rs",
+        "sha256": "b038273af17c4f2478dd4c7336424da0516fb74c87d1f9eec9a0ddecde271372"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/history.rs",
+        "sha256": "fc63629008f4987d9d6648e497fcf8b48641ae93153fdf0d3ff8de9c3f4399d3"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/insert.rs",
+        "sha256": "3dce8890b880e0a9ae722437920548d3d20a400e6a416fdd07abe3b8f9d65db0"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/internal_tests.rs",
+        "sha256": "ade482a3f3e17e611403bf3c2db3146c196438e7fe9e179afe5b17a923ff27e4"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/lib.rs",
+        "sha256": "8029e3172f9b4e9cef8d5c9fa0f32a3671443096ac33aad6e7b2bc0c41f60c3c"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/ops.rs",
+        "sha256": "21839dba23c7055cba7efe568b8f246052b719c8c74fcc23ba58a59916b4187e"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/piece_table.rs",
+        "sha256": "3e2ac0026be900ee0d1d110574dfae15ccb2982164b60b4c99abfccfffcd27a5"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/query.rs",
+        "sha256": "dac20a9239d07a27f50ed66fdb1209dfe4e1f29ebeec90439671cff5fac9d407"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/snapshot.rs",
+        "sha256": "f2d467cec2e1ee3dba7b53cfd99e43869108123e7da491f7a8f39d07458c07e3"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/storage.rs",
+        "sha256": "242f3b43cee99c0d252585ba7b6320c675c1c4f71b186e5e4551f0f2f9f2d6d7"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/types.rs",
+        "sha256": "ce4a127b8d61e2ec8f366ff43b0185f0ed03d6e348be3effa693dac45bd78b08"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/src/view.rs",
+        "sha256": "e2631ddd4d6f7aa355c3a47133c72b366573a23a9a11dd8dfcd925575ae843d5"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/allocation_atomicity.rs",
+        "sha256": "099465478e7bc50819f74c6a7db2a621a4f4fed366e590386e553579ccf74b23"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/common/mod.rs",
+        "sha256": "de24f4a5d04587f1074c0184af895bde921cc96a43b0bd3e5437f297bc97cb74"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/edge_contracts.rs",
+        "sha256": "b782e1e721b9003b76d1c485eda66bf3efe3ee23ec479dc2f97b2f45b65c3ec8"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/edit_contract.rs",
+        "sha256": "612e84c02d82c89c73445c53bfd1b50b495da17a9bd0b4276315f12ac6cb343b"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/history_snapshot_view.rs",
+        "sha256": "e76131edd6f30fe144e227102bb06d6f28b57bf49dd6075abba5407f00bc4bb7"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/native_save.rs",
+        "sha256": "9f6f85b964f4649761cf2ebe14847798cee21961eebbd27189b9323805dc0635"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/original_fixtures.rs",
+        "sha256": "a1b58fab0c1cb864a892551da596fed8c9e4ea44aee8da8d33477050ffab926e"
+      },
+      {
+        "path": "rust/crates/vexel-document-edit/tests/seeded_editor.rs",
+        "sha256": "a0e4ea793625494782ba22a24e8e2da5d086e0be9d2de520e233a2f0c57b29d6"
+      }
+    ]
+  },
+  "verification": {
+    "required": [
+      "cargo +stable check -p vexel-document-edit --locked --offline",
+      "cargo +stable test -p vexel-document-edit --locked --offline",
+      "python3 scripts/wo_validate.py WO-RUST-DOCUMENT-EDIT-01 --ready",
+      "python3 scripts/ledger.py validate ledger.jsonl",
+      "git diff --check"
+    ],
+    "record": "verification.txt"
+  },
+  "remaining_downstream_work": [
+    "Independent root review, preservation audit and integration; candidate is not acceptance.",
+    "Full 100 MB editing/save integration remains the separate feature explicitly excluded by this frozen legacy-parity order."
+  ]
+}

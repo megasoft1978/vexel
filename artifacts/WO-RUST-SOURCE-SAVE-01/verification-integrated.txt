@@ -1,0 +1,45 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-document-io --locked --offline
+EXIT: 0
+    Checking vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-document-io)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+
+COMMAND: cargo +stable test -p vexel-document-io --locked --offline
+EXIT: 0
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 5 tests
+test path_adapter_rejects_nul_and_nonregular_targets_after_tokenization ... ok
+test validation_precedence_and_tokenizer_diagnostics_prevent_destination_calls ... ok
+test replaces_existing_source_byte_for_byte_and_preserves_mode ... ok
+test failures_keep_commit_state_and_clean_temporary_files ... ok
+test missing_target_uses_native_no_replace_create_and_reports_durability ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-document-io)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.25s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_document_io-764c9472da35ac8b)
+     Running tests/source_save.rs (build/rust/aarch64-apple-darwin/debug/deps/source_save-d8f41aee3c8efd94)
+   Doc-tests vexel_document_io
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SOURCE-SAVE-01 --ready
+EXIT: 0
+valid WO-RUST-SOURCE-SAVE-01 revision 1 sha256 d0d3c5d17b3cd82b3c25eef4be355a53b05704479314b889bf29fcab86858818
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1267 entries
+
+COMMAND: git diff --check
+EXIT: 0

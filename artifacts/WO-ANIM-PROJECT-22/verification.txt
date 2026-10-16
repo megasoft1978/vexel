@@ -1,0 +1,23 @@
+WO-ANIM-PROJECT-22 focused verification
+Date: 2026-10-13
+
+Debug
+- cmake --preset mac-debug: PASS
+- cmake --build --preset mac-debug --target viewer_timeline_test viewer_timeline_native_test svgworkbench: PASS
+- build/mac-debug/bin/viewer_timeline_test: PASS (viewer timeline: passed)
+- build/mac-debug/bin/viewer_timeline_native_test: PASS (viewer native timeline: passed)
+
+ASan/UBSan
+- cmake --preset mac-asan: PASS
+- cmake --build --preset mac-asan --target viewer_timeline_test viewer_timeline_native_test svgworkbench: PASS
+- both focused timeline binaries: PASS
+
+UBSan
+- cmake --preset mac-ubsan: PASS
+- cmake --build --preset mac-ubsan --target viewer_timeline_test viewer_timeline_native_test svgworkbench: PASS
+- both focused timeline binaries: PASS
+
+Scope checks
+- General timeline test source: 506 lines; focused native timeline source: 423 lines.
+- No comprehensive UI/E2E or unrelated tests run.
+- Existing unrelated worktree changes were left untouched.

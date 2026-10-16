@@ -1,0 +1,23 @@
+{
+  "rust/crates/vexel-platform-apple/Cargo.toml": "1eceb008a5a0239889cd9dd7dd8e83e90c4c2bff50c9431f27165bd0cf92009c",
+  "rust/crates/vexel-platform-apple/tests/native_boundary.rs": "bcd53787bec0b75098c8746023d8f0e944a8961edb9a2787aae8d79f3fb075c3",
+  "rust/crates/vexel-platform-apple/tests/native_window.rs": "5e2b67a64d211627ec14c89138b58832d48672b199d9dd84400ed56d707ea82e",
+  "rust/crates/vexel-platform-apple/src/native_boundary.rs": "9614d537b7e9c1e2c7df4bd427f37c78254b11523525dfda269874d2c6663098",
+  "rust/crates/vexel-platform-apple/src/lib.rs": "e8692565593bcd3d38c42797e14fb3561d5b1ed62856dc7eb7703a16815b0f5a",
+  "rust/crates/vexel-platform-apple/src/main_thread.rs": "19f7dbb4c106a51ced188fa991bd08536e69c50be4ccec980a3b8671e41a9340",
+  "rust/crates/vexel-platform-apple/src/native_window/types.rs": "1c1e1363ed79498e73739fadc59a3a027db81fe6a75b340dd48d83ba08f54e9d",
+  "rust/crates/vexel-platform-apple/src/native_window/ticks.rs": "7b0648224bb8770454054e06e778286fcd78437a35c09861797dca02b144a990",
+  "rust/crates/vexel-platform-apple/src/native_window/route.rs": "9b7e429f5d05fc6c141adc81481a05b1448e148fe789e4dc5d96d387a5f8d230",
+  "rust/crates/vexel-platform-apple/src/native_window/ime.rs": "acfb784c79cdee9d89bc40144f69860e8185389737795cfc51bc3824985c6a6a",
+  "rust/crates/vexel-platform-apple/src/native_window/window.rs": "0321d21abc2bceccbf63abd805223df9035034e2fbfef69ce7abc51ff6fd1f14",
+  "rust/crates/vexel-platform-apple/src/native_window/queue.rs": "bbc76adc1fd55de2755bb9908d22ad66320e1afd0770b990de3dfc1c41ecb40f",
+  "rust/crates/vexel-platform-apple/src/native_window/teardown.rs": "895780830f88358f14b20a12f40f4f5c35ac6594c89d0a99086a0754dc6a861f",
+  "rust/crates/vexel-platform-apple/src/native_window/verification_tests.rs": "d295c1cea849ad165082430fe810a8f4d98e788b6be75a510b42ffc620152651",
+  "rust/crates/vexel-platform-apple/src/native_window/mod.rs": "f99dd50c79bfce68d54d7db2b7f5e395d15c656a1b2365332faab74dacfab9f6",
+  "rust/crates/vexel-platform-apple/src/native_window/ime_native.rs": "19319d5e187513eec95c35ecd69eaa3591e50b9ba7ec5ad619af21201e254c28",
+  "rust/crates/vexel-platform-apple/src/native_window/cursor.rs": "7ca1a0a2c4123737a10ec8a22a1a0130345fb1f2b38d747c2bd7a37c71f77557",
+  "rust/crates/vexel-platform-apple/src/native_window/callbacks.rs": "54050fdd6dc2b63f804b55dcb79758f3977cbcbe2c53d264a92b767a08ee4ee1",
+  "rust/crates/vexel-platform-apple/src/native_window/geometry.rs": "bf843d0e36c6cd5df39a4f0175f6fec1dfd5a815a6841cf60d4618530ab4e9df",
+  "rust/crates/vexel-platform-apple/src/native_window/input.rs": "ee596a301d8bb27b83ca535e60a2883ca237fdcf439c5403ac3172c6b75ee89b",
+  "rust/crates/vexel-platform-apple/src/native_window/app.rs": "556814b322f3fbdde7c5a2e002d561427cfed715e73d84ee0a2b619b46b9436c"
+}

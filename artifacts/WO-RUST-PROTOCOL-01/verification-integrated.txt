@@ -1,0 +1,49 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-protocol --locked --offline
+EXIT: 0
+    Checking vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-protocol)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+
+COMMAND: cargo +stable test -p vexel-protocol --locked --offline
+EXIT: 0
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 9 tests
+test legacy_progress_is_monotone_bounded_and_atomic ... ok
+test notifications_do_not_emit_and_unknown_requests_do ... ok
+test current_discovery_metadata_merging_original_ids_and_task_capability_reset ... ok
+test every_tool_schema_and_validation_registry_is_available ... ok
+test sync_fallback_malformed_backends_metadata_and_legacy_deferred_cancel ... ok
+test flat_task_create_detailed_terminal_empty_cancel_and_rpc_error_are_distinct ... ok
+test legacy_lifecycle_sync_discovery_tools_resources_prompts_and_reset ... ok
+test request_rate_limit_is_per_session_and_has_an_rpc_error_envelope ... ok
+test async_payload_limits_content_shapes_timestamps_ids_and_cancel_ack ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-protocol)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.88s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_protocol-25dc03d68d1d3ba0)
+     Running tests/parity.rs (build/rust/aarch64-apple-darwin/debug/deps/parity-844f9c802eb9363f)
+   Doc-tests vexel_protocol
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-PROTOCOL-01 --ready
+EXIT: 0
+valid WO-RUST-PROTOCOL-01 revision 1 sha256 1b83f57278d6aad84ba343bace11b3806472b6ff6988d8887de7ca6bf3f9e71d
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1120 entries
+
+COMMAND: git diff --check
+EXIT: 0

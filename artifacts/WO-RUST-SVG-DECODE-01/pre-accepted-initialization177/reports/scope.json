@@ -1,0 +1,1425 @@
+{
+  "schema": 1,
+  "owner": "DECODE",
+  "crate": "vexel-svg-decode",
+  "work_order": "WO-RUST-SVG-DECODE-01",
+  "mapping_adaptation": "separate owned crate address only; full accepted owner scope remains",
+  "accepted_plan": "WO-RUST-RENDER-CONTRACT-PLAN-01",
+  "accepted_shared_orders": [
+    "WO-RUST-SCENE-MODEL-01",
+    "WO-RUST-KERNEL-CONTRACTS-01",
+    "WO-RUST-SCENE-DRAFT-01"
+  ],
+  "source_files": [
+    {
+      "path": "src/svg/shape/decode.c",
+      "sha256": "92268afd4f11df6c57a8f6cb38b54221f9ce1663680721fca129d4656365531b",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_decode_source",
+          "line": 10,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:10:definition:svg_shape_decode_source",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_decode_source_with_media",
+          "line": 17,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:17:definition:svg_shape_decode_source_with_media",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_decode_source_with_bounds",
+          "line": 25,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:25:definition:svg_shape_decode_source_with_bounds",
+          "semantic_replacement": null
+        },
+        {
+          "name": "decode_source_with_language_and_media_and_bounds",
+          "line": 34,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:34:definition:decode_source_with_language_and_media_and_bounds",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_decode_source_with_system_language",
+          "line": 242,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:242:definition:svg_shape_decode_source_with_system_language",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_decode_source_with_media_and_bounds",
+          "line": 251,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:251:definition:svg_shape_decode_source_with_media_and_bounds",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_decode_source_with_token_budget",
+          "line": 263,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:263:definition:svg_shape_decode_source_with_token_budget",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_decode_cancellable",
+          "line": 274,
+          "kind": "definition",
+          "key": "src/svg/shape/decode.c:274:definition:svg_shape_decode_cancellable",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/ignored.c",
+      "sha256": "911a3895f23545072676acce7e92593e98e3a88f0546441ef46fa649b64ea675",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_ignored_kind_name",
+          "line": 8,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:8:definition:svg_shape_ignored_kind_name",
+          "semantic_replacement": null
+        },
+        {
+          "name": "note",
+          "line": 15,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:15:definition:note",
+          "semantic_replacement": null
+        },
+        {
+          "name": "ci_equal",
+          "line": 24,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:24:definition:ci_equal",
+          "semantic_replacement": null
+        },
+        {
+          "name": "ident_byte",
+          "line": 36,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:36:definition:ident_byte",
+          "semantic_replacement": null
+        },
+        {
+          "name": "scan_css_text",
+          "line": 43,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:43:definition:scan_css_text",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_ignored_scan",
+          "line": 61,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:61:definition:svg_shape_ignored_scan",
+          "semantic_replacement": null
+        },
+        {
+          "name": "affects_rendering",
+          "line": 94,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:94:definition:affects_rendering",
+          "semantic_replacement": null
+        },
+        {
+          "name": "first_visit",
+          "line": 117,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:117:definition:first_visit",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_attributes_supported",
+          "line": 130,
+          "kind": "definition",
+          "key": "src/svg/shape/ignored.c:130:definition:svg_shape_traverse_attributes_supported",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/shape.c",
+      "sha256": "b25de60b0bac55fd268db61721d08a39a5b09307f8bc7abc85526f5f4587e066",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_span_eq",
+          "line": 12,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:12:definition:svg_shape_span_eq",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_point_bounded",
+          "line": 18,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:18:definition:svg_shape_point_bounded",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_transformed_flatness_tolerance",
+          "line": 23,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:23:definition:svg_shape_transformed_flatness_tolerance",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_fail",
+          "line": 33,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:33:definition:svg_shape_fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "skip_space",
+          "line": 37,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:37:definition:skip_space",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_skip_path_separators",
+          "line": 41,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:41:definition:svg_shape_skip_path_separators",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_path_operand_boundary",
+          "line": 45,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:45:definition:svg_shape_path_operand_boundary",
+          "semantic_replacement": null
+        },
+        {
+          "name": "next_number_separator",
+          "line": 57,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:57:definition:next_number_separator",
+          "semantic_replacement": null
+        },
+        {
+          "name": "read_number",
+          "line": 71,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:71:definition:read_number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_skip_number_space",
+          "line": 113,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:113:definition:svg_shape_skip_number_space",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_next_number_separator",
+          "line": 117,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:117:definition:svg_shape_next_number_separator",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_number_value",
+          "line": 121,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:121:definition:svg_shape_read_number_value",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_arc_flag",
+          "line": 125,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:125:definition:svg_shape_read_arc_flag",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_number",
+          "line": 132,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:132:definition:svg_shape_read_number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_number_list",
+          "line": 143,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:143:definition:svg_shape_read_number_list",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_dimension",
+          "line": 158,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:158:definition:svg_shape_read_dimension",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_length_value",
+          "line": 163,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:163:definition:svg_shape_read_length_value",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_read_length",
+          "line": 202,
+          "kind": "definition",
+          "key": "src/svg/shape/shape.c:202:definition:svg_shape_read_length",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_MAX_COMMANDS",
+          "65536U"
+        ],
+        [
+          "SHAPE_MAX_COORD",
+          "1000000.0"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/shape_custom.c",
+      "sha256": "2a11e34380c46c30d6ca3a9cb81b2b122381bd4a78216179826db89570ddf749",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_builder_add_custom_element",
+          "line": 9,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_custom.c:9:definition:svg_shape_builder_add_custom_element",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/shape_geometry.c",
+      "sha256": "59dbf34064c6b9abee7f061adfec867f4d81be0af58a40d74b05aa6fd78011d9",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "add_edge",
+          "line": 12,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:12:definition:add_edge",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_builder_add_edge",
+          "line": 49,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:49:definition:svg_shape_builder_add_edge",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_builder_begin_shape",
+          "line": 55,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:55:definition:svg_shape_builder_begin_shape",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_ensure_stroke_paint",
+          "line": 178,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:178:definition:svg_shape_ensure_stroke_paint",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_ensure_fill_paint",
+          "line": 225,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:225:definition:svg_shape_ensure_fill_paint",
+          "semantic_replacement": null
+        },
+        {
+          "name": "midpoint",
+          "line": 267,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:267:definition:midpoint",
+          "semantic_replacement": null
+        },
+        {
+          "name": "point_segment_distance",
+          "line": 271,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:271:definition:point_segment_distance",
+          "semantic_replacement": null
+        },
+        {
+          "name": "add_curve_recursive",
+          "line": 281,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:281:definition:add_curve_recursive",
+          "semantic_replacement": null
+        },
+        {
+          "name": "add_curve",
+          "line": 289,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:289:definition:add_curve",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_builder_add_curve",
+          "line": 294,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:294:definition:svg_shape_builder_add_curve",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 300,
+          "kind": "declaration",
+          "key": "src/svg/shape/shape_geometry.c:300:declaration:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 302,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:302:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "number_attr",
+          "line": 307,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:307:definition:number_attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "ellipse_edges",
+          "line": 315,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:315:definition:ellipse_edges",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_builder_add_element",
+          "line": 346,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_geometry.c:346:definition:svg_shape_builder_add_element",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_MAX_COORD",
+          "1000000.0"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/shape_path.c",
+      "sha256": "232f882b1910b4b278bbcf7e541c236fea71eafd8ec0bbbfbe08ee6af9e11eba",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "record_path_subpath",
+          "line": 13,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_path.c:13:definition:record_path_subpath",
+          "semantic_replacement": null
+        },
+        {
+          "name": "add_arc",
+          "line": 43,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_path.c:43:definition:add_arc",
+          "semantic_replacement": null
+        },
+        {
+          "name": "record_path_segment",
+          "line": 86,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_path.c:86:definition:record_path_segment",
+          "semantic_replacement": null
+        },
+        {
+          "name": "add_path_quad",
+          "line": 161,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_path.c:161:definition:add_path_quad",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_path_decode",
+          "line": 171,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_path.c:171:definition:svg_shape_path_decode",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_MAX_COMMANDS",
+          "(4U * 1024U * 1024U)"
+        ],
+        [
+          "SHAPE_MAX_COORD",
+          "1000000.0"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/shape_style.c",
+      "sha256": "61d0e2539786991d20d5037cd1d476c1d23a71a93cb66f039c17d46ae28e5bb7",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "parse_color",
+          "line": 9,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:9:definition:parse_color",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_parse_style_color",
+          "line": 18,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:18:definition:svg_shape_parse_style_color",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_stroke_number",
+          "line": 33,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:33:definition:parse_stroke_number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_dasharray",
+          "line": 40,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:40:definition:parse_dasharray",
+          "semantic_replacement": null
+        },
+        {
+          "name": "store_dash_values",
+          "line": 67,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:67:definition:store_dash_values",
+          "semantic_replacement": null
+        },
+        {
+          "name": "paint_server_value",
+          "line": 117,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:117:definition:paint_server_value",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_parse_opacity",
+          "line": 132,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:132:definition:svg_shape_parse_opacity",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_style_opacity",
+          "line": 148,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:148:definition:svg_shape_style_opacity",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_style_display_none",
+          "line": 157,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:157:definition:svg_shape_style_display_none",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_multiply_alpha",
+          "line": 178,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:178:definition:svg_shape_multiply_alpha",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_parse_stroke",
+          "line": 183,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:183:definition:svg_shape_parse_stroke",
+          "semantic_replacement": null
+        },
+        {
+          "name": "uniform_scale",
+          "line": 313,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:313:definition:uniform_scale",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_apply_vector_effect",
+          "line": 329,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_style.c:329:definition:svg_shape_apply_vector_effect",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/transform.c",
+      "sha256": "a2229c82eb2962707055be6ba362b28d765282d454737da0f881d99c45a79278",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_affine_inverse",
+          "line": 6,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:6:definition:svg_shape_affine_inverse",
+          "semantic_replacement": null
+        },
+        {
+          "name": "fail",
+          "line": 25,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:25:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "span_eq",
+          "line": 32,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:32:definition:span_eq",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 40,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:40:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "transform_args",
+          "line": 54,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:54:definition:transform_args",
+          "semantic_replacement": null
+        },
+        {
+          "name": "transform_parse",
+          "line": 63,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:63:definition:transform_parse",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_transform_parse",
+          "line": 184,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:184:definition:svg_shape_transform_parse",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_transform_node",
+          "line": 191,
+          "kind": "definition",
+          "key": "src/svg/shape/transform.c:191:definition:svg_shape_transform_node",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/traverse.c",
+      "sha256": "4f8be06fbb2e60a00de17c6dfa8b4aed5c73ff1fe893a268ae7370b5f51f1659",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_traverse_fail",
+          "line": 11,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:11:definition:svg_shape_traverse_fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_span_eq",
+          "line": 18,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:18:definition:svg_shape_traverse_span_eq",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_attr",
+          "line": 26,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:26:definition:svg_shape_traverse_attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_element_name",
+          "line": 42,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:42:definition:svg_shape_traverse_element_name",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_basic_shape",
+          "line": 49,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:49:definition:svg_shape_traverse_basic_shape",
+          "semantic_replacement": null
+        },
+        {
+          "name": "metadata_element",
+          "line": 64,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:64:definition:metadata_element",
+          "semantic_replacement": null
+        },
+        {
+          "name": "animation_element",
+          "line": 75,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:75:definition:animation_element",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_matching_end",
+          "line": 84,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:84:definition:svg_shape_traverse_matching_end",
+          "semantic_replacement": null
+        },
+        {
+          "name": "source_element_span",
+          "line": 97,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:97:definition:source_element_span",
+          "semantic_replacement": null
+        },
+        {
+          "name": "assign_shape_source",
+          "line": 117,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:117:definition:assign_shape_source",
+          "semantic_replacement": null
+        },
+        {
+          "name": "authored_transform",
+          "line": 131,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:131:definition:authored_transform",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_account_transform",
+          "line": 147,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:147:definition:svg_shape_traverse_account_transform",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_push_transform_node",
+          "line": 159,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:159:definition:svg_shape_traverse_push_transform_node",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_compute_style",
+          "line": 214,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:214:definition:svg_shape_traverse_compute_style",
+          "semantic_replacement": null
+        },
+        {
+          "name": "apply_marker_shorthand",
+          "line": 228,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:228:definition:apply_marker_shorthand",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_begin_opacity_group",
+          "line": 240,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:240:definition:svg_shape_traverse_begin_opacity_group",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_finish_opacity_group",
+          "line": 360,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:360:definition:svg_shape_traverse_finish_opacity_group",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_walk_range",
+          "line": 370,
+          "kind": "declaration",
+          "key": "src/svg/shape/traverse.c:370:declaration:svg_shape_traverse_walk_range",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_render_node",
+          "line": 374,
+          "kind": "declaration",
+          "key": "src/svg/shape/traverse.c:374:declaration:svg_shape_traverse_render_node",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_render_node",
+          "line": 379,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:379:definition:svg_shape_traverse_render_node",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_walk_range",
+          "line": 710,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse.c:710:definition:svg_shape_traverse_walk_range",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/traverse_switch.c",
+      "sha256": "3aba678c90df0a0be374435b88036b90e9d9851094f19515bb9630ce5554f2b1",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "ascii_lower",
+          "line": 5,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse_switch.c:5:definition:ascii_lower",
+          "semantic_replacement": null
+        },
+        {
+          "name": "language_range_matches",
+          "line": 11,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse_switch.c:11:definition:language_range_matches",
+          "semantic_replacement": null
+        },
+        {
+          "name": "switch_child_matches",
+          "line": 23,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse_switch.c:23:definition:switch_child_matches",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_select_switch_child",
+          "line": 100,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse_switch.c:100:definition:svg_shape_traverse_select_switch_child",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/traverse_use.c",
+      "sha256": "7a1bda159e227415bbb7eaaee57e1a23a2e9e0d9db5c6f06e57405f51dfbaa1e",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "svg_shape_traverse_resolve_use",
+          "line": 8,
+          "kind": "definition",
+          "key": "src/svg/shape/traverse_use.c:8:definition:svg_shape_traverse_resolve_use",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/viewport.c",
+      "sha256": "f2f6e32d6b2bcaa15ebee6075f5fde8857d131ff04dc15b3998757f108852e44",
+      "owner": "DECODE",
+      "symbols": [
+        {
+          "name": "space",
+          "line": 6,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:6:definition:space",
+          "semantic_replacement": null
+        },
+        {
+          "name": "token_eq",
+          "line": 12,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:12:definition:token_eq",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_parse_preserve_aspect",
+          "line": 22,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:22:definition:svg_shape_parse_preserve_aspect",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_viewbox_transform",
+          "line": 73,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:73:definition:svg_shape_viewbox_transform",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 107,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:107:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "fail",
+          "line": 126,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:126:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_symbol_attributes_supported",
+          "line": 133,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:133:definition:svg_shape_symbol_attributes_supported",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_symbol_mapping",
+          "line": 174,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:174:definition:svg_shape_symbol_mapping",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_nested_viewport",
+          "line": 213,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:213:definition:svg_shape_nested_viewport",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_root_viewport",
+          "line": 312,
+          "kind": "definition",
+          "key": "src/svg/shape/viewport.c:312:definition:svg_shape_root_viewport",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    }
+  ],
+  "operations": [
+    {
+      "owner": "DECODE",
+      "name": "Decoder::new",
+      "signature": "fn new(source: &'a SourceOwner, tokens: &'a [XmlToken], generation: u64, options: DecodeOptions<'a>, control: &mut dyn WorkControl) -> Result<Decoder<'a>>",
+      "contract": "Own builder and bounded continuation stack, borrow external immutable source/tokens, own ephemeral CSS/reference caches borrowing same external data. No self reference. Cancellation invalidates draft and outstanding tickets."
+    },
+    {
+      "owner": "DECODE",
+      "name": "Decoder::step",
+      "signature": "fn step<'s>(&'s mut self, work_quantum: u64, operations: &mut dyn DecodeOperations, control: &mut dyn WorkControl) -> Result<DecodeEvent<'s>>",
+      "contract": "Bounded engine handles XML-depth/inherited style/viewport/transform/group/text stacks and local use expansions. No calls from lower definition/media/paint modules back into engine; planners enqueue typed child/post operations."
+    },
+    {
+      "owner": "DECODE",
+      "name": "Decoder::resume_pattern",
+      "signature": "fn resume_pattern(&mut self, ticket: PatternTicket, result: Result<Tile>, control: &mut dyn WorkControl) -> Result<()>",
+      "contract": "After request view borrow ends, validate ticket/dimensions/capacity; move rendered pixels once into pattern; update cache/budget then continue same position. Error aborts job, no fallback or skipping. Nested patterns finish before parent event."
+    },
+    {
+      "owner": "DECODE",
+      "name": "Decoder::finish",
+      "signature": "fn finish(self, control: &mut dyn WorkControl) -> Result<SceneGraph>",
+      "contract": "Only Complete state allowed; all indices/ranges/inverses/graph and pattern readiness checked; move arrays and Arc clone, no parsing or source copy."
+    },
+    {
+      "owner": "DECODE",
+      "name": "geometry",
+      "signature": "fn geometry(element: ElementView<'_>, flavor: DecodeFlavor, style: &CssPaint<'_>, transform: Affine, builder: &mut SceneBuilder, scene: SceneId, control: &mut dyn WorkControl) -> Result<TableRange>",
+      "contract": "Entire shape_geometry/path/custom API: primitives, poly lists, transformed tolerance, implicit fill closure, open stroke, source numbers/segments/subpaths. Reuse accepted path parser and G3 flatten/number cursor; custom glyph/image geometry passes owned edges/metadata into same style finalization transaction."
+    },
+    {
+      "owner": "DECODE",
+      "name": "style",
+      "signature": "fn parse_style(source: &[u8], paint: &CssPaint<'_>, percentage_reference: f64, transform: Affine, viewport: Viewport, builder: &mut SceneBuilder, control: &mut dyn WorkControl) -> Result<ResolvedStyle>",
+      "contract": "ResolvedStyle owns fill [u8;4], Stroke, fill/stroke server spans, clip/filter/mask/marker spans, opacity, visibility/display, blend/isolation; no borrowed CSS retained after decode. Preserve currentColor, dash compaction, alpha rounding, non-scaling stroke, join fallback, crisp edges and paint order."
+    }
+  ],
+  "assigned_original_suites": [
+    {
+      "path": "tests/bench_shape_raster.py",
+      "sha256": "08c049f2efbe0498e15cffb08ce340da154ff38694abaf22f1ccc1f4762760aa",
+      "primary_owner": "DECODE",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/fuzz/shape/shape_fuzz.c",
+      "sha256": "9ae56612013411f09764f6e3c65281cd6d877b21cfebdea02351bb0806937ef4",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "identify_features",
+          "line": 23,
+          "owner": "DECODE"
+        },
+        {
+          "name": "command_cap_probe",
+          "line": 145,
+          "owner": "DECODE"
+        },
+        {
+          "name": "main",
+          "line": 172,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/fuzz/shape/shape_fuzz.py",
+      "sha256": "a75e4e95a5caccf331214206b37688d63542bdfb5232202d9c860f1173b79065",
+      "primary_owner": "DECODE",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/raster/cache/cache_contract.c",
+      "sha256": "e69a30865eaa2212561b9283d0cb2b6325ed72760d557981c8b56406cb8ab602",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "spatial_cache_contract_tests",
+          "line": 17,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "primary_owner": "DECODE",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/path_number_test.c",
+      "sha256": "2873387dde31e5c326aee95c3a30fc117b548f4b9c5271f77b8fc98f31eaf9ad",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "main",
+          "line": 25,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/png_utils.py",
+      "sha256": "02469ea6dcfaa92f0ce33440d07bd363f469f4fc79058f3d50e4093f94249e07",
+      "primary_owner": "DECODE",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/shape_render_cli.c",
+      "sha256": "6a31787ae83f018e5d287f6ab840d8732d050c10e0fbfa7716f341c14c378b24",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "print_peak_rss",
+          "line": 9,
+          "owner": "DECODE"
+        },
+        {
+          "name": "main",
+          "line": 16,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/shape_render_stats_cli.c",
+      "sha256": "9d63a4f37fab9dcf81df398d615e5baab7180cddb6d84c362cfd4f88a18f4ecc",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "read_file",
+          "line": 10,
+          "owner": "DECODE"
+        },
+        {
+          "name": "make_translucent",
+          "line": 31,
+          "owner": "DECODE"
+        },
+        {
+          "name": "main",
+          "line": 44,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_ignored.c",
+      "sha256": "fceafa6fdf673e446632ffcf4ba87fb112023751cd964bef31e338ee0d31effc",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "check",
+          "line": 11,
+          "owner": "DECODE"
+        },
+        {
+          "name": "same_render",
+          "line": 27,
+          "owner": "DECODE"
+        },
+        {
+          "name": "expect_ignored",
+          "line": 43,
+          "owner": "DECODE"
+        },
+        {
+          "name": "main",
+          "line": 63,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "decode_job_total",
+          "line": 26,
+          "owner": "DECODE"
+        },
+        {
+          "name": "render_rgba",
+          "line": 95,
+          "owner": "DECODE"
+        },
+        {
+          "name": "pixel_is",
+          "line": 107,
+          "owner": "DECODE"
+        },
+        {
+          "name": "svg_shape_m4_06_evidence_tests",
+          "line": 149,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_m4_06_evidence.h",
+      "sha256": "ba29fdf1c9f6780b1b4ce5a24bebbeb30272f7680543a472771aaf21fc2e52c7",
+      "primary_owner": "DECODE",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "render_source",
+          "line": 14,
+          "owner": "DECODE"
+        },
+        {
+          "name": "source_bytes_unchanged_check",
+          "line": 30,
+          "owner": "DECODE"
+        },
+        {
+          "name": "sha_same",
+          "line": 242,
+          "owner": "DECODE"
+        },
+        {
+          "name": "decode_use_target_size",
+          "line": 249,
+          "owner": "DECODE"
+        },
+        {
+          "name": "reference_boundary_checks",
+          "line": 367,
+          "owner": "DECODE"
+        },
+        {
+          "name": "reference_rejection_checks",
+          "line": 409,
+          "owner": "DECODE"
+        },
+        {
+          "name": "use_transform_order_check",
+          "line": 681,
+          "owner": "DECODE"
+        },
+        {
+          "name": "indexed_paint_lookup_check",
+          "line": 707,
+          "owner": "DECODE"
+        },
+        {
+          "name": "svg_shape_reference_tests",
+          "line": 793,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_reference.h",
+      "sha256": "7d9830e7e8bb57aa900c9327ee5955df3e19aaf16546e7238046b574f68cef5b",
+      "primary_owner": "DECODE",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_render_frame_ignored.py",
+      "sha256": "32e6024dac868d4adc3fd4094823ddcc41c8c0cabe98ce40dd76738c8a923a7e",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "test_one_line_per_kind_on_success",
+          "line": 29,
+          "owner": "DECODE",
+          "body_sha256": "dae2c7b92bcd5a50b7590006f0f085311bc9ddf7d775b1469052a6dfedede85d"
+        },
+        {
+          "name": "test_clean_document_prints_nothing",
+          "line": 40,
+          "owner": "DECODE",
+          "body_sha256": "cc5311aaf4303d96189b4ec54ccbb6d2c9c22ee96a858852cf3674dd584b933c"
+        },
+        {
+          "name": "test_failure_keeps_single_diagnostic",
+          "line": 44,
+          "owner": "DECODE",
+          "body_sha256": "81fea7a9fe5e315d37066b59621386e8070d5546978546acf9aac1f48e7faec7"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "paths_equivalent",
+          "line": 23,
+          "owner": "DECODE"
+        },
+        {
+          "name": "render_source",
+          "line": 49,
+          "owner": "DECODE"
+        },
+        {
+          "name": "alpha_at",
+          "line": 66,
+          "owner": "DECODE"
+        },
+        {
+          "name": "main",
+          "line": 600,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_w5_render.py",
+      "sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "test_crisp_edges_and_extended_linejoin_fallbacks_decode",
+          "line": 175,
+          "owner": "DECODE",
+          "body_sha256": "d9951288849d7d2036b9dd9ef63395830533043e006b0ab597995c966101d489"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/w5_reference.c",
+      "sha256": "e549afc6bb4df09ebc4b4e6b2ca06fea696d2adaec26f228d83594b66c9739c2",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "svg_shape_w5_reference_tests",
+          "line": 8,
+          "owner": "DECODE"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "test_css_cascade_inheritance_and_source_preservation",
+          "line": 203,
+          "owner": "DECODE",
+          "body_sha256": "98380441caa13f5ca6b3935c548140ea4800a0164e2ef3e734b04279dfd37e43"
+        },
+        {
+          "name": "test_css_invalid_recognized_value_has_value_offset",
+          "line": 228,
+          "owner": "DECODE",
+          "body_sha256": "1118b27f5d807b48024448123c58968ad509a97de480b28544079ce833d47f04"
+        },
+        {
+          "name": "test_css_invalid_values_for_all_nine_paint_properties",
+          "line": 241,
+          "owner": "DECODE",
+          "body_sha256": "c01020036b69c47aa6d336153d7fefb76ad7f4ba97006c91e8ae3ae96a74f6a2"
+        },
+        {
+          "name": "test_css_stylesheet_limit_and_unsupported_declarations",
+          "line": 267,
+          "owner": "DECODE",
+          "body_sha256": "2cc2cc007523649754b98f431cc160bad2f552e350cc3e7f721a3cca4f4b2830"
+        },
+        {
+          "name": "test_css_class_tokens_and_initial_paint",
+          "line": 289,
+          "owner": "DECODE",
+          "body_sha256": "8e20efdc814cf931b693e84bfa1f8b80aac3acda6cbebd1ee6dde1e75f56869d"
+        },
+        {
+          "name": "test_css_presentation_precedence_source_order_and_inheritance",
+          "line": 327,
+          "owner": "DECODE",
+          "body_sha256": "6d94b8a72a9ab8ea74bd21a2cb7a415ad9bf66327ea01913ebe9eb039ce1cbc0"
+        },
+        {
+          "name": "test_css_rule_match_work_limit",
+          "line": 348,
+          "owner": "DECODE",
+          "body_sha256": "19aae356da5d42f076ef38aad195a943c3591f5fcd61a58248bfe5117c1c98d4"
+        },
+        {
+          "name": "test_decoder_diagnostics_source_retention_and_raster",
+          "line": 361,
+          "owner": "DECODE",
+          "body_sha256": "d778929861e99501d8ef79b74a10ecac944f42ef1922a11ce98e50a5496a226a"
+        },
+        {
+          "name": "test_reference_comparison_and_repeatability",
+          "line": 366,
+          "owner": "DECODE",
+          "body_sha256": "c07269d90fb8194bdb1c1e76c0866d385df54f373dee988528b21a163d0b2c97"
+        },
+        {
+          "name": "test_default_viewbox_meet_letterboxes_mismatched_aspect_ratio",
+          "line": 597,
+          "owner": "DECODE",
+          "body_sha256": "269cda9a5d658dc471b70ee70c34346707e7f3a51329ebcbc1741dafa2d795a5"
+        },
+        {
+          "name": "test_root_height_diagnostic_uses_height_value_offset",
+          "line": 613,
+          "owner": "DECODE",
+          "body_sha256": "ee72f5f74ad8bcf415f150c1cd26978a84cf77b78d0969c0047a5a23da93fd96"
+        },
+        {
+          "name": "test_transform_diagnostic_preserves_attribute_value_offset",
+          "line": 629,
+          "owner": "DECODE",
+          "body_sha256": "85812ee8a8bfc384c9b75ab9a84103828d8de60b11c8b5a8dcb7dcd5085c83d3"
+        },
+        {
+          "name": "test_culled_renderer_matches_reference_for_fixtures_and_random_documents",
+          "line": 642,
+          "owner": "DECODE",
+          "body_sha256": "c15417542dedbf6119bb1385d754032df9e4039dea9d1c73f089695861f32aac"
+        },
+        {
+          "name": "test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr",
+          "line": 767,
+          "owner": "DECODE",
+          "body_sha256": "07d4fb456006f22d0e73fff6913965c580625d1520ea7e1d32b1611cc657b315"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    }
+  ],
+  "frozen_oracles_source": "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json",
+  "frozen_input_sha256": {
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/ownership-matrix.json": "c014bc96ef46b8d8b9f5ed3cfc5f36c3b8853d578c758faa36af48e576810dd5",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json": "19b13d230c10553b262a585b1839385761b7e5ef857bb82457fa880234f7212e",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json": "188d73452059bd05c84ba2db790c2ea49313fa58f74f485bcb5b0273b953cde7",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/limits-features.json": "821b98188085a78259008b82d9384b12299704cf8c31f6daf907d8a057baa763"
+  },
+  "current_shared_api_sha256": {
+    "rust/crates/vexel-scene/src/lexical_document.rs": "cff931ff54cbd17372fc98df9b10de5f3eaf0cd1bed708efc88d9a3f989fa651",
+    "rust/crates/vexel-scene/src/decode_contract.rs": "806b19df794a831bbb90cb6575046bd3aa918b5aeb5cb6a4feb46a6ec1f2b0f3",
+    "rust/crates/vexel-scene/src/types.rs": "1779916725a9df0d4921010e8ab85deafa6852cd0ef39ab9ed994a13ccf0e6bb",
+    "rust/crates/vexel-scene/src/pattern_ticket.rs": "9f9b5a0f4f4779d159c8c9c2ecd9db9e369ac6a145013ae642fba23dbe98673d",
+    "rust/crates/vexel-scene/src/accounting.rs": "0a0fb0118a9c0e3c0f3d597a87253490e4a50ad122f59e730ecdd45e4a2efe90",
+    "rust/crates/vexel-scene/src/lib.rs": "8b0bc2356ab3039f5e4bbfb45c8ecba19ad5ba514c418dd12e2b229996ccf7af",
+    "rust/crates/vexel-scene/src/memory.rs": "f2de4c04af6bff31228b95f973317c175eb192d81c89594c48f02b47b4695f23",
+    "rust/crates/vexel-scene/src/contract_validate.rs": "6c3557487eb0e8ee73e4be79a437f40d79400727aa7bbfd827a4b8f76125791e",
+    "rust/crates/vexel-scene/src/contract_storage.rs": "9f990135cdae62efe4a4260a47b9bced98b2a141a1406cae641d7f8a37b02005",
+    "rust/crates/vexel-scene/src/media.rs": "b9532fe5a5e12c1460fe569d86727e3a59fe14f2fb6ef4153a29b3fd25b75403",
+    "rust/crates/vexel-scene/src/dash_validate.rs": "6b979f789334409e5954bd25d945c050d3b42c50539066d5f52307038ac6911c",
+    "rust/crates/vexel-scene/src/draft_updates.rs": "7c7790ac942641d0c07f559cec0099457e9ba714e56da5e2778530e14a3146a0",
+    "rust/crates/vexel-scene/src/mutators.rs": "e258b6d5dcda0d7dc44ddec39a21dfc26637d70c1d89d59bee10d49e2031cb14",
+    "rust/crates/vexel-scene/src/draft.rs": "652302ff36efed92f65ce7f426ee5153788f79aa474a223b3dc536df4d500952",
+    "rust/crates/vexel-scene/src/validation_tests.rs": "cbecb7df16720750f7f871e3f3876d08ecee3693df70d6c94da011cc5c817474",
+    "rust/crates/vexel-scene/src/ids.rs": "61fa36334a9c409460dbfb61fbdd42eaa228ac271d6e318abf3c0579bb86fcdc",
+    "rust/crates/vexel-scene/src/shape_builder.rs": "924e8e4b257beb5941c57d77f102bbdaaabf1262a175400c93544caf25e76852",
+    "rust/crates/vexel-scene/src/source_context.rs": "e0ee7343122cc60c0bab5ec653f99eeb5b5bc7a1595feaa79202eaf10c1af80b",
+    "rust/crates/vexel-scene/src/frame.rs": "73527780415669adf0b0ee1214a5cff7c2b0ba12f34017cd4ef7cf3da6431f06",
+    "rust/crates/vexel-scene/src/validate.rs": "c69e7c45cf6d2377a1d8fbdba3dd9f129bb4d7fc488b1a880191ddd4fb567002",
+    "rust/crates/vexel-scene/src/model.rs": "7ba0317648e8017129e89d68c639b5ba277e17b7baf27998dc13d2f6d33fe0b6",
+    "rust/crates/vexel-scene/src/builder.rs": "de4f320d0486c43152a40b93eeba59eaf2b221e975b898c5a9cdbe011d6c9d9c",
+    "rust/crates/vexel-scene/src/render_contract.rs": "ad81dfaef997e7ea7c263a9084477e66c4a400e7dd69ba0385bf166869e3e11f"
+  },
+  "scope_completion": "full real owned algorithms/private helpers and assigned original assertion semantics; no fake success, smaller renderer, TODO required workflow or weakened oracle",
+  "later_composition": "real accepted DecodeOperations/KernelResources/FlatKernel adapters supplied by coordinator, not fake defaults"
+}

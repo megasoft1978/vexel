@@ -1,0 +1,16 @@
+WO-RUST-UI-CORE-01 focused verification and narrowed review repair
+
+Compiler: rustc +stable --version -> rustc 1.99.0 (b940084d7 2026-09-28)
+Target/cache environment: CARGO_HOME=$PWD/.cache/cargo; TMPDIR=$PWD/.cache/tmp; CARGO_TARGET_DIR=$PWD/build/rust; MACOSX_DEPLOYMENT_TARGET=13.0
+
+PASS: cargo +stable check -p vexel-ui --locked --offline
+PASS: cargo +stable test -p vexel-ui --locked --offline (8 unit tests passed; 0 failed; 0 doc tests)
+PASS: python3 scripts/wo_validate.py WO-RUST-UI-CORE-01 --ready
+PASS: python3 scripts/ledger.py validate ledger.jsonl
+PASS: git diff --check
+
+Review repair coverage: all 8 legacy accent choices x 2 themes x 2 contrast modes; contrast thresholds against panel and raised panel; selection accent/focus aliases and opaque/non-panel fill; zero and transparent accent fallback. Focus tests exercise button, disabled button, text field, slider, row and checkbox, with forward/reverse order and wrap assertions.
+
+During repair, the first Cargo test attempt found a mismatched closing delimiter in the added regression loop. The test source was corrected; the final named test command passed all 8 tests. No UI-core behavior defect was found. The legacy contrast harness also checks icon asset hashes; those are outside this frozen ui_core.c scope and were not run here.
+
+No rustfmt or clippy component is installed; neither was run or installed. No C, desktop UI, broad suite, or whole-application check was run. This repair does not claim acceptance; independent narrowed recheck and main integration remain.

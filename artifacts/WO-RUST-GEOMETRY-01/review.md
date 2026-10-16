@@ -1,0 +1,5 @@
+**ACCEPT.** The scoped Rust functions match the C reference’s matrix convention, right-first composition, coefficient and translation limits, point output cap, and four-corner bounds mapping. Bounds reject negative or nonfinite dimensions; overflow in corner construction or point mapping is rejected. Returned values use safe Rust ownership, and the crate forbids unsafe code.
+
+The five focused tests cover the original composition, point, singular-transform, iterative-composition, and rotated-bounds assertions, plus nonfinite inputs, limits, and overflow. The main gap is that `bounds_validate_dimensions_corners_and_intermediate_overflow` does not directly test a finite, valid affine whose transformed bounds corner exceeds the output cap; point mapping tests that cap separately, and bounds delegates each corner to `affine_map_point`, so this is not a blocking parity defect.
+
+I ran no builds or tests, as requested.

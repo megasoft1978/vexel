@@ -1,0 +1,4 @@
+probe small: owner_seconds=0.000001 copied_bytes=170 original_scene_bytes=1024
+probe 16MiB: owner_seconds=0.001055 copied_bytes=16777258 original_scene_bytes=1024
+probe near64MiB: owner_seconds=0.004134 copied_bytes=67107882 original_scene_bytes=1024
+probe large-saved-small-edited: owner_seconds=0.000004 copied_bytes=170 original_scene_bytes=33554432

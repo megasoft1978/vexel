@@ -1,0 +1,31 @@
+WO-SVG-MEM-01 revision 2 verification
+Date: 2026-10-13
+Model: gpt-6.1-sol
+Base/head: 19234a036ed6a8d40c2ccdaec9b8186806d70eca / working tree
+
+Implementation
+- Implicit/default solid fills now use a zero `uint32_t` per-shape paint index; only non-default fill paints occupy `svg_shape_paint` records.
+- Central const/mutable accessors are used in parsing, selection, raster sampling/preflight, scalar reference rendering, group views, and animation render copies.
+- Pattern, image, gradient, group and animation paths use the sparse mapping; stroke paint storage and all resource ceilings are unchanged.
+- Focused assertions confirm a default solid fill leaves `paints == NULL` and `paint_count == 0`, while a gradient fill creates one accessible record.
+- The shape-count ceiling remains 65,536; the synthetic Inkscape sample is not claimed to decode.
+
+Focused matrix
+- Debug: build `svgworkbench`, `shape_test`, and `gradient_stroke_test` PASS; `shape-render`, `svg-gradient-stroke`, `svg-animation`: 3/3 PASS.
+- ASan/UBSan: same targets PASS; same three CTests: 3/3 PASS.
+- UBSan: same targets PASS; same three CTests: 3/3 PASS.
+- Total focused executions: 9/9 passed. No broad UI/E2E, corpus, fuzz, or performance suite run.
+
+Storage estimate (static size arithmetic, not process RSS)
+- `sizeof(svg_shape_paint)` is 272 bytes; a shape-to-record index is 4 bytes.
+- At the present 65,536 shape capacity, a dense fill-paint array would reserve 17,825,792 bytes. With no non-default fills, the sparse form reserves a 262,144-byte index map and no paint table. With one gradient fill, the table's initial capacity is eight records (2,176 bytes).
+- At a future 524,288 capacity, the corresponding dense fill array would be 142,606,336 bytes, versus a 2,097,152-byte index map and at most 2,176 bytes for one fill record. This is a projection from the current doubling allocator; the shape cap is unchanged and no RSS claim is made. Stroke paints, dash arrays, images, XML and geometry remain separate costs.
+
+Repository checks
+- Frozen work order revision 2 validates, SHA-256 `4dd8ec0c20a0c101fb9b68b192ef75e057fb5d3e882d0bc4ae49908959b0bfe0`.
+- `tests/test_map.json` parses; quick-test selection for the changed SVG test sources maps to CTest expression `shape-render|svg-`.
+- `ledger.jsonl` validates (812 entries before completion events); `git diff --check` passes.
+- Changed source sizes: shape.h 334 lines; shape_internal.h 243; shape_geometry.c 701; shape_custom.c 161; pattern.c 648; image.c 319; document.c 136; selection.c 225; shape_render_fill.c 127; shape_render_sample.c 303; shape_render_preflight.c 433; shape_render.c 540; shape_render_group.c 554; shape_render_animation.c 739; shape_render_reference.c 338; gradient_stroke_test.c 103. All remain below 800 lines.
+
+Limitations
+- This reduces fill-paint allocation only. Dense stroke paint records and other per-shape metadata remain large; no shape-limit increase or large-document benchmark is included.

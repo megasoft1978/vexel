@@ -1,0 +1,66 @@
+{
+  "status": "pass",
+  "four_source_handles_confirmed_live": [
+    {
+      "pid": 69475,
+      "status": "running",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-ANIMATION-FRAME-01/worker",
+      "started_epoch": 1792010908.0411189,
+      "child_pid": 69482,
+      "wo_id": "WO-RUST-SVG-ANIMATION-FRAME-01",
+      "confirmed_live_at_utc": "2026-10-14T20:51:44.835050+00:00",
+      "process_observation": "69482 03:16 codex",
+      "source_candidate_accepted": false
+    },
+    {
+      "pid": 69640,
+      "status": "running",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker",
+      "started_epoch": 1792010908.281153,
+      "child_pid": 69661,
+      "wo_id": "WO-RUST-SVG-DEFINITIONS-01",
+      "confirmed_live_at_utc": "2026-10-14T20:51:44.838379+00:00",
+      "process_observation": "69661 03:16 codex",
+      "source_candidate_accepted": false
+    },
+    {
+      "pid": 69715,
+      "status": "running",
+      "model": "gpt-6-luna",
+      "effort": "medium",
+      "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker",
+      "started_epoch": 1792010908.504606,
+      "child_pid": 69717,
+      "wo_id": "WO-RUST-SCENE-QUERY-01",
+      "confirmed_live_at_utc": "2026-10-14T20:51:44.841419+00:00",
+      "process_observation": "69717 03:16 codex",
+      "source_candidate_accepted": false
+    },
+    {
+      "pid": 69778,
+      "status": "running",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker",
+      "started_epoch": 1792010908.736831,
+      "child_pid": 69858,
+      "wo_id": "WO-RUST-SVG-MEDIA-01",
+      "confirmed_live_at_utc": "2026-10-14T20:51:44.844741+00:00",
+      "process_observation": "69858 03:16 codex",
+      "source_candidate_accepted": false
+    }
+  ],
+  "unchanged_original_scopes": true,
+  "no_live_input_mutation_or_restart": true,
+  "accepted_prerequisite_order_ids": [
+    "WO-RUST-RENDER-FIXTURE-SETUP-01",
+    "WO-RUST-MEDIA-SOURCE-MAP-01",
+    "WO-RUST-SVG-CSS-MARKER-CONTEXT-01",
+    "WO-RUST-PAINT-PUBLICATION-01"
+  ],
+  "application_or_UI_tests_run": false
+}

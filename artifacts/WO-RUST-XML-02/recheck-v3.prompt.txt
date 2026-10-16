@@ -1,0 +1,10 @@
+Final narrow read-only recheck solely remaining partial UTF8 name-scan byte-work finding after repair-v3. Inspect persistent decoder/QName-classification state and actual source-read/decoder-input instrumentation; everybudget1name-step mustread/input<=1sourcebyte, not fullscalar rereads withcursorfakeaccounting. Verify2/3/4byte start/attribute/PI/endnames andpartialboundarycancel assertions, allprior23assertionspreserved. Earlier parsing/cancellation/failure cleanup/visitor/QName conclusions remain unless touched. No edits/tests/build/web/install/agents/wholeaudit. Verdict ACCEPT/REJECT <=250words real remaining source:line blockers only. Repair report:
+Name parsing now preserves the partial scalar decoder state and caches QName classification, eliminating repeated full-scalar decoding.
+
+The measured regressions cover 2/3/4-byte start, attribute, PI, and end names: each budget-one parse step performs **at most 1 actual name-source read and 1 decoder input**. Cancellation at all **6 partial-scalar boundaries** performs no further name reads.
+
+All 23 existing tests and assertions remain; **2 tests added, 25 passed, 0 failed; 0 doc tests**. Named Cargo checks passed with existing Rust **1.99.0**. WO, ledger (**1,096 entries**), diff, and JSON validation passed.
+
+Updated [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/parity-map.json) and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/verification.txt); prior evidence is preserved.
+
+Two known nonblocking coverage gaps remain: the original C fuzz loop and exhaustive span combinations. Independent final narrow recheck is required; acceptance is not declared.

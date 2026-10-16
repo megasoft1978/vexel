@@ -1,0 +1,18 @@
+2026-10-15 fresh main-tree verification
+
+Integrated `rust/crates/vexel-ui/src/tests.rs` SHA-256: `f5c81985580e2fa2d8ba5f21853fcaf1b8aec16a03fb4bc1601e917407dab10f`; matches candidate.
+Unchanged C oracle sources match frozen seed:
+`src/ui/ui_icons.c` `f96fd22830bec7d17d744cd7ceffa8714bbb0ad00852e84ea66e70dd2020c3f9`
+`src/ui/ui_icon_paths.c` `703eff3e06802bafaac8bbf6e3822777e3ea40a195fd3b1a90bebd0b6c07a6dd`
+
+Frozen C asset hashes asserted for both Light and Dark themes:
+1x `dd0cedd4ec723d06`; 2x `2d4e975f7b5775c5`; 3x `be120e3a5aa41d42`.
+
+PASS `CARGO_HOME=.cache/cargo CARGO_TARGET_DIR=build/rust cargo +stable check -p vexel-ui --locked --offline`
+PASS `CARGO_HOME=.cache/cargo CARGO_TARGET_DIR=build/rust cargo +stable test -p vexel-ui --locked --offline` (12 passed; 0 failed; 0 doc tests)
+PASS `python3 scripts/wo_validate.py WO-RUST-UI-ICON-HASH-01 --ready`
+PASS `python3 scripts/ledger.py validate ledger.jsonl`
+PASS JSON parse of `parity-map.json`
+PASS `git diff --check`
+
+The independent review confirmed exact assertions, complete test inventory and unchanged oracle source. No production UI code changed.

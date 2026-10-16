@@ -1,0 +1,4 @@
+WO-MCP-SNAPSHOT-01 r1
+HEAD 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+spec_sha256 dfa79a7f942253c4c1d76a9d07729b8c0e1946a934c4ee0090c074911ea25ccc
+Owner authorized Luna effort selection and parallel implementation in isolated repo-local worktrees; shared integration is coordinator-owned.

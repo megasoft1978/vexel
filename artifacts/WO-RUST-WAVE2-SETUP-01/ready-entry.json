@@ -1,0 +1,22 @@
+{
+  "ts": "2026-10-14T06:58:25Z",
+  "wo_id": "WO-RUST-WAVE2-SETUP-01",
+  "event": "ready",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-WAVE2-SETUP-01-ready",
+  "session_id": "rust-wave2-2026-10-14",
+  "model": "codex-coordinator",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "ready",
+  "artifacts": [
+    "work/WO-RUST-WAVE2-SETUP-01.md"
+  ],
+  "note": "Serialized zero-external-dependency registrations and audited native-system FFI boundary for six disjoint next scopes. Accepted source protected; no new subsystem acceptance."
+}

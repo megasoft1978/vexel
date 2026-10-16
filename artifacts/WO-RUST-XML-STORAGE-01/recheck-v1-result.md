@@ -1,0 +1,3 @@
+**ACCEPT.** The public constructor now immediately returns `Err(StreamStatus::Failed)` for zero and sub-token budgets, and the boundary regression asserts that behavior: [stream.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-xml-storage/rust/crates/vexel-xml/src/stream.rs:144), [stream_tests.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-xml-storage/rust/crates/vexel-xml/src/stream_tests.rs:260).
+
+The rejected assertions and evidence are archived. The current parity map records no adaptation; the valid-capacity and lifecycle regressions remain, and private `with_limits` retains count-based capacity handling. The current suite has 31 tests, including the prior 29. I ran no tests or builds.

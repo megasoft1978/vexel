@@ -1,0 +1,87 @@
+{
+  "result": "candidate_verified_pending_coordinator_independent_review_audit_fresh_main",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-scene -p vexel-svg-animation --locked --offline",
+      "exit_code": 0,
+      "log": "check-final-3.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-scene -p vexel-svg-animation --locked --offline",
+      "exit_code": 0,
+      "log": "test-final-4.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SCENE-DECODE-INITIALIZATION-01 --ready",
+      "exit_code": 0,
+      "log": "wo-final-2.log"
+    }
+  ],
+  "scene_checks": 173,
+  "animation_checks": 21,
+  "preserved_scene_checks": 156,
+  "preserved_animation_checks": 21,
+  "new_integration_tests": 16,
+  "new_compile_fail_checks": 1,
+  "edited_existing_tests": false,
+  "animation_crate_changed": false,
+  "max_scene_source_or_newtest_lines": 720,
+  "line_counts": {
+    "rust/crates/vexel-scene/src/decode_initialization.rs": 221,
+    "rust/crates/vexel-scene/src/lexical_document.rs": 77,
+    "rust/crates/vexel-scene/src/decode_quantum.rs": 118,
+    "rust/crates/vexel-scene/src/request.rs": 153,
+    "rust/crates/vexel-scene/src/decode_contract.rs": 345,
+    "rust/crates/vexel-scene/src/types.rs": 418,
+    "rust/crates/vexel-scene/src/media_source_map.rs": 81,
+    "rust/crates/vexel-scene/src/pattern_ticket.rs": 126,
+    "rust/crates/vexel-scene/src/accounting.rs": 415,
+    "rust/crates/vexel-scene/src/lib.rs": 77,
+    "rust/crates/vexel-scene/src/memory.rs": 88,
+    "rust/crates/vexel-scene/src/ledger_buffer.rs": 131,
+    "rust/crates/vexel-scene/src/pattern_publication.rs": 276,
+    "rust/crates/vexel-scene/src/contract_validate.rs": 95,
+    "rust/crates/vexel-scene/src/contract_storage.rs": 148,
+    "rust/crates/vexel-scene/src/media.rs": 213,
+    "rust/crates/vexel-scene/src/dash_validate.rs": 78,
+    "rust/crates/vexel-scene/src/draft_updates.rs": 222,
+    "rust/crates/vexel-scene/src/mutators.rs": 333,
+    "rust/crates/vexel-scene/src/draft.rs": 133,
+    "rust/crates/vexel-scene/src/ids.rs": 54,
+    "rust/crates/vexel-scene/src/path_topology.rs": 154,
+    "rust/crates/vexel-scene/src/shape_builder.rs": 169,
+    "rust/crates/vexel-scene/src/raster_composition.rs": 250,
+    "rust/crates/vexel-scene/src/source_context.rs": 226,
+    "rust/crates/vexel-scene/src/mask_post.rs": 169,
+    "rust/crates/vexel-scene/src/frame.rs": 450,
+    "rust/crates/vexel-scene/src/raster_job_views.rs": 261,
+    "rust/crates/vexel-scene/src/validate.rs": 720,
+    "rust/crates/vexel-scene/src/production_decode.rs": 502,
+    "rust/crates/vexel-scene/src/model.rs": 539,
+    "rust/crates/vexel-scene/src/raster_job_scratch.rs": 228,
+    "rust/crates/vexel-scene/src/builder.rs": 366,
+    "rust/crates/vexel-scene/src/paint_publication.rs": 365,
+    "rust/crates/vexel-scene/src/render_contract.rs": 276,
+    "rust/crates/vexel-scene/src/raster_job.rs": 660,
+    "rust/crates/vexel-scene/tests/decode_initialization.rs": 574
+  },
+  "baseline_comparison": "worker-baseline-comparison.json",
+  "failed_attempts_preserved": [
+    "check-attempt-1.log",
+    "test-attempt-1.log",
+    "test-final.log"
+  ],
+  "limitations": [
+    "Production decoder adapter and lower consumer traversal reads remain downstream",
+    "No complete renderer/native app/performance or broad UI claim",
+    "Coordinator independent LunaHigh review, protected audit and fresh main verification remain required"
+  ],
+  "api_coverage": {
+    "initialization": "provisional, initialize_root, initialize_hidden_root, canonical root/CSS/source guards",
+    "ownership": "actual shape/image/text source-map requests, typed owner, production planner, child draft/seal, stale rollback handles",
+    "late_install": "finalize_decode returns actual owner on failure, generation/source/duplicate/cancel/work/budget/history guards",
+    "deferred_requests": "request_mapped_traversal shares request algorithms; open scopes survive install; finalized child frame and complete_mapped close original scope",
+    "publication": "freeze blocks unresolved/hidden/pending scopes; freeze_decode explicitly separates HiddenScene with empty query/frame from drawable SceneGraph",
+    "downstream": "production decoder must preserve attribute/style/display/transform/viewport/root_seen priority, parse actual same lexical source/tokens after traversal, use traversal reads and finalize before rendering"
+  }
+}

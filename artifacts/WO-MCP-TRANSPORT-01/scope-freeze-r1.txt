@@ -1,0 +1,5 @@
+WO-MCP-TRANSPORT-01 revision 1 scope freeze
+Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Frozen spec SHA-256: 8058c8295d94df7ab2381e9b3e3667ab65deb82eaadbf90102225259de08abd4
+Scope: bounded public stdio MCP relay multiplexing and deterministic focused transport tests.
+Allowlist and protected paths are frozen in work/WO-MCP-TRANSPORT-01.md.

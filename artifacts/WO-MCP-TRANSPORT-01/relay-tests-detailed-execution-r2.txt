@@ -1,0 +1,16 @@
+test_cancellation_while_pending_has_no_synthetic_response (__main__.McpStdioRelayTests.test_cancellation_while_pending_has_no_synthetic_response) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_exact_limit_lines_are_preserved_in_both_directions (__main__.McpStdioRelayTests.test_exact_limit_lines_are_preserved_in_both_directions) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_local_parse_error_never_splits_broker_stdout_line (__main__.McpStdioRelayTests.test_local_parse_error_never_splits_broker_stdout_line) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_oversized_broker_line_fails_without_partial_json (__main__.McpStdioRelayTests.test_oversized_broker_line_fails_without_partial_json) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_oversized_stdin_at_eof_emits_one_parse_error (__main__.McpStdioRelayTests.test_oversized_stdin_at_eof_emits_one_parse_error) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_oversized_stdin_discards_once_and_recovers (__main__.McpStdioRelayTests.test_oversized_stdin_discards_once_and_recovers) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_partial_coalesced_progress_and_out_of_order_response_ids (__main__.McpStdioRelayTests.test_partial_coalesced_progress_and_out_of_order_response_ids) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_socket_backpressure_still_forwards_broker_progress (__main__.McpStdioRelayTests.test_socket_backpressure_still_forwards_broker_progress) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_stdin_eof_half_closes_and_drains_broker (__main__.McpStdioRelayTests.test_stdin_eof_half_closes_and_drains_broker) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_stdout_backpressure_still_forwards_cancellation (__main__.McpStdioRelayTests.test_stdout_backpressure_still_forwards_cancellation) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+test_truncated_broker_line_fails_without_partial_json (__main__.McpStdioRelayTests.test_truncated_broker_line_fails_without_partial_json) ... skipped 'execution sandbox denies Unix-domain socket bind (EPERM)'
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.004s
+
+OK (skipped=11)

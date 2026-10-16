@@ -1,0 +1,7 @@
+**REJECT.** In [file.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/rust/crates/vexel-project-io/src/file.rs:108), `project_file_save_encoded_with_hooks` maps every bundle decode error except `Limit` to `FileError::InvalidArgument`. The Rust decoder can return `project::Error::OutOfMemory` when its asset-name table allocation fails; the file API then reports invalid input even though `FileError::OutOfMemory` exists. Preserve that error class and add a focused regression proving the mapping.
+
+The inspected recovery code matches the C capsule’s 72-byte layout, little-endian fields, CRC coverage, reserved-byte and nanosecond checks, validation precedence, borrowed views, and bundle error offsets. Save paths validate encoded bundles before publication, use the accepted atomic helpers, preserve publication/durability state, and keep recovery separate from the source. The hooks gate native operations and cannot report successful sync or publication themselves. Scoped Rust sources are under 800 lines, forbid unsafe code, and add no dependencies.
+
+**Nonblocking coverage gaps:** No focused test covers encoded-save bundle checksum corruption before filesystem access; race coverage exercises new-file collision but not replacement races; recovery tests do not inject precommit file-sync or write failures. These gaps do not change the blocking error-mapping finding.
+
+This was a read-only review; I did not run tests or builds. No full-app or live MCP certification was performed.

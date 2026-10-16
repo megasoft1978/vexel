@@ -1,0 +1,125 @@
+{
+  "schema": 2,
+  "work_order": "WO-RUST-SVG-DECODE-01",
+  "revision": 2,
+  "candidate_complete": false,
+  "acceptance": "BLOCKED_INCOMPLETE_NOT_ACCEPTED",
+  "scope_sha256": "2c6ceb9b08eff33b84e63ea6d3fb03bf4b5069e9f659038aadf073744a7b8e08",
+  "commands": [
+    {
+      "command": [
+        "cargo",
+        "+stable",
+        "check",
+        "-p",
+        "vexel-svg-decode",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.04161787033081055,
+      "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-1.log",
+      "output_sha256": "6d77f64dfc8c5325b90fdbe05d8be367bdd578bcccec24f275c5ffee7d03dd6e",
+      "working_directory": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DECODE-01/worker"
+    },
+    {
+      "command": [
+        "cargo",
+        "+stable",
+        "test",
+        "-p",
+        "vexel-svg-decode",
+        "--locked",
+        "--offline"
+      ],
+      "exit_code": 101,
+      "elapsed_seconds": 9.017354965209961,
+      "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-2.log",
+      "output_sha256": "8d3f497ee8fb0ccf499f1a878d1e1555fc5ed6a3ce7ad38bb82162d44265dc30",
+      "working_directory": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DECODE-01/worker"
+    },
+    {
+      "command": [
+        "cargo",
+        "+stable",
+        "test",
+        "-p",
+        "vexel-svg-decode",
+        "--locked",
+        "--offline",
+        "--no-fail-fast"
+      ],
+      "exit_code": 101,
+      "elapsed_seconds": 4.4925618171691895,
+      "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-3.log",
+      "output_sha256": "d699a79b91aeb8384cd2c6025dde3d78f1740f5ce00b0319dc01a53e4a7ceaaf",
+      "working_directory": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DECODE-01/worker"
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/wo_validate.py",
+        "WO-RUST-SVG-DECODE-01",
+        "--ready"
+      ],
+      "exit_code": 0,
+      "elapsed_seconds": 0.028703927993774414,
+      "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-4.log",
+      "output_sha256": "386070fc70e255cd4ca31283a1fdade121ee818fb90361351729e49e1e21b366",
+      "working_directory": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DECODE-01/worker"
+    }
+  ],
+  "test_results": {
+    "passed": 32,
+    "failed": 1,
+    "ignored": 0,
+    "old_seven_preserved": true,
+    "failing_test": "original_smooth_equivalences_use_real_lexical_animation_and_scene",
+    "failure": "Original path after Z: accepted parser metadata overlaps; accepted scene validator InvalidArgument offset0."
+  },
+  "audit": {
+    "protected_count": 2877,
+    "changed_protected": [],
+    "source_test_line_counts": {
+      "rust/crates/vexel-svg-decode/src/numbers.rs": 316,
+      "rust/crates/vexel-svg-decode/src/traversal.rs": 741,
+      "rust/crates/vexel-svg-decode/src/tasks.rs": 66,
+      "rust/crates/vexel-svg-decode/src/ignored.rs": 292,
+      "rust/crates/vexel-svg-decode/src/lib.rs": 109,
+      "rust/crates/vexel-svg-decode/src/style.rs": 497,
+      "rust/crates/vexel-svg-decode/src/use_expansion.rs": 307,
+      "rust/crates/vexel-svg-decode/src/source.rs": 120,
+      "rust/crates/vexel-svg-decode/src/decode.rs": 626,
+      "rust/crates/vexel-svg-decode/src/publication.rs": 169,
+      "rust/crates/vexel-svg-decode/src/transform.rs": 181,
+      "rust/crates/vexel-svg-decode/src/geometry.rs": 541,
+      "rust/crates/vexel-svg-decode/src/definition_links.rs": 185,
+      "rust/crates/vexel-svg-decode/src/definition_work.rs": 536,
+      "rust/crates/vexel-svg-decode/src/viewport.rs": 391,
+      "rust/crates/vexel-svg-decode/tests/original_shapes.rs": 144,
+      "rust/crates/vexel-svg-decode/tests/definition_lifecycle.rs": 206,
+      "rust/crates/vexel-svg-decode/tests/original_references.rs": 127,
+      "rust/crates/vexel-svg-decode/tests/original_css.rs": 126,
+      "rust/crates/vexel-svg-decode/tests/path_number.rs": 74,
+      "rust/crates/vexel-svg-decode/tests/control_and_style.rs": 69,
+      "rust/crates/vexel-svg-decode/tests/helpers.rs": 134,
+      "rust/crates/vexel-svg-decode/tests/original_ignored.rs": 75,
+      "rust/crates/vexel-svg-decode/tests/decoder_path.rs": 138,
+      "rust/crates/vexel-svg-decode/tests/support/mod.rs": 120,
+      "rust/crates/vexel-svg-decode/tests/support/original_shape_inputs.rs": 34
+    },
+    "over_limit": [],
+    "accepted_seed_count": 27,
+    "changed_seed_files": [],
+    "frozen_source_suite_count": 31,
+    "changed_frozen_files": []
+  },
+  "notes": [
+    "R1 source/tests/README/reports preserved under r2/r1-preserved.",
+    "All19 whole original mixed suite inputs and138 original functions/helpers retained under r2/original-assertion-inputs.json. Catalog preservation is not execution proof.",
+    "An earlier original_shapes 70000-shape test run was interrupted with exit130 after excessive runtime; bounded attribute token scopes removed repeated full-token validation; final test passes in1.26sec.",
+    "During implementation, compile-only fixture errors were corrected; no original assertion was removed or weakened. An attempted cargo --manifest-path rust/Cargo.toml returned101 because workspace Cargo.toml is at root; mandatory final commands use root workspace.",
+    "Strict per-step quantum, all capacity leases, full original pure parity and nested definition/media/paint assertions remain incomplete.",
+    "No independent Luna review, root main focused checks or acceptance performed. No stage/commit/reset/delete or shared repair performed."
+  ]
+}

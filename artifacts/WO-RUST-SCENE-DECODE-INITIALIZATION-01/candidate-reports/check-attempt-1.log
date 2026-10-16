@@ -1,0 +1,25 @@
+    Checking vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene)
+error[E0425]: cannot find type `V` in this scope
+   --> rust/crates/vexel-scene/src/validate.rs:509:26
+    |
+509 |     scene: SceneView<'_, V, A>,
+    |                          ^ not found in this scope
+    |
+help: you might be missing a type parameter
+    |
+508 | fn group_order<V>(
+    |               +++
+
+error[E0425]: cannot find type `A` in this scope
+   --> rust/crates/vexel-scene/src/validate.rs:509:29
+    |
+509 |     scene: SceneView<'_, V, A>,
+    |                             ^ not found in this scope
+    |
+help: you might be missing a type parameter
+    |
+508 | fn group_order<A>(
+    |               +++
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `vexel-scene` (lib) due to 2 previous errors

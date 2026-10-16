@@ -1,0 +1,86 @@
+{
+  "work_order": "WO-RUST-TIMELINE-01",
+  "revision": 1,
+  "legacy_source_baseline": {
+    "manifest": "artifacts/WO-RUST-PLAN-01/source-baseline.json",
+    "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "overlay_hashes_verified": true,
+    "files": {
+      "src/project/project_timeline.c": "270a6c806327caaef37fb60559a55969e43220f20cb24e55cfcadebac0c95921",
+      "src/project/project_timeline.h": "b9d27fed7c4d8cc6a20ddb645df50037dd0cf34dbae4743e28bcbf37ae701f02",
+      "src/project/project_timeline_json.c": "dbe20974447fdc3cfae3d0677405a0f8af76d96e31936c0bca728165d9f10adb",
+      "src/project/project_timeline_json.h": "2dd5c321f989f9a6bde58580b52a1b9ddc6147b2ca745595ab552b942d440f5f",
+      "src/project/project_bundle.h": "dc4590a6c9b128f4a3a3ab2d8c0cf6aa2fea1542c9a7de8147cfc3d63b89c654",
+      "tests/project/project_timeline_test.c": "2426db99c60372c7c9e2df3c368cf4dffbfaa6c78f415b6c7102ac9763c8c092"
+    }
+  },
+  "public_symbol_parity": [
+    {"c": "project_timeline_decode_cancellable", "rust": "schema::decode_cancellable", "parity": "full", "adaptation": "C callback/context pair becomes an optional lifetime-borrowed FnMut; cancellation is reported on DecodeFailure and partial view state is dropped."},
+    {"c": "project_timeline_decode", "rust": "schema::decode", "parity": "full", "adaptation": "C output pointer becomes Result<TimelineView<'source>>; all returned source slices are lifetime-bound."},
+    {"c": "project_timeline_track_at", "rust": "TimelineView::track_at", "parity": "full", "adaptation": "C out-parameter/boolean becomes Option<TrackView>; string fields remain raw JSON contents and borrow original source."},
+    {"c": "project_timeline_item_at", "rust": "TimelineView::item_at", "parity": "full", "adaptation": "C out-parameter/boolean becomes Option<ItemView>; source span is vexel_base::Span and payload bytes borrow source."},
+    {"c": "project_timeline_item_next", "rust": "TimelineView::item_next / TimelineIterator", "parity": "full", "adaptation": "Iterator state is safe value metadata; one forward JSON scan per item, bound to a single track until reset."},
+    {"c": "project_timeline_string_copy", "rust": "string_copy", "parity": "full", "adaptation": "Caller-owned mutable slice replaces pointer+length output; returns decoded byte count only on success, writes bounded UTF-8 without allocation, and rejects decoded output above 4096 bytes even when the output slice is larger."},
+    {"c": "project_timeline_error_name", "rust": "Error::name", "parity": "full", "adaptation": "Rust Result success carries no error enum; all failure names match C spellings."},
+    {"c": "project_timeline_json_classify (header declaration only; no body in named C source)", "rust": "classify / classify_cancellable", "parity": "implemented from declared contract", "adaptation": "Validates complete JSON and recognizes schema vexel.animation with integer version 1; cancellation shares the streaming reader."}
+  ],
+  "named_helper_parity": [
+    {"c": "valid_ascii_id, valid_asset_name, valid_media_type", "rust": "schema::valid_track_id, valid_asset_name, valid_media_type", "parity": "full"},
+    {"c": "find_asset, find_scene_id", "rust": "schema::decode_cancellable reference checks; sorted Vec binary_search for scene IDs", "parity": "full"},
+    {"c": "parse_tick_item, validate_item_visit", "rust": "schema::decode_cancellable per-item validation", "parity": "full", "details": "Exact fields, tick range/order, drawing asset MIME, labels, scalar/transform2d/rgba/boolean values, duplicate ticks and references."},
+    {"c": "array_visit", "rust": "json::array_spans", "parity": "full", "details": "Bounded streaming scan with checked reservation; one temporary item-span table per track, capped at 100000."},
+    {"c": "result", "rust": "DecodeFailure construction", "parity": "full"},
+    {"c": "is_space, skip_space, json_reader_poll_cancel", "rust": "json::Reader::space / poll", "parity": "full", "details": "JSON whitespace is the four permitted ASCII bytes; cancellation polls at 4096-byte source offsets."},
+    {"c": "fail, fail_at", "rust": "DecodeFailure { error, offset, canceled }", "parity": "full"},
+    {"c": "utf8_sequence, hex_value, append_utf8", "rust": "json::utf8_width, read_hex4, char::encode_utf8", "parity": "full"},
+    {"c": "decode_string_content, scan_string", "rust": "json::string_copy / Reader::string / decode_string", "parity": "full", "details": "UTF-8 validity, all JSON escapes, paired surrogate validation, decoded 4096-byte limit in both the public copy helper and parser, and exact caller-buffer capacity behavior."},
+    {"c": "initialize_timeline_locale, scan_number, span_number_value", "rust": "json::Reader::number / schema::number", "parity": "full", "details": "Rust finite f64 parsing is locale-independent; JSON lexical grammar and 96-byte numeric token bound are enforced."},
+    {"c": "scan_array, scan_object, scan_value", "rust": "json::Reader::array / object / scan", "parity": "full", "details": "Nesting limit 32, object field limit 16, decoded duplicate-key detection, malformed JSON and cancellation."},
+    {"c": "bytes_equal, bytes_compare, field_equal, json_string_equal, json_strings_equal", "rust": "byte-slice equality/order and decoded Field.key comparisons", "parity": "full", "details": "Rust u8 slice ordering matches unsigned-byte C memcmp ordering."},
+    {"c": "parse_object_fields, get_field, only_fields", "rust": "json::object_fields and schema::field / require_fields", "parity": "full"},
+    {"c": "span_string, span_uint, span_bool", "rust": "schema::string / uint / boolean", "parity": "full", "details": "Preserves raw JSON source spans; decoded strings are only materialized for comparison and reference checks."},
+    {"c": "span_array, array_count", "rust": "json::array_spans and returned span count", "parity": "full", "details": "Capacity enforced before adding each span; no shared DOM/token cap is imposed."},
+    {"c": "array_item_at, array_item_at_from", "rust": "access::item_at, access::item_next", "parity": "full", "details": "Indexed access scans from the array start; sequential access resumes from its saved cursor and does not rescan prior items."}
+  ],
+  "frozen_limits": {
+    "source_bytes": 67108864,
+    "tracks": 256,
+    "items_total": 1000000,
+    "items_per_track": 100000,
+    "decoded_json_string_bytes": 4096,
+    "nested_depth": 32,
+    "object_fields": 16,
+    "scene_ids": 1000000,
+    "assets": 1024,
+    "numeric_token_bytes": 96
+  },
+  "safe_ownership_adaptations": [
+    "C source pointer+length becomes &'source [u8]; TimelineView privately retains the borrow and immutable Span metadata.",
+    "Fixed 256-entry stack arrays become fallibly reserved Vec metadata capped at the same count; at most one 100000-span item array is temporary at a time.",
+    "Borrowed scene/asset pointer records become owned TimelineContext vectors validated for limits, uniqueness and sorted unsigned-byte scene order.",
+    "C zero-initialized public iterator becomes TimelineIterator::default; invalid track reuse returns None and reset replaces state with default.",
+    "No unsafe code, C shim, new dependency, system package, external algorithm or unsupported-OS code was introduced."
+  ],
+  "focused_tests": [
+    "borrowed_view_accessors_and_json_spans_match_c_contract",
+    "property_track_iteration_and_raw_value_spans_are_preserved",
+    "iterator_is_bound_to_one_track_until_reset",
+    "escaped_keys_surrogates_and_duplicate_decoded_fields",
+    "exact_error_categories_and_offsets",
+    "schema_property_value_reference_and_tick_rules",
+    "bounded_context_and_empty_source_cleanup",
+    "cancellation_stops_long_source_scan_and_reports_owned_cleanup_state",
+    "cancellation_is_polled_during_later_validation_rescans",
+    "string_copy_enforces_decoded_byte_limit_with_large_output",
+    "per_track_limit_and_large_sequential_iteration_are_bounded",
+    "track_count_limit_is_exact",
+    "total_item_limit_covers_items_across_tracks",
+    "source_limit_is_checked_before_parse"
+  ],
+  "acceptance_review_repairs": {
+    "string_copy_limit": "Regression asserts 4096 decoded bytes succeeds and 4097 fails with an 8192-byte output buffer.",
+    "validation_cancellation": "The callback is propagated through object_fields, array_spans, and typed-array rescans; a later-pass cancellation asserts canceled=true and source offset 131072.",
+    "exact_error_offsets": "Duplicate escaped key offset is asserted at the second encoded key; malformed high/invalid-low surrogate offset is asserted at the cursor after the low code unit."
+  },
+  "remaining_product_scope": "This crate ports timeline decoding, classification, immutable access, iteration and string copying only. Native timeline edit/session/playback/render behavior, application integration, and the overall Rust product finish line remain separate work."
+}

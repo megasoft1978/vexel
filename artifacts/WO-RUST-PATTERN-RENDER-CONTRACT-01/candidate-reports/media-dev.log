@@ -1,0 +1,11 @@
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running tests/scoped_media_contracts.rs (build/rust/aarch64-apple-darwin/debug/deps/scoped_media_contracts-d231b46a7dac65d8)
+
+running 3 tests
+test combined_scoped_operations_retain_real_cache_channel_and_nonpaint_planning_routes ... ok
+test image_real_token_rollback_and_scoped_preflight_reject_wrong_draft_and_cancel_before_provider ... ok
+test actual_token_handoff_cumulative_budget_and_late_failure_preserve_prefix_and_authority ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

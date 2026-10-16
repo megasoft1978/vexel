@@ -1,0 +1,3 @@
+The public TreeRow and EmptyState methods now use the same checked widget-bounds preflight as `widget_paint`, before any drawing. Primitive rectangle conversion uses the shared checked coordinate arithmetic without the widget-only offset allowance. Added direct near-`u32::MAX` tests confirm both compositors fail without panic or buffer mutation.
+
+The previous three fixes and all 17 tests remain passing. Locked offline check/test, work-order validation, ledger validation (1197 entries), and `git diff --check` passed. Updated the work-order result, parity map, and verification evidence.

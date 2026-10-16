@@ -1,0 +1,137 @@
+BINDING standardUserDefaults
+65:     #[derive(Debug, PartialEq, Eq, Hash)]
+66:     pub struct NSUserDefaults;
+67: );
+68: 
+69: extern_conformance!(
+70:     unsafe impl NSObjectProtocol for NSUserDefaults {}
+71: );
+72: 
+73: impl NSUserDefaults {
+74:     extern_methods!(
+75:         /// +standardUserDefaults returns a global instance of NSUserDefaults configured to search the current application's search list.
+76:         #[unsafe(method(standardUserDefaults))]
+77:         #[unsafe(method_family = none)]
+78:         pub fn standardUserDefaults() -> Retained<NSUserDefaults>;
+79: 
+80:         /// +resetStandardUserDefaults releases the standardUserDefaults and sets it to nil. A new standardUserDefaults will be created the next time it's accessed. The only visible effect this has is that all KVO observers of the previous standardUserDefaults will no longer be observing it.
+81:         #[unsafe(method(resetStandardUserDefaults))]
+82:         #[unsafe(method_family = none)]
+83:         pub fn resetStandardUserDefaults();
+84: 
+85:         /// -init is equivalent to -initWithSuiteName:nil
+86:         #[unsafe(method(init))]
+87:         #[unsafe(method_family = init)]
+88:         pub fn init(this: Allocated<Self>) -> Retained<Self>;
+89: 
+90:         #[cfg(feature = "NSString")]
+91:         /// -initWithSuiteName: initializes an instance of NSUserDefaults that searches the shared preferences search list for the domain 'suitename'. For example, using the identifier of an application group will cause the receiver to search the preferences for that group. Passing the current application's bundle identifier, NSGlobalDomain, or the corresponding CFPreferences constants is an error. Passing nil will search the default search list.
+92:         #[unsafe(method(initWithSuiteName:))]
+
+SDK standardUserDefaults
+152: ///
+153: /// The shared defaults object searches the current application's search list, which consists of the current domain, followed by any added suite domains, the global domain, and the registration domain.
+154: @property (class, readonly, strong) NSUserDefaults *standardUserDefaults;
+155: 
+156: // +resetStandardUserDefaults releases the standardUserDefaults and sets it to nil. A new standardUserDefaults will be created the next time it's accessed. The only visible effect this has is that all KVO observers of the previous standardUserDefaults will no longer be observing it.
+157: /// This method has no effect and shouldn't be used.
+158: + (void)resetStandardUserDefaults;
+159: 
+160: // -init is equivalent to -initWithSuiteName:nil
+161: /// Creates a new defaults object and initializes it with the app's current settings.
+
+SDK standardUserDefaults
+154: @property (class, readonly, strong) NSUserDefaults *standardUserDefaults;
+155: 
+156: // +resetStandardUserDefaults releases the standardUserDefaults and sets it to nil. A new standardUserDefaults will be created the next time it's accessed. The only visible effect this has is that all KVO observers of the previous standardUserDefaults will no longer be observing it.
+157: /// This method has no effect and shouldn't be used.
+158: + (void)resetStandardUserDefaults;
+159: 
+160: // -init is equivalent to -initWithSuiteName:nil
+161: /// Creates a new defaults object and initializes it with the app's current settings.
+162: - (instancetype)init;
+163: 
+
+BINDING setInteger_forKey
+187:         #[unsafe(method_family = none)]
+188:         pub fn boolForKey(&self, default_name: &NSString) -> bool;
+189: 
+190:         #[cfg(all(feature = "NSString", feature = "NSURL"))]
+191:         /// -URLForKey: is equivalent to -objectForKey: except that it converts the returned value to an NSURL. If the value is an NSString path, then it will construct a file URL to that path. If the value is an archived URL from -setURL:forKey: it will be unarchived. If the value is absent or can't be converted to an NSURL, nil will be returned.
+192:         #[unsafe(method(URLForKey:))]
+193:         #[unsafe(method_family = none)]
+194:         pub fn URLForKey(&self, default_name: &NSString) -> Option<Retained<NSURL>>;
+195: 
+196:         #[cfg(feature = "NSString")]
+197:         /// -setInteger:forKey: is equivalent to -setObject:forKey: except that the value is converted from an NSInteger to an NSNumber.
+198:         #[unsafe(method(setInteger:forKey:))]
+199:         #[unsafe(method_family = none)]
+200:         pub fn setInteger_forKey(&self, value: NSInteger, default_name: &NSString);
+201: 
+202:         #[cfg(feature = "NSString")]
+203:         /// -setFloat:forKey: is equivalent to -setObject:forKey: except that the value is converted from a float to an NSNumber.
+204:         #[unsafe(method(setFloat:forKey:))]
+205:         #[unsafe(method_family = none)]
+206:         pub fn setFloat_forKey(&self, value: c_float, default_name: &NSString);
+207: 
+208:         #[cfg(feature = "NSString")]
+209:         /// -setDouble:forKey: is equivalent to -setObject:forKey: except that the value is converted from a double to an NSNumber.
+210:         #[unsafe(method(setDouble:forKey:))]
+211:         #[unsafe(method_family = none)]
+212:         pub fn setDouble_forKey(&self, value: c_double, default_name: &NSString);
+213: 
+214:         #[cfg(feature = "NSString")]
+
+SDK setInteger_forKey
+264: ///   - value: The integer value to store.
+265: ///   - defaultName: The key with which to associate the value.
+266: - (void)setInteger:(NSInteger)value forKey:(NSString *)defaultName;
+267: /// Sets the value of the specified key to a floating-point number.
+268: ///
+269: /// - Parameters:
+270: ///   - value: The floating-point value to store.
+271: ///   - defaultName: The key with which to associate the value.
+272: - (void)setFloat:(float)value forKey:(NSString *)defaultName;
+273: /// Sets the value of the specified key to a double.
+
+BINDING objectForKey
+97:         ) -> Option<Retained<Self>>;
+98: 
+99:         #[cfg(feature = "NSString")]
+100:         /// -initWithUser: is equivalent to -init
+101:         #[deprecated = "Use -init instead"]
+102:         #[unsafe(method(initWithUser:))]
+103:         #[unsafe(method_family = init)]
+104:         pub fn initWithUser(this: Allocated<Self>, username: &NSString) -> Option<Retained<Self>>;
+105: 
+106:         #[cfg(feature = "NSString")]
+107:         /// -objectForKey: will search the receiver's search list for a default with the key 'defaultName' and return it. If another process has changed defaults in the search list, NSUserDefaults will automatically update to the latest values. If the key in question has been marked as ubiquitous via a Defaults Configuration File, the latest value may not be immediately available, and the registered value will be returned instead.
+108:         #[unsafe(method(objectForKey:))]
+109:         #[unsafe(method_family = none)]
+110:         pub fn objectForKey(&self, default_name: &NSString) -> Option<Retained<AnyObject>>;
+111: 
+112:         #[cfg(feature = "NSString")]
+113:         /// -setObject:forKey: immediately stores a value (or removes the value if nil is passed as the value) for the provided key in the search list entry for the receiver's suite name in the current user and any host, then asynchronously stores the value persistently, where it is made available to other processes.
+114:         ///
+115:         /// # Safety
+116:         ///
+117:         /// `value` should be of the correct type.
+118:         #[unsafe(method(setObject:forKey:))]
+119:         #[unsafe(method_family = none)]
+120:         pub unsafe fn setObject_forKey(&self, value: Option<&AnyObject>, default_name: &NSString);
+121: 
+122:         #[cfg(feature = "NSString")]
+123:         /// -removeObjectForKey: is equivalent to -[... setObject:nil forKey:defaultName]
+124:         #[unsafe(method(removeObjectForKey:))]
+
+SDK objectForKey
+177: ///
+178: /// The returned object is immutable, even if the value you originally set was mutable.
+179: - (nullable id)objectForKey:(NSString *)defaultName;
+180: 
+181: /// Sets the value of the specified key to a property list object.
+182: ///
+183: /// - Parameters:
+184: ///   - value: The object to store in the defaults database. Pass `nil` to remove the value for `defaultName`.
+185: ///   - defaultName: The key with which to associate the value.
+186: ///

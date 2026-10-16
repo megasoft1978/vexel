@@ -1,0 +1,23 @@
+WO-CORPUS-05 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Input identity checks
+- External corpus manifest SHA-256: 9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30 (58 records).
+- `generated-inkscape_t1`: files/generated/inkscape_t1.svg; 979,796 bytes; SHA-256 3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5; exact manifest and file hash match.
+- `generated-inkscape_t2`: files/generated/inkscape_t2.svg; 10,062,253 bytes; SHA-256 b0b7223ac34f78d64f8d37e7e6f82e05b76f626d9f1b01183cc533515a2d17d1; exact manifest and file hash match.
+- Repository fixture manifest is a separate schema/corpus: SHA-256 a05dcf0da95bd7c53ce6faec6704f7b739d6cbd9cf829dfff74b50dfb8359bbd, 24 fixtures, matching `bench/corpus/manifest.sha256`. Neither external corpus ID appears in that fixture manifest.
+
+Build
+- `cmake --preset mac-release`: PASS.
+- `cmake --build --preset mac-release --target svgworkbench`: PASS (198 build steps; app linked).
+
+Targeted full-document probes (Release, 128x128 output)
+- `/usr/bin/time -l build/mac-release/bin/svgworkbench --render-frame /Users/megasoft78/Desktop/Freelance/vexel-corpus-real/files/generated/inkscape_t1.svg --size 128x128 --out .cache/WO-CORPUS-05/inkscape_t1.ppm`: exit 1; `limit at byte 0`; 0.83 s real; maximum RSS 100,204,544 bytes.
+- `/usr/bin/time -l build/mac-release/bin/svgworkbench --render-frame /Users/megasoft78/Desktop/Freelance/vexel-corpus-real/files/generated/inkscape_t2.svg --size 128x128 --out .cache/WO-CORPUS-05/inkscape_t2.ppm`: exit 1; `limit at byte 1848989`; 0.09 s real; maximum RSS 138,903,552 bytes.
+- Both prior reports showed `unsupported at byte 1214` inside `stroke="url(#g)"`; the current Release build reports raster `limit` instead. This establishes a changed first diagnostic only; neither full file is proven to render. These failure latencies are not render-performance measurements.
+
+Scope and interpretation
+- Exactly the two frozen full-document probes were run. No corpus-wide sweep, UI/E2E suite, fuzz, broad benchmark, or source change was made.
+- The accepted full-render evidence remains 3 rendered / 39 probed / 19 skipped (58-file manifest). WO-CORPUS-04 remains an unaccepted candidate at 5 rendered / 39 probed / 19 skipped, with no regressions reported in its delta. Those are separate source states.
+- The next SVG slice should identify the exact work/limit site and required work before changing budgets. The existing candidate caps scaled work at 16,000,000,000 units; do not raise that cap without a safe design and evidence.

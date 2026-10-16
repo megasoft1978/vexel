@@ -1,0 +1,46 @@
+{
+  "work_order": "WO-RUST-DOCUMENT-MODEL-01",
+  "status": "blocked",
+  "implementation": "none",
+  "dependency": {
+    "crate": "vexel-xml::XmlTokenStream",
+    "missing_contract": "Public enforcement and reporting of a 64 MiB actual allocated tokenizer-storage cap with the exact OutputExhausted diagnostic and offset.",
+    "evidence": [
+      "XmlTokenStream::new converts max_storage_bytes to token_capacity by division.",
+      "stage_tag and emit call Vec::try_reserve(1); allocated Vec capacity is not constrained by token_capacity bytes.",
+      "new_visitor has bounded per-tag scratch but no cumulative token-storage cap or exhaustion diagnostic at the cumulative boundary.",
+      "The XML crate is protected from this worker."
+    ]
+  },
+  "c_api": [
+    {"symbol":"document_model_parse","rust":"not implemented","original_assertions":"parse errors, diagnostics, limits, resource exhaustion, source borrowing and preservation"},
+    {"symbol":"document_model_destroy","rust":"not implemented","original_assertions":"model lifetime and source borrow"},
+    {"symbol":"document_model_node_count","rust":"not implemented","original_assertions":"parsed node count"},
+    {"symbol":"document_model_live_node_count","rust":"not implemented","original_assertions":"live counts before and after removal"},
+    {"symbol":"document_model_root","rust":"not implemented","original_assertions":"root and root removal"},
+    {"symbol":"document_model_first_child","rust":"not implemented","original_assertions":"tree traversal and post-removal child traversal"},
+    {"symbol":"document_model_next_sibling","rust":"not implemented","original_assertions":"sibling traversal and post-removal traversal"},
+    {"symbol":"document_model_parent","rust":"not implemented","original_assertions":"parent query"},
+    {"symbol":"document_model_tag_name","rust":"not implemented","original_assertions":"raw tag bytes, foreign/stale/deleted handle rejection"},
+    {"symbol":"document_model_attribute_count","rust":"not implemented","original_assertions":"attribute count"},
+    {"symbol":"document_model_attribute_at","rust":"not implemented","original_assertions":"raw attribute name and value bytes"},
+    {"symbol":"document_model_depth","rust":"not implemented","original_assertions":"depth query"},
+    {"symbol":"document_model_node_at","rust":"not implemented","original_assertions":"slot query and removed-node rejection"},
+    {"symbol":"document_model_source_span","rust":"not implemented","original_assertions":"exact complete group and empty-element byte spans"},
+    {"symbol":"document_model_remove_subtree","rust":"not implemented","original_assertions":"subtree deletion, generations, live counts, stale handles and source unchanged"},
+    {"symbol":"document_model_error_name","rust":"not implemented","original_assertions":"stable error names"},
+    {"symbol":"allocate_document_id","rust":"not implemented","original_assertions":"unique model IDs, no zero/MAX/wrap/reuse, isolated exhaustion seam"},
+    {"symbol":"append_child","rust":"not implemented","original_assertions":"first-child/last-child/next-sibling order"},
+    {"symbol":"create_nodes","rust":"not implemented","original_assertions":"node/attribute tables, parents, depth, spans and bounds"},
+    {"symbol":"resolve","rust":"not implemented","original_assertions":"wrong-model, invalid-generation, stale and deleted handle rejection"},
+    {"symbol":"make_handle","rust":"not implemented","original_assertions":"stable document/slot/generation identity"}
+  ],
+  "limits": {
+    "input_bytes": "16 MiB tokenizer default",
+    "tokenizer_storage": "64 MiB actual allocation requirement unresolved",
+    "nodes": 1000000,
+    "depth": 256,
+    "allocation_policy": "No implementation; required allocations must be fallible and size checked."
+  },
+  "ownership": "No implementation; required model must borrow immutable source bytes for its lifetime."
+}

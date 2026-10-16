@@ -1,0 +1,13 @@
+COMMAND: python3 scripts/wo_validate.py WO-RUST-GOAL-02 --ready
+EXIT: 0
+valid WO-RUST-GOAL-02 revision 1 sha256 2ef0ce3af8d133a17e6095555a0db38302603f1a83b34c68d21c1acf3a5df27e
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1099 entries
+
+COMMAND: git diff --check
+EXIT: 0
+
+Reviewed against OWNER-DIRECTIVES, ADR0018/0022, wave2 status files. All nine outcomes, release definition, preservation, performance evidence, parallel scope and test sequence explicit.
+HEAD/index unchanged. This order wrote only its frozen allowed documentation/artifact/ledger paths. No application build/test run.

@@ -1,0 +1,29 @@
+from pathlib import Path
+import hashlib,json,subprocess,sys,shutil,os
+from datetime import datetime,timezone
+r=Path(__file__).resolve().parents[2];w='WO-RUST-CACHE-PUBLICATION-01';a=r/'artifacts'/w;t=r/'.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker';out=t/'artifacts'/w;out.mkdir(exist_ok=False);h=lambda p:hashlib.sha256(p.read_bytes()).hexdigest();head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=r,text=True).strip()
+last=None
+for l in (r/'ledger.jsonl').read_text().splitlines():
+ d=json.loads(l)
+ if d['wo_id']=='WO-RUST-SCENE-DECODE-INITIALIZATION-01':last=d
+assert last['event']=='accepted'
+for f in ['process-status.json','viewport-recheck-status.json']:
+ d=json.loads((r/'artifacts/WO-RUST-SCENE-DECODE-INITIALIZATION-01'/f).read_text());assert d['status']=='completed';assert not subprocess.run(['ps','-p',str(d['child_pid']),'-o','comm='],capture_output=True,text=True).stdout.strip()
+# Preserve prior candidate source already archived/accepted, then overlay the
+# exact current authoritative source (including newly accepted definitions).
+files={}
+for name in subprocess.check_output(['rg','--files','--hidden','-g','!.git','-g','!.cache','-g','!build','-g','!artifacts','-g','!reports'],cwd=r,text=True).splitlines():
+ p=r/name
+ if not p.is_file():continue
+ dst=t/name;dst.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(p,dst);files[name]=h(p)
+proof={'prerequisite':'WO-RUST-SCENE-DECODE-INITIALIZATION-01 ACCEPTED','main_scene_entries':177,'unchanged_animation_entries':21,'accepted_ledger_event':last,'previous_writer_and_reviewer_terminal':True,'exact_current_source_overlay_files':len(files),'old_reports':'Historical candidate reports are preserved, current coordinator acceptance is authoritative.'}
+for name in ['coordinator-result.md','main-verification.json']:
+ shutil.copy2(r/'artifacts/WO-RUST-SCENE-DECODE-INITIALIZATION-01'/name,out/('accepted-initialization-'+name))
+shutil.copy2(r/'artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/coordinator-cache-cap-clarification.md',out/'coordinator-cache-cap-clarification.md');shutil.copy2(r/'.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/aggregate-contract-blocker.md',out/'scalar-aggregate-contract-blocker.md')
+for p in [a/'accepted-prerequisite.json',out/'accepted-prerequisite.json']:p.write_text(json.dumps(proof,indent=2)+'\n')
+b={'head':head,'worktree':str(t),'files':files,'accepted_inputs':proof};(a/'input-baseline.json').write_text(json.dumps(b,indent=2)+'\n');shutil.copy2(a/'input-baseline.json',out/'input-baseline.json')
+(a/'worker.prompt.txt').write_text('''Implement entire frozen work/WO-RUST-CACHE-PUBLICATION-01.md. Read OWNER/AGENTS, exactorder, own accepted-prerequisite.json/coordinator-cache-cap-clarification.md/scalar-aggregate-contract-blocker.md then ONLY relevant raster_job/cache/grid/scratch/composition files and actualoldtests. Prior initialization writer/reviewer terminal, accepted/freshmain177Scene+21animation; current mainSource including definitions40 overlaid exactly. Old pendingcandidate reports historical. You are sole shared writer; shapepublication order waits for you, do NOT implement its scope.\nNamed SolMedium resource accounting/lifetime problem: existing defaultcheck_pool alreadycombined16MiB but acrossphysicallive old+stagedcaches. Need explicit generation/transaction-scoped cachecap16MiB/cells65536/refs1M, allphysicalold/new/meta/capacities admitted separatelycallerledger. Preserve EVERY177oldScene/21animation assertion/sourceAPI/literal/defaultpoolcap. Public safe replacement construct realtypedbuffers/no copies, validate logicalscope+role+owner+stale/mixed/replay, atomic commit retiresold onlyaftervalidate; abort/error/cancel keepsoldusable; metadatahistoryhonest, no unresolvedfinishedjob. Actual nearcap success/inadequatephysicalbudget/individual+aggregate/refcellcap/repeatedfailure/actualcomposition proofs and complete lowerexample. Read scalar builder/tests as READONLY ifneeded, no peerchanges. No rawVec/lease escape/Scratchpoolworkaround/doubleglobalcap or blanketraisingfrozencaps. Only frozenScene src/newtest/README/ownreports, source/tests<800, no manifest/deps/oldtests/state/ledgers/agents/reviewCLI/network/GUI/broadUI/stage/reset/delete/commit/billing. Standard SolMedium subscriptiononly, stopquota/rateerrors no retries/credits. Run SAME namedofflinecheck/test/WO exactlogs/APIcoverage/result. Root independent LunaHighreview/protectedaudit/freshmain beforeacceptance orseed. Implement directly with narrowadaptive reads, no wholetree/history scan.\n''')
+s=(r/'artifacts/WO-RUST-SCENE-DECODE-INITIALIZATION-01/runner.py').read_text().replace('WO-RUST-SCENE-DECODE-INITIALIZATION-01',w);start=s.index("'resume',");end=s.index(",'-']",start);s=s[:start]+s[end+1:];p=a/'runner.py';p.write_text(s)
+sys.path.insert(0,str(r));from scripts.ledger import append_entry
+append_entry(r/'ledger.jsonl',dict(ts=datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),wo_id=w,event='run_started',revision=1,base_sha=head,head_sha=head,run_id=w+'-start',session_id='coordinator-cache-publication',model='gpt-6.1-sol',cli_version='0.162.1',duration_s=0,usage={'input_tokens':None,'output_tokens':None},status='running',artifacts=[f'artifacts/{w}/input-baseline.json',f'artifacts/{w}/accepted-prerequisite.json'],note='Starts onlyafter initialization accepted/main177Scene+21animation and terminalwriter/rechecker; exactcurrentrootSource overlaid. Single shared writer resource-generation accounting; frozen177 assertions/defaultcaps preserved, no source acceptance/productclaim.'))
+log=(a/'supervisor.log').open('ab');proc=subprocess.Popen([sys.executable,str(p)],stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=True);print({'supervisor_pid':proc.pid,'order':w,'current_source_files':len(files),'model':'gpt-6.1-sol','effort':'medium'})

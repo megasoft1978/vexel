@@ -1,0 +1,34 @@
+{
+  "work_order": "WO-RUST-BASE-01",
+  "source": "src/base/base.h and src/base/base.c",
+  "rust_crate": "rust/crates/vexel-base",
+  "tests": "rust/crates/vexel-base/tests/base_contract.rs",
+  "mapping": [
+    {"c_symbol":"base_size_add","rust_symbol":"vexel_base::size_add","tests":["arithmetic_matches_original_assertions_and_randomized_cases"],"adaptation":"Option<usize> represents success or overflow; Rust has no output pointer to zero on failure."},
+    {"c_symbol":"base_size_mul","rust_symbol":"vexel_base::size_mul","tests":["arithmetic_matches_original_assertions_and_randomized_cases"],"adaptation":"Option<usize> represents success or overflow; Rust has no output pointer to zero on failure."},
+    {"c_symbol":"base_bytes_valid","rust_symbol":"vexel_base::Bytes<'a>","tests":["immutable_and_mutable_slices_preserve_original_assertions"],"adaptation":"A borrowed Rust slice cannot express a null pointer with positive length; empty slices are valid."},
+    {"c_symbol":"base_mut_bytes_valid","rust_symbol":"vexel_base::MutBytes<'a>","tests":["immutable_and_mutable_slices_preserve_original_assertions"],"adaptation":"A mutable borrowed Rust slice cannot express a null pointer with positive length; empty slices are valid."},
+    {"c_symbol":"base_bytes_sub","rust_symbol":"vexel_base::bytes_sub","tests":["immutable_and_mutable_slices_preserve_original_assertions"],"adaptation":"Returns Option<&[u8]>; invalid pointer/length pairs are unrepresentable, and failed bounds return None."},
+    {"c_symbol":"base_mut_bytes_sub","rust_symbol":"vexel_base::mut_bytes_sub","tests":["immutable_and_mutable_slices_preserve_original_assertions"],"adaptation":"Returns Option<&mut [u8]> with an exclusive borrow; failed bounds return None."},
+    {"c_symbol":"base_bytes_equal","rust_symbol":"vexel_base::bytes_equal","tests":["immutable_and_mutable_slices_preserve_original_assertions"],"adaptation":"Accepts only valid borrowed slices; Rust slice equality checks length and contents."},
+    {"c_symbol":"base_arena_create","rust_symbol":"vexel_base::Arena::new and Arena::with_allocation_gate","tests":["arena_alignment_reset_stats_and_limit","allocator_failure_is_atomic_and_cleanup_is_owned"],"adaptation":"Takes a value config and returns Result<Arena, BaseStatus>. Construction allocates no chunk; deterministic failure injection applies to chunk backing allocations through AllocationGate."},
+    {"c_symbol":"base_arena_push","rust_symbol":"vexel_base::Arena::push","tests":["arena_alignment_reset_stats_and_limit","allocator_failure_is_atomic_and_cleanup_is_owned","arena_reports_overflow_without_partial_state_change"],"adaptation":"Returns Result<Option<ArenaHandle>, BaseStatus>; zero size is Ok(None), and opaque handles replace raw output pointers. Alignment 1..=4096 and first-fit retained-chunk behavior are preserved."},
+    {"c_symbol":"base_arena_get_stats","rust_symbol":"vexel_base::Arena::stats","tests":["arena_alignment_reset_stats_and_limit","allocator_failure_is_atomic_and_cleanup_is_owned","arena_reports_overflow_without_partial_state_change"],"adaptation":"Returns ArenaStats by value; null arena/output cases cannot be expressed. Used bytes include alignment padding as in C."},
+    {"c_symbol":"base_arena_reset","rust_symbol":"vexel_base::Arena::reset","tests":["arena_alignment_reset_stats_and_limit"],"adaptation":"Mutably borrows the arena and retains chunks and handles while clearing usage."},
+    {"c_symbol":"base_arena_destroy","rust_symbol":"Drop for vexel_base::Arena","tests":["allocator_failure_is_atomic_and_cleanup_is_owned"],"adaptation":"Owned chunk storage is released automatically; explicit destroy and callback free counts are not exposed."}
+  ],
+  "public_types": [
+    {"c_type":"base_status","rust_type":"BaseStatus","adaptation":"Existing Rust Invalid/Overflow/Limit/OutOfMemory variants remain frozen; success is represented by Result::Ok rather than a success enum variant."},
+    {"c_type":"base_bytes and base_mut_bytes","rust_type":"Bytes<'a> and MutBytes<'a>","adaptation":"Borrowed slices encode pointer validity and length together."},
+    {"c_type":"base_arena_config","rust_type":"ArenaConfig","adaptation":"Allocator callbacks are replaced by an optional AllocationGate permission seam plus standard fallible Vec reservation."},
+    {"c_type":"base_arena_stats","rust_type":"ArenaStats","adaptation":"Same three payload counters, returned as an owned value."}
+  ],
+  "allocation_and_slice_adaptation": "Safe 4096-aligned fixed blocks preserve supported alignment without unsafe code. Borrowed allocation views are segmented ArenaSlice/ArenaSliceMut objects with byte access and copy methods, since the standard library cannot safely reinterpret aligned-block storage as one contiguous byte slice. Handles carry an arena identity and do not expose addresses. No external dependencies or unsafe code are used.",
+  "unrepresentable_c_cases": [
+    "Null output pointers for arithmetic, subslices, arena construction, and stats have no Rust equivalent; values and Result/Option carry outputs.",
+    "Invalid pointer-plus-positive-length byte pairs and invalid null arena arguments cannot be constructed through borrowed slices and owned Arena methods.",
+    "Mismatched allocator callback pairs have no counterpart because allocator callbacks are replaced by a typed AllocationGate.",
+    "C arena construction can fail while allocating the arena object; Rust Arena construction is an owned value and does not allocate. AllocationGate failure is tested on the first backing chunk instead.",
+    "Exact custom allocator allocation/free callback counters have no Rust counterpart. Vec backing allocations are fallible and released by ownership/drop; tests assert failure atomicity and retained handle readability instead."
+  ]
+}

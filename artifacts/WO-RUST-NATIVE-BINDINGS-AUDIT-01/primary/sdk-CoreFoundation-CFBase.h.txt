@@ -1,0 +1,17 @@
+776: 
+777: CF_EXPORT
+778: CFTypeRef CFRetain(CFTypeRef cf);
+779: 
+780: CF_EXPORT
+781: void CFRelease(CFTypeRef cf);
+782: 
+783: CF_EXPORT
+
+779: 
+780: CF_EXPORT
+781: void CFRelease(CFTypeRef cf);
+782: 
+783: CF_EXPORT
+784: CFTypeRef CFAutorelease(CFTypeRef CF_RELEASES_ARGUMENT arg) API_AVAILABLE(macos(10.9), ios(7.0), watchos(2.0), tvos(9.0));
+785: 
+786: CF_EXPORT

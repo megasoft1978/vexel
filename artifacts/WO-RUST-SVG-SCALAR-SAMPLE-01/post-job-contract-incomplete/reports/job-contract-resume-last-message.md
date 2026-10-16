@@ -1,0 +1,9 @@
+The **entire frozen owner scope is not complete**. The resumed candidate now uses `ControlledSampleInput` for paint calls and `JobDashView` for stroke grid queries. It also adds a canonical `SceneBuilder` fixture with parsed path and animation, plus same-source job accounting and cancellation rollback checks.
+
+Dash/grid construction still uses standalone `DashCache` vectors, and `fill_row` still uses `RasterScratch` vectors. Several of the eleven assigned pure predicates also remain unported. I have not claimed lower-engine or renderer completion.
+
+I found a shared API issue for the fill/output port: `JobDashView` holds an immutable borrow of `RasterJob`, while writes to its buffers require `&mut RasterJob`. Recreating and validating the view per sample repeats charged traversal and changes work limits. The coordinator needs to provide a safe split-borrow seam; I made no shared-file changes.
+
+Scoped `cargo check`, `cargo test` (6 unit and 3 integration tests), and WO validation passed. The original 603/157 suites and fixtures were not run or modified. The seed references `pre-job-contract-resume`, but that archive directory is absent from this tree.
+
+Evidence: [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/parity-map.json), [coverage.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/coverage.json), and [verification.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/verification.json).

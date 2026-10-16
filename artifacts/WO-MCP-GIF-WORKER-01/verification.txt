@@ -1,0 +1,32 @@
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-gif-worker/build/mac-debug
+ninja: no work to do.
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-gif-worker/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-gif-worker/build/mac-debug
+    Start 5: mcp-export-job
+1/1 Test #5: mcp-export-job ...................   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.02 sec
+valid WO-MCP-GIF-WORKER-01 revision 1 sha256 c97344a7ca2f9c2ff803a34d97bd576bf70c20adf0450b1b094b0a83d1400774
+valid ledger: 1015 entries
+     389 src/mcp/mcp_export_job.c
+      67 src/mcp/mcp_export_job.h
+     372 tests/mcp/mcp_export_job_test.c
+     828 total
+
+Final focused repair verification:
+$ cmake --build build/mac-debug --target mcp_export_job_test vexel-mcp
+exit 0; rebuilt mcp_export_job_test, vexel_mcp, vexel-mcp
+$ ctest --test-dir build/mac-debug --output-on-failure -R ^mcp-export-job$
+1/1 mcp-export-job passed (0.27 sec)
+$ git diff --check
+exit 0

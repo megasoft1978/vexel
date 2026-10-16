@@ -1,0 +1,7 @@
+e69a30865eaa2212561b9283d0cb2b6325ed72760d557981c8b56406cb8ab602  tests/raster/cache/cache_contract.c
+7e0542f124c6da1e423588db2e18fac6b440f862811a48363ad49e3ad0b88ed3  artifacts/WO-RUST-TILE-CACHE-ORACLE-01/scope.json
+85c870f4c7af8ef015f9be1a96f6439ec8091fc6fc057974a4e2bca360a44db8  rust/crates/vexel-tile-cache/src/lib.rs
+77b18901fa24bbec1aced8405d1f97b90e61f6976b69e2c23acb71793f4a6b55  rust/crates/vexel-tile-cache/tests/cache.rs
+d62554d1329a575e81d8d0842e4a84c936ff7e0c5f6c73fa9ab249590e3b0030  artifacts/WO-RUST-TILE-CACHE-ORACLE-01/candidate/expected-summary.json
+d62554d1329a575e81d8d0842e4a84c936ff7e0c5f6c73fa9ab249590e3b0030  artifacts/WO-RUST-TILE-CACHE-ORACLE-01/candidate/actual-summary.json
+75f6edb0c0f507457506cb7bd5adc5e8d1a9603dadc8b3f6bda92afe47fa8935  artifacts/WO-RUST-TILE-CACHE-ORACLE-01/candidate/REPORT.md

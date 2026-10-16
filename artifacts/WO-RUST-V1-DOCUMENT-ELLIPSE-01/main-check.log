@@ -1,0 +1,4 @@
+COMMAND: env CARGO_HOME="$PWD/.cache/cargo" cargo +stable check -p vexel-v1-document --locked --offline
+EXIT: 0
+    Checking vexel-v1-document v0.1.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s

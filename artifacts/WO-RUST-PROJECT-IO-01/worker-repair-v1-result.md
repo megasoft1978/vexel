@@ -1,0 +1,5 @@
+Added the authorized Rust decoder allocation adaptation: `OutOfMemory` maps to `FileError::OutOfMemory` with `bundle_error` retained; `Limit` and other decoder mappings remain unchanged. Regression tests verify result flags and checksum-corrupt rejection before publication. The original six tests remain; all eight tests pass.
+
+All five named checks passed, including work-order and ledger validation. The candidate remains uncommitted and limited to the owned crate and artifacts.
+
+Updated evidence: [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/artifacts/WO-RUST-PROJECT-IO-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/artifacts/WO-RUST-PROJECT-IO-01/parity-map.json), [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/artifacts/WO-RUST-PROJECT-IO-01/verification.txt).

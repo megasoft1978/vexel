@@ -1,0 +1,479 @@
+BINDING characters
+833:         #[unsafe(method_family = none)]
+834:         pub fn scrollingDeltaY(&self) -> CGFloat;
+835: 
+836:         #[unsafe(method(momentumPhase))]
+837:         #[unsafe(method_family = none)]
+838:         pub fn momentumPhase(&self) -> NSEventPhase;
+839: 
+840:         #[unsafe(method(isDirectionInvertedFromDevice))]
+841:         #[unsafe(method_family = none)]
+842:         pub fn isDirectionInvertedFromDevice(&self) -> bool;
+843: 
+844:         #[unsafe(method(characters))]
+845:         #[unsafe(method_family = none)]
+846:         pub fn characters(&self) -> Option<Retained<NSString>>;
+847: 
+848:         #[unsafe(method(charactersIgnoringModifiers))]
+849:         #[unsafe(method_family = none)]
+850:         pub fn charactersIgnoringModifiers(&self) -> Option<Retained<NSString>>;
+851: 
+852:         #[unsafe(method(charactersByApplyingModifiers:))]
+853:         #[unsafe(method_family = none)]
+854:         pub fn charactersByApplyingModifiers(
+855:             &self,
+856:             modifiers: NSEventModifierFlags,
+857:         ) -> Option<Retained<NSString>>;
+858: 
+859:         #[unsafe(method(isARepeat))]
+860:         #[unsafe(method_family = none)]
+
+SDK characters
+361: 
+362: /* these messages are valid for keyup and keydown events */
+363: @property (nullable, readonly, copy) NSString *characters;
+364: @property (nullable, readonly, copy) NSString *charactersIgnoringModifiers;
+365: 
+366: /* This message is valid keyup and keydown events.
+367:     It returns the character(s) that would have been generated if a different modifier combination had been used.
+368:     It uses [self keyCode], the new modifiers and the current keyboard input source's layout data for re-translation.  It entirely ignores the modifiers that are already present in the event and calling this method will not affect the dead key state for current text input.
+369:     If there is invalid data in this event, -charactersByApplyingModifiers will return nil.
+370: */
+
+SDK characters
+362: /* these messages are valid for keyup and keydown events */
+363: @property (nullable, readonly, copy) NSString *characters;
+364: @property (nullable, readonly, copy) NSString *charactersIgnoringModifiers;
+365: 
+366: /* This message is valid keyup and keydown events.
+367:     It returns the character(s) that would have been generated if a different modifier combination had been used.
+368:     It uses [self keyCode], the new modifiers and the current keyboard input source's layout data for re-translation.  It entirely ignores the modifiers that are already present in the event and calling this method will not affect the dead key state for current text input.
+369:     If there is invalid data in this event, -charactersByApplyingModifiers will return nil.
+370: */
+371: - (nullable NSString *)charactersByApplyingModifiers:(NSEventModifierFlags)modifiers API_AVAILABLE(macos(10.15)); 
+
+SDK characters
+367:     It returns the character(s) that would have been generated if a different modifier combination had been used.
+368:     It uses [self keyCode], the new modifiers and the current keyboard input source's layout data for re-translation.  It entirely ignores the modifiers that are already present in the event and calling this method will not affect the dead key state for current text input.
+369:     If there is invalid data in this event, -charactersByApplyingModifiers will return nil.
+370: */
+371: - (nullable NSString *)charactersByApplyingModifiers:(NSEventModifierFlags)modifiers API_AVAILABLE(macos(10.15)); 
+372: 
+373:   /* the chars that would have been generated, regardless of modifier keys (except shift) */
+374: @property (getter=isARepeat, readonly) BOOL ARepeat;
+375: /* this message is valid for keyup, keydown and flagschanged events */
+376: @property (readonly) unsigned short keyCode;        /* device-independent key number */
+
+BINDING charactersIgnoringModifiers
+837:         #[unsafe(method_family = none)]
+838:         pub fn momentumPhase(&self) -> NSEventPhase;
+839: 
+840:         #[unsafe(method(isDirectionInvertedFromDevice))]
+841:         #[unsafe(method_family = none)]
+842:         pub fn isDirectionInvertedFromDevice(&self) -> bool;
+843: 
+844:         #[unsafe(method(characters))]
+845:         #[unsafe(method_family = none)]
+846:         pub fn characters(&self) -> Option<Retained<NSString>>;
+847: 
+848:         #[unsafe(method(charactersIgnoringModifiers))]
+849:         #[unsafe(method_family = none)]
+850:         pub fn charactersIgnoringModifiers(&self) -> Option<Retained<NSString>>;
+851: 
+852:         #[unsafe(method(charactersByApplyingModifiers:))]
+853:         #[unsafe(method_family = none)]
+854:         pub fn charactersByApplyingModifiers(
+855:             &self,
+856:             modifiers: NSEventModifierFlags,
+857:         ) -> Option<Retained<NSString>>;
+858: 
+859:         #[unsafe(method(isARepeat))]
+860:         #[unsafe(method_family = none)]
+861:         pub fn isARepeat(&self) -> bool;
+862: 
+863:         #[unsafe(method(keyCode))]
+864:         #[unsafe(method_family = none)]
+
+SDK charactersIgnoringModifiers
+362: /* these messages are valid for keyup and keydown events */
+363: @property (nullable, readonly, copy) NSString *characters;
+364: @property (nullable, readonly, copy) NSString *charactersIgnoringModifiers;
+365: 
+366: /* This message is valid keyup and keydown events.
+367:     It returns the character(s) that would have been generated if a different modifier combination had been used.
+368:     It uses [self keyCode], the new modifiers and the current keyboard input source's layout data for re-translation.  It entirely ignores the modifiers that are already present in the event and calling this method will not affect the dead key state for current text input.
+369:     If there is invalid data in this event, -charactersByApplyingModifiers will return nil.
+370: */
+371: - (nullable NSString *)charactersByApplyingModifiers:(NSEventModifierFlags)modifiers API_AVAILABLE(macos(10.15)); 
+
+SDK charactersIgnoringModifiers
+520: /* apps will rarely create these objects */
+521: + (nullable NSEvent *)mouseEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum clickCount:(NSInteger)cNum pressure:(float)pressure;
+522: + (nullable NSEvent *)keyEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil characters:(NSString *)keys charactersIgnoringModifiers:(NSString *)ukeys isARepeat:(BOOL)flag keyCode:(unsigned short)code;
+523: + (nullable NSEvent *)enterExitEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum trackingNumber:(NSInteger)tNum userData:(nullable void *)data;
+524: + (nullable NSEvent *)otherEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil subtype:(short)subtype data1:(NSInteger)d1 data2:(NSInteger)d2;
+525: 
+526: // global mouse coordinates
+527: @property (class, readonly) NSPoint mouseLocation;
+528: 
+529: /* modifier keys currently down.  This returns the state of devices combined with synthesized events at the moment, independent of which events have been delivered via the event stream. */
+
+BINDING modifierFlags
+753: 
+754: extern_conformance!(
+755:     unsafe impl NSObjectProtocol for NSEvent {}
+756: );
+757: 
+758: impl NSEvent {
+759:     extern_methods!(
+760:         #[unsafe(method(type))]
+761:         #[unsafe(method_family = none)]
+762:         pub fn r#type(&self) -> NSEventType;
+763: 
+764:         #[unsafe(method(modifierFlags))]
+765:         #[unsafe(method_family = none)]
+766:         pub fn modifierFlags(&self) -> NSEventModifierFlags;
+767: 
+768:         #[unsafe(method(timestamp))]
+769:         #[unsafe(method_family = none)]
+770:         pub fn timestamp(&self) -> NSTimeInterval;
+771: 
+772:         #[cfg(all(feature = "NSResponder", feature = "NSWindow"))]
+773:         #[unsafe(method(window))]
+774:         #[unsafe(method_family = none)]
+775:         pub fn window(&self, mtm: MainThreadMarker) -> Option<Retained<NSWindow>>;
+776: 
+777:         #[unsafe(method(windowNumber))]
+778:         #[unsafe(method_family = none)]
+779:         pub fn windowNumber(&self) -> NSInteger;
+780: 
+
+SDK modifierFlags
+320: /* these messages are valid for all events */
+321: @property (readonly) NSEventType type;
+322: @property (readonly) NSEventModifierFlags modifierFlags;
+323: @property (readonly) NSTimeInterval timestamp;
+324: @property (readonly, nullable, weak) NSWindow *window;
+325: @property (readonly) NSInteger windowNumber;
+326: @property (nullable, readonly, strong) NSGraphicsContext *context API_DEPRECATED("This method always returns nil. If you need access to the current drawing context, use [NSGraphicsContext currentContext] inside of a draw operation.", macos(10.0,10.12));
+327: 
+328: /* these messages are valid for all mouse down/up/drag events */
+329: @property (readonly) NSInteger clickCount;
+
+SDK modifierFlags
+519: 
+520: /* apps will rarely create these objects */
+521: + (nullable NSEvent *)mouseEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum clickCount:(NSInteger)cNum pressure:(float)pressure;
+522: + (nullable NSEvent *)keyEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil characters:(NSString *)keys charactersIgnoringModifiers:(NSString *)ukeys isARepeat:(BOOL)flag keyCode:(unsigned short)code;
+523: + (nullable NSEvent *)enterExitEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum trackingNumber:(NSInteger)tNum userData:(nullable void *)data;
+524: + (nullable NSEvent *)otherEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil subtype:(short)subtype data1:(NSInteger)d1 data2:(NSInteger)d2;
+525: 
+526: // global mouse coordinates
+527: @property (class, readonly) NSPoint mouseLocation;
+528: 
+
+SDK modifierFlags
+520: /* apps will rarely create these objects */
+521: + (nullable NSEvent *)mouseEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum clickCount:(NSInteger)cNum pressure:(float)pressure;
+522: + (nullable NSEvent *)keyEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil characters:(NSString *)keys charactersIgnoringModifiers:(NSString *)ukeys isARepeat:(BOOL)flag keyCode:(unsigned short)code;
+523: + (nullable NSEvent *)enterExitEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum trackingNumber:(NSInteger)tNum userData:(nullable void *)data;
+524: + (nullable NSEvent *)otherEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil subtype:(short)subtype data1:(NSInteger)d1 data2:(NSInteger)d2;
+525: 
+526: // global mouse coordinates
+527: @property (class, readonly) NSPoint mouseLocation;
+528: 
+529: /* modifier keys currently down.  This returns the state of devices combined with synthesized events at the moment, independent of which events have been delivered via the event stream. */
+
+BINDING scrollingDeltaX
+816: 
+817:         #[cfg(feature = "objc2-core-foundation")]
+818:         #[unsafe(method(deltaZ))]
+819:         #[unsafe(method_family = none)]
+820:         pub fn deltaZ(&self) -> CGFloat;
+821: 
+822:         #[unsafe(method(hasPreciseScrollingDeltas))]
+823:         #[unsafe(method_family = none)]
+824:         pub fn hasPreciseScrollingDeltas(&self) -> bool;
+825: 
+826:         #[cfg(feature = "objc2-core-foundation")]
+827:         #[unsafe(method(scrollingDeltaX))]
+828:         #[unsafe(method_family = none)]
+829:         pub fn scrollingDeltaX(&self) -> CGFloat;
+830: 
+831:         #[cfg(feature = "objc2-core-foundation")]
+832:         #[unsafe(method(scrollingDeltaY))]
+833:         #[unsafe(method_family = none)]
+834:         pub fn scrollingDeltaY(&self) -> CGFloat;
+835: 
+836:         #[unsafe(method(momentumPhase))]
+837:         #[unsafe(method_family = none)]
+838:         pub fn momentumPhase(&self) -> NSEventPhase;
+839: 
+840:         #[unsafe(method(isDirectionInvertedFromDevice))]
+841:         #[unsafe(method_family = none)]
+842:         pub fn isDirectionInvertedFromDevice(&self) -> bool;
+843: 
+
+SDK scrollingDeltaX
+337: @property (readonly) NSPoint locationInWindow;
+338: 
+339: /* these messages are valid for scroll wheel events and mouse move/drag events.  As of 10.5.2, deltaX and deltaY are also valid for swipe events.  A non-0 deltaX will represent a horizontal swipe, -1 for swipe right and 1 for swipe left.  A non-0 deltaY will represent a vertical swipe, -1 for swipe down and 1 for swipe up. As of 10.7, the preferred methods for scroll wheel events are scrollingDeltaX and scrollingDeltaY defined below.
+340: */
+341: @property (readonly) CGFloat deltaX;    
+342: @property (readonly) CGFloat deltaY;    
+343: @property (readonly) CGFloat deltaZ;    // 0 for most scroll wheel and mouse events
+344: 
+345: /* This message is valid for NSEventTypeScrollWheel events. A generic scroll wheel issues rather coarse scroll deltas. Some Apple mice and trackpads provide much more precise delta. This method determines the resolution of the scrollDeltaX and scrollDeltaY values.
+346: */
+
+SDK scrollingDeltaX
+349: /* The following two message are the preferred API for accessing NSEventTypeScrollWheel deltas. When -hasPreciseScrollingDeltas reutrns NO, multiply the returned value by line or row height. When -hasPreciseScrollingDeltas returns YES, scroll by the returned value (in points).
+350: */
+351: @property (readonly) CGFloat scrollingDeltaX API_AVAILABLE(macos(10.7));
+352: @property (readonly) CGFloat scrollingDeltaY API_AVAILABLE(macos(10.7));
+353: 
+354: /* This message is valid for NSEventTypeScrollWheel events. With the Magic Mouse and some trackpads, the user can flick thier finger resulting in a stream of scroll events that dissipate over time. The location of these scroll wheel events changes as the user moves the cursor. AppKit latches these scroll wheel events to the view that is under the cursor when the flick occurs. A custom view can use this method to recognize these momentum scroll events and further route the event to the appropriate sub component.
+355: */
+356: @property (readonly) NSEventPhase momentumPhase API_AVAILABLE(macos(10.7));
+357: 
+358: /* valid for NSEventScrollWheel events. The user may choose to change the scrolling behavior such that it feels like they are moving the content instead of the scroll bar. To accomplish this, deltaX/Y and scrollingDeltaX/Y are automatically inverted for NSEventScrollWheel events according to the user's preferences. However, for some uses, the behavior should not respect the user preference. This method allows you to determine when the event has been inverted and compensate by multiplying -1 if needed. 
+
+SDK scrollingDeltaX
+356: @property (readonly) NSEventPhase momentumPhase API_AVAILABLE(macos(10.7));
+357: 
+358: /* valid for NSEventScrollWheel events. The user may choose to change the scrolling behavior such that it feels like they are moving the content instead of the scroll bar. To accomplish this, deltaX/Y and scrollingDeltaX/Y are automatically inverted for NSEventScrollWheel events according to the user's preferences. However, for some uses, the behavior should not respect the user preference. This method allows you to determine when the event has been inverted and compensate by multiplying -1 if needed. 
+359: */
+360: @property (getter=isDirectionInvertedFromDevice, readonly) BOOL directionInvertedFromDevice API_AVAILABLE(macos(10.7));
+361: 
+362: /* these messages are valid for keyup and keydown events */
+363: @property (nullable, readonly, copy) NSString *characters;
+364: @property (nullable, readonly, copy) NSString *charactersIgnoringModifiers;
+365: 
+
+BINDING scrollingDeltaY
+821: 
+822:         #[unsafe(method(hasPreciseScrollingDeltas))]
+823:         #[unsafe(method_family = none)]
+824:         pub fn hasPreciseScrollingDeltas(&self) -> bool;
+825: 
+826:         #[cfg(feature = "objc2-core-foundation")]
+827:         #[unsafe(method(scrollingDeltaX))]
+828:         #[unsafe(method_family = none)]
+829:         pub fn scrollingDeltaX(&self) -> CGFloat;
+830: 
+831:         #[cfg(feature = "objc2-core-foundation")]
+832:         #[unsafe(method(scrollingDeltaY))]
+833:         #[unsafe(method_family = none)]
+834:         pub fn scrollingDeltaY(&self) -> CGFloat;
+835: 
+836:         #[unsafe(method(momentumPhase))]
+837:         #[unsafe(method_family = none)]
+838:         pub fn momentumPhase(&self) -> NSEventPhase;
+839: 
+840:         #[unsafe(method(isDirectionInvertedFromDevice))]
+841:         #[unsafe(method_family = none)]
+842:         pub fn isDirectionInvertedFromDevice(&self) -> bool;
+843: 
+844:         #[unsafe(method(characters))]
+845:         #[unsafe(method_family = none)]
+846:         pub fn characters(&self) -> Option<Retained<NSString>>;
+847: 
+848:         #[unsafe(method(charactersIgnoringModifiers))]
+
+SDK scrollingDeltaY
+337: @property (readonly) NSPoint locationInWindow;
+338: 
+339: /* these messages are valid for scroll wheel events and mouse move/drag events.  As of 10.5.2, deltaX and deltaY are also valid for swipe events.  A non-0 deltaX will represent a horizontal swipe, -1 for swipe right and 1 for swipe left.  A non-0 deltaY will represent a vertical swipe, -1 for swipe down and 1 for swipe up. As of 10.7, the preferred methods for scroll wheel events are scrollingDeltaX and scrollingDeltaY defined below.
+340: */
+341: @property (readonly) CGFloat deltaX;    
+342: @property (readonly) CGFloat deltaY;    
+343: @property (readonly) CGFloat deltaZ;    // 0 for most scroll wheel and mouse events
+344: 
+345: /* This message is valid for NSEventTypeScrollWheel events. A generic scroll wheel issues rather coarse scroll deltas. Some Apple mice and trackpads provide much more precise delta. This method determines the resolution of the scrollDeltaX and scrollDeltaY values.
+346: */
+
+SDK scrollingDeltaY
+350: */
+351: @property (readonly) CGFloat scrollingDeltaX API_AVAILABLE(macos(10.7));
+352: @property (readonly) CGFloat scrollingDeltaY API_AVAILABLE(macos(10.7));
+353: 
+354: /* This message is valid for NSEventTypeScrollWheel events. With the Magic Mouse and some trackpads, the user can flick thier finger resulting in a stream of scroll events that dissipate over time. The location of these scroll wheel events changes as the user moves the cursor. AppKit latches these scroll wheel events to the view that is under the cursor when the flick occurs. A custom view can use this method to recognize these momentum scroll events and further route the event to the appropriate sub component.
+355: */
+356: @property (readonly) NSEventPhase momentumPhase API_AVAILABLE(macos(10.7));
+357: 
+358: /* valid for NSEventScrollWheel events. The user may choose to change the scrolling behavior such that it feels like they are moving the content instead of the scroll bar. To accomplish this, deltaX/Y and scrollingDeltaX/Y are automatically inverted for NSEventScrollWheel events according to the user's preferences. However, for some uses, the behavior should not respect the user preference. This method allows you to determine when the event has been inverted and compensate by multiplying -1 if needed. 
+359: */
+
+BINDING magnification
+914: 
+915:         #[unsafe(method(isMouseCoalescingEnabled))]
+916:         #[unsafe(method_family = none)]
+917:         pub fn isMouseCoalescingEnabled() -> bool;
+918: 
+919:         /// Setter for [`isMouseCoalescingEnabled`][Self::isMouseCoalescingEnabled].
+920:         #[unsafe(method(setMouseCoalescingEnabled:))]
+921:         #[unsafe(method_family = none)]
+922:         pub fn setMouseCoalescingEnabled(mouse_coalescing_enabled: bool);
+923: 
+924:         #[cfg(feature = "objc2-core-foundation")]
+925:         #[unsafe(method(magnification))]
+926:         #[unsafe(method_family = none)]
+927:         pub fn magnification(&self) -> CGFloat;
+928: 
+929:         #[unsafe(method(deviceID))]
+930:         #[unsafe(method_family = none)]
+931:         pub fn deviceID(&self) -> NSUInteger;
+932: 
+933:         #[unsafe(method(rotation))]
+934:         #[unsafe(method_family = none)]
+935:         pub fn rotation(&self) -> c_float;
+936: 
+937:         #[unsafe(method(absoluteX))]
+938:         #[unsafe(method_family = none)]
+939:         pub fn absoluteX(&self) -> NSInteger;
+940: 
+941:         #[unsafe(method(absoluteY))]
+
+SDK magnification
+413: 
+414: /* This message is valid for events of type NSEventTypeMagnify, on 10.5.2 or later */
+415: @property (readonly) CGFloat magnification API_AVAILABLE(macos(10.5));       // change in magnification.   This value should be added to the current scaling of an item to get the new scale factor.
+416: 
+417: /* this message is valid for mouse events with subtype NSEventSubtypeTabletPoint or NSEventSubtypeTabletProximity, and for NSEventTypeTabletPoint and NSEventTypeTabletProximity events */
+418: @property (readonly) NSUInteger deviceID;
+419: 
+420: /* this message is valid for valid for mouse events with subtype NSEventSubtypeTabletPoint, and for NSEventTypeTabletPoint events.  On 10.5.2 or later, it is also valid for NSEventTypeRotate events. */
+421: @property (readonly) float rotation;       // In degrees.  For NSEventTypeTabletPoint, this is rotation of the pen.  For NSEventTypeRotate, it is rotation on the track pad.
+422: 
+
+BINDING timestamp
+757: 
+758: impl NSEvent {
+759:     extern_methods!(
+760:         #[unsafe(method(type))]
+761:         #[unsafe(method_family = none)]
+762:         pub fn r#type(&self) -> NSEventType;
+763: 
+764:         #[unsafe(method(modifierFlags))]
+765:         #[unsafe(method_family = none)]
+766:         pub fn modifierFlags(&self) -> NSEventModifierFlags;
+767: 
+768:         #[unsafe(method(timestamp))]
+769:         #[unsafe(method_family = none)]
+770:         pub fn timestamp(&self) -> NSTimeInterval;
+771: 
+772:         #[cfg(all(feature = "NSResponder", feature = "NSWindow"))]
+773:         #[unsafe(method(window))]
+774:         #[unsafe(method_family = none)]
+775:         pub fn window(&self, mtm: MainThreadMarker) -> Option<Retained<NSWindow>>;
+776: 
+777:         #[unsafe(method(windowNumber))]
+778:         #[unsafe(method_family = none)]
+779:         pub fn windowNumber(&self) -> NSInteger;
+780: 
+781:         #[cfg(feature = "NSGraphicsContext")]
+782:         #[deprecated = "This method always returns nil. If you need access to the current drawing context, use [NSGraphicsContext currentContext] inside of a draw operation."]
+783:         #[unsafe(method(context))]
+784:         #[unsafe(method_family = none)]
+
+SDK timestamp
+321: @property (readonly) NSEventType type;
+322: @property (readonly) NSEventModifierFlags modifierFlags;
+323: @property (readonly) NSTimeInterval timestamp;
+324: @property (readonly, nullable, weak) NSWindow *window;
+325: @property (readonly) NSInteger windowNumber;
+326: @property (nullable, readonly, strong) NSGraphicsContext *context API_DEPRECATED("This method always returns nil. If you need access to the current drawing context, use [NSGraphicsContext currentContext] inside of a draw operation.", macos(10.0,10.12));
+327: 
+328: /* these messages are valid for all mouse down/up/drag events */
+329: @property (readonly) NSInteger clickCount;
+330: @property (readonly) NSInteger buttonNumber;    // for NSOtherMouse events, but will return valid constants for NSLeftMouse and NSRightMouse
+
+SDK timestamp
+519: 
+520: /* apps will rarely create these objects */
+521: + (nullable NSEvent *)mouseEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum clickCount:(NSInteger)cNum pressure:(float)pressure;
+522: + (nullable NSEvent *)keyEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil characters:(NSString *)keys charactersIgnoringModifiers:(NSString *)ukeys isARepeat:(BOOL)flag keyCode:(unsigned short)code;
+523: + (nullable NSEvent *)enterExitEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum trackingNumber:(NSInteger)tNum userData:(nullable void *)data;
+524: + (nullable NSEvent *)otherEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil subtype:(short)subtype data1:(NSInteger)d1 data2:(NSInteger)d2;
+525: 
+526: // global mouse coordinates
+527: @property (class, readonly) NSPoint mouseLocation;
+528: 
+
+SDK timestamp
+520: /* apps will rarely create these objects */
+521: + (nullable NSEvent *)mouseEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum clickCount:(NSInteger)cNum pressure:(float)pressure;
+522: + (nullable NSEvent *)keyEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil characters:(NSString *)keys charactersIgnoringModifiers:(NSString *)ukeys isARepeat:(BOOL)flag keyCode:(unsigned short)code;
+523: + (nullable NSEvent *)enterExitEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum trackingNumber:(NSInteger)tNum userData:(nullable void *)data;
+524: + (nullable NSEvent *)otherEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil subtype:(short)subtype data1:(NSInteger)d1 data2:(NSInteger)d2;
+525: 
+526: // global mouse coordinates
+527: @property (class, readonly) NSPoint mouseLocation;
+528: 
+529: /* modifier keys currently down.  This returns the state of devices combined with synthesized events at the moment, independent of which events have been delivered via the event stream. */
+
+BINDING keyCode
+852:         #[unsafe(method(charactersByApplyingModifiers:))]
+853:         #[unsafe(method_family = none)]
+854:         pub fn charactersByApplyingModifiers(
+855:             &self,
+856:             modifiers: NSEventModifierFlags,
+857:         ) -> Option<Retained<NSString>>;
+858: 
+859:         #[unsafe(method(isARepeat))]
+860:         #[unsafe(method_family = none)]
+861:         pub fn isARepeat(&self) -> bool;
+862: 
+863:         #[unsafe(method(keyCode))]
+864:         #[unsafe(method_family = none)]
+865:         pub fn keyCode(&self) -> c_ushort;
+866: 
+867:         #[unsafe(method(trackingNumber))]
+868:         #[unsafe(method_family = none)]
+869:         pub fn trackingNumber(&self) -> NSInteger;
+870: 
+871:         #[unsafe(method(userData))]
+872:         #[unsafe(method_family = none)]
+873:         pub fn userData(&self) -> *mut c_void;
+874: 
+875:         #[cfg(feature = "NSTrackingArea")]
+876:         #[unsafe(method(trackingArea))]
+877:         #[unsafe(method_family = none)]
+878:         pub fn trackingArea(&self) -> Option<Retained<NSTrackingArea>>;
+879: 
+
+SDK keyCode
+366: /* This message is valid keyup and keydown events.
+367:     It returns the character(s) that would have been generated if a different modifier combination had been used.
+368:     It uses [self keyCode], the new modifiers and the current keyboard input source's layout data for re-translation.  It entirely ignores the modifiers that are already present in the event and calling this method will not affect the dead key state for current text input.
+369:     If there is invalid data in this event, -charactersByApplyingModifiers will return nil.
+370: */
+371: - (nullable NSString *)charactersByApplyingModifiers:(NSEventModifierFlags)modifiers API_AVAILABLE(macos(10.15)); 
+372: 
+373:   /* the chars that would have been generated, regardless of modifier keys (except shift) */
+374: @property (getter=isARepeat, readonly) BOOL ARepeat;
+375: /* this message is valid for keyup, keydown and flagschanged events */
+
+SDK keyCode
+374: @property (getter=isARepeat, readonly) BOOL ARepeat;
+375: /* this message is valid for keyup, keydown and flagschanged events */
+376: @property (readonly) unsigned short keyCode;        /* device-independent key number */
+377: 
+378: /* these messages are valid for enter and exit events */
+379: @property (readonly) NSInteger trackingNumber;
+380: @property (nullable, readonly) void *userData NS_RETURNS_INNER_POINTER;
+381: /* -trackingArea returns the NSTrackingArea that generated this event.  It is possible for there to be no trackingArea associated with the event in some cases where the event corresponds to a trackingRect installed with -[NSView addTrackingRect:owner:userData:assumeInside:], in which case nil is returned. */
+382: @property (nullable, readonly, strong) NSTrackingArea *trackingArea API_AVAILABLE(macos(10.5)); 
+383: 
+
+SDK keyCode
+520: /* apps will rarely create these objects */
+521: + (nullable NSEvent *)mouseEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum clickCount:(NSInteger)cNum pressure:(float)pressure;
+522: + (nullable NSEvent *)keyEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil characters:(NSString *)keys charactersIgnoringModifiers:(NSString *)ukeys isARepeat:(BOOL)flag keyCode:(unsigned short)code;
+523: + (nullable NSEvent *)enterExitEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil eventNumber:(NSInteger)eNum trackingNumber:(NSInteger)tNum userData:(nullable void *)data;
+524: + (nullable NSEvent *)otherEventWithType:(NSEventType)type location:(NSPoint)location modifierFlags:(NSEventModifierFlags)flags timestamp:(NSTimeInterval)time windowNumber:(NSInteger)wNum context:(nullable NSGraphicsContext* __unused)unusedPassNil subtype:(short)subtype data1:(NSInteger)d1 data2:(NSInteger)d2;
+525: 
+526: // global mouse coordinates
+527: @property (class, readonly) NSPoint mouseLocation;
+528: 
+529: /* modifier keys currently down.  This returns the state of devices combined with synthesized events at the moment, independent of which events have been delivered via the event stream. */

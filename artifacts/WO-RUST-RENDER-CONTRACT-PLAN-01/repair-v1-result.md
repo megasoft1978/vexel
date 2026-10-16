@@ -1,0 +1,5 @@
+Resolved the render contract lifetime blocker. `DefinitionPlan<'src>` now contains `Vec<Expansion<'src>>` with `CssPaint<'src>`, and both planning signatures use the explicit source/paint lifetime independently of temporary mutable context, counter, and control borrows. The object safe trait method is retained.
+
+Updated only [shared-contracts.json](/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json), [rust-render-contract-plan.md](/Users/megasoft78/Desktop/Freelance/vexel/docs/product/rust-render-contract-plan.md), and [result.json](/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/result.json).
+
+Ready validator and ledger validator passed; `git diff --check` and JSON parsing passed. No tests or builds were run. The broader workspace had extensive pre-existing changes, left untouched.

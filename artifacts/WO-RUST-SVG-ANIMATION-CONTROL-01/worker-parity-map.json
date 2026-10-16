@@ -1,0 +1,26 @@
+{
+  "controlled_apis": [
+    "parse_controlled(source, tokens, control)",
+    "parse_owned_controlled(&Arc<Vec<u8>>, tokens, control)",
+    "evaluate_view_controlled(DocumentView, time, control)",
+    "evaluate_controlled(&Document, time, control)"
+  ],
+  "shared_engine": "Legacy APIs use the same parser/evaluator internals with Meter's no-stop policy; controlled APIs use the caller's WorkControl through Meter.",
+  "polling": {
+    "maximum_charge_batch": 256,
+    "per_character_or_token_loops": "Charge/poll at each consumed source unit or visited token. Meter chunks any grouped charges at no more than 256.",
+    "SourceRead": ["attribute/name comparisons", "number and time lexemes", "number lists", "value splitting", "path-shape scan and command comparison", "CSS substring matching", "motion path whitespace/numbers", "motion/syncbase ID byte comparisons"],
+    "TokenVisit": ["attribute lookup", "element closing-token lookup", "outer parser traversal", "style child traversal", "parent search", "mpath attribute lookup"],
+    "ReferenceProbe": ["mpath token/path lookup", "syncbase track-ID lookup"],
+    "AnimationTransform": ["parsed key/spline loops", "syncbase track resolution", "evaluation track/key/motion/spline traversal", "interpolation and spline bisection"]
+  },
+  "publication_and_errors": {
+    "owned_source": "Arc cloned only after controlled parse succeeds; stopped/error paths do not alter caller strong count",
+    "overlay": "fallibly reserved and locally accumulated; returned only after complete evaluation success",
+    "stop_priority": "meter stop propagated before original parse error mapping",
+    "typed_evaluation": ["InvalidTime", "InvalidTrack", "OutOfMemory", "Canceled", "Limit", "Overflow"],
+    "cycles": "accepted syncbase-cycle behavior remains inactive tracks"
+  },
+  "parity": "All 12 archived original integration-test bodies match current bodies after whitespace normalization. Fixture controlled/no-stop parse tables, diagnostics, and overlays match across 15 fixtures at five times.",
+  "tests": {"unit": 6, "integration": 15, "failed": 0}
+}

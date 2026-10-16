@@ -1,0 +1,1 @@
+PASS every original baseline path retained; only exact3allowed existing +3new source/test paths changed. Main corresponding source/registrations still exact baseline before serialized copy. New files absent beforecopy; no extra nonartifact changes. Registration original text saved for capture merge. Head/index unchanged; original protocol/snapshot/GIF code preserved.

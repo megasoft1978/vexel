@@ -1,0 +1,4 @@
+error: no matching package named `objc2-image-io` found
+location searched: crates.io index
+required by package `vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker/rust/crates/vexel-platform-apple)`
+note: offline mode can sometimes cause surprising resolution failures

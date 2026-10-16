@@ -1,0 +1,5 @@
+Fixed property-track argument validation: both creation APIs now reject empty required `property`, `value_type`, or `interpolation` as `InvalidArgument` at offset 0. Added exact error/source/history assertions for empty required arguments across both APIs, plus a regression reproducing the original byte-limited history trim and rejected-edit behavior. The original 13 edit tests and 14 decoder parity tests remain intact.
+
+Locked offline `cargo +stable check` and `cargo +stable test` pass; 15 edit tests and 14 decoder parity tests pass. Work-order validation, ledger validation, and `git diff --check` pass. The first run of the new history regression exposed an incorrect test expectation for undo count after the initial snapshot had been trimmed; the assertion now expects the actual zero, while confirming the retained redo entry remains. See `parity-map.json` and `verification.txt` for the original fixture mapping and exact evidence.
+
+The candidate remains uncommitted for independent review. std `Arc` header allocation remains non-fallible and documented; session/render/context-scene wiring remains downstream.

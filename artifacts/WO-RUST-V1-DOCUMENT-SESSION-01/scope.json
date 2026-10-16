@@ -1,0 +1,29 @@
+{
+  "work_order": "WO-RUST-V1-DOCUMENT-SESSION-01",
+  "revision": 1,
+  "allowed": [
+    "rust/crates/vexel-v1-document/**",
+    "artifacts/WO-RUST-V1-DOCUMENT-SESSION-01/** except source-seed.json"
+  ],
+  "protected": [
+    "rust/** except listed dependency inputs (read-only)",
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    "work/** except coordinator order",
+    "STATE.md",
+    "LEDGER.md",
+    "ledger.jsonl",
+    "tests/**",
+    "src/**",
+    "artifacts/** except own directory"
+  ],
+  "verification": [
+    "cargo +stable check -p vexel-v1-document --locked --offline",
+    "cargo +stable test -p vexel-v1-document --locked --offline",
+    "cargo +stable fmt --package vexel-v1-document -- --check",
+    "python3 scripts/wo_validate.py WO-RUST-V1-DOCUMENT-SESSION-01 --ready",
+    "python3 scripts/ledger.py validate ledger.jsonl",
+    "git diff --check"
+  ]
+}

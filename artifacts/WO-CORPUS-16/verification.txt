@@ -1,0 +1,26 @@
+WO-CORPUS-16 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: bf3e1a42b1549178c09fb1ae24af61519f0837bb066f8a3a2ab29b21438de4bc
+
+Input and procedure
+- Source variant: `.cache/WO-CORPUS-13/filtered-path-only.svg`, 1,226 bytes, SHA-256 `7eb595b9428c2fc59fb57529bcda783103d0b2108e87de88551e107d98a2e263`. Original bytes remain unchanged.
+- Three derived files were byte-spliced, each changing exactly one attribute: remove `marker-end`, remove `filter`, or replace `fill="url(#g)"` with endpoint stop color `fill="#3289a7"`. SVG hashes and all rendered hashes are in `variant-analysis.json`.
+- `cmake --build --preset mac-release --target shape_render_cli`: PASS; Ninja reported no work required.
+- Renderer: installed Inkscape 1.4.4 (dcaf3e7, 2026-05-05), binary only. Each Vexel and Inkscape output is 1600x1000. Inkscape exited 0 for all renders without stderr warnings.
+- Vexel RGBA was composited over white with the same floor integer formula as `pixdiff.py`. Each comparison used tolerance 2; each matching heatmap is retained in ignored `.cache/WO-CORPUS-16/`.
+
+Comparisons
+- Baseline filtered path: 2,301 differing pixels; max delta 149; endpoint ROI x580..619/y80..119 has 166 differing pixels, 71 above delta 10, max 149.
+- No marker: 2,262 differing pixels; max delta 13; endpoint ROI has 127 differing pixels, 5 above delta 10, max 13. The full variant has 17 pixels above delta 10.
+- No filter: 990 differing pixels; max delta 221; endpoint ROI has 62 differing pixels, 46 above delta 10, max 221. Removing the filter does not remove the hotspot.
+- Flat fill: 2,256 differing pixels; max delta 122; endpoint ROI has 146 differing pixels, 58 above delta 10, max 122. Replacing the gradient does not remove the hotspot.
+
+Interpretation
+- Removing `marker-end` reduces endpoint-ROI high-delta pixels from 71 to 5 (93% reduction), and full-page max delta from 149 to 13. The 69 full-T1 pixels above delta 10 all previously overlapped the filtered-path-only mismatch; this intervention strongly associates the dominant hotspot with marker rendering or marker paint inheritance.
+- Filter removal and flat-fill substitution leave most high-delta endpoint pixels. These one-at-a-time comparisons do not prove whether the marker geometry/reference placement, inherited gradient paint coordinates, or their interaction is the exact semantic defect. The next implementation order should focus on marker-end rendering for the gradient-filled path, add an independent native-size regression, and compare each fix against the saved Inkscape output. Avoid changing general gradient-stroke behavior based on this result.
+- This remains a single-fixture diagnostic, not accepted T1 parity or a corpus-wide fidelity claim.
+
+Scope and hygiene
+- No product/test/corpus/golden source, limits, or thresholds changed. No test or broad suite ran. No external corpus or sibling directory was accessed.
+- `WO-CORPUS-16` validates, ledger validates, generated outputs remain in ignored `.cache/WO-CORPUS-16/` and `build/mac-release/`, and `git diff --check` passes. Work is uncommitted.

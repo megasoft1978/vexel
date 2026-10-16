@@ -1,0 +1,39 @@
+WO-ANIM-PROJECT-20 r1 implementation and focused verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: b86308a167d8cc043ec10906175dbeb919f239229e8a766bc2e4680348b36ef1
+
+Implementation
+- Added a responsive Drawing Asset selector and Add Cel action to the native
+  timeline. The selector walks live project `image/svg+xml` assets and skips
+  drawings whose raster dimensions or viewBox do not match the animation scene.
+- Add Cel targets the selected drawing track at the integer playhead tick,
+  replacing same-tick exposures using the session's undoable upsert operation.
+  It refreshes timeline rows, invalidates frame/onion preview, sets the existing
+  native-mutation notification, and reports the selected asset and tick.
+- Added accessible action names and current-asset value. A bounded index cache
+  is refreshed when the live bundle's asset count changes, including MCP asset
+  insertions.
+
+Verification
+- Strict Debug build passed:
+  `cmake --build --preset mac-debug --target viewer_timeline_test svgworkbench -j 8`.
+  `build/mac-debug/bin/viewer_timeline_test` passed.
+- Strict ASan/UBSan build passed for `viewer_timeline_test` and `svgworkbench`;
+  `build/mac-asan/bin/viewer_timeline_test` passed.
+- Strict configured UBSan build passed for `viewer_timeline_test` and
+  `svgworkbench`; `build/mac-ubsan/bin/viewer_timeline_test` passed.
+- Focused cases cover asset selection/cycling, skipping canvas mismatch, cel
+  insertion and same-tick replacement, tick 23 boundary, render preview,
+  invalid tick, wrong/no selected track, accessibility labels/value, mutation
+  signal, and undo/redo.
+- `python3 scripts/wo_validate.py WO-ANIM-PROJECT-20 --ready` passed with the
+  frozen SHA-256 above. `python3 scripts/ledger.py validate ledger.jsonl` and
+  `git diff --check` passed. Changed C source/test files remain below 800 lines.
+- No comprehensive UI/E2E or release suite was run; no commit was made.
+
+Remaining product work includes drawing-track creation from the timeline UI,
+deterministic animation export, final broad UI/E2E and release acceptance, and
+the reviewed Codex/Vexel character-animation recording for the website and
+README. WO-ANIM-PROJECT-19 was superseded before implementation; see
+`artifacts/WO-ANIM-PROJECT-19/` for the source-cap scope correction.

@@ -1,0 +1,35 @@
+58: /// Returns the default cursor, the arrow cursor.
+59: /// - Discussion: The default cursor, a slanted arrow with its hot spot at the tip. The arrow cursor is the one you’re used to seeing over buttons, scrollers, and many other objects in the window system.
+60: @property (class, readonly, strong) NSCursor *arrowCursor;
+61: 
+62: @property (class, readonly, strong) NSCursor *crosshairCursor;
+63: @property (class, readonly, strong) NSCursor *disappearingItemCursor;
+64: @property (class, readonly, strong) NSCursor *operationNotAllowedCursor API_AVAILABLE(macos(10.5));
+65: @property (class, readonly, strong) NSCursor *dragLinkCursor API_AVAILABLE(macos(10.6));
+
+71: @property (class, readonly, strong) NSCursor *pointingHandCursor;
+72: @property (class, readonly, strong) NSCursor *closedHandCursor;
+73: @property (class, readonly, strong) NSCursor *openHandCursor;
+74: 
+75: // MARK: I-Beam Cursors
+76: 
+77: @property (class, readonly, strong) NSCursor *IBeamCursor;
+78: @property (class, readonly, strong) NSCursor *IBeamCursorForVerticalLayout API_AVAILABLE(macos(10.7));
+
+70: 
+71: @property (class, readonly, strong) NSCursor *pointingHandCursor;
+72: @property (class, readonly, strong) NSCursor *closedHandCursor;
+73: @property (class, readonly, strong) NSCursor *openHandCursor;
+74: 
+75: // MARK: I-Beam Cursors
+76: 
+77: @property (class, readonly, strong) NSCursor *IBeamCursor;
+
+160: @property (class, readonly, strong) NSCursor *resizeUpCursor API_DEPRECATED("Use either `+[NSCursor rowResizeCursorInDirections:]` or `+[NSCursor frameResizeCursorFromPosition:inDirections:]` instead, depending on whether a divider is being re-positioned or a rectangular frame is being resized.", macos(10.0, API_TO_BE_DEPRECATED));
+161: @property (class, readonly, strong) NSCursor *resizeDownCursor API_DEPRECATED("Use either `+[NSCursor rowResizeCursorInDirections:]` or `+[NSCursor frameResizeCursorFromPosition:inDirections:]` instead, depending on whether a divider is being re-positioned or a rectangular frame is being resized.", macos(10.0, API_TO_BE_DEPRECATED));
+162: @property (class, readonly, strong) NSCursor *resizeUpDownCursor API_DEPRECATED("Use either `+[NSCursor rowResizeCursorInDirections:]` or `+[NSCursor frameResizeCursorFromPosition:inDirections:]` instead, depending on whether a divider is being re-positioned or a rectangular frame is being resized.", macos(10.0, API_TO_BE_DEPRECATED));
+163: @end
+164: 
+165: APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
+166: @interface NSCursor (NSDeprecated)
+167: - (instancetype)initWithImage:(NSImage *)newImage foregroundColorHint:(nullable NSColor *)fg backgroundColorHint:(nullable NSColor *)bg hotSpot:(NSPoint)hotSpot API_DEPRECATED("Color hints are ignored. Use -initWithImage:hotSpot: instead", macos(10.0,10.12));

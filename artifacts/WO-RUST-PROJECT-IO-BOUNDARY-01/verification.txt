@@ -1,0 +1,12 @@
+2026-10-15 fresh main-tree verification
+
+Integrated source change: `rust/crates/vexel-project-io/src/tests.rs` exactly matches the reviewed candidate hash `1eb68568a927fa19c2e9bb0f9e440b564bd47bf29f1fc08e4d8a7142d01e7deb`. Production sources are unchanged from the accepted main tree. Parity mapping accurately describes the borrowed `RecoveryView` adaptation and new regression coverage.
+
+PASS `CARGO_HOME=.cache/cargo CARGO_TARGET_DIR=build/rust cargo +stable check -p vexel-project-io --locked --offline`
+PASS `CARGO_HOME=.cache/cargo CARGO_TARGET_DIR=build/rust cargo +stable test -p vexel-project-io --locked --offline` (9 passed; 0 failed; 0 doc tests)
+PASS `python3 scripts/wo_validate.py WO-RUST-PROJECT-IO-BOUNDARY-01 --ready`
+PASS `python3 scripts/ledger.py validate ledger.jsonl`
+PASS JSON parse of `parity-map.json`
+PASS `git diff --check`
+
+Independent review confirms the repaired inner-bundle error offset and expected-path precedence. The maximum-size regression checks the size formula, bounded accepted path, and exact/over-limit declarations without allocating a maximum-size capsule; it does not claim to decode a fully materialized maximum-size capsule. No production behavior changed.

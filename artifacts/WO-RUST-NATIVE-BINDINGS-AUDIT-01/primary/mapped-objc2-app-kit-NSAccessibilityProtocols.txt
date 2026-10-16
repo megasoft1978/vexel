@@ -1,0 +1,893 @@
+BINDING setAccessibilityParent
+590:         #[unsafe(method(accessibilityParent))]
+591:         #[unsafe(method_family = none)]
+592:         fn accessibilityParent(&self) -> Option<Retained<AnyObject>>;
+593: 
+594:         /// Setter for [`accessibilityParent`][Self::accessibilityParent].
+595:         ///
+596:         /// This is a [weak property][objc2::topics::weak_property].
+597:         ///
+598:         /// # Safety
+599:         ///
+600:         /// `accessibility_parent` should be of the correct type.
+601:         #[unsafe(method(setAccessibilityParent:))]
+602:         #[unsafe(method_family = none)]
+603:         unsafe fn setAccessibilityParent(&self, accessibility_parent: Option<&AnyObject>);
+604: 
+605:         #[unsafe(method(accessibilityPlaceholderValue))]
+606:         #[unsafe(method_family = none)]
+607:         fn accessibilityPlaceholderValue(&self) -> Option<Retained<NSString>>;
+608: 
+609:         /// Setter for [`accessibilityPlaceholderValue`][Self::accessibilityPlaceholderValue].
+610:         ///
+611:         /// This is [copied][objc2_foundation::NSCopying::copy] when set.
+612:         #[unsafe(method(setAccessibilityPlaceholderValue:))]
+613:         #[unsafe(method_family = none)]
+614:         fn setAccessibilityPlaceholderValue(
+615:             &self,
+616:             accessibility_placeholder_value: Option<&NSString>,
+617:         );
+
+BINDING accessibilityPerformPress
+36:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitygroup?language=objc)
+37:     pub unsafe trait NSAccessibilityGroup: NSAccessibilityElementProtocol {}
+38: );
+39: 
+40: extern_protocol!(
+41:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitybutton?language=objc)
+42:     pub unsafe trait NSAccessibilityButton: NSAccessibilityElementProtocol {
+43:         #[unsafe(method(accessibilityLabel))]
+44:         #[unsafe(method_family = none)]
+45:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+46: 
+47:         #[unsafe(method(accessibilityPerformPress))]
+48:         #[unsafe(method_family = none)]
+49:         fn accessibilityPerformPress(&self) -> bool;
+50:     }
+51: );
+52: 
+53: extern_protocol!(
+54:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityswitch?language=objc)
+55:     pub unsafe trait NSAccessibilitySwitch: NSAccessibilityButton {
+56:         #[unsafe(method(accessibilityValue))]
+57:         #[unsafe(method_family = none)]
+58:         fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+59: 
+60:         #[optional]
+61:         #[unsafe(method(accessibilityPerformIncrement))]
+62:         #[unsafe(method_family = none)]
+63:         fn accessibilityPerformIncrement(&self) -> bool;
+
+BINDING accessibilityPerformPress
+2171:         #[unsafe(method_family = none)]
+2172:         fn accessibilityPerformDelete(&self) -> bool;
+2173: 
+2174:         #[unsafe(method(accessibilityPerformIncrement))]
+2175:         #[unsafe(method_family = none)]
+2176:         fn accessibilityPerformIncrement(&self) -> bool;
+2177: 
+2178:         #[unsafe(method(accessibilityPerformPick))]
+2179:         #[unsafe(method_family = none)]
+2180:         fn accessibilityPerformPick(&self) -> bool;
+2181: 
+2182:         #[unsafe(method(accessibilityPerformPress))]
+2183:         #[unsafe(method_family = none)]
+2184:         fn accessibilityPerformPress(&self) -> bool;
+2185: 
+2186:         #[unsafe(method(accessibilityPerformRaise))]
+2187:         #[unsafe(method_family = none)]
+2188:         fn accessibilityPerformRaise(&self) -> bool;
+2189: 
+2190:         #[unsafe(method(accessibilityPerformShowAlternateUI))]
+2191:         #[unsafe(method_family = none)]
+2192:         fn accessibilityPerformShowAlternateUI(&self) -> bool;
+2193: 
+2194:         #[unsafe(method(accessibilityPerformShowDefaultUI))]
+2195:         #[unsafe(method_family = none)]
+2196:         fn accessibilityPerformShowDefaultUI(&self) -> bool;
+2197: 
+2198:         #[unsafe(method(accessibilityPerformShowMenu))]
+
+SDK accessibilityPerformPress
+37: @required
+38: - (nullable NSString *)accessibilityLabel;
+39: - (BOOL)accessibilityPerformPress;
+40: @end
+41: 
+42: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+43: @protocol NSAccessibilitySwitch <NSAccessibilityButton>
+44: // Post NSAccessibilityValueChangedNotification when the value changes
+45: 
+46: @required
+
+SDK accessibilityPerformPress
+840: 
+841: // Invokes when clients perform NSAccessibilityPressAction
+842: - (BOOL)accessibilityPerformPress API_AVAILABLE(macos(10.10));
+843: 
+844: // Invokes when clients perform NSAccessibilityRaiseAction
+845: - (BOOL)accessibilityPerformRaise API_AVAILABLE(macos(10.10));
+846: 
+847: // Invokes when clients perform NSAccessibilityShowAlternateUIAction
+848: - (BOOL)accessibilityPerformShowAlternateUI API_AVAILABLE(macos(10.10));
+849: 
+
+BINDING accessibilityPerformIncrement
+50:     }
+51: );
+52: 
+53: extern_protocol!(
+54:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityswitch?language=objc)
+55:     pub unsafe trait NSAccessibilitySwitch: NSAccessibilityButton {
+56:         #[unsafe(method(accessibilityValue))]
+57:         #[unsafe(method_family = none)]
+58:         fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+59: 
+60:         #[optional]
+61:         #[unsafe(method(accessibilityPerformIncrement))]
+62:         #[unsafe(method_family = none)]
+63:         fn accessibilityPerformIncrement(&self) -> bool;
+64: 
+65:         #[optional]
+66:         #[unsafe(method(accessibilityPerformDecrement))]
+67:         #[unsafe(method_family = none)]
+68:         fn accessibilityPerformDecrement(&self) -> bool;
+69:     }
+70: );
+71: 
+72: extern_protocol!(
+73:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityradiobutton?language=objc)
+74:     pub unsafe trait NSAccessibilityRadioButton: NSAccessibilityButton {
+75:         #[unsafe(method(accessibilityValue))]
+76:         #[unsafe(method_family = none)]
+77:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+
+BINDING accessibilityPerformIncrement
+138:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+139:     }
+140: );
+141: 
+142: extern_protocol!(
+143:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitystepper?language=objc)
+144:     pub unsafe trait NSAccessibilityStepper: NSAccessibilityElementProtocol {
+145:         #[unsafe(method(accessibilityLabel))]
+146:         #[unsafe(method_family = none)]
+147:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+148: 
+149:         #[unsafe(method(accessibilityPerformIncrement))]
+150:         #[unsafe(method_family = none)]
+151:         fn accessibilityPerformIncrement(&self) -> bool;
+152: 
+153:         #[unsafe(method(accessibilityPerformDecrement))]
+154:         #[unsafe(method_family = none)]
+155:         fn accessibilityPerformDecrement(&self) -> bool;
+156: 
+157:         #[optional]
+158:         #[unsafe(method(accessibilityValue))]
+159:         #[unsafe(method_family = none)]
+160:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+161:     }
+162: );
+163: 
+164: extern_protocol!(
+165:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityslider?language=objc)
+
+BINDING accessibilityPerformIncrement
+164: extern_protocol!(
+165:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityslider?language=objc)
+166:     pub unsafe trait NSAccessibilitySlider: NSAccessibilityElementProtocol {
+167:         #[unsafe(method(accessibilityLabel))]
+168:         #[unsafe(method_family = none)]
+169:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+170: 
+171:         #[unsafe(method(accessibilityValue))]
+172:         #[unsafe(method_family = none)]
+173:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+174: 
+175:         #[unsafe(method(accessibilityPerformIncrement))]
+176:         #[unsafe(method_family = none)]
+177:         fn accessibilityPerformIncrement(&self) -> bool;
+178: 
+179:         #[unsafe(method(accessibilityPerformDecrement))]
+180:         #[unsafe(method_family = none)]
+181:         fn accessibilityPerformDecrement(&self) -> bool;
+182:     }
+183: );
+184: 
+185: extern_protocol!(
+186:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityimage?language=objc)
+187:     pub unsafe trait NSAccessibilityImage: NSAccessibilityElementProtocol {
+188:         #[unsafe(method(accessibilityLabel))]
+189:         #[unsafe(method_family = none)]
+190:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+191:     }
+
+BINDING accessibilityPerformIncrement
+2163:         #[unsafe(method_family = none)]
+2164:         fn accessibilityPerformConfirm(&self) -> bool;
+2165: 
+2166:         #[unsafe(method(accessibilityPerformDecrement))]
+2167:         #[unsafe(method_family = none)]
+2168:         fn accessibilityPerformDecrement(&self) -> bool;
+2169: 
+2170:         #[unsafe(method(accessibilityPerformDelete))]
+2171:         #[unsafe(method_family = none)]
+2172:         fn accessibilityPerformDelete(&self) -> bool;
+2173: 
+2174:         #[unsafe(method(accessibilityPerformIncrement))]
+2175:         #[unsafe(method_family = none)]
+2176:         fn accessibilityPerformIncrement(&self) -> bool;
+2177: 
+2178:         #[unsafe(method(accessibilityPerformPick))]
+2179:         #[unsafe(method_family = none)]
+2180:         fn accessibilityPerformPick(&self) -> bool;
+2181: 
+2182:         #[unsafe(method(accessibilityPerformPress))]
+2183:         #[unsafe(method_family = none)]
+2184:         fn accessibilityPerformPress(&self) -> bool;
+2185: 
+2186:         #[unsafe(method(accessibilityPerformRaise))]
+2187:         #[unsafe(method_family = none)]
+2188:         fn accessibilityPerformRaise(&self) -> bool;
+2189: 
+2190:         #[unsafe(method(accessibilityPerformShowAlternateUI))]
+
+SDK accessibilityPerformIncrement
+48: 
+49: @optional
+50: - (BOOL)accessibilityPerformIncrement;
+51: - (BOOL)accessibilityPerformDecrement;
+52: @end
+53: 
+54: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+55: @protocol NSAccessibilityRadioButton <NSAccessibilityButton>
+56: // NSAccessibilityValueChangedNotification should be posted whenever accessibilityValue changes
+57: 
+
+SDK accessibilityPerformIncrement
+103: @required
+104: - (nullable NSString *)accessibilityLabel;
+105: - (BOOL)accessibilityPerformIncrement;
+106: - (BOOL)accessibilityPerformDecrement;
+107: @optional
+108: // Value is a NSString or a NSNumber
+109: - (nullable id)accessibilityValue;
+110: @end
+111: 
+112: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+
+SDK accessibilityPerformIncrement
+116: // Value is a NSString or a NSNumber
+117: - (nullable id)accessibilityValue;
+118: - (BOOL)accessibilityPerformIncrement;
+119: - (BOOL)accessibilityPerformDecrement;
+120: @end
+121: 
+122: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+123: @protocol NSAccessibilityImage <NSAccessibilityElement>
+124: @required
+125: - (nullable NSString *)accessibilityLabel;
+
+BINDING accessibilityPerformDecrement
+55:     pub unsafe trait NSAccessibilitySwitch: NSAccessibilityButton {
+56:         #[unsafe(method(accessibilityValue))]
+57:         #[unsafe(method_family = none)]
+58:         fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+59: 
+60:         #[optional]
+61:         #[unsafe(method(accessibilityPerformIncrement))]
+62:         #[unsafe(method_family = none)]
+63:         fn accessibilityPerformIncrement(&self) -> bool;
+64: 
+65:         #[optional]
+66:         #[unsafe(method(accessibilityPerformDecrement))]
+67:         #[unsafe(method_family = none)]
+68:         fn accessibilityPerformDecrement(&self) -> bool;
+69:     }
+70: );
+71: 
+72: extern_protocol!(
+73:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityradiobutton?language=objc)
+74:     pub unsafe trait NSAccessibilityRadioButton: NSAccessibilityButton {
+75:         #[unsafe(method(accessibilityValue))]
+76:         #[unsafe(method_family = none)]
+77:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+78:     }
+79: );
+80: 
+81: extern_protocol!(
+82:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitycheckbox?language=objc)
+
+BINDING accessibilityPerformDecrement
+142: extern_protocol!(
+143:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitystepper?language=objc)
+144:     pub unsafe trait NSAccessibilityStepper: NSAccessibilityElementProtocol {
+145:         #[unsafe(method(accessibilityLabel))]
+146:         #[unsafe(method_family = none)]
+147:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+148: 
+149:         #[unsafe(method(accessibilityPerformIncrement))]
+150:         #[unsafe(method_family = none)]
+151:         fn accessibilityPerformIncrement(&self) -> bool;
+152: 
+153:         #[unsafe(method(accessibilityPerformDecrement))]
+154:         #[unsafe(method_family = none)]
+155:         fn accessibilityPerformDecrement(&self) -> bool;
+156: 
+157:         #[optional]
+158:         #[unsafe(method(accessibilityValue))]
+159:         #[unsafe(method_family = none)]
+160:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+161:     }
+162: );
+163: 
+164: extern_protocol!(
+165:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityslider?language=objc)
+166:     pub unsafe trait NSAccessibilitySlider: NSAccessibilityElementProtocol {
+167:         #[unsafe(method(accessibilityLabel))]
+168:         #[unsafe(method_family = none)]
+169:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+
+BINDING accessibilityPerformDecrement
+168:         #[unsafe(method_family = none)]
+169:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+170: 
+171:         #[unsafe(method(accessibilityValue))]
+172:         #[unsafe(method_family = none)]
+173:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+174: 
+175:         #[unsafe(method(accessibilityPerformIncrement))]
+176:         #[unsafe(method_family = none)]
+177:         fn accessibilityPerformIncrement(&self) -> bool;
+178: 
+179:         #[unsafe(method(accessibilityPerformDecrement))]
+180:         #[unsafe(method_family = none)]
+181:         fn accessibilityPerformDecrement(&self) -> bool;
+182:     }
+183: );
+184: 
+185: extern_protocol!(
+186:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityimage?language=objc)
+187:     pub unsafe trait NSAccessibilityImage: NSAccessibilityElementProtocol {
+188:         #[unsafe(method(accessibilityLabel))]
+189:         #[unsafe(method_family = none)]
+190:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+191:     }
+192: );
+193: 
+194: extern_protocol!(
+195:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitycontainstransientui?language=objc)
+
+BINDING accessibilityPerformDecrement
+2155:             accessibility_custom_actions: Option<&NSArray<NSAccessibilityCustomAction>>,
+2156:         );
+2157: 
+2158:         #[unsafe(method(accessibilityPerformCancel))]
+2159:         #[unsafe(method_family = none)]
+2160:         fn accessibilityPerformCancel(&self) -> bool;
+2161: 
+2162:         #[unsafe(method(accessibilityPerformConfirm))]
+2163:         #[unsafe(method_family = none)]
+2164:         fn accessibilityPerformConfirm(&self) -> bool;
+2165: 
+2166:         #[unsafe(method(accessibilityPerformDecrement))]
+2167:         #[unsafe(method_family = none)]
+2168:         fn accessibilityPerformDecrement(&self) -> bool;
+2169: 
+2170:         #[unsafe(method(accessibilityPerformDelete))]
+2171:         #[unsafe(method_family = none)]
+2172:         fn accessibilityPerformDelete(&self) -> bool;
+2173: 
+2174:         #[unsafe(method(accessibilityPerformIncrement))]
+2175:         #[unsafe(method_family = none)]
+2176:         fn accessibilityPerformIncrement(&self) -> bool;
+2177: 
+2178:         #[unsafe(method(accessibilityPerformPick))]
+2179:         #[unsafe(method_family = none)]
+2180:         fn accessibilityPerformPick(&self) -> bool;
+2181: 
+2182:         #[unsafe(method(accessibilityPerformPress))]
+
+SDK accessibilityPerformDecrement
+49: @optional
+50: - (BOOL)accessibilityPerformIncrement;
+51: - (BOOL)accessibilityPerformDecrement;
+52: @end
+53: 
+54: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+55: @protocol NSAccessibilityRadioButton <NSAccessibilityButton>
+56: // NSAccessibilityValueChangedNotification should be posted whenever accessibilityValue changes
+57: 
+58: @required
+
+SDK accessibilityPerformDecrement
+104: - (nullable NSString *)accessibilityLabel;
+105: - (BOOL)accessibilityPerformIncrement;
+106: - (BOOL)accessibilityPerformDecrement;
+107: @optional
+108: // Value is a NSString or a NSNumber
+109: - (nullable id)accessibilityValue;
+110: @end
+111: 
+112: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+113: @protocol NSAccessibilitySlider <NSAccessibilityElement>
+
+SDK accessibilityPerformDecrement
+117: - (nullable id)accessibilityValue;
+118: - (BOOL)accessibilityPerformIncrement;
+119: - (BOOL)accessibilityPerformDecrement;
+120: @end
+121: 
+122: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+123: @protocol NSAccessibilityImage <NSAccessibilityElement>
+124: @required
+125: - (nullable NSString *)accessibilityLabel;
+126: @end
+
+BINDING accessibilityFrame
+4: use core::ptr::NonNull;
+5: use objc2::__framework_prelude::*;
+6: use objc2_foundation::*;
+7: 
+8: use crate::*;
+9: 
+10: extern_protocol!(
+11:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityelementprotocol?language=objc)
+12:     #[doc(alias = "NSAccessibilityElement")]
+13:     #[name = "NSAccessibilityElement"]
+14:     pub unsafe trait NSAccessibilityElementProtocol: NSObjectProtocol {
+15:         #[unsafe(method(accessibilityFrame))]
+16:         #[unsafe(method_family = none)]
+17:         fn accessibilityFrame(&self) -> NSRect;
+18: 
+19:         #[unsafe(method(accessibilityParent))]
+20:         #[unsafe(method_family = none)]
+21:         fn accessibilityParent(&self) -> Option<Retained<AnyObject>>;
+22: 
+23:         #[optional]
+24:         #[unsafe(method(isAccessibilityFocused))]
+25:         #[unsafe(method_family = none)]
+26:         fn isAccessibilityFocused(&self) -> bool;
+27: 
+28:         #[optional]
+29:         #[unsafe(method(accessibilityIdentifier))]
+30:         #[unsafe(method_family = none)]
+31:         fn accessibilityIdentifier(&self) -> Retained<NSString>;
+
+BINDING accessibilityFrame
+388:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibility?language=objc)
+389:     pub unsafe trait NSAccessibility: NSObjectProtocol {
+390:         #[unsafe(method(isAccessibilityElement))]
+391:         #[unsafe(method_family = none)]
+392:         fn isAccessibilityElement(&self) -> bool;
+393: 
+394:         /// Setter for [`isAccessibilityElement`][Self::isAccessibilityElement].
+395:         #[unsafe(method(setAccessibilityElement:))]
+396:         #[unsafe(method_family = none)]
+397:         fn setAccessibilityElement(&self, accessibility_element: bool);
+398: 
+399:         #[unsafe(method(accessibilityFrame))]
+400:         #[unsafe(method_family = none)]
+401:         fn accessibilityFrame(&self) -> NSRect;
+402: 
+403:         /// Setter for [`accessibilityFrame`][Self::accessibilityFrame].
+404:         #[unsafe(method(setAccessibilityFrame:))]
+405:         #[unsafe(method_family = none)]
+406:         fn setAccessibilityFrame(&self, accessibility_frame: NSRect);
+407: 
+408:         #[unsafe(method(isAccessibilityFocused))]
+409:         #[unsafe(method_family = none)]
+410:         fn isAccessibilityFocused(&self) -> bool;
+411: 
+412:         /// Setter for [`isAccessibilityFocused`][Self::isAccessibilityFocused].
+413:         #[unsafe(method(setAccessibilityFocused:))]
+414:         #[unsafe(method_family = none)]
+415:         fn setAccessibilityFocused(&self, accessibility_focused: bool);
+
+SDK accessibilityFrame
+19: @protocol NSAccessibilityElement <NSObject>
+20: @required
+21: - (NSRect)accessibilityFrame;
+22: - (nullable id)accessibilityParent;
+23: 
+24: @optional
+25: - (BOOL)isAccessibilityFocused;
+26: - (NSString *)accessibilityIdentifier;
+27: @end
+28: 
+
+SDK accessibilityFrame
+89: 
+90: // Frame is in screen coordinates. See NSAccessibilityFrameInView()
+91: - (NSRect)accessibilityFrameForRange:(NSRange)range;
+92: @end
+93: 
+94: #pragma mark Miscellaneous
+95: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+96: @protocol NSAccessibilityProgressIndicator <NSAccessibilityGroup>
+97: @required
+98: - (nullable NSNumber *)accessibilityValue;
+
+SDK accessibilityFrame
+244: // The frame of the UIElement in screen coordinates. See NSAccessibilityFrameInView()
+245: // Invokes when clients request NSAccessibilitySizeAttribute or NSAccessibilityPositionAttribute
+246: @property NSRect accessibilityFrame API_AVAILABLE(macos(10.10));
+247: 
+248: // Returns YES if the element is focused (generally, accessibilityFocused is equivilent to the
+249: // UIElement with the focus ring or selection)
+250: // Invokes when clients request NSAccessibilityFocusedAttribute
+251: @property (getter = isAccessibilityFocused) BOOL accessibilityFocused API_AVAILABLE(macos(10.10));
+252: 
+253: // Activation point for the UIElement, in screen coordinates. See NSAccessibilityPointInView()
+
+BINDING accessibilityChildren
+311:         fn accessibilityDisclosureLevel(&self) -> NSInteger;
+312:     }
+313: );
+314: 
+315: extern_protocol!(
+316:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitylayoutarea?language=objc)
+317:     pub unsafe trait NSAccessibilityLayoutArea: NSAccessibilityGroup {
+318:         #[unsafe(method(accessibilityLabel))]
+319:         #[unsafe(method_family = none)]
+320:         fn accessibilityLabel(&self) -> Retained<NSString>;
+321: 
+322:         #[unsafe(method(accessibilityChildren))]
+323:         #[unsafe(method_family = none)]
+324:         fn accessibilityChildren(&self) -> Option<Retained<NSArray>>;
+325: 
+326:         #[unsafe(method(accessibilitySelectedChildren))]
+327:         #[unsafe(method_family = none)]
+328:         fn accessibilitySelectedChildren(&self) -> Option<Retained<NSArray>>;
+329: 
+330:         #[unsafe(method(accessibilityFocusedUIElement))]
+331:         #[unsafe(method_family = none)]
+332:         fn accessibilityFocusedUIElement(&self) -> Retained<AnyObject>;
+333:     }
+334: );
+335: 
+336: extern_protocol!(
+337:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitylayoutitem?language=objc)
+338:     pub unsafe trait NSAccessibilityLayoutItem: NSAccessibilityGroup {
+
+BINDING accessibilityChildren
+859:         fn setAccessibilityEdited(&self, accessibility_edited: bool);
+860: 
+861:         #[unsafe(method(isAccessibilityEnabled))]
+862:         #[unsafe(method_family = none)]
+863:         fn isAccessibilityEnabled(&self) -> bool;
+864: 
+865:         /// Setter for [`isAccessibilityEnabled`][Self::isAccessibilityEnabled].
+866:         #[unsafe(method(setAccessibilityEnabled:))]
+867:         #[unsafe(method_family = none)]
+868:         fn setAccessibilityEnabled(&self, accessibility_enabled: bool);
+869: 
+870:         #[unsafe(method(accessibilityChildren))]
+871:         #[unsafe(method_family = none)]
+872:         fn accessibilityChildren(&self) -> Option<Retained<NSArray>>;
+873: 
+874:         /// Setter for [`accessibilityChildren`][Self::accessibilityChildren].
+875:         ///
+876:         /// This is [copied][objc2_foundation::NSCopying::copy] when set.
+877:         ///
+878:         /// # Safety
+879:         ///
+880:         /// `accessibility_children` generic should be of the correct type.
+881:         #[unsafe(method(setAccessibilityChildren:))]
+882:         #[unsafe(method_family = none)]
+883:         unsafe fn setAccessibilityChildren(&self, accessibility_children: Option<&NSArray>);
+884: 
+885:         #[unsafe(method(accessibilityChildrenInNavigationOrder))]
+886:         #[unsafe(method_family = none)]
+
+SDK accessibilityChildren
+191: 
+192: // All of the layoutItem children
+193: - (nullable NSArray *)accessibilityChildren;
+194: 
+195: // Selected layoutItem children
+196: - (nullable NSArray *)accessibilitySelectedChildren;
+197: 
+198: // The focused layoutItem
+199: @property (readonly, strong) id accessibilityFocusedUIElement;
+200: 
+
+SDK accessibilityChildren
+384: // Array of UIElements that represent children of the current UIElement
+385: // Invokes when clients request NSAccessibilityChildrenAttribute
+386: @property (nullable, copy) NSArray *accessibilityChildren API_AVAILABLE(macos(10.10));
+387: 
+388: // Returns an array of children UIElements ordered for linear navigation.
+389: // This array should match all UIElements found in accessibilityChildren, but in an order that's more suitable for navigation
+390: @property (nullable, copy) NSArray <id<NSAccessibilityElement>> *accessibilityChildrenInNavigationOrder API_AVAILABLE(macos(10.13));
+391: 
+392: // UIElement for search field clear button
+393: // Invokes when clients request NSAccessibilityClearButtonAttribute
+
+SDK accessibilityChildren
+387: 
+388: // Returns an array of children UIElements ordered for linear navigation.
+389: // This array should match all UIElements found in accessibilityChildren, but in an order that's more suitable for navigation
+390: @property (nullable, copy) NSArray <id<NSAccessibilityElement>> *accessibilityChildrenInNavigationOrder API_AVAILABLE(macos(10.13));
+391: 
+392: // UIElement for search field clear button
+393: // Invokes when clients request NSAccessibilityClearButtonAttribute
+394: @property (nullable, strong) id accessibilityClearButton API_AVAILABLE(macos(10.10));
+395: 
+396: // UIElement for cancel button
+
+BINDING accessibilityValue
+45:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+46: 
+47:         #[unsafe(method(accessibilityPerformPress))]
+48:         #[unsafe(method_family = none)]
+49:         fn accessibilityPerformPress(&self) -> bool;
+50:     }
+51: );
+52: 
+53: extern_protocol!(
+54:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityswitch?language=objc)
+55:     pub unsafe trait NSAccessibilitySwitch: NSAccessibilityButton {
+56:         #[unsafe(method(accessibilityValue))]
+57:         #[unsafe(method_family = none)]
+58:         fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+59: 
+60:         #[optional]
+61:         #[unsafe(method(accessibilityPerformIncrement))]
+62:         #[unsafe(method_family = none)]
+63:         fn accessibilityPerformIncrement(&self) -> bool;
+64: 
+65:         #[optional]
+66:         #[unsafe(method(accessibilityPerformDecrement))]
+67:         #[unsafe(method_family = none)]
+68:         fn accessibilityPerformDecrement(&self) -> bool;
+69:     }
+70: );
+71: 
+72: extern_protocol!(
+
+BINDING accessibilityValue
+64: 
+65:         #[optional]
+66:         #[unsafe(method(accessibilityPerformDecrement))]
+67:         #[unsafe(method_family = none)]
+68:         fn accessibilityPerformDecrement(&self) -> bool;
+69:     }
+70: );
+71: 
+72: extern_protocol!(
+73:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityradiobutton?language=objc)
+74:     pub unsafe trait NSAccessibilityRadioButton: NSAccessibilityButton {
+75:         #[unsafe(method(accessibilityValue))]
+76:         #[unsafe(method_family = none)]
+77:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+78:     }
+79: );
+80: 
+81: extern_protocol!(
+82:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitycheckbox?language=objc)
+83:     pub unsafe trait NSAccessibilityCheckBox: NSAccessibilityButton {
+84:         #[unsafe(method(accessibilityValue))]
+85:         #[unsafe(method_family = none)]
+86:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+87:     }
+88: );
+89: 
+90: extern_protocol!(
+91:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitystatictext?language=objc)
+
+BINDING accessibilityValue
+73:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityradiobutton?language=objc)
+74:     pub unsafe trait NSAccessibilityRadioButton: NSAccessibilityButton {
+75:         #[unsafe(method(accessibilityValue))]
+76:         #[unsafe(method_family = none)]
+77:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+78:     }
+79: );
+80: 
+81: extern_protocol!(
+82:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitycheckbox?language=objc)
+83:     pub unsafe trait NSAccessibilityCheckBox: NSAccessibilityButton {
+84:         #[unsafe(method(accessibilityValue))]
+85:         #[unsafe(method_family = none)]
+86:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+87:     }
+88: );
+89: 
+90: extern_protocol!(
+91:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitystatictext?language=objc)
+92:     pub unsafe trait NSAccessibilityStaticText: NSAccessibilityElementProtocol {
+93:         #[unsafe(method(accessibilityValue))]
+94:         #[unsafe(method_family = none)]
+95:         fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+96: 
+97:         #[optional]
+98:         #[unsafe(method(accessibilityAttributedStringForRange:))]
+99:         #[unsafe(method_family = none)]
+100:         fn accessibilityAttributedStringForRange(
+
+BINDING accessibilityValue
+82:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitycheckbox?language=objc)
+83:     pub unsafe trait NSAccessibilityCheckBox: NSAccessibilityButton {
+84:         #[unsafe(method(accessibilityValue))]
+85:         #[unsafe(method_family = none)]
+86:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+87:     }
+88: );
+89: 
+90: extern_protocol!(
+91:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitystatictext?language=objc)
+92:     pub unsafe trait NSAccessibilityStaticText: NSAccessibilityElementProtocol {
+93:         #[unsafe(method(accessibilityValue))]
+94:         #[unsafe(method_family = none)]
+95:         fn accessibilityValue(&self) -> Option<Retained<NSString>>;
+96: 
+97:         #[optional]
+98:         #[unsafe(method(accessibilityAttributedStringForRange:))]
+99:         #[unsafe(method_family = none)]
+100:         fn accessibilityAttributedStringForRange(
+101:             &self,
+102:             range: NSRange,
+103:         ) -> Option<Retained<NSAttributedString>>;
+104: 
+105:         #[optional]
+106:         #[unsafe(method(accessibilityVisibleCharacterRange))]
+107:         #[unsafe(method_family = none)]
+108:         fn accessibilityVisibleCharacterRange(&self) -> NSRange;
+109:     }
+
+BINDING accessibilityValue
+125:         fn accessibilityRangeForLine(&self, line_number: NSInteger) -> NSRange;
+126: 
+127:         #[unsafe(method(accessibilityFrameForRange:))]
+128:         #[unsafe(method_family = none)]
+129:         fn accessibilityFrameForRange(&self, range: NSRange) -> NSRect;
+130:     }
+131: );
+132: 
+133: extern_protocol!(
+134:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityprogressindicator?language=objc)
+135:     pub unsafe trait NSAccessibilityProgressIndicator: NSAccessibilityGroup {
+136:         #[unsafe(method(accessibilityValue))]
+137:         #[unsafe(method_family = none)]
+138:         fn accessibilityValue(&self) -> Option<Retained<NSNumber>>;
+139:     }
+140: );
+141: 
+142: extern_protocol!(
+143:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilitystepper?language=objc)
+144:     pub unsafe trait NSAccessibilityStepper: NSAccessibilityElementProtocol {
+145:         #[unsafe(method(accessibilityLabel))]
+146:         #[unsafe(method_family = none)]
+147:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+148: 
+149:         #[unsafe(method(accessibilityPerformIncrement))]
+150:         #[unsafe(method_family = none)]
+151:         fn accessibilityPerformIncrement(&self) -> bool;
+152: 
+
+BINDING accessibilityValue
+147:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+148: 
+149:         #[unsafe(method(accessibilityPerformIncrement))]
+150:         #[unsafe(method_family = none)]
+151:         fn accessibilityPerformIncrement(&self) -> bool;
+152: 
+153:         #[unsafe(method(accessibilityPerformDecrement))]
+154:         #[unsafe(method_family = none)]
+155:         fn accessibilityPerformDecrement(&self) -> bool;
+156: 
+157:         #[optional]
+158:         #[unsafe(method(accessibilityValue))]
+159:         #[unsafe(method_family = none)]
+160:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+161:     }
+162: );
+163: 
+164: extern_protocol!(
+165:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityslider?language=objc)
+166:     pub unsafe trait NSAccessibilitySlider: NSAccessibilityElementProtocol {
+167:         #[unsafe(method(accessibilityLabel))]
+168:         #[unsafe(method_family = none)]
+169:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+170: 
+171:         #[unsafe(method(accessibilityValue))]
+172:         #[unsafe(method_family = none)]
+173:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+174: 
+
+BINDING accessibilityValue
+160:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+161:     }
+162: );
+163: 
+164: extern_protocol!(
+165:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityslider?language=objc)
+166:     pub unsafe trait NSAccessibilitySlider: NSAccessibilityElementProtocol {
+167:         #[unsafe(method(accessibilityLabel))]
+168:         #[unsafe(method_family = none)]
+169:         fn accessibilityLabel(&self) -> Option<Retained<NSString>>;
+170: 
+171:         #[unsafe(method(accessibilityValue))]
+172:         #[unsafe(method_family = none)]
+173:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+174: 
+175:         #[unsafe(method(accessibilityPerformIncrement))]
+176:         #[unsafe(method_family = none)]
+177:         fn accessibilityPerformIncrement(&self) -> bool;
+178: 
+179:         #[unsafe(method(accessibilityPerformDecrement))]
+180:         #[unsafe(method_family = none)]
+181:         fn accessibilityPerformDecrement(&self) -> bool;
+182:     }
+183: );
+184: 
+185: extern_protocol!(
+186:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsaccessibilityimage?language=objc)
+187:     pub unsafe trait NSAccessibilityImage: NSAccessibilityElementProtocol {
+
+BINDING accessibilityValue
+444:         #[unsafe(method(accessibilityURL))]
+445:         #[unsafe(method_family = none)]
+446:         fn accessibilityURL(&self) -> Option<Retained<NSURL>>;
+447: 
+448:         /// Setter for [`accessibilityURL`][Self::accessibilityURL].
+449:         ///
+450:         /// This is [copied][objc2_foundation::NSCopying::copy] when set.
+451:         #[unsafe(method(setAccessibilityURL:))]
+452:         #[unsafe(method_family = none)]
+453:         fn setAccessibilityURL(&self, accessibility_url: Option<&NSURL>);
+454: 
+455:         #[unsafe(method(accessibilityValue))]
+456:         #[unsafe(method_family = none)]
+457:         fn accessibilityValue(&self) -> Option<Retained<AnyObject>>;
+458: 
+459:         /// Setter for [`accessibilityValue`][Self::accessibilityValue].
+460:         ///
+461:         /// # Safety
+462:         ///
+463:         /// `accessibility_value` should be of the correct type.
+464:         #[unsafe(method(setAccessibilityValue:))]
+465:         #[unsafe(method_family = none)]
+466:         unsafe fn setAccessibilityValue(&self, accessibility_value: Option<&AnyObject>);
+467: 
+468:         #[unsafe(method(accessibilityValueDescription))]
+469:         #[unsafe(method_family = none)]
+470:         fn accessibilityValueDescription(&self) -> Option<Retained<NSString>>;
+471: 
+
+SDK accessibilityValue
+45: 
+46: @required
+47: - (nullable NSString *)accessibilityValue;
+48: 
+49: @optional
+50: - (BOOL)accessibilityPerformIncrement;
+51: - (BOOL)accessibilityPerformDecrement;
+52: @end
+53: 
+54: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+
+SDK accessibilityValue
+54: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+55: @protocol NSAccessibilityRadioButton <NSAccessibilityButton>
+56: // NSAccessibilityValueChangedNotification should be posted whenever accessibilityValue changes
+57: 
+58: @required
+59: // Return @YES if selected, or @NO if not selected
+60: - (nullable NSNumber *)accessibilityValue;
+61: @end
+62: 
+63: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+
+SDK accessibilityValue
+58: @required
+59: // Return @YES if selected, or @NO if not selected
+60: - (nullable NSNumber *)accessibilityValue;
+61: @end
+62: 
+63: NS_PROTOCOL_REQUIRES_EXPLICIT_IMPLEMENTATION
+64: @protocol NSAccessibilityCheckBox <NSAccessibilityButton>
+65: // NSAccessibilityValueChangedNotification should be posted whenever accessibilityValue changes
+66: 
+67: @required

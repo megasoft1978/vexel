@@ -1,0 +1,18 @@
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28), cargo 1.99.0 (5f94df478 2026-08-27), stable-aarch64-apple-darwin. Cargo target: aarch64-apple-darwin.
+
+cargo +stable check -p vexel-project-io --locked --offline
+PASS; finished dev profile successfully.
+
+cargo +stable test -p vexel-project-io --locked --offline
+PASS; 8 unit tests passed, 0 failed; all original 6 tests remain and 2 focused regressions are added; 0 doc tests, 0 failed. The checksum-corrupt save regression covers missing and seeded existing destinations, verifies exact errors and zero-publication fields, checks seeded bytes/directory entries remain unchanged, and confirms the missing path stays absent.
+
+python3 scripts/wo_validate.py WO-RUST-PROJECT-IO-01 --ready
+PASS; valid WO-RUST-PROJECT-IO-01 revision 1, SHA-256 3c2dbfa4e7603b652411c38e1296a06e99f6c5e7ff4ec1297ae3b5041618c297.
+
+python3 scripts/ledger.py validate ledger.jsonl
+PASS; valid ledger, 1197 entries.
+
+git diff --check
+PASS; no output (no whitespace errors).
+
+No production behavior changed in this continuation. The prior authorized Rust decoder OutOfMemory mapping remains documented; no actual system OOM injection was performed. No checks beyond those named by the work order were run.

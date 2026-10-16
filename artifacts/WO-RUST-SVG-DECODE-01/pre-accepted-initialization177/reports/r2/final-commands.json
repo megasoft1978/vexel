@@ -1,0 +1,56 @@
+[
+  {
+    "command": [
+      "cargo",
+      "+stable",
+      "check",
+      "-p",
+      "vexel-svg-decode",
+      "--locked",
+      "--offline"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.04161787033081055,
+    "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-1.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "+stable",
+      "test",
+      "-p",
+      "vexel-svg-decode",
+      "--locked",
+      "--offline"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 9.017354965209961,
+    "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-2.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "+stable",
+      "test",
+      "-p",
+      "vexel-svg-decode",
+      "--locked",
+      "--offline",
+      "--no-fail-fast"
+    ],
+    "exit_code": 101,
+    "elapsed_seconds": 4.4925618171691895,
+    "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-3.log"
+  },
+  {
+    "command": [
+      "python3",
+      "scripts/wo_validate.py",
+      "WO-RUST-SVG-DECODE-01",
+      "--ready"
+    ],
+    "exit_code": 0,
+    "elapsed_seconds": 0.028703927993774414,
+    "output": "artifacts/WO-RUST-SVG-DECODE-01/r2/final-command-4.log"
+  }
+]

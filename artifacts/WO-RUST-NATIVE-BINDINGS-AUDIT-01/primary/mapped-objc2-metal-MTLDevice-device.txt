@@ -1,0 +1,347 @@
+BINDING MTLCreateSystemDefaultDevice
+34: }
+35: 
+36: unsafe impl RefEncode for MTLIOCompressionMethod {
+37:     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
+38: }
+39: 
+40: /// Returns a reference to the preferred system default Metal device.
+41: ///
+42: /// On Mac OS X systems that support automatic graphics switching, calling
+43: /// this API to get a Metal device will cause the system to switch to the high power
+44: /// GPU.  On other systems that support more than one GPU it will return the GPU that
+45: /// is associated with the main display.
+46: #[inline]
+47: pub extern "C-unwind" fn MTLCreateSystemDefaultDevice(
+48: ) -> Option<Retained<ProtocolObject<dyn MTLDevice>>> {
+49:     extern "C-unwind" {
+50:         fn MTLCreateSystemDefaultDevice() -> *mut ProtocolObject<dyn MTLDevice>;
+51:     }
+52:     let ret = unsafe { MTLCreateSystemDefaultDevice() };
+53:     unsafe { Retained::from_raw(ret) }
+54: }
+55: 
+56: /// Type for device notifications
+57: ///
+58: /// See also [Apple's documentation](https://developer.apple.com/documentation/metal/mtldevicenotificationname?language=objc)
+59: // NS_TYPED_ENUM
+60: pub type MTLDeviceNotificationName = NSString;
+61: 
+
+BINDING MTLCreateSystemDefaultDevice
+37:     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
+38: }
+39: 
+40: /// Returns a reference to the preferred system default Metal device.
+41: ///
+42: /// On Mac OS X systems that support automatic graphics switching, calling
+43: /// this API to get a Metal device will cause the system to switch to the high power
+44: /// GPU.  On other systems that support more than one GPU it will return the GPU that
+45: /// is associated with the main display.
+46: #[inline]
+47: pub extern "C-unwind" fn MTLCreateSystemDefaultDevice(
+48: ) -> Option<Retained<ProtocolObject<dyn MTLDevice>>> {
+49:     extern "C-unwind" {
+50:         fn MTLCreateSystemDefaultDevice() -> *mut ProtocolObject<dyn MTLDevice>;
+51:     }
+52:     let ret = unsafe { MTLCreateSystemDefaultDevice() };
+53:     unsafe { Retained::from_raw(ret) }
+54: }
+55: 
+56: /// Type for device notifications
+57: ///
+58: /// See also [Apple's documentation](https://developer.apple.com/documentation/metal/mtldevicenotificationname?language=objc)
+59: // NS_TYPED_ENUM
+60: pub type MTLDeviceNotificationName = NSString;
+61: 
+62: extern "C" {
+63:     /// This notification is posted when a new Metal device is added to the system
+64:     ///
+
+SDK MTLCreateSystemDefaultDevice
+128:  is associated with the main display.
+129:  */
+130: MTL_EXTERN id <MTLDevice> __nullable MTLCreateSystemDefaultDevice(void) API_AVAILABLE(macos(10.11), ios(8.0)) NS_RETURNS_RETAINED;
+131: 
+132: /*!
+133:  @brief Returns all Metal devices in the system.
+134:  @discussion On macOS and macCatalyst, this API will not cause the system to switch devices and leaves the decision about which GPU to use up to the application based on whatever criteria it deems appropriate.
+135:  On iOS, tvOS and visionOS, this API returns an array containing the same device that MTLCreateSystemDefaultDevice would have returned, or an empty array if it would have failed.
+136: */
+137: MTL_EXTERN NSArray <id<MTLDevice>> *MTLCopyAllDevices(void) API_AVAILABLE(macos(10.11), macCatalyst(13.0), ios(18.0)) NS_RETURNS_RETAINED;
+
+SDK MTLCreateSystemDefaultDevice
+133:  @brief Returns all Metal devices in the system.
+134:  @discussion On macOS and macCatalyst, this API will not cause the system to switch devices and leaves the decision about which GPU to use up to the application based on whatever criteria it deems appropriate.
+135:  On iOS, tvOS and visionOS, this API returns an array containing the same device that MTLCreateSystemDefaultDevice would have returned, or an empty array if it would have failed.
+136: */
+137: MTL_EXTERN NSArray <id<MTLDevice>> *MTLCopyAllDevices(void) API_AVAILABLE(macos(10.11), macCatalyst(13.0), ios(18.0)) NS_RETURNS_RETAINED;
+138: 
+139: /*!
+140:  @brief Type for device notifications
+141: */
+142: typedef NSString *MTLDeviceNotificationName NS_STRING_ENUM API_DEPRECATED("Device notifications are not applicable on Apple Silicon", macos(10.13, 27.0)) API_UNAVAILABLE(ios);
+
+BINDING newCommandQueue
+836:         #[unsafe(method(newLogStateWithDescriptor:error:_))]
+837:         #[unsafe(method_family = new)]
+838:         fn newLogStateWithDescriptor_error(
+839:             &self,
+840:             descriptor: &MTLLogStateDescriptor,
+841:         ) -> Result<Retained<ProtocolObject<dyn MTLLogState>>, Retained<NSError>>;
+842: 
+843:         #[cfg(feature = "MTLCommandQueue")]
+844:         /// Create and return a new command queue.   Command Queues created via this method will only allow up to 64 non-completed command buffers.
+845:         ///
+846:         /// Returns: The new command queue object
+847:         #[unsafe(method(newCommandQueue))]
+848:         #[unsafe(method_family = new)]
+849:         fn newCommandQueue(&self) -> Option<Retained<ProtocolObject<dyn MTLCommandQueue>>>;
+850: 
+851:         #[cfg(feature = "MTLCommandQueue")]
+852:         /// Create and return a new command queue with a given upper bound on non-completed command buffers.
+853:         ///
+854:         /// Returns: The new command queue object
+855:         #[unsafe(method(newCommandQueueWithMaxCommandBufferCount:))]
+856:         #[unsafe(method_family = new)]
+857:         fn newCommandQueueWithMaxCommandBufferCount(
+858:             &self,
+859:             max_command_buffer_count: NSUInteger,
+860:         ) -> Option<Retained<ProtocolObject<dyn MTLCommandQueue>>>;
+861: 
+862:         #[cfg(feature = "MTLCommandQueue")]
+863:         /// Create a MTLCommandQueue according to MTLCommandQueueDescriptor.
+
+SDK newCommandQueue
+638: 
+639: /*!
+640:  @method newCommandQueue
+641:  @brief Create and return a new command queue.   Command Queues created via this method will only allow up to 64 non-completed command buffers.
+642:  @return The new command queue object
+643:  */
+644: - (nullable id <MTLCommandQueue>)newCommandQueue;
+645: 
+646: /*!
+647:  @method newCommandQueueWithMaxCommandBufferCount
+
+SDK newCommandQueue
+642:  @return The new command queue object
+643:  */
+644: - (nullable id <MTLCommandQueue>)newCommandQueue;
+645: 
+646: /*!
+647:  @method newCommandQueueWithMaxCommandBufferCount
+648:  @brief Create and return a new command queue with a given upper bound on non-completed command buffers.
+649:  @return The new command queue object
+650:  */
+651: - (nullable id <MTLCommandQueue>)newCommandQueueWithMaxCommandBufferCount:(NSUInteger)maxCommandBufferCount;
+
+SDK newCommandQueue
+645: 
+646: /*!
+647:  @method newCommandQueueWithMaxCommandBufferCount
+648:  @brief Create and return a new command queue with a given upper bound on non-completed command buffers.
+649:  @return The new command queue object
+650:  */
+651: - (nullable id <MTLCommandQueue>)newCommandQueueWithMaxCommandBufferCount:(NSUInteger)maxCommandBufferCount;
+652: 
+653: /*!
+654:  @method newCommandQueueWithDescriptor:
+
+BINDING newTextureWithDescriptor
+962:         fn newDepthStencilStateWithDescriptor(
+963:             &self,
+964:             descriptor: &MTLDepthStencilDescriptor,
+965:         ) -> Option<Retained<ProtocolObject<dyn MTLDepthStencilState>>>;
+966: 
+967:         #[cfg(all(
+968:             feature = "MTLAllocation",
+969:             feature = "MTLResource",
+970:             feature = "MTLTexture"
+971:         ))]
+972:         /// Allocate a new texture with privately owned storage.
+973:         #[unsafe(method(newTextureWithDescriptor:))]
+974:         #[unsafe(method_family = new)]
+975:         fn newTextureWithDescriptor(
+976:             &self,
+977:             descriptor: &MTLTextureDescriptor,
+978:         ) -> Option<Retained<ProtocolObject<dyn MTLTexture>>>;
+979: 
+980:         #[cfg(all(
+981:             feature = "MTLAllocation",
+982:             feature = "MTLResource",
+983:             feature = "MTLTexture",
+984:             feature = "objc2-io-surface"
+985:         ))]
+986:         /// Create a new texture from an IOSurface.
+987:         ///
+988:         /// Parameter `descriptor`: A description of the properties for the new texture.
+989:         ///
+
+SDK newTextureWithDescriptor
+702: 
+703: /*!
+704:  @method newTextureWithDescriptor:
+705:  @abstract Allocate a new texture with privately owned storage.
+706:  */
+707: - (nullable id <MTLTexture>)newTextureWithDescriptor:(MTLTextureDescriptor *)descriptor;
+708: 
+709: /*!
+710:  @method newTextureWithDescriptor:iosurface:plane
+711:  @abstract Create a new texture from an IOSurface.
+
+SDK newTextureWithDescriptor
+705:  @abstract Allocate a new texture with privately owned storage.
+706:  */
+707: - (nullable id <MTLTexture>)newTextureWithDescriptor:(MTLTextureDescriptor *)descriptor;
+708: 
+709: /*!
+710:  @method newTextureWithDescriptor:iosurface:plane
+711:  @abstract Create a new texture from an IOSurface.
+712:  @param descriptor A description of the properties for the new texture.
+713:  @param iosurface The IOSurface to use as storage for the new texture.
+714:  @param plane The plane within the IOSurface to use.
+
+SDK newTextureWithDescriptor
+708: 
+709: /*!
+710:  @method newTextureWithDescriptor:iosurface:plane
+711:  @abstract Create a new texture from an IOSurface.
+712:  @param descriptor A description of the properties for the new texture.
+713:  @param iosurface The IOSurface to use as storage for the new texture.
+714:  @param plane The plane within the IOSurface to use.
+715:  @return A new texture object.
+716:  */
+717: - (nullable id <MTLTexture>)newTextureWithDescriptor:(MTLTextureDescriptor *)descriptor iosurface:(IOSurfaceRef)iosurface plane:(NSUInteger)plane API_AVAILABLE(macos(10.11), ios(11.0));
+
+BINDING newLibraryWithSource_options_error
+1094:         ///
+1095:         /// Parameter `error`: An error if we fail to open the metallib data.
+1096:         #[unsafe(method(newLibraryWithData:error:_))]
+1097:         #[unsafe(method_family = new)]
+1098:         fn newLibraryWithData_error(
+1099:             &self,
+1100:             data: &DispatchData,
+1101:         ) -> Result<Retained<ProtocolObject<dyn MTLLibrary>>, Retained<NSError>>;
+1102: 
+1103:         #[cfg(feature = "MTLLibrary")]
+1104:         /// Load a MTLLibrary from source.
+1105:         #[unsafe(method(newLibraryWithSource:options:error:_))]
+1106:         #[unsafe(method_family = new)]
+1107:         fn newLibraryWithSource_options_error(
+1108:             &self,
+1109:             source: &NSString,
+1110:             options: Option<&MTLCompileOptions>,
+1111:         ) -> Result<Retained<ProtocolObject<dyn MTLLibrary>>, Retained<NSError>>;
+1112: 
+1113:         #[cfg(all(feature = "MTLLibrary", feature = "block2"))]
+1114:         /// Load a MTLLibrary from source.
+1115:         ///
+1116:         /// # Safety
+1117:         ///
+1118:         /// `completion_handler` must be a valid pointer.
+1119:         #[unsafe(method(newLibraryWithSource:options:completionHandler:))]
+1120:         #[unsafe(method_family = none)]
+1121:         unsafe fn newLibraryWithSource_options_completionHandler(
+
+SDK newLibraryWithSource_options_error
+782: 
+783: /*!
+784:  @method newLibraryWithSource:options:error:
+785:  @abstract Load a MTLLibrary from source.
+786:  */
+787: - (nullable id <MTLLibrary>)newLibraryWithSource:(NSString *)source options:(nullable MTLCompileOptions *)options error:(__autoreleasing NSError **)error;
+788: 
+789: /*!
+790:  @method newLibraryWithSource:options:completionHandler:
+791:  @abstract Load a MTLLibrary from source.
+
+SDK newLibraryWithSource_options_error
+785:  @abstract Load a MTLLibrary from source.
+786:  */
+787: - (nullable id <MTLLibrary>)newLibraryWithSource:(NSString *)source options:(nullable MTLCompileOptions *)options error:(__autoreleasing NSError **)error;
+788: 
+789: /*!
+790:  @method newLibraryWithSource:options:completionHandler:
+791:  @abstract Load a MTLLibrary from source.
+792:  */
+793: - (void)newLibraryWithSource:(NSString *)source options:(nullable MTLCompileOptions *)options completionHandler:(MTLNewLibraryCompletionHandler)completionHandler;
+794: 
+
+SDK newLibraryWithSource_options_error
+788: 
+789: /*!
+790:  @method newLibraryWithSource:options:completionHandler:
+791:  @abstract Load a MTLLibrary from source.
+792:  */
+793: - (void)newLibraryWithSource:(NSString *)source options:(nullable MTLCompileOptions *)options completionHandler:(MTLNewLibraryCompletionHandler)completionHandler;
+794: 
+795: /*!
+796:  @method newLibraryWithStitchedDescriptor:error:
+797:  @abstract Returns a library generated using the graphs in the descriptor.
+
+BINDING newRenderPipelineStateWithDescriptor_error
+1146:         /// `completion_handler` must be a valid pointer.
+1147:         #[unsafe(method(newLibraryWithStitchedDescriptor:completionHandler:))]
+1148:         #[unsafe(method_family = none)]
+1149:         unsafe fn newLibraryWithStitchedDescriptor_completionHandler(
+1150:             &self,
+1151:             descriptor: &MTLStitchedLibraryDescriptor,
+1152:             completion_handler: MTLNewLibraryCompletionHandler,
+1153:         );
+1154: 
+1155:         #[cfg(all(feature = "MTLAllocation", feature = "MTLRenderPipeline"))]
+1156:         /// Create and compile a new MTLRenderPipelineState object synchronously.
+1157:         #[unsafe(method(newRenderPipelineStateWithDescriptor:error:_))]
+1158:         #[unsafe(method_family = new)]
+1159:         fn newRenderPipelineStateWithDescriptor_error(
+1160:             &self,
+1161:             descriptor: &MTLRenderPipelineDescriptor,
+1162:         ) -> Result<Retained<ProtocolObject<dyn MTLRenderPipelineState>>, Retained<NSError>>;
+1163: 
+1164:         #[cfg(all(
+1165:             feature = "MTLAllocation",
+1166:             feature = "MTLLibrary",
+1167:             feature = "MTLRenderPipeline"
+1168:         ))]
+1169:         /// Create and compile a new MTLRenderPipelineState object synchronously and returns additional reflection information.
+1170:         #[unsafe(method(newRenderPipelineStateWithDescriptor:options:reflection:error:_))]
+1171:         #[unsafe(method_family = new)]
+1172:         fn newRenderPipelineStateWithDescriptor_options_reflection_error(
+1173:             &self,
+
+SDK newRenderPipelineStateWithDescriptor_error
+806: 
+807: /*!
+808:  @method newRenderPipelineStateWithDescriptor:error:
+809:  @abstract Create and compile a new MTLRenderPipelineState object synchronously.
+810:  */
+811: - (nullable id <MTLRenderPipelineState>)newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor error:(__autoreleasing NSError **)error;
+812: 
+813: /*!
+814:  @method newRenderPipelineStateWithDescriptor:options:reflection:error:
+815:  @abstract Create and compile a new MTLRenderPipelineState object synchronously and returns additional reflection information.
+
+SDK newRenderPipelineStateWithDescriptor_error
+809:  @abstract Create and compile a new MTLRenderPipelineState object synchronously.
+810:  */
+811: - (nullable id <MTLRenderPipelineState>)newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor error:(__autoreleasing NSError **)error;
+812: 
+813: /*!
+814:  @method newRenderPipelineStateWithDescriptor:options:reflection:error:
+815:  @abstract Create and compile a new MTLRenderPipelineState object synchronously and returns additional reflection information.
+816:  */
+817: - (nullable id <MTLRenderPipelineState>)newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor options:(MTLPipelineOption)options reflection:(MTLAutoreleasedRenderPipelineReflection * __nullable)reflection error:(__autoreleasing NSError **)error;
+818: 
+
+SDK newRenderPipelineStateWithDescriptor_error
+812: 
+813: /*!
+814:  @method newRenderPipelineStateWithDescriptor:options:reflection:error:
+815:  @abstract Create and compile a new MTLRenderPipelineState object synchronously and returns additional reflection information.
+816:  */
+817: - (nullable id <MTLRenderPipelineState>)newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)descriptor options:(MTLPipelineOption)options reflection:(MTLAutoreleasedRenderPipelineReflection * __nullable)reflection error:(__autoreleasing NSError **)error;
+818: 
+819: /*!
+820:  @method newRenderPipelineState:completionHandler:
+821:  @abstract Create and compile a new MTLRenderPipelineState object asynchronously.

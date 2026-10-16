@@ -1,0 +1,9 @@
+{
+  "animation-owned": {
+    "wo": "WO-RUST-SVG-ANIMATION-OWNED-01",
+    "crate": "vexel-svg-animation",
+    "effort": "high",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-owned"
+  }
+}

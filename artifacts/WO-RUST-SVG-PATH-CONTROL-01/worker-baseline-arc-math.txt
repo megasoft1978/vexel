@@ -1,0 +1,48 @@
+pub(crate) fn arc(edges: &mut Vec<Edge>, transform: Affine, from: Point, rx: f64, ry: f64, rotation: f64, large: bool, sweep: bool, to: Point, tolerance: f64, max_edges: usize, offset: usize) -> Result<(), Diagnostic> {
+    let mut rx = rx.abs();
+    let mut ry = ry.abs();
+    if rx == 0.0 || ry == 0.0 { return edge(edges, transform, from, to, max_edges, offset); }
+    if from == to { return Ok(()); }
+    let phi = rotation * 0.017453292519943295;
+    let (cp, sp) = (phi.cos(), phi.sin());
+    let (dx, dy) = ((from.x - to.x) * 0.5, (from.y - to.y) * 0.5);
+    let (xp, yp) = (cp * dx + sp * dy, -sp * dx + cp * dy);
+    let scale = xp * xp / (rx * rx) + yp * yp / (ry * ry);
+    if !scale.is_finite() { return Err(failure(DiagnosticKind::Number, offset)); }
+    if scale > 1.0 { let factor = scale.sqrt(); rx *= factor; ry *= factor; }
+    let numerator = rx * rx * ry * ry - rx * rx * yp * yp - ry * ry * xp * xp;
+    let denominator = rx * rx * yp * yp + ry * ry * xp * xp;
+    let ratio = if denominator == 0.0 { 0.0 } else { (numerator / denominator).max(0.0) };
+    let sign = if large == sweep { -1.0 } else { 1.0 };
+    let coefficient = sign * ratio.sqrt();
+    let cxp = coefficient * (rx * yp / ry);
+    let cyp = coefficient * (-ry * xp / rx);
+    let cx = cp * cxp - sp * cyp + (from.x + to.x) * 0.5;
+    let cy = sp * cxp + cp * cyp + (from.y + to.y) * 0.5;
+    let (ux, uy) = ((xp - cxp) / rx, (yp - cyp) / ry);
+    let (vx, vy) = ((-xp - cxp) / rx, (-yp - cyp) / ry);
+    let start = uy.atan2(ux);
+    let mut delta = (ux * vy - uy * vx).atan2(ux * vx + uy * vy);
+    if !sweep && delta > 0.0 { delta -= std::f64::consts::TAU; }
+    if sweep && delta < 0.0 { delta += std::f64::consts::TAU; }
+    let radius = rx.max(ry);
+    let max_angle = if radius <= tolerance { std::f64::consts::TAU } else { 2.0 * (1.0 - tolerance / radius).max(-1.0).acos() };
+    let raw = (delta.abs() / max_angle).ceil();
+    if !raw.is_finite() || raw > MAX_COORDINATE * 4.0 || raw > max_edges as f64 { return Err(failure(DiagnosticKind::Limit, offset)); }
+    let steps = (raw as usize).max(1);
+    if steps > max_edges.saturating_sub(edges.len()) { return Err(failure(DiagnosticKind::Limit, offset)); }
+    edges.try_reserve(steps).map_err(|_| oom(offset))?;
+    let mut previous = from;
+    for index in 1..=steps {
+        let angle = start + delta * index as f64 / steps as f64;
+        let mut point = Point {
+            x: cx + cp * rx * angle.cos() - sp * ry * angle.sin(),
+            y: cy + sp * rx * angle.cos() + cp * ry * angle.sin(),
+        };
+        if index == steps { point = to; }
+        if !bounded(point) { return Err(failure(DiagnosticKind::Number, offset)); }
+        edge(edges, transform, previous, point, max_edges, offset)?;
+        previous = point;
+    }
+    Ok(())
+}

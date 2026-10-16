@@ -1,0 +1,5 @@
+WO-PROJECT-06 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 3722bb5ef7e2d53a5bfc10bd55b4101512f0c28e76f4968ec6fe402016e8ff0c
+Allowlist and protected paths are frozen in work/WO-PROJECT-06.md.
+Scope: immutable piece-table snapshot only; no app autosave scheduling or recovery UI.

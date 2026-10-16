@@ -1,0 +1,54 @@
+WO-MCP-TASK-PROTOCOL-01 focused verification
+Date: 2026-10-14
+Worktree HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Scope and audits
+- Read OWNER-DIRECTIVES.md, AGENTS.md, and the frozen work order.
+- Coordinator supplied overlay-baseline.json; protocol implementation files were clean at start.
+- Existing mcp_tool_response/mcp_protocol_backend layouts were not changed.
+- tests/mcp/mcp_protocol_test.c still matches overlay-baseline.json SHA-256
+  73d230a554bdeec12190640e2b98cf8d47741b4fef2233469abc599ef04fd166;
+  existing assertions were not edited.
+- tests/test_map.json parses as JSON. Async test target and test registration
+  appear only in the MCP registrations.
+- Source/test line counts after review repair: protocol 604, async helper 298,
+  async header 49, async dispatcher test 429; each C file is below 800 lines.
+- `git diff --check`: passed.
+
+Commands
+- `cmake --preset mac-debug`: passed; output in configure.txt.
+- `cmake --build build/mac-debug --target mcp_protocol_async_test
+  mcp_protocol_test vexel-mcp`: passed after review repair; output in
+  build-repair.txt.
+- `ctest --test-dir build/mac-debug --output-on-failure
+  -R '^mcp-(protocol|protocol-async)$'`: 2/2 passed after review repair;
+  output in ctest-repair.txt.
+- `python3 scripts/wo_validate.py WO-MCP-TASK-PROTOCOL-01 --ready`: passed.
+- `python3 scripts/ledger.py validate ledger.jsonl`: passed (1015 entries).
+
+The async test parses every nonempty dispatcher response and verifies the
+JSON-RPC envelope and exact original request ID. It exercises ready/unready
+capability advertisement, object-type and per-request Tasks negotiation, durable
+fake task creation, detailed working/completed/tool-isError/failed/cancelled
+responses, unknown/foreign/expired IDs, empty cancel ack then cooperative
+terminal transition, sync fallback, legacy deferred/cancellation routing without
+a response, per-method malformed and oversized payload validation, timestamp/TTL/
+task-ID bounds, scalar request IDs, modern metadata merging, and legacy progress
+token/message/progress bounds and monotonicity. The unchanged synchronous suite
+passed in the same focused CTest run.
+
+Captured protocol rules used from the frozen sources (fetched by coordinator
+2026-10-14; no network access in this worktree):
+- https://tasks.extensions.modelcontextprotocol.io/specification/draft/tasks
+  Current Tasks uses resultType=complete for get/cancel; cancel acknowledges
+  cooperatively and does not force a terminal state.
+- https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/progress
+  Legacy progress uses the original progressToken and total=1000 here.
+- https://modelcontextprotocol.io/specification/2025-11-25/basic/utilities/cancellation
+  Legacy cancellation routes by the original request ID; eventual response
+  suppression belongs to the bridge.
+
+Limitations: no app/broker/worker bridge was changed. Production still supplies
+no async backend and therefore advertises no Tasks capability. No live client,
+UI, E2E, or broad-suite run was performed. Build/test logs also preserve the
+first compile and test failures and their narrowed fixes.

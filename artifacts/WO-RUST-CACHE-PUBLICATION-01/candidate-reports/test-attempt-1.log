@@ -1,0 +1,28 @@
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene)
+error[E0599]: no variant, associated function, or constant named `Cancelled` found for enum `vexel_scene::Stop` in the current scope
+  --> rust/crates/vexel-scene/tests/cache_publication.rs:10:75
+   |
+10 |     fn checkpoint(&mut self) -> std::result::Result<(), Stop> { Err(Stop::Cancelled) }
+   |                                                                           ^^^^^^^^^ variant, associated function, or constant not found in `vexel_scene::Stop`
+   |
+help: there is a variant with a similar name
+   |
+10 -     fn checkpoint(&mut self) -> std::result::Result<(), Stop> { Err(Stop::Cancelled) }
+10 +     fn checkpoint(&mut self) -> std::result::Result<(), Stop> { Err(Stop::Canceled) }
+   |
+
+error[E0599]: no variant, associated function, or constant named `Cancelled` found for enum `vexel_scene::Stop` in the current scope
+  --> rust/crates/vexel-scene/tests/cache_publication.rs:11:92
+   |
+11 |     fn charge(&mut self, _: WorkKind, _: u64) -> std::result::Result<(), Stop> { Err(Stop::Cancelled) }
+   |                                                                                            ^^^^^^^^^ variant, associated function, or constant not found in `vexel_scene::Stop`
+   |
+help: there is a variant with a similar name
+   |
+11 -     fn charge(&mut self, _: WorkKind, _: u64) -> std::result::Result<(), Stop> { Err(Stop::Cancelled) }
+11 +     fn charge(&mut self, _: WorkKind, _: u64) -> std::result::Result<(), Stop> { Err(Stop::Canceled) }
+   |
+
+For more information about this error, try `rustc --explain E0599`.
+error: could not compile `vexel-scene` (test "cache_publication") due to 2 previous errors
+warning: build failed, waiting for other jobs to finish...

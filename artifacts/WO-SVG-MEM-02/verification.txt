@@ -1,0 +1,63 @@
+WO-SVG-MEM-02 revision 1 verification
+Date: 2026-10-13
+Model: gpt-6.1-sol
+Base/head: 19234a036ed6a8d40c2ccdaec9b8186806d70eca / working tree
+
+Implementation
+- Default solid strokes now use a zero 32-bit per-shape stroke-paint index.
+  Non-default gradient and pattern strokes append records to a bounded compact
+  table; fill and stroke records have centralized shape accessors.
+- Stroke resolution, raster sampling/preflight, scalar reference, grouped views,
+  and animation render copies resolve sparse stroke records. Shared paint-stop
+  storage and existing solid/pattern/gradient behavior remain in place.
+- Focused assertions verify that a solid stroke allocates no stroke-paint
+  records and a linear-gradient stroke has exactly one mapped record.
+- The 65,536-shape ceiling and all other resource ceilings remain unchanged.
+
+Focused matrix
+- `cmake --build --preset mac-debug --target svgworkbench shape_test
+  gradient_stroke_test`: PASS; focused Debug CTest command below: 3/3 PASS.
+- `cmake --build --preset mac-asan --target svgworkbench shape_test
+  gradient_stroke_test`: PASS; focused ASan/UBSan CTest command below: 3/3 PASS.
+- `cmake --build --preset mac-ubsan --target svgworkbench shape_test
+  gradient_stroke_test`: PASS; focused UBSan CTest command below: 3/3 PASS.
+- In each configuration:
+  `ctest --test-dir build/<preset> --output-on-failure -R
+  '^(shape-render|svg-gradient-stroke|svg-animation)$'`: PASS.
+- Total focused executions: 9/9 passed. All three CTest names were confirmed
+  registered in each configuration. No broad UI/E2E, corpus, fuzz, or
+  performance suite was run.
+
+Storage estimate (static size arithmetic, not process RSS)
+- `sizeof(svg_shape_paint)` is 272 bytes; a stroke shape-to-record index is 4
+  bytes. At 65,536 shapes, the former dense array reserved 17,825,792 bytes
+  whenever any non-solid stroke appeared. With one non-default stroke, the
+  sparse representation reserves a 262,144-byte index map and an eight-record
+  initial table (2,176 bytes), about 17,561,472 bytes less. Documents in which
+  most shapes have non-default strokes still require corresponding records;
+  no corpus RSS or throughput result is claimed.
+
+Repository checks
+- Frozen work order revision 1 validates, SHA-256
+  `e52465c6f71c930eb77d18653ca5e5fd8cb3de8a8c794ee177d112a2ffee8804`.
+- `python3 scripts/wo_validate.py WO-SVG-MEM-02 --ready`: PASS.
+- `python3 scripts/ledger.py validate ledger.jsonl`: PASS.
+- `python3 -m json.tool tests/test_map.json`: PASS. Static quick-test
+  selection for the touched SVG
+  and raster paths includes `shape-render` and `svg-*`; no selector-driven
+  broad tests were run.
+- `git diff --check`: PASS; final source line checks pass.
+- Source line counts: `shape.h` 341; `shape_internal.h` 243;
+  `shape_geometry.c` 717; `shape_custom.c` 162; `pattern.c` 637;
+  `document.c` 157; `shape_render_sample.c` 305;
+  `shape_render_preflight.c` 435; `shape_render.c` 540;
+  `shape_render_group.c` 556; `shape_render_animation.c` 741;
+  `shape_render_reference.c` 338; `gradient_stroke_test.c` 117.
+  All are below the 800-line limit.
+
+Limitations
+- Sparse records reduce memory when non-default strokes are uncommon. They do
+  not reduce paint-record count when every shape has a distinct non-default
+  stroke. The synthetic Inkscape T2 shape ceiling remains; record sharing,
+  other per-shape metadata, measured peak RSS, and a separately scoped limit
+  decision remain future work.

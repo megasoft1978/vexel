@@ -1,0 +1,1 @@
+BLOCKED: the repository is in read-only mode, so I can’t inspect the requested files. I made no edits and ran no builds, tests, or network calls.

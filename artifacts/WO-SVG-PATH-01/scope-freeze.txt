@@ -1,0 +1,5 @@
+WO-SVG-PATH-01 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 1565ed9e7e999443174d6b73303712ddd544b45811f69edbe5a71ff0103b2b12
+Allowlist and protected paths are frozen in work/WO-SVG-PATH-01.md.
+Scope: accept valid adjacent decimal path operands with focused source-span, geometry, and negative coverage. Broad UI/E2E and corpus suites remain deferred.

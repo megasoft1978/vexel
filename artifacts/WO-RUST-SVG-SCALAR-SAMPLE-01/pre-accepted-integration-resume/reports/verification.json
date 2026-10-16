@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-SCALAR-SAMPLE-01",
+  "candidate_only": true,
+  "completion_status": "INCOMPLETE; not ready for owner-scope acceptance",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-scalar-sample --locked --offline",
+      "exit_code": 0,
+      "result": "Finished dev profile successfully; no warnings or errors."
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-scalar-sample --locked --offline",
+      "exit_code": 0,
+      "result": "6 unit tests and 3 integration tests passed; doc-tests 0 passed, 0 failed."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-SCALAR-SAMPLE-01 --ready",
+      "exit_code": 0,
+      "result": "valid WO-RUST-SVG-SCALAR-SAMPLE-01 revision 1 sha256 7200bbedb3e1b381058caa81784bae4d1cdf501b21e126ef1d590b3e966c9d1f"
+    }
+  ],
+  "formatting": {
+    "command": "rustfmt --edition 2024 on each owned src/*.rs and tests/*.rs",
+    "exit_code": 0,
+    "result": "All owned Rust files formatted."
+  },
+  "not_run": [
+    "No claim of full 51-symbol accepted production completion: dash/grid builder and fill row still use legacy Vec-backed storage.",
+    "Original 603/157 renderer-oracle suite and mixed whole C/Python cases remain unchanged and require later real renderer composition.",
+    "Independent Luna review, protected-scope audit and fresh main focused checks remain coordinator acceptance gates."
+  ],
+  "scope_audit": {
+    "immutable_scope_sha256": "1c4992c4230e4b4dcc619ccb6e2bf720d8463d45677a4065e50d68dd4c2cb922",
+    "catalog_source_files_verified": 5,
+    "assigned_original_suite_files_verified": 4,
+    "result": "Frozen inputs preserved; full owned completion and original pure-case coverage are not achieved."
+  }
+}

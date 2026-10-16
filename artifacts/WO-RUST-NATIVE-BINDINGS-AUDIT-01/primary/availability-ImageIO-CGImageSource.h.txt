@@ -1,0 +1,223 @@
+310:  *
+311:  * - Returns: An image source. You're responsible for releasing this type using <doc://com.apple.documentation/documentation/corefoundation/cfrelease>.
+312:  */
+313: IMAGEIO_EXTERN CGImageSourceRef _iio_Nullable CGImageSourceCreateWithDataProvider(CGDataProviderRef _iio_Nonnull provider, CFDictionaryRef _iio_Nullable options) IMAGEIO_AVAILABLE_STARTING(10.4, 4.0);
+314: 
+315: /* Create an image source reading from `data'.  The `options' dictionary
+316:  * may be used to request additional creation options; see the list of keys
+317:  * above for more information. */
+318: 
+319: /**
+320:  * Creates an image source that reads from a Core Foundation data object.
+321:  *
+322:  * - Parameters:
+323:  *
+324:  *   - data: The data object from which to read. For more information on data objects, see <doc://com.apple.documentation/documentation/corefoundation/cfdata> and [Data Objects](https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBinaryData/DataObjects.html#//apple_ref/doc/uid/20000171).
+
+328:  *
+329:  * - Returns: An image source. You're responsible for releasing this type using <doc://com.apple.documentation/documentation/corefoundation/cfrelease>.
+330:  */
+331: IMAGEIO_EXTERN CGImageSourceRef _iio_Nullable CGImageSourceCreateWithData(CFDataRef _iio_Nonnull data, CFDictionaryRef _iio_Nullable options) IMAGEIO_AVAILABLE_STARTING(10.4, 4.0);
+332: 
+333: /* Create an image source reading from `url'. The `options' dictionary may
+334:  * be used to request additional creation options; see the list of keys
+335:  * above for more information. */
+336: 
+337: /**
+338:  * Creates an image source that reads from a location specified by a URL.
+339:  *
+340:  * - Parameters:
+341:  *   - url: The URL of the image.
+342:  *   - options: A dictionary that specifies additional creation options. For a list of possible values, see <doc:CGImageSource#Specifying-the-Read-Options>.
+
+377:  *
+378:  * This function does not extract the layers of a PSD file.
+379:  */
+380: IMAGEIO_EXTERN size_t CGImageSourceGetCount(CGImageSourceRef _iio_Nonnull isrc)  IMAGEIO_AVAILABLE_STARTING(10.4, 4.0);
+381: 
+382: /* Return the properties of the image source `isrc'.  These properties
+383:  * apply to the container in general but not necessarily to any individual
+384:  * image that it contains. */
+385: 
+386: /**
+387:  * Returns the properties of the image source.
+388:  *
+389:  * - Parameters:
+390:  *   - isrc: The image source that contains the image data.
+391:  *   - options: A dictionary you can use to request additional options. For a list of possible values, see <doc:CGImageSource#Specifying-the-Read-Options>.
+
+110:  */
+111: IMAGEIO_EXTERN const CFStringRef kCGImageSourceAllowableTypes  IMAGEIO_AVAILABLE_STARTING(27.0, 27.0, 27.0, 27.0);
+112: 
+113: /** Keys for the options dictionary of "CGImageSourceCopyPropertiesAtIndex"
+114:  ** and "CGImageSourceCreateImageAtIndex". **/
+115: 
+116: /* Specifies whether the image should be cached in a decoded form. The
+117:  * value of this key must be a CFBooleanRef.
+118:  * kCFBooleanFalse indicates no caching, kCFBooleanTrue indicates caching.
+119:  * For 64-bit architectures, the default is kCFBooleanTrue, for 32-bit the default is kCFBooleanFalse.
+120:  */
+121: 
+122: /**
+123:  * A Boolean value that indicates whether to cache the decoded image.
+124:  *
+
+124:  *
+125:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleantrue> for 64-bit architectures, and <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse> for 32-bit architectures.
+126:  *
+127:  * Include this key in the options dictionary you pass to the functions ``CGImageSourceCopyPropertiesAtIndex(_:_:_:)`` and ``CGImageSourceCreateImageAtIndex(_:_:_:)``.
+128:  */
+129: IMAGEIO_EXTERN const CFStringRef kCGImageSourceShouldCache  IMAGEIO_AVAILABLE_STARTING(10.4, 4.0);
+130: 
+131: /* Specifies whether image decoding and caching should happen at image creation time.
+132:  * The value of this key must be a CFBooleanRef. The default value is kCFBooleanFalse (image decoding will
+133:  * happen at rendering time).
+134:  */
+135: /**
+136:  * A Boolean value that indicates whether image decoding and caching happens at image creation time.
+137:  *
+138:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse>, which causes decoding and caching to happen only when you render the image.
+
+137:  *
+138:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse>, which causes decoding and caching to happen only when you render the image.
+139:  *
+140:  * Include this key in the options dictionary you pass to the functions ``CGImageSourceCopyPropertiesAtIndex(_:_:_:)`` and ``CGImageSourceCreateImageAtIndex(_:_:_:)``.
+141:  */
+142: IMAGEIO_EXTERN const CFStringRef kCGImageSourceShouldCacheImmediately  IMAGEIO_AVAILABLE_STARTING(10.9, 7.0);
+143: 
+144: /* Specifies whether the image should be returned as a floating
+145:  * point CGImageRef if supported by the file format. Extended
+146:  * range floating point CGImageRef may require additional
+147:  * processing  to render pleasingly.  The value of this key must
+148:  * be a CFBooleanRef; the default value is kCFBooleanFalse. */
+149: 
+150: /**
+151:  * A Boolean that indicates whether to use floating-point values in returned images.
+
+168:  *
+169:  * Currently, image sources support this option only for camera RAW images. This key is a no-op when it is absent or <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse>, when the image isn't a camera RAW format, or when no higher-quality decode method is available, so it is always safe to set.
+170:  *
+171:  * Include this key in the options dictionary you pass to the functions ``CGImageSourceCopyPropertiesAtIndex(_:_:_:)`` and ``CGImageSourceCreateImageAtIndex(_:_:_:)``.
+172:  *
+173:  * ## Example
+174:  * @TabNavigator {
+175:  *   @Tab("Swift") {
+176:  *     ```swift
+177:  *     let options = [
+178:  *         kCGImageSourcePrioritizeQuality: true
+179:  *     ] as CFDictionary
+180:  *     let image = CGImageSourceCreateImageAtIndex(source, 0, options)
+181:  *     ```
+182:  *   }
+
+411:  *
+412:  * - Returns: A dictionary that contains the properties associated with the image. See `CGImageProperties` for a list of properties that allowed in the dictionary.
+413:  */
+414: IMAGEIO_EXTERN CFDictionaryRef _iio_Nullable CGImageSourceCopyPropertiesAtIndex(CGImageSourceRef _iio_Nonnull isrc, size_t index, CFDictionaryRef _iio_Nullable options)  IMAGEIO_AVAILABLE_STARTING(10.4, 4.0);
+415: 
+416: /* Return the metadata of the image at `index' in the image source
+417:  * `isrc'. The index is zero-based. The `options' dictionary may be used
+418:  * to request additional options; see the list of keys above for more
+419:  * information. Please refer to CGImageMetadata.h for usage of metadata. */
+420: IMAGEIO_EXTERN CGImageMetadataRef _iio_Nullable CGImageSourceCopyMetadataAtIndex (CGImageSourceRef _iio_Nonnull isrc, size_t index, CFDictionaryRef _iio_Nullable options) IMAGEIO_AVAILABLE_STARTING(10.8,7.0);
+421: 
+422: /* Return the image at `index' in the image source `isrc'.  The index is
+423:  * zero-based. The `options' dictionary may be used to request additional
+424:  * creation options; see the list of keys above for more information. */
+425: 
+
+111: IMAGEIO_EXTERN const CFStringRef kCGImageSourceAllowableTypes  IMAGEIO_AVAILABLE_STARTING(27.0, 27.0, 27.0, 27.0);
+112: 
+113: /** Keys for the options dictionary of "CGImageSourceCopyPropertiesAtIndex"
+114:  ** and "CGImageSourceCreateImageAtIndex". **/
+115: 
+116: /* Specifies whether the image should be cached in a decoded form. The
+117:  * value of this key must be a CFBooleanRef.
+118:  * kCFBooleanFalse indicates no caching, kCFBooleanTrue indicates caching.
+119:  * For 64-bit architectures, the default is kCFBooleanTrue, for 32-bit the default is kCFBooleanFalse.
+120:  */
+121: 
+122: /**
+123:  * A Boolean value that indicates whether to cache the decoded image.
+124:  *
+125:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleantrue> for 64-bit architectures, and <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse> for 32-bit architectures.
+
+124:  *
+125:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleantrue> for 64-bit architectures, and <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse> for 32-bit architectures.
+126:  *
+127:  * Include this key in the options dictionary you pass to the functions ``CGImageSourceCopyPropertiesAtIndex(_:_:_:)`` and ``CGImageSourceCreateImageAtIndex(_:_:_:)``.
+128:  */
+129: IMAGEIO_EXTERN const CFStringRef kCGImageSourceShouldCache  IMAGEIO_AVAILABLE_STARTING(10.4, 4.0);
+130: 
+131: /* Specifies whether image decoding and caching should happen at image creation time.
+132:  * The value of this key must be a CFBooleanRef. The default value is kCFBooleanFalse (image decoding will
+133:  * happen at rendering time).
+134:  */
+135: /**
+136:  * A Boolean value that indicates whether image decoding and caching happens at image creation time.
+137:  *
+138:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse>, which causes decoding and caching to happen only when you render the image.
+
+137:  *
+138:  * The value of this key is a <doc://com.apple.documentation/documentation/corefoundation/cfboolean>. The default value is <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse>, which causes decoding and caching to happen only when you render the image.
+139:  *
+140:  * Include this key in the options dictionary you pass to the functions ``CGImageSourceCopyPropertiesAtIndex(_:_:_:)`` and ``CGImageSourceCreateImageAtIndex(_:_:_:)``.
+141:  */
+142: IMAGEIO_EXTERN const CFStringRef kCGImageSourceShouldCacheImmediately  IMAGEIO_AVAILABLE_STARTING(10.9, 7.0);
+143: 
+144: /* Specifies whether the image should be returned as a floating
+145:  * point CGImageRef if supported by the file format. Extended
+146:  * range floating point CGImageRef may require additional
+147:  * processing  to render pleasingly.  The value of this key must
+148:  * be a CFBooleanRef; the default value is kCFBooleanFalse. */
+149: 
+150: /**
+151:  * A Boolean that indicates whether to use floating-point values in returned images.
+
+168:  *
+169:  * Currently, image sources support this option only for camera RAW images. This key is a no-op when it is absent or <doc://com.apple.documentation/documentation/corefoundation/kcfbooleanfalse>, when the image isn't a camera RAW format, or when no higher-quality decode method is available, so it is always safe to set.
+170:  *
+171:  * Include this key in the options dictionary you pass to the functions ``CGImageSourceCopyPropertiesAtIndex(_:_:_:)`` and ``CGImageSourceCreateImageAtIndex(_:_:_:)``.
+172:  *
+173:  * ## Example
+174:  * @TabNavigator {
+175:  *   @Tab("Swift") {
+176:  *     ```swift
+177:  *     let options = [
+178:  *         kCGImageSourcePrioritizeQuality: true
+179:  *     ] as CFDictionary
+180:  *     let image = CGImageSourceCreateImageAtIndex(source, 0, options)
+181:  *     ```
+182:  *   }
+
+177:  *     let options = [
+178:  *         kCGImageSourcePrioritizeQuality: true
+179:  *     ] as CFDictionary
+180:  *     let image = CGImageSourceCreateImageAtIndex(source, 0, options)
+181:  *     ```
+182:  *   }
+183:  *   @Tab("Objective-C") {
+184:  *     ```objc
+185:  *     NSDictionary *options = @{
+186:  *         (id)kCGImageSourcePrioritizeQuality: @YES
+187:  *     };
+188:  *     CGImageRef image = CGImageSourceCreateImageAtIndex(source, 0, (CFDictionaryRef)options);
+189:  *     ```
+190:  *   }
+191:  * }
+
+185:  *     NSDictionary *options = @{
+186:  *         (id)kCGImageSourcePrioritizeQuality: @YES
+187:  *     };
+188:  *     CGImageRef image = CGImageSourceCreateImageAtIndex(source, 0, (CFDictionaryRef)options);
+189:  *     ```
+190:  *   }
+191:  * }
+192:  */
+193: IMAGEIO_EXTERN const CFStringRef kCGImageSourcePrioritizeQuality  IMAGEIO_AVAILABLE_STARTING(27.0, 27.0, 27.0, 27.0);
+194: 
+195: /** Keys for the options dictionary of
+196:  ** "CGImageSourceCreateThumbnailAtIndex". **/
+197: 
+198: /* Specifies whether a thumbnail should be automatically created for an
+199:  * image if a thumbnail isn't present in the image source file.  The

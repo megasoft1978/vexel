@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "changed_existing_paths": [
+    "rust/crates/vexel-scene/README.md",
+    "rust/crates/vexel-scene/src/decode_contract.rs",
+    "rust/crates/vexel-scene/src/lib.rs"
+  ],
+  "original82tests_byte_preserved": true,
+  "manifests_config_unchanged": true,
+  "HEAD_index_unchanged": true
+}

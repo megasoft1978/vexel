@@ -1,0 +1,112 @@
+{
+  "workers": [
+    {
+      "name": "inventory_schedule",
+      "exit_code": 0,
+      "effort": "low",
+      "usage": {
+        "input_tokens": 1509243,
+        "cached_input_tokens": 1396224,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4942,
+        "reasoning_output_tokens": 0
+      },
+      "items": {
+        "agent_message": 4,
+        "command_execution": 10,
+        "web_search": 11
+      }
+    },
+    {
+      "name": "mcp_async",
+      "exit_code": 0,
+      "effort": "high",
+      "usage": {
+        "input_tokens": 611958,
+        "cached_input_tokens": 521472,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4523,
+        "reasoning_output_tokens": 1672
+      },
+      "items": {
+        "agent_message": 3,
+        "command_execution": 5,
+        "web_search": 5
+      }
+    },
+    {
+      "name": "platform_ui",
+      "exit_code": 0,
+      "effort": "high",
+      "usage": {
+        "input_tokens": 632293,
+        "cached_input_tokens": 540672,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4998,
+        "reasoning_output_tokens": 2105
+      },
+      "items": {
+        "agent_message": 2,
+        "command_execution": 3,
+        "web_search": 8
+      }
+    },
+    {
+      "name": "projects_animation",
+      "exit_code": 0,
+      "effort": "medium",
+      "usage": {
+        "input_tokens": 200908,
+        "cached_input_tokens": 161280,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2421,
+        "reasoning_output_tokens": 396
+      },
+      "items": {
+        "agent_message": 3,
+        "command_execution": 3,
+        "web_search": 2
+      }
+    },
+    {
+      "name": "svg_render",
+      "exit_code": 0,
+      "effort": "high",
+      "usage": {
+        "input_tokens": 610751,
+        "cached_input_tokens": 520448,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6516,
+        "reasoning_output_tokens": 3434
+      },
+      "items": {
+        "agent_message": 3,
+        "command_execution": 6,
+        "web_search": 4
+      }
+    },
+    {
+      "name": "toolchain",
+      "exit_code": 0,
+      "effort": "medium",
+      "usage": {
+        "input_tokens": 296337,
+        "cached_input_tokens": 241664,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2855,
+        "reasoning_output_tokens": 519
+      },
+      "items": {
+        "agent_message": 3,
+        "command_execution": 4,
+        "web_search": 3
+      }
+    }
+  ],
+  "total": {
+    "input_tokens": 3861490,
+    "output_tokens": 26255,
+    "cached_input_tokens": 3381760
+  },
+  "note": "CLI-reported token counts, not account allowance/billing meter."
+}

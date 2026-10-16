@@ -1,0 +1,548 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-DEFINITIONS-01",
+  "status": "INCOMPLETE_CANDIDATE",
+  "scope_catalog_sha256": "1435986a9a2a30a7d7e8591a24d7cd0fd5c54111f78754692888fd91118c34d2",
+  "catalog_symbol_count": 79,
+  "original_suite_count": 10,
+  "assigned_original_suites": [
+    {
+      "suite": "tests/svg/shape/clip_definition_scope_test.c",
+      "sha256": "1e744b64b71817e5fe955bd007e92a6b2d5487759cb95f5f2c32753bdb024cf6",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "center_is_clipped",
+          "line": 68,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "original_clip_rule_inheritance_and_rejections_are_preserved: direct/style inherited fill-rule predicates; raster center pixels remain integration proof",
+            "caller_rolls_back_late_group_apply_failure_and_restores_draft (late second-shape limit after a committed draft shape mutation, followed by rollback)",
+            "caller_rolls_back_late_group_apply_cancel_and_restores_draft (late cancellation after one actual shape mutation, followed by caller rollback)"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "main",
+          "line": 87,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "original_marker_shorthand_and_viewport_units_are_preserved"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/shape/marker_realloc_test.c",
+      "sha256": "003f92e3beb5987f15da1131fd44658c2ed2d6946d5d42688a182bee581d436b",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "render_case",
+          "line": 9,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "marker::tests::mid_markers_follow_authored_segments_not_flattened_edges",
+            "real_scene_clip_query_mutation_and_deduplicated_overlay; reallocating renderer append remains unproven",
+            "marker::tests::path_marker_loop_charges_empty_segments_and_stops_without_partial_output",
+            "marker::tests::marker_aspect_span_overflow_is_a_diagnostic",
+            "marker::tests::path_marker_loop_charges_empty_segments_and_stops_without_partial_output",
+            "marker::tests::primitive_marker_pair_loop_charges_before_each_pair",
+            "marker::tests::marker_aspect_span_overflow_is_a_diagnostic"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "main",
+          "line": 24,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "original_marker_shorthand_and_viewport_units_are_preserved"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/shape/paint_clip_generator.py",
+      "sha256": "8d4ad97a2ab4ab85e22c3a79ae68a2e073defb10464f14f3b8f61b994016da0b",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [],
+      "full_input_preserved": true,
+      "reason": "The Rust fixture generator now ports the assigned pure helper behavior. The original renderer differential suite remains unrun and its input/oracle is unchanged.",
+      "rust_helper_coverage": {
+        "helper": "random_paint_clip_document",
+        "source_line": 3,
+        "status": "PURE_HELPER_PORTED; ORIGINAL_RENDERER_HARNESS_NOT_RUN",
+        "rust_evidence": "seeded_generator_preserves_original_paint_clip_fixture_matrix; deterministic SplitMix64 seed 0x5041494e545f434c; 12 generated outputs check all six index cycles and source fixture elements/attributes",
+        "original_python_source_unchanged": true,
+        "note": "Original helper injects a Python RNG; Rust preserves its choices/ranges/template with an explicit deterministic seed stream, not Python random.Random bit-for-bit output."
+      }
+    },
+    {
+      "suite": "tests/svg/shape/test_clip_work_budget.c",
+      "sha256": "69ffa0e94eed273d88b13ee362720bd3840b0d5b459c39cdbe6f17de44aeb60d",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "append_text",
+          "line": 17,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "definition_plans::clip_boundary_source creates bounded source buffers; original 4 MiB pathological generator remains unrun"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "append_format",
+          "line": 28,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "definition_plans::clip_boundary_source uses checked exact-length construction; original variadic helper remains unrun"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "build_pathological_document",
+          "line": 41,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "no equivalent 60x64x32768 scene-boundary fixture; requires coordinator scene/query/raster integration"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "clip_boundary_accounting_check",
+          "line": 82,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "clip query proof covers exact simple chain/child/edge totals; 200M-work raster preflight remains later integration"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "clip_wrapper_extreme_check",
+          "line": 73,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "clip::tests::wrapper_admission_retains_extreme_viewbox_budget proves frozen 155/192/4096 bounds; original decode/preserve-source assertion remains integration proof"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "group_clip_scratch_resolved_once_check",
+          "line": 200,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "real_source_scene_plans_all_five_definition_kinds resolves canonical references and emits direct ranges without scratch source",
+            "caller_rolls_back_late_group_apply_failure_and_restores_draft (logical draft table/shape restoration)",
+            "caller_rolls_back_late_group_apply_cancel_and_restores_draft (logical draft shape/clip table restoration)"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "build_clip_boundary_source",
+          "line": 291,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "clip boundary visitor test covers ordered real scene edges; original generated input preserved for full decoder integration"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "decode_clip_boundary",
+          "line": 342,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "real_scene_clip_query_mutation_and_deduplicated_overlay covers scene clip mapping and boundaries; original renderer boundary mask remains integration proof"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "clip_checks",
+          "line": 329,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "clip geometry, style/source and limit proofs are in clip unit and focused integration tests; original pixel/render assertions remain integration proof"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "clip_work_budget_check",
+          "line": 468,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "clip query work_counts/work_units and controlled scan stopping are tested; pathological renderer budget remains integration proof"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/shape/test_w5_render.py",
+      "sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "test_pattern_user_space_tile_and_repeat_matches_librsvg",
+          "line": 52,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "real_source_scene_plans_all_five_definition_kinds covers typed planning; PatternMapping proves tile origin/inverse; raster oracle remains later"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_pattern_object_box_viewbox_and_transform_matches_librsvg",
+          "line": 69,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "PatternMapping and real scene test cover bbox tile/viewBox/transform math; raster oracle remains later"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_pattern_stroke_tiles_on_open_path_matches_librsvg",
+          "line": 83,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "primitive marker/typed plans only; pattern stroke paint raster requires later adapter"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_marker_start_mid_end_orient_and_ref_matches_librsvg",
+          "line": 191,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "original_marker_shorthand_and_viewport_units_are_preserved; authored path placement math test; raster oracle remains later"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_marker_viewbox_and_stroke_width_units_matches_librsvg",
+          "line": 216,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "marker viewport/viewBox/unit assertions pass in focused plans; raster oracle remains later"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_marker_children_inherit_definition_ancestors_not_referencing_path",
+          "line": 230,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "real_source_scene_plans_all_five_definition_kinds proves defs ancestor fill and explicit marker-mid retention"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_marker_shorthand_maps_to_start_mid_and_end",
+          "line": 247,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "original_marker_shorthand_and_viewport_units_are_preserved resolves shorthand for all 3 positions"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/svg/test_text_image_render.py",
+      "sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22",
+      "primary_owner": "MEDIA",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "test_embedded_image_render_matches_librsvg_through_clip_transform_and_opacity",
+          "line": 82,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "media source map/provider plus real clip render composition remains later; original fixture preserved"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    },
+    {
+      "suite": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "test_user_space_clip_half_pixel_edge_uses_4x4_samples",
+          "line": 169,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "requires renderer/kernel sample loop; original oracle preserved"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        },
+        {
+          "name": "test_clip_half_pixel_edge_matches_librsvg_at_fractional_boundary",
+          "line": 181,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+          "rust_predicate_evidence": [
+            "requires renderer/kernel sample loop and librsvg oracle; original fixture preserved"
+          ],
+          "original_assertion_and_input": "unchanged; full original case remains required"
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "The assigned original harness needs renderer/kernel/provider or complete traversal composition. Focused evidence is listed per case; no oracle/input was weakened or substituted."
+    }
+  ],
+  "rust_tests": [
+    {
+      "name": "clip::tests::clip_winding_center_inside_and_outside_predicate",
+      "status": "PASS",
+      "kind": "clip query winding and outside predicate"
+    },
+    {
+      "name": "clip::tests::evenodd_clip_rule_preserves_holes_and_nonzero_winding",
+      "status": "PASS",
+      "kind": "nested winding/even-odd hole distinction"
+    },
+    {
+      "name": "clip::tests::clip_local_bounds_maps_every_endpoint_and_rejects_empty",
+      "status": "PASS",
+      "kind": "all endpoint affine bounds and empty range"
+    },
+    {
+      "name": "clip::tests::wrapper_admission_retains_extreme_viewbox_budget",
+      "status": "PASS",
+      "kind": "worst 155-byte user-space wrapper, 192-byte buffer and 4096 cap"
+    },
+    {
+      "name": "tests::controlled_element_scan_stops_at_its_work_budget",
+      "status": "PASS",
+      "kind": "WorkControl stop propagation during token traversal"
+    },
+    {
+      "name": "pattern::tests::pattern_cache_key_uses_exact_render_identity_fields",
+      "status": "PASS",
+      "kind": "exact legacy cache-key fields and ignored error offset"
+    },
+    {
+      "name": "marker::tests::angle_wrap_uses_short_turn",
+      "status": "PASS",
+      "kind": "marker signed remainder turn"
+    },
+    {
+      "name": "marker::tests::element_scale_is_largest_singular_value",
+      "status": "PASS",
+      "kind": "marker transform scale"
+    },
+    {
+      "name": "marker::tests::mid_markers_follow_authored_segments_not_flattened_edges",
+      "status": "PASS",
+      "kind": "authored path segments determine mid marker placements"
+    },
+    {
+      "name": "marker::tests::transform_keeps_position_reference_order",
+      "status": "PASS",
+      "kind": "position/rotation/scale/reference/content transform order"
+    },
+    {
+      "name": "color::tests::original_css_color_assertions",
+      "status": "PASS",
+      "kind": "CSS color assertion values"
+    },
+    {
+      "name": "color::tests::named_table_and_alias_fingerprint",
+      "status": "PASS",
+      "kind": "complete supported named-color table/aliases"
+    },
+    {
+      "name": "color::tests::malformed_bounds_and_grammar",
+      "status": "PASS",
+      "kind": "invalid color grammar and source bounds"
+    },
+    {
+      "name": "tests::filter_supported_primitives_and_named_results",
+      "status": "PASS",
+      "kind": "filter inputs/results/blend and parsed primitives"
+    },
+    {
+      "name": "tests::filter_merge_and_matrix_defaults",
+      "status": "PASS",
+      "kind": "merge list and color matrix defaults"
+    },
+    {
+      "name": "tests::unsupported_filter_keeps_specific_error",
+      "status": "PASS",
+      "kind": "named unsupported primitive error kinds"
+    },
+    {
+      "name": "tests::filter_rejects_unknown_result_and_invalid_region",
+      "status": "PASS",
+      "kind": "strict input/result and custom region diagnostics"
+    },
+    {
+      "name": "tests::local_url_bounds_and_whitespace",
+      "status": "PASS",
+      "kind": "strict bounded local URL parsing"
+    },
+    {
+      "name": "tests::filter_color_uses_full_css_named_and_function_grammar",
+      "status": "PASS",
+      "kind": "CSS filter color parsing"
+    },
+    {
+      "name": "tests::filter_number_lists_accept_signed_adjacency_and_reject_extra_values",
+      "status": "PASS",
+      "kind": "number cursor adjacency and extra-value rejection"
+    },
+    {
+      "name": "tests::marker_attribute_parser_keeps_units_orient_and_viewbox_mapping",
+      "status": "PASS",
+      "kind": "marker units/orient/ref/viewBox values"
+    },
+    {
+      "name": "real_source_scene_plans_all_five_definition_kinds",
+      "status": "PASS",
+      "kind": "real accepted DecodeSource/SceneBuilder plans and resolved references"
+    },
+    {
+      "name": "real_scene_clip_query_mutation_and_deduplicated_overlay",
+      "status": "PASS",
+      "kind": "real DraftToken finalization; query/order/reapply/dedup/update/work"
+    },
+    {
+      "name": "original_marker_shorthand_and_viewport_units_are_preserved",
+      "status": "PASS",
+      "kind": "raw shorthand maps to start/mid/end; real reference resolution and viewport percentages"
+    },
+    {
+      "name": "original_clip_rule_inheritance_and_rejections_are_preserved",
+      "status": "PASS",
+      "kind": "inherited/stylesheet clip-rule, owner-rule isolation, exact bad-value offset"
+    },
+    {
+      "name": "original_clip_source_and_aggregate_boundaries_are_preserved",
+      "status": "PASS",
+      "kind": "exact 64 KiB child / 512 KiB aggregate accept and +1 reject"
+    },
+    {
+      "name": "marker::tests::marker_aspect_span_overflow_is_a_diagnostic",
+      "status": "PASS",
+      "kind": "checked caller-provided preserveAspectRatio offset+length overflow; exact InvalidArgument offset"
+    },
+    {
+      "name": "marker::tests::path_marker_loop_charges_empty_segments_and_stops_without_partial_output",
+      "status": "PASS",
+      "kind": "each authored segment including zero-edge segment charged; mid-loop work-limit and pre-loop cancellation propagate"
+    },
+    {
+      "name": "marker::tests::primitive_marker_pair_loop_charges_before_each_pair",
+      "status": "PASS",
+      "kind": "controlled primitive placement stops at the second pair with exact Expansion cost 1"
+    },
+    {
+      "name": "tests::filter_reference_lookup_is_charged_and_cancellable",
+      "status": "PASS",
+      "kind": "public filter ID lookup charges token visits and propagates work limit/cancellation"
+    },
+    {
+      "name": "caller_rolls_back_late_group_apply_cancel_and_restores_draft",
+      "status": "PASS",
+      "kind": "third checkpoint cancels after first actual finalization; caller DraftToken rollback restores original shape and clip table"
+    },
+    {
+      "name": "seeded_generator_preserves_original_paint_clip_fixture_matrix",
+      "status": "PASS",
+      "kind": "Rust deterministic seeded port of random_paint_clip_document covers 12 outputs across gradient/units/fraction/clip/transform branches"
+    }
+  ],
+  "all_original_inputs_preserved": true,
+  "later_integration_required": [
+    "full clip definition decode/render pixels and source-preservation assertions",
+    "60-level/64-child/32768-shape boundary-work/raster limit fixture",
+    "marker reallocation full generated polyline/path/segment rendering",
+    "7 pattern/librsvg render oracles including open-path stroke tiles",
+    "embedded-image through clip/transform/opacity rendering",
+    "half-pixel clip sample/fidelity oracles",
+    "full definition traversal, real kernel/resource/native provider adapters",
+    "paint adapter consumes PatternMapping because current shared pattern record lacks tile origin/inverse",
+    "mid-loop marker/filter work accounting now has direct stop proofs; full traversal and renderer stop/output preservation remain integration checks",
+    "apply_group is incremental; its actual caller must rollback the active DraftToken after late failure. Rollback restores logical records; Vec capacity is retained by SceneBuilder and is not asserted as deallocated"
+  ],
+  "rust_test_totals": {
+    "unit": 25,
+    "integration": 7,
+    "doc": 0,
+    "failed": 0
+  }
+}

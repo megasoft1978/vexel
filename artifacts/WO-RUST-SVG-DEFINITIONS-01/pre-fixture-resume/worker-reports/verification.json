@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-DEFINITIONS-01",
+  "status": "INCOMPLETE_CANDIDATE",
+  "commands": [
+    {
+      "command": "cargo +stable fmt -p vexel-svg-definitions",
+      "exit_code": 0,
+      "result": "completed"
+    },
+    {
+      "command": "cargo +stable check -p vexel-svg-definitions --locked --offline",
+      "exit_code": 0,
+      "stdout": "Checking vexel-svg-definitions v0.1.0 (rust/crates/vexel-svg-definitions)\nFinished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-definitions --locked --offline",
+      "exit_code": 0,
+      "stdout_summary": "17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s; doc-tests 0 passed, 0 failed"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-DEFINITIONS-01 --ready",
+      "exit_code": 0,
+      "stdout": "valid WO-RUST-SVG-DEFINITIONS-01 revision 1 sha256 0a99711ad6d9d8356a5395384bdf69645d6531e296453e8a68549add61eb1e8d"
+    }
+  ],
+  "not_run": [
+    "full original C/Python SVG suites",
+    "renderer/provider integration checks",
+    "independent Luna review and protected-scope audit",
+    "fresh main focused checks"
+  ],
+  "scope_catalog_sha256": "1435986a9a2a30a7d7e8591a24d7cd0fd5c54111f78754692888fd91118c34d2",
+  "immutability_check": "scope.json SHA256 unchanged"
+}

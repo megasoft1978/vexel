@@ -1,0 +1,145 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/vexel_svg_definitions-721bf29f1eca0ba5)
+
+running 25 tests
+test clip::tests::clip_winding_center_inside_and_outside_predicate ... ok
+test clip::tests::clip_local_bounds_maps_every_endpoint_and_rejects_empty ... ok
+test clip::tests::evenodd_clip_rule_preserves_holes_and_nonzero_winding ... ok
+test clip::tests::wrapper_admission_retains_extreme_viewbox_budget ... ok
+test color::tests::original_css_color_assertions ... ok
+test marker::tests::element_scale_is_largest_singular_value ... ok
+test color::tests::named_table_and_alias_fingerprint ... ok
+test marker::tests::marker_aspect_span_overflow_is_a_diagnostic ... ok
+test marker::tests::angle_wrap_uses_short_turn ... ok
+test color::tests::malformed_bounds_and_grammar ... ok
+test marker::tests::mid_markers_follow_authored_segments_not_flattened_edges ... ok
+test marker::tests::path_marker_loop_charges_empty_segments_and_stops_without_partial_output ... ok
+test marker::tests::transform_keeps_position_reference_order ... ok
+test marker::tests::primitive_marker_pair_loop_charges_before_each_pair ... ok
+test pattern::tests::pattern_cache_key_uses_exact_render_identity_fields ... ok
+test tests::controlled_element_scan_stops_at_its_work_budget ... ok
+test tests::filter_color_uses_full_css_named_and_function_grammar ... ok
+test tests::filter_merge_and_matrix_defaults ... ok
+test tests::filter_number_lists_accept_signed_adjacency_and_reject_extra_values ... ok
+test tests::filter_reference_lookup_is_charged_and_cancellable ... ok
+test tests::filter_rejects_unknown_result_and_invalid_region ... ok
+test tests::filter_supported_primitives_and_named_results ... ok
+test tests::local_url_bounds_and_whitespace ... ok
+test tests::marker_attribute_parser_keeps_units_orient_and_viewbox_mapping ... ok
+test tests::unsupported_filter_keeps_specific_error ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/clip_rollback.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/clip_rollback-de3b1e9a6bfa0dfa)
+
+running 1 test
+test caller_rolls_back_late_group_apply_cancel_and_restores_draft ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/definition_plans.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/definition_plans-b58e359f1aaeaf4d)
+
+running 5 tests
+test real_scene_clip_query_mutation_and_deduplicated_overlay ... ok
+test original_marker_shorthand_and_viewport_units_are_preserved ... ok
+test real_source_scene_plans_all_five_definition_kinds ... ok
+test original_clip_rule_inheritance_and_rejections_are_preserved ... ok
+test original_clip_source_and_aggregate_boundaries_are_preserved ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/marker_dimension_errors.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/marker_dimension_errors-6902b59af0d90781)
+
+running 4 tests
+test malformed_dimensions_remain_number_errors_at_the_value ... ok
+test nonpositive_marker_dimensions_are_limits_at_the_marker_name ... ok
+test positive_and_default_marker_dimensions_are_unchanged ... ok
+test overlimit_marker_dimensions_keep_the_same_limit_diagnostic ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/paint_clip_generator.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/paint_clip_generator-1ff3d9b213e7137a)
+
+running 1 test
+test seeded_generator_preserves_original_paint_clip_fixture_matrix ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/production_planner.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/production_planner-890d90898e89a22c)
+
+running 4 tests
+test production_filter_plan_uses_actual_empty_group_owner ... ok
+test late_plan_capacity_failure_releases_intermediate_leases_and_planner_counters ... ok
+test production_pattern_plan_carries_complete_actual_source_mapping ... ok
+test omitted_selected_channel_opacity_defaults_to_one_through_publication ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/vexel_svg_paint-213da8765ac8d18c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cache_handoff.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/cache_handoff-70681b50547c6a2b)
+
+running 6 tests
+test wrong_job_source_and_cold_budget_rejection_do_not_publish_or_leak_cache_buffers ... ok
+test owned_conversion_has_real_payload_distinct_allocation_and_releasable_capacity ... ok
+test explicit_owned_copy_cancellation_releases_every_temporary_stop_capacity ... ok
+test cold_cache_has_one_stop_allocation_and_metadata_growth_accounts_actual_overlap ... ok
+test temporary_context_ends_but_cache_borrow_remains_and_40000_hits_allocate_no_stops ... ok
+test cancellation_at_every_cold_resolver_poll_keeps_only_actual_retained_cache_capacity ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.51s
+
+     Running tests/graph_publication.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/graph_publication-a27a4f60bfa90155)
+
+running 3 tests
+test graph_publication::cached_publication_survives_rollback_without_stale_graph_ranges_and_owned_payload_is_compatible ... ok
+test graph_publication::every_public_handoff_cancellation_position_cleans_logical_publication ... ok
+test graph_publication::real_40000_instance_fill_stroke_handoff_shares_two_graph_stops ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+     Running tests/paint_parity.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/paint_parity-da2cfdc5599c3cc0)
+
+running 6 tests
+test exact_gradient_sample_matches_frozen_pixel_channel_oracle ... ok
+test edge_span_preserves_empty_and_invalid_range_contract ... ok
+test invalid_stop_ranges_and_order_leave_destination_untouched ... ok
+test linear_sampling_matches_lround_interpolation_at_midpoint ... ok
+test radial_focal_degenerate_fallback_and_negative_discriminant_no_write ... ok
+test repeat_reflect_degenerate_linear_and_invalid_geometry_match_sampler_rules ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/resolver_parity.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target/aarch64-apple-darwin/debug/deps/resolver_parity-b05d0f7f9dac7dc1)
+
+running 11 tests
+test external_references_and_singular_gradient_transforms_are_rejected_at_fill ... ok
+test resolves_href_inheritance_current_color_transform_and_scene_stop_sharing ... ok
+test bound_xlink_and_child_stop_override_follow_the_nearest_gradient ... ok
+test resolver_preserves_fill_offsets_and_cancellation_kind ... ok
+test malformed_fill_spans_are_unsupported_at_fill_offset_in_all_public_flows ... ok
+test radial_defaults_and_pattern_classification_are_explicit ... ok
+test current_color_without_a_computed_color_uses_opaque_black ... ok
+test href_cycles_bad_stop_order_and_empty_edges_fail_without_fake_success ... ok
+test one_gradient_cannot_exceed_256_stops ... ok
+test cached_gradient_scan_original_scale_and_css_stop_cascade ... ok
+test cache_admits_exact_global_stop_limit_and_rejects_the_next_template ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.52s
+
+   Doc-tests vexel_svg_definitions
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_svg_paint
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

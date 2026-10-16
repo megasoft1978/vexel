@@ -1,0 +1,6 @@
+WO-PRODUCT-GOAL-04 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 7f04aa92ea7fe3279b594e2ed8a50355034fb86844ddb1e40c1ae906617b28c5
+Allowlist: docs/product/vexel-goal-and-delivery-plan.md, README.md, work/WO-PRODUCT-GOAL-04.md, artifacts/WO-PRODUCT-GOAL-04/**, STATE.md, LEDGER.md, ledger.jsonl
+Protected: accepted ADRs, application/source/tests, scripts, reports, prior frozen work orders/artifacts, website/deployment, paths outside allowlist
+Feature tests and broad UI/E2E are out of scope. The showcase is a post-acceptance deliverable and is not recorded or published by this work order.

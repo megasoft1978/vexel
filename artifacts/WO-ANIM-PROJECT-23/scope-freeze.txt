@@ -1,0 +1,7 @@
+WO-ANIM-PROJECT-23 r1 scope freeze
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: ec91c18344098201911428adf454bc5f67738db44274c44c59e01ea4effe4a7a
+Status: ready; implementation not started at freeze.
+
+Connect native project frame composition to existing bounded MCP GIF and PNG-sequence export while preserving SVG SMIL export.

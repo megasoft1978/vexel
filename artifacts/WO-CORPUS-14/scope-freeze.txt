@@ -1,0 +1,5 @@
+WO-CORPUS-14 revision 1
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 617e04924c209fe9786dac20a47f3e3e843a4ae19b5def70d684b91fa6cddcd7
+Scope: read-only analysis of existing accepted T1 raster outputs; generated analysis/heatmap only in ignored .cache/WO-CORPUS-14; evidence plus state/ledgers only.
+Protected: no source/tests/corpus/goldens/thresholds, no external corpus access, no broad tests/builds.

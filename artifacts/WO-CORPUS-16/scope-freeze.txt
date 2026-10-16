@@ -1,0 +1,4 @@
+WO-CORPUS-16 revision 1
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: bf3e1a42b1549178c09fb1ae24af61519f0837bb066f8a3a2ab29b21438de4bc
+Scope: current-renderer and installed-Inkscape rerenders of three one-attribute byte-spliced variants of the local W13 filtered-path fixture; exact output/image comparisons, no implementation change.

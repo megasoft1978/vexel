@@ -1,0 +1,1 @@
+V1 scope refinement evidence. The original accepted scope estimate remains in the historical WO-RUST-V1-SCOPE-01 ledger entry. This follow-up updates only V1 framing/estimates, preserves ADR-0029 and the full product completion gates, and runs no app/UI tests.

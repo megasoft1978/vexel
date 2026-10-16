@@ -1,0 +1,17 @@
+{
+  "rust/crates/vexel-svg-definitions/Cargo.toml": "2b7f889cbc6259ac25fce3bc1634d54346f7cb2e06afa34dba6a69576b18ab17",
+  "rust/crates/vexel-svg-definitions/README.md": "521a79d30bb5e768fec09a55fe05e6be17f999aebff011a1d2e4d315f8f18f90",
+  "rust/crates/vexel-svg-definitions/tests/definition_plans.rs": "86b3141e6d765894def8dc3ceca5e7cf4d8ca2284177fbdccc3d072330520469",
+  "rust/crates/vexel-svg-definitions/src/pattern.rs": "80f236f1a5655f67eebe97a9d62ee409907549d7d3599e4efddc11c3c1a25c07",
+  "rust/crates/vexel-svg-definitions/src/planner_support.rs": "df995977bd36298c8d52a270128ca9ecc52b33c91f4a72b570418b7ce93fb4c5",
+  "rust/crates/vexel-svg-definitions/src/color.rs": "362e56d4b72bc4364d713e76d569adf87e1289adc48c1077141a0b68bf31346b",
+  "rust/crates/vexel-svg-definitions/src/lib.rs": "571e39db9d3e7cff83b4bb8685fa9aa574a2e004726ddf1f3f062828c2e0c581",
+  "rust/crates/vexel-svg-definitions/src/planner.rs": "b9bb7bc1700d2a372340599e1363bec7cbb888eb131f7c478ef7d39e44f07715",
+  "rust/crates/vexel-svg-definitions/src/clip.rs": "f553b86dc64320f73efa7eebc5b00538ee52c62f6cded359e862d00bf197fb80",
+  "rust/crates/vexel-svg-definitions/src/tests.rs": "e04e017a013cbfcd3910497b466214228ba11d935925284c4bf5d2299b4cbaaa",
+  "rust/crates/vexel-svg-definitions/src/filter.rs": "36b2f27d00499eb4a00dc2afa32db1e5c0a05efd53d92324b7e19bf1d719c8df",
+  "rust/crates/vexel-svg-definitions/src/reference.rs": "0fc3f3ead717bb89c00a7f1f7004c6607f4184b5aa06a108159944ff2bffcb53",
+  "rust/crates/vexel-svg-definitions/src/marker.rs": "c133ea1b222e6eb16467a395f263c6091a39a13c7d0e65a25dcb945f1f537042",
+  "rust/crates/vexel-svg-definitions/src/common.rs": "c3efef0b1167fc69f1afb10f595b5138c34024913dc35596e833b27fa201b2ab",
+  "rust/crates/vexel-svg-definitions/tests/common/mod.rs": "89da80aa6b71ed564df7d92c9fc51c3fe1a6e111fe6a3ef02f12feeaac9f3621"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "project-io",
+  "wo": "WO-RUST-PROJECT-IO-01",
+  "pid": 54188,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791973920.1165729,
+  "exit_code": 0,
+  "duration_seconds": 344.6398582458496
+}

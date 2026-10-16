@@ -1,0 +1,45 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-ui --locked --offline
+EXIT: 0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+
+COMMAND: cargo +stable test -p vexel-ui --locked --offline
+EXIT: 0
+
+running 12 tests
+test tests::focus_commands_checkboxes_and_disabled_nodes ... ok
+test tests::tokens_type_scale_and_metrics_match_core_defaults ... ok
+test tests::five_widget_add_wrappers_preserve_roles_and_owned_text ... ok
+test tests::original_layout_cases_fixed_flexible_overflow_and_trailing_fixed ... ok
+test tests::accent_choices_keep_contrast_on_both_surfaces_in_all_modes ... ok
+test tests::basic_render_and_focus_ring_use_owned_rgba_tile ... ok
+test tests::scalar_draw_and_tree_paint_validate_before_writing ... ok
+test tests::semantics_are_owned_full_text_and_preserve_defaults_frames ... ok
+test tests::depth_limit_layout_failure_is_atomic_and_retryable ... ok
+test tests::add_caps_duplicate_and_failure_leave_tree_unchanged ... ok
+test tests::legacy_pan_mask_matches_frozen_c_reference_at_scales_one_through_four ... ok
+test tests::icon_catalog_strict_paths_masks_and_frozen_hash_relationships ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.22s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-ui v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.55s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_ui-2b51bdcb2ee7b980)
+   Doc-tests vexel_ui
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-UI-DRAW-01 --ready
+EXIT: 0
+valid WO-RUST-UI-DRAW-01 revision 1 sha256 3f67be21ee959179715b74f5ea1e705f852a98e1ea50a9aab67dc05810dad489
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1162 entries
+
+COMMAND: git diff --check
+EXIT: 0

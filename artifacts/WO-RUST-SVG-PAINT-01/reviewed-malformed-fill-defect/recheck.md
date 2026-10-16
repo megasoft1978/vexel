@@ -1,0 +1,5 @@
+**BLOCKER — malformed fill spans change the original error kind.** In `classify_inner`, [resolver.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/src/resolver.rs:144) maps an out-of-range `XmlSpan` to `InvalidArgument`. The original C checks the same span bounds as part of fill URL validation and returns `Unsupported` ([paint.c](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/src/svg/paint/paint.c:553)). That violates the required error parity; the focused evidence does not cover this case.
+
+The R2 borrowed cache path itself is substantiated: the recorded graph proof exercises 40,000 fill/stroke handoffs sharing two stops, and the cache tests check stable stop pointers and unchanged hit-path accounting. The separate owned compatibility path carries a real allocation lease; production adoption of the borrowed path remains a documented composition gate, not an owned-source rejection.
+
+I did not rerun commands. The recorded evidence reports 22 focused tests and 3 graph tests passing. Mixed renderer assertions remain later gates.

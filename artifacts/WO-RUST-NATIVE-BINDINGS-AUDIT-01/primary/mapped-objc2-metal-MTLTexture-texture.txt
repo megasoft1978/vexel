@@ -1,0 +1,185 @@
+BINDING texture2DDescriptorWithPixelFormat_width_height_mipmapped
+230:     type Result = Self;
+231: }
+232: 
+233: extern_conformance!(
+234:     unsafe impl NSObjectProtocol for MTLTextureDescriptor {}
+235: );
+236: 
+237: impl MTLTextureDescriptor {
+238:     extern_methods!(
+239:         #[cfg(feature = "MTLPixelFormat")]
+240:         /// Create a TextureDescriptor for a common 2D texture.
+241:         #[unsafe(method(texture2DDescriptorWithPixelFormat:width:height:mipmapped:))]
+242:         #[unsafe(method_family = none)]
+243:         pub unsafe fn texture2DDescriptorWithPixelFormat_width_height_mipmapped(
+244:             pixel_format: MTLPixelFormat,
+245:             width: NSUInteger,
+246:             height: NSUInteger,
+247:             mipmapped: bool,
+248:         ) -> Retained<MTLTextureDescriptor>;
+249: 
+250:         #[cfg(feature = "MTLPixelFormat")]
+251:         /// Create a TextureDescriptor for a common Cube texture.
+252:         ///
+253:         /// # Safety
+254:         ///
+255:         /// `size` might not be bounds-checked.
+256:         #[unsafe(method(textureCubeDescriptorWithPixelFormat:size:mipmapped:))]
+257:         #[unsafe(method_family = none)]
+
+SDK texture2DDescriptorWithPixelFormat_width_height_mipmapped
+115: 
+116: /*!
+117:  @method texture2DDescriptorWithPixelFormat:width:height:mipmapped:
+118:  @abstract Create a TextureDescriptor for a common 2D texture.
+119:  */
+120: + (MTLTextureDescriptor*)texture2DDescriptorWithPixelFormat:(MTLPixelFormat)pixelFormat width:(NSUInteger)width height:(NSUInteger)height mipmapped:(BOOL)mipmapped;
+121: 
+122: /*!
+123:  @method textureCubeDescriptorWithPixelFormat:size:mipmapped:
+124:  @abstract Create a TextureDescriptor for a common Cube texture.
+
+SDK texture2DDescriptorWithPixelFormat_width_height_mipmapped
+118:  @abstract Create a TextureDescriptor for a common 2D texture.
+119:  */
+120: + (MTLTextureDescriptor*)texture2DDescriptorWithPixelFormat:(MTLPixelFormat)pixelFormat width:(NSUInteger)width height:(NSUInteger)height mipmapped:(BOOL)mipmapped;
+121: 
+122: /*!
+123:  @method textureCubeDescriptorWithPixelFormat:size:mipmapped:
+124:  @abstract Create a TextureDescriptor for a common Cube texture.
+125:  */
+126: + (MTLTextureDescriptor*)textureCubeDescriptorWithPixelFormat:(MTLPixelFormat)pixelFormat size:(NSUInteger)size mipmapped:(BOOL)mipmapped;
+127: 
+
+BINDING replaceRegion_mipmapLevel_withBytes_bytesPerRow
+837:             bytes_per_row: NSUInteger,
+838:             region: MTLRegion,
+839:             level: NSUInteger,
+840:         );
+841: 
+842:         #[cfg(feature = "MTLTypes")]
+843:         /// Convenience for replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage: that doesn't require slice related arguments
+844:         ///
+845:         /// # Safety
+846:         ///
+847:         /// `pixel_bytes` must be a valid pointer.
+848:         #[unsafe(method(replaceRegion:mipmapLevel:withBytes:bytesPerRow:))]
+849:         #[unsafe(method_family = none)]
+850:         unsafe fn replaceRegion_mipmapLevel_withBytes_bytesPerRow(
+851:             &self,
+852:             region: MTLRegion,
+853:             level: NSUInteger,
+854:             pixel_bytes: NonNull<c_void>,
+855:             bytes_per_row: NSUInteger,
+856:         );
+857: 
+858:         #[cfg(feature = "MTLPixelFormat")]
+859:         /// Create a new texture which shares the same storage as the source texture, but with a different (but compatible) pixel format.
+860:         #[unsafe(method(newTextureViewWithPixelFormat:))]
+861:         #[unsafe(method_family = new)]
+862:         fn newTextureViewWithPixelFormat(
+863:             &self,
+864:             pixel_format: MTLPixelFormat,
+
+SDK replaceRegion_mipmapLevel_withBytes_bytesPerRow
+506: 
+507: /*!
+508:  @method replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage:
+509:  @abstract Copy a block of pixel data from the caller's pointer into a texture slice.
+510:  */
+511: - (void)replaceRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level slice:(NSUInteger)slice withBytes:(const void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow bytesPerImage:(NSUInteger)bytesPerImage;
+512: 
+513: /*!
+514:  @method getBytes:bytesPerRow:fromRegion:mipmapLevel:
+515:  @abstract Convenience for getBytes:bytesPerRow:bytesPerImage:fromRegion:mipmapLevel:slice: that doesn't require slice related arguments
+
+SDK replaceRegion_mipmapLevel_withBytes_bytesPerRow
+509:  @abstract Copy a block of pixel data from the caller's pointer into a texture slice.
+510:  */
+511: - (void)replaceRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level slice:(NSUInteger)slice withBytes:(const void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow bytesPerImage:(NSUInteger)bytesPerImage;
+512: 
+513: /*!
+514:  @method getBytes:bytesPerRow:fromRegion:mipmapLevel:
+515:  @abstract Convenience for getBytes:bytesPerRow:bytesPerImage:fromRegion:mipmapLevel:slice: that doesn't require slice related arguments
+516:  */
+517: - (void)getBytes:(void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow fromRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level;
+518: 
+
+SDK replaceRegion_mipmapLevel_withBytes_bytesPerRow
+518: 
+519: /*!
+520:  @method replaceRegion:mipmapLevel:withBytes:bytesPerRow:
+521:  @abstract Convenience for replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage: that doesn't require slice related arguments
+522:  */
+523: - (void)replaceRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level withBytes:(const void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow;
+524: 
+525: /*!
+526:  @method newTextureViewWithPixelFormat:
+527:  @abstract Create a new texture which shares the same storage as the source texture, but with a different (but compatible) pixel format.
+
+BINDING getBytes_bytesPerRow_fromRegion_mipmapLevel
+821:             pixel_bytes: NonNull<c_void>,
+822:             bytes_per_row: NSUInteger,
+823:             bytes_per_image: NSUInteger,
+824:         );
+825: 
+826:         #[cfg(feature = "MTLTypes")]
+827:         /// Convenience for getBytes:bytesPerRow:bytesPerImage:fromRegion:mipmapLevel:slice: that doesn't require slice related arguments
+828:         ///
+829:         /// # Safety
+830:         ///
+831:         /// `pixel_bytes` must be a valid pointer.
+832:         #[unsafe(method(getBytes:bytesPerRow:fromRegion:mipmapLevel:))]
+833:         #[unsafe(method_family = none)]
+834:         unsafe fn getBytes_bytesPerRow_fromRegion_mipmapLevel(
+835:             &self,
+836:             pixel_bytes: NonNull<c_void>,
+837:             bytes_per_row: NSUInteger,
+838:             region: MTLRegion,
+839:             level: NSUInteger,
+840:         );
+841: 
+842:         #[cfg(feature = "MTLTypes")]
+843:         /// Convenience for replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage: that doesn't require slice related arguments
+844:         ///
+845:         /// # Safety
+846:         ///
+847:         /// `pixel_bytes` must be a valid pointer.
+848:         #[unsafe(method(replaceRegion:mipmapLevel:withBytes:bytesPerRow:))]
+
+SDK getBytes_bytesPerRow_fromRegion_mipmapLevel
+500: 
+501: /*!
+502:  @method getBytes:bytesPerRow:bytesPerImage:fromRegion:mipmapLevel:slice:
+503:  @abstract Copies a block of pixels from a texture slice into the application's memory.
+504:  */
+505: - (void)getBytes:(void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow bytesPerImage:(NSUInteger)bytesPerImage fromRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level slice:(NSUInteger)slice;
+506: 
+507: /*!
+508:  @method replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage:
+509:  @abstract Copy a block of pixel data from the caller's pointer into a texture slice.
+
+SDK getBytes_bytesPerRow_fromRegion_mipmapLevel
+503:  @abstract Copies a block of pixels from a texture slice into the application's memory.
+504:  */
+505: - (void)getBytes:(void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow bytesPerImage:(NSUInteger)bytesPerImage fromRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level slice:(NSUInteger)slice;
+506: 
+507: /*!
+508:  @method replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage:
+509:  @abstract Copy a block of pixel data from the caller's pointer into a texture slice.
+510:  */
+511: - (void)replaceRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level slice:(NSUInteger)slice withBytes:(const void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow bytesPerImage:(NSUInteger)bytesPerImage;
+512: 
+
+SDK getBytes_bytesPerRow_fromRegion_mipmapLevel
+512: 
+513: /*!
+514:  @method getBytes:bytesPerRow:fromRegion:mipmapLevel:
+515:  @abstract Convenience for getBytes:bytesPerRow:bytesPerImage:fromRegion:mipmapLevel:slice: that doesn't require slice related arguments
+516:  */
+517: - (void)getBytes:(void *)pixelBytes bytesPerRow:(NSUInteger)bytesPerRow fromRegion:(MTLRegion)region mipmapLevel:(NSUInteger)level;
+518: 
+519: /*!
+520:  @method replaceRegion:mipmapLevel:withBytes:bytesPerRow:
+521:  @abstract Convenience for replaceRegion:mipmapLevel:slice:withBytes:bytesPerRow:bytesPerImage: that doesn't require slice related arguments

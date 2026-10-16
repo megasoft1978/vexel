@@ -1,0 +1,1 @@
+All prior accepted Rust unchanged except exact accepted source-editor integration; original603legacy/index/HEAD retained. Exact pinned16 active native units/18lock records/cache checksums, workspacecompile and R2validators pass; independent LunaMedium setup ACCEPT. No GUI/mac13runtime claim.

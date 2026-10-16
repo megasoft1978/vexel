@@ -1,0 +1,2 @@
+2026-10-14T18:57:20.234854Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-ANIMATION-FRAME-01/worker/rust/crates/vexel-svg-animation-frame/src/lib.rs:
+                        shape_bounds(view, shape, inv, control, work)?;

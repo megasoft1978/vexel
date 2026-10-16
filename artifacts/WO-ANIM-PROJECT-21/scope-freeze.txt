@@ -1,0 +1,10 @@
+WO-ANIM-PROJECT-21 r1 scope freeze
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: d8fd1603d52ed1b219904594321be0c8be0d0d33c8f03fa6be9285b7d7ecf96f
+Status: ready; implementation not started at freeze.
+
+Adds Add Track behavior to the existing native timeline drawing action. Track
+creation uses the selected identified SVG node and selected validated drawing
+asset; model authoring supplies its required tick-zero exposure. Broad UI/E2E
+remains deferred.

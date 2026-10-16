@@ -1,0 +1,7 @@
+**REJECT.**
+
+**Blocker:** [lib.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-references/rust/crates/vexel-svg-reference/src/lib.rs:56) calls `try_reserve_exact(131072)` but never checks the resulting `Vec::capacity()`. Rust may reserve more than requested, so a nonempty index can retain excess slots despite the fixed-capacity requirement. `storage_bytes()` reports that excess ([line 115](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-references/rust/crates/vexel-svg-reference/src/lib.rs:115)), but reporting it does not enforce the requirement. Ensure excess capacity is not retained and add a meaningful assertion for that invariant.
+
+The FNV seed matches the original value `1469598103934665603`; raw-byte ID comparison, duplicate handling, probe order, empty-index behavior, allowlists, and the local error categories appear consistent with the inspected C implementation. The source and test files are each under 800 lines, and the crate forbids unsafe code.
+
+**Nonblocking gap:** The new allowlist tests enumerate common, root-only, and `<use>` names, but do not exercise every per-kind geometry allowlist. I did not run tests or builds, per request. This review does not certify full application fidelity or performance.

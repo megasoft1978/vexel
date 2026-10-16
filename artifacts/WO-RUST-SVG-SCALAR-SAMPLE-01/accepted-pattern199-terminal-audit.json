@@ -1,0 +1,38 @@
+{
+  "verdict": "PASS",
+  "candidate_status": "completed",
+  "live_processes": [],
+  "head_matches": true,
+  "protected_file_count": 1695,
+  "protected_mismatches": [],
+  "unexpected_source_paths": [],
+  "over_800_lines": [],
+  "seed_order": [
+    "job-contract-source-seed.json",
+    "accepted-integration-source-seed.json",
+    "r2-order-seed.json",
+    "accepted-cache-source-seed.json",
+    "accepted-pattern199-source-seed.json"
+  ],
+  "verification_commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-scalar-sample --locked --offline",
+      "exit_code": 0,
+      "status": "PASS",
+      "output": "Finished dev profile; vexel-svg-scalar-sample checked successfully."
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-scalar-sample --locked --offline",
+      "exit_code": 0,
+      "status": "PASS",
+      "output": "11 unit + 8 canonical integration + 5 aggregate capacity tests passed; 24 total, 0 failed; doc tests 0."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-SCALAR-SAMPLE-01 --ready",
+      "exit_code": 0,
+      "status": "PASS",
+      "output": "valid WO-RUST-SVG-SCALAR-SAMPLE-01 revision 2 sha256 d219eaaef145805172eeef495cb99b3d42de5868d5d9cc5679649b0e7cce9a53"
+    }
+  ],
+  "candidate_worktree": ".cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker"
+}

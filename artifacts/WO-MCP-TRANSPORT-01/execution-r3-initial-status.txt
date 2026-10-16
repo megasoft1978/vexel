@@ -1,0 +1,289 @@
+ M BLOCKERS.md
+ M CMakeLists.txt
+ M LEDGER.md
+ M README.md
+ M STATE.md
+ M app/Info.plist.in
+ M app/vexel_mcp_main.c
+ M artifacts/release/install-smoke.json
+ M artifacts/release/sbom.cyclonedx.json
+ M docs/lanes/decode2.md
+ M docs/mcp.md
+ M docs/research-r4/05-revised-roadmap.md
+ M ledger.jsonl
+ M src/app/README.md
+ M src/app/mcp_broker_hook.c
+ M src/app/viewer.c
+ M src/app/viewer_chrome_editor.c
+ M src/app/viewer_display.c
+ M src/app/viewer_editor.c
+ M src/app/viewer_editor.h
+ M src/app/viewer_editor_document.c
+ M src/app/viewer_editor_input.c
+ M src/app/viewer_editor_internal.h
+ M src/app/viewer_editor_palette.c
+ M src/app/viewer_editor_result.c
+ M src/app/viewer_events.c
+ M src/app/viewer_internal.h
+ M src/app/viewer_load.c
+ M src/app/viewer_load.h
+ M src/app/viewer_render.c
+ M src/app/viewer_save.c
+ M src/app/viewer_timeline.c
+ M src/app/viewer_timeline.h
+ M src/app/viewer_timeline_accessibility.c
+ M src/app/viewer_timeline_easing.c
+ M src/app/viewer_timeline_layout.c
+ M src/app/viewer_timeline_ui.c
+ M src/document/README.md
+ M src/document/document_edit.c
+ M src/document/document_edit.h
+ M src/document/document_edit_history.c
+ M src/document/document_edit_internal.h
+ M src/document/document_edit_ops.c
+ M src/document/document_edit_piece_table.c
+ M src/mcp/README.md
+ M src/mcp/mcp_broker.h
+ M src/mcp/mcp_broker_animation.c
+ M src/mcp/mcp_broker_internal.h
+ M src/mcp/mcp_broker_render.c
+ M src/mcp/mcp_broker_tools.c
+ M src/mcp/mcp_tools.c
+ M src/platform/macos/README.md
+ M src/platform/macos/platform_dialog.h
+ M src/platform/macos/platform_dialog.m
+ M src/platform/macos/platform_window.m
+ M src/platform/macos/platform_window_files.m
+ M src/raster/shape_render.c
+ M src/raster/shape_render_animation.c
+ M src/raster/shape_render_fill.c
+ M src/raster/shape_render_group.c
+ M src/raster/shape_render_internal.h
+ M src/raster/shape_render_preflight.c
+ M src/raster/shape_render_preflight.h
+ M src/raster/shape_render_sample.c
+ M src/raster/shape_render_stroke.c
+ M src/svg/clip/clip.c
+ M src/svg/css/README.md
+ M src/svg/css/css.c
+ M src/svg/css/css.h
+ M src/svg/reference/reference.c
+ M src/svg/shape/README.md
+ M src/svg/shape/decode.c
+ M src/svg/shape/document.c
+ M src/svg/shape/ignored.c
+ M src/svg/shape/image.c
+ M src/svg/shape/marker.c
+ M src/svg/shape/pattern.c
+ M src/svg/shape/selection.c
+ M src/svg/shape/shape.c
+ M src/svg/shape/shape.h
+ M src/svg/shape/shape_custom.c
+ M src/svg/shape/shape_geometry.c
+ M src/svg/shape/shape_internal.h
+ M src/svg/shape/shape_style.c
+ M src/svg/shape/text.c
+ M src/svg/shape/traverse.c
+ M src/svg/shape/traverse_internal.h
+ M src/svg/xml/README.md
+ M src/svg/xml/xml_stream_internal.inc
+ M src/svg/xml/xml_tokenizer.c
+ M src/svg/xml/xml_tokenizer.h
+ M src/svg/xml/xml_tokenizer_api.c
+ M tests/app/viewer_timeline_test.c
+ M tests/edit/README.md
+ M tests/edit/test_document_edit.c
+ M tests/mcp/mcp_protocol_test.c
+ M tests/mcp/test_e2e.py
+ M tests/platform/platform_dialog_test.m
+ M tests/svg/css/test_css.c
+ M tests/svg/index/test_token_stream.c
+ M tests/svg/shape/shape_render_reference.c
+ M tests/svg/shape/test_w5_render.py
+ M tests/svg/xml/test_xml_tokenizer.c
+ M tests/test_map.json
+?? artifacts/WO-ANIM-PROJECT-01/
+?? artifacts/WO-ANIM-PROJECT-02/
+?? artifacts/WO-ANIM-PROJECT-03/
+?? artifacts/WO-ANIM-PROJECT-04/
+?? artifacts/WO-ANIM-PROJECT-05/
+?? artifacts/WO-ANIM-PROJECT-06/
+?? artifacts/WO-ANIM-PROJECT-07/
+?? artifacts/WO-ANIM-PROJECT-08/
+?? artifacts/WO-ANIM-PROJECT-09/
+?? artifacts/WO-ANIM-PROJECT-10/
+?? artifacts/WO-ANIM-PROJECT-11/
+?? artifacts/WO-ANIM-PROJECT-12/
+?? artifacts/WO-ANIM-PROJECT-13/
+?? artifacts/WO-ANIM-PROJECT-16/
+?? artifacts/WO-ANIM-PROJECT-17/
+?? artifacts/WO-ANIM-PROJECT-18/
+?? artifacts/WO-ANIM-PROJECT-19/
+?? artifacts/WO-ANIM-PROJECT-20/
+?? artifacts/WO-ANIM-PROJECT-21/
+?? artifacts/WO-ANIM-PROJECT-22/
+?? artifacts/WO-ANIM-PROJECT-23/
+?? artifacts/WO-ANIM-PROJECT-24/
+?? artifacts/WO-ANIM-PROJECT-25/
+?? artifacts/WO-ANIM-PROJECT-26/
+?? artifacts/WO-ANIM-PROJECT-27/
+?? artifacts/WO-ANIM-PROJECT-28/
+?? artifacts/WO-ANIM-PROJECT-29/
+?? artifacts/WO-ANIM-PROJECT-30/
+?? artifacts/WO-ANIM-PROJECT-31/
+?? artifacts/WO-CORPUS-04/
+?? artifacts/WO-CORPUS-05/
+?? artifacts/WO-CORPUS-06/
+?? artifacts/WO-CORPUS-07/
+?? artifacts/WO-CORPUS-08/
+?? artifacts/WO-CORPUS-09/
+?? artifacts/WO-CORPUS-10/
+?? artifacts/WO-CORPUS-11/
+?? artifacts/WO-CORPUS-12/
+?? artifacts/WO-CORPUS-13/
+?? artifacts/WO-CORPUS-14/
+?? artifacts/WO-CORPUS-15/
+?? artifacts/WO-CORPUS-16/
+?? artifacts/WO-MCP-ASYNC-01/
+?? artifacts/WO-MCP-ASYNC-02/
+?? artifacts/WO-MCP-ASYNC-03/
+?? artifacts/WO-MCP-OBS-01/
+?? artifacts/WO-MCP-TRANSPORT-01/
+?? artifacts/WO-PRODUCT-GOAL-01/
+?? artifacts/WO-PRODUCT-GOAL-02/
+?? artifacts/WO-PRODUCT-GOAL-03/
+?? artifacts/WO-PRODUCT-GOAL-04/
+?? artifacts/WO-PRODUCT-PLAN-01/
+?? artifacts/WO-PRODUCT-PLAN-02/
+?? artifacts/WO-PRODUCT-PLAN-03/
+?? artifacts/WO-PROJECT-01/
+?? artifacts/WO-PROJECT-02/
+?? artifacts/WO-PROJECT-03/
+?? artifacts/WO-PROJECT-04/
+?? artifacts/WO-PROJECT-05/
+?? artifacts/WO-PROJECT-06/
+?? artifacts/WO-PROJECT-07/
+?? artifacts/WO-PROJECT-08/
+?? artifacts/WO-SVG-CLIP-01/
+?? artifacts/WO-SVG-CLIP-02/
+?? artifacts/WO-SVG-MARKER-01/
+?? artifacts/WO-SVG-MEM-01/
+?? artifacts/WO-SVG-MEM-02/
+?? artifacts/WO-SVG-MEM-03/
+?? artifacts/WO-SVG-PAINT-01/
+?? artifacts/WO-SVG-PAINT-02/
+?? artifacts/WO-SVG-PATH-01/
+?? artifacts/WO-XML-STREAM-02/
+?? docs/adr/0018-product-goal-and-completion-gates.md
+?? docs/adr/0019-vexel-project-container-v1.md
+?? docs/adr/0020-native-animation-schema-v1.md
+?? docs/adr/0021-native-project-recovery-capsules.md
+?? docs/product/
+?? src/app/viewer_editor_actions.c
+?? src/app/viewer_editor_paint.c
+?? src/app/viewer_editor_visibility.c
+?? src/app/viewer_history.c
+?? src/app/viewer_recovery.c
+?? src/app/viewer_timeline_cel.c
+?? src/app/viewer_timeline_native_move.c
+?? src/app/viewer_timeline_transform.c
+?? src/document/document_edit_insert.c
+?? src/document/document_edit_snapshot.c
+?? src/mcp/mcp_broker_native_timeline.c
+?? src/mcp/mcp_task_store.c
+?? src/mcp/mcp_task_store.h
+?? src/platform/macos/platform_recovery_store.m
+?? src/platform/platform_recovery_store.h
+?? src/project/
+?? src/raster/shape_render_dash_cache.c
+?? tests/app/project_save_test.c
+?? tests/app/viewer_editor_visibility_test.c
+?? tests/app/viewer_history_test.c
+?? tests/app/viewer_recovery_test.c
+?? tests/app/viewer_timeline_bootstrap_test.c
+?? tests/app/viewer_timeline_native_test.c
+?? tests/edit/document_edit_snapshot_test.c
+?? tests/mcp/mcp_async_task_test.c
+?? tests/mcp/mcp_native_timeline_test.c
+?? tests/platform/platform_file_route_test.m
+?? tests/platform/platform_recovery_store_test.m
+?? tests/project/
+?? tests/svg/shape/clip_definition_scope_test.c
+?? tests/svg/shape/gradient_stroke_test.c
+?? tests/svg/shape/path_number_test.c
+?? tests/svg/shape/raster_budget_test.c
+?? tests/svg/shape/stroke_dash_storage_test.c
+?? work/WO-ANIM-PROJECT-01.md
+?? work/WO-ANIM-PROJECT-02.md
+?? work/WO-ANIM-PROJECT-03.md
+?? work/WO-ANIM-PROJECT-04.md
+?? work/WO-ANIM-PROJECT-05.md
+?? work/WO-ANIM-PROJECT-06.md
+?? work/WO-ANIM-PROJECT-07.md
+?? work/WO-ANIM-PROJECT-08.md
+?? work/WO-ANIM-PROJECT-09.md
+?? work/WO-ANIM-PROJECT-10.md
+?? work/WO-ANIM-PROJECT-11.md
+?? work/WO-ANIM-PROJECT-12.md
+?? work/WO-ANIM-PROJECT-13.md
+?? work/WO-ANIM-PROJECT-14.md
+?? work/WO-ANIM-PROJECT-15.md
+?? work/WO-ANIM-PROJECT-16.md
+?? work/WO-ANIM-PROJECT-17.md
+?? work/WO-ANIM-PROJECT-18.md
+?? work/WO-ANIM-PROJECT-19.md
+?? work/WO-ANIM-PROJECT-20.md
+?? work/WO-ANIM-PROJECT-21.md
+?? work/WO-ANIM-PROJECT-22.md
+?? work/WO-ANIM-PROJECT-23.md
+?? work/WO-ANIM-PROJECT-24.md
+?? work/WO-ANIM-PROJECT-25.md
+?? work/WO-ANIM-PROJECT-26.md
+?? work/WO-ANIM-PROJECT-27.md
+?? work/WO-ANIM-PROJECT-28.md
+?? work/WO-ANIM-PROJECT-29.md
+?? work/WO-ANIM-PROJECT-30.md
+?? work/WO-ANIM-PROJECT-31.md
+?? work/WO-CORPUS-05.md
+?? work/WO-CORPUS-06.md
+?? work/WO-CORPUS-07.md
+?? work/WO-CORPUS-08.md
+?? work/WO-CORPUS-09.md
+?? work/WO-CORPUS-10.md
+?? work/WO-CORPUS-11.md
+?? work/WO-CORPUS-12.md
+?? work/WO-CORPUS-13.md
+?? work/WO-CORPUS-14.md
+?? work/WO-CORPUS-15.md
+?? work/WO-CORPUS-16.md
+?? work/WO-MCP-ASYNC-01.md
+?? work/WO-MCP-ASYNC-02.md
+?? work/WO-MCP-ASYNC-03.md
+?? work/WO-MCP-OBS-01.md
+?? work/WO-MCP-TRANSPORT-01.md
+?? work/WO-PRODUCT-GOAL-01.md
+?? work/WO-PRODUCT-GOAL-02.md
+?? work/WO-PRODUCT-GOAL-03.md
+?? work/WO-PRODUCT-GOAL-04.md
+?? work/WO-PRODUCT-PLAN-01.md
+?? work/WO-PRODUCT-PLAN-02.md
+?? work/WO-PRODUCT-PLAN-03.md
+?? work/WO-PROJECT-01.md
+?? work/WO-PROJECT-02.md
+?? work/WO-PROJECT-03.md
+?? work/WO-PROJECT-04.md
+?? work/WO-PROJECT-05.md
+?? work/WO-PROJECT-06.md
+?? work/WO-PROJECT-07.md
+?? work/WO-PROJECT-08.md
+?? work/WO-SVG-CLIP-01.md
+?? work/WO-SVG-CLIP-02.md
+?? work/WO-SVG-MARKER-01.md
+?? work/WO-SVG-MEM-01.md
+?? work/WO-SVG-MEM-02.md
+?? work/WO-SVG-MEM-03.md
+?? work/WO-SVG-PAINT-01.md
+?? work/WO-SVG-PAINT-02.md
+?? work/WO-SVG-PATH-01.md
+?? work/WO-XML-STREAM-01.md
+?? work/WO-XML-STREAM-02.md

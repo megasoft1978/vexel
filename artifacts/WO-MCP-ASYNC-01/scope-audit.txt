@@ -1,0 +1,10 @@
+Scope audit: 2026-10-13
+
+The frozen AC-6 requires the existing status-strip Cancel button to signal the
+active MCP task. That button's command dispatch is implemented in
+src/app/viewer_editor.c, which is not in revision 1's allowlist. The editor
+also needs per-instance cancellation-request state in
+src/app/viewer_editor_internal.h. Neither path can be changed under the frozen
+scope. No product source was edited. Revision 1 is superseded before
+implementation; replacement work order adds both required paths and retains
+the same product behavior and focused-test boundary.

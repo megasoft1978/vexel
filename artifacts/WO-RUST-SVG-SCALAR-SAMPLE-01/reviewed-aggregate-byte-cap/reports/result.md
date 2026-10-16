@@ -1,0 +1,7 @@
+# Candidate result
+
+Implemented the full owned scalar sample scope against the accepted Scene153/job APIs: dash cache construction and rollback, global tagged join grids with scalar fallback, stroke caps/joins/seams, image and periodic pattern sampling, source-over rounding, paint order, clips, and fill sampling. The row engine now consumes a Copy-only `FillRowLayout`; interval/run payloads remain in actual same-job admitted `JobRasterScratch` buffers. It preserves the center interval/run pass and exact active-slot 4×4 traversal. `RasterJob::compose` validates the cache once, while comparison and traversal work is charged inside the loops that perform it.
+
+The 19 focused checks pass (11 unit, 8 canonical integration). They cover all 11 assigned pure assertion predicates, including exact 136 fill interval comparisons per fixture pass, all 16 sample colors, malformed-layout rejection, controlled interval-loop cancellation, fractional 8.5×7.25 extent rounding, and the 70,000-segment/16 MiB/1,000,000-step dash case. Original source and test fixtures remain protected.
+
+The owned lower scalar engines are implemented and tested; this does not claim completion of the later native provider or whole-renderer integration. Mixed decoded SVG/librsvg pixels, full source603/oracle157 audit, and app/UI/performance/release checks remain later gates. This is a candidate only, pending independent root review, exact protected-scope audit, and fresh main focused checks.

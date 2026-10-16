@@ -1,0 +1,11 @@
+{
+  "name": "xml",
+  "wo": "WO-RUST-XML-01",
+  "pid": 35639,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791957018.420726,
+  "exit_code": 0,
+  "duration_seconds": 194.5698380470276
+}

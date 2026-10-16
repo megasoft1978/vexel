@@ -1,0 +1,8 @@
+{
+  "file": "rust/crates/vexel-svg-animation/tests/animation.rs",
+  "before_sha256": "b6f30c8cc823be81fd6b9a226fa9ab7320f0905bb9b90ee1ddfb053889527fa5",
+  "after_sha256": "8d7b604b016ccbbe38cd98790cd64dace538a06f6c6686c6cff66f67e153bb7c",
+  "change": "restore four spaces in original fixture array; no assertion/source behavior change",
+  "all_prior16_functions_byte_identical": true,
+  "fresh_main_scoped_checks_required": true
+}

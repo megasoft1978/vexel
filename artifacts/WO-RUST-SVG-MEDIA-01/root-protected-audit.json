@@ -1,0 +1,42 @@
+{
+  "recorded_utc": "2026-10-15T06:30:17.204918+00:00",
+  "work_order": "WO-RUST-SVG-MEDIA-01 r2",
+  "verdict": "PASS",
+  "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "expected_head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_matches": true,
+  "index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "expected_index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "index_matches": true,
+  "legacy_source_count": 603,
+  "legacy_source_mismatches": [],
+  "frozen_suite_and_fixture_count": 157,
+  "frozen_suite_and_fixture_mismatches": [],
+  "media_source_line_counts": {
+    "rust/crates/vexel-svg-media/tests/source_map_requests.rs": 280,
+    "rust/crates/vexel-svg-media/tests/style_publication.rs": 656,
+    "rust/crates/vexel-svg-media/tests/document_budget_gap.rs": 105,
+    "rust/crates/vexel-svg-media/tests/atomicity_gap.rs": 269,
+    "rust/crates/vexel-svg-media/tests/style_and_layout.rs": 296,
+    "rust/crates/vexel-svg-media/tests/media_parity.rs": 560,
+    "rust/crates/vexel-svg-media/tests/request_failures.rs": 217,
+    "rust/crates/vexel-svg-media/tests/cache_limits.rs": 112,
+    "rust/crates/vexel-svg-media/tests/visibility_order.rs": 294,
+    "rust/crates/vexel-svg-media/src/request.rs": 31,
+    "rust/crates/vexel-svg-media/src/lib.rs": 36,
+    "rust/crates/vexel-svg-media/src/image.rs": 581,
+    "rust/crates/vexel-svg-media/src/text_cache.rs": 329,
+    "rust/crates/vexel-svg-media/src/publication.rs": 189,
+    "rust/crates/vexel-svg-media/src/text.rs": 394,
+    "rust/crates/vexel-svg-media/src/text_geometry.rs": 516,
+    "rust/crates/vexel-svg-media/src/image_sample.rs": 85,
+    "rust/crates/vexel-svg-media/tests/support/mod.rs": 99
+  },
+  "over_800_lines": {},
+  "allowed_main_paths": [
+    "rust/crates/vexel-svg-media/src/**",
+    "rust/crates/vexel-svg-media/tests/**",
+    "rust/crates/vexel-svg-media/README.md"
+  ],
+  "non_media_changes_by_this_integration": []
+}

@@ -1,0 +1,14 @@
+WO-RUST-SVG-DEFINITION-VIEWS-01 coordinator integration
+
+Integrated only the reviewed planner.rs and planner_support.rs hashes into the main Rust workspace. The engine crate and its decoder test remain candidate-only pending acceptance/integration of the decoder prerequisite.
+
+Commands run after integration (CARGO_HOME=.cache/cargo, CARGO_TARGET_DIR=build/rust, CARGO_NET_OFFLINE=true):
+- cargo +stable check -p vexel-svg-definitions --locked --offline — exit 0
+- cargo +stable test -p vexel-svg-definitions --locked --offline — exit 0; 36 unit/integration tests passed, 0 failed
+- cargo +stable fmt --package vexel-svg-definitions -- --check — exit 0
+
+Exact integrated source hashes:
+- planner.rs: ab605f181d878d3f76919b980315d0375994de99440557ec2746b1541ce39693
+- planner_support.rs: 8059e9988a9126cdaa92a3a0e60ed2df70bb8540c97b9b53deba7ceb133b4bc2
+
+Candidate-only actual decoder clip test: passed after Progress with positive charged units, Complete, successful Drawable finish; observed one published clip attached to owner and resolving in scene. See final-verification.log and worker-report.md. Coordinator audit checks 436 immutable candidate seed entries (excluding 3 allowed paths), with no candidate mismatches. The candidate's workspace manifest/lock and terminal decoder differ from current root files; these are recorded as later root state differences in coordinator-audit.json and were not integrated by this action.

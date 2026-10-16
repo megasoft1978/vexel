@@ -1,0 +1,45 @@
+{
+  "work_order": "WO-RUST-XML-STORAGE-01",
+  "scope": [
+    {
+      "contract": "public new preserves immediate failure when storage budget is below one token",
+      "implementation": "new returns Err(StreamStatus::Failed) when max_storage_bytes < size_of::<XmlToken>(); private with_limits remains count-based",
+      "coverage": "byte_storage_budget_bounds_actual_token_capacity_at_every_boundary"
+    },
+    {
+      "contract": "max_storage_bytes bounds retained token Vec capacity, not only token length",
+      "implementation": "bounded exact slot growth enforces floor(byte_budget / size_of::<XmlToken>()), releases an oversized rejected reservation, and preserves OutputExhausted offsets",
+      "coverage": "byte_storage_budget_bounds_actual_token_capacity_at_every_boundary"
+    },
+    {
+      "contract": "count-limited private batch stream preserves count semantics and representable limits",
+      "implementation": "with_limits retains its count cap, clamped only to isize::MAX / size_of::<XmlToken>()",
+      "coverage": "cancelable_batch_and_stream_match_batch_tokens_errors_limits_and_capacity"
+    },
+    {
+      "contract": "actual allocated storage is observable for downstream charging",
+      "implementation": "token_storage_bytes and open_name_storage_bytes report retained Vec capacity bytes; visitor_storage_bytes reports scratch Vec capacity bytes",
+      "coverage": "bounded_token_storage_survives_cancel_and_visitor_stacks_report_capacity"
+    },
+    {
+      "contract": "fixed open-name and visitor scratch capacities stay within caps",
+      "implementation": "initial reserve capacities are checked; later exact reservations enforce fixed ceilings and release rejected excess",
+      "coverage": "bounded_token_storage_survives_cancel_and_visitor_stacks_report_capacity"
+    },
+    {
+      "contract": "source ownership, diagnostics, cancellation, visitors, and name-read budget are preserved",
+      "implementation": "existing borrowed source and parser state paths retained",
+      "coverage": "all existing vexel-xml tests plus focused stream capacity regressions"
+    }
+  ],
+  "adaptations": [],
+  "limits": [
+    "Reports Vec-exposed capacity only; allocator RSS is not claimed."
+  ],
+  "rejected_candidate_archive": [
+    "rejected-candidate-boundary-assertions.txt",
+    "rejected-candidate-parity-map.json",
+    "rejected-candidate-result.md",
+    "rejected-candidate-verification.txt"
+  ]
+}

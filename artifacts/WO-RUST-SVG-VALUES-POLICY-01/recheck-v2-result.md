@@ -1,0 +1,1 @@
+ACCEPT — `parse_limits.rs` covers all three standalone APIs: oversized original-source rejection under defaults and acceptance under larger policy, exact 16 MiB boundary and equivalence with legacy APIs, smaller-limit precedence over invalid spans/counts/values, and preserved span, grammar, separator, unit, and absolute-offset errors when within policy.

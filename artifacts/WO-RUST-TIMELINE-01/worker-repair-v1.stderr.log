@@ -1,0 +1,4 @@
+2026-10-14T09:35:02.311298Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/artifacts/WO-RUST-TIMELINE-01/parity-map.json:
+    "string_copy_enforces_decoded_byte_limit_with_large_output",
+2026-10-14T09:36:05.589967Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/artifacts/WO-RUST-TIMELINE-01/verification.txt:
+Candidate remains uncommitted for independent coordinator review.

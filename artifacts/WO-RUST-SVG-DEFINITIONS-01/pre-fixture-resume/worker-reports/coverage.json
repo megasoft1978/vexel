@@ -1,0 +1,371 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-DEFINITIONS-01",
+  "status": "INCOMPLETE",
+  "assigned_original_suites": [
+    {
+      "suite": "tests/svg/shape/clip_definition_scope_test.c",
+      "sha256": "1e744b64b71817e5fe955bd007e92a6b2d5487759cb95f5f2c32753bdb024cf6",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "center_is_clipped",
+          "line": 68,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "main",
+          "line": 87,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/marker_realloc_test.c",
+      "sha256": "003f92e3beb5987f15da1131fd44658c2ed2d6946d5d42688a182bee581d436b",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "render_case",
+          "line": 9,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "main",
+          "line": 24,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/paint_clip_generator.py",
+      "sha256": "8d4ad97a2ab4ab85e22c3a79ae68a2e073defb10464f14f3b8f61b994016da0b",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/test_clip_work_budget.c",
+      "sha256": "69ffa0e94eed273d88b13ee362720bd3840b0d5b459c39cdbe6f17de44aeb60d",
+      "primary_owner": "DEFINITIONS",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "append_text",
+          "line": 17,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "append_format",
+          "line": 28,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "build_pathological_document",
+          "line": 41,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "clip_boundary_accounting_check",
+          "line": 82,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "clip_wrapper_extreme_check",
+          "line": 73,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "group_clip_scratch_resolved_once_check",
+          "line": 200,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "build_clip_boundary_source",
+          "line": 291,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "decode_clip_boundary",
+          "line": 342,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "clip_checks",
+          "line": 329,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "clip_work_budget_check",
+          "line": 468,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/shape/test_w5_render.py",
+      "sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "test_pattern_user_space_tile_and_repeat_matches_librsvg",
+          "line": 52,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_pattern_object_box_viewbox_and_transform_matches_librsvg",
+          "line": 69,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_pattern_stroke_tiles_on_open_path_matches_librsvg",
+          "line": 83,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_marker_start_mid_end_orient_and_ref_matches_librsvg",
+          "line": 191,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_marker_viewbox_and_stroke_width_units_matches_librsvg",
+          "line": 216,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_marker_children_inherit_definition_ancestors_not_referencing_path",
+          "line": 230,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_marker_shorthand_maps_to_start_mid_and_end",
+          "line": 247,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/svg/test_text_image_render.py",
+      "sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22",
+      "primary_owner": "MEDIA",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "test_embedded_image_render_matches_librsvg_through_clip_transform_and_opacity",
+          "line": 82,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    },
+    {
+      "suite": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "primary_owner": "DECODE",
+      "status": "NOT_RUN_IN_FULL_ORIGINAL_HARNESS",
+      "cases": [
+        {
+          "name": "test_user_space_clip_half_pixel_edge_uses_4x4_samples",
+          "line": 169,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        },
+        {
+          "name": "test_clip_half_pixel_edge_matches_librsvg_at_fractional_boundary",
+          "line": 181,
+          "owner": "DEFINITIONS",
+          "status": "NOT_RUN",
+          "reason": "Original assertion body and full mixed input remain unchanged in the legacy suite; it requires complete DecodeOperations/renderer/provider composition not supplied by this crate candidate. The mapped pure-domain predicates are covered only where listed in rust_tests."
+        }
+      ],
+      "full_input_preserved": true,
+      "reason": "Renderer, raster, media, native provider or broad integration harness remains a later gate; no original fixture/assertion was edited."
+    }
+  ],
+  "rust_tests": [
+    {
+      "name": "clip_winding_center_inside_and_outside_predicate",
+      "status": "PASS",
+      "kind": "winding/even-odd geometry predicate"
+    },
+    {
+      "name": "clip_local_bounds_maps_every_endpoint_and_rejects_empty",
+      "status": "PASS",
+      "kind": "clip bounds and affine limits"
+    },
+    {
+      "name": "angle_wrap_uses_short_turn",
+      "status": "PASS",
+      "kind": "marker auto mid tangent wrapping"
+    },
+    {
+      "name": "element_scale_is_largest_singular_value",
+      "status": "PASS",
+      "kind": "marker transform scaling"
+    },
+    {
+      "name": "mid_markers_follow_authored_segments_not_flattened_edges",
+      "status": "PASS",
+      "kind": "authored path-segment marker placement"
+    },
+    {
+      "name": "transform_keeps_position_reference_order",
+      "status": "PASS",
+      "kind": "marker transform composition"
+    },
+    {
+      "name": "named_table_and_alias_fingerprint",
+      "status": "PASS",
+      "kind": "full named CSS color table fingerprint"
+    },
+    {
+      "name": "original_css_color_assertions",
+      "status": "PASS",
+      "kind": "original CSS color assertions"
+    },
+    {
+      "name": "malformed_bounds_and_grammar",
+      "status": "PASS",
+      "kind": "color parser bounds and invalid grammar"
+    },
+    {
+      "name": "filter_supported_primitives_and_named_results",
+      "status": "PASS",
+      "kind": "filter primitive/input/result behavior"
+    },
+    {
+      "name": "filter_merge_and_matrix_defaults",
+      "status": "PASS",
+      "kind": "merge/color-matrix defaults"
+    },
+    {
+      "name": "unsupported_filter_keeps_specific_error",
+      "status": "PASS",
+      "kind": "named unsupported primitive error"
+    },
+    {
+      "name": "filter_rejects_unknown_result_and_invalid_region",
+      "status": "PASS",
+      "kind": "filter source/result/region errors"
+    },
+    {
+      "name": "local_url_bounds_and_whitespace",
+      "status": "PASS",
+      "kind": "local reference parsing"
+    },
+    {
+      "name": "filter_color_uses_full_css_named_and_function_grammar",
+      "status": "PASS",
+      "kind": "filter CSS color conversion"
+    },
+    {
+      "name": "filter_number_lists_accept_signed_adjacency_and_reject_extra_values",
+      "status": "PASS",
+      "kind": "number-list tokenization and filter validation"
+    },
+    {
+      "name": "marker_attribute_parser_keeps_units_orient_and_viewbox_mapping",
+      "status": "PASS",
+      "kind": "marker attribute parsing and viewBox transform"
+    }
+  ],
+  "unexecuted_reasons": [
+    "full clip definition decode/render including inherited/inline/stylesheet clip-rule assertions",
+    "60-level/64-child/32768-shape boundary-budget generator and raster work failure",
+    "marker_realloc_test complete generated polyline/path/segment rendering input",
+    "7 pattern librsvg oracle fixtures",
+    "embedded-image through clip/transform/opacity raster oracle",
+    "2 half-pixel clip sample/fidelity oracles",
+    "wrapper-extreme integration assertion",
+    "these remain full-input-preserved integration proof; no reduced fixture substitutes them"
+  ]
+}

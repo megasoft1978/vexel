@@ -1,0 +1,17 @@
+WO-ANIM-PROJECT-26 verification
+Date: 2026-10-13
+Scope: atomic retiming of native drawing cels/property keys through project/session APIs, pointer timeline interaction, and MCP.
+
+- Debug configure/build: `cmake --preset mac-debug && cmake --build --preset mac-debug --target project_timeline_move_test viewer_timeline_native_test mcp_native_timeline_test svgworkbench`: PASS.
+- Debug focused CTest: `ctest --test-dir build/mac-debug -R '^(project-timeline-move|viewer-timeline-native|mcp-native-timeline)$' --output-on-failure`: PASS (3/3).
+- ASan/UBSan configure/build: `cmake --preset mac-asan && cmake --build --preset mac-asan --target project_timeline_move_test viewer_timeline_native_test mcp_native_timeline_test svgworkbench`: PASS.
+- ASan/UBSan focused CTest with the same regex: PASS (3/3).
+- UBSan configure/build: `cmake --preset mac-ubsan && cmake --build --preset mac-ubsan --target project_timeline_move_test viewer_timeline_native_test mcp_native_timeline_test svgworkbench`: PASS.
+- UBSan focused CTest with the same regex: PASS (3/3).
+- `python3 scripts/wo_validate.py WO-ANIM-PROJECT-26 --ready`: PASS (revision 2; scope SHA-256 `c2e8e67419e6171e67bfffe83d285bb87a397c7cd5b4dd25a2261f2fa99d3216`).
+- `python3 scripts/ledger.py validate ledger.jsonl`: PASS (752 entries before final lifecycle rows).
+- `python3 -m json.tool tests/test_map.json`: PASS.
+- `git diff --check`: PASS.
+- Changed C source files are below 800 lines; largest are `src/app/viewer_timeline.c` (795), `src/project/project_timeline_edit.c` (770), and `src/app/viewer_timeline_layout.c` (751).
+- Project checks cover cel/property ordering and payload retention, formatting outside moved objects, collision/range/baseline rejection, no-op, and undo/redo. UI checks cover preview without mutation, pointer-up commit, occupied destination and baseline rejection. MCP checks cover cel and property movement, successful live notifications, invalid collision, no-op response, and history behavior.
+- Comprehensive UI/E2E, corpus, and performance suites were not run.

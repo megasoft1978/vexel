@@ -1,0 +1,11 @@
+{
+  "basis": "exact current-source launch overlay, NOT git HEAD which predates uncommitted Rust migration",
+  "immutable_files": {
+    "artifacts/WO-RUST-SVG-VALUES-POLICY-01/accepted-baseline/Cargo.toml": "280f1ea147fcbcb51321581512efd928b8c18c9a8fb43189a7c350ba49019ffc",
+    "artifacts/WO-RUST-SVG-VALUES-POLICY-01/accepted-baseline/src/lib.rs": "dba42ecd40410e34f966b80e0a8338e54448f745475cb91731248654b2d868ef",
+    "artifacts/WO-RUST-SVG-VALUES-POLICY-01/accepted-baseline/src/number.rs": "5a100f3f3f05f4e7d2e51554c544274fa1b3a0873444e2a0bedbf00c87179537",
+    "artifacts/WO-RUST-SVG-VALUES-POLICY-01/accepted-baseline/src/transform.rs": "5c05aac3d85a227ab0f121ff70f8b560d877f33d5ec5ee2636e4188c7886ddf2",
+    "artifacts/WO-RUST-SVG-VALUES-POLICY-01/accepted-baseline/src/viewport.rs": "3e3b5472e19503059311f625cbec613c682218d4c288c9c79d0821d730fa25d3"
+  },
+  "matches_main_accepted_and_overlay": true
+}

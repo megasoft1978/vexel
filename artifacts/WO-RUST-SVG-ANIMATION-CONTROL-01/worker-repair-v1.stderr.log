@@ -1,0 +1,59 @@
+2026-10-14T15:03:21.741125Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/rust/crates/vexel-svg-animation/src/motion.rs:
+use crate::{MotionPoint, Track};
+use crate::control::Meter;
+2026-10-14T15:04:06.131707Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/rust/crates/vexel-svg-animation/src/parse.rs:
+                    if let Some(b) = span(source, x.value) {
+                        if !meter.charge(WorkKind::SourceRead, b.len()) {
+                            break;
+                        }
+                        if [
+                            b"@keyframes".as_slice(),
+                            b"animation:",
+                            b"transition:",
+                        ]
+                        .iter()
+                        .any(|n| b.windows(n.len()).any(|w| w == *n))
+                        {
+2026-10-14T15:05:01.358675Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/rust/crates/vexel-svg-animation/src/parse_values.rs:
+pub(crate) fn attr_kind(source: &[u8], s: XmlSpan, meter: &mut Meter<'_>) -> (Attribute, bool) {
+    let b = span(source, s).unwrap_or_default();
+    if !meter.charge(WorkKind::SourceRead, b.len()) {
+        return (Attribute::Motion, false);
+    }
+    let a = match b {
+        b"x" => Some(Attribute::X),
+        b"y" => Some(Attribute::Y),
+        b"width" => Some(Attribute::Width),
+        b"height" => Some(Attribute::Height),
+        b"cx" => Some(Attribute::Cx),
+        b"cy" => Some(Attribute::Cy),
+        b"r" => Some(Attribute::R),
+        b"rx" => Some(Attribute::Rx),
+        b"ry" => Some(Attribute::Ry),
+        b"opacity" => Some(Attribute::Opacity),
+        b"fill-opacity" => Some(Attribute::FillOpacity),
+        b"stroke-opacity" => Some(Attribute::StrokeOpacity),
+        b"fill" => Some(Attribute::Fill),
+        b"stroke" => Some(Attribute::Stroke),
+        b"stroke-width" => Some(Attribute::StrokeWidth),
+        b"stroke-dashoffset" => Some(Attribute::StrokeDashoffset),
+        b"d" => Some(Attribute::D),
+        b"transform" => Some(Attribute::Transform),
+        _ => None,
+    };
+    (a.unwrap_or(Attribute::Motion), b == b"transform")
+}
+2026-10-14T15:07:57.762666Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/rust/crates/vexel-svg-animation/src/parse.rs:
+        if !meter.charge(
+            WorkKind::SourceRead,
+            t.name
+                .length
+                .saturating_add(t.local_name.length),
+        ) {
+            break;
+        }
+        if !matches!(t.kind, TokenKind::StartElement | TokenKind::EmptyElement) {
+2026-10-14T15:08:14.381077Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-animation-control/rust/crates/vexel-svg-animation/src/parse_values.rs:
+    }
+    let b = &b[start..];
+    if !meter.charge(WorkKind::SourceRead, b.len()) { return None; }

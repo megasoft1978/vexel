@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "kind": "read-only artifact/source coverage audit, not product tests",
+  "file_coverage_count": 69,
+  "signature_location_count": 678,
+  "unique_locations": 678,
+  "partitions": 13,
+  "dag_acyclic": true,
+  "original_suite_files": 53,
+  "assertion_condition_locations": 1458,
+  "fixtures": 104,
+  "frozen_goldens": 24,
+  "report_words": 1504,
+  "errors": [],
+  "semantic_and_independent_review": "pending; coverage/hashes do not establish implementation correctness"
+}

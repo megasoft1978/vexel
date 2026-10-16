@@ -1,0 +1,26 @@
+Work order: WO-RUST-SVG-PATH-01 revision 1
+Workspace: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-paths
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28), aarch64-apple-darwin
+
+Named checks:
+- `rustc +stable --version`: PASS; exact rustc 1.99.0.
+- `cargo +stable check -p vexel-svg-path --locked --offline`: PASS; no Rust source warnings.
+- `cargo +stable test -p vexel-svg-path --locked --offline`: PASS; 9 focused integration tests passed, 0 failed; unit tests 0; doc-tests 0.
+- `python3 scripts/wo_validate.py WO-RUST-SVG-PATH-01 --ready`: PASS; revision 1 and frozen spec SHA-256 validated.
+- `python3 scripts/ledger.py validate ledger.jsonl`: PASS; 1143 entries.
+- `git diff --check`: PASS.
+- Local parity-map JSON/test-reference audit: PASS; valid JSON, 12 C-symbol rows, no unresolved named Rust test references.
+- Source limits: PASS; largest changed source/test file is 251 lines (maximum allowed 799).
+
+Bring-up failures and repairs:
+- Initial focused runs exposed incorrect expected offsets and endpoints in new assertions. Expectations were reconciled with the local C behavior: malformed operand offsets point at the missing operand boundary, command-limit offsets are after the command byte, and the final open-subpath edge closes back to the first point.
+- An invalid absolute span in a test was replaced with a correctly prefixed containing source. No frozen source fixture/oracle was changed.
+- A final edge-cap assertion was adjusted to the C builder's last-command group offset for implicit closure.
+- Final named test run is green after those repairs.
+
+Implementation adaptations:
+- Borrowed source only for parsing; output vectors own edges, subpaths, segment/number records. Spans retain absolute original byte offsets without retaining source pointers.
+- Accepted `vexel-base::Span` and `vexel-geometry::{Point, Affine, affine_map_point}` are reused. Caller limits can be lower; defaults and hard caps remain 4,194,304 commands, 4,194,304 edges, and 29,360,128 numbers. There is no whole-container 16 MiB cap.
+- Fallible vector reservations produce typed OOM diagnostics; Rust drop cleans partial parse state. No unsafe code, dependency, or shared metadata change.
+
+Build output included Xcode SDK discovery notices about the local DARWIN_USER_CACHE_DIR and event stream; they did not fail either Cargo check.

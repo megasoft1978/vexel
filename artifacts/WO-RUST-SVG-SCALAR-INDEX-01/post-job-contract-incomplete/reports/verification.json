@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-SCALAR-INDEX-01",
+  "status": "incomplete_candidate_not_owner_scope_complete",
+  "commands": [
+    {
+      "command": "rustfmt --edition 2024 --check rust/crates/vexel-svg-scalar-index/src/lib.rs rust/crates/vexel-svg-scalar-index/src/util.rs rust/crates/vexel-svg-scalar-index/src/bounds.rs rust/crates/vexel-svg-scalar-index/src/job_bounds.rs rust/crates/vexel-svg-scalar-index/src/scanline.rs rust/crates/vexel-svg-scalar-index/src/fill.rs rust/crates/vexel-svg-scalar-index/src/preflight.rs rust/crates/vexel-svg-scalar-index/src/tests.rs rust/crates/vexel-svg-scalar-index/tests/owning_job_index.rs",
+      "exit_code": 0,
+      "stdout_stderr": "passed"
+    },
+    {
+      "command": "cargo +stable check -p vexel-svg-scalar-index --locked --offline",
+      "exit_code": 0,
+      "stdout_stderr": "Finished dev profile; no warnings or errors"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-scalar-index --locked --offline",
+      "exit_code": 0,
+      "stdout_stderr": "11 unit tests and 2 integration tests passed; 0 failed; 0 doc tests"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-SCALAR-INDEX-01 --ready",
+      "exit_code": 0,
+      "stdout_stderr": "valid frozen work order revision 1; scope hash unchanged"
+    }
+  ],
+  "not_run": [
+    "Original mixed render/decode/reference suites and large fixture hash proof: later composition gates, and the pure cases not already covered remain incomplete.",
+    "Performance benchmark suite: not run.",
+    "Fresh main checks and protected-path audit: coordinator gate after candidate; current work is not a complete candidate."
+  ],
+  "blockers": [
+    "Owned storage conversion remains for clip-boundary traversal, scanline row mutation, fill cache/crossings/intervals/runs and exact preflight; do not register the Vec-based paths as production.",
+  "The full assigned pure assertion set across the six original suites is not yet ported or verified.",
+    "A non-empty animation fixture needs XmlToken, which is unavailable as a direct accepted crate dependency while manifests are protected. The current real SceneBuilder/path fixture uses empty animation tokens."
+  ]
+}

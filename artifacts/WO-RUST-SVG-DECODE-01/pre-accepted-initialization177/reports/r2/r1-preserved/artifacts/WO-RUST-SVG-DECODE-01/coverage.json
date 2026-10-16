@@ -1,0 +1,423 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-DECODE-01",
+  "complete": false,
+  "assigned_suite_count": 19,
+  "suites": [
+    {
+      "suite": "tests/bench_shape_raster.py",
+      "sha256": "08c049f2efbe0498e15cffb08ce340da154ff38694abaf22f1ccc1f4762760aa",
+      "assigned_case_count": 0,
+      "cases": [],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/fuzz/shape/shape_fuzz.c",
+      "sha256": "9ae56612013411f09764f6e3c65281cd6d877b21cfebdea02351bb0806937ef4",
+      "assigned_case_count": 3,
+      "cases": [
+        {
+          "name": "identify_features",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "command_cap_probe",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "main",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/fuzz/shape/shape_fuzz.py",
+      "sha256": "a75e4e95a5caccf331214206b37688d63542bdfb5232202d9c860f1173b79065",
+      "assigned_case_count": 0,
+      "cases": [],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/raster/cache/cache_contract.c",
+      "sha256": "e69a30865eaa2212561b9283d0cb2b6325ed72760d557981c8b56406cb8ab602",
+      "assigned_case_count": 1,
+      "cases": [
+        {
+          "name": "spatial_cache_contract_tests",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "assigned_case_count": 0,
+      "cases": [],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/path_number_test.c",
+      "sha256": "2873387dde31e5c326aee95c3a30fc117b548f4b9c5271f77b8fc98f31eaf9ad",
+      "assigned_case_count": 1,
+      "cases": [
+        {
+          "name": "main",
+          "status": "partial",
+          "reason": "Compact/separated authored number spans, edge parity and malformed offset have focused Rust tests; complete original decode/source-retention checks are not ported."
+        }
+      ],
+      "status": "partial",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/png_utils.py",
+      "sha256": "02469ea6dcfaa92f0ce33440d07bd363f469f4fc79058f3d50e4093f94249e07",
+      "assigned_case_count": 0,
+      "cases": [],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/shape_render_cli.c",
+      "sha256": "6a31787ae83f018e5d287f6ab840d8732d050c10e0fbfa7716f341c14c378b24",
+      "assigned_case_count": 2,
+      "cases": [
+        {
+          "name": "print_peak_rss",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "main",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/shape_render_stats_cli.c",
+      "sha256": "9d63a4f37fab9dcf81df398d615e5baab7180cddb6d84c362cfd4f88a18f4ecc",
+      "assigned_case_count": 3,
+      "cases": [
+        {
+          "name": "read_file",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "make_translucent",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "main",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_ignored.c",
+      "sha256": "fceafa6fdf673e446632ffcf4ba87fb112023751cd964bef31e338ee0d31effc",
+      "assigned_case_count": 4,
+      "cases": [
+        {
+          "name": "check",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "same_render",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "expect_ignored",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "main",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "assigned_case_count": 4,
+      "cases": [
+        {
+          "name": "decode_job_total",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "render_rgba",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "pixel_is",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "svg_shape_m4_06_evidence_tests",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_m4_06_evidence.h",
+      "sha256": "ba29fdf1c9f6780b1b4ce5a24bebbeb30272f7680543a472771aaf21fc2e52c7",
+      "assigned_case_count": 0,
+      "cases": [],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "assigned_case_count": 9,
+      "cases": [
+        {
+          "name": "render_source",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "source_bytes_unchanged_check",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "sha_same",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "decode_use_target_size",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "reference_boundary_checks",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "reference_rejection_checks",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "use_transform_order_check",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "indexed_paint_lookup_check",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "svg_shape_reference_tests",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_reference.h",
+      "sha256": "7d9830e7e8bb57aa900c9327ee5955df3e19aaf16546e7238046b574f68cef5b",
+      "assigned_case_count": 0,
+      "cases": [],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_render_frame_ignored.py",
+      "sha256": "32e6024dac868d4adc3fd4094823ddcc41c8c0cabe98ce40dd76738c8a923a7e",
+      "assigned_case_count": 3,
+      "cases": [
+        {
+          "name": "test_one_line_per_kind_on_success",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_clean_document_prints_nothing",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_failure_keeps_single_diagnostic",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "assigned_case_count": 4,
+      "cases": [
+        {
+          "name": "paths_equivalent",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "render_source",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "alpha_at",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "main",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_w5_render.py",
+      "sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "assigned_case_count": 1,
+      "cases": [
+        {
+          "name": "test_crisp_edges_and_extended_linejoin_fallbacks_decode",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/w5_reference.c",
+      "sha256": "e549afc6bb4df09ebc4b4e6b2ca06fea696d2adaec26f228d83594b66c9739c2",
+      "assigned_case_count": 1,
+      "cases": [
+        {
+          "name": "svg_shape_w5_reference_tests",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    },
+    {
+      "suite": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "assigned_case_count": 14,
+      "cases": [
+        {
+          "name": "test_css_cascade_inheritance_and_source_preservation",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_css_invalid_recognized_value_has_value_offset",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_css_invalid_values_for_all_nine_paint_properties",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_css_stylesheet_limit_and_unsupported_declarations",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_css_class_tokens_and_initial_paint",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_css_presentation_precedence_source_order_and_inheritance",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_css_rule_match_work_limit",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_decoder_diagnostics_source_retention_and_raster",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_reference_comparison_and_repeatability",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_default_viewbox_meet_letterboxes_mismatched_aspect_ratio",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_root_height_diagnostic_uses_height_value_offset",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_transform_diagnostic_preserves_attribute_value_offset",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_culled_renderer_matches_reference_for_fixtures_and_random_documents",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        },
+        {
+          "name": "test_shape_fuzz_wrapper_rejects_and_retains_sanitizer_stderr",
+          "status": "not_run",
+          "reason": "Original assertion body is cataloged but has no equivalent Rust test in this candidate."
+        }
+      ],
+      "status": "not_run",
+      "mixed_oracle": "Preserved in frozen catalog; whole renderer/fidelity/UI execution belongs to later integration."
+    }
+  ]
+}

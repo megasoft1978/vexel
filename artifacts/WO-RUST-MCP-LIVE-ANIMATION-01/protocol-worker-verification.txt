@@ -1,0 +1,6 @@
+Candidate: .cache/WO-RUST-MCP-LIVE-ANIMATION-01/candidate-protocol
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Preview tools: animation_list, bounded animation_add, and preview-only animation_control (play/pause/seek).
+Default profile: animation_control is omitted and rejected as unknown; existing full schema otherwise preserved.
+Validation: focused MCP preview profile tests 6/6 passed; package-scoped formatting passed; git diff --check passed.
+Source hashes: tools.rs 5cff0f78686c228d7008424ce90205da69aaf387710d1b68da014ea1dc2d0f5e; tool_methods.rs 53637725da3646d300fd1cd9bc280441291400dbe2bb85a1d1d20f8519bc5c73; mcp_preview_profile.rs 6dad21367a08af0150b66b41b18469877debc6d1da77da309f43e05d1dcef437.

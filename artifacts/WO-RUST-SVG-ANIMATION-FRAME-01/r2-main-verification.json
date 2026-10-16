@@ -1,0 +1,10 @@
+{
+  "status": "pass",
+  "exact_reviewed_source_integrated": true,
+  "check_exit": 0,
+  "test_exit": 0,
+  "focused_entries_passed": 31,
+  "protected_candidate_hashes": 1670,
+  "source_603_HEAD_index_preserved": true,
+  "scope": "Full owned31symbol frame/clip source, not whole renderer/runtime/authoring/CLI/fuzz/app"
+}

@@ -1,0 +1,40 @@
+{
+  "baseline_peer_count": 375,
+  "unchanged_peer_count": 371,
+  "allowed_changed_peer_paths": [
+    "rust/crates/vexel-scene/src/builder.rs",
+    "rust/crates/vexel-scene/src/decode_initialization.rs",
+    "rust/crates/vexel-scene/src/draft.rs",
+    "rust/crates/vexel-scene/src/request.rs"
+  ],
+  "new_rust_paths": [
+    "rust/crates/vexel-scene/tests/child_request_contracts.rs"
+  ],
+  "missing_paths": [],
+  "protected_mismatches": [],
+  "passed": true,
+  "root_readme_sha256": "34f70610364f798bcfa9d036118eba3e4789bb241371cf84b57a775856bb84ac",
+  "root_readme_unchanged_from_reviewed_baseline": true,
+  "protected_workspace_inputs": {
+    "Cargo.toml": {
+      "expected": "23509968b44aed12c6ed56934c7131e539e11e51f0f6d2bddf5d8c87c3a918d5",
+      "actual": "23509968b44aed12c6ed56934c7131e539e11e51f0f6d2bddf5d8c87c3a918d5",
+      "matches": true
+    },
+    "Cargo.lock": {
+      "expected": "6679c6fc369af4248f29146a7172f31af9c5a4d80675f5fa15f650f943803a42",
+      "actual": "6679c6fc369af4248f29146a7172f31af9c5a4d80675f5fa15f650f943803a42",
+      "matches": true
+    },
+    "rust/crates/vexel-scene/Cargo.toml": {
+      "expected": "9a055c86e61af92236a524fbcec33a98e91ed640b1bf4411ebaf121f07ade7e7",
+      "actual": "9a055c86e61af92236a524fbcec33a98e91ed640b1bf4411ebaf121f07ade7e7",
+      "matches": true
+    },
+    "rust/crates/vexel-scene/README.md": {
+      "expected": "c0c88a661720d07aa73db074aff456a5371e9b297a19985c7aae825b3d7aba90",
+      "actual": "c0c88a661720d07aa73db074aff456a5371e9b297a19985c7aae825b3d7aba90",
+      "matches": true
+    }
+  }
+}

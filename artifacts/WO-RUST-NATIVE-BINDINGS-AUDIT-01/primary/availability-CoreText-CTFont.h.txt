@@ -1,0 +1,127 @@
+1134:     CFIndex         count ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+1135: 
+1136: /*!
+1137:     @function   CTFontCreatePathForGlyph
+1138:     @abstract   Creates a path for the specified glyph.
+1139: 
+1140:     @discussion Creates a path from the outlines of the glyph for the specified font. The path will reflect the font point size, matrix, and transform parameter, in that order. The transform parameter will most commonly be used to provide a translation to the desired glyph origin.
+1141: 
+1142:     @param      font
+1143:                 The font reference.
+1144: 
+1145:     @param      glyph
+1146:                 The glyph.
+1147: 
+1148:     @param      matrix
+
+1151:     @result     A retained CGPath reference containing the glyph outlines or NULL if there is no such glyph or it has no outline.
+1152: */
+1153: CT_EXPORT
+1154: CGPathRef _Nullable CTFontCreatePathForGlyph(
+1155:     CTFontRef                   font,
+1156:     CGGlyph                     glyph,
+1157:     const CGAffineTransform * _Nullable matrix ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+1158: 
+1159: /*! --------------------------------------------------------------------------
+1160:     @group Font Variations
+1161: *///--------------------------------------------------------------------------
+1162: 
+1163: /*!
+1164:     @defined    kCTFontVariationAxisIdentifierKey
+1165:     @abstract   Key to get the variation axis identifier.
+
+149: *///--------------------------------------------------------------------------
+150: 
+151: /*!
+152:     @function   CTFontCreateWithName
+153:     @abstract   Returns a new font reference for the given name.
+154: 
+155:     @discussion This function uses font descriptor matching so only registered fonts can be returned; see CTFontManager.h for more information. If you are trying to create a system UI font (with name beginning with a "."), you should use CTFontCreateUIFontForLanguage() or appropriate AppKit/UIKit APIs instead.
+156: 
+157:     @param      name
+158:                 The font name for which you wish to create a new font reference. A valid PostScript name is preferred, although other font name types will be matched in a fallback manner. Any font name beginning with a "." is reserved for the system and should not be used here.
+159: 
+160:     @param      size
+161:                 The point size for the font reference. If 0.0 is specified, the default font size of 12.0 will be used.
+162: 
+163:     @param      matrix
+
+166:     @result     This function will return a CTFontRef that best matches the name provided with size and matrix attributes. The name parameter is the only required parameters, and default values will be used for unspecified parameters. A best match will be found if all parameters cannot be matched identically.
+167: */
+168: CT_EXPORT
+169: CTFontRef CTFontCreateWithName(
+170:     CFStringRef                 name,
+171:     CGFloat                     size,
+172:     const CGAffineTransform * _Nullable matrix ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+173: 
+174: #ifdef __swift__
+175: 
+176: static inline CF_SWIFT_NAME(CTFont.init(_:size:)) CTFontRef _CTFontCreateWithName(CFStringRef name, CGFloat size)
+177: {
+178:     return CTFontCreateWithName(name, size, NULL);
+179: }
+180: 
+
+173: 
+174: #ifdef __swift__
+175: 
+176: static inline CF_SWIFT_NAME(CTFont.init(_:size:)) CTFontRef _CTFontCreateWithName(CFStringRef name, CGFloat size)
+177: {
+178:     return CTFontCreateWithName(name, size, NULL);
+179: }
+180: 
+181: static inline CF_SWIFT_NAME(CTFont.init(_:transform:)) CTFontRef _CTFontCreateWithNameAndMatrix(CFStringRef name, CGAffineTransform matrix)
+182: {
+183:     return CTFontCreateWithName(name, 1.0, &matrix);
+184: }
+185: 
+186: #endif // __swift__
+187: 
+
+175: 
+176: static inline CF_SWIFT_NAME(CTFont.init(_:size:)) CTFontRef _CTFontCreateWithName(CFStringRef name, CGFloat size)
+177: {
+178:     return CTFontCreateWithName(name, size, NULL);
+179: }
+180: 
+181: static inline CF_SWIFT_NAME(CTFont.init(_:transform:)) CTFontRef _CTFontCreateWithNameAndMatrix(CFStringRef name, CGAffineTransform matrix)
+182: {
+183:     return CTFontCreateWithName(name, 1.0, &matrix);
+184: }
+185: 
+186: #endif // __swift__
+187: 
+188: /*!
+189:     @function   CTFontCreateWithFontDescriptor
+
+178:     return CTFontCreateWithName(name, size, NULL);
+179: }
+180: 
+181: static inline CF_SWIFT_NAME(CTFont.init(_:transform:)) CTFontRef _CTFontCreateWithNameAndMatrix(CFStringRef name, CGAffineTransform matrix)
+182: {
+183:     return CTFontCreateWithName(name, 1.0, &matrix);
+184: }
+185: 
+186: #endif // __swift__
+187: 
+188: /*!
+189:     @function   CTFontCreateWithFontDescriptor
+190:     @abstract   Returns a new font reference that best matches the font descriptor.
+191: 
+192:     @param      descriptor
+
+180: 
+181: static inline CF_SWIFT_NAME(CTFont.init(_:transform:)) CTFontRef _CTFontCreateWithNameAndMatrix(CFStringRef name, CGAffineTransform matrix)
+182: {
+183:     return CTFontCreateWithName(name, 1.0, &matrix);
+184: }
+185: 
+186: #endif // __swift__
+187: 
+188: /*!
+189:     @function   CTFontCreateWithFontDescriptor
+190:     @abstract   Returns a new font reference that best matches the font descriptor.
+191: 
+192:     @param      descriptor
+193:                 A font descriptor containing attributes that specify the requested font.
+194: 

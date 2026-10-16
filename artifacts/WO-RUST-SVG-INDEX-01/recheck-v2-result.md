@@ -1,0 +1,7 @@
+**REJECT**
+
+The prior error-order and detached metadata allocation issues are repaired: a completed validation error returns before another reader step, and an oversized metadata candidate is dropped while existing records remain. The coordinator overlay’s four recorded dependency hashes match the current XML source, tests, work order, and ledger. The source limit and preview subset remain unchanged.
+
+**Blocker:** collector growth still doubles without clamping to the remaining legal capacity. In [lib.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/rust/crates/vexel-svg-index/src/lib.rs:356), the collector requests twice its current capacity; [reserve_tokens](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-index/rust/crates/vexel-svg-index/src/lib.rs:414) rejects that request when it exceeds the 128 MiB component budget. At the current token layout, doubling from 1,048,576 tokens requests 2,097,152, over budget, although a smaller increase would fit. A valid document can therefore fail with `OutputExhausted` while collector capacity remains available. Clamp the request to the maximum capacity allowed by the current XML storage before reserving.
+
+The inspected XML stream reports and bounds actual retained token, open-name, and visitor capacities; metadata reservations are checked and rejected safely. The five unit regressions and six integration tests are present, and the verification artifact records them passing. I did not run checks. No full application or performance certification.

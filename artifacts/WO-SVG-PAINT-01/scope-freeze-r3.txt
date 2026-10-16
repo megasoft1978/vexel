@@ -1,0 +1,5 @@
+WO-SVG-PAINT-01 revision 3 scope correction
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+spec_sha256: 72b4fd5fa250b526c9c6cfba162ede40a37dcdaed0c5dc0880dfdafd64b4162c
+Revision 2 omitted src/raster/shape_render.c, needed to pass document-space sample coordinates for stroke-only gradients. Revision 2 is superseded after focused test exposed the gap.
+Allowlist and protected paths are frozen in work/WO-SVG-PAINT-01.md.

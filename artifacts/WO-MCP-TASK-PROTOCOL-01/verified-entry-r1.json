@@ -1,0 +1,23 @@
+{
+  "ts": "2026-10-14T04:48:40Z",
+  "wo_id": "WO-MCP-TASK-PROTOCOL-01",
+  "event": "verified",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-MCP-TASK-PROTOCOL-01-r1-verified",
+  "session_id": "async-parallel-luna-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "agent-runtime",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "fail",
+  "artifacts": [
+    "artifacts/WO-MCP-TASK-PROTOCOL-01/spec-r1.md",
+    "artifacts/WO-MCP-TASK-PROTOCOL-01/verification.txt"
+  ],
+  "note": "R1 focused tests pass but review finds unvalidated content entries and task-creation metadata vs DetailedTask ambiguity. R2 freezes optional poll, creation terminal metadata and effective task readiness; preserve original assertions. No production bridge acceptance."
+}

@@ -1,0 +1,2 @@
+COMMAND: env CARGO_HOME="$PWD/.cache/cargo" cargo +stable fmt --package vexel-v1-document -- --check
+EXIT: 0

@@ -1,0 +1,383 @@
+BINDING addCompletedHandler
+476:         /// Synchronously wait for this command buffer to be scheduled.
+477:         #[unsafe(method(waitUntilScheduled))]
+478:         #[unsafe(method_family = none)]
+479:         fn waitUntilScheduled(&self);
+480: 
+481:         #[cfg(feature = "block2")]
+482:         /// Add a block to be called when this command buffer has completed execution.
+483:         ///
+484:         /// # Safety
+485:         ///
+486:         /// `block` must be a valid pointer.
+487:         #[unsafe(method(addCompletedHandler:))]
+488:         #[unsafe(method_family = none)]
+489:         unsafe fn addCompletedHandler(&self, block: MTLCommandBufferHandler);
+490: 
+491:         /// Synchronously wait for this command buffer to complete.
+492:         #[unsafe(method(waitUntilCompleted))]
+493:         #[unsafe(method_family = none)]
+494:         fn waitUntilCompleted(&self);
+495: 
+496:         /// status reports the current stage in the lifetime of MTLCommandBuffer, as it proceeds to enqueued, committed, scheduled, and completed.
+497:         #[unsafe(method(status))]
+498:         #[unsafe(method_family = none)]
+499:         fn status(&self) -> MTLCommandBufferStatus;
+500: 
+501:         /// If an error occurred during execution, the NSError may contain more details about the problem.
+502:         #[unsafe(method(error))]
+503:         #[unsafe(method_family = none)]
+
+SDK addCompletedHandler
+49:  
+50:  @constant MTLCommandBufferStatusCompleted
+51:  The command buffer has finished executing successfully: any blocks set with -addCompletedHandler: may now be called.
+52:  
+53:  @constant MTLCommandBufferStatusError
+54:  Execution of the command buffer was aborted due to an error during execution.  Check -error for more information.
+55:  */
+56: typedef NS_ENUM(NSUInteger, MTLCommandBufferStatus) {
+57:     MTLCommandBufferStatusNotEnqueued = 0,
+58:     MTLCommandBufferStatusEnqueued = 1,
+
+SDK addCompletedHandler
+343: 
+344: /*!
+345:  @method addCompletedHandler:block:
+346:  @abstract Add a block to be called when this command buffer has completed execution.
+347:  */
+348: - (void)addCompletedHandler:(MTLCommandBufferHandler)block;
+349: 
+350: /*!
+351:  @method waitUntilCompleted
+352:  @abstract Synchronously wait for this command buffer to complete.
+
+SDK addCompletedHandler
+346:  @abstract Add a block to be called when this command buffer has completed execution.
+347:  */
+348: - (void)addCompletedHandler:(MTLCommandBufferHandler)block;
+349: 
+350: /*!
+351:  @method waitUntilCompleted
+352:  @abstract Synchronously wait for this command buffer to complete.
+353:  */
+354: - (void)waitUntilCompleted NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use 'await completed()' instead.");
+355: 
+
+BINDING presentDrawable
+432:         /// # Safety
+433:         ///
+434:         /// `block` must be a valid pointer.
+435:         #[unsafe(method(addScheduledHandler:))]
+436:         #[unsafe(method_family = none)]
+437:         unsafe fn addScheduledHandler(&self, block: MTLCommandBufferHandler);
+438: 
+439:         #[cfg(feature = "MTLDrawable")]
+440:         /// Add a drawable present that will be invoked when this command buffer has been scheduled for execution.
+441:         ///
+442:         /// The submission thread will be lock stepped with present call been serviced by window server
+443:         #[unsafe(method(presentDrawable:))]
+444:         #[unsafe(method_family = none)]
+445:         fn presentDrawable(&self, drawable: &ProtocolObject<dyn MTLDrawable>);
+446: 
+447:         #[cfg(all(feature = "MTLDrawable", feature = "objc2-core-foundation"))]
+448:         /// Add a drawable present for a specific host time that will be invoked when this command buffer has been scheduled for execution.
+449:         ///
+450:         /// The submission thread will be lock stepped with present call been serviced by window server
+451:         #[unsafe(method(presentDrawable:atTime:))]
+452:         #[unsafe(method_family = none)]
+453:         fn presentDrawable_atTime(
+454:             &self,
+455:             drawable: &ProtocolObject<dyn MTLDrawable>,
+456:             presentation_time: CFTimeInterval,
+457:         );
+458: 
+459:         #[cfg(all(feature = "MTLDrawable", feature = "objc2-core-foundation"))]
+
+SDK presentDrawable
+313: 
+314: /*!
+315:  @method presentDrawable:
+316:  @abstract Add a drawable present that will be invoked when this command buffer has been scheduled for execution.
+317:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+318:  */
+319: - (void)presentDrawable:(id <MTLDrawable>)drawable;
+320: 
+321: /*!
+322:  @method presentDrawable:atTime:
+
+SDK presentDrawable
+317:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+318:  */
+319: - (void)presentDrawable:(id <MTLDrawable>)drawable;
+320: 
+321: /*!
+322:  @method presentDrawable:atTime:
+323:  @abstract Add a drawable present for a specific host time that will be invoked when this command buffer has been scheduled for execution.
+324:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+325: */
+326: - (void)presentDrawable:(id <MTLDrawable>)drawable atTime:(CFTimeInterval)presentationTime;
+
+SDK presentDrawable
+320: 
+321: /*!
+322:  @method presentDrawable:atTime:
+323:  @abstract Add a drawable present for a specific host time that will be invoked when this command buffer has been scheduled for execution.
+324:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+325: */
+326: - (void)presentDrawable:(id <MTLDrawable>)drawable atTime:(CFTimeInterval)presentationTime;
+327: 
+328: /*!
+329:  @method presentDrawable:afterMinimumDuration:
+
+BINDING commit
+414:         /// The host time in seconds that GPU finishes executing this command buffer. Returns zero if CPU has not received completion notification. This usually can be called in command buffer completion handler.
+415:         #[unsafe(method(GPUEndTime))]
+416:         #[unsafe(method_family = none)]
+417:         fn GPUEndTime(&self) -> CFTimeInterval;
+418: 
+419:         /// Append this command buffer to the end of its MTLCommandQueue.
+420:         #[unsafe(method(enqueue))]
+421:         #[unsafe(method_family = none)]
+422:         fn enqueue(&self);
+423: 
+424:         /// Commit a command buffer so it can be executed as soon as possible.
+425:         #[unsafe(method(commit))]
+426:         #[unsafe(method_family = none)]
+427:         fn commit(&self);
+428: 
+429:         #[cfg(feature = "block2")]
+430:         /// Adds a block to be called when this command buffer has been scheduled for execution.
+431:         ///
+432:         /// # Safety
+433:         ///
+434:         /// `block` must be a valid pointer.
+435:         #[unsafe(method(addScheduledHandler:))]
+436:         #[unsafe(method_family = none)]
+437:         unsafe fn addScheduledHandler(&self, block: MTLCommandBufferHandler);
+438: 
+439:         #[cfg(feature = "MTLDrawable")]
+440:         /// Add a drawable present that will be invoked when this command buffer has been scheduled for execution.
+441:         ///
+
+SDK commit
+34:  @enum MTLCommandBufferStatus
+35:  
+36:  @abstract MTLCommandBufferStatus reports the current stage in the lifetime of MTLCommandBuffer, as it proceeds to enqueued, committed, scheduled, and completed.
+37:  
+38:  @constant MTLCommandBufferStatusNotEnqueued
+39:  The command buffer has not been enqueued yet.
+40:  
+41:  @constant MTLCommandBufferStatusEnqueued
+42:  This command buffer is enqueued, but not committed.
+43:  
+
+SDK commit
+40:  
+41:  @constant MTLCommandBufferStatusEnqueued
+42:  This command buffer is enqueued, but not committed.
+43:  
+44:  @constant MTLCommandBufferStatusCommitted
+45:  Commited to its command queue, but not yet scheduled for execution.
+46:  
+47:  @constant MTLCommandBufferStatusScheduled
+48:  All dependencies have been resolved and the command buffer has been scheduled for execution.
+49:  
+
+SDK commit
+301: 
+302: /*!
+303:  @method commit
+304:  @abstract Commit a command buffer so it can be executed as soon as possible.
+305:  */
+306: - (void)commit;
+307: 
+308: /*!
+309:  @method addScheduledHandler:block:
+310:  @abstract Adds a block to be called when this command buffer has been scheduled for execution.
+
+BINDING status
+486:         /// `block` must be a valid pointer.
+487:         #[unsafe(method(addCompletedHandler:))]
+488:         #[unsafe(method_family = none)]
+489:         unsafe fn addCompletedHandler(&self, block: MTLCommandBufferHandler);
+490: 
+491:         /// Synchronously wait for this command buffer to complete.
+492:         #[unsafe(method(waitUntilCompleted))]
+493:         #[unsafe(method_family = none)]
+494:         fn waitUntilCompleted(&self);
+495: 
+496:         /// status reports the current stage in the lifetime of MTLCommandBuffer, as it proceeds to enqueued, committed, scheduled, and completed.
+497:         #[unsafe(method(status))]
+498:         #[unsafe(method_family = none)]
+499:         fn status(&self) -> MTLCommandBufferStatus;
+500: 
+501:         /// If an error occurred during execution, the NSError may contain more details about the problem.
+502:         #[unsafe(method(error))]
+503:         #[unsafe(method_family = none)]
+504:         fn error(&self) -> Option<Retained<NSError>>;
+505: 
+506:         #[cfg(all(feature = "MTLBlitCommandEncoder", feature = "MTLCommandEncoder"))]
+507:         /// returns a blit command encoder to encode into this command buffer.
+508:         #[unsafe(method(blitCommandEncoder))]
+509:         #[unsafe(method_family = none)]
+510:         fn blitCommandEncoder(&self)
+511:             -> Option<Retained<ProtocolObject<dyn MTLBlitCommandEncoder>>>;
+512: 
+513:         #[cfg(all(
+
+SDK status
+134:  
+135:  @constant MTLCommandBufferErrorOptionEncoderExecutionStatus
+136:  Provide the execution status of the individual encoders within the command buffer. In the event of a command buffer error, populate the `userInfo` dictionary of the command buffer's NSError parameter, see MTLCommandBufferEncoderInfoErrorKey and MTLCommandBufferEncoderInfo. Note that enabling this error reporting option may increase CPU, GPU, and/or memory overhead on some platforms; testing for impact is suggested.
+137:  */
+138: typedef NS_OPTIONS(NSUInteger, MTLCommandBufferErrorOption) {
+139:     MTLCommandBufferErrorOptionNone = 0,
+140:     MTLCommandBufferErrorOptionEncoderExecutionStatus = 1 << 0,
+141: } API_AVAILABLE(macos(11.0), ios(14.0));
+142: 
+143: /*!
+
+SDK status
+196: 
+197: /*!
+198:  @abstract Provides execution status information for a Metal command encoder.
+199:  */
+200: API_AVAILABLE(macos(11.0), ios(14.0))
+201: @protocol MTLCommandBufferEncoderInfo <NSObject>
+202: 
+203: /*!
+204:  @abstract The debug label given to the associated Metal command encoder at command buffer submission.
+205: */
+
+SDK status
+355: 
+356: /*!
+357:  @property status
+358:  @abstract status reports the current stage in the lifetime of MTLCommandBuffer, as it proceeds to enqueued, committed, scheduled, and completed.
+359:  */
+360: @property (readonly) MTLCommandBufferStatus status;
+361: 
+362: /*!
+363:  @property error
+364:  @abstract If an error occurred during execution, the NSError may contain more details about the problem.
+
+BINDING renderCommandEncoderWithDescriptor
+508:         #[unsafe(method(blitCommandEncoder))]
+509:         #[unsafe(method_family = none)]
+510:         fn blitCommandEncoder(&self)
+511:             -> Option<Retained<ProtocolObject<dyn MTLBlitCommandEncoder>>>;
+512: 
+513:         #[cfg(all(
+514:             feature = "MTLCommandEncoder",
+515:             feature = "MTLRenderCommandEncoder",
+516:             feature = "MTLRenderPass"
+517:         ))]
+518:         /// returns a render command endcoder to encode into this command buffer.
+519:         #[unsafe(method(renderCommandEncoderWithDescriptor:))]
+520:         #[unsafe(method_family = none)]
+521:         fn renderCommandEncoderWithDescriptor(
+522:             &self,
+523:             render_pass_descriptor: &MTLRenderPassDescriptor,
+524:         ) -> Option<Retained<ProtocolObject<dyn MTLRenderCommandEncoder>>>;
+525: 
+526:         #[cfg(all(
+527:             feature = "MTLCommandEncoder",
+528:             feature = "MTLComputeCommandEncoder",
+529:             feature = "MTLComputePass"
+530:         ))]
+531:         /// returns a compute command endcoder to encode into this command buffer.
+532:         #[unsafe(method(computeCommandEncoderWithDescriptor:))]
+533:         #[unsafe(method_family = none)]
+534:         fn computeCommandEncoderWithDescriptor(
+535:             &self,
+
+SDK renderCommandEncoderWithDescriptor
+373: 
+374: /*!
+375:  @method renderCommandEncoderWithDescriptor:
+376:  @abstract returns a render command endcoder to encode into this command buffer.
+377:  */
+378: - (nullable id <MTLRenderCommandEncoder>)renderCommandEncoderWithDescriptor:(MTLRenderPassDescriptor *)renderPassDescriptor;
+379: 
+380: /*!
+381:  @method computeCommandEncoderWithDescriptor:
+382:  @abstract returns a compute command endcoder to encode into this command buffer.
+
+SDK renderCommandEncoderWithDescriptor
+376:  @abstract returns a render command endcoder to encode into this command buffer.
+377:  */
+378: - (nullable id <MTLRenderCommandEncoder>)renderCommandEncoderWithDescriptor:(MTLRenderPassDescriptor *)renderPassDescriptor;
+379: 
+380: /*!
+381:  @method computeCommandEncoderWithDescriptor:
+382:  @abstract returns a compute command endcoder to encode into this command buffer.
+383:  */
+384: - (nullable id <MTLComputeCommandEncoder>)computeCommandEncoderWithDescriptor:(MTLComputePassDescriptor *)computePassDescriptor API_AVAILABLE(macos(11.0), ios(14.0));
+385: 
+
+BINDING blitCommandEncoder
+497:         #[unsafe(method(status))]
+498:         #[unsafe(method_family = none)]
+499:         fn status(&self) -> MTLCommandBufferStatus;
+500: 
+501:         /// If an error occurred during execution, the NSError may contain more details about the problem.
+502:         #[unsafe(method(error))]
+503:         #[unsafe(method_family = none)]
+504:         fn error(&self) -> Option<Retained<NSError>>;
+505: 
+506:         #[cfg(all(feature = "MTLBlitCommandEncoder", feature = "MTLCommandEncoder"))]
+507:         /// returns a blit command encoder to encode into this command buffer.
+508:         #[unsafe(method(blitCommandEncoder))]
+509:         #[unsafe(method_family = none)]
+510:         fn blitCommandEncoder(&self)
+511:             -> Option<Retained<ProtocolObject<dyn MTLBlitCommandEncoder>>>;
+512: 
+513:         #[cfg(all(
+514:             feature = "MTLCommandEncoder",
+515:             feature = "MTLRenderCommandEncoder",
+516:             feature = "MTLRenderPass"
+517:         ))]
+518:         /// returns a render command endcoder to encode into this command buffer.
+519:         #[unsafe(method(renderCommandEncoderWithDescriptor:))]
+520:         #[unsafe(method_family = none)]
+521:         fn renderCommandEncoderWithDescriptor(
+522:             &self,
+523:             render_pass_descriptor: &MTLRenderPassDescriptor,
+524:         ) -> Option<Retained<ProtocolObject<dyn MTLRenderCommandEncoder>>>;
+
+SDK blitCommandEncoder
+367: 
+368: /*!
+369:  @method blitCommandEncoder
+370:  @abstract returns a blit command encoder to encode into this command buffer.
+371:  */
+372: - (nullable id <MTLBlitCommandEncoder>)blitCommandEncoder;
+373: 
+374: /*!
+375:  @method renderCommandEncoderWithDescriptor:
+376:  @abstract returns a render command endcoder to encode into this command buffer.
+
+SDK blitCommandEncoder
+370:  @abstract returns a blit command encoder to encode into this command buffer.
+371:  */
+372: - (nullable id <MTLBlitCommandEncoder>)blitCommandEncoder;
+373: 
+374: /*!
+375:  @method renderCommandEncoderWithDescriptor:
+376:  @abstract returns a render command endcoder to encode into this command buffer.
+377:  */
+378: - (nullable id <MTLRenderCommandEncoder>)renderCommandEncoderWithDescriptor:(MTLRenderPassDescriptor *)renderPassDescriptor;
+379: 
+
+SDK blitCommandEncoder
+385: 
+386: /*!
+387:  @method blitCommandEncoderWithDescriptor:
+388:  @abstract returns a blit command endcoder to encode into this command buffer.
+389:  */
+390: - (nullable id <MTLBlitCommandEncoder>)blitCommandEncoderWithDescriptor:(MTLBlitPassDescriptor *)blitPassDescriptor API_AVAILABLE(macos(11.0), ios(14.0));
+391: /*!
+392:  @method computeCommandEncoder
+393:  @abstract returns a compute command encoder to encode into this command buffer.
+394:  */

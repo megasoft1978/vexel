@@ -1,0 +1,20 @@
+{
+  "inner_then_outer_success_populated_three_descendant_levels_and_freeze": true,
+  "inner_rollback_populated_prefix_identity_descendant_suffix_and_parent_continuation": true,
+  "inner_rollback_capacity_history_and_descendant_payload_release": true,
+  "begin_nested_rejections_wrong_foreign_stale_replayed_out_of_order_and_noncurrent": true,
+  "rejection_recovery_and_parent_mutation_scope_guard": true,
+  "real_mapped_static_pattern_capability": true,
+  "cancellation_abort_cleanup_at_every_depth": true,
+  "exact_64_level_limit_and_overflow": true,
+  "full_scene_result_blocks": 19,
+  "full_scene_totals": {
+    "passed": 229,
+    "failed": 0,
+    "ignored": 0,
+    "measured": 0,
+    "filtered": 0
+  },
+  "compile_fail_doctests_included": true,
+  "runtime_renderer_claim": false
+}

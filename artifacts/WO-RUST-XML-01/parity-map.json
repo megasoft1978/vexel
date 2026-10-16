@@ -1,0 +1,79 @@
+{
+  "work_order": "WO-RUST-XML-01",
+  "scope": "XML character predicates, strict UTF-8 scalar decoding, and the bounded resumable lexical tag reader from xml_chars.c and xml_reader.c.",
+  "entries": [
+    {
+      "c_symbol": "svg_xml_internal_char(uint32_t)",
+      "rust_symbol": "vexel_xml::is_xml_char(u32) -> bool",
+      "focused_tests": ["xml_character_ranges_and_whitespace_match_xml_10", "every_unicode_scalar_matches_the_xml_10_range_tables"]
+    },
+    {
+      "c_symbol": "svg_xml_internal_utf8_next(const uint8_t *, size_t, size_t *, uint32_t *)",
+      "rust_symbol": "vexel_xml::utf8_next(&[u8], usize) -> Option<(u32, usize)>",
+      "focused_tests": ["utf8_decoder_accepts_scalars_and_preserves_position_on_bad_input"],
+      "adaptation": "Returns decoded scalar and next offset together; None leaves caller state unchanged, matching C's unchanged position/output on failure without pointer mutation. Rejects overlongs, surrogates, bad continuations, truncation, and values above U+10FFFF."
+    },
+    {
+      "c_symbol": "svg_xml_internal_name_start(uint32_t)",
+      "rust_symbol": "vexel_xml::is_name_start(u32) -> bool",
+      "focused_tests": ["name_start_and_name_char_ranges_match_xml_10", "every_unicode_scalar_matches_the_xml_10_range_tables"]
+    },
+    {
+      "c_symbol": "svg_xml_internal_name_char(uint32_t)",
+      "rust_symbol": "vexel_xml::is_name_char(u32) -> bool",
+      "focused_tests": ["name_start_and_name_char_ranges_match_xml_10", "every_unicode_scalar_matches_the_xml_10_range_tables"]
+    },
+    {
+      "c_symbol": "svg_xml_internal_whitespace(uint8_t)",
+      "rust_symbol": "vexel_xml::is_xml_whitespace(u8) -> bool",
+      "focused_tests": ["xml_character_ranges_and_whitespace_match_xml_10"]
+    },
+    {
+      "c_symbol": "svg_xml_reader_start(base_bytes, svg_xml_reader **)",
+      "rust_symbol": "vexel_xml::XmlReader::new(&[u8]) -> Result<XmlReader<'_>, ReaderStatus>",
+      "focused_tests": ["reader_rejects_zero_budget_and_reports_completion_idempotently", "reader_skips_doctype_without_expanding_or_interpreting_subset"],
+      "adaptation": "Rust borrows immutable input for the reader lifetime and uses Result instead of an allocated opaque pointer/out-parameter. Source length above 1 GiB returns ReaderStatus::Limit."
+    },
+    {
+      "c_symbol": "svg_xml_reader_step(svg_xml_reader *, size_t, svg_xml_reader_tag_fn, void *)",
+      "rust_symbol": "vexel_xml::XmlReader::step(usize, FnMut(ReaderTag) -> bool) -> ReaderStatus",
+      "focused_tests": ["reader_preserves_byte_spans_and_emits_tags_across_every_chunk_size", "reader_skips_doctype_without_expanding_or_interpreting_subset", "reader_reports_stable_malformed_categories_offsets_and_callback_failure", "reader_accepts_4096_byte_names_and_rejects_4097_at_name_start_offset", "reader_rejects_zero_budget_and_reports_completion_idempotently", "reader_hard_caps_large_step_budgets_at_64_kib"],
+      "adaptation": "Closure replaces C callback/context pair. ReaderTag spans use shared vexel_base::Span with exclusive end rather than offset/length; they slice the unchanged borrowed source."
+    },
+    {
+      "c_symbol": "svg_xml_reader_get_progress(const svg_xml_reader *)",
+      "rust_symbol": "vexel_xml::XmlReader::progress() -> ReaderProgress",
+      "focused_tests": ["reader_preserves_byte_spans_and_emits_tags_across_every_chunk_size", "reader_reports_stable_malformed_categories_offsets_and_callback_failure"]
+    },
+    {
+      "c_symbol": "svg_xml_reader_destroy(svg_xml_reader *)",
+      "rust_symbol": "std::drop(XmlReader<'_>)",
+      "focused_tests": ["reader_preserves_byte_spans_and_emits_tags_across_every_chunk_size"],
+      "adaptation": "Rust ownership releases scanner state automatically; no explicit destroy function is needed."
+    },
+    {
+      "c_symbol": "svg_xml_reader_status / svg_xml_reader_tag / svg_xml_reader_progress / svg_xml_reader_tag_fn",
+      "rust_symbol": "ReaderStatus / ReaderTag / ReaderProgress / FnMut(ReaderTag) -> bool",
+      "focused_tests": ["reader_preserves_byte_spans_and_emits_tags_across_every_chunk_size", "reader_reports_stable_malformed_categories_offsets_and_callback_failure"],
+      "adaptation": "C token kinds map to TagKind::{StartElement, EndElement, EmptyElement}; diagnostics retain the C error categories and byte offsets."
+    },
+    {
+      "c_symbol": "xml_doctype_step(xml_doctype_state *, uint8_t) (related internal helper)",
+      "rust_symbol": "private DoctypeState::step(u8) -> DoctypeResult",
+      "focused_tests": ["reader_skips_doctype_without_expanding_or_interpreting_subset", "reader_reports_stable_malformed_categories_offsets_and_callback_failure"],
+      "adaptation": "Private state is ported because the public reader shares its quote/comment/PI/internal-subset scanning behavior; it skips declarations and never expands entities."
+    }
+  ],
+  "supported_subset": [
+    "XML 1.0 Char, NameStartChar, NameChar and XML whitespace predicates.",
+    "Strict UTF-8 scalar decoding with unchanged caller position on failure.",
+    "A borrowing lexical scanner for start, end and empty-element tags, quoted-attribute counting, comments, CDATA, processing instructions and a single pre-element DOCTYPE skip.",
+    "Byte-accurate source/name spans, callback cancellation diagnostic, progress reporting, 1 GiB source cap, nonzero step budget capped at 64 KiB, and 4096-byte lexical name cap."
+  ],
+  "limits": [
+    "Reader is intentionally not a validating XML tokenizer: it does not check XML characters, UTF-8, name grammar, matching tags, attribute syntax, document roots, or text/entity validity.",
+    "Reader events can be delivered before later input is scanned; only ReaderStatus::Complete marks scanner completion.",
+    "DOCTYPE content is skipped, not interpreted; custom entities and external resources are not resolved.",
+    "Full tokenizer/stream/index, entity/numeric decoding, and namespace semantics are outside this order."
+  ]
+}

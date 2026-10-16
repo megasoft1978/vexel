@@ -1,0 +1,15 @@
+Work order: WO-MCP-ASYNC-03 revision 2
+Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Frozen spec SHA-256: c964781819f37bf8d36af5486237706916ae8868145b92226b961be2ea653f0f
+Scope: bounded asynchronous native .vexel GIF export task with visible progress,
+cooperative protocol/UI cancellation, MCP Tasks and legacy progress support.
+Preserve the tested task-store implementation carried forward from WO-MCP-ASYNC-02.
+The immutable snapshot/render/publish pipeline lives in dedicated
+mcp_broker_async_export.c/.h modules so mcp_broker_render.c stays under 800 lines.
+
+Scope correction only: add docs/product/vexel-goal-and-delivery-plan.md to
+Files allowed to touch so required implementation item 6 can update the product
+inventory. Intent, limits, implementation, acceptance, and verification are
+unchanged. Revision 1 is superseded after its recorded scope block; its original
+scope-freeze.txt, scope-audit.txt, and verification.txt remain immutable.
+Revision 2 is READY; implementation has not started.

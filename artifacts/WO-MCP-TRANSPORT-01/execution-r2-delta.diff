@@ -1,0 +1,275 @@
+--- run-start/app/vexel_mcp_main.c
++++ execution-r3/app/vexel_mcp_main.c
+@@ -63,6 +63,8 @@
+     bool ready;
+     bool eof;
+     bool oversized;
++    bool request_line;
++    bool response_line;
+     int64_t deadline;
+ } relay_stream;
+ 
+@@ -82,6 +84,30 @@
+     return now + MCP_IO_TIMEOUT_SECONDS * 1000;
+ }
+ 
++static bool rpc_line_has_method_and_id(const uint8_t *line, size_t length)
++{
++    mcp_json_doc document = {0};
++    if (!mcp_json_parse(line, length, &document)) return false;
++    bool result = document.root < document.token_count &&
++        document.tokens[document.root].type == MCP_JSON_OBJECT &&
++        mcp_json_object_get(&document, document.root, "method") != MCP_JSON_NO_TOKEN &&
++        mcp_json_object_get(&document, document.root, "id") != MCP_JSON_NO_TOKEN;
++    mcp_json_doc_destroy(&document);
++    return result;
++}
++
++static bool rpc_line_has_id_without_method(const uint8_t *line, size_t length)
++{
++    mcp_json_doc document = {0};
++    if (!mcp_json_parse(line, length, &document)) return false;
++    bool result = document.root < document.token_count &&
++        document.tokens[document.root].type == MCP_JSON_OBJECT &&
++        mcp_json_object_get(&document, document.root, "id") != MCP_JSON_NO_TOKEN &&
++        mcp_json_object_get(&document, document.root, "method") == MCP_JSON_NO_TOKEN;
++    mcp_json_doc_destroy(&document);
++    return result;
++}
++
+ static bool set_nonblocking(int descriptor, int *old_flags)
+ {
+     *old_flags = fcntl(descriptor, F_GETFL);
+@@ -92,6 +118,10 @@
+ {
+     if (client && newline && stream->length > 0U &&
+         stream->line[stream->length - 1U] == '\r') stream->length--;
++    stream->request_line = client &&
++        rpc_line_has_method_and_id(stream->line, stream->length);
++    stream->response_line = !client &&
++        rpc_line_has_id_without_method(stream->line, stream->length);
+     stream->line[stream->length++] = '\n';
+     stream->ready = true;
+     stream->deadline = io_deadline(now);
+@@ -133,13 +163,16 @@
+     return true;
+ }
+ 
+-static bool read_chunk(int descriptor, relay_stream *stream, int64_t now)
+-{
++static bool read_chunk(int descriptor, relay_stream *stream, int64_t now,
++                       bool *received_bytes)
++{
++    *received_bytes = false;
+     ssize_t amount = read(descriptor, stream->scratch, sizeof(stream->scratch));
+     if (amount < 0) return errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK;
+     stream->cursor = 0U;
+     stream->count = (size_t)amount;
+     stream->eof = amount == 0;
++    *received_bytes = amount > 0;
+     if (descriptor != STDIN_FILENO) stream->deadline = io_deadline(now);
+     return true;
+ }
+@@ -184,8 +217,10 @@
+ {
+     bool error_pending = false;
+     size_t error_written = 0U;
++    size_t pending_requests = 0U;
+     int64_t error_deadline = 0;
+     int64_t drain_deadline = 0;
++    int64_t pending_deadline = 0;
+     bool half_closed = false;
+     for (;;) {
+         int64_t now = now_ms();
+@@ -220,7 +255,9 @@
+             ((output->ready || output->length > 0U) &&
+              !poll_timeout(output->deadline, now, &timeout)) ||
+             (error_pending && !poll_timeout(error_deadline, now, &timeout)) ||
+-            (half_closed && !poll_timeout(drain_deadline, now, &timeout))) return false;
++            (half_closed && !poll_timeout(drain_deadline, now, &timeout)) ||
++            (pending_requests > 0U &&
++             !poll_timeout(pending_deadline, now, &timeout))) return false;
+         int amount = poll(descriptors, 3U, timeout);
+         if (amount < 0 && errno == EINTR) continue;
+         if (amount <= 0) return false;
+@@ -237,18 +274,38 @@
+                     error_pending = false;
+                     error_written = 0U;
+                 }
+-            } else if (!flush_line(STDOUT_FILENO, output, now)) return false;
++            } else {
++                bool was_response = output->ready && output->response_line;
++                if (!flush_line(STDOUT_FILENO, output, now)) return false;
++                if (was_response && !output->ready && pending_requests > 0U) {
++                    pending_requests--;
++                    pending_deadline = pending_requests > 0U ? io_deadline(now) : 0;
++                }
++            }
+         } else if ((descriptors[2].revents & (POLLERR | POLLHUP)) != 0) return false;
+         if (client->ready && (descriptors[1].revents & (POLLERR | POLLHUP)) != 0 &&
+             (descriptors[1].revents & POLLOUT) == 0) return false;
+-        if ((descriptors[1].revents & POLLOUT) != 0 && !flush_line(broker, client, now)) return false;
++        if ((descriptors[1].revents & POLLOUT) != 0) {
++            bool was_request = client->ready && client->request_line;
++            if (!flush_line(broker, client, now)) return false;
++            if (was_request && !client->ready) {
++                if (pending_requests == SIZE_MAX) return false;
++                pending_requests++;
++                pending_deadline = io_deadline(now);
++            }
++        }
+         if (can_read(output) &&
+             (descriptors[1].revents & (POLLIN | POLLHUP | POLLERR)) != 0) {
+-            if (!read_chunk(broker, output, now)) return false;
++            bool received_bytes = false;
++            if (!read_chunk(broker, output, now, &received_bytes)) return false;
++            if (received_bytes && pending_requests > 0U)
++                pending_deadline = io_deadline(now);
+         }
+         if (can_read(client) && !error_pending &&
+-            (descriptors[0].revents & (POLLIN | POLLHUP | POLLERR)) != 0 &&
+-            !read_chunk(STDIN_FILENO, client, now)) return false;
++            (descriptors[0].revents & (POLLIN | POLLHUP | POLLERR)) != 0) {
++            bool received_bytes = false;
++            if (!read_chunk(STDIN_FILENO, client, now, &received_bytes)) return false;
++        }
+     }
+ }
+ 
+--- run-start/docs/mcp.md
++++ execution-r3/docs/mcp.md
+@@ -31,16 +31,19 @@
+ 
+ After stdin EOF, queued client data is sent, broker input is half-closed, and
+ broker output is drained until closure or a 30-second drain deadline. Socket
+-writes, partial broker-line reads, and stdout writes retain 30-second stall
+-bounds; successful I/O renews the relevant stall deadline. An idle open stdin
+-with no buffered work has no deadline. This is transport readiness only:
++writes, partial broker-line reads, stdout writes, and broker inactivity while a
++client request is outstanding retain 30-second bounds; successful I/O renews
++the relevant stall deadline. An idle open stdin with no pending request has no
++deadline. This is transport readiness only:
+ cooperative task/export progress and cancellation still need broker integration.
+ The private socket checks and file-grant policy are unchanged.
+ 
+ The focused `mcp-stdio-relay` fixture exercises the public executable without
+ app UI automation. The nested executor sandbox denied private socket binding,
+-so its first attempt skipped all fixture assertions. A subsequent host-shell
+-run passed all 11 relay cases and both focused CTest registrations
++so its first attempt skipped all fixture assertions. The host-shell r2 run
++passed 11 relay cases and both focused CTest registrations. After the r3 timeout
++repair, a fresh host-shell run passed all 12 relay cases, including the
++silent-broker deadline case, and both focused CTest registrations
+ (`mcp-stdio-relay` and `mcp-stdio-e2e`, 2/2). This verifies the local relay and
+ headless broker path; it does not establish live Codex/Claude interoperability
+ or implement cooperative task/export cancellation.
+@@ -199,8 +202,10 @@
+   interoperability gates are complete.
+ - Async native GIF export integration under WO-MCP-ASYNC-03 revision 2 stopped
+   before product-code edits at its transport/scope audit. WO-MCP-TRANSPORT-01 r2
+-  implements the required sidecar multiplexing; its focused host-shell runtime
+-  checks pass. The tested task-store slice is preserved;
++  implemented sidecar multiplexing and its focused host-shell checks passed,
++  then review found a silent-broker timeout gap. WO-MCP-TRANSPORT-01 r3 adds
++  the required 30-second pending-request bound and focused silent-broker case.
++  The tested task-store slice is preserved;
+   async export, Tasks negotiation, cooperative cancellation, and app progress
+   remain unimplemented. A newly frozen async integration order is still needed.
+   See the historical
+--- run-start/docs/product/vexel-goal-and-delivery-plan.md
++++ execution-r3/docs/product/vexel-goal-and-delivery-plan.md
+@@ -67,18 +67,18 @@
+   results, and verified live sessions with Codex, Claude Code, and an
+   independent client remain open.
+   WO-MCP-ASYNC-03 r2 stopped before product-code edits at the recorded
+-  transport/scope audit. WO-MCP-TRANSPORT-01 r2 now implements bounded stdio
++  transport/scope audit. WO-MCP-TRANSPORT-01 r3 implements bounded stdio
+   multiplexing: ordered client forwarding, independent broker notifications and
+-  responses, retained partial/coalesced lines, and half-close/EOF draining.
+-  The named targets build; a host-shell run passes all 11 public relay fixture
+-  cases and both focused CTest registrations (2/2). The nested executor sandbox
+-  had skipped these tests because socket binding was denied. This transport
+-  slice does not implement async tasks, export workers, app progress, or
+-  cooperative cancellation.
++  responses, retained partial/coalesced lines, half-close/EOF draining, and a
++  30-second inactivity bound while requests await broker responses. A fresh
++  host-shell run passes all 12 public relay fixtures and both focused CTest
++  registrations (2/2). Earlier nested executor runs skipped because socket
++  binding was denied. This transport slice does not implement async tasks,
++  export workers, app progress, or cooperative cancellation.
+   The tested bounded task store is preserved. Sol's focused review found an
+   unbounded silent-broker wait and an overstated E2E assertion preservation
+-  claim; transport r2 was superseded and r3 freezes those two corrections.
+-  Once transport r3 is accepted, supersede or revise WO-MCP-ASYNC-03 r2 to make
++  claim; transport r2 was superseded and r3 corrects both review findings.
++  With transport r3 verified, supersede or revise WO-MCP-ASYNC-03 r2 to make
+   the verified transport its prerequisite before integration starts. That
+   slice uses request-negotiated
+   `2026-07-28` Tasks
+@@ -162,10 +162,10 @@
+ remaining schedule is driven by end-to-end workflow closure and evidence, not by
+ adding another large feature list.
+ 
+-1. **Unblock async MCP integration.** WO-MCP-TRANSPORT-01 r2's host-shell rerun
+-   passes its 11 covered relay cases and both focused stdio CTests, but review
+-   found the silent-broker bound and evidence-label defects. Execute the frozen
+-   r3 repairs, then supersede or revise blocked WO-MCP-ASYNC-03 r2 and implement
++1. **Unblock async MCP integration.** WO-MCP-TRANSPORT-01 r3 passes its 12
++   relay cases, including the silent-broker bound, and both focused stdio CTests.
++   Finish the scoped evidence/acceptance record, then supersede or revise blocked
++   WO-MCP-ASYNC-03 r2 and implement
+    bounded native GIF tasks, progress, cancellation, and app status.
+ 2. **Prove the animation vertical slice.** Use the existing fragment/element
+    tools, stable IDs, project-asset and drawing-track/cel tools, timeline keys,
+--- run-start/ledger.jsonl
++++ execution-r3/ledger.jsonl
+@@ -989,3 +989,4 @@
+ {"ts":"2026-10-13T20:27:05Z","wo_id":"WO-MCP-TRANSPORT-01","revision":2,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-transport-01-r2-runtime-blocked-2026-10-13","session_id":"codex-mcp-transport-01-r2-2026-10-13","model":"gpt-6","cli_version":"not reported (API executor)","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"artifacts":["artifacts/WO-MCP-TRANSPORT-01/verification.txt","artifacts/WO-MCP-TRANSPORT-01/execution-r2-start-manifest.json","artifacts/WO-MCP-TRANSPORT-01/scope-audit-execution-r2.txt"],"event":"blocked","status":"blocked","note":"Runtime acceptance blocked: private Unix-domain socket bind returns EPERM in this execution sandbox. All 11 deterministic relay cases skip before assertions; existing mcp-stdio-e2e reports its documented bind skip. AC-2 is unverified. Implementation/build/static scope checks recorded; run only the focused relay and stdio E2E checks on a host permitting private socket binding before transport acceptance. Frozen r2, shared dirty tree, task store and prior evidence retained."}
+ {"ts":"2026-10-13T20:41:00Z","wo_id":"WO-MCP-TRANSPORT-01","revision":2,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-transport-01-r2-review-superseded-2026-10-13","event":"superseded","session_id":"codex-mcp-transport-01-r3-review-correction-2026-10-13","model":"gpt-6.1-sol","cli_version":"codex-cli 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"superseded","artifacts":["artifacts/WO-MCP-TRANSPORT-01/WO-MCP-TRANSPORT-01-r2.md","artifacts/WO-MCP-TRANSPORT-01/review-r2-sol.txt","artifacts/WO-MCP-TRANSPORT-01/relay-tests-host.txt","artifacts/WO-MCP-TRANSPORT-01/ctest-host.txt"],"note":"Superseded after focused Sol review found an unbounded silent-broker wait and an overstated byte-identical E2E assertion audit. Host tests pass; r3 adds the missing 30-second pending-request bound and truthfully scopes the expected tool inventory update. Preserve all r2 implementation and evidence."}
+ {"ts":"2026-10-13T20:41:01Z","wo_id":"WO-MCP-TRANSPORT-01","revision":3,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-transport-01-r3-ready-2026-10-13","event":"ready","session_id":"codex-mcp-transport-01-r3-review-correction-2026-10-13","model":"gpt-6.1-sol","cli_version":"codex-cli 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"ready","artifacts":["work/WO-MCP-TRANSPORT-01.md","artifacts/WO-MCP-TRANSPORT-01/scope-freeze-r3.txt","artifacts/WO-MCP-TRANSPORT-01/review-r2-sol.txt"],"note":"Frozen r3 closes the two scoped review findings: preserve a 30-second pending-request inactivity bound and accurately audit the one expected-tool inventory update. Existing r2 relay implementation/logs remain baseline; only focused transport checks are authorized."}
++{"ts":"2026-10-13T20:41:33Z","wo_id":"WO-MCP-TRANSPORT-01","event":"run_started","revision":3,"base_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","head_sha":"19234a036ed6a8d40c2ccdaec9b8186806d70eca","run_id":"mcp-transport-01-r3-started-2026-10-13","session_id":"codex-mcp-transport-01-r3-review-correction-2026-10-13","model":"gpt-6.1-sol","cli_version":"codex-cli 0.162.1","duration_s":0,"usage":{"input_tokens":null,"output_tokens":null},"status":"running","artifacts":["work/WO-MCP-TRANSPORT-01.md","artifacts/WO-MCP-TRANSPORT-01/execution-r3-start-manifest.json","artifacts/WO-MCP-TRANSPORT-01/scope-freeze-r3.txt"],"note":"Closing the two focused r2 review findings with the frozen silent-broker timeout, test, and truthful E2E expected-tool inventory audit. Only focused MCP relay and stdio checks are authorized."}
+--- run-start/src/mcp/README.md
++++ execution-r3/src/mcp/README.md
+@@ -105,8 +105,12 @@
+ truncation fails without emitting the partial line. Queued client data at EOF
+ is flushed before `SHUT_WR`, then output drains to closure or a 30-second bound.
+ Pending writes and partial broker reads have 30-second stall bounds, renewed
+-by successful I/O; idle stdin has no timeout. stdout contains only protocol
+-lines, stderr diagnostics.
++by successful I/O. While at least one client request awaits a JSON-RPC response,
++broker inactivity is bounded to 30 seconds and any broker bytes (including
++progress notifications) renew that deadline; a complete response clears one
++pending request without correlating or reordering IDs. Idle stdin with no
++pending request has no timeout. stdout contains only protocol lines, stderr
++diagnostics.
+ 
+ Transport multiplexing does not implement asynchronous tasks, export workers,
+ cooperative cancellation, or app progress. The existing task-store slice is
+@@ -120,6 +124,8 @@
+ partial/coalesced lines, EOF, size bounds, and backpressure. It is registered as
+ `mcp-stdio-relay`, separately from `mcp-stdio-e2e`. The nested executor sandbox
+ denied private socket binding, but a host-shell rerun passed all 11 fixture
+-cases and both focused CTest registrations (2/2). This verifies local relay and
+-headless broker transport behavior; live Codex/Claude sessions and async task,
++cases and both focused CTest registrations (2/2). A fresh revision-3 run passed
++all 12 fixtures, including the silent-broker timeout case, and both focused
++CTest registrations. This verifies local relay and headless broker transport
++behavior; live Codex/Claude sessions and async task,
+ export, app-progress, and cooperative cancellation integration remain open.
+--- run-start/tests/mcp/test_e2e.py
++++ execution-r3/tests/mcp/test_e2e.py
+@@ -177,6 +177,14 @@
+         self.broker.sendall(response[11:])
+         self.assertEqual(self.client_line(), response)
+         self.assertEqual(self.finish(), b"")
++
++    def test_silent_broker_is_bounded_for_pending_request(self) -> None:
++        request = self.wire({"jsonrpc": "2.0", "id": "silent", "method": "slow"})
++        self.send_client(request)
++        self.assertEqual(self.broker_line(), request)
++        self.assertEqual(self.server.wait(timeout=32.0), 1)
++        self.assertIn(b"bounded stdio/socket relay failed", self.server.stderr.read())
++        self.assertEqual(self.server.stdout.read(), b"")
+ 
+     def test_oversized_stdin_discards_once_and_recovers(self) -> None:
+         self.send_client(b"x" * (self.MAX_BYTES + 8192))

@@ -1,0 +1,128 @@
+{
+  "wo_id": "WO-RUST-APPLE-PRESENTATION-01",
+  "work_order_sha256": "a79ef96ec1bad78ed76033428c80e1414913ccf3abe337e7c885e1613babd5f0",
+  "commands": [
+    {
+      "command": "CARGO_HOME=\"$PWD/../../../.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/build\" cargo +stable check -p vexel-platform-apple --locked --offline",
+      "exit_code": 0,
+      "result": "pass",
+      "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/check.log",
+      "summary": "Finished successfully with no warnings."
+    },
+    {
+      "command": "CARGO_HOME=\"$PWD/../../../.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/build\" cargo +stable test -p vexel-platform-apple --locked --offline",
+      "exit_code": 0,
+      "result": "pass",
+      "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/test.log",
+      "summary": "36 unit, 5 native-boundary, 1 native-window, and 6 doc tests passed; raw output includes names and individual result lines."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-APPLE-PRESENTATION-01 --ready",
+      "exit_code": 0,
+      "result": "pass",
+      "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/validator.log"
+    }
+  ],
+  "presentation_transaction": {
+    "candidate_preparation": "A CGImage and fully configured CALayer are prepared off-hierarchy. The candidate frame comes from the current view-layer bounds; requested contentsScale, resize gravity, and prepared image contents are installed on the candidate.",
+    "publish_operation": "Exactly one guarded hierarchy operation: addSublayer for the first frame, replaceSublayer_with for replacement.",
+    "ownership_commit": "WindowRecord stores the current Retained<CALayer> only after the guarded hierarchy operation returns successfully. Window remains a weak generation-checked handle without native ownership.",
+    "failure_behavior": "Preparation failure does not touch the current layer. A failed publish callback returns before replacing WindowRecord ownership. No visible prior layer properties are mutated, no restoration calls are made, and direct contents are not followed by setNeedsDisplay.",
+    "pure_test": "failed_publish_keeps_prior_presenter_state injects a failed callback and checks that the prior pure presenter state remains intact. This does not prove AppKit/Core Animation runtime behavior or native exception atomicity."
+  },
+  "api_ownership_and_lifetime": {
+    "public_api_is_safe_and_native_handle_free": true,
+    "window_ownership": "Window is a weak handle; WindowRecord owns the current presenter CALayer.",
+    "input_bytes_copied_synchronously": "Owned RGBA bytes are converted in place and copied into CFData before present_rgba returns.",
+    "image_backing_lifetime_intent": "CGDataProvider retains CFData and the configured CALayer contents references the CGImage; live retention has not been verified.",
+    "input_convention": "Top-left, tightly packed, straight-alpha sRGB RGBA8; bytes are converted to premultiplied RGBA before the CGImage is declared PremultipliedLast.",
+    "byte_bounds": "Exact byte length and allocated Vec capacity are each bounded by 64 MiB."
+  },
+  "pure_validation_coverage": [
+    "zero dimensions",
+    "axis over limit",
+    "checked byte arithmetic overflow",
+    "byte-count mismatch",
+    "capacity over limit",
+    "nonfinite, nonpositive, fractional, and out-of-range scales",
+    "accepted axis and scale boundaries",
+    "failed publish callback preserves prior pure presenter state"
+  ],
+  "live_runtime_properties_unverified": [
+    "displayed channel order",
+    "top-left orientation",
+    "sRGB and alpha compositing on display",
+    "image retention after present_rgba returns",
+    "replacement and release behavior",
+    "resize and backing-scale replacement",
+    "teardown behavior",
+    "native exception behavior, including hierarchy-operation atomicity"
+  ],
+  "native_runtime_proof": "Not run. Package tests do not create a live AppKit window; the pure transaction test is not evidence of AppKit runtime behavior.",
+  "affected_file_sha256": {
+    "rust/crates/vexel-platform-apple/src/lib.rs": "815350949d634077224d67d6663efaded5c46dd61eaf01e143647be4a0aba588",
+    "rust/crates/vexel-platform-apple/src/native_window/app.rs": "b9fddd1899d0f96cde371d07110b2664c1dcd2a7dcb3a43b844faeba40a9fd0d",
+    "rust/crates/vexel-platform-apple/src/native_window/frame.rs": "f9460c873be34810a5b8629722d0ea2fcec3b77f464c03d4aa4fe2f6943b0b9b",
+    "rust/crates/vexel-platform-apple/src/native_window/mod.rs": "58f95df4de2985e6c1e3a5e6178c26c4a6eb6de782204dc72082e92136746c02",
+    "rust/crates/vexel-platform-apple/src/native_window/types.rs": "b54f5490dc33c94f618dafe3149e5fda358cc12a4d7c19315dd22a25e1baa019",
+    "rust/crates/vexel-platform-apple/src/native_window/window.rs": "cb4ae316d915b6a31e374483417e758f1e03f8345b359d6a5af893f51270ff34",
+    "rust/crates/vexel-platform-apple/README.md": "b76cd8a65918ec60558438d8c1d8850eac46283ff1c3dd196d5aaed0eaa99431",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/check.log": "684f580401e2291d158ee1eddefe5748195870ce1a0edbe6ea33561f490c9a59",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/test.log": "20ab0948a9f8d390f734ab5fd646bfe8fa2f704f04671caa69561b0cb77da1f9",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/validator.log": "7d6ba18b8c643ccaf56b598c8b095082f00a0197cadb13fa18c0ac3563001dbb",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/result.md": "697bcfbdabcff79fe47ce3d6053f2ab08eacf44bd2d9fc7a4202f66794230510",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/scope-audit.md": "bd86b2637d0ae96b6600d0d12d70c399408cde26be63a5eedb62f039f10795e1",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/source-seed.json": "f350c4d60aa8c38c590c31c6097f9ec6703ba144706647381d6ea5f3e5639b40",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/main-check.log": "736e2582f563605dd272e5fb977840b0c0767377d27b6940c440caf75eec7157",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/main-test.log": "75debfdb371861b58cf541af143135d686a0f32ee43e67f1c10786f53cb976b7",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/main-validator.log": "7d6ba18b8c643ccaf56b598c8b095082f00a0197cadb13fa18c0ac3563001dbb",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/sol-final-corrected.log": "079a806839f755e36f593669b267fb59d0cb10ff49d694bd251da90bea3edb92",
+    "artifacts/WO-RUST-APPLE-PRESENTATION-01/ledger-validation.txt": "67f841bfdb59c93416d86602275f7aba1172cfba8739de69018cedef7397f88a"
+  },
+  "scope_audit": {
+    "path": "artifacts/WO-RUST-APPLE-PRESENTATION-01/scope-audit.md",
+    "result": "pass",
+    "changed_seeded_files": [
+      "rust/crates/vexel-platform-apple/src/lib.rs",
+      "rust/crates/vexel-platform-apple/src/native_window/app.rs",
+      "rust/crates/vexel-platform-apple/src/native_window/mod.rs",
+      "rust/crates/vexel-platform-apple/src/native_window/types.rs",
+      "rust/crates/vexel-platform-apple/src/native_window/window.rs"
+    ],
+    "new_files": [
+      "rust/crates/vexel-platform-apple/README.md",
+      "rust/crates/vexel-platform-apple/src/native_window/frame.rs"
+    ],
+    "protected_manifests_unchanged": true,
+    "outside_allowed_paths": []
+  },
+  "main_tree_verification": {
+    "check": {
+      "command": "cargo +stable check -p vexel-platform-apple --locked --offline",
+      "exit_code": 0,
+      "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/main-check.log"
+    },
+    "test": {
+      "command": "cargo +stable test -p vexel-platform-apple --locked --offline",
+      "exit_code": 0,
+      "summary": "36 unit, 5 native-boundary, 1 native-window, 6 doc tests passed",
+      "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/main-test.log"
+    },
+    "validator": {
+      "command": "python3 scripts/wo_validate.py WO-RUST-APPLE-PRESENTATION-01 --ready",
+      "exit_code": 0,
+      "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/main-validator.log"
+    }
+  },
+  "independent_review": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "result": "ACCEPT",
+    "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/sol-final-corrected.log"
+  },
+  "ledger_validation": {
+    "command": "python3 scripts/ledger.py validate ledger.jsonl",
+    "result": "pass",
+    "log": "artifacts/WO-RUST-APPLE-PRESENTATION-01/ledger-validation.txt"
+  }
+}

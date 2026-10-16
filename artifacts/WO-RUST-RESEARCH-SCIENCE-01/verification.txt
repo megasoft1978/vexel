@@ -1,0 +1,12 @@
+Eight HTTP200 API envelopes, sequential spacing>=2.1s; primary5PDFhashes checked. Source603/index/HEAD/shared registrations preserved. No application tests/code/dependency/performance results from research.
+COMMAND: python3 scripts/wo_validate.py WO-RUST-RESEARCH-SCIENCE-01 --ready
+EXIT: 0
+valid WO-RUST-RESEARCH-SCIENCE-01 revision 1 sha256 909e4ee2ddf84663ade7a34f0dd7334a0d4c7d29e2504bf61125e333d2e5d74d
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1234 entries
+
+COMMAND: git diff --check
+EXIT: 0
+

@@ -1,0 +1,161 @@
+BINDING handleEvent
+72:         /// ** Activation ****
+73:         #[unsafe(method(activate))]
+74:         #[unsafe(method_family = none)]
+75:         pub fn activate(&self);
+76: 
+77:         #[unsafe(method(deactivate))]
+78:         #[unsafe(method_family = none)]
+79:         pub fn deactivate(&self);
+80: 
+81:         #[cfg(feature = "NSEvent")]
+82:         /// ** Input source interface ***
+83:         #[unsafe(method(handleEvent:))]
+84:         #[unsafe(method_family = none)]
+85:         pub fn handleEvent(&self, event: &NSEvent) -> bool;
+86: 
+87:         #[unsafe(method(discardMarkedText))]
+88:         #[unsafe(method_family = none)]
+89:         pub fn discardMarkedText(&self);
+90: 
+91:         #[unsafe(method(invalidateCharacterCoordinates))]
+92:         #[unsafe(method_family = none)]
+93:         pub fn invalidateCharacterCoordinates(&self);
+94: 
+95:         #[unsafe(method(textInputClientWillStartScrollingOrZooming))]
+96:         #[unsafe(method_family = none)]
+97:         pub fn textInputClientWillStartScrollingOrZooming(&self);
+98: 
+99:         #[unsafe(method(textInputClientDidEndScrollingOrZooming))]
+
+SDK handleEvent
+53: /* Tells the Cocoa Text Input system to handle mouse/key events. Returns YES if the system consumed the event.
+54:  */
+55: - (BOOL)handleEvent:(NSEvent *)event;
+56: 
+57: /* Notifies the system to discard the current conversion session. The client should clear its marked range when sending this message.
+58:  */
+59: - (void)discardMarkedText;
+60: 
+61: /* Notifies the text input system that information related to character positions, including the document's visual coordinates, text selection, and document contents, has been modified. Text engines implementing the NSTextInputClient protocol should send this message whenever any of these changes occur, and -[NSTextInputContext handleEvent:] will not otherwise be called. -handleEvent: serves as an implicit notification that any of these changes could have occurred.
+62:  */
+
+SDK handleEvent
+59: - (void)discardMarkedText;
+60: 
+61: /* Notifies the text input system that information related to character positions, including the document's visual coordinates, text selection, and document contents, has been modified. Text engines implementing the NSTextInputClient protocol should send this message whenever any of these changes occur, and -[NSTextInputContext handleEvent:] will not otherwise be called. -handleEvent: serves as an implicit notification that any of these changes could have occurred.
+62:  */
+63: - (void)invalidateCharacterCoordinates;
+64: 
+65: /* Notifies the text input client will be continuous updated due to user action. This includes scrolling, resizing, zooming, and any other action modifying the the geometry information of text selection while displaying the content.
+66: 
+67:     This method should be called before -invalidateCharacterCoordinates.
+68:  */
+
+BINDING discardMarkedText
+76: 
+77:         #[unsafe(method(deactivate))]
+78:         #[unsafe(method_family = none)]
+79:         pub fn deactivate(&self);
+80: 
+81:         #[cfg(feature = "NSEvent")]
+82:         /// ** Input source interface ***
+83:         #[unsafe(method(handleEvent:))]
+84:         #[unsafe(method_family = none)]
+85:         pub fn handleEvent(&self, event: &NSEvent) -> bool;
+86: 
+87:         #[unsafe(method(discardMarkedText))]
+88:         #[unsafe(method_family = none)]
+89:         pub fn discardMarkedText(&self);
+90: 
+91:         #[unsafe(method(invalidateCharacterCoordinates))]
+92:         #[unsafe(method_family = none)]
+93:         pub fn invalidateCharacterCoordinates(&self);
+94: 
+95:         #[unsafe(method(textInputClientWillStartScrollingOrZooming))]
+96:         #[unsafe(method_family = none)]
+97:         pub fn textInputClientWillStartScrollingOrZooming(&self);
+98: 
+99:         #[unsafe(method(textInputClientDidEndScrollingOrZooming))]
+100:         #[unsafe(method_family = none)]
+101:         pub fn textInputClientDidEndScrollingOrZooming(&self);
+102: 
+103:         #[unsafe(method(textInputClientDidUpdateSelection))]
+
+SDK discardMarkedText
+57: /* Notifies the system to discard the current conversion session. The client should clear its marked range when sending this message.
+58:  */
+59: - (void)discardMarkedText;
+60: 
+61: /* Notifies the text input system that information related to character positions, including the document's visual coordinates, text selection, and document contents, has been modified. Text engines implementing the NSTextInputClient protocol should send this message whenever any of these changes occur, and -[NSTextInputContext handleEvent:] will not otherwise be called. -handleEvent: serves as an implicit notification that any of these changes could have occurred.
+62:  */
+63: - (void)invalidateCharacterCoordinates;
+64: 
+65: /* Notifies the text input client will be continuous updated due to user action. This includes scrolling, resizing, zooming, and any other action modifying the the geometry information of text selection while displaying the content.
+66: 
+
+BINDING invalidateCharacterCoordinates
+80: 
+81:         #[cfg(feature = "NSEvent")]
+82:         /// ** Input source interface ***
+83:         #[unsafe(method(handleEvent:))]
+84:         #[unsafe(method_family = none)]
+85:         pub fn handleEvent(&self, event: &NSEvent) -> bool;
+86: 
+87:         #[unsafe(method(discardMarkedText))]
+88:         #[unsafe(method_family = none)]
+89:         pub fn discardMarkedText(&self);
+90: 
+91:         #[unsafe(method(invalidateCharacterCoordinates))]
+92:         #[unsafe(method_family = none)]
+93:         pub fn invalidateCharacterCoordinates(&self);
+94: 
+95:         #[unsafe(method(textInputClientWillStartScrollingOrZooming))]
+96:         #[unsafe(method_family = none)]
+97:         pub fn textInputClientWillStartScrollingOrZooming(&self);
+98: 
+99:         #[unsafe(method(textInputClientDidEndScrollingOrZooming))]
+100:         #[unsafe(method_family = none)]
+101:         pub fn textInputClientDidEndScrollingOrZooming(&self);
+102: 
+103:         #[unsafe(method(textInputClientDidUpdateSelection))]
+104:         #[unsafe(method_family = none)]
+105:         pub fn textInputClientDidUpdateSelection(&self);
+106: 
+107:         #[unsafe(method(textInputClientDidScroll))]
+
+SDK invalidateCharacterCoordinates
+61: /* Notifies the text input system that information related to character positions, including the document's visual coordinates, text selection, and document contents, has been modified. Text engines implementing the NSTextInputClient protocol should send this message whenever any of these changes occur, and -[NSTextInputContext handleEvent:] will not otherwise be called. -handleEvent: serves as an implicit notification that any of these changes could have occurred.
+62:  */
+63: - (void)invalidateCharacterCoordinates;
+64: 
+65: /* Notifies the text input client will be continuous updated due to user action. This includes scrolling, resizing, zooming, and any other action modifying the the geometry information of text selection while displaying the content.
+66: 
+67:     This method should be called before -invalidateCharacterCoordinates.
+68:  */
+69: - (void)textInputClientWillStartScrollingOrZooming API_AVAILABLE(macos(14.0));
+70: 
+
+SDK invalidateCharacterCoordinates
+65: /* Notifies the text input client will be continuous updated due to user action. This includes scrolling, resizing, zooming, and any other action modifying the the geometry information of text selection while displaying the content.
+66: 
+67:     This method should be called before -invalidateCharacterCoordinates.
+68:  */
+69: - (void)textInputClientWillStartScrollingOrZooming API_AVAILABLE(macos(14.0));
+70: 
+71: /* Notifies the text input client was continuous updated due to user action. This includes scrolling, resizing, zooming, and any other action modifying the the geometry information of text selection while displaying the content.
+72: 
+73:   This method should be called after -invalidateCharacterCoordinates. */
+74: - (void)textInputClientDidEndScrollingOrZooming API_AVAILABLE(macos(14.0));
+
+SDK invalidateCharacterCoordinates
+71: /* Notifies the text input client was continuous updated due to user action. This includes scrolling, resizing, zooming, and any other action modifying the the geometry information of text selection while displaying the content.
+72: 
+73:   This method should be called after -invalidateCharacterCoordinates. */
+74: - (void)textInputClientDidEndScrollingOrZooming API_AVAILABLE(macos(14.0));
+75: 
+76: // Notify when the text view selection is changed.
+77: - (void)textInputClientDidUpdateSelection API_AVAILABLE(macos(15.4));
+78: 
+79: // Notify when the text view scroll location is changed.
+80: - (void)textInputClientDidScroll API_AVAILABLE(macos(15.4));

@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-PAINT-CHANNEL-CONTRACT-01/review_runner.py", line 9, in <module>
+    assert json.loads((a/'accepted-input-terminal-audit.json').read_text())['verdict']=='PASS'
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1027, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/pathlib.py", line 1013, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-SVG-PAINT-01/accepted-input-terminal-audit.json'

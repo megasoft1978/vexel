@@ -1,0 +1,5 @@
+WO-SVG-MEM-01 revision 2 scope correction
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+spec_sha256: 4dd8ec0c20a0c101fb9b68b192ef75e057fb5d3e882d0bc4ae49908959b0bfe0
+Revision 1 omitted tests/svg/shape/shape_render_reference.c, which reads per-shape fill paint state and must follow the sparse accessor contract. Revision 1 is superseded before verification.
+Allowlist and protected paths are frozen in work/WO-SVG-MEM-01.md.

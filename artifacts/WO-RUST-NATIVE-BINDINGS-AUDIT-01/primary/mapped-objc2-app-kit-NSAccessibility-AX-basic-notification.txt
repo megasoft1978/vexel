@@ -1,0 +1,31 @@
+BINDING NSAccessibilityPostNotification
+337:     }
+338:     let ret = unsafe { NSAccessibilityUnignoredChildrenForOnlyChild(original_child) };
+339:     unsafe { Retained::retain_autoreleased(ret) }
+340:         .expect("function was marked as returning non-null, but actually returned NULL")
+341: }
+342: 
+343: extern "C-unwind" {
+344:     /// * Posting Notifications **
+345:     ///
+346:     /// # Safety
+347:     ///
+348:     /// `element` should be of the correct type.
+349:     #[cfg(feature = "NSAccessibilityConstants")]
+350:     pub fn NSAccessibilityPostNotification(
+351:         element: &AnyObject,
+352:         notification: &NSAccessibilityNotificationName,
+353:     );
+354: }
+
+SDK NSAccessibilityPostNotification
+183: 
+184: */
+185: APPKIT_EXTERN void NSAccessibilityPostNotification(id element, NSAccessibilityNotificationName notification);
+186: 
+187: #ifdef __swift__
+188: // This struct is not available in Objective-C. Its only purpose is to create a namespace for accessibility symbols in Swift.
+189: typedef struct NSAccessibility { void *_reserved; } NSAccessibility;
+190: #endif
+191: 
+192: API_UNAVAILABLE_END

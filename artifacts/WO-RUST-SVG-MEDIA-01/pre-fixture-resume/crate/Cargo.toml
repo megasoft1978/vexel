@@ -1,0 +1,17 @@
+[package]
+name = "vexel-svg-media"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+vexel-scene = { path = "../vexel-scene" }
+vexel-base = { path = "../vexel-base" }
+vexel-geometry = { path = "../vexel-geometry" }
+vexel-xml = { path = "../vexel-xml" }
+vexel-svg-values = { path = "../vexel-svg-values" }
+vexel-svg-css = { path = "../vexel-svg-css" }
+vexel-svg-path = { path = "../vexel-svg-path" }
+vexel-svg-color = { path = "../vexel-svg-color" }

@@ -1,0 +1,32 @@
+{
+  "work_order": "WO-RUST-V1-DOCUMENT-SESSION-01",
+  "source_seed_inputs": 59,
+  "missing_seed_inputs": [],
+  "seed_mismatches": {
+    "Cargo.lock": {
+      "reason": "workspace package entry owned by coordinator"
+    },
+    "Cargo.toml": {
+      "reason": "workspace membership change owned by coordinator"
+    }
+  },
+  "integrated_sources": {
+    "rust/crates/vexel-v1-document/Cargo.toml": {
+      "sha256": "45dc046e77a5ce1380a13ed438aed0e572aa4d5c87f3c463c2dba33ed30ce20e",
+      "matches_candidate": true,
+      "line_count": 10
+    },
+    "rust/crates/vexel-v1-document/src/lib.rs": {
+      "sha256": "fc99a043197bda4050f9b611deab91d4e9553d7ec92b729bb5aecf0f5af940b1",
+      "matches_candidate": true,
+      "line_count": 209
+    },
+    "rust/crates/vexel-v1-document/src/tests.rs": {
+      "sha256": "7b7d39d8c23868b4b3e74449cfa8d280f14ec6b0096928d4161d1bc992f313df",
+      "matches_candidate": true,
+      "line_count": 169
+    }
+  },
+  "coordinator_workspace_membership": true,
+  "review": "PASS; see independent-review.md"
+}

@@ -1,0 +1,505 @@
+                              How Low Should We Go? Understanding the
+                                         Perception of Latency While Inking
+     Michelle Annett *                   Albert Ng †                 Paul Dietz ‡          Walter F. Bischof §             Anoop Gupta¥
+     University of Alberta          Applied Sciences Group,        Microsoft Research        University of Alberta        Microsoft Research
+     Microsoft Research                   Microsoft
+
+
+                                                                           1 versus 6 milliseconds when using the finger [23], but could
+ABSTRACT                                                                   distinguish 1 versus 2 milliseconds while using a stylus [24].
+Recent advances in hardware have enabled researchers to study the             Although we have learned a great deal about the capabilities of
+perception of latency. Thus far, latency research has utilized simple      human perception, little is known about latency when increased task
+touch and stylus-based tasks that do not represent inking activities       complexity and attentional demands are present. Unlike dragging or
+found in the real world. In this work, we report on two studies that       tapping a target, writing is a cognitively and visually demanding
+utilized writing and sketching tasks to understand the limits of           task requiring focus on character size and formation, attention to
+human perception. Our studies revealed that latency perception             inter-word spacing, and the ability to ignore cognitive and
+while inking is worse (~50 milliseconds) than perception while             environmental distractions. Little is known however, about the
+performing non-inking tasks reported previously (~2-7                      perceptual processes underlying latency perception or the influence
+milliseconds). We also determined that latency perception is not           of such conditions on the perception of latency.
+based on the distance from the stylus’ nib to the ink, but rather on          In recent work, while performing a stylus-based task that
+the presence of a visual referent such as the hand or stylus. The prior    requiring oscillating, scribbling movements, participants were
+and current work has informed the Latency Perception Model, a              unable to discriminate 7 from 40 milliseconds of latency [24].
+framework upon which latency knowledge and the underlying                  Although there is an ecosystem-wide push to make systems faster,
+mechanisms of perception can be understood and further explored.           such work suggests that these efforts may not be needed. If users
+                                                                           perceive two different latencies as being equal, while performing
+Keywords: Latency; delay; responsiveness; stylus; pen; indirect            tasks more complex and demanding than tapping, moving a box, or
+interaction; direct interaction; perception; psychophysics; just-          scribbling, it may not be necessary to allocate resources to achieve
+noticeable difference; latency perception model.                           the latency levels recommended previously. It may be beneficial to
+                                                                           reallocate CPU or GPU cycles to improve stroke rendering,
+Index Terms: B.4.2 Input / Output Devices, H.5.2 User Interfaces:          integrate pressure or tilt information from the stylus, or improve the
+Input devices and strategies, H.1.2. User/Machine Systems: Human           recognition of unintended touch. If users are unable to perceive the
+factors.                                                                   difference in speed, but readily perceive more realistic looking
+                                                                           strokes, delaying ink by 10 or 15 milliseconds may be acceptable if
+1    INTRODUCTION                                                          the user experience is improved in other ways.
+While interacting with devices, whether inking, gesturing, or                 To understand latency within the context of real-world activities
+selecting, it is essential to receive feedback about our actions. Users    and work towards an understanding of the influencing factors, two
+readily notice whenever feedback is unavailable or delayed,                experiments were conducted. The aim was not to determine how
+adapting their behaviour or interaction styles [26]. On digital            latency influences performance or develop methods to reduce
+devices today, there is typically a 60 to 120 millisecond delay from       hardware or software delays, but rather to understand the human
+when the stylus touches the screen until digital ink appears [23].         perception during real world activities. The first experiment
+Caused by both hardware and software factors, such delays                  determined the minimal perceivable latency while drawing and
+decrease user performance [3, 13, 32]. Unlike digital devices,             writing. Perceived latencies were found to be higher than those
+inking with pen and paper incurs zero delay, with the ink flowing          previously found with simple dragging and tapping tasks. The
+from the nib onto the paper, providing instantaneous feedback.             experiment also uncovered the importance of task demands and the
+   Until recently [3], it was assumed that the delay or latency            strategies employed to discriminate latency. These findings
+adequate for direct interaction was on the order of 100 milliseconds       motivated the second experiment, which manipulated the location
+[20]. Due to technological advances with high performance                  and presence of visual cues and feedback. While making latency
+hardware, it is now possible to display and examine the influence          judgements, the relative motion of the hand or stylus to the ink was
+and perceptibility of much smaller delays, e.g., 1 millisecond, to         used instead of the distance between the ink and stylus. The results
+users [22, 23, 24]. Such hardware has been used to determine the           from both experiments, in addition to those from prior work,
+minimum latency required for direct-touch interaction. For                 provided insight into how latency is perceived and helped to form
+example, while tapping with the finger, participants could not             the Latency Perception Model, which provides a blueprint for future
+distinguish 1 versus 63 milliseconds of delay [13]. While                  explorations into latency perception.
+performing a simple box moving task, users could not discriminate
+                                                                           2   RELATED WORK
+                                                                           There has been a variety of work focused on the detection and
+                                                                           understanding of latency. Researchers within computer music have
+     * email: mkannett@ualberta.ca
+     † email: v-albeng@microsoft.com                                       strived to determine the ideal latency for musical composition.
+    LEAVE
+      ‡ email:0.5 INCH SPACE AT BOTTOM OF LEFT COLUMN                      Early work by Freed et al. and Wright et al. suggested that music
+               paul.dietz@microsoft.com
+    ON§ email:
+         FIRST   PAGE FOR COPYRIGHT BLOCK                                  controllers should have less than 10 milliseconds latency, as it is at
+               wfb@ualberta.ca
+     ¥ email: anoop@microsoft.com                                          this point that piano players notice delays [9, 34]. Many others have
+recommended much higher latencies, depending on the type of               3   JUST NOTICEABLE DIFFERENCE
+instrument, genre of music, and the presence of tactile feedback.         As the goal of this work was to determine the minimum latency
+Maki-Patola and Hamalainen determined that delays between 2 and           perceivable, it was thus appropriate to use a just-noticeable
+30 milliseconds were sufficient while playing a Theremin without          difference (JND) methodology. With a JND methodology,
+tactile feedback [17]. Adelstein et al. found that delays of 24           participants are presented with two stimulus levels and are forced
+milliseconds were tolerable while tapping a brick with a hammer           to make a judgment regarding which alternative was brighter,
+[1]. Dahl and Bresin recommended latencies of 55 milliseconds for         quieter, or in our case, faster. After repeated presentations of
+percussion instruments [6]. While playing collaborative music via         various stimuli, one is able to derive the minimum threshold, or just-
+network connection, delays of 100 milliseconds were acceptable            noticeable difference (JND), perceivable for a given stimulus. The
+while playing piano, but only 20 milliseconds while playing an            JND paradigm converges on a threshold that is the result of
+accordion [25]. Using this work as a guide, Montag and colleagues         participants being unable to distinguish the minimum baseline from
+built a low-cost multi-touch tabletop capable of providing low            all latencies below the converged threshold. Because the task was
+latency audio and haptic feedback to users for music applications         constant across trials, we assume that participants would be unable
+[21]. The system focused on improving audio-haptic synchrony,             to distinguish between any latencies lower than the threshold.
+achieving a minimum latency of 30 milliseconds. The fragmented               During our experiments, two latencies on each trial, the baseline,
+results and recommendations from the computer musical literature          which was held constant and acted as a reference for the participant,
+demonstrate that many factors, i.e., feedback modality (e.g., tactile,    and the test or probe that was modified on each trial. Although
+audio, or visual feedback), task, and input, influence the perception     many methods can determine the test value, it is important to choose
+of latency during musical composition [16].                               method that reflect the needs of the experiment. Prior work used
+   Touch and stylus systems have also been used to investigate the        staircase methods that have been around since the inception of
+perception of latency. Using off-the-shelf touchscreen devices,           psychophysics [13, 23]. Given that our experiments required
+Anderson, Doherty, and Ganapthy artificially inserted latency into        repeated motor movements, a highly efficient method that mitigated
+everyday tasks such as reading and web or photo browsing to               fatigue and increased engagement was needed. The more modern
+determine that users tolerated 80 to 580 milliseconds of delay [4].       Parameter Estimation by Sequential Testing (PEST) adaptive
+Work by Ng et al. focused not on tolerance, but on the minimum            technique [27] met these requirements. This newer methodology
+latency perceivable [23]. By integrating a high-speed DLP projector       produces little variance in the resulting thresholds compared to
+with a custom high-speed touch sensor they were capable of                legacy methods, allows the experiment to be completed faster (30-
+displaying touch latencies as low as one millisecond. Ng and              80 trials), and reduces participant fatigue and boredom. The
+colleagues determined that users were able to distinguish between         duration of an experiment using PEST is approximately 10 minutes.
+one and six milliseconds of latency while dragging a box.                    With PEST, the Wald sequential likelihood-ratio test [33] uses
+Extensions of this work by Jota et al. examined latency while             the prior history of a participant’s responses at a given stimulus
+pointing and during the ‘land-on’ segment of a dragging task [13].        level determined the test latency and the amount that the stimulus
+Performance degraded as latency increased during a pointing task          should increase or decrease by (step size). Once the step size
+and unlike Ng et al.’s box dragging task, participants could not          reaches a minimum, in our case 1 millisecond, the experiment
+distinguish between 1 and 64 milliseconds during the ‘land-on’            concluded (aka the Minimal Overshoot and Undershoot Sequential
+event. Although Ng and Jota’s work probed the boundaries of               Estimation technique [18]). This ensured that participants
+touch-based latency perception, little information regarding the          experienced the smallest possible difference between latencies. A
+mechanisms and processes underlying latency perception was                maximum latency upper bound was placed on the probe (i.e., 105
+provided, nor were stylus-based interactions considered.                  milliseconds) to prevent participants from experiencing higher,
+   While working with a light-pen system, Miller hypothesized that        unreasonable levels of latency. If the probe ever reached this level,
+users could tolerate delays on the order of 100 milliseconds when         the experiment concluded.
+making slow, thoughtful strokes [20]. Although this was the first            To further increase the efficiency of PEST, an initial step size of
+exploration of latency while using a ‘stylus’, little justification for   10 milliseconds and expected probability of 75% were used, i.e.,
+this estimate is available. Due to technological limitations, stylus      participants correctly identified the baseline latency on 75% of
+latency has only recently been explored again. Henzen et al.              trials. As the onscreen digital ink required filtering and smoothing
+developed an electronic ink display that exhibited zero parallax and      via a moving average window, the minimum latency while inking
+minimum latency of 40 milliseconds, but did not leave the proof of        was seven milliseconds. The baseline latency was thus set at seven
+concept stage [11, 12]. Unlike Henzen and colleagues’ system, our         milliseconds. In an ideal scenario, the baseline latency would be
+prototype High Performance Stylus System (HPSS) system                    zero milliseconds, but as with all prior work, current technology is
+exhibited zero parallax, and is capable of a one millisecond inking       unable to achieve such latencies. Motivated by prior work [13, 23],
+delay while rendering simple shapes and a seven millisecond delay         the initial testing latency was set to 55 milliseconds to prevent
+while inking. In previous work with the HPSS, we examined                 participants from completing too many trials that would likely be
+latency perception while participants performed Ng et al.’s box           too easy. Across all trials, the presentation order of the baseline and
+dragging task [23] as well as a scribbling task [24]. We found that       testing latencies were randomized.
+participants were able to discriminate between 1 and 2 milliseconds
+of latency while dragging and 7 and 40 milliseconds of delay while        4   EXPERIMENT 1: PERCEIVED LATENCY WHILE INKING
+scribbling. As latency perception thus appears to be largely task-
+dependent and depend upon a multitude of factors, the current study       To understand latency perception during scenarios that require
+extends our previous work with the HPSS to focus on real-world            increased cognitive and attentional demands compared to the tasks
+tasks that have added cognitive load, different loci of attention, and    used in prior work [24], the first experiment determined the
+the presence or absence of visual feedback of the hand.                   minimum latency perceivable while participants drew simple lines,
+                                                                          wrote a word, and sketched a simple shape.
+Figure 1: The prototype High Performance Stylus System, which is composed of two high-speed projectors, a first surface mirror for rear
+projection, and a fibre-optic based stylus. Further details about the hardware can be found in [24].
+                                                                           timing on the FPGAs, verified the displayed latencies. As any
+4.1 Participants                                                           camera-based approach introduces delays and noise, there is likely
+Twelve individuals (3 female) with normal or corrected-to-normal           plus or minus half of a millisecond of error on the displayed
+vision were recruited to participate in the study (M = 34, range 23-       latencies.
+44 years). All participants were right handed and were naive to the           Although the High Performance Stylus System is capable of
+purpose and goals of the experiment during recruitment to remove           running independently, a HP Z400 Workstation was connected to
+any bias or experience with latency from pen-enabled systems,              the system via a serial connection to manipulate the latency values
+touch enabled systems, or video games. A range of participants             according to PEST. A custom C# and WPF program automatically
+were recruited, some used tablets and styli daily and whereas others       determined and sent appropriate latency values to the system,
+had limited prior exposure. In a pre-experiment questionnaire,             gathered latency judgments from participants, and record the JND
+twenty-five percent of participants were familiar with latency,            values for each task. A 21” Dell monitor provided participants
+through playing video or mobile phone games or through                     feedback about the current task and condition and prompted them
+interacting with virtual environments. Each participant was                for their latency decision. To advance to the next condition and
+provided a $10 honorarium at the conclusion of the experiment.             indicate their latency decision, participants pressed the A, B, and
+                                                                           space bar keys on a Microsoft Arc keyboard.
+4.2 Equipment and Apparatus
+To determine the minimum perceivable latency, the prototype High           4.3 Procedure
+Performance Stylus System (HPSS) system from [24] was used                 At the start of each experiment, participants sat in an adjustable
+(Figure 1). The HPSS employed two Texas Instrument Discovery               drafting chair in front of the HPSS. The concept of latency was
+4100 high-speed projector kits [7], a first-surface mirror for rear-       explained to each participant to ensure that they understood the
+projection onto a diffuse surface, and a fibre-optic stylus. The           purpose and goals of our experiment. Participants were then
+Discovery kits were able to achieve high frame rates using Digital         informed that they would be performing a number of inking tasks
+Micromirror Devices (DMD). DMD’s contain arrays of                         and that we would be measuring the minimum latency that they
+micromirrors that modulate light very quickly, allowing binary             could perceive during each task. On each trial, participants were
+frames to be projected at a rate in the tens of kHz. The first projector   informed that two different latencies, A and B, would be presented.
+kit rear-projected a series of grey-coded patterns that utilized Lee et    Participants were asked to complete the task twice, first at latency
+al.’s structured light technique [14]. The IR grey-coded patterns          A, then latency B. To switch from A to B, participants pressed the
+were projected at 17,000 frames per second at a resolution of              space bar. After each trial, participants used the A and B keyboard
+1920x1080. The patterns uniquely encoded every pixel in the image          keys to indicate “which condition exhibited the least delay”.
+area. To provide visual feedback in the form of ink, the second               Although explicitly priming participants for latency could
+Discovery 4100 kit refreshed at 23,000 binary frames per second,           influence their behaviour, it was imperative to do so. The use of
+with a pixel resolution of 1920x1080. The stylus used a one-               ambiguous questions probing which condition was ‘most preferred’
+millimetre fibre optic cable to detect the grey-coded IR patterns.         or ‘better’ would have left too much room for interpretation,
+The fiber fit within a 3D printed 1.2-millimeter UV cured ABS              indirectly encouraging some participants to focus on other factors
+plastic nib affixed to the end of a hollowed out laser pointer case.       or visual cues while making their decisions. It should be noted that
+Opposite the nib was a momentary switch that ‘activated’ whenever          any values determined are likely to be higher in a real-world
+the stylus was pressed against the screen. The stylus was close in         scenario, where latency detection is not paramount in a user’s mind.
+weight and size to a Cintiq or Intuos stylus.
+   As operating system and application layers add latency to any           4.4 Tasks
+system, the HPSS made use of the Discovery kits’ on board Xilinx           Three inking tasks were chosen based on their similarity to real
+Virtex 5 FPGAs to decode the grey-code pattern sampled by the              world activities: line drawing, writing, and drawing.
+stylus and render feedback for the user via the visible projector.            In the first task, line drawing, participants drew a single vertical
+High-speed cameras and the method detailed in [23], in addition to         line, approximately 2 inches long, from the top to the bottom of the
+                       Figure 2: Tasks used in Experiment 2, from left to right: the line drawing, writing, and drawing tasks.
+screen (Figure 2). Participants drew the line wherever they wished          activities. Rather, it suggests that other factors such as the visual
+and were told to maintain the same length and speed across trials.          cues and reference points available or the motor movements
+Such a task was included because it required a short ballistic              required may be more influential while perceiving latency.
+movement, had low cognitive load, and is commonly performed
+while annotating or sketching diagrams, (e.g., connect two boxes,
+underline words, etc.). It thus provided a baseline against which the
+other tasks could be compared.
+   With the writing task, participants were instructed to write the
+word ‘party’ (Figure 2). ‘Party’ was used because it was required
+familiar, practised movements and included characters that
+contained ascending and descending elements with a variety of
+curved and straight line components (e.g., ‘P’, ‘t’, ‘y’). Although
+participants may have been able to make a latency judgment from a
+single stroke or character, they were required to write the whole
+word on every trial. They were also encouraged to use whichever
+writing style they were most comfortable with (i.e., printing,
+handwriting, or a hybrid of the two) and were told to write each
+character at whichever size they wished, but to maintain the same           Figure 3: Median latency perceived while performing the writing,
+character size across all trials.                                           drawing, and line drawing tasks. The box boundaries represent the
+   In the drawing task, participants drew a six-sided star using one        5th and 95th percentiles.
+continuous stroke (Figure 2). A six-sided star was used because it
+contained varying angles, and was less automatic and familiar than          4.6 Discussion
+other simple shapes. The increased attention and cognitive loading          While performing everyday inking tasks, participants had a higher
+that encouraged slower, deliberate movements. Participants were             threshold for detecting latency than what has been found in prior
+encouraged to start drawing the star at the same location and               work. For touch and simple box moving tasks, prior recommended
+maintain the same size of star and general shape across all trials.         target latencies were below 10 milliseconds [23] but approximately
+   All three tasks were counterbalanced to reduce any possible              40 milliseconds when scribbling an oscillating line [24]. While
+effects of learning and fatigue. A 1-pixel wide line displayed ‘ink’        performing inking tasks at the 50-millisecond level, many
+while participants performed each task. As we were interested in            participants had difficulty distinguishing between the baseline and
+determining the absolute minimum latency users could perceive, we           testing latencies, believing that they were the same, “are you sure
+did not explicitly require participants to complete each trial at a         these aren’t the same, they look identical to me”, “I swear most of
+specific speed. The experimenter did monitor each participant via           these are the same”, and “oh these are impossible now”. While
+web camera and provided verbal feedback to participants if they             moving a simple box to and fro or tapping on the screen, there is
+appeared to be moving at unnatural speeds. As per the requirements          very little cognitive or attentional demands placed on the user,
+of any JND paradigm, participants were required to perform the              hence the lower perceptible latencies attained.
+same task on each trial. To test different words, shapes, or stroke            Even though sketching a shape and writing a word appear to be
+directions, participants would have had to complete another JND             simple, familiar tasks, on the cognitive and attentional levels they
+experiment. The experiment lasted approximately 30 minutes.                 are much more complex. The slight increase in perceptible latency
+                                                                            found between the inking tasks used presently and those prior [24]
+4.5 Results                                                                 is likely due to the present tasks being much more cognitively
+As the JND thresholds were not normally distributed, a non-                 demanding, requiring pre- and post-planning to ensure that all
+parametric Friedman’s ANOVA was performed with task as the                  strokes and characters are well formed, intra-strokes are joined,
+only factor (i.e., line drawing, writing, and drawing; Figure 3). The       inter-stroke spacing is appropriate, and higher-level components
+ANOVA revealed that task did not have a significant effect on               such as characters and corners were created in the correct order and
+participant’s ability to perceive latency (X2(2) = 0.809, p = 0.667,        at the correct time. Such demands were not present in the scribbling
+ω2 = 0). Participants were able to distinguish 7 and 53 milliseconds        task used prior, suggesting that attention and task demands likely
+while line drawing (range: 31-76), 7 versus 50 milliseconds while           influence the perception and detection of latency. This echoes the
+writing the word ‘party’ (range: 32-87), and 7 versus 61                    results found within the computer music literature and requires
+milliseconds while drawing the six-sided star (range: 21-82). The           further investigation, especially in scenarios involving external
+median latency across all tasks was 53 milliseconds. The lack of            environmental stimuli and indirect interaction.
+significance between the tasks does not suggest that perceived                 Although not significant, there appears to be a larger range in
+latency was, or will be, identical for all stylus-based inking              variance as task complexity increases. As writing was more
+cognitively taxing then drawing the single line, participants had               constant. We thus manipulated the presence / absence of the hand
+many opportunities and possible points of reference to use when                 within the visual field to mimic direct and indirect interaction
+making their latency judgments. With the line drawing task, the                 scenarios.
+short, ballistic nature of the required movements left little time and
+a smaller set of reference points to judge latency. In the drawing              5.1 Participants
+task, many participants reported that they could not focus on latency           Twelve naïve, right handed individuals (5 female) participated in
+as much as they could while drawing the simple line or writing                  the study (M = 33 years, range 24-44). Similar to the first
+because they intently focused on drawing all six points of the star.            experiment, all participants had normal or corrected-to-normal
+As the six sided star was an uncommon shape to draw, the increased              vision and had a range of experience with tablets and styli, some
+availability of reference points (compared to the line drawing task)            being experts and others complete novices. Thirty-three percent of
+and focus required (compared to writing) lead to larger variability             participants were familiar with latency from playing video games
+in the thresholds obtained. This observed variability may become                or interacting with virtual environments. Participants were provided
+even more prolific given a larger experimental population or                    a $10 honorarium for the 30-minute experiment. None of the
+different experimental stimuli.                                                 participants from Experiment 1 participated in this study.
+   In addition to task, post-experiment comments suggested that the
+natural sensorimotor processes and resulting locus of attention                 5.2 Equipment, Apparatus, and Procedure
+influenced latency perception. When asked how latency judgments                 The HPSS and procedure detailed in Experiment 1 was also used in
+were made, participants reported using a variety of strategies:                 Experiment 2.
+   Fixated on the eventual end location of the stylus and waited for the ink
+    to catch up                                                                 5.3 Tasks
+   Fixated on one region of interest and estimated the time between the        Four variations of the line drawing task from the first experiment
+    stylus / hand moving through the area and the ink appearing in the area     were used (Figure 4). The line drawing task was chosen over the
+   Performed a pursuit movement, following the nib as it moved                 writing and drawing tasks as it was the simplest, required less time
+   Performed a pursuit movement, following the ink as it appeared              to complete, and induced the least fatigue, all of which were
+   Alternated between the nib and ink (no saccades)                            important given the number of conditions.
+   Attended to the propagation of the ink’s projected light through the           In the first condition, no offset, the ink appeared directly
+    translucent nib                                                             underneath the nib. This was identical to the first experiment and
+   Participants largely reported that depending on the task, they felt          enabled the location of the stylus nib, stylus barrel, and hand to
+it was necessary to attend to different areas of the screen or visual           remain in the foveal region. In the second condition, small offset,
+cues. A graphic designer indicated that she focused on the global               the ink was offset 6.5 millimetres, or approximately one index
+picture while inking, “intently focusing on the ink drawing the last            finger width, to the left of the nib. This offset diverted attention
+few contour lines, not the lost, implied, or construction lines … the           towards the ink, forcing the nib, stylus, and hand into the parafoveal
+contour lines are the most important”. Another participant                      region, closely mimicked scenarios where the stylus is inaccurate.
+commented, “when I take notes during a meeting, I rarely look at                In the third condition, large offset, the ink was further offset to the
+my tablet … instead I look at the speaker or their presentation. I              left, approximately 65 millimetres. This condition moved the nib,
+only look at my tablet to see if I need to scroll for more paper, to fix        stylus barrel, and hand from the parafoveal region to the periphery
+a mistake, or to occasionally check that the pen is working”. Based             and required much larger saccades to see both locations. Although
+on such comments, it is clear that the strategy and location of focus           the third condition would likely not exist in the real world, it was
+are also implicated in the detection of latency.                                included to enable a comparison with the last condition.
+                                                                                   In the last condition, hand not visible, the ink was again offset 65
+5   EXPERIMENT 2: ATTENTION AND VISUAL REFERENCE                                millimetres to the left of the nib but the hand was additionally
+                                                                                obscured from view, using a foamboard flange placed vertically in
+As Experiment 1 suggested, a number of factors influence the                    the centre of the screen (Figure 4). Participants were instructed to
+perception of latency. We thus conducted another experiment to                  attend to the left side of the screen, where they could only see the
+determine the extent that the visual and motor systems work                     ink, not their hand. Participants did not receive visual information
+together to aid in the perception of latency. Inspired by the differing         corresponding to the movements they were making.
+judgement strategies reported in Experiment 1, we explicitly                       Similar to the first experiment, all four tasks were
+manipulated the location of the digital ink, forcing attention away             counterbalanced to reduce learning and fatigue effects. A 1-pixel
+from the stylus into other areas of the screen, similar to a poorly             wide line provided visual feedback and the experimenter controlled
+calibrated stylus system. If participants focus on the relationship             for the speed of drawing.
+between the nib and ink to make latency judgments, offsetting the
+location of the ink a variety of distances, should decrease latency             5.4 Results
+perception. If such information is not used, perceived latency
+                                                                                As the threshold distributions were not normal, non-parametric
+should remain unchanged.
+                                                                                analyses were conducted. A Wilcoxon signed-rank test evaluated
+   We were also interested in the effect of eliminating information
+                                                                                the influence of viewing the hand with ‘hand visible’ as the main
+about the motion of the stylus and hand, similar to indirect input
+                                                                                factor (i.e., visible versus not visible). The results indicated that
+scenarios. In such scenarios, interaction and visual attention is
+                                                                                participants were able to better perceive latency when they could
+naturally decoupled, distributed along different planes or different
+                                                                                view the pen-wielding hand and stylus (Mdn = 59 milliseconds,
+devices. If latency is determined largely by the visual system,
+                                                                                range: 33-104) compared to not receiving this visual feedback (Mdn
+removing this reference from the visual field should impact the
+                                                                                = 97 milliseconds, range: 59-105), z = -2.86, p < 0.005, r = -0.58
+perception of latency. If latency is largely determined by other
+                                                                                (Figure 5). The presence or absence of the hand and stylus is thus
+systems, such as audio or tactile feedback, signals from the motor
+                                                                                an important referent and influenced the perception of latency.
+system, or cognitive cues, latency perception should remain
+Figure 4: [Top] offsets used in Experiment 2, from left to right: no offset, small offset, and large offset. [Bottom] The hand not-visible condition.
+(Left) The participants placed their right arm and hand underneath the pink flange. (Right) The experiment from the perspective of the participant,
+wherein they could not see their hand or the stylus.
+                                                                             with their eyes. Few participants actually reported explicitly
+                                                                             focused on the nib, stylus, or distance between the nib and stylus in
+                                                                             Experiment 2. This is surprising, given that one would assume such
+                                                                             visual elements would be the first cues users would look towards,
+                                                                             as the stylus initiates interaction and the ink provides feedback
+                                                                             about the action. Scanpath analyses have found that whenever the
+                                                                             nib is located in the parafoveal or foveal region, it is often not
+                                                                             attended to [2], 5, 8, 19, 29]. Eye-movement patterns have also been
+                                                                             found to be largely task and motivation dependent, some preferable
+                                                                             for quick inking movements such as sketching, whereas others are
+                                                                             more appropriate for reading or editing [10, 28, 29, 30, 31]. Future
+                                                                             work is thus needed to understand the specific visual details
+                                                                             important for latency perception and where attention is directed
+                                                                             during natural inking tasks.
+Figure 5: Median perceived latency while the ink was not offset, offset         The significant differences found between the hand visible and
+a small amount (i.e., 6.5 millimetres), offset to the opposite side of       not visible conditions, in addition to work from the eye-tracking
+the screen (i.e., 65 millimetres), and while the hand was not visible.
+The box boundaries represent the 5th and 95th percentiles.
+                                                                             literature, suggests that the motion of the larger elements such as
+                                                                             the hand or stylus barrel are valuable cues. In the motor-only
+   A Friedman’s ANOVA examined the influence of the ink offset,              condition, i.e., hand not visible, performance plummeted because
+(i.e., no offset, small offset, large offset). Offset distance did not       participants were unable to solely rely on the haptic feedback from
+have a significant effect on participant’s ability to perceive latency       their pen-wielding hand or the signals from their motor system to
+(X2(2) = 4.167, p = 0.125, ω2 = 0.007). Participants could                   make latency judgements. Once the stylus and hand were visible,
+distinguish 7 versus 59 milliseconds when no ink offset was present          even if only in the periphery (i.e., large offset condition), they
+(range: 23-101), 7 versus 50 milliseconds when a small offset was            provided valuable information to participants, in the form of a large
+present (range: 18-105) and 7 versus 59 milliseconds when a large            moving stimulus and increased latency discrimination. When such
+offset was used (range: 33-104). Irrespective of the offset used, the        visual cues are not present, participants are forced to use cues from
+median perceived latency was 55 milliseconds, similar to that found          other modalities (e.g., haptic, audio, proprioceptive, or cognitive)
+in Experiment 1. As there was not a significant difference between           so performance suffers.
+the offset conditions, participants likely did not use the distance             To notice the latency inherent on stylus-enabled devices, it
+between the nib and ink to make their judgements, instead relying            appears necessary for users to see their own hand in their field of
+on the relative movement of the stylus or hand.                              view. As interaction and attention were visually and physically
+                                                                             divided during the no-hand condition, the increased latency
+5.5 Discussion                                                               threshold observed from the large offset (59 milliseconds) to no-
+The lack of significance between the no, small, and large offset             hand conditions (97 milliseconds) prticipants may have more
+conditions suggests that the distance between the stylus and digital         difficulty perceiving latency on indirect input devices where the
+ink is little help while perceiving latency. Many researchers believe        movement of the hand is out of view of the display. Although
+the gap between nib and ink is used for judging latency, but                 traditional indirect input devices separate input and output along
+participant comments and lab-based studies from the eye-tracking             different planes or devices, the no-hand condition mimicked such a
+literature corroborate with our results and suggest the opposite. It is      scenario quite well. Such findings have implications for the future
+actually uncommon for participants to follow the nib continually             design and continued use of stylus devices that harness indirect
+interaction, such as the Wacom Bamboo Connect or Intuos devices.           uncertainty about what influences the referents. The referent also
+On such devices, sub-100 millisecond latency may not be required.          need not be a physical stimulus, but may take the form of a cognitive
+A more focused study would be needed to examine other factors              initiation of an action (i.e., a mental ‘Go’ signal).
+involved with real-world use of indirect input devices (e.g.,
+placement relative to screen and user, size of input space, etc.).
+   Although there was no difference between the various offset
+conditions, a few users commented that they preferred the small
+offset condition because it was “similar to those signature pads at
+Home Depot or Lowes where the ink is far away from the pen
+location” and “allowed me to focus on the ink and still see the pen
+nib without having the nib occlude things or get in the way”. Such
+comments suggest that a pixel-perfect calibration and accuracy may
+not be needed for a satisfying stylus experience.
+   Participants additionally commented that varying the speed of
+their strokes helped them to perceive latency, but this strategy is not
+supported by our results. While increased pen speeds will increase         Figure 6: The Latency Perception Model, detailing the role of the input
+the visible gap between the pen nib and the visual ink trail, in           action, the resulting referent stimuli, the latency source, and the
+theory, this will make it easier for participants to perceive lower        output responses. The observer compares the referents and
+                                                                           responses when perceiving latency and is likely influenced by
+latency levels. Based on the results from the second experiment, we
+                                                                           contextual demands such as task requirements, loci of attention,
+are not convinced of this. If participants were perceiving latency         environmental factors, etc.
+based on the distance between the nib and ink, as predicted by
+Weber’s law (i.e., the just-noticeable difference between two                 Once the referents or responses are available, the observer
+stimuli is proportional to the magnitude of the stimuli), performance      compares the original input action to the referents and responses to
+should have decreased as the offset increased.                             determine the magnitude of latency generated by the latency source.
+                                                                           During this comparison and the decision making process, our
+6   LATENCY PERCEPTION MODEL                                               experimentation determined that there are a variety of contextual
+                                                                           demands influencing the observer. As suggested by Experiment 1,
+While latency is simply the “delay between input action and the
+                                                                           the judgement strategy plays a role in focusing or diverting attention
+output response” [15], our previous and current explorations into
+                                                                           from referents and responses, as does the location and amount of
+latency have determined that the perception of latency is a complex,
+                                                                           attention and external environmental distractions. Although we
+multi-faceted problem. In Experiment 2, the input action and output
+                                                                           cannot make definitive comparisons, tasks that require more
+response remained the same, yet the perception of latency changed.
+                                                                           attention (inking versus moving a box) and increased cognitive load
+Initially, participants could use visual information to make
+                                                                           seem to redirect resources away from perceiving the referents and
+judgments but once that was removed, they were forced to use of
+                                                                           responses, making latency judgements more difficult.
+other information streams, perhaps auditory or tactile cues from the
+                                                                              Although little is known about latency perception, the model
+stylus. These alternative data sources affected latency perception.
+                                                                           provides many avenues for future explorations. By isolating each
+   Based on our work and the prior literature, we have developed a
+                                                                           factor in the model and examining its effects, it is possible to extend
+model that describes the perceptual processes underlying latency
+                                                                           the model, such that one could predict just-noticeable difference
+perception in stylus and touch interaction. The model is composed
+                                                                           thresholds when different referents and responses are available,
+of five elements: an input action, a referent stimulus, a latency
+                                                                           without having to evaluate the role of each explicitly. The model
+source, output responses, and contextual demands (Figure 6). The
+                                                                           also raises a number of questions. For example, does each modality
+input action can take many forms, e.g., hovering the stylus in the
+                                                                           have its own cost when judging latency? Is there a constant cost for
+air, touching a finger to the screen, or pressing the stylus against the
+                                                                           having the referent and response in different modalities? What is
+screen, and is invoked by the observer, another user, or an external
+                                                                           the relative impact of referents versus responses? From a
+system or device. Once the action occurs, it is handled by the
+                                                                           psychological and interaction perspective, it is imperative to
+latency source (e.g., a sensor array, operating system, application,
+                                                                           understand the processes governing latency perception before
+etc.). This entity converts the input action into output responses and
+                                                                           recommendations for future systems are made.
+adds delay. The responses are most often visual (e.g., a dot, line, or
+simple shape), but could manifest themselves via other modalities          7   FUTURE WORK
+(e.g., haptic or auditory). As our experiments demonstrated,
+changes in attention to and the location of responses influence their      A great deal of attention has been devoted towards latency
+use. Prior results using different sized boxes during dragging [13]        perception recently, but there still is a great deal open for
+suggest that the spatial magnitude of responses also affects latency       exploration. Miller’s 100 millisecond latency hypothesis focused on
+perception.                                                                the issue of latency tolerance whereas our experimentation
+   In addition to supplying the latency source with input, the input       examined perceptual thresholds [20]. There is of course a difference
+action also generates a variety of stimuli, or referents that provide      between what users can perceive and what they will tolerate.
+clues to the observer (e.g., stylus barrel, fingernail, hand, stylus       Although we cannot provide tolerance recommendations, if users
+nib). Different modalities of the referent likely influence perception     are unable to perceive delays below a certain threshold, then it is
+as well. In prior work with tapping, the haptic sensation of the finger    likely that they will tolerate delays at or near these thresholds. It is
+pad touching and moving along the surface produced an additional           equally likely that they may tolerate much higher latencies as Miller
+referent that assisted in the perception of latency [13, 23]. As the       predicted. Understanding the relationship between perception and
+stylus naturally dampens the haptic sensations from the screen, it is      tolerance thus remains an important, fruitful area of research.
+likely that in stylus-based scenarios haptic referents play less of a         This work explicitly focused on the display aspect of latency,
+role. Similar to the output responses, there is spatial and temporal       manipulating the speed at which input was rendered. Across the
+experiments, participants knew that regardless of how fast or slow             [10] E. Gowen and R.C. Miall. Eye-tracking Interactions in Tracing and
+they interacted, all strokes would be sensed by the system and                      Drawing Tasks. Human Movement Science, 25: 568-585, 2006.
+eventually appear on screen. With current devices, it is often                 [11] A. Henzen, N. Ailenei, F. Di Fiore, F. Van Reeth, and J. Patterson.
+                                                                                    Sketching with a Low-Latency Electronic Ink Drawing Tablet. In
+unclear why some input is not sensed or displayed. Our experiments
+                                                                                    Proc. of 3rd Int. Conf. on Computer Graphics and Interactive
+determined the display latency that can be perceived but not the                    Techniques in Australasia and South East Asia, 51-60, 2005.
+effects of delayed or slow sampling. While we advocate for                     [12] A. Henzen, N. Ailenei, F. Van Reeth, G. Vansichem, R.W. Zehner,
+decreasing latency in the whole pipeline, it remains to be seen how                 and K. Amundson. An Electronic Ink Low Latency Drawing Tablet.
+perception and user satisfaction would change if devices rendered                   SID Symposium Digest of Technical Papers, 35(1): 1070-1073, 2004.
+quickly but stroke completeness and accuracy were unpredictable.               [13] R. Jota, A. Ng, P. Dietz, and D. Wigdor. How Fast is Fast Enough?
+   As reducing the actual system latency requires many incremental                  A Study of the Effects of Latency in Direct-Touch Pointing Tasks. In
+improvements throughout the data pipeline, it may be worthwhile                     Proc. of CHI, 2291-2300, 2013.
+                                                                               [14] J.C. Lee, P. Dietz, D. Maynes-Aminzade, R. Raskar, and S. Hudson.
+to use additional information to modulate the processing devoted to
+                                                                                    Automatic Projector Calibration with Embedded Light Sensors. In
+latency reduction whenever the user is looking at the display or the                Proc. of UIST, 123-126, 2004.
+stylus is about to touch the screen. The use of eye tracking and ‘pre-         [15] I.S. MacKenzie and C. Ware. Lag as a Determinant of Human
+touch’ information from the stylus or finger is also an interesting                 Performance in Interactive Systems. In Proc. of CHI, 488-493, 1993.
+avenue of research. By predicating and anticipating strokes or                 [16] T. Maki-Patola. Musical Effects of Latency. Suomen
+actions before contact is made with the screen, it may be possible                  Musiikintutkijoiden, 9: 82-85, 2005.
+to decrease the perceived latency inherent in a system.                        [17] T. Maki-Patola and P. Hamalainen. Latency Tolerance for Gesture
+                                                                                    Controlled Continuous Sound Instrument without Tactile Feedback.
+8     CONCLUSION                                                                    In Proc. of Int. Computer Music Conf., 1-5, 2004.
+                                                                               [18] N.A. McMillian and D.C. Creelman, Detection Theory: a User’s
+In our experiments, we dove further into understanding the basics                   Guide, Cambridge University Press, Cambridge, 1991.
+of latency perception by performing simple manipulations on the                [19] R.C. Miall, H. Imamizu, and S. Miyauchi. Activation of the
+tasks performed and the presence and locations of visual reference                  Cerebellum in Co-Ordinated Eye and Hand Tracking Movements: An
+cues. By offsetting the location between the ink and stylus and                     fMRI Study. Experimental Brain Research, 135: 22-33, 2000.
+removing the hand and stylus from the visual field in one condition,           [20] R.B. Miller. Response Time in Man-Computer Conversational
+we determined that low-latency judgments are largely visual, using                  Transactions. Fall Joint Computer Conference, 267-277, 1968.
+                                                                               [21] M. Montag, S. Sullivan, S. Dickey, and C. Leider. A Low-Cost, Low-
+the relative movement between the stylus and ink for an accurate
+                                                                                    Latency Multi-Touch Table with Haptic Feedback for Musical
+judgment. Participants were unable to distinguish latencies below                   Applications. In Proc. of Int. Conf. on New Interfaces for Musical
+97 milliseconds when the hand and stylus were not visible. We                       Expression, 8-13, 2011.
+additionally found that latency perception is task dependant, with             [22] A. Ng and P. Dietz. The Need for Speed in Touch Systems. SID
+inking tasks degrading one’s ability to discern between various                     Symposium Digest of Technical Papers, 2013.
+levels of latency when compared to tasks used in prior work. These             [23] A. Ng, J. Lepinski, D. Wigdor, S. Sanders, and P. Dietz. Designing
+results informed the Latency Perception model, a model focusing                     for Low-Latency Direct-Touch Input. In Proc. of UIST, 453-462,
+on the role of referents, responses, and additional extraneous factors              2012.
+                                                                               [24] A. Ng, M. Annett, P. Dietz, A. Gupta, and W.F. Bischof. In the Blink
+on the perception of latency. Such a model provides insight into the
+                                                                                    of an Eye: Investigating Latency Perception during Stylus
+perception of latency and forms a foundation upon which future                      Interaction. In Proceedings of CHI 2014.
+work can be undertaken.                                                        [25] A.A. Sawchuk, E. Chew, R. Zimmermann, C. Papadopoulos, and C.
+                                                                                    Kyriakakis. From Remote Media Immersion to Distributed
+REFERENCES                                                                          Immersive performance. In Proc. of ACM SIGMM Workshop on
+[1]    B.D. Adelstein, D.R. Begault, M.R. Anderson, and E.M. Wenzel.                Experiential Telepresence, 110-120, 2003.
+       Sensitivity to Haptic-Audio Asynchrony. In Proc. of Int. Conf. on       [26] S. Seow. Designing and Engineering Time: The Psychology of Time
+       Multimodal Interfaces, 73-76, 2003.                                          Perception in Software, Pearson Education, Boston, 2008.
+[2]    D. Alamargot, D. Chesnet, C. Dansac, and C. Ros. Eye and Pen: A         [27] M.M. Taylor, and C.D. Creelman. PEST: Efficient Estimates on
+       New Device for Studying Reading during Writing. Behaviour                    Probability Functions. Journal of the Acoustical Society of America,
+       Research Methods, 38(2): 287-299, 2006.                                      41: 782-787, 1967.
+[3]    M. Annett, F. Anderson, W.F. Bischof, and A. Gupta. The Pen is          [28] J. Tchalenko. Eye Movements in Drawing Simple Lines. Perception,
+       Mightier: Understanding Stylus Behaviour While Inking on Tablets.            36: 1152-1167, 2007.
+       In Proc. of GI, 2014.                                                   [29] J. Tchalenko and R.C. Miall. Eye-hand Strategies in Copying
+[4]    G. Anderson, R. Doherty, and S. Ganapathy. User Perception of                Complex Lines. Cortex, 45:368-376, 2009.
+       Touch Screen Latency. Design, User Experience, and Usability Part       [30] N. Toyoda, R. Yamamoto, and T. Yubuta. Clarification of Transition
+       1, 195-202, 2011.                                                            Conditions for Eye Movement While Generating a Trajectory Using
+[5]    R. Coen-Calgi, P. Coraggio, P. Napoletano, O. Schwartz, M. Ferraro,          the Upper Limb. SI International, 106-111, 2011.
+       and G. Boccignone. Visuomotor Characterization of Eye Movements         [31] N. Toyoda, R. Yamamoto, and T. Yubuta. Eye Movement While
+       in a Drawing Task. Vision Research, 49(8): 810-818, 2009.                    Generating a Trajectory Using the Upper Limb. Journal of Energy
+[6]    S. Dahl and R. Bresin. Is the Player More Influenced by the Auditory         and Power Engineering, 6: 1733-1744, 2012.
+       than the Tactile Feedback from the Instrument? In Proc. of the COST-    [32] D. Vogel and R. Balakrishnan. Direct Pen Interaction with a
+       06 Workshop on Digital Audio Effects, 194-197, 2001.                         Conventional Graphic User Interface. Human Computer Interaction,
+[7]    DLP          Discovery          4100        Development          Kit.        25: 324-388, 2010.
+       http://www.ti.com/lit/an/dlpa008/dlpa008.pdf. Accessed July 2013.       [33] A. Wald. Sequential Analysis, John Wiley & Sons Inc. New York,
+[8]    M. Fayol, D. Alamargot, and V.W. Berninger. Translation of                   1947.
+       Thought to Written Text While Composing: Advancing Theory,              [34] J. Wright and E. Brandt. System-Level MIDI Performance Testing.
+       Knowledge, Research Methods, Tools, and Application. Psychology              In Proc. of Int. Computer Music Conf., 318-331, 2001.
+       Press, Taylor & Francis Group, New York, 2012.
+[9]    A. Freed, A. Chaudhary, and B. Davila. Operating System Latency
+       Measurement and Analysis for Sound Synthesis and Processing
+       Applications. In Proc. of Int. Computer Music Conf., 479-481, 1997.
+

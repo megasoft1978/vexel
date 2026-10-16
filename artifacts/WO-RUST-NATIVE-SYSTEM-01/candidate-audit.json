@@ -1,0 +1,25 @@
+{
+  "name": "platform",
+  "wo": "WO-RUST-NATIVE-SYSTEM-01",
+  "changed_baseline_files": [
+    "rust/crates/vexel-platform-macos/src/lib.rs"
+  ],
+  "new_files": [
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/worker.events.jsonl",
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/result.md",
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/overlay-baseline.json",
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/verification.txt",
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/parity-map.json",
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/worker.stderr.log",
+    "artifacts/WO-RUST-NATIVE-SYSTEM-01/worker.prompt.txt",
+    "rust/crates/vexel-platform-macos/tests/native_system.rs",
+    "rust/crates/vexel-platform-macos/src/sys.rs"
+  ],
+  "unchanged_inherited_git_blob_files": 1168,
+  "missing_baseline_files": [],
+  "out_of_scope": [],
+  "main_module_conflicts": [],
+  "source_line_cap_violations": [],
+  "pass": true,
+  "audit_correction": "Initial new-file scan mislabeled inherited tracked artifacts and .git metadata. Inherited files now checked against immutable git blobs; current-source baseline hashes still checked individually."
+}

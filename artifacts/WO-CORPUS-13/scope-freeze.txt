@@ -1,0 +1,4 @@
+WO-CORPUS-13 revision 1
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: d7b43b491438ecc5370653e74c567103954b0c87699d6141c9eec75e11238365
+Two byte-derived T1 feature ablations; Vexel/Inkscape comparisons only.

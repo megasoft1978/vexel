@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "review_snapshot_matches_main": true,
+  "original66tests_byte_identical": true,
+  "preintegration_603_157_scope_audit": "pre-integration-scope-audit.json",
+  "original_manifests_unchanged": true,
+  "root_HEAD_index_unchanged": true,
+  "focused_tests": 82,
+  "new_tests": 16,
+  "broad_UI_fullapp_tested": false
+}

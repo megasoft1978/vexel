@@ -1,0 +1,9 @@
+{
+  "work_order": "WO-RUST-SCENE-NESTED-REQUESTS-01",
+  "protected_inputs": {
+    "Cargo.toml": "23509968b44aed12c6ed56934c7131e539e11e51f0f6d2bddf5d8c87c3a918d5",
+    "Cargo.lock": "6679c6fc369af4248f29146a7172f31af9c5a4d80675f5fa15f650f943803a42",
+    "rust/crates/vexel-scene/Cargo.toml": "9a055c86e61af92236a524fbcec33a98e91ed640b1bf4411ebaf121f07ade7e7",
+    "rust/crates/vexel-scene/README.md": "c0c88a661720d07aa73db074aff456a5371e9b297a19985c7aae825b3d7aba90"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "base": {
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "wo": "WO-RUST-BASE-01",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-base"
+  },
+  "geometry": {
+    "model": "gpt-6-luna",
+    "effort": "medium",
+    "wo": "WO-RUST-GEOMETRY-01",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-geometry"
+  },
+  "xml": {
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "wo": "WO-RUST-XML-01",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-xml"
+  },
+  "json": {
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "wo": "WO-RUST-JSON-01",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-json"
+  },
+  "project": {
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "wo": "WO-RUST-PROJECT-01",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-project"
+  },
+  "raster": {
+    "model": "gpt-6-luna",
+    "effort": "medium",
+    "wo": "WO-RUST-RASTER-01",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-raster"
+  }
+}

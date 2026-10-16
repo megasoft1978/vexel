@@ -1,0 +1,46 @@
+Exact compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+COMMAND: cargo +stable generate-lockfile --offline
+EXIT: 0
+
+COMMAND: cargo +stable check --workspace --locked --offline
+EXIT: 0
+    Checking vexel-timeline v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-timeline)
+    Checking vexel-svg-path v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-path)
+    Checking vexel-tile-cache v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-tile-cache)
+    Checking vexel-platform-tasks v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-tasks)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-WAVE3-SETUP-01 --ready
+EXIT: 0
+valid WO-RUST-WAVE3-SETUP-01 revision 1 sha256 b5d9dd1905f7b257205d3701c968c420cf0c14e0133ecc0aeee95a97f406af7c
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SVG-PATH-01 --ready
+EXIT: 0
+valid WO-RUST-SVG-PATH-01 revision 1 sha256 30fca048df6a30760553fc3f87647506b016483d44cc8b605aa04c842e3982b8
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-TIMELINE-01 --ready
+EXIT: 0
+valid WO-RUST-TIMELINE-01 revision 1 sha256 4d990d0a1c1bc1f53d58bbcb49acc81dee7cd51333fa52cb67ab2cf85dd37881
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-UI-DRAW-01 --ready
+EXIT: 0
+valid WO-RUST-UI-DRAW-01 revision 1 sha256 3f67be21ee959179715b74f5ea1e705f852a98e1ea50a9aab67dc05810dad489
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-ATOMIC-FILES-01 --ready
+EXIT: 0
+valid WO-RUST-ATOMIC-FILES-01 revision 1 sha256 0aa3256814c8c5e084f2bd453bb6b0e2656cfea39cfec9996ce087c1aa4cd717
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-TILE-CACHE-01 --ready
+EXIT: 0
+valid WO-RUST-TILE-CACHE-01 revision 1 sha256 13e4a1365c8477b027992641fe0a428f617b34d0ecda77bb33fda884d93fc429
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-TASK-QUEUE-01 --ready
+EXIT: 0
+valid WO-RUST-TASK-QUEUE-01 revision 1 sha256 3f2f48a95e25bf16842778c8419423f98560ad3acafed163f8558c7d284d44da
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1128 entries
+
+COMMAND: git diff --check
+EXIT: 0

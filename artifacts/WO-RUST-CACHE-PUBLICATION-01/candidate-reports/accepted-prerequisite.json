@@ -1,0 +1,31 @@
+{
+  "prerequisite": "WO-RUST-SCENE-DECODE-INITIALIZATION-01 ACCEPTED",
+  "main_scene_entries": 177,
+  "unchanged_animation_entries": 21,
+  "accepted_ledger_event": {
+    "ts": "2026-10-15T04:54:14Z",
+    "wo_id": "WO-RUST-SCENE-DECODE-INITIALIZATION-01",
+    "event": "accepted",
+    "revision": 1,
+    "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "run_id": "WO-RUST-SCENE-DECODE-INITIALIZATION-01-main177-accepted",
+    "session_id": "coordinator-main-initialization",
+    "model": "gpt-6.1-sol",
+    "cli_version": "0.162.1",
+    "duration_s": 0,
+    "usage": {
+      "input_tokens": null,
+      "output_tokens": null
+    },
+    "status": "accepted",
+    "artifacts": [
+      "artifacts/WO-RUST-SCENE-DECODE-INITIALIZATION-01/main-verification.json",
+      "artifacts/WO-RUST-SCENE-DECODE-INITIALIZATION-01/coordinator-result.md"
+    ],
+    "note": "FullHigh review+viewportMediumrecheck, root1672audit/exactdiff and freshmain177Scene+21unchangedanimation pass;156oldScene assertions preserved+21new. Fouracceptedconsumers compile.603/157/HEAD/index intact. Sourcecontractonly, lowerengine adoption/app/finalQA/demo pending."
+  },
+  "previous_writer_and_reviewer_terminal": true,
+  "exact_current_source_overlay_files": 1747,
+  "old_reports": "Historical candidate reports are preserved, current coordinator acceptance is authoritative."
+}

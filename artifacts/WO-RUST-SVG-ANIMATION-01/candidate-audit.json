@@ -1,0 +1,31 @@
+{
+  "wo": "WO-RUST-SVG-ANIMATION-01",
+  "changed_baseline_files": [
+    "rust/crates/vexel-svg-animation/src/lib.rs"
+  ],
+  "new_files": [
+    "artifacts/WO-RUST-SVG-ANIMATION-01/repair-v1-result.md",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/worker.events.jsonl",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/result.md",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/verification.txt",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/repair-v1.prompt.txt",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/parity-map.json",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/worker.stderr.log",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/repair-v1.events.jsonl",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/worker.prompt.txt",
+    "artifacts/WO-RUST-SVG-ANIMATION-01/repair-v1.stderr.log",
+    "rust/crates/vexel-svg-animation/tests/animation.rs",
+    "rust/crates/vexel-svg-animation/src/parse.rs",
+    "rust/crates/vexel-svg-animation/src/eval.rs",
+    "rust/crates/vexel-svg-animation/src/parse_values.rs",
+    "rust/crates/vexel-svg-animation/src/motion.rs"
+  ],
+  "unchanged_inherited_git_blob_files": 1168,
+  "out_of_scope": [],
+  "missing_baseline_files": [],
+  "main_module_conflicts": [],
+  "source_line_cap_violations": [],
+  "pass": true,
+  "accepted_review": "recheck-v1",
+  "authorized_coordinator_input_deltas": {}
+}

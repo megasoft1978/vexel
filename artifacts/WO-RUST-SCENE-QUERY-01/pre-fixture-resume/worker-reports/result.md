@@ -1,0 +1,7 @@
+# Candidate result
+
+Implemented safe selection helpers for immutable accepted scene views, including aspect mapping, bounds, segment distance, fill winding/even-odd tests, inverse-space stroke distance, reverse painter traversal with the concrete clip contract, and narrowest source-span lookup. Source spans are set on unpublished `ShapeInput` before append because accepted scene graphs expose no mutation path for published shapes. Added explicit capacity accounting through `ChargeLedger` leases and transactional replacement reservation; no global allocator tracking or RSS claim is made.
+
+The frozen allocation fixture builder has a safe Rust equivalent and tests for its exact prefix, padding, repeated use elements, suffix, equal-length padded cases, and checked overflow. Allocation tests cover capacity charges, release, replacement preservation, and budget failure.
+
+This is a candidate, not complete mixed renderer acceptance. The assigned `measure_allocation_source` proof needs the concrete decoder/reference index, clip-copy producer, and raster output adapter. Its original three-source allocation assertions are preserved as unexecuted integration coverage. The current accepted `SceneView` also lacks a shape-handle-by-slot API; queries recover handles from published edge ownership, so zero-edge shapes cannot be hit/selected by source offset through this crate. Coordinator review should decide whether the shared API needs an accessor.

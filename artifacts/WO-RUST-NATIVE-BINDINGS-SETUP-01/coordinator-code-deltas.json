@@ -1,0 +1,7 @@
+{
+  "rust/crates/vexel-document-edit/src/lib.rs": {
+    "before_sha256": "9f24f9ef54f54c78ce080f1cba8ddbdfe9a249a953bf20a20b7b8c36ad6b205f",
+    "after_sha256": "8029e3172f9b4e9cef8d5c9fa0f32a3671443096ac33aad6e7b2bc0c41f60c3c",
+    "authority": "WO-RUST-DOCUMENT-EDIT-01"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "status": "pass",
+  "baseline_file_count": 1648,
+  "changed_baseline_paths": [
+    "work/WO-RUST-NATIVE-WINDOW-PLAN-01.md"
+  ],
+  "authorized_coordinator_order_update": {
+    "work/WO-RUST-NATIVE-WINDOW-PLAN-01.md": "e106f277b3590fdf084f43a4e41ae0bfae2199a7b9715bbdb59f7dd0003665da"
+  },
+  "unexpected_worker_changes": [],
+  "candidate_outputs": {
+    "result.md": "4a1f54d8d815007d11f19fdb5e4fe57b8b6d2b72d64960f162d296bb5f4c42cb",
+    "parity-map.json": "270553966457bbe2f909dc2f3826351a1b0e63201f066b1ae6437ffe23173938",
+    "ready-window-order.md": "2666ed1f59894158e4b66ff71719b4910731f59350acb537eb8b3e7989a021a3",
+    "verification.txt": "fba736cbc458aed0bf0cfbf1229540a6999ee92f45a075de6cde24cbcb8f080f"
+  },
+  "native_code_implemented": false,
+  "builds_or_tests_run": false
+}

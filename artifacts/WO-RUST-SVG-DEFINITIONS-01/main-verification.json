@@ -1,0 +1,28 @@
+{
+  "recorded_utc": "2026-10-15T04:47:43Z",
+  "check": {
+    "command": "cargo +stable check -p vexel-svg-definitions --locked --offline",
+    "exit_code": 0,
+    "log": "main-check.log"
+  },
+  "test": {
+    "command": "cargo +stable test -p vexel-svg-definitions --locked --offline",
+    "exit_code": 0,
+    "named_entries": 40,
+    "log": "main-test.log"
+  },
+  "owned_catalog_symbols": 79,
+  "catalog_suites": 10,
+  "source_review": "full-review.md",
+  "sole_blocker_fixed": "marker-recheck.md",
+  "reviewed_source_diff": "marker-review-diff.json",
+  "protected_candidate_hashes": 1685,
+  "root_independently_verified_diff_and_audit": true,
+  "narrow_rechecker_limitation": "Root reports were outside readonly worker tree, so narrow rechecker did not independently confirm their hash assertions; root exact audit/diff directly provides them.",
+  "legacy_preserved": 603,
+  "frozen_preserved": 157,
+  "head_preserved": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "index_preserved": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "broad_UI_E2E_run": false,
+  "full_product_complete": false
+}

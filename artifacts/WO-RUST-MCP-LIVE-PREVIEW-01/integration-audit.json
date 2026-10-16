@@ -1,0 +1,40 @@
+{
+  "work_order": "WO-RUST-MCP-LIVE-PREVIEW-01",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "work_order_sha256": "e2446e2720b4d26248c73006fde18f4e5b48458d6de0e94355feb413a0c488e0",
+  "source_seed_count": 87,
+  "source_seed_changes": {
+    "Cargo.lock": "0187b5b43c12c78dfafbf4cc2735fc9c3b7dd869b8973c505c19d5e4b239bd6b",
+    "rust/crates/vexel-app/Cargo.toml": "de4ebd59ff9cc4efd947eb2caa8eb812170813734ee9a3ad04856e68c28bbe1d",
+    "rust/crates/vexel-app/README.md": "a3ed951226e47b4c9b1901c8c670dcff2e7d22092a9c8d1d45dd87e322bd503b",
+    "rust/crates/vexel-app/src/main.rs": "ca9b299b30cc764a9e94ab30a6778fa4b109e90418784c5e57de8d6d7b1ff99d",
+    "rust/crates/vexel-protocol/src/protocol.rs": "c8870c56f3bcafd5a4560d6626d5a3ea02d87f57529f1e03945dcbc857ac39d3",
+    "rust/crates/vexel-protocol/src/tools.rs": "60e42fe4072300824746c9b428a919496d372812f8257186bea35662b797ff48"
+  },
+  "unexpected_source_seed_changes": [],
+  "output_hashes": {
+    "rust/crates/vexel-app/Cargo.toml": "de4ebd59ff9cc4efd947eb2caa8eb812170813734ee9a3ad04856e68c28bbe1d",
+    "rust/crates/vexel-app/README.md": "a3ed951226e47b4c9b1901c8c670dcff2e7d22092a9c8d1d45dd87e322bd503b",
+    "rust/crates/vexel-app/src/main.rs": "ca9b299b30cc764a9e94ab30a6778fa4b109e90418784c5e57de8d6d7b1ff99d",
+    "rust/crates/vexel-app/src/preview.rs": "ab28f4941fd9b57685d28a72d8ef5fbe2cb2ab0306e1ce303ee2296258860762",
+    "rust/crates/vexel-app/src/preview_app.rs": "f0f2582d213335dca53ae343d337385d683bbef98513975e055ef2bca0526cd9",
+    "rust/crates/vexel-protocol/src/protocol.rs": "c8870c56f3bcafd5a4560d6626d5a3ea02d87f57529f1e03945dcbc857ac39d3",
+    "rust/crates/vexel-protocol/src/protocol/tool_methods.rs": "5786066a527488c6ba2c3a2cd2fd566057c816e447eb777cb1d9f56b4fc0e639",
+    "rust/crates/vexel-protocol/src/tools.rs": "60e42fe4072300824746c9b428a919496d372812f8257186bea35662b797ff48",
+    "rust/crates/vexel-protocol/tests/mcp_preview_profile.rs": "6003958e215490cbccc19ebea3ac4d563450c7a3593892b7cf95bdf8c2449c8b",
+    "docs/product/mcp-live-preview.md": "d8b3ae3d864d6af9b1f6b9ffbaf711fffe6770bc790f1ea0c160f9a335a19d9b",
+    "Cargo.lock": "0187b5b43c12c78dfafbf4cc2735fc9c3b7dd869b8973c505c19d5e4b239bd6b"
+  },
+  "verification": {
+    "main_check": "cargo +stable check -p vexel-protocol -p vexel-app --locked --offline \u2014 passed",
+    "main_tests": "cargo +stable test -p vexel-protocol -p vexel-app --locked --offline \u2014 passed: app 16/16; protocol preview 4/4; protocol parity 9/9",
+    "format": "rustfmt --check on all seven changed Rust source/test files \u2014 passed",
+    "work_order": "python3 scripts/wo_validate.py WO-RUST-MCP-LIVE-PREVIEW-01 --ready \u2014 passed",
+    "ledger": "validated after acceptance event",
+    "git_diff_check": "passed",
+    "independent_review": "passed after two MCP schema/documentation fixes; see reviewer-report.md",
+    "native_gui": "not launched; active desktop preserved",
+    "live_codex_session": "not run"
+  }
+}

@@ -1,0 +1,65 @@
+BINDING copyFromTexture_sourceSlice_sourceLevel_sourceOrigin_sourceSize_toTexture_destinationSlice_destinationLevel_destinationOrigin
+88:             feature = "MTLTypes"
+89:         ))]
+90:         /// Copy a rectangle of pixels between textures.
+91:         ///
+92:         /// # Safety
+93:         ///
+94:         /// - `source_texture` may need to be synchronized.
+95:         /// - `source_texture` may be unretained, you must ensure it is kept alive while in use.
+96:         /// - `sourceSize` might not be bounds-checked.
+97:         /// - `destination_texture` may need to be synchronized.
+98:         /// - `destination_texture` may be unretained, you must ensure it is kept alive while in use.
+99:         #[unsafe(method(copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:))]
+100:         #[unsafe(method_family = none)]
+101:         unsafe fn copyFromTexture_sourceSlice_sourceLevel_sourceOrigin_sourceSize_toTexture_destinationSlice_destinationLevel_destinationOrigin(
+102:             &self,
+103:             source_texture: &ProtocolObject<dyn MTLTexture>,
+104:             source_slice: NSUInteger,
+105:             source_level: NSUInteger,
+106:             source_origin: MTLOrigin,
+107:             source_size: MTLSize,
+108:             destination_texture: &ProtocolObject<dyn MTLTexture>,
+109:             destination_slice: NSUInteger,
+110:             destination_level: NSUInteger,
+111:             destination_origin: MTLOrigin,
+112:         );
+113: 
+114:         #[cfg(all(
+115:             feature = "MTLAllocation",
+
+SDK copyFromTexture_sourceSlice_sourceLevel_sourceOrigin_sourceSize_toTexture_destinationSlice_destinationLevel_destinationOrigin
+62: 
+63: /*!
+64:  @method copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+65:  @abstract Copy a rectangle of pixels between textures.
+66:  */
+67: - (void)copyFromTexture:(id<MTLTexture>)sourceTexture sourceSlice:(NSUInteger)sourceSlice sourceLevel:(NSUInteger)sourceLevel sourceOrigin:(MTLOrigin)sourceOrigin sourceSize:(MTLSize)sourceSize toTexture:(id<MTLTexture>)destinationTexture destinationSlice:(NSUInteger)destinationSlice destinationLevel:(NSUInteger)destinationLevel destinationOrigin:(MTLOrigin)destinationOrigin;
+68: 
+69: /*!
+70:  @method copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+71:  @abstract Copy an image from a buffer into a texture.
+
+SDK copyFromTexture_sourceSlice_sourceLevel_sourceOrigin_sourceSize_toTexture_destinationSlice_destinationLevel_destinationOrigin
+65:  @abstract Copy a rectangle of pixels between textures.
+66:  */
+67: - (void)copyFromTexture:(id<MTLTexture>)sourceTexture sourceSlice:(NSUInteger)sourceSlice sourceLevel:(NSUInteger)sourceLevel sourceOrigin:(MTLOrigin)sourceOrigin sourceSize:(MTLSize)sourceSize toTexture:(id<MTLTexture>)destinationTexture destinationSlice:(NSUInteger)destinationSlice destinationLevel:(NSUInteger)destinationLevel destinationOrigin:(MTLOrigin)destinationOrigin;
+68: 
+69: /*!
+70:  @method copyFromBuffer:sourceOffset:sourceBytesPerRow:sourceBytesPerImage:sourceSize:toTexture:destinationSlice:destinationLevel:destinationOrigin:
+71:  @abstract Copy an image from a buffer into a texture.
+72:  */
+73: - (void)copyFromBuffer:(id<MTLBuffer>)sourceBuffer sourceOffset:(NSUInteger)sourceOffset sourceBytesPerRow:(NSUInteger)sourceBytesPerRow sourceBytesPerImage:(NSUInteger)sourceBytesPerImage sourceSize:(MTLSize)sourceSize toTexture:(id<MTLTexture>)destinationTexture destinationSlice:(NSUInteger)destinationSlice destinationLevel:(NSUInteger)destinationLevel destinationOrigin:(MTLOrigin)destinationOrigin;
+74: 
+
+SDK copyFromTexture_sourceSlice_sourceLevel_sourceOrigin_sourceSize_toTexture_destinationSlice_destinationLevel_destinationOrigin
+80: 
+81: /*!
+82:  @method copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:
+83:  @abstract Copy an image from a texture into a buffer.
+84:  */
+85: - (void)copyFromTexture:(id<MTLTexture>)sourceTexture sourceSlice:(NSUInteger)sourceSlice sourceLevel:(NSUInteger)sourceLevel sourceOrigin:(MTLOrigin)sourceOrigin sourceSize:(MTLSize)sourceSize toBuffer:(id<MTLBuffer>)destinationBuffer destinationOffset:(NSUInteger)destinationOffset destinationBytesPerRow:(NSUInteger)destinationBytesPerRow destinationBytesPerImage:(NSUInteger)destinationBytesPerImage;
+86: 
+87: /*!
+88:  @method copyFromTexture:sourceSlice:sourceLevel:sourceOrigin:sourceSize:sourceOptions:toBuffer:destinationOffset:destinationBytesPerRow:destinationBytesPerImage:options:
+89:  @abstract Copy an image from a texture into a buffer.

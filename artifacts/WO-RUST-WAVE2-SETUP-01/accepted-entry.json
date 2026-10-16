@@ -1,0 +1,23 @@
+{
+  "ts": "2026-10-14T06:58:26Z",
+  "wo_id": "WO-RUST-WAVE2-SETUP-01",
+  "event": "accepted",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-WAVE2-SETUP-01-accepted",
+  "session_id": "rust-wave2-2026-10-14",
+  "model": "codex-coordinator",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "accepted",
+  "artifacts": [
+    "artifacts/WO-RUST-WAVE2-SETUP-01/verification.txt",
+    "docs/adr/0024-rust-native-system-ffi.md"
+  ],
+  "note": "Std-only workspace registrations build and scope/ledger/diff validate. Native FFI boundary documented from primary APIs; crates are shells, not platform/GUI/protocol parity. Six next writers may start."
+}

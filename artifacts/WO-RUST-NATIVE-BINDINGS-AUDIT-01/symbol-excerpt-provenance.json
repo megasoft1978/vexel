@@ -1,0 +1,346 @@
+[
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSApplication-shell.txt",
+    "sha256": "b7925fcfc58d0794f98929aa7f1e7ae48758a6b6ac4216fb17bff20e75cecc26",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSApplication.rs",
+    "binding_sha256": "d3c31020ebb7c1f8676d7eb8489acb67c1272b6e39ee4686da36002a6e08842e",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSApplication.h",
+    "sdk_sha256": "33ed7a975710fc58046253c6d12f5210acb99418ae5e2c3f6a89c585fc3ee793"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSWindow-window.txt",
+    "sha256": "8ea6fec8bbde2304709238c27f066eec43fef7fd24e113b60159484e5b2e0d06",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSWindow.rs",
+    "binding_sha256": "f8012c8ac7e1bc7158944bfaaecf076bc6cae04cdd576e46dc5d7edac6fb60a2",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSWindow.h",
+    "sdk_sha256": "32d8533578a7dfc8edf193775bc3471556ad8da94322bc42ce5942eed9c47549"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSView-view-layer-backing.txt",
+    "sha256": "bee264d40689639241ca064324c210b74b3770f97f1201031be7ee518600ecde",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSView.rs",
+    "binding_sha256": "fb5be74366838f450742597c8ccdc4eff2d1374ff699ea324a0783193428a318",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSView.h",
+    "sdk_sha256": "af91fb647759eccbc205c2db73a20f7d73cd3850b90ae13d4a211745abeb372c"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSResponder-input.txt",
+    "sha256": "fd99fb6303347cf60df4b0be271ee10823a669624c09bad5145a1645ca740595",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSResponder.rs",
+    "binding_sha256": "47293a8798de98ca140342c2f8e5aee8fa8c0a0e6588978d171168ccbb6b8b4f",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSResponder.h",
+    "sdk_sha256": "ae3ed01e34fdee50d9b0bb36fc732ce5ab72275086ebd207a5b362908e52c227"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSTextInputClient-IME.txt",
+    "sha256": "e42e8c8196e7fcda3452e0e7e77237980b0f1b1bf50a6c9ef1b4c2d1fde923ad",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSTextInputClient.rs",
+    "binding_sha256": "2f86e8bdee770044f75037050b0a976e450322e70cb204e14a7b0b392e2de597",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSTextInputClient.h",
+    "sdk_sha256": "389131a0a835334b2d328ab8b6f93114a237b9c4a4bb3743a9275bc11cde4900"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSTextInputContext-input-context.txt",
+    "sha256": "0f6589a558bddb14c11b56f9f56fd8761597d018be23777930d58e15f7d22b58",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSTextInputContext.rs",
+    "binding_sha256": "c73085501aa214db4aa5e3dd9cc965cf4a4ca14da0f10e88b33a063c1fa76238",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSTextInputContext.h",
+    "sdk_sha256": "afb79153e9541185beea7c3ebea49b163bdda7eaa8d422b31f77af342624ae3e"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSEvent-event-payload.txt",
+    "sha256": "7046c9fea8c441629cecfbc0c5ba3d5b015874f39a755e2303ae606fd80ab73a",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSEvent.rs",
+    "binding_sha256": "00110c5557cc23d8a8a67d25bca4a1b04f74e00e0997bf531351e151c3b8bda4",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSEvent.h",
+    "sdk_sha256": "fe7611bf49295ba80ba7bd88ca8abc6af490a0d1fb73ed59853b7a45f6e56bdb"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSCursor-cursor.txt",
+    "sha256": "d919383d6878064f93d3c70f7ea3ce2b128863a99ef6e27470bd847dcdc643cc",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSCursor.rs",
+    "binding_sha256": "be801b7f15cd0e6a633a92e62d60ba45d04ba675214035ce918ac4797dae79de",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSCursor.h",
+    "sdk_sha256": "7ba1dc382bc8257af685796cdd1502b633bf889badffe949ad4eb4af4cae7d23"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSDragging-drag-drop.txt",
+    "sha256": "c3dbb545b40aded0a17e4aa37ca3adb5c0643ca4a0ff4a1feb562c0fd1337632",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSDragging.rs",
+    "binding_sha256": "05aa618d649b1bf53582dedc79f9bcf20e10fe0b3a896e928a991ddec8c9b60b",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSDragging.h",
+    "sdk_sha256": "8b93639cae4bf29b380ae13d1cee52fcf3b36b34fa81bd3e34a383edc0227b24"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSMenu-menus.txt",
+    "sha256": "0ffa0d025f20ef6e8d51182cd364ce23178a1c0c1624b96967b093793d68940c",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSMenu.rs",
+    "binding_sha256": "893402a18c68e4659e18c0be43c34604304ccf49df94b478e74ed50a04ece054",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSMenu.h",
+    "sdk_sha256": "84f508cfaf3cd5e268c7883a53c85df28191767000daca9110074d382d9ed89c"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSMenuItem-command-targets.txt",
+    "sha256": "52703e3ce7904fc6c9faf0158876ab03a97be0c3d8b811cdb00cb85397447c6b",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSMenuItem.rs",
+    "binding_sha256": "d333273294b594dfd6bafd51503b281ab4a9d535f99f382661938c84ec8481fd",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSMenuItem.h",
+    "sdk_sha256": "fbc9527077d19182677bd65e54e19ee076a2ebf50402f93b2f69addfe8561914"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAccessibilityElement-AX.txt",
+    "sha256": "e6320eca4e06040d0654f5dbff326a922861f3dd777a56caa4f616adfae1b427",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibilityElement.rs",
+    "binding_sha256": "259b8b0494048be1639394f53560a1ffd62173996c63f194525abf6e4fa19abe",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAccessibilityElement.h",
+    "sdk_sha256": "a56446b7b18eb36f99b222f6a469d8f91abc9da192fd141912453ce561b5b093"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAccessibility-AX-basic-notification.txt",
+    "sha256": "aea5a45238c82d90d4a566853bc653056a850fccbf3d2a31932340927592a64b",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibility.rs",
+    "binding_sha256": "6215adad156ad76284d4c158e28b79a9e9e270c5872625df93866e53c75a109b",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAccessibility.h",
+    "sdk_sha256": "03a754431b25b24a2a732a3c9bba3856ddccdbaa5523c0912bd7b5da3b63ef50"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAccessibilityConstants-AX-notifications.txt",
+    "sha256": "d3edf604fcb2180b656ac3c79d452df4c7866edfd0164e5f7218a8cb9e725bdd",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibilityConstants.rs",
+    "binding_sha256": "a0d5025120241dcbcb405e7933a2e828c4db8cd5f73067321a81a1b8f9898368",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAccessibilityConstants.h",
+    "sdk_sha256": "bef307f721603f6b8a83f87a493c848f55b51d949a11e16a004e79184e84849b"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAccessibilityProtocols-AX-actions.txt",
+    "sha256": "c6493485257c0a8022a19099ce7b656dc39ec4618062a68301f5bac470a4d3ab",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibilityProtocols.rs",
+    "binding_sha256": "7f7053ec1045429e50c745ad01379f364c7d25cfea031d3f6aa83ae26a153f77",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAccessibilityProtocols.h",
+    "sdk_sha256": "670f13a595760ab59aebca9447c35e87709f094ac702a928edc66beab28e00b6"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSSavePanel-save-sheets.txt",
+    "sha256": "2c0bc7f2249d099a83dc1d3dcd16591557485f19929648ce6cd3f3b3be151e19",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSSavePanel.rs",
+    "binding_sha256": "6cc0c9c358223bdcb91a67c7a2db1b3b37fee107bceef928843e1f0f62315c87",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSSavePanel.h",
+    "sdk_sha256": "4b89fdb576cce5f5a0d911aa978dc274214a7fa55271eeceb3eb59f12ce88fcc"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSOpenPanel-open.txt",
+    "sha256": "0aff594b7bb6fd6701a911243c1a03696a751db75ca8d0e44c786d2d6c2be0f5",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSOpenPanel.rs",
+    "binding_sha256": "662405e69dc24f8fa2aa5c73e19254ff79457c1cfc6195d5719aabca824423c4",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSOpenPanel.h",
+    "sdk_sha256": "b39a3e18743d7f484a47c0fb2f2f4b74d41b446b28afa09b9b47fd3d90958f28"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAlert-alerts.txt",
+    "sha256": "0f9a72101cfc8a5e9daec5dbe5fbdf3484d26fb63fae4c28f878b6736f50fed6",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAlert.rs",
+    "binding_sha256": "88a465f92d7962d066623c82f5770b645b13ee9bed48e6b28f1ad4d25d08f56c",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAlert.h",
+    "sdk_sha256": "18a8d0ede104eb976ee4fb868312d840c5aa0cb73c3e36d7b829d21c4053e0c1"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSPasteboard-clipboard.txt",
+    "sha256": "6f3f65fdd22d35b836066d1ef3ed776494e086d4993bb88690cc38ebfb12fb7c",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSPasteboard.rs",
+    "binding_sha256": "b08f0b44f6942ce8bd335b7aa2fd69b67e114fe4b04e20da6bbb02dcb99d3f51",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSPasteboard.h",
+    "sdk_sha256": "8cad206027ff2bb2b3175d7fe60d0ff93a488ce95428b845be11ea8d578d95c9"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAccessibility-preferences-flags.txt",
+    "sha256": "53b7c4f86563dedffb3209aeb7559d55b62f059a99616be5487026bed6f6aa50",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibility.rs",
+    "binding_sha256": "6215adad156ad76284d4c158e28b79a9e9e270c5872625df93866e53c75a109b",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAccessibility.h",
+    "sdk_sha256": "03a754431b25b24a2a732a3c9bba3856ddccdbaa5523c0912bd7b5da3b63ef50"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSAppearance-appearance.txt",
+    "sha256": "fb3f8a2a99bb9eddc20b1eaebe9845f8df04960c7b2508d9c9e36933b40e0a55",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAppearance.rs",
+    "binding_sha256": "7981f749a0cfdb56b5a443087476f28efe886024fced38952bba4aa45dd0a088",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSAppearance.h",
+    "sdk_sha256": "9c22c3d6213676f55e9bccf9abfdfce7de14bdd1bf96e4905c29f5f62949541b"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-app-kit-NSColor-accent.txt",
+    "sha256": "a5717b56ebe091f2d3f256154f506e0bf429a80b21d035c1c7bdbb599db6c6ce",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSColor.rs",
+    "binding_sha256": "fc975cabf6249410aee72f12a1b7965bf87c4ab70a18a018501adb0a551e39a2",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/AppKit.framework/Headers/NSColor.h",
+    "sdk_sha256": "9dadf6af222eabf442c157c7a9bc62fdf42a251d47e9818434e0080705767a79"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-foundation-NSUserDefaults-defaults.txt",
+    "sha256": "5bc83880803f475bc452d7c398b3f80114b934fc70fe4dac4a0ee8857a840f45",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSUserDefaults.rs",
+    "binding_sha256": "1da4975158e934e82f0d02f636d627a6846c04fc7af7018c2933713873f583b4",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSUserDefaults.h",
+    "sdk_sha256": "a35371e63488777f863a2b791f102d4bd77000d60fcf331ac4088574faadaf1f"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-foundation-NSNotification-observers.txt",
+    "sha256": "d063e55de9be2e820016da8729dd05fa9d452324d2ba2753a1f65bc04d2e2069",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSNotification.rs",
+    "binding_sha256": "8c964b43775b4c67fef076c628646c76d07544bc0c331d57eea2e3082663c9a2",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSNotification.h",
+    "sdk_sha256": "4518f793ca6a790632cf57d2ccc6c9782d8d9983cbafd576e4224245015969ab"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-foundation-NSOperation-observer-queue.txt",
+    "sha256": "35d3c237fcc2f27b749b41fd41932f505d8f0beba69b72f1ac0fbc2779e74533",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSOperation.rs",
+    "binding_sha256": "f24e93eba71bf55593b2cb7b7d09bd44e4491345f7e51dc1262c685e87f9f5cd",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSOperation.h",
+    "sdk_sha256": "0be3e14b458c77e23897dca075984b7eb495adeeea19fde33411bb65385722fa"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-foundation-NSKeyValueObserving-KVO.txt",
+    "sha256": "a0c3e5da72bd6ec1ee12d36f492b2fd82befb5704b1fbeb9e5cf105445e1c3a5",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSKeyValueObserving.rs",
+    "binding_sha256": "cc5c6140a9065e253d56371fc54f0c0896a1ed4431f7241f7a5cb93b711df2a5",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSKeyValueObserving.h",
+    "sdk_sha256": "46e5664ebefb006fa03b64ffaf36740838a98262453775e7a559a72f99d00a74"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-foundation-NSTimer-ticks.txt",
+    "sha256": "63aba8bcdfa2b072ece3ed655f1af937259fe4bcc536d6c1b30b6d0c3fee3bd8",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSTimer.rs",
+    "binding_sha256": "c87981aa12759e761218ebca4af97019b17bc8b57b3223cfa1ac49a97978f37a",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Foundation.framework/Headers/NSTimer.h",
+    "sdk_sha256": "2d05da89cb1511d2b1cf3e85d76c784d02c5cb843534a1f56109dd507110c7f1"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-foundation-CFRunLoop-wake.txt",
+    "sha256": "0dee150d20308ecafb88ad374fe589e80857151d97352b8ab2aea2c33ff7614d",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFRunLoop.rs",
+    "binding_sha256": "8f868d42f6ce26bd31832cbd6a8186de3bf78e401ee5b0c13f54c059eca555c5",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreFoundation.framework/Headers/CFRunLoop.h",
+    "sdk_sha256": "8eae64468e30c23a0e0e9a6a8dbf9d373644d0691ad3ca1613ebef3c42173742"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-text-CTFont-font.txt",
+    "sha256": "1d74e4999ebfa8516bf672d1680dc60a68ffd0834262d74df5a48cc12014ac9f",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTFont.rs",
+    "binding_sha256": "39c17e07c1fc6199e6c78e696306d8e68e2ab7f6d3d1d0fbfb2efa78245c5cea",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreText.framework/Headers/CTFont.h",
+    "sdk_sha256": "e9c47f154ed3f6267556f04bde22c5a3f6f08748b8c87f7c6ff0f3f8165c4bb7"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-text-CTLine-shaping.txt",
+    "sha256": "b393b81082bf2880fe8a117e474e21f9117803d0b042e26d8441a6179fabc68b",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTLine.rs",
+    "binding_sha256": "0a70e09e88041591897a195316ed7eb8fb20bd61a0115e50248bcd2880db6765",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreText.framework/Headers/CTLine.h",
+    "sdk_sha256": "416e11cafbf0437b982afe34897294de64d365cdd447cb9f3b69cce589030e83"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-text-CTRun-runs.txt",
+    "sha256": "ad8d472f22dccbb15f7937285b68e1d8ac1aaa83a02e46da4374c8b54521c03f",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTRun.rs",
+    "binding_sha256": "79829a8cbc80eab0b02dbf466c5356dfc9445d38b46b75e174cfa3cd38478637",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreText.framework/Headers/CTRun.h",
+    "sdk_sha256": "4fa63db0292f183e83840c316845d973816117b8a076b06d24781c15af25f91f"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-graphics-CGPath-outline-callback.txt",
+    "sha256": "41633b362deca2ab446647628bcb6bb2f62348cd350a97aff241da56596e3b6e",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGPath.rs",
+    "binding_sha256": "10d70aac4329d5211953673b319ae77ce37d705b0900ceda8eb62ffc34efea46",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreGraphics.framework/Headers/CGPath.h",
+    "sdk_sha256": "08e7f3ab92dc4c1f0e483dd3e7f3ee6e28debd4737f14412fd9025ee3ccb590d"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-graphics-CGBitmapContext-label-pixels.txt",
+    "sha256": "39e8a80ead7cabfdeff2e24ad242b09f6ecf3262835e2da1d3e8c6d26f89d0fa",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/bitmap_context.rs",
+    "binding_sha256": "8af94e93b69ac5b1ad6ba802199b4d605711fe8dea1b3f467052c9cbb1af73d9",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreGraphics.framework/Headers/CGBitmapContext.h",
+    "sdk_sha256": "a933bf48cdb92a5d2b22b55f5482ab6baf162c5ac9c78bbf36cd89c5d4d60d6f"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-graphics-CGContext-draw-image.txt",
+    "sha256": "f8f8e05d891b73b7dc8cdaa76484bc52f629355feff4a944b36c1a6eb69da508",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGContext.rs",
+    "binding_sha256": "5f1569bacb6e82fed998f879f82ff8e0dc5a8fb59f08060ffd6a96d95e4952e7",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreGraphics.framework/Headers/CGContext.h",
+    "sdk_sha256": "d9482782580d3821d081d7ca5fd1d0796e4eb107b2a489fed25ff9d7c7bdffbb"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-image-io-CGImageSource-image-properties-decode.txt",
+    "sha256": "4d83e5cc53133f5b42f117dae186ccb946b5b4bec6bda3d1167a5ac9c42f12b4",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/src/generated/CGImageSource.rs",
+    "binding_sha256": "90e677bc824ed01c3ec2531c92cbdcb5f0052a01dfb0db573679c5262e9392cd",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/ImageIO.framework/Headers/CGImageSource.h",
+    "sdk_sha256": "532fb5d92259966fadbdc4c81fa807982b1dd09cae380cefc069b1c8d0675079"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-image-io-CGImageDestination-image-export.txt",
+    "sha256": "9a37d551d337730e0d616c22ece19062a705ab9390b5331bdfdd7879f1b844c7",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/src/generated/CGImageDestination.rs",
+    "binding_sha256": "33394b9a5fd13a38987a0957a5425adc49be3fa41afbcf6f950feed906ca7fa9",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/ImageIO.framework/Headers/CGImageDestination.h",
+    "sdk_sha256": "901be5beb7de9e289644ec63686ba86d45e24b3ad6f533a70e88675f70c14f34"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-metal-MTLDevice-device.txt",
+    "sha256": "987185efed14d4a7137a936131c796c855aac88a9d3ce776ec4c84c5b5f11923",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLDevice.rs",
+    "binding_sha256": "da6b1c6896a892058153354098bc9abe8b5979fa651c2b75d93f0d063675ab48",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLDevice.h",
+    "sdk_sha256": "bb4222866870a4a703cd1581fe55cf4fee4769fbee5efc795af51fbff95f2989"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-metal-MTLTexture-texture.txt",
+    "sha256": "100d9008973a813975c01ea3156340427529865259d538329db9e7c0aed262dd",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLTexture.rs",
+    "binding_sha256": "e6c68df6adf0bb47c1067e64aa7297030358d3cedcd70c280392aaa9ae68fde5",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLTexture.h",
+    "sdk_sha256": "a9faf566a48f85aeec7ccea55086436729a3a7f74e4fd61e932636e89a309a8b"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-metal-MTLCommandBuffer-GPU-submit.txt",
+    "sha256": "8bfcc6a96bc3cd9aef6983320f6123f06261ff082f0190cc26182cdd63e00ee7",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLCommandBuffer.rs",
+    "binding_sha256": "80056cfa9aeaef691ea957643fe647339717c728fd92ebc828d3e658c5e0a16c",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLCommandBuffer.h",
+    "sdk_sha256": "d84dda866f07ffc37ce68e3c635177373cdefa419fc1f64c766442ed81966895"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-metal-MTLRenderCommandEncoder-GPU-render.txt",
+    "sha256": "b992cb90fb35d8511ffc38659f6d3a8eaed06052d13e9f0f6a5d3c4dde783b36",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLRenderCommandEncoder.rs",
+    "binding_sha256": "6cef1e0818903c95ff807db9fa7e54e18b3312b7f1139e49ffcdad0ac7fb9d98",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLRenderCommandEncoder.h",
+    "sdk_sha256": "225e4360cbd69989d1ddce82065c7325db108085bc193c596138be5c8ab782d3"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-metal-MTLBlitCommandEncoder-GPU-blit.txt",
+    "sha256": "88705e760704ea6d23f573c8cb30023d18dee4a722dd8b3486218922aa44fe3c",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLBlitCommandEncoder.rs",
+    "binding_sha256": "9193c81d27dee340a194dc75816b4f77e00228728054075a431f2317107629b0",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/Metal.framework/Headers/MTLBlitCommandEncoder.h",
+    "sdk_sha256": "63681f0b1c907e0d166e2ebcd2fa2edc636c0c780237d0a2d38d6d2b4fee4ed0"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-quartz-core-CAMetalLayer-present-layer.txt",
+    "sha256": "4e226ec9750ca7cf929ee9272182db61e9c1e5ebcf74ae7d5e511efbda19dc55",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-quartz-core/src/generated/CAMetalLayer.rs",
+    "binding_sha256": "444af4ee56f6de4a9315469042624d5b3604704ecbc62cbca9278045c57e416f",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/QuartzCore.framework/Headers/CAMetalLayer.h",
+    "sdk_sha256": "074e50fdb4981d9da5f000b979bef047a78e00ac9bea682f85388e20bf47c73f"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/primary/mapped-objc2-core-graphics-CGDirectDisplay-display-coordinates.txt",
+    "sha256": "c3f84aa83ea118ee74bf4c5242ae1888fed947e7f3eb8354d85bbc7cb6be5b2f",
+    "binding_path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGDirectDisplay.rs",
+    "binding_sha256": "8902e7fe7cc727911c2dc136b47f24fe26b63f0e91afceeae8c34c5d90b87d8e",
+    "sdk_path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk/System/Library/Frameworks/CoreGraphics.framework/Headers/CGDirectDisplay.h",
+    "sdk_sha256": "5dd06c1ff9a699356c9ff484f7b990fc6cd910de36edbd64caff4f34dad74f89"
+  }
+]

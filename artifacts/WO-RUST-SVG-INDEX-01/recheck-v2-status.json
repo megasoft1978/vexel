@@ -1,0 +1,13 @@
+{
+  "name": "index",
+  "wo": "WO-RUST-SVG-INDEX-01",
+  "session": "01a13a07-bf05-7ba1-a308-137a020c681f",
+  "pid": 24924,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791976334.6458082,
+  "exit_code": 0,
+  "duration_seconds": 74.64043760299683
+}

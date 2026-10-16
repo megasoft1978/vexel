@@ -1,0 +1,13 @@
+Diagnostic only: candidate identity guard removed; original test untouched. Not candidate acceptance.
+$ cargo +stable test -p vexel-scene --locked --offline --test render_integration_contracts actual_mask_planner_shared_validation_nonempty_expansion_wrong_flavor_and_source_coherence -- --exact
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.52s
+     Running tests/render_integration_contracts.rs (build/rust/aarch64-apple-darwin/debug/deps/render_integration_contracts-ba18587acc7effba)
+
+running 1 test
+test actual_mask_planner_shared_validation_nonempty_expansion_wrong_flavor_and_source_coherence ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+
+exit_code=0

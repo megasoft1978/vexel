@@ -1,0 +1,44 @@
+182: /// - Returns: An opaque object to act as the observer, which you use to
+183: ///   deregister the observer with ``removeObserver:``.
+184: - (id <NSObject>)addObserverForName:(nullable NSNotificationName)name object:(nullable id)obj queue:(nullable NSOperationQueue *)queue usingBlock:(void (NS_SWIFT_SENDABLE ^)(NSNotification *notification))block API_AVAILABLE(macos(10.6), ios(4.0), watchos(2.0), tvos(9.0));
+185: #endif
+186: 
+187: @end
+188: 
+189: NS_HEADER_AUDIT_END(nullability, sendability)
+
+182: /// - Returns: An opaque object to act as the observer, which you use to
+183: ///   deregister the observer with ``removeObserver:``.
+184: - (id <NSObject>)addObserverForName:(nullable NSNotificationName)name object:(nullable id)obj queue:(nullable NSOperationQueue *)queue usingBlock:(void (NS_SWIFT_SENDABLE ^)(NSNotification *notification))block API_AVAILABLE(macos(10.6), ios(4.0), watchos(2.0), tvos(9.0));
+185: #endif
+186: 
+187: @end
+188: 
+189: NS_HEADER_AUDIT_END(nullability, sendability)
+
+156: ///
+157: /// - Parameter observer: The notification observer to remove.
+158: - (void)removeObserver:(id)observer;
+159: 
+160: /// Removes matching entries from the notification center's dispatch table.
+161: ///
+162: /// - Parameters:
+163: ///   - observer: The notification observer to remove.
+
+166: ///   - anObject: The sender to remove from the dispatch table. Pass `nil`
+167: ///     to remove the observer regardless of the sender.
+168: - (void)removeObserver:(id)observer name:(nullable NSNotificationName)aName object:(nullable id)anObject;
+169: 
+170: #if !0
+171: /// Adds an entry to the notification center to receive notifications that
+172: /// passed to the provided block.
+173: ///
+
+181: ///   - block: The block to be executed when the notification is received.
+182: /// - Returns: An opaque object to act as the observer, which you use to
+183: ///   deregister the observer with ``removeObserver:``.
+184: - (id <NSObject>)addObserverForName:(nullable NSNotificationName)name object:(nullable id)obj queue:(nullable NSOperationQueue *)queue usingBlock:(void (NS_SWIFT_SENDABLE ^)(NSNotification *notification))block API_AVAILABLE(macos(10.6), ios(4.0), watchos(2.0), tvos(9.0));
+185: #endif
+186: 
+187: @end
+188: 

@@ -1,0 +1,35 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_tile_cache-3571c4024da02163)
+
+running 3 tests
+test tests::c_contract_clock_rollover_order ... ok
+test tests::equal_recency_evicts_lowest_slot_first ... ok
+test tests::metadata_charge_uses_actual_entry_layout_and_reserved_capacity ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cache.rs (build/rust/aarch64-apple-darwin/debug/deps/cache-83ff1fb9c1c9f723)
+
+running 13 tests
+test c_oracle_generation_and_scale_both_invalidate_entries ... ok
+test c_oracle_invalid_and_valid_cache_limits ... ok
+test count_cap_stats_epoch_invalidation_and_same_epoch_retention ... ok
+test c_oracle_one_pixel_insert_transfers_ownership_and_lru_is_deterministic ... ok
+test exact_byte_boundary_and_rejected_tile_preserve_caller_data ... ok
+test replacement_and_eviction_charge_reserved_payload_capacity ... ok
+test c_oracle_oversized_tile_failure_preserves_caller_ownership ... ok
+test replacement_does_not_evict_other_entries_and_updates_value ... ok
+test spare_payload_capacity_is_charged_and_failed_put_returns_exact_allocation ... ok
+test entry_count_boundary_and_accounting_stay_bounded ... ok
+test touched_entry_is_newest_lru_and_eviction_tie_uses_slot_order ... ok
+test validates_limits_and_charges_reserved_metadata ... ok
+test c_oracle_10000_insertions_preserve_ownership_and_bounded_stats ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+   Doc-tests vexel_tile_cache
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,23 @@
+WO-CORPUS-10 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Input and snapshot
+- Generated T1: 979,796 bytes; SHA-256 3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5.
+- Before instrumentation, current and scratch hashes matched: `src/raster/shape_render_dash_cache.c` d281e07af92c9f2813765139482518502e611172ba26269eff1ed89560e26d4b; `src/raster/shape_render_stroke_grid.c` 7ba71de467a37fb80e5b0cbcec9f7641fa2914e81ed1a758947ba2ea1dbe6539; `src/raster/shape_render.c` ec25eeeac3134e10e53ce7cf873a59a0e855deb9d75415d4f79a76616b7c31c8.
+- Shared files still match the original hashes. All instrumentation/build output stayed under ignored `.cache/WO-CORPUS-10/`.
+
+Build and probe
+- Scratch `cmake --preset mac-release`: PASS.
+- Scratch `cmake --build --preset mac-release --target svgworkbench`: PASS, 232 build steps.
+- Exactly one full-document T1 render probe at 128x128 under `/usr/bin/time -l`: exit 1, `limit at byte 0`, 0.56 s real, maximum RSS 99,975,168 bytes.
+- Exact refusal: segment-cache byte preflight. For the 34,714-shape grouped subrange, the cache had 131,072 segments and 131,072 joins, with 131,072 segment capacity and 131,072 join capacity. The next request was segment 131,073; geometric doubling requested capacity 262,144. Combined estimated allocation became 20,109,760 bytes, exceeding the 16,777,216-byte limit. At refusal the build-step count was 262,145. The work cap was not reached.
+- Range failure occurred while building shape index 32,768. No grid-build failure was reported.
+
+Interpretation
+- WO-CORPUS-07 correctly removed the independent count cap, but its power-of-two capacity rounding consumes the combined byte budget before the required next segment can be stored. The actual allocation at 131,072 segment capacity plus 131,072 joins and the range table is below 16 MiB; the 262,144 rounded segment capacity is what exceeds it.
+- Recommended next fix: use bounded 1.5x (or byte-budget-aware) capacity growth instead of doubling, retaining checked overflow, combined 16 MiB cache bytes, 1,000,000 construction steps, and grid budgets. Reprobe T1; any later limit must be independently measured.
+- T1 full rendering is still not established. No production budget changed. No tests, UI/E2E, corpus sweep, fuzz, sanitizer, or broad benchmark ran.
+
+Order and hygiene
+- Shared files remain byte-identical to their pre-instrument hashes. Frozen WO-CORPUS-10 validates. Ledger validates; `git diff --check` passes. No commit.

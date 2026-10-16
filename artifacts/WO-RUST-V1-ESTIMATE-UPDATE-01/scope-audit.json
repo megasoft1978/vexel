@@ -1,0 +1,43 @@
+{
+  "included_scope": {
+    "basic_drawing": true,
+    "disclosed_svg_subset": true,
+    "one_short_animation_loop": true,
+    "editable_native_project": true,
+    "preset_gif": true,
+    "authorized_live_codex_mcp": true
+  },
+  "deferred_scope": {
+    "broad_svg_fidelity": true,
+    "full_animation_authoring": true,
+    "large_file_targets": true,
+    "project_recovery_and_compatibility": true,
+    "broad_final_ui_e2e": true,
+    "public_demo_video_until_full_product_acceptance": true
+  },
+  "estimate_arithmetic": {
+    "row_minima": [
+      3,
+      1,
+      2,
+      2,
+      2
+    ],
+    "row_maxima": [
+      5,
+      2,
+      3,
+      4,
+      3
+    ],
+    "total": [
+      10,
+      17
+    ]
+  },
+  "sha256": {
+    "docs/product/vexel-v1-vertical-slice.md": "d8facd45641bdedf17cb83916cd6af982d63accc4a4e98efcf144aa3142951e7",
+    "docs/product/rust-port-goal-and-plan.md": "c595e196b3676d8cd1b9a8ec50a7d43cdefd661ba8c7c56b045f9acc9b77924f",
+    "docs/adr/0029-v1-vertical-slice-cutline.md": "87f9125840eecde00d7351f09a9c44bcc8ff98f46202123f38cd0972092ad61c"
+  }
+}

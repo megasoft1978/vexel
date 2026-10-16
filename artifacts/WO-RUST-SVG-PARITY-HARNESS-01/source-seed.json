@@ -1,0 +1,213 @@
+{
+  "work_order": "WO-RUST-SVG-PARITY-HARNESS-01",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "captured_utc": "2026-10-15T11:38:34Z",
+  "files": [
+    {
+      "path": "rust/crates/vexel-scene/Cargo.toml",
+      "sha256": "9a055c86e61af92236a524fbcec33a98e91ed640b1bf4411ebaf121f07ade7e7",
+      "bytes": 609
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/accounting.rs",
+      "sha256": "36c41cd1d1b1c63afbef5f461f254a4df8547a7d5bb933e3f1bcb948cbf5c6bb",
+      "bytes": 25232
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/source_context.rs",
+      "sha256": "d92f0032cb226c1b87392decc514a0a7b24428e0620ca1cdda8de8b4be594326",
+      "bytes": 12501
+    },
+    {
+      "path": "rust/crates/vexel-svg-css/Cargo.toml",
+      "sha256": "a886c2ca15353d1c670f278cefb9f6969b046cd0f01aa3520d0333545de97d52",
+      "bytes": 257
+    },
+    {
+      "path": "rust/crates/vexel-svg-css/src/lib.rs",
+      "sha256": "37cb72ac7302f7716cb0ef79b8eebf7e0bb00f476fa3aee98cdba83b7a061dde",
+      "bytes": 10547
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/Cargo.toml",
+      "sha256": "2b7f889cbc6259ac25fce3bc1634d54346f7cb2e06afa34dba6a69576b18ab17",
+      "bytes": 637
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/clip.rs",
+      "sha256": "f553b86dc64320f73efa7eebc5b00538ee52c62f6cded359e862d00bf197fb80",
+      "bytes": 22882
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/color.rs",
+      "sha256": "362e56d4b72bc4364d713e76d569adf87e1289adc48c1077141a0b68bf31346b",
+      "bytes": 16381
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/common.rs",
+      "sha256": "c3efef0b1167fc69f1afb10f595b5138c34024913dc35596e833b27fa201b2ab",
+      "bytes": 4095
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/filter.rs",
+      "sha256": "68821b7b299b904e7c1b2fbd2fde9f14bc3cae6a09f6986e42e254e3b2afb9b6",
+      "bytes": 17628
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/lib.rs",
+      "sha256": "f7d8eb6675f28f0b22dc4e8462e63a9778ebf0430120ec193403f889616a4d8c",
+      "bytes": 6887
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/marker.rs",
+      "sha256": "7da5df93ddb55fbaf3fe6e5d41d55db0429b4e2e0407923194a9bd7decf270f4",
+      "bytes": 22498
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/pattern.rs",
+      "sha256": "b63229f1fbf0ea8ce6057bd571bfc149a61affb415ccbb4f33664e474c84da53",
+      "bytes": 11059
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/planner.rs",
+      "sha256": "29039d7f8a551bb35e266d25eac92a836233e1bd881a8548b546e24961678545",
+      "bytes": 29666
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/planner_support.rs",
+      "sha256": "5a5343f9f7545e4b3f2a03150504715ce50b2be699d0965bda8e12fd98bb0fa8",
+      "bytes": 11753
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/reference.rs",
+      "sha256": "0fc3f3ead717bb89c00a7f1f7004c6607f4184b5aa06a108159944ff2bffcb53",
+      "bytes": 2276
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/tests.rs",
+      "sha256": "a83acaf9aa8304adfaac648c9130a2f0485818a5d1e3f27c54311e78c94bfece",
+      "bytes": 7339
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/clip_rollback.rs",
+      "sha256": "e85e52dc64854b11c146f7c46aae42ebdcd85bb55d5b2afa315f5098a1aedf8f",
+      "bytes": 5259
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/common/mod.rs",
+      "sha256": "89da80aa6b71ed564df7d92c9fc51c3fe1a6e111fe6a3ef02f12feeaac9f3621",
+      "bytes": 9615
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/definition_plans.rs",
+      "sha256": "86b3141e6d765894def8dc3ceca5e7cf4d8ca2284177fbdccc3d072330520469",
+      "bytes": 20821
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/marker_dimension_errors.rs",
+      "sha256": "264ca7fdaf3f525f6436e96383938a46b666f5a8072b6dffe00ae40c445263cc",
+      "bytes": 3755
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/paint_clip_generator.rs",
+      "sha256": "551e31abd6b9dc87091f0b0503f0f1488d2cb5652d579d0446ac21084bc86e2b",
+      "bytes": 2055
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/production_planner.rs",
+      "sha256": "c29732fdc365c5f7bf2a9feb04d9991dfc1b7a750b5d6598f31d2130deec0844",
+      "bytes": 20049
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/support/mod.rs",
+      "sha256": "9a32f688a92eea63c47dabd17afd1d2a4692fb5202761ab2b7ec103e10a42c81",
+      "bytes": 30
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/tests/support/paint_clip_generator.rs",
+      "sha256": "09f4125fa12d62ef886a8c320b5f427c7c0de6416e01d2f0dfef0838903f2ccf",
+      "bytes": 4990
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/Cargo.toml",
+      "sha256": "80ed28cf63acab093a7b08b335031ba023180c2532c53c73db34cec386caa670",
+      "bytes": 681
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/cache.rs",
+      "sha256": "1b4ac7708f910e085c39c4cf9df8abf22aadb2722e2b40bf0691475156e8eccb",
+      "bytes": 12891
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/control.rs",
+      "sha256": "409bbef938480bae1c82541ec774fb467cd2ef61b9a834b3d4c493db7ddc3d6a",
+      "bytes": 2296
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/gradient_data.rs",
+      "sha256": "cbf9e038cc3e001db97f2e3ac740647951cc493cef93593c404eaaae477e9682",
+      "bytes": 15115
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/handoff.rs",
+      "sha256": "eeeb256073d4dee4ec529c0eac8ddfcbf555009d2adbd93dd75e0bf82b2dc85a",
+      "bytes": 6697
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/lib.rs",
+      "sha256": "92f8d00c887654a26d3513211aefb2835120e1574a4baab5149128941614c841",
+      "bytes": 590
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/paint.rs",
+      "sha256": "b71c1690f5871e055528a1b30cd58ef4084225893db20fed64db388158f3850f",
+      "bytes": 4966
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/resolver.rs",
+      "sha256": "241c0d7fab92e72ae42c75d0166940c9730cdd201117cdaf097d7d7fd30708c0",
+      "bytes": 14890
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/tests/cache_handoff.rs",
+      "sha256": "220d9023b0d5f5beb15b6c47d97314e7ac2598b02bbb3d97df06bb8a83a937e0",
+      "bytes": 12924
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/tests/graph_publication.rs",
+      "sha256": "318d8ac36776a34c349ade66fc73ad7d34a827ccfe20495307ff5980ed25cba1",
+      "bytes": 88
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/tests/harness/graph_publication.rs",
+      "sha256": "66f1c276ebbc6932b43efe93b0cab7f06568d0316fc2961ddc743ab1f70404f1",
+      "bytes": 7939
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/tests/paint_parity.rs",
+      "sha256": "fa4f73e033f8ba25d8bcad704f5ca94dd3b0182e30ef67a9e152dada20f1168f",
+      "bytes": 4823
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/tests/resolver_parity.rs",
+      "sha256": "a0939544726530419e6146444ff1dbaa06de2fa761ad19e45aab17f3f46b229d",
+      "bytes": 25865
+    },
+    {
+      "path": "rust/crates/vexel-svg-reference/Cargo.toml",
+      "sha256": "2790152bb6c9008999c219e70c6b3b6fdd5efaead781d1874cf3bca2b8bc62b8",
+      "bytes": 263
+    },
+    {
+      "path": "rust/crates/vexel-svg-reference/src/lib.rs",
+      "sha256": "2b2ea3843a4701f6ced8824b5b712b9257b1dce94351fef818f550e7bf4905f5",
+      "bytes": 15814
+    },
+    {
+      "path": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "bytes": 42779
+    }
+  ]
+}

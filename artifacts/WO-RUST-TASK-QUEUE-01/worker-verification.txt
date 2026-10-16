@@ -1,0 +1,93 @@
+WO-RUST-TASK-QUEUE-01 focused verification
+Date: 2026-10-14
+Workspace: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue
+Target output: build/rust/aarch64-apple-darwin (repo-local)
+
+Toolchain
+  rustc +stable --version
+    rustc 1.99.0 (b940084d7 2026-09-28)
+  cargo +stable --version
+    cargo 1.99.0 (5f94df478 2026-08-27)
+
+Named package checks
+  cargo +stable check -p vexel-platform-tasks --locked --offline
+    PASS, exit 0; finished dev profile in 0.00s.
+  cargo +stable test -p vexel-platform-tasks --locked --offline
+    PASS, exit 0; 10 unit tests passed, 0 failed; 0 doc tests.
+    Focused cases: config/allocation failure seam; thread-start rollback; native status priority;
+    rejected ownership; queued cancellation and reentrant cleanup; running cancellation;
+    generation suppression; callback failure and panic; completion retirement; shutdown/API race;
+    reentrant shutdown during external join; final-owner drop and worker join.
+
+Named repository checks
+  python3 scripts/wo_validate.py WO-RUST-TASK-QUEUE-01 --ready
+    PASS, exit 0; valid revision 1, spec SHA-256
+    3f2f48a95e25bf16842778c8419423f98560ad3acafed163f8558c7d284d44da.
+  python3 scripts/ledger.py validate ledger.jsonl
+    PASS, exit 0; valid ledger, 1143 entries. Ledger was not edited.
+  git diff --check
+    PASS, exit 0.
+  JSON parse of artifacts/WO-RUST-TASK-QUEUE-01/parity-map.json
+    PASS, exit 0.
+
+Source sizes
+  src/lib.rs: 9 lines; src/queue.rs: 501 lines; src/tests.rs: 282 lines (792 total).
+  All source files are below the 800-line limit.
+
+Failures and repairs during implementation
+  Early cargo check found a worker tuple destructuring mismatch and borrow conflicts; these were
+  corrected, and the final package check passes.
+  Initial regression runs found two test assertion/setup defects (a test counter lacked a Drop
+  guard, and a reentrant poll consumed the result before the assertion). A later run exposed a
+  shutdown-vs-completion race in that test. Tests now observe cleanup after slot publication and
+  before shutdown; final focused run passes all 10 tests.
+  A rustc 1.99 probe confirmed Box::try_new still requires unstable allocator_api. TaskCallback is
+  therefore constructed as caller-owned task state before submit; submit allocates no task wrapper
+  and returns the same TaskCallback on rejection. Queue-owned vectors use fallible reservations;
+  a five-point AllocationGate tests bounded construction rollback. This is safe deterministic
+  gate injection, not a claim of deterministic operating-system OOM injection. Arc control-block
+  allocation and Rust runtime internals remain governed by the standard allocator.
+  The reentrant-shutdown regression first failed to compile because its signal sender was borrowed
+  by a 'static callback; moving that sender into the callback fixed the test and final checks pass.
+
+Behavioral adaptations
+  C borrowed void* contexts and cleanup callbacks become typed Send+'static owned context in
+  TaskCallback and context Drop after the terminal slot transition, outside the mutex. A callback
+  receives a lifetime-bound cancellation token, so safe code cannot retain a dangling C token.
+  Rust callback panic is caught and published as failure with value 0. Reentrant worker shutdown
+  requests stop and returns without self-joining; an external shutdown joins every worker.
+  Thread-local worker identity prevents deadlock when cleanup requests shutdown while another
+  thread is joining. Safe Rust ownership replaces the C active-call counter/death probe.
+
+No dependencies, shared manifests, locks, interfaces, project docs, or ledgers were changed.
+No broad UI/E2E/corpus/performance checks were run. The application, MCP/export wiring, and full
+product finish line remain outside this port; coordinator review/integration is pending.
+
+Acceptance-review repair (2026-10-14)
+  Finding repaired: cancellation after Queued -> Running but before callback entry no longer skips
+  invocation. The worker carries an explicit invocation decision from its locked transition; only
+  queued-canceled/stale/stopping work is discarded without invoking its callback. A test-only,
+  task-ID-scoped gate pauses after unlock and before callback entry.
+  Regression: cancellation_after_running_transition_still_invokes_callback_without_publication
+    PASS; deterministically cancels in the gap, observes callback invocation and token=true, waits
+    for owned-context cleanup, then asserts poll returns None.
+
+  Exact toolchain
+    rustc +stable 1.99.0 (b940084d7 2026-09-28)
+    cargo +stable 1.99.0 (5f94df478 2026-08-27)
+  Focused package commands (locked, offline)
+    cargo +stable check -p vexel-platform-tasks --locked --offline: PASS, exit 0.
+    cargo +stable test -p vexel-platform-tasks --locked --offline: PASS, 11 unit tests,
+    0 failed, 0 ignored; 0 doc tests. Existing 10 test cases retained.
+  Named validators run after repair
+    python3 scripts/wo_validate.py WO-RUST-TASK-QUEUE-01 --ready: PASS, revision 1 and same
+    frozen work-order SHA recorded above.
+    python3 scripts/ledger.py validate ledger.jsonl: PASS, 1143 entries; ledger untouched.
+    git diff --check: PASS.
+    parity-map JSON parse: PASS.
+  Current source sizes: lib.rs 9 lines; queue.rs 542 lines; tests.rs 311 lines. Each is below
+  800 lines. Only task crate src/tests and this work-order artifact directory were edited.
+  The reviewer read prior verification evidence without rerunning it; this repair's package
+  checks and validators were run locally as listed. Allocation-gate limitation remains: system
+  allocator failures inside Arc::new and Rust runtime internals are not injected. No broad or
+  integrated application checks were run; coordinator narrowed recheck/main audit remains.

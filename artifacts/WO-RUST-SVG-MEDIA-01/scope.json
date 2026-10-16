@@ -1,0 +1,369 @@
+{
+  "schema": 1,
+  "owner": "MEDIA",
+  "crate": "vexel-svg-media",
+  "work_order": "WO-RUST-SVG-MEDIA-01",
+  "mapping_adaptation": "separate owned crate address only; full accepted owner scope remains",
+  "accepted_plan": "WO-RUST-RENDER-CONTRACT-PLAN-01",
+  "accepted_shared_orders": [
+    "WO-RUST-SCENE-MODEL-01",
+    "WO-RUST-KERNEL-CONTRACTS-01",
+    "WO-RUST-SCENE-DRAFT-01"
+  ],
+  "source_files": [
+    {
+      "path": "src/svg/shape/image.c",
+      "sha256": "79ef7d7d0884bf0ab2e82f69292bd55c1e6bcb0c57dbcc4fde65b76f77abff47",
+      "owner": "MEDIA",
+      "symbols": [
+        {
+          "name": "span_is",
+          "line": 18,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:18:definition:span_is",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attribute",
+          "line": 27,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:27:definition:attribute",
+          "semantic_replacement": null
+        },
+        {
+          "name": "base64_value",
+          "line": 43,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:43:definition:base64_value",
+          "semantic_replacement": null
+        },
+        {
+          "name": "decode_base64",
+          "line": 53,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:53:definition:decode_base64",
+          "semantic_replacement": null
+        },
+        {
+          "name": "data_payload",
+          "line": 127,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:127:definition:data_payload",
+          "semantic_replacement": null
+        },
+        {
+          "name": "image_geometry",
+          "line": 148,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:148:definition:image_geometry",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_builder_add_image_element",
+          "line": 304,
+          "kind": "definition",
+          "key": "src/svg/shape/image.c:304:definition:svg_shape_builder_add_image_element",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SVG_IMAGE_MAX_ENCODED_BYTES",
+          "(32U * 1024U * 1024U)"
+        ],
+        [
+          "SVG_IMAGE_MAX_URI_BYTES",
+          "44739266U"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/text.c",
+      "sha256": "2c96f96a936b8d37c223fb8027a70f24b35b5fcd46ea3d2741836dceea96331a",
+      "owner": "MEDIA",
+      "symbols": [
+        {
+          "name": "text_span_equal",
+          "line": 26,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:26:definition:text_span_equal",
+          "semantic_replacement": null
+        },
+        {
+          "name": "text_attribute",
+          "line": 36,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:36:definition:text_attribute",
+          "semantic_replacement": null
+        },
+        {
+          "name": "normalize_text",
+          "line": 53,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:53:definition:normalize_text",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_position_list",
+          "line": 108,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:108:definition:parse_position_list",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_families",
+          "line": 169,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:169:definition:parse_families",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_size",
+          "line": 225,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:225:definition:parse_size",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_weight",
+          "line": 238,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:238:definition:parse_weight",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_spacing",
+          "line": 254,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:254:definition:parse_spacing",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_text_style",
+          "line": 269,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:269:definition:parse_text_style",
+          "semantic_replacement": null
+        },
+        {
+          "name": "text_geometry",
+          "line": 319,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:319:definition:text_geometry",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_xml_space",
+          "line": 388,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:388:definition:parse_xml_space",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_text_render_element",
+          "line": 409,
+          "kind": "definition",
+          "key": "src/svg/shape/text.c:409:definition:svg_shape_text_render_element",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/text_cache.c",
+      "sha256": "09baeffce272592680c92286ce9c9abb37500cc182a787944000f0b40e7d7c1d",
+      "owner": "MEDIA",
+      "symbols": [
+        {
+          "name": "svg_shape_text_layout_release",
+          "line": 31,
+          "kind": "definition",
+          "key": "src/svg/shape/text_cache.c:31:definition:svg_shape_text_layout_release",
+          "semantic_replacement": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+        },
+        {
+          "name": "svg_shape_text_cache_create",
+          "line": 43,
+          "kind": "definition",
+          "key": "src/svg/shape/text_cache.c:43:definition:svg_shape_text_cache_create",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_text_cache_destroy",
+          "line": 52,
+          "kind": "definition",
+          "key": "src/svg/shape/text_cache.c:52:definition:svg_shape_text_cache_destroy",
+          "semantic_replacement": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+        },
+        {
+          "name": "request_matches",
+          "line": 63,
+          "kind": "definition",
+          "key": "src/svg/shape/text_cache.c:63:definition:request_matches",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_text_layout_run",
+          "line": 83,
+          "kind": "definition",
+          "key": "src/svg/shape/text_cache.c:83:definition:svg_shape_text_layout_run",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "TEXT_CACHE_ENTRIES",
+          "32U"
+        ],
+        [
+          "TEXT_CACHE_BYTES",
+          "(256U * 1024U)"
+        ],
+        [
+          "TEXT_CACHE_COMMANDS",
+          "SVG_SHAPE_MEDIA_MAX_PATH_COMMANDS"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    }
+  ],
+  "operations": [
+    {
+      "owner": "MEDIA",
+      "name": "text/image builders",
+      "signature": "fn text(element: ElementView<'_>, end: usize, style: &CssPaint<'_>, transform: Affine, state: &mut TextState, preserve_space: bool, provider: &mut dyn MediaProvider, cache: &mut TextCache, builder: &mut SceneBuilder, control: &mut dyn WorkControl) -> Result<bool>; fn image(element: ElementView<'_>, style: &CssPaint<'_>, transform: Affine, provider: &mut dyn MediaProvider, builder: &mut SceneBuilder, control: &mut dyn WorkControl) -> Result<ShapeId>",
+      "contract": "Preserve tspan state/x-y-dx-dy, entities, whitespace, font fallback/style/anchor/spacing, source mapping; image exact PNG/JPEG data URI grammar and bilinear premultiplied sample placement/meet/slice. TextCache owns key text and family bytes/spans within source lifetime plus owned layouts; caller borrows cache hits, no multiple release. No product deterministic fake provider."
+    }
+  ],
+  "assigned_original_suites": [
+    {
+      "path": "tests/fuzz/shape/shape_fuzz.c",
+      "sha256": "9ae56612013411f09764f6e3c65281cd6d877b21cfebdea02351bb0806937ef4",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "fuzz_release_text",
+          "line": 112,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "fuzz_release_image",
+          "line": 134,
+          "owner": "MEDIA"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/media_render_cli.c",
+      "sha256": "83f2889c9f26514d902b5a7d8ba78e2d91ab21af98e409105d22fc7343845c20",
+      "primary_owner": "MEDIA",
+      "assigned_cases": [
+        {
+          "name": "main",
+          "line": 11,
+          "owner": "MEDIA"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/text_image_test.c",
+      "sha256": "2b8962dff33a4c293b85b5bb25cc02acf16adfce46698a861ec270154888a963",
+      "primary_owner": "MEDIA",
+      "assigned_cases": [
+        {
+          "name": "fake_text_release",
+          "line": 112,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "fake_image_release",
+          "line": 139,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "check",
+          "line": 157,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "text_checks",
+          "line": 163,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "text_use_symbol_checks",
+          "line": 236,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "image_checks",
+          "line": 269,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "selection_and_path_checks",
+          "line": 362,
+          "owner": "MEDIA"
+        },
+        {
+          "name": "main",
+          "line": 423,
+          "owner": "MEDIA"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/test_text_image_render.py",
+      "sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22",
+      "primary_owner": "MEDIA",
+      "assigned_cases": [
+        {
+          "name": "test_coretext_text_render_tracks_librsvg_structure_with_font_tolerance",
+          "line": 40,
+          "owner": "MEDIA",
+          "body_sha256": "a69b6771fa0046b9a5d8dea470423cc33154a745d7c1bc70e21ce1fb42ebbb15"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    }
+  ],
+  "frozen_oracles_source": "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json",
+  "frozen_input_sha256": {
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/ownership-matrix.json": "c014bc96ef46b8d8b9f5ed3cfc5f36c3b8853d578c758faa36af48e576810dd5",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json": "19b13d230c10553b262a585b1839385761b7e5ef857bb82457fa880234f7212e",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json": "188d73452059bd05c84ba2db790c2ea49313fa58f74f485bcb5b0273b953cde7",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/limits-features.json": "821b98188085a78259008b82d9384b12299704cf8c31f6daf907d8a057baa763"
+  },
+  "current_shared_api_sha256": {
+    "rust/crates/vexel-scene/src/lexical_document.rs": "cff931ff54cbd17372fc98df9b10de5f3eaf0cd1bed708efc88d9a3f989fa651",
+    "rust/crates/vexel-scene/src/decode_contract.rs": "806b19df794a831bbb90cb6575046bd3aa918b5aeb5cb6a4feb46a6ec1f2b0f3",
+    "rust/crates/vexel-scene/src/types.rs": "1779916725a9df0d4921010e8ab85deafa6852cd0ef39ab9ed994a13ccf0e6bb",
+    "rust/crates/vexel-scene/src/pattern_ticket.rs": "9f9b5a0f4f4779d159c8c9c2ecd9db9e369ac6a145013ae642fba23dbe98673d",
+    "rust/crates/vexel-scene/src/accounting.rs": "0a0fb0118a9c0e3c0f3d597a87253490e4a50ad122f59e730ecdd45e4a2efe90",
+    "rust/crates/vexel-scene/src/lib.rs": "8b0bc2356ab3039f5e4bbfb45c8ecba19ad5ba514c418dd12e2b229996ccf7af",
+    "rust/crates/vexel-scene/src/memory.rs": "f2de4c04af6bff31228b95f973317c175eb192d81c89594c48f02b47b4695f23",
+    "rust/crates/vexel-scene/src/contract_validate.rs": "6c3557487eb0e8ee73e4be79a437f40d79400727aa7bbfd827a4b8f76125791e",
+    "rust/crates/vexel-scene/src/contract_storage.rs": "9f990135cdae62efe4a4260a47b9bced98b2a141a1406cae641d7f8a37b02005",
+    "rust/crates/vexel-scene/src/media.rs": "b9532fe5a5e12c1460fe569d86727e3a59fe14f2fb6ef4153a29b3fd25b75403",
+    "rust/crates/vexel-scene/src/dash_validate.rs": "6b979f789334409e5954bd25d945c050d3b42c50539066d5f52307038ac6911c",
+    "rust/crates/vexel-scene/src/draft_updates.rs": "7c7790ac942641d0c07f559cec0099457e9ba714e56da5e2778530e14a3146a0",
+    "rust/crates/vexel-scene/src/mutators.rs": "e258b6d5dcda0d7dc44ddec39a21dfc26637d70c1d89d59bee10d49e2031cb14",
+    "rust/crates/vexel-scene/src/draft.rs": "652302ff36efed92f65ce7f426ee5153788f79aa474a223b3dc536df4d500952",
+    "rust/crates/vexel-scene/src/validation_tests.rs": "cbecb7df16720750f7f871e3f3876d08ecee3693df70d6c94da011cc5c817474",
+    "rust/crates/vexel-scene/src/ids.rs": "61fa36334a9c409460dbfb61fbdd42eaa228ac271d6e318abf3c0579bb86fcdc",
+    "rust/crates/vexel-scene/src/shape_builder.rs": "924e8e4b257beb5941c57d77f102bbdaaabf1262a175400c93544caf25e76852",
+    "rust/crates/vexel-scene/src/source_context.rs": "e0ee7343122cc60c0bab5ec653f99eeb5b5bc7a1595feaa79202eaf10c1af80b",
+    "rust/crates/vexel-scene/src/frame.rs": "73527780415669adf0b0ee1214a5cff7c2b0ba12f34017cd4ef7cf3da6431f06",
+    "rust/crates/vexel-scene/src/validate.rs": "c69e7c45cf6d2377a1d8fbdba3dd9f129bb4d7fc488b1a880191ddd4fb567002",
+    "rust/crates/vexel-scene/src/model.rs": "7ba0317648e8017129e89d68c639b5ba277e17b7baf27998dc13d2f6d33fe0b6",
+    "rust/crates/vexel-scene/src/builder.rs": "de4f320d0486c43152a40b93eeba59eaf2b221e975b898c5a9cdbe011d6c9d9c",
+    "rust/crates/vexel-scene/src/render_contract.rs": "ad81dfaef997e7ea7c263a9084477e66c4a400e7dd69ba0385bf166869e3e11f"
+  },
+  "scope_completion": "full real owned algorithms/private helpers and assigned original assertion semantics; no fake success, smaller renderer, TODO required workflow or weakened oracle",
+  "later_composition": "real accepted DecodeOperations/KernelResources/FlatKernel adapters supplied by coordinator, not fake defaults"
+}

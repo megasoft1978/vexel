@@ -1,0 +1,37 @@
+{
+  "work_order": "WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01 revision 1",
+  "candidate_only": true,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "files": [
+    {
+      "path": "rust/crates/vexel-svg-path/src/parser.rs",
+      "size": 19227,
+      "sha256": "da929d1c7fe674ec33f16e3ed18def54fa7a46b9656811e795e410f3a5c8f878"
+    },
+    {
+      "path": "rust/crates/vexel-svg-path/src/reader.rs",
+      "size": 9501,
+      "sha256": "4aaaa54cbae0db9d9ab5981af223d6d1eeafe95d5cd9b8aa2a18daa221a74944"
+    },
+    {
+      "path": "rust/crates/vexel-svg-path/tests/controlled.rs",
+      "size": 17792,
+      "sha256": "15ef434c6fa9c1bcdd06c16b4782e3f4c5d767adb6f0d6ca081331173d3d6739"
+    },
+    {
+      "path": "rust/crates/vexel-svg-path/tests/parity.rs",
+      "size": 2660,
+      "sha256": "6859534e46d51b463527e987ef09c4a5b54d55ac4ca88b4e00db2df6a467d645"
+    },
+    {
+      "path": "rust/crates/vexel-svg-path/tests/path.rs",
+      "size": 14221,
+      "sha256": "1b2dc9abd849d35f06111532163ecbe09d68980f09f5aa00f01a08af50795ce2"
+    },
+    {
+      "path": "rust/crates/vexel-svg-path/tests/support/mod.rs",
+      "size": 5698,
+      "sha256": "4358c0c4da583fc45ddb5ce533e98720350d1787aa9df7067e3c8e64f848333e"
+    }
+  ]
+}

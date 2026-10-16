@@ -1,0 +1,12 @@
+**BLOCK — changed-file formatting gate fails.**
+
+The workspace uses Rust edition **2024**, but continuation-3 formatting evidence uses **2021**. Independent edition-2024 checks fail at:
+
+- `accounting.rs:454,463`
+- `observability_contracts.rs:119,148,194`
+
+Minimum repair: format only the allowed changed Rust files with `rustfmt +stable --edition 2024`, then refresh formatting logs and hashes. Package formatting cannot currently be attributed solely to protected files.
+
+Other reviewed gates pass: checked registry `new-old` history, additive `None` payload, distinct live/total-history semantics, arithmetic atomicity and error priority, second-growth/reuse/release proofs, payload overflow, replacement cancellation, and actual probe forwarding. Source/API preservation, hashes and line caps pass. Recorded package tests report **246 passed**; ledger validation independently passes **1,696 entries**.
+
+Diff-check remains blocked solely by protected `STATE.md:1341`. Read-only review; no files modified.

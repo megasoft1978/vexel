@@ -1,0 +1,5 @@
+Fixed the marker dimension error parity mismatch: zero and negative width or height now return `Limit(Shapes)` at the marker name offset, matching the original C. Malformed values still return `Number` at the value offset. Added four focused regression tests; the prior 36 assertions and accepted production channel tests remain intact.
+
+Locked offline check and full crate tests passed: **25 unit + 15 integration tests, 40 total, 0 failures**. Work order validation passed. Scope remains 79 symbols and 10 suites; the largest source or test file is 757 lines.
+
+Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/result.md), [coverage.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/coverage.json), and [verification.json](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/artifacts/WO-RUST-SVG-DEFINITIONS-01/verification.json). This remains a source candidate pending root re-review, protected audit, and fresh-main checks.

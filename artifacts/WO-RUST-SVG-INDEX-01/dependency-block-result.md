@@ -1,0 +1,7 @@
+# WO-RUST-SVG-INDEX-01 — unaccepted, blocked on XML storage contract
+
+Corrected completed-validation harvesting to return a validator diagnostic immediately before another lexical reader step, matching `svg_index_step` C ordering. Added a deterministic background-completion regression and a completed malformed-tail regression that checks preview publication and zero subsequent reader progress. Element metadata growth now allocates a detached candidate `Vec`, checks its actual capacity before copying/replacing, and retains the original partial records when the owned candidate exceeds budget. A safe oversized-candidate rejection regression exercises that path without simulating allocator failure.
+
+The full 128 MiB validator/token component budget cannot currently be proven. The accepted `XmlTokenStream` API does not expose exact `token_storage_bytes` and `open_name_storage_bytes`; its existing visitor scratch accessor is insufficient to account for all retained storage. The index keeps its local bounded collector ceiling, but that is not evidence of the complete component limit. Root is implementing `WO-RUST-XML-STORAGE-01`; do not accept or claim full bounded-memory parity until its exact accepted source delta is supplied and integrated here.
+
+The six integration tests remain, alongside three deterministic unit regressions. Named checks pass as recorded in `verification.txt`; this candidate remains unaccepted pending the XML storage contract and subsequent budget integration/review.

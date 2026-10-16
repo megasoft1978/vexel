@@ -1,0 +1,196 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-SCALAR-SAMPLE-01",
+  "original_cases": [
+    {
+      "source": "tests/svg/shape/stroke_dash_storage_test.c",
+      "source_sha256": "716d7ff650b88d45a6ac0d5a60511a8fd519d3f25d5a507a5ef33f67b4d91056",
+      "case": "has_values",
+      "line": 35,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "ported_predicate_pass",
+      "rust_tests": [
+        "original_has_values_assertion_predicate"
+      ],
+      "reason": "The original has_values pure assertion predicate is ported and passing."
+    },
+    {
+      "source": "tests/svg/shape/stroke_dash_storage_test.c",
+      "source_sha256": "716d7ff650b88d45a6ac0d5a60511a8fd519d3f25d5a507a5ef33f67b4d91056",
+      "case": "main",
+      "line": 45,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [
+        "original_dash_storage_and_seam_predicates",
+        "dash_seam_walk_propagates_work_limits"
+      ],
+      "pure_status": "partial predicates pass; complete source-storage/cache assertions not ported"
+    },
+    {
+      "source": "tests/svg/shape/test_shape.c",
+      "source_sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "case": "antialias_and_fill_checks",
+      "line": 76,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [
+        "fill_sampling_lattice_and_size_arithmetic",
+        "original_source_over_rounding_predicate"
+      ],
+      "pure_status": "partial math predicates pass; pixel/source round-trip assertions unexecuted"
+    },
+    {
+      "source": "tests/svg/shape/test_shape.c",
+      "source_sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "case": "stroke_decode_and_render_checks",
+      "line": 497,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [
+        "original_stroke_cap_and_join_geometry_predicates"
+      ],
+      "pure_status": "partial geometry predicates pass; decode/render assertions unexecuted"
+    },
+    {
+      "source": "tests/svg/shape/test_shape.c",
+      "source_sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "case": "stroke_cap_join_and_dash_checks",
+      "line": 562,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [
+        "original_dash_storage_and_seam_predicates",
+        "original_stroke_cap_and_join_geometry_predicates"
+      ],
+      "pure_status": "partial geometry predicates pass; full fixture assertions unexecuted"
+    },
+    {
+      "source": "tests/svg/shape/test_w5_render.py",
+      "source_sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "case": "test_paint_order_stroke_then_fill_matches_librsvg",
+      "line": 148,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [],
+      "pure_status": "no independent pure predicate isolated; mixed renderer comparison remains unexecuted"
+    },
+    {
+      "source": "tests/svg/shape/test_w5_render.py",
+      "source_sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "case": "test_vector_effect_non_scaling_stroke_width_matches_librsvg",
+      "line": 160,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [],
+      "pure_status": "no independent pure predicate isolated; mixed renderer comparison remains unexecuted"
+    },
+    {
+      "source": "tests/test_shape_render.py",
+      "source_sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "case": "test_dashed_cubic_stays_under_work_cap",
+      "line": 126,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [
+        "dash_seam_walk_propagates_work_limits"
+      ],
+      "pure_status": "work-limit predicate partially covered; original cubic work-count assertion unexecuted"
+    },
+    {
+      "source": "tests/test_shape_render.py",
+      "source_sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "case": "test_sparse_compound_stroke_uses_local_candidates",
+      "line": 148,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [],
+      "pure_status": "local-candidate cost predicate unexecuted; requires complete retained grid/sample engine"
+    },
+    {
+      "source": "tests/test_shape_render.py",
+      "source_sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "case": "test_independent_shape_fill_rules_and_painter_order",
+      "line": 567,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [],
+      "pure_status": "no independent pure predicate isolated; mixed renderer pixel assertions unexecuted"
+    },
+    {
+      "source": "tests/test_shape_render.py",
+      "source_sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "case": "test_fractional_viewport_rounds_tile_extent_up",
+      "line": 587,
+      "owner": "RASTER_SAMPLE",
+      "body_sha256": null,
+      "status": "unexecuted_full_original_case",
+      "rust_tests": [],
+      "reason": "The original whole case requires decoder/renderer/native composition outside this isolated crate. Its exact source body and all original fixture inputs remain unchanged at this protected path; focused owned scalar predicates are separately executed below.",
+      "pure_rust_tests": [],
+      "pure_status": "no independent pure predicate isolated; tile extent belongs to later viewport composition"
+    }
+  ],
+  "executed_rust_tests": [
+    "original_has_values_assertion_predicate",
+    "original_dash_storage_and_seam_predicates",
+    "dash_seam_walk_propagates_work_limits",
+    "original_stroke_cap_and_join_geometry_predicates",
+    "original_source_over_rounding_predicate",
+    "fill_sampling_lattice_and_size_arithmetic",
+    "canonical_scene_uses_builder_path_animation_and_source_identity",
+    "job_scratch_is_same_source_owned_and_capacity_admitted",
+    "canceled_job_growth_keeps_published_contents"
+  ],
+  "deferred_inputs": [
+    {
+      "source": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "reason": "Preserved mixed decode/render input; requires later accepted composition and native providers."
+    },
+    {
+      "source": "tests/svg/shape/test_w5_render.py",
+      "sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "reason": "Preserved mixed decode/render input; requires later accepted composition and native providers."
+    },
+    {
+      "source": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "reason": "Preserved mixed decode/render input; requires later accepted composition and native providers."
+    }
+  ],
+  "later_gates": [
+    "run every original whole C/Python case unchanged through final SceneDraft/FlatKernel and real KernelResources composition",
+    "prove indexed versus exact scalar stroke results with original sparse/dashed inputs",
+    "prove source-over/fill/pattern/image/clip outputs against all frozen pixel oracles"
+  ],
+  "owner_scope_status": "INCOMPLETE: named Rust predicates and canonical scene/job tests passed; all 11 frozen original case bodies remain unchanged, mixed renderer gates are deferred, and several pure predicates remain unported."
+}

@@ -1,0 +1,17 @@
+PASS `cargo +stable check -p vexel-svg-index --locked --offline`
+  Finished dev profile successfully.
+
+PASS `cargo +stable test -p vexel-svg-index --locked --offline`
+  6 unit tests passed; 6 integration tests passed; 0 failed. Doc tests: 0.
+  All eleven prior tests/assertions retained. Added deterministic collector growth remainder regression for capacities 1/3/5/65 and remainders 0/1/token_size-1, including 64-to-65 clamp, final legal slot, sub-token/excess XML budget rejection, checked extreme capacity, and actual oversized detached-candidate rejection retaining original pointer/capacity/tokens. Small safe test allocations; no allocator OOM claim.
+
+PASS `python3 scripts/wo_validate.py WO-RUST-SVG-INDEX-01 --ready`
+  valid WO-RUST-SVG-INDEX-01 revision 1 sha256 710311f2f5d816abc33894a96fcd53951bc6506ed89c0be1ff9ba007341cac39
+
+PASS `python3 scripts/ledger.py validate ledger.jsonl`
+  valid ledger: 1229 entries (read-only validation; ledger untouched).
+
+PASS `git diff --check`
+  no whitespace errors.
+
+Uses the root-approved XML exact-storage dependency already applied. Collector requests clamp to remaining whole-token capacity under the existing 128 MiB component budget. Actual candidate capacity plus XML storage is checked before copying/replacement; rejected candidates drop without replacing prior tokens. Existing 256 MiB combined-budget enforcement remains. Only named checks were run; no peer edits, dependency changes, installs, staging, or commits. Candidate only, pending root review and main checks.

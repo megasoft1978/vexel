@@ -1,0 +1,20 @@
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28); cargo 1.99.0 (5f94df478 2026-08-27); stable-aarch64-apple-darwin.
+
+Command: cargo +stable check -p vexel-platform-apple --locked --offline
+Result: PASS; finished dev profile, 0 warnings.
+
+Command: cargo +stable test -p vexel-platform-apple --locked --offline
+Result: PASS; 5 integration tests passed, 0 failed; 2 compile-fail doctests passed, 0 failed. Includes the real Foundation range-exception regression and subprocess cleanup-death regression. Original payload Drop panic_anys a secondary payload with a panicking Drop; child SIGABRT (signal 6) is asserted.
+
+Command: python3 scripts/wo_validate.py WO-RUST-NATIVE-BOUNDARY-01 --ready
+Result: PASS; valid WO-RUST-NATIVE-BOUNDARY-01 revision 1 sha256 f86de04534fab0d39f6fa9f390d0860149f6b1c859b9960be9162de0a692d651.
+
+Command: python3 scripts/ledger.py validate ledger.jsonl
+Result: PASS; valid ledger: 1313 entries.
+
+Command: git diff --check
+Result: PASS; no output, exit status 0.
+
+Adaptation: The selected Foundation feature set enables NSException but does not enable NSDictionary and NSObjCRuntime, which gate NSException::new. The native regression instead calls the accepted NSString substring API with an invalid index; Foundation raises its real NSRangeException, objc2 catch-all converts it, and guard_native_call returns the bounded fault. No features or dependencies were added.
+
+Fatal cleanup behavior: Matching `Err(_secondary_payload)` binds the payload through the divergent `std::process::abort()` call. Thus it is neither leaked nor dropped, and no further unwind crosses the boundary. The subprocess regression confirms SIGABRT without running the secondary payload destructor.

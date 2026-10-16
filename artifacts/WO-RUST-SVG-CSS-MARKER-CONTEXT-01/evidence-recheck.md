@@ -1,0 +1,5 @@
+**ACCEPT — scoped API.** `CssPaint::without_inherited_markers` clears only `Marker`, `MarkerStart`, `MarkerMid`, and `MarkerEnd` on the copied style, matching the four clears in `marker.c`. The retained values and spans, source identity, unchanged parent, explicit child cascade, and allocation-free four-field operation are supported by code and focused tests.
+
+The evidence records all 63 original named CSS entries unchanged plus three new cases. I independently hash-compared the ten original CSS test sources listed in the baseline; all match. The scope audit reports only the authorized `lib.rs` method changed among existing CSS files. Check, test, and work-order validation each record exit code 0, including all three marker-context tests. The earlier shorthand assertion failure is preserved in the artifact; the corrected fixture reflects raw CSS semantics, with shorthand expansion handled by the SVG style layer.
+
+Acceptance is limited to this API and work order; it does not cover full definitions, native integration, or application QA.

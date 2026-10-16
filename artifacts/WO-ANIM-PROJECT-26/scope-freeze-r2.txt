@@ -1,0 +1,6 @@
+WO-ANIM-PROJECT-26 revision 2 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: see frozen work order metadata.
+Scope correction: revision 1 omitted tests/test_map.json, which maps focused CTests for repository quick checks. Revision 2 adds that required path. Existing implementation changes remain in scope and are retained.
+Allowlist: work order r2 allowlist, including tests/test_map.json.
+Protected: all other paths, especially unrelated pre-existing dirty state.

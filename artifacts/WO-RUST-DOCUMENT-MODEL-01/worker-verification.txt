@@ -1,0 +1,23 @@
+Candidate verification for WO-RUST-DOCUMENT-MODEL-01.
+
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28), cargo 1.99.0 (5f94df478 2026-08-27), stable-aarch64-apple-darwin. Offline, locked dependency resolution; no installs or network access.
+
+`cargo +stable check -p vexel-document --locked --offline`
+PASS, exit 0; vexel-document checked.
+
+`cargo +stable test -p vexel-document --locked --offline`
+PASS, exit 0; 9 unit tests passed, 0 failed; 0 doc tests.
+Coverage includes legacy fixture/API behavior, exact XML errors/offsets, limits, and the production 64 MiB storage-exhaustion boundary.
+
+`python3 scripts/wo_validate.py WO-RUST-DOCUMENT-MODEL-01 --ready`
+PASS, exit 0; revision 1, SHA-256 97ff544663b6ead932020383bff7fadba6938bedaffbfcdbbf5a9fc006e0ea00.
+
+`python3 scripts/ledger.py validate ledger.jsonl`
+PASS, exit 0; valid ledger, 1232 entries. Ledger was not edited for this candidate.
+
+`git diff --check`
+PASS, exit 0.
+
+Capacity/adaptation: production parsing passes 64 MiB to accepted `XmlTokenStream::new`, verifies `token_storage_bytes()` and bounded `open_name_storage_bytes()` after each step and at completion, then checks successful ownership transfer. The full-limit regression asserts `ResourceExhausted`, `OutputExhausted`, and exact offset. A private smaller-cap test exercises exact/nonmultiple/sub-token boundaries without changing the public parser limit. Rust slices make invalid pointer/length input unrepresentable. No legacy/peer files, manifests, root records, or ledger were edited. Candidate only; independent review and coordinator main checks remain.
+
+Narrow parity correction: the source cap remains 16 MiB. Only the source-limit diagnostic offset and its corresponding new assertion changed, from `MAX_INPUT_BYTES` to `0`; C result initialization leaves the offset zero. The other eight Rust test assertions were not edited. Prior result/parity/verification and the full test source were archived before correction in `archive/prior-candidate/`; their hashes are recorded in `archive/prior-candidate/SHA256SUMS.txt`.

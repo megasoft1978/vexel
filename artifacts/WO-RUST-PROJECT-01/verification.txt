@@ -1,0 +1,29 @@
+WO-RUST-PROJECT-01 revision 1 — implementation evidence
+
+Toolchain/environment
+- rustc +stable --version: rustc 1.99.0 (b940084d4 2026-09-28)
+- cargo +stable --version: cargo 1.99.0 (5f94df478 2026-08-27)
+- Checks used the existing repo-local CARGO_HOME, CARGO_TARGET_DIR, TMPDIR, and MACOSX_DEPLOYMENT_TARGET=13.0; no downloads or dependencies were added.
+
+Named checks
+- cargo +stable check -p vexel-project --locked --offline — PASS.
+- cargo +stable test -p vexel-project --locked --offline — PASS; 8 integration tests, 0 failures; crate and doc test targets also passed (0 unit/doc tests).
+- python3 scripts/wo_validate.py WO-RUST-PROJECT-01 --ready — PASS; revision 1 and frozen spec SHA matched.
+- python3 scripts/ledger.py validate ledger.jsonl — PASS; 1058 entries.
+- git diff --check — PASS.
+- Independent read-only review — no codec correctness/parity defect found; reviewer requested explicit null out_view adaptation, recorded in parity-map.json.
+- Source scan found no TODO, todo!, or unimplemented!; only unsafe match is crate-level #![forbid(unsafe_code)].
+
+Implemented public API
+- Constants: VERSION, HEADER_BYTES, MAX_BYTES, MAX_MANIFEST_BYTES, MAX_SCENE_BYTES, MAX_TIMELINE_BYTES, MAX_ASSET_COUNT, MAX_ASSET_NAME_BYTES, MAX_MEDIA_TYPE_BYTES, MAX_ASSET_BYTES, MAX_ASSET_TOTAL_BYTES, ASSET_HEADER_BYTES, MAGIC.
+- Types: Error (including exact C error_name strings), BundleFailure, Asset<'a>, BundleInput<'a>, BundleView<'a>.
+- Functions/methods: encoded_size, encode_into, encode, decode, has_magic, BundleView::asset_at.
+- Formats strict little-endian v1 header and asset records; scalar IEEE CRC32; validates headers, reserved flags, content/asset CRCs, names/media types, duplicates, truncation/trailing bytes, all configured limits, and preserves opaque asset bytes. Decoded slices are borrowed from and lifetime-bound to the encoded bytes. Owned encode and decoder bookkeeping use fallible reservation.
+
+Parity/adaptations/limits
+- artifacts/WO-RUST-PROJECT-01/parity-map.json maps each public C symbol/constant and behavior to Rust APIs and focused tests.
+- C null pointer/length invalid states cannot be represented by safe Rust slices/references. Safe borrowing prevents output/input overlap; encode_into completes validation before writes and preserves the destination on insufficient capacity.
+- C asset overlay, timeline, recovery, app integration, and prevalidated capture candidate remain explicitly outside this order. Deterministic allocator failure was not induced; fallible allocation reports OutOfMemory. The original C suite was not run; its codec assertions were ported to the focused Rust tests.
+- Rustfmt and Clippy are unavailable as directed; not installed or run.
+
+Changed implementation/evidence files only: rust/crates/vexel-project/src/lib.rs, rust/crates/vexel-project/src/bundle.rs, rust/crates/vexel-project/tests/bundle.rs, artifacts/WO-RUST-PROJECT-01/parity-map.json, artifacts/WO-RUST-PROJECT-01/verification.txt. No coordinator manifests, contracts, state, ledgers, or main checkout files were edited. Changes remain uncommitted.

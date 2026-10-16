@@ -1,0 +1,23 @@
+{
+  "ts": "2026-10-14T10:31:54Z",
+  "wo_id": "WO-RUST-PROJECT-IO-01",
+  "event": "run_started",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-PROJECT-IO-01-run_started-wave4",
+  "session_id": "rust-wave4-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "running",
+  "artifacts": [
+    "work/WO-RUST-PROJECT-IO-01.md",
+    "artifacts/WO-RUST-WAVE4-SETUP-01/batch.json"
+  ],
+  "note": "Isolated current-source overlay and actual Standard Luna high CLI writer, scoped package checks only. Candidate requires independent review and fresh main integration audit. No API billing or recursive agents."
+}

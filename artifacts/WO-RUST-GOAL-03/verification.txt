@@ -1,0 +1,13 @@
+COMMAND: python3 scripts/wo_validate.py WO-RUST-GOAL-03 --ready
+EXIT: 0
+valid WO-RUST-GOAL-03 revision 1 sha256 eaa1d640af76c0a0a6954001111d052086a5e7db5bbdf60b66c5999d90e27c3d
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1104 entries
+
+COMMAND: git diff --check
+EXIT: 0
+
+Document review: owner final readiness request and all nine prior product outcomes preserved; final testing coverage, required-check pass policy, blocker repairs, clean packaged install, user documentation and recorded demos explicit.
+HEAD/index unchanged. This order writes only its allowed work-order/product-goal/STATE/ledger/artifact paths. No application build/test run.

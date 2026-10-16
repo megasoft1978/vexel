@@ -1,0 +1,5 @@
+Repaired the blocking cancellation race. A task that has transitioned to `Running` now invokes its callback even if cancellation arrives before callback entry; canceled queued or stale work is discarded. The deterministic regression confirms the callback observes cancellation and its result is not published.
+
+The original 10 test cases remain. Final focused checks passed: package check, **11 tests**, work order validator, ledger validator (1,143 entries), parity map JSON parse, and `git diff --check`. Rust source files are each under 800 lines.
+
+Updated [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/artifacts/WO-RUST-TASK-QUEUE-01/parity-map.json), [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/artifacts/WO-RUST-TASK-QUEUE-01/verification.txt), and [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/artifacts/WO-RUST-TASK-QUEUE-01/result.md). The allocation gate still does not inject failures inside `Arc::new` or Rust runtime internals. Coordinator narrowed recheck and main audit remain; this is not full application completion. Changes remain uncommitted.

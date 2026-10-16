@@ -1,0 +1,4 @@
+WO-SVG-MARKER-01 revision 1
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: e5894f66e9fc064ae36e752189dc6828b66761e4a60014749a5e62d49b16f81c
+Scope: bounded marker-definition lexical style inheritance correction, focused regression, Debug/Release renderer builds, marker-only reference checks, and native-size T1/filtered-path comparisons. No broad suites or unrelated source changes.

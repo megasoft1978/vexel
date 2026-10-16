@@ -1,0 +1,102 @@
+{
+  "status": "pass",
+  "changed_baseline_paths": [
+    "ledger.jsonl",
+    "Cargo.toml",
+    "Cargo.lock"
+  ],
+  "new_files": [
+    "rust/crates/vexel-scene-query/Cargo.toml",
+    "rust/crates/vexel-scene-query/src/lib.rs",
+    "rust/crates/vexel-svg-animation-frame/Cargo.toml",
+    "rust/crates/vexel-svg-animation-frame/src/lib.rs",
+    "rust/crates/vexel-svg-decode/Cargo.toml",
+    "rust/crates/vexel-svg-decode/src/lib.rs",
+    "rust/crates/vexel-svg-definitions/Cargo.toml",
+    "rust/crates/vexel-svg-definitions/src/lib.rs",
+    "rust/crates/vexel-svg-media/Cargo.toml",
+    "rust/crates/vexel-svg-media/src/lib.rs",
+    "rust/crates/vexel-svg-paint/Cargo.toml",
+    "rust/crates/vexel-svg-paint/src/lib.rs",
+    "rust/crates/vexel-svg-scalar-index/Cargo.toml",
+    "rust/crates/vexel-svg-scalar-index/src/lib.rs",
+    "rust/crates/vexel-svg-scalar-sample/Cargo.toml",
+    "rust/crates/vexel-svg-scalar-sample/src/lib.rs",
+    "work/WO-RUST-RENDER-WAVE-SETUP-01.md",
+    "work/WO-RUST-SCENE-QUERY-01.md",
+    "work/WO-RUST-SVG-ANIMATION-FRAME-01.md",
+    "work/WO-RUST-SVG-DECODE-01.md",
+    "work/WO-RUST-SVG-DEFINITIONS-01.md",
+    "work/WO-RUST-SVG-MEDIA-01.md",
+    "work/WO-RUST-SVG-PAINT-01.md",
+    "work/WO-RUST-SVG-SCALAR-INDEX-01.md",
+    "work/WO-RUST-SVG-SCALAR-SAMPLE-01.md"
+  ],
+  "baseline_count": 1651,
+  "old_Rust_and_manifests_unchanged": true,
+  "legacy_files_preserved": 603,
+  "frozen_oracles_preserved": 157,
+  "HEAD_index_unchanged": true,
+  "external_pins_versions_checksums_unchanged": true,
+  "new_internal_crates_only": [
+    "vexel-scene-query",
+    "vexel-svg-animation-frame",
+    "vexel-svg-decode",
+    "vexel-svg-definitions",
+    "vexel-svg-media",
+    "vexel-svg-paint",
+    "vexel-svg-scalar-index",
+    "vexel-svg-scalar-sample"
+  ],
+  "owner_coverage": {
+    "DECODE": {
+      "source_files": 12,
+      "symbols": 113,
+      "original_suite_files": 19,
+      "accepted_shared_API_exact": true
+    },
+    "PAINT": {
+      "source_files": 1,
+      "symbols": 23,
+      "original_suite_files": 6,
+      "accepted_shared_API_exact": true
+    },
+    "DEFINITIONS": {
+      "source_files": 6,
+      "symbols": 79,
+      "original_suite_files": 10,
+      "accepted_shared_API_exact": true
+    },
+    "MEDIA": {
+      "source_files": 3,
+      "symbols": 24,
+      "original_suite_files": 4,
+      "accepted_shared_API_exact": true
+    },
+    "SELECTION": {
+      "source_files": 2,
+      "symbols": 22,
+      "original_suite_files": 1,
+      "accepted_shared_API_exact": true
+    },
+    "RASTER_INDEX": {
+      "source_files": 4,
+      "symbols": 73,
+      "original_suite_files": 6,
+      "accepted_shared_API_exact": true
+    },
+    "RASTER_SAMPLE": {
+      "source_files": 5,
+      "symbols": 51,
+      "original_suite_files": 4,
+      "accepted_shared_API_exact": true
+    },
+    "ANIMATION": {
+      "source_files": 2,
+      "symbols": 31,
+      "original_suite_files": 9,
+      "accepted_shared_API_exact": true
+    }
+  },
+  "no_application_UI_tests_or_engine_claim": true
+}

@@ -1,0 +1,6 @@
+{
+  "pid": 25159,
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "command": "codex exec --ignore-user-config --profile economy --sandbox read-only"
+}

@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-MEDIA-01",
+  "scope_sha256": "74fe7164f1305f19ff31ae52bc07fe605c7f2b172c1adc51e88e3136e48ad1aa",
+  "original_inputs_preserved": true,
+  "rust_focused_tests": {
+    "path": "rust/crates/vexel-svg-media/tests",
+    "passed": [
+      "image_data_uri_and_base64_keep_exact_grammar_and_offsets",
+      "image_geometry_preserves_meet_slice_none_and_viewport_lengths",
+      "text_entities_whitespace_and_position_lists_match_source_contract",
+      "text_cache_owns_keys_and_reuses_exact_layout_requests",
+      "text_cache_entry_cap_and_image_capacity_validation_fail_closed",
+      "malformed_provider_pixels_keep_unsupported_classification",
+      "image_sampler_matches_premultiplied_bilinear_rounding_and_bounds",
+      "glyph_outline_closure_and_command_range_validation_inputs_are_owned",
+      "typed_text_and_image_requests_append_with_host_annotation",
+      "invalid_typed_source_map_stops_before_provider_or_append",
+      "canceled_typed_request_stops_before_provider_or_append"
+    ],
+    "unexecuted_reasons": []
+  },
+  "original_cases": [
+    {
+      "suite": "tests/fuzz/shape/shape_fuzz.c",
+      "case": "fuzz_release_text",
+      "status": "adaptation proven; fuzz harness unexecuted",
+      "coverage": "Rust TextLayout/cache values own buffers and drop without callback; Rust cache/layout ownership exercised by media_parity tests. The original C fuzz case is not ported as a fuzz target."
+    },
+    {
+      "suite": "tests/fuzz/shape/shape_fuzz.c",
+      "case": "fuzz_release_image",
+      "status": "adaptation proven; fuzz harness unexecuted",
+      "coverage": "Rust ImagePixels owns decoded bytes and drops by ownership; image provider and append path exercised with explicit test fixture. The original C fuzz case is not ported as a fuzz target."
+    },
+    {
+      "suite": "tests/svg/shape/media_render_cli.c",
+      "case": "main",
+      "status": "unexecuted",
+      "coverage": "Requires completed DecodeSession, native MediaProvider, whole SVG composition, raster output and CLI; input/output behavior remains assigned to later integration."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "fake_text_release",
+      "status": "ownership adaptation",
+      "coverage": "C callback is replaced by owned TextLayout values; native allocation release count has no Rust runtime equivalent and full mixed C harness remains unexecuted."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "fake_image_release",
+      "status": "ownership adaptation",
+      "coverage": "C callback is replaced by owned ImagePixels values; native allocation release count has no Rust runtime equivalent and full mixed C harness remains unexecuted."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "check",
+      "status": "adapted",
+      "coverage": "Individual frozen predicates are expressed as Rust assertions in focused parity and source_map_requests tests; helper function itself is harness-only."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "text_checks",
+      "status": "partially covered",
+      "coverage": "Entity/whitespace/position, cache reuse/caps, outline closure and real typed text append/source map are tested. CSS cascade fidelity, native font output, complete scene source/shape assertions and native release behavior await composition."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "text_use_symbol_checks",
+      "status": "source-map predicate covered; full mixed case unexecuted",
+      "coverage": "Real typed text append retains a distinct use-host SourceMap while canonical text tokens remain referenced-source tokens. Original second symbol instance, native provider and exact two-use geometry oracle await renderer integration."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "image_checks",
+      "status": "partially covered",
+      "coverage": "PNG/JPEG URI grammar, base64 offsets/errors, meet/slice/none geometry, premultiplied bilinear rounding, actual typed image provider append and host map are tested. Full raster coverage/clip/opacity/transform and release-count predicates await renderer integration."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "selection_and_path_checks",
+      "status": "unexecuted",
+      "coverage": "Frozen mixed selection, hit-test, source-byte path topology and stroke-aware queries require completed decoder/query composition. Original fixture and predicates remain unchanged."
+    },
+    {
+      "suite": "tests/svg/shape/text_image_test.c",
+      "case": "main",
+      "status": "unexecuted",
+      "coverage": "Full C harness depends on the unexecuted composition, native providers, raster and selection/query paths."
+    },
+    {
+      "suite": "tests/svg/test_text_image_render.py",
+      "case": "test_coretext_text_render_tracks_librsvg_structure_with_font_tolerance",
+      "status": "unexecuted",
+      "coverage": "Requires native CoreText provider, media CLI, librsvg oracle and platform integration; no substituted product font provider used."
+    }
+  ],
+  "fixture_proofs": [
+    "Real LexicalDocument and animation source feed SceneBuilder and ChargeLedger.",
+    "Typed text and image requests validate SourceMap before provider entry; malformed image host span produces zero provider calls and zero image/shape append.",
+    "Typed text and image output shapes preserve the distinct use-host span and transform; provider is explicitly injected in this test only.",
+    "Original mixed input files and assertion source remain protected and unchanged; renderer/native-provider assertions are recorded as later integration proof."
+  ],
+  "additional_unexecuted": [
+    {
+      "case": "native provider error cleanup and CoreText/ImageIO runtime",
+      "reason": "No native MEDIA provider is assigned in this crate order; only explicit fixture providers are allowed."
+    },
+    {
+      "case": "complete draft rollback after mid-append failure",
+      "reason": "Functions append within the caller-owned real DraftToken; a coordinated decoder owns rollback after operation failure. Full composed failure injection remains an integration check."
+    },
+    {
+      "case": "allocator failure injection",
+      "reason": "All media-owned growth is fallible, but no accepted allocation-failure injection contract is available."
+    }
+  ],
+  "aggregate": {
+    "original_cases": 12,
+    "passed_original_end_to_end": 0,
+    "focused_rust_tests_passed": 11,
+    "focused_test_failures": 0,
+    "full_mixed_oracles_claimed": false,
+    "later_integration_proof": [
+      "media_render_cli main",
+      "full text_image_test main and selection_and_path_checks",
+      "native provider release/runtime",
+      "CoreText/librsvg differential",
+      "completed DecodeSession and application renderer"
+    ]
+  },
+  "preserved_original_inputs": [
+    {
+      "path": "tests/fuzz/shape/shape_fuzz.c",
+      "sha256": "9ae56612013411f09764f6e3c65281cd6d877b21cfebdea02351bb0806937ef4",
+      "later_proof": "fuzz_release_text and fuzz_release_image in original fuzz composition"
+    },
+    {
+      "path": "tests/svg/shape/media_render_cli.c",
+      "sha256": "83f2889c9f26514d902b5a7d8ba78e2d91ab21af98e409105d22fc7343845c20",
+      "later_proof": "run media_render_cli against completed renderer/provider composition"
+    },
+    {
+      "path": "tests/svg/shape/text_image_test.c",
+      "sha256": "2b8962dff33a4c293b85b5bb25cc02acf16adfce46698a861ec270154888a963",
+      "later_proof": "full mixed main including text use/symbol, image raster, selection and path-source assertions"
+    },
+    {
+      "path": "tests/svg/test_text_image_render.py",
+      "sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22",
+      "later_proof": "CoreText/librsvg structural and font-tolerance differential"
+    }
+  ]
+}

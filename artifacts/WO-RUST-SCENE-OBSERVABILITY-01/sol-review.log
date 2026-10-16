@@ -1,0 +1,15 @@
+**BLOCK** — the Sol Medium review found one implementation defect and missing required proof.
+
+- **Registry history is omitted.** [accounting.rs:140](rust/crates/vexel-scene/src/accounting.rs) excludes retained registry storage, and growth at line 185 never updates `AllocationTag::None` history. The README documents this exclusion; the new test at line 157 asserts it. Record actual registry reserves under `None`, checking arithmetic before mutation and preserving separate caller-tag history.
+- **Required tests are incomplete.** The “history overflow” test exercises live-byte overflow, not cumulative history overflow. Add admitted/released logical-byte exhaustion. Add cancellation during copying a nonempty replacement, verifying preserved original contents/capacity and retained replacement history. Assert exact capacity-based history deltas.
+
+Other reviewed implementation gates passed: real reference-index probe forwarding, unchanged `RenderMemoryStats`, bounded counters, API preservation, and no unsafe code or dependencies. No additional arithmetic or mutation-order defect was identified. Changed Rust files contain **435 / 331 / 201 lines**, below the cap.
+
+Evidence reconciliation:
+
+- `test.log:202–213` confirms **seven passing observability tests**; the report’s repeated “six” is stale.
+- Supplied logs show package check/tests, ten compile-fail docs, and scoped rustfmt passing.
+- Package formatting failures concern **14 unchanged protected files**. Diff-check reports only unchanged protected `STATE.md:1341`. Neither is a candidate defect.
+- Main matches the source-seed manifest; the report’s unavailable-baseline claim needs correction. Ledger validation remains unproven.
+
+Review was read-only and desktop-safe; no files were edited or GUI checks performed.

@@ -1,0 +1,53 @@
+BINDING mainQueue
+447:         #[unsafe(method_family = none)]
+448:         pub fn cancelAllOperations(&self);
+449: 
+450:         #[unsafe(method(waitUntilAllOperationsAreFinished))]
+451:         #[unsafe(method_family = none)]
+452:         pub fn waitUntilAllOperationsAreFinished(&self);
+453: 
+454:         #[unsafe(method(currentQueue))]
+455:         #[unsafe(method_family = none)]
+456:         pub fn currentQueue() -> Option<Retained<NSOperationQueue>>;
+457: 
+458:         #[unsafe(method(mainQueue))]
+459:         #[unsafe(method_family = none)]
+460:         pub fn mainQueue() -> Retained<NSOperationQueue>;
+461:     );
+462: }
+463: 
+464: /// Methods declared on superclass `NSObject`.
+465: impl NSOperationQueue {
+466:     extern_methods!(
+467:         #[unsafe(method(init))]
+468:         #[unsafe(method_family = init)]
+469:         pub fn init(this: Allocated<Self>) -> Retained<Self>;
+470: 
+471:         #[unsafe(method(new))]
+472:         #[unsafe(method_family = new)]
+473:         pub fn new() -> Retained<Self>;
+474:     );
+
+SDK mainQueue
+559: /// This property specifies the service level applied to operation objects added to the queue. If the operation object
+560: /// has an explicit service level set, that value is used instead. For queues you create yourself, the default value
+561: /// is `NSOperationQualityOfServiceBackground`. For the queue returned by the `mainQueue` method, the default value
+562: /// is `NSOperationQualityOfServiceUserInteractive` and cannot be changed.
+563: @property NSQualityOfService qualityOfService API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0));
+564: 
+565: /// The dispatch queue that the operation queue uses to invoke operations.
+566: ///
+567: /// The default value of this property is `nil`. You can set the value of this property to an existing dispatch queue
+568: /// to have enqueued operations interspersed with blocks submitted to that dispatch queue.
+
+SDK mainQueue
+607: /// main thread is interleaved with the other tasks that must execute on the main thread, such as the servicing of
+608: /// events and the updating of an app's user interface.
+609: @property (class, readonly, strong) NSOperationQueue *mainQueue API_AVAILABLE(macos(10.6), ios(4.0), watchos(2.0), tvos(9.0));
+610: 
+611: @end
+612: 
+613: @interface NSOperationQueue (NSDeprecated)
+614: 
+615: // These two functions are inherently a race condition and should be avoided if possible
+616: 

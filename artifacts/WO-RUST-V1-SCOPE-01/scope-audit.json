@@ -1,0 +1,47 @@
+{
+  "work_order": "WO-RUST-V1-SCOPE-01",
+  "source_seed_sha256": "8746245a71a39aa3bffaf5e46059b2670c0decbe6d5b880b91a277f0c1fdbd59",
+  "seeded_paths": 8,
+  "changed_seeded_paths": [
+    {
+      "path": "docs/product/rust-port-goal-and-plan.md",
+      "expected_sha256": "a325452c8a8a33a7816d27151609677b0eae34e5e56829c31b65296987ceed5b",
+      "actual_sha256": "ac5853a55ede49537c51ab5f01a4b6dc62d9cafa18d745d27f8407ff8997ff38",
+      "allowed": true
+    },
+    {
+      "path": "docs/product/vexel-v1-vertical-slice.md",
+      "expected_sha256": "f92c473ce4c1190b273f887797360c28e43d85a7b633f45ab1b8329f12407d3f",
+      "actual_sha256": "a5349d960636d4ed6720760d465a7f11deb37b657f2fda39682adcf0979775c1",
+      "allowed": true
+    },
+    {
+      "path": "STATE.md",
+      "expected_sha256": "ba20986e6999dbff0100203eea344053ceda894150007333239dcea27ed961e0",
+      "actual_sha256": "54557884e54364be63314fdfc1183a8899e3e74eefe3cf48386cb83647cd45e0",
+      "allowed": true
+    },
+    {
+      "path": "LEDGER.md",
+      "expected_sha256": "e9ca3f0d084ce45f6022d6df53702903f3fc0c68b32dd5287b1afb9ced83abab",
+      "actual_sha256": "b0c7ef70aadec9936601ac0d4f4d2c046b654be4e049340c1e2d57203852d2ee",
+      "allowed": true
+    },
+    {
+      "path": "ledger.jsonl",
+      "expected_sha256": "20cd1885fc2e598addf6ddd86d5cb6a48aadd3f4cb7c4d39aa2c8650b6267f40",
+      "actual_sha256": "75bd026d95869ea65ef3066f19a1ed9cdbeddc976cf420e3fbbfea592e791b66",
+      "allowed": true
+    }
+  ],
+  "new_decision": {
+    "path": "docs/adr/0029-v1-vertical-slice-cutline.md",
+    "sha256": "87f9125840eecde00d7351f09a9c44bcc8ff98f46202123f38cd0972092ad61c"
+  },
+  "full_goal_and_ADR0018_unchanged": true,
+  "old_delivery_plan_unchanged": true,
+  "frozen_work_order_unchanged": true,
+  "final_ledger_sha256": "75bd026d95869ea65ef3066f19a1ed9cdbeddc976cf420e3fbbfea592e791b66",
+  "final_ledger_validation_sha256": "af5397da5f878a955d1283a620740f4ce15e28660f28ac7df6e785634ae0138f",
+  "scope": "Only the two V1 documentation sections, coordinator state/ledgers, new ADR-0029 and this evidence."
+}

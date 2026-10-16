@@ -1,0 +1,964 @@
+{
+  "schema": 1,
+  "owner": "DEFINITIONS",
+  "crate": "vexel-svg-definitions",
+  "work_order": "WO-RUST-SVG-DEFINITIONS-01",
+  "mapping_adaptation": "separate owned crate address only; full accepted owner scope remains",
+  "accepted_plan": "WO-RUST-RENDER-CONTRACT-PLAN-01",
+  "accepted_shared_orders": [
+    "WO-RUST-SCENE-MODEL-01",
+    "WO-RUST-KERNEL-CONTRACTS-01",
+    "WO-RUST-SCENE-DRAFT-01"
+  ],
+  "source_files": [
+    {
+      "path": "src/svg/clip/clip.c",
+      "sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "owner": "DEFINITIONS",
+      "symbols": [
+        {
+          "name": "eq",
+          "line": 40,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:40:definition:eq",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 48,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:48:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "element_end",
+          "line": 60,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:60:definition:element_end",
+          "semantic_replacement": null
+        },
+        {
+          "name": "check_clip_child_style",
+          "line": 70,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:70:definition:check_clip_child_style",
+          "semantic_replacement": null
+        },
+        {
+          "name": "clip_rule_map",
+          "line": 98,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:98:definition:clip_rule_map",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_reference",
+          "line": 161,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:161:definition:parse_reference",
+          "semantic_replacement": null
+        },
+        {
+          "name": "point_inside",
+          "line": 172,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:172:definition:point_inside",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_resolve",
+          "line": 191,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:191:definition:svg_clip_resolve",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_contains",
+          "line": 340,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:340:definition:svg_clip_contains",
+          "semantic_replacement": null
+        },
+        {
+          "name": "clip_local_to_document",
+          "line": 365,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:365:definition:clip_local_to_document",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_visit_boundary_edges",
+          "line": 378,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:378:definition:svg_clip_visit_boundary_edges",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_boundary_work_counts",
+          "line": 413,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:413:definition:svg_clip_boundary_work_counts",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_work_units",
+          "line": 430,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:430:definition:svg_clip_work_units",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_destroy",
+          "line": 440,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:440:definition:svg_clip_destroy",
+          "semantic_replacement": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+        },
+        {
+          "name": "svg_clip_retain",
+          "line": 451,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:451:definition:svg_clip_retain",
+          "semantic_replacement": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+        },
+        {
+          "name": "clone_bytes",
+          "line": 458,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:458:definition:clone_bytes",
+          "semantic_replacement": null
+        },
+        {
+          "name": "clone_array",
+          "line": 465,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:465:definition:clone_array",
+          "semantic_replacement": null
+        },
+        {
+          "name": "clone_clip_chain",
+          "line": 486,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:486:definition:clone_clip_chain",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_clone",
+          "line": 540,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:540:definition:svg_clip_clone",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_update_owner",
+          "line": 548,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:548:definition:svg_clip_update_owner",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_local_bounds",
+          "line": 570,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:570:definition:svg_clip_local_bounds",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_apply_group",
+          "line": 597,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:597:definition:svg_clip_apply_group",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_clip_create_rect",
+          "line": 624,
+          "kind": "definition",
+          "key": "src/svg/clip/clip.c:624:definition:svg_clip_create_rect",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "CLIP_MAX_CHILDREN",
+          "64U"
+        ],
+        [
+          "CLIP_MAX_DEPTH",
+          "256U"
+        ],
+        [
+          "CLIP_MAX_REFERENCE_BYTES",
+          "(64U * 1024U)"
+        ],
+        [
+          "CLIP_MAX_JOB_REFERENCE_BYTES",
+          "(512U * 1024U)"
+        ],
+        [
+          "CLIP_WRAPPER_BUFFER_BYTES",
+          "192U"
+        ],
+        [
+          "CLIP_WRAPPER_LIMIT_BYTES",
+          "4096U"
+        ],
+        [
+          "CLIP_WRAPPER_WORST_BYTES",
+          "(12U + 10U + 11U + 3U + 2U + 2U * 10U + 4U * 24U + 1U)"
+        ],
+        [
+          "CLIP_MAX_EDGES",
+          "65536U"
+        ],
+        [
+          "CLIP_CLONE_MAX_DEPTH",
+          "64U"
+        ],
+        [
+          "CLIP_CLONE_MAX_BYTES",
+          "(64U * 1024U * 1024U)"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/filter.c",
+      "sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "owner": "DEFINITIONS",
+      "symbols": [
+        {
+          "name": "span_equal",
+          "line": 16,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:16:definition:span_equal",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attribute",
+          "line": 22,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:22:definition:attribute",
+          "semantic_replacement": null
+        },
+        {
+          "name": "fail",
+          "line": 37,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:37:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_url_id",
+          "line": 44,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:44:definition:parse_url_id",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_number",
+          "line": 73,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:73:definition:parse_number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_region_number",
+          "line": 89,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:89:definition:parse_region_number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_number_list",
+          "line": 106,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:106:definition:parse_number_list",
+          "semantic_replacement": null
+        },
+        {
+          "name": "resolve_input",
+          "line": 137,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:137:definition:resolve_input",
+          "semantic_replacement": null
+        },
+        {
+          "name": "unsupported_primitive",
+          "line": 168,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:168:definition:unsupported_primitive",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_blend_mode",
+          "line": 187,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:187:definition:parse_blend_mode",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_color",
+          "line": 201,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:201:definition:parse_color",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_merge_inputs",
+          "line": 217,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:217:definition:parse_merge_inputs",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_primitive",
+          "line": 258,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:258:definition:parse_primitive",
+          "semantic_replacement": null
+        },
+        {
+          "name": "matching_end",
+          "line": 478,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:478:definition:matching_end",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_filter_parse",
+          "line": 488,
+          "kind": "definition",
+          "key": "src/svg/shape/filter.c:488:definition:svg_shape_filter_parse",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_FILTER_MAX_COUNT",
+          "4096U"
+        ],
+        [
+          "SHAPE_FILTER_MAX_TOTAL_PRIMITIVES",
+          "65536U"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/marker.c",
+      "sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "owner": "DEFINITIONS",
+      "symbols": [
+        {
+          "name": "fail",
+          "line": 23,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:23:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 30,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:30:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_url_id",
+          "line": 38,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:38:definition:parse_url_id",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_marker_attributes",
+          "line": 69,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:69:definition:parse_marker_attributes",
+          "semantic_replacement": null
+        },
+        {
+          "name": "direction_angle",
+          "line": 104,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:104:definition:direction_angle",
+          "semantic_replacement": null
+        },
+        {
+          "name": "middle_angle",
+          "line": 109,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:109:definition:middle_angle",
+          "semantic_replacement": null
+        },
+        {
+          "name": "element_scale",
+          "line": 117,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:117:definition:element_scale",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_orient",
+          "line": 126,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:126:definition:parse_orient",
+          "semantic_replacement": null
+        },
+        {
+          "name": "compose_marker_transform",
+          "line": 152,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:152:definition:compose_marker_transform",
+          "semantic_replacement": null
+        },
+        {
+          "name": "marker_definition_parent_style",
+          "line": 172,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:172:definition:marker_definition_parent_style",
+          "semantic_replacement": null
+        },
+        {
+          "name": "make_marker",
+          "line": 220,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:220:definition:make_marker",
+          "semantic_replacement": null
+        },
+        {
+          "name": "emit_marker",
+          "line": 405,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:405:definition:emit_marker",
+          "semantic_replacement": null
+        },
+        {
+          "name": "emit_mid_marker",
+          "line": 430,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:430:definition:emit_mid_marker",
+          "semantic_replacement": null
+        },
+        {
+          "name": "flush_path_subpath",
+          "line": 441,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:441:definition:flush_path_subpath",
+          "semantic_replacement": null
+        },
+        {
+          "name": "path_markers",
+          "line": 457,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:457:definition:path_markers",
+          "semantic_replacement": null
+        },
+        {
+          "name": "primitive_markers",
+          "line": 511,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:511:definition:primitive_markers",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_attach_markers",
+          "line": 552,
+          "kind": "definition",
+          "key": "src/svg/shape/marker.c:552:definition:svg_shape_traverse_attach_markers",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_MARKER_MAX_INSTANCES",
+          "1024U"
+        ],
+        [
+          "SHAPE_MARKER_PI",
+          "3.14159265358979323846"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/mask.c",
+      "sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "owner": "DEFINITIONS",
+      "symbols": [
+        {
+          "name": "fail",
+          "line": 8,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:8:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 15,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:15:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_url_id",
+          "line": 30,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:30:definition:parse_url_id",
+          "semantic_replacement": null
+        },
+        {
+          "name": "matching_end",
+          "line": 61,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:61:definition:matching_end",
+          "semantic_replacement": null
+        },
+        {
+          "name": "read_mask_region",
+          "line": 72,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:72:definition:read_mask_region",
+          "semantic_replacement": null
+        },
+        {
+          "name": "target_bounds",
+          "line": 100,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:100:definition:target_bounds",
+          "semantic_replacement": null
+        },
+        {
+          "name": "sync_mask_work",
+          "line": 140,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:140:definition:sync_mask_work",
+          "semantic_replacement": null
+        },
+        {
+          "name": "append_mask",
+          "line": 163,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:163:definition:append_mask",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_traverse_attach_mask",
+          "line": 189,
+          "kind": "definition",
+          "key": "src/svg/shape/mask.c:189:definition:svg_shape_traverse_attach_mask",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_MASK_MAX_INSTANCES",
+          "1024U"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/pattern.c",
+      "sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "owner": "DEFINITIONS",
+      "symbols": [
+        {
+          "name": "fail",
+          "line": 12,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:12:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 19,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:19:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_url_id",
+          "line": 34,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:34:definition:parse_url_id",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_bbox_number",
+          "line": 65,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:65:definition:parse_bbox_number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "read_unit_value",
+          "line": 82,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:82:definition:read_unit_value",
+          "semantic_replacement": null
+        },
+        {
+          "name": "local_bounds",
+          "line": 95,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:95:definition:local_bounds",
+          "semantic_replacement": null
+        },
+        {
+          "name": "matrix_equal",
+          "line": 130,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:130:definition:matrix_equal",
+          "semantic_replacement": null
+        },
+        {
+          "name": "sync_work",
+          "line": 136,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:136:definition:sync_work",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_supported_attributes",
+          "line": 159,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:159:definition:parse_supported_attributes",
+          "semantic_replacement": null
+        },
+        {
+          "name": "append_pattern",
+          "line": 190,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:190:definition:append_pattern",
+          "semantic_replacement": null
+        },
+        {
+          "name": "cached_pattern",
+          "line": 220,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:220:definition:cached_pattern",
+          "semantic_replacement": null
+        },
+        {
+          "name": "decode_pattern_content",
+          "line": 239,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:239:definition:decode_pattern_content",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_pattern_resolve",
+          "line": 378,
+          "kind": "definition",
+          "key": "src/svg/shape/pattern.c:378:definition:svg_shape_pattern_resolve",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SHAPE_PATTERN_MAX_INSTANCES",
+          "1024U"
+        ],
+        [
+          "SHAPE_PATTERN_MAX_PIXELS",
+          "1048576U"
+        ],
+        [
+          "SHAPE_PATTERN_MAX_AXIS",
+          "4096U"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    },
+    {
+      "path": "src/svg/shape/shape_clip_apply.c",
+      "sha256": "f75fd3d6582d0b0a84e84b1847c57d11646d6eb30377d1c746712654b64c71f4",
+      "owner": "DEFINITIONS",
+      "symbols": [
+        {
+          "name": "fail",
+          "line": 5,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_clip_apply.c:5:definition:fail",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_shape_apply_declared_clip",
+          "line": 12,
+          "kind": "definition",
+          "key": "src/svg/shape/shape_clip_apply.c:12:definition:svg_shape_apply_declared_clip",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    }
+  ],
+  "operations": [
+    {
+      "owner": "DEFINITIONS",
+      "name": "plan definitions",
+      "signature": "fn plan<'src, 'ctx>(ctx: &mut DefinitionContext<'src, 'ctx>, kind: DefinitionKind, element: ElementId, owner: ShapeId, transform: Affine, bounds: [f64;4], style: &CssPaint<'src>, control: &mut dyn WorkControl) -> Result<DefinitionPlan<'src>>",
+      "contract": "DefinitionContext supplies borrowed source/tokens + mutable CSS/reference and shared counters/active-definition stack, builder append interface; DefinitionPlan<'src> contains one or more Expansion<'src> with source-borrowed CssPaint<'src>, postoperation and full parsed descriptor. CssSheet<'src> and ReferenceIndex<'src> retain their accepted source borrows; DefinitionContext<'src, 'ctx> separately ties mutable container, active-stack, counter and builder borrows to temporary 'ctx, while the result retains only 'src. Control is separately borrowed. This permits the context and all mutable control borrows to end when the method returns DefinitionPlan<'src>. Includes all clip/filter/mask/pattern/marker files, strict local hrefs, units, regions, viewBox, definition ancestor style, cache keys and instance limits. Engine executes expansions; definitions never recurse into engine directly."
+    },
+    {
+      "owner": "DEFINITIONS",
+      "name": "clip mutation",
+      "signature": "fn create_rect(points: [Point;4], user_inverse: Affine, owner: Option<TransformId>, builder: &mut SceneBuilder) -> Result<ClipId>; fn apply_group(builder: &mut SceneBuilder, scene: SceneId, shapes: TableRange, clip: ClipId) -> Result<()>; fn clone_clips(view: SceneView<'_>, control: &mut dyn WorkControl) -> Result<ClipOverlay>; fn update_owner(overlay: &mut ClipOverlay, id: ClipId, owner: TransformId, user_inverse: Affine, attribute_inverse: Affine, bounds: [f64;4]) -> Result<()>",
+      "contract": "No raw retain/release; clone overlay deduplicates shared ClipId to preserve sharing. Direct original token range in Clip flavor replaces scratch wrapper/reparse; retain wrapper-length/reference admission cap, original clip-rule restrictions and diagnostic offsets; actual allocation counters record actual buffers only."
+    },
+    {
+      "owner": "DEFINITIONS",
+      "name": "clip queries",
+      "signature": "fn contains(view: SceneView<'_>, clip: ClipId, x: f64, y: f64) -> bool; fn visit_boundary_edges(view: SceneView<'_>, clip: ClipId, visitor: &mut dyn FnMut(Edge) -> bool) -> Result<bool>; fn work_counts(view: SceneView<'_>, clip: ClipId) -> Result<ClipWorkCounts>; fn work_units(view: SceneView<'_>, clip: ClipId) -> Result<usize>; fn local_bounds(edges: &[Edge], inverse: Affine) -> Option<[f64;4]>",
+      "contract": "boundary result bool is mapping_valid; invalid inverse disables culling, never discards visible paint. Visitor false terminates without unsafe callbacks. Same chain/child/edge costs used preflight and sample."
+    }
+  ],
+  "assigned_original_suites": [
+    {
+      "path": "tests/svg/shape/clip_definition_scope_test.c",
+      "sha256": "1e744b64b71817e5fe955bd007e92a6b2d5487759cb95f5f2c32753bdb024cf6",
+      "primary_owner": "DEFINITIONS",
+      "assigned_cases": [
+        {
+          "name": "center_is_clipped",
+          "line": 68,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "main",
+          "line": 87,
+          "owner": "DEFINITIONS"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/marker_realloc_test.c",
+      "sha256": "003f92e3beb5987f15da1131fd44658c2ed2d6946d5d42688a182bee581d436b",
+      "primary_owner": "DEFINITIONS",
+      "assigned_cases": [
+        {
+          "name": "render_case",
+          "line": 9,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "main",
+          "line": 24,
+          "owner": "DEFINITIONS"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/paint_clip_generator.py",
+      "sha256": "8d4ad97a2ab4ab85e22c3a79ae68a2e073defb10464f14f3b8f61b994016da0b",
+      "primary_owner": "DEFINITIONS",
+      "assigned_cases": [],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_clip_work_budget.c",
+      "sha256": "69ffa0e94eed273d88b13ee362720bd3840b0d5b459c39cdbe6f17de44aeb60d",
+      "primary_owner": "DEFINITIONS",
+      "assigned_cases": [
+        {
+          "name": "append_text",
+          "line": 17,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "append_format",
+          "line": 28,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "build_pathological_document",
+          "line": 41,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "clip_boundary_accounting_check",
+          "line": 82,
+          "owner": "DEFINITIONS"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "clip_wrapper_extreme_check",
+          "line": 73,
+          "owner": "DEFINITIONS"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "group_clip_scratch_resolved_once_check",
+          "line": 200,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "build_clip_boundary_source",
+          "line": 291,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "decode_clip_boundary",
+          "line": 342,
+          "owner": "DEFINITIONS"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "clip_checks",
+          "line": 329,
+          "owner": "DEFINITIONS"
+        },
+        {
+          "name": "clip_work_budget_check",
+          "line": 468,
+          "owner": "DEFINITIONS"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_w5_render.py",
+      "sha256": "630c19192558ad911e77f1565ef4ed62c3fbd60ee960aea05ece12c320b1ab4b",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "test_pattern_user_space_tile_and_repeat_matches_librsvg",
+          "line": 52,
+          "owner": "DEFINITIONS",
+          "body_sha256": "2701ae663712b9ac536bdfdb950e81840c9bfcad8b1f30db66ea3774da0b4d72"
+        },
+        {
+          "name": "test_pattern_object_box_viewbox_and_transform_matches_librsvg",
+          "line": 69,
+          "owner": "DEFINITIONS",
+          "body_sha256": "a8be749f2063f30489c895196f1edca4391b6b5220e9febac41e503d6520f622"
+        },
+        {
+          "name": "test_pattern_stroke_tiles_on_open_path_matches_librsvg",
+          "line": 83,
+          "owner": "DEFINITIONS",
+          "body_sha256": "c62f340dab4cebc42dcdee7101760e9f3a3df295d95df9c2b2cc5da05c8a9075"
+        },
+        {
+          "name": "test_marker_start_mid_end_orient_and_ref_matches_librsvg",
+          "line": 191,
+          "owner": "DEFINITIONS",
+          "body_sha256": "1ff5f717cb832b51ee6b2514762ffade89d1cf56e59de954cf3a6fbd58b27dbb"
+        },
+        {
+          "name": "test_marker_viewbox_and_stroke_width_units_matches_librsvg",
+          "line": 216,
+          "owner": "DEFINITIONS",
+          "body_sha256": "b4f07db5ab1256e41e0c0a8921152796c78a538c21fa0779eaf5a464eae5d568"
+        },
+        {
+          "name": "test_marker_children_inherit_definition_ancestors_not_referencing_path",
+          "line": 230,
+          "owner": "DEFINITIONS",
+          "body_sha256": "1d98bd3f749e6632d996fc168ca73dbf3d781719f42012bb6951b48d1f5d042d"
+        },
+        {
+          "name": "test_marker_shorthand_maps_to_start_mid_and_end",
+          "line": 247,
+          "owner": "DEFINITIONS",
+          "body_sha256": "96bfca345844251d325b7063f665b68e9d444090efd347648c348eb2c2833d51"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/test_text_image_render.py",
+      "sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22",
+      "primary_owner": "MEDIA",
+      "assigned_cases": [
+        {
+          "name": "test_embedded_image_render_matches_librsvg_through_clip_transform_and_opacity",
+          "line": 82,
+          "owner": "DEFINITIONS",
+          "body_sha256": "05bbd63259018586769fc1b17e23b74edce2e01366a2c0a92891a352e0a8e517"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "test_user_space_clip_half_pixel_edge_uses_4x4_samples",
+          "line": 169,
+          "owner": "DEFINITIONS",
+          "body_sha256": "20684a5ed320203fca600faef1fc350ba78debd434e01de157c46422d20f1d47"
+        },
+        {
+          "name": "test_clip_half_pixel_edge_matches_librsvg_at_fractional_boundary",
+          "line": 181,
+          "owner": "DEFINITIONS",
+          "body_sha256": "06a4cad5a31aaa438434ecb1c2b404f6632b531aaab033224d86a6302b803563"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    }
+  ],
+  "frozen_oracles_source": "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json",
+  "frozen_input_sha256": {
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/ownership-matrix.json": "c014bc96ef46b8d8b9f5ed3cfc5f36c3b8853d578c758faa36af48e576810dd5",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json": "19b13d230c10553b262a585b1839385761b7e5ef857bb82457fa880234f7212e",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json": "188d73452059bd05c84ba2db790c2ea49313fa58f74f485bcb5b0273b953cde7",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/limits-features.json": "821b98188085a78259008b82d9384b12299704cf8c31f6daf907d8a057baa763"
+  },
+  "current_shared_api_sha256": {
+    "rust/crates/vexel-scene/src/lexical_document.rs": "cff931ff54cbd17372fc98df9b10de5f3eaf0cd1bed708efc88d9a3f989fa651",
+    "rust/crates/vexel-scene/src/decode_contract.rs": "806b19df794a831bbb90cb6575046bd3aa918b5aeb5cb6a4feb46a6ec1f2b0f3",
+    "rust/crates/vexel-scene/src/types.rs": "1779916725a9df0d4921010e8ab85deafa6852cd0ef39ab9ed994a13ccf0e6bb",
+    "rust/crates/vexel-scene/src/pattern_ticket.rs": "9f9b5a0f4f4779d159c8c9c2ecd9db9e369ac6a145013ae642fba23dbe98673d",
+    "rust/crates/vexel-scene/src/accounting.rs": "0a0fb0118a9c0e3c0f3d597a87253490e4a50ad122f59e730ecdd45e4a2efe90",
+    "rust/crates/vexel-scene/src/lib.rs": "8b0bc2356ab3039f5e4bbfb45c8ecba19ad5ba514c418dd12e2b229996ccf7af",
+    "rust/crates/vexel-scene/src/memory.rs": "f2de4c04af6bff31228b95f973317c175eb192d81c89594c48f02b47b4695f23",
+    "rust/crates/vexel-scene/src/contract_validate.rs": "6c3557487eb0e8ee73e4be79a437f40d79400727aa7bbfd827a4b8f76125791e",
+    "rust/crates/vexel-scene/src/contract_storage.rs": "9f990135cdae62efe4a4260a47b9bced98b2a141a1406cae641d7f8a37b02005",
+    "rust/crates/vexel-scene/src/media.rs": "b9532fe5a5e12c1460fe569d86727e3a59fe14f2fb6ef4153a29b3fd25b75403",
+    "rust/crates/vexel-scene/src/dash_validate.rs": "6b979f789334409e5954bd25d945c050d3b42c50539066d5f52307038ac6911c",
+    "rust/crates/vexel-scene/src/draft_updates.rs": "7c7790ac942641d0c07f559cec0099457e9ba714e56da5e2778530e14a3146a0",
+    "rust/crates/vexel-scene/src/mutators.rs": "e258b6d5dcda0d7dc44ddec39a21dfc26637d70c1d89d59bee10d49e2031cb14",
+    "rust/crates/vexel-scene/src/draft.rs": "652302ff36efed92f65ce7f426ee5153788f79aa474a223b3dc536df4d500952",
+    "rust/crates/vexel-scene/src/validation_tests.rs": "cbecb7df16720750f7f871e3f3876d08ecee3693df70d6c94da011cc5c817474",
+    "rust/crates/vexel-scene/src/ids.rs": "61fa36334a9c409460dbfb61fbdd42eaa228ac271d6e318abf3c0579bb86fcdc",
+    "rust/crates/vexel-scene/src/shape_builder.rs": "924e8e4b257beb5941c57d77f102bbdaaabf1262a175400c93544caf25e76852",
+    "rust/crates/vexel-scene/src/source_context.rs": "e0ee7343122cc60c0bab5ec653f99eeb5b5bc7a1595feaa79202eaf10c1af80b",
+    "rust/crates/vexel-scene/src/frame.rs": "73527780415669adf0b0ee1214a5cff7c2b0ba12f34017cd4ef7cf3da6431f06",
+    "rust/crates/vexel-scene/src/validate.rs": "c69e7c45cf6d2377a1d8fbdba3dd9f129bb4d7fc488b1a880191ddd4fb567002",
+    "rust/crates/vexel-scene/src/model.rs": "7ba0317648e8017129e89d68c639b5ba277e17b7baf27998dc13d2f6d33fe0b6",
+    "rust/crates/vexel-scene/src/builder.rs": "de4f320d0486c43152a40b93eeba59eaf2b221e975b898c5a9cdbe011d6c9d9c",
+    "rust/crates/vexel-scene/src/render_contract.rs": "ad81dfaef997e7ea7c263a9084477e66c4a400e7dd69ba0385bf166869e3e11f"
+  },
+  "scope_completion": "full real owned algorithms/private helpers and assigned original assertion semantics; no fake success, smaller renderer, TODO required workflow or weakened oracle",
+  "later_composition": "real accepted DecodeOperations/KernelResources/FlatKernel adapters supplied by coordinator, not fake defaults"
+}

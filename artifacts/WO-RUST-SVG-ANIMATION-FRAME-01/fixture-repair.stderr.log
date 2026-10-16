@@ -1,0 +1,15 @@
+2026-10-14T20:50:37.389224Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-ANIMATION-FRAME-01/worker/rust/crates/vexel-svg-animation-frame/tests/original_frame.rs:
+        fixture.graph.root(),
+2026-10-14T20:58:25.392254Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-ANIMATION-FRAME-01/worker/rust/crates/vexel-svg-animation-frame/tests/original_frame.rs:
+fn unsupported_active_path_and_negative_stroke_animation_fail_without_static_frame() {
+    let mut control = Control::new(u64::MAX);
+    let source = Arc::new(
+        b"<svg><path d='M1 1 L3 1'><animate attributeName='d' from='M1 1 L3 1' to='M1 1 L4 1' dur='2s'/></path></svg>".to_vec(),
+    );
+    let lexical = LexicalDocument::parse(source.clone(), 1 << 20, &mut control).unwrap();
+    let animation = parse_owned(&source, lexical.tokens()).unwrap();
+    assert!(animation.tracks().is_empty());
+    assert!(animation
+        .diagnostics()
+        .iter()
+        .any(|diagnostic| diagnostic.kind == AnimationDiagnosticKind::UnsupportedPath));

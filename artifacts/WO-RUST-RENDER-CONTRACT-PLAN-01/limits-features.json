@@ -1,0 +1,1006 @@
+{
+  "schema": 1,
+  "source_macros": [
+    {
+      "path": "src/platform/media/platform_animation.h",
+      "name": "VEXEL_PLATFORM_ANIMATION_H",
+      "expression": "#include \"platform_media.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_animation.h",
+      "name": "PLATFORM_ANIMATION_MAX_FRAMES",
+      "expression": "120U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_animation.h",
+      "name": "PLATFORM_ANIMATION_MAX_DIMENSION",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_animation.h",
+      "name": "PLATFORM_ANIMATION_MAX_TOTAL_PIXELS",
+      "expression": "32000000U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_animation.h",
+      "name": "PLATFORM_ANIMATION_MAX_ENCODED_BYTES",
+      "expression": "(128U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "VEXEL_PLATFORM_IMAGE_H",
+      "expression": "#include \"platform_media.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_MAX_INPUT_BYTES",
+      "expression": "(32U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_MAX_PIXELS",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_MAX_DIMENSION",
+      "expression": "16384U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_DATA_URI_PREFIX",
+      "expression": "\"data:image/png;base64,\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_DATA_URI_PREFIX_LENGTH",
+      "expression": "22U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_MAX_DATA_URI_BYTES",
+      "expression": "44739266U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_INIT",
+      "expression": "{ NULL, 0U, 0U, 0U, 0U }",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "name": "PLATFORM_IMAGE_BYTES_INIT",
+      "expression": "{ NULL, 0U }",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_media.h",
+      "name": "VEXEL_PLATFORM_MEDIA_H",
+      "expression": "typedef enum platform_media_status {",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "VEXEL_PLATFORM_TEXT_H",
+      "expression": "#include \"platform_media.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "PLATFORM_TEXT_MAX_BYTES",
+      "expression": "(64U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "PLATFORM_TEXT_MAX_GLYPHS",
+      "expression": "16384U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "PLATFORM_TEXT_MAX_PATH_SEGMENTS",
+      "expression": "262144U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "PLATFORM_TEXT_MAX_FAMILIES",
+      "expression": "32U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "PLATFORM_TEXT_MAX_FAMILY_BYTES",
+      "expression": "256U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "name": "PLATFORM_TEXT_RESULT_INIT",
+      "expression": "{ NULL, 0U, NULL, 0U, 0.0, 0.0, 0.0, 0.0 }",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_bounds.c",
+      "name": "RASTER_BOUNDARY_WORK_LIMIT",
+      "expression": "200000000U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_bounds.h",
+      "name": "VEXEL_RASTER_SHAPE_BOUNDS_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_filter.c",
+      "name": "FILTER_SCRATCH_LIMIT",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_filter.c",
+      "name": "FILTER_WORK_LIMIT",
+      "expression": "50000000U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_filter.h",
+      "name": "VEXEL_RASTER_SHAPE_FILTER_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render.c",
+      "name": "RASTER_SAMPLES_PER_AXIS",
+      "expression": "4U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render.c",
+      "name": "RASTER_SAMPLE_COUNT",
+      "expression": "(RASTER_SAMPLES_PER_AXIS * RASTER_SAMPLES_PER_AXIS)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render.h",
+      "name": "VEXEL_RASTER_SHAPE_RENDER_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_animation.c",
+      "name": "ANIMATION_TRANSFORM_CHAIN_MAX",
+      "expression": "128U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_animation.c",
+      "name": "ANIMATION_TRANSFORM_WORK_MAX",
+      "expression": "50000000U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_animation_clips.c",
+      "name": "ANIMATION_CLIP_COPY_MAX_BYTES",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_animation_clips.c",
+      "name": "ANIMATION_CLIP_CHAIN_MAX",
+      "expression": "128U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_animation_clips.c",
+      "name": "ANIMATION_CLIP_OWNER_DEPTH_MAX",
+      "expression": "64U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_animation_clips.h",
+      "name": "VEXEL_RASTER_SHAPE_RENDER_ANIMATION_CLIPS_H",
+      "expression": "#include \"svg/shape/shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_fill.c",
+      "name": "RASTER_FILL_SAMPLES_PER_AXIS",
+      "expression": "4U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_fill.c",
+      "name": "RASTER_FILL_SAMPLE_COUNT",
+      "expression": "(RASTER_FILL_SAMPLES_PER_AXIS * RASTER_FILL_SAMPLES_PER_AXIS)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_fill.h",
+      "name": "VEXEL_RASTER_SHAPE_RENDER_FILL_H",
+      "expression": "#include \"shape_render_internal.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_group.c",
+      "name": "GROUP_SCRATCH_LIMIT",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "VEXEL_RASTER_SHAPE_RENDER_INTERNAL_H",
+      "expression": "#include \"shape_render.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_STROKE_DASH_EPSILON",
+      "expression": "1e-12",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_DASH_CACHE_MAX_STEPS",
+      "expression": "1000000U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_STROKE_GRID_MAX_CELLS",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_STROKE_GRID_MAX_REFS",
+      "expression": "1000000U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_STROKE_GRID_MAX_AXIS",
+      "expression": "128U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_STROKE_GRID_CELL_SIZE",
+      "expression": "1.0",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_internal.h",
+      "name": "RASTER_DASH_CACHE_BYTE_LIMIT",
+      "expression": "(16U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_preflight.c",
+      "name": "RASTER_PREFLIGHT_BASE_WORK",
+      "expression": "200000000ULL",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_preflight.c",
+      "name": "RASTER_PREFLIGHT_RAMP_START_PIXELS",
+      "expression": "1048576ULL",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_preflight.c",
+      "name": "RASTER_PREFLIGHT_WORK_PER_PIXEL",
+      "expression": "24576ULL",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_preflight.c",
+      "name": "RASTER_PREFLIGHT_WORK_CAP",
+      "expression": "16000000000ULL",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_preflight.c",
+      "name": "RASTER_PREFLIGHT_SAMPLES_PER_AXIS",
+      "expression": "4U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_preflight.h",
+      "name": "VEXEL_RASTER_SHAPE_RENDER_PREFLIGHT_H",
+      "expression": "#include \"shape_bounds.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_render_stroke_grid.c",
+      "name": "RASTER_STROKE_GRID_JOIN_BIT",
+      "expression": "UINT32_C(0x80000000)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline.c",
+      "name": "RASTER_SCANLINE_MAX_TREE_DEPTH",
+      "expression": "64U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline.h",
+      "name": "VEXEL_RASTER_SHAPE_SCANLINE_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline.h",
+      "name": "RASTER_SCANLINE_VALUES_PER_ROW",
+      "expression": "5U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline_fill.c",
+      "name": "RASTER_FILL_SCANLINE_PIXEL_RUN_LIMIT",
+      "expression": "(8U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline_fill.h",
+      "name": "VEXEL_RASTER_SHAPE_SCANLINE_FILL_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline_fill.h",
+      "name": "RASTER_FILL_SCANLINE_SAMPLE_ROWS",
+      "expression": "RASTER_SCANLINE_VALUES_PER_ROW",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/raster/shape_scanline_fill.h",
+      "name": "RASTER_FILL_SCANLINE_MAX_EDGES",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_MAX_CHILDREN",
+      "expression": "64U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_MAX_DEPTH",
+      "expression": "256U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_MAX_REFERENCE_BYTES",
+      "expression": "(64U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_MAX_JOB_REFERENCE_BYTES",
+      "expression": "(512U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_WRAPPER_BUFFER_BYTES",
+      "expression": "192U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_WRAPPER_LIMIT_BYTES",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_WRAPPER_WORST_BYTES",
+      "expression": "(12U + 10U + 11U + 3U + 2U + 2U * 10U + 4U * 24U + 1U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_MAX_EDGES",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_CLONE_MAX_DEPTH",
+      "expression": "64U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.c",
+      "name": "CLIP_CLONE_MAX_BYTES",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/clip/clip.h",
+      "name": "VEXEL_SVG_CLIP_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/paint/paint.c",
+      "name": "SVG_PAINT_CACHE_SLOT_COUNT",
+      "expression": "(SVG_PAINT_CACHE_MAX_GRADIENTS * 2U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/paint/paint.c",
+      "name": "SVG_PAINT_MAX_TOKEN_VISITS",
+      "expression": "4194304U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/paint/paint.h",
+      "name": "VEXEL_SVG_PAINT_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/paint/paint.h",
+      "name": "SVG_PAINT_MAX_STOPS",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/paint/paint.h",
+      "name": "SVG_PAINT_MAX_GRADIENT_STOPS",
+      "expression": "256U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/paint/paint.h",
+      "name": "SVG_PAINT_CACHE_MAX_GRADIENTS",
+      "expression": "32768U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/filter.c",
+      "name": "SHAPE_FILTER_MAX_COUNT",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/filter.c",
+      "name": "SHAPE_FILTER_MAX_TOTAL_PRIMITIVES",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/image.c",
+      "name": "SVG_IMAGE_MAX_ENCODED_BYTES",
+      "expression": "(32U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/image.c",
+      "name": "SVG_IMAGE_MAX_URI_BYTES",
+      "expression": "44739266U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/marker.c",
+      "name": "SHAPE_MARKER_MAX_INSTANCES",
+      "expression": "1024U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/marker.c",
+      "name": "SHAPE_MARKER_PI",
+      "expression": "3.14159265358979323846",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/mask.c",
+      "name": "SHAPE_MASK_MAX_INSTANCES",
+      "expression": "1024U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "VEXEL_SVG_SHAPE_MEDIA_H",
+      "expression": "#include \"base.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_TEXT_BYTES",
+      "expression": "(64U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_DOCUMENT_TEXT_BYTES",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_GLYPHS",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_PATH_COMMANDS",
+      "expression": "262144U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_DOCUMENT_GLYPHS",
+      "expression": "(1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_DOCUMENT_PATH_COMMANDS",
+      "expression": "(4U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_FAMILIES",
+      "expression": "32U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/media.h",
+      "name": "SVG_SHAPE_MEDIA_MAX_IMAGE_PIXELS",
+      "expression": "(64U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/pattern.c",
+      "name": "SHAPE_PATTERN_MAX_INSTANCES",
+      "expression": "1024U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/pattern.c",
+      "name": "SHAPE_PATTERN_MAX_PIXELS",
+      "expression": "1048576U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/pattern.c",
+      "name": "SHAPE_PATTERN_MAX_AXIS",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.c",
+      "name": "SHAPE_MAX_COMMANDS",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.c",
+      "name": "SHAPE_MAX_COORD",
+      "expression": "1000000.0",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "VEXEL_SVG_SHAPE_H",
+      "expression": "#include \"base.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_EDGES",
+      "expression": "(4U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_SHAPES",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_COMMANDS",
+      "expression": "(4U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_DASH_VALUES",
+      "expression": "16U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_PATH_NUMBERS",
+      "expression": "(SVG_SHAPE_MAX_COMMANDS * 7U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_FILTER_PRIMITIVES",
+      "expression": "16U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_FILTER_MERGE_INPUTS",
+      "expression": "8U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_FILTER_INPUT_PREVIOUS",
+      "expression": "(-1)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_FILTER_INPUT_GRAPHIC",
+      "expression": "(-2)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_FILTER_INPUT_ALPHA",
+      "expression": "(-3)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_MASKS",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_NO_MASK",
+      "expression": "SIZE_MAX",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_PATTERNS",
+      "expression": "4096U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_MAX_PATTERN_BYTES",
+      "expression": "(16U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_NO_PATTERN",
+      "expression": "SIZE_MAX",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_NO_FILTER",
+      "expression": "SIZE_MAX",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_NO_GROUP",
+      "expression": "SIZE_MAX",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape.h",
+      "name": "SVG_SHAPE_NO_TRANSFORM_NODE",
+      "expression": "SIZE_MAX",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape_alloc.c",
+      "name": "SVG_ALLOC_TRACKER_CAPACITY",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape_alloc.h",
+      "name": "VEXEL_SVG_SHAPE_ALLOC_H",
+      "expression": "#include <stdbool.h>",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape_geometry.c",
+      "name": "SHAPE_MAX_COORD",
+      "expression": "1000000.0",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape_internal.h",
+      "name": "VEXEL_SVG_SHAPE_INTERNAL_H",
+      "expression": "#include \"shape.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape_path.c",
+      "name": "SHAPE_MAX_COMMANDS",
+      "expression": "(4U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/shape_path.c",
+      "name": "SHAPE_MAX_COORD",
+      "expression": "1000000.0",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/text_cache.c",
+      "name": "TEXT_CACHE_ENTRIES",
+      "expression": "32U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/text_cache.c",
+      "name": "TEXT_CACHE_BYTES",
+      "expression": "(256U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/text_cache.c",
+      "name": "TEXT_CACHE_COMMANDS",
+      "expression": "SVG_SHAPE_MEDIA_MAX_PATH_COMMANDS",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "VEXEL_SVG_SHAPE_TRAVERSE_INTERNAL_H",
+      "expression": "#include \"shape_internal.h\"",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_SOURCE_BYTES",
+      "expression": "(1024U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_TOKEN_BYTES",
+      "expression": "(256U * 1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_BYTES",
+      "expression": "SHAPE_MAX_SOURCE_BYTES",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_XML_DEPTH",
+      "expression": "64U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_REFERENCE_DEPTH",
+      "expression": "16U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_USE_INSTANCES",
+      "expression": "65536U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_TRAVERSAL_VISITS",
+      "expression": "4194304U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_TRANSFORM_OPERATIONS",
+      "expression": "(1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_TRANSFORM_NODES",
+      "expression": "4194304U",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_REFERENCE_BYTES",
+      "expression": "(64U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    },
+    {
+      "path": "src/svg/shape/traverse_internal.h",
+      "name": "SHAPE_MAX_JOB_REFERENCE_BYTES",
+      "expression": "(1024U * 1024U)",
+      "policy": "preserve original admission/fallback; reserved capacity charged"
+    }
+  ],
+  "resolved_limits": {
+    "source_bytes": 1073741824,
+    "token_bytes": 268435456,
+    "xml_depth": 64,
+    "reference_depth": 16,
+    "use_instances": 65536,
+    "visits": 4194304,
+    "transform_operations": 1048576,
+    "transform_nodes": 4194304,
+    "edges_per_scene": 4194304,
+    "shapes_per_scene": 65536,
+    "commands_per_path": 4194304,
+    "numbers_per_path": 29360128,
+    "coordinate_abs": 1000000,
+    "curve_depth": 16,
+    "transformed_tolerance": 0.25,
+    "dash_values": 16,
+    "stroke_width_max": 1024,
+    "miter_min_max": [
+      1,
+      64
+    ],
+    "dash_offset_abs": 1000000,
+    "gradient_stops_each": 256,
+    "stops_document": 65536,
+    "gradient_cache_entries": 32768,
+    "paint_visits": 4194304,
+    "clip_children": 64,
+    "clip_depth": 256,
+    "clip_reference_bytes": 65536,
+    "clip_job_bytes": 524288,
+    "clip_edges": 65536,
+    "clip_clone_depth": 64,
+    "clip_clone_bytes": 67108864,
+    "wrapper_syntax_bytes": 4096,
+    "masks_per_scene": 4096,
+    "patterns_per_scene": 4096,
+    "active_mask_pattern_marker_depth": 8,
+    "instances_each": 1024,
+    "pattern_pixels": 1048576,
+    "pattern_axis": 4096,
+    "pattern_bytes": 16777216,
+    "filter_count": 4096,
+    "filter_primitives_total": 65536,
+    "primitives_each": 16,
+    "merge_inputs": 8,
+    "blur_sigma_max": 32,
+    "filter_scratch_bytes": 67108864,
+    "filter_work": 50000000,
+    "group_scratch_bytes": 67108864,
+    "group_depth": 64,
+    "boundary_work": 200000000,
+    "fill_eligible_edges": 4096,
+    "pixel_runs": 8388608,
+    "scanline_tree_depth": 64,
+    "sample_rows": 5,
+    "samples_per_axis": 4,
+    "sample_locations": [
+      0.125,
+      0.375,
+      0.625,
+      0.875
+    ],
+    "dash_steps": 1000000,
+    "dash_bytes": 16777216,
+    "grid_cells": 65536,
+    "grid_refs": 1000000,
+    "grid_axis": 128,
+    "dash_epsilon": 1e-12,
+    "animation_chain": 128,
+    "animation_work": 50000000,
+    "animation_clip_bytes": 67108864,
+    "animation_owner_depth": 64,
+    "tracks": 128,
+    "values": 256,
+    "animation_diagnostics": 128,
+    "timeline_seconds": 3600,
+    "run_text_bytes": 65536,
+    "document_text_bytes": 67108864,
+    "svg_run_glyphs": 65536,
+    "document_glyphs": 1048576,
+    "run_commands": 262144,
+    "document_text_commands": 4194304,
+    "text_cache_entries": 32,
+    "text_cache_bytes": 262144,
+    "text_cache_commands": 262144,
+    "families": 32,
+    "native_run_glyphs": 16384,
+    "native_family_bytes": 256,
+    "image_encoded_bytes": 33554432,
+    "image_uri_bytes": 44739266,
+    "image_document_pixels": 67108864,
+    "image_axis": 16384,
+    "tile_axis": 4096,
+    "tile_capacity_bytes": 67108864,
+    "gif_frames": 120,
+    "gif_fps": 60,
+    "gif_pixels": 32000000,
+    "gif_bytes": 134217728
+  },
+  "features": {
+    "geometry": "all M/L/H/V/C/S/Q/T/A/Z absolute/relative, line/polyline/polygon/circle/ellipse/rect including elliptical rounded corners, primitive/custom geometry and all source/path provenance",
+    "decoder": "full XML/CSS/reference flow, nested svg/symbol/use transform instances, switch BCP47 conditionals, inherited style/viewport/transform/group/text stacks, definitions/metadata/ignored reporting",
+    "paint": "solid, local linear/radial href/default/stop CSS/currentColor/spread/interpolation, bbox/user/inverse handling; image/pattern fill and stroke, independent fill rules and painter/paint order",
+    "clip": "child union, parent intersection, bbox/user units, inherited clip-rule, nested viewport rectangle, conservative boundary mapping and animated owners",
+    "effects": "alpha/luminance nested masks and default/custom regions/content units; nested patterns bbox/user/viewBox/transform/tile repeat/stroke; marker start/mid/end/shorthand/orient/ref/units/viewBox/definition inheritance; groups opacity/blend/isolation; all eight filter primitives/result chains/regions/color spaces",
+    "filter_mode_encodings": {
+      "blend": [
+        "normal",
+        "multiply",
+        "screen",
+        "darken",
+        "lighten"
+      ],
+      "composite": [
+        "over",
+        "in",
+        "out",
+        "atop",
+        "xor",
+        "lighter",
+        "arithmetic"
+      ],
+      "color_matrix": [
+        "matrix",
+        "saturate",
+        "hueRotate",
+        "luminanceToAlpha"
+      ]
+    },
+    "media": "actual CoreText outlines/bidi/fallback/kerning/ligatures, text/tspan positioning/entities/whitespace/anchor/spacing; SVG exact PNG/JPEG data URI; native PNG/JPEG/static GIF/WebP when ImageIO available; premultiplied bilinear image sampling; full looping GIF export tracked downstream",
+    "unsupported": "preserve original exact reports: external resources/scripts/SVG image URI/textPath/color-only glyph/animated image; original CSS/XML/reference unsupported rules; clipPath transform/style/clip-path forbidden; pattern attribute whitelist without href extension; no new acceptance of formerly unsupported input",
+    "unsupported_filter_categories": [
+      "feTurbulence",
+      "feDisplacementMap",
+      "feConvolveMatrix",
+      "feImage",
+      "feDiffuseLighting/feSpecularLighting",
+      "feMorphology"
+    ],
+    "animation": "accepted complete SMIL parse/eval and full legacy render_at composition. Preserve explicit unsupported animated geometry in filter/mask groups or pattern paints and active D/path composition. Do not substitute static frame. Broader authoring/native animation workflows remain product follow-up, not acceptance here.",
+    "ignored": [
+      "unknown attributes",
+      "meta",
+      "DOCTYPE",
+      "writing-mode"
+    ]
+  },
+  "preflight": "min(16000000000, 200000000+max(0,width*height-1048576)*24576) checked u64; 1600x1000=13751796224",
+  "capacity_contract": [
+    "check every size/range arithmetic before access or reservation",
+    "charge capacity*sizeof(T), source lease capacity once, tokens/open names/cache metadata/reference tables/media/patterns/clips/overlays and concurrent scratch",
+    "try_reserve before mutation, release over-cap reservation on failure; no hostile-input panic/assert or fake output",
+    "retain original per-scene vs job aggregate counters and nested sync_work propagation; no independent fresh nested budget",
+    "caller-selected job memory cap explicit; compatibility defaults retain original finite table/instance ceilings; do not shrink to16MiB/262144-edge renderer",
+    "grid/fill ineligibility uses original scalar fallback; resource errors abort normally",
+    "work charged before bounded units and not refunded on rollback; per-job counters replace thread-local globals; cancellation at most256units apart outside synchronous native call"
+  ],
+  "math": "f64 right-first affine; exact C arithmetic/evaluation sequence, comparisons/sort ties, integer alpha numerators, lround/floor(+0.5), sRGB/linear conversions, blur pass/kernel order and group child->filter->mask->opacity/blend. No reassociation/FMA/SIMD/GPU or source normalization. Keep original premultiplied media sampling conversion and final C Tile encoding.",
+  "errors": "invalid/NaN/Inf/singular matrices/invalid strides/ranges checked before slice. Original XML/path/value offsets/error precedence. Media Limit->Limit, OOM->OutOfMemory, other failures->Unsupported at href/run offset. Rust Canceled distinct; C adapter limit+flag. Failure drops entire unpublished job, retains source/static scene/generation.",
+  "product_gates": "100MB edit/render/save; first content<2s, owner-thread pauses<100ms, pan/zoom p95<33ms and original memory/corpus targets remain. Module caps do not prove product budgets. Progressive tiled work via spatial/tile/task interfaces and controlled resumable APIs required; full UI/E2E/fidelity/corpus/fuzz/performance/release/live demos later."
+}

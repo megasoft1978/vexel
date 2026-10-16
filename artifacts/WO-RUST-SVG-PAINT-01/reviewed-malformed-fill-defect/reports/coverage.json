@@ -1,0 +1,171 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-PAINT-01",
+  "original_scope_sha256": "7c12c639e75d7974da41ec91737f5a3086c785c757f51d6ac2f21d7ae5cc5972",
+  "original_inputs_preserved": [
+    {
+      "suite": "tests/svg/shape/gradient_stroke_test.c",
+      "sha256": "2f4f869968b642209928ed5ab44e4aeb81dd3b664bafa8e7c2083cd0613ed2d4",
+      "cases": [
+        "main"
+      ],
+      "owner": "PAINT",
+      "source_unchanged": "protected original oracle"
+    },
+    {
+      "suite": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "cases": [
+        "exact_gradient_check"
+      ],
+      "owner": "PAINT",
+      "source_unchanged": "protected original oracle"
+    },
+    {
+      "suite": "tests/svg/shape/test_paint_edge_span.c",
+      "sha256": "ea1b331099a65cd208a082d619c88333c13d735973fd0705d080cbb023c022f8",
+      "cases": [
+        "paint_edge_span_check"
+      ],
+      "owner": "PAINT",
+      "source_unchanged": "protected original oracle"
+    },
+    {
+      "suite": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "cases": [
+        "cached_gradient_scan_check"
+      ],
+      "owner": "PAINT",
+      "source_unchanged": "protected original oracle"
+    },
+    {
+      "suite": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "cases": [
+        "gradient_checks"
+      ],
+      "owner": "PAINT",
+      "source_unchanged": "protected original oracle"
+    },
+    {
+      "suite": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "cases": [
+        "test_gradient_full_tile_radial_interior_uses_center_sample"
+      ],
+      "owner": "PAINT",
+      "source_unchanged": "protected original oracle"
+    }
+  ],
+  "original_cases": [
+    {
+      "suite": "tests/svg/shape/gradient_stroke_test.c",
+      "suite_sha256": "2f4f869968b642209928ed5ab44e4aeb81dd3b664bafa8e7c2083cd0613ed2d4",
+      "name": "main",
+      "line": 70,
+      "status": "partially_ported_paint_behavior_renderer_integration_unexecuted",
+      "reason": "Pure fill/stroke resolution behavior, missing href errors, inverse/bounds, linear/radial sampling, stops, cache sharing, and opacity inputs are covered by resolver/sampler tests. Frozen decode result-count, raster alpha/compositing, overlap and rendered pixels require the real later DECODE/RENDER adapter and are not claimed."
+    },
+    {
+      "suite": "tests/svg/shape/test_m4_06_evidence.c",
+      "suite_sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "name": "exact_gradient_check",
+      "line": 118,
+      "status": "pure_sampler_assertions_ported_alpha_composition_unexecuted",
+      "reason": "The frozen x=0/8/15 channel tuples are byte-for-byte asserted in exact_gradient_sample_matches_frozen_pixel_channel_oracle. The second layered alpha/compositor predicate requires actual render_rgba integration."
+    },
+    {
+      "suite": "tests/svg/shape/test_paint_edge_span.c",
+      "suite_sha256": "ea1b331099a65cd208a082d619c88333c13d735973fd0705d080cbb023c022f8",
+      "name": "paint_edge_span_check",
+      "line": 5,
+      "status": "pure_predicates_ported",
+      "reason": "edge_span_preserves_empty_and_invalid_range_contract ports empty, formed, valid-one-edge, and invalid-overflow behavior."
+    },
+    {
+      "suite": "tests/svg/shape/test_reference.c",
+      "suite_sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "name": "cached_gradient_scan_check",
+      "line": 740,
+      "status": "resolver_scale_input_and_work_predicates_ported_decode_count_unexecuted",
+      "reason": "cached_gradient_scan_original_scale_and_css_stop_cascade retains all 4,096 comment tokens and 512 fill references, asserts one two-stop cached template and the original token-visit bound. Full decoder shape count and rendered document scan await the real DECODE adapter."
+    },
+    {
+      "suite": "tests/svg/shape/test_shape.c",
+      "suite_sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "name": "gradient_checks",
+      "line": 146,
+      "status": "resolver_and_sampler_pure_predicates_ported_raster_compositor_unexecuted",
+      "reason": "Focused tests cover linear channels, black defaults, radial center math, CSS stops/currentColor, user-space/object-box values, transforms, invalid bounds, and alpha-adjusted stop bytes. Raster alpha compositing and all mixed render predicates remain for later integration."
+    },
+    {
+      "suite": "tests/test_shape_render.py",
+      "suite_sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "name": "test_gradient_full_tile_radial_interior_uses_center_sample",
+      "line": 112,
+      "status": "radial_sampler_predicate_ported_full_tile_render_unexecuted",
+      "reason": "radial_defaults_and_pattern_classification_explicit checks center sampling and radial equations directly. Full-tile scan conversion/subsample output and reference CLI comparison need the later real renderer."
+    }
+  ],
+  "focused_tests": [
+    "temporary_context_ends_but_cache_borrow_remains_and_40000_hits_allocate_no_stops",
+    "owned_conversion_has_real_payload_distinct_allocation_and_releasable_capacity",
+    "wrong_job_source_and_cold_budget_rejection_do_not_publish_or_leak_cache_buffers",
+    "cold_cache_has_one_stop_allocation_and_metadata_growth_accounts_actual_overlap",
+    "cancellation_at_every_cold_resolver_poll_keeps_only_actual_retained_cache_capacity",
+    "explicit_owned_copy_cancellation_releases_every_temporary_stop_capacity",
+    "edge_span_preserves_empty_and_invalid_range_contract",
+    "linear_sampling_matches_lround_interpolation_at_midpoint",
+    "exact_gradient_sample_matches_frozen_pixel_channel_oracle",
+    "invalid_stop_ranges_and_order_leave_destination_untouched",
+    "repeat_reflect_degenerate_linear_and_invalid_geometry_match_sampler_rules",
+    "radial_focal_degenerate_fallback_and_negative_discriminant_no_write",
+    "resolves_href_inheritance_current_color_transform_and_scene_stop_sharing",
+    "radial_defaults_and_pattern_classification_are_explicit",
+    "href_cycles_bad_stop_order_and_empty_edges_fail_without_fake_success",
+    "resolver_preserves_fill_offsets_and_cancellation_kind",
+    "bound_xlink_and_child_stop_override_follow_the_nearest_gradient",
+    "cache_admits_exact_global_stop_limit_and_rejects_the_next_template",
+    "one_gradient_cannot_exceed_256_stops",
+    "external_references_and_singular_gradient_transforms_are_rejected_at_fill",
+    "current_color_without_a_computed_color_uses_opaque_black",
+    "cached_gradient_scan_original_scale_and_css_stop_cascade"
+  ],
+  "shared_publication_seed": "R2 also runs three real public SceneBuilder proofs through CachedPaint handoff. Seeded full32768-template/65536-stop publication proof remains inherited, not newly rerun.",
+  "later_integration_proofs": [
+    "Root adopts resolve_cached_context/resolve_cached_fill and CachedPaint append_fill/stroke in the actual DECODE engine, or approves a lifetime/publication-capable shared operation.",
+    "Native definitions/resources and mixed raster/compositor oracle integration.",
+    "Full application/MCP/release/demo checks."
+  ],
+  "revision": 2,
+  "public_graph_tests": [
+    "real_40000_instance_fill_stroke_handoff_shares_two_graph_stops",
+    "cached_publication_survives_rollback_without_stale_graph_ranges_and_owned_payload_is_compatible",
+    "every_public_handoff_cancellation_position_cleans_logical_publication"
+  ],
+  "original_16_preserved": true,
+  "strengthened_prior_tests": [
+    "cached_gradient_scan_original_scale_and_css_stop_cascade: all 4096 comments/512 references and old assertions retained; cached hits now assert actual pointer and unchanged memory stats.",
+    "cache_admits_exact_global_stop_limit_and_rejects_the_next_template: same 256 templates/65536 stops and rejection predicates, using real cached producer rather than retained owned copies."
+  ],
+  "shared_integration_gap": "See owned-interface-gap.md; existing owned DecodeOperations result cannot itself return borrowed cached stops.",
+  "prior_16_case_names_preserved": [
+    "edge_span_preserves_empty_and_invalid_range_contract",
+    "linear_sampling_matches_lround_interpolation_at_midpoint",
+    "exact_gradient_sample_matches_frozen_pixel_channel_oracle",
+    "invalid_stop_ranges_and_order_leave_destination_untouched",
+    "repeat_reflect_degenerate_linear_and_invalid_geometry_match_sampler_rules",
+    "radial_focal_degenerate_fallback_and_negative_discriminant_no_write",
+    "resolves_href_inheritance_current_color_transform_and_scene_stop_sharing",
+    "radial_defaults_and_pattern_classification_are_explicit",
+    "href_cycles_bad_stop_order_and_empty_edges_fail_without_fake_success",
+    "resolver_preserves_fill_offsets_and_cancellation_kind",
+    "bound_xlink_and_child_stop_override_follow_the_nearest_gradient",
+    "cache_admits_exact_global_stop_limit_and_rejects_the_next_template",
+    "one_gradient_cannot_exceed_256_stops",
+    "external_references_and_singular_gradient_transforms_are_rejected_at_fill",
+    "current_color_without_a_computed_color_uses_opaque_black",
+    "cached_gradient_scan_original_scale_and_css_stop_cascade"
+  ]
+}

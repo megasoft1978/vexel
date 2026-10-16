@@ -1,0 +1,28 @@
+{
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-scene --locked --offline",
+      "exit_code": 0,
+      "log": "check.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-scene --locked --offline",
+      "exit_code": 0,
+      "log": "test.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-PAINT-CHANNEL-CONTRACT-01 --ready",
+      "exit_code": 0,
+      "log": "wo.log"
+    }
+  ],
+  "passing_tests_including_doctests": 156,
+  "changed_preexisting_files": [
+    "rust/crates/vexel-scene/tests/paint_channel_contracts.rs",
+    "rust/crates/vexel-scene/src/production_decode.rs",
+    "rust/crates/vexel-scene/README.md"
+  ],
+  "old_test_files_byte_unchanged": 10,
+  "new_test_retained_prefix_byte_unchanged": true,
+  "source_acceptance": "candidate only; coordinator independent review and fresh main acceptance pending"
+}

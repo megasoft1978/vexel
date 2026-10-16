@@ -1,0 +1,56 @@
+{
+  "paths": {
+    "wo": "WO-RUST-SVG-PATH-01",
+    "crate": "vexel-svg-path",
+    "effort": "high",
+    "scope": "Port every function in shape_path.c (absolute/relative M/L/H/V/C/S/Q/T/A/Z, implicit/repeated commands, reflected controls, subpaths/closure, elliptical arcs, command/number provenance) plus required add_edge/add_curve/flattening helpers from shape_geometry.c and transformed flatness/number reader helpers in shape.c. Safe owned PathDocument edges/subpaths/segments/numbers with checked source Span offsets and accepted Point/Affine; expose parse_path(source, span, transform, options) returning complete owned path data or typed diagnostic with exact original offsets. Preserve4M-command/edge and28M-number caps, coordinate/affine limits, depth16/transformed tolerance and exact grammar. Preserve path source number and segment spans for future node edits. Test all commands, relative/implicit/smooth/reset rules, compact arc flags, degenerate/corrected arcs, transform/tolerance, coordinate/limits/failure diagnostics and original path-number provenance cases. Local input views may adapt accepted SVG values helpers; do not impose a16MiB cap on the entire containing SVG source or reduce C hard limits. Larger integration/shape styles/XML scene traversal are later; no full SVG/render claim.",
+    "refs": "src/svg/shape/shape_path.c, shape_geometry.c (required edge/curve helper functions only), shape.c (number/tolerance helpers), shape.h, shape_internal.h; tests/svg/shape/path_number_test.c and scoped path assertions in existing shape tests/fixtures",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-paths"
+  },
+  "timeline": {
+    "wo": "WO-RUST-TIMELINE-01",
+    "crate": "vexel-timeline",
+    "effort": "high",
+    "scope": "Port complete project_timeline.c and project_timeline_json.c decode/classify/accessor/iterator/string-copy behavior. Safe lifetime-bound immutable TimelineView source plus Span metadata; owned bounded context of sorted scene IDs and asset references, validated timeline schema/property/drawing tracks/loop/onion parameters, timing/FPS and reference/duplicate rules. Exact error categories/offsets, cancellation during scans, native-v1 classification, UTF8/escapes/surrogates, unknown/duplicate fields, nested-depth and string/source limits,256tracks/1Mtotalitems/100Kpertrack/4096stringbytes. Sequential iterator must keep bounded progress and avoid repeated scans/O(n^2) on large tracks. Port meaningful original decoder/JSON cases, invalid-reference/duplicate/schema, raw escaped string equality, track/item source spans, canceled parse cleanup and malformed input. Accepted general JSON core may have smaller DOM limits: do not silently impose these on timeline; port the domain bounded streaming JSON reader instead. Native edit/session/playback/render are later separate orders, not fabricated here.",
+    "refs": "src/project/project_timeline.c, project_timeline.h, project_timeline_json.c, project_timeline_json.h, project_bundle.h; tests/project/project_timeline_test.c and scoped native timeline decoder cases",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline"
+  },
+  "ui-draw": {
+    "wo": "WO-RUST-UI-DRAW-01",
+    "crate": "vexel-ui",
+    "effort": "high",
+    "scope": "Extend accepted UI core with all functions defined ui_draw.c, ui_widgets.c (only its five add wrappers), ui_icons.c, ui_icons_legacy.c, ui_icon_paths.c and their declared contracts. Owned icon definitions/caches matching asset numeric/path data and frozen hashes; bounded strict path parsing, arc/Bezier flattening, masks/backing scales/legacy painter, state colors/clipping/alpha blending, scalar ASCII fallback text (the declared legacy behavior), full tree paint/backgrounds/semantic styles/focus and add-widget wrappers. Validate RGBA buffer dimensions/stride/capacity before writes, preserve original glyph data and pixel/hash cases; port scale/theme/contrast/icon taxonomy/frozen C asset hash results without replacing or weakening oracle. Safe per-owner IconCache rather than unsafe globals if needed; document lifetime/cache adaptation. Preserve all8accepted core tests and original public behavior/limits; cohesive files<800. Pure pixel/unit checks only; no native GUI automation or goldens campaign. Native text shaping/AppKit presentation, interactive ui fields implementations outside named files and actual desktop UX remain later; do not substitute ASCII fallback for native product text rendering.",
+    "refs": "src/ui/ui_draw.c/h, ui_widgets.c/h, ui_icons.c/h, ui_icons_legacy.c, ui_icon_paths.c/h, ui_core.h; scoped icon/draw/widget assertions in tests/ui (exclude native GUI/full galleries/sweep)",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-ui-draw"
+  },
+  "atomic-files": {
+    "wo": "WO-RUST-ATOMIC-FILES-01",
+    "crate": "vexel-platform-macos",
+    "effort": "high",
+    "scope": "Extend accepted native crate with complete atomic existing-file replace and atomic no-replace new-file publication from both C files/headers. Safe APIs accept bounded byte-path/bytes and return exact error class plus file_synced/renamed-or-published/directory_synced state. Preserve1023byte/NUL/path-component bounds, lstat regular/non-symlink rules, target mode/identity rules, exclusive sibling temp creation, short-write/EINTR loops, sync before commit, no-replace collision, atomic commit point, cleanup and correct postcommit durability reporting. Use std filesystem/File/MetadataExt/OsStrExt and safe typed operation hooks (borrowed File/paths), actual native success path; no Cshim/externaldeps/new unsafe or accepted sys.rs changes. If a std-only route cannot meet named guarantee stop with exact dependency rather than weaken it. Explicit safe temporary naming/owned-hook API adaptations must preserve security/race/error behavior. Tests only repo-local .cache/atomic-* paths; port deterministic short write/interrupt/failure/publication/race/durability cases, zero bytes, symlink/nonregular/existing destination and temp cleanup. Preserve8accepted native-service tests/API. Caller file-grants/application/project wiring later.",
+    "refs": "src/platform/macos/platform_atomic_file.c, platform_atomic_new_file.c, src/platform/platform_atomic_file.h, platform_atomic_new_file.h; focused existing atomic filesystem fixtures in tests/platform and tests/project",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-atomic-files"
+  },
+  "cache": {
+    "wo": "WO-RUST-TILE-CACHE-01",
+    "crate": "vexel-tile-cache",
+    "effort": "medium",
+    "scope": "Port full tile_cache.c/h mutable owner cache, creation/get/put/epoch/stats/drop and clock rollover test seam. Own accepted Tile values; borrowed get reference cannot survive mutable call in safe Rust. Put transfers ownership only on success; return unchanged owned tile on failure.256MiB/65536 entry caps; account actual reserved entry metadata plus tiles with checked arithmetic and fallible bounded allocation. Preserve C byte-cap boundary and LRU replacement/eviction/tie/clock-epoch rollover ordering; justify exact layout/charge adaptation if needed, never ignore metadata or report only live payload. Epoch change clears all entries synchronously; same epoch retains. Test budget boundaries, rejected tile ownership/caller data, replacement without spurious eviction, touched LRU, count/stats, generation/scale invalidation and clock wrap matching original cases. No huge throughput/performance campaign or actual render integration claim.",
+    "refs": "src/raster/tile_cache.c/h, tile.h; focused tile-cache assertions in tests/raster; accepted vexel-raster Tile API",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache"
+  },
+  "queue": {
+    "wo": "WO-RUST-TASK-QUEUE-01",
+    "crate": "vexel-platform-tasks",
+    "effort": "high",
+    "scope": "Port full platform_task.c/h bounded native queue contract to Rust std threads/synchronization: capacity1..64/workers1..4, submit/shared or owned contexts, IDs/generations, duplicate/stale/full/stopped errors, queued/running cooperative cancel, generation advancement/discard, polling/retirement, shutdown joins and cleanup exactly once outside mutex. Safe Send+'static closures/Arc-owned shared context replace unsafe borrowed void*; failure must return ownership and never run cleanup for rejected submission. Public CancellationToken, TaskResult{id,generation,succeeded,value}, TaskQueue and typed statuses; no stub C callback invocation. Freeze exact semantics/status priority to C; owned completion/cleanup and cross-thread handoff, no data races/deadlocks/leaks, catch user callback panic so queue lifecycle remains bounded (document Rust-only adaptation). Fallible significant bounded allocations/thread-start error rollback, explicit safe test allocation/failure seam for preserved failure cases; do not falsely claim deterministic system OOM injection. Test pending vs running cancel, generation races, duplicates/full, ownership/failure cleanup/reentrancy, no cancel-vs-success publication race, thread-start/shutdown/quiescence. Pure native worker checks only, no app/UI tests. Platform macOSarm guard via base; no unsupported OS shims, no unsafe/deps. MCP/export job wiring later.",
+    "refs": "src/platform/macos/platform_task.c, src/platform/platform_task.h; focused native task driver/queue cases in tests/platform; accepted base and native task-related behavioral records",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue"
+  }
+}

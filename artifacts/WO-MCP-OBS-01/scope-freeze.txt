@@ -1,0 +1,4 @@
+WO-MCP-OBS-01 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+spec_sha256: 2c668d8f13f6b18e87d4f9f39b36b0c52b8f8c73fa9da8245bbad05516be89af
+Allowlist and protected paths are frozen in work/WO-MCP-OBS-01.md.

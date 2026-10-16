@@ -1,0 +1,3 @@
+ACCEPT
+
+The result is 700 words. Its text limits and style claims match the audit and inspected source: media limits are 64 KiB, 16,384 glyphs, 262,144 segments, and 32 families; media styles are normal, italic, and oblique, with color glyphs unsupported. Rust UI limits are 128 nodes, depth 24, 63-byte previews, 1 MiB total strings, and 127-byte drafts/63-byte labels. C UI labels use normal style at weights 400 or 600. The report correctly says no 4,000-codepoint fallback exists in the inspected sources. No adoption or implementation is claimed.

@@ -1,0 +1,3 @@
+Extended the checksum-corruption regression to cover both missing and seeded existing destinations. It confirms the exact error, zero-write/unpublished/unsynced state, unchanged seeded bytes, and unchanged directory entry count. No production behavior changed.
+
+All named checks passed; 8 tests passed, including the original 6. Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/artifacts/WO-RUST-PROJECT-IO-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/artifacts/WO-RUST-PROJECT-IO-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-project-io/artifacts/WO-RUST-PROJECT-IO-01/verification.txt).

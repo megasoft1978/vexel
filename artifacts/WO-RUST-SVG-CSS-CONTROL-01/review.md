@@ -1,0 +1,3 @@
+ACCEPT — the candidate meets the frozen CSS control requirements on review. The accepted uncommitted baseline matches both saved baseline copies by SHA-256; the original 13 test bodies are unchanged verbatim in both added routes. The build, scanner, declaration, selector, matching, and compute paths retain bounded cursors, with no hidden variable-length scan in a step, `new`, or `finish`.
+
+The reviewed tests cover legacy parity, stop behavior, progress and accounting, limits, lifetimes, cleanup, and actual retained capacities. The candidate records all five named checks as passing, including 63 tests. I did not rerun them, per your read-only instruction. Fresh main integration checks remain a separate gate.

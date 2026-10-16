@@ -1,0 +1,17 @@
+WO-PROJECT-08 revision 1 verification
+
+Implementation: worker-side discovery validates bounded capsule bytes, CRCs, embedded bundle, and exact source path. Matching snapshots offer restore/discard/cancel; changed source is presented as a conflict and restore remains unsaved. Recovery load uses the full native project decoder and restores timeline session/assets; explicit discard unlinks the discovered capsule path. Successful project save cleanup is wired through app and MCP save routes. Cleanup failures remain visible.
+
+Focused verification (each configuration built svgworkbench, viewer_recovery_test, platform_dialog_test):
+- Debug: PASS; viewer-recovery, platform-dialog, project-recovery, project-file = 4/4.
+- ASan/UBSan: PASS; same focused CTests = 4/4.
+- UBSan: PASS; same focused CTests = 4/4.
+- Aggregate: 12/12 focused CTest executions passed. No broad UI/E2E suite was run.
+- Work-order validator: PASS, SHA-256 eb581cc286eae92ca0e2831b864483587af2505c534f6d0114efe827adb85ee8.
+- tests/test_map.json JSON parse: PASS; ledger validator: PASS; git diff --check: PASS.
+
+Source sizes (lines): viewer.c 800; viewer_recovery.c 383; viewer_load.c 284; viewer_recovery_test.c 199; platform_dialog.m 376; platform_dialog_test.m 215.
+
+Coverage includes matching/conflicting source detection, wrong-path rejection, restored native project/timeline/assets, dirty editor marking, cancel preservation, discard removal, save-capsule removal, cleanup-failure preservation, and platform dialog choices. The project recovery codec has corrupt-payload coverage in project-recovery tests. App/MCP save routes invoke cleanup only after successful save; file-save cancellation/failure is not separately fault-injected end to end.
+
+Remaining recovery limitations: discovery requires the original source file to exist; capsules have no retention/expiry policy; format migration policy is undefined; peak memory on very large project recovery has not been measured. Comprehensive UI/E2E acceptance remains deferred until feature work is complete.

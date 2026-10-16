@@ -1,0 +1,29 @@
+{
+  "accepted_prerequisite": "WO-RUST-CACHE-PUBLICATION-01 accepted/main185Scene",
+  "ledger": {
+    "ts": "2026-10-15T05:17:23Z",
+    "wo_id": "WO-RUST-CACHE-PUBLICATION-01",
+    "event": "accepted",
+    "revision": 1,
+    "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "run_id": "WO-RUST-CACHE-PUBLICATION-01-main185-accepted",
+    "session_id": "coordinator-main-cache",
+    "model": "gpt-6.1-sol",
+    "cli_version": "0.162.1",
+    "duration_s": 0,
+    "usage": {
+      "input_tokens": null,
+      "output_tokens": null
+    },
+    "status": "accepted",
+    "artifacts": [
+      "artifacts/WO-RUST-CACHE-PUBLICATION-01/main-verification.json",
+      "artifacts/WO-RUST-CACHE-PUBLICATION-01/coordinator-result.md"
+    ],
+    "note": "RootLunaHigh ACCEPT,1708protected audit/freshmain185checks (177preserved+7runtime+1compilefail). Logicalgeneration16MiB/cell/refcaps separatephysicaloverlap, defaultcaps/literals intact.603/157/HEAD/index preserved. Scalaradoption+fullproduct remain, no runtime/UIclaim."
+  },
+  "prior_writer_reviewer_terminal": true,
+  "current_source_overlay_count": 1751,
+  "authority": "Current coordinator accepted report; prior worker pending reports preserved historical."
+}

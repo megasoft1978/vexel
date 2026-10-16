@@ -1,0 +1,42 @@
+[
+  {
+    "name": "css",
+    "wo": "WO-RUST-SVG-CSS-01",
+    "pid": 84229,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-css",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "status": "running",
+    "overlay_file_count": 1522
+  },
+  {
+    "name": "references",
+    "wo": "WO-RUST-SVG-REFERENCE-01",
+    "pid": 84702,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-references",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "status": "running",
+    "overlay_file_count": 1522
+  },
+  {
+    "name": "source-save",
+    "wo": "WO-RUST-SOURCE-SAVE-01",
+    "pid": 85155,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-source-save",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "status": "running",
+    "overlay_file_count": 1522
+  },
+  {
+    "name": "owned-document",
+    "wo": "WO-RUST-DOCUMENT-OWNED-01",
+    "pid": 85606,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "status": "running",
+    "overlay_file_count": 1522
+  }
+]

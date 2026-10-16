@@ -1,0 +1,51 @@
+{
+  "requested_at_utc": "2026-10-14T11:03:14.151284+00:00",
+  "method": "GET",
+  "url": "https://api.sciencemadereadable.com/api/data/search?q=title%3A%22How+Low+Should+We+Go%22+AND+inking&k=5&mode=keyword&abstracts=true",
+  "command": "search",
+  "http_status": 200,
+  "response": {
+    "mode": "keyword",
+    "matches": 1,
+    "query": "title:\"How Low Should We Go\" AND inking",
+    "results": [
+      {
+        "id": "W2285330908",
+        "doi": "10.1201/9781003059325-22",
+        "title": "How Low Should We Go? Understanding the Perception of Latency While Inking",
+        "date": "2020-10-30",
+        "year": 2020,
+        "type": "book-chapter",
+        "authors": "Michelle Annett | Albert Ng | Paul Dietz | Walter F. Bischof | Anoop Gupta",
+        "authors_count": 5,
+        "venue": "Graphics Interface 2014",
+        "publisher": null,
+        "is_oa": 0,
+        "oa_status": "closed",
+        "license": null,
+        "citations": 34,
+        "is_retracted": 0,
+        "url": "https://doi.org/10.1201/9781003059325-22",
+        "pdf_url": null,
+        "topic": "Multisensory perception and integration",
+        "field": "Psychology",
+        "keywords": "Stylus | Perception | Latency (audio) | Referent | Computer science | Psychology | Human–computer interaction | Computer vision | Neuroscience | Telecommunications",
+        "mesh": null,
+        "pmcid": null,
+        "pmc_oa": null,
+        "pmc_license": null,
+        "pmc_type": null,
+        "smr": 0,
+        "abstract": "Recent advances in hardware have enabled researchers to study the perception of latency. Thus far, latency research has utilized simple touch and stylus-based tasks that do not represent inking activities found in the real world. In this work, we report on two studies that utilized writing and sketching tasks to understand the limits of human perception. Our studies revealed that latency perception while inking is worse (~50 milliseconds) than perception while performing non-inking tasks reported previously (~2–7 milliseconds). We also determined that latency perception is not based on the distance from the stylus’ nib to the ink, but rather on the presence of a visual referent such as the hand or stylus. The prior and current work has informed the Latency Perception Model, a framework upon which latency knowledge and the underlying mechanisms of perception can be understood and further explored.",
+        "score": 87.2765,
+        "openalex": "https://openalex.org/W2285330908"
+      }
+    ],
+    "filters": {},
+    "timing": {
+      "keyword_ms": 6.4,
+      "details_ms": 0.1,
+      "total_ms": 6.5
+    }
+  }
+}

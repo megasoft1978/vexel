@@ -1,0 +1,66 @@
+{
+  "recorded_utc": "2026-10-14T12:31:32.301835+00:00",
+  "goal_status": "active",
+  "goal": "Full Rust Vexel application completed, comprehensively tested, packaged/documented and ready to use, including real live agents and recorded demos",
+  "authority": "docs/product/rust-port-goal-and-plan.md",
+  "turn_classification": "progress",
+  "accepted_main_focused_test_count": 281,
+  "package_counts": {
+    "vexel-base": 7,
+    "vexel-geometry": 5,
+    "vexel-xml": 31,
+    "vexel-json": 5,
+    "vexel-project": 8,
+    "vexel-raster": 8,
+    "vexel-spatial": 9,
+    "vexel-svg-values": 12,
+    "vexel-protocol": 9,
+    "vexel-ui": 17,
+    "vexel-platform-macos": 25,
+    "vexel-svg-path": 9,
+    "vexel-timeline": 29,
+    "vexel-tile-cache": 11,
+    "vexel-platform-tasks": 11,
+    "vexel-svg-color": 3,
+    "vexel-mcp-tasks": 8,
+    "vexel-mcp-access": 12,
+    "vexel-project-io": 8,
+    "vexel-svg-index": 12,
+    "vexel-document": 13,
+    "vexel-svg-reference": 11,
+    "vexel-document-io": 5,
+    "vexel-svg-css": 13
+  },
+  "workers": [
+    {
+      "wo": "WO-RUST-DOCUMENT-EDIT-01",
+      "accepted": false,
+      "handles": [
+        {
+          "name": "document-edit",
+          "wo": "WO-RUST-DOCUMENT-EDIT-01",
+          "pid": 93218,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "running",
+          "started_epoch": 1791980934.780685,
+          "evidence": "artifacts/WO-RUST-DOCUMENT-EDIT-01/process-status.json",
+          "supervisor_confirmed_live": true
+        }
+      ]
+    }
+  ],
+  "scientific_review": {
+    "wo": "WO-RUST-RESEARCH-SCIENCE-01",
+    "accepted_as": "research only",
+    "report": "docs/product/rust-rendering-research.md",
+    "api_envelopes": 8,
+    "primary_pdfs": 5
+  },
+  "full_application_complete": false,
+  "full_final_testing_complete": false,
+  "broad_ui_e2e": "final gate after feature completion",
+  "billing": "existing subscription, Standard service, no purchased credits/API billing",
+  "next_gate": "Review full source-editor candidate; native bindings ADR/provenance before platform integration. Complete large editable/save workflow and all product gates.",
+  "known_product_gap": "Large-source owned parsing accepted; default source editing/save remain16MiB. No100MB workflow/performance acceptance."
+}

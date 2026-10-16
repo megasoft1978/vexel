@@ -1,0 +1,12 @@
+Toolchain observed: rustc 1.99.0 (b940084d7 2026-09-28), cargo 1.99.0 (5f94df478 2026-08-27), `+stable`.
+
+Commands required by WO-RUST-SVG-ANIMATION-01:
+
+- `cargo +stable check -p vexel-svg-animation --locked --offline` — PASS; exit 0.
+- `cargo +stable test -p vexel-svg-animation --locked --offline` — PASS; 9 integration tests passed, no failures; unit/doc tests had 0 tests.
+- `python3 scripts/wo_validate.py WO-RUST-SVG-ANIMATION-01 --ready` — PASS; valid revision 1, SHA-256 `be7604977c3a77e877eb7409159e277dc71617f172bb8301fbc6651abe58f16d`.
+- `python3 scripts/ledger.py validate ledger.jsonl` — PASS; valid ledger, 1291 entries.
+- `git diff --check` — PASS; exit 0, no whitespace errors.
+- `python3 -c 'import json; json.load(open("artifacts/WO-RUST-SVG-ANIMATION-01/parity-map.json"))'` — PASS; valid JSON.
+
+Focused compile/test runs used only the workspace's inherited Cargo paths and offline lockfile. Renderer/CLI assertions were not run; they require the later renderer/CLI scope.

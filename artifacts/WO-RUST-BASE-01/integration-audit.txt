@@ -1,0 +1,3 @@
+PASS overlay retained; all changed/new paths scoped Rust src/tests, corresponding root source exact baseline beforecopy. Manifests/other crates/legacy tests unchanged byworker. HEAD/index preserved; parity-map JSON valid and C symbol adaptations reviewed. Independent High review accepts, nonblocking assertion gaps recorded.
+Changed ['rust/crates/vexel-base/src/lib.rs']
+New ['rust/crates/vexel-base/tests/base_contract.rs']

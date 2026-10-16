@@ -1,0 +1,11 @@
+{
+  "name": "reference-control",
+  "wo": "WO-RUST-SVG-REFERENCE-CONTROL-01",
+  "pid": 96541,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791988215.1960719,
+  "exit_code": 0,
+  "duration_seconds": 1039.3071591854095
+}

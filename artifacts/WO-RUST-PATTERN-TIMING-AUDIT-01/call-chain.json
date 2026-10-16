@@ -1,0 +1,502 @@
+{
+  "order": "WO-RUST-PATTERN-TIMING-AUDIT-01",
+  "status": "SOURCE_GAP_IDENTIFIED_PROPOSAL_ONLY",
+  "verification": "Read-only source inspection; SHA-256 of raw full files and inclusive line excerpts, including their original newline bytes. No execution verification.",
+  "baseline_files_match": {
+    "src/svg/shape/pattern.c": true,
+    "src/svg/shape/decode.c": true,
+    "rust/crates/vexel-scene/src/pattern_publication.rs": true,
+    "rust/crates/vexel-scene/src/decode_initialization.rs": true,
+    "rust/crates/vexel-scene/src/frame.rs": true,
+    "rust/crates/vexel-scene/tests/decode_initialization.rs": true
+  },
+  "evidence": [
+    {
+      "id": "original-child",
+      "path": "src/svg/shape/pattern.c",
+      "lines": [
+        239,
+        345
+      ],
+      "symbol": "decode_pattern_content",
+      "file_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "excerpt_sha256": "3e6af28883cce9038450b9247065a3d79b3fe1504bbcd12ff44b639506daa91f"
+    },
+    {
+      "id": "original-child-publication",
+      "path": "src/svg/shape/pattern.c",
+      "lines": [
+        355,
+        375
+      ],
+      "symbol": "decode_pattern_content suffix",
+      "file_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "excerpt_sha256": "511a5cbb4989eac250524b65c2f7cf77cbc30811aff912038f7ce28a3f696d9d"
+    },
+    {
+      "id": "original-order",
+      "path": "src/svg/shape/decode.c",
+      "lines": [
+        198,
+        218
+      ],
+      "symbol": "svg_shape_traverse_walk_range before svg_anim_parse",
+      "file_sha256": "92268afd4f11df6c57a8f6cb38b54221f9ce1663680721fca129d4656365531b",
+      "excerpt_sha256": "ab8b6054d21242f833daf5706cdf123d060cfa0f10a236d9d055706843353bec"
+    },
+    {
+      "id": "original-static-render",
+      "path": "src/raster/shape_render.c",
+      "lines": [
+        580,
+        587
+      ],
+      "symbol": "raster_shape_render",
+      "file_sha256": "49042f49360aa73b973ee39c1003dfc55af427c1efe0ffed744fc7eade23311b",
+      "excerpt_sha256": "3e657e66dde75a16e940fb49eef34ec60370619825b47ebb4767e02e7d0d1e84"
+    },
+    {
+      "id": "original-media",
+      "path": "src/svg/shape/image.c",
+      "lines": [
+        219,
+        239
+      ],
+      "symbol": "decode_image callback",
+      "file_sha256": "79ef7d7d0884bf0ab2e82f69292bd55c1e6bcb0c57dbcc4fde65b76f77abff47",
+      "excerpt_sha256": "e57422aeab0978ae3299f731eca9af9d919b844b95676854a93a2811274e23d0"
+    },
+    {
+      "id": "request-types",
+      "path": "rust/crates/vexel-scene/src/decode_contract.rs",
+      "lines": [
+        181,
+        200
+      ],
+      "symbol": "DecodeEvent / PatternRequest",
+      "file_sha256": "4496256fda1ae85147c66e418be33b014de4207f6f6ba9fc7855b1be2076c908",
+      "excerpt_sha256": "43ffebd4134bdc2ed1b42adc6137eb2f358d9b8ddb2889e88ecf45663b8ccc12"
+    },
+    {
+      "id": "scene-view",
+      "path": "rust/crates/vexel-scene/src/model.rs",
+      "lines": [
+        189,
+        220
+      ],
+      "symbol": "SceneView declaration",
+      "file_sha256": "8abd7ce8403d7daa1796e9fab4b67cfcd2414a93c2555111993a1fe877627b25",
+      "excerpt_sha256": "58a8691c91e8ae8f1f0059d77a7af8d4a6d40c893df7b00cec339f30950f4c47"
+    },
+    {
+      "id": "scene-lookup",
+      "path": "rust/crates/vexel-scene/src/model.rs",
+      "lines": [
+        345,
+        361
+      ],
+      "symbol": "SceneView::scene",
+      "file_sha256": "8abd7ce8403d7daa1796e9fab4b67cfcd2414a93c2555111993a1fe877627b25",
+      "excerpt_sha256": "ff5e0e78ccde588ff95f987b3e10475ffc480161826fc8fad3e6380970c0e548"
+    },
+    {
+      "id": "pending-guard",
+      "path": "rust/crates/vexel-scene/src/model.rs",
+      "lines": [
+        524,
+        539
+      ],
+      "symbol": "TraversalView compile_fail and animation access",
+      "file_sha256": "8abd7ce8403d7daa1796e9fab4b67cfcd2414a93c2555111993a1fe877627b25",
+      "excerpt_sha256": "6a5d2e1712eaabfb2806beb9f590a930843e9ef881d15e2d680de0c659eac8ec"
+    },
+    {
+      "id": "initialization",
+      "path": "rust/crates/vexel-scene/src/decode_initialization.rs",
+      "lines": [
+        8,
+        38
+      ],
+      "symbol": "DecodeInitialization / AnimationStorage",
+      "file_sha256": "c434e3268cb84b50fb35b23de220f737d14ec7a287f1c108258875f6877c8416",
+      "excerpt_sha256": "10bf28cb2c9ed2998e31f798f37f592003ef125b3d8d6f5cc124be85cd501989"
+    },
+    {
+      "id": "traversal",
+      "path": "rust/crates/vexel-scene/src/decode_initialization.rs",
+      "lines": [
+        66,
+        78
+      ],
+      "symbol": "require_finalized / traversal_scene",
+      "file_sha256": "c434e3268cb84b50fb35b23de220f737d14ec7a287f1c108258875f6877c8416",
+      "excerpt_sha256": "a766492d67fe5b4e81a1673d23a6499f1612bed2b84bb638a63b40440fa9c9da"
+    },
+    {
+      "id": "late-admission",
+      "path": "rust/crates/vexel-scene/src/decode_initialization.rs",
+      "lines": [
+        204,
+        252
+      ],
+      "symbol": "finalize_decode",
+      "file_sha256": "c434e3268cb84b50fb35b23de220f737d14ec7a287f1c108258875f6877c8416",
+      "excerpt_sha256": "29a21c2ec69947bd84a73a72759a26d536bbd281080d4fef57e76197588b89ef"
+    },
+    {
+      "id": "ready",
+      "path": "rust/crates/vexel-scene/src/builder.rs",
+      "lines": [
+        183,
+        197
+      ],
+      "symbol": "SceneBuilder::scene",
+      "file_sha256": "b614a737834b1f1d32acbfc1607bb6f45acb23f2484d46846a295e2c1b8b2f7a",
+      "excerpt_sha256": "1a35ea134c6fc0fffee433b09a8101e77a2da958893a721832aecd52e45891d8"
+    },
+    {
+      "id": "seal",
+      "path": "rust/crates/vexel-scene/src/builder.rs",
+      "lines": [
+        257,
+        277
+      ],
+      "symbol": "SceneBuilder::seal",
+      "file_sha256": "b614a737834b1f1d32acbfc1607bb6f45acb23f2484d46846a295e2c1b8b2f7a",
+      "excerpt_sha256": "47c508a28ea72713bbf15588088fb2e496ef1f21733b200ee4ba6b22be833e6b"
+    },
+    {
+      "id": "mapped-request",
+      "path": "rust/crates/vexel-scene/src/pattern_publication.rs",
+      "lines": [
+        69,
+        165
+      ],
+      "symbol": "request_mapped / request_mapped_traversal / request_mapped_view",
+      "file_sha256": "3641e7d6aad3bf5ecbcf7e07613ef48b34bca7dd7964d053679a41c92cc306c7",
+      "excerpt_sha256": "ccb1d7c400b36daee7a8dbfc8e8fbe6e245fe172f5f61b491f5bd5d933bac68b"
+    },
+    {
+      "id": "mapped-completion",
+      "path": "rust/crates/vexel-scene/src/pattern_publication.rs",
+      "lines": [
+        169,
+        276
+      ],
+      "symbol": "complete_mapped",
+      "file_sha256": "3641e7d6aad3bf5ecbcf7e07613ef48b34bca7dd7964d053679a41c92cc306c7",
+      "excerpt_sha256": "cb42c58794ff797f82f368fce5c8ffbbf4b27698d482917d9407a58882a737e4"
+    },
+    {
+      "id": "ticket",
+      "path": "rust/crates/vexel-scene/src/pattern_ticket.rs",
+      "lines": [
+        36,
+        90
+      ],
+      "symbol": "PatternTickets::request",
+      "file_sha256": "235d0c7aa0e6572705d9a4886288e0f6c147d7ab1eafb8ab0c6c53187b7b6251",
+      "excerpt_sha256": "d3d5574e321a4d41bec8f1bc99ca2c1e81d0582364a6a2c931a87d0cd1468acd"
+    },
+    {
+      "id": "frame",
+      "path": "rust/crates/vexel-scene/src/frame.rs",
+      "lines": [
+        9,
+        35
+      ],
+      "symbol": "EvaluatedFrame / FrameBuilder",
+      "file_sha256": "652634caeff248b612b5041964245e3aa8048f7ec4662a9fa5ae4812271684bc",
+      "excerpt_sha256": "008839b91e71afc7f1c66b13e86a23ae5921032220d08bd3d8136abc6330af3f"
+    },
+    {
+      "id": "frame-constructor",
+      "path": "rust/crates/vexel-scene/src/frame.rs",
+      "lines": [
+        105,
+        130
+      ],
+      "symbol": "FrameBuilder::new",
+      "file_sha256": "652634caeff248b612b5041964245e3aa8048f7ec4662a9fa5ae4812271684bc",
+      "excerpt_sha256": "9accac1adf958be328ca7ab7b36d848f0c6907141aa6ff1de710cd3ea869158b"
+    },
+    {
+      "id": "animation-evaluation",
+      "path": "rust/crates/vexel-svg-animation-frame/src/lib.rs",
+      "lines": [
+        251,
+        270
+      ],
+      "symbol": "evaluate_frame",
+      "file_sha256": "6187b3460354e22b4f21b8b960c72d7b297d2458e9ffe493294398c11fbf2649",
+      "excerpt_sha256": "3d64ecb498484c6771b01349a91f7bee0a6fb5415bccd7594faa7d6bd7c789a2"
+    },
+    {
+      "id": "kernel-legacy",
+      "path": "rust/crates/vexel-scene/src/render_contract.rs",
+      "lines": [
+        218,
+        261
+      ],
+      "symbol": "KernelResources / FlatKernel",
+      "file_sha256": "ad81dfaef997e7ea7c263a9084477e66c4a400e7dd69ba0385bf166869e3e11f",
+      "excerpt_sha256": "291ca2ffa022db5472b52d20c90b9d9e90fd5ff535f6dd0191d76a2c03aa5522"
+    },
+    {
+      "id": "kernel-controlled",
+      "path": "rust/crates/vexel-scene/src/raster_job_views.rs",
+      "lines": [
+        153,
+        261
+      ],
+      "symbol": "ControlledKernelResources / ControlledSampleInput / ControlledSampleKernel / ControlledIndexKernel",
+      "file_sha256": "259c23c85c6b5965ceed4cea4ab69a4cfb44bbcdf1fcdf3711c882301f9b75c4",
+      "excerpt_sha256": "e03f764ebca4727194093fe0bbc1f16231bb3e586cb3ca6070ac31908a477458"
+    },
+    {
+      "id": "output-flat",
+      "path": "rust/crates/vexel-scene/src/raster_job_scratch.rs",
+      "lines": [
+        183,
+        227
+      ],
+      "symbol": "JobRenderOutput / ControlledFlatKernel",
+      "file_sha256": "73e90ecdcd324cc1c7a95a9c9c402d9aa9b988b15c273c043c4d26e14cd651e4",
+      "excerpt_sha256": "57d6b6379328a1759711672f2fee2e7818413d98e89f1166c26b2727976b6336"
+    },
+    {
+      "id": "pending-regression",
+      "path": "rust/crates/vexel-scene/tests/decode_initialization.rs",
+      "lines": [
+        324,
+        376
+      ],
+      "symbol": "pending_actual_planner_child_request_and_stale_ownership_are_usable",
+      "file_sha256": "2c9d200eede3951504fc50b144590e9500e16b59527465a00fd6242f799e5fba",
+      "excerpt_sha256": "7465b4efd6d3af840ad97647f2307e0f6157a8714739da15379caa13a3e73dca"
+    },
+    {
+      "id": "deferred-test",
+      "path": "rust/crates/vexel-scene/tests/decode_initialization.rs",
+      "lines": [
+        515,
+        550
+      ],
+      "symbol": "deferred_child_render_after_late_install_completes_same_pending_request",
+      "file_sha256": "2c9d200eede3951504fc50b144590e9500e16b59527465a00fd6242f799e5fba",
+      "excerpt_sha256": "527cfe308d40c4b045139d916f634b304f09ca653fe2e8928830144817f5aa61"
+    },
+    {
+      "id": "candidate-early-animation",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/decode.rs",
+      "lines": [
+        246,
+        289
+      ],
+      "symbol": "Decoder constructor animation parse / SceneBuilder::new",
+      "file_sha256": "6f6e51088e436ec5d591c642ec0850f0d981f03c2c6add426adc6dcc9023b3d2",
+      "excerpt_sha256": "ee281bbd94c308600d290d11d7aee734d390caf92639cee68a6a019d32b682a2"
+    },
+    {
+      "id": "candidate-step",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/decode.rs",
+      "lines": [
+        427,
+        508
+      ],
+      "symbol": "step_production / step_internal",
+      "file_sha256": "6f6e51088e436ec5d591c642ec0850f0d981f03c2c6add426adc6dcc9023b3d2",
+      "excerpt_sha256": "97261803dd735dcc4bc5d22bbde19198071c37b6e3ab195ff14a2d496b5a805e"
+    },
+    {
+      "id": "candidate-abort",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/decode.rs",
+      "lines": [
+        511,
+        527
+      ],
+      "symbol": "abort",
+      "file_sha256": "6f6e51088e436ec5d591c642ec0850f0d981f03c2c6add426adc6dcc9023b3d2",
+      "excerpt_sha256": "f6db7da7f5c9baf16f9a6102321317ab6c88562542b5436faafa01d7e91e66b9"
+    },
+    {
+      "id": "candidate-request",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/session.rs",
+      "lines": [
+        8,
+        74
+      ],
+      "symbol": "pattern_event / prepare_pattern_event",
+      "file_sha256": "de217835a7619384d589c700b2f6fe9b11d9ff19983b48ec24c23fc7faf5d7d6",
+      "excerpt_sha256": "2d2ae243b57b3329337035b26af9d838c9e7130dff6d591abced38f07e7389b9"
+    },
+    {
+      "id": "candidate-resume",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/session.rs",
+      "lines": [
+        115,
+        148
+      ],
+      "symbol": "resume_pattern_production",
+      "file_sha256": "de217835a7619384d589c700b2f6fe9b11d9ff19983b48ec24c23fc7faf5d7d6",
+      "excerpt_sha256": "352e9f6349a03df3b319bb148f3a3d8e4674476e013691e1c5d397234a257244"
+    },
+    {
+      "id": "candidate-child",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_work.rs",
+      "lines": [
+        297,
+        339
+      ],
+      "symbol": "accept child viewport and draft",
+      "file_sha256": "96a064be6d0e1072768b9bc99bb14f6dcf1f8e7f0a4f54dfde64304683ed1765",
+      "excerpt_sha256": "998e55414940e8d4347bde74423629e0b877cc7fd836759206437416bcac8ddc"
+    },
+    {
+      "id": "candidate-nesting",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_work.rs",
+      "lines": [
+        353,
+        424
+      ],
+      "symbol": "active patterns / DefinitionDone / child Walk tasks",
+      "file_sha256": "96a064be6d0e1072768b9bc99bb14f6dcf1f8e7f0a4f54dfde64304683ed1765",
+      "excerpt_sha256": "f989ef732d79f990ab5f4c448525a7f18ba1c86c23c94cc7df5a15218a48118a"
+    },
+    {
+      "id": "candidate-style",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_work.rs",
+      "lines": [
+        425,
+        478
+      ],
+      "symbol": "expansion_context",
+      "file_sha256": "96a064be6d0e1072768b9bc99bb14f6dcf1f8e7f0a4f54dfde64304683ed1765",
+      "excerpt_sha256": "0fe80c11863bb60b30112b33a9d18e662ba499c813c5987f9ba7697a0ba11518"
+    },
+    {
+      "id": "candidate-seal",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_finish.rs",
+      "lines": [
+        21,
+        38
+      ],
+      "symbol": "definition_done_inner",
+      "file_sha256": "595fbe6c64bec73fac5763b056bbb7560caacc6f57af30b3a7641116a38687cf",
+      "excerpt_sha256": "d572be2a0a702b9e93f2536da742f287635de77f1803214f1f3187a6af984d39"
+    },
+    {
+      "id": "candidate-pending",
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_finish.rs",
+      "lines": [
+        177,
+        202
+      ],
+      "symbol": "Pattern branch PendingPattern",
+      "file_sha256": "595fbe6c64bec73fac5763b056bbb7560caacc6f57af30b3a7641116a38687cf",
+      "excerpt_sha256": "02eb0ea64065cbbd502f6f482e7d271e19443b37abc9866513eb4e1e8548d62a"
+    }
+  ],
+  "original_call_chain": [
+    "decode.c:198 svg_shape_traverse_walk_range(parent)",
+    "pattern resolve -> decode_pattern_content:239",
+    "compute pattern_style:282-296; copy traversal and reset child-local state:297-318",
+    "walk child:319-327 (nested patterns finish synchronously)",
+    "decrement active pattern depth:328; raster_shape_render:330 -> grouped/flat static raster",
+    "render failure:331-333 -> parent traversal failure:199-201 -> cleanup; no svg_anim_parse",
+    "render succeeds -> byte admission/copy/append:335-374 -> continue parent traversal",
+    "root_seen check:208-212 -> actual parent svg_anim_parse:214"
+  ],
+  "current_candidate_call_chain": [
+    "constructor decode.rs:255 parse_owned_controlled -> :282 SceneBuilder::new (early parent parse)",
+    "definition_work.rs:297 ready root viewport -> new_scene/begin_draft -> DefinitionDone and child Walk tasks",
+    "definition_finish.rs:27-37 commit/seal child -> :177-201 ready parent shape lookup -> pending_pattern",
+    "decode.rs:468-478 / 499-505 stop traversal for pattern_event",
+    "session.rs:56 request_mapped -> builder.scene(child) requires finalized; :22 reconstructs ready child",
+    "external render result -> session.rs:116 resume_pattern_production -> complete_mapped; errors abort; only then tasks resume"
+  ],
+  "existing_route_verdict": {
+    "sufficient": false,
+    "reason": "No accepted conversion from TraversalView to static raster input. Ready builder.scene requires actual parsed parent animation. FrameBuilder/evaluate_frame and both legacy and controlled kernel signatures take ready SceneView. Deferred accepted test installs late animation first and supplies fixture pixels; it does not provide the original timing route. Scalar-sample lib is registration only; no production backend was proved here."
+  },
+  "proposed_api": {
+    "visibility": "New names/signatures below are a proposal, not existing declarations. All static-view constructors/fields private to Scene; expose only the request path.",
+    "static_view": "pub struct StaticPatternView<'a> { /* private borrow of real SceneData tables, SourceOwner, validated Viewport, child identity and request scope; no AnimationView/Option/OwnedAnimation */ }",
+    "static_request": "pub struct StaticPatternRequest<'a> { pub ticket: PatternTicket, pub child: StaticPatternView<'a>, /* same definition,width,height,tile_width,tile_height,content_transform,error_offset fields as PatternRequest */ }",
+    "mint": "pub fn request_mapped_static<'a>(&mut self, builder: &'a SceneBuilder, draft: &DraftToken, source: &DecodeSource<'_>, child: SceneId, descriptor: PatternDescriptor, mapping: PatternMapping, shape: ShapeId, channel: PaintChannel, job: &RasterJob, control: &mut dyn WorkControl) -> Result<StaticPatternRequest<'a>>",
+    "event": "Add DecodeEvent::NeedStaticPattern(StaticPatternRequest<'a>); keep existing NeedPattern for accepted ready callers. Production decoder emits NeedStaticPattern during provisional traversal.",
+    "raster_input": "pub enum RasterInput<'a> { Ready(SceneView<'a>), StaticPattern(StaticPatternView<'a>) }",
+    "static_mask_lookup": "impl<'a> StaticPatternView<'a> { pub fn mask_content(&self, mask: MaskId) -> Result<StaticPatternView<'a>>; } // only current view's validated mask.content; source/owner/serial/sealed/viewport checks; bounded closure traversal",
+    "render_boundary": "ControlledFlatKernel::render_flat(&mut self, view: RasterInput<'_>, range: TableRange, options: RenderOptions, job: &mut RasterJob, control: &mut dyn WorkControl) -> Result<JobRenderOutput>",
+    "propagation": "Change SceneView input positions along ControlledKernelResources clip/stroke methods, ControlledSampleInput::validate, ControlledSampleKernel and ControlledIndexKernel to RasterInput; provide common read-only table/source/id/viewport getters and typed shape/paint/clip access. Static getter surface has no arbitrary SceneId lookup, mutable data, animation access, ready-view conversion, frame evaluation or freeze. Ready variant delegates existing scene lookups. Static reads original attributes/transforms unchanged; grouped/mask/filter orchestration uses the same input role throughout. Legacy APIs can remain ready-only; no duplicate scratch or fake backend.",
+    "completion": "Use unchanged PatternTickets::complete_mapped(ticket, &mut builder, &draft, &mut job, result: Result<JobRenderOutput>, control); no raw Vec/Tile handoff.",
+    "lifetimes": "StaticPatternView borrows builder tables and its Arc source owner, not temporary copied storage. Step event borrows Decoder; save Copy ticket, render with independently owned same job/control, then drop event/view before resume_pattern_production(&mut Decoder,...). Output contains only job-owned handles and generation, never scene references. Borrow prevents parent edits, rollback, source drop, seal/freeze or late animation installation while view is live."
+  },
+  "mint_invariants": [
+    "Run all existing request_mapped_view validations unchanged: draft_index and draft_slot ownership; job.validate_source; Arc::ptr_eq source; same-source pattern token; owner shape SourceMap; computed mapping inverse; child != parent and child.index >= draft.scene_count.",
+    "Require builder Traversing with actual AnimationStorage::Pending; child is not root, has no live child draft/request, is sealed by existing validate::scene; parent draft is live and unsealed. For this production route require an active request scope (not an unscoped ready escape).",
+    "Require child viewport width/height match descriptor pixels, view origin zero, view dimensions tile_width/tile_height, and explicit none/set aspect as original. Validate reachable mask scenes sealed, same source/owner, positive validated viewport, cycle/work bounds. Never invent a missing viewport.",
+    "Mint static capability only after child traversal and all descendant pattern publications succeed. Preserve all table references and typed IDs/serials; do not flatten away masks/groups/filters or rebuild paints from reduced data.",
+    "Store existing PatternContinuation mapping,parent,shape,channel,draft nonce,generation,request identity and job identity; existing ticket owner/serial remains authoritative. Revalidate completion after borrow ends; wrong/stale/canceled scopes never attach output.",
+    "Charge real reads/render work and buffers to existing control/job; keep overflow/OOM/limit cleanup and partial-output accounting. Do not claim source sharing eliminates child or output allocation costs."
+  ],
+  "adoption_scope": [
+    {
+      "paths": [
+        ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/decode.rs"
+      ],
+      "requirements": "Replace constructor early animation with accepted provisional; preserve original root attribute/style/display/transform/viewport order through initialize_root/hidden root. At task exhaustion and root_seen only, parse same-source actual animation and finalize_decode; do not advance to Complete before admission. Child render/publication errors abort before this point."
+    },
+    {
+      "paths": [
+        ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_work.rs",
+        ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/definition_finish.rs",
+        ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/session.rs"
+      ],
+      "requirements": "Use traversal_scene for read-only construction queries currently using ready scene; unwrap only validated optional viewport at required locations. Preserve expansion styles (including canonical pattern-root compute_style with no inherited parent per original), source-backed ranges/transforms, tile viewport, child reset state, control and active-definition accounting. Request static role after commit/seal; build event with borrowed static child without reconstructing ready view. Keep step pending barrier and resume error abort."
+    },
+    {
+      "paths": [
+        "rust/crates/vexel-scene/src/pattern_publication.rs",
+        "rust/crates/vexel-scene/src/model.rs",
+        "rust/crates/vexel-scene/src/decode_contract.rs",
+        "rust/crates/vexel-scene/src/render_contract.rs",
+        "rust/crates/vexel-scene/src/raster_job_views.rs",
+        "rust/crates/vexel-scene/src/raster_job_scratch.rs"
+      ],
+      "requirements": "Add opaque static role/request/event and shared raster read input as specified; update only actual production raster/resource consumers that require it. Keep existing ready SceneView defaults, AnimationStorage::Pending, require_finalized, FrameBuilder/evaluate_frame signatures, accepted assertions and compile-fail guards intact. Root selects concrete consumer scope; no renderer implementation is asserted by this audit."
+    }
+  ],
+  "nested_and_effect_order": [
+    "DefinitionWork task stack completes inner pending pattern first; resume attaches inner output before outer child commit/seal and static render. Single outstanding PatternTickets slot suffices because outer ticket is minted only after descendants finish. Preserve active-definition guard until traversal ends; original pops pattern depth before rendering.",
+    "Use original cumulative sync_work semantics for references, use/element/transform/paint work, text/image counts, mask/pattern/marker instances and pattern bytes; retain original cycle/depth/instance/byte limits and error categories/offsets. No new delayed render queue.",
+    "Media operations execute at their original child traversal point using the existing provider with exact style/source/viewport inputs. Scene/request rollback releases owned child/image/output resources; it cannot undo callbacks. No defer/replay/deduplication or second traversal. Original image callback evidence is pattern.c:280-281 and copied traversal :297 plus image.c:219-239. Rust MediaProvider is an owned-result contract, not permission to alter callback order."
+  ],
+  "regression_proposal": [
+    {
+      "input": "Pattern-filled path with traversable child; inject child raster OOM/limit or deterministic raster failure; same source contains animation that would fail late parser.",
+      "assert": "Exact child diagnostic/category/offset wins; parent animation parser count zero; no next parent task/provider effect; no attached tile; admitted buffers released honestly."
+    },
+    {
+      "input": "Same dual-error source with successful child renderer.",
+      "assert": "Child rendered/resumed/published before actual animation parse; late animation diagnostic wins afterward; overall decode rolls back; no ready/frozen parent escapes."
+    },
+    {
+      "input": "Pattern contains animated geometry/opacity/transform descendants, masks (with their own content), opacity groups, nested patterns, gradients/clips/filters and source-backed image/text.",
+      "assert": "Static original child pixels/tables and original provider trace; parent animation still parsed only once after traversal. Mask children retain static role. Pattern-root CSS inheritance, transform, tile viewport/aspect, paints/source maps, opacity and nested published tiles remain intact."
+    },
+    {
+      "input": "Nested acyclic pattern and self/two-node cycle; depth/instance/byte boundary cases; child cancel and control limit at traversal/render/publication.",
+      "assert": "Depth-first single pending ticket barrier; original limit/error priority; correct cumulative accounting/cleanup; no later callback/parser invocation on earlier failure."
+    },
+    {
+      "input": "Wrong/stale ticket; same bytes different Arc; foreign job; altered generation; rollback/replacement child or owner shape; invalid dimensions/stride/output pool.",
+      "assert": "Reject under existing identity/typed handle guards, release same-job output where owned, never mutate replacement or publish stale result."
+    },
+    {
+      "input": "Compile-fail probes and all accepted Scene177 tests unchanged.",
+      "assert": "TraversalView and StaticPatternView cannot enter FrameBuilder/evaluate_frame/ready render signature; pending root cannot mint static input; no public forged static constructor or arbitrary parent lookup; mutation/rollback/finalize while borrowed fails; existing pending-parent and freeze guards remain."
+    }
+  ],
+  "limitations": "Source-only architectural proposal. No implementation, build/test, runtime equivalence, final product acceptance, or new roadmap. No agents/network/GUI/review CLI/billing. Root decides any future shared scope after independent evidence review."
+}

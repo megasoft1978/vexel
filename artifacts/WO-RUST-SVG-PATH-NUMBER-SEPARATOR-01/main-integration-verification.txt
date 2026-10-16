@@ -1,0 +1,19 @@
+2026-10-15 main workspace integration verification
+
+Source seed audit: all six seeded immutable files match the revision-2 seed before the worker edit. The four allowlisted candidate outputs were integrated by exact hash match from result-r2.json. Candidate-only incidental formatting differences in parser/commands.rs and parser/tests.rs were excluded.
+
+Integrated SHA-256:
+4339f87a1ffefadd81c53bd2ad980f6ec9465884339878e24a2a6ac90cd53131  rust/crates/vexel-svg-path/src/parser.rs
+da5f2cfbe34ca0f475a886db57c9d20672f97f45c161e8417b5d02c307d3e33e  rust/crates/vexel-svg-path/src/reader.rs
+a2d1cd9c36e10341925e5a5854817f5a94bdac80c3c300daf300e5ce1abd8195  rust/crates/vexel-svg-path/tests/controlled.rs
+b9d5ee0bd255380ed6bbe049a1a3ef3a38e35fd3c048a63e0233f632b818fc87  rust/crates/vexel-svg-path/tests/number_separator.rs
+
+Fresh main checks:
+PASS CARGO_HOME=.cache/cargo CARGO_TARGET_DIR=build/rust cargo +stable check -p vexel-svg-path --locked --offline
+PASS CARGO_HOME=.cache/cargo CARGO_TARGET_DIR=build/rust cargo +stable test -p vexel-svg-path --locked --offline (37 tests: 9 unit, 13 controlled, 1 separator regression, 1 parity, 13 path; 0 doc tests)
+PASS rustfmt --edition 2024 --check rust/crates/vexel-svg-path/src/reader.rs rust/crates/vexel-svg-path/tests/controlled.rs
+PASS python3 scripts/wo_validate.py WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01 --ready
+PASS python3 scripts/ledger.py validate ledger.jsonl (1742 entries before coordinator terminal events)
+PASS git diff --check
+
+Independent Luna review passed the parser behavior, expected absolute diagnostic offset (13 with source span beginning at 7), `.6.5` compact pair, compact arc exception, and candidate hashes. Frozen parity and all existing path tests pass. No legacy oracle or shared Cargo files changed. This is a scoped parser acceptance, not full SVG or application completion.

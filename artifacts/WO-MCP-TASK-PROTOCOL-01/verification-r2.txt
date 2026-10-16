@@ -1,0 +1,20 @@
+WO-MCP-TASK-PROTOCOL-01 revision 2 focused verification
+
+Frozen contract: revision 2 SHA-256 452ceca8cf30f0af4d918ca26a452375823c7aa7a4884b20d4f593f79557bc73.
+
+Implementation:
+- CallToolResult validation rejects missing/non-array content, null/scalar/empty/unknown blocks, and supported block types missing required fields. Empty content arrays remain valid. Text, image, audio, embedded resource, and resource-link basic fields are covered.
+- Task creation validates Task metadata only, supports working/completed/failed/cancelled initial statuses without DetailedTask result/error, and allows omitted pollIntervalMs.
+- tools/call passes task support only when both the request capability and complete task backend are available.
+
+Focused test coverage: terminal creation metadata for all four statuses; malformed content validation plus dispatcher responses; supported content block forms; callback-observed readiness flag; prior protocol envelope/id parsing assertions retained.
+
+Commands and results:
+- cmake --build build/mac-debug --target mcp_protocol_async_test mcp_protocol_test vexel-mcp: passed; raw output in build-r2.txt.
+- ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-(protocol|protocol-async)$': 2/2 passed; raw output in ctest-r2.txt.
+- python3 scripts/wo_validate.py WO-MCP-TASK-PROTOCOL-01 --ready: passed, revision/hash above.
+- python3 scripts/ledger.py validate ledger.jsonl: passed, 1021 entries.
+- git diff --check: passed.
+- tests/test_map.json parsed as valid JSON; targeted new/changed source whitespace audit clean. Async implementation/header/dispatcher test are 410/61/479 lines respectively.
+
+One initial test run failed because a new test generated an unquoted string request ID; the fixture was corrected and the focused build/CTest rerun passed. No app bridge, broker, worker, network source fetch, broad test suite, staging, or commit was performed. r1 evidence files remain unchanged.

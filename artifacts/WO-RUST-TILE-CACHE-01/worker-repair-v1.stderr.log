@@ -1,0 +1,2 @@
+2026-10-14T09:33:50.464660Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-cache/artifacts/WO-RUST-TILE-CACHE-01/result.md:
+Final checks passed: locked offline `cargo +stable check` and `cargo +stable test` for `vexel-tile-cache` (2 unit and 6 integration tests), WO ready validation, ledger validation (1143 entries), and `git diff --check`. The initial rollover test issues and their repairs are recorded in `verification.txt` and `parity-map.json`.

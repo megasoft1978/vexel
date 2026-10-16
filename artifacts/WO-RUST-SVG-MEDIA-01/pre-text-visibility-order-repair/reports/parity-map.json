@@ -1,0 +1,412 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-MEDIA-01",
+  "scope_sha256": "74fe7164f1305f19ff31ae52bc07fe605c7f2b172c1adc51e88e3136e48ad1aa",
+  "catalog_symbol_count": 24,
+  "symbols": [
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "span_is",
+      "rust": "src/image.rs::span_is",
+      "status": "ported",
+      "coverage": "tests/media_parity.rs::image_data_uri_and_base64_keep_exact_grammar_and_offsets"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "attribute",
+      "rust": "src/image.rs::attribute",
+      "status": "ported",
+      "coverage": "image_element uses local-name and prefix matching"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "base64_value",
+      "rust": "src/image.rs::base64_value",
+      "status": "ported",
+      "coverage": "tests/media_parity.rs::image_data_uri_and_base64_keep_exact_grammar_and_offsets"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "decode_base64",
+      "rust": "src/image.rs::decode_base64",
+      "status": "ported",
+      "coverage": "strict padding/alphabet checks, 32 MiB decoded and 44,739,266-byte encoded caps; focused test"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "data_payload",
+      "rust": "src/image.rs::parse_data_uri",
+      "status": "ported",
+      "coverage": "Exact PNG/JPEG headers and caps; empty payload Unsupported at href START; successful payload span used for provider errors; conflicting href uses original xlink span"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "image_geometry",
+      "rust": "src/image.rs::image_geometry",
+      "status": "ported",
+      "coverage": "x/y/width/height, viewport percentage, meet/slice/none, bounds; focused test"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "symbol": "svg_shape_builder_add_image_element",
+      "rust": "src/publication.rs::publish_image_request + StylePublisher; src/image.rs::image_element + append_image_plan_mapped; src/request.rs::atomic_request",
+      "status": "owned media implemented; common style delegated explicitly; pre-geometry shape capacity admission blocked",
+      "coverage": "All prior image/rollback predicates plus style_publication: visibility, style/provider order, real colors/stroke/clip/group, host mapping, no empty-success, exact diagnostic offsets, every control boundary"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "text_span_equal",
+      "rust": "src/text.rs::text_span_equal",
+      "status": "ported",
+      "coverage": "source-bounded exact span equality"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "text_attribute",
+      "rust": "src/text.rs::text_attribute",
+      "status": "ported",
+      "coverage": "shares bounded attribute scan with image parser"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "normalize_text",
+      "rust": "src/text.rs::normalize_text",
+      "status": "ported",
+      "coverage": "entity decoding, preserve/collapse whitespace and TextState; focused test"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_position_list",
+      "rust": "src/text.rs::parse_position_list",
+      "status": "ported",
+      "coverage": "Existing grammar/units/malformed predicates; exact over-cap Number at excess-item source offset in pure and typed production requests; failed request restores admissions"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_families",
+      "rust": "src/text.rs::parse_families",
+      "status": "ported",
+      "coverage": "style_and_layout proves quoted Mock Sans + sans-serif bytes/spans, inherited tspan families and exact Unsupported offset at family 33"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_size",
+      "rust": "src/text.rs::parse_size",
+      "status": "corrected original Unsupported style failures and evaluation order",
+      "coverage": "tests/style_and_layout.rs: malformed_style_is_unsupported_at_exact_property_offset_before_provider; style_defaults_and_original_inherited_font_values_reach_provider; anchor_modes_and_oblique_normal_spacing_use_original_units; family_count_limit_and_relative_lengths_keep_original_style_errors_and_units"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_weight",
+      "rust": "src/text.rs::parse_weight",
+      "status": "corrected original Unsupported style failures and evaluation order",
+      "coverage": "tests/style_and_layout.rs: malformed_style_is_unsupported_at_exact_property_offset_before_provider; style_defaults_and_original_inherited_font_values_reach_provider; anchor_modes_and_oblique_normal_spacing_use_original_units; family_count_limit_and_relative_lengths_keep_original_style_errors_and_units"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_spacing",
+      "rust": "src/text.rs::parse_spacing",
+      "status": "corrected original Unsupported style failures and evaluation order",
+      "coverage": "tests/style_and_layout.rs: malformed_style_is_unsupported_at_exact_property_offset_before_provider; style_defaults_and_original_inherited_font_values_reach_provider; anchor_modes_and_oblique_normal_spacing_use_original_units; family_count_limit_and_relative_lengths_keep_original_style_errors_and_units"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_text_style",
+      "rust": "src/text.rs::parse_text_style",
+      "status": "corrected original Unsupported style failures and evaluation order",
+      "coverage": "tests/style_and_layout.rs: malformed_style_is_unsupported_at_exact_property_offset_before_provider; style_defaults_and_original_inherited_font_values_reach_provider; anchor_modes_and_oblique_normal_spacing_use_original_units; family_count_limit_and_relative_lengths_keep_original_style_errors_and_units"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "text_geometry",
+      "rust": "src/text_geometry.rs::text_geometry + text_path_geometry",
+      "status": "ported",
+      "coverage": "compound_contours_keep_winding_closure_and_scene_subpath_boundaries proves separate contour ranges, opposite winding, explicit/implicit closure, and committed real scene output; prior outline test retained"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "parse_xml_space",
+      "rust": "src/text.rs::parse_xml_space",
+      "status": "ported",
+      "coverage": "xml:space preserve/default inheritance and invalid value error"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "symbol": "svg_shape_text_render_element",
+      "rust": "src/publication.rs::publish_text_request + StylePublisher; src/text_geometry.rs::render_text_request_impl + render_text_element; src/request.rs::atomic_request",
+      "status": "owned text implemented; common style delegated explicitly; pre-geometry shape capacity admission blocked",
+      "coverage": "Prior text/tspan/font/cache/layout/compound/cumulative-budget/atomicity predicates plus style_publication direct styles, clips/groups, layout-before-custom-style errors and callback/commit cleanup"
+    },
+    {
+      "source": "src/svg/shape/text_cache.c",
+      "symbol": "svg_shape_text_layout_release",
+      "rust": "src/text_cache.rs::release_layout",
+      "status": "owned Drop adaptation",
+      "coverage": "provider returns Rust-owned TextLayout; layouts release once by ownership"
+    },
+    {
+      "source": "src/svg/shape/text_cache.c",
+      "symbol": "svg_shape_text_cache_create",
+      "rust": "src/text_cache.rs::TextCache::new",
+      "status": "owned Drop adaptation",
+      "coverage": "constructs empty 32-entry cache"
+    },
+    {
+      "source": "src/svg/shape/text_cache.c",
+      "symbol": "svg_shape_text_cache_destroy",
+      "rust": "src/text_cache.rs::Drop for TextCache",
+      "status": "owned Drop adaptation",
+      "coverage": "keys/layouts drop exactly once with cache"
+    },
+    {
+      "source": "src/svg/shape/text_cache.c",
+      "symbol": "request_matches",
+      "rust": "src/text_cache.rs::TextCacheKey::matches",
+      "status": "ported",
+      "coverage": "exact owned text/family/style/size/weight/spacing key"
+    },
+    {
+      "source": "src/svg/shape/text_cache.c",
+      "symbol": "svg_shape_text_layout_run",
+      "rust": "src/text_cache.rs::TextCache::layout and public layout_shared_cache",
+      "status": "ported",
+      "coverage": "Both cache representations proved at 32 entries, 256 KiB and 262144 commands; every key parameter, cache ownership/fallback, malformed layout and provider OOM/Limit/otherwise Unsupported. Request rollback removes only new entries and restores counters."
+    }
+  ],
+  "algorithms": [
+    {
+      "source": "src/svg/shape/image.c",
+      "name": "strict data URI and base64 decode",
+      "rust": "src/image.rs",
+      "coverage": "image_data_uri_and_base64_keep_exact_grammar_and_offsets"
+    },
+    {
+      "source": "src/svg/shape/image.c",
+      "name": "image geometry and preserveAspectRatio meet/slice/none",
+      "rust": "src/image.rs",
+      "coverage": "image_geometry_preserves_meet_slice_none_and_viewport_lengths"
+    },
+    {
+      "source": "src/raster/shape_render_sample.c",
+      "name": "transformed bilinear sample of premultiplied image pixels, half-open bounds, straight-alpha output rounding",
+      "rust": "src/image_sample.rs::sample_image",
+      "coverage": "image_sampler_matches_premultiplied_bilinear_rounding_and_bounds"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "name": "XML entity decoding and preserve/collapse whitespace state",
+      "rust": "src/text.rs::normalize_text",
+      "coverage": "text_entities_whitespace_and_position_lists_match_source_contract"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "name": "font-family, size/weight/style/anchor and letter/word spacing",
+      "rust": "src/text.rs",
+      "coverage": "style_and_layout: inherited original Mock Sans/font-size9pt/weight700/italic/letter-spacing1.5pt, all anchors, relative spacing/font lengths and exact Unsupported offsets"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "name": "glyph placement, baseline, overrides, word spacing, contour closing and cubic flatten",
+      "rust": "src/text_geometry.rs::text_geometry and text_path_geometry",
+      "coverage": "original outline test plus compound contours and typed scene subpath proof; tspan cursor and anchor unit proofs"
+    },
+    {
+      "source": "src/svg/shape/text_cache.c",
+      "name": "bounded cache key ownership and layout validation",
+      "rust": "src/text_cache.rs::TextCache",
+      "coverage": "cache_limits.rs proves both cache representations at exact byte/command boundaries; prior entry-cap proof unchanged"
+    },
+    {
+      "source": "src/svg/shape/image.c and text.c",
+      "name": "request-local atomic cleanup under active outer draft",
+      "status": "implemented and proved",
+      "coverage": "atomicity_gap.rs seven converted success regressions; request_failures.rs all observed control boundaries through commit and late provider errors; no caller rollback assumed",
+      "rust": "src/request.rs::atomic_request plus text state/cache checkpoint in render_text_request"
+    },
+    {
+      "source": "src/svg/shape/text.c",
+      "name": "4 Mi document text-command budget including cache hits",
+      "status": "implemented and proved",
+      "coverage": "document_budget_gap.rs: sixteen actual rectangle layouts consume exactly 4 Mi; use seventeen returns TextCommands at original run offset; failed admissions/canceled uses preserve prior budget, state and cache",
+      "rust": "render_text_element calls accepted SceneBuilder::admit_text_commands on every validated layout use"
+    },
+    {
+      "source": "src/svg/shape/shape_custom.c + shape_style.c + traverse.c (common decoder call chain)",
+      "name": "required production common-style publisher and media request stages",
+      "status": "public executable required adapter surface; owned visibility/atomicity implemented; actual decoder adapter pending and exact shape admission blocked",
+      "rust": "src/publication.rs::PublicationContext, CustomGeometry, StylePublisher, publish_image_request, publish_text_request, publish_checked",
+      "coverage": "tests/style_publication.rs: fourteen meaningful fixture delegate/diagnostic tests; no production neutral style implementation"
+    }
+  ],
+  "algorithm_adaptations": [
+    {
+      "algorithm": "provider release callbacks and raw pointers",
+      "adaptation": "Rust-owned Vec, ImagePixels and TextLayout drop automatically; cache hits borrow owned scene cache entries; no unsafe/refcount callbacks"
+    },
+    {
+      "algorithm": "C allocation hooks and source ownership",
+      "adaptation": "Fallible owned reserves and actual SceneBuilder capacity admission/source maps. Accepted begin_request/commit_request/rollback_request provide unconditional logical suffix restoration; text wrapper also truncates new cache entries and restores external state. Retained capacity/allocation/work history is not RSS rollback."
+    },
+    {
+      "algorithm": "referenced-element source mapping",
+      "adaptation": "typed TextDecodeRequest and ImageDecodeRequest carry SourceMap separately from canonical ElementView; both entrypoints validate before provider/append and preserve the map on output shapes; exercised with real LexicalDocument/SceneBuilder fixture"
+    },
+    {
+      "algorithm": "native font/image decode and mixed renderer",
+      "adaptation": "only explicitly supplied MediaProvider is called; fixture provider is test-only; native provider and full renderer composition remain later gates"
+    }
+  ],
+  "revision": 2,
+  "status": "owned media/style-delegate candidate; exact common admission parity blocked; not accepted",
+  "scope_unchanged": true,
+  "blocking_shared_contracts": [
+    {
+      "name": "request-scoped pre-geometry shape capacity admission",
+      "original": "shape_custom.c: builder_begin_shape after fill-rule, before fill-opacity/stroke/geometry/provider",
+      "missing": "Scene153 public SceneBuilder exposes append_shape only; limits/reserves are private and finalize_shape cannot replace path ranges",
+      "required_minimal_contract": "fallible draft/request-scoped actual shape capacity lease bearing source offset, acquired at original admission boundary, consumed by append of actual geometry, released by request rollback",
+      "owner": "coordinator shared repair only",
+      "not_substituted": "no dummy/empty shape, probe allocation, late admission parity claim or unchecked caller cleanup",
+      "detail": "style-publication-contract.md"
+    }
+  ],
+  "integration_seed": "accepted-integration-source-seed.json",
+  "accepted_contract_resolution": {
+    "seed": "accepted-integration-source-seed.json",
+    "accepted_scene_checks": 153,
+    "request_api": [
+      "begin_request",
+      "commit_request",
+      "rollback_request"
+    ],
+    "document_command_api": "SceneBuilder::admit_text_commands and document_text_commands; accepted TextState intentionally remains unchanged",
+    "previous_blocker_report": "atomicity-blocker.md (historical; superseded by this seed and current implementation)"
+  },
+  "assertion_transitions": [
+    {
+      "previous_test": "accepted_public_api_rejects_request_savepoints_inside_outer_draft",
+      "current_test": "accepted_request_savepoint_preserves_prefix_and_outer_draft_usability",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "image_late_shape_limit_documents_residual_pixels_and_missing_atomicity",
+      "current_test": "image_late_shape_limit_restores_prefix_without_residual_pixels",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "image_late_cancellation_documents_residual_pixels_and_missing_atomicity",
+      "current_test": "image_late_cancellation_restores_prefix_without_residual_pixels",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "image_late_capacity_admission_failure_documents_residual_pixels",
+      "current_test": "image_late_capacity_failure_restores_prefix_without_residual_pixels",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "text_late_capacity_failure_documents_retained_layout_state_and_cache",
+      "current_test": "text_late_capacity_failure_restores_layout_state_cache_and_prefix",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "text_second_run_limit_documents_retained_first_run_state_and_cache",
+      "current_test": "text_second_run_limit_restores_first_run_state_cache_and_prefix",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "text_finalization_cancel_documents_retained_shape_after_glyph_work",
+      "current_test": "text_finalization_cancel_restores_shape_state_cache_and_allows_retry",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "previous_test": "document_command_limit_is_missing_on_repeated_cached_layout_uses",
+      "current_test": "seventeenth_cached_layout_use_hits_document_limit_and_restores_counters",
+      "assertion_status": "now requires successful atomicity or original document limit behavior; passed"
+    },
+    {
+      "test": "text_entities_whitespace_and_position_lists_match_source_contract",
+      "before": "incorrect Limit(TextBytes) expectation",
+      "after": "original Number plus exact excess-item offset; all other predicates retained"
+    },
+    {
+      "test": "image_provider_failures_preserve_original_classes_offsets_and_outer_prefix",
+      "before": "incorrect href-start provider offset",
+      "after": "original encoded payload start after successful data_payload; all classes and cleanup predicates retained"
+    }
+  ],
+  "common_effect_obligations": [
+    {
+      "effect": "display",
+      "owner": "owned preflight",
+      "contract": "Unsupported at property span; none before callbacks/provider; inline/block/contents accepted",
+      "proof": "image/text skip tests"
+    },
+    {
+      "effect": "visibility",
+      "owner": "owned hidden skip and custom-boundary validation",
+      "contract": "hidden/collapse before provider; begin/finish traversal effects still run; invalid visibility Unsupported at span after begin and at original custom boundary",
+      "proof": "image/text skip and error priority tests"
+    },
+    {
+      "effect": "opacity/filter/mask/blend/isolation",
+      "owner": "required decoder adapter begin/finish",
+      "contract": "Number opacity; original blend/isolation Unsupported; actual group/definition capacity and shared hierarchy; parent groups and clips close after descendant tspans",
+      "proof": "fixture real opacity groups; full hierarchy/filter/mask/blend/isolation integration unexecuted"
+    },
+    {
+      "effect": "fill/currentColor/fill-rule/fill-opacity",
+      "owner": "required decoder adapter prepare_geometry/publish",
+      "contract": "original url(# recognition, color fallback/default black/none/currentColor, fill-rule Unsupported; opacity Number; alpha lround; shape admission between fill-rule and opacity is BLOCKED",
+      "proof": "fixture red/currentColor/evenodd/half alpha; exact negative order"
+    },
+    {
+      "effect": "stroke and dashes",
+      "owner": "required decoder adapter prepare_geometry/publish",
+      "contract": "original stroke color/paint server, width against viewport diagonal, miter, offset, cap/join, dash bounds, opacity, paint order, shape rendering; Number/Unsupported at exact property spans",
+      "proof": "fixture actual blue stroke/width/alpha; full parser/vector-effect/dash rendering later"
+    },
+    {
+      "effect": "vector-effect and inverse",
+      "owner": "required decoder adapter prepare_geometry",
+      "contract": "actual inverse checks, non-scaling stroke math and original Number/Unsupported; no identity substitution for noninvertible geometry",
+      "proof": "contract assigned; full adapter math unexecuted"
+    },
+    {
+      "effect": "gradient/pattern fill then stroke",
+      "owner": "required decoder adapter publish",
+      "contract": "after geometry, pattern resolver before gradient; real source-derived templates/stops/handles; original inverse/bounds/error priority; image skips gradient fill and retains IMAGE with zero solid alpha",
+      "proof": "fixture actual image index and zero solid alpha; real servers later"
+    },
+    {
+      "effect": "clip-path",
+      "owner": "required decoder adapter publish/finish + enclosing traversal",
+      "contract": "image after paints with actual inverse/local bounds/transform owner; text custom run clip deferred; enclosing decoder includes descendants before closing element clip",
+      "proof": "fixture real Scene Clip handles, text deferred finish and image clip, rollback; original resolver later"
+    },
+    {
+      "effect": "source/use transform",
+      "owner": "owned request validation + checked publication",
+      "contract": "actual source/ledger/scene/end/finite CTMs/host span/live same-scene handles; map fixed at append and retained independently from geometry",
+      "proof": "prior source-map tests; new production host-map and rejected prefix/wrong-map outputs"
+    },
+    {
+      "effect": "marker and enclosing traversal context",
+      "owner": "decoder enclosing traversal",
+      "contract": "original media branch does not attach markers; retain shorthand/inherited contexts, descendants, shared opacity/filter/mask and selection composition",
+      "proof": "original mixed inputs preserved; complete traversal later"
+    }
+  ],
+  "compatibility_helpers": {
+    "functions": [
+      "render_text_request",
+      "decode_image_request",
+      "append_image_plan"
+    ],
+    "status": "explicitly documented geometry-only fixture compatibility; forbidden for production style composition",
+    "production": [
+      "publish_text_request",
+      "publish_image_request"
+    ],
+    "production_requires": "explicit StylePublisher; no neutral/default implementation"
+  }
+}

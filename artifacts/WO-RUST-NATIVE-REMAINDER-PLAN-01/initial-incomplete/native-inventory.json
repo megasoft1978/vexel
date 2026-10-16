@@ -1,0 +1,871 @@
+{
+  "schema": "vexel.native-remainder-inventory.v1",
+  "scope": "src/platform/** original native platform source inventory; hashes computed locally; functions are token-discovered and source mapping is by path",
+  "files": [
+    {
+      "path": "src/platform/README.md",
+      "sha256": "2310381776cae8a1c4e6b2ab438562b56d96815c50830b7e2abc05a26d63c953",
+      "bytes": 1421,
+      "symbols": []
+    },
+    {
+      "path": "src/platform/macos/README.md",
+      "sha256": "90764d27effa62e28d03bbee1794eb7607d0162783c1491862b00a63e32ab2cc",
+      "bytes": 6200,
+      "symbols": []
+    },
+    {
+      "path": "src/platform/macos/platform_accessibility.h",
+      "sha256": "edd257dcbf09f58c62906f09febeb915da928248160a9579a3ad9a6afd9142c9",
+      "bytes": 1216,
+      "symbols": [
+        "platform_accessibility_clear_view_callback",
+        "platform_accessibility_set_command_callback",
+        "platform_accessibility_set_view_callback",
+        "platform_accessibility_update",
+        "platform_accessibility_update_tree"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_accessibility.m",
+      "sha256": "47f2d5d5a2e047f4e70d3f3a5b94cc5d08ea707e883d24e9a32eb563af2020d3",
+      "bytes": 19338,
+      "symbols": [
+        "platform_accessibility_clear_view_callback",
+        "platform_accessibility_set_command_callback",
+        "platform_accessibility_set_view_callback",
+        "platform_accessibility_update",
+        "platform_accessibility_update_tree",
+        "platform_localization_string"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_atomic_file.c",
+      "sha256": "adc63a533d77d2fbf12aae27fb1a488a9696211a27a054f803e8e07096c8b095",
+      "bytes": 6073,
+      "symbols": [
+        "platform_atomic_file_error_name",
+        "platform_atomic_file_replace"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_atomic_new_file.c",
+      "sha256": "f4ba237ec1a70ee6fedb901c17d2185de05e8f35baa07f0070448e9e8170721c",
+      "bytes": 5992,
+      "symbols": [
+        "platform_atomic_file_create_new"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_clipboard.h",
+      "sha256": "3908d4410fc751d11806625d3a5a7f60f218bb99b8d056656580008f936e6435",
+      "bytes": 773,
+      "symbols": [
+        "platform_clipboard_can_paste_svg",
+        "platform_clipboard_read_svg",
+        "platform_clipboard_write_png",
+        "platform_clipboard_write_svg",
+        "platform_clipboard_write_text"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_clipboard.m",
+      "sha256": "434e34ee2488a0e344cab85ef2c6daaff2b20f8a2961d15c40dabb71e88051ad",
+      "bytes": 3287,
+      "symbols": [
+        "platform_clipboard_can_paste_svg",
+        "platform_clipboard_read_svg",
+        "platform_clipboard_write_png",
+        "platform_clipboard_write_svg",
+        "platform_clipboard_write_text"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_cursor.m",
+      "sha256": "197fa482d11928c96b3e58492a6add197708a40f049523b76dc3bc23bf21ddc3",
+      "bytes": 4378,
+      "symbols": [
+        "platform_window_set_cursor"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_dialog.h",
+      "sha256": "9c6c49c8b05c85bd7f873d339124d88452c9c0f791e62a5d517e3a3381f61fc7",
+      "bytes": 3434,
+      "symbols": [
+        "platform_dialog_recovery_choice",
+        "platform_dialog_save_document",
+        "platform_dialog_save_png",
+        "platform_dialog_set_test_hooks",
+        "platform_dialog_show_error",
+        "platform_dialog_status",
+        "platform_dialog_unsaved_changes",
+        "platform_recovery_choice",
+        "platform_unsaved_choice"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_dialog.m",
+      "sha256": "1f067ac72803e9a96ff4f10183c6770ef39bbaa20bd7eeb1831dee8880f70798",
+      "bytes": 18737,
+      "symbols": [
+        "platform_dialog_recovery_choice",
+        "platform_dialog_save_document",
+        "platform_dialog_save_png",
+        "platform_dialog_set_test_hooks",
+        "platform_dialog_show_error",
+        "platform_dialog_unsaved_changes",
+        "platform_localization_copy_default",
+        "platform_localization_string"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_feedback.m",
+      "sha256": "94409ccba31e6103e926cc8e9d7d3054ac86e29a600e78f1b0463ddee66acf6e",
+      "bytes": 12878,
+      "symbols": [
+        "platform_feedback_copy_diagnostics",
+        "platform_feedback_golden_view",
+        "platform_feedback_show",
+        "platform_help_golden_view",
+        "platform_help_show",
+        "platform_settings_get",
+        "platform_window_open_panel"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_localization.m",
+      "sha256": "b84629b8fb74a8165e6c403abe526f6c10fc4015c832f335dca0b3422ffeabee",
+      "bytes": 10922,
+      "symbols": [
+        "platform_localization_copy",
+        "platform_localization_copy_default",
+        "platform_localization_copy_string",
+        "platform_localization_default_find",
+        "platform_localization_format_count",
+        "platform_localization_format_count_message",
+        "platform_localization_format_number",
+        "platform_localization_format_number_object",
+        "platform_localization_format_one",
+        "platform_localization_pseudo",
+        "platform_localization_raw_string",
+        "platform_localization_string",
+        "platform_localization_test_set_pseudo_locale",
+        "platform_text_ui_app_is_active"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_menus.m",
+      "sha256": "42f698356bdcc84976d1d4bb2c98a6186ea2e6208c9108dd60943d95f1ee3d59",
+      "bytes": 31897,
+      "symbols": [
+        "menu_string",
+        "platform_add_separator",
+        "platform_add_shortcut_discovery",
+        "platform_append_recent_items",
+        "platform_clipboard_can_paste_svg",
+        "platform_command_is_enabled",
+        "platform_feedback_copy_diagnostics",
+        "platform_feedback_show",
+        "platform_help_show",
+        "platform_localization_string",
+        "platform_macos_menus_clear_owner",
+        "platform_macos_menus_init",
+        "platform_macos_menus_refresh_recent",
+        "platform_macos_menus_set_full_screen",
+        "platform_macos_menus_set_option_state",
+        "platform_macos_menus_set_owner",
+        "platform_macos_menus_show_ruler_context_menu",
+        "platform_macos_menus_update_state",
+        "platform_macos_welcome_hide",
+        "platform_macos_welcome_show",
+        "platform_menu_heading",
+        "platform_menu_item",
+        "platform_recents_clear",
+        "platform_recents_count",
+        "platform_recents_get",
+        "platform_recents_init",
+        "platform_settings_show",
+        "platform_text_ui_get_interface_scale",
+        "platform_text_ui_set_interface_scale",
+        "platform_text_ui_set_ui_scale",
+        "platform_update_menu",
+        "platform_window_dispatch_action",
+        "platform_window_dispatch_command",
+        "platform_window_dispatch_file_open",
+        "platform_window_native_view",
+        "platform_window_open_panel",
+        "platform_window_set_visible"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_metal.m",
+      "sha256": "c180165e69d51aa44094ff7e1dea8a219cd2562234fd7182fa18dd674424cd16",
+      "bytes": 20913,
+      "symbols": [
+        "platform_metal_copy_and_hash",
+        "platform_metal_dimensions_valid",
+        "platform_metal_fail",
+        "platform_metal_prepare_present",
+        "platform_metal_present",
+        "platform_metal_present_and_verify",
+        "platform_metal_present_dimensions_valid",
+        "platform_metal_reset",
+        "platform_metal_verify_readback",
+        "platform_metal_wait",
+        "platform_window_native_view",
+        "texture"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_metal_internal.h",
+      "sha256": "a9f1328f1f671cbc63e67599724f52a13f3d8a63cf6cec457f2ff538f9989963",
+      "bytes": 200,
+      "symbols": [
+        "platform_window_native_view"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_png.h",
+      "sha256": "9cb6f566e42d0dbc6f724746aff90a460c71da798289bbdb1d50319ba8f6610c",
+      "bytes": 561,
+      "symbols": [
+        "platform_png_blob_destroy",
+        "platform_png_encode_rgba8"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_png.m",
+      "sha256": "f704b0ba0d39b028b34a5f41ac08a37b08efbbfe2009107fa03bbaaa4793af64",
+      "bytes": 2891,
+      "symbols": [
+        "platform_png_blob_destroy",
+        "platform_png_encode_rgba8"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_recents.m",
+      "sha256": "1d60f4ef253f6cb9b1470fdef7b1c7f252563a0ebbc4b4595346eca33c4134b2",
+      "bytes": 6469,
+      "symbols": [
+        "platform_bounded_length",
+        "platform_macos_menus_refresh_recent",
+        "platform_macos_welcome_refresh",
+        "platform_path_from_string",
+        "platform_recents_add",
+        "platform_recents_clear",
+        "platform_recents_contains",
+        "platform_recents_count",
+        "platform_recents_get",
+        "platform_recents_init",
+        "platform_recents_persist",
+        "platform_recents_remove",
+        "welcome_recent_add",
+        "welcome_recent_clear",
+        "welcome_recent_get",
+        "welcome_recent_path_supported",
+        "welcome_recent_remove"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_recovery_store.m",
+      "sha256": "71f08c602a914cf1631c312835ac1714a2f64972d50abbc21102554e46969474",
+      "bytes": 5963,
+      "symbols": [
+        "platform_recovery_store_error_name",
+        "platform_recovery_store_path"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_settings.m",
+      "sha256": "d29aa26917fb95e89e2956be1c4da429a8b52640c8ec4f42ec9ca47ad69339b6",
+      "bytes": 17755,
+      "symbols": [
+        "platform_recents_clear",
+        "platform_settings_get",
+        "platform_settings_golden_view",
+        "platform_settings_show",
+        "platform_settings_store_density",
+        "platform_settings_store_sidebar_visibility",
+        "platform_settings_store_workspace",
+        "platform_settings_use_test_domain",
+        "platform_settings_write_count",
+        "platform_window_dispatch_action",
+        "settings_bool",
+        "settings_checkbox",
+        "settings_defaults",
+        "settings_key",
+        "settings_note_write",
+        "settings_seed_defaults",
+        "settings_stack",
+        "settings_string"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_task.c",
+      "sha256": "362fc0190236f4d6e56ed01cf405a76b42cf49a5af6d7c065bed0c368f70d134",
+      "bytes": 15303,
+      "symbols": [
+        "platform_task_advance_generation",
+        "platform_task_cancel",
+        "platform_task_destroy",
+        "platform_task_poll",
+        "platform_task_queue_create",
+        "platform_task_shutdown",
+        "platform_task_submit",
+        "platform_task_submit_owned",
+        "platform_task_test_pause_next_api_call",
+        "platform_task_test_release_paused_call",
+        "platform_task_test_wait_until_paused"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_welcome.m",
+      "sha256": "debc17f9a9a47522ec164a253a8d17312a2f3e336e6c2f89d12c55be0ce3065a",
+      "bytes": 16535,
+      "symbols": [
+        "platform_macos_welcome_clear_owner",
+        "platform_macos_welcome_hide",
+        "platform_macos_welcome_open_failure",
+        "platform_macos_welcome_refresh",
+        "platform_macos_welcome_set_owner",
+        "platform_macos_welcome_show",
+        "platform_recents_clear",
+        "platform_recents_contains",
+        "platform_recents_count",
+        "platform_recents_get",
+        "platform_recents_remove",
+        "platform_welcome_golden_view",
+        "platform_window_dispatch_action",
+        "platform_window_dispatch_file_open",
+        "platform_window_open_panel",
+        "welcome_bounded_length",
+        "welcome_label",
+        "welcome_path_button",
+        "welcome_recent_path_supported",
+        "welcome_stack",
+        "welcome_url_is_svg"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window.m",
+      "sha256": "fdcc5c4155513a457b29383623f1ed4c75b96ad9097e213b16ee84571232418f",
+      "bytes": 31296,
+      "symbols": [
+        "platform_dimensions_valid",
+        "platform_drag_operation",
+        "platform_dragged_svg_path",
+        "platform_emit",
+        "platform_init",
+        "platform_macos_menus_clear_owner",
+        "platform_macos_menus_init",
+        "platform_macos_menus_set_full_screen",
+        "platform_macos_menus_set_owner",
+        "platform_macos_welcome_clear_owner",
+        "platform_macos_welcome_set_owner",
+        "platform_modifiers",
+        "platform_on_main_thread",
+        "platform_path_supported_internal",
+        "platform_poll_event",
+        "platform_queue_test_open_from_environment",
+        "platform_shutdown",
+        "platform_size_event",
+        "platform_test_inject_key",
+        "platform_test_inject_key_text",
+        "platform_test_inject_magnify",
+        "platform_test_inject_pointer",
+        "platform_test_inject_scroll",
+        "platform_test_request_close",
+        "platform_window_create",
+        "platform_window_destroy",
+        "platform_window_dispatch_action",
+        "platform_window_dispatch_animation_tick",
+        "platform_window_dispatch_command",
+        "platform_window_dispatch_file_drop",
+        "platform_window_dispatch_file_open",
+        "platform_window_dispatch_startup_files",
+        "platform_window_emit_internal",
+        "platform_window_is_dark_appearance",
+        "platform_window_native_view",
+        "platform_window_open_panel",
+        "platform_window_request_animation_ticks",
+        "platform_window_resize",
+        "platform_window_set_material_enabled",
+        "platform_window_set_title",
+        "platform_window_set_visible"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window_animation.m",
+      "sha256": "9af454df2618f39d72141832e1779930f4521dace5ebae8570681956dbdef4b7",
+      "bytes": 850,
+      "symbols": [
+        "platform_window_dispatch_animation_tick",
+        "platform_window_request_animation_ticks"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window_files.m",
+      "sha256": "2ae91ea6cbc9d3f614dd101e69473c0bc6239287143ed6994c502e723191adbb",
+      "bytes": 4074,
+      "symbols": [
+        "platform_path_supported_internal",
+        "platform_queue_test_open_from_environment",
+        "platform_window_dispatch_file_drop",
+        "platform_window_dispatch_file_open",
+        "platform_window_dispatch_new_file",
+        "platform_window_dispatch_startup_files",
+        "platform_window_emit_internal"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window_geometry.m",
+      "sha256": "d28a630ed8e7ac75a0484665daf835a3e90026f5d3665541776d89838d7a1992",
+      "bytes": 1468,
+      "symbols": [
+        "platform_window_content_screen_origin",
+        "platform_window_native_view"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window_internal.h",
+      "sha256": "c0d384ca70481f24ea8be09e2460c341aee4b1d0615d3523ec0655087fe966b5",
+      "bytes": 2045,
+      "symbols": [
+        "platform_macos_menus_clear_owner",
+        "platform_macos_menus_init",
+        "platform_macos_menus_refresh_recent",
+        "platform_macos_menus_set_full_screen",
+        "platform_macos_menus_set_option_state",
+        "platform_macos_menus_set_owner",
+        "platform_macos_menus_show_ruler_context_menu",
+        "platform_macos_menus_update_state",
+        "platform_macos_welcome_clear_owner",
+        "platform_macos_welcome_hide",
+        "platform_macos_welcome_open_failure",
+        "platform_macos_welcome_refresh",
+        "platform_macos_welcome_set_owner",
+        "platform_macos_welcome_show",
+        "platform_path_supported_internal",
+        "platform_queue_test_open_from_environment",
+        "platform_window_dispatch_action",
+        "platform_window_dispatch_file_drop",
+        "platform_window_dispatch_file_open",
+        "platform_window_dispatch_new_file",
+        "platform_window_dispatch_startup_files",
+        "platform_window_emit_internal",
+        "platform_window_native_view"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window_menus.m",
+      "sha256": "8014f3e834598492dd55980e573dac0480a296af5238a628ba89446dcce58021",
+      "bytes": 672,
+      "symbols": [
+        "platform_macos_menus_set_option_state",
+        "platform_macos_menus_show_ruler_context_menu",
+        "platform_window_set_option_state",
+        "platform_window_show_ruler_context_menu"
+      ]
+    },
+    {
+      "path": "src/platform/macos/platform_window_native_shell.m",
+      "sha256": "facf0af6aea795bc4cce2bbf2bd2da75f4107233594515629f14883fdda8e295",
+      "bytes": 2609,
+      "symbols": [
+        "platform_macos_menus_update_state",
+        "platform_macos_welcome_hide",
+        "platform_macos_welcome_open_failure",
+        "platform_macos_welcome_show",
+        "platform_recents_add",
+        "platform_recents_count",
+        "platform_recents_get",
+        "platform_window_hide_welcome",
+        "platform_window_recent_add",
+        "platform_window_recent_files",
+        "platform_window_recent_open_failed",
+        "platform_window_show_welcome",
+        "platform_window_update_command_state"
+      ]
+    },
+    {
+      "path": "src/platform/media/README.md",
+      "sha256": "ef45006552188307128693897bf2198ba50fecf2791709c62942a341f98c708e",
+      "bytes": 1924,
+      "symbols": []
+    },
+    {
+      "path": "src/platform/media/platform_animation.h",
+      "sha256": "5fe9f67f5eacc1b50f2fdbb389d73ef176548ad7c66e7cab3d4345a47411cbb9",
+      "bytes": 996,
+      "symbols": [
+        "platform_animation_bytes_destroy",
+        "platform_animation_encode_gif"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_animation.m",
+      "sha256": "dd2d7209b2447e035b80952e37270b0d5504d17352c4e90ed2cda666eab57182",
+      "bytes": 6666,
+      "symbols": [
+        "platform_animation_bytes_destroy",
+        "platform_animation_encode_gif"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_image.h",
+      "sha256": "7bf601aed8b303de121687c8865f397dde7c93cbdd9cf6fd49f4e33282f62cb2",
+      "bytes": 2526,
+      "symbols": [
+        "platform_image_bytes_destroy",
+        "platform_image_decode",
+        "platform_image_decode_data_uri",
+        "platform_image_destroy",
+        "platform_image_scale_bilinear"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_image.m",
+      "sha256": "e68d809662ec58e62ad4384e25bd6e77b3874348877685b67b61c2ed633c123e",
+      "bytes": 15071,
+      "symbols": [
+        "image_type_allowed",
+        "platform_image_bytes_destroy",
+        "platform_image_decode",
+        "platform_image_decode_data_uri",
+        "platform_image_destroy",
+        "platform_image_scale_bilinear"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_media.c",
+      "sha256": "6652ae715c4e0d95922f16e1cf933ffc7557e3533399da6692193f536d18c8ed",
+      "bytes": 596,
+      "symbols": [
+        "platform_media_status_name"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_media.h",
+      "sha256": "a15bfb015a45b79a54e38a83fa96bce758aff366318803d9c329208d8fcaae73",
+      "bytes": 816,
+      "symbols": [
+        "platform_media_status_name"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_text.h",
+      "sha256": "c89f6ee1f08fa76e9750e00ea94856e165eeeba90e37e130cf9cfdff6809cd49",
+      "bytes": 3085,
+      "symbols": [
+        "platform_text_anchor_offset",
+        "platform_text_layout",
+        "platform_text_result_destroy"
+      ]
+    },
+    {
+      "path": "src/platform/media/platform_text.m",
+      "sha256": "cdae7180092b92cfb9bdd003629edff50d29013fde657aa5f652fe17a3376f62",
+      "bytes": 24499,
+      "symbols": [
+        "platform_text_anchor_offset",
+        "platform_text_layout",
+        "platform_text_result_destroy"
+      ]
+    },
+    {
+      "path": "src/platform/platform_atomic_file.h",
+      "sha256": "7a6704a43d13a30f2ad24564f1b59f827365030a74422d9e323f392d317e8b4b",
+      "bytes": 1594,
+      "symbols": [
+        "platform_atomic_file_error_name",
+        "platform_atomic_file_replace"
+      ]
+    },
+    {
+      "path": "src/platform/platform_atomic_new_file.h",
+      "sha256": "3ee7f7c663fcf5f2da1a69de9000991617fbc50a8a7c20fa57ce9e0aac437e92",
+      "bytes": 1258,
+      "symbols": [
+        "platform_atomic_file_create_new"
+      ]
+    },
+    {
+      "path": "src/platform/platform_feedback.h",
+      "sha256": "92535e3f5f213c6935cd7a6b53df44495f2e725f625fe704c1fe9111855b5b81",
+      "bytes": 245,
+      "symbols": [
+        "platform_feedback_copy_diagnostics",
+        "platform_feedback_show",
+        "platform_help_show"
+      ]
+    },
+    {
+      "path": "src/platform/platform_localization.h",
+      "sha256": "1edcd4f35c2bc172799d02d32fb42550a902eac19f514518d539a28936fcfc8d",
+      "bytes": 1946,
+      "symbols": [
+        "platform_localization_copy",
+        "platform_localization_copy_default",
+        "platform_localization_format_count",
+        "platform_localization_format_count_message",
+        "platform_localization_format_number",
+        "platform_localization_format_one",
+        "platform_localization_string",
+        "platform_localization_test_set_pseudo_locale"
+      ]
+    },
+    {
+      "path": "src/platform/platform_localization_defaults.c",
+      "sha256": "cd3d04eb50e16e4a4999cbe23083bfabb2aa14fe74a714cb910dba61711b3441",
+      "bytes": 31832,
+      "symbols": [
+        "platform_localization_default_find"
+      ]
+    },
+    {
+      "path": "src/platform/platform_localization_internal.h",
+      "sha256": "6fa50d80e76f338c1e74b19692babc2d44820ec426ef64050a950c02c7458f12",
+      "bytes": 418,
+      "symbols": [
+        "platform_localization_default_find"
+      ]
+    },
+    {
+      "path": "src/platform/platform_metal.h",
+      "sha256": "7c73178db3a29b6478d9cc64320c14ac9ef2caa550e45790d77c0966e6f65332",
+      "bytes": 1356,
+      "symbols": [
+        "platform_metal_copy_and_hash",
+        "platform_metal_present",
+        "platform_metal_present_and_verify",
+        "platform_metal_reset"
+      ]
+    },
+    {
+      "path": "src/platform/platform_recents.h",
+      "sha256": "d7dc774b29654fd3d88e624c3e45b64a1c30a6cf7504d6de9cefb5e0c2ea7668",
+      "bytes": 752,
+      "symbols": [
+        "platform_recents_add",
+        "platform_recents_clear",
+        "platform_recents_contains",
+        "platform_recents_count",
+        "platform_recents_get",
+        "platform_recents_init",
+        "platform_recents_remove"
+      ]
+    },
+    {
+      "path": "src/platform/platform_recovery_store.h",
+      "sha256": "ccc2f5a3e031e5fadbc939837f1bc0533bcad498394fcc91b090b896999b46f1",
+      "bytes": 1236,
+      "symbols": [
+        "platform_recovery_store_error_name",
+        "platform_recovery_store_path"
+      ]
+    },
+    {
+      "path": "src/platform/platform_settings.h",
+      "sha256": "c3cc4d8b5eb3706202a605c20b3297eeab7b068becb11974ce4e699ee97d4a66",
+      "bytes": 1402,
+      "symbols": [
+        "platform_settings_get",
+        "platform_settings_show",
+        "platform_settings_store_density",
+        "platform_settings_store_sidebar_visibility",
+        "platform_settings_store_workspace",
+        "platform_settings_use_test_domain",
+        "platform_settings_write_count"
+      ]
+    },
+    {
+      "path": "src/platform/platform_task.h",
+      "sha256": "01aa981bf1e4266f1cc90bb7d94eb830e8d54229095e6464059d91ce18cceb0e",
+      "bytes": 3180,
+      "symbols": [
+        "platform_task_advance_generation",
+        "platform_task_cancel",
+        "platform_task_destroy",
+        "platform_task_poll",
+        "platform_task_queue_create",
+        "platform_task_shutdown",
+        "platform_task_submit",
+        "platform_task_submit_owned",
+        "platform_task_test_pause_next_api_call",
+        "platform_task_test_release_paused_call",
+        "platform_task_test_wait_until_paused"
+      ]
+    },
+    {
+      "path": "src/platform/platform_text_ui.h",
+      "sha256": "ed072350fb95753567df9307d07a98a02f4f8a67d66fa131defd44aecf14b0d2",
+      "bytes": 2230,
+      "symbols": [
+        "platform_text_ui_app_is_active",
+        "platform_text_ui_cache_clear",
+        "platform_text_ui_draw",
+        "platform_text_ui_draw_widget",
+        "platform_text_ui_get_extended_preferences",
+        "platform_text_ui_get_interface_scale",
+        "platform_text_ui_get_preferences",
+        "platform_text_ui_set_interface_scale",
+        "platform_text_ui_set_panel_widths",
+        "platform_text_ui_set_ui_scale",
+        "platform_text_ui_unwatch_preferences",
+        "platform_text_ui_watch_preferences"
+      ]
+    },
+    {
+      "path": "src/platform/platform_text_ui.m",
+      "sha256": "91079cfa3539abe532d8bb18ed9177160f9a76ddd3ed8c0edd6bec88b78af822",
+      "bytes": 28344,
+      "symbols": [
+        "platform_text_layout",
+        "platform_text_result_destroy",
+        "platform_text_ui_app_is_active",
+        "platform_text_ui_cache_clear",
+        "platform_text_ui_draw",
+        "platform_text_ui_draw_widget",
+        "platform_text_ui_get_extended_preferences",
+        "platform_text_ui_get_interface_scale",
+        "platform_text_ui_get_preferences",
+        "platform_text_ui_set_interface_scale",
+        "platform_text_ui_set_panel_widths",
+        "platform_text_ui_set_ui_scale",
+        "platform_text_ui_unwatch_preferences",
+        "platform_text_ui_watch_preferences",
+        "text_measure"
+      ]
+    },
+    {
+      "path": "src/platform/platform_window.h",
+      "sha256": "50638ec985c2d5a4c78000eb7b0c5a4c1ae6d28bf07df244d794a3d83a962434",
+      "bytes": 6438,
+      "symbols": [
+        "platform_init",
+        "platform_poll_event",
+        "platform_shutdown",
+        "platform_window_content_screen_origin",
+        "platform_window_create",
+        "platform_window_destroy",
+        "platform_window_dispatch_animation_tick",
+        "platform_window_dispatch_command",
+        "platform_window_hide_welcome",
+        "platform_window_is_dark_appearance",
+        "platform_window_open_panel",
+        "platform_window_recent_add",
+        "platform_window_recent_files",
+        "platform_window_recent_open_failed",
+        "platform_window_request_animation_ticks",
+        "platform_window_resize",
+        "platform_window_set_cursor",
+        "platform_window_set_material_enabled",
+        "platform_window_set_option_state",
+        "platform_window_set_title",
+        "platform_window_set_visible",
+        "platform_window_show_ruler_context_menu",
+        "platform_window_show_welcome",
+        "platform_window_update_command_state"
+      ]
+    }
+  ],
+  "mapping": {
+    "media_text_image_gif": [
+      "src/platform/media/platform_media.h",
+      "src/platform/media/platform_media.c",
+      "src/platform/media/platform_text.h",
+      "src/platform/media/platform_text.m",
+      "src/platform/media/platform_image.h",
+      "src/platform/media/platform_image.m",
+      "src/platform/media/platform_animation.h",
+      "src/platform/media/platform_animation.m",
+      "tests/platform_media/platform_media_test.c",
+      "tests/platform_media/generate_fixtures.py",
+      "tests/platform_media/media_probe.c",
+      "tests/test_platform_media.py"
+    ],
+    "native_ui_text_preferences": [
+      "src/platform/platform_text_ui.h",
+      "src/platform/platform_text_ui.m",
+      "src/platform/platform_settings.h",
+      "src/platform/macos/platform_settings.m",
+      "tests/ui/native_ui_render.m"
+    ],
+    "presenter_shaders_png": [
+      "src/platform/platform_metal.h",
+      "src/platform/macos/platform_metal_internal.h",
+      "src/platform/macos/platform_metal.m",
+      "src/platform/macos/platform_png.h",
+      "src/platform/macos/platform_png.m",
+      "src/platform/macos/platform_window_internal.h",
+      "tests/ui/native_ui_render.m"
+    ],
+    "menus_commands": [
+      "src/platform/macos/platform_menus.m",
+      "src/platform/platform_window.h",
+      "src/platform/platform_recents.h",
+      "tests/app/platform_command_policy_test.c",
+      "tests/ui/native_ui_render.m"
+    ],
+    "dialogs_files_drop_clipboard": [
+      "src/platform/macos/platform_dialog.h",
+      "src/platform/macos/platform_dialog.m",
+      "src/platform/macos/platform_window_files.m",
+      "src/platform/macos/platform_clipboard.h",
+      "src/platform/macos/platform_clipboard.m",
+      "src/platform/macos/platform_window.h",
+      "tests/app/project_save_test.c",
+      "tests/editor/editor_clipboard_ids_test.c"
+    ],
+    "accessibility": [
+      "src/platform/macos/platform_accessibility.h",
+      "src/platform/macos/platform_accessibility.m",
+      "tests/editor/accessibility_localization_test.c",
+      "tests/editor/inspector_tab_reachability_test.c"
+    ],
+    "preferences_recents_welcome_localization_feedback": [
+      "src/platform/platform_settings.h",
+      "src/platform/macos/platform_settings.m",
+      "src/platform/platform_recents.h",
+      "src/platform/macos/platform_recents.m",
+      "src/platform/macos/platform_welcome.m",
+      "src/platform/platform_localization.h",
+      "src/platform/macos/platform_localization.m",
+      "src/platform/platform_feedback.h",
+      "src/platform/macos/platform_feedback.m",
+      "tests/app/viewer_home_test.c",
+      "tests/app/welcome_model_test.c",
+      "tests/editor/accessibility_localization_test.c"
+    ],
+    "native_window_prerequisite_source_accepted_runtime_future": [
+      "src/platform/platform_window.h",
+      "src/platform/macos/platform_window.m",
+      "src/platform/macos/platform_window_native_shell.m",
+      "src/platform/macos/platform_window_geometry.m",
+      "src/platform/macos/platform_window_animation.m",
+      "src/platform/macos/platform_cursor.m",
+      "src/platform/macos/platform_window_internal.h",
+      "artifacts/WO-RUST-NATIVE-WINDOW-01/coordinator-result.md"
+    ],
+    "other_platform_boundary_code_requires_assignment": [
+      "src/platform/platform_atomic_file.h",
+      "src/platform/macos/platform_atomic_file.c",
+      "src/platform/platform_atomic_new_file.h",
+      "src/platform/macos/platform_atomic_new_file.c",
+      "src/platform/platform_recovery_store.h",
+      "src/platform/macos/platform_recovery_store.m",
+      "src/platform/platform_task.h",
+      "src/platform/macos/platform_task.c",
+      "src/platform/platform_feedback.h",
+      "src/platform/platform_localization_defaults.c",
+      "src/platform/README.md",
+      "src/platform/macos/README.md"
+    ]
+  },
+  "constraints": {
+    "source_symbols": "each src/platform file record includes SHA-256, bytes, and regex-discovered function-like symbols; macros/types/constants remain discoverable in source and are enumerated by work-order scope",
+    "test_scope": "assignment references original tests and harnesses; do not weaken frozen tests/oracles",
+    "native_runtime": "future; accepted window result is source acceptance only"
+  }
+}

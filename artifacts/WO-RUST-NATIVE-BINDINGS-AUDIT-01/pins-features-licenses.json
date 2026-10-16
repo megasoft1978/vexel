@@ -1,0 +1,597 @@
+{
+  "status": "PUBLISHED_CLOSURE_RESOLVED_LICENSE_AND_POLICY_GATES",
+  "pins": [
+    {
+      "name": "objc2",
+      "version": "=0.6.5",
+      "default_features": false,
+      "features": [
+        "catch-all",
+        "std"
+      ],
+      "expanded_features": [
+        "alloc",
+        "catch-all",
+        "exception",
+        "std"
+      ],
+      "checksum": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+      "license_expression": "MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate"
+    },
+    {
+      "name": "objc2-encode",
+      "version": "=4.1.0",
+      "default_features": false,
+      "features": [
+        "std"
+      ],
+      "expanded_features": [
+        "alloc",
+        "std"
+      ],
+      "checksum": "ef25abbcd74fb2609453eb695bd2f860d389e457f67dc17cafc8b8cbc89d0c33",
+      "license_expression": "MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-encode/objc2-encode-4.1.0.crate"
+    },
+    {
+      "name": "objc2-foundation",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "NSArray",
+        "NSAttributedString",
+        "NSData",
+        "NSDate",
+        "NSDictionary",
+        "NSError",
+        "NSGeometry",
+        "NSKeyValueObserving",
+        "NSNotification",
+        "NSObject",
+        "NSOperation",
+        "NSRange",
+        "NSRunLoop",
+        "NSSet",
+        "NSString",
+        "NSThread",
+        "NSTimer",
+        "NSUserDefaults",
+        "NSValue",
+        "block2",
+        "std"
+      ],
+      "expanded_features": [
+        "NSAppleEventDescriptor",
+        "NSArray",
+        "NSAttributedString",
+        "NSBundle",
+        "NSCoder",
+        "NSData",
+        "NSDate",
+        "NSDictionary",
+        "NSEnumerator",
+        "NSError",
+        "NSException",
+        "NSFileManager",
+        "NSFileWrapper",
+        "NSFormatter",
+        "NSGeometry",
+        "NSKeyValueObserving",
+        "NSNotification",
+        "NSNull",
+        "NSObjCRuntime",
+        "NSObject",
+        "NSOperation",
+        "NSRange",
+        "NSRunLoop",
+        "NSSet",
+        "NSString",
+        "NSThread",
+        "NSTimer",
+        "NSURL",
+        "NSUndoManager",
+        "NSUserActivity",
+        "NSUserDefaults",
+        "NSValue",
+        "NSZone",
+        "alloc",
+        "bitflags",
+        "block2",
+        "objc2-core-foundation",
+        "std"
+      ],
+      "checksum": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+      "license_expression": "MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate"
+    },
+    {
+      "name": "objc2-app-kit",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "NSAccessibility",
+        "NSAccessibilityConstants",
+        "NSAccessibilityElement",
+        "NSAccessibilityProtocols",
+        "NSAlert",
+        "NSAppearance",
+        "NSApplication",
+        "NSButton",
+        "NSColor",
+        "NSColorSpace",
+        "NSControl",
+        "NSCursor",
+        "NSDragging",
+        "NSEvent",
+        "NSGraphics",
+        "NSMenu",
+        "NSMenuItem",
+        "NSOpenPanel",
+        "NSPanel",
+        "NSPasteboard",
+        "NSResponder",
+        "NSRunningApplication",
+        "NSSavePanel",
+        "NSScreen",
+        "NSTextInputClient",
+        "NSTextInputContext",
+        "NSTrackingArea",
+        "NSView",
+        "NSWindow",
+        "NSWorkspace",
+        "block2",
+        "objc2-core-graphics",
+        "objc2-quartz-core",
+        "std"
+      ],
+      "expanded_features": [
+        "NSAccessibility",
+        "NSAccessibilityConstants",
+        "NSAccessibilityElement",
+        "NSAccessibilityProtocols",
+        "NSAlert",
+        "NSAppearance",
+        "NSApplication",
+        "NSButton",
+        "NSColor",
+        "NSColorSpace",
+        "NSControl",
+        "NSCursor",
+        "NSDragging",
+        "NSEvent",
+        "NSGraphics",
+        "NSMenu",
+        "NSMenuItem",
+        "NSOpenPanel",
+        "NSPanel",
+        "NSPasteboard",
+        "NSResponder",
+        "NSRunningApplication",
+        "NSSavePanel",
+        "NSScreen",
+        "NSTextInputClient",
+        "NSTextInputContext",
+        "NSTrackingArea",
+        "NSView",
+        "NSWindow",
+        "NSWorkspace",
+        "alloc",
+        "bitflags",
+        "block2",
+        "objc2-core-graphics",
+        "objc2-quartz-core",
+        "std"
+      ],
+      "checksum": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate"
+    },
+    {
+      "name": "objc2-core-foundation",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CFArray",
+        "CFAttributedString",
+        "CFData",
+        "CFDictionary",
+        "CFNumber",
+        "CFRunLoop",
+        "CFString",
+        "objc2",
+        "std"
+      ],
+      "expanded_features": [
+        "CFArray",
+        "CFAttributedString",
+        "CFByteOrder",
+        "CFCGTypes",
+        "CFCalendar",
+        "CFCharacterSet",
+        "CFData",
+        "CFDate",
+        "CFDictionary",
+        "CFError",
+        "CFFileSecurity",
+        "CFLocale",
+        "CFMachPort",
+        "CFMessagePort",
+        "CFNumber",
+        "CFRunLoop",
+        "CFSet",
+        "CFStream",
+        "CFString",
+        "CFURL",
+        "alloc",
+        "bitflags",
+        "objc2",
+        "std"
+      ],
+      "checksum": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate"
+    },
+    {
+      "name": "objc2-core-graphics",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CGBitmapContext",
+        "CGColor",
+        "CGColorSpace",
+        "CGContext",
+        "CGDataProvider",
+        "CGDirectDisplay",
+        "CGFont",
+        "CGImage",
+        "CGPath",
+        "objc2",
+        "std"
+      ],
+      "expanded_features": [
+        "CGBitmapContext",
+        "CGColor",
+        "CGColorSpace",
+        "CGContext",
+        "CGDataConsumer",
+        "CGDataProvider",
+        "CGDirectDisplay",
+        "CGEventTypes",
+        "CGFont",
+        "CGImage",
+        "CGPath",
+        "alloc",
+        "bitflags",
+        "objc2",
+        "std"
+      ],
+      "checksum": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate"
+    },
+    {
+      "name": "objc2-core-text",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CTFont",
+        "CTFontDescriptor",
+        "CTLine",
+        "CTRun",
+        "CTStringAttributes",
+        "objc2",
+        "objc2-core-graphics",
+        "std"
+      ],
+      "expanded_features": [
+        "CTFont",
+        "CTFontDescriptor",
+        "CTLine",
+        "CTRun",
+        "CTStringAttributes",
+        "alloc",
+        "bitflags",
+        "objc2",
+        "objc2-core-graphics",
+        "std"
+      ],
+      "checksum": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate"
+    },
+    {
+      "name": "objc2-metal",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "MTLBlitCommandEncoder",
+        "MTLCommandBuffer",
+        "MTLCommandEncoder",
+        "MTLCommandQueue",
+        "MTLDevice",
+        "MTLDrawable",
+        "MTLLibrary",
+        "MTLPixelFormat",
+        "MTLRenderCommandEncoder",
+        "MTLRenderPass",
+        "MTLRenderPipeline",
+        "MTLResource",
+        "MTLTexture",
+        "MTLTypes",
+        "block2",
+        "std"
+      ],
+      "expanded_features": [
+        "MTLAllocation",
+        "MTLBlitCommandEncoder",
+        "MTLCommandBuffer",
+        "MTLCommandEncoder",
+        "MTLCommandQueue",
+        "MTLDevice",
+        "MTLDrawable",
+        "MTLGPUAddress",
+        "MTLLibrary",
+        "MTLPixelFormat",
+        "MTLRenderCommandEncoder",
+        "MTLRenderPass",
+        "MTLRenderPipeline",
+        "MTLResidencySet",
+        "MTLResource",
+        "MTLTexture",
+        "MTLTypes",
+        "alloc",
+        "bitflags",
+        "block2",
+        "std"
+      ],
+      "checksum": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate"
+    },
+    {
+      "name": "objc2-quartz-core",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CALayer",
+        "CAMediaTiming",
+        "CAMetalLayer",
+        "objc2-core-foundation",
+        "objc2-core-graphics",
+        "objc2-metal",
+        "std"
+      ],
+      "expanded_features": [
+        "CADisplayLink",
+        "CALayer",
+        "CAMediaTiming",
+        "CAMediaTimingFunction",
+        "CAMetalLayer",
+        "CAOpenGLLayer",
+        "alloc",
+        "bitflags",
+        "objc2-core-foundation",
+        "objc2-core-graphics",
+        "objc2-metal",
+        "std"
+      ],
+      "checksum": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate"
+    },
+    {
+      "name": "block2",
+      "version": "=0.6.2",
+      "default_features": false,
+      "features": [
+        "std"
+      ],
+      "expanded_features": [
+        "alloc",
+        "std"
+      ],
+      "checksum": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+      "license_expression": "MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/block2/block2-0.6.2.crate"
+    },
+    {
+      "name": "bitflags",
+      "version": "=2.13.2",
+      "default_features": "see activated edges",
+      "features": [
+        "std"
+      ],
+      "expanded_features": [
+        "std"
+      ],
+      "checksum": "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06",
+      "license_expression": "MIT OR Apache-2.0",
+      "license_texts": [
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/bitflags/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "archive_member": "bitflags-2.13.2/LICENSE-APACHE"
+        },
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/bitflags/LICENSE-MIT",
+          "sha256": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+          "archive_member": "bitflags-2.13.2/LICENSE-MIT"
+        }
+      ],
+      "license_status": "grant texts verified",
+      "rust_version": "1.56.0",
+      "source": "https://static.crates.io/crates/bitflags/bitflags-2.13.2.crate"
+    },
+    {
+      "name": "objc2-exception-helper",
+      "version": "=0.1.1",
+      "default_features": "see activated edges",
+      "features": [],
+      "expanded_features": [],
+      "checksum": "c7a1c5fbb72d7735b076bb47b578523aedc40f3c439bea6dfd595c089d79d98a",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-exception-helper/objc2-exception-helper-0.1.1.crate"
+    },
+    {
+      "name": "objc2-image-io",
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CGImageDestination",
+        "CGImageProperties",
+        "CGImageSource",
+        "objc2",
+        "objc2-core-graphics",
+        "std"
+      ],
+      "expanded_features": [
+        "CGImageDestination",
+        "CGImageProperties",
+        "CGImageSource",
+        "alloc",
+        "objc2",
+        "objc2-core-graphics",
+        "std"
+      ],
+      "checksum": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "license_texts": [],
+      "license_status": "expression + exact-revision upstream overview verified; referenced full grant/notice verification remains",
+      "rust_version": "1.71",
+      "source": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate"
+    },
+    {
+      "name": "cc",
+      "version": "=1.8.0",
+      "default_features": "see activated edges",
+      "features": [],
+      "expanded_features": [],
+      "checksum": "6651c9ed80effdc7db0ff72512157f901af5e3549e341e24b1dd4887d836d838",
+      "license_expression": "MIT OR Apache-2.0",
+      "license_texts": [
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/cc/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "archive_member": "cc-1.8.0/LICENSE-APACHE"
+        },
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/cc/LICENSE-MIT",
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+          "archive_member": "cc-1.8.0/LICENSE-MIT"
+        }
+      ],
+      "license_status": "grant texts verified",
+      "rust_version": "1.65.0",
+      "source": "https://static.crates.io/crates/cc/cc-1.8.0.crate"
+    },
+    {
+      "name": "find-msvc-tools",
+      "version": "=0.1.14",
+      "default_features": "see activated edges",
+      "features": [],
+      "expanded_features": [],
+      "checksum": "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484",
+      "license_expression": "MIT OR Apache-2.0",
+      "license_texts": [
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/find-msvc-tools/LICENSE-APACHE",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "archive_member": "find-msvc-tools-0.1.14/LICENSE-APACHE"
+        },
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/find-msvc-tools/LICENSE-MIT",
+          "sha256": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+          "archive_member": "find-msvc-tools-0.1.14/LICENSE-MIT"
+        }
+      ],
+      "license_status": "grant texts verified",
+      "rust_version": "1.65.0",
+      "source": "https://static.crates.io/crates/find-msvc-tools/find-msvc-tools-0.1.14.crate"
+    },
+    {
+      "name": "shlex",
+      "version": "=2.0.1",
+      "default_features": "see activated edges",
+      "features": [
+        "default",
+        "std"
+      ],
+      "expanded_features": [
+        "default",
+        "std"
+      ],
+      "checksum": "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba",
+      "license_expression": "MIT OR Apache-2.0",
+      "license_texts": [
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/shlex/LICENSE-APACHE",
+          "sha256": "553fffcd9b1cb158bc3e9edc35da85ca5c3b3d7d2e61c883ebcfa8a65814b583",
+          "archive_member": "shlex-2.0.1/LICENSE-APACHE"
+        },
+        {
+          "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/shlex/LICENSE-MIT",
+          "sha256": "4455bf75a91154108304cb283e0fea9948c14f13e20d60887cf2552449dea3b1",
+          "archive_member": "shlex-2.0.1/LICENSE-MIT"
+        }
+      ],
+      "license_status": "grant texts verified",
+      "rust_version": "1.46.0",
+      "source": "https://static.crates.io/crates/shlex/shlex-2.0.1.crate"
+    }
+  ],
+  "transitive_closure_status": "complete published-manifest closure; Cargo lock/type/link checks remain later",
+  "missing_package_inputs": [],
+  "missing_license_inputs": [
+    {
+      "license": "MIT",
+      "url": "https://opensource.org/license/MIT",
+      "reason": "Referenced by exact-revision upstream LICENSE.md; complete standard grant text missing from supplied binding archives"
+    },
+    {
+      "license": "Zlib",
+      "url": "https://zlib.net/zlib_license.html",
+      "reason": "Referenced by upstream; optional license choice, text not supplied"
+    },
+    {
+      "license": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0",
+      "reason": "Referenced by upstream; optional license choice, text not supplied"
+    }
+  ],
+  "exception_policy": "catch-all -> third-party Objective-C helper -> cc. No first-party C shim; zero foreign unwinding anywhere in Rust is not established by helper. Separate native boundary/adoption decision required.",
+  "adopted": false
+}

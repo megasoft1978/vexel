@@ -1,0 +1,15 @@
+{
+  "rust/crates/vexel-scene/README.md": "c0c88a661720d07aa73db074aff456a5371e9b297a19985c7aae825b3d7aba90",
+  "rust/crates/vexel-scene/src/builder.rs": "0f6632563e27fda03fd0bb21da532d459d2c1d1ba8a35179901929094bae3873",
+  "rust/crates/vexel-scene/src/common_raster.rs": "1750f6a3e774297c2ad4046722b5e091f97536c15b36214fa653f1420a74d1f3",
+  "rust/crates/vexel-scene/src/lib.rs": "ba6f66a901c2c0b587945ac93406acf971b5e42ae10ee0975cbd71221150f3f0",
+  "rust/crates/vexel-scene/src/model.rs": "703a4d034a3e93ff4178e43b97881b66b24f7c194868dcd6fd8c3ce94d0c396a",
+  "rust/crates/vexel-scene/src/request.rs": "3c2d3b4d8ef5802e68f8d7bbd90c64f86d38e689a4ff6b0af99feebe1ebb60ac",
+  "rust/crates/vexel-scene/src/shape_admission.rs": "fec64a95cc8a9a910e304c4e9a5c61426bd13b29f88b79ed2c162d551b29b859",
+  "rust/crates/vexel-scene/src/shape_builder.rs": "f6e849f3806da923e08a5bf4d55f7c70b0d61c5168ba4eae688c68d2bdc4436b",
+  "rust/crates/vexel-scene/src/shape_geometry.rs": "655e02cd978f291f15f3dbda6c8465727df71972ade1f98ac80bf9fbc7372cc1",
+  "rust/crates/vexel-scene/src/shape_publication_tests.rs": "158603b46b22c66322a9aa68611f201a324736b7f4c476e2ec628c79d216b7bf",
+  "rust/crates/vexel-scene/src/source_context.rs": "226afae77cd277aadfc56875719ce70023e4537d6d4f561b989e17163dabb021",
+  "rust/crates/vexel-scene/src/validate.rs": "40d92166468b3f60f2ee8f98fee8dee67d33e76ff0f9516f7e3c922ceac4badc",
+  "rust/crates/vexel-scene/tests/shape_publication.rs": "9f78fc8b00af33fc202bf0eec6131b965566fd781ba7bb73868eea14f37ab33e"
+}

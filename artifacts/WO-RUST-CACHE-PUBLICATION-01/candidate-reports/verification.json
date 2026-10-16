@@ -1,0 +1,31 @@
+{
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-scene --locked --offline",
+      "exit_code": 0,
+      "log": "check.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-scene --locked --offline",
+      "exit_code": 0,
+      "log": "test.log",
+      "passed": 185,
+      "failed": 0,
+      "original_entries_preserved": 177,
+      "new_runtime_tests": 7,
+      "new_compile_fail_test": 1
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-CACHE-PUBLICATION-01 --ready",
+      "exit_code": 0,
+      "log": "wo-validate.log"
+    }
+  ],
+  "readme_example": {
+    "compile_exit": 0,
+    "run_exit": 0,
+    "log": "lower-example.log"
+  },
+  "acceptance": "PENDING independent root Luna High review, root protected audit and fresh-main validation; no seeding",
+  "animation": "21 accepted prerequisite entries byte-preserved; not rerun by this worker"
+}

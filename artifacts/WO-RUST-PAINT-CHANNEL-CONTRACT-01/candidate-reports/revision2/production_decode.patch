@@ -1,0 +1,14 @@
+--- seed/production_decode.rs
++++ candidate/production_decode.rs
+@@ -393,6 +393,11 @@
+     validate_style(ctx.shared.source(), style, control)?;
+     ctx.shared
+         .element(element, crate::memory::add(element.0, 1)?, control)?;
++    // Preserve source/style validation priority, then bind the canonical
++    // dispatched definition to its typed owner before either lower planner.
++    if owner.element() != element {
++        return Err(invalid(0));
++    }
+     if !vexel_geometry::affine_valid(transform)
+         || !bounds.into_iter().all(f64::is_finite)
+         || bounds[2] < 0.

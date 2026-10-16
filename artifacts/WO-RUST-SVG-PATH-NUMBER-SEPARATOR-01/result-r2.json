@@ -1,0 +1,56 @@
+{
+  "work_order": "WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01 revision 2",
+  "candidate_only": true,
+  "status": "implemented_verified_candidate",
+  "r1_evidence": "result.json retained without edits by this worker",
+  "changed_paths": [
+    "rust/crates/vexel-svg-path/src/parser.rs",
+    "rust/crates/vexel-svg-path/src/reader.rs",
+    "rust/crates/vexel-svg-path/tests/controlled.rs",
+    "rust/crates/vexel-svg-path/tests/number_separator.rs"
+  ],
+  "sha256": {
+    "rust/crates/vexel-svg-path/src/parser.rs": "4339f87a1ffefadd81c53bd2ad980f6ec9465884339878e24a2a6ac90cd53131",
+    "rust/crates/vexel-svg-path/src/reader.rs": "da5f2cfbe34ca0f475a886db57c9d20672f97f45c161e8417b5d02c307d3e33e",
+    "rust/crates/vexel-svg-path/tests/controlled.rs": "a2d1cd9c36e10341925e5a5854817f5a94bdac80c3c300daf300e5ce1abd8195",
+    "rust/crates/vexel-svg-path/tests/number_separator.rs": "b9d5ee0bd255380ed6bbe049a1a3ef3a38e35fd3c048a63e0233f632b818fc87"
+  },
+  "verification": [
+    {
+      "command": "CARGO_HOME=/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01/worker/.cargo-home CARGO_TARGET_DIR=/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01/worker/build/r2-target cargo +stable check -p vexel-svg-path --locked --offline",
+      "exit_code": 0
+    },
+    {
+      "command": "CARGO_HOME=/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01/worker/.cargo-home CARGO_TARGET_DIR=/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01/worker/build/r2-target cargo +stable test -p vexel-svg-path --locked --offline",
+      "exit_code": 0,
+      "result": "All tests passed: 9 library unit tests, 13 controlled integration tests, 1 number separator regression test, 1 frozen parity test, 13 path tests, and 0 doc tests."
+    },
+    {
+      "command": "CARGO_HOME=/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01/worker/.cargo-home CARGO_TARGET_DIR=/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01/worker/build/r2-target cargo +stable test -p vexel-svg-path --test number_separator --locked --offline",
+      "exit_code": 0,
+      "result": "Targeted regression passed. Malformed L1.2.3 is rejected by parse_path, parse_path_controlled, and a quantum-2 PathParseSession with expected absolute diagnostic offset 13 for a span starting at 7; M.6.5 remains valid. The original compact arc fixture `A2 3 0 011.2.4` is also directly asserted valid."
+    },
+    {
+      "command": "rustfmt --edition 2024 --check rust/crates/vexel-svg-path/src/reader.rs rust/crates/vexel-svg-path/tests/controlled.rs",
+      "exit_code": 0
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01 --ready",
+      "exit_code": 0,
+      "result": "valid revision 2; spec sha256 6168dcd502bbd53b4d0acb71ccc55b18b5bbf9ffc6ef6d7dbca821e96c914ad1"
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit_code": 0,
+      "result": "valid ledger: 1742 entries"
+    }
+  ],
+  "implementation": "NumberCursor rejects a second dot after an integer-leading fraction by default. Parser context enables that compact adjacency only for SVG arc endpoint x (operand 5), preserving the original arc endpoint tokenization and all frozen parity behavior.",
+  "line_counts": {
+    "rust/crates/vexel-svg-path/src/parser.rs": 658,
+    "rust/crates/vexel-svg-path/src/reader.rs": 346,
+    "rust/crates/vexel-svg-path/tests/controlled.rs": 735,
+    "rust/crates/vexel-svg-path/tests/number_separator.rs": 92
+  },
+  "history": "An earlier full-suite attempt failed because the coordinator had not yet supplied the parity golden. After the frozen artifact was supplied, the final named full package test command passed."
+}

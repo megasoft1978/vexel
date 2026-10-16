@@ -1,0 +1,1 @@
+2026-10-14T09:22:32.603934Z ERROR codex_core::tools::router: error=apply_patch verification failed: invalid patch: multiple operations target /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-atomic-files/artifacts/WO-RUST-ATOMIC-FILES-01/parity-map.json

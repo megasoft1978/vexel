@@ -1,0 +1,11 @@
+{
+  "status": "pass",
+  "check_exit": 0,
+  "test_exit": 0,
+  "main_passes": 13,
+  "exact_review_source": true,
+  "protected_hashes": 1679,
+  "source603_HEAD_index_preserved": true,
+  "source_only": true,
+  "mixed_allocator_renderer_unexecuted": true
+}

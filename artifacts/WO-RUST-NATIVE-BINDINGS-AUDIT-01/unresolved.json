@@ -1,0 +1,9 @@
+{
+  "package_closure": "resolved from 16 published manifests; Cargo resolution not run",
+  "licenses": "referenced full upstream grant text/notice and SDK distribution implications remain",
+  "SDK_generator": "exact generator SDK/Xcode version absent; installed SDK27 independently established",
+  "exception_boundary": "helper requires third-party Objective-C build and permits foreign unwinding inside runtime trampoline; absolute zero-foreign-unwind requirement unresolved",
+  "compiler_runtime": "MSRVs known, compile/link/macOS13/IME/AX/GPU/teardown runtime checks deferred to separate orders",
+  "protected_source": "603 legacy/HEAD/index matched; rust/crates/vexel-svg-animation/src/lib.rs differs from supplied Rust baseline, without any audit edits; coordinator reconciliation required",
+  "independent_review": "pending coordinator, no recursive agents"
+}

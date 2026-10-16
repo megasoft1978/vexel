@@ -1,0 +1,15 @@
+Revision 1 independent review: FAIL.
+
+Findings:
+
+- High: event-handler rejection checked for a two-byte name, so `onload` and
+  `onclick` passed.
+- High: CSS escape sequences could hide `url()` and `@import` identifiers.
+- High: the ID-pool allocation check used the wrong capacity counter and could
+  proceed with a null pool after allocation failure.
+- High: cancellation did not reach the owned shape decoder; a single asset up
+  to 256 MiB could not be interrupted while parsing.
+
+The first three findings are being fixed in revision 2. The cancellation fix
+requires an additive cancellable entry point in the owned SVG shape decoder, so
+revision 1 is superseded to include that seam in its allowlist.

@@ -1,0 +1,40 @@
+2026-10-14T20:52:44.967125Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/planner.rs:
+                if def_style
+                    .value(Property::ClipPath)
+                    .is_some_and(|v| !v.bytes.eq_ignore_ascii_case(b"none"))
+                {
+                    return Err(unsupported(
+                        def_style.value(Property::ClipPath).unwrap().span.offset,
+                    ));
+                }
+                let marker_style = def_style.clone().without_inherited_markers();
+2026-10-14T20:57:39.978376Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/clip.rs:
+        let Some(local_to_doc) = inverse(c.user_inverse) else {
+2026-10-14T20:59:31.516019Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/lib.rs:
+mod planner;
+pub use planner::DefinitionPlanner;
+2026-10-14T20:59:51.068218Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/definition_plans.rs:
+use vexel_svg_definitions::{DefinitionPlanner, apply_group, clone_clips, contains, create_rect, work_counts};
+2026-10-14T21:00:53.616158Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/definition_plans.rs:
+use vexel_svg_definitions::{
+    DefinitionPlanner, apply_group, clone_clips, contains, create_rect,
+    resolve_local_definition, work_counts,
+2026-10-14T21:01:26.294652Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/definition_plans.rs:
+    DefinitionPlanner, apply_group, clone_clips, contains, create_rect, resolve_local_definition,
+    local_to_document, update_owner, visit_boundary_edges, work_counts, work_units,
+2026-10-14T21:01:54.452054Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/definition_plans.rs:
+    MarkerOrient, parse_marker_attributes_for_viewport, resolve_local_definition, update_owner,
+2026-10-14T21:05:53.312964Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/filter.rs:
+            linear_rgb: !attr(source, tokens, element, b"color-interpolation-filters")
+                .is_some_and(|s| eq(source, s, b"sRGB")),
+2026-10-14T21:06:58.965022Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/definition_plans.rs:
+<pattern id="p" x=".1" y=".2" width=".5" height=".25" patternUnits="objectBoundingBox" patternContentUnits="objectBoundingBox" viewBox="0 0 2 1"><path d="M0 0L2 0L2 1Z"/></pattern>
+2026-10-14T21:09:15.317915Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/tests/common/mod.rs:
+const SVG: &[u8] = br#"<svg width="20" height="20" viewBox="0 0 20 20"><defs>
+2026-10-14T21:12:03.787771Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DEFINITIONS-01/worker/rust/crates/vexel-svg-definitions/src/pattern.rs:
+fn number(offset: usize) -> Diagnostic {
+    Diagnostic {
+        kind: ErrorKind::Number,
+        offset,
+    }
+}

@@ -1,0 +1,21 @@
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28)
+Status: full-scope uncommitted CSS-control candidate; root acceptance pending.
+
+PASS (exit 0) cargo +stable check -p vexel-svg-css --locked --offline
+PASS (exit 0) cargo +stable test -p vexel-svg-css --locked --offline
+PASS (exit 0) python3 scripts/wo_validate.py WO-RUST-SVG-CSS-CONTROL-01 --ready
+PASS (exit 0) python3 scripts/ledger.py validate ledger.jsonl
+PASS (exit 0) git diff --check
+
+63 tests passed; 0 failed. Suite counts: unit 10; boundaries 3; controlled original one-shot 13; controlled original one-unit sessions 13; unchanged original css 13; independent legacy oracle 3; focused sessions 8.
+Original css.rs matches pre-edit baseline SHA256 exactly. Both controlled suites preserve all 13 original test bodies verbatim.
+All source/tests below 800 lines; largest file: 410 lines. Owned-file trailing whitespace scan passed.
+Exact output and timings: named-checks.log and named-checks.json. Final source/test SHA256s: source-snapshot.json.
+Inherited CARGO_HOME: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-css-control/.cache/cargo
+Inherited CARGO_TARGET_DIR: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-css-control/build/rust
+Inherited TMPDIR: /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-css-control/.cache/tmp
+
+Supplemental focused checks passed: sessions, boundaries, --lib, legacy_oracle. One initial new long-value test expected trailing-comment trimming before !important incorrectly; its fixture was corrected to match baseline semantics. Original assertions unchanged.
+OOM proof is a real safe try_reserve capacity-overflow failure, not physical allocator exhaustion. No fake backend or allocator, unsafe, network, new dependencies, installs, agents, UI automation, commits or staging.
+Build/compute share the new private state engines across legacy and controlled routes. No partial paint publication, smaller caps, new containing-source limits or newly supported grammar.
+Root review/protected audits/fresh main integration checks still required. No full renderer/app/UI/E2E claim.

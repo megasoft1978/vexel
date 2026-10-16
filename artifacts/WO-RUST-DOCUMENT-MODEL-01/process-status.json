@@ -1,0 +1,11 @@
+{
+  "name": "document-model",
+  "wo": "WO-RUST-DOCUMENT-MODEL-01",
+  "pid": 68769,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791974376.412241,
+  "exit_code": 0,
+  "duration_seconds": 81.23913908004761
+}

@@ -1,0 +1,25 @@
+{
+  "ts": "2026-10-14T06:03:07Z",
+  "wo_id": "WO-RUST-RASTER-01",
+  "event": "verified",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-RASTER-01-verified",
+  "session_id": "rust-foundation-parallel-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": 465887,
+    "output_tokens": 6131
+  },
+  "status": "pass",
+  "artifacts": [
+    "artifacts/WO-RUST-RASTER-01/verification-integrated.txt",
+    "artifacts/WO-RUST-RASTER-01/integration-audit.txt",
+    "artifacts/WO-RUST-RASTER-01/review.md",
+    "artifacts/WO-RUST-RASTER-01/parity-map.json"
+  ],
+  "note": "Scoped std-only Rust foundation accepted after independent LunaMedium review, exact isolated/root source audit and main package check/tests. Original C/tests/source/manifest/index preserved. Only named geometry or tile module parity, no full app/render claim."
+}

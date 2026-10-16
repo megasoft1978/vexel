@@ -1,0 +1,22 @@
+{
+  "ts": "2026-10-14T07:01:40Z",
+  "wo_id": "WO-RUST-PROTOCOL-01",
+  "event": "run_started",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-PROTOCOL-01-run_started",
+  "session_id": "rust-wave2-parallel-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "running",
+  "artifacts": [
+    "work/WO-RUST-PROTOCOL-01.md"
+  ],
+  "note": "Six disjoint second-batch Rust ports using accepted foundations and frozen scopes. Standard subscription LunaHigh, own worktree/module, root manifests/contracts/acceptance. No whole app/UI/perf claim."
+}

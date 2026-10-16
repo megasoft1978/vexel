@@ -1,0 +1,15 @@
+{
+  "protected_files_checked": 1652,
+  "protected_mismatches": [],
+  "main_scene_drift": [],
+  "allowed_existing_changes": [
+    "rust/crates/vexel-scene/README.md",
+    "rust/crates/vexel-scene/src/accounting.rs",
+    "rust/crates/vexel-scene/src/lib.rs",
+    "rust/crates/vexel-scene/src/model.rs"
+  ],
+  "unexpected_files": [],
+  "unchanged_HEAD_paths_outside_overlay": 1205,
+  "overlength_files": [],
+  "pass": true
+}

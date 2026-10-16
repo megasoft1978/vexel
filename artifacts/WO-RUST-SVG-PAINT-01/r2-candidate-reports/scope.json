@@ -1,0 +1,323 @@
+{
+  "schema": 1,
+  "owner": "PAINT",
+  "crate": "vexel-svg-paint",
+  "work_order": "WO-RUST-SVG-PAINT-01",
+  "mapping_adaptation": "separate owned crate address only; full accepted owner scope remains",
+  "accepted_plan": "WO-RUST-RENDER-CONTRACT-PLAN-01",
+  "accepted_shared_orders": [
+    "WO-RUST-SCENE-MODEL-01",
+    "WO-RUST-KERNEL-CONTRACTS-01",
+    "WO-RUST-SCENE-DRAFT-01"
+  ],
+  "source_files": [
+    {
+      "path": "src/svg/paint/paint.c",
+      "sha256": "0b3ecb4320a6a5e58524e98aa7ce1483927f68c778b99ab453c9b81529af5d05",
+      "owner": "PAINT",
+      "symbols": [
+        {
+          "name": "svg_paint_cache_destroy",
+          "line": 33,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:33:definition:svg_paint_cache_destroy",
+          "semantic_replacement": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+        },
+        {
+          "name": "svg_paint_edge_span",
+          "line": 41,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:41:definition:svg_paint_edge_span",
+          "semantic_replacement": null
+        },
+        {
+          "name": "cache_hash",
+          "line": 53,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:53:definition:cache_hash",
+          "semantic_replacement": null
+        },
+        {
+          "name": "cache_create",
+          "line": 69,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:69:definition:cache_create",
+          "semantic_replacement": null
+        },
+        {
+          "name": "cache_find",
+          "line": 87,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:87:definition:cache_find",
+          "semantic_replacement": null
+        },
+        {
+          "name": "cache_reserve_entry",
+          "line": 108,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:108:definition:cache_reserve_entry",
+          "semantic_replacement": null
+        },
+        {
+          "name": "cache_insert",
+          "line": 129,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:129:definition:cache_insert",
+          "semantic_replacement": null
+        },
+        {
+          "name": "eq",
+          "line": 153,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:153:definition:eq",
+          "semantic_replacement": null
+        },
+        {
+          "name": "attr",
+          "line": 161,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:161:definition:attr",
+          "semantic_replacement": null
+        },
+        {
+          "name": "count_token_visit",
+          "line": 173,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:173:definition:count_token_visit",
+          "semantic_replacement": null
+        },
+        {
+          "name": "gradient_attributes_supported",
+          "line": 181,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:181:definition:gradient_attributes_supported",
+          "semantic_replacement": null
+        },
+        {
+          "name": "gradient_href",
+          "line": 216,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:216:definition:gradient_href",
+          "semantic_replacement": null
+        },
+        {
+          "name": "gradient_inherited_color",
+          "line": 238,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:238:definition:gradient_inherited_color",
+          "semantic_replacement": null
+        },
+        {
+          "name": "element_end",
+          "line": 270,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:270:definition:element_end",
+          "semantic_replacement": null
+        },
+        {
+          "name": "number",
+          "line": 289,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:289:definition:number",
+          "semantic_replacement": null
+        },
+        {
+          "name": "color",
+          "line": 306,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:306:definition:color",
+          "semantic_replacement": null
+        },
+        {
+          "name": "resolve_stop_color",
+          "line": 311,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:311:definition:resolve_stop_color",
+          "semantic_replacement": null
+        },
+        {
+          "name": "supported_stop_inline_style",
+          "line": 327,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:327:definition:supported_stop_inline_style",
+          "semantic_replacement": null
+        },
+        {
+          "name": "parse_stops",
+          "line": 352,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:352:definition:parse_stops",
+          "semantic_replacement": null
+        },
+        {
+          "name": "gradient_coordinates",
+          "line": 431,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:431:definition:gradient_coordinates",
+          "semantic_replacement": null
+        },
+        {
+          "name": "collect_gradient_chain",
+          "line": 487,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:487:definition:collect_gradient_chain",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_paint_resolve_fill",
+          "line": 531,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:531:definition:svg_paint_resolve_fill",
+          "semantic_replacement": null
+        },
+        {
+          "name": "svg_paint_sample",
+          "line": 725,
+          "kind": "definition",
+          "key": "src/svg/paint/paint.c:725:definition:svg_paint_sample",
+          "semantic_replacement": null
+        }
+      ],
+      "limits": [
+        [
+          "SVG_PAINT_CACHE_SLOT_COUNT",
+          "(SVG_PAINT_CACHE_MAX_GRADIENTS * 2U)"
+        ],
+        [
+          "SVG_PAINT_MAX_TOKEN_VISITS",
+          "4194304U"
+        ]
+      ],
+      "policy": "all owner implementation/private helper semantics, original error/limit/algorithm behavior; shared declarations adapt to actual accepted APIs"
+    }
+  ],
+  "operations": [
+    {
+      "owner": "PAINT",
+      "name": "resolve",
+      "signature": "fn resolve_fill(ctx: &mut ResolveContext<'_>, value: XmlSpan, edges: &[Edge], user_inverse: Affine, viewport: [f64;2], control: &mut dyn WorkControl) -> Result<ResolvedPaint>",
+      "contract": "ResolveContext borrows source/tokens + mutable CSS/reference/cache and stop append transaction; ResolvedPaint contains Paint and owned new stops before commit. Local linear/radial href inheritance, stop CSS/currentColor, ordering, spread, focal/radius defaults, bbox/inverse handling unchanged. Pattern classified and sent to planner. Cache keyed complete resolution context, charge all probes/token visits."
+    },
+    {
+      "owner": "PAINT",
+      "name": "sample",
+      "signature": "fn sample(paint: &Paint, stops: &[PaintStop], x: f64, y: f64) -> [u8;4]",
+      "contract": "Exact C interpolation/clamping/rounding and transform operation order; stop range validated before hot loop; edge_span accessor returns None for empty/invalid range (formed false equivalent). Cache destroy is owned Drop."
+    }
+  ],
+  "assigned_original_suites": [
+    {
+      "path": "tests/svg/shape/gradient_stroke_test.c",
+      "sha256": "2f4f869968b642209928ed5ab44e4aeb81dd3b664bafa8e7c2083cd0613ed2d4",
+      "primary_owner": "PAINT",
+      "assigned_cases": [
+        {
+          "name": "main",
+          "line": 70,
+          "owner": "PAINT"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_m4_06_evidence.c",
+      "sha256": "9dcadcd26147c5b84f504828b82e1478de9dede45ba9bb767fab448481ff42d5",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "exact_gradient_check",
+          "line": 118,
+          "owner": "PAINT"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_paint_edge_span.c",
+      "sha256": "ea1b331099a65cd208a082d619c88333c13d735973fd0705d080cbb023c022f8",
+      "primary_owner": "PAINT",
+      "assigned_cases": [
+        {
+          "name": "paint_edge_span_check",
+          "line": 5,
+          "owner": "PAINT"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_reference.c",
+      "sha256": "85e79f57322935fc88fc1c379d6f4c6b6e0c7cd3e1c79f1bb8afbb67fd40e980",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "cached_gradient_scan_check",
+          "line": 740,
+          "owner": "PAINT"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/svg/shape/test_shape.c",
+      "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "gradient_checks",
+          "line": 146,
+          "owner": "PAINT"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    },
+    {
+      "path": "tests/test_shape_render.py",
+      "sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+      "primary_owner": "DECODE",
+      "assigned_cases": [
+        {
+          "name": "test_gradient_full_tile_radial_interior_uses_center_sample",
+          "line": 112,
+          "owner": "PAINT",
+          "body_sha256": "e6bc1f745bc78e5740a31e33f704af2d24f03c0d03664a09e49d3024ec89ead9"
+        }
+      ],
+      "policy": "entire original suite/functions incl helper and implicit return/error checks; all expressions/data/expected bytes/tolerances preserved; primary owns harness, case owner feature proof, COMPOSITION owns mixed end-to-end runs"
+    }
+  ],
+  "frozen_oracles_source": "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json",
+  "frozen_input_sha256": {
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/ownership-matrix.json": "c014bc96ef46b8d8b9f5ed3cfc5f36c3b8853d578c758faa36af48e576810dd5",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json": "19b13d230c10553b262a585b1839385761b7e5ef857bb82457fa880234f7212e",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/assertion-assignments.json": "188d73452059bd05c84ba2db790c2ea49313fa58f74f485bcb5b0273b953cde7",
+    "artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/limits-features.json": "821b98188085a78259008b82d9384b12299704cf8c31f6daf907d8a057baa763"
+  },
+  "current_shared_api_sha256": {
+    "rust/crates/vexel-scene/src/lexical_document.rs": "cff931ff54cbd17372fc98df9b10de5f3eaf0cd1bed708efc88d9a3f989fa651",
+    "rust/crates/vexel-scene/src/decode_contract.rs": "806b19df794a831bbb90cb6575046bd3aa918b5aeb5cb6a4feb46a6ec1f2b0f3",
+    "rust/crates/vexel-scene/src/types.rs": "1779916725a9df0d4921010e8ab85deafa6852cd0ef39ab9ed994a13ccf0e6bb",
+    "rust/crates/vexel-scene/src/pattern_ticket.rs": "9f9b5a0f4f4779d159c8c9c2ecd9db9e369ac6a145013ae642fba23dbe98673d",
+    "rust/crates/vexel-scene/src/accounting.rs": "0a0fb0118a9c0e3c0f3d597a87253490e4a50ad122f59e730ecdd45e4a2efe90",
+    "rust/crates/vexel-scene/src/lib.rs": "8b0bc2356ab3039f5e4bbfb45c8ecba19ad5ba514c418dd12e2b229996ccf7af",
+    "rust/crates/vexel-scene/src/memory.rs": "f2de4c04af6bff31228b95f973317c175eb192d81c89594c48f02b47b4695f23",
+    "rust/crates/vexel-scene/src/contract_validate.rs": "6c3557487eb0e8ee73e4be79a437f40d79400727aa7bbfd827a4b8f76125791e",
+    "rust/crates/vexel-scene/src/contract_storage.rs": "9f990135cdae62efe4a4260a47b9bced98b2a141a1406cae641d7f8a37b02005",
+    "rust/crates/vexel-scene/src/media.rs": "b9532fe5a5e12c1460fe569d86727e3a59fe14f2fb6ef4153a29b3fd25b75403",
+    "rust/crates/vexel-scene/src/dash_validate.rs": "6b979f789334409e5954bd25d945c050d3b42c50539066d5f52307038ac6911c",
+    "rust/crates/vexel-scene/src/draft_updates.rs": "7c7790ac942641d0c07f559cec0099457e9ba714e56da5e2778530e14a3146a0",
+    "rust/crates/vexel-scene/src/mutators.rs": "e258b6d5dcda0d7dc44ddec39a21dfc26637d70c1d89d59bee10d49e2031cb14",
+    "rust/crates/vexel-scene/src/draft.rs": "652302ff36efed92f65ce7f426ee5153788f79aa474a223b3dc536df4d500952",
+    "rust/crates/vexel-scene/src/validation_tests.rs": "cbecb7df16720750f7f871e3f3876d08ecee3693df70d6c94da011cc5c817474",
+    "rust/crates/vexel-scene/src/ids.rs": "61fa36334a9c409460dbfb61fbdd42eaa228ac271d6e318abf3c0579bb86fcdc",
+    "rust/crates/vexel-scene/src/shape_builder.rs": "924e8e4b257beb5941c57d77f102bbdaaabf1262a175400c93544caf25e76852",
+    "rust/crates/vexel-scene/src/source_context.rs": "e0ee7343122cc60c0bab5ec653f99eeb5b5bc7a1595feaa79202eaf10c1af80b",
+    "rust/crates/vexel-scene/src/frame.rs": "73527780415669adf0b0ee1214a5cff7c2b0ba12f34017cd4ef7cf3da6431f06",
+    "rust/crates/vexel-scene/src/validate.rs": "c69e7c45cf6d2377a1d8fbdba3dd9f129bb4d7fc488b1a880191ddd4fb567002",
+    "rust/crates/vexel-scene/src/model.rs": "7ba0317648e8017129e89d68c639b5ba277e17b7baf27998dc13d2f6d33fe0b6",
+    "rust/crates/vexel-scene/src/builder.rs": "de4f320d0486c43152a40b93eeba59eaf2b221e975b898c5a9cdbe011d6c9d9c",
+    "rust/crates/vexel-scene/src/render_contract.rs": "ad81dfaef997e7ea7c263a9084477e66c4a400e7dd69ba0385bf166869e3e11f"
+  },
+  "scope_completion": "full real owned algorithms/private helpers and assigned original assertion semantics; no fake success, smaller renderer, TODO required workflow or weakened oracle",
+  "later_composition": "real accepted DecodeOperations/KernelResources/FlatKernel adapters supplied by coordinator, not fake defaults"
+}

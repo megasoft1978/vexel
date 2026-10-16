@@ -1,0 +1,6 @@
+WO-ANIM-PROJECT-26 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: f411228d7fb48d8cd054b84d11dd6b2f6678be00b4c507cd495fed6523311148
+Allowlist: frozen in work/WO-ANIM-PROJECT-26.md
+Protected: all paths outside allowlist, including unrelated dirty files and existing work-order artifacts
+Feature: atomically retime native drawing cels/property keys in the project/session API, pointer timeline UI, and MCP; focused project/UI/MCP verification only.

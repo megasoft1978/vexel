@@ -1,0 +1,44 @@
+{
+  "xml-tokenizer": {
+    "wo": "WO-RUST-XML-02",
+    "crate": "vexel-xml",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer"
+  },
+  "spatial": {
+    "wo": "WO-RUST-SPATIAL-01",
+    "crate": "vexel-spatial",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-spatial"
+  },
+  "svg-values": {
+    "wo": "WO-RUST-SVG-VALUES-01",
+    "crate": "vexel-svg-values",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-svg-values"
+  },
+  "protocol": {
+    "wo": "WO-RUST-PROTOCOL-01",
+    "crate": "vexel-protocol",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol"
+  },
+  "ui": {
+    "wo": "WO-RUST-UI-CORE-01",
+    "crate": "vexel-ui",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-ui"
+  },
+  "platform": {
+    "wo": "WO-RUST-NATIVE-SYSTEM-01",
+    "crate": "vexel-platform-macos",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-platform"
+  }
+}

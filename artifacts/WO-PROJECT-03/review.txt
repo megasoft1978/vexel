@@ -1,0 +1,4 @@
+Independent read-only review: PASS
+Model/CLI: gpt-6.1-sol / Codex CLI 0.162.1
+Scope: WO-PROJECT-03 saved checkpoint API, coalescing boundary, focused test.
+No blocking findings. Reviewer confirmed checkpoint-only behavior, NULL safety, saved undo boundary, and consistent redo/branch/history behavior. Static review only; no test execution or modifications by reviewer.

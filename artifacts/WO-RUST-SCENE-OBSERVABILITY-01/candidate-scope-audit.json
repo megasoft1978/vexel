@@ -1,0 +1,26 @@
+{
+  "seed_paths": 64,
+  "root_seed_mismatches": [],
+  "changed_seeded_paths": [
+    {
+      "path": "rust/crates/vexel-scene/src/accounting.rs",
+      "seed": "ba55e96fdc9f6a4a87816d6a1048f4b4c027bb6f17fe20e7bbc22e40c9a2ef09",
+      "candidate": "95be8d83e876b763435982760da1ece7b339f431736e77aef62a633f73c5a4a6",
+      "allowed": true
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/source_context.rs",
+      "seed": "226afae77cd277aadfc56875719ce70023e4537d6d4f561b989e17163dabb021",
+      "candidate": "d92f0032cb226c1b87392decc514a0a7b24428e0620ca1cdda8de8b4be594326",
+      "allowed": true
+    },
+    {
+      "path": "rust/crates/vexel-scene/README.md",
+      "seed": "c0c88a661720d07aa73db074aff456a5371e9b297a19985c7aae825b3d7aba90",
+      "candidate": "28100544da366554aa3998db9ca9867b0659ad5a679c64eaa5e91d2d16a720ab",
+      "allowed": true
+    }
+  ],
+  "seeded_changes_all_allowed": true,
+  "candidate_test_exists": true
+}

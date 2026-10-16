@@ -1,0 +1,8 @@
+183: 
+184: */
+185: APPKIT_EXTERN void NSAccessibilityPostNotification(id element, NSAccessibilityNotificationName notification);
+186: 
+187: #ifdef __swift__
+188: // This struct is not available in Objective-C. Its only purpose is to create a namespace for accessibility symbols in Swift.
+189: typedef struct NSAccessibility { void *_reserved; } NSAccessibility;
+190: #endif

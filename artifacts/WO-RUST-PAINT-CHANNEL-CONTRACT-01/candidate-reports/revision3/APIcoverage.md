@@ -1,0 +1,11 @@
+# Revision 3 API coverage
+
+`plan_production_definition` and `plan_production_pattern` use the same validator, as do combined-object `plan_channel_aware_definition` and `plan_channel_aware_pattern`. Only the incorrect owner-element equality was removed. Canonical dispatch-element lookup, source/context/owner/draft/target validation, style, transform, bounds, descriptor kind/ID, mapping source/bounds and post guards remain.
+
+`DefinitionOwner.element` is the lexical host/planning anchor. The requested element is the resolved definition. The replacement test dispatches a distinct real pattern from a path owner through both compatibility and explicit Stroke routes, then requests, renders and completes real PatternId publication through PatternTickets and RasterJob.
+
+Both routes prove out-of-range dispatch rejection, foreign owner rejection, stale owner rejection with its target still live, foreign source rejection, cancellation and invalid bounds before provider entry. Invalid owner construction using a foreign target or invalid anchor is rejected. Provider calls remain zero and scene/accounting snapshots remain unchanged across dispatch failures. Valid dispatch enters once, returns the requested descriptor and publishes the actual tile. Existing mapping and descriptor guards are unchanged.
+
+The retained new-test prefix includes eight fill/stroke/default opacity publications and combined dyn operations pattern/group-filter planning. Every preexisting scene test file is byte unchanged from this revision's input; the frozen distinct-owner mask integration passes.
+
+Downstream decoder adoption: mint owner from the actual host/current lexical anchor and real target; resolve the definition separately; dispatch patterns with explicit Fill/Stroke via the channel-aware operation set/session. Preserve the selected channel through tickets and completion. Definitions adapters must implement the required channel method and compute its selected style opacity including initial 1. Nonpaint definitions keep the combined object's nonpattern route and real group targets. Full engine adapters, native UI/runtime and performance proofs remain downstream; this candidate makes no runtime/performance claim.

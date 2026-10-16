@@ -1,0 +1,35 @@
+{
+  "work_order": "WO-RUST-TILE-CACHE-ORACLE-01",
+  "revision": 1,
+  "spec_sha256": "8740e3596bdc569a3a0ea589d7b7535708ef522806829188274122f0a359659c",
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "candidate": ".cache/WO-RUST-TILE-CACHE-ORACLE-01/worker/",
+  "integrated_paths": {
+    "rust/crates/vexel-tile-cache/src/lib.rs": "85c870f4c7af8ef015f9be1a96f6439ec8091fc6fc057974a4e2bca360a44db8",
+    "rust/crates/vexel-tile-cache/tests/cache.rs": "77b18901fa24bbec1aced8405d1f97b90e61f6976b69e2c23acb71793f4a6b55"
+  },
+  "protected_inputs": {
+    "Cargo.toml": "byte-identical to candidate seed",
+    "Cargo.lock": "byte-identical to candidate seed",
+    ".cargo/config.toml": "byte-identical to candidate seed",
+    "tests/raster/cache/cache_contract.c": "e69a30865eaa2212561b9283d0cb2b6325ed72760d557981c8b56406cb8ab602",
+    "artifacts/WO-RUST-TILE-CACHE-ORACLE-01/scope.json": "7e0542f124c6da1e423588db2e18fac6b440f862811a48363ad49e3ad0b88ed3",
+    "candidate C oracle copy": "byte-identical to root; SHA-256 e69a30865eaa2212561b9283d0cb2b6325ed72760d557981c8b56406cb8ab602"
+  },
+  "independent_review": "PASS; literal expected accounting and JSON; refreshed evidence hashes verified",
+  "verification": {
+    "cargo +stable check -p vexel-tile-cache --locked --offline": "PASS",
+    "cargo +stable test -p vexel-tile-cache --locked --offline": "PASS: 3 unit + 13 integration, 0 doc failures",
+    "cargo +stable fmt --package vexel-tile-cache -- --check": "PASS",
+    "python3 scripts/wo_validate.py WO-RUST-TILE-CACHE-ORACLE-01 --ready": "PASS",
+    "git diff --check": "PASS"
+  },
+  "scope_result": "29 frozen C assertions mapped; no production behavior change; lib.rs diff is rustfmt only; test changes add exact oracle coverage.",
+  "remaining_product_gates": [
+    "decoder composition",
+    "renderer/job/CLI integration",
+    "app/UI/E2E",
+    "release and demo"
+  ],
+  "accepted": true
+}

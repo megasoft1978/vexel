@@ -1,0 +1,23 @@
+WO-ANIM-PROJECT-17 r1 implementation and acceptance
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 95191c157a571436aa83742f14b682b3260931576f4b59c53a339b99996fe5e0
+Status: accepted in working tree; uncommitted.
+
+Implemented:
+- A native timeline “Key Opacity” control records the selected SVG node's presentation opacity at the current integer tick. It creates a stable-ID scalar opacity track with a tick-zero baseline, creates later-frame tracks and keys in one undo step, and upserts the requested key on an existing target opacity track.
+- Selection data is read from the document edit index. Missing opacity defaults to 1; percentages are normalized. Missing/long IDs, multi-selection, invalid values, or inline-style opacity are rejected with status feedback. SVG scene bytes are not changed.
+- Native track views now expose borrowed property/type/interpolation slices. The action refreshes the live timeline, invalidates the frame preview, selects the resulting track, reports status, and sends the native mutation notification. The control has an accessibility label.
+- Focused tests cover button hit routing, track creation at tick 12 with tick-zero baseline, source opacity capture, undo/redo, metadata access, and atomic one-step property-track creation. Project README documents the supported workflow and inline-style limit.
+
+Verification:
+- Debug strict build: `cmake --build --preset mac-debug --target viewer_timeline_test project_timeline_edit_test project_timeline_session_test svgworkbench -j 8` — passed.
+- Debug focused CTest: `ctest --test-dir build/mac-debug -R 'viewer-timeline|project-timeline-edit|project-timeline-session' --output-on-failure` — 4/4 passed (viewer timeline, viewer keyframes, project timeline edit, project timeline session).
+- ASan/UBSan strict build of the same four targets — passed. Focused CTest — 4/4 passed.
+- Configured UBSan strict build of the same four targets — passed. Focused CTest — 4/4 passed.
+- After the final pointer-routing assertion, `viewer-timeline` was rebuilt and rerun separately in Debug, ASan/UBSan, and UBSan — 1/1 passed in each.
+- `python3 scripts/wo_validate.py WO-ANIM-PROJECT-17 --ready` passed before execution; frozen order hash remained valid.
+- `python3 scripts/ledger.py validate ledger.jsonl` passed with 697 entries.
+- `git diff --check` passed. Changed C and `.inc` sources remain below 800 lines; maximum is `src/app/viewer_timeline_layout.c` at 763 lines and `src/project/project_timeline_edit.c` at 768 lines.
+
+Not run: broad UI/E2E or release acceptance, as required by the product goal's final-stage sequence. No commit. Remaining feature work includes broader property authoring, native drawing-cel UI authoring, deterministic export, final MCP/UI acceptance, then the reviewed accessible live Codex character-animation recording for the website and README.

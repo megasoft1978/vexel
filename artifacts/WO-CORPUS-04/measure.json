@@ -1,0 +1,21 @@
+{
+ "command_template": "/usr/bin/time -l build/mac-release/bin/svgworkbench --render-frame <corpus>/files/generated/<name>.svg --size 128x128 --out .cache/WO-CORPUS-04/<name>.ppm",
+ "files": {
+  "generated-science_t1": {
+   "exit_code": 0,
+   "last_stderr_line": "(none; no diagnostic, frame written)",
+   "wall_seconds": 13.69,
+   "max_rss_bytes": 76775424
+  },
+  "generated-embedded_t2": {
+   "exit_code": 0,
+   "last_stderr_line": "(none; no diagnostic, frame written)",
+   "wall_seconds": 5.77,
+   "max_rss_bytes": 381911040
+  }
+ },
+ "ceilings": {
+  "wall_seconds": 60,
+  "max_rss_bytes": 2147483648
+ }
+}

@@ -1,0 +1,15 @@
+{
+  "status": "running",
+  "model": "gpt-6-luna",
+  "effort": "medium",
+  "speed": "standard",
+  "worker_count_total": 2,
+  "worktree": ".cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker",
+  "prompt": "artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/accepted-pattern199-resume-prompt.txt",
+  "seed": "artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/accepted-pattern199-source-seed.json",
+  "started_epoch": 1792042480.0300958,
+  "process_rows": [
+    "36597 88053       00:06 codex exec --ignore-user-config --profile economy --model gpt-6-luna -c model_reasoning_effort=\"medium\" -c service_tier=\"default\" -c model_provider=\"openai\" -c web_search=\"disabled\" --sandbox workspace-write --color never --json --cd /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker --output-last-message /Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-SVG-SCALAR-SAMPLE-01/accepted-pattern199-last-message.md -"
+  ],
+  "session_id": 83798
+}

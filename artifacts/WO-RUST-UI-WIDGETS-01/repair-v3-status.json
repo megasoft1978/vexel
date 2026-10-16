@@ -1,0 +1,13 @@
+{
+  "name": "widgets",
+  "wo": "WO-RUST-UI-WIDGETS-01",
+  "session": "01a139f7-febf-7741-b3de-6f788f8033c5",
+  "pid": 30440,
+  "mode": "repair",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "status": "completed",
+  "started_epoch": 1791976564.787563,
+  "exit_code": 0,
+  "duration_seconds": 453.3132951259613
+}

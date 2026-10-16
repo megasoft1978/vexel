@@ -1,0 +1,10 @@
+{
+  "failure": "First fresh main test compile lacked original CSS Rust baseline imported by legacy_oracle.rs; no acceptance recorded",
+  "resolution": "Copy exact launch-baseline-hash matching immutable oracle inputs under authorized ownartifact paths",
+  "oracle_inputs": {
+    "artifacts/WO-RUST-SVG-CSS-CONTROL-01/baseline/lib.rs": "3ddef744fad4e55c23081666d79db07de90f1e097a8754020e96145ae4b1728c",
+    "artifacts/WO-RUST-SVG-CSS-CONTROL-01/baseline/css.rs": "df40ed77c80687ee4883de047cd7b1703e5da54d1986bab27dd6ed7be4e26d61"
+  },
+  "prior_partial_copy": "candidate-audit.json records successful protected audit; every main product file must equal same reviewed candidate before resume",
+  "tests_changed": false
+}

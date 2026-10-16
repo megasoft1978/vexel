@@ -1,0 +1,12 @@
+[
+  {
+    "name": "svg-animation",
+    "wo": "WO-RUST-SVG-ANIMATION-01",
+    "pid": 4131,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation",
+    "model": "gpt-6-luna",
+    "effort": "high",
+    "status": "running",
+    "overlay_file_count": 1535
+  }
+]

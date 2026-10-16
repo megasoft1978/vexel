@@ -1,0 +1,4 @@
+WO-CORPUS-06 revision 1
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 78688d06a807efb2d824c59191d62966991ff6e7f280f9ab23a856cf64441a76
+Instrumentation/build/probes are confined to ignored .cache/WO-CORPUS-06/. Shared source must remain byte-identical.

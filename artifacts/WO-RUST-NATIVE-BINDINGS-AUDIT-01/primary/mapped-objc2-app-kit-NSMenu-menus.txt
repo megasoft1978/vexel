@@ -1,0 +1,161 @@
+BINDING addItem
+194:         /// This is unretained, you must ensure the object is kept alive while in use.
+195:         #[unsafe(method(setSupermenu:))]
+196:         #[unsafe(method_family = none)]
+197:         pub unsafe fn setSupermenu(&self, supermenu: Option<&NSMenu>);
+198: 
+199:         #[cfg(feature = "NSMenuItem")]
+200:         #[unsafe(method(insertItem:atIndex:))]
+201:         #[unsafe(method_family = none)]
+202:         pub fn insertItem_atIndex(&self, new_item: &NSMenuItem, index: NSInteger);
+203: 
+204:         #[cfg(feature = "NSMenuItem")]
+205:         #[unsafe(method(addItem:))]
+206:         #[unsafe(method_family = none)]
+207:         pub fn addItem(&self, new_item: &NSMenuItem);
+208: 
+209:         #[cfg(feature = "NSMenuItem")]
+210:         /// # Safety
+211:         ///
+212:         /// `selector` must be a valid selector.
+213:         #[unsafe(method(insertItemWithTitle:action:keyEquivalent:atIndex:))]
+214:         #[unsafe(method_family = none)]
+215:         pub unsafe fn insertItemWithTitle_action_keyEquivalent_atIndex(
+216:             &self,
+217:             string: &NSString,
+218:             selector: Option<Sel>,
+219:             char_code: &NSString,
+220:             index: NSInteger,
+221:         ) -> Retained<NSMenuItem>;
+
+SDK addItem
+90: 
+91: /* Appends an item to the end of the menu.  A nil item will raise an exception. */
+92: - (void)addItem:(NSMenuItem *)newItem;
+93: 
+94: /* Inserts a new menu item with the given title, action, and key equivalent, at the given index.  The index must be at least zero and no more than the receiver's item count.  The title and key equivalent must not be nil (pass the empty string to indicate no key equivalent). This returns the new item.
+95:  */
+96: - (NSMenuItem *)insertItemWithTitle:(NSString *)string action:(nullable SEL)selector keyEquivalent:(NSString *)charCode atIndex:(NSInteger)index;
+97: 
+98: /* Appends a new menu item with the given properties to the end of the menu. */
+99: - (NSMenuItem *)addItemWithTitle:(NSString *)string action:(nullable SEL)selector keyEquivalent:(NSString *)charCode;
+
+SDK addItem
+97: 
+98: /* Appends a new menu item with the given properties to the end of the menu. */
+99: - (NSMenuItem *)addItemWithTitle:(NSString *)string action:(nullable SEL)selector keyEquivalent:(NSString *)charCode;
+100: 
+101: /* Removes the item at the given index, which must be at least zero and less than the number of items.  All subsequent items will shift down one index. */
+102: - (void)removeItemAtIndex:(NSInteger)index;
+103: 
+104: /* Removes the item from the menu.  If the item is nil, or is not present in the receiver, an exception will be raised. */
+105: - (void)removeItem:(NSMenuItem *)item;
+106: 
+
+BINDING popUpContextMenu_withEvent_forView
+135:         #[unsafe(method_family = none)]
+136:         pub fn title(&self) -> Retained<NSString>;
+137: 
+138:         /// Setter for [`title`][Self::title].
+139:         ///
+140:         /// This is [copied][objc2_foundation::NSCopying::copy] when set.
+141:         #[unsafe(method(setTitle:))]
+142:         #[unsafe(method_family = none)]
+143:         pub fn setTitle(&self, title: &NSString);
+144: 
+145:         #[cfg(all(feature = "NSEvent", feature = "NSResponder", feature = "NSView"))]
+146:         #[unsafe(method(popUpContextMenu:withEvent:forView:))]
+147:         #[unsafe(method_family = none)]
+148:         pub fn popUpContextMenu_withEvent_forView(menu: &NSMenu, event: &NSEvent, view: &NSView);
+149: 
+150:         #[cfg(all(
+151:             feature = "NSEvent",
+152:             feature = "NSFont",
+153:             feature = "NSResponder",
+154:             feature = "NSView"
+155:         ))]
+156:         #[unsafe(method(popUpContextMenu:withEvent:forView:withFont:))]
+157:         #[unsafe(method_family = none)]
+158:         pub fn popUpContextMenu_withEvent_forView_withFont(
+159:             menu: &NSMenu,
+160:             event: &NSEvent,
+161:             view: &NSView,
+162:             font: Option<&NSFont>,
+
+SDK popUpContextMenu_withEvent_forView
+69: */
+70:  
+71: + (void)popUpContextMenu:(NSMenu*)menu withEvent:(NSEvent*)event forView:(NSView*)view;
+72: + (void)popUpContextMenu:(NSMenu*)menu withEvent:(NSEvent*)event forView:(NSView*)view withFont:(nullable NSFont*)font;
+73: 
+74: /* Pops up the receiver as a popup menu. The top left or right corner of the given item (which must be present in the receiver) is positioned at the given location in the given view, interpreted in the view's own coordinate system.  If item is nil, the menu is positioned such that the top left or right of the menu content frame is at the given location.  If view is nil, the location is interpreted in the screen coordinate system. This allows you to pop up a menu disconnected from any window.  The method returns YES if menu tracking ended because an item was selected, and NO if menu tracking was cancelled for any reason.
+75:  
+76:    This method determines whether to use the top left or right corner by calling userInterfaceLayoutDirection on the view or its cell (if implemented).  If not implemented, or if the view is nil, it inspects the userInterfaceLayoutDirection of the NSApplication.
+77: */
+78: - (BOOL)popUpMenuPositioningItem:(nullable NSMenuItem *)item atLocation:(NSPoint)location inView:(nullable NSView *)view API_AVAILABLE(macos(10.6));
+
+SDK popUpContextMenu_withEvent_forView
+70:  
+71: + (void)popUpContextMenu:(NSMenu*)menu withEvent:(NSEvent*)event forView:(NSView*)view;
+72: + (void)popUpContextMenu:(NSMenu*)menu withEvent:(NSEvent*)event forView:(NSView*)view withFont:(nullable NSFont*)font;
+73: 
+74: /* Pops up the receiver as a popup menu. The top left or right corner of the given item (which must be present in the receiver) is positioned at the given location in the given view, interpreted in the view's own coordinate system.  If item is nil, the menu is positioned such that the top left or right of the menu content frame is at the given location.  If view is nil, the location is interpreted in the screen coordinate system. This allows you to pop up a menu disconnected from any window.  The method returns YES if menu tracking ended because an item was selected, and NO if menu tracking was cancelled for any reason.
+75:  
+76:    This method determines whether to use the top left or right corner by calling userInterfaceLayoutDirection on the view or its cell (if implemented).  If not implemented, or if the view is nil, it inspects the userInterfaceLayoutDirection of the NSApplication.
+77: */
+78: - (BOOL)popUpMenuPositioningItem:(nullable NSMenuItem *)item atLocation:(NSPoint)location inView:(nullable NSView *)view API_AVAILABLE(macos(10.6));
+79: 
+
+BINDING menuNeedsUpdate
+582:         #[cfg(feature = "NSMenuItem")]
+583:         #[unsafe(method(validateMenuItem:))]
+584:         #[unsafe(method_family = none)]
+585:         fn validateMenuItem(&self, menu_item: &NSMenuItem) -> bool;
+586:     }
+587: );
+588: 
+589: extern_protocol!(
+590:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsmenudelegate?language=objc)
+591:     pub unsafe trait NSMenuDelegate: NSObjectProtocol + MainThreadOnly {
+592:         #[optional]
+593:         #[unsafe(method(menuNeedsUpdate:))]
+594:         #[unsafe(method_family = none)]
+595:         fn menuNeedsUpdate(&self, menu: &NSMenu);
+596: 
+597:         #[optional]
+598:         #[unsafe(method(numberOfItemsInMenu:))]
+599:         #[unsafe(method_family = none)]
+600:         fn numberOfItemsInMenu(&self, menu: &NSMenu) -> NSInteger;
+601: 
+602:         #[cfg(feature = "NSMenuItem")]
+603:         #[optional]
+604:         #[unsafe(method(menu:updateItem:atIndex:shouldCancel:))]
+605:         #[unsafe(method_family = none)]
+606:         fn menu_updateItem_atIndex_shouldCancel(
+607:             &self,
+608:             menu: &NSMenu,
+609:             item: &NSMenuItem,
+
+SDK menuNeedsUpdate
+269: @protocol NSMenuDelegate <NSObject>
+270: @optional
+271: - (void)menuNeedsUpdate:(NSMenu*)menu NS_SWIFT_UI_ACTOR;
+272: 
+273: - (NSInteger)numberOfItemsInMenu:(NSMenu*)menu NS_SWIFT_UI_ACTOR;
+274: - (BOOL)menu:(NSMenu*)menu updateItem:(NSMenuItem*)item atIndex:(NSInteger)index shouldCancel:(BOOL)shouldCancel NS_SWIFT_UI_ACTOR;
+275:     // implement either the first one or the next two to populate the menu
+276: - (BOOL)menuHasKeyEquivalent:(NSMenu*)menu forEvent:(NSEvent*)event target:(_Nullable id* _Nonnull)target action:(_Nullable SEL* _Nonnull)action NS_SWIFT_UI_ACTOR;
+277:     // bypasses populating the menu for checking for key equivalents. set target and action on return
+278: 
+
+SDK menuNeedsUpdate
+311: /* The following method may be called from delegate callbacks to determine which properties need to be updated and which may be skipped.  It is intended to allow more efficient updating of the menu in certain circumstances.  For example, if the NSMenuPropertyItemImage bit is zero, your delegate does not need to update the images of the menu items, because the images are not needed (for example, during key equivalent matching).  Calling this is optional: it is always acceptable to fully update the menu.
+312:  
+313:  This may be called from the menu delegate method -menuNeedsUpdate:.  Calling this at other times will raise an exception.
+314:  */
+315: @interface NSMenu (NSMenuPropertiesToUpdate)
+316: @property (readonly) NSMenuProperties propertiesToUpdate API_AVAILABLE(macos(10.6));
+317: @end
+318: 
+319: APPKIT_EXTERN NSNotificationName NSMenuWillSendActionNotification;
+320: APPKIT_EXTERN NSNotificationName NSMenuDidSendActionNotification;

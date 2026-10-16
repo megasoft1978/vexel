@@ -1,0 +1,42 @@
+WO-RUST-UI-DRAW-01 revision 1 — candidate verification
+Context: dirty-source overlay rooted at base 19234a036ed6a8d40c2ccdaec9b8186806d70eca; existing overlay and shared files preserved.
+Toolchain: rustc +stable --version => rustc 1.99.0 (b940084d7 2026-09-28), aarch64-apple-darwin; repo-local target build/rust.
+
+Commands required by the frozen work order:
+PASS  cargo +stable check -p vexel-ui --locked --offline
+      vexel-base, vexel-raster, vexel-ui checked; exit 0.
+PASS  cargo +stable test -p vexel-ui --locked --offline
+      11 unit tests passed, 0 failed (8 preexisting retained, 3 focused added); doc tests 0; exit 0.
+PASS  python3 scripts/wo_validate.py WO-RUST-UI-DRAW-01 --ready
+      valid WO-RUST-UI-DRAW-01 revision 1; SHA-256 3f67be21ee959179715b74f5ea1e705f852a98e1ea50a9aab67dc05810dad489.
+PASS  python3 scripts/ledger.py validate ledger.jsonl
+      valid ledger: 1143 entries.
+PASS  git diff --check
+      exit 0.
+
+Additional scoped artifact/source audit:
+PASS  parity-map.json parsed as JSON; 52 C symbols/helpers mapped, 4 header contracts, 11 test records.
+PASS  changed Rust source/test files are each below 800 lines; maximum is tests.rs at 168 lines.
+PASS  no TODO, todo!, unimplemented!, unsafe block, or unsafe function in new modules.
+
+Focused behavior verified by tests: 53 frozen icon entries; path grammar, range, byte and segment caps; cubic/quadratic/arc flattening; scale 1/2/3 mask hashes and cross-theme equality; distinct standard emphasized icon masks and legacy select/pan/zoom masks at scales 1–4; backing-scale rejection; exact scalar pixels and alpha blend; clipping/capacity failure without writes; semantic pressed fill and exact focus-ring pixels; all five add-wrapper roles. Existing eight core tests are unchanged and remain passing.
+
+Not run: native GUI/AppKit, native text shaping, broad UI/E2E/gallery/golden/corpus/performance campaigns, and C legacy executables. No dependencies or shared manifests/locks/interfaces/ledgers were changed. Independent coordinator review/integration remains pending.
+
+Acceptance-review repair (prior initial run and REJECT evidence above retained)
+Review finding: legacy pan segment endpoints differed from frozen C geometry at src/ui/ui_icons_legacy.c:15-21.
+Repair: restored the C endpoints in rust/crates/vexel-ui/src/icons.rs; added legacy_pan_mask_matches_frozen_c_reference_at_scales_one_through_four with exact complete-mask occupancy fingerprints and endpoint RGBA checks at each scale. Expected FNV occupancy fingerprints for 1x..4x: 7323620c6cdd19ff, 07e88963e179c015, df297786b8b26697, 0408259af00c95a1.
+
+Repair verification (rustc +stable 1.99.0 (b940084d7 2026-09-28), aarch64-apple-darwin)
+PASS  cargo +stable check -p vexel-ui --locked --offline
+      Checked vexel-ui; exit 0.
+Initial repair test attempt: cargo +stable test -p vexel-ui --locked --offline failed to compile because the new assertion's diagnostic format string used unsupported tuple formatting. Corrected the diagnostic only; no assertion or expected value changed.
+PASS  cargo +stable test -p vexel-ui --locked --offline
+      12 unit tests passed, 0 failed (8 original retained, 4 focused); doc tests 0; exit 0.
+PASS  python3 scripts/wo_validate.py WO-RUST-UI-DRAW-01 --ready
+      valid WO-RUST-UI-DRAW-01 revision 1; SHA-256 3f67be21ee959179715b74f5ea1e705f852a98e1ea50a9aab67dc05810dad489.
+PASS  python3 scripts/ledger.py validate ledger.jsonl
+      valid ledger: 1143 entries.
+PASS  git diff --check
+      exit 0.
+Independent narrowed recheck/coordinator audit remains pending; candidate is not accepted.

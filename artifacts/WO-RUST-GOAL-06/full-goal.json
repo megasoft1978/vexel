@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "owner_requested_update": "2026-10-14",
+  "status": "active",
+  "objective": "Deliver Vexel as a complete, high-quality Rust vector drawing and 2D cartoon animation application for Apple Silicon macOS 13+, fully implemented, integrated, comprehensively tested, packaged, documented, and ready for real use. Port every first-party application, platform, UI, XML/SVG parser/rasterizer, geometry, scene, document, project, animation, MCP, development, test, benchmark, and release component to Rust while preserving migration references and frozen acceptance evidence. Provide an original modern custom interface informed by Blender and other modern drawing/animation tools; complete vector editing and cartoon animation workflows; faithful source-preserving Inkscape SVG import/export; versioned native projects containing artwork, animation, assets, metadata, and recovery; and measured high performance on large files, including memory, build time, and release bundle size. Provide detailed discoverable, authorized, live and visible MCP control for Codex, Claude Code, and compatible agents, including drawing, editing, animation, undo/redo, save/export, progress, errors, and cancellation. After feature completion, pass comprehensive UI/end-to-end, fidelity, performance, accessibility, malformed-input, recovery, MCP interoperability, and packaged fresh-install acceptance, fix release blockers, and deliver release artifacts and documentation. Record authentic Codex prompts creating a character, revising the drawing, animating it, and revising that animation through successive real MCP calls while the same Vexel project visibly updates live, with reusable projects, prompts, exports, captions/transcript, and accepted website/README presentation. Preserve macOS-only initial support, MPL-2.0, owned SVG/XML/raster code, minimal audited pinned dependencies, no GPL editor source or external SVG fetching, and safe ownership/resource limits. Use useful disjoint parallel Luna Codex exec workers at task-appropriate effort and Standard speed within the existing subscription allowance, with named escalations only; keep focused correctness checks during implementation and reserve broad automated UI/E2E for the final stage. Completion requires all agreed product outcomes and release evidence, not foundation tests or partial functionality.",
+  "authority": "docs/product/rust-port-goal-and-plan.md",
+  "tracker": {
+    "status": "active",
+    "stored_objective": "Deliver the owner-approved Vexel product: a high-quality macOS-first vector drawing and 2D animation application with a modern task-focused UI, faithful Inkscape SVG import/export and preservation, a versioned native project format for artwork/animation/assets, high performance on large documents, and live, observable, user-controlled MCP operation for Claude Code, Codex, and compatible agents. Update the governing product decision and roadmap, then implement the remaining capability in scoped repository work orders; reserve the comprehensive UI/end-to-end acceptance pass for the end while retaining focused correctness checks during implementation.",
+    "objective_edit_available_in_current_api": false,
+    "stored_objective_changed": false,
+    "scope_supplement": "canonical full Rust objective and complete outcome/finish-line contract"
+  },
+  "deliverables": [
+    {
+      "area": "Complete Rust migration",
+      "required_outcome": "Port application, platform, custom UI, XML/SVG, geometry, scene/raster, documents, projects, animation, MCP and first-party development/test/benchmark/report/release tooling.",
+      "completion_evidence": "Per-module parity maps, accepted work orders, integration checks, closed inventory and a Rust-built release using the Rust workflow."
+    },
+    {
+      "area": "Vector editor",
+      "required_outcome": "Coherent drawing, path/node editing, shapes, text, selection, groups/layers, styles, transforms, alignment/snapping, supported masks/clips/gradients/effects, zoom/pan and undo/redo.",
+      "completion_evidence": "Representative complete create/edit/save/reopen/export workflows; documented exact tool/feature coverage and recoverable errors."
+    },
+    {
+      "area": "SVG and Inkscape interchange",
+      "required_outcome": "Owned bounded parsing/rendering; preserve namespaces, editor metadata, unsupported constructs and unknown source whenever an edit can retain them. Report approximations and destructive conversion explicitly.",
+      "completion_evidence": "Full-document corpus outcomes, declared render tolerances, preservation checks and documented import/export limitations; no silent content loss."
+    },
+    {
+      "area": "Native `.vexel` projects",
+      "required_outcome": "Versioned editable artwork, timeline/animation, assets and metadata; schema compatibility/migration, safe save publication, interrupted-save handling and recovery.",
+      "completion_evidence": "Reopen projects intact; asset and animation integrity; malformed-input, compatibility and recovery evidence."
+    },
+    {
+      "area": "Cartoon animation",
+      "required_outcome": "Property keyframes/interpolation, frame-by-frame drawings/exposures, timeline editing, onion skinning, deterministic playback and export. Undoable, persistent and controllable through MCP.",
+      "completion_evidence": "A character can be drawn, animated, previewed, saved/reopened and exported with verified appearance and frame timing."
+    },
+    {
+      "area": "Modern original UI",
+      "required_outcome": "Task-focused drawing/animation workspaces, flexible editor areas, contextual inspector, layer controls, timeline and clear progress/errors/cancel. Apply useful Blender/Figma/animation-tool ideas within macOS conventions.",
+      "completion_evidence": "Integrated workflow review, complete keyboard operation, accessibility semantics, readable contrast, supported display scales and representative-user review."
+    },
+    {
+      "area": "Large-file performance",
+      "required_outcome": "Measure and optimize loading, first visible content, rendering, pan/zoom, owner-thread pauses, memory/RSS, allocations, cancellation, bundle size and build time.",
+      "completion_evidence": "Named corpus/hardware/build, cold/warm protocol, repeated samples and raw results; bounded resource failures; accepted budgets met."
+    },
+    {
+      "area": "Detailed live MCP",
+      "required_outcome": "Discoverable schemas and tools for live scene/objects, selection/style/transforms, undoable edits, animation, project save/export and rendering; visible activity/progress/results and bounded cancellation.",
+      "completion_evidence": "Real Codex, Claude Code and protocol-client sessions operating the same document shown in the Rust app; protocol, permission and error-recovery evidence."
+    },
+    {
+      "area": "Release and recorded demos",
+      "required_outcome": "Complete final acceptance and release artifacts, then record authentic Codex prompts drawing/revising a character and creating/revising its animation through successive real MCP calls while the same Vexel project visibly updates live; deliver the reviewed video through the website and README.",
+      "completion_evidence": "Passed quality gates; reviewed footage with real conversation and app visible together; retained privacy-reviewed MCP execution evidence; playback/save/reopen/export; captions/transcript; reusable native project/prompts/exports; working website/README links or embeds."
+    }
+  ],
+  "definition_of_done": [
+    {
+      "number": 1,
+      "title": "Full scope delivered.",
+      "requirements": "All nine deliverable areas and agreed feature\n   coverage are implemented and integrated. The migration inventory is closed;\n   application and first-party tooling use Rust. Required production workflows\n   contain no unfinished placeholders or mock backends."
+    },
+    {
+      "number": 2,
+      "title": "Complete user workflows work.",
+      "requirements": "A user can launch, create/edit vector art,\n   import supported Inkscape SVG, animate a character, undo/redo, save/reopen\n   projects with assets and animation intact, recover work and export results.\n   Actual Codex and Claude Code sessions drive the live app visibly and safely."
+    },
+    {
+      "number": 3,
+      "title": "Comprehensive final testing passes.",
+      "requirements": "After feature completion, run the\n   supported unit/integration/regression checks and full automated UI/E2E pass,\n   SVG fidelity/source-preservation corpus, malformed-input/property/fuzz checks\n   where specified, project compatibility/recovery, animation appearance/timing,\n   MCP interoperability/permissions/progress/cancellation and release checks.\n   Record coverage and actual results; skipped or blocked required checks cannot\n   count as passes. Preserve frozen assertions and oracles."
+    },
+    {
+      "number": 4,
+      "title": "Product quality is accepted.",
+      "requirements": "Measured large-file responsiveness and\n   memory budgets pass on named hardware. Keyboard/accessibility/display-scale\n   and representative-user reviews pass. Fix and rerun affected checks for all\n   release-blocking findings, including crashes, corruption/data loss, broken\n   required workflows, permission failures and unmet acceptance gates. Document\n   remaining nonblocking limitations with evidence; do not claim zero possible\n   defects or unlimited SVG compatibility."
+    },
+    {
+      "number": 5,
+      "title": "The packaged product is usable.",
+      "requirements": "Verify the intended release artifact on\n   a clean installation/profile for supported macOS: install, launch, open/save,\n   animate/export and connect the supported MCP clients without a developer\n   checkout. Validate required platform permissions and distribution behavior\n   for the chosen release channel. Deliver versioned artifacts, installation/\n   getting-started guidance, supported-feature/format documentation, live-agent\n   setup instructions, example projects and release notes."
+    },
+    {
+      "number": 6,
+      "title": "Showcase delivered.",
+      "requirements": "Review an authentic live Codex recording covering\n   character creation, drawing revision, animation creation and animation\n   revision through successive MCP calls, with the same Vexel project visibly\n   updating. Include playback, save/reopen, exported animation, accessible\n   captions/transcript and reusable project/prompts/exports; publish/link the\n   accepted video through both website and README."
+    },
+    {
+      "number": 7,
+      "title": "Final evidence reconciled.",
+      "requirements": "Complete release requirements/coverage matrix,\n   accepted work orders, inventory, test/performance results, documented\n   limitations and release checklist agree with the shipped version. Completion\n   is declared only against that evidence, never from plans, worker exits,\n   foundation tests or partially usable functionality."
+    }
+  ],
+  "execution_policy": {
+    "models": "Luna by default at task-appropriate effort; named Sol/Astra escalation only when it reduces rework",
+    "parallelism": "useful disjoint Codex exec workers; one writer per module; coordinator owns shared contracts/manifests/integration",
+    "speed": "Standard",
+    "billing": "existing subscription allowance only; no purchased credits or API billing",
+    "implementation_checks": "focused correctness/build/integration evidence",
+    "broad_ui_e2e": "after feature completion, then fix findings and rerun release acceptance"
+  },
+  "current_evidence": {
+    "accepted_focused_test_entries": 503,
+    "accepted_main_packages": 28,
+    "full_application_complete": false,
+    "full_final_testing_complete": false,
+    "checkpoint": "artifacts/WO-RUST-KERNEL-CONTRACTS-01/current-goal-checkpoint.json"
+  },
+  "completion_requires": "every agreed deliverable and final evidence gate; skipped/blocked required checks are not passes",
+  "supplements": "WO-RUST-GOAL-06 clarifies live iterative demo acceptance; WO-RUST-GOAL-05 remains preserved historical evidence.",
+  "live_demo_acceptance": {
+    "required": true,
+    "completed": false,
+    "recorded_client": "Codex",
+    "production_clients": [
+      "Codex",
+      "Claude Code",
+      "other compatible MCP agents"
+    ],
+    "sequence": [
+      "Prompt to draw a specific character",
+      "Follow-up prompt to revise the drawing",
+      "Prompt to animate that character and show playback",
+      "Follow-up prompt to revise animation and show updated timeline/playback",
+      "Save/reopen native project and show exported animation"
+    ],
+    "live_evidence": "Real conversation and same live Vexel project visible together; progressive application changes through successive actual MCP calls; retain original footage and privacy-reviewed execution evidence; label cuts/speed changes.",
+    "deliverables": [
+      "reviewed demo video",
+      "reusable native project",
+      "prompts/instructions",
+      "exported artwork/animation",
+      "captions or transcript",
+      "preview",
+      "working website and README links/embeds"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "source-save",
+  "wo": "WO-RUST-SOURCE-SAVE-01",
+  "session": "01a13a3a-1a45-7fd0-85d3-8085ce66078a",
+  "pid": 32064,
+  "mode": "repair",
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "status": "completed",
+  "started_epoch": 1791979318.9463959,
+  "exit_code": 0,
+  "duration_seconds": 96.04985809326172
+}

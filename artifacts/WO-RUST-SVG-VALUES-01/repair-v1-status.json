@@ -1,0 +1,13 @@
+{
+  "name": "svg-values",
+  "wo": "WO-RUST-SVG-VALUES-01",
+  "session": "01a13937-8a0b-70d1-bb57-0fb7e05a5c78",
+  "pid": 14913,
+  "mode": "repair",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791963618.665227,
+  "exit_code": 0,
+  "duration_seconds": 67.98850417137146
+}

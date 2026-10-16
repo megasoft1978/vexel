@@ -1,0 +1,11 @@
+{
+  "rust/crates/vexel-svg-animation-frame/Cargo.toml": "f39040f317102c3e4453cc67c78adf37b03d9b4400817dbcf6a157e2003ac4c2",
+  "rust/crates/vexel-svg-animation-frame/README.md": "d44995c0f10ee58b3f319b45652269c92b038672df2ba415b39e06de27382d2e",
+  "rust/crates/vexel-svg-animation-frame/tests/original_clip.rs": "0a35bfdee4ce5df458c3f34e8a6c845101802f35d55afcc0aec5304ae760474c",
+  "rust/crates/vexel-svg-animation-frame/tests/frame_scene.rs": "6ab5f9e5eb36917fc3382ff52c20f0f71b9c7142cf038e525d1cadcf39f2f307",
+  "rust/crates/vexel-svg-animation-frame/tests/original_frame.rs": "e75240162a96d76d0ae0673aae5236befabed05b89c41013ca3d34d4c869ab3e",
+  "rust/crates/vexel-svg-animation-frame/src/lib.rs": "086ac0f792943ff4ca0deea37de88a3db85dc81694ca87b3979d2cb7a00e999c",
+  "rust/crates/vexel-svg-animation-frame/src/clips.rs": "8e014daf499585f24873a36ca053e286d56a26bc2aafa5322e4c2d1709993fa9",
+  "rust/crates/vexel-svg-animation-frame/src/apply.rs": "4978e3eeccb2a808fa767ba8110f1c9a4990a8735c03a7ef0e8106d0c034081f",
+  "rust/crates/vexel-svg-animation-frame/tests/support/mod.rs": "5214cfb92c8f22c9c5419af1f1882bfb09b1a33011f524159e2c76c73b5e1f5c"
+}

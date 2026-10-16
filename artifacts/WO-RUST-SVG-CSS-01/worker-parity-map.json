@@ -1,0 +1,58 @@
+{
+  "work_order": "WO-RUST-SVG-CSS-01",
+  "revision": 1,
+  "source_contract": "All spans are vexel_xml::XmlSpan offsets into immutable source bytes. CssSheet borrows and retains the source and matching token slice supplied at creation; compute takes only an element index and optional parent paint. CssValue/CssPaint borrow values from the sheet source. Parent paints with a different source slice identity are rejected by pointer/length identity without cloning source bytes.",
+  "limits": {
+    "aggregate_css_bytes": { "c": "SVG_CSS_MAX_BYTES", "rust": "MAX_BYTES", "value": 1048576 },
+    "rules": { "c": "SVG_CSS_MAX_RULES", "rust": "MAX_RULES", "value": 4096 },
+    "declarations": { "c": "SVG_CSS_MAX_DECLARATIONS", "rust": "MAX_DECLARATIONS", "value": 16384 },
+    "classes_per_term": { "c": "SVG_CSS_MAX_CLASSES", "rust": "MAX_CLASSES", "value": 16 },
+    "selector_terms": { "c": "SVG_CSS_MAX_SELECTOR_TERMS", "rust": "MAX_SELECTOR_TERMS", "value": 4 },
+    "stateful_rule_matches_and_selector_visits": { "c": "SVG_CSS_MAX_RULE_MATCHES", "rust": "MAX_RULE_MATCHES", "value": 4194304 }
+  },
+  "public_mappings": [
+    { "c": "svg_css_property / SVG_CSS_PROPERTY_COUNT", "rust": "Property / PROPERTY_COUNT", "coverage": "all 39 enum members; tests/css.rs::all_properties_cascade_and_source_spans_are_preserved" },
+    { "c": "svg_css_value", "rust": "CssValue<'a> { span, bytes }", "coverage": "borrowed raw source span asserted in all_properties_cascade_and_source_spans_are_preserved" },
+    { "c": "svg_css_paint", "rust": "CssPaint<'a>", "coverage": "initial, inherited, selected-property access; tests/css.rs" },
+    { "c": "svg_css_keyword_equals", "rust": "keyword_equals", "coverage": "case-insensitive and invalid-span behavior; keyword_and_initial_paint_api_are_safe_for_invalid_spans" },
+    { "c": "svg_css_paint_value", "rust": "CssPaint::value", "coverage": "returns optional borrowed span/value without copying" },
+    { "c": "svg_css_sheet", "rust": "CssSheet<'a>", "coverage": "owns bounded rule metadata, borrows source; automatic Rust Drop" },
+    { "c": "svg_css_error (OK/LIMIT/OOM/UNSUPPORTED)", "rust": "Result<T, CssError> (Limit/OutOfMemory/Unsupported)", "coverage": "limit and matched unknown stop cases; Vec try_reserve failures map to OutOfMemory" },
+    { "c": "svg_css_sheet_create", "rust": "CssSheet::create(source, tokens)", "coverage": "source and token slice are retained together; style Text extraction, plus documented additive CDATA compatibility; aggregate bytes, rules and declarations limits" },
+    { "c": "svg_css_is_style_element", "rust": "is_style_element", "coverage": "unprefixed start/empty style element detection" },
+    { "c": "svg_css_sheet_destroy", "rust": "CssSheet drop", "coverage": "owned Rust rule/declaration vectors release through RAII" },
+    { "c": "svg_css_compute(sheet, source, tokens, count, element, parent, out)", "rust": "CssSheet::compute(element, parent)", "coverage": "uses only the source/token slices retained by create; rejects parent paint from unrelated source; specificity, source order, presentation attrs, inline !important, inheritance, initial/unset, stateful quotas" },
+    { "c": "svg_css_initial_paint", "rust": "CssPaint::initial", "coverage": "all 39 slots initially absent; CSS-wide initial clears a slot" }
+  ],
+  "internal_helper_mappings": [
+    { "c": "ws, skip_ws, comments, skip_comment, trim_value, ident", "rust": "is_space, skip_space_comments, comment_end, trim_value, ident" },
+    { "c": "eq, eq_ci, property", "rust": "span_eq, keyword_equals, Property::name / PROPERTY_NAMES" },
+    { "c": "span_attr", "rust": "attribute" },
+    { "c": "parse_selector", "rust": "parse_selector; fixed 4-term and 16-class storage, descendant-only compounds" },
+    { "c": "parse_decls", "rust": "parse_declarations, strip_important; comment/string/parenthesis-aware separators" },
+    { "c": "append_rule, parse_stylesheet", "rust": "CssSheet::parse_stylesheet; fallible Vec reserves and bounded rule/declaration totals" },
+    { "c": "has_class, matches_term, matches", "rust": "has_class, matches_term, matches_selector; XML local-name and unprefixed id/class attribute behavior" },
+    { "c": "offer, declarations", "rust": "offer plus inline declaration parsing" }
+  ],
+  "behavioral_coverage": [
+    "exact expected values for all 39 properties and a direct port of every meaningful value assertion from the original C fixture",
+    "specificity, declaration/source order, presentation attributes, inline and stylesheet !important",
+    "parent inheritance, inherited clip-rule, initial and unset keywords",
+    "compound class and descendant chains, XML prefixes, style CDATA",
+    "@media/@import skipping, unsupported selectors, quoted semicolon/important grammar, comments, malformed rule recovery",
+    "matched unknown declaration on stop returns Unsupported",
+    "exact CSS byte, rule, declaration, selector term/class, and stateful match quota boundaries",
+    "containing SVG source above 16 MiB accepted with aggregate CSS below 1 MiB"
+  ],
+  "scope_adaptations": [
+    "Rust ownership replaces the nullable opaque sheet and explicit destroy function; source and value spans remain borrowed.",
+    "compute no longer accepts source or tokens; CssSheet retains its create-time source and tokens, preventing per-call source/token substitution without a copy.",
+    "Style CDATA is an explicitly authorized additive Inkscape compatibility adaptation; original C creation processes Text tokens only. The direct CDATA test verifies unknown declaration bytes remain untouched.",
+    "Invalid spans/element indexes map to Limit; no invalid pointer states exist in safe Rust slices.",
+    "Color parsing assertions in tests/svg/css/test_css.c exercise separate src/svg/css/color.c/h APIs, outside this css.c/h work order."
+  ],
+  "downstream": [
+    "Scene, paint, renderer, and font integration remains in later work orders.",
+    "No full-SVG support claim; accepted vexel-xml tokenization is a caller prerequisite."
+  ]
+}

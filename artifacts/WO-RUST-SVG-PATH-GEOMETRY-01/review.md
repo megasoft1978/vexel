@@ -1,0 +1,3 @@
+BLOCKER — `flatten_cubic` does not document partial append on failure. Its shared recursive curve engine can append edges before a later edge or recursion limit fails, so callers need the work order’s required warning; the current doc comment only says it flattens into transformed edges.
+
+The wrappers otherwise reuse the parser’s tolerance, edge, and curve engines. The original nine parser tests appear unchanged, and the added tests cover transformed edge output, prefilled caps, upfront validation, offsets, and scaled/sheared cubic parity. The recorded checks report success, but I did not run them.

@@ -1,0 +1,24 @@
+{
+  "status": "pass",
+  "changed_baseline_paths": [
+    "rust/crates/vexel-svg-media/Cargo.toml",
+    "rust/crates/vexel-svg-scalar-index/Cargo.toml",
+    "rust/crates/vexel-svg-scalar-sample/Cargo.toml",
+    "rust/crates/vexel-scene-query/Cargo.toml",
+    "rust/crates/vexel-svg-paint/Cargo.toml",
+    "rust/crates/vexel-svg-animation-frame/Cargo.toml",
+    "rust/crates/vexel-svg-definitions/Cargo.toml",
+    "rust/crates/vexel-scene/src/decode_contract.rs",
+    "rust/crates/vexel-scene/src/lib.rs",
+    "Cargo.lock"
+  ],
+  "exact_separate_WO_RUST_MEDIA_SOURCE_MAP_01_deltas": {
+    "rust/crates/vexel-scene/src/decode_contract.rs": "cd9997694bcbee60e3666f3dd47bbcda8cc452b6790a7dbfc312b9be67fe3529",
+    "rust/crates/vexel-scene/src/lib.rs": "fd4d935cf06c25bc291d6c06b5bd13eb12974d6c1e8e92b78adc4aa8e860f2db"
+  },
+  "fixture_registration_no_source_changes": true,
+  "legacy603_oracle157_unchanged": true,
+  "HEAD_index_unchanged": true,
+  "review_snapshot_unchanged": true,
+  "pins_unchanged": "dependency-audit.json"
+}

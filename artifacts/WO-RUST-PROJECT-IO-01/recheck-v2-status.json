@@ -1,0 +1,13 @@
+{
+  "name": "project-io",
+  "wo": "WO-RUST-PROJECT-IO-01",
+  "session": "01a139fe-0da2-7120-a515-04c8d29d9235",
+  "pid": 88576,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791974948.451603,
+  "exit_code": 0,
+  "duration_seconds": 11.131649017333984
+}

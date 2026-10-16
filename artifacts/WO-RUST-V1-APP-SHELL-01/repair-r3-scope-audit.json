@@ -1,0 +1,89 @@
+{
+  "work_order": "WO-RUST-V1-APP-SHELL-01",
+  "source_seed_path": "artifacts/WO-RUST-V1-APP-SHELL-01/source-seed.json",
+  "source_seed_sha256": "8be263dd4b122b256fc803fbd8c5f34ab559ee17760f2c4820998d413ecc9000",
+  "seeded_path_count": 46,
+  "seeded_paths_matching_seed": 37,
+  "changed_seeded_paths": [
+    {
+      "path": "rust/crates/vexel-app/src/main.rs",
+      "expected_sha256": "536e506bb90914c243a12b397b9a998f85ae2cbd9ba02dfd03a9e155ca5ca0f4",
+      "actual_sha256": "6d4be1932346c8193c611e281276c0f632f1c19ceffb6b0ec267be162e5febcd",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/README.md",
+      "expected_sha256": "b76cd8a65918ec60558438d8c1d8850eac46283ff1c3dd196d5aaed0eaa99431",
+      "actual_sha256": "272821d3c94c6979725fe47026ef1331a06e9170af6a7bf49ff582be239e24b8",
+      "user_repair_allowlist": false
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/lib.rs",
+      "expected_sha256": "815350949d634077224d67d6663efaded5c46dd61eaf01e143647be4a0aba588",
+      "actual_sha256": "3730114e70f1eab3c87cf8e2989cf4deaae71493f8835ced47fa9d967c333b9b",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/native_window/app.rs",
+      "expected_sha256": "b9fddd1899d0f96cde371d07110b2664c1dcd2a7dcb3a43b844faeba40a9fd0d",
+      "actual_sha256": "840b891fe19c67673d83690ab8a884b1c6fdb47e4ad13a993c6f29c8835edca5",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/native_window/callbacks.rs",
+      "expected_sha256": "54050fdd6dc2b63f804b55dcb79758f3977cbcbe2c53d264a92b767a08ee4ee1",
+      "actual_sha256": "a7adb534008c23f0e30597b90d40a15f5a9dcbf3a3e62fd697acedf1946c63c3",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/native_window/frame.rs",
+      "expected_sha256": "f9460c873be34810a5b8629722d0ea2fcec3b77f464c03d4aa4fe2f6943b0b9b",
+      "actual_sha256": "e3545bc5ceedb93f35d6836edd715d9f1fa1daca86fbb0f05a697260c9d4066e",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/native_window/mod.rs",
+      "expected_sha256": "58f95df4de2985e6c1e3a5e6178c26c4a6eb6de782204dc72082e92136746c02",
+      "actual_sha256": "2d1392a7bdece39ecd4e4c3efc2ba6af16a060f9fa52ec14333ff672d177d5d1",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/native_window/route.rs",
+      "expected_sha256": "9b7e429f5d05fc6c141adc81481a05b1448e148fe789e4dc5d96d387a5f8d230",
+      "actual_sha256": "0c428b3f40e82735a02b94ffc090cacc6f06daa789a8045bcddea427311045f0",
+      "user_repair_allowlist": true
+    },
+    {
+      "path": "rust/crates/vexel-platform-apple/src/native_window/window.rs",
+      "expected_sha256": "cb4ae316d915b6a31e374483417e758f1e03f8345b359d6a5af893f51270ff34",
+      "actual_sha256": "15db33341e3fc5c77323c6ac3eb6eab33adcfe2f9bc10e7d14909ec57f82560e",
+      "user_repair_allowlist": true
+    }
+  ],
+  "candidate_source_files": 23,
+  "candidate_source_paths_outside_user_repair_allowlist": [],
+  "manifest_and_lock_checks": {
+    "Cargo.toml": {
+      "source_seed_sha256": "23509968b44aed12c6ed56934c7131e539e11e51f0f6d2bddf5d8c87c3a918d5",
+      "actual_sha256": "23509968b44aed12c6ed56934c7131e539e11e51f0f6d2bddf5d8c87c3a918d5",
+      "unchanged": true
+    },
+    "Cargo.lock": {
+      "source_seed_sha256": "6679c6fc369af4248f29146a7172f31af9c5a4d80675f5fa15f650f943803a42",
+      "actual_sha256": "6679c6fc369af4248f29146a7172f31af9c5a4d80675f5fa15f650f943803a42",
+      "unchanged": true
+    },
+    "rust/crates/vexel-app/Cargo.toml": {
+      "source_seed_sha256": "9040f6ed9b3dd024b11ead706318869c8c5fe63f05de4c45135079ae6220770e",
+      "actual_sha256": "9040f6ed9b3dd024b11ead706318869c8c5fe63f05de4c45135079ae6220770e",
+      "unchanged": true
+    },
+    "rust/crates/vexel-platform-apple/Cargo.toml": {
+      "source_seed_sha256": "1eceb008a5a0239889cd9dd7dd8e83e90c4c2bff50c9431f27165bd0cf92009c",
+      "actual_sha256": "1eceb008a5a0239889cd9dd7dd8e83e90c4c2bff50c9431f27165bd0cf92009c",
+      "unchanged": true
+    }
+  },
+  "frozen_source_seed_and_prior_scope_hash_reports_modified": false,
+  "note": "The platform README delta is pre-existing relative to source-seed, outside this repair turn allowlist, and was left untouched."
+}

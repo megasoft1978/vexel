@@ -1,0 +1,35 @@
+152: ///
+153: /// The shared defaults object searches the current application's search list, which consists of the current domain, followed by any added suite domains, the global domain, and the registration domain.
+154: @property (class, readonly, strong) NSUserDefaults *standardUserDefaults;
+155: 
+156: // +resetStandardUserDefaults releases the standardUserDefaults and sets it to nil. A new standardUserDefaults will be created the next time it's accessed. The only visible effect this has is that all KVO observers of the previous standardUserDefaults will no longer be observing it.
+157: /// This method has no effect and shouldn't be used.
+158: + (void)resetStandardUserDefaults;
+159: 
+
+154: @property (class, readonly, strong) NSUserDefaults *standardUserDefaults;
+155: 
+156: // +resetStandardUserDefaults releases the standardUserDefaults and sets it to nil. A new standardUserDefaults will be created the next time it's accessed. The only visible effect this has is that all KVO observers of the previous standardUserDefaults will no longer be observing it.
+157: /// This method has no effect and shouldn't be used.
+158: + (void)resetStandardUserDefaults;
+159: 
+160: // -init is equivalent to -initWithSuiteName:nil
+161: /// Creates a new defaults object and initializes it with the app's current settings.
+
+264: ///   - value: The integer value to store.
+265: ///   - defaultName: The key with which to associate the value.
+266: - (void)setInteger:(NSInteger)value forKey:(NSString *)defaultName;
+267: /// Sets the value of the specified key to a floating-point number.
+268: ///
+269: /// - Parameters:
+270: ///   - value: The floating-point value to store.
+271: ///   - defaultName: The key with which to associate the value.
+
+412: ///
+413: /// This notification isn't posted when ubiquitous defaults change, or when an outside process changes defaults. Using key-value observing to register observers for the specific keys of interest will inform you of all updates, regardless of where they're from.
+414: FOUNDATION_EXPORT NSNotificationName const NSUserDefaultsDidChangeNotification;
+415: 
+416: #if TARGET_OS_OSX
+417: /* The following keys and their values are deprecated in Mac OS X 10.5 "Leopard". Developers should use NSLocale, NSDateFormatter and NSNumberFormatter to retrieve the values formerly returned by these keys.
+418:  */
+419: /// Key for an array of strings that specify the names for the days of the week, affecting strings that use the `%A` format specifier.

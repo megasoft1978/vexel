@@ -1,0 +1,52 @@
+1: /*
+2:     NSGlassEffectView.h
+3:     Application Kit
+4:     Copyright (c) 2025, Apple Inc.
+5:     All rights reserved.
+6: */
+7: 
+
+12: APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
+13: 
+14: typedef NS_ENUM(NSInteger, NSGlassEffectViewStyle) {
+15:     /// Standard glass effect style.
+16:     NSGlassEffectViewStyleRegular,
+17:     /// Clear glass effect style.
+18:     NSGlassEffectViewStyleClear
+19: } API_AVAILABLE(macos(26.0)) NS_SWIFT_NAME(NSGlassEffectView.Style);
+
+14: typedef NS_ENUM(NSInteger, NSGlassEffectViewStyle) {
+15:     /// Standard glass effect style.
+16:     NSGlassEffectViewStyleRegular,
+17:     /// Clear glass effect style.
+18:     NSGlassEffectViewStyleClear
+19: } API_AVAILABLE(macos(26.0)) NS_SWIFT_NAME(NSGlassEffectView.Style);
+20: 
+21: 
+
+17:     /// Clear glass effect style.
+18:     NSGlassEffectViewStyleClear
+19: } API_AVAILABLE(macos(26.0)) NS_SWIFT_NAME(NSGlassEffectView.Style);
+20: 
+21: 
+22: /// A view that embeds its content view in a dynamic glass effect.
+23: API_AVAILABLE(macos(26.0))
+24: @interface NSGlassEffectView: NSView
+
+21: 
+22: /// A view that embeds its content view in a dynamic glass effect.
+23: API_AVAILABLE(macos(26.0))
+24: @interface NSGlassEffectView: NSView
+25: /// The view to embed in glass.
+26: ///
+27: /// - Important: `NSGlassEffectView` only guarantees the `contentView` will be placed inside the glass effect; arbitrary subviews aren't guaranteed specific behavior with regard to z-order in relation to the content view or glass effect.
+28: @property (nullable, strong) __kindof NSView *contentView;
+
+43: /// When `YES`, the glass effect will provide visual feedback when it is interacted with.
+44: /// When `NO`, the glass effect remains static. The default value is `NO`.
+45: @property BOOL effectIsInteractive API_AVAILABLE(macos(27.0));
+46: 
+47: @end
+48: 
+49: /// A view that efficiently merges descendant glass effect views together when they are within a specified proximity to each other.
+50: ///

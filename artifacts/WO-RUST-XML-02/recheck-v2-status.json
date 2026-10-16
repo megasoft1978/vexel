@@ -1,0 +1,13 @@
+{
+  "name": "xml-tokenizer",
+  "wo": "WO-RUST-XML-02",
+  "session": "01a13957-df3b-7421-970c-147064a73abb",
+  "pid": 28671,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791969661.432467,
+  "exit_code": 0,
+  "duration_seconds": 72.58811593055725
+}

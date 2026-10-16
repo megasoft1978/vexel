@@ -1,0 +1,1145 @@
+[
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2/src/rc/retained.rs",
+    "sha256": "2878abed2de7a6e4e0dbccae825a73901bc840e010022e473db81655407c7ca2",
+    "bytes": 46236,
+    "archive_member": "objc2-0.6.5/src/rc/retained.rs",
+    "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+    "url": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate",
+    "retrieved_utc": "2026-10-14T12:45:02.691679+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2/src/rc/autorelease.rs",
+    "sha256": "87d6a8d19e69b0eaf85c4b99ee3ee15e02c314f325e5e61520b6e35a3d2be799",
+    "bytes": 22212,
+    "archive_member": "objc2-0.6.5/src/rc/autorelease.rs",
+    "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+    "url": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate",
+    "retrieved_utc": "2026-10-14T12:45:02.691679+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2/src/macros/define_class.rs",
+    "sha256": "b731297bf607ac57d7129dcbd0bd6a8919e6dd46cd3a8e6322b2e0288ef01da8",
+    "bytes": 47912,
+    "archive_member": "objc2-0.6.5/src/macros/define_class.rs",
+    "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+    "url": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate",
+    "retrieved_utc": "2026-10-14T12:45:02.691679+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2/src/runtime/protocol_object.rs",
+    "sha256": "fdd6760cca194e14ea251646b5c2179a3085179913930de5d52d025c1542d5c6",
+    "bytes": 15361,
+    "archive_member": "objc2-0.6.5/src/runtime/protocol_object.rs",
+    "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+    "url": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate",
+    "retrieved_utc": "2026-10-14T12:45:02.691679+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2/src/runtime/mod.rs",
+    "sha256": "accb4533fec9dbfc9ca51090663def2308aac72c66ec9cbf85649c4d2729c4c6",
+    "bytes": 66965,
+    "archive_member": "objc2-0.6.5/src/runtime/mod.rs",
+    "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+    "url": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate",
+    "retrieved_utc": "2026-10-14T12:45:02.691679+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/block2/src/rc_block.rs",
+    "sha256": "fe821a8d5c05562a1a310283d432c8f28f0d13d18a75b3e5ca00b8941052c65e",
+    "bytes": 12071,
+    "archive_member": "block2-0.6.2/src/rc_block.rs",
+    "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+    "url": "https://static.crates.io/crates/block2/block2-0.6.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:15.728711+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/block2/src/block.rs",
+    "sha256": "8c555d194c036c2c04e1df39b66b95437b14c3331fcdbad720934b4dbee5efdf",
+    "bytes": 7284,
+    "archive_member": "block2-0.6.2/src/block.rs",
+    "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+    "url": "https://static.crates.io/crates/block2/block2-0.6.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:15.728711+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/block2/src/stack.rs",
+    "sha256": "4ab335be7ce0aff1e36e00b69120d30721c58fc35d876712cdeaf895a86de72f",
+    "bytes": 21649,
+    "archive_member": "block2-0.6.2/src/stack.rs",
+    "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+    "url": "https://static.crates.io/crates/block2/block2-0.6.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:15.728711+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/block2/src/traits.rs",
+    "sha256": "7af1d39a56afd41cf6c49d99f895d2670c455d68135f69ad4b29cd578154dcdb",
+    "bytes": 15513,
+    "archive_member": "block2-0.6.2/src/traits.rs",
+    "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+    "url": "https://static.crates.io/crates/block2/block2-0.6.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:15.728711+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/block2/src/global.rs",
+    "sha256": "3a17009b513ef9f18fd76b333e72f1ed082d63db1674bfffcf74bb5be40c4d57",
+    "bytes": 8700,
+    "archive_member": "block2-0.6.2/src/global.rs",
+    "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+    "url": "https://static.crates.io/crates/block2/block2-0.6.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:15.728711+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSApplication.rs",
+    "sha256": "d3c31020ebb7c1f8676d7eb8489acb67c1272b6e39ee4686da36002a6e08842e",
+    "bytes": 94685,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSApplication.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSWindow.rs",
+    "sha256": "f8012c8ac7e1bc7158944bfaaecf076bc6cae04cdd576e46dc5d7edac6fb60a2",
+    "bytes": 145341,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSWindow.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSScreen.rs",
+    "sha256": "4783abe51db82fd4ab12e2f390154466d94c59b1bbb4ad0febd9ccb94c830b1d",
+    "bytes": 8815,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSScreen.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSRunningApplication.rs",
+    "sha256": "8deb3628fc25b4b42971c7125a35fd11e0ea1bd1aa255c70fcdd21d782acb66f",
+    "bytes": 15108,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSRunningApplication.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSPanel.rs",
+    "sha256": "4c2d54f76f0ab6fb443854b14f91688e61b37000fe5e465b6d69f6417df81871",
+    "bytes": 7415,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSPanel.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSView.rs",
+    "sha256": "fb5be74366838f450742597c8ccdc4eff2d1374ff699ea324a0783193428a318",
+    "bytes": 71789,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSView.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSResponder.rs",
+    "sha256": "47293a8798de98ca140342c2f8e5aee8fa8c0a0e6588978d171168ccbb6b8b4f",
+    "bytes": 45426,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSResponder.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSEvent.rs",
+    "sha256": "00110c5557cc23d8a8a67d25bca4a1b04f74e00e0997bf531351e151c3b8bda4",
+    "bytes": 61650,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSEvent.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSTextInputClient.rs",
+    "sha256": "2f86e8bdee770044f75037050b0a976e450322e70cb204e14a7b0b392e2de597",
+    "bytes": 6693,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSTextInputClient.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSTextInputContext.rs",
+    "sha256": "c73085501aa214db4aa5e3dd9cc965cf4a4ca14da0f10e88b33a063c1fa76238",
+    "bytes": 5799,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSTextInputContext.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSTrackingArea.rs",
+    "sha256": "ee33870f9b2496d88148677c82c124cc80cffa8bd49eee59961c2b94326736df",
+    "bytes": 3913,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSTrackingArea.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSDragging.rs",
+    "sha256": "05aa618d649b1bf53582dedc79f9bcf20e10fe0b3a896e928a991ddec8c9b60b",
+    "bytes": 15802,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSDragging.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSCursor.rs",
+    "sha256": "be801b7f15cd0e6a633a92e62d60ba45d04ba675214035ce918ac4797dae79de",
+    "bytes": 16026,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSCursor.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSGraphics.rs",
+    "sha256": "f453a92d093a6c048715e3529750a175dcc2aa6dbf78f0297dd5152619dc765b",
+    "bytes": 34018,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSGraphics.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSMenu.rs",
+    "sha256": "893402a18c68e4659e18c0be43c34604304ccf49df94b478e74ed50a04ece054",
+    "bytes": 30627,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSMenu.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSMenuItem.rs",
+    "sha256": "d333273294b594dfd6bafd51503b281ab4a9d535f99f382661938c84ec8481fd",
+    "bytes": 18725,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSMenuItem.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibility.rs",
+    "sha256": "6215adad156ad76284d4c158e28b79a9e9e270c5872625df93866e53c75a109b",
+    "bytes": 13395,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSAccessibility.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibilityConstants.rs",
+    "sha256": "a0d5025120241dcbcb405e7933a2e828c4db8cd5f73067321a81a1b8f9898368",
+    "bytes": 107824,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSAccessibilityConstants.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibilityProtocols.rs",
+    "sha256": "7f7053ec1045429e50c745ad01379f364c7d25cfea031d3f6aa83ae26a153f77",
+    "bytes": 92354,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSAccessibilityProtocols.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAccessibilityElement.rs",
+    "sha256": "259b8b0494048be1639394f53560a1ffd62173996c63f194525abf6e4fa19abe",
+    "bytes": 2437,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSAccessibilityElement.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSSavePanel.rs",
+    "sha256": "6cc0c9c358223bdcb91a67c7a2db1b3b37fee107bceef928843e1f0f62315c87",
+    "bytes": 35221,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSSavePanel.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSOpenPanel.rs",
+    "sha256": "662405e69dc24f8fa2aa5c73e19254ff79457c1cfc6195d5719aabca824423c4",
+    "bytes": 12443,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSOpenPanel.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAlert.rs",
+    "sha256": "88a465f92d7962d066623c82f5770b645b13ee9bed48e6b28f1ad4d25d08f56c",
+    "bytes": 20048,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSAlert.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSButton.rs",
+    "sha256": "57b74438b2485cf7226166a5faaa44257e7ee2e9fa306e8ac8b080450ce0dcdc",
+    "bytes": 28980,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSButton.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSControl.rs",
+    "sha256": "0b8cc0ee19be265789fb925bfb04330bc1697fd0292bed1cd1f5801c8eccdb4e",
+    "bytes": 25471,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSControl.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSPasteboard.rs",
+    "sha256": "b08f0b44f6942ce8bd335b7aa2fd69b67e114fe4b04e20da6bbb02dcb99d3f51",
+    "bytes": 42726,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSPasteboard.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSWorkspace.rs",
+    "sha256": "5fd9ac3133c5a7ccc95623cafc0fb7a16bb0a0764799fdc41e4c8bb30a7a83db",
+    "bytes": 50216,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSWorkspace.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSAppearance.rs",
+    "sha256": "7981f749a0cfdb56b5a443087476f28efe886024fced38952bba4aa45dd0a088",
+    "bytes": 6810,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSAppearance.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSColor.rs",
+    "sha256": "fc975cabf6249410aee72f12a1b7965bf87c4ab70a18a018501adb0a551e39a2",
+    "bytes": 43333,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSColor.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/NSColorSpace.rs",
+    "sha256": "25c635812c98f279408956140f6ff064254396edba6a8165d5c9775a305a9f11",
+    "bytes": 8396,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/NSColorSpace.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/translation-config.toml",
+    "sha256": "d426dc286d0be311d5f80ec0b478378a64e5ae720128cd44fbb415279557d2d8",
+    "bytes": 15578,
+    "archive_member": "objc2-app-kit-0.3.2/translation-config.toml",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-app-kit/src/generated/mod.rs",
+    "sha256": "ed2ee03a54db629e9c6226f64103ed24d80c54404c621f2fe9d2ebf81847637e",
+    "bytes": 342404,
+    "archive_member": "objc2-app-kit-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+    "url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:06.962129+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSObject.rs",
+    "sha256": "005d0f04c1a75938ba4dffc0aa9763b7312522191abb2352258edbb75465974b",
+    "bytes": 6580,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSObject.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSString.rs",
+    "sha256": "69566889177a40450501f5a3b12768e0e34be30c0e99f260b31c848e9e216338",
+    "bytes": 71812,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSString.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSArray.rs",
+    "sha256": "61cf29c062b9e01f61feb77a5d6fa3395fe9b0f27b4fa6772fbee68d9b544c33",
+    "bytes": 37133,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSArray.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSDictionary.rs",
+    "sha256": "a9479bd05edcfb15d9fb97d63972ee4a39c7a6a6ce0e05e3f0bdaa3eccaa3869",
+    "bytes": 29627,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSDictionary.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSData.rs",
+    "sha256": "3e3b728fe93d5a87b76bb98b6f0d2b3f628cab39acfe02f044ef937ea1488528",
+    "bytes": 34557,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSData.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSValue.rs",
+    "sha256": "8f8df63dd5e8eb98ee397b94a63eb571502678908449c42059335a8016896f35",
+    "bytes": 13933,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSValue.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSGeometry.rs",
+    "sha256": "5f8b611b17c1c574dcb8f5214817fa02364849b566cd7442e19ddcbd1e8d3ad9",
+    "bytes": 20905,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSGeometry.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSRange.rs",
+    "sha256": "3afc5f65ec006aa0bc3f48711d8fb4b205d81357241a6965882f02ea2c77015c",
+    "bytes": 2729,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSRange.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSDate.rs",
+    "sha256": "bcd7ff1c0cfd18859ef35a64132c2401439ba3f46c1be3e6538df232fa40c96a",
+    "bytes": 7539,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSDate.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSError.rs",
+    "sha256": "106e8c96b47b5a3be92bfa9041660f0b5a8929659b38e694789270a8015763c2",
+    "bytes": 11479,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSError.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSNotification.rs",
+    "sha256": "8c964b43775b4c67fef076c628646c76d07544bc0c331d57eea2e3082663c9a2",
+    "bytes": 7915,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSNotification.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSRunLoop.rs",
+    "sha256": "dcc54e0d0be9333662a7c82aa39706b3eaf322c901b75cc03d09c5eef7e614d8",
+    "bytes": 9498,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSRunLoop.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSTimer.rs",
+    "sha256": "c87981aa12759e761218ebca4af97019b17bc8b57b3223cfa1ac49a97978f37a",
+    "bytes": 9412,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSTimer.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSThread.rs",
+    "sha256": "c43b789b648322c7900154489f0cd4625743d7b63283882fd05be20051ab2e4c",
+    "bytes": 11133,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSThread.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSOperation.rs",
+    "sha256": "f24e93eba71bf55593b2cb7b7d09bd44e4491345f7e51dc1262c685e87f9f5cd",
+    "bytes": 17671,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSOperation.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSUserDefaults.rs",
+    "sha256": "1da4975158e934e82f0d02f636d627a6846c04fc7af7018c2933713873f583b4",
+    "bytes": 32043,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSUserDefaults.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSKeyValueObserving.rs",
+    "sha256": "cc5c6140a9065e253d56371fc54f0c0896a1ed4431f7241f7a5cb93b711df2a5",
+    "bytes": 17374,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSKeyValueObserving.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSAttributedString.rs",
+    "sha256": "a705d1ed0434a38df821ce340f5314a074a8ac0bc8623c22ba3112daa30d9135",
+    "bytes": 45080,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSAttributedString.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/NSSet.rs",
+    "sha256": "aa90a26e852bfff7a949db303356ac7e0a062ebe0799c2f2d9e45d6b3e3459f6",
+    "bytes": 22113,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/NSSet.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/translation-config.toml",
+    "sha256": "2805d9961d429c56abfbbb6fec06e6318e2b52ae15f09658e0b0942df70a9d05",
+    "bytes": 26333,
+    "archive_member": "objc2-foundation-0.3.2/translation-config.toml",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-foundation/src/generated/mod.rs",
+    "sha256": "b7239ddd878de2ae07aedf8bb2c68ed0def17d42da4ddfce418ab7f814d841bb",
+    "bytes": 216243,
+    "archive_member": "objc2-foundation-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+    "url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:05.363504+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFString.rs",
+    "sha256": "47afaf4bdc4d0775bef71100bb858bd378190dcda50505deaa1e8f46c34800b4",
+    "bytes": 104034,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFString.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFNumber.rs",
+    "sha256": "de8dfe24f1851321d1ed88f90d7d4703e47a141c1d3e7c8c3ec4e83e26e040f1",
+    "bytes": 10087,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFNumber.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFAttributedString.rs",
+    "sha256": "43d9f944db594ceb25b185f30e7fa03c5fd1857393db526ae0600c58c4d0be44",
+    "bytes": 35525,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFAttributedString.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFDictionary.rs",
+    "sha256": "ea0d49b6a317ac9fc944d4077608d7e5c7ebf1dc38929e24614deea02c99301e",
+    "bytes": 54475,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFDictionary.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFArray.rs",
+    "sha256": "a85dfe2d330c37d60cd516520af44817e71807add2c69031dffbf250962dcebe",
+    "bytes": 54700,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFArray.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFData.rs",
+    "sha256": "e33a958692dc1189fd9334eb8e7682cc84c80e05443334ae6530da074d5c379c",
+    "bytes": 15452,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFData.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/CFRunLoop.rs",
+    "sha256": "8f868d42f6ce26bd31832cbd6a8186de3bf78e401ee5b0c13f54c059eca555c5",
+    "bytes": 53234,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/CFRunLoop.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/retained.rs",
+    "sha256": "8108e934c1b1963935bb55c951c12542c81f5c3d20c4d9774d955fc2c49446e9",
+    "bytes": 16383,
+    "archive_member": "objc2-core-foundation-0.3.2/src/retained.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/type_traits.rs",
+    "sha256": "420f0266bb6bc2b0696b9f4e9a8ca62fa0fa3b80732c7953ecd2e4226fce1ccb",
+    "bytes": 4825,
+    "archive_member": "objc2-core-foundation-0.3.2/src/type_traits.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/thread_safety.rs",
+    "sha256": "6535a908173b1fe26b91acb963843961d4f79cf1f01ccdaefcaa3ee54d6169d5",
+    "bytes": 7706,
+    "archive_member": "objc2-core-foundation-0.3.2/src/thread_safety.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/array.rs",
+    "sha256": "17b3e41c90a923e912bbf39aab10e92788dde4cfd0f704727cb87c63fd71856a",
+    "bytes": 21460,
+    "archive_member": "objc2-core-foundation-0.3.2/src/array.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/dictionary.rs",
+    "sha256": "37302d12c5304372e1eda6931563a6775e67ac7c2c868a31ae5697e086658899",
+    "bytes": 15825,
+    "archive_member": "objc2-core-foundation-0.3.2/src/dictionary.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/data.rs",
+    "sha256": "5b2f5a7ce9f971e52cf236db87691b032e15af1bc0d94b570da7552f68282026",
+    "bytes": 3658,
+    "archive_member": "objc2-core-foundation-0.3.2/src/data.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/string.rs",
+    "sha256": "013a6a8e4d3e1752c4a5ae3bdc84b95cc059d9faa9228397baf5d74de8483cf3",
+    "bytes": 13822,
+    "archive_member": "objc2-core-foundation-0.3.2/src/string.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/translation-config.toml",
+    "sha256": "5ed2f612a4cd07fb4891345deadfdede83fafc6f435a881c06c30db09491dfdc",
+    "bytes": 18337,
+    "archive_member": "objc2-core-foundation-0.3.2/translation-config.toml",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-foundation/src/generated/mod.rs",
+    "sha256": "af508283110a0fe8c87986bb89e8e54dae8e3d732a5aa95e0cba7c737718219d",
+    "bytes": 171587,
+    "archive_member": "objc2-core-foundation-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+    "url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:08.283357+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGBitmapContext.rs",
+    "sha256": "cf10b56378e54da63d7ac2739c39df3e0b47a065bf3b65c2290141e65c6fbfe4",
+    "bytes": 12738,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGBitmapContext.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGContext.rs",
+    "sha256": "5f1569bacb6e82fed998f879f82ff8e0dc5a8fb59f08060ffd6a96d95e4952e7",
+    "bytes": 101529,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGContext.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGColorSpace.rs",
+    "sha256": "ca7589fce7180b97d8e976baaa82f9a48f367e32dbb7482d0346da5320be5415",
+    "bytes": 39757,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGColorSpace.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGColor.rs",
+    "sha256": "ba4b7f912285ad96a752b048b0637a506be523699642916468fb77f282788786",
+    "bytes": 21484,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGColor.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGPath.rs",
+    "sha256": "10d70aac4329d5211953673b319ae77ce37d705b0900ceda8eb62ffc34efea46",
+    "bytes": 49300,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGPath.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGImage.rs",
+    "sha256": "657fe549c13c41fe6f4758038976d4ee078f46a8969e0127f89a7ef130c9e8c1",
+    "bytes": 43041,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGImage.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGDataProvider.rs",
+    "sha256": "27e2abd4c168d6624c43e499cc892425ba133cdc9c108484f2700b8dca583c84",
+    "bytes": 14504,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGDataProvider.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGFont.rs",
+    "sha256": "0f44df08ac96a3b84f2c2b93dd50e6be88645077060976600d11a56e6ce9f434",
+    "bytes": 23173,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGFont.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/CGDirectDisplay.rs",
+    "sha256": "8902e7fe7cc727911c2dc136b47f24fe26b63f0e91afceeae8c34c5d90b87d8e",
+    "bytes": 26044,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/CGDirectDisplay.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/bitmap_context.rs",
+    "sha256": "8af94e93b69ac5b1ad6ba802199b4d605711fe8dea1b3f467052c9cbb1af73d9",
+    "bytes": 2590,
+    "archive_member": "objc2-core-graphics-0.3.2/src/bitmap_context.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/image.rs",
+    "sha256": "710852f8e12b6cec750579eecd0a102bca675fb03ff9aa00dc5887c0ec09f6c0",
+    "bytes": 965,
+    "archive_member": "objc2-core-graphics-0.3.2/src/image.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/thread_safety.rs",
+    "sha256": "9564db48067138bc98ba8b2a08c5a0381da50a7b27dd87f5e581edd8aeafc02b",
+    "bytes": 661,
+    "archive_member": "objc2-core-graphics-0.3.2/src/thread_safety.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/translation-config.toml",
+    "sha256": "b69f33537f029e1254bb6bdf64e4cc0dc2491f62f3490e2ac2cf7d678da07bc3",
+    "bytes": 3534,
+    "archive_member": "objc2-core-graphics-0.3.2/translation-config.toml",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-graphics/src/generated/mod.rs",
+    "sha256": "770140af1dddbb63fbba79532d32c51660b74a3158bcb5d2a6c3222d10ddd091",
+    "bytes": 103697,
+    "archive_member": "objc2-core-graphics-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+    "url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:09.543873+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTFont.rs",
+    "sha256": "39c17e07c1fc6199e6c78e696306d8e68e2ab7f6d3d1d0fbfb2efa78245c5cea",
+    "bytes": 131811,
+    "archive_member": "objc2-core-text-0.3.2/src/generated/CTFont.rs",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTFontDescriptor.rs",
+    "sha256": "a3f1ce4fb2ec8b45401c0a4c43c2c0837fe2cacb32beaeeb9651abeac64be2d6",
+    "bytes": 51062,
+    "archive_member": "objc2-core-text-0.3.2/src/generated/CTFontDescriptor.rs",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTLine.rs",
+    "sha256": "0a70e09e88041591897a195316ed7eb8fb20bd61a0115e50248bcd2880db6765",
+    "bytes": 27517,
+    "archive_member": "objc2-core-text-0.3.2/src/generated/CTLine.rs",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTRun.rs",
+    "sha256": "79829a8cbc80eab0b02dbf466c5356dfc9445d38b46b75e174cfa3cd38478637",
+    "bytes": 26420,
+    "archive_member": "objc2-core-text-0.3.2/src/generated/CTRun.rs",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/CTStringAttributes.rs",
+    "sha256": "cd02efc2726fe06f338be7475e27309762e3564b05925822eb93b2b74bbf9ce5",
+    "bytes": 22060,
+    "archive_member": "objc2-core-text-0.3.2/src/generated/CTStringAttributes.rs",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/translation-config.toml",
+    "sha256": "3f2ea32e4c392705812bf948232ed14b71396b9aa49cdc67427748e61c67fc3f",
+    "bytes": 770,
+    "archive_member": "objc2-core-text-0.3.2/translation-config.toml",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-core-text/src/generated/mod.rs",
+    "sha256": "1e92ec4e4e4388e97c6bfb5e79bd8ab0343336c8a65508218d01d59ac9d25d9a",
+    "bytes": 124145,
+    "archive_member": "objc2-core-text-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+    "url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:10.786982+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLDevice.rs",
+    "sha256": "da6b1c6896a892058153354098bc9abe8b5979fa651c2b75d93f0d063675ab48",
+    "bytes": 101434,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLDevice.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLCommandQueue.rs",
+    "sha256": "2039073fa7aeb9aa83e4466425145bc88a4c24abc16313d3c52b94f44cc22250",
+    "bytes": 7241,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLCommandQueue.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLCommandBuffer.rs",
+    "sha256": "80056cfa9aeaef691ea957643fe647339717c728fd92ebc828d3e658c5e0a16c",
+    "bytes": 29022,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLCommandBuffer.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLCommandEncoder.rs",
+    "sha256": "45cced27fa6a1b2fc87561598b1163ccb095a57db23578ce075fdef5eb7f4213",
+    "bytes": 7972,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLCommandEncoder.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLTexture.rs",
+    "sha256": "e6c68df6adf0bb47c1067e64aa7297030358d3cedcd70c280392aaa9ae68fde5",
+    "bytes": 40289,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLTexture.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLResource.rs",
+    "sha256": "d56fcaecfd0071cb775405b7cee57dcf1aec5bcdb152f4f44332810cab235367",
+    "bytes": 17177,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLResource.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLPixelFormat.rs",
+    "sha256": "c7e7d25092c19d444d07796d52fe9e4ebe703f77f1de6b64e4b95cafdaa90ee0",
+    "bytes": 20675,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLPixelFormat.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLLibrary.rs",
+    "sha256": "4a20fc7eb65bb2a63a08e3ef0148fbd551286c67d04a0f416f75c36b807efd3c",
+    "bytes": 42506,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLLibrary.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLRenderPipeline.rs",
+    "sha256": "1ed74019dd3bb60d3cf36f321691b9ec76ee909c6ba3b2c2208eeb801ff41e43",
+    "bytes": 99077,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLRenderPipeline.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLRenderPass.rs",
+    "sha256": "03e61f7979ee9fe64f73ed389dc9b5f549a777a9e3686c98f256b954872a1803",
+    "bytes": 41612,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLRenderPass.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLRenderCommandEncoder.rs",
+    "sha256": "6cef1e0818903c95ff807db9fa7e54e18b3312b7f1139e49ffcdad0ac7fb9d98",
+    "bytes": 116134,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLRenderCommandEncoder.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLBlitCommandEncoder.rs",
+    "sha256": "9193c81d27dee340a194dc75816b4f77e00228728054075a431f2317107629b0",
+    "bytes": 32383,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLBlitCommandEncoder.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLDrawable.rs",
+    "sha256": "61b4a50ef2a59ee789ae080225d229254653871bb9f1b93ba71ec3757f6cd44f",
+    "bytes": 3166,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLDrawable.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/MTLTypes.rs",
+    "sha256": "25555a70801148221ba63b52d67a332e3dd1c4f9af7734674fdbed2e502c865a",
+    "bytes": 4691,
+    "archive_member": "objc2-metal-0.3.2/src/generated/MTLTypes.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/translation-config.toml",
+    "sha256": "be11700d7a86255e1478dcdd0ecd17e39baccac24e92ab2343283999346f479b",
+    "bytes": 16634,
+    "archive_member": "objc2-metal-0.3.2/translation-config.toml",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-metal/src/generated/mod.rs",
+    "sha256": "d6ce6925431c4b29df7339c4c2e326932cb89e15eb7021fdab6832985c70a743",
+    "bytes": 59878,
+    "archive_member": "objc2-metal-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+    "url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:13.144827+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-quartz-core/src/generated/CALayer.rs",
+    "sha256": "124cb3a854eb0b319dade99984c5adc755ff4d9d72b09531fa95f74090492230",
+    "bytes": 48509,
+    "archive_member": "objc2-quartz-core-0.3.2/src/generated/CALayer.rs",
+    "archive_sha256": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+    "url": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:14.359223+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-quartz-core/src/generated/CAMediaTiming.rs",
+    "sha256": "659272ac48461ee1b2e81c0255b1977cb8587a4b452ae6783a77ed719bf3516a",
+    "bytes": 4522,
+    "archive_member": "objc2-quartz-core-0.3.2/src/generated/CAMediaTiming.rs",
+    "archive_sha256": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+    "url": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:14.359223+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-quartz-core/src/generated/CAMetalLayer.rs",
+    "sha256": "444af4ee56f6de4a9315469042624d5b3604704ecbc62cbca9278045c57e416f",
+    "bytes": 8832,
+    "archive_member": "objc2-quartz-core-0.3.2/src/generated/CAMetalLayer.rs",
+    "archive_sha256": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+    "url": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:14.359223+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-quartz-core/translation-config.toml",
+    "sha256": "9ee825d06f3f5608ed2cb4965135dfe5f9289bec363bcfd912404a96d989c3d7",
+    "bytes": 3253,
+    "archive_member": "objc2-quartz-core-0.3.2/translation-config.toml",
+    "archive_sha256": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+    "url": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:14.359223+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-quartz-core/src/generated/mod.rs",
+    "sha256": "329804e12d78a3f1702da953266c9fe7710a1c7d037d9836ba75f1e03c044e0c",
+    "bytes": 20879,
+    "archive_member": "objc2-quartz-core-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+    "url": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:45:14.359223+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/src/generated/CGImageSource.rs",
+    "sha256": "90e677bc824ed01c3ec2531c92cbdcb5f0052a01dfb0db573679c5262e9392cd",
+    "bytes": 24928,
+    "archive_member": "objc2-image-io-0.3.2/src/generated/CGImageSource.rs",
+    "archive_sha256": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+    "url": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:52:04.978957+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/src/generated/CGImageDestination.rs",
+    "sha256": "33394b9a5fd13a38987a0957a5425adc49be3fa41afbcf6f950feed906ca7fa9",
+    "bytes": 21120,
+    "archive_member": "objc2-image-io-0.3.2/src/generated/CGImageDestination.rs",
+    "archive_sha256": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+    "url": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:52:04.978957+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/src/generated/CGImageProperties.rs",
+    "sha256": "81bf4408389694e41484ee9661f7f000835ddda8cc9856e6b78ba7d2a4a0d8f0",
+    "bytes": 153283,
+    "archive_member": "objc2-image-io-0.3.2/src/generated/CGImageProperties.rs",
+    "archive_sha256": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+    "url": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:52:04.978957+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/translation-config.toml",
+    "sha256": "6f5bdff64402dbc2d239742e0082559a9e0e5b066e6f2b4998dc9f41d51dbee2",
+    "bytes": 539,
+    "archive_member": "objc2-image-io-0.3.2/translation-config.toml",
+    "archive_sha256": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+    "url": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:52:04.978957+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-image-io/src/generated/mod.rs",
+    "sha256": "fb60da415c1d94888060e0395aa0b1ef77d05f6f00b382be3efa0e6fc41e037f",
+    "bytes": 91825,
+    "archive_member": "objc2-image-io-0.3.2/src/generated/mod.rs",
+    "archive_sha256": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+    "url": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate",
+    "retrieved_utc": "2026-10-14T12:52:04.978957+00:00"
+  },
+  {
+    "path": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/published-selective/objc2-exception-helper/src/try_catch.m",
+    "sha256": "c5a6bd80b3229422849c4036d9d0d4ca4a8bae62b58e05c0c4941e07ad679db1",
+    "bytes": 2114,
+    "archive_member": "objc2-exception-helper-0.1.1/src/try_catch.m",
+    "archive_sha256": "c7a1c5fbb72d7735b076bb47b578523aedc40f3c439bea6dfd595c089d79d98a",
+    "url": "https://static.crates.io/crates/objc2-exception-helper/objc2-exception-helper-0.1.1.crate",
+    "retrieved_utc": "2026-10-14T12:52:04.180541+00:00"
+  }
+]

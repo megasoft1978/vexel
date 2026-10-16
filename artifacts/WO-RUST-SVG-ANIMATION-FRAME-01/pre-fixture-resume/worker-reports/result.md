@@ -1,0 +1,9 @@
+# WO-RUST-SVG-ANIMATION-FRAME-01 result
+
+Status: **incomplete candidate; not ready for acceptance**.
+
+Implemented `evaluate_frame` over the accepted animation `DocumentView` and scene overlay. It applies active items in overlay order, owns only changed frame tables, uses current transform ancestry and geometry for paint bounds/inverses, and refreshes clip owners at each affected overlay step. Clip updates preserve clip-parent identity, calculate full and owner-before-suffix matrices, update object-box bounds, enforce chain/work/copy bounds, and publish through atomic `EvaluatedFrame::replace_clips`. The former unconditional `Unsupported` implementation of `update_animation_clips` is removed; it now performs the operation. No partial frame is returned on errors.
+
+Focused proofs cover transform math and invalid values plus owned-scene clip matrix/bounds behavior. The crate has no declared direct `vexel-svg-path` dependency, while `SceneBuilder::append_shape` requires `ShapeInput { path: vexel_svg_path::PathDocument, ... }`. Manifests are protected, so this candidate cannot construct a real owned shape fixture to exercise full evaluator-to-clip publication or the original raster assertions. The 52 original assigned functions/cases remain catalogued in `coverage.json`; only the named pure assertions with focused equivalents are marked partial or passed. Authoring/editor, CLI/fuzz, and real native renderer/provider composition remain later engine gates.
+
+The full frozen scope is therefore not claimed complete. `parity-map.json` covers all 31 original source symbols and both operations. `coverage.json` retains all 52 assigned cases and all 15 mixed-oracle SVG inputs. The successful scoped check/test and work-order validation are recorded in `verification.json`. Protected shared files, manifests, old tests, state, and ledgers were outside this worker's edits; coordinator independent review and baseline protected-path audit remain required.

@@ -1,0 +1,7 @@
+Work order: WO-MCP-ASYNC-01 revision 1
+Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Frozen spec SHA-256: 6ceb3ca063349a62e03d0521edf8adc0f099d8b54acd45ccd7d58138e84131da
+Scope: bounded asynchronous native .vexel GIF export task with visible progress,
+cooperative UI/protocol cancellation, and MCP 2026 Tasks plus legacy 2025 progress.
+The task does not move live broker or editor pointers off the owner thread.
+Broad UI/E2E remains deferred; only the frozen focused Debug targets and CTests run.

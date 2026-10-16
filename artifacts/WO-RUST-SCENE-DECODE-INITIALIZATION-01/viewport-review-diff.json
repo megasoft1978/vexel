@@ -1,0 +1,10 @@
+{
+  "previous_full_review": "review.md",
+  "changed": [
+    "rust/crates/vexel-scene/README.md",
+    "rust/crates/vexel-scene/tests/decode_initialization.rs",
+    "rust/crates/vexel-scene/src/decode_initialization.rs"
+  ],
+  "new": [],
+  "all_other_reviewed_bytes_unchanged": true
+}

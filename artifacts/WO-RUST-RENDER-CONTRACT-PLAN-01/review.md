@@ -1,0 +1,7 @@
+**BLOCKER — `DefinitionPlan` has no source lifetime in the proposed API.**
+
+[shared-contracts.json](/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json:28) defines `Expansion<'a>` with `CssPaint<'a>`, while the plan’s context describes `DefinitionPlan` as containing `Vec<Expansion>`. But both [`DecodeOperations::plan_definition`](/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json:44) and the [`plan` signature](/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-RENDER-CONTRACT-PLAN-01/shared-contracts.json:120) return bare `DefinitionPlan`. Since accepted `CssPaint<'a>` borrows the source, a plan containing expansions needs that lifetime. Expected contract: define `DefinitionPlan<'src>` and return it consistently from both signatures, or make expansion styles owned.
+
+The rest of the spot check supports the proposed cycle approach: pattern requests suspend decoding for composition to invoke the scalar kernel and resume once; clip flavor avoids synthetic wrapper parsing while retaining original offsets and admission limits; media outputs are owned, with native handles released before transfer; scalar order, fallbacks, and limits are specified. The inventory matches all 69 scoped files, and the 24 authored goldens are assigned to full composition acceptance without rewrites.
+
+Read-only review only; no builds or tests run.

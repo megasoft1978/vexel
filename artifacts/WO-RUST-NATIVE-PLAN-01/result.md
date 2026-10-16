@@ -1,0 +1,30 @@
+The earliest complete Rust desktop requires an audited Apple binding boundary, native shell, Core Text adapter, Metal presentation, and a small integration executable. Existing system wrappers do not provide AppKit integration.
+
+Reviewed OWNER-DIRECTIVES, AGENTS, frozen native-plan and owned-document orders; named window/text/Metal headers; native shell, window events, geometry, text and presentation implementation excerpts; Rust UI/document contracts; and existing platform/toolchain research. Owned-document candidate code was not consumed.
+
+**Proposed API contracts**
+
+- `MainThread::acquire() -> Result<MainThread, PlatformError>` verifies Apple’s main thread. `NativeApp`, `Window`, menus, preference subscriptions, accessibility objects and presenters are `!Send + !Sync`; their operations require this capability. `NativeApp::start`, `create_window`, `run` and `shutdown` define one application lifecycle, regular activation, launch completion and autorelease pools around native turns.
+- `WindowConfig` validates UTF-8, rejects embedded NUL, preserves the 1,024-byte title and 1–4,096-point dimensions. Fallible creation publishes no partially initialized handle. Public types expose no Objective-C pointers.
+- `WindowId { slot, generation }` identifies callback targets. Retained native objects belong to platform owners; delegates, observers and completion blocks use invalidatable weak routing state. Callbacks enqueue owned events, never hold application-model borrows or invoke application mutation reentrantly. No Rust panic crosses Objective-C/C/block boundaries: catch unwind where supported, mark failure and request orderly shutdown; document abort behavior separately. Native exceptions must never unwind through Rust.
+- `Event` separates key transitions, modifiers, committed text and composition updates. Implement `NSTextInputClient` for marked text, selection and candidate positioning; `charactersIgnoringModifiers` alone is insufficient. Translate modifier bits explicitly: C platform and accepted Rust UI constants differ.
+- Preserve finite top-left point coordinates, precise scroll/magnification, monotonic timestamps and separate backing-pixel dimensions. Geometry conversion remains per-window/per-display. The accepted canvas permits integer backing scales 1–3; reject unsupported scales explicitly pending an accepted adaptation.
+- Use a bounded 256-event queue with owned UTF-8/path payloads and typed overflow. Coalesce adjacent compatible motion/resize events without crossing key/button/command barriers. Reserve control capacity; saturation latches an observable fault and resets input state instead of silently losing releases or close requests. Bound native dispatch per turn; sleep/wake through the run loop.
+- `FontService::layout(TextRequest) -> Result<TextLayout, TextError>` borrows inputs only during calls and returns owned metrics/outlines. Preserve media limits: 64-KiB text, 16,384 glyphs, 262,144 segments, 32 families, normal/italic/oblique, and unsupported color glyphs. Rust UI: 128 nodes/depth24, 63-byte previews/1-MiB total strings, 127-byte drafts/63-byte labels; C labels use normal style/400-or-600 weight. No 4,000-codepoint fallback exists in inspected sources. Main-thread-owned label rendering implements accepted `TextDraw`, retaining no text/pixel borrow; validate stride, clipping and lengths. Preserve the 64-entry/4-MiB cache bound.
+- `Presenter::present(&RgbaFrame) -> Result<Submission, PresentError>` copies borrowed pixels before return. Per-window textures avoid legacy global resource coupling; bounded in-flight submissions retain GPU resources until completion. Freeze channel/alpha semantics, checked sizes and the 8,192-axis limit. Drawable absence is recoverable; readback verification stays separate.
+- Menus consume command descriptors/state snapshots and emit typed commands once. AX consumes validated owned `SemanticsSnapshot`s, converts frames to screen coordinates and routes actions by window generation. Preference watching returns a removable subscription.
+- Teardown invalidates routing first, cancels sheets/timers/jobs, unregisters observers and AX/menu targets, detaches delegates, retires GPU submissions, clears caches, releases windows, then stops AppKit. Late completions discard stale generations.
+
+**Hard dependencies and proposed work orders**
+
+1. **NATIVE-BINDINGS:** coordinator-approved dependency ADR/provenance and macOS-13 symbol audit. objc2 remains a proposal. Evaluate only required objc2/Foundation/AppKit/CoreFoundation/CoreGraphics/CoreText/Metal/QuartzCore features; justify block support separately, defer dispatch bindings. Before fetch/adoption, verify current primary manifests, exact pins, checksums, transitive licenses, SDK-derived provenance, compiler compatibility and callback APIs. Existing research establishes neither newest versions nor verified licenses.
+2. **NATIVE-SHELL:** map `platform_window*.m`, native-shell/internal headers and geometry into startup, windows, responder/input, queues and teardown.
+3. **NATIVE-TEXT-PRESENT:** map both text implementations and Metal/shaders into font/draw/presenter contracts.
+4. **NATIVE-MENU-AX:** map menu and accessibility implementations, command routing and preferences.
+5. **DESKTOP-CHECKPOINT:** bundle executable/resources; connect accepted custom UI to these seams. First usable GUI: labeled interactive custom canvas, keyboard/IME, resize/scale, menus, VoiceOver and clean close.
+
+Document opening additionally requires accepted owned-document APIs: immutable `Arc<Vec<u8>>`, offset spans, cancellation and generation-tagged bounded job results. No self-referential borrowed model.
+
+MacOS-26 material branches require availability guards; macOS-13 compatibility remains unverified. All first-party implementation stays Rust behind platform interfaces: custom UI, owned SVG, no C shims, GPL source or unsupported-OS backends.
+
+No edits, network, downloads, installs, builds, tests, agents or commits occurred. This is an architecture proposal, with no product-completion or performance claim.

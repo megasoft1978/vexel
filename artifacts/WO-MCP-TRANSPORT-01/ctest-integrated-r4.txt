@@ -1,0 +1,10 @@
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+    Start 6: mcp-stdio-relay
+1/2 Test #6: mcp-stdio-relay ..................   Passed  194.39 sec
+    Start 7: mcp-stdio-e2e
+2/2 Test #7: mcp-stdio-e2e ....................   Passed    0.59 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) = 194.99 sec

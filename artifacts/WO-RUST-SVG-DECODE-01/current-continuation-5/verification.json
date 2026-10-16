@@ -1,0 +1,47 @@
+{
+  "work_order": "WO-RUST-SVG-DECODE-01 revision 2",
+  "candidate_only": true,
+  "environment": {
+    "CARGO_HOME": "<repo>/.cache/cargo",
+    "CARGO_TARGET_DIR": "<worker>/.cache/WO-RUST-SVG-DECODE-01/current-continuation-5/target",
+    "offline": true,
+    "locked": true
+  },
+  "commands": [
+    {
+      "command": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-5/target\" cargo +stable check -p vexel-svg-decode --locked --offline",
+      "exit_code": 0,
+      "log": "check.log"
+    },
+    {
+      "command": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-5/target\" cargo +stable test -p vexel-svg-decode --locked --offline",
+      "exit_code": 0,
+      "log": "package-test.log"
+    },
+    {
+      "command": "CARGO_HOME=\"$PWD/.cache/cargo\" cargo +stable fmt --manifest-path Cargo.toml --package vexel-svg-decode -- --check",
+      "exit_code": 0,
+      "log": "format-check.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-DECODE-01 --ready",
+      "exit_code": 0,
+      "log": "validator.log"
+    },
+    {
+      "command": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-5/target\" cargo +stable test -p vexel-svg-decode --locked --offline --test custom_publication",
+      "exit_code": 0,
+      "log": "focused-custom-publication.log"
+    }
+  ],
+  "acceptance_gates_remaining": [
+    "exact lookup/cache/counter predicates",
+    "full frozen parity acceptance beyond exercised crate suite",
+    "independent review/coordinator acceptance"
+  ],
+  "package_test_summary": {
+    "test_blocks": 26,
+    "tests_including_unit_and_doc_blocks": 86,
+    "all_results_passed": true
+  }
+}

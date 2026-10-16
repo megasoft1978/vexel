@@ -1,0 +1,152 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-MEDIA-01",
+  "revision": 2,
+  "spec_sha256": "f960b64a19d208552c1423ebdf51e4dfc4aa458588c8e2ceb675c97971d1d5ed",
+  "scope_sha256": "74fe7164f1305f19ff31ae52bc07fe605c7f2b172c1adc51e88e3136e48ad1aa",
+  "status": "blocked; check/test/WO passing does not satisfy R2 atomicity or cumulative document command limit",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-media --locked --offline",
+      "exit_code": 0,
+      "result": "finished dev profile; no warnings",
+      "evidence": "check-r2.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-media --locked --offline",
+      "exit_code": 0,
+      "result": "30 tests passed, 0 failed: 22 functional tests and 8 unresolved-defect reproducers; unit/doc tests 0",
+      "evidence": "test-r2.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-MEDIA-01 --ready",
+      "exit_code": 0,
+      "result": "valid WO-RUST-SVG-MEDIA-01 revision 2 sha256 f960b64a19d208552c1423ebdf51e4dfc4aa458588c8e2ceb675c97971d1d5ed",
+      "evidence": "wo-r2.log"
+    }
+  ],
+  "test_names_by_file": {
+    "tests/source_map_requests.rs": [
+      "typed_text_and_image_requests_append_with_host_annotation",
+      "invalid_typed_source_map_stops_before_provider_or_append",
+      "canceled_typed_request_stops_before_provider_or_append"
+    ],
+    "tests/document_budget_gap.rs": [
+      "document_command_limit_is_missing_on_repeated_cached_layout_uses"
+    ],
+    "tests/atomicity_gap.rs": [
+      "accepted_public_api_rejects_request_savepoints_inside_outer_draft",
+      "image_late_shape_limit_documents_residual_pixels_and_missing_atomicity",
+      "image_late_cancellation_documents_residual_pixels_and_missing_atomicity",
+      "image_late_capacity_admission_failure_documents_residual_pixels",
+      "text_late_capacity_failure_documents_retained_layout_state_and_cache",
+      "text_second_run_limit_documents_retained_first_run_state_and_cache",
+      "text_finalization_cancel_documents_retained_shape_after_glyph_work"
+    ],
+    "tests/style_and_layout.rs": [
+      "style_defaults_and_original_inherited_font_values_reach_provider",
+      "family_count_limit_and_relative_lengths_keep_original_style_errors_and_units",
+      "malformed_style_is_unsupported_at_exact_property_offset_before_provider",
+      "anchor_modes_and_oblique_normal_spacing_use_original_units",
+      "compound_contours_keep_winding_closure_and_scene_subpath_boundaries",
+      "unavailable_native_provider_stays_unsupported_at_text_run_offset",
+      "explicit_text_request_end_bounds_authored_runs",
+      "malformed_position_keeps_number_classification_and_source_offset"
+    ],
+    "tests/media_parity.rs": [
+      "image_data_uri_and_base64_keep_exact_grammar_and_offsets",
+      "image_geometry_preserves_meet_slice_none_and_viewport_lengths",
+      "text_entities_whitespace_and_position_lists_match_source_contract",
+      "malformed_provider_pixels_keep_unsupported_classification",
+      "image_sampler_matches_premultiplied_bilinear_rounding_and_bounds",
+      "text_cache_owns_keys_and_reuses_exact_layout_requests",
+      "text_cache_entry_cap_and_image_capacity_validation_fail_closed",
+      "glyph_outline_closure_and_command_range_validation_inputs_are_owned"
+    ],
+    "tests/cache_limits.rs": [
+      "local_and_accepted_shared_cache_admit_exactly_256_kib_then_return_owned_misses",
+      "local_and_accepted_shared_cache_enforce_cumulative_and_per_layout_command_caps",
+      "cache_key_distinguishes_owned_family_and_each_font_parameter"
+    ]
+  },
+  "scope_audit": {
+    "immutable_scope_sha256_matches": true,
+    "coordinator_seeded_paths": 26,
+    "seeded_hash_mismatches": [],
+    "assigned_original_reference_hashes": [
+      {
+        "path": "src/svg/shape/image.c",
+        "observed_sha256": "79ef7d7d0884bf0ab2e82f69292bd55c1e6bcb0c57dbcc4fde65b76f77abff47",
+        "historical_catalog_sha256": "79ef7d7d0884bf0ab2e82f69292bd55c1e6bcb0c57dbcc4fde65b76f77abff47"
+      },
+      {
+        "path": "src/svg/shape/text.c",
+        "observed_sha256": "2c96f96a936b8d37c223fb8027a70f24b35b5fcd46ea3d2741836dceea96331a",
+        "historical_catalog_sha256": "2c96f96a936b8d37c223fb8027a70f24b35b5fcd46ea3d2741836dceea96331a"
+      },
+      {
+        "path": "src/svg/shape/text_cache.c",
+        "observed_sha256": "09baeffce272592680c92286ce9c9abb37500cc182a787944000f0b40e7d7c1d",
+        "historical_catalog_sha256": "09baeffce272592680c92286ce9c9abb37500cc182a787944000f0b40e7d7c1d"
+      },
+      {
+        "path": "tests/fuzz/shape/shape_fuzz.c",
+        "observed_sha256": "9ae56612013411f09764f6e3c65281cd6d877b21cfebdea02351bb0806937ef4",
+        "historical_catalog_sha256": "9ae56612013411f09764f6e3c65281cd6d877b21cfebdea02351bb0806937ef4"
+      },
+      {
+        "path": "tests/svg/shape/media_render_cli.c",
+        "observed_sha256": "83f2889c9f26514d902b5a7d8ba78e2d91ab21af98e409105d22fc7343845c20",
+        "historical_catalog_sha256": "83f2889c9f26514d902b5a7d8ba78e2d91ab21af98e409105d22fc7343845c20"
+      },
+      {
+        "path": "tests/svg/shape/text_image_test.c",
+        "observed_sha256": "2b8962dff33a4c293b85b5bb25cc02acf16adfce46698a861ec270154888a963",
+        "historical_catalog_sha256": "2b8962dff33a4c293b85b5bb25cc02acf16adfce46698a861ec270154888a963"
+      },
+      {
+        "path": "tests/svg/test_text_image_render.py",
+        "observed_sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22",
+        "historical_catalog_sha256": "6caadb9dfb52f25c86bfc0f2f0e288efcab3c50b077bd0505375b641d6d0bf22"
+      }
+    ],
+    "owned_source_test_line_counts": {
+      "rust/crates/vexel-svg-media/src/lib.rs": 32,
+      "rust/crates/vexel-svg-media/src/image.rs": 581,
+      "rust/crates/vexel-svg-media/src/text_cache.rs": 329,
+      "rust/crates/vexel-svg-media/src/text.rs": 394,
+      "rust/crates/vexel-svg-media/src/text_geometry.rs": 461,
+      "rust/crates/vexel-svg-media/src/image_sample.rs": 85,
+      "rust/crates/vexel-svg-media/tests/source_map_requests.rs": 280,
+      "rust/crates/vexel-svg-media/tests/document_budget_gap.rs": 54,
+      "rust/crates/vexel-svg-media/tests/atomicity_gap.rs": 213,
+      "rust/crates/vexel-svg-media/tests/style_and_layout.rs": 296,
+      "rust/crates/vexel-svg-media/tests/media_parity.rs": 559,
+      "rust/crates/vexel-svg-media/tests/cache_limits.rs": 112,
+      "rust/crates/vexel-svg-media/tests/support/mod.rs": 99
+    },
+    "all_owned_source_tests_under_800": true,
+    "prior_11_test_files_not_edited_by_R2_writer": {
+      "rust/crates/vexel-svg-media/tests/media_parity.rs": "985ed81e88b786842c38d0ce7bd08978f9e91f193b14ab6edd73c8ae3bcdee28",
+      "rust/crates/vexel-svg-media/tests/source_map_requests.rs": "655b8911a4b88511678046e7fe8eaf4332f9cf37d2c55cc1e4cc26542d2b750d"
+    },
+    "shared_manifests_locks_protected_source_oracles_modified_by_R2_writer": false,
+    "note": "Scoped hash reads and line inventory only; no broad 603/157 audit, shared tests, global formatter or other test suite run. Root independent audit remains required."
+  },
+  "blocking_contracts": [
+    "atomicity-blocker.md: active-draft request savepoint/rollback",
+    "atomicity-blocker.md: persistent cumulative document text-command budget"
+  ],
+  "review_evidence": [
+    "reviewed-media-defects-r2.md",
+    "r1-evidence-snapshot.json"
+  ],
+  "unverified_gates": [
+    "actual allocator OOM fault injection",
+    "native CoreText/ImageIO and provider cleanup",
+    "full original CLI/C mixed media/selection/path suites",
+    "CoreText/librsvg oracle comparison",
+    "full renderer/application/runtime/release/UI validation"
+  ],
+  "acceptance_claimed": false
+}

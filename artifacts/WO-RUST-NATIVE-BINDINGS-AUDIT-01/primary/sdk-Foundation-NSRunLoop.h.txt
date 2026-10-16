@@ -1,0 +1,26 @@
+114: /// BOOL shouldKeepRunning = YES; // global
+115: /// NSRunLoop *theRL = [NSRunLoop currentRunLoop];
+116: /// while (shouldKeepRunning && [theRL runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
+117: /// ```
+118: - (void)run NS_SWIFT_UNAVAILABLE_FROM_ASYNC("run cannot be used from async contexts.");
+119: 
+120: /// Runs the loop until the specified date, during which time it processes data from all attached input sources.
+121: ///
+
+136: /// > Note:
+137: /// > A timer is not considered an input source and may fire multiple times when waiting for this method to return. Manually removing all known input sources and timers from the run loop does not guarantee that the run loop will exit immediately.
+138: - (BOOL)runMode:(NSRunLoopMode)mode beforeDate:(NSDate *)limitDate NS_SWIFT_UNAVAILABLE_FROM_ASYNC("run(_:before:) cannot be used from async contexts.");
+139: 
+140: #if TARGET_OS_OSX
+141: /// Deprecated. Does nothing.
+142: - (void)configureAsServer API_DEPRECATED("Not supported", macos(10.0,10.5), ios(2.0,2.0), watchos(2.0,2.0), tvos(9.0,9.0));
+143: #endif
+
+150: /// Schedules the execution of a block on the target run loop.
+151: /// - parameter: block   The block to execute
+152: - (void)performBlock:(void (NS_SWIFT_SENDABLE ^)(void))block API_AVAILABLE(macosx(10.12), ios(10.0), watchos(3.0), tvos(10.0));
+153: 
+154: @end
+155: 
+156: /* *************** 	Delayed perform	 ******************/
+157: 

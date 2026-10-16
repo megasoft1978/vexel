@@ -1,0 +1,34 @@
+{
+  "recorded_utc": "2026-10-15T04:54:14Z",
+  "check": {
+    "command": "cargo +stable check -p vexel-scene -p vexel-svg-animation --locked --offline",
+    "exit_code": 0,
+    "log": "main-check.log"
+  },
+  "test": {
+    "command": "cargo +stable test -p vexel-scene -p vexel-svg-animation --locked --offline",
+    "exit_code": 0,
+    "named_entries": 198,
+    "scene_entries": 177,
+    "animation_entries": 21,
+    "log": "main-test.log"
+  },
+  "consumer_check": {
+    "command": "cargo +stable check -p vexel-svg-definitions -p vexel-scene-query -p vexel-svg-paint -p vexel-svg-animation-frame --locked --offline",
+    "exit_code": 0,
+    "log": "main-consumer-check.log"
+  },
+  "prior_scene_entries": 156,
+  "added_scene_entries": 21,
+  "animation_crate_unchanged": true,
+  "full_review": "review.md",
+  "sole_blocker_recheck": "viewport-recheck.md",
+  "root_confirmed_source_diff": "viewport-review-diff.json",
+  "protected_candidate_hashes": 1672,
+  "legacy_preserved": 603,
+  "frozen_preserved": 157,
+  "head_preserved": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "index_preserved": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "broad_UI_E2E_run": false,
+  "full_product_complete": false
+}

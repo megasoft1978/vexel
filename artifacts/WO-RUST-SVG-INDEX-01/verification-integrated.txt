@@ -1,0 +1,52 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-svg-index --locked --offline
+EXIT: 0
+    Checking vexel-svg-index v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-index)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.07s
+
+COMMAND: cargo +stable test -p vexel-svg-index --locked --offline
+EXIT: 0
+
+running 6 tests
+test index_tests::exact_metadata_capacity_and_source_limit_boundaries_are_preserved ... ok
+test index_tests::oversized_owned_element_candidate_is_rejected_without_replacing_partial_index ... ok
+test index_tests::exact_validator_capacity_and_combined_storage_budgets_are_charged ... ok
+test index_tests::collector_growth_clamps_to_last_legal_token_and_drops_oversized_candidates ... ok
+test index_tests::completed_malformed_tail_keeps_prior_candidate_preview_without_more_reader_work ... ok
+test index_tests::completed_validator_diagnostic_returns_before_lexical_progress_like_c_step ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test nested_element_parent_and_full_source_spans_are_retained ... ok
+test incremental_progress_preview_and_full_token_spans_match_the_xml_oracle ... ok
+test malformed_prefix_blocks_preview_and_malformed_tail_preserves_valid_preview ... ok
+test doctype_and_rich_xml_keep_original_token_kinds_and_source_spans ... ok
+test large_start_tag_is_indexed_without_becoming_preview_eligible ... ok
+test exact_diagnostics_unsupported_gate_generation_invalidation_and_cancellation ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-svg-index v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-index)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.38s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_svg_index-a5cb59e6b259b0dc)
+     Running tests/index_contract.rs (build/rust/aarch64-apple-darwin/debug/deps/index_contract-6947bc4884dff152)
+   Doc-tests vexel_svg_index
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SVG-INDEX-01 --ready
+EXIT: 0
+valid WO-RUST-SVG-INDEX-01 revision 1 sha256 710311f2f5d816abc33894a96fcd53951bc6506ed89c0be1ff9ba007341cac39
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1243 entries
+
+COMMAND: git diff --check
+EXIT: 0

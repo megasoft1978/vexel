@@ -1,0 +1,7 @@
+**The frozen work order is not complete.** I implemented edge-span checks, paint sampling, and a viewport-keyed owned cache, but stopped before implementing the SVG resolver because the accepted shared cache cannot meet its contract.
+
+`ResolveContext` exposes `vexel_scene::PaintCache`, whose entries contain only a definition, paint, and stop range. They have no viewport or full resolution-context key. Reusing entries could give incorrect results across viewports; substituting the crate-local cache would bypass the required shared API. The shared contract needs repair before resolver work can proceed.
+
+The implementation and evidence are in [paint.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/src/paint.rs), [paint_parity.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/tests/paint_parity.rs), and [the work-order result](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/artifacts/WO-RUST-SVG-PAINT-01/result.md). The parity map covers all 23 catalog symbols; it marks resolver behavior and five original renderer cases as blocked or unexecuted.
+
+Verification: scoped locked offline `cargo check` passed, all four focused Rust tests passed, and `wo_validate.py ... --ready` passed. `scope.json` remains unchanged.

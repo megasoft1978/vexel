@@ -1,0 +1,27 @@
+{
+  "rust/crates/vexel-svg-animation/tests/animation.rs": {
+    "before_sha256": "11450ab3c6bb392244f82382679a8b14e6f8c15307450066f894294daf42f1d6",
+    "after_sha256": "0bde967e5a4852475bd4064427fcf11bb1b29591d01d93f365167ade998a1f43",
+    "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+  },
+  "rust/crates/vexel-svg-animation/src/lib.rs": {
+    "before_sha256": "b38dc8efb8a724c9fb7fc9006df8aa36d0c4bf80407d328e18f47fdb41fbb9e1",
+    "after_sha256": "f779e5f2c3c880253a3d8c9f77c20ca5180451245c67c46ee5b2be5b209c3751",
+    "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+  },
+  "rust/crates/vexel-svg-animation/src/parse.rs": {
+    "before_sha256": "18e2079027d503b1c63f2735fb05b127c3002d10db5c52620b977f5892eb5c19",
+    "after_sha256": "33bc67ecce079efa5d16ccf51d11f8a71fcf79a03a504384e149a48cbf18dc55",
+    "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+  },
+  "rust/crates/vexel-svg-animation/src/eval.rs": {
+    "before_sha256": "07db20df770b733573b793aa6953c577b734ac4db94bea837eb9d8ee8ca1ab69",
+    "after_sha256": "b65c5f21084b689db1756a019cc934ee911316497dce8f19999c3be539de98ef",
+    "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+  },
+  "rust/crates/vexel-document-edit/src/lib.rs": {
+    "before_sha256": "9f24f9ef54f54c78ce080f1cba8ddbdfe9a249a953bf20a20b7b8c36ad6b205f",
+    "after_sha256": "8029e3172f9b4e9cef8d5c9fa0f32a3671443096ac33aad6e7b2bc0c41f60c3c",
+    "coordinator_authorization": "WO-RUST-DOCUMENT-EDIT-01"
+  }
+}

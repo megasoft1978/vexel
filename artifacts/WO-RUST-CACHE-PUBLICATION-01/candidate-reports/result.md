@@ -1,0 +1,15 @@
+Implemented WO-RUST-CACHE-PUBLICATION-01; worker verification passes. Acceptance and seeding remain pending coordinator root independent Luna High review, protected audit and fresh-main validation.
+
+The resource accounting/lifetime design uses opaque `CacheGeneration` metadata and an exclusive `CacheTransaction` borrow. Each explicit generation admits 16 MiB actual retained Dash/Grid capacity, 65536 cells and 1000000 references independently. The same caller ChargeLedger admits physically simultaneous generations, native buffer-growth overlap, slot/lease metadata and their retained history. Transactions allocate no heap registry. Legacy default combined pool caps, original JobDashCache literals and public APIs remain compatible.
+
+Commit validates actual typed payload, ranges, grid roles and same-job/source/serial/generation identity before retiring old ownership. Staged buffer addresses remain unchanged across publication. Abort, Drop, cancellation and failed commit release staged ownership; old cache reads remain usable. Forgotten transactions prevent successful finish until explicit release_all cleanup. Composition validates once and owns the exclusive job borrow; repeated grid reads and output writes allocate nothing. New scoped admission scans poll cancellation; default admission retains constant-time counters.
+
+Verification (all exit 0):
+- `cargo +stable check -p vexel-scene --locked --offline` — check.log.
+- `cargo +stable test -p vexel-scene --locked --offline` — test.log; 185 passed: 177 unchanged accepted entries, seven new runtime tests and one compile-fail replay guard.
+- `python3 scripts/wo_validate.py WO-RUST-CACHE-PUBLICATION-01 --ready` — wo-validate.log; frozen revision/hash valid.
+- Complete README lower example extracted verbatim, compiled and executed — lower-example.rs/log, both exit 0.
+
+API coverage: begin_cache, cache_descriptor, cache_view, transaction buffer/reserve/extend/slice/slice_mut/capacity/truncate/shrink_to/clear_capacity/release/stats/commit/abort/Drop; legacy dash_view/compose/with_buffers/release_all/finish. Tests prove exact 16777216-byte populated cache replacement under 256 MiB physical budget, insufficient physical admission, individual/aggregate byte caps, simultaneous populated 65536-cell/1M-reference generations, repeated failure cleanup, stale/mixed/foreign/wrong-source/wrong-role rejection, cancellation after real allocation and validation, replay prevention, and actual repeated composition reads/writes.
+
+The worker hash audit covers all 1747 frozen baseline paths: no missing or changed protected files. Original Scene tests and animation source/tests remain byte-identical; the 21 accepted animation entries were not rerun here. HEAD is unchanged. All changed/new source/tests remain below 800 lines. No shape-publication, scalar-engine, manifests, dependencies, old tests, state or ledgers changed. Initial failed verification attempts are preserved honestly. Full renderer/native/app/final QA/release/demo remain downstream.

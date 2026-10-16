@@ -1,0 +1,3 @@
+Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
+Integrated only: rust/crates/vexel-svg-reference/src/lib.rs, rust/crates/vexel-svg-reference/tests/controlled.rs, rust/crates/vexel-svg-reference/src/build.rs, rust/crates/vexel-svg-reference/src/find.rs.
+603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v1.

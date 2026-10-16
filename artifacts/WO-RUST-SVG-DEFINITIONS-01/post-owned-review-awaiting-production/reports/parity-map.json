@@ -1,0 +1,707 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-DEFINITIONS-01",
+  "owner": "DEFINITIONS",
+  "candidate_status": "INCOMPLETE_CANDIDATE",
+  "source_catalog_sha256": "1435986a9a2a30a7d7e8591a24d7cd0fd5c54111f78754692888fd91118c34d2",
+  "symbol_count": 79,
+  "symbols": [
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "eq",
+      "catalog_key": "src/svg/clip/clip.c:40:definition:eq",
+      "status": "implemented",
+      "rust_equivalent": "DefinitionSource::equals/span_bytes use checked source spans and exact bytes."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "attr",
+      "catalog_key": "src/svg/clip/clip.c:48:definition:attr",
+      "status": "implemented",
+      "rust_equivalent": "DefinitionSource::attribute and attr find only unprefixed attributes within the token-owned attribute run."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "element_end",
+      "catalog_key": "src/svg/clip/clip.c:60:definition:element_end",
+      "status": "implemented",
+      "rust_equivalent": "matching_end validates element kinds and matches close tokens at the same depth; planner path also charges work."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "check_clip_child_style",
+      "catalog_key": "src/svg/clip/clip.c:70:definition:check_clip_child_style",
+      "status": "implemented",
+      "rust_equivalent": "check_clip_style permits only valid inherited clip-rule values and reports the authored property span."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "clip_rule_map",
+      "catalog_key": "src/svg/clip/clip.c:98:definition:clip_rule_map",
+      "status": "implemented",
+      "rust_equivalent": "DefinitionPlanner computes ancestor/stylesheet/inline CssPaint for every clip descendant; direct child ranges retain authored rule context."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "parse_reference",
+      "catalog_key": "src/svg/clip/clip.c:161:definition:parse_reference",
+      "status": "implemented",
+      "rust_equivalent": "resolve_local_definition uses the canonical DecodeSource reference index; clip URL grammar preserves its strict no-whitespace spelling."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "point_inside",
+      "catalog_key": "src/svg/clip/clip.c:172:definition:point_inside",
+      "status": "implemented",
+      "rust_equivalent": "Iterative winding and even-odd crossings preserve fill-rule semantics, including holes."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_resolve",
+      "catalog_key": "src/svg/clip/clip.c:191:definition:svg_clip_resolve",
+      "status": "adapted",
+      "rust_equivalent": "DefinitionPlanner returns Clip units, owner inverse/bounds, bounded direct token expansions, and source admission limits. The later DecodeOperations adapter turns those ranges into actual clip geometry."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_contains",
+      "catalog_key": "src/svg/clip/clip.c:340:definition:svg_clip_contains",
+      "status": "implemented",
+      "rust_equivalent": "contains maps through checked inverse/object-box coordinates, unions filled children, and intersects the ordered parent chain."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "clip_local_to_document",
+      "catalog_key": "src/svg/clip/clip.c:365:definition:clip_local_to_document",
+      "status": "implemented",
+      "rust_equivalent": "local_to_document and visit_boundary_edges map object-box coordinates and affine inverses."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_visit_boundary_edges",
+      "catalog_key": "src/svg/clip/clip.c:378:definition:svg_clip_visit_boundary_edges",
+      "status": "implemented",
+      "rust_equivalent": "Boundary traversal preserves chain/child/edge order, reports invalid mappings separately, and honors visitor early-stop."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_boundary_work_counts",
+      "catalog_key": "src/svg/clip/clip.c:413:definition:svg_clip_boundary_work_counts",
+      "status": "implemented",
+      "rust_equivalent": "work_counts checked-adds the exact chain, child, and edge totals."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_work_units",
+      "catalog_key": "src/svg/clip/clip.c:430:definition:svg_clip_work_units",
+      "status": "implemented",
+      "rust_equivalent": "work_units preserves chain + child + edge accounting."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_destroy",
+      "catalog_key": "src/svg/clip/clip.c:440:definition:svg_clip_destroy",
+      "status": "adapted",
+      "rust_equivalent": "Owned Clip geometry is freed by safe Vec drop; shared IDs and Rust borrowing replace recursive C release callbacks."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_retain",
+      "catalog_key": "src/svg/clip/clip.c:451:definition:svg_clip_retain",
+      "status": "adapted",
+      "rust_equivalent": "Validated scene ClipId values share immutable scene records without manual refcounts."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "clone_bytes",
+      "catalog_key": "src/svg/clip/clip.c:458:definition:clone_bytes",
+      "status": "implemented",
+      "rust_equivalent": "ClipOverlay::allocated_bytes records actual Vec capacities with checked arithmetic."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "clone_array",
+      "catalog_key": "src/svg/clip/clip.c:465:definition:clone_array",
+      "status": "implemented",
+      "rust_equivalent": "Clip copies use fallible exact reservations and account actual post-allocation capacities."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "clone_clip_chain",
+      "catalog_key": "src/svg/clip/clip.c:486:definition:clone_clip_chain",
+      "status": "implemented",
+      "rust_equivalent": "clone_clips bounds depth/bytes, preserves parent chains, deduplicates IDs, and polls/charges work."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_clone",
+      "catalog_key": "src/svg/clip/clip.c:540:definition:svg_clip_clone",
+      "status": "implemented",
+      "rust_equivalent": "clone_clips returns an owned deduplicated ClipOverlay; lookup stays read-only."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_update_owner",
+      "catalog_key": "src/svg/clip/clip.c:548:definition:svg_clip_update_owner",
+      "status": "implemented",
+      "rust_equivalent": "update_owner walks the copied chain and updates matching transform owners only for valid mappings."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_local_bounds",
+      "catalog_key": "src/svg/clip/clip.c:570:definition:svg_clip_local_bounds",
+      "status": "implemented",
+      "rust_equivalent": "local_bounds maps every edge endpoint through the supplied affine and rejects invalid/empty ranges."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_apply_group",
+      "catalog_key": "src/svg/clip/clip.c:597:definition:svg_clip_apply_group",
+      "status": "implemented",
+      "rust_equivalent": "apply_group uses actual DraftToken finalization, shares already-present ClipIds, preserves legacy chain order by copying immutable prefixes, and caps actual copied capacities."
+    },
+    {
+      "source": "src/svg/clip/clip.c",
+      "source_sha256": "79bc36bdb6fff3c5c084455a4d4ba5feb8d5469f1e3bdc2f8887dee7b1cba41d",
+      "symbol": "svg_clip_create_rect",
+      "catalog_key": "src/svg/clip/clip.c:624:definition:svg_clip_create_rect",
+      "status": "implemented",
+      "rust_equivalent": "create_rect validates finite points/inverse and appends a four-edge real SceneBuilder clip."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "span_equal",
+      "catalog_key": "src/svg/shape/filter.c:16:definition:span_equal",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "attribute",
+      "catalog_key": "src/svg/shape/filter.c:22:definition:attribute",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "fail",
+      "catalog_key": "src/svg/shape/filter.c:37:definition:fail",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_url_id",
+      "catalog_key": "src/svg/shape/filter.c:44:definition:parse_url_id",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_number",
+      "catalog_key": "src/svg/shape/filter.c:73:definition:parse_number",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_region_number",
+      "catalog_key": "src/svg/shape/filter.c:89:definition:parse_region_number",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_number_list",
+      "catalog_key": "src/svg/shape/filter.c:106:definition:parse_number_list",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "resolve_input",
+      "catalog_key": "src/svg/shape/filter.c:137:definition:resolve_input",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "unsupported_primitive",
+      "catalog_key": "src/svg/shape/filter.c:168:definition:unsupported_primitive",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_blend_mode",
+      "catalog_key": "src/svg/shape/filter.c:187:definition:parse_blend_mode",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_color",
+      "catalog_key": "src/svg/shape/filter.c:201:definition:parse_color",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_merge_inputs",
+      "catalog_key": "src/svg/shape/filter.c:217:definition:parse_merge_inputs",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "parse_primitive",
+      "catalog_key": "src/svg/shape/filter.c:258:definition:parse_primitive",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "matching_end",
+      "catalog_key": "src/svg/shape/filter.c:478:definition:matching_end",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the filter Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/filter.c",
+      "source_sha256": "b0667757985032bd14154ca17e4a83f3e3ffc5ec82a9f1ec12dbe742b5efed4c",
+      "symbol": "svg_shape_filter_parse",
+      "catalog_key": "src/svg/shape/filter.c:488:definition:svg_shape_filter_parse",
+      "status": "implemented",
+      "rust_equivalent": "parse_filter and DefinitionPlanner parse typed filter descriptors, primitive/result ranges, original limits, named unsupported errors, and source offsets."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "fail",
+      "catalog_key": "src/svg/shape/marker.c:23:definition:fail",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "attr",
+      "catalog_key": "src/svg/shape/marker.c:30:definition:attr",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "parse_url_id",
+      "catalog_key": "src/svg/shape/marker.c:38:definition:parse_url_id",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "parse_marker_attributes",
+      "catalog_key": "src/svg/shape/marker.c:69:definition:parse_marker_attributes",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "direction_angle",
+      "catalog_key": "src/svg/shape/marker.c:104:definition:direction_angle",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "middle_angle",
+      "catalog_key": "src/svg/shape/marker.c:109:definition:middle_angle",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "element_scale",
+      "catalog_key": "src/svg/shape/marker.c:117:definition:element_scale",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "parse_orient",
+      "catalog_key": "src/svg/shape/marker.c:126:definition:parse_orient",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "compose_marker_transform",
+      "catalog_key": "src/svg/shape/marker.c:152:definition:compose_marker_transform",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "marker_definition_parent_style",
+      "catalog_key": "src/svg/shape/marker.c:172:definition:marker_definition_parent_style",
+      "status": "implemented",
+      "rust_equivalent": "definition_style composes true ancestor CssPaint; without_inherited_markers clears only the four accepted marker properties."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "make_marker",
+      "catalog_key": "src/svg/shape/marker.c:220:definition:make_marker",
+      "status": "adapted",
+      "rust_equivalent": "MarkerDescriptor and source-borrowed child Expansion preserve parsed dimensions, refs, orient, viewBox transform and style. The coordinator adapter performs scene traversal."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "emit_marker",
+      "catalog_key": "src/svg/shape/marker.c:405:definition:emit_marker",
+      "status": "implemented",
+      "rust_equivalent": "compose_marker_transform and path/primitive placement helpers produce exact per-position transforms and authored segment placements."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "emit_mid_marker",
+      "catalog_key": "src/svg/shape/marker.c:430:definition:emit_mid_marker",
+      "status": "implemented",
+      "rust_equivalent": "middle_angle and placement helpers preserve signed remainder half-turn behavior and authored mid boundaries."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "flush_path_subpath",
+      "catalog_key": "src/svg/shape/marker.c:441:definition:flush_path_subpath",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "path_markers",
+      "catalog_key": "src/svg/shape/marker.c:457:definition:path_markers",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "primitive_markers",
+      "catalog_key": "src/svg/shape/marker.c:511:definition:primitive_markers",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the marker Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/marker.c",
+      "source_sha256": "5c10d9000fcc9dd1f99bcdc7a21e244763cf9ba31b1f7d779b39db4a50eb9ff3",
+      "symbol": "svg_shape_traverse_attach_markers",
+      "catalog_key": "src/svg/shape/marker.c:552:definition:svg_shape_traverse_attach_markers",
+      "status": "adapted",
+      "rust_equivalent": "Marker references, shorthand mapping, typed descriptors, CSS inheritance and placement math are owned here; real renderer append/provider composition is the later gate."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "fail",
+      "catalog_key": "src/svg/shape/mask.c:8:definition:fail",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the mask Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "attr",
+      "catalog_key": "src/svg/shape/mask.c:15:definition:attr",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the mask Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "parse_url_id",
+      "catalog_key": "src/svg/shape/mask.c:30:definition:parse_url_id",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the mask Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "matching_end",
+      "catalog_key": "src/svg/shape/mask.c:61:definition:matching_end",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the mask Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "read_mask_region",
+      "catalog_key": "src/svg/shape/mask.c:72:definition:read_mask_region",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the mask Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "target_bounds",
+      "catalog_key": "src/svg/shape/mask.c:100:definition:target_bounds",
+      "status": "adapted",
+      "rust_equivalent": "The real owner ShapeId and its actual local bounds are supplied to DefinitionPlanner; its mask region and transform use those bounds."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "sync_mask_work",
+      "catalog_key": "src/svg/shape/mask.c:140:definition:sync_mask_work",
+      "status": "adapted",
+      "rust_equivalent": "Definition planning charges actual context/style/token work through WorkControl and uses the real ChargeLedger; renderer-specific nested scene work is the later adapter."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "append_mask",
+      "catalog_key": "src/svg/shape/mask.c:163:definition:append_mask",
+      "status": "adapted",
+      "rust_equivalent": "MaskDescriptor and child ranges carry region, units, luminance/alpha and source offset for the real SceneBuilder adapter."
+    },
+    {
+      "source": "src/svg/shape/mask.c",
+      "source_sha256": "778a229b9d2f4512f3c32f9da4a2877fc925877c25b61d980d710087092b4380",
+      "symbol": "svg_shape_traverse_attach_mask",
+      "catalog_key": "src/svg/shape/mask.c:189:definition:svg_shape_traverse_attach_mask",
+      "status": "adapted",
+      "rust_equivalent": "DefinitionPlanner validates active-definition recursion and emits actual source ranges; nested scene execution and paint attachment use the later adapter."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "fail",
+      "catalog_key": "src/svg/shape/pattern.c:12:definition:fail",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the pattern Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "attr",
+      "catalog_key": "src/svg/shape/pattern.c:19:definition:attr",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the pattern Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "parse_url_id",
+      "catalog_key": "src/svg/shape/pattern.c:34:definition:parse_url_id",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the pattern Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "parse_bbox_number",
+      "catalog_key": "src/svg/shape/pattern.c:65:definition:parse_bbox_number",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the pattern Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "read_unit_value",
+      "catalog_key": "src/svg/shape/pattern.c:82:definition:read_unit_value",
+      "status": "implemented",
+      "rust_equivalent": "parse_pattern_mapping parses object-box fractions/percentages and user-space lengths against the active viewport."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "local_bounds",
+      "catalog_key": "src/svg/shape/pattern.c:95:definition:local_bounds",
+      "status": "adapted",
+      "rust_equivalent": "The planner receives actual owner bounds; clip::local_bounds provides checked affine bounds mapping for geometry consumers."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "matrix_equal",
+      "catalog_key": "src/svg/shape/pattern.c:130:definition:matrix_equal",
+      "status": "implemented",
+      "rust_equivalent": "same_pattern_cache_key compares definition, dimensions, tile size and all content matrix terms exactly, matching the legacy cache key."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "sync_work",
+      "catalog_key": "src/svg/shape/pattern.c:136:definition:sync_work",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the pattern Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "parse_supported_attributes",
+      "catalog_key": "src/svg/shape/pattern.c:159:definition:parse_supported_attributes",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the pattern Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "append_pattern",
+      "catalog_key": "src/svg/shape/pattern.c:190:definition:append_pattern",
+      "status": "adapted",
+      "rust_equivalent": "The typed PatternDescriptor is ready for the accepted SceneBuilder/PatternTickets adapter; no fake raster tile is produced here."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "cached_pattern",
+      "catalog_key": "src/svg/shape/pattern.c:220:definition:cached_pattern",
+      "status": "adapted",
+      "rust_equivalent": "PatternCacheKey and exact comparison preserve the legacy identity predicate; accepted scene tickets serialize requests but have no shared cache container."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "decode_pattern_content",
+      "catalog_key": "src/svg/shape/pattern.c:239:definition:decode_pattern_content",
+      "status": "adapted",
+      "rust_equivalent": "Owned bounded source ranges and content transforms are emitted as expansions; engine traversal is deliberately delegated to coordinator adapters."
+    },
+    {
+      "source": "src/svg/shape/pattern.c",
+      "source_sha256": "0e1c692970ac8b72a8892aded2268156cd0393d6700882762bf84caa1c570da3",
+      "symbol": "svg_shape_pattern_resolve",
+      "catalog_key": "src/svg/shape/pattern.c:378:definition:svg_shape_pattern_resolve",
+      "status": "adapted",
+      "rust_equivalent": "Pattern units/regions/viewBox/transform/sampling limits and a public owned tile-origin/inverse mapping are parsed. Current shared PatternDescriptor has no x/y or pattern inverse fields, so the later paint adapter must carry PatternMapping into the paint record."
+    },
+    {
+      "source": "src/svg/shape/shape_clip_apply.c",
+      "source_sha256": "f75fd3d6582d0b0a84e84b1847c57d11646d6eb30377d1c746712654b64c71f4",
+      "symbol": "fail",
+      "catalog_key": "src/svg/shape/shape_clip_apply.c:5:definition:fail",
+      "status": "implemented",
+      "rust_equivalent": "Ported by the shape_clip_apply Rust module with checked source spans, bounded parsing, preserved errors/limits, and the named algorithm behavior."
+    },
+    {
+      "source": "src/svg/shape/shape_clip_apply.c",
+      "source_sha256": "f75fd3d6582d0b0a84e84b1847c57d11646d6eb30377d1c746712654b64c71f4",
+      "symbol": "svg_shape_apply_declared_clip",
+      "catalog_key": "src/svg/shape/shape_clip_apply.c:12:definition:svg_shape_apply_declared_clip",
+      "status": "adapted",
+      "rust_equivalent": "apply_group mutates real draft shapes and preserves clip-chain semantics; declaration resolution/bounds and decoded clip creation arrive through the coordinator adapter."
+    }
+  ],
+  "algorithms": [
+    {
+      "name": "clip source admission and rule mapping",
+      "proof": "Clip planner: exact child/reference/job byte caps, wrapper worst-prefix budget, direct-child count, depth, ancestor CssPaint inheritance, stylesheet rules and source offsets."
+    },
+    {
+      "name": "clip containment and boundary traversal",
+      "proof": "Winding/even-odd point query; object-box normalization; ordered chain intersection; stable boundary mapping/early-stop; checked chain/child/edge accounting."
+    },
+    {
+      "name": "clip ownership and mutation",
+      "proof": "Scene ClipId sharing, deduplicated bounded overlays, capacity accounting, valid owner update, actual DraftToken finalizers, ordered safe chain copy."
+    },
+    {
+      "name": "filter primitives and named results",
+      "proof": "All supported primitive types, input defaults/results, merge bounds, matrix defaults/values, exact named unsupported kinds, flood-color alpha rounding and count/region limits."
+    },
+    {
+      "name": "marker placement and inheritance",
+      "proof": "Ancestor style source, exact accepted four-property marker clear, shorthand fallback at start/mid/end, viewport lengths/viewBox, orient parsing, largest singular scale, signed-remainder mid angle and authored segment placements."
+    },
+    {
+      "name": "mask region and expansion planning",
+      "proof": "maskUnits/maskContentUnits, bbox/user-space percentage references, default/custom regions, luminance/alpha and source-only direct child expansions with active recursion guard."
+    },
+    {
+      "name": "pattern tile and content mapping",
+      "proof": "Units, viewport lengths, bbox fractions, tile origin/size limits, patternTransform inverse and scale, preserveAspectRatio viewBox mapping, pixel-axis/area caps, exact legacy cache key."
+    },
+    {
+      "name": "source references and bounds",
+      "proof": "Canonical shared ReferenceIndex local ID lookup, expected unprefixed definition kinds, checked source spans, actual owner ShapeId/bounds/affines."
+    },
+    {
+      "name": "controlled marker placement scans",
+      "proof": "Public marker placement APIs require caller WorkControl; each path segment (including zero-edge commands) is charged before processing, and primitive pair iteration charges Expansion. Overflowing preserveAspectRatio offset+length returns InvalidArgument at the authored offset."
+    },
+    {
+      "name": "controlled filter reference lookup",
+      "proof": "Public parse_filter requires WorkControl; both its initial DefinitionSource token-span validation and subsequent token/candidate-attribute ID scans charge TokenVisit and map limit/cancel stops to accepted diagnostics."
+    },
+    {
+      "name": "transactional group mutation failure path",
+      "proof": "apply_group performs incremental accepted DraftToken finalizations; the focused caller fixture proves a late third-checkpoint cancellation after the first mutation, then rollback_draft restores logical shape/clip tables and source shape data. SceneBuilder retains Vec capacity after rollback."
+    },
+    {
+      "name": "seeded paint/clip fixture generation",
+      "proof": "Rust test support ports every branch and emitted content of tests/svg/shape/paint_clip_generator.py::random_paint_clip_document using explicit SplitMix64 seed 0x5041494e545f434c; 12 fixture outputs cover all index-driven gradient/units/fraction combinations and validate stable generation."
+    },
+    {
+      "name": "controlled primitive marker pair scan",
+      "proof": "Public primitive marker placement requires WorkControl and charges Expansion before every adjacent-edge pair; a two-pair work-limit fixture proves the stop and exact accepted cost."
+    }
+  ],
+  "accepted_contract_limitations": [
+    {
+      "api": "vexel_scene::PatternDescriptor / PatternRequest / Pattern",
+      "missing_fields": [
+        "tile origin x/y",
+        "user-to-pattern inverse / patternTransform mapping"
+      ],
+      "preserved_workaround": "Public owned PatternMapping and PatternCacheKey retain the source-derived mapping for the later paint adapter. The current shared descriptor cannot itself carry the complete legacy paint mapping; coordinator-owned shared repair or adapter handoff is required before renderer acceptance."
+    }
+  ],
+  "later_composition": "Actual DecodeOperations, KernelResources, FlatKernel and native provider adapters execute emitted source ranges and consume the owned PatternMapping; no placeholder provider or empty success is supplied."
+}

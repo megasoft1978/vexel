@@ -1,0 +1,11 @@
+{
+  "name": "ui-draw",
+  "wo": "WO-RUST-UI-DRAW-01",
+  "pid": 28669,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791969661.426108,
+  "exit_code": 0,
+  "duration_seconds": 86.36142015457153
+}

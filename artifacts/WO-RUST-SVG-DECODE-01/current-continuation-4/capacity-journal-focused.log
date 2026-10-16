@@ -1,0 +1,11 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running tests/capacity_journal.rs (target/aarch64-apple-darwin/debug/deps/capacity_journal-b438d7302985e910)
+
+running 2 tests
+test canonical_source_token_index_and_stack_capacity_are_retained_and_admitted ... ok
+test actual_clip_temporary_capacity_has_no_live_leases_after_parent_completion ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,320 @@
+{
+  "_doc": "Path prefix -> tests to run for quick checks. ctest = regex for ctest -R; python = unittest modules. First match of every prefix is unioned. 'always' runs on every quick check (cheap sanity).",
+  "always": {
+    "ctest": "cli-version|base-contract",
+    "python": []
+  },
+  "map": [
+    {
+      "prefix": "src/base/",
+      "ctest": ".",
+      "python": []
+    },
+    {
+      "prefix": "src/svg/animation/",
+      "ctest": "svg-animation|animation-authoring|viewer-timeline",
+      "python": [
+        "tests.anim.test_animation"
+      ]
+    },
+    {
+      "prefix": "src/svg/xml/",
+      "ctest": "xml-tokenizer|svg-index|svg-token|document",
+      "python": [
+        "tests.test_xml_tokenizer",
+        "tests.test_svg_index"
+      ]
+    },
+    {
+      "prefix": "src/svg/clip/",
+      "ctest": "shape-render|svg-nested-clip-definition|svg-animation",
+      "python": []
+    },
+    {
+      "prefix": "src/svg/css/",
+      "ctest": "css-cascade",
+      "python": []
+    },
+    {
+      "prefix": "src/svg/shape/ignored.c",
+      "ctest": "shape-ignored-constructs",
+      "python": []
+    },
+    {
+      "prefix": "src/svg/",
+      "ctest": "shape-render|svg-text-image|svg-marker|css-cascade|viewer-frame|viewer-quality",
+      "python": [
+        "tests.test_shape_render",
+        "tests.svg",
+        "tests.realworld"
+      ]
+    },
+    {
+      "prefix": "src/raster/",
+      "ctest": "shape-render|svg-text-image|svg-marker|viewer-frame|viewer-quality",
+      "python": [
+        "tests.test_shape_render",
+        "tests.svg",
+        "tests.realworld"
+      ]
+    },
+    {
+      "prefix": "src/geom/",
+      "ctest": "shape-render|svg-|css-|viewer-",
+      "python": [
+        "tests.test_shape_render"
+      ]
+    },
+    {
+      "prefix": "src/document/",
+      "ctest": "document|source-save|editor|mcp",
+      "python": [
+        "tests.test_document_model",
+        "tests.test_source_save"
+      ]
+    },
+    {
+      "prefix": "src/project/",
+      "ctest": "project-(bundle|file|recovery|load|save|timeline|timeline-integration|timeline-edit|timeline-move|timeline-session|animation-render)",
+      "python": []
+    },
+    {
+      "prefix": "tests/project/",
+      "ctest": "project-(bundle|file|recovery|load|save|timeline|timeline-integration|timeline-edit|timeline-move|timeline-session|animation-render)",
+      "python": []
+    },
+    {
+      "prefix": "src/mcp/",
+      "ctest": "mcp",
+      "python": []
+    },
+    {
+      "prefix": "src/ui/",
+      "ctest": "ui-|editor-|viewer-chrome|platform-text-ui",
+      "python": [
+        "tests.test_ui_chrome_golden"
+      ]
+    },
+    {
+      "prefix": "resources/en.lproj/",
+      "ctest": "editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
+      "prefix": "tests/test_w15_accessibility_localization.py",
+      "ctest": "editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
+      "prefix": "src/app/",
+      "ctest": "viewer-|editor-|ui-|mcp",
+      "python": [
+        "tests.test_viewer_frame",
+        "tests.test_viewer_navigation",
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
+      "prefix": "src/app/platform_command_policy.c",
+      "ctest": "platform-command-policy",
+      "python": []
+    },
+    {
+      "prefix": "src/app/welcome_model.",
+      "ctest": "welcome-model",
+      "python": []
+    },
+    {
+      "prefix": "src/app/feedback_diagnostics.",
+      "ctest": "feedback-diagnostics",
+      "python": []
+    },
+    {
+      "prefix": "src/platform/macos/platform_recovery_store.m",
+      "ctest": "platform-recovery-store",
+      "python": []
+    },
+    {
+      "prefix": "tests/platform/platform_recovery_store_test.m",
+      "ctest": "platform-recovery-store",
+      "python": []
+    },
+    {
+      "prefix": "src/platform/macos/platform_welcome.m",
+      "ctest": "native-shell-goldens",
+      "python": []
+    },
+    {
+      "prefix": "src/platform/macos/platform_settings.m",
+      "ctest": "native-shell-goldens",
+      "python": []
+    },
+    {
+      "prefix": "src/platform/macos/platform_feedback.m",
+      "ctest": "native-shell-goldens",
+      "python": []
+    },
+    {
+      "prefix": "src/platform/media",
+      "ctest": "platform-media",
+      "python": []
+    },
+    {
+      "prefix": "src/platform/platform_localization",
+      "ctest": "editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
+      "prefix": "src/platform/",
+      "ctest": "platform-|viewer-|index-replay|editor-accessibility-localization",
+      "python": [
+        "tests.test_w15_accessibility_localization"
+      ]
+    },
+    {
+      "prefix": "app/",
+      "ctest": "cli-|viewer-frame|render-soak",
+      "python": [
+        "tests.test_viewer_frame"
+      ]
+    },
+    {
+      "prefix": "app/Info.plist.in",
+      "ctest": "cli-version",
+      "python": [
+        "tests.e2e.test_packaging"
+      ]
+    },
+    {
+      "prefix": "app/Vexel-Icon",
+      "ctest": "cli-version",
+      "python": [
+        "tests.e2e.test_packaging"
+      ]
+    },
+    {
+      "prefix": "packaging/",
+      "ctest": "cli-version",
+      "python": [
+        "tests.e2e.test_packaging"
+      ]
+    },
+    {
+      "prefix": "scripts/",
+      "ctest": "cli-version",
+      "python": [
+        "tests.test_dev",
+        "tests.e2e"
+      ]
+    },
+    {
+      "prefix": "tests/editor/",
+      "ctest": "editor-",
+      "python": [
+        "tests.editor.test_smoke_supervisor"
+      ]
+    },
+    {
+      "prefix": "tests/edit/",
+      "ctest": "document-edit|document-edit-history|document-edit-snapshot",
+      "python": []
+    },
+    {
+      "prefix": "tests/app/",
+      "ctest": "viewer-timeline|viewer-timeline-native|viewer-history|viewer-home|viewer-sessions|viewer-recovery|project-save",
+      "python": []
+    },
+    {
+      "prefix": "tests/app/welcome_model_test.c",
+      "ctest": "welcome-model",
+      "python": []
+    },
+    {
+      "prefix": "tests/app/feedback_diagnostics_test.c",
+      "ctest": "feedback-diagnostics",
+      "python": []
+    },
+    {
+      "prefix": "tests/app/platform_command_policy_test.c",
+      "ctest": "platform-command-policy",
+      "python": []
+    },
+    {
+      "prefix": "tests/viewer/",
+      "ctest": "viewer-",
+      "python": [
+        "tests.viewer.test_native_smoke"
+      ]
+    },
+    {
+      "prefix": "tests/ui/",
+      "ctest": "ui-|editor-|viewer-chrome|viewer-home|platform-text-ui|viewer-timeline|native-shell-goldens",
+      "python": []
+    },
+    {
+      "prefix": "tests/svg/shape/clip_definition_scope_test.c",
+      "ctest": "svg-nested-clip-definition",
+      "python": []
+    },
+    {
+      "prefix": "tests/svg/css/test_css.c",
+      "ctest": "css-cascade",
+      "python": []
+    },
+    {
+      "prefix": "tests/svg/shape/stroke_dash_storage_test.c",
+      "ctest": "svg-stroke-dash-storage",
+      "python": []
+    },
+    {
+      "prefix": "tests/svg/",
+      "ctest": "shape-render|svg-",
+      "python": [
+        "tests.test_shape_render",
+        "tests.svg"
+      ]
+    },
+    {
+      "prefix": "tests/realworld/",
+      "ctest": "shape-render",
+      "python": [
+        "tests.realworld"
+      ]
+    },
+    {
+      "prefix": "tests/anim/",
+      "ctest": "anim",
+      "python": [
+        "tests.anim"
+      ]
+    },
+    {
+      "prefix": "tests/mcp/mcp_async_task_test.c",
+      "ctest": "mcp-async-task",
+      "python": []
+    },
+    {
+      "prefix": "tests/mcp/",
+      "ctest": "mcp",
+      "python": []
+    },
+    {
+      "prefix": "CMakeLists.txt",
+      "ctest": ".",
+      "python": []
+    },
+    {
+      "prefix": "dev",
+      "ctest": "cli-version",
+      "python": [
+        "tests.test_dev"
+      ]
+    }
+  ]
+}

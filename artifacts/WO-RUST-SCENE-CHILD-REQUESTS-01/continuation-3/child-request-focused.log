@@ -1,0 +1,15 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running tests/child_request_contracts.rs (.cache/build/rust/aarch64-apple-darwin/debug/deps/child_request_contracts-abeacc8c3908315c)
+
+running 8 tests
+test canceled_top_scope_remains_unconditionally_rollbackable ... ok
+test explicit_child_scope_preserves_parent_and_rolls_back_descendants ... ok
+test nested_tokens_reject_foreign_stale_replayed_and_out_of_order_use ... ok
+test nested_request_mints_real_mapped_static_pattern_capability ... ok
+test cancellation_abort_cleanup_succeeds_at_every_nested_scope_depth ... ok
+test populated_inner_rollback_preserves_parent_prefix_and_allocation_history ... ok
+test populated_three_level_inner_and_outer_success_survives_freeze ... ok
+test child_request_depth_is_bounded_and_cancellation_cleanup_is_unconditional ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

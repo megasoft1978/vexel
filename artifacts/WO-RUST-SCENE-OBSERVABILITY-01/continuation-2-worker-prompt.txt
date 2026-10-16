@@ -1,0 +1,12 @@
+Continue the existing isolated candidate for READY WO-RUST-SCENE-OBSERVABILITY-01 r1. The previous worker is terminal and independent Sol Medium review BLOCKed on three narrow repairs. Do not edit root/main. Preserve continuation-1 files/evidence; write new command logs and result under candidate artifacts/current-continuation-2/.
+Read the frozen order and Sol review at /Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-SCENE-OBSERVABILITY-01/sol-review.log. Allowed implementation paths remain only:
+- rust/crates/vexel-scene/src/accounting.rs
+- rust/crates/vexel-scene/src/source_context.rs
+- rust/crates/vexel-scene/tests/observability_contracts.rs (new)
+- rust/crates/vexel-scene/README.md
+- artifacts/WO-RUST-SCENE-OBSERVABILITY-01/**
+Repairs:
+1. Include physical growth of the retained lease-registry Vec in cumulative AllocationTag::None history. Use the exact actual capacity delta returned by reserve; separately preserve caller-payload history when caller tag is None; checked arithmetic and error priority before observable state mutation. Do not count the old capacity a second time, but historical new bytes must survive later registry reuse/release. Update docs.
+2. Add a real cumulative payload-history overflow atomicity test. The existing test only exhausts reserved/live bytes; use the accepted accounting.rs unit-test module to set the private fixed counter near usize::MAX, then verify checked failure, overflow reporting, unchanged live/total/tag history and no partial admission.
+3. Add cancellation during copying a nonempty replacement. Prove original buffer contents and capacity remain owned/unchanged and actual replacement allocation history remains cumulative even though the canceled replacement is released. Add exact capacity-based deltas where allocator reports are available.
+Also correct the result report to say seven original focused observability tests (plus any new cases) based on test.log; the first report's six was wrong. Verify exact seed hashes using source-seed.json even though Rust files are untracked relative to git HEAD; coordinator can audit separately. Do not run a full-workspace format scan; run rustfmt --check on the changed Rust source/test files. Run offline locked vexel-scene check and package tests in worker-local target/cache. Run the ready validator. Record all actual command results and candidly leave package-level format/git diff-check blocked by unchanged protected files. Never change protected STATE.md or any unrelated files. No nested workers, dependencies, or broader scope.

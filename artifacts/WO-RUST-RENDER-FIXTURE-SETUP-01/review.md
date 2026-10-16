@@ -1,0 +1,5 @@
+**ACCEPT — prerequisite metadata review only.**
+
+The seven manifests contain exactly the local development edges listed in `fixture-dependencies.json`; production dependency sections remain separate. The lock record pins the already accepted `vexel-svg-animation` and `vexel-svg-path` workspace crates at 0.1.0/MPL-2.0 and declares no external dependency changes. The saved pre-change lockfile and audit record support the internal-edge-only scope.
+
+Recorded verification reports passing locked offline workspace check, work-order validation, 1,466-entry ledger validation, and `git diff --check`. No need to rerun those checks for this read-only review. This accepts only the fixture dependency prerequisite; it does not accept fixtures, engines, application/UI behavior, or renderer correctness. Source scopes and PAINT input metadata remain outside this review.

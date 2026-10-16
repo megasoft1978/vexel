@@ -1,0 +1,4 @@
+WO-CORPUS-05 revision 1 scope freeze
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 1f153a43d0553938c945cd6f1d13ba1b133755e99df9239df23996399211f162
+Probes: exactly the manifested generated-inkscape_t1 and generated-inkscape_t2 files at 128x128. No corpus sweep or UI/E2E run.

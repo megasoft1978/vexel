@@ -1,0 +1,359 @@
+BINDING sharedApplication
+475:     unsafe impl NSObjectProtocol for NSApplication {}
+476: );
+477: 
+478: #[cfg(all(feature = "NSResponder", feature = "NSUserInterfaceValidation"))]
+479: extern_conformance!(
+480:     unsafe impl NSUserInterfaceValidations for NSApplication {}
+481: );
+482: 
+483: #[cfg(feature = "NSResponder")]
+484: impl NSApplication {
+485:     extern_methods!(
+486:         #[unsafe(method(sharedApplication))]
+487:         #[unsafe(method_family = none)]
+488:         pub fn sharedApplication(mtm: MainThreadMarker) -> Retained<NSApplication>;
+489: 
+490:         #[unsafe(method(delegate))]
+491:         #[unsafe(method_family = none)]
+492:         pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSApplicationDelegate>>>;
+493: 
+494:         /// Setter for [`delegate`][Self::delegate].
+495:         ///
+496:         /// This is a [weak property][objc2::topics::weak_property].
+497:         #[unsafe(method(setDelegate:))]
+498:         #[unsafe(method_family = none)]
+499:         pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSApplicationDelegate>>);
+500: 
+501:         #[unsafe(method(hide:))]
+502:         #[unsafe(method_family = none)]
+
+SDK sharedApplication
+196: APPKIT_EXTERN __kindof NSApplication * _Null_unspecified NSApp NS_SWIFT_UI_ACTOR;
+197: 
+198: @property (class, readonly, strong) __kindof NSApplication *sharedApplication;
+199: @property (nullable, weak) id<NSApplicationDelegate> delegate;
+200: 
+201: - (void)hide:(nullable id)sender;
+202: - (void)unhide:(nullable id)sender;
+203: - (void)unhideWithoutActivation;
+204: - (nullable NSWindow *)windowWithWindowNumber:(NSInteger)windowNum;
+205: 
+
+BINDING setActivationPolicy
+741:         #[unsafe(method(activationPolicy))]
+742:         #[unsafe(method_family = none)]
+743:         pub fn activationPolicy(&self) -> NSApplicationActivationPolicy;
+744: 
+745:         #[cfg(feature = "NSRunningApplication")]
+746:         /// Attempts to modify the application's activation policy.  In OS X 10.9, any policy may be set; prior to 10.9, the activation policy may be changed to
+747:         /// `NSApplicationActivationPolicyProhibited`or
+748:         /// `NSApplicationActivationPolicyRegular,`but may not be changed to
+749:         /// `NSApplicationActivationPolicyAccessory.`This returns
+750:         /// `YES`if setting the activation policy is successful, and
+751:         /// `NO`if not.
+752:         #[unsafe(method(setActivationPolicy:))]
+753:         #[unsafe(method_family = none)]
+754:         pub fn setActivationPolicy(&self, activation_policy: NSApplicationActivationPolicy)
+755:             -> bool;
+756: 
+757:         #[cfg(feature = "NSDockTile")]
+758:         #[unsafe(method(dockTile))]
+759:         #[unsafe(method_family = none)]
+760:         pub fn dockTile(&self) -> Retained<NSDockTile>;
+761: 
+762:         #[unsafe(method(reportException:))]
+763:         #[unsafe(method_family = none)]
+764:         pub fn reportException(&self, exception: &NSException);
+765: 
+766:         /// # Safety
+767:         ///
+768:         /// - `selector` must be a valid selector.
+
+SDK setActivationPolicy
+304:  Attempts to modify the application's activation policy.  In OS X 10.9, any policy may be set; prior to 10.9, the activation policy may be changed to @c NSApplicationActivationPolicyProhibited or @c NSApplicationActivationPolicyRegular, but may not be changed to @c NSApplicationActivationPolicyAccessory.  This returns @c YES if setting the activation policy is successful, and @c NO if not.
+305:  */
+306: - (BOOL)setActivationPolicy:(NSApplicationActivationPolicy)activationPolicy API_AVAILABLE(macos(10.6));
+307: 
+308: 
+309: @property (readonly, strong) NSDockTile *dockTile API_AVAILABLE(macos(10.5));
+310: 
+311: - (void)reportException:(NSException *)exception;
+312: + (void)detachDrawingThread:(SEL)selector toTarget:(id)target withObject:(nullable id)argument;
+313: 
+
+BINDING activateIgnoringOtherApps
+542:         #[unsafe(method(applicationShouldSuppressHighDynamicRangeContent))]
+543:         #[unsafe(method_family = none)]
+544:         pub fn applicationShouldSuppressHighDynamicRangeContent(&self) -> bool;
+545: 
+546:         #[unsafe(method(deactivate))]
+547:         #[unsafe(method_family = none)]
+548:         pub fn deactivate(&self);
+549: 
+550:         /// Makes the receiver the active app.
+551:         /// - Parameter ignoreOtherApps: If `NO`, the app is activated only if no other app is currently active. If `YES`, the app activates regardless.
+552:         #[deprecated = "This method will be deprecated in a future release. Use NSApp.activate instead."]
+553:         #[unsafe(method(activateIgnoringOtherApps:))]
+554:         #[unsafe(method_family = none)]
+555:         pub fn activateIgnoringOtherApps(&self, ignore_other_apps: bool);
+556: 
+557:         /// Makes the receiver the active app, if possible.
+558:         ///
+559:         /// You shouldn’t assume the app will be active immediately
+560:         /// after sending this message. The framework also does not
+561:         /// guarantee that the app will be activated at all.
+562:         ///
+563:         /// For cooperative activation, the other application should
+564:         /// call `-yieldActivationToApplication:` or equivalent prior
+565:         /// to the target application invoking `-activate`.
+566:         ///
+567:         /// Invoking `-activate` on an already-active application
+568:         /// cancels any pending activation yields by the receiver.
+569:         #[unsafe(method(activate))]
+
+SDK activateIgnoringOtherApps
+220: /// Makes the receiver the active app.
+221: /// - Parameter ignoreOtherApps: If `NO`, the app is activated only if no other app is currently active. If `YES`, the app activates regardless.
+222: - (void)activateIgnoringOtherApps:(BOOL)ignoreOtherApps API_DEPRECATED("This method will be deprecated in a future release. Use NSApp.activate instead.", macos(10.0, API_TO_BE_DEPRECATED));
+223: 
+224: /// Makes the receiver the active app, if possible.
+225: ///
+226: /// You shouldn’t assume the app will be active immediately
+227: /// after sending this message. The framework also does not
+228: /// guarantee that the app will be activated at all.
+229: ///
+
+BINDING finishLaunching
+596:             bundle_identifier: &NSString,
+597:         );
+598: 
+599:         #[unsafe(method(hideOtherApplications:))]
+600:         #[unsafe(method_family = none)]
+601:         pub fn hideOtherApplications(&self, sender: Option<&AnyObject>);
+602: 
+603:         #[unsafe(method(unhideAllApplications:))]
+604:         #[unsafe(method_family = none)]
+605:         pub fn unhideAllApplications(&self, sender: Option<&AnyObject>);
+606: 
+607:         #[unsafe(method(finishLaunching))]
+608:         #[unsafe(method_family = none)]
+609:         pub fn finishLaunching(&self);
+610: 
+611:         #[unsafe(method(run))]
+612:         #[unsafe(method_family = none)]
+613:         pub fn run(&self);
+614: 
+615:         #[cfg(feature = "NSWindow")]
+616:         #[unsafe(method(runModalForWindow:))]
+617:         #[unsafe(method_family = none)]
+618:         pub fn runModalForWindow(&self, window: &NSWindow) -> NSModalResponse;
+619: 
+620:         #[unsafe(method(stop:))]
+621:         #[unsafe(method_family = none)]
+622:         pub fn stop(&self, sender: Option<&AnyObject>);
+623: 
+
+SDK finishLaunching
+259: - (void)unhideAllApplications:(nullable id)sender;
+260: 
+261: - (void)finishLaunching;
+262: - (void)run;
+263: - (NSModalResponse)runModalForWindow:(NSWindow *)window;
+264: - (void)stop:(nullable id)sender;
+265: - (void)stopModal;
+266: - (void)stopModalWithCode:(NSModalResponse)returnCode;
+267: - (void)abortModal;
+268: @property (nullable, readonly, strong) NSWindow *modalWindow;
+
+SDK finishLaunching
+507: 
+508: /**
+509:  This method will be called once during application launch at `-[NSApplication finishLaunching]`.
+510:  
+511:  @return @c NO if the receiving delegate object wishes to opt-out of system-wide keyboard shortcut localization for all application-supplied menus. Return @c YES by default for apps linked against 12.0 and later SDK.
+512: */
+513: - (BOOL)applicationShouldAutomaticallyLocalizeKeyEquivalents:(NSApplication *)application NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(12.0));
+514: 
+515: #pragma mark - Notifications
+516: 
+
+BINDING nextEventMatchingMask_untilDate_inMode_dequeue
+895:         #[cfg(feature = "NSEvent")]
+896:         #[unsafe(method(postEvent:atStart:))]
+897:         #[unsafe(method_family = none)]
+898:         pub fn postEvent_atStart(&self, event: &NSEvent, at_start: bool);
+899: 
+900:         #[cfg(feature = "NSEvent")]
+901:         #[unsafe(method(currentEvent))]
+902:         #[unsafe(method_family = none)]
+903:         pub fn currentEvent(&self) -> Option<Retained<NSEvent>>;
+904: 
+905:         #[cfg(feature = "NSEvent")]
+906:         #[unsafe(method(nextEventMatchingMask:untilDate:inMode:dequeue:))]
+907:         #[unsafe(method_family = none)]
+908:         pub fn nextEventMatchingMask_untilDate_inMode_dequeue(
+909:             &self,
+910:             mask: NSEventMask,
+911:             expiration: Option<&NSDate>,
+912:             mode: &NSRunLoopMode,
+913:             deq_flag: bool,
+914:         ) -> Option<Retained<NSEvent>>;
+915: 
+916:         #[cfg(feature = "NSEvent")]
+917:         #[unsafe(method(discardEventsMatchingMask:beforeEvent:))]
+918:         #[unsafe(method_family = none)]
+919:         pub fn discardEventsMatchingMask_beforeEvent(
+920:             &self,
+921:             mask: NSEventMask,
+922:             last_event: Option<&NSEvent>,
+
+SDK nextEventMatchingMask_untilDate_inMode_dequeue
+357: - (void)postEvent:(NSEvent *)event atStart:(BOOL)atStart;
+358: @property (nullable, readonly, strong) NSEvent *currentEvent;
+359: - (nullable NSEvent *)nextEventMatchingMask:(NSEventMask)mask untilDate:(nullable NSDate *)expiration inMode:(NSRunLoopMode)mode dequeue:(BOOL)deqFlag;
+360: - (void)discardEventsMatchingMask:(NSEventMask)mask beforeEvent:(nullable NSEvent *)lastEvent;
+361: @end
+362: 
+363: @interface NSApplication(NSResponder)
+364: - (BOOL)sendAction:(SEL)action to:(nullable id)target from:(nullable id)sender;
+365: - (nullable id)targetForAction:(SEL)action;
+366: - (nullable id)targetForAction:(SEL)action to:(nullable id)target from:(nullable id)sender;
+
+BINDING sendEvent
+880: 
+881: #[cfg(all(feature = "NSAppearance", feature = "NSResponder"))]
+882: extern_conformance!(
+883:     unsafe impl NSAppearanceCustomization for NSApplication {}
+884: );
+885: 
+886: /// NSEvent.
+887: #[cfg(feature = "NSResponder")]
+888: impl NSApplication {
+889:     extern_methods!(
+890:         #[cfg(feature = "NSEvent")]
+891:         #[unsafe(method(sendEvent:))]
+892:         #[unsafe(method_family = none)]
+893:         pub fn sendEvent(&self, event: &NSEvent);
+894: 
+895:         #[cfg(feature = "NSEvent")]
+896:         #[unsafe(method(postEvent:atStart:))]
+897:         #[unsafe(method_family = none)]
+898:         pub fn postEvent_atStart(&self, event: &NSEvent, at_start: bool);
+899: 
+900:         #[cfg(feature = "NSEvent")]
+901:         #[unsafe(method(currentEvent))]
+902:         #[unsafe(method_family = none)]
+903:         pub fn currentEvent(&self) -> Option<Retained<NSEvent>>;
+904: 
+905:         #[cfg(feature = "NSEvent")]
+906:         #[unsafe(method(nextEventMatchingMask:untilDate:inMode:dequeue:))]
+907:         #[unsafe(method_family = none)]
+
+SDK sendEvent
+354: 
+355: @interface NSApplication(NSEvent)
+356: - (void)sendEvent:(NSEvent *)event;
+357: - (void)postEvent:(NSEvent *)event atStart:(BOOL)atStart;
+358: @property (nullable, readonly, strong) NSEvent *currentEvent;
+359: - (nullable NSEvent *)nextEventMatchingMask:(NSEventMask)mask untilDate:(nullable NSDate *)expiration inMode:(NSRunLoopMode)mode dequeue:(BOOL)deqFlag;
+360: - (void)discardEventsMatchingMask:(NSEventMask)mask beforeEvent:(nullable NSEvent *)lastEvent;
+361: @end
+362: 
+363: @interface NSApplication(NSResponder)
+
+BINDING stop
+609:         pub fn finishLaunching(&self);
+610: 
+611:         #[unsafe(method(run))]
+612:         #[unsafe(method_family = none)]
+613:         pub fn run(&self);
+614: 
+615:         #[cfg(feature = "NSWindow")]
+616:         #[unsafe(method(runModalForWindow:))]
+617:         #[unsafe(method_family = none)]
+618:         pub fn runModalForWindow(&self, window: &NSWindow) -> NSModalResponse;
+619: 
+620:         #[unsafe(method(stop:))]
+621:         #[unsafe(method_family = none)]
+622:         pub fn stop(&self, sender: Option<&AnyObject>);
+623: 
+624:         #[unsafe(method(stopModal))]
+625:         #[unsafe(method_family = none)]
+626:         pub fn stopModal(&self);
+627: 
+628:         #[unsafe(method(stopModalWithCode:))]
+629:         #[unsafe(method_family = none)]
+630:         pub fn stopModalWithCode(&self, return_code: NSModalResponse);
+631: 
+632:         #[unsafe(method(abortModal))]
+633:         #[unsafe(method_family = none)]
+634:         pub fn abortModal(&self);
+635: 
+636:         #[cfg(feature = "NSWindow")]
+
+SDK stop
+262: - (void)run;
+263: - (NSModalResponse)runModalForWindow:(NSWindow *)window;
+264: - (void)stop:(nullable id)sender;
+265: - (void)stopModal;
+266: - (void)stopModalWithCode:(NSModalResponse)returnCode;
+267: - (void)abortModal;
+268: @property (nullable, readonly, strong) NSWindow *modalWindow;
+269: - (NSModalSession)beginModalSessionForWindow:(NSWindow *)window NS_RETURNS_INNER_POINTER;
+270: - (NSModalResponse)runModalSession:(NSModalSession)session;
+271: - (void)endModalSession:(NSModalSession)session;
+
+SDK stop
+263: - (NSModalResponse)runModalForWindow:(NSWindow *)window;
+264: - (void)stop:(nullable id)sender;
+265: - (void)stopModal;
+266: - (void)stopModalWithCode:(NSModalResponse)returnCode;
+267: - (void)abortModal;
+268: @property (nullable, readonly, strong) NSWindow *modalWindow;
+269: - (NSModalSession)beginModalSessionForWindow:(NSWindow *)window NS_RETURNS_INNER_POINTER;
+270: - (NSModalResponse)runModalSession:(NSModalSession)session;
+271: - (void)endModalSession:(NSModalSession)session;
+272: - (void)terminate:(nullable id)sender;
+
+SDK stop
+264: - (void)stop:(nullable id)sender;
+265: - (void)stopModal;
+266: - (void)stopModalWithCode:(NSModalResponse)returnCode;
+267: - (void)abortModal;
+268: @property (nullable, readonly, strong) NSWindow *modalWindow;
+269: - (NSModalSession)beginModalSessionForWindow:(NSWindow *)window NS_RETURNS_INNER_POINTER;
+270: - (NSModalResponse)runModalSession:(NSModalSession)session;
+271: - (void)endModalSession:(NSModalSession)session;
+272: - (void)terminate:(nullable id)sender;
+273: 
+
+BINDING setDelegate
+486:         #[unsafe(method(sharedApplication))]
+487:         #[unsafe(method_family = none)]
+488:         pub fn sharedApplication(mtm: MainThreadMarker) -> Retained<NSApplication>;
+489: 
+490:         #[unsafe(method(delegate))]
+491:         #[unsafe(method_family = none)]
+492:         pub fn delegate(&self) -> Option<Retained<ProtocolObject<dyn NSApplicationDelegate>>>;
+493: 
+494:         /// Setter for [`delegate`][Self::delegate].
+495:         ///
+496:         /// This is a [weak property][objc2::topics::weak_property].
+497:         #[unsafe(method(setDelegate:))]
+498:         #[unsafe(method_family = none)]
+499:         pub fn setDelegate(&self, delegate: Option<&ProtocolObject<dyn NSApplicationDelegate>>);
+500: 
+501:         #[unsafe(method(hide:))]
+502:         #[unsafe(method_family = none)]
+503:         pub fn hide(&self, sender: Option<&AnyObject>);
+504: 
+505:         #[unsafe(method(unhide:))]
+506:         #[unsafe(method_family = none)]
+507:         pub fn unhide(&self, sender: Option<&AnyObject>);
+508: 
+509:         #[unsafe(method(unhideWithoutActivation))]
+510:         #[unsafe(method_family = none)]
+511:         pub fn unhideWithoutActivation(&self);
+512: 
+513:         #[cfg(feature = "NSWindow")]

@@ -1,0 +1,5 @@
+**ACCEPT.** The updated checksum-corruption regression covers both a missing destination and a seeded existing file. It asserts the exact `InvalidArgument`/`Corrupt` errors, zero bytes written, unpublished and unsynced state, and default native error fields. It verifies the missing path remains absent and the seeded file’s bytes and directory entry count remain unchanged.
+
+The OOM mapping test still checks `OutOfMemory` with `bundle_error` retained, default publication state, and unchanged `Limit`/other error mappings. Production `save_encoded` invokes decode and the mapping before filesystem access. The evidence lists all eight tests, preserving the original six and two added regressions.
+
+I inspected the latest code and evidence without running tests or builds. This is scoped work-order acceptance, not full-app certification.

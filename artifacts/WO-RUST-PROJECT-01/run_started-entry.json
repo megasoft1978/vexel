@@ -1,0 +1,22 @@
+{
+  "ts": "2026-10-14T05:48:28Z",
+  "wo_id": "WO-RUST-PROJECT-01",
+  "event": "run_started",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-PROJECT-01-run_started",
+  "session_id": "rust-foundation-parallel-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "running",
+  "artifacts": [
+    "work/WO-RUST-PROJECT-01.md"
+  ],
+  "note": "Disjoint Rust foundation port under owner full-port direction; isolated current-source worktree, lean LunaCLI, std only, preserved legacy fixtures/source. Root integrates after review+focused checks."
+}

@@ -1,0 +1,54 @@
+{
+  "work_order": "WO-RUST-NATIVE-SYSTEM-01",
+  "scope": "macOS 13+ Apple Silicon native entropy and peer-identity wrappers",
+  "symbols": [
+    {
+      "source_symbol": "SecRandomCopyBytes(NULL, count, bytes)",
+      "rust_symbol": "vexel_platform_macos::fill_random(&mut [u8])",
+      "behavior": "Uses Apple's documented NULL default provider; accepts 0..=256 bytes; empty input is a no-op; nonzero OSStatus clears the complete output before returning the status.",
+      "tests": [
+        "empty_random_request_succeeds",
+        "small_random_request_fills_the_buffer",
+        "maximum_random_request_is_accepted",
+        "random_request_over_the_limit_is_rejected_without_changing_output",
+        "tests::failed_random_status_clears_the_entire_output",
+        "tests::successful_random_status_preserves_native_output"
+      ]
+    },
+    {
+      "source_symbol": "getuid()",
+      "rust_symbol": "vexel_platform_macos::current_uid() -> u32",
+      "behavior": "Returns Darwin real user ID using the SDK uid_t ABI (u32).",
+      "tests": ["connected_unix_socket_reports_the_current_user"]
+    },
+    {
+      "source_symbol": "getpeereid(int, uid_t *, gid_t *)",
+      "rust_symbol": "vexel_platform_macos::peer_credentials(BorrowedFd<'_>) -> Result<(u32, u32), SystemError>",
+      "behavior": "Borrows the descriptor only during the synchronous call; returns Darwin uid_t/gid_t as u32; captures thread-local errno immediately on failure.",
+      "tests": [
+        "connected_unix_socket_reports_the_current_user",
+        "non_socket_descriptor_returns_native_error_classification"
+      ]
+    }
+  ],
+  "abi_evidence": {
+    "sdk": "Local MacOSX.sdk: SecRandom.h, unistd.h, sys/_types.h, sys/errno.h",
+    "facts": [
+      "SecRandomRef is an opaque pointer and NULL selects the documented default.",
+      "SecRandomCopyBytes takes size_t and void * and returns int; zero is success.",
+      "Darwin uid_t and gid_t alias unsigned 32-bit types.",
+      "getpeereid takes int, uid_t *, gid_t *; __error returns the calling thread's errno slot."
+    ]
+  },
+  "api_adaptations": [
+    "peer_credentials accepts BorrowedFd to make descriptor lifetime explicit and returns the uid/gid pair as a tuple.",
+    "SystemError distinguishes random OSStatus, captured peer-credential errno, and an over-limit request with requested/maximum sizes.",
+    "Empty entropy requests return success without calling the native API."
+  ],
+  "security_boundary": "Only src/sys.rs permits unsafe code. Native calls are synchronous, retain no pointers/descriptors, and do not dispatch work to another thread. No unsupported-OS implementation is included.",
+  "not_claimed": [
+    "AppKit, windowing, graphics, file dialogs, or other platform services",
+    "Cryptographic certification",
+    "Whole-application or complete platform-port parity"
+  ]
+}

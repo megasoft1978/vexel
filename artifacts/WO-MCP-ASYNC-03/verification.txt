@@ -1,0 +1,77 @@
+WO-MCP-ASYNC-03 revision 1 — BLOCKED at pre-edit scope audit
+
+Preflight command: python3 scripts/wo_validate.py WO-MCP-ASYNC-03 --ready
+Exit: 0
+Output: valid WO-MCP-ASYNC-03 revision 1 sha256 9a38e129242fccf4f232f0eaaeae2911eb8f84635d3fc42589dffd43d9f04253
+Preflight command: git rev-parse HEAD
+Exit: 0
+Output: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Bookkeeping command: python3 scripts/ledger.py append ledger.jsonl --entry-file artifacts/WO-MCP-ASYNC-03/blocked-entry.json
+Exit: 0
+Output: entry appended
+
+Scope conflict: required product inventory at
+ docs/product/vexel-goal-and-delivery-plan.md is excluded from frozen allowlist.
+See scope-audit.txt. Frozen work order remains untouched.
+Existing-file SHA-256 baseline: run-start-manifest.json (2655 files + Git index).
+Four original bookkeeping/doc files retained in baseline/; task-delta.diff records
+only this run's changes to those files.
+
+AC-1 focused build: NOT RUN — stopped before product edits at scope gate.
+AC-2 focused CTests: NOT RUN — stopped before product edits at scope gate.
+AC-3 through AC-6: NOT IMPLEMENTED/NOT VERIFIED by this run.
+No broad UI/E2E, full CTest/Python suites, corpus, fuzz, performance,
+sanitizer matrix, release gates, network fetches, staging, or commits.
+No live Codex/Claude interoperability claim.
+
+Audit verification commands/results follow:
+
+$ python3 scripts/wo_validate.py WO-MCP-ASYNC-03 --ready
+Exit: 0
+valid WO-MCP-ASYNC-03 revision 1 sha256 9a38e129242fccf4f232f0eaaeae2911eb8f84635d3fc42589dffd43d9f04253
+
+$ python3 -c 'import json; json.load(open('"'"'tests/test_map.json'"'"')); print('"'"'test-map JSON valid'"'"')'
+Exit: 0
+test-map JSON valid
+
+$ python3 scripts/ledger.py validate ledger.jsonl
+Exit: 0
+valid ledger: 977 entries
+
+$ python3 artifacts/WO-MCP-ASYNC-03/verify-scope.py
+Exit: 1
+Traceback (most recent call last):
+  File "/Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-MCP-ASYNC-03/verify-scope.py", line 25, in <module>
+    assert changed_path_allowed(path, allowed, []), f'Outside allowlist: {path}'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Outside allowlist: artifacts/WO-MCP-ASYNC-03/baseline/docs_mcp.md
+
+Audit-script repair: Python PurePath.match does not treat the frozen artifacts/** pattern as recursively matching nested baseline files. Corrected the artifact-only audit to use prefix matching for /**, exact matching for named paths. Prior exit 1 was a script matching defect, not an outside-scope edit.
+
+$ python3 artifacts/WO-MCP-ASYNC-03/verify-scope.py
+Exit: 0
+PASS: run delta is inside frozen allowlist; no product C/test/build changes.
+PASS: all unrelated captured files unchanged; existing bookkeeping content preserved as additions only.
+PASS: Git index unchanged; task-store source/header/test hashes unchanged.
+Changed paths:
+LEDGER.md
+STATE.md
+artifacts/WO-MCP-ASYNC-03/baseline/LEDGER.md
+artifacts/WO-MCP-ASYNC-03/baseline/STATE.md
+artifacts/WO-MCP-ASYNC-03/baseline/docs_mcp.md
+artifacts/WO-MCP-ASYNC-03/baseline/ledger.jsonl
+artifacts/WO-MCP-ASYNC-03/blocked-entry.json
+artifacts/WO-MCP-ASYNC-03/run-start-manifest.json
+artifacts/WO-MCP-ASYNC-03/scope-audit.txt
+artifacts/WO-MCP-ASYNC-03/verification.txt
+artifacts/WO-MCP-ASYNC-03/verify-scope.py
+docs/mcp.md
+ledger.jsonl
+Changed C source count: 0; no new line-limit violation.
+Preserved src/mcp/mcp_broker_render.c: 735 lines
+Preserved src/mcp/mcp_task_store.c: 280 lines
+Preserved tests/mcp/mcp_async_task_test.c: 84 lines
+
+$ git diff --check
+Exit: 0
+(no output)

@@ -1,0 +1,13 @@
+# WO-ANIM-PROJECT-12 independent review
+
+Reviewer: `codex exec --model gpt-6.1-sol`, read-only, medium reasoning effort.
+Scope: frozen onion-skin implementation and focused test paths only.
+
+Final result: **No blocking/high findings.** The reviewer confirmed the three earlier findings were fixed:
+
+- A previous neighbor at tick zero is included.
+- The accessibility value buffer accommodates the onion preview limit status.
+- The edit/session API accepts validated opacity and formats it using the C locale.
+- The aggregate pixel budget is charged before each neighboring-frame render attempt, including attempts that fail.
+
+No files were edited by the reviewer.

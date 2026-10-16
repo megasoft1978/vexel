@@ -1,0 +1,4 @@
+WO-CORPUS-08 revision 1
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: d59ca93c79c54ae7333d2bd70f6533fe8c560ed4c3a366872d83c7f55a55bc87
+Scratch-only T1 raster failure instrumentation; shared source is protected.

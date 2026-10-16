@@ -1,0 +1,3 @@
+PASS exact overlay retained, only owned Rust src/tests changed/new, root relevant files were exact baseline beforecopy; all legacy/shared metadata untouched, HEAD/index preserved. Parity map valid, Rust files<800. Initial reviewer rejects recorded; narrow repair+High recheck accept.
+Changed ['rust/crates/vexel-xml/src/lib.rs']
+New ['rust/crates/vexel-xml/src/tests.rs']

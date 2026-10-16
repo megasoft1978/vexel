@@ -1,0 +1,12 @@
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running tests/static_pattern_contracts.rs (build/rust/aarch64-apple-darwin/debug/deps/static_pattern_contracts-33f2f8bc0be45140)
+
+running 4 tests
+test ordered_minmax_guard_precedes_planner_and_negative_mapping_publishes ... ok
+test mint_render_and_completion_enforce_scope_cancel_source_job_replay_and_rollback ... ok
+test nested_depth_first_tiles_mask_closure_and_complete_static_effect_metadata ... ok
+test real_child_failure_wins_and_success_publishes_before_actual_late_animation_parse ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

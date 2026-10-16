@@ -1,0 +1,5 @@
+WO-SVG-MEM-02 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: e52465c6f71c930eb77d18653ca5e5fd8cb3de8a8c794ee177d112a2ffee8804
+Allowlist and protected paths are frozen in work/WO-SVG-MEM-02.md.
+Scope: sparse non-default SVG stroke-paint storage, preserving current paint resolution and rendering behavior; no shape-limit change, broad UI/E2E, corpus, fuzz, or performance suite.

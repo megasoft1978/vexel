@@ -1,0 +1,13 @@
+{
+  "name": "animation-control",
+  "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+  "session": "01a13ad5-9ed2-7bd0-9b84-e1b9b281eacd",
+  "pid": 63913,
+  "mode": "repair",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791990097.2045922,
+  "exit_code": 0,
+  "duration_seconds": 703.3031077384949
+}

@@ -1,0 +1,3 @@
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1813 entries (before integration transition appends)

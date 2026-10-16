@@ -1,0 +1,5 @@
+2026-10-14T22:05:29.191826Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/rust/crates/vexel-scene-query/tests/allocation.rs:
+        &mut tracking,
+        &mut job,
+        AllocationTag::Output,
+        500,

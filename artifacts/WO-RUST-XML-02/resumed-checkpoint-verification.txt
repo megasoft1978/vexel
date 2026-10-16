@@ -1,0 +1,8 @@
+python3 scripts/ledger.py validate ledger.jsonl
+EXIT 0
+valid ledger: 1126 entries
+
+git diff --check
+EXIT 0
+
+All603legacy source hashes and index retained; accepted scope counts match ledgers/main integrated logs. Goal active confirmed. Broad UI/E2E not run.

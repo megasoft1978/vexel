@@ -1,0 +1,5 @@
+WO-PROJECT-07 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 018e6841c819cd0d8666fbe35a68f00887a2caa31bcc57e6fb110678f11a1a52
+Allowlist and protected paths are frozen in work/WO-PROJECT-07.md.
+Scope: periodic background recovery capture for dirty native projects; no restore UI.

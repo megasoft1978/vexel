@@ -1,0 +1,18 @@
+Integrated cmake configure and named build mcp_protocol_async_test mcp_protocol_test vexel-mcp exited0; focused CTests mcp-protocol0.26s and mcp-protocol-async0.18s pass2/2,total0.45s. Coordinator tool output2026-10-14. Existing protocol test SHA exactly baseline.
+$ python3 scripts/wo_validate.py WO-MCP-TASK-PROTOCOL-01 --ready
+valid WO-MCP-TASK-PROTOCOL-01 revision 2 sha256 452ceca8cf30f0af4d918ca26a452375823c7aa7a4884b20d4f593f79557bc73
+
+exit 0
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 1028 entries
+
+exit 0
+$ git diff --check
+
+exit 0
+test-map JSON valid; serialized registration union preserves job/snapshot.
+src/mcp/mcp_protocol.c: 605lines
+src/mcp/mcp_protocol.h: 46lines
+src/mcp/mcp_protocol_async.c: 410lines
+src/mcp/mcp_protocol_async.h: 61lines
+tests/mcp/mcp_protocol_async_test.c: 479lines

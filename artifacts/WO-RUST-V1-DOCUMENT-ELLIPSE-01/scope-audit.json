@@ -1,0 +1,31 @@
+{
+  "work_order": "WO-RUST-V1-DOCUMENT-ELLIPSE-01",
+  "candidate": ".cache/WO-RUST-V1-DOCUMENT-ELLIPSE-01/worker",
+  "changed_paths": [
+    "rust/crates/vexel-v1-document/src/lib.rs",
+    "rust/crates/vexel-v1-document/src/tests.rs"
+  ],
+  "candidate_matches_main": {
+    "rust/crates/vexel-v1-document/src/lib.rs": true,
+    "rust/crates/vexel-v1-document/src/tests.rs": true
+  },
+  "root_hashes": {
+    "rust/crates/vexel-v1-document/src/lib.rs": "29b7f94e02db808a431015bf48dcb029814c590e3fd6539a0091cdf0d56adecb",
+    "rust/crates/vexel-v1-document/src/tests.rs": "5569631528579f35e307c39731071f3cdd432efb290b5b7c9190f08f658074b6"
+  },
+  "line_counts": {
+    "rust/crates/vexel-v1-document/src/lib.rs": 288,
+    "rust/crates/vexel-v1-document/src/tests.rs": 259
+  },
+  "frozen_dependency_inputs_match": true,
+  "review": "PASS; both X and Y subnormal radius underflow covered after re-review",
+  "protected_scope": "No other root source, manifest, fixture, HEAD, or index changes were made for this order.",
+  "verification": {
+    "check": 0,
+    "test": 0,
+    "fmt": 0,
+    "work_order_validator": 0,
+    "ledger_validator_before_acceptance_append": 0,
+    "diff_check": 0
+  }
+}

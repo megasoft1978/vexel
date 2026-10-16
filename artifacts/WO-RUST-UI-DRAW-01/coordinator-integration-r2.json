@@ -1,0 +1,48 @@
+{
+  "work_order": "WO-RUST-UI-DRAW-01 revision 1 follow-up integration",
+  "status": "integrated repairs; real root workspace check and focused package verification pass with repository-local Cargo cache",
+  "production_files": {
+    "icons.rs": {
+      "main_sha256": "55e8ab5471e25d890ba0795874c178c152d2825b5503365ca7506da7085a877c",
+      "reviewed_candidate_sha256": "55e8ab5471e25d890ba0795874c178c152d2825b5503365ca7506da7085a877c",
+      "exact_match": true
+    },
+    "paint.rs": {
+      "main_sha256": "9209c62495328d1d697990fac20238ef7e381822e5cb0b02a375e5d42eb2d546",
+      "reviewed_candidate_sha256": "9209c62495328d1d697990fac20238ef7e381822e5cb0b02a375e5d42eb2d546",
+      "exact_match": true
+    },
+    "tree.rs": {
+      "main_sha256": "7f26c790d41e6b49ad09e6b783689e3539120b3a3026166a7cd488452f60a2a8",
+      "reviewed_candidate_sha256": "7f26c790d41e6b49ad09e6b783689e3539120b3a3026166a7cd488452f60a2a8",
+      "exact_match": true
+    },
+    "widget_add.rs": {
+      "main_sha256": "b94d8d1f0d822deba627e4c28831e056632d1a9547e6e3d9068ae135a63e859e",
+      "reviewed_candidate_sha256": "b94d8d1f0d822deba627e4c28831e056632d1a9547e6e3d9068ae135a63e859e",
+      "exact_match": true
+    }
+  },
+  "tests": {
+    "main_sha256": "1051960d3843eaa6b20d82fb8e27515962cd165839564202389bed05897e1a88",
+    "candidate_sha256": "d4f8276655461b834e6108724d6b876bfed053dc72abebee85a24f6d9ac6f810",
+    "additional_restored_test_source": "accepted WO-RUST-UI-WIDGETS-01 tests from rust4-widgets; only the five absent regression functions appended; main frozen icon hash assertions preserved",
+    "unit_tests_passed": 18,
+    "unit_tests_failed": 0,
+    "doc_tests": 0
+  },
+  "verification": {
+    "root_workspace_check": "CARGO_HOME=\"$PWD/.cache/cargo\" cargo +stable check -p vexel-ui --locked --offline \u2014 PASS",
+    "root_workspace_test": "CARGO_HOME=\"$PWD/.cache/cargo\" cargo +stable test -p vexel-ui --locked --offline \u2014 PASS, 18 unit tests, 0 failures",
+    "isolated_workspace": "`.cache/ui-main-verify` containing byte-identical copies of current main vexel-base, vexel-geometry, vexel-raster, and vexel-ui package trees; generated lock offline; no external dependencies",
+    "isolated_check": "cargo +stable check -p vexel-ui --locked --offline --manifest-path .cache/ui-main-verify/Cargo.toml \u2014 PASS",
+    "isolated_test": "cargo +stable test -p vexel-ui --locked --offline --manifest-path .cache/ui-main-verify/Cargo.toml \u2014 PASS, 18 unit tests, 0 failures",
+    "work_order_validator": "python3 scripts/wo_validate.py WO-RUST-UI-DRAW-01 --ready \u2014 PASS",
+    "ledger_validator": "python3 scripts/ledger.py validate ledger.jsonl \u2014 PASS (1766 entries)",
+    "diff_check": "git diff --check scoped to the five vexel-ui files \u2014 PASS",
+    "source_limit": "icons.rs, paint.rs, tree.rs, widget_add.rs and tests.rs each below 800 lines",
+    "broad_ui_e2e": "not run, per owner request to defer until final acceptance",
+    "offline_dependency_cache": "Exact locked objc2-image-io 0.3.2 archive and sparse index already present in .cache/cargo; archive SHA-256 matches Cargo.lock; no network or dependency changes"
+  },
+  "remaining_gate": "Broad UI/E2E and native GUI validation remain deferred to final acceptance per owner request."
+}

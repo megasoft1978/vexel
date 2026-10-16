@@ -1,0 +1,7 @@
+**REJECT**
+
+1. **Synchronous tool fallback emits the wrong MCP content shape.** When the backend leaves `content_json` empty, [protocol.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol/rust/crates/vexel-protocol/src/protocol.rs:132) writes a JSON string into `content`; the legacy implementation emits an array containing a text block ([mcp_protocol.c](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol/src/mcp/mcp_protocol.c:366)). **Repair and regression:** for both `is_error` values with empty `content_json`, parse the emitted response and assert `result.content` is a one-element text-block array with the expected fallback text.
+
+2. **The required failed-task envelope distinction lacks an emitted-response regression.** The tests exercise a completed task with `result.isError` through `tasks/get` ([parity.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol/rust/crates/vexel-protocol/tests/parity.rs:108)) and validate failed-task payload shape in isolation ([parity.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-protocol/rust/crates/vexel-protocol/tests/parity.rs:149)). They do not assert that `tasks/get` returns a failed task state inside a JSON-RPC `result`, distinct from an async RPC error envelope. **Regression:** emit and parse both cases; assert failed task state is a result with its task error, while `AsyncDisposition::Error` is a top-level JSON-RPC error.
+
+**Nonblocking gap:** None identified. I did not run tests or builds, as requested.

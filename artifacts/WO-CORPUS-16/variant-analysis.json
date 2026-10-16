@@ -1,0 +1,97 @@
+{
+  "dimensions": [
+    1600,
+    1000
+  ],
+  "endpoint_roi_xyxy": [
+    580,
+    80,
+    619,
+    119
+  ],
+  "inkscape_version": "1.4.4 (dcaf3e7, 2026-05-05)",
+  "interpretation": "Removing marker-end reduces endpoint ROI pixels above delta 10 from 71 to 5 and full-variant max delta from 149 to 13. Filter removal and flat-fill substitution do not remove the high-error endpoint pattern. Evidence associates the dominant endpoint mismatch with marker rendering and/or marker paint inheritance; the test does not separate marker geometry from inherited gradient paint.",
+  "tolerance": 2,
+  "variants": {
+    "baseline": {
+      "bbox": [
+        15,
+        10,
+        602,
+        134
+      ],
+      "different_pixels": 2301,
+      "fraction": 0.00143812,
+      "full_pixels_delta_gt_10": 83,
+      "inkscape_png_sha256": "efab09c907df35f558464077fc83916d1a6ff6da846dc9d702e42a589fd55a31",
+      "max_delta": 149,
+      "mean_delta_differing": 5.21,
+      "roi_different_pixels": 166,
+      "roi_max_delta": 149,
+      "roi_mean_delta_differing": 25.247,
+      "roi_pixels_delta_gt_10": 71,
+      "svg_sha256": "7eb595b9428c2fc59fb57529bcda783103d0b2108e87de88551e107d98a2e263",
+      "vexel_rgba_sha256": "8536d06c780d66e22b126f7a139b8583ca280e9f4d53c94f54ef6aba9ab7cc1b"
+    },
+    "flat_fill": {
+      "bbox": [
+        15,
+        10,
+        602,
+        134
+      ],
+      "different_pixels": 2256,
+      "fraction": 0.00141,
+      "full_pixels_delta_gt_10": 93,
+      "inkscape_png_sha256": "e0ee6b99ea1913ce88fd92358e22b8e260ea1648e284797e898fe81cfe441728",
+      "max_delta": 122,
+      "mean_delta_differing": 5.244,
+      "roi_different_pixels": 146,
+      "roi_max_delta": 122,
+      "roi_mean_delta_differing": 20.952,
+      "roi_pixels_delta_gt_10": 58,
+      "svg_sha256": "662d3bfd5eedfa15c72416457a7534287627534f80953994182a50e3bbcb7573",
+      "vexel_rgba_sha256": "928093ed8c77e7e9f00cea88f175bba76061dc5529b52382161091fd4fdc4e9b"
+    },
+    "no_filter": {
+      "bbox": [
+        11,
+        10,
+        600,
+        132
+      ],
+      "different_pixels": 990,
+      "fraction": 0.00061875,
+      "full_pixels_delta_gt_10": 301,
+      "inkscape_png_sha256": "152a56d6a1c36145ebff1aa3e51e70adca14dc2cc4f06b859630b43132919e67",
+      "max_delta": 221,
+      "mean_delta_differing": 12.218,
+      "roi_different_pixels": 62,
+      "roi_max_delta": 221,
+      "roi_mean_delta_differing": 64.581,
+      "roi_pixels_delta_gt_10": 46,
+      "svg_sha256": "078670948bcc31ea3433ba85c586127beeb251c8721600db7ad56a50ef9f978e",
+      "vexel_rgba_sha256": "03ee8d2554323da6fcf5b0768cc563a8d66b7c06ca0e268b9bfc5cdc0b9808ff"
+    },
+    "no_marker": {
+      "bbox": [
+        15,
+        10,
+        600,
+        134
+      ],
+      "different_pixels": 2262,
+      "fraction": 0.00141375,
+      "full_pixels_delta_gt_10": 17,
+      "inkscape_png_sha256": "5a4c249dac723a9ee3b06373ff32604f963418d939ec5225af8e71a8f2561ce4",
+      "max_delta": 13,
+      "mean_delta_differing": 3.734,
+      "roi_different_pixels": 127,
+      "roi_max_delta": 13,
+      "roi_mean_delta_differing": 5.11,
+      "roi_pixels_delta_gt_10": 5,
+      "svg_sha256": "4f39f645a8bcdfea5e959e2b7a5b75d4f08bcfea56c8c12233ff4b2075956657",
+      "vexel_rgba_sha256": "b25760d3e20d234dfeae57495c2e3c61b047d64a76ae54396ccf2675bf8e460b"
+    }
+  }
+}

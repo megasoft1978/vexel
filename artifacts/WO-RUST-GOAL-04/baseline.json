@@ -1,0 +1,10 @@
+{
+  "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "files": {
+    "docs/product/rust-port-goal-and-plan.md": "1e5314cc598aedf7fc4e1e677b9753c8926dd84665d9d407874167862023cf24",
+    "STATE.md": "cd60494e62a1b9c0011317755e6740ffdf7b1928f5e9e358e782adb592b50c67",
+    "LEDGER.md": "8dac20cf2eebcbc3013ecee83ebe1943bd72a7fd66d5064608f3f484ee065e48",
+    "ledger.jsonl": "9247fe3d9c26e4cbcbab9d1e5cb404b07cb458138e218b4084504569a8f7c705"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "work_order": "WO-RUST-SHAPE-PUBLICATION-01 revision 1",
+  "candidate_review": "ACCEPT \u2014 final Sol Medium review at final-review.md",
+  "coordinator_review": "PASS \u2014 coordinator-review.md",
+  "main_check": {
+    "command": "cargo +stable check -p vexel-scene --locked --offline",
+    "exit_code": 0,
+    "log": "main-check.log"
+  },
+  "main_test": {
+    "command": "cargo +stable test -p vexel-scene --locked --offline",
+    "exit_code": 0,
+    "log": "main-test.log",
+    "passing_entries": 221,
+    "failures": 0,
+    "groups": [
+      13,
+      7,
+      9,
+      16,
+      19,
+      24,
+      14,
+      4,
+      21,
+      3,
+      14,
+      23,
+      16,
+      4,
+      19,
+      5,
+      0,
+      10
+    ],
+    "shape_publication_cases": 22
+  },
+  "work_order_validation": {
+    "command": "python3 scripts/wo_validate.py WO-RUST-SHAPE-PUBLICATION-01 --ready",
+    "exit_code": 0,
+    "output": "valid WO-RUST-SHAPE-PUBLICATION-01 revision 1 sha256 53bd5619f4434a486b7f388ab88636a8fbb4dc8d2ff55b836090b07f4c9ebd2d"
+  },
+  "preservation_audit": "root-protected-audit.json",
+  "integration_source_hashes": "integration-source-hashes.json",
+  "scope_limit": "Scene admission/provenance contract accepted; production lower decoder/provider adoption and all full-product delivery/release gates remain outstanding."
+}

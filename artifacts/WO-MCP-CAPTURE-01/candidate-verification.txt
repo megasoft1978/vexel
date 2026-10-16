@@ -1,0 +1,51 @@
+WO-MCP-CAPTURE-01 revision 1
+Executor worktree: .worktrees/mcp-owned-capture
+Declared base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Worktree HEAD before implementation: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Work-order validation: python3 scripts/wo_validate.py WO-MCP-CAPTURE-01 --ready
+Result: valid WO-MCP-CAPTURE-01 revision 1, SHA-256 26042a5513871de1182c3649f6a8f741b17b9eaa66549770a20c689f974901c0
+
+Implemented paths (all within the work-order allowlist):
+- CMakeLists.txt (MCP source and focused test registration only)
+- tests/test_map.json (capture registration)
+- src/mcp/mcp_export_capture.c, src/mcp/mcp_export_capture.h (new)
+- src/mcp/mcp_export_snapshot.c, src/mcp/mcp_export_snapshot.h
+- src/mcp/mcp_export_job.c, src/mcp/mcp_export_job.h
+- src/project/project_bundle.c, src/project/project_bundle.h
+- tests/mcp/mcp_export_capture_test.c (new)
+- tests/mcp/mcp_export_job_test.c (capture route additions)
+
+Scope/conflict audit: the worktree was already dirty at start with broad source overlay files outside this order. They were left untouched. No app/broker/socket/grant/publication/UI, parser/raster, platform, dependency, ledger/state, or shared product documentation files were edited. No network, staging, or commit was used. No full UI/E2E/full-suite run was performed. `git diff --check` passed.
+
+Build and focused verification (macOS arm64 Debug):
+- `cmake --preset mac-debug` — passed.
+- `cmake --build build/mac-debug --target mcp_export_capture_test mcp_export_snapshot_test mcp_export_job_test vexel-mcp` — passed.
+- `ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-export-(capture|snapshot|job)$'` — 3/3 passed.
+- `python3 scripts/ledger.py validate ledger.jsonl` — valid ledger, 1036 entries.
+- Existing strict snapshot test source was not edited; current overlay source SHA-256: b41d3522be44bb9a054738adc26653a8feb59d4105c4fb43e7b8cb52afb8f355. That file is untracked in the supplied overlay and therefore has no blob at declared base HEAD.
+
+Owner-capture timing probe (fixture construction, strict load/decode, and worker finalize excluded; elapsed wall time from CLOCK_MONOTONIC):
+- small: owner_seconds=0.000001, copied_bytes=170, original_scene_bytes=1024
+- 16MiB: owner_seconds=0.000996, copied_bytes=16777258, original_scene_bytes=1024
+- near64MiB: owner_seconds=0.004179, copied_bytes=67107882, original_scene_bytes=1024
+- large-saved-small-edited: owner_seconds=0.000003, copied_bytes=170, original_scene_bytes=33554432
+Command: `./build/mac-debug/bin/mcp_export_capture_test --probe`. These are single-run observations, not a latency guarantee.
+
+Ownership/behavior notes: source view is documented as successfully decoded/loaded and stable for capture. Owner capture validates bounded header/slice/metadata and copies current scene/timeline plus base/overlay assets without asset CRC, project bundle encoding, SVG decode, or timeline decode. The default strict snapshot path still decodes and validates CRCs. The capture job owns the capture only after successful create, finalizes on execute, frees capture immediately after finalize (and on cancellation/destruction), and drops its finalized snapshot after execution on the capture route. Cancellation/timeouts bracket finalize before continuing into the existing renderer.
+
+Still required for production async export evidence: connect the live owner/application thread to the capture API, publish through the intended write path, exercise UI cancellation and generation gating, and collect client/app bridge evidence. This implementation and its tests do not claim that bridge is shipped.
+
+Post-finalize review repair (narrow follow-up):
+- `run_job` now checks timeout and queue/job cancellation immediately after capture finalize and raw capture release, before classifying a finalizer error. It destroys any produced snapshot on timeout, cancellation, or finalizer-error exits.
+- Under `MCP_EXPORT_JOB_TESTING` only, a one-shot post-finalize barrier can inject a result error and/or a monotonic-clock offset. It adds no production hook or allocation framework.
+- `mcp-export-job` now tests a real queue-token cancellation at the post-finalize boundary while the test hook also reports an error. The job records CANCELLED, exposes no GIF, and a following queue sentinel completes before shutdown, proving shutdown did not mask the outcome.
+- A second focused test applies a one-shot clock offset at the same barrier and verifies the queue result and status report timeout without waiting for the 900-second deadline.
+- Rebuilt the named targets and reran `ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-export-(capture|snapshot|job)$'`: 3/3 passed. WO ready validator, ledger validation (1036 entries), and `git diff --check` passed again.
+- Timing probe figures above were reused: this repair does not change the capture path being measured.
+
+Review follow-up: clear finalize output on invalid capture
+- `mcp_export_capture_finalize` now sets a nonnull `out_snapshot` to `NULL` before validating `capture`; invalid arguments cannot leave a stale caller pointer.
+- Added `test_finalize_null_capture_clears_output`, initializing the output to a nonnull sentinel and asserting `PROJECT_BUNDLE_INVALID_ARGUMENT` plus a cleared output.
+- Changed source SHA-256: `src/mcp/mcp_export_capture.c` `5d080a800bd8f1a3a1514197d3a542fcf4165cb35f9f4b98c13b66a0377e624e`; `tests/mcp/mcp_export_capture_test.c` `21c5046e9a83b0f8f72176f575205d21c4dd05751a973bc51f3ab6ebecd619c6`.
+- Rebuilt targets `mcp_export_capture_test mcp_export_snapshot_test mcp_export_job_test vexel-mcp`: passed. Scoped CTest command `ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-export-(capture|snapshot|job)$'`: 3/3 passed. The isolated capture executable passed `--probe`; current single-run observations: small 0.000001s / 170 copied bytes / 1,024 original scene bytes; 16MiB 0.001025s / 16,777,258 copied / 1,024 original; near64MiB 0.003968s / 67,107,882 copied / 1,024 original; large-saved-small-edited 0.000007s / 170 copied / 33,554,432 original. These are observations, not guarantees.
+- `cmake --preset mac-debug`, `python3 scripts/wo_validate.py WO-MCP-CAPTURE-01 --ready`, `python3 scripts/ledger.py validate ledger.jsonl` (1,036 entries), and `git diff --check`: passed.

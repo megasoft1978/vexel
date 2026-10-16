@@ -1,0 +1,37 @@
+WO-MCP-SNAPSHOT-01 r1 focused verification
+
+Scope
+- Implemented opaque owned snapshot API in src/mcp/mcp_export_snapshot.h/.c.
+- Added focused ownership, unsaved-input, overlay, and bounds tests in tests/mcp/mcp_export_snapshot_test.c.
+- Added only snapshot source/target/CTest and test-map registrations within shared registration files.
+- Did not modify task store, work order, state, ledgers, product docs, or unrelated source.
+
+Commands and results
+- cmake --preset mac-debug — PASS; Debug arm64/macOS 13 configuration generated build/mac-debug.
+- cmake --build build/mac-debug --target mcp_export_snapshot_test vexel-mcp — PASS; both targets linked.
+- ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-export-snapshot$' — PASS; 1/1 tests passed.
+- python3 scripts/wo_validate.py WO-MCP-SNAPSHOT-01 --ready — PASS; revision 1 and frozen spec SHA validated.
+- python3 scripts/ledger.py validate ledger.jsonl — PASS; 1002 entries valid.
+- git diff --check — PASS.
+- python3 -m json.tool tests/test_map.json >/dev/null — PASS.
+- wc -l src/mcp/mcp_export_snapshot.c tests/mcp/mcp_export_snapshot_test.c — PASS; 139 and 180 lines respectively.
+
+The first focused CTest attempt exposed an out-of-bounds overwrite in the test's source-buffer mutation step (the snapshot was larger than its source bundle). The test was corrected to use the source bundle's exact encoded length; the focused build and CTest were rerun and passed. No implementation repair was required.
+
+Limitations
+- This verifies snapshot construction, ownership, exact preservation, and bounds only. It does not claim integrated async GIF export; worker/protocol/UI work orders remain outstanding.
+
+Focused repair follow-up
+- Added cheap borrowed-view preflight for unsupported view version, inverted/oversized asset counts, missing overlay descriptor, and invalid/short/oversized encoded slice before project_bundle_decode.
+- Added deterministic error/null-output regression cases for zero scene, NULL nonempty timeline, those count/version/pointer conditions, source slice mismatch, bad magic, unsupported encoded version, and encoded length guards.
+- cmake --build build/mac-debug --target mcp_export_snapshot_test — PASS; snapshot module and focused test rebuilt.
+- ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-export-snapshot$' — PASS; 1/1 tests passed.
+
+Owner-thread cost note: source-view validation calls project_bundle_decode, which validates asset records and recomputes their CRCs over the saved encoded bundle before snapshot sizing/encoding. This scan is linear in source bundle bytes and may be noticeable for large saved projects (container limit permits up to 1 GiB); keep snapshot creation on the owner thread as specified, and consider profiling before changing validation strategy.
+
+Coordinator integration evidence:
+Exact worker delta is six allowed paths; all1,332 overlay baseline files retained, worker HEAD/index unchanged and unstaged. Root conflict check passed before copying. Audit: artifacts/WO-DELIVERY-PARALLEL-01/snapshot-integration-audit.json.
+cmake --preset mac-debug: exit0.
+cmake --build build/mac-debug --target mcp_export_snapshot_test vexel-mcp: exit0.
+ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-export-snapshot$': exit0,1/1pass,0.45s.
+Independent Luna Medium recheck passes after invalid-input repair; remaining owner-thread source-checksum cost is recorded for later integration. Snapshot source/header/test below800lines; test-map JSON and generated CTest registration valid. No broad UI/E2E or async/live-client claim.

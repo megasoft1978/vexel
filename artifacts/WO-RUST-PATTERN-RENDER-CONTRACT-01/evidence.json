@@ -1,0 +1,12 @@
+{
+  "static_timing_audit": "artifacts/WO-RUST-PATTERN-TIMING-AUDIT-01/call-chain.json",
+  "independent_root_source_check": [
+    "src/svg/shape/pattern.c:319-334 (noanimation parse beforechildrender)",
+    "src/svg/shape/decode.c:214",
+    "rust/crates/vexel-scene/src/pattern_publication.rs:86-100 (pendingchildrole)",
+    "rust/crates/vexel-svg-definitions/src/pattern.rs:51-52 (minmaxwidthheight)",
+    "rust/crates/vexel-scene/src/pattern_publication.rs:24-25 (wrongnegative-maxguard)"
+  ],
+  "not_started": true,
+  "prerequisite": "WO-RUST-CACHE-PUBLICATION-01 accepted source and terminal reviewer"
+}

@@ -1,0 +1,1 @@
+BLOCKER — The bounded-loop and stale-verification blockers are resolved on static review: inner scans poll during traversal, and the updated record reports 6 unit plus 15 integration tests. The mandatory fresh-main checks were not run, as instructed; acceptance remains pending those checks.

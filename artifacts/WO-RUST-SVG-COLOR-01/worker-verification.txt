@@ -1,0 +1,15 @@
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28), selected with +stable.
+
+Commands required by WO-RUST-SVG-COLOR-01:
+- cargo +stable check -p vexel-svg-color --locked --offline: PASS, exit 0.
+- cargo +stable test -p vexel-svg-color --locked --offline: PASS, exit 0; 3 unit tests passed, 0 failed; doc tests 0.
+- python3 scripts/wo_validate.py WO-RUST-SVG-COLOR-01 --ready: PASS; revision 1 sha256 69d657ed27f89784601df339feca1601854a32d15d8090df7f2f1d2a63f7ce4d.
+- python3 scripts/ledger.py validate ledger.jsonl: PASS; 1197 entries.
+- git diff --check: PASS, exit 0.
+
+Scope observations:
+- rust/crates/vexel-svg-color/src/lib.rs: 81 lines.
+- rust/crates/vexel-svg-color/src/named_colors.rs: 151 lines.
+- No separate crate tests/ directory existed; focused tests are unit tests in lib.rs.
+- An initial test run failed due to two incorrect new rejection expectations; corrected to the C behavior (legacy parser accepts comma alpha with rgb(), and form feed is CSS whitespace). Final required test command passes.
+- No external dependencies, network access, toolchain component installation, unsafe code, or source allocations were used.

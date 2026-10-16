@@ -1,0 +1,5 @@
+**BLOCKER**
+
+The plan is close, but the pinned exception boundary is not ready to implement as specified. The candidate requires `guard_native_call` to catch Objective-C exceptions in callbacks, while the accepted binding audit says objc2’s `catch-all` feature pulls in `objc2-exception-helper` and its native build dependency closure. The audit still records upstream license grant texts as pending, and the ready order forbids manifest or dependency changes. Resolve that pinned exception-helper/build and licensing dependency before implementation, or revise the callback contract to use only a proven available boundary.
+
+The source map otherwise accounts for the named window APIs and separates the later file, menu, accessibility, text-shaping, presenter, dialogs, preferences, and welcome gates. Plan review only; no code or runtime completion claimed.

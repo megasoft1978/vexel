@@ -1,0 +1,5 @@
+COMMAND: env CARGO_HOME="$PWD/.cache/cargo" cargo +stable test -p vexel-v1-document --locked --offline
+EXIT: 0
+running 11 tests
+11 passed; 0 failed; 0 ignored
+doc-tests: 0 passed; 0 failed

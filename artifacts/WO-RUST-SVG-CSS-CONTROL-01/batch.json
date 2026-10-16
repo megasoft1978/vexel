@@ -1,0 +1,9 @@
+{
+  "css-control": {
+    "wo": "WO-RUST-SVG-CSS-CONTROL-01",
+    "crate": "vexel-svg-css",
+    "effort": "high",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-css-control"
+  }
+}

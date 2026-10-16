@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-MEDIA-01",
+  "scope_sha256": "74fe7164f1305f19ff31ae52bc07fe605c7f2b172c1adc51e88e3136e48ad1aa",
+  "original_inputs_preserved": true,
+  "rust_focused_tests": {
+    "path": "rust/crates/vexel-svg-media/tests/media_parity.rs",
+    "passed": [
+      "image_data_uri_and_base64_keep_exact_grammar_and_offsets",
+      "image_geometry_preserves_meet_slice_none_and_viewport_lengths",
+      "text_entities_whitespace_and_position_lists_match_source_contract",
+      "text_cache_owns_keys_and_reuses_exact_layout_requests",
+      "text_cache_entry_cap_and_image_capacity_validation_fail_closed",
+      "malformed_provider_pixels_keep_unsupported_classification",
+      "image_sampler_matches_premultiplied_bilinear_rounding_and_bounds",
+      "glyph_outline_closure_and_command_range_validation_inputs_are_owned"
+    ],
+    "unexecuted_reasons": []
+  },
+  "original_cases": [
+    {"suite":"tests/fuzz/shape/shape_fuzz.c","case":"fuzz_release_text","status":"unexecuted","reason":"Original fuzz harness is not a crate test. Its provider-owned layout allocation maps to Rust TextLayout Drop; no fuzz campaign claimed."},
+    {"suite":"tests/fuzz/shape/shape_fuzz.c","case":"fuzz_release_image","status":"unexecuted","reason":"Original fuzz harness is not a crate test. ImagePixels ownership maps to Rust Drop; no fuzz campaign claimed."},
+    {"suite":"tests/svg/shape/media_render_cli.c","case":"main","status":"unexecuted","reason":"Requires complete application DecodeSession, native MediaProvider, and raster composition, supplied by later coordinator integration."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"fake_text_release","status":"unexecuted","reason":"C fixture callback is replaced by owned Rust TextLayout values; mixed C suite remains unported as a harness."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"fake_image_release","status":"unexecuted","reason":"C fixture callback is replaced by owned Rust ImagePixels values; mixed C suite remains unported as a harness."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"check","status":"adapted","reason":"Assertion predicates are expressed as Rust assert_eq/assert in focused parity tests; the C helper itself is not needed."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"text_checks","status":"partially covered","reason":"Entity/whitespace, style conversion helpers, cache reuse, and outline geometry have focused tests. CSS cascade, native provider, shape count/source mapping, release counts, and no-provider end-to-end assertions await composition."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"text_use_symbol_checks","status":"blocked on shared contract","reason":"Accepted TextDecodeRequest omits use-site source assignment required by both frozen source mapping assertions; shared coordinator repair required."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"image_checks","status":"partially covered","reason":"URI/base64, aspect meet/slice/none, geometry and malformed input are tested. Raster bilinear pixels, clip/opacity, transform, image release, and provider classifications await native renderer integration."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"selection_and_path_checks","status":"unexecuted","reason":"Mixed whole-decoder selection/path oracle is owned by later composition; its frozen source and assertions remain unchanged."},
+    {"suite":"tests/svg/shape/text_image_test.c","case":"main","status":"unexecuted","reason":"The original full C test harness requires the later composed decoder and platform provider."},
+    {"suite":"tests/svg/test_text_image_render.py","case":"test_coretext_text_render_tracks_librsvg_structure_with_font_tolerance","status":"unexecuted","reason":"Requires native CoreText provider, built media CLI, librsvg oracle, and final platform integration; no substitute font provider used."}
+  ],
+  "additional_unexecuted": [
+    {"case":"scene-draft rollback after a mid-append failure","reason":"The scene crate's public constructor requires OwnedAnimation, but the MEDIA crate has no direct animation dependency and shared manifests are protected. append operations require the real DraftToken; composition rollback remains an integration check."},
+    {"case":"allocator-failure injection for try_reserve_exact","reason":"std Vec allocation is fallible in the owned paths, but the accepted media crate has no allocation-gate contract to inject reserve failures."}
+  ],
+  "aggregate": {"original_cases":12,"passed_original_end_to_end":0,"focused_rust_predicates_passed":8,"full_mixed_oracles_claimed":false}
+}

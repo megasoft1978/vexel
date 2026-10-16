@@ -1,0 +1,3 @@
+Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
+Integrated only: rust/crates/vexel-platform-macos/src/lib.rs, rust/crates/vexel-platform-macos/src/sys.rs, rust/crates/vexel-platform-macos/src/atomic_files/create_new.rs, rust/crates/vexel-platform-macos/src/atomic_files/path.rs, rust/crates/vexel-platform-macos/src/atomic_files/mod.rs, rust/crates/vexel-platform-macos/src/atomic_files/replace.rs, rust/crates/vexel-platform-macos/src/atomic_files/tests.rs.
+603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v1.

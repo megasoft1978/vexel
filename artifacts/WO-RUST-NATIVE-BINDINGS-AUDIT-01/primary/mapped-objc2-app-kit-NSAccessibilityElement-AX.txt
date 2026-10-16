@@ -1,0 +1,41 @@
+BINDING accessibilityElementWithRole_frame_label_parent
+21: 
+22: extern_conformance!(
+23:     unsafe impl NSObjectProtocol for NSAccessibilityElement {}
+24: );
+25: 
+26: impl NSAccessibilityElement {
+27:     extern_methods!(
+28:         #[cfg(feature = "NSAccessibilityConstants")]
+29:         /// # Safety
+30:         ///
+31:         /// `parent` should be of the correct type.
+32:         #[unsafe(method(accessibilityElementWithRole:frame:label:parent:))]
+33:         #[unsafe(method_family = none)]
+34:         pub unsafe fn accessibilityElementWithRole_frame_label_parent(
+35:             role: &NSAccessibilityRole,
+36:             frame: NSRect,
+37:             label: Option<&NSString>,
+38:             parent: Option<&AnyObject>,
+39:         ) -> Retained<AnyObject>;
+40: 
+41:         #[unsafe(method(accessibilityAddChildElement:))]
+42:         #[unsafe(method_family = none)]
+43:         pub fn accessibilityAddChildElement(&self, child_element: &NSAccessibilityElement);
+44: 
+45:         #[unsafe(method(accessibilityFrameInParentSpace))]
+46:         #[unsafe(method_family = none)]
+47:         pub fn accessibilityFrameInParentSpace(&self) -> NSRect;
+48: 
+
+SDK accessibilityElementWithRole_frame_label_parent
+19: @interface NSAccessibilityElement : NSObject <NSAccessibility>
+20: 
+21: + (id)accessibilityElementWithRole:(NSAccessibilityRole)role frame:(NSRect)frame label:(nullable NSString *)label parent:(nullable id)parent;
+22: - (void)accessibilityAddChildElement:(NSAccessibilityElement *)childElement;
+23: 
+24: // Accessibility frame in the cordinate system of the accessibility parent
+25: @property NSRect accessibilityFrameInParentSpace;
+26: 
+27: @end
+28: 

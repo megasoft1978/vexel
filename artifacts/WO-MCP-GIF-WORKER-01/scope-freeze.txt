@@ -1,0 +1,4 @@
+WO-MCP-GIF-WORKER-01 r1
+HEAD 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+spec_sha256 c97344a7ca2f9c2ff803a34d97bd576bf70c20adf0450b1b094b0a83d1400774
+Bounded Luna High isolated implementation; coordinator merges registrations and ledgers.

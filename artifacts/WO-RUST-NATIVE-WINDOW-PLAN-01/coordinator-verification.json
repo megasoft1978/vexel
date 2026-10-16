@@ -1,0 +1,15 @@
+{
+  "status": "pass",
+  "accepted_as": "native-window implementation readiness plan only",
+  "candidate_overlay_audit": "candidate-audit.json",
+  "protected_native_and_ui_changes": [],
+  "legacy603_unchanged": true,
+  "head_index_unchanged": true,
+  "final_review_hashes_unchanged": true,
+  "final_review": "recheck-v1-result.md",
+  "original_r1_scope_mismatch_archived": true,
+  "attempted_invalid_ledger_transition_archived_and_corrected": true,
+  "product_code_or_native_gui_implemented": false,
+  "builds_tests_gui_run": false,
+  "mac13runtime_proved": false
+}

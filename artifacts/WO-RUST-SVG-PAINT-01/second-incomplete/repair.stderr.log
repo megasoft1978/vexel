@@ -1,0 +1,80 @@
+2026-10-14T19:48:58.013025Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/src/paint.rs:
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct CacheKey { definition: usize, width: u64, height: u64 }
+
+/// Per-decode gradient cache. The key includes the complete current resolution
+/// context (definition and both viewport dimensions); shape-specific inverse/bounds are applied
+/// after cache lookup and are never shared between shapes.
+#[derive(Debug, Default)]
+pub struct GradientCache {
+    entries: Vec<(CacheKey, Paint, Vec<PaintStop>)>,
+    slots: Vec<Option<usize>>,
+}
+
+impl GradientCache {
+    pub fn len(&self) -> usize { self.entries.len() }
+    pub fn is_empty(&self) -> bool { self.entries.is_empty() }
+    pub fn allocated_bytes(&self) -> Option<usize> {
+        self.entries.capacity().checked_mul(std::mem::size_of::<(CacheKey, Paint, Vec<PaintStop>)>())
+            .and_then(|v| self.slots.capacity().checked_mul(std::mem::size_of::<Option<usize>>()).and_then(|s| v.checked_add(s)))
+    }
+    /// Returns an immutable entry for the exact definition/viewport key.
+    pub fn get(&self, definition: usize, viewport: [f64; 2]) -> Option<(Paint, &[PaintStop])> {
+        let key = CacheKey { definition, width: viewport[0].to_bits(), height: viewport[1].to_bits() };
+        let index = self.find(key)?;
+        let (_, paint, stops) = self.entries.get(index)?;
+        Some((*paint, stops.as_slice()))
+    }
+    /// Stores an owned definition result. Cache capacity and all size arithmetic
+    /// are fallible, and malformed stop lists are rejected before insertion.
+    pub fn insert_resolved(&mut self, definition: usize, viewport: [f64; 2], paint: Paint, stops: Vec<PaintStop>) -> Result<()> {
+        if !viewport[0].is_finite() || !viewport[1].is_finite() || !valid_stops(&stops) || stops.len() > MAX_GRADIENT_STOPS {
+            return Err(invalid(0));
+        }
+        let key = CacheKey { definition, width: viewport[0].to_bits(), height: viewport[1].to_bits() };
+        if self.find(key).is_some() { return Ok(()); }
+        self.insert(key, paint, stops).map(|_| ())
+    }
+    fn find(&self, key: CacheKey) -> Option<usize> {
+        if self.slots.is_empty() { return None; }
+        let mut slot = hash(key) & (CACHE_SLOTS - 1);
+        for _ in 0..CACHE_SLOTS {
+            match self.slots.get(slot).copied().flatten() {
+                None => return None,
+                Some(index) if self.entries.get(index).is_some_and(|entry| entry.0 == key) => return Some(index),
+                _ => slot = (slot + 1) & (CACHE_SLOTS - 1),
+            }
+        }
+        None
+    }
+    fn insert(&mut self, key: CacheKey, paint: Paint, stops: Vec<PaintStop>) -> Result<usize> {
+        if self.entries.len() >= MAX_GRADIENTS { return Err(error(ErrorKind::Limit(vexel_scene::LimitKind::PaintVisits), 0)); }
+        if self.slots.is_empty() {
+            self.slots.try_reserve_exact(CACHE_SLOTS).map_err(|_| oom(0))?;
+            self.slots.resize(CACHE_SLOTS, None);
+        }
+        let next = self.entries.len();
+        self.entries.try_reserve(1).map_err(|_| oom(0))?;
+        let mut slot = hash(key) & (CACHE_SLOTS - 1);
+        for _ in 0..CACHE_SLOTS {
+            if self.slots[slot].is_none() {
+                self.entries.push((key, paint, stops));
+                self.slots[slot] = Some(next);
+                return Ok(next);
+            }
+            slot = (slot + 1) & (CACHE_SLOTS - 1);
+        }
+        Err(error(ErrorKind::Limit(vexel_scene::LimitKind::PaintVisits), 0))
+    }
+}
+
+fn hash(key: CacheKey) -> usize {
+    let mut x = (key.definition as u64) ^ key.width ^ key.height.wrapping_add(0x9e3779b97f4a7c15);
+    x ^= x >> 30; x = x.wrapping_mul(0xbf58476d1ce4e5b9);
+    x ^= x >> 27; x = x.wrapping_mul(0x94d049bb133111eb); x ^= x >> 31;
+    x as usize
+}
+
+fn error(kind: ErrorKind, offset: usize) -> vexel_scene::Diagnostic { vexel_scene::Diagnostic { kind, offset } }
+fn oom(offset: usize) -> vexel_scene::Diagnostic { error(ErrorKind::OutOfMemory, offset) }
+fn invalid(offset: usize) -> vexel_scene::Diagnostic { error(ErrorKind::InvalidArgument, offset) }

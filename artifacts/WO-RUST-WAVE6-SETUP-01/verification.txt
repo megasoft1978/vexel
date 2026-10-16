@@ -1,0 +1,40 @@
+COMMAND: cargo +stable generate-lockfile --offline
+EXIT: 0
+
+COMMAND: cargo +stable check --workspace --locked --offline
+EXIT: 0
+    Checking vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-document-io)
+    Checking vexel-svg-reference v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-reference)
+    Checking vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-css)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.08s
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-WAVE6-SETUP-01 --ready
+EXIT: 0
+valid WO-RUST-WAVE6-SETUP-01 revision 1 sha256 56e200f568615302cf1f2f66980372f26ad5ffc0d8c8eb2eb0f6a949c807ab15
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-NATIVE-PLAN-01 --ready
+EXIT: 0
+valid WO-RUST-NATIVE-PLAN-01 revision 1 sha256 45e1053a56d2371d101260f39e56cc3b1c8236db62cf4e63cecfe6f93d40605f
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SVG-CSS-01 --ready
+EXIT: 0
+valid WO-RUST-SVG-CSS-01 revision 1 sha256 16a7efed9c3ac031b416a1ce8fd65f0fd98f2e181c9288e4d3d7a91d44ead878
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SVG-REFERENCE-01 --ready
+EXIT: 0
+valid WO-RUST-SVG-REFERENCE-01 revision 1 sha256 eb5bde203919cbec9bbf54333041ee903742a42a89e63fabfbcdd4c4ea78e0a6
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SOURCE-SAVE-01 --ready
+EXIT: 0
+valid WO-RUST-SOURCE-SAVE-01 revision 1 sha256 d0d3c5d17b3cd82b3c25eef4be355a53b05704479314b889bf29fcab86858818
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-DOCUMENT-OWNED-01 --ready
+EXIT: 0
+valid WO-RUST-DOCUMENT-OWNED-01 revision 1 sha256 ba1c5417fad26e6f4d92619bbdb6d861e5193ec866b3149f71eb5ba8d0bbc737
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1253 entries
+
+COMMAND: git diff --check
+EXIT: 0

@@ -1,0 +1,2 @@
+2026-10-14T13:06:50.927413Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/resume-verification.json:
+null

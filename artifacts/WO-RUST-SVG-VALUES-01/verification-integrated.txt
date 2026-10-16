@@ -1,0 +1,47 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-svg-values --locked --offline
+EXIT: 0
+    Checking vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-values)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+
+COMMAND: cargo +stable test -p vexel-svg-values --locked --offline
+EXIT: 0
+
+running 12 tests
+test adapter_tests::validates_bounded_source_backed_attribute_spans_and_namespace_lookup ... ok
+test transform::tests::inverse_round_trip_limits_and_singularity ... ok
+test number::tests::lengths_preserve_svg_units_and_report_absolute_failure_offsets ... ok
+test number::tests::svg_decimal_grammar_and_separator_rules ... ok
+test adapter_tests::enforces_source_and_attribute_count_caps ... ok
+test transform::tests::transform_count_numeric_limits_and_error_offsets ... ok
+test transform::tests::transform_node_defaults_and_composes_parent_with_original_source_offsets ... ok
+test transform::tests::transform_operations_follow_c_matrix_order_and_arity_defaults ... ok
+test viewport::tests::viewbox_meet_slice_none_and_overflow_limits ... ok
+test viewport::tests::root_nested_and_symbol_mappings_keep_defaults_percentages_and_offsets ... ok
+test viewport::tests::zero_nested_viewport_is_empty_and_symbol_allowlist_is_fail_closed ... ok
+test viewport::tests::aspect_meet_slice_none_and_diagnostic_byte_offsets ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-geometry v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-geometry)
+   Compiling vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-values)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.45s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_svg_values-7d06e497e1db4c3c)
+   Doc-tests vexel_svg_values
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SVG-VALUES-01 --ready
+EXIT: 0
+valid WO-RUST-SVG-VALUES-01 revision 1 sha256 732417f983e5b8be4c9661df29b35b9e05888e31b02c25258a808b8baf0c3456
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1117 entries
+
+COMMAND: git diff --check
+EXIT: 0

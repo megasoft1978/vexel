@@ -1,0 +1,26 @@
+COMMAND: cargo +stable generate-lockfile --offline
+EXIT: 0
+
+COMMAND: cargo +stable check --workspace --locked --offline
+EXIT: 0
+    Checking vexel-svg-animation v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-animation)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-WAVE8-SETUP-01 --ready
+EXIT: 0
+valid WO-RUST-WAVE8-SETUP-01 revision 1 sha256 c323de1ad71fe8bda0a6d695b54efd0ef8546638bd4d4e0cffc695273b99ac2f
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-SVG-ANIMATION-01 --ready
+EXIT: 0
+valid WO-RUST-SVG-ANIMATION-01 revision 1 sha256 be7604977c3a77e877eb7409159e277dc71617f172bb8301fbc6651abe58f16d
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-NATIVE-BINDINGS-AUDIT-01 --ready
+EXIT: 0
+valid WO-RUST-NATIVE-BINDINGS-AUDIT-01 revision 1 sha256 c6c015d1b3ab478729475fb46d468d97c2cbebe6a0e9ab5e7880589de4103da6
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1287 entries
+
+COMMAND: git diff --check
+EXIT: 0

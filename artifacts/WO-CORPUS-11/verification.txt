@@ -1,0 +1,25 @@
+WO-CORPUS-11 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Implementation
+- Replaced power-of-two doubling with checked 1.125x segment/join capacity growth. Each allocation still uses the existing combined 16 MiB preflight. Overflow still reports LIMIT; dash construction remains capped at 1,000,000 steps; grid limits are unchanged.
+- Added a generated long dashed line to `stroke_dash_storage_test.c`: cache creation yields more than 65,536 segments; the test checks construction steps and total reserved range/segment/join/grid bytes stay within 16 MiB.
+- Updated `docs/lanes/decode2.md`.
+
+Build and focused checks
+- `cmake --preset mac-release`: PASS.
+- `cmake --build --preset mac-release --target svgworkbench stroke_dash_storage_test shape_test`: PASS (6 build steps).
+- `ctest --test-dir build/mac-release -N -R '^(svg-stroke-dash-storage|shape-render)$'`: exactly two tests registered.
+- `ctest --test-dir build/mac-release --output-on-failure -R '^(svg-stroke-dash-storage|shape-render)$'`: PASS 2/2 (`shape-render` 0.51 s; `svg-stroke-dash-storage` 0.27 s).
+
+Manifested T1 probe
+- Input `files/generated/inkscape_t1.svg`: 979,796 bytes; SHA-256 3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5.
+- `/usr/bin/time -l build/mac-release/bin/svgworkbench --render-frame <T1> --size 128x128 --out .cache/WO-CORPUS-11/inkscape_t1.ppm`: completed without a render diagnostic; output is a valid 128x128 raw PPM, 49,167 bytes, SHA-256 ecf44aa0a35891ff5a379765e85750314efd80103aaf22595e4f3b54285aba80. Process completed successfully (the runner session ended; no failure diagnostic was emitted).
+- Time: 1.61 s real, 1.35 s user; maximum RSS 129,875,968 bytes. These are one-run measurements, not a benchmark.
+- This is the first successful full-document render for this exact target in this candidate source state. It does not establish pixel fidelity against Inkscape/librsvg or change the accepted 3/39 corpus report.
+
+Scope
+- Source lengths: `shape_render_dash_cache.c` 472 lines; `stroke_dash_storage_test.c` 124 lines (both below 800).
+- T2's 65,536-shape decode cap remains. No broad UI/E2E, corpus sweep, fuzz, sanitizer, broad benchmark, dependency/platform change or commit.
+- Frozen work order, ledger, and `git diff --check` validate.

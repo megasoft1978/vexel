@@ -1,0 +1,82 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (.cache/build/aarch64-apple-darwin/debug/deps/vexel_platform_apple-6323e00764563578)
+
+running 36 tests
+test native_window::frame::tests::accepts_axis_boundary_and_minimum_scale ... ok
+test native_window::frame::tests::checks_byte_arithmetic_and_exact_pixel_length ... ok
+test native_window::frame::tests::failed_publish_keeps_prior_presenter_state ... ok
+test native_window::frame::tests::rejects_nonfinite_nonpositive_and_unbounded_scale ... ok
+test native_window::frame::tests::rejects_zero_and_oversized_dimensions ... ok
+test native_window::frame::tests::rejects_vec_capacity_over_frame_bound ... ok
+test native_window::frame::tests::premultiplies_semitransparent_straight_rgba_deterministically ... ok
+test native_window::queue::close_tests::delivered_close_can_be_requested_again_after_application_cancel ... ok
+test native_window::tests::geometry_checks_scale_rounding_and_overflow ... ok
+test native_window::queue::sequence_tests::terminal_sequence_metadata_cannot_wrap_or_reopen_ingress ... ok
+test native_window::tests::modifiers_are_mapped_to_ui_order ... ok
+test native_window::tests::point_origin_keeps_negative_display_coordinates ... ok
+test native_window::tests::queue_coalesces_only_adjacent_motion_and_batches_are_bounded ... ok
+test native_window::tests::title_and_text_input_snapshots_enforce_ownership_and_bounds ... ok
+test native_window::tests::utf16_ranges_round_trip_and_reject_surrogate_interiors ... ok
+test native_window::verification_tests::adjacent_geometry_replaces_but_scale_change_survives_a_barrier_with_same_pixels ... ok
+test native_window::verification_tests::barriers_and_button_transitions_are_never_coalesced ... ok
+test native_window::verification_tests::config_snapshot_attribute_and_candidate_limits_are_checked_before_replacement ... ok
+test native_window::verification_tests::geometry_three_scales_nonfinite_edges_and_exact_cursor_hotspot_recipe ... ok
+test native_window::verification_tests::invalid_utf16_ranges_never_clamp_or_replace_the_valid_snapshot ... ok
+test native_window::verification_tests::quartz_missing_display_and_candidate_inverse_geometry_are_explicit ... ok
+test native_window::tests::overflow_reset_and_close_are_sticky_and_ordered ... ok
+test native_window::verification_tests::missing_focus_snapshot_faults_but_explicit_no_target_does_not ... ok
+test native_window::verification_tests::alternating_controls_cannot_exceed_sixteen_reserved_records ... ok
+test native_window::verification_tests::surviving_window_operations_fail_without_native_ownership_or_resurrection ... ok
+test native_window::verification_tests::timer_generation_and_weak_teardown_ignore_late_callbacks ... ok
+test native_window::verification_tests::reentrant_callback_uses_owned_snapshot_without_refcell_borrow ... ok
+test native_window::verification_tests::full_input_reserve_preserves_releases_or_orders_reset_after_them ... ok
+test native_window::verification_tests::timestamps_are_monotonic_and_nonfinite_input_resets_ingress ... ok
+test native_window::verification_tests::payload_accounting_includes_native_snapshot_and_pending_composition ... ok
+test native_window::verification_tests::marked_text_projects_utf16_selection_and_commits_separately ... ok
+test native_window::verification_tests::lossy_motion_reports_drop_without_losing_non_droppable_input ... ok
+test native_window::verification_tests::callback_panic_and_foundation_exception_return_fallback_and_sequence_reset ... ok
+test native_window::verification_tests::invalid_native_utf16_and_unadvertised_attributes_preserve_prior_snapshot ... ok
+test native_window::verification_tests::all_protocol_selectors_are_registered_with_real_appkit_superclasses ... ok
+test native_window::verification_tests::marked_attributes_are_owned_advertised_and_returned_in_substrings ... ok
+
+test result: ok. 36 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/native_boundary.rs (.cache/build/aarch64-apple-darwin/debug/deps/native_boundary-7682c0384e62ac24)
+
+running 5 tests
+test guard_catches_rust_panic_and_discards_payload ... ok
+test guard_preserves_success_value ... ok
+test main_thread_capability_is_denied_on_spawned_thread ... ok
+test foundation_range_exception_is_contained_by_guard ... ok
+
+running 1 test
+
+thread 'panic_payload_destructor_aborts_process' (29554186) panicked at rust/crates/vexel-platform-apple/tests/native_boundary.rs:64:38:
+Box<dyn Any>
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'panic_payload_destructor_aborts_process' (29554186) panicked at rust/crates/vexel-platform-apple/tests/native_boundary.rs:47:9:
+Box<dyn Any>
+test panic_payload_destructor_aborts_process ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/native_window.rs (.cache/build/aarch64-apple-darwin/debug/deps/native_window-44036d280559ad15)
+
+running 1 test
+test cocoa_modifier_flags_map_to_vexel_ui_order ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_platform_apple
+
+running 6 tests
+test rust/crates/vexel-platform-apple/src/main_thread.rs - main_thread::MainThread (line 14) - compile fail ... ok
+test rust/crates/vexel-platform-apple/src/native_window/window.rs - native_window::window::Window (line 24) - compile fail ... ok
+test rust/crates/vexel-platform-apple/src/native_window/window.rs - native_window::window::Window (line 20) - compile fail ... ok
+test rust/crates/vexel-platform-apple/src/main_thread.rs - main_thread::MainThread (line 9) - compile fail ... ok
+test rust/crates/vexel-platform-apple/src/native_window/app.rs - native_window::app::NativeApp (line 57) - compile fail ... ok
+test rust/crates/vexel-platform-apple/src/native_window/app.rs - native_window::app::NativeApp (line 53) - compile fail ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+

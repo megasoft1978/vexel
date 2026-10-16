@@ -1,0 +1,15 @@
+Coordinator integration and acceptance evidence (2026-10-15)
+
+The isolated candidate was copied into `rust/crates/vexel-v1-document/`; implementation and test hashes match. The root workspace member and local-only lock entry were added by the coordinator. `cargo +stable metadata --no-deps --format-version 1 --locked` recognizes the package.
+
+Independent review: PASS. The reviewer verified 32-byte stack-bounded scientific formatting, formatting-limit handling, fallible output allocation, fixed fractional markup, and smallest-subnormal `5e-324` bit round-trip.
+
+Fresh root commands using the existing offline cache (`CARGO_HOME=$PWD/.cache/cargo`):
+- `cargo +stable check -p vexel-v1-document --locked --offline`: PASS.
+- `cargo +stable test -p vexel-v1-document --locked --offline`: PASS (8 unit tests; 0 failures; 0 doc tests).
+- `cargo +stable fmt --package vexel-v1-document -- --check`: PASS.
+- `python3 scripts/wo_validate.py WO-RUST-V1-DOCUMENT-SESSION-01 --ready`: PASS.
+- `python3 scripts/ledger.py validate ledger.jsonl`: PASS.
+- `git diff --check`: PASS.
+
+The first root check using the default Cargo home could not resolve `objc2-image-io`. The crate already existed under the repository's `.cache/cargo`; rerunning with that offline cache passed without network access or dependency changes. Seed audit and exact candidate/root hashes are recorded in `scope-audit.json`. No UI/E2E/native GUI tests were run. The order implements a document model only; visible canvas drawing remains open.

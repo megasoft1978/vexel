@@ -1,0 +1,11 @@
+{
+  "name": "atomic-files",
+  "wo": "WO-RUST-ATOMIC-FILES-01",
+  "pid": 67178,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791964980.384923,
+  "exit_code": 0,
+  "duration_seconds": 154.38073301315308
+}

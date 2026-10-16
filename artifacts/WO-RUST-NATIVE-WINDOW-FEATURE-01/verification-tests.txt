@@ -1,0 +1,40 @@
+   Compiling objc2-foundation v0.3.2
+   Compiling objc2-metal v0.3.2
+   Compiling objc2-quartz-core v0.3.2
+   Compiling objc2-app-kit v0.3.2
+   Compiling vexel-platform-apple v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-apple)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.98s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_platform_apple-6323e00764563578)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/native_boundary.rs (build/rust/aarch64-apple-darwin/debug/deps/native_boundary-7682c0384e62ac24)
+
+running 5 tests
+test guard_preserves_success_value ... ok
+test main_thread_capability_is_denied_on_spawned_thread ... ok
+test guard_catches_rust_panic_and_discards_payload ... ok
+test foundation_range_exception_is_contained_by_guard ... ok
+
+running 1 test
+
+thread 'panic_payload_destructor_aborts_process' (20855478) panicked at rust/crates/vexel-platform-apple/tests/native_boundary.rs:64:38:
+Box<dyn Any>
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'panic_payload_destructor_aborts_process' (20855478) panicked at rust/crates/vexel-platform-apple/tests/native_boundary.rs:47:9:
+Box<dyn Any>
+test panic_payload_destructor_aborts_process ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_platform_apple
+
+running 2 tests
+test rust/crates/vexel-platform-apple/src/main_thread.rs - main_thread::MainThread (line 9) - compile fail ... ok
+test rust/crates/vexel-platform-apple/src/main_thread.rs - main_thread::MainThread (line 14) - compile fail ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+

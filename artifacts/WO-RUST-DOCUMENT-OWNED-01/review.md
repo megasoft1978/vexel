@@ -1,0 +1,8 @@
+**ACCEPT** — no blockers found in the scoped implementation. Borrowed parsing keeps its signature, lifetime, 16 MiB cap, and offset-0 input-limit diagnostic. The owned APIs borrow the caller’s `Arc`, clone it only after successful parsing, and share the same cached tables and query logic. I found no unsafe code, duplicated model identity, source copy, query-time rebuild, or partial-model return on failure. Cancellation is polled during XML processing and table construction, with offsets documented in [parse.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document/rust/crates/vexel-document/src/parse.rs:14).
+
+The nine original test bodies remain in [tests.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document/rust/crates/vexel-document/src/tests.rs:14); additional coverage exercises owned queries, handles, deletion, `Arc` lifetime/sharing, cancellation, and sources over 16 MiB including 100 MiB. Source files are under 800 lines. The candidate’s [verification record](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-owned-document/artifacts/WO-RUST-DOCUMENT-OWNED-01/verification.txt) reports the named checks passing; I did not run tests or builds, as requested. This review makes no full-app or performance claim.
+
+**Non-blocking gaps**
+
+- The new large/owned entrypoints lack direct tests for malformed input, token-storage exhaustion, and the 1 GiB boundary. Existing borrowed tests and shared parsing code cover much of that behavior, but entrypoint-specific cases would strengthen the evidence.
+- The 100 MiB case validates a large attribute value and source sharing; it does not establish large-document throughput.

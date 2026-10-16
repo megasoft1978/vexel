@@ -1,0 +1,18 @@
+   Compiling vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running tests/custom_publication.rs (.cache/WO-RUST-SVG-DECODE-01/current-continuation-5/target/aarch64-apple-darwin/debug/deps/custom_publication-91f78e43ff2960c7)
+
+running 10 tests
+test custom_hidden_geometry_publishes_no_shape ... ok
+test custom_solid_geometry_uses_guarded_request_publication ... ok
+test custom_singular_transform_reports_the_original_paint_offset ... ok
+test custom_wrong_job_and_reused_ticket_fail_without_retaining_output ... ok
+test custom_resume_cancellation_rolls_back_and_reclaims_output ... ok
+test custom_late_pattern_failure_rolls_back_custom_suffix ... ok
+test custom_clip_is_finalized_and_missing_clip_keeps_source_offset ... ok
+test nested_custom_pattern_child_resumes_before_its_parent ... ok
+test custom_resume_rejects_wrong_dimensions_and_generation_and_reclaims_output ... ok
+test custom_fill_and_stroke_patterns_publish_through_sequential_resumes ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,2 @@
+2026-10-14T10:43:26.099511Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-access/artifacts/WO-RUST-MCP-ACCESS-01/verification.txt:
+exit 0; valid WO-RUST-MCP-ACCESS-01 revision 1 sha256 ef11d3120093d47f208eed2e98a6dff37d434600a0529730f3c0e7060196c11e

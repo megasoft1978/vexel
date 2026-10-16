@@ -1,0 +1,11 @@
+{
+  "name": "platform",
+  "wo": "WO-RUST-NATIVE-SYSTEM-01",
+  "pid": 48543,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791961303.312114,
+  "exit_code": 0,
+  "duration_seconds": 185.7197470664978
+}

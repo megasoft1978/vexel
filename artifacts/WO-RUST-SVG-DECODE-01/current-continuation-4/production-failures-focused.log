@@ -1,0 +1,16 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.20s
+     Running tests/production_failures.rs (target/aarch64-apple-darwin/debug/deps/production_failures-cfbfbadab948d7f4)
+
+running 5 tests
+test cancellation_at_pattern_completion_releases_pixels_and_cannot_finish ... ok
+test explicit_definition_channels_preserve_distinct_requested_opacities ... ok
+test wrong_ticket_aborts_and_reclaims_only_transferred_job_output ... ok
+test nested_pattern_failure_and_cancellation_unwind_every_request_and_keep_source_identity ... ok
+test child_draft_cancellation_sweep_rolls_back_every_admitted_draft ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+

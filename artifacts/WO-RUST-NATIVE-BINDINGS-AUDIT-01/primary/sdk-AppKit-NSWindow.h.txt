@@ -1,0 +1,89 @@
+291: - (NSRect)contentRectForFrameRect:(NSRect)frameRect;
+292: 
+293: - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag NS_DESIGNATED_INITIALIZER;
+294: - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag screen:(nullable NSScreen *)screen;
+295: - (instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE; // Use initWithContentRect:. This method will throw an exception for coders that support allowsKeyedCoding, and is only available for compatibility with non keyed coding.
+296: 
+297: @property (copy) NSString *title;
+298: 
+
+292: 
+293: - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag NS_DESIGNATED_INITIALIZER;
+294: - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag screen:(nullable NSScreen *)screen;
+295: - (instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE; // Use initWithContentRect:. This method will throw an exception for coders that support allowsKeyedCoding, and is only available for compatibility with non keyed coding.
+296: 
+297: @property (copy) NSString *title;
+298: 
+299: /*!
+
+293: - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag NS_DESIGNATED_INITIALIZER;
+294: - (instancetype)initWithContentRect:(NSRect)contentRect styleMask:(NSWindowStyleMask)style backing:(NSBackingStoreType)backingStoreType defer:(BOOL)flag screen:(nullable NSScreen *)screen;
+295: - (instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE; // Use initWithContentRect:. This method will throw an exception for coders that support allowsKeyedCoding, and is only available for compatibility with non keyed coding.
+296: 
+297: @property (copy) NSString *title;
+298: 
+299: /*!
+300:  * Secondary text that may be displayed adjacent to or below the primary title depending on the configuration of the window.
+
+828: @protocol NSWindowDelegate <NSObject>
+829: @optional
+830: - (BOOL)windowShouldClose:(NSWindow *)sender NS_SWIFT_UI_ACTOR;
+831: - (nullable id)windowWillReturnFieldEditor:(NSWindow *)sender toObject:(nullable id)client NS_SWIFT_UI_ACTOR;
+832: - (NSSize)windowWillResize:(NSWindow *)sender toSize:(NSSize)frameSize NS_SWIFT_UI_ACTOR;
+833: - (NSRect)windowWillUseStandardFrame:(NSWindow *)window defaultFrame:(NSRect)newFrame NS_SWIFT_UI_ACTOR;
+834: - (BOOL)windowShouldZoom:(NSWindow *)window toFrame:(NSRect)newFrame NS_SWIFT_UI_ACTOR;
+835: - (nullable NSUndoManager *)windowWillReturnUndoManager:(NSWindow *)window NS_SWIFT_UI_ACTOR;
+
+904: /* Notifications
+905: */
+906: - (void)windowDidResize:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+907: - (void)windowDidExpose:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+908: - (void)windowWillMove:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+909: - (void)windowDidMove:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+910: - (void)windowDidBecomeKey:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+911: - (void)windowDidResignKey:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+
+919: - (void)windowDidChangeScreen:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+920: - (void)windowDidChangeScreenProfile:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+921: - (void)windowDidChangeBackingProperties:(NSNotification *)notification NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7)); // added in 10.7.3
+922: - (void)windowWillBeginSheet:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+923: - (void)windowDidEndSheet:(NSNotification *)notification NS_SWIFT_UI_ACTOR;
+924: - (void)windowWillStartLiveResize:(NSNotification *)notification NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.6));
+925: - (void)windowDidEndLiveResize:(NSNotification *)notification NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.6));
+926: - (void)windowWillEnterFullScreen:(NSNotification *)notification NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));
+
+328: /*!
+329:  * If url is not nil and its path is not empty, the window will show a document icon in the titlebar.
+330:  * If the url represents a filename or other resource with a known icon, that icon will be used as the document icon.  Otherwise the default document icon will be used.  The icon can be customized using `-[[NSWindow standardWindowButton:NSWindowDocumentIconButton] setImage:customImage]`.  If url is not nil and its path is not empty, the window will have a pop-up menu which can be shown via command-click on the area containing the document icon and title.  By default, this menu will display the path components of the url.  The presence and contents of this menu can be controlled by the delegate method `-[window:shouldPopUpDocumentPathMenu:]`
+331:  * If the url is nil or has an empty path, the window will not show a document icon and will not have a pop-up menu available via command-click.
+332:  */
+333: @property (nullable, copy) NSURL *representedURL API_AVAILABLE(macos(10.5));
+334: @property (copy) NSString *representedFilename;
+335: - (void)setTitleWithRepresentedFilename:(NSString *)filename;
+
+336: @property (getter=isExcludedFromWindowsMenu) BOOL excludedFromWindowsMenu;
+337: @property (nullable, strong) __kindof NSView *contentView;
+338: @property (nullable, weak) id<NSWindowDelegate> delegate;
+339: @property (readonly) NSInteger windowNumber;
+340: 
+341: /// @note The styleMask can only be set on macOS 10.6 and later. Valid \c styleMask settings have the same restrictions as the \c styleMask passed to `-initWithContentRect:styleMask:backing:defer:`.  Some \c styleMask changes will cause the view hierarchy to be rebuilt, since there is a different subclass for the top level view of a borderless window than for the top level view of a titled window.
+342: @property NSWindowStyleMask styleMask;
+343: 
+
+696: @property NSWindowTabbingMode tabbingMode API_AVAILABLE(macos(10.12));
+697: 
+698: /*! Windows with the same \c tabbingIdentifier will have the ability to be tabbed together when a window is being shown. This allows aggregation of similar windows. By default, the \c tabbingIdentifier will be generated based on inherent window properties, such as the window class name, the delegate class name, the window controller class name, and some additional state. Windows can be explicitly made to group together by using the same \c tabbingIdentifier.
+699:  */
+700: @property (copy) NSWindowTabbingIdentifier tabbingIdentifier API_AVAILABLE(macos(10.12));
+701: 
+702: /*! Actions that can be called to perform various tabbed window behaviors. UI that is hooked up to these items can be automatically validated by calling `NSWindow`'s \c validateUserInterfaceItem.
+703:  */
+
+390: 
+391: @property (readonly) NSEventModifierFlags resizeFlags;
+392: - (void)close;
+393: @property (getter=isReleasedWhenClosed) BOOL releasedWhenClosed;
+394: - (void)miniaturize:(nullable id)sender;
+395: - (void)deminiaturize:(nullable id)sender;
+396: @property (getter=isZoomed, readonly) BOOL zoomed;
+397: - (void)zoom:(nullable id)sender;

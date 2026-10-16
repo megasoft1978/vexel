@@ -1,0 +1,10 @@
+{
+  "baseline": "artifacts/WO-RUST-PLAN-01/source-baseline.json",
+  "baseline_sha256": "4242ac679d6b96b819ea82a459732848594fd60f598599a2fd585e66e988da87",
+  "files_checked": 603,
+  "changes": [],
+  "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "expected_head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "expected_index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c"
+}

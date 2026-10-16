@@ -1,0 +1,7 @@
+**ACCEPT — setup only.** The eight frozen catalogs match the accepted ownership matrix by source path: all 35 owner-assigned file rows are present, with no missing or extra paths. Their operations and original-suite assignments are retained.
+
+The separate-crate adaptation preserves the accepted ownership boundaries. The work orders keep shared decoder and scalar contracts intact, require real `DecodeOperations` and `KernelResources` implementations, and defer real root adapters. Selection records append-time source assignment and actual capacity leases. The new libraries are metadata-only; the orders retain downstream composition, effects, native, and UI work.
+
+The eight crates are registered with internal-only dependencies matching their partitions. The accepted `vexel-scene` contracts are present, and the setup retains the macOS 13+ Apple Silicon, MPL-2.0, and owned SVG constraints.
+
+The setup’s recorded verification reports passing offline workspace check and ready-order validation. I did **not** rerun commands or tests in this read-only review. No application or UI tests are claimed. Source implementation should begin only after this setup acceptance; each implementation still needs independent review and main checks before acceptance.

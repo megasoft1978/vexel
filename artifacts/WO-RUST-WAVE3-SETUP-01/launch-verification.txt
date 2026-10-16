@@ -1,0 +1,12 @@
+python3 scripts/wo_validate.py WO-RUST-WAVE3-SETUP-01 --ready
+EXIT 0
+valid WO-RUST-WAVE3-SETUP-01 revision 1 sha256 b5d9dd1905f7b257205d3701c968c420cf0c14e0133ecc0aeee95a97f406af7c
+
+python3 scripts/ledger.py validate ledger.jsonl
+EXIT 0
+valid ledger: 1143 entries
+
+git diff --check
+EXIT 0
+
+Six actual CLI supervisor statuses/handles inspected, current source overlay hashes recorded;603legacy source/index retained. XML escalation narrow and recorded. No broad application/UI tests.

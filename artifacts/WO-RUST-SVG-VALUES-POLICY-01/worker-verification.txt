@@ -1,0 +1,18 @@
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28)
+
+$ cargo +stable check -p vexel-svg-values --locked --offline
+PASS; Finished dev profile.
+
+$ cargo +stable test -p vexel-svg-values --locked --offline
+PASS; 15 unit tests passed, 0 failed; 4 integration tests passed, 0 failed; 0 doc tests. 19 tests total.
+
+$ python3 scripts/wo_validate.py WO-RUST-SVG-VALUES-POLICY-01 --ready
+PASS; valid WO-RUST-SVG-VALUES-POLICY-01 revision 1 sha256 289c38eb5952522a8034892e5ef1742819712a6dc2e90a027785ae9ff04abd1b
+
+$ python3 scripts/ledger.py validate ledger.jsonl
+PASS; valid ledger: 1319 entries
+
+$ git diff --check
+PASS; exit 0
+
+Scope: test file and owned artifacts only. Accepted baseline directory unchanged.

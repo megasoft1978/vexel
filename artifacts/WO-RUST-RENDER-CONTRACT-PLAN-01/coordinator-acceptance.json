@@ -1,0 +1,76 @@
+{
+  "accepted_as": "full interface/dependency plan only; proposed gates require implementation/acceptance",
+  "independent_review": "recheck-v2-result.md plus original review.md/recheck-v1-result.md retained",
+  "checked_launch_files": 131,
+  "authorized_coordinator_deltas": {
+    "rust/crates/vexel-svg-animation/tests/animation.rs": {
+      "before_sha256": "11450ab3c6bb392244f82382679a8b14e6f8c15307450066f894294daf42f1d6",
+      "after_sha256": "0bde967e5a4852475bd4064427fcf11bb1b29591d01d93f365167ade998a1f43",
+      "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+    },
+    "rust/crates/vexel-svg-animation/src/lib.rs": {
+      "before_sha256": "b38dc8efb8a724c9fb7fc9006df8aa36d0c4bf80407d328e18f47fdb41fbb9e1",
+      "after_sha256": "f779e5f2c3c880253a3d8c9f77c20ca5180451245c67c46ee5b2be5b209c3751",
+      "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+    },
+    "rust/crates/vexel-svg-animation/src/parse.rs": {
+      "before_sha256": "18e2079027d503b1c63f2735fb05b127c3002d10db5c52620b977f5892eb5c19",
+      "after_sha256": "33bc67ecce079efa5d16ccf51d11f8a71fcf79a03a504384e149a48cbf18dc55",
+      "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+    },
+    "rust/crates/vexel-svg-animation/src/eval.rs": {
+      "before_sha256": "07db20df770b733573b793aa6953c577b734ac4db94bea837eb9d8ee8ca1ab69",
+      "after_sha256": "b65c5f21084b689db1756a019cc934ee911316497dce8f19999c3be539de98ef",
+      "coordinator_authorization": "WO-RUST-SVG-ANIMATION-OWNED-01"
+    },
+    "rust/crates/vexel-document-edit/src/lib.rs": {
+      "before_sha256": "9f24f9ef54f54c78ce080f1cba8ddbdfe9a249a953bf20a20b7b8c36ad6b205f",
+      "after_sha256": "8029e3172f9b4e9cef8d5c9fa0f32a3671443096ac33aad6e7b2bc0c41f60c3c",
+      "coordinator_authorization": "WO-RUST-DOCUMENT-EDIT-01"
+    }
+  },
+  "original_legacy_hashes_preserved": 603,
+  "original_suites_fixtures_goldens_manifests_checked": 157,
+  "head_index_preserved": true,
+  "validators": [
+    {
+      "command": [
+        "python3",
+        "scripts/wo_validate.py",
+        "WO-RUST-RENDER-CONTRACT-PLAN-01",
+        "--ready"
+      ],
+      "exit_code": 0,
+      "stdout": "valid WO-RUST-RENDER-CONTRACT-PLAN-01 revision 1 sha256 596baaba56cc119c521cc75d2561f209b31d888188b0e8945561926201aa8725\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/ledger.py",
+        "validate",
+        "ledger.jsonl"
+      ],
+      "exit_code": 0,
+      "stdout": "valid ledger: 1322 entries\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "passed": true,
+  "actual_G1_binding": {
+    "proposed_OwnedAnimation": "vexel_svg_animation::OwnedDocument",
+    "proposed_AnimationView": "vexel_svg_animation::DocumentView",
+    "accepted_order": "WO-RUST-SVG-ANIMATION-OWNED-01"
+  },
+  "current_native_bindings": "WO-RUST-NATIVE-BINDINGS-SETUP-01 r2 accepted compiled registrations; shell/media still unimplemented"
+}

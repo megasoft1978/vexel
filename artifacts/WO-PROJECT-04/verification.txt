@@ -1,0 +1,26 @@
+WO-PROJECT-04 verification
+Date: 2026-10-13
+
+Implementation:
+- Added a 72-byte little-endian, version-1 recovery capsule around a complete project bundle.
+- Captures source path, file size, mtime seconds/nanoseconds, and capture time; checks path, nested bundle, and record with CRC-32.
+- Decode rejects unsupported versions, invalid header flags, bad lengths, overflow/truncation/trailing bytes, checksum failures, invalid nested projects, and expected-path mismatch without returning partial views.
+- Atomic storage creates or replaces a caller-selected regular target, reports publication and directory-fsync status, and refuses the source path. It does not alter saved-state flags.
+- Added full manifest/scene/timeline/asset round-trip, metadata, corruption, path mismatch, overflow, trailing/truncation, create/replace, invalid-target, and prior-content-preservation coverage.
+
+Commands and results:
+- `python3 scripts/wo_validate.py WO-PROJECT-04 --ready`: passed (frozen r1 SHA-256 f8b36eaa7d4a155b4544ddff21fd34a1232efaaf6801fb42dc1b14a968140aca).
+- `python3 scripts/ledger.py validate ledger.jsonl`: passed (757 entries before final lifecycle entries; validated again after recording).
+- `cmake --preset mac-debug`: passed.
+- `cmake --build --preset mac-debug --target svgworkbench project_recovery_test project_bundle_test project_file_test`: passed, strict warnings; linker emitted existing duplicate-library warnings.
+- `ctest --test-dir build/mac-debug --output-on-failure -R '^(project-recovery|project-bundle|project-file)$'`: passed 3/3.
+- `cmake --preset mac-asan`, matching `cmake --build --preset mac-asan --target svgworkbench project_recovery_test project_bundle_test project_file_test`, and matching focused CTest command: passed 3/3 (ASan/UBSan).
+- `cmake --preset mac-ubsan`, matching `cmake --build --preset mac-ubsan --target svgworkbench project_recovery_test project_bundle_test project_file_test`, and matching focused CTest command: passed 3/3 (UBSan).
+- Broad UI/E2E, corpus, performance suites were not run, as required.
+
+Follow-up application work:
+- Choose/create a per-user Application Support recovery directory and stable source identity key.
+- Schedule bounded background snapshot capture without blocking UI; handle cancellation and project mutation consistency.
+- Discover capsules after restart; compare saved baseline with the current source and present restore/conflict UI without overwriting changed source files.
+- Add cleanup/retention and remove capsules after successful save/discard.
+- Final broad UI/E2E acceptance remains deferred until feature completion. The reviewed live Codex/MCP character-animation recording for the website and README remains a post-acceptance deliverable.

@@ -1,0 +1,341 @@
+{
+  "work_order": "WO-RUST-SVG-DECODE-01 revision 2",
+  "status": "incomplete candidate; not accepted",
+  "scope_catalog": {
+    "path": "artifacts/WO-RUST-SVG-DECODE-01/scope.json",
+    "sha256": "2c6ceb9b08eff33b84e63ea6d3fb03bf4b5069e9f659038aadf073744a7b8e08",
+    "expected_frozen_sha256": "2c6ceb9b08eff33b84e63ea6d3fb03bf4b5069e9f659038aadf073744a7b8e08",
+    "catalog_keys": 113,
+    "parity_entries": 113,
+    "key_sets_equal": true,
+    "ordered_catalog_keys_sha256": "931d949a9c4cbdadd05b5dde4fe3acf0743af8fa0d129863773d495931afdde1"
+  },
+  "accepted_scene_seed": {
+    "path": "artifacts/WO-RUST-SVG-DECODE-01/accepted-child-requests-source-seed.json",
+    "verified_files": [
+      {
+        "path": "rust/crates/vexel-scene/src/builder.rs",
+        "expected_sha256": "93e71dc2ea3c1fd66353b8d40a889d094882a5528b6a9cb9ed100b40fcdafa50",
+        "actual_sha256": "93e71dc2ea3c1fd66353b8d40a889d094882a5528b6a9cb9ed100b40fcdafa50",
+        "matches": true
+      },
+      {
+        "path": "rust/crates/vexel-scene/src/decode_initialization.rs",
+        "expected_sha256": "7bb9b36fa52b12196b3592ed68804d9d7588192b29aaddbe14bb2ecdd470ecfb",
+        "actual_sha256": "7bb9b36fa52b12196b3592ed68804d9d7588192b29aaddbe14bb2ecdd470ecfb",
+        "matches": true
+      },
+      {
+        "path": "rust/crates/vexel-scene/src/draft.rs",
+        "expected_sha256": "8455c0fdd5cbd153780ab753d5f31f4000945ef150f178fe09505b6ea56be294",
+        "actual_sha256": "8455c0fdd5cbd153780ab753d5f31f4000945ef150f178fe09505b6ea56be294",
+        "matches": true
+      },
+      {
+        "path": "rust/crates/vexel-scene/src/request.rs",
+        "expected_sha256": "2824537c7a2db3f6f0d00d41081a824c5e305bae5cc4ea3fd3a494f8fa53e1cc",
+        "actual_sha256": "2824537c7a2db3f6f0d00d41081a824c5e305bae5cc4ea3fd3a494f8fa53e1cc",
+        "matches": true
+      },
+      {
+        "path": "rust/crates/vexel-scene/tests/child_request_contracts.rs",
+        "expected_sha256": "e6c1220cf40e0814640acd85e8464cdf25c91cb2084a042bedadf8e0107c770f",
+        "actual_sha256": "e6c1220cf40e0814640acd85e8464cdf25c91cb2084a042bedadf8e0107c770f",
+        "matches": true
+      }
+    ],
+    "all_five_match": true,
+    "source_seed_sha256": "aaa091e39ce00708df326333c1d6f68f632fde9e90bbb5562d2208ca0a63293d"
+  },
+  "changed_authorized_files": [
+    {
+      "path": "rust/crates/vexel-svg-decode/src/custom_publication.rs",
+      "sha256": "a4a6633fb2e7d3ed971aeb867106661cd3030f0803f3206c1ee65d2702076277"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/definition_finish.rs",
+      "sha256": "85934255d7814bf63adc67012aa4065cb82c8ef0488fc09c069445cc1d7d50cf"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/definition_work.rs",
+      "sha256": "8803359c44b1afc3932872cc356c465b45fbda927508888569a4938be0099a00"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/decode.rs",
+      "sha256": "72697856d6aa2a07e4ab59c6b52b510fb22c6fb60dd5282b5e3f800922fd6f4a"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/lib.rs",
+      "sha256": "fe6ff39e2592637e2b2fd8e60229b72abb3627da392b2b4d51f9df73acb8258f"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/publication.rs",
+      "sha256": "80d4627d84b66690d66fb38ff1ba171b5db0f42f2f037bb10a68fff5734f9a8a"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/session.rs",
+      "sha256": "d2df2c5edf67be44ec015c7b4b65910b393816ccc5a15f563358a77ff153b87a"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/tasks.rs",
+      "sha256": "d2c69a0872d8cfa7d7ea43da77accf0c0b4d489e450e90d072ccc2e27d3b8cb4"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/text_task.rs",
+      "sha256": "3f60d2b26e50287735c7c2191408364d0481a551ee3c33b659a7fd07ca2e7fee"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/traversal.rs",
+      "sha256": "a2b2cec8304a29063960bb7742f26bf0e91dfa32bdf7eb7bf8465b24aa849485"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/traversal_boundary.rs",
+      "sha256": "ed564543ad929c8568af0be2328da5df69b63e8d1871bf9d99d158f126d29090"
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/tests/custom_publication.rs",
+      "sha256": "d8fa08d1a5f48792518116a25255f3099e74244ae74935c9c90e9a6ee5eda69e"
+    }
+  ],
+  "preserved_prior_continuation_artifact_inventory": [
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/capacity-journal.log",
+      "sha256": "7ca7705f0e35f2a3565662738d7678db0bef7bd18aa75ff5ad8364bb73b78fd3"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/check-after-batching.log",
+      "sha256": "60a7c101a6138860c2eb17461bbc145188dc2f61f70aab94b624c16df2d43a04"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/check.log",
+      "sha256": "4920cbd846c343915f86fc9866d8097d8016408c82405534701e983d899de233"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/coverage.json",
+      "sha256": "527714979a6834b1646b1eb51676ede6773a30044684339c8aa9da3a73525b4c"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/decoder-path.log",
+      "sha256": "ddec75f81a02f14da6fa1daa91edbae5123c3b5b2861fe102ebd3592e6c04583"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/focused-after-initial.log",
+      "sha256": "42e3d10745145486fd3dfc1fe77d72169ecf60b1586843ed8ce7e450ce24f5ee"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/focused-before.log",
+      "sha256": "9afe55341eb56dcfe6ffc2a8d01b67347003d7132eed1ba86524b4fa99506a52"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/focused-final.log",
+      "sha256": "cfd4a4d9674b043cc8449b9465d1ad3df03795743feb17f0ae450b01bc878649"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/independent-review.md",
+      "sha256": "fddc107b84964922f2c147a77a365306e6e4c6bef9149043fe4e117ac06854bb"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/many-shapes.log",
+      "sha256": "3c968f1359d810ea17e18b768e461273cf88f45b34ae15801b6c11e0d30d1e68"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/package-test-before-precount-cleanup.log",
+      "sha256": "864106f2af452f07c182a9e21bffd72ccdf00979cfc26f739a2a04279c2fd452"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/package-test-boundary-failure.log",
+      "sha256": "bf34248eaefb566ed2236dfd9bb254fd19ad30a099e9fba33e92f96b8b927836"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/package-test-initial-per-shape.log",
+      "sha256": "172ec95f3e805173df8ffc75a3f78c7b5434cd9ab74ca6260ff798dbcb03430e"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/package-test.log",
+      "sha256": "2b441a98355fdb644fe87d07b063e1c9ee22b4334edd971b7870dfb3881ff714"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/parity-map.json",
+      "sha256": "f58b901bb23a50e585bb588b5ca3b5593c88fa07f3a970fc2092e3bacc66c515"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/result.md",
+      "sha256": "6faa2393d4dc602d4f1aeb99a3610a33db8af3f35c5504997710603cc143be9e"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/validator.log",
+      "sha256": "386070fc70e255cd4ca31283a1fdade121ee818fb90361351729e49e1e21b366"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-2/verification.json",
+      "sha256": "9655d6e0b4027e7980917e39dd3b95342347977a030c9786bfa9bfdc9f965b11"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/capacity-journal-focused.log",
+      "sha256": "1f63742911a2fbb3e7ee0157abd1f4743b40a344423412ade9dbc59b52c4c148"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/check.log",
+      "sha256": "a13905646e2aed93ec6ea9ed6ac91490a4e01f91af0215c3965279a910612149"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/clip-boundaries-focused.log",
+      "sha256": "aabecb73292614450078a0f944d0f451bc80d36ebe46ff4cc0b4a5e076ab7818"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/continuation-2-preservation.json",
+      "sha256": "f7d21b9387a23281f6e08c3902f256eec4954101016f76d6d1f70667d62660a9"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/coverage.json",
+      "sha256": "6456e49024d469d9970ef05c406fbb01333b3f32aa6bb9e5870a902ccdd00be2"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/decoder-path-focused.log",
+      "sha256": "ef866a40f93aa4c223254372767e730b82101c81e481eff58d603dc3551a2f50"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/format-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/original-probe-scan-focused.log",
+      "sha256": "5ce27df53c8c8a1eb5848d9401c49f7a92da28548251673ce8d72888b9f44673"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/original-references-focused.log",
+      "sha256": "af5f30bb5642446b7181003eefbbffe0a6a4fbf3c08250102f79e4455607cda7"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/package-test.log",
+      "sha256": "b74ac06b31b8c7c624a4888d3be895404109c3f8600d3121828b060d05f2205b"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/parity-map.json",
+      "sha256": "c80f8ec94e4cd101c8dd2deb8cb138b3ab4d1e855090b5068152a4a5ea918a44"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/production-engine-focused.log",
+      "sha256": "d4bbd1441e6b4dabec4d30ccb40e26f90147c0d8bf9a6bc5a0eb447697eef219"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/production-failures-focused.log",
+      "sha256": "bb5119980f2cb221424f4a7fafa6b5b87af13ca032ffd85e065dd44f303aaaf1"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/protected-scope-audit.json",
+      "sha256": "bc41fa07d8f000674d74f44c5ba3daf8858d58307d4f2c5e37a0a25ffef8de06"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/result.md",
+      "sha256": "a7b8df0587258a00fc043ecf40990775a2559955c4414c8e7b00a3efca8a83aa"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/tile-cache-contract.log",
+      "sha256": "6e2558b24dde13424c898333f5eaa7224e1686d65a4d08ca786de237f418dc0a"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/validator.log",
+      "sha256": "386070fc70e255cd4ca31283a1fdade121ee818fb90361351729e49e1e21b366"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-3/verification.json",
+      "sha256": "1f490e2e0d467d3b5efdd01cb3ab369908d37a0dc50eb1bd6c58564e3f7623b2"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/blocker-api-proof.md",
+      "sha256": "db28f2c53f4247c2871d8ef71596fa04611092b8200c82df8344fd8d716db86b"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/capacity-journal-focused.log",
+      "sha256": "68c1f1831a500794d1809c5537bc400558aba26c18678c8bb465aa36d435bb2f"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/check.log",
+      "sha256": "361ce97dc1c7d95d010ead029f16bbe37304263b2314c59e499a4300eeec5868"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/coverage.json",
+      "sha256": "d9eed5cee7dc39f51afb69949a5059095eaaa040ec44c63c0896393413400a48"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/edits-and-hashes.json",
+      "sha256": "74b8c64dd68dc5be18bc4fd60c8e89e601b7b6a9ee7d804a1e4ccd4734cdb3f8"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/format-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/ledger-validator.log",
+      "sha256": "5dab179a69fc2e6afba07192078bfc510f19aa1735dd6cc602fc70d20feeca1b"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/m4-boundaries-focused.log",
+      "sha256": "19e51756dbab013118bd1d4211e2707ee6c88570f27b3c70825a1dfeec86bc60"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/original-m4-boundaries-focused.log",
+      "sha256": "0f5aa004f1a3eaa5d91121b280ecd47df8c68a9d43a32b4c607c49d572babeaa"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/original-probe-scan-focused.log",
+      "sha256": "d776545c1d9c5270c9ddc070f51dfc8a4e80c22512e3f327609d4361d0750b15"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/package-test.log",
+      "sha256": "e4aad0d0ccc986daf1fa4a21aec0fdf934b2efa0bef00d5100b2086bf04de374"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/parity-map.json",
+      "sha256": "cc828079e58596885d564a08ea47835e38848176181292817c5dd25da6560daa"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/production-engine-focused.log",
+      "sha256": "c9f27f09045a70a78d51451a68c7bea619d3a248ad76a6b0dfa237a0d29034a3"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/production-failures-focused.log",
+      "sha256": "e4df14d3709417ed895733aa9ac21406a499cf19df7e5dbb19b34ece6be57502"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/result.md",
+      "sha256": "b4a13ab63d90ed073065963940879cb68e9792b5c222b6b15adfa27581a940c3"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/seed-reconciliation.json",
+      "sha256": "75329f8bb197edf498437b1ed26242a57c4861a985138c200b2d9680d5e6947a"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/sol-architecture-review.md",
+      "sha256": "00141fdb03ce5039a41063d99841f02139728cd4acdc5970cf74a446d31aecaa"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/validator.log",
+      "sha256": "386070fc70e255cd4ca31283a1fdade121ee818fb90361351729e49e1e21b366"
+    },
+    {
+      "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-4/verification.json",
+      "sha256": "5338b7e7b5f9ff38872fd99d8e8b1fe648050ee078056519686f943d694eb5df"
+    }
+  ],
+  "boundary_audit": {
+    "no_scene_source_or_test_edits": true,
+    "no_shared_files_or_manifest_or_lock_edits_by_this_continuation": true,
+    "no_legacy_c_or_original_test_edits": true,
+    "no_network_or_dependencies": true,
+    "no_gui_or_broad_ui_e2e": true,
+    "note": "This continuation wrote only the listed decoder crate paths and current-continuation-5 evidence. Existing unrelated worktree changes were left untouched."
+  },
+  "parity_map": {
+    "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-5/parity-map.json",
+    "sha256": "b746bd7c2b86bc9dbf50ae3330cc940853a06fafd2d2e8d013bdce7b63533558",
+    "catalog_entries": 113,
+    "complete": false
+  },
+  "candidate_result": {
+    "path": "artifacts/WO-RUST-SVG-DECODE-01/current-continuation-5/result.md",
+    "sha256": "9d9721c685b8f2e69405a43346992ab1f306589457f285bce2be0ee68975e577",
+    "status": "incomplete candidate; not accepted"
+  }
+}

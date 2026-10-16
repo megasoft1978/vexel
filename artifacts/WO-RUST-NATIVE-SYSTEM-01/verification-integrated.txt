@@ -1,0 +1,48 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-platform-macos --locked --offline
+EXIT: 0
+    Checking vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-macos)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s
+
+COMMAND: cargo +stable test -p vexel-platform-macos --locked --offline
+EXIT: 0
+
+running 2 tests
+test tests::failed_random_status_clears_the_entire_output ... ok
+test tests::successful_random_status_preserves_native_output ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 6 tests
+test connected_unix_socket_reports_the_current_user ... ok
+test random_request_over_the_limit_is_rejected_without_changing_output ... ok
+test maximum_random_request_is_accepted ... ok
+test empty_random_request_succeeds ... ok
+test small_random_request_fills_the_buffer ... ok
+test non_socket_descriptor_returns_native_error_classification ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-macos)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.22s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_platform_macos-7e924a4961d4e0f1)
+     Running tests/native_system.rs (build/rust/aarch64-apple-darwin/debug/deps/native_system-d2472a1597201dbf)
+   Doc-tests vexel_platform_macos
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-NATIVE-SYSTEM-01 --ready
+EXIT: 0
+valid WO-RUST-NATIVE-SYSTEM-01 revision 1 sha256 165760987e1c09776660f665ed1bdc2d7c44daf9ca73cdd4d36f0f2bd9f05893
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1111 entries
+
+COMMAND: git diff --check
+EXIT: 0

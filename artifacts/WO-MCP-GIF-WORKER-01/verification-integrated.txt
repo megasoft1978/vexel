@@ -1,0 +1,16 @@
+Integrated configure/build mcp_export_job_test vexel-mcp exited0; mcp-export-job1/1 passed0.26s. Captured in coordinator tool output2026-10-14.
+$ python3 scripts/wo_validate.py WO-MCP-GIF-WORKER-01 --ready
+valid WO-MCP-GIF-WORKER-01 revision 1 sha256 c97344a7ca2f9c2ff803a34d97bd576bf70c20adf0450b1b094b0a83d1400774
+
+exit 0
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 1021 entries
+
+exit 0
+$ git diff --check
+
+exit 0
+test-map JSON valid; existing root mcp-export-job mapping retained.
+src/mcp/mcp_export_job.c: 389lines
+src/mcp/mcp_export_job.h: 76lines
+tests/mcp/mcp_export_job_test.c: 381lines

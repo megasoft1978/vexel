@@ -1,0 +1,14 @@
+Final independent read-only review — WO-ANIM-PROJECT-09
+Model: gpt-6.1-sol
+Scope: work-order allowlist only; no edits or tests performed by reviewer.
+
+Verdict: No blocking or high findings remain.
+
+The reviewer found deterministic last-exposure-at-or-before-tick selection and track-order compositing. Its rounded integer source-over math converts straight raster RGBA input to premultiplied output. Cumulative budget subtraction is guarded; output reuse preserves ownership; later failures release the output and completed layer intermediates.
+
+Medium follow-ups:
+- Pixel tests cover half-transparent blue over opaque red, but not translucent destination/base-scene cases. Assertions inspect the first pixel only.
+- Failure coverage includes invalid references, unsupported media, SVG decode failure, dimension mismatch, base-render failure, invalid tick, and invisible tracks. Allocation failure, composite-budget exhaustion, drawing-layer raster failure, and failure after a previous layer composited are not directly injected/tested. The allocator offers no failure injection in this lane.
+- Immutability checks compare the encoded bundle (including scene, timeline, and assets) plus selected decoded scene/timeline fields; they do not snapshot every decoded array.
+
+The reviewer notes that dependency guarantees for iterator bounds, raster format/byte counts, and dependency cleanup were outside the frozen allowlist and were not independently inspected.

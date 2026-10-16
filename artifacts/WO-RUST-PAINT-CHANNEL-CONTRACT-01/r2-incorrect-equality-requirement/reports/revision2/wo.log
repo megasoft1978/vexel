@@ -1,0 +1,4 @@
+$ python3 scripts/wo_validate.py WO-RUST-PAINT-CHANNEL-CONTRACT-01 --ready
+valid WO-RUST-PAINT-CHANNEL-CONTRACT-01 revision 2 sha256 23ce07ef37f8645d3adf3469195b69bff2be787a4acca0e93d3f20d6c5a36a6f
+
+exit_code=0

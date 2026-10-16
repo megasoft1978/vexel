@@ -1,0 +1,1 @@
+**ACCEPT.** The repaired tests assert exact malformed-input offsets and cover both 4096-byte name acceptance and 4097-byte rejection, including the rejection offset and no tag emission. The parity map names the new boundary test. The reader implementation appears unchanged from the prior review. No remaining issue found.

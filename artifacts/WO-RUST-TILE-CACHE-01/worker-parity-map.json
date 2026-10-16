@@ -1,0 +1,42 @@
+{
+  "work_order": "WO-RUST-TILE-CACHE-01",
+  "source_context": "current dirty-source overlay; legacy references were read in place and left unchanged",
+  "provenance": "owner-owned src/raster/tile_cache.c and tile_cache.h; baseline inventory artifacts/WO-RUST-PLAN-01/source-baseline.json; no external algorithms copied",
+  "rust_implementation": "rust/crates/vexel-tile-cache/src/lib.rs",
+  "rust_tests": [
+    "rust/crates/vexel-tile-cache/tests/cache.rs",
+    "rust/crates/vexel-tile-cache/src/lib.rs (cfg(test) rollover seam and regression)"
+  ],
+  "adaptations": {
+    "ownership": "C's raster_tile pointer transfer is represented by TileCache::put(key, Tile): success consumes the owned Tile; failure returns (CacheError, Tile), preserving caller data. The C borrowed pointer from get becomes Option<&Tile> tied to the mutable cache borrow, preventing use across mutation/destruction. Drop releases all owned tile vectors safely.",
+    "allocation": "Vec::try_reserve_exact is used for bounded slots. Metadata charge is reserved slot capacity multiplied by size_of::<Option<Entry>>(), including allocator over-reservation, plus each tile's allocated_byte_count() (the RGBA Vec capacity, including spare bytes). Construction rejects metadata beyond byte_cap; put admission, replacement deltas, eviction removal, and stats all use reserved payload capacity. Cache object/allocator bookkeeping follows the C convention and is not charged.",
+    "errors": "C bool/null-out-parameter failures become Result for construction and (CacheError, Tile) for ownership-preserving insertion. Null pointers cannot be expressed by safe references/owned values. Tile dimensions and packed RGBA length are validated before insertion.",
+    "clock": "u64 tick rollover resets tick and wrapping-increments the epoch, retaining ordering by (epoch,tick). The clock injection method and exact C-order rollover test are cfg(test), matching the C VEXEL_TESTING seam without production mutability.",
+    "threading": "No synchronization is added; exclusive Rust borrowing enforces one mutable owner at a time."
+  },
+  "c_api_parity": [
+    {"c_symbol": "RASTER_TILE_CACHE_MAX_BYTES / RASTER_TILE_CACHE_MAX_ENTRIES", "rust_symbol": "MAX_BYTES / MAX_ENTRIES", "rust_span": "src/lib.rs:8-10", "tests": "tests/cache.rs:13-20", "limits": "256 MiB and 65,536 slots"},
+    {"c_symbol": "raster_tile_cache_create", "rust_symbol": "TileCache::new", "rust_span": "src/lib.rs:55-65", "tests": "tests/cache.rs:13-20", "limits": "nonzero bounded cap/count; checked metadata charge; fallible slot reserve"},
+    {"c_symbol": "raster_tile_cache_get", "rust_symbol": "TileCache::get", "rust_span": "src/lib.rs:67-75", "tests": "tests/cache.rs:23-28, 39-60", "ownership": "borrow tied to exclusive mutable cache borrow; hit advances LRU"},
+    {"c_symbol": "raster_tile_cache_put", "rust_symbol": "TileCache::put", "rust_span": "src/lib.rs:77-107", "tests": "tests/cache.rs:23-90, 100-147", "ownership": "consumes on success and returns unchanged Tile on failure; validates dimensions/byte count; charges allocated_byte_count() for admission, replacement, eviction, and stats"},
+    {"c_symbol": "raster_tile_cache_set_epoch", "rust_symbol": "TileCache::set_epoch", "rust_span": "src/lib.rs:109-116", "tests": "tests/cache.rs:64-79", "behavior": "same generation+scale retains entries; either change clears synchronously and resets clock"},
+    {"c_symbol": "raster_tile_cache_get_stats", "rust_symbol": "TileCache::stats", "rust_span": "src/lib.rs:118-120", "tests": "tests/cache.rs:13-90, 123-147", "behavior": "entry count, total actual reserved metadata+payload capacity charge, byte cap, generation, scale"},
+    {"c_symbol": "raster_tile_cache_destroy", "rust_symbol": "Drop for TileCache / clear", "rust_span": "src/lib.rs:144-148, 215-217", "behavior": "all entries and tile allocations released by ownership"},
+    {"c_symbol": "raster_tile_cache_test_set_clock", "rust_symbol": "TileCache::set_clock_for_test", "rust_span": "src/lib.rs:156-166", "tests": "src/lib.rs:173-194", "behavior": "test-only deterministic UINT64_MAX rollover seam; newest entry is placed at max tick"},
+    {"c_symbol": "cache_entry / find_key / free_slot / lru_slot / next_tick / remove_entry / destroy_tile", "rust_symbol": "Entry / find / slot search in put / lru_slot / next_tick / remove / Tile Drop", "rust_span": "src/lib.rs:27-40, 92-106, 129-165, 215-217", "tests": "tests/cache.rs:43-90, 100-147; src/lib.rs:173-225", "behavior": "stable slot-order tie break; actual Option<Entry> metadata sizing; allocated payload-capacity release; epoch+tick ordering"}
+  ],
+  "focused_contract_tests": [
+    "validates_limits_and_charges_reserved_metadata",
+    "metadata_charge_uses_actual_entry_layout_and_reserved_capacity",
+    "exact_byte_boundary_and_rejected_tile_preserve_caller_data",
+    "spare_payload_capacity_is_charged_and_failed_put_returns_exact_allocation",
+    "replacement_and_eviction_charge_reserved_payload_capacity",
+    "replacement_does_not_evict_other_entries_and_updates_value",
+    "touched_entry_is_newest_lru_and_eviction_tie_uses_slot_order",
+    "equal_recency_evicts_lowest_slot_first",
+    "count_cap_stats_epoch_invalidation_and_same_epoch_retention",
+    "entry_count_boundary_and_accounting_stay_bounded",
+    "c_contract_clock_rollover_order"
+  ],
+  "remaining_product_scope": "No renderer/cache integration, full application migration, performance campaign, or product completion is claimed. This port is a candidate pending independent review, exact-scope/main audit, and named integrated checks."
+}

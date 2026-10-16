@@ -1,0 +1,264 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-ANIMATION-FRAME-01",
+  "catalog_source_sha256": "1ef66c85354c47f8c0ae077af7e3f43001566c790a9d20c2e332f5c56c68bd55",
+  "source_symbols": [
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:14:definition:checked_bytes",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "checked_bytes",
+      "source_line": 14,
+      "status": "partial",
+      "rust_mapping": "Checked additions/multiplications are used at table, range, and byte boundaries; no standalone helper API."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:21:definition:consume_work",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "consume_work",
+      "source_line": 21,
+      "status": "partial",
+      "rust_mapping": "WorkControl charges and checked local work counters enforce the 50,000,000 transform ceiling; full oracle classification remains unproven."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:32:definition:shape_in_target",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "shape_in_target",
+      "source_line": 32,
+      "status": "partial",
+      "rust_mapping": "Implemented in apply_value across source spans and transform ancestry; source-bound checks need full oracle proof."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:56:definition:shape_is_direct_target",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "shape_is_direct_target",
+      "source_line": 56,
+      "status": "partial",
+      "rust_mapping": "Implemented in apply_value for direct source/transform targets; not separately proven."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:72:definition:shape_target_node",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "shape_target_node",
+      "source_line": 72,
+      "status": "partial",
+      "rust_mapping": "Transform ancestry is traversed in evaluate_frame; all source error classifications remain unproven."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:95:definition:shape_has_animated_effect_limit",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "shape_has_animated_effect_limit",
+      "source_line": 95,
+      "status": "partial",
+      "rust_mapping": "has_effect checks group filter/mask use for geometry changes."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:113:definition:shape_transform_product",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "shape_transform_product",
+      "source_line": 113,
+      "status": "partial",
+      "rust_mapping": "product composes current parent chain with attribute, suffix, and motion transforms."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:143:definition:scale_unit",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "scale_unit",
+      "source_line": 143,
+      "status": "implemented",
+      "rust_mapping": "Numeric opacity is clamped to [0,1]."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:149:definition:affine_inverse",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "affine_inverse",
+      "source_line": 149,
+      "status": "partial",
+      "rust_mapping": "inverse preserves the 1e-15 frame transform threshold; clip threshold behavior not ported."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:162:definition:transform_matrix",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "transform_matrix",
+      "source_line": 162,
+      "status": "partial",
+      "rust_mapping": "transform_value implements translate/scale/rotate/skew and rotation center checks."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:202:definition:apply_matrix_to_shape",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "apply_matrix_to_shape",
+      "source_line": 202,
+      "status": "partial",
+      "rust_mapping": "map_shape_edges updates geometry and frame stroke/paint inverses for transform tracks."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:238:definition:apply_geometry_matrix",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "apply_geometry_matrix",
+      "source_line": 238,
+      "status": "partial",
+      "rust_mapping": "map_shape_edges is shared for numeric geometry changes."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:257:definition:bounds_for_shape",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "bounds_for_shape",
+      "source_line": 257,
+      "status": "partial",
+      "rust_mapping": "shape_bounds computes local bounds over shape edge endpoints."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:288:definition:refresh_object_paint_bounds",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "refresh_object_paint_bounds",
+      "source_line": 288,
+      "status": "partial",
+      "rust_mapping": "object-bounding-box fill bounds are refreshed; stroke paint and clip cases remain."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:308:definition:matrix_for_numeric",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "matrix_for_numeric",
+      "source_line": 308,
+      "status": "partial",
+      "rust_mapping": "numeric geometry mapping covers translation and width/height/radius scaling."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:369:definition:apply_transform_track",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "apply_transform_track",
+      "source_line": 369,
+      "status": "partial",
+      "rust_mapping": "Transform/motion overlays are applied in order; clip propagation and exact unsupported cases remain."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:435:definition:apply_track",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "apply_track",
+      "source_line": 435,
+      "status": "partial",
+      "rust_mapping": "Overlay application supports a subset of legacy attrs; unsupported effects/pattern/path classifications need oracle proof."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation.c:549:definition:raster_shape_render_at",
+      "source": "src/raster/shape_render_animation.c",
+      "symbol": "raster_shape_render_at",
+      "source_line": 549,
+      "status": "blocked",
+      "rust_mapping": "No concrete accepted raster/FlatKernel/native provider adapter exists in the assigned crate dependencies; no raster frame dispatch is claimed."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:19:definition:checked_bytes",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "checked_bytes",
+      "source_line": 19,
+      "status": "implemented",
+      "rust_mapping": "Checked multiplication/addition computes estimated copied table and nested geometry bytes before reservation."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:26:definition:reserve_clone_bytes",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "reserve_clone_bytes",
+      "source_line": 26,
+      "status": "adapted",
+      "rust_mapping": "try_reserve_exact plus the 64 MiB estimate and actual Vec capacities bound the owned clip-table copy."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:38:definition:hash_capacity",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "hash_capacity",
+      "source_line": 38,
+      "status": "adapted",
+      "rust_mapping": "Safe Rust ownership and the accepted FrameBuilder remove pointer-hash alias/refcount bookkeeping; clip-copy behavior is still blocked."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:51:definition:pointer_hash",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "pointer_hash",
+      "source_line": 51,
+      "status": "adapted",
+      "rust_mapping": "Safe Rust ownership removes raw pointer hashing; shared clip identity must be preserved by a future safe handle-aware clip adapter."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:62:definition:raster_animation_clips_release",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "raster_animation_clips_release",
+      "source_line": 62,
+      "status": "adapted",
+      "rust_mapping": "Drop owns Rust buffers and prevents double release; frame clip publication is blocked by the missing mutation API."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:74:definition:raster_animation_clips_clone",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "raster_animation_clips_clone",
+      "source_line": 74,
+      "status": "adapted",
+      "rust_mapping": "Rust-owned ClipId-indexed table clone preserves graph identity; exact pointer-root alias topology becomes owned scene Clip identity."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:135:definition:add_work",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "add_work",
+      "source_line": 135,
+      "status": "implemented",
+      "rust_mapping": "Clip loops charge WorkControl and checked local work against 50,000,000."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:145:definition:affine_inverse",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "affine_inverse",
+      "source_line": 145,
+      "status": "implemented",
+      "rust_mapping": "Clip inverse accepts finite nonzero determinant and validates the resulting affine, matching the source clip threshold."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:158:definition:node_product",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "node_product",
+      "source_line": 158,
+      "status": "implemented",
+      "rust_mapping": "node_product composes motion then attribute, snapshots target before suffix, and returns full and owner-before-suffix products."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:191:definition:shape_has_node",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "shape_has_node",
+      "source_line": 191,
+      "status": "implemented",
+      "rust_mapping": "Shape transform ancestry traverses effective frame transforms with the 128-node bound and charged work."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:213:definition:bounds_for_node",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "bounds_for_node",
+      "source_line": 213,
+      "status": "implemented",
+      "rust_mapping": "Bounds traverse all effective shapes using the target full inverse and every edge endpoint; empty owner geometry errors."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:251:definition:update_clip_owner",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "update_clip_owner",
+      "source_line": 251,
+      "status": "implemented",
+      "rust_mapping": "Each effective shape root and ClipId parent chain is visited with depth 64; matching owners update inverse and valid object-box bounds."
+    },
+    {
+      "catalog_key": "src/raster/shape_render_animation_clips.c:266:definition:raster_animation_clips_update",
+      "source": "src/raster/shape_render_animation_clips.c",
+      "symbol": "raster_animation_clips_update",
+      "source_line": 266,
+      "status": "implemented",
+      "rust_mapping": "Public update_animation_clips validates handle access, deep-copies clips, updates the full shape instance chain, then uses atomic replace_clips."
+    }
+  ],
+  "operations": [
+    {
+      "name": "evaluate_frame",
+      "signature": "fn evaluate_frame<'a>(view: SceneView<'a>, time_seconds: f64, control: &mut dyn WorkControl) -> Result<EvaluatedFrame<'a>>; fn update_animation_clips(frame: &mut EvaluatedFrame<'_>, shape: ShapeId, update_bounds: bool, control: &mut dyn WorkControl) -> Result<()>",
+      "status": "partial",
+      "implementation": "evaluate_frame evaluates current accepted DocumentView overlays and publishes changed tables; per-overlay clip refresh uses seeded SceneView IDs and atomic replace_clips. update_animation_clips is implemented. No full native FlatKernel render adapter is in this crate.",
+      "contract": "Uses accepted r2 APIs: all-record shape/transform/clip IDs and scene_id; effective frame references; owner-before-suffix matrices; instance-specific ancestry; current overlay order; atomic whole clip replacement. Exact renderer/provider composition is a later adapter. Unsupported values preserve explicit diagnostics."
+    }
+  ]
+}

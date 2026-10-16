@@ -1,0 +1,12 @@
+{
+  "status": "proposed-awaiting-owner",
+  "original_fixture_sha256": "f223c036495281069b0b5c2b9a57653e723e2a9b6bfc6e6bd4fece1b0df2551c",
+  "path": "tests/test_shape_render.py",
+  "one_input_change": [
+    "M0 0 L1.2.3 4 5",
+    "M0 0 L1.2..3 4 5"
+  ],
+  "assertions_changed": false,
+  "repository_files_modified": false,
+  "primary_reference": "https://www.w3.org/TR/SVG/paths.html#PathDataBNF"
+}

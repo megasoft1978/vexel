@@ -1,0 +1,71 @@
+WO-MCP-TRANSPORT-01 revision 1 — BLOCKED before product edits
+Execution date: 2026-10-13
+Frozen spec SHA-256: 8058c8295d94df7ab2381e9b3e3667ab65deb82eaadbf90102225259de08abd4
+
+Read OWNER-DIRECTIVES.md, AGENTS.md, frozen order, scope-freeze.txt,
+W03 scope-block-execution-r2.txt, ADR-0018, coding standard, MCP guide,
+module README and product inventory evidence.
+
+Required item 6 and Output require the product inventory at
+ docs/product/vexel-goal-and-delivery-plan.md (Current implementation status,
+lines 22-26; MCP inventory lines 58-75). That path is not allowed by r1.
+User explicitly requires stopping on newly discovered contract/path issues;
+order Failure and escalation requires recording the failure without scope expansion.
+STOP: no product source, tests, CMake, MCP docs/README, inventory, task-store,
+frozen order, scope freeze or prior evidence changed. Only in-scope block records.
+Narrow follow-on: freeze r2 adding only the exact required product inventory path.
+
+Baseline: execution-r1-start-manifest.json (2693 tracked/untracked file hashes,
+HEAD and index), execution-r1-initial-status.txt, execution-r1-baseline/.
+Pre-edit audit: scope-block-execution-r1.txt classifies initial dirty paths;
+pre-existing out-of-scope dirty files are preserved, not attributed to this run.
+
+Commands not run because scope stop precedes implementation:
+- cmake --build build/mac-debug --target vexel-mcp mcp_headless_broker (AC-1 unverified)
+- new focused relay tests (not implemented; AC-2 unverified)
+- ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-stdio-e2e$' (AC-3 unverified)
+AC-4 existing metadata/preservation checks below; new relay mapping unavailable.
+AC-5: no broad UI/E2E, full CTest/Python, corpus, fuzz, performance, sanitizer
+matrix, release gate, live-client session, async task or export acceptance claim.
+The complete product goal, final acceptance and recorded showcase remain active.
+No staging/commit. Frozen r1 remains READY on disk; execution ledger is BLOCKED.
+
+Recording command already completed:
+$ python3 scripts/ledger.py append ledger.jsonl --entry-file artifacts/WO-MCP-TRANSPORT-01/blocked-execution-r1-entry.json
+exit 0
+entry appended
+
+Final exact checks:
+$ python3 scripts/wo_validate.py WO-MCP-TRANSPORT-01 --ready
+exit 0
+valid WO-MCP-TRANSPORT-01 revision 1 sha256 8058c8295d94df7ab2381e9b3e3667ab65deb82eaadbf90102225259de08abd4
+
+$ python3 scripts/ledger.py validate ledger.jsonl
+exit 0
+valid ledger: 984 entries
+
+$ python3 artifacts/WO-MCP-TRANSPORT-01/verify-execution-r1.py
+exit 0
+PASS: 2690/2693 baseline files unchanged; only STATE and ledger records modified.
+PASS: HEAD and Git index unchanged; existing ledger content retained byte for byte.
+PASS: exact execution delta is within the frozen allowlist:
+LEDGER.md
+STATE.md
+artifacts/WO-MCP-TRANSPORT-01/blocked-execution-r1-entry.json
+artifacts/WO-MCP-TRANSPORT-01/execution-r1-baseline/LEDGER.md
+artifacts/WO-MCP-TRANSPORT-01/execution-r1-baseline/STATE.md
+artifacts/WO-MCP-TRANSPORT-01/execution-r1-baseline/ledger.jsonl
+artifacts/WO-MCP-TRANSPORT-01/execution-r1-initial-status.txt
+artifacts/WO-MCP-TRANSPORT-01/execution-r1-start-manifest.json
+artifacts/WO-MCP-TRANSPORT-01/scope-block-execution-r1.txt
+artifacts/WO-MCP-TRANSPORT-01/verification.txt
+artifacts/WO-MCP-TRANSPORT-01/verify-execution-r1.py
+ledger.jsonl
+C line report: no changed C files; app/vexel_mcp_main.c unchanged at 146 lines (<800).
+PASS: existing test-map JSON parses; tests/mcp/ maps to mcp-stdio-e2e, registered in CMake.
+New focused relay tests/mappings: NOT IMPLEMENTED; pre-product-edit scope stop.
+
+$ git diff --check
+exit 0
+(no output)
+

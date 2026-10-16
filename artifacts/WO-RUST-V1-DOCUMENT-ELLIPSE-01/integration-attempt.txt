@@ -1,0 +1,1 @@
+Integrated the reviewed ellipse API and focused tests into the main tree. Fresh locked/offline package check, 11 package tests, package format check, frozen work-order validation, ledger validation, and git diff --check passed. Independent review identified and rechecked subnormal underflow on both axes; failed operations preserve source, history count/cursor, and dirty state.

@@ -1,0 +1,60 @@
+{
+  "wo_id": "WO-RUST-SVG-ENGINE-ADAPTER-01",
+  "revision": 1,
+  "candidate_root": ".cache/WO-RUST-SVG-DECODE-01/worker",
+  "candidate_decoder_status": "incomplete; isolated, not accepted",
+  "files": [
+    {
+      "path": "rust/crates/vexel-scene/src/production_decode.rs",
+      "sha256": "359a44c449eb073571ddca0ea189d10425712ec66ca5cd37f5e0851d323a9ea9",
+      "bytes": 18228
+    },
+    {
+      "path": "rust/crates/vexel-scene/Cargo.toml",
+      "sha256": "9a055c86e61af92236a524fbcec33a98e91ed640b1bf4411ebaf121f07ade7e7",
+      "bytes": 609
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/src/resolver.rs",
+      "sha256": "241c0d7fab92e72ae42c75d0166940c9730cdd201117cdaf097d7d7fd30708c0",
+      "bytes": 14890
+    },
+    {
+      "path": "rust/crates/vexel-svg-paint/Cargo.toml",
+      "sha256": "80ed28cf63acab093a7b08b335031ba023180c2532c53c73db34cec386caa670",
+      "bytes": 681
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/src/planner.rs",
+      "sha256": "29039d7f8a551bb35e266d25eac92a836233e1bd881a8548b546e24961678545",
+      "bytes": 29666
+    },
+    {
+      "path": "rust/crates/vexel-svg-definitions/Cargo.toml",
+      "sha256": "2b7f889cbc6259ac25fce3bc1634d54346f7cb2e06afa34dba6a69576b18ab17",
+      "bytes": 637
+    },
+    {
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/lib.rs",
+      "sha256": "fe6ff39e2592637e2b2fd8e60229b72abb3627da392b2b4d51f9df73acb8258f",
+      "bytes": 4368
+    },
+    {
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/src/media_scope.rs",
+      "sha256": "035fabdb877bf2c63c55dd74e811190d8126059b92923c85393e62dead8a9be8",
+      "bytes": 1485
+    },
+    {
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/Cargo.toml",
+      "sha256": "963cab2c33b8817b9f402099b7e6901558331b4da2b1161b0705d14db845650b",
+      "bytes": 706
+    },
+    {
+      "path": ".cache/WO-RUST-SVG-DECODE-01/worker/rust/crates/vexel-svg-decode/tests/production_engine.rs",
+      "sha256": "b34dd89f00621b2df113701e0a6e89d9bbf74dca53aba9847cdf75f76be676ef",
+      "bytes": 11716
+    }
+  ],
+  "test_baseline": "R7 candidate: 89 decoder tests pass; overall decoder scope incomplete",
+  "note": "Source seed covers the accepted scene/paint/definitions contracts and exact isolated decoder interfaces to which this adapter composes."
+}

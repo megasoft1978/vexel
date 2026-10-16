@@ -1,0 +1,23 @@
+Toolchain: rustc 1.99.0 (b940084d7 2026-09-28); cargo 1.99.0 (5f94df478 2026-08-27)
+Target used by Cargo: aarch64-apple-darwin
+
+PASS `cargo +stable check -p vexel-svg-index --locked --offline`
+  Finished dev profile successfully.
+
+PASS `cargo +stable test -p vexel-svg-index --locked --offline`
+  3 unit regressions and 6 integration tests passed; 0 failed. Doc tests: 0.
+  Includes deterministic completed-validator/C-order regression and safe detached-candidate budget rejection.
+
+PASS `python3 scripts/wo_validate.py WO-RUST-SVG-INDEX-01 --ready`
+  valid WO-RUST-SVG-INDEX-01 revision 1 sha256 710311f2f5d816abc33894a96fcd53951bc6506ed89c0be1ff9ba007341cac39
+
+PASS `python3 scripts/ledger.py validate ledger.jsonl`
+  valid ledger: 1209 entries
+
+PASS `git diff --check`
+  no whitespace errors.
+
+PASS `python3 -m json.tool artifacts/WO-RUST-SVG-INDEX-01/parity-map.json`
+  valid JSON.
+
+UNRESOLVED acceptance dependency: accepted XmlTokenStream currently does not expose exact `token_storage_bytes` and `open_name_storage_bytes`. Therefore this candidate cannot prove the full 128 MiB validator/token component budget and remains unaccepted. Root is implementing WO-RUST-XML-STORAGE-01; integrate only its later exact accepted source delta. No fmt, clippy, UI/E2E, fuzz, performance campaign, dependency install, network access, or commit was run.

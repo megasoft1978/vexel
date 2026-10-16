@@ -1,0 +1,13 @@
+WO-PRODUCT-GOAL-03 verification
+Date: 2026-10-13
+Scope: documentation-only reconciliation of the product goal and README.
+
+- `python3 scripts/wo_validate.py WO-PRODUCT-GOAL-03 --ready`: PASS (revision 1, frozen spec hash validated).
+- `python3 scripts/ledger.py validate ledger.jsonl`: PASS (735 entries before completion rows).
+- `git diff --check`: PASS.
+- Manual review of `docs/product/vexel-goal-and-delivery-plan.md` and `README.md`: PASS. The final Codex/MCP character creation and animation recording is explicitly a post-acceptance deliverable, described as not yet recorded, and slated for the product website and README.
+- Corpus claims are separated: accepted report baseline is 3/58 full-document renders, with 19 above-32-MiB documents not rendered; WO-CORPUS-04 has 5 full renders but remains partial/unaccepted.
+- Large-file performance claims remain qualified: 100-MiB first preview is absent in the cited report, and proposed targets are not presented as achieved.
+- Comprehensive UI/E2E acceptance, application tests, corpus/performance runs, video capture, and website publication were not run/performed; the user-requested final-stage deferral remains intact.
+
+Files reconciled: `README.md`, `docs/product/vexel-goal-and-delivery-plan.md`.

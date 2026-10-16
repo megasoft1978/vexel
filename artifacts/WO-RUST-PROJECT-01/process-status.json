@@ -1,0 +1,11 @@
+{
+  "name": "project",
+  "wo": "WO-RUST-PROJECT-01",
+  "pid": 35641,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791957018.4221282,
+  "exit_code": 0,
+  "duration_seconds": 319.57214069366455
+}

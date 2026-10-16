@@ -1,0 +1,497 @@
+BINDING insertText_replacementRange
+41: 
+42: unsafe impl RefEncode for NSTextCursorAccessoryPlacement {
+43:     const ENCODING_REF: Encoding = Encoding::Pointer(&Self::ENCODING);
+44: }
+45: 
+46: extern_protocol!(
+47:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nstextinputclient?language=objc)
+48:     pub unsafe trait NSTextInputClient {
+49:         /// # Safety
+50:         ///
+51:         /// `string` should be of the correct type.
+52:         #[unsafe(method(insertText:replacementRange:))]
+53:         #[unsafe(method_family = none)]
+54:         unsafe fn insertText_replacementRange(
+55:             &self,
+56:             string: &AnyObject,
+57:             replacement_range: NSRange,
+58:         );
+59: 
+60:         /// # Safety
+61:         ///
+62:         /// `selector` must be a valid selector.
+63:         #[unsafe(method(doCommandBySelector:))]
+64:         #[unsafe(method_family = none)]
+65:         unsafe fn doCommandBySelector(&self, selector: Sel);
+66: 
+67:         /// # Safety
+68:         ///
+
+SDK insertText_replacementRange
+35: /* The receiver inserts string replacing the content specified by replacementRange. string can be either an NSString or NSAttributedString instance.
+36: */
+37: - (void)insertText:(id)string replacementRange:(NSRange)replacementRange;
+38: 
+39: /* The receiver invokes the action specified by selector.
+40: */
+41:  - (void)doCommandBySelector:(SEL)selector;
+42:  
+43: /* The receiver inserts string replacing the content specified by replacementRange. string can be either an NSString or NSAttributedString instance. selectedRange specifies the selection inside the string being inserted; hence, the location is relative to the beginning of string. When string is an NSString, the receiver is expected to render the marked text with distinguishing appearance (i.e. NSTextView renders with -markedTextAttributes).
+44: */
+
+BINDING setMarkedText_selectedRange_replacementRange
+59: 
+60:         /// # Safety
+61:         ///
+62:         /// `selector` must be a valid selector.
+63:         #[unsafe(method(doCommandBySelector:))]
+64:         #[unsafe(method_family = none)]
+65:         unsafe fn doCommandBySelector(&self, selector: Sel);
+66: 
+67:         /// # Safety
+68:         ///
+69:         /// `string` should be of the correct type.
+70:         #[unsafe(method(setMarkedText:selectedRange:replacementRange:))]
+71:         #[unsafe(method_family = none)]
+72:         unsafe fn setMarkedText_selectedRange_replacementRange(
+73:             &self,
+74:             string: &AnyObject,
+75:             selected_range: NSRange,
+76:             replacement_range: NSRange,
+77:         );
+78: 
+79:         #[unsafe(method(unmarkText))]
+80:         #[unsafe(method_family = none)]
+81:         fn unmarkText(&self);
+82: 
+83:         #[unsafe(method(selectedRange))]
+84:         #[unsafe(method_family = none)]
+85:         fn selectedRange(&self) -> NSRange;
+86: 
+
+SDK setMarkedText_selectedRange_replacementRange
+43: /* The receiver inserts string replacing the content specified by replacementRange. string can be either an NSString or NSAttributedString instance. selectedRange specifies the selection inside the string being inserted; hence, the location is relative to the beginning of string. When string is an NSString, the receiver is expected to render the marked text with distinguishing appearance (i.e. NSTextView renders with -markedTextAttributes).
+44: */
+45: - (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange;
+46: 
+47: /* The receiver unmarks the marked text. If no marked text, the invocation of this method has no effect.
+48: */
+49: - (void)unmarkText;
+50: 
+51: /* Returns the selection range. The valid location is from 0 to the document length.
+52: */
+
+BINDING unmarkText
+68:         ///
+69:         /// `string` should be of the correct type.
+70:         #[unsafe(method(setMarkedText:selectedRange:replacementRange:))]
+71:         #[unsafe(method_family = none)]
+72:         unsafe fn setMarkedText_selectedRange_replacementRange(
+73:             &self,
+74:             string: &AnyObject,
+75:             selected_range: NSRange,
+76:             replacement_range: NSRange,
+77:         );
+78: 
+79:         #[unsafe(method(unmarkText))]
+80:         #[unsafe(method_family = none)]
+81:         fn unmarkText(&self);
+82: 
+83:         #[unsafe(method(selectedRange))]
+84:         #[unsafe(method_family = none)]
+85:         fn selectedRange(&self) -> NSRange;
+86: 
+87:         #[unsafe(method(markedRange))]
+88:         #[unsafe(method_family = none)]
+89:         fn markedRange(&self) -> NSRange;
+90: 
+91:         #[unsafe(method(hasMarkedText))]
+92:         #[unsafe(method_family = none)]
+93:         fn hasMarkedText(&self) -> bool;
+94: 
+95:         /// # Safety
+
+SDK unmarkText
+47: /* The receiver unmarks the marked text. If no marked text, the invocation of this method has no effect.
+48: */
+49: - (void)unmarkText;
+50: 
+51: /* Returns the selection range. The valid location is from 0 to the document length.
+52: */
+53: - (NSRange)selectedRange;
+54: 
+55: /* Returns the marked range. Returns {NSNotFound, 0} if no marked range.
+56: */
+
+BINDING selectedRange
+72:         unsafe fn setMarkedText_selectedRange_replacementRange(
+73:             &self,
+74:             string: &AnyObject,
+75:             selected_range: NSRange,
+76:             replacement_range: NSRange,
+77:         );
+78: 
+79:         #[unsafe(method(unmarkText))]
+80:         #[unsafe(method_family = none)]
+81:         fn unmarkText(&self);
+82: 
+83:         #[unsafe(method(selectedRange))]
+84:         #[unsafe(method_family = none)]
+85:         fn selectedRange(&self) -> NSRange;
+86: 
+87:         #[unsafe(method(markedRange))]
+88:         #[unsafe(method_family = none)]
+89:         fn markedRange(&self) -> NSRange;
+90: 
+91:         #[unsafe(method(hasMarkedText))]
+92:         #[unsafe(method_family = none)]
+93:         fn hasMarkedText(&self) -> bool;
+94: 
+95:         /// # Safety
+96:         ///
+97:         /// `actual_range` must be a valid pointer or null.
+98:         #[unsafe(method(attributedSubstringForProposedRange:actualRange:))]
+99:         #[unsafe(method_family = none)]
+
+SDK selectedRange
+41:  - (void)doCommandBySelector:(SEL)selector;
+42:  
+43: /* The receiver inserts string replacing the content specified by replacementRange. string can be either an NSString or NSAttributedString instance. selectedRange specifies the selection inside the string being inserted; hence, the location is relative to the beginning of string. When string is an NSString, the receiver is expected to render the marked text with distinguishing appearance (i.e. NSTextView renders with -markedTextAttributes).
+44: */
+45: - (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange;
+46: 
+47: /* The receiver unmarks the marked text. If no marked text, the invocation of this method has no effect.
+48: */
+49: - (void)unmarkText;
+50: 
+
+SDK selectedRange
+43: /* The receiver inserts string replacing the content specified by replacementRange. string can be either an NSString or NSAttributedString instance. selectedRange specifies the selection inside the string being inserted; hence, the location is relative to the beginning of string. When string is an NSString, the receiver is expected to render the marked text with distinguishing appearance (i.e. NSTextView renders with -markedTextAttributes).
+44: */
+45: - (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange;
+46: 
+47: /* The receiver unmarks the marked text. If no marked text, the invocation of this method has no effect.
+48: */
+49: - (void)unmarkText;
+50: 
+51: /* Returns the selection range. The valid location is from 0 to the document length.
+52: */
+
+SDK selectedRange
+51: /* Returns the selection range. The valid location is from 0 to the document length.
+52: */
+53: - (NSRange)selectedRange;
+54: 
+55: /* Returns the marked range. Returns {NSNotFound, 0} if no marked range.
+56: */
+57: - (NSRange)markedRange;
+58: 
+59: /* Returns whether or not the receiver has marked text.
+60: */
+
+BINDING markedRange
+76:             replacement_range: NSRange,
+77:         );
+78: 
+79:         #[unsafe(method(unmarkText))]
+80:         #[unsafe(method_family = none)]
+81:         fn unmarkText(&self);
+82: 
+83:         #[unsafe(method(selectedRange))]
+84:         #[unsafe(method_family = none)]
+85:         fn selectedRange(&self) -> NSRange;
+86: 
+87:         #[unsafe(method(markedRange))]
+88:         #[unsafe(method_family = none)]
+89:         fn markedRange(&self) -> NSRange;
+90: 
+91:         #[unsafe(method(hasMarkedText))]
+92:         #[unsafe(method_family = none)]
+93:         fn hasMarkedText(&self) -> bool;
+94: 
+95:         /// # Safety
+96:         ///
+97:         /// `actual_range` must be a valid pointer or null.
+98:         #[unsafe(method(attributedSubstringForProposedRange:actualRange:))]
+99:         #[unsafe(method_family = none)]
+100:         unsafe fn attributedSubstringForProposedRange_actualRange(
+101:             &self,
+102:             range: NSRange,
+103:             actual_range: NSRangePointer,
+
+SDK markedRange
+55: /* Returns the marked range. Returns {NSNotFound, 0} if no marked range.
+56: */
+57: - (NSRange)markedRange;
+58: 
+59: /* Returns whether or not the receiver has marked text.
+60: */
+61: - (BOOL)hasMarkedText;
+62: 
+63: /* Returns attributed string specified by range. It may return nil. If non-nil return value and actualRange is non-NULL, it contains the actual range for the return value. The range can be adjusted from various reasons (i.e. adjust to grapheme cluster boundary, performance optimization, etc).
+64: */
+
+BINDING hasMarkedText
+80:         #[unsafe(method_family = none)]
+81:         fn unmarkText(&self);
+82: 
+83:         #[unsafe(method(selectedRange))]
+84:         #[unsafe(method_family = none)]
+85:         fn selectedRange(&self) -> NSRange;
+86: 
+87:         #[unsafe(method(markedRange))]
+88:         #[unsafe(method_family = none)]
+89:         fn markedRange(&self) -> NSRange;
+90: 
+91:         #[unsafe(method(hasMarkedText))]
+92:         #[unsafe(method_family = none)]
+93:         fn hasMarkedText(&self) -> bool;
+94: 
+95:         /// # Safety
+96:         ///
+97:         /// `actual_range` must be a valid pointer or null.
+98:         #[unsafe(method(attributedSubstringForProposedRange:actualRange:))]
+99:         #[unsafe(method_family = none)]
+100:         unsafe fn attributedSubstringForProposedRange_actualRange(
+101:             &self,
+102:             range: NSRange,
+103:             actual_range: NSRangePointer,
+104:         ) -> Option<Retained<NSAttributedString>>;
+105: 
+106:         #[unsafe(method(validAttributesForMarkedText))]
+107:         #[unsafe(method_family = none)]
+
+SDK hasMarkedText
+59: /* Returns whether or not the receiver has marked text.
+60: */
+61: - (BOOL)hasMarkedText;
+62: 
+63: /* Returns attributed string specified by range. It may return nil. If non-nil return value and actualRange is non-NULL, it contains the actual range for the return value. The range can be adjusted from various reasons (i.e. adjust to grapheme cluster boundary, performance optimization, etc).
+64: */
+65: - (nullable NSAttributedString *)attributedSubstringForProposedRange:(NSRange)range actualRange:(nullable NSRangePointer)actualRange;
+66: 
+67: /* Returns an array of attribute names recognized by the receiver.
+68: */
+
+BINDING attributedSubstringForProposedRange_actualRange
+87:         #[unsafe(method(markedRange))]
+88:         #[unsafe(method_family = none)]
+89:         fn markedRange(&self) -> NSRange;
+90: 
+91:         #[unsafe(method(hasMarkedText))]
+92:         #[unsafe(method_family = none)]
+93:         fn hasMarkedText(&self) -> bool;
+94: 
+95:         /// # Safety
+96:         ///
+97:         /// `actual_range` must be a valid pointer or null.
+98:         #[unsafe(method(attributedSubstringForProposedRange:actualRange:))]
+99:         #[unsafe(method_family = none)]
+100:         unsafe fn attributedSubstringForProposedRange_actualRange(
+101:             &self,
+102:             range: NSRange,
+103:             actual_range: NSRangePointer,
+104:         ) -> Option<Retained<NSAttributedString>>;
+105: 
+106:         #[unsafe(method(validAttributesForMarkedText))]
+107:         #[unsafe(method_family = none)]
+108:         fn validAttributesForMarkedText(&self) -> Retained<NSArray<NSAttributedStringKey>>;
+109: 
+110:         /// # Safety
+111:         ///
+112:         /// `actual_range` must be a valid pointer or null.
+113:         #[unsafe(method(firstRectForCharacterRange:actualRange:))]
+114:         #[unsafe(method_family = none)]
+
+SDK attributedSubstringForProposedRange_actualRange
+63: /* Returns attributed string specified by range. It may return nil. If non-nil return value and actualRange is non-NULL, it contains the actual range for the return value. The range can be adjusted from various reasons (i.e. adjust to grapheme cluster boundary, performance optimization, etc).
+64: */
+65: - (nullable NSAttributedString *)attributedSubstringForProposedRange:(NSRange)range actualRange:(nullable NSRangePointer)actualRange;
+66: 
+67: /* Returns an array of attribute names recognized by the receiver.
+68: */
+69: - (NSArray<NSAttributedStringKey> *)validAttributesForMarkedText;
+70: 
+71: /* Returns the first logical rectangular area for range. The return value is in the screen coordinate. The size value can be negative if the text flows to the left. If non-NULL, actuallRange contains the character range corresponding to the returned area.
+72: */
+
+BINDING validAttributesForMarkedText
+95:         /// # Safety
+96:         ///
+97:         /// `actual_range` must be a valid pointer or null.
+98:         #[unsafe(method(attributedSubstringForProposedRange:actualRange:))]
+99:         #[unsafe(method_family = none)]
+100:         unsafe fn attributedSubstringForProposedRange_actualRange(
+101:             &self,
+102:             range: NSRange,
+103:             actual_range: NSRangePointer,
+104:         ) -> Option<Retained<NSAttributedString>>;
+105: 
+106:         #[unsafe(method(validAttributesForMarkedText))]
+107:         #[unsafe(method_family = none)]
+108:         fn validAttributesForMarkedText(&self) -> Retained<NSArray<NSAttributedStringKey>>;
+109: 
+110:         /// # Safety
+111:         ///
+112:         /// `actual_range` must be a valid pointer or null.
+113:         #[unsafe(method(firstRectForCharacterRange:actualRange:))]
+114:         #[unsafe(method_family = none)]
+115:         unsafe fn firstRectForCharacterRange_actualRange(
+116:             &self,
+117:             range: NSRange,
+118:             actual_range: NSRangePointer,
+119:         ) -> NSRect;
+120: 
+121:         #[unsafe(method(characterIndexForPoint:))]
+122:         #[unsafe(method_family = none)]
+
+SDK validAttributesForMarkedText
+67: /* Returns an array of attribute names recognized by the receiver.
+68: */
+69: - (NSArray<NSAttributedStringKey> *)validAttributesForMarkedText;
+70: 
+71: /* Returns the first logical rectangular area for range. The return value is in the screen coordinate. The size value can be negative if the text flows to the left. If non-NULL, actuallRange contains the character range corresponding to the returned area.
+72: */
+73: - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(nullable NSRangePointer)actualRange;
+74: 
+75: /* Returns the index for character that is nearest to point. point is in the screen coordinate system.
+76: */
+
+BINDING firstRectForCharacterRange_actualRange
+102:             range: NSRange,
+103:             actual_range: NSRangePointer,
+104:         ) -> Option<Retained<NSAttributedString>>;
+105: 
+106:         #[unsafe(method(validAttributesForMarkedText))]
+107:         #[unsafe(method_family = none)]
+108:         fn validAttributesForMarkedText(&self) -> Retained<NSArray<NSAttributedStringKey>>;
+109: 
+110:         /// # Safety
+111:         ///
+112:         /// `actual_range` must be a valid pointer or null.
+113:         #[unsafe(method(firstRectForCharacterRange:actualRange:))]
+114:         #[unsafe(method_family = none)]
+115:         unsafe fn firstRectForCharacterRange_actualRange(
+116:             &self,
+117:             range: NSRange,
+118:             actual_range: NSRangePointer,
+119:         ) -> NSRect;
+120: 
+121:         #[unsafe(method(characterIndexForPoint:))]
+122:         #[unsafe(method_family = none)]
+123:         fn characterIndexForPoint(&self, point: NSPoint) -> NSUInteger;
+124: 
+125:         #[optional]
+126:         #[unsafe(method(attributedString))]
+127:         #[unsafe(method_family = none)]
+128:         fn attributedString(&self) -> Retained<NSAttributedString>;
+129: 
+
+SDK firstRectForCharacterRange_actualRange
+71: /* Returns the first logical rectangular area for range. The return value is in the screen coordinate. The size value can be negative if the text flows to the left. If non-NULL, actuallRange contains the character range corresponding to the returned area.
+72: */
+73: - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(nullable NSRangePointer)actualRange;
+74: 
+75: /* Returns the index for character that is nearest to point. point is in the screen coordinate system.
+76: */
+77: - (NSUInteger)characterIndexForPoint:(NSPoint)point;
+78: 
+79: @optional
+80: /* Returns an attributed string representing the receiver's document content. An NSTextInputClient can implement this interface if can be done efficiently. The caller of this interface can random access arbitrary portions of the receiver's content more efficiently.
+
+SDK firstRectForCharacterRange_actualRange
+86: - (CGFloat)fractionOfDistanceThroughGlyphForPoint:(NSPoint)point;
+87: 
+88: /* Returns the baseline position relative to the origin of rectangle returned by -firstRectForCharacterRange:actualRange:. This information allows the caller to access finer-grained character position inside the NSTextInputClient document.
+89: */
+90: - (CGFloat)baselineDeltaForCharacterAtIndex:(NSUInteger)anIndex;
+91: 
+92: /* Returns the window level of the receiver. An NSTextInputClient can implement this interface to specify its window level if it is higher than NSFloatingWindowLevel.
+93: */
+94: - (NSInteger)windowLevel;
+95: 
+
+BINDING characterIndexForPoint
+110:         /// # Safety
+111:         ///
+112:         /// `actual_range` must be a valid pointer or null.
+113:         #[unsafe(method(firstRectForCharacterRange:actualRange:))]
+114:         #[unsafe(method_family = none)]
+115:         unsafe fn firstRectForCharacterRange_actualRange(
+116:             &self,
+117:             range: NSRange,
+118:             actual_range: NSRangePointer,
+119:         ) -> NSRect;
+120: 
+121:         #[unsafe(method(characterIndexForPoint:))]
+122:         #[unsafe(method_family = none)]
+123:         fn characterIndexForPoint(&self, point: NSPoint) -> NSUInteger;
+124: 
+125:         #[optional]
+126:         #[unsafe(method(attributedString))]
+127:         #[unsafe(method_family = none)]
+128:         fn attributedString(&self) -> Retained<NSAttributedString>;
+129: 
+130:         #[cfg(feature = "objc2-core-foundation")]
+131:         #[optional]
+132:         #[unsafe(method(fractionOfDistanceThroughGlyphForPoint:))]
+133:         #[unsafe(method_family = none)]
+134:         fn fractionOfDistanceThroughGlyphForPoint(&self, point: NSPoint) -> CGFloat;
+135: 
+136:         #[cfg(feature = "objc2-core-foundation")]
+137:         #[optional]
+
+SDK characterIndexForPoint
+75: /* Returns the index for character that is nearest to point. point is in the screen coordinate system.
+76: */
+77: - (NSUInteger)characterIndexForPoint:(NSPoint)point;
+78: 
+79: @optional
+80: /* Returns an attributed string representing the receiver's document content. An NSTextInputClient can implement this interface if can be done efficiently. The caller of this interface can random access arbitrary portions of the receiver's content more efficiently.
+81: */
+82: - (NSAttributedString *)attributedString;
+83: 
+84: /* Returns the fraction of distance for point from the left side of the character. This allows caller to perform precise selection handling.
+
+BINDING doCommandBySelector
+52:         #[unsafe(method(insertText:replacementRange:))]
+53:         #[unsafe(method_family = none)]
+54:         unsafe fn insertText_replacementRange(
+55:             &self,
+56:             string: &AnyObject,
+57:             replacement_range: NSRange,
+58:         );
+59: 
+60:         /// # Safety
+61:         ///
+62:         /// `selector` must be a valid selector.
+63:         #[unsafe(method(doCommandBySelector:))]
+64:         #[unsafe(method_family = none)]
+65:         unsafe fn doCommandBySelector(&self, selector: Sel);
+66: 
+67:         /// # Safety
+68:         ///
+69:         /// `string` should be of the correct type.
+70:         #[unsafe(method(setMarkedText:selectedRange:replacementRange:))]
+71:         #[unsafe(method_family = none)]
+72:         unsafe fn setMarkedText_selectedRange_replacementRange(
+73:             &self,
+74:             string: &AnyObject,
+75:             selected_range: NSRange,
+76:             replacement_range: NSRange,
+77:         );
+78: 
+79:         #[unsafe(method(unmarkText))]
+
+SDK doCommandBySelector
+39: /* The receiver invokes the action specified by selector.
+40: */
+41:  - (void)doCommandBySelector:(SEL)selector;
+42:  
+43: /* The receiver inserts string replacing the content specified by replacementRange. string can be either an NSString or NSAttributedString instance. selectedRange specifies the selection inside the string being inserted; hence, the location is relative to the beginning of string. When string is an NSString, the receiver is expected to render the marked text with distinguishing appearance (i.e. NSTextView renders with -markedTextAttributes).
+44: */
+45: - (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange;
+46: 
+47: /* The receiver unmarks the marked text. If no marked text, the invocation of this method has no effect.
+48: */

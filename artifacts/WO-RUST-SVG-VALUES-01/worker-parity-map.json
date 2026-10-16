@@ -1,0 +1,101 @@
+{
+  "work_order": "WO-RUST-SVG-VALUES-01",
+  "status": "implemented and focused checks passed",
+  "compiler": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "edition": "2024",
+    "dependencies_added": false
+  },
+  "symbols": [
+    {
+      "c": "svg_shape_affine_inverse",
+      "rust": "vexel_svg_values::affine_inverse",
+      "tests": ["transform::tests::inverse_round_trip_limits_and_singularity"],
+      "parity": "f64 inverse, determinant rejection below 1e-15, accepted affine limits, finite output"
+    },
+    {
+      "c": "svg_shape_transform_parse",
+      "rust": "vexel_svg_values::parse_transform",
+      "tests": ["transform::tests::transform_operations_follow_c_matrix_order_and_arity_defaults", "transform::tests::transform_count_numeric_limits_and_error_offsets"],
+      "parity": "matrix, translate, scale, rotate with optional center, skewX/skewY; exact argument counts, right-first affine composition, 64-operation cap, SVG decimal grammar and finite affine limits"
+    },
+    {
+      "c": "svg_shape_transform_node",
+      "rust": "vexel_svg_values::parse_transform_node",
+      "tests": ["transform::tests::transform_node_defaults_and_composes_parent_with_original_source_offsets"],
+      "parity": "missing transform is identity; local transform composes with parent; parse failure is reported at original attribute value start and parent-composition overflow at element name start; both diagnostic positions are asserted"
+    },
+    {
+      "c": "svg_shape_read_number_value / svg_shape_read_number",
+      "rust": "internal Reader::number / vexel_svg_values::parse_number",
+      "tests": ["number::tests::svg_decimal_grammar_and_separator_rules"],
+      "parity": "ASCII sign, decimal and exponent grammar; rejects NaN, infinity, incomplete exponents, trailing bytes and absolute values above 1e6"
+    },
+    {
+      "c": "svg_shape_read_number_list",
+      "rust": "vexel_svg_values::parse_number_list",
+      "tests": ["number::tests::svg_decimal_grammar_and_separator_rules"],
+      "parity": "fixed caller-selected count, comma or space/tab/CR/LF separators, no repeated/trailing comma, form-feed separator rejected, bounded to 64 outputs and fallible reserve"
+    },
+    {
+      "c": "svg_shape_read_dimension / svg_shape_read_length_value / svg_shape_read_length",
+      "rust": "vexel_svg_values::parse_length",
+      "tests": ["number::tests::lengths_preserve_svg_units_and_report_absolute_failure_offsets"],
+      "parity": "unitless/px, pt, mm, cm, in, em and percentage reference conversions; case-insensitive units; invalid percentage reference, unsupported units, overflow and trailing bytes rejected"
+    },
+    {
+      "c": "svg_shape_parse_preserve_aspect",
+      "rust": "vexel_svg_values::parse_preserve_aspect",
+      "tests": ["viewport::tests::aspect_meet_slice_none_and_diagnostic_byte_offsets"],
+      "parity": "defer; none; all nine alignments; meet default and slice; only space, tab, CR and LF count as whitespace; form feed is rejected; source is capped at 16 MiB and oversize input returns InvalidArgument at offset 0"
+    },
+    {
+      "c": "svg_shape_viewbox_transform",
+      "rust": "vexel_svg_values::viewbox_transform",
+      "tests": ["viewport::tests::viewbox_meet_slice_none_and_overflow_limits"],
+      "parity": "none nonuniform scaling, meet/slice uniform scaling, alignment offsets, positive finite viewport dimensions and accepted affine output limits"
+    },
+    {
+      "c": "svg_shape_symbol_attributes_supported",
+      "rust": "vexel_svg_values::symbol_attributes_supported",
+      "tests": ["viewport::tests::zero_nested_viewport_is_empty_and_symbol_allowlist_is_fail_closed"],
+      "parity": "the reference 22-name unprefixed allowlist; first unsupported or prefixed attribute reports its original name start"
+    },
+    {
+      "c": "svg_shape_symbol_mapping",
+      "rust": "vexel_svg_values::parse_symbol_mapping",
+      "tests": ["viewport::tests::root_nested_and_symbol_mappings_keep_defaults_percentages_and_offsets"],
+      "parity": "required target viewBox and use width/height; use x/y percentages; use aspect overrides target aspect; default centered meet; viewport size and viewBox validation"
+    },
+    {
+      "c": "svg_shape_nested_viewport",
+      "rust": "vexel_svg_values::nested_viewport",
+      "tests": ["viewport::tests::root_nested_and_symbol_mappings_keep_defaults_percentages_and_offsets", "viewport::tests::zero_nested_viewport_is_empty_and_symbol_allowlist_is_fail_closed"],
+      "parity": "parent-size defaults, percentage x/y/width/height, zero-size empty result, transformed clip corners, optional viewBox/aspect mapping, child dimensions and parent/local composition"
+    },
+    {
+      "c": "svg_shape_root_viewport",
+      "rust": "vexel_svg_values::parse_root_viewport",
+      "tests": ["viewport::tests::root_nested_and_symbol_mappings_keep_defaults_percentages_and_offsets"],
+      "parity": "SVG namespace validation, required width/height, [1,4096] viewport bounds, ceil output dimensions, viewBox and preserveAspectRatio defaults"
+    }
+  ],
+  "adapter": {
+    "rust": "AttributeList<'a> and Attribute",
+    "description": "A borrowed original source slice, checked element/name/value spans, optional namespace-prefix span, and a borrowed bounded attribute slice. Lookup is exact and case-sensitive and skips prefixed attributes.",
+    "limits": {"source_bytes": 16777216, "attributes_per_element": 256, "number_list_values": 64, "transform_operations": 64},
+    "symbol_mapping_source_rule": "target and use lists must refer to the same original source allocation and length so all spans and diagnostics retain document byte offsets"
+  },
+  "api_adaptations": [
+    "C token-array lookup becomes a lifetime-bound AttributeList; there is no C/XML token ABI or C shim.",
+    "C output pointers and mutable diagnostic structs become Result values carrying typed error kind and absolute byte offset.",
+    "Number-list output uses a bounded Vec with try_reserve_exact; no unbounded C-style output array or infallible dynamic allocation is exposed.",
+    "An empty nested viewport returns a fully initialized Rust value with empty=true and zeroed clip points; the C caller receives empty=true before those output arrays are read."
+  ],
+  "remaining_scope": [
+    "This crate is a standalone SVG value and viewport adapter, not an XML tokenizer or full SVG decoder.",
+    "Shape, path, scene traversal, rendering, and whole-document SVG behavior remain outside WO-RUST-SVG-VALUES-01.",
+    "Callers remain responsible for obtaining trustworthy tokenizer attribute spans; this crate validates bounds, names, prefixes, and collection limits but does not tokenize XML."
+  ]
+}

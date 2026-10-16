@@ -1,0 +1,19 @@
+You are the single Luna Medium implementation worker for READY work order WO-RUST-SCENE-OBSERVABILITY-01 revision 1. The full Vexel product/Rust-port goal remains active.
+
+Read OWNER-DIRECTIVES.md, AGENTS.md, this work order, and the current Scene/reference APIs before coding. Work ONLY in:
+- rust/crates/vexel-scene/src/accounting.rs
+- rust/crates/vexel-scene/src/source_context.rs
+- rust/crates/vexel-scene/tests/observability_contracts.rs (new)
+- rust/crates/vexel-scene/README.md
+- artifacts/WO-RUST-SCENE-OBSERVABILITY-01/**
+
+No nested agents/processes, dependency/manifest/shared interface edits, network, staging/commit/reset/delete. The coordinator owns ledgers/state and integration. This is an isolated git worktree. Preserve every existing assertion and public struct literal. Use CARGO_HOME="$PWD/.cache/cargo" and a repo-local CARGO_TARGET_DIR for all Cargo commands.
+
+Implement the frozen contract fully, especially:
+1. DecodeSource::reference_lookup_probes forwards the existing actual ReferenceIndex counter, with hit/miss tests through DecodeSource::find_reference.
+2. Add checked fixed-size per-AllocationTag cumulative payload history in ChargeLedger without changing RenderMemoryStats. Precisely distinguish caller-tagged payload from internal lease-registry growth (None). Preserve existing historical/live semantics, error priority, overflow atomicity, post-physical-allocation cancellation history and failed-reserve behavior. Do not add an unbounded event list. Consider every call path in admit_inner, allocate, release, replacement and cleanup.
+3. Add deterministic integration tests in observability_contracts.rs covering the frozen order. Test through public paths where possible; only use accepted public APIs. Keep changed Rust files under 800 lines.
+
+Run every exact work-order verification command in the isolated candidate, using scoped formatting only. Store exact logs, result.md (<=350 words), and verification.json under the allowed artifact dir. Verify source/test lengths and current source seed hashes. Do not validate/modify root coordinator ledgers or claim acceptance. Return candidly if any acceptance gate cannot be proven.
+
+Do not broaden scope. No GUI or broad UI/E2E testing.

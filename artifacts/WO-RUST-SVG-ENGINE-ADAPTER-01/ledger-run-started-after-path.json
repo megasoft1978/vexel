@@ -1,0 +1,20 @@
+{
+  "ts": "2026-10-15T14:17:48Z",
+  "wo_id": "WO-RUST-SVG-ENGINE-ADAPTER-01",
+  "revision": 2,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "session_id": "codex-luna-engine-adapter-after-path-2026-10-15",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {"input_tokens": null, "output_tokens": null},
+  "event": "run_started",
+  "run_id": "WO-RUST-SVG-ENGINE-ADAPTER-01-r2-after-path-fix-started",
+  "status": "running",
+  "artifacts": [
+    ".cache/WO-RUST-SVG-ENGINE-ADAPTER-01/reseed-r3/artifacts/WO-RUST-SVG-ENGINE-ADAPTER-01/reseed-source-audit.json",
+    ".cache/WO-RUST-SVG-ENGINE-ADAPTER-01/reseed-r3/artifacts/WO-RUST-SVG-ENGINE-ADAPTER-01/reseed-evidence.md"
+  ],
+  "note": "After accepted path compact-operand repair, resume the isolated production engine candidate against current parser sources with one Luna worker and no overlapping engine writer."
+}

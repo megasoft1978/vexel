@@ -1,0 +1,13 @@
+{
+  "name": "work-control",
+  "wo": "WO-RUST-WORK-CONTROL-01",
+  "session": "01a13ac9-7143-7751-a697-8ccf9b60f297",
+  "pid": 76471,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "status": "completed",
+  "started_epoch": 1791988012.0639732,
+  "exit_code": 0,
+  "duration_seconds": 9.054356813430786
+}

@@ -1,0 +1,256 @@
+{
+  "schema": 1,
+  "status": "proposal-pending-independent-review-root-freeze",
+  "partitions": {
+    "SHARED": {
+      "crate": "vexel-scene",
+      "modules": [
+        "types",
+        "budget",
+        "media",
+        "contracts"
+      ],
+      "depends_on": [
+        "accepted-base",
+        "accepted-geometry",
+        "accepted-path",
+        "accepted-values",
+        "accepted-animation-gap",
+        "accepted-xml",
+        "accepted-css",
+        "accepted-reference"
+      ],
+      "writer": "coordinator",
+      "stage": 0
+    },
+    "DECODE": {
+      "crate": "vexel-svg-decode",
+      "modules": [
+        "core",
+        "geometry",
+        "style",
+        "ignored",
+        "values_adapter"
+      ],
+      "depends_on": [
+        "SHARED",
+        "accepted-xml",
+        "accepted-css",
+        "accepted-reference",
+        "accepted-values-gap",
+        "accepted-path-gap"
+      ],
+      "writer": "decoder owner",
+      "stage": 1
+    },
+    "PAINT": {
+      "crate": "vexel-svg-decode",
+      "modules": [
+        "paint"
+      ],
+      "depends_on": [
+        "SHARED",
+        "accepted-css",
+        "accepted-reference",
+        "accepted-values-gap",
+        "accepted-color"
+      ],
+      "writer": "paint owner",
+      "stage": 1
+    },
+    "DEFINITIONS": {
+      "crate": "vexel-svg-decode",
+      "modules": [
+        "definitions",
+        "clip_decode",
+        "marker",
+        "pattern",
+        "mask",
+        "filter_decode"
+      ],
+      "depends_on": [
+        "SHARED",
+        "accepted-css",
+        "accepted-reference",
+        "accepted-values-gap"
+      ],
+      "writer": "definition owner",
+      "stage": 1
+    },
+    "MEDIA": {
+      "crate": "vexel-svg-decode",
+      "modules": [
+        "text",
+        "text_cache",
+        "image"
+      ],
+      "depends_on": [
+        "SHARED",
+        "accepted-values-gap",
+        "accepted-color",
+        "accepted-path-gap"
+      ],
+      "writer": "SVG media owner",
+      "stage": 1
+    },
+    "SELECTION": {
+      "crate": "vexel-scene",
+      "modules": [
+        "selection",
+        "allocation_metrics"
+      ],
+      "depends_on": [
+        "SHARED",
+        "accepted-values-gap"
+      ],
+      "writer": "scene query/accounting owner",
+      "stage": 1
+    },
+    "RASTER_INDEX": {
+      "crate": "vexel-svg-scalar",
+      "modules": [
+        "bounds",
+        "scanline",
+        "scanline_fill",
+        "preflight"
+      ],
+      "depends_on": [
+        "SHARED"
+      ],
+      "writer": "index/preflight owner",
+      "stage": 1
+    },
+    "RASTER_SAMPLE": {
+      "crate": "vexel-svg-scalar",
+      "modules": [
+        "sample",
+        "stroke",
+        "dash_cache",
+        "stroke_grid",
+        "fill",
+        "clip_query",
+        "paint_sample"
+      ],
+      "depends_on": [
+        "SHARED"
+      ],
+      "writer": "sample/stroke owner",
+      "stage": 1
+    },
+    "RASTER_EFFECTS": {
+      "crate": "vexel-svg-scalar",
+      "modules": [
+        "filter",
+        "group"
+      ],
+      "depends_on": [
+        "SHARED",
+        "RASTER_INDEX",
+        "RASTER_SAMPLE",
+        "accepted-raster"
+      ],
+      "writer": "effects owner",
+      "stage": 2
+    },
+    "ANIMATION": {
+      "crate": "vexel-svg-scalar",
+      "modules": [
+        "animation",
+        "animation_clips"
+      ],
+      "depends_on": [
+        "SHARED",
+        "accepted-animation-gap",
+        "accepted-values-gap"
+      ],
+      "writer": "animation composition owner",
+      "stage": 1
+    },
+    "NATIVE_MEDIA": {
+      "crate": "vexel-platform-macos",
+      "modules": [
+        "media_text",
+        "media_image",
+        "media_status"
+      ],
+      "depends_on": [
+        "SHARED",
+        "later-audited-native-media-boundary"
+      ],
+      "writer": "native media owner after separate audit/approval",
+      "stage": 2
+    },
+    "NATIVE_EXPORT": {
+      "crate": "vexel-platform-macos",
+      "modules": [
+        "media_animation"
+      ],
+      "depends_on": [
+        "NATIVE_MEDIA"
+      ],
+      "writer": "native animation export owner after separate audit/approval",
+      "stage": 3
+    },
+    "COMPOSITION": {
+      "crate": "vexel-svg-render",
+      "modules": [
+        "pipeline",
+        "document",
+        "render",
+        "measurement"
+      ],
+      "depends_on": [
+        "DECODE",
+        "PAINT",
+        "DEFINITIONS",
+        "MEDIA",
+        "SELECTION",
+        "RASTER_INDEX",
+        "RASTER_SAMPLE",
+        "RASTER_EFFECTS",
+        "ANIMATION",
+        "accepted-raster"
+      ],
+      "writer": "coordinator",
+      "stage": 3
+    }
+  },
+  "edge_direction": "partition -> prerequisite",
+  "runtime_cycle_resolution": "bounded decode continuation emits completed child PatternRequest; composition renders through scalar and resumes same decoder; no decoder crate dependency on scalar",
+  "writer_exceptions": {
+    "DEFINITIONS": [
+      "vexel-svg-scalar::clip_query"
+    ],
+    "PAINT": [
+      "vexel-svg-scalar::paint_sample"
+    ]
+  },
+  "launch_order": [
+    [
+      "SHARED",
+      "accepted-animation-gap",
+      "accepted-values-gap",
+      "accepted-path-gap"
+    ],
+    [
+      "DECODE",
+      "PAINT",
+      "DEFINITIONS",
+      "MEDIA",
+      "SELECTION",
+      "RASTER_INDEX",
+      "RASTER_SAMPLE",
+      "ANIMATION"
+    ],
+    [
+      "RASTER_EFFECTS",
+      "NATIVE_MEDIA"
+    ],
+    [
+      "COMPOSITION",
+      "NATIVE_EXPORT"
+    ]
+  ],
+  "registration": "coordinator only, after independent review; no orders created or frozen here",
+  "compile_contract_rule": "DECODE depends on shared DecodeOperations, RASTER_EFFECTS on shared FlatKernel; actual coordinator bridges invoke full real module implementations after acceptance. No temporary stub bodies or unfinished peer dependencies. PAINT/DEFINITIONS own lower scalar sampling/query modules as declared, coordinator only registers them."
+}

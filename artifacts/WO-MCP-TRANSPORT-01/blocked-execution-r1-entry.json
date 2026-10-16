@@ -1,0 +1,24 @@
+{
+  "ts": "2026-10-13T20:16:23Z",
+  "wo_id": "WO-MCP-TRANSPORT-01",
+  "event": "blocked",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "mcp-transport-01-r1-inventory-scope-blocked-2026-10-13",
+  "session_id": "codex-mcp-transport-01-2026-10-13",
+  "model": "gpt-6",
+  "cli_version": "not reported (API executor)",
+  "duration_s": 36.443,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "blocked",
+  "artifacts": [
+    "artifacts/WO-MCP-TRANSPORT-01/scope-block-execution-r1.txt",
+    "artifacts/WO-MCP-TRANSPORT-01/verification.txt",
+    "artifacts/WO-MCP-TRANSPORT-01/execution-r1-start-manifest.json"
+  ],
+  "note": "Stopped before product edits: required item 6 and Output require docs/product/vexel-goal-and-delivery-plan.md, absent from the frozen allowlist. Preserve shared dirty tree, task store, frozen order and prior evidence. Narrow frozen scope correction required. No build/test, relay implementation, async export or live-client acceptance. Duration measures baseline capture through block recording."
+}

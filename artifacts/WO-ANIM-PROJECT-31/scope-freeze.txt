@@ -1,0 +1,4 @@
+Frozen work order: WO-ANIM-PROJECT-31 revision 1
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Scope: user-facing visibility key authoring in native Animate timeline.
+Current heavily modified shared worktree is preserved; order changes are compared against frozen base.

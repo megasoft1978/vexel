@@ -1,0 +1,5 @@
+**REJECT**
+
+- **Must fix: decode error offsets differ from C for asset CRC failures.** In [bundle.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-project/rust/crates/vexel-project/src/bundle.rs:350), `read_asset` leaves `offset` unchanged when CRC validation fails, so the remapped failure reports the record start. C advances its cursor through the record before checking the CRC, then reports the record end. Preserve that cursor position and add an assertion for `BundleFailure.error_offset` in the CRC corruption case in [bundle.rs tests](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-project/rust/crates/vexel-project/tests/bundle.rs:201).
+
+The codec’s ownership, bounded/fallible allocation, checked sizing, strict validation, and valid round-trip paths look sound within this work order. The focused tests cover the named behavior, but they assert only error kinds for malformed inputs; exact error-offset parity is a concrete coverage gap. I performed no builds or tests.

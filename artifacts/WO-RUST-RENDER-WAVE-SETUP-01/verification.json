@@ -1,0 +1,72 @@
+{
+  "status": "pass",
+  "registration_only": true,
+  "checks": [
+    {
+      "command": "cargo +stable generate-lockfile --offline",
+      "exit_code": 0,
+      "output": "     Locking 18 packages to highest Rust 1.99 compatible versions\n"
+    },
+    {
+      "command": "cargo +stable check --workspace --locked --offline",
+      "exit_code": 0,
+      "output": "    Checking vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-macos)\n    Checking vexel-svg-color v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-color)\n    Checking vexel-project v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-project)\n    Checking vexel-document-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-document-io)\n    Checking vexel-document v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-document)\n    Checking vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-json)\n    Checking vexel-platform-tasks v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-tasks)\n    Checking vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-protocol)\n    Checking vexel-svg-index v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-index)\n    Checking vexel-document-edit v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-document-edit)\n    Checking vexel-project-io v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-project-io)\n    Checking vexel-timeline v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-timeline)\n    Checking vexel-svg-paint v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-paint)\n    Checking vexel-svg-media v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-media)\n    Checking vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-decode)\n    Checking vexel-mcp-tasks v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-mcp-tasks)\n    Checking vexel-mcp-access v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-mcp-access)\n    Checking vexel-svg-scalar-sample v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-scalar-sample)\n    Checking vexel-svg-scalar-index v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-scalar-index)\n    Checking vexel-svg-definitions v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-definitions)\n    Checking vexel-svg-animation-frame v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-animation-frame)\n    Checking vexel-scene-query v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-scene-query)\n    Checking vexel-tile-cache v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-tile-cache)\n    Checking vexel-ui v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-ui)\n    Checking vexel-spatial v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-spatial)\n    Checking vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)\n    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.01s\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-RENDER-WAVE-SETUP-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-RENDER-WAVE-SETUP-01 revision 1 sha256 605c1969fa87c167ea71456a79deec7de09d27d10cdf4a86d18e4d065e53ab13\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-DECODE-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-DECODE-01 revision 1 sha256 9a0db5f9dddca1a55cb6c585faa3d6ed6b4c537ca8f6f21962bc0d768c232dc2\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-PAINT-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-PAINT-01 revision 1 sha256 971265fa4ce5b36ad88602c6a8b523fbdd2c998fbc7a511d2717186201cf25f3\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-DEFINITIONS-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-DEFINITIONS-01 revision 1 sha256 0a99711ad6d9d8356a5395384bdf69645d6531e296453e8a68549add61eb1e8d\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-MEDIA-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-MEDIA-01 revision 1 sha256 a4856b910ec05a9df0a964bb368ca53cc0d7d98ff41157aa77ac9e90e8c7a9f4\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SCENE-QUERY-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SCENE-QUERY-01 revision 1 sha256 7a85a750db8f9ed24d31fce05bd2bc87469ed43e35e5c9b22d78ee4c0b3e3e4d\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-SCALAR-INDEX-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-SCALAR-INDEX-01 revision 1 sha256 809427f8de0751516956e53ca38622c5670078e1c6745968e6795ed1df23e863\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-SCALAR-SAMPLE-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-SCALAR-SAMPLE-01 revision 1 sha256 7200bbedb3e1b381058caa81784bae4d1cdf501b21e126ef1d590b3e966c9d1f\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-ANIMATION-FRAME-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-SVG-ANIMATION-FRAME-01 revision 1 sha256 c78952300be9cbbed7a1aaa1395acf38da41cae33aee6cb8c6d772a39841213d\n"
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit_code": 0,
+      "output": "valid ledger: 1407 entries\n"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "application_or_UI_tests_run": false
+}

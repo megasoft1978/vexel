@@ -1,0 +1,203 @@
+BINDING CFRunLoopGetMain
+165:     #[inline]
+166:     pub fn current() -> Option<CFRetained<CFRunLoop>> {
+167:         extern "C-unwind" {
+168:             fn CFRunLoopGetCurrent() -> Option<NonNull<CFRunLoop>>;
+169:         }
+170:         let ret = unsafe { CFRunLoopGetCurrent() };
+171:         ret.map(|ret| unsafe { CFRetained::retain(ret) })
+172:     }
+173: 
+174:     #[doc(alias = "CFRunLoopGetMain")]
+175:     #[inline]
+176:     pub fn main() -> Option<CFRetained<CFRunLoop>> {
+177:         extern "C-unwind" {
+178:             fn CFRunLoopGetMain() -> Option<NonNull<CFRunLoop>>;
+179:         }
+180:         let ret = unsafe { CFRunLoopGetMain() };
+181:         ret.map(|ret| unsafe { CFRetained::retain(ret) })
+182:     }
+183: 
+184:     #[doc(alias = "CFRunLoopCopyCurrentMode")]
+185:     #[inline]
+186:     pub fn current_mode(&self) -> Option<CFRetained<CFRunLoopMode>> {
+187:         extern "C-unwind" {
+188:             fn CFRunLoopCopyCurrentMode(rl: &CFRunLoop) -> Option<NonNull<CFRunLoopMode>>;
+189:         }
+190:         let ret = unsafe { CFRunLoopCopyCurrentMode(self) };
+191:         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
+192:     }
+
+BINDING CFRunLoopGetMain
+1001: 
+1002: #[deprecated = "renamed to `CFRunLoop::current`"]
+1003: #[inline]
+1004: pub extern "C-unwind" fn CFRunLoopGetCurrent() -> Option<CFRetained<CFRunLoop>> {
+1005:     extern "C-unwind" {
+1006:         fn CFRunLoopGetCurrent() -> Option<NonNull<CFRunLoop>>;
+1007:     }
+1008:     let ret = unsafe { CFRunLoopGetCurrent() };
+1009:     ret.map(|ret| unsafe { CFRetained::retain(ret) })
+1010: }
+1011: 
+1012: #[deprecated = "renamed to `CFRunLoop::main`"]
+1013: #[inline]
+1014: pub extern "C-unwind" fn CFRunLoopGetMain() -> Option<CFRetained<CFRunLoop>> {
+1015:     extern "C-unwind" {
+1016:         fn CFRunLoopGetMain() -> Option<NonNull<CFRunLoop>>;
+1017:     }
+1018:     let ret = unsafe { CFRunLoopGetMain() };
+1019:     ret.map(|ret| unsafe { CFRetained::retain(ret) })
+1020: }
+1021: 
+1022: #[deprecated = "renamed to `CFRunLoop::current_mode`"]
+1023: #[inline]
+1024: pub extern "C-unwind" fn CFRunLoopCopyCurrentMode(
+1025:     rl: &CFRunLoop,
+1026: ) -> Option<CFRetained<CFRunLoopMode>> {
+1027:     extern "C-unwind" {
+1028:         fn CFRunLoopCopyCurrentMode(rl: &CFRunLoop) -> Option<NonNull<CFRunLoopMode>>;
+
+BINDING CFRunLoopGetMain
+1003: #[inline]
+1004: pub extern "C-unwind" fn CFRunLoopGetCurrent() -> Option<CFRetained<CFRunLoop>> {
+1005:     extern "C-unwind" {
+1006:         fn CFRunLoopGetCurrent() -> Option<NonNull<CFRunLoop>>;
+1007:     }
+1008:     let ret = unsafe { CFRunLoopGetCurrent() };
+1009:     ret.map(|ret| unsafe { CFRetained::retain(ret) })
+1010: }
+1011: 
+1012: #[deprecated = "renamed to `CFRunLoop::main`"]
+1013: #[inline]
+1014: pub extern "C-unwind" fn CFRunLoopGetMain() -> Option<CFRetained<CFRunLoop>> {
+1015:     extern "C-unwind" {
+1016:         fn CFRunLoopGetMain() -> Option<NonNull<CFRunLoop>>;
+1017:     }
+1018:     let ret = unsafe { CFRunLoopGetMain() };
+1019:     ret.map(|ret| unsafe { CFRetained::retain(ret) })
+1020: }
+1021: 
+1022: #[deprecated = "renamed to `CFRunLoop::current_mode`"]
+1023: #[inline]
+1024: pub extern "C-unwind" fn CFRunLoopCopyCurrentMode(
+1025:     rl: &CFRunLoop,
+1026: ) -> Option<CFRetained<CFRunLoopMode>> {
+1027:     extern "C-unwind" {
+1028:         fn CFRunLoopCopyCurrentMode(rl: &CFRunLoop) -> Option<NonNull<CFRunLoopMode>>;
+1029:     }
+1030:     let ret = unsafe { CFRunLoopCopyCurrentMode(rl) };
+
+SDK CFRunLoopGetMain
+58: CF_SWIFT_UNAVAILABLE_FROM_ASYNC("CFRunLoopGetCurrent cannot be used from async contexts.")
+59: CF_EXPORT CFRunLoopRef CFRunLoopGetCurrent(void);
+60: CF_EXPORT CFRunLoopRef CFRunLoopGetMain(void);
+61: 
+62: CF_EXPORT CFRunLoopMode CFRunLoopCopyCurrentMode(CFRunLoopRef rl);
+63: 
+64: CF_EXPORT CFArrayRef CFRunLoopCopyAllModes(CFRunLoopRef rl);
+65: 
+66: CF_EXPORT void CFRunLoopAddCommonMode(CFRunLoopRef rl, CFRunLoopMode mode);
+67: 
+
+BINDING CFRunLoopWakeUp
+255:     #[inline]
+256:     pub fn is_waiting(&self) -> bool {
+257:         extern "C-unwind" {
+258:             fn CFRunLoopIsWaiting(rl: &CFRunLoop) -> Boolean;
+259:         }
+260:         let ret = unsafe { CFRunLoopIsWaiting(self) };
+261:         ret != 0
+262:     }
+263: 
+264:     #[doc(alias = "CFRunLoopWakeUp")]
+265:     #[inline]
+266:     pub fn wake_up(&self) {
+267:         extern "C-unwind" {
+268:             fn CFRunLoopWakeUp(rl: &CFRunLoop);
+269:         }
+270:         unsafe { CFRunLoopWakeUp(self) }
+271:     }
+272: 
+273:     #[doc(alias = "CFRunLoopStop")]
+274:     #[inline]
+275:     pub fn stop(&self) {
+276:         extern "C-unwind" {
+277:             fn CFRunLoopStop(rl: &CFRunLoop);
+278:         }
+279:         unsafe { CFRunLoopStop(self) }
+280:     }
+281: 
+282:     /// # Safety
+
+BINDING CFRunLoopWakeUp
+1096: 
+1097: #[deprecated = "renamed to `CFRunLoop::is_waiting`"]
+1098: #[inline]
+1099: pub extern "C-unwind" fn CFRunLoopIsWaiting(rl: &CFRunLoop) -> bool {
+1100:     extern "C-unwind" {
+1101:         fn CFRunLoopIsWaiting(rl: &CFRunLoop) -> Boolean;
+1102:     }
+1103:     let ret = unsafe { CFRunLoopIsWaiting(rl) };
+1104:     ret != 0
+1105: }
+1106: 
+1107: #[deprecated = "renamed to `CFRunLoop::wake_up`"]
+1108: #[inline]
+1109: pub extern "C-unwind" fn CFRunLoopWakeUp(rl: &CFRunLoop) {
+1110:     extern "C-unwind" {
+1111:         fn CFRunLoopWakeUp(rl: &CFRunLoop);
+1112:     }
+1113:     unsafe { CFRunLoopWakeUp(rl) }
+1114: }
+1115: 
+1116: #[deprecated = "renamed to `CFRunLoop::stop`"]
+1117: #[inline]
+1118: pub extern "C-unwind" fn CFRunLoopStop(rl: &CFRunLoop) {
+1119:     extern "C-unwind" {
+1120:         fn CFRunLoopStop(rl: &CFRunLoop);
+1121:     }
+1122:     unsafe { CFRunLoopStop(rl) }
+1123: }
+
+BINDING CFRunLoopWakeUp
+1098: #[inline]
+1099: pub extern "C-unwind" fn CFRunLoopIsWaiting(rl: &CFRunLoop) -> bool {
+1100:     extern "C-unwind" {
+1101:         fn CFRunLoopIsWaiting(rl: &CFRunLoop) -> Boolean;
+1102:     }
+1103:     let ret = unsafe { CFRunLoopIsWaiting(rl) };
+1104:     ret != 0
+1105: }
+1106: 
+1107: #[deprecated = "renamed to `CFRunLoop::wake_up`"]
+1108: #[inline]
+1109: pub extern "C-unwind" fn CFRunLoopWakeUp(rl: &CFRunLoop) {
+1110:     extern "C-unwind" {
+1111:         fn CFRunLoopWakeUp(rl: &CFRunLoop);
+1112:     }
+1113:     unsafe { CFRunLoopWakeUp(rl) }
+1114: }
+1115: 
+1116: #[deprecated = "renamed to `CFRunLoop::stop`"]
+1117: #[inline]
+1118: pub extern "C-unwind" fn CFRunLoopStop(rl: &CFRunLoop) {
+1119:     extern "C-unwind" {
+1120:         fn CFRunLoopStop(rl: &CFRunLoop);
+1121:     }
+1122:     unsafe { CFRunLoopStop(rl) }
+1123: }
+1124: 
+1125: extern "C-unwind" {
+
+SDK CFRunLoopWakeUp
+75: 
+76: CF_EXPORT Boolean CFRunLoopIsWaiting(CFRunLoopRef rl);
+77: CF_EXPORT void CFRunLoopWakeUp(CFRunLoopRef rl);
+78: CF_EXPORT void CFRunLoopStop(CFRunLoopRef rl);
+79: 
+80: #if __BLOCKS__
+81: CF_EXPORT void CFRunLoopPerformBlock(CFRunLoopRef rl, CFTypeRef mode, void (^block)(void)) API_AVAILABLE(macos(10.6), ios(4.0), watchos(2.0), tvos(9.0)); 
+82: #endif
+83: 
+84: CF_EXPORT Boolean CFRunLoopContainsSource(CFRunLoopRef rl, CFRunLoopSourceRef source, CFRunLoopMode mode);

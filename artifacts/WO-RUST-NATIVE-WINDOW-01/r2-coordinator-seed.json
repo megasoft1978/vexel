@@ -1,0 +1,13 @@
+{
+  "authorized_by": [
+    "WO-RUST-NATIVE-WINDOW-01-r2",
+    "WO-RUST-NATIVE-WINDOW-FEATURE-01"
+  ],
+  "files": {
+    "rust/crates/vexel-platform-apple/Cargo.toml": "1eceb008a5a0239889cd9dd7dd8e83e90c4c2bff50c9431f27165bd0cf92009c",
+    "Cargo.lock": "271fa0721fc4a4b5aefffab1c76e4a2e11ef2a3e98e3352d3ef5d61fab31ef81",
+    "work/WO-RUST-NATIVE-WINDOW-01.md": "fe8a67d9c90968d9decfb591b0b7fa316aa5deb68bfddbd102eabf257ff5cd57",
+    "docs/adr/0027-native-window-binding-features.md": "8b2747a7c43f1b76f0432e15f30ac2f8be9748695d22b469988dae08025731eb",
+    "docs/dependencies/objc2-native-window.lock.json": "8c131d528a8055183d8d6480ae0c7c3058141d1d625cda9e8d2e386cdd22f3d2"
+  }
+}

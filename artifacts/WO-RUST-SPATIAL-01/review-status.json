@@ -1,0 +1,11 @@
+{
+  "name": "spatial",
+  "wo": "WO-RUST-SPATIAL-01",
+  "pid": 7574,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791963422.261328,
+  "exit_code": 0,
+  "duration_seconds": 61.37643003463745
+}

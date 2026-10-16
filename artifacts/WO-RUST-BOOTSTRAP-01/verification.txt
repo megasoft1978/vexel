@@ -1,0 +1,121 @@
+$ rustc +stable --version
+rustc 1.99.0 (b940084d7 2026-09-28)
+
+exit 0
+$ cargo +stable generate-lockfile --offline
+
+exit 0
+$ cargo +stable check --workspace --locked --offline
+    Checking vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-base)
+    Checking vexel-project v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-project)
+    Checking vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Checking vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-xml)
+    Checking vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-json)
+    Checking vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-raster)
+    Checking vexel-geometry v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-geometry)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
+
+exit 0
+$ cargo +stable test -p vexel-base --locked --offline
+
+running 2 tests
+test tests::span_overflow ... ok
+test tests::span_valid_empty_bounds ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-base)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.57s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_base-291bb9a649bfac4f)
+   Doc-tests vexel_base
+
+exit 0
+$ cargo +stable run -p vexel-dev --locked --offline -- info
+Vexel Rust foundation: Apple Silicon macOS13+, Rust1.99.0/2024, MPL2
+Workspace scaffolding; application/module parity pending. See docs/product/rust-port-goal-and-plan.md
+   Compiling vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev info`
+
+exit 0
+$ python3 scripts/wo_validate.py WO-RUST-BOOTSTRAP-01 --ready
+valid WO-RUST-BOOTSTRAP-01 revision 1 sha256 d2f2d320fd28beecea3b8898c81c9682d9c774b8be2146ebcf8f8b116f541d35
+
+exit 0
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 1046 entries
+
+exit 0
+$ git diff --check
+
+exit 0
+
+Coordinator cache-init completion checks:
+cargo +stable fmt --all unavailable: rustfmt not installed. No global component installation attempted; no formatter pass claimed.
+$ cargo +stable check --workspace --locked --offline
+    Checking vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.03s
+
+exit 0
+$ cargo +stable test -p vexel-base --locked --offline
+
+running 2 tests
+test tests::span_overflow ... ok
+test tests::span_valid_empty_bounds ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.00s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_base-291bb9a649bfac4f)
+   Doc-tests vexel_base
+
+exit 0
+$ cargo +stable run -p vexel-dev --locked --offline -- check
+   Compiling vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev check`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+
+exit 0
+
+Low review target concerns reconciled: compile-time guard already existed in required base dependency; added direct CLI guard for clarity. Work order requires repo-local target, not target under .cache; build/rust is correct. Added explicit target env override to prevent inherited outside paths.
+$ cargo +stable check --workspace --locked --offline
+    Checking vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.03s
+
+exit 0
+$ cargo +stable test -p vexel-base --locked --offline
+
+running 2 tests
+test tests::span_overflow ... ok
+test tests::span_valid_empty_bounds ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.00s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_base-291bb9a649bfac4f)
+   Doc-tests vexel_base
+
+exit 0
+$ cargo +stable run -p vexel-dev --locked --offline -- check
+   Compiling vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running `build/rust/aarch64-apple-darwin/debug/vexel-dev check`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+
+exit 0

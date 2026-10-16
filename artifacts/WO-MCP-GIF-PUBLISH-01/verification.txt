@@ -1,0 +1,26 @@
+WO-MCP-GIF-PUBLISH-01 isolated worktree verification
+
+Commands and results:
+- `cmake --preset mac-debug` — passed; configured Debug arm64 macOS 13 build.
+- `cmake --build build/mac-debug --target mcp_native_timeline_test source_save_test vexel-mcp` — passed.
+- `ctest --test-dir build/mac-debug --output-on-failure -R '^(mcp-native-timeline|source-save)$'` — passed, 2/2 tests.
+- `python3 scripts/wo_validate.py WO-MCP-GIF-PUBLISH-01 --ready` — passed; revision 1 digest matched frozen spec.
+- `python3 scripts/ledger.py validate ledger.jsonl` — passed; 1026 entries.
+- `git diff --check` — passed.
+
+Focused evidence:
+- Existing no-replace primitive sets `published` immediately after successful `link` (commit point), before temporary cleanup and directory fsync. Broker routes preserve the canonical output path whenever `published` is true; both GIF routes report `published:true` and `durable:false` on post-commit errors, while unpublished GIF failures retain `animation_export_failed`.
+- Save grants are resolved again immediately before calling the primitive and the resolved path must equal the earlier canonical path.
+- Native GIF regression checks successful published/durable status, duplicate export error, unchanged existing sentinel bytes, no `.vexel-new-*` temporary siblings, and denied path rejection without output.
+- Source-save primitive regressions check the target remains absent for every partial-write hook call, injected write failure leaves no target/temp sibling, and duplicate publication preserves existing content (existing assertion retained).
+- PNG frame writing path remains on its original directory-fd writer.
+- Focused C files remain below 800 lines: `mcp_broker_render.c` 757, `mcp_native_timeline_test.c` 737, `test_source_save.c` 295.
+
+Overlay/conflict audit: only the three work-order source/test paths were edited by this lane, plus this evidence file. The worktree had pre-existing unrelated dirty paths from the accepted overlay; they were left untouched. No ledgers, state, docs, protocol, job, task-store, platform primitive, or protected app/UI paths were edited by this lane. Original test assertions were retained and regressions were additive.
+
+Scoped self-review: broker publication is classified using `platform_atomic_new_file_result.published`, not `error == OK`; no cleanup removes the final path after a committed publication. Duplicate errors occur before publication and retain the established failure domain. No async/live progress claim is made.
+
+Independent review repair (response commit edge):
+- GIF success JSON, including canonical path and published/durable fields, is now completely built before the atomic create call. A bounded-buffer encoding failure returns before publication; on unpublished primitive failure, the prebuilt result is cleared before emitting the failure. After a committed publish, only the fixed-width durability token is patched in the existing buffer, so no later JSON allocation/append can replace the committed result with a generic error.
+- Added a response-buffer limit regression proving failure leaves the GIF destination absent, and parses the successful native GIF response as JSON.
+- Re-ran `cmake --build build/mac-debug --target mcp_native_timeline_test source_save_test vexel-mcp` — passed; `ctest --test-dir build/mac-debug --output-on-failure -R '^(mcp-native-timeline|source-save)$'` — passed, 2/2; `git diff --check` — passed. `mcp_broker_render.c` is 792 lines.

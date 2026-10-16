@@ -1,0 +1,20 @@
+{
+  "work_order": "WO-RUST-SVG-PATH-NUMBER-SEPARATOR-01",
+  "revision": 2,
+  "seed_files": 6,
+  "immutable_seed_matches_before_integration": 6,
+  "candidate_reported_changed_paths": [
+    "rust/crates/vexel-svg-path/src/parser.rs",
+    "rust/crates/vexel-svg-path/src/reader.rs",
+    "rust/crates/vexel-svg-path/tests/controlled.rs",
+    "rust/crates/vexel-svg-path/tests/number_separator.rs"
+  ],
+  "integrated_hashes_match_candidate": true,
+  "unreported_out_of_scope_candidate_differences_excluded": [
+    "rust/crates/vexel-svg-path/src/parser/commands.rs",
+    "rust/crates/vexel-svg-path/src/parser/tests.rs"
+  ],
+  "independent_review": "passed",
+  "fresh_main_checks": "passed",
+  "accepted_scope": "Reject malformed integer-leading repeated decimal separators while preserving dot-leading compact values, arc endpoint compact adjacency, diagnostics, controlled/resumable behavior, and frozen parity."
+}

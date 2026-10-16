@@ -1,0 +1,25 @@
+WO-MCP-OBS-01 revision 1 verification
+Date: 2026-10-13
+Model: gpt-6.1-sol
+Base/head: 19234a036ed6a8d40c2ccdaec9b8186806d70eca / working tree
+
+Implementation
+- Central broker tool dispatch now reports the tool name and success/error result through an optional host callback.
+- The macOS app sanitizes the bounded tool name and records `MCP <tool> completed/failed` in the existing bounded operator log and status strip, then requests redraw. It does not open the log automatically.
+- MCP README documents that this is completion visibility only; in-progress status, streaming, and cancellation remain open.
+- Native timeline behavior remains unchanged; its focused test verifies callback success on a timeline read and failure on an invalid move.
+
+Focused matrix
+- Debug: `cmake --build --preset mac-debug --target svgworkbench mcp_native_timeline_test`: PASS; `ctest --test-dir build/mac-debug --output-on-failure -R '^mcp-native-timeline$'`: 1/1 PASS.
+- ASan/UBSan: same target build PASS; focused CTest 1/1 PASS.
+- UBSan: same target build PASS; focused CTest 1/1 PASS.
+- Total focused executions: 3/3 passed. No broad UI/E2E or full test suite run.
+
+Repository checks
+- Frozen work order validates as revision 1, SHA-256 2c668d8f13f6b18e87d4f9f39b36b0c52b8f8c73fa9da8245bbad05516be89af.
+- `tests/test_map.json` parses; quick-test selection for the focused MCP test maps to the `mcp` CTest group.
+- `ledger.jsonl` validates (803 records before completion events); `git diff --check` passes.
+- Changed source sizes: mcp_broker.h 42 lines; mcp_broker_tools.c 172; mcp/README.md 98; mcp_broker_hook.c 529; mcp_native_timeline_test.c 660. All are below 800 lines.
+
+Limitations
+- This makes completed tool outcomes visible after a synchronous call. It does not provide live progress/cancellation while a long call is executing or prove a real Codex/Claude session.

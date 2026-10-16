@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-ANIMATION-FRAME-01",
+  "candidate_status": "complete owned frame/clip candidate; pending independent review; later product integrations remain separate gates",
+  "commands": [
+    {
+      "command": "rustc +stable --version",
+      "result": "PASS",
+      "evidence": "rustc 1.99.0 (b940084d7 2026-09-28)"
+    },
+    {
+      "command": "rustfmt +stable --edition 2024 --check rust/crates/vexel-svg-animation-frame/src/*.rs rust/crates/vexel-svg-animation-frame/tests/*.rs rust/crates/vexel-svg-animation-frame/tests/support/mod.rs",
+      "result": "PASS",
+      "evidence": "Exit 0; all owned source/test files formatted. Exact per-file counts in source_test_line_counts; every file below800."
+    },
+    {
+      "command": "cargo +stable check -p vexel-svg-animation-frame --locked --offline",
+      "result": "PASS",
+      "evidence": "Exit0; locked offline scoped package check finished; no warnings/errors."
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-animation-frame --locked --offline",
+      "result": "PASS",
+      "evidence": "Exit 0: 9 unit + 2 frame_scene + 8 original_clip + 10 original_frame + 2 r2_policy =31 passed; 0 failed/ignored; 0 doc tests. Original27 retained with fixture invocation changes and explicitly incorrect default-cap predicate replaced by stronger explicit-policy proof."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-ANIMATION-FRAME-01 --ready",
+      "result": "PASS",
+      "evidence": "Exit0: valid WO-RUST-SVG-ANIMATION-FRAME-01 revision2 sha256 4b0592c2615a763a35bc171eb0ce474bdc6e41d6a272a33fe91245d6adccb4a3"
+    }
+  ],
+  "not_run": [
+    "Renderer pixel oracles from anim_test.c: the real frame/geometry/clip assertions are ported; raster sampling requires later actual DecodeOperations/KernelResources/FlatKernel/native providers.",
+    "Original render CLI output/sequence/frame-count tests: later accepted runtime CLI composition.",
+    "Original authoring/editor mutation suites: later source-preserving authoring engine.",
+    "Original fuzz campaign: later Rust decoder/fuzz harness.",
+    "Broad UI/E2E, final app/runtime/release and authentic MCP demo: later product gates."
+  ],
+  "scope_audit": {
+    "owned_paths": "crate src, crate README, new tests under crate, own artifact directory except scope.json",
+    "protected_edits_by_this_work": [],
+    "immutable_scope_sha256": "1ef66c85354c47f8c0ae077af7e3f43001566c790a9d20c2e332f5c56c68bd55"
+  },
+  "revision": 2,
+  "source_test_line_counts": {
+    "src/lib.rs": 634,
+    "src/clip_tests.rs": 382,
+    "src/clips.rs": 438,
+    "src/apply.rs": 220,
+    "src/loop_tests.rs": 101,
+    "tests/original_clip.rs": 318,
+    "tests/frame_scene.rs": 105,
+    "tests/original_frame.rs": 340,
+    "tests/r2_policy.rs": 119,
+    "tests/support/mod.rs": 469
+  }
+}

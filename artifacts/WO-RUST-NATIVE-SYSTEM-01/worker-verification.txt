@@ -1,0 +1,35 @@
+WO-RUST-NATIVE-SYSTEM-01 verification
+Date: 2026-10-14
+Host target: aarch64-apple-darwin; workspace deployment target: macOS 13.0
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28), invoked as cargo +stable
+Dependencies: --locked --offline; no dependency or manifest changes
+
+SDK ABI inspection:
+- MacOSX.sdk/System/Library/Frameworks/Security.framework/Headers/SecRandom.h
+  confirms nullable SecRandomRef, SecRandomCopyBytes(size_t, void *) -> int,
+  zero success, and NULL/default provider documentation.
+- MacOSX.sdk/usr/include/unistd.h confirms getuid(void) -> uid_t and
+  getpeereid(int, uid_t *, gid_t *).
+- MacOSX.sdk/usr/include/sys/_types.h confirms uid_t/gid_t are u32 aliases.
+- MacOSX.sdk/usr/include/sys/errno.h confirms errno is __error().
+
+Named checks:
+- cargo +stable check -p vexel-platform-macos --locked --offline: PASS,
+  exit 0. Checked vexel-base and vexel-platform-macos.
+- cargo +stable test -p vexel-platform-macos --locked --offline: PASS,
+  exit 0. 2 unit tests, 6 integration tests, 0 failures; doc tests 0.
+- Focused tests exercised native empty/small/256-byte entropy calls, 257-byte
+  cap rejection, simulated nonzero Security status zeroing, same-UID Unix
+  socket credentials, and non-socket error classification. No credentials or
+  random bytes were printed.
+- python3 scripts/wo_validate.py WO-RUST-NATIVE-SYSTEM-01 --ready: PASS,
+  exit 0; revision 1 SHA-256 matched the frozen value.
+- python3 scripts/ledger.py validate ledger.jsonl: PASS, exit 0; 1096 entries.
+- git diff --check: PASS, exit 0.
+
+Cargo emitted Xcode/xcrun diagnostics about unavailable filesystem event
+stream and DARWIN_USER_CACHE_DIR lookup while resolving the already-installed
+SDK. They were warnings only; both named checks completed successfully.
+
+Not run: rustfmt and clippy are unavailable per the frozen work order. No broad
+UI, full-suite, C, performance, or cryptographic-certification checks were run.

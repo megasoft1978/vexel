@@ -1,0 +1,24 @@
+WO-CORPUS-08 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Input and snapshot identity
+- Generated T1: 979,796 bytes; SHA-256 3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5, matching WO-CORPUS-05/06/07 evidence.
+- Before scratch instrumentation, hashes matched current shared source: `src/raster/shape_render.c` ec25eeeac3134e10e53ce7cf873a59a0e855deb9d75415d4f79a76616b7c31c8; `src/raster/shape_render_group.c` be4c813df68bc9e8f0a9225ce36befac68c8c83ec90f0309f7dcb0fe5786f3ff; `src/raster/shape_bounds.c` a5f99eb5a6e5edb6cc5532ee1ac555dddc1def6535e435c3c2c51663961124d8; `src/raster/shape_render_preflight.c` b6cd8865b117c84020ea910aa1ea72398d165afcd8a8e48d1d02a28581733303.
+- After instrumentation/probe, current shared files still have those original hashes. Instrumented scratch files differ as expected; no instrumentation was written into shared source.
+
+Build and one instrumented probe
+- `cmake --preset mac-release` configured successfully in the scratch snapshot.
+- The first compile exposed misleading-indentation warnings in the temporary instrumentation; braces were added only in the scratch copy. Final `cmake --build --preset mac-release --target svgworkbench` succeeded (185 incremental build steps).
+- Exactly one instrumented T1 probe was run at 128x128 with `/usr/bin/time -l`.
+- Result: exit 1, `limit at byte 0`, 0.28 s real, 99,958,784-byte maximum RSS.
+- Instrumented pipeline reports failure in `raster_shape_render_flat` at the `raster_fill_scanline_cache_create` call (shared-source call site `src/raster/shape_render.c:259` before instrumentation). Grouped rendering reports the same 34,714-shape / 138,856-edge subrange failed, then propagates the failure. No boundary-mark or raster work-preflight refusal diagnostic occurred. The exact internal return branch of `raster_fill_scanline_cache_create` is not yet known; no amount/cap can be claimed from this probe.
+
+Interpretation and next action
+- WO-CORPUS-07 removed the 65,536 dash-entry cutoff while preserving the 16 MiB allocation limit and 1,000,000-step cap. T1 now advances past dash-cache construction and fails at scanline-fill cache creation.
+- Do not change another limit yet. Next diagnostic should instrument the internal early-return branches of `raster_fill_scanline_cache_create` and identify its document dimensions, maximum eligible shape edge count, computed allocation sizes, and exact failure category. The available source shows that cache uses a 4,096-edge eligibility threshold and bounded width-sized pixel runs; this probe does not establish which branch returned false.
+- T1 full-document rendering remains unproven. T2's 65,536-shape cap is untouched. Accepted corpus remains 3/39 rendered, unaccepted candidate 5/39, and 19/58 skipped.
+- No tests, product changes, corpus sweep, UI/E2E, fuzz, sanitizer, or broad benchmark were run. No commit.
+
+Order and hygiene
+- Frozen WO-CORPUS-08 validates. `python3 scripts/ledger.py validate ledger.jsonl`: PASS. `git diff --check`: PASS.

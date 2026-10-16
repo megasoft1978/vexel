@@ -1,0 +1,13 @@
+{
+  "shape_admission": [
+    "src/svg/shape/shape_custom.c:53",
+    "src/svg/shape/shape_geometry.c:55",
+    "rust/crates/vexel-scene/src/shape_builder.rs:6"
+  ],
+  "canonical_source": [
+    "WO-RUST-SVG-DECODE-01 preserved use-host path failure",
+    "WO-RUST-MEDIA-SOURCE-MAP-01 accepted separate host/canonical contract"
+  ],
+  "prerequisite": "WO-RUST-SCENE-DECODE-INITIALIZATION-01 accepted, not yet complete",
+  "not_started": true
+}

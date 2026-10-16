@@ -1,0 +1,46 @@
+{
+  "recorded_utc": "2026-10-14T07:48:37Z",
+  "goal_status": "active",
+  "goal_status_evidence": "artifacts/WO-RUST-XML-02/active-goal.json",
+  "authority": "docs/product/rust-port-goal-and-plan.md",
+  "turn_classification": "progress",
+  "accepted_scope_test_counts": {
+    "WO-RUST-BASE-01": 7,
+    "WO-RUST-GEOMETRY-01": 5,
+    "WO-RUST-XML-01": 10,
+    "WO-RUST-JSON-01": 5,
+    "WO-RUST-PROJECT-01": 8,
+    "WO-RUST-RASTER-01": 5,
+    "WO-RUST-NATIVE-SYSTEM-01": 8,
+    "WO-RUST-SPATIAL-01": 9,
+    "WO-RUST-SVG-VALUES-01": 12,
+    "WO-RUST-PROTOCOL-01": 9,
+    "WO-RUST-UI-CORE-01": 8
+  },
+  "accepted_focused_test_total": 86,
+  "second_batch_accepted": [
+    "WO-RUST-NATIVE-SYSTEM-01",
+    "WO-RUST-SPATIAL-01",
+    "WO-RUST-SVG-VALUES-01",
+    "WO-RUST-PROTOCOL-01",
+    "WO-RUST-UI-CORE-01"
+  ],
+  "pending_xml": {
+    "wo": "WO-RUST-XML-02",
+    "repair_status": "running",
+    "supervisor_pid": 14911,
+    "supervisor_confirmed_live": true,
+    "accepted": false,
+    "status_evidence": "artifacts/WO-RUST-XML-02/repair-v1-status.json"
+  },
+  "full_application_complete": false,
+  "comprehensive_final_testing_complete": false,
+  "next_steps": [
+    "finish XML repair and independent narrowed recheck",
+    "fresh XML scope/source audits and named main checks before acceptance",
+    "freeze next ready downstream parallel work orders",
+    "complete all requirements and final testing/release/demo gates"
+  ],
+  "broad_ui_e2e": "deferred until feature completion",
+  "subscription_policy": "existing subscription only, no new credits/API billing"
+}

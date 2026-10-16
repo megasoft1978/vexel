@@ -1,0 +1,33 @@
+{
+  "wo": "WO-RUST-NATIVE-BOUNDARY-01",
+  "changed_baseline_files": [
+    "rust/crates/vexel-platform-apple/src/lib.rs"
+  ],
+  "new_files": [
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v2.events.jsonl",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v2.stderr.log",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v1-result.md",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/worker.events.jsonl",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/result.md",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/verification.txt",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v2.prompt.txt",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v1.prompt.txt",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/parity-map.json",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/worker.stderr.log",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v1.events.jsonl",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/worker.prompt.txt",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v2-result.md",
+    "artifacts/WO-RUST-NATIVE-BOUNDARY-01/repair-v1.stderr.log",
+    "rust/crates/vexel-platform-apple/tests/native_boundary.rs",
+    "rust/crates/vexel-platform-apple/src/native_boundary.rs",
+    "rust/crates/vexel-platform-apple/src/main_thread.rs"
+  ],
+  "unchanged_inherited_git_blob_files": 1168,
+  "out_of_scope": [],
+  "missing_baseline_files": [],
+  "main_module_conflicts": [],
+  "source_line_cap_violations": [],
+  "pass": true,
+  "accepted_review": "recheck-v2",
+  "authorized_coordinator_input_deltas": {}
+}

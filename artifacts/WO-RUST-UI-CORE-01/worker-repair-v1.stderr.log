@@ -1,0 +1,1 @@
+2026-10-14T07:41:16.288669Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to read file to update /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-ui/rust2-ui/src/tests.rs: No such file or directory (os error 2)

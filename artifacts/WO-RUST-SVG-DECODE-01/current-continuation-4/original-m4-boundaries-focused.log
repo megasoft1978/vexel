@@ -1,0 +1,12 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on build directory
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running tests/original_m4_boundaries.rs (target/aarch64-apple-darwin/debug/deps/original_m4_boundaries-2f4f3638fee4fa13)
+
+running 3 tests
+test original_long_viewbox_values_use_canonical_source_without_wrapper_reparse ... ok
+test original_group_clip_resolves_once_and_shares_one_owned_geometry ... ok
+test original_decode_job_total_exact_one_megabyte_and_plus_one ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

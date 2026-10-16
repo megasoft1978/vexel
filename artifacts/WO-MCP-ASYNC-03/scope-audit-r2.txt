@@ -1,0 +1,43 @@
+Scope audit: WO-MCP-ASYNC-03 revision 2, 2026-10-13
+
+Outcome: scope correction validated; READY, implementation not started.
+Required item 6 can now update docs/product/vexel-goal-and-delivery-plan.md.
+This is the sole allowlist addition. Intent, limits, implementation, acceptance,
+verification, protected paths, base SHA, and all other order content are unchanged.
+Only revision and spec hash metadata were updated alongside this addition.
+
+Revision 1 is superseded after its recorded scope block. Its original audit,
+freeze, verification (including the historical audit-script failure/repair),
+and all other pre-existing evidence remain unchanged. Do not rerun the original
+verify-scope.py for r2: it is historical and would rewrite r1 task-delta.diff.
+Use verify-scope-r2.py against revision-r2-start-manifest.json instead.
+
+Ledger transitions appended via scripts/ledger.py append:
+r1 blocked -> superseded; r2 new -> ready.
+No r2 execution or acceptance transitions; no app builds/tests or interoperability claim.
+Verification commands/results: verification-r2.txt.
+
+PASS: r2 order differs only by revision/hash and the single allowlist addition; spec c964781819f37bf8d36af5486237706916ae8868145b92226b961be2ea653f0f.
+PASS: r2 freeze matches revision, base, and frozen spec hash; r1 spec independently verified.
+PASS: 5222 existing files audited; only order/STATE/LEDGER/ledger changed.
+PASS: all prior evidence, product/source/test files, and task-store slice unchanged byte-for-byte.
+PASS: existing ledger prefix preserved; exactly r1 superseded and r2 ready appended.
+PASS: work-order artifact JSON and test-map JSON parse; HEAD and Git index unchanged.
+Changed C source count: 0; implementation acceptance and line-limit checks not claimed.
+Revision delta paths:
+LEDGER.md
+STATE.md
+artifacts/WO-MCP-ASYNC-03/ready-r2-entry.json
+artifacts/WO-MCP-ASYNC-03/revision-r2-baseline/LEDGER.md
+artifacts/WO-MCP-ASYNC-03/revision-r2-baseline/STATE.md
+artifacts/WO-MCP-ASYNC-03/revision-r2-baseline/WO-MCP-ASYNC-03-r1.md
+artifacts/WO-MCP-ASYNC-03/revision-r2-baseline/ledger.jsonl
+artifacts/WO-MCP-ASYNC-03/revision-r2-start-manifest.json
+artifacts/WO-MCP-ASYNC-03/revision-r2.diff
+artifacts/WO-MCP-ASYNC-03/scope-audit-r2.txt
+artifacts/WO-MCP-ASYNC-03/scope-freeze-r2.txt
+artifacts/WO-MCP-ASYNC-03/superseded-r1-entry.json
+artifacts/WO-MCP-ASYNC-03/verification-r2.txt
+artifacts/WO-MCP-ASYNC-03/verify-scope-r2.py
+ledger.jsonl
+work/WO-MCP-ASYNC-03.md

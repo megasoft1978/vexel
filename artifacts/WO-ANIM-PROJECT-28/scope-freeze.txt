@@ -1,0 +1,4 @@
+WO-ANIM-PROJECT-28 revision 1 scope freeze
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Policy: native timeline history takes precedence per direction only in Animate workspace; SVG history is fallback and remains the history popover scope.
+Broad UI/E2E, corpus, fuzz, performance, and release checks are deferred.

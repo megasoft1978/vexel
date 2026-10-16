@@ -1,0 +1,26 @@
+20: /* Creates a new instance of the NSOpenPanel. This class is not a singleton. 
+21:  */
+22: + (NSOpenPanel *)openPanel;
+23: 
+24: @property (readonly, copy) NSArray<NSURL *> *URLs;
+25: 
+26: @property BOOL resolvesAliases;
+27: @property BOOL allowsMultipleSelection;
+
+22: + (NSOpenPanel *)openPanel;
+23: 
+24: @property (readonly, copy) NSArray<NSURL *> *URLs;
+25: 
+26: @property BOOL resolvesAliases;
+27: @property BOOL allowsMultipleSelection;
+28: 
+29: /**
+
+70: @interface NSOpenPanel (NSDeprecated)
+71: 
+72: /* Use URLs instead.
+73:  */
+74: - (NSArray *)filenames API_DEPRECATED("", macos(10.0,10.6));
+75: 
+76: /* Use -beginSheetModalForWindow:completionHandler: instead.
+77:     Set the -directoryURL property instead of passing in a 'path'.

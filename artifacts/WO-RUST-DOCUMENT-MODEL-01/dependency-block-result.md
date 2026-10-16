@@ -1,0 +1,7 @@
+I stopped before implementation because the accepted `vexel-xml::XmlTokenStream` API cannot enforce the required 64 MiB **actual allocated tokenizer-storage cap**. Its normal stream mode limits token count, but `Vec::try_reserve(1)` can allocate capacity beyond that byte limit. Visitor mode bounds per-tag scratch only; it does not enforce the required cumulative cap and diagnostic. The XML crate is protected from this work order.
+
+No document source or tests were changed, and no C API or assertion is claimed as ported. The specific dependency is an accepted XML stream API that enforces and reports actual tokenizer allocation limits with the exact exhaustion diagnostic and offset.
+
+I recorded the blocker and API parity status in [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-document-model/artifacts/WO-RUST-DOCUMENT-MODEL-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-document-model/artifacts/WO-RUST-DOCUMENT-MODEL-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust5-document-model/artifacts/WO-RUST-DOCUMENT-MODEL-01/verification.txt).
+
+The named Cargo checks, work-order validator, ledger validator, and `git diff --check` passed. The Cargo test run passed with **0 tests**, so it provides no parity coverage.

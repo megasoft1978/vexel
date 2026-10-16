@@ -1,0 +1,7 @@
+# Candidate status: incomplete
+
+This resumed candidate preserves the earlier archived result and leaves the immutable scope catalog unchanged. Scalar sampling now uses `ControlledSampleInput` for paint-provider work and validated `JobDashView` data for stroke grid queries. A canonical fixture builds and commits a real `SceneBuilder` draft with parsed path geometry and animation, then checks same-source `RasterJob` scratch admission and canceled-growth rollback. Nine focused tests pass.
+
+The frozen owner scope is **not complete**. Dash and grid construction still allocate standalone `DashCache` vectors, and fill rows still use `RasterScratch` vectors. Those paths do not meet same-job capacity leases, append-time source assignment, actual-capacity overlap admission, or no per-row allocation requirements. Several of the eleven original pure predicates also remain unported. No lower-engine, 603/157 oracle, or renderer-parity completion is claimed.
+
+`accepted-job-APIcoverage.md` records the accepted owning/controlled interfaces. One exact safe-composition gap is recorded in parity-map.json: `JobDashView` immutably borrows the job while all same-job buffer mutation requires `&mut RasterJob`; per-sample revalidation changes work accounting. The coordinator owns any shared repair. After that repair, crate-owned cache/fill adaptation and the remaining pure predicates still need completion, followed by independent review and fresh main checks.

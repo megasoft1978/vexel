@@ -1,0 +1,16 @@
+WO-PROJECT-07 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Implemented periodic background recovery capture for dirty native projects. The scene is captured through the immutable document-edit snapshot API; timeline source bytes are pinned independently of history eviction; asset descriptors are copied and payload slices remain borrowed from the stable loaded project. A 30-second monotonic interval is used. The worker materializes and publishes an atomic capsule without mutating dirty or saved-state markers. The source file stamp is verified before and after publication; a capsule is removed if the stamp changes during writing. A concise editor status reports success/failure. Recovery preparation failures report a nonmodal status.
+
+Focused verification:
+- Debug: strict build of svgworkbench, viewer_recovery_test, project_timeline_edit_test, project_recovery_test, and document_edit_snapshot_test passed.
+- Debug CTest: viewer-recovery, document-edit-snapshot, project-timeline-edit, project-recovery passed 4/4.
+- ASan/UBSan: strict target build passed. viewer-recovery, document-edit-snapshot, and project-recovery passed. project-timeline-edit passed when run directly; instrumentation runtime was about 30 seconds.
+- UBSan: strict target build passed. The four focused CTests passed 4/4.
+- `git diff --check` passed.
+- `python3 scripts/ledger.py validate ledger.jsonl` passed (772 entries before final WO-07 ledger events).
+- Source sizes: viewer_recovery.c 153, viewer.c 800, project_timeline_edit.c 844, project_timeline_session.c 268, viewer_recovery_test.c 127. project_timeline_edit.c remains 44 lines over the 800-line project limit because it predates this order and its split was not in the frozen allowlist.
+
+Not implemented in this order: restart discovery, recovery restore/conflict UI, removal after save/discard, retention policy, project migration, broad UI/E2E acceptance. Capsule encoding currently allocates a full encoded recovery buffer on the worker, so peak memory for very large projects needs later measurement and likely streaming work. No broad UI/E2E, corpus, or performance suite was run.

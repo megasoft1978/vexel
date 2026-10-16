@@ -1,0 +1,4 @@
+WO-CORPUS-12 revision 1
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: d29d6b6fe9ebb07648e5e78bfb54b8ec00f4879223cfa1e83485b6fa72ff4e6f
+One full T1 render comparison against installed Inkscape; no code changes.

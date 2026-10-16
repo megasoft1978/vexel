@@ -1,0 +1,26 @@
+WO-RUST-ATOMIC-FILES-01 checkpoint
+Date: 2026-10-14
+Result: blocked before implementation; no candidate implementation was left in the crate.
+
+Inspected the active work order, its named C/header references, the focused
+project-file test and platform test note, and accepted vexel-base byte-slice
+API. Both legacy close_checked helpers return failure and retain IO
+classification before commit. Stable std::fs::File has no API to explicitly
+close and return that error. Drop closes owned descriptors without surfacing
+the error. Syncing the file first does not make close errors observable.
+
+The work order forbids the available ways to add that behavior: a new unsafe
+Darwin close boundary, accepted sys.rs changes, and external dependencies.
+Implementing the rest would silently weaken a named error guarantee, so coding
+and package checks stop here.
+
+Checks executed: source/reference and API review only.
+Not run: cargo +stable check -p vexel-platform-macos --locked --offline;
+cargo +stable test -p vexel-platform-macos --locked --offline;
+wo_validate.py; ledger validation; git diff --check. No implementation exists
+for those checks to verify. No fixtures or accepted tests were changed.
+
+Counts: 0 of 2 public atomic operations ported; 0 focused Rust regressions
+added; 8 accepted same-crate tests remain unchanged. The 17 source-function
+entries and the blocker are mapped in parity-map.json. Application grants and
+project wiring remain out of this work order's port scope.

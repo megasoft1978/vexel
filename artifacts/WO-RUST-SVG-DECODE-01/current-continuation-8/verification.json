@@ -1,0 +1,52 @@
+{
+  "work_order": "WO-RUST-SVG-DECODE-01 revision 2",
+  "continuation": 8,
+  "candidate_only": true,
+  "complete": false,
+  "scope_catalog_sha256": "2c6ceb9b08eff33b84e63ea6d3fb03bf4b5069e9f659038aadf073744a7b8e08",
+  "accepted_seed": "seed-verification.json",
+  "changed_decoder_source_paths": [],
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-decode --locked --offline",
+      "environment": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target\"",
+      "exit_code": 0,
+      "result": "Finished dev profile successfully.",
+      "log": "check.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-decode --locked --offline",
+      "environment": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target\"",
+      "exit_code": 0,
+      "result": "27 result blocks; 89 passed, 0 failed, 0 ignored.",
+      "log": "package-test-final.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-paint -p vexel-svg-definitions --locked --offline",
+      "environment": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target\"",
+      "exit_code": 0,
+      "result": "66 passed, 0 failed, 0 ignored across both seeded component crates. This is component evidence only, not decoder composition.",
+      "log": "accepted-peer-tests.log"
+    },
+    {
+      "command": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-svg-decode -- --check",
+      "environment": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-8/target\"",
+      "exit_code": 0,
+      "result": "No formatting differences."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-DECODE-01 --ready",
+      "exit_code": 0,
+      "result": "valid WO-RUST-SVG-DECODE-01 revision 2 sha256 a6941069f4aba0f30d2d8256c3cc75590e0c2a244d873be3b3c37900ef77b72e"
+    },
+    {
+      "command": "cargo +stable check -p vexel-svg-decode --locked --offline",
+      "environment": "default Cargo home, no CARGO_HOME override",
+      "exit_code": 101,
+      "result": "Offline resolution failed: no matching package named objc2-image-io; rerunning with the preseeded task-local CARGO_HOME passed."
+    }
+  ],
+  "protected_paths_written": [],
+  "seeded_peer_sources_modified": false,
+  "integration_review_and_main_checks": "not run; coordinator gates"
+}

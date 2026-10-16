@@ -1,0 +1,44 @@
+$ cargo +stable check -p vexel-json --locked --offline
+    Checking vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-json)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s
+
+exit 0
+$ cargo +stable test -p vexel-json --locked --offline
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 5 tests
+test buffer_quotes_raw_tokens_and_rolls_back_failed_appends ... ok
+test strict_malformed_and_utf8_cases_match_reference_parser ... ok
+test numbers_obey_json_grammar_and_uint_is_checked_decimal_only ... ok
+test parses_ordered_containers_duplicate_keys_and_raw_spans ... ok
+test depth_token_and_byte_limits_are_enforced ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-json v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-json)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_json-ee6cb3b3c570d69c)
+     Running tests/parity.rs (build/rust/aarch64-apple-darwin/debug/deps/parity-4200e4482d0041f1)
+   Doc-tests vexel_json
+
+exit 0
+$ python3 scripts/wo_validate.py WO-RUST-JSON-01 --ready
+valid WO-RUST-JSON-01 revision 1 sha256 7d96668102fa6ed8e11d28e8752a4a6ffeaba6c91f995f3de86a63176ea7455b
+
+exit 0
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 1070 entries
+
+exit 0
+$ git diff --check
+
+exit 0

@@ -1,0 +1,12 @@
+Second independent Sol Medium review of WO-RUST-SCENE-OBSERVABILITY-01 candidate continuation 2. Do not edit any files.
+Read frozen work order at /Users/megasoft78/Desktop/Freelance/vexel/work/WO-RUST-SCENE-OBSERVABILITY-01.md, prior review at /Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-SCENE-OBSERVABILITY-01/sol-review.log, and continuation 2 result/verification/logs. Inspect only candidate implementation in accounting.rs, source_context.rs, observability_contracts.rs and README, comparing against main/source-seed where useful.
+Confirm specifically:
+- actual lease registry Vec capacity delta is included as cumulative AllocationTag::None history, with checked bounds and no tag double-counting;
+- caller AllocationTag::None payload and internal registry growth combine correctly;
+- cumulative-history overflow errors without partial admission, and the test reaches that overflow rather than live-byte exhaustion;
+- cancellation while copying a nonempty capacity replacement leaves original values/capacity usable, but retains physical replacement history;
+- actual reference index probes are exposed;
+- exact capacity deltas, arithmetic/update ordering, existing API/oracles, changed path allowlist, line caps, tests/logs.
+Return ACCEPT only if all remaining gates of the frozen order are proven. Call out that full candidate package fmt and git diff-check may fail only because of protected pre-existing files; assess changed-file rustfmt evidence. Return a concise decision with precise blockers if any. No product completion assessment.
+Candidate: /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-OBSERVABILITY-01/worker
+Main: /Users/megasoft78/Desktop/Freelance/vexel

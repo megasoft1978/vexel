@@ -1,0 +1,3 @@
+**ACCEPT.** The repair checks `Vec::capacity()` against exactly 131,072 before resize, fill, or publication. A successfully reserved oversized candidate is consumed and dropped; it returns `Limit` at offset 0. Reservation failure remains `OutOfMemory`. The unit assertion exercises rejection of an oversized candidate.
+
+The ten integration tests and their storage assertions remain present. The parity map and verification record document the capacity behavior and error adaptation. I did not run tests or builds; this is a read-only review, not an application certification.

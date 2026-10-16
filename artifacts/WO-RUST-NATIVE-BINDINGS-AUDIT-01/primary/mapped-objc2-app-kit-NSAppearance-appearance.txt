@@ -1,0 +1,53 @@
+BINDING bestMatchFromAppearancesWithNames
+78:         #[unsafe(method(initWithCoder:))]
+79:         #[unsafe(method_family = init)]
+80:         pub unsafe fn initWithCoder(
+81:             this: Allocated<Self>,
+82:             coder: &NSCoder,
+83:         ) -> Option<Retained<Self>>;
+84: 
+85:         #[unsafe(method(allowsVibrancy))]
+86:         #[unsafe(method_family = none)]
+87:         pub fn allowsVibrancy(&self) -> bool;
+88: 
+89:         #[unsafe(method(bestMatchFromAppearancesWithNames:))]
+90:         #[unsafe(method_family = none)]
+91:         pub fn bestMatchFromAppearancesWithNames(
+92:             &self,
+93:             appearances: &NSArray<NSAppearanceName>,
+94:         ) -> Option<Retained<NSAppearanceName>>;
+95:     );
+96: }
+97: 
+98: /// Methods declared on superclass `NSObject`.
+99: impl NSAppearance {
+100:     extern_methods!(
+101:         #[unsafe(method(init))]
+102:         #[unsafe(method_family = init)]
+103:         pub fn init(this: Allocated<Self>) -> Retained<Self>;
+104: 
+105:         #[unsafe(method(new))]
+
+SDK bestMatchFromAppearancesWithNames
+54: /* Given a list of appearance names, returns the one that best matches the receiver
+55:  */
+56: - (nullable NSAppearanceName)bestMatchFromAppearancesWithNames:(NSArray<NSAppearanceName> *)appearances API_AVAILABLE(macos(10.14));
+57: 
+58: @end
+59: 
+60: #pragma mark -
+61: #pragma mark Standard Appearances
+62: 
+63: APPKIT_EXTERN NSAppearanceName const NSAppearanceNameAqua API_AVAILABLE(macos(10.9));
+
+SDK bestMatchFromAppearancesWithNames
+71: APPKIT_EXTERN NSAppearanceName const NSAppearanceNameVibrantLight API_AVAILABLE(macos(10.10));
+72: 
+73: /* The following appearance names are for matching using bestMatchFromAppearancesWithNames:
+74:    Passing any of them to appearanceNamed: will return NULL
+75:  */
+76: APPKIT_EXTERN NSAppearanceName const NSAppearanceNameAccessibilityHighContrastAqua API_AVAILABLE(macos(10.14));
+77: APPKIT_EXTERN NSAppearanceName const NSAppearanceNameAccessibilityHighContrastDarkAqua API_AVAILABLE(macos(10.14));
+78: APPKIT_EXTERN NSAppearanceName const NSAppearanceNameAccessibilityHighContrastVibrantLight API_AVAILABLE(macos(10.14));
+79: APPKIT_EXTERN NSAppearanceName const NSAppearanceNameAccessibilityHighContrastVibrantDark API_AVAILABLE(macos(10.14));
+80: 

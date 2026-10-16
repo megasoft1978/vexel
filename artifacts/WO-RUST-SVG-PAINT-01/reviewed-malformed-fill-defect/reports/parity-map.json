@@ -1,0 +1,284 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-PAINT-01",
+  "symbols": [
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "svg_paint_cache_destroy",
+      "status": "safe_owned_drop",
+      "mapping": "PaintCache Vecs and source Arc are released by Rust ownership when the job cache leaves scope; no raw callback or double-free API is retained."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "svg_paint_edge_span",
+      "status": "implemented",
+      "mapping": "`paint::edge_span` uses checked addition and slice lookup; empty, overflowing, and out-of-range spans return None and clear formed."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "cache_hash",
+      "status": "implemented",
+      "mapping": "`cache::hash` ports the frozen 64-bit mixing sequence and masks to 65,536 slots; the key is definition plus viewport bits."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "cache_create",
+      "status": "safe_lazy_creation",
+      "mapping": "cache::replacement fallibly creates accepted shared slot/entry vectors with actual-capacity overlap leases; no local replacement cache type."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "cache_find",
+      "status": "implemented",
+      "mapping": "`cache::find_template` probes the accepted PaintCache, checks indices before access, compares definition/viewport/source Arc, and validates the selected template/range/stops."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "cache_reserve_entry",
+      "status": "implemented",
+      "mapping": "cache::replacement/reconcile grows 16/doubling/32768 entries, admits full old/new overlap and retains actual growth in the same source job."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "cache_insert",
+      "status": "implemented",
+      "mapping": "cache::insert_template transfers the one admitted cold Vec into GradientCacheEntry without stop copying; errors release its stop lease and provisional buffers."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "eq",
+      "status": "implemented",
+      "mapping": "`resolver::eq` compares validated XmlSpan bytes without rewriting source."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "attr",
+      "status": "implemented",
+      "mapping": "`gradient_data::attr` scans only the selected element\u2019s attribute run and accepts unprefixed exact names."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "count_token_visit",
+      "status": "implemented",
+      "mapping": "`cache::token_visit` uses checked cumulative accounting, caps at 4,194,304, and charges the caller WorkControl and ChargeLedger."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "gradient_attributes_supported",
+      "status": "implemented",
+      "mapping": "`resolver::attributes_supported` ports gradient kind, namespace, href/common/coordinate allowlists and token charging."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "gradient_href",
+      "status": "implemented",
+      "mapping": "`resolver::gradient_href` validates one local #id href and only accepts xlink when its namespace is bound."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "gradient_inherited_color",
+      "status": "implemented",
+      "mapping": "`gradient_data::inherited_gradient_color` rebuilds a fixed 64-element ancestor stack and computes CSS per gradient in the href chain."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "element_end",
+      "status": "implemented",
+      "mapping": "`gradient_data::element_end` handles empty elements and scans a matching-depth close tag with per-token charging."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "number",
+      "status": "implemented",
+      "mapping": "`gradient_data::number` preserves the 96-byte bound, leading C whitespace, finite 1e6 magnitude cap, and percent conversion."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "color",
+      "status": "implemented",
+      "mapping": "`gradient_data::parse_css_color` adapts the accepted source-span color parser; values remain tied to DecodeSource."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "resolve_stop_color",
+      "status": "implemented",
+      "mapping": "`gradient_data::resolve_stop_color` handles explicit colors, inherited/currentColor, and the original opaque black fallback."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "supported_stop_inline_style",
+      "status": "implemented",
+      "mapping": "`gradient_data::supported_stop_inline_style` accepts only stop-color, stop-opacity, and color declarations."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "parse_stops",
+      "status": "implemented",
+      "mapping": "`gradient_data::collect_stops` applies computed CSS, default offset/color/opacity, order/range checks, lround alpha scaling, 256-stop cap, and href fallback."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "gradient_coordinates",
+      "status": "implemented",
+      "mapping": "`gradient_data::read_coordinates` preserves objectBox/userSpace defaults, units, percentages, focal defaults, and positive radial radius."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "collect_gradient_chain",
+      "status": "implemented",
+      "mapping": "`resolver::collect_chain` enforces same-kind chains, local hrefs, cycle rejection, per-link attributes, and maximum 16 links."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "svg_paint_resolve_fill",
+      "status": "implemented",
+      "mapping": "resolve_cached_fill/resolve_cached_context implement the complete resolver, return actual borrowed cached stops and explicit source/definition/viewport identity, rebind each instance, and publish through CachedPaint::append_fill/stroke. resolve_fill is separately accounted owned compatibility; see owned-interface-gap.md."
+    },
+    {
+      "source": "src/svg/paint/paint.c",
+      "symbol": "svg_paint_sample",
+      "status": "implemented",
+      "mapping": "`paint::sample` validates ranges/stops/geometry before access and preserves transform order, linear/radial math, spread, endpoint selection, and rounded channel interpolation."
+    }
+  ],
+  "algorithms": [
+    {
+      "name": "safe edge-span formed flag and checked pointer range",
+      "status": "implemented",
+      "mapping": "Covered by edge_span_preserves_empty_and_invalid_range_contract."
+    },
+    {
+      "name": "cache key combines definition, viewport width/height, source-owner witness, and template context",
+      "status": "implemented",
+      "mapping": "Cache entries normalize instance inverse/bounds and include viewport, definition, and Arc source witness; tests prove same-template rebind and viewport separation."
+    },
+    {
+      "name": "cache hash, fixed slot count, open addressing, bounded probes",
+      "status": "implemented",
+      "mapping": "65,536-slot open addressing and charged probes; insertion bounds are inherited from 32,768 entry capacity."
+    },
+    {
+      "name": "cache entry and stop ownership/destruction",
+      "status": "implemented",
+      "mapping": "Shared GradientCacheEntry owns source/context/stops; Vec/Arc drops on cache/job teardown."
+    },
+    {
+      "name": "cache entry/slot capacities and shared controlled storage validation",
+      "status": "implemented",
+      "mapping": "Actual cold stop/slot/entry capacities and growth overlap are admitted. Cold allocation count/live/history and peak overlap have direct tests; hits leave stats and capacities unchanged."
+    },
+    {
+      "name": "source-span equality and safe attribute lookup",
+      "status": "implemented",
+      "mapping": "Exact XmlSpan byte equality and bounded attribute-run scan; no source data borrows escape."
+    },
+    {
+      "name": "paint token-visit limit 4194304 and controlled probe charging",
+      "status": "implemented",
+      "mapping": "Cumulative checked counter and controlled token/reference work; 4,096-comment/512-fill original-scale case is ported."
+    },
+    {
+      "name": "linear/radial attribute allowlist and fallback classification",
+      "status": "implemented",
+      "mapping": "Linear/radial allowlists are enforced; patterns classify as PaintReference::Pattern and are not converted to solids."
+    },
+    {
+      "name": "href and bound xlink href syntax/reference resolution",
+      "status": "implemented",
+      "mapping": "Local href and namespace-bound xlink tested; unbound xlink is rejected."
+    },
+    {
+      "name": "same-kind gradient inheritance chain, cycle detection, maximum 16 links",
+      "status": "implemented",
+      "mapping": "Kind checked at each link, repeated IDs rejected, fixed 16-link bound; cycle rejection tested."
+    },
+    {
+      "name": "ancestor stack CSS color inheritance, maximum depth 64",
+      "status": "implemented",
+      "mapping": "Fixed 64-slot stack and per-ancestor CSS compute; currentColor inheritance tested."
+    },
+    {
+      "name": "element subtree end scan and work charging",
+      "status": "implemented",
+      "mapping": "Matching-depth end scan charges each examined token; exercised on nested gradient source and comments."
+    },
+    {
+      "name": "finite number parsing, 96-byte value bound, 1e6 magnitude and percent conversion",
+      "status": "implemented",
+      "mapping": "Exact bounds and conversion in number helper; percent offsets are exercised in resolver tests."
+    },
+    {
+      "name": "stop-color parsing, currentColor inherited color and black fallback",
+      "status": "implemented",
+      "mapping": "Color helper plus currentColor and black default paths; inherited SVG color and explicit CSS color tests."
+    },
+    {
+      "name": "stop inline style allowlist and CSS computed property validation",
+      "status": "implemented",
+      "mapping": "Inline property allowlist and computed non-stop-property rejection are active; class selector and inline declarations tested."
+    },
+    {
+      "name": "stop defaults, offset order/range, opacity multiplication, maximum 256 stops",
+      "status": "implemented",
+      "mapping": "Defaults/order/opacity rounding are implemented; exact 256 and 257-stop boundaries tested."
+    },
+    {
+      "name": "inherited linear/radial coordinates, units, percentage references, focal defaults and positive radius",
+      "status": "implemented",
+      "mapping": "Coordinate defaults/ancestor chain, objectBox/userSpace references and radial focal defaults are implemented; linear/radial outputs tested."
+    },
+    {
+      "name": "gradient transform parse/inverse and source operation order",
+      "status": "implemented",
+      "mapping": "Accepted transform parser and inverse are used; inverse translation is asserted and sampler applies user then gradient inverse."
+    },
+    {
+      "name": "template cache by definition/viewport and instance bounds/inverse rebind",
+      "status": "implemented",
+      "mapping": "CachedPaint borrows the exact cache stop slice, public context lifetime is independent of temporary fields, and 40000 hits preserve pointer/capacity/accounting while inverse/bounds rebind."
+    },
+    {
+      "name": "shape bounds from every local edge endpoint; empty/degenerate handling",
+      "status": "implemented",
+      "mapping": "Both endpoints of every edge are mapped with checked affine math; empty edge and zero-area objectBox errors are explicit."
+    },
+    {
+      "name": "global 65536 paint-stop admission, shared template range and rollback-safe graph publication",
+      "status": "implemented_split_shared_contract",
+      "mapping": "Exact cache 65536/256 limits remain proved. Actual CachedPaint append_template publication shares graph stops; standalone harness proves 40000 fill/stroke instances with 2 stops and rollback/cancellation/source/scene validation."
+    },
+    {
+      "name": "pattern reference classification and planner handoff",
+      "status": "implemented_classifier",
+      "mapping": "Pattern is returned explicitly by classify_fill. Native pattern construction remains assigned to the later definitions/provider engine; resolve_fill does not return success for patterns."
+    },
+    {
+      "name": "sample transform order, linear projection and zero-length t=1",
+      "status": "implemented",
+      "mapping": "Midpoint, exact pixel channels, degenerate linear t=1, and nonfinite no-write behavior are tested."
+    },
+    {
+      "name": "sample radial focal quadratic, degenerate coefficient fallback and finite roots",
+      "status": "implemented",
+      "mapping": "Radial focal quadratic and near-zero coefficient branch are retained; radial center sampler case is tested."
+    },
+    {
+      "name": "pad/reflect/repeat spread and negative t behavior",
+      "status": "implemented",
+      "mapping": "Spread operation is ported; repeat/reflect values past the endpoint are exact-tested; pad is covered by linear interpolation."
+    },
+    {
+      "name": "endpoint clamp, duplicate offsets, lround byte interpolation and invalid range no-write",
+      "status": "implemented",
+      "mapping": "Endpoint branches and duplicate offsets follow original loop; exact channels, midpoint rounding, invalid range/order no-write are tested."
+    },
+    {
+      "name": "original diagnostic category/source-offset preservation",
+      "status": "implemented",
+      "mapping": "Resolver failures map to the original fill span offset; Unsupported, PaintStops Limit, and Canceled category are asserted."
+    }
+  ],
+  "revision": 2,
+  "shared_integration_gap": "Owned-only DecodeOperations::resolve_paint cannot carry a borrowed cache slice or releasable lease. Root must adopt the real cached producer/handoff or approve a shared repair; complete accounted owned compatibility is preserved.",
+  "prior_snapshot": "r1-preserved/"
+}

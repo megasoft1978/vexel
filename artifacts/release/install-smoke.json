@@ -3,7 +3,7 @@
   {
    "step": "bundle",
    "exit": 0,
-   "stdout_tail": "it=1064960\nExecutable Segment flags=0x1\nPage size=16384\nCDHash=ec7ce782561da5c02093976facfd73be1e270b53\nSignature=adhoc\nInfo.plist entries=15\nTeamIdentifier=not set\nRuntime Version=27.0.0\nSealed Resources version=2 rules=13 files=2\nInternal requirements count=0 size=12\nTotal signatures=1\nChosen signature=1\nBuilt /Users/megasoft78/Desktop/Freelance/vexel/build/Vexel.app (version 0.0.1, identity -)\n"
+   "stdout_tail": "it=1081344\nExecutable Segment flags=0x1\nPage size=16384\nCDHash=90f587f2e428e7ca51c97fe663e71a90e61cdbc3\nSignature=adhoc\nInfo.plist entries=15\nTeamIdentifier=not set\nRuntime Version=27.0.0\nSealed Resources version=2 rules=13 files=2\nInternal requirements count=0 size=12\nTotal signatures=1\nChosen signature=1\nBuilt /Users/megasoft78/Desktop/Freelance/vexel/build/Vexel.app (version 0.0.1, identity -)\n"
   },
   {
    "step": "run --version",
@@ -12,6 +12,6 @@
   }
  ],
  "bundle": "build/mac-release/Vexel.app",
- "installed_binary": "/var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmpqk_ogta0/Applications/Vexel.app/Contents/MacOS/svgworkbench",
+ "installed_binary": "/var/folders/kr/jkdm_jq1749dlrtw5lbb8lb40000gn/T/tmp7odvtqve/Applications/Vexel.app/Contents/MacOS/svgworkbench",
  "result": "pass"
 }

@@ -1,0 +1,20 @@
+WO-ANIM-PROJECT-25 revision 2 verification
+Date: 2026-10-13
+
+Implemented
+- Added a bounded selected-object transform capture API. It accepts no transform as identity and strict SVG matrix(a b c d e f) values, including exponent notation and comma-wsp separators. It rejects unsupported transform functions, style-based transforms, duplicate IDs, malformed/non-finite values, hexadecimal numbers, and coefficients outside +/-1e9.
+- Added an accessible Key Transform timeline button and native property authoring. The first key must be at tick zero; later keys update the same transform track. A later first key is rejected without changing native timeline bytes.
+- Transform keys use one native session edit, preserve SVG scene bytes, refresh preview/selection, and participate in timeline undo/redo; exact native timeline source bytes are restored on undo/redo. Repeating an identical key is a no-op and does not signal a mutation.
+- Added compact-layout hiding and semantic accessibility coverage.
+
+Verification
+- Debug: `cmake --preset mac-debug`; build `viewer_timeline_native_test`, `svgworkbench`, `viewer_timeline_test`, `viewer_timeline_render`, and `viewer_timeline_keyframe_test`: PASS.
+- Debug focused test: `ctest --test-dir build/mac-debug -R '^viewer-timeline-native$' --output-on-failure`: PASS (1/1).
+- ASan/UBSan: configure/build focused native test and `svgworkbench`; focused CTest PASS (1/1).
+- UBSan: configure/build focused native test and `svgworkbench`; focused CTest PASS (1/1).
+- `python3 scripts/wo_validate.py WO-ANIM-PROJECT-25 --ready`: PASS (r2 frozen hash `730844098792e74bc7bc664afffe8ef29d2609830ce81f7f45f9296e2be6d463`).
+- `python3 scripts/ledger.py validate ledger.jsonl`: PASS after closeout rows.
+- `git diff --check`: PASS.
+- Changed C sources are all below 800 lines; the largest is `tests/app/viewer_timeline_native_test.c` at 573 lines.
+
+The broad UI/E2E suite, corpus/performance checks, website work, and showcase recording were not run or performed. No commit was created.

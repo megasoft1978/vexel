@@ -1,0 +1,5 @@
+**BLOCKER — cache hits allocate an uncharged stop vector for every paint instance.**
+
+In [resolver.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-PAINT-01/worker/rust/crates/vexel-svg-paint/src/resolver.rs:146), each cache hit reserves a new vector and copies `template.stops` into it at lines 146–150. That contradicts the required no-per-instance stop duplication. The copy also bypasses the `ChargeLedger`; `find_template` charges probes, but this allocation is not charged. The seeded API provides `append_template_fill/stroke` specifically to borrow cached stops, as documented in `publication-api.md`. The focused test at `resolver_parity.rs:121–123` checks that the copied stops compare equal; it does not prove reuse without duplication.
+
+The candidate’s recorded checks and 16 focused test passes are evidence only; I did not rerun prohibited commands. Original mixed-renderer predicates remain explicitly deferred for later integration. Fix the cache-hit handoff and account for any retained allocation before accepting this owned-source candidate.

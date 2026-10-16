@@ -1,0 +1,4 @@
+WO-MCP-TRANSPORT-01 revision 2 scope freeze
+Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Frozen spec SHA-256: 9fc9af3dfad34463da247326bb93809f184acfe22a0cac6b4458efa2c16e295e
+Scope correction only: add docs/product/vexel-goal-and-delivery-plan.md for required item 6 and Output. The remaining r1 intent, implementation, limits, acceptance, protected paths, and verification are unchanged. Revision 1 is superseded before product edits; see scope-block-execution-r1.txt.

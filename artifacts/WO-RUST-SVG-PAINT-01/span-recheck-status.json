@@ -1,0 +1,10 @@
+{
+  "pid": 83228,
+  "status": "completed",
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "started_epoch": 1792014044.55009,
+  "child_pid": 83230,
+  "exit_code": 0,
+  "duration_seconds": 17.95512580871582
+}

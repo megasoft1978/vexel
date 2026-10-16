@@ -1,0 +1,11 @@
+{
+  "pid": 27440,
+  "status": "completed",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-SCALAR-SAMPLE-01/worker",
+  "started_epoch": 1792038857.2746549,
+  "child_pid": 27441,
+  "exit_code": 0,
+  "duration_seconds": 279.89899015426636
+}

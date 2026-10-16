@@ -1,0 +1,34 @@
+{
+  "date_utc": "2026-10-14T11:09:33.956553+00:00",
+  "exact_doi_or_openalex_deduplicated_records": 36,
+  "notes": [
+    {
+      "title": "How Low Should We Go? Understanding the Perception of Latency While Inking",
+      "retrieved": "W2285330908 / 10.1201/9781003059325-22 / 2020 book chapter",
+      "selected_primary": "2014 Graphics Interface original author PDF / University of Alberta archive",
+      "decision": "Related version, not evidence of independent replication; exact title index search returned chapter only."
+    },
+    {
+      "title": "Validating XML Documents in the Streaming Model with External Memory",
+      "retrieved": "W2950569977 / arXiv1012.3311 initial2010",
+      "selected_primary": "arXiv full text downloaded has revision date September23,2021",
+      "related_publications": "ICDT2012 and TODS2013; not counted as independent studies."
+    },
+    {
+      "title": "Aggregate G-Buffer Anti-Aliasing",
+      "records": [
+        "W3114696367 (noDOI)",
+        "W2083206766 (DOI10.1145/2699276.2699285)"
+      ],
+      "decision": "Related identical-title evidence, exclude from recommendations: deferred3Dgeometry, not our2Dvector work."
+    },
+    {
+      "title": "Compressed coverage masks for path rendering on mobile GPUs",
+      "records": [
+        "W2002535619 / 2015 conference",
+        "W2344130469 / 2016 journal"
+      ],
+      "decision": "Related versions, abstract-only screened; no implementation choice or transferred speed claim."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+command: sh -c cmake --preset mac-debug && cmake --build --preset mac-debug
+exit: 0
+--- last 40 lines ---
+[39/71] Linking C executable bin/editor_chrome_render
+[40/71] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a', 'libvexel_platform_media.a', 'libvexel_shape.a', 'libvexel_ui_state.a'
+[41/71] Linking C executable bin/editor_state_test
+[42/71] Linking C executable bin/ui_icon_gallery
+[43/71] Linking C executable bin/editor_media_provider_test
+[44/71] Linking C executable bin/raster_budget_test
+[45/71] Linking C executable bin/raster_large_render_test
+[46/71] Linking C executable bin/viewer_workspace_test
+[47/71] Linking C executable bin/viewer_chrome_test
+[48/71] Linking C executable bin/editor_clipboard_ids_test
+[49/71] Linking C executable bin/viewer_visual_test
+[50/71] Linking C executable bin/editor_selection_render
+[51/71] Linking C executable bin/editor_canvas_test
+[52/71] Linking C executable bin/viewer_editor_guides_test
+[53/71] Linking C executable bin/editor_canvas_fuzz_test
+[54/71] Linking C executable bin/viewer_guides_render
+[55/71] Linking C executable bin/inspector_tab_reachability_test
+[56/71] Linking C executable bin/viewer_sessions_test
+[57/71] Linking C executable bin/viewer_timeline_test
+ld: warning: ignoring duplicate libraries: 'libvexel_shape.a'
+[58/71] Linking C executable bin/viewer_chrome_render
+[59/71] Linking C executable bin/viewer_export_test
+ld: warning: ignoring duplicate libraries: 'libvexel_platform_media.a', 'libvexel_shape.a'
+[60/71] Linking C executable bin/editor_snap_overlay_render
+[61/71] Linking C executable bin/viewer_timeline_render
+ld: warning: ignoring duplicate libraries: 'libvexel_shape.a'
+[62/71] Linking C executable bin/animation_authoring_edge_test
+ld: warning: ignoring duplicate libraries: 'libvexel_document.a', 'libvexel_shape.a'
+[63/71] Linking C executable bin/editor_command_palette_test
+[64/71] Linking C executable bin/editor_command_overlay_render
+[65/71] Linking C executable bin/editor_followups_test
+[66/71] Linking C executable bin/editor_snap_popover_render
+[67/71] Linking C executable bin/animation_authoring_test
+ld: warning: ignoring duplicate libraries: 'libvexel_document.a', 'libvexel_shape.a'
+[68/71] Linking C executable bin/viewer_editor_ux_test
+[69/71] Linking C executable bin/viewer_timeline_keyframe_test
+ld: warning: ignoring duplicate libraries: 'libvexel_shape.a'
+[70/71] Linking C executable bin/editor_accessibility_localization_test
+[71/71] Generating Vexel.app/Contents/Info.plist

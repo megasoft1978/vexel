@@ -1,0 +1,10 @@
+Perform an independent read-only Sol Medium final review for candidate WO-RUST-SCENE-OBSERVABILITY-01 revision 1. Do not edit files. Compare candidate against current main source using the source seed manifest at /Users/megasoft78/Desktop/Freelance/vexel/artifacts/WO-RUST-SCENE-OBSERVABILITY-01/source-seed.json and frozen order. Review the exact allowed-file diffs:
+- rust/crates/vexel-scene/src/accounting.rs
+- rust/crates/vexel-scene/src/source_context.rs
+- rust/crates/vexel-scene/tests/observability_contracts.rs (new)
+- rust/crates/vexel-scene/README.md
+
+Assess contract fidelity, correctness, preservation of existing API/behavior, checked arithmetic and mutation ordering, physical reserve/failure/cancellation history, per-tag semantics (in particular the order says retained lease-registry growth is attributed to AllocationTag::None), real reference-index lookup probe forwarding, tests, line caps, and unexplained scope changes. Package test/check and scoped rustfmt logs are under the candidate artifacts folder. The candidate report says six tests but verification states seven; reconcile from test.log. The order-level cargo fmt --package attempt and git diff --check have reported failures; identify which are pre-existing protected-path failures versus candidate defects. Return ACCEPT only if all implementation/contract gates are satisfied; otherwise BLOCK with precise code-level findings and minimum repairs. Do not assess overall app/product completion.
+
+Candidate root: /Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-OBSERVABILITY-01/worker
+Main root: /Users/megasoft78/Desktop/Freelance/vexel

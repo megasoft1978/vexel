@@ -1,0 +1,13 @@
+{
+  "name": "xml-storage",
+  "wo": "WO-RUST-XML-STORAGE-01",
+  "session": "01a13a11-3114-7131-9b9f-723686b063b3",
+  "pid": 12135,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791975832.495766,
+  "exit_code": 0,
+  "duration_seconds": 17.68921709060669
+}

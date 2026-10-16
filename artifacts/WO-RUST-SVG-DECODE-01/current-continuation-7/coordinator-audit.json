@@ -1,0 +1,38 @@
+{
+  "work_order": "WO-RUST-SVG-DECODE-01 revision 2",
+  "continuation": 7,
+  "candidate_only": true,
+  "listed_candidate_source_files": 58,
+  "listed_hash_mismatches": [],
+  "changed_since_continuation_6_for_overlapping_paths": [
+    "rust/crates/vexel-svg-decode/tests/decoder_observability_path.rs"
+  ],
+  "r7_declared_source_writes": [
+    "rust/crates/vexel-svg-decode/tests/decoder_observability_path.rs"
+  ],
+  "source_line_limits": {
+    "src": {
+      "files": 28,
+      "max_lines": 792,
+      "max_file": "rust/crates/vexel-svg-decode/src/traversal.rs",
+      "over_800": []
+    },
+    "tests": {
+      "files": 30,
+      "max_lines": 616,
+      "max_file": "rust/crates/vexel-svg-decode/tests/custom_publication.rs",
+      "over_800": []
+    }
+  },
+  "catalog": {
+    "before": 113,
+    "after": 113,
+    "all_113_preserved": true
+  },
+  "protected_paths_written": [],
+  "root_source_integrated": false,
+  "root_head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "root_staged_paths": [],
+  "review_status": "not run; entire decoder candidate remains incomplete",
+  "root_ledger_valid": true
+}

@@ -1,0 +1,184 @@
+{
+  "work_order": "WO-RUST-SVG-ANIMATION-01",
+  "candidate_scope": "Rust port of animation.h, animation_internal.h, smil.c, smil_tracks.c, evaluate.c, and motion_path.c",
+  "limits": {
+    "SVG_ANIM_MAX_TRACKS": {
+      "rust": "MAX_TRACKS",
+      "value": 128,
+      "tests": [
+        "track_bound_and_sync_cycles_are_bounded_without_partial_results"
+      ]
+    },
+    "SVG_ANIM_MAX_VALUES": {
+      "rust": "MAX_VALUES",
+      "value": 256,
+      "tests": [
+        "value_and_diagnostic_limits_and_offsets_are_preserved"
+      ]
+    },
+    "SVG_ANIM_MAX_DIAGNOSTICS": {
+      "rust": "MAX_DIAGNOSTICS",
+      "value": 128,
+      "tests": [
+        "value_and_diagnostic_limits_and_offsets_are_preserved"
+      ]
+    },
+    "SVG_ANIM_MAX_TIMELINE_SECONDS": {
+      "rust": "MAX_TIMELINE_SECONDS",
+      "value": 3600.0,
+      "tests": [
+        "spans_borrow_original_source_and_invalid_eval_is_rejected"
+      ]
+    },
+    "ANIM_MAX_PATH_VALUE / MOTION_MAX_BYTES": {
+      "rust": "MAX_PATH_BYTES / MAX_BYTES",
+      "value": 65536,
+      "tests": [
+        "path_and_motion_internal_bounds_are_kept"
+      ]
+    },
+    "ANIM_MAX_PATH_NUMBERS": {
+      "rust": "MAX_PATH_NUMBERS",
+      "value": 4096,
+      "tests": [
+        "path_and_motion_internal_bounds_are_kept"
+      ]
+    },
+    "MOTION_MAX_POINTS": {
+      "rust": "MAX_POINTS",
+      "value": 4096,
+      "tests": [
+        "path_and_motion_internal_bounds_are_kept; both motion fixtures"
+      ]
+    },
+    "path command array": {
+      "rust": "path_shape command array",
+      "value": 1024,
+      "tests": [
+        "fixed 1024-command array exercised by the path structure scanner"
+      ]
+    },
+    "motion numeric coordinate bound": {
+      "rust": "PathReader / push_xy",
+      "value": 1000000.0,
+      "tests": [
+        "motion parser enforces finite coordinates and numeric magnitude"
+      ]
+    },
+    "motion cumulative distance bound": {
+      "rust": "push_xy",
+      "value": 1000000000.0,
+      "tests": [
+        "motion parser rejects nonfinite or over-limit cumulative distance"
+      ]
+    }
+  },
+  "public_symbols": {
+    "enums": {
+      "svg_anim_attribute": "Attribute; name() and attribute_name() preserve C order/names",
+      "svg_anim_kind": "Kind",
+      "svg_anim_value_kind": "ValueKind",
+      "svg_anim_calc_mode": "CalcMode",
+      "svg_anim_fill_mode": "FillMode",
+      "svg_anim_transform_type": "TransformType",
+      "svg_anim_diagnostic_kind": "DiagnosticKind; name() and diagnostic_name() preserve C strings"
+    },
+    "records": {
+      "svg_anim_value": "Value: numeric/color channels, kind, raw source span",
+      "svg_anim_keyframe": "Keyframe: time, value, source span",
+      "svg_anim_motion_point": "MotionPoint: x/y/cumulative distance",
+      "svg_anim_track": "Track: complete timing, values, transform, sync, motion, composition, support, and XML-span fields",
+      "svg_anim_diagnostic": "Diagnostic: kind and original byte offset",
+      "svg_anim_document": "Document<'source>: borrowed source and owned bounded tracks/diagnostics",
+      "svg_anim_overlay_item": "OverlayItem: track index, evaluated value, iteration, active state",
+      "svg_anim_overlay": "Overlay: owned evaluated items and sample time"
+    },
+    "functions": {
+      "svg_anim_parse": "parse(): whole-result Result<Document, ParseError>; source borrows caller bytes; TrackLimit keeps source offset and Allocation is distinct",
+      "svg_anim_document_destroy": "Rust ownership drops Document and all track arrays",
+      "svg_anim_eval": "evaluate(): validates finite [0, 3600] time and atomically returns the complete overlay or None",
+      "svg_anim_overlay_destroy": "Rust ownership drops Overlay and items",
+      "svg_anim_attribute_name": "attribute_name()",
+      "svg_anim_diagnostic_name": "diagnostic_name()"
+    }
+  },
+  "internal_symbols": {
+    "span_eq/token_name/attr/attr_or_empty": "parse_values::{eq, attr, attr0}; motion::{attr, resolve_motion_path}; checked XmlSpan slicing and unprefixed element/attribute rules",
+    "parse_number/parse_time": "parse_values::{number,time}; finite checks, 128-byte bound, units, nonnegative 3600-second bound",
+    "path_structures_match": "parse_values::{path_shape,paths_match}; command structure and numeric count checks",
+    "attribute_kind": "parse_values::attr_kind",
+    "add_diagnostic": "parse_values::diagnostic; ordered append capped at 128",
+    "element_span": "parse_values::element_span; original byte spans for target/animation elements",
+    "parse_sync_time": "parse_values::sync_time; offsets, indefinite, begin/end sync IDs",
+    "parse_value/base_attribute_value": "parse_values::{parse_value,base_value}; supported number/color/transform/path/motion kinds and defaults",
+    "split_value_spans": "parse_values::split; trimmed semicolon spans, 256-value bound, fallible reservation",
+    "parse_key_times/parse_splines/parse_repeat/parse_calc_fill": "parse_track implementation in parse.rs",
+    "parse_motion_path/resolve_motion_path": "motion::{parse_motion,resolve_motion_path}; bounded path commands, relative coordinates, direct path and unique local href/xlink mpath resolution",
+    "track_duration/resolve_start/active_duration": "eval.rs timing and syncbase resolution, cycle-safe bounded recursion",
+    "value_distance/bezier_coordinate/spline_progress/paced_interval/interpolate": "eval.rs paced distance, 48-step cubic inversion, discrete/linear/spline interpolation",
+    "add_accumulation/motion_at/evaluate_one/svg_anim_eval": "eval.rs iteration accumulation, motion interpolation/rotation, fill/end state and atomic overlay"
+  },
+  "error_and_source_contracts": {
+    "SVG_ANIM_DIAG_UNSUPPORTED_ELEMENT": "UnsupportedElement at animation element name; unsupported animateColor is reported and omitted as in C.",
+    "SVG_ANIM_DIAG_UNSUPPORTED_ATTRIBUTE": "UnsupportedAttribute at attributeName/type/attributeType/calcMode/fill/keyTimes/rotate attribute value offset.",
+    "SVG_ANIM_DIAG_UNSUPPORTED_TIMING": "UnsupportedTiming at begin/end/repeatDur value offsets, the animation element name for invalid repeatCount, or unresolved sync ID offset; unresolved sync tracks become unsupported.",
+    "SVG_ANIM_DIAG_UNSUPPORTED_COMPOSITION": "UnsupportedComposition at additive/accumulate attribute or element name where the C rule rejects composition.",
+    "SVG_ANIM_DIAG_UNSUPPORTED_PATH": "UnsupportedPath at invalid d/motion path source span; incompatible d key reports that key's original span.",
+    "SVG_ANIM_DIAG_CSS_ANIMATION": "CssAnimation at the source text token start when it contains @keyframes, animation:, or transition:; one ordered diagnostic per matching text token.",
+    "SVG_ANIM_DIAG_INVALID_TRACK": "InvalidTrack at C-defined element/value offset; unsupported tracks are omitted while original source is retained.",
+    "hard track overflow": "ParseError::TrackLimit carries the 129th candidate animation name offset; no partial Document is returned.",
+    "allocation failure": "ParseError::Allocation from fallible parse reservations; evaluation's Option result is empty on reservation or evaluation failure; no simulated OOM is claimed.",
+    "source, spans, and ownership": "Document borrows caller source for its lifetime and owns all arrays; every raw/source/target/element/id/sync span is a checked byte range into unchanged source. Evaluation does no source parsing or copying.",
+    "diagnostic cap/order": "Diagnostics append in source traversal and track field order, stop at 128, and preserve byte offsets."
+  },
+  "assertions": {
+    "tests/anim/test_animation.py::test_authored_fixture_inventory": "authored_fixtures_parse_and_both_motion_sources_evaluate; all 15 fixture files included and parsed",
+    "tests/anim/test_animation.py::test_linear_opacity_matches_python_at_sampled_times": "interpolation_repeat_fill_sync_and_transform_samples_match_contract; 100 samples at 0.02-second intervals, including repeat wrap",
+    "tests/anim/test_animation.py::test_spline_and_discrete_match_python": "interpolation_repeat_fill_sync_and_transform_samples_match_contract; 49 spline samples against the cubic reference and discrete sample at 0.75 seconds",
+    "tests/anim/test_animation.py::test_syncbase_fixture_lists_both_tracks": "interpolation_repeat_fill_sync_and_transform_samples_match_contract; two attributes, starts, inactive/active states, and frozen endpoint value",
+    "tests/anim/test_animation.py::test_render_frame_accepts_explicit_time": {
+      "status": "pending",
+      "scope": "later renderer/CLI port"
+    },
+    "tests/anim/test_animation.py::test_render_animation_writes_bounded_ppm_sequence": {
+      "status": "pending",
+      "scope": "later renderer/CLI port"
+    },
+    "tests/anim/test_animation.py::test_render_animation_rejects_more_than_300_frames": {
+      "status": "pending",
+      "scope": "later renderer/CLI port"
+    },
+    "animation_eval_cli.c": "CLI serialization assertions depend on the later executable/CLI port; parse/eval public data is exercised by the crate tests",
+    "additional bounds/edges": "value_and_diagnostic_limits_and_offsets_are_preserved; track_bound_and_sync_cycles_are_bounded_without_partial_results; path_and_motion_internal_bounds_are_kept; spans_borrow_original_source_and_invalid_eval_is_rejected; authored fixture test checks both direct and mpath motion"
+  },
+  "adaptations": [
+    "Borrowed source lifetime replaces C's caller-managed source pointer lifetime; spans remain source byte offsets.",
+    "Rust Drop replaces explicit document/overlay destroy calls.",
+    "ParseError distinguishes track-cap exhaustion and fallible allocation; no allocator fault injection or simulated OOM is claimed.",
+    "Path command shape uses a fixed 1024-byte array; the C implementation's bounded stack arrays have the same observable cap."
+  ],
+  "separate_scopes": [
+    "animation authoring/create/native timeline",
+    "renderer and render CLI",
+    "broad UI/E2E",
+    "performance/fuzz campaign"
+  ],
+  "review_findings": {
+    "invalid_base_value": {
+      "legacy_contract": "smil_tracks.c:183 records SVG_ANIM_DIAG_INVALID_TRACK at tag->name.offset when base_attribute_value rejects the target attribute.",
+      "rust_fix": "parse.rs reports InvalidTrack at the animation element name when base_value returns None.",
+      "regression": "invalid_base_value_reports_invalid_track_at_animation_name",
+      "expected": "No track; exactly one InvalidTrack diagnostic at the source offset of animate."
+    },
+    "duplicate_mpath_ids": {
+      "legacy_contract": "motion_path.c counts every matching path id before accepting the unique target and d attribute.",
+      "rust_fix": "motion.rs counts matching IDs independently of whether a match has a d attribute, then accepts only one match.",
+      "regression": "duplicate_mpath_ids_reject_even_when_first_path_has_no_data",
+      "expected": "No track; exactly one UnsupportedPath diagnostic at the source offset of animateMotion."
+    },
+    "requested_behavior_regressions": {
+      "regression": "direct_end_and_additive_accumulation_keep_c_evaluation_semantics",
+      "expected": "Checks absolute end timing, stored additive_sum/accumulate flags, iteration 1, additive sample 18, accumulation-only sample 9, and end-removed opacity state."
+    }
+  }
+}

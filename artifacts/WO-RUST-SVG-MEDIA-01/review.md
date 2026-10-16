@@ -1,0 +1,9 @@
+**BLOCKER — owned-source review not accepted.**
+
+- **Text style errors change the original classification.** [text.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/rust/crates/vexel-svg-media/src/text.rs:258) and the size, weight, and spacing parsers return `ErrorKind::Number` for malformed values. The original [text.c](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/src/svg/shape/text.c:525) routes any `parse_text_style` failure to `SVG_SHAPE_ERROR_UNSUPPORTED`. The typed renderer propagates the Rust error, so malformed font size/weight/spacing now reports a different class. Preserve the original classification and add focused assertions.
+
+- **Image append can leave partial draft state on failure.** [image.rs](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/rust/crates/vexel-svg-media/src/image.rs:463) appends decoded pixels before allocating the path and appending/finalizing the shape. A later allocation, capacity, or cancellation error returns without rolling back that image. The recorded coverage explicitly leaves mid-append rollback unexecuted. The caller may own the outer draft, but the candidate neither enforces nor proves rollback for this request path; add failure injection showing the required rollback behavior.
+
+- **Required pure behavior lacks meaningful proof.** The focused tests do not exercise text family/style/anchor/spacing parsing, the cache’s 256 KiB and command caps, or compound glyph contour handling. Yet parity-map marks these behaviors ported, and coverage describes the cache test as covering caps when it only reaches the entry cap. Add focused tests for these owner behaviors and correct the coverage claims.
+
+I did not rerun commands. Later integration gates remain the native provider, mixed CLI/C suites, full renderer/selection composition, CoreText/librsvg comparison, and application/UI validation.

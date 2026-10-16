@@ -1,0 +1,7 @@
+## ACCEPT — narrow span-parity repair
+
+The `classify_inner` guard maps an invalid `XmlSpan::slice` to `Unsupported` at the supplied fill offset, matching the original behavior at [paint.c:553](/Users/megasoft78/Desktop/Freelance/vexel/src/svg/paint/paint.c:553). The guard runs before URL parsing or reference lookup, so out-of-bounds, overlong, overflowing, empty, and short spans are rejected without changing cache or accounting state. The regression asserts the error kind and exact offset in all three public flows.
+
+Valid local gradient URLs still resolve through those flows; existing coverage retains pattern classification. The resolver’s entry checkpoint remains before classification, preserving cancellation priority and the supplied offset. The recorded verification reports 23 crate tests and 3 graph checks passing. The earlier 22 crate tests and 3 graph proofs remain, including the 40,000-instance shared-stop proof; the new regression is the only reported addition.
+
+This confirms the narrow fix against the source and recorded evidence; I did not rerun checks. It does **not** close the broader paint work order: shared production delegate/adapters, mixed renderer and application coverage, and live MCP, runtime, release, and demo checks remain later gates.

@@ -1,0 +1,11 @@
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+    Start 6: mcp-stdio-e2e
+1/1 Test #6: mcp-stdio-e2e ....................***Skipped   0.34 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.35 sec
+
+The following tests did not run:
+	  6 - mcp-stdio-e2e (Skipped)

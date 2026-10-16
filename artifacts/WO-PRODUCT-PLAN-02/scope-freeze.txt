@@ -1,0 +1,5 @@
+WO-PRODUCT-PLAN-02 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 783666c09cfd3b4a91fc5e4a4db357a3140b6f2011d382e3d6e176763bcf700d
+Allowlist and protected paths are frozen in work/WO-PRODUCT-PLAN-02.md.
+Scope: documentation-only status and critical-path refresh against current accepted evidence. Product goal, engineering/platform locks, and final UI/E2E-then-showcase completion gates are preserved.

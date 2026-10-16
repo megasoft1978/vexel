@@ -1,0 +1,14 @@
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-CHILD-REQUESTS-01/worker/rust/crates/vexel-scene)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running tests/child_request_contracts.rs (.cache/build/rust/aarch64-apple-darwin/debug/deps/child_request_contracts-abeacc8c3908315c)
+
+running 6 tests
+test canceled_top_scope_remains_unconditionally_rollbackable ... ok
+test nested_tokens_reject_foreign_stale_replayed_and_out_of_order_use ... ok
+test explicit_child_scope_preserves_parent_and_rolls_back_descendants ... ok
+test nested_request_mints_real_mapped_static_pattern_capability ... ok
+test cancellation_abort_cleanup_succeeds_at_every_nested_scope_depth ... ok
+test child_request_depth_is_bounded_and_cancellation_cleanup_is_unconditional ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

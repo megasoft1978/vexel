@@ -1,0 +1,8 @@
+{
+  "action": "create_goal",
+  "registered": false,
+  "reason": "cannot create a new goal because this thread has an unfinished goal; complete the existing goal first",
+  "previous_goal_status": "paused",
+  "prior_goal_falsely_completed": false,
+  "authoritative_goal": "docs/product/rust-port-goal-and-plan.md"
+}

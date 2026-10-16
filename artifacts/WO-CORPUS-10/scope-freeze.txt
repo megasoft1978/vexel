@@ -1,0 +1,4 @@
+WO-CORPUS-10 revision 1
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 0b1a125819ed61a95f5c86e737a920793fdb0fee119ccb4469b8e3743b73b58e
+Scratch-only dash-cache diagnostic; exact T1 target.

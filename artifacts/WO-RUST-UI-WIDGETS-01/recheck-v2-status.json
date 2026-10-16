@@ -1,0 +1,13 @@
+{
+  "name": "widgets",
+  "wo": "WO-RUST-UI-WIDGETS-01",
+  "session": "01a13a07-bf6d-7960-bf5b-bbedc847206b",
+  "pid": 24923,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791976334.6429079,
+  "exit_code": 0,
+  "duration_seconds": 58.54477524757385
+}

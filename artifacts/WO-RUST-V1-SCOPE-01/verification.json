@@ -1,0 +1,43 @@
+{
+  "work_order": "WO-RUST-V1-SCOPE-01",
+  "revision": 1,
+  "source_seed_sha256": "8746245a71a39aa3bffaf5e46059b2670c0decbe6d5b880b91a277f0c1fdbd59",
+  "commands": [
+    {
+      "log": "validate-work-order.log",
+      "exit_code": 0,
+      "sha256": "6c533a1244e88cd9d8e34c63fa5bab29cbef0c48527902aed5141e34d4b30c9d"
+    },
+    {
+      "log": "validate-ledger.log",
+      "exit_code": 0,
+      "sha256": "e2dab71221e2c01f0061113edebe7b3ffa4e72594c510d831f2e537d82d0e841"
+    },
+    {
+      "log": "git-diff-check.log",
+      "exit_code": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "log": "document-contract-check.log",
+      "exit_code": 0,
+      "sha256": "a2a011d3c27878bfa8d3bd4a97d2540f692e8de4b779e91d683d800b53ab400d"
+    }
+  ],
+  "document_hashes": {
+    "work/WO-RUST-V1-SCOPE-01.md": "1d26ac60702f3d4a2ba229e8f13ca0c38806bd8bb4b7536ce87d22991d5a3329",
+    "docs/adr/0029-v1-vertical-slice-cutline.md": "87f9125840eecde00d7351f09a9c44bcc8ff98f46202123f38cd0972092ad61c",
+    "docs/product/vexel-v1-vertical-slice.md": "a5349d960636d4ed6720760d465a7f11deb37b657f2fda39682adcf0979775c1",
+    "docs/product/rust-port-goal-and-plan.md": "ac5853a55ede49537c51ab5f01a4b6dc62d9cafa18d745d27f8407ff8997ff38",
+    "STATE.md": "54557884e54364be63314fdfc1183a8899e3e74eefe3cf48386cb83647cd45e0",
+    "LEDGER.md": "b0c7ef70aadec9936601ac0d4f4d2c046b654be4e049340c1e2d57203852d2ee"
+  },
+  "scope_audit": "artifacts/WO-RUST-V1-SCOPE-01/scope-audit.json",
+  "application_tests_run": false,
+  "native_ui_or_browser_tests_run": false,
+  "full_product_goal_changed": false,
+  "final_ledger_sha256": "75bd026d95869ea65ef3066f19a1ed9cdbeddc976cf420e3fbbfea592e791b66",
+  "final_ledger_validation_log_sha256": "af5397da5f878a955d1283a620740f4ce15e28660f28ac7df6e785634ae0138f",
+  "final_ledger_entry_count": 1670,
+  "scope_audit_sha256": "93ad7e0f2220769a10c71969990689d228534191f6d4136f9255f28d7fd266c7"
+}

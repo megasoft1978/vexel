@@ -1,0 +1,5 @@
+WO-PROJECT-05 revision 1 scope freeze
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 79f5d42954271897578bdf3169e83325b7092378395754377dbc66fd5c2ac8e3
+Allowlist and protected paths are frozen in work/WO-PROJECT-05.md.
+Scope: macOS private Application Support path and stable canonical source key only; no autosave schedule or restore UI.

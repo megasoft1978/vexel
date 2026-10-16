@@ -1,0 +1,26 @@
+18: 
+19: /* The callback for releasing the data supplied to
+20:    `CGBitmapContextCreateWithData'. */
+21: 
+22: typedef void (*CGBitmapContextReleaseDataCallback)(void * __nullable releaseInfo,
+23:     void * __nullable data);
+24: 
+25: /* Create a bitmap context. The context draws into a bitmap which is `width'
+
+41:    `data' as arguments. */
+42: 
+43: CG_EXTERN CGContextRef __nullable CGBitmapContextCreateWithData(
+44:     void * __nullable data, size_t width, size_t height, size_t bitsPerComponent,
+45:     size_t bytesPerRow, CGColorSpaceRef __nullable space, CGBitmapInfo bitmapInfo,
+46:     CGBitmapContextReleaseDataCallback __nullable releaseCallback,
+47:     void * __nullable releaseInfo)
+48:     API_AVAILABLE(macos(10.6), ios(4.0));
+
+50: #ifdef __swift__
+51: API_DEPRECATED("update space parameter to CGColorSpace?, bitmapInfo parameter to CGBitmapInfo", macos(10.6, API_TO_BE_DEPRECATED), ios(4.0, API_TO_BE_DEPRECATED))
+52: CG_INLINE CGContextRef __nullable __CGBitmapContextCreateWithData(
+53:     void * __nullable data, size_t width, size_t height, size_t bitsPerComponent,
+54:     size_t bytesPerRow, CGColorSpaceRef cg_nullable space, uint32_t bitmapInfo,
+55:     CGBitmapContextReleaseDataCallback __nullable releaseCallback,
+56:     void * __nullable releaseInfo) {
+57:     return CGBitmapContextCreateWithData(data, width, height, bitsPerComponent, bytesPerRow, space, bitmapInfo, releaseCallback, releaseInfo);

@@ -1,0 +1,11 @@
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-RENDER-INTEGRATION-CONTRACTS-01/worker/rust/crates/vexel-scene)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.27s
+     Running tests/paint_channel_contracts.rs (build/rust/aarch64-apple-darwin/debug/deps/paint_channel_contracts-5db7253833e630a7)
+
+running 3 tests
+test combined_session_operations_dispatch_pattern_and_group_filter_through_one_trait_object ... ok
+test both_production_routes_bind_canonical_owner_before_provider_and_publish_matching_element ... ok
+test explicit_fill_stroke_channels_and_independent_initial_opacity_reach_real_publication ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

@@ -1,0 +1,9 @@
+# WO-RUST-SVG-DEFINITIONS-01 candidate result
+
+Status: **incomplete candidate; not accepted**.
+
+The full frozen 79-symbol, 10-suite scope remains represented in parity-map.json and coverage.json. The accepted source135 handoff is integrated: this crate implements `vexel_scene::DefinitionPlanner`, validates typed shape/group owners against the active source and draft, plans filters on actual empty groups, meters retained plan and bounded scratch capacities through a same-job `ChargeLedger` journal with failure rollback, and transfers the complete parsed `PatternMapping` through `request_mapped`/`complete_mapped`. Tests verify actual fill and stroke `PatternId` attachments. All prior 32 tests remain; four new production-planner proofs bring the total to 25 unit + 11 integration (36), all passing.
+
+One exact shared-contract gap remains: `plan_owned_definition` has no `PaintChannel`, while legacy pattern publication selects `fill-opacity` for fill and `stroke-opacity` for stroke. `PatternMapping` contains one opacity. The adapter returns `Unsupported` at the differing opacity property span when effective values (including SVG initial opacity 1) differ; it does not silently publish a lossy mapping. Root-owned API repair or a channel-specific input is required for that case. Full renderer/oracle suites, native providers, complete traversal and application integration also remain later gates.
+
+Locked/offline scoped check, all 36 crate tests and work-order validation passed. Frozen original inputs and source135 shared seed validated. The earlier fixture seed is historical; its four subsequent shared changes match the accepted production seed chain. This is candidate evidence only: root independent review, exact-scope/protected audit and fresh main focused checks remain mandatory for acceptance.

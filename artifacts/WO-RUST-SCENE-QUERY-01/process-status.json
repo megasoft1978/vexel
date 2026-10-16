@@ -1,0 +1,11 @@
+{
+  "pid": 88025,
+  "status": "completed",
+  "model": "gpt-6-luna",
+  "effort": "medium",
+  "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker",
+  "started_epoch": 1792003983.8901,
+  "child_pid": 88026,
+  "exit_code": 0,
+  "duration_seconds": 241.61862301826477
+}

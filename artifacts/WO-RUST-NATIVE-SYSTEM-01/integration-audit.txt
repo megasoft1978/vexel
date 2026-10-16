@@ -1,0 +1,2 @@
+Exact worker audit passed. Integrated only rust/crates/vexel-platform-macos/src/lib.rs, rust/crates/vexel-platform-macos/tests/native_system.rs, rust/crates/vexel-platform-macos/src/sys.rs.
+603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock untouched. Independent LunaHigh review accepted; candidate code bytes copied exactly.

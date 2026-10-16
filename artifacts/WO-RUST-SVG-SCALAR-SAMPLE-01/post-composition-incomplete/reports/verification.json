@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-SCALAR-SAMPLE-01",
+  "scope_sha256": "1c4992c4230e4b4dcc619ccb6e2bf720d8463d45677a4065e50d68dd4c2cb922",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-scalar-sample --locked --offline",
+      "status": "PASS",
+      "evidence": "Finished dev profile; no warnings or errors."
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-scalar-sample --locked --offline",
+      "status": "PASS",
+      "evidence": "10 unit tests passed; 8 canonical integration tests passed; 0 doc tests."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-SCALAR-SAMPLE-01 --ready",
+      "status": "PASS",
+      "evidence": "valid WO-RUST-SVG-SCALAR-SAMPLE-01 revision 1 sha256 7200bbedb3e1b381058caa81784bae4d1cdf501b21e126ef1d590b3e966c9d1f"
+    }
+  ],
+  "scope_audit": {
+    "immutable_scope_sha256": "1c4992c4230e4b4dcc619ccb6e2bf720d8463d45677a4065e50d68dd4c2cb922",
+    "original_source_and_assigned_suite_hashes_checked": 9,
+    "hashes_matching_frozen_catalog": 9,
+    "owned_source_and_test_files_over_800_lines": 0,
+    "protected_path_edits_by_this_worker": 0
+  },
+  "acceptance_status": "candidate only; exact indexed fill-row work profile awaits coordinator-owned shared descriptor; independent review, protected-scope audit, and fresh main checks remain required",
+  "not_run": [
+    "mixed full-renderer and librsvg oracle cases",
+    "fractional viewport output tile extent",
+    "native provider integration",
+    "app/UI, performance, and release checks"
+  ],
+  "accepted_contract_blocker": "JobRasterScratch lacks per-row eligibility, interval_counts[5], interval_stride, and pixel-run count metadata for exact cached fill traversal.",
+  "inherited_coordinator_evidence": [
+    "prior source603/157/index audit",
+    "prior fresh main111 tests",
+    "prior independent LunaHigh ACCEPT"
+  ]
+}

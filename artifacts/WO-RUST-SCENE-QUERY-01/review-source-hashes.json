@@ -1,0 +1,10 @@
+{
+  "rust/crates/vexel-scene-query/Cargo.toml": "b510500831f6cccee0574ec08a4564fe8e0e1e4a3498fab96d9b183c9d216f95",
+  "rust/crates/vexel-scene-query/README.md": "f1a49e8f6934a57363d53b846e03c99807db73b36a24cd3a0eae974c39afac3d",
+  "rust/crates/vexel-scene-query/tests/selection.rs": "0f1544aa578e64073969a874f6a08ca7292072038a7b331f46c6e0d35591576c",
+  "rust/crates/vexel-scene-query/tests/original_allocation_inputs.rs": "f85d619176bcdead12e5a257d271915f3c6ec2d88ddd5c43cdbc826125d589e8",
+  "rust/crates/vexel-scene-query/tests/allocation.rs": "33ba4d79dd6f6ceb0fa67e58b3914ba930354c8d3bca0e6272c6de3c4d6ad5ef",
+  "rust/crates/vexel-scene-query/src/lib.rs": "b0834f63c38e991f676421adf7dc01683d3054af69312a57f9613aecdf5ac518",
+  "rust/crates/vexel-scene-query/src/selection.rs": "2911d4986572a39a47c833e69649ff93f2fab24b4b0f492dba02f8e768261b6b",
+  "rust/crates/vexel-scene-query/src/allocation.rs": "a500b65f6400b7dec5de62ecefe8e2168784dd7500447eba60e242289e2f1764"
+}

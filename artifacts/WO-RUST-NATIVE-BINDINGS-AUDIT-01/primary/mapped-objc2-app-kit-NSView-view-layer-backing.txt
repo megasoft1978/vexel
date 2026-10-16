@@ -1,0 +1,275 @@
+BINDING convertPoint_fromView
+482:         #[unsafe(method_family = none)]
+483:         pub fn isRotatedFromBase(&self) -> bool;
+484: 
+485:         #[unsafe(method(isRotatedOrScaledFromBase))]
+486:         #[unsafe(method_family = none)]
+487:         pub fn isRotatedOrScaledFromBase(&self) -> bool;
+488: 
+489:         #[unsafe(method(isOpaque))]
+490:         #[unsafe(method_family = none)]
+491:         pub fn isOpaque(&self) -> bool;
+492: 
+493:         #[unsafe(method(convertPoint:fromView:))]
+494:         #[unsafe(method_family = none)]
+495:         pub fn convertPoint_fromView(&self, point: NSPoint, view: Option<&NSView>) -> NSPoint;
+496: 
+497:         #[unsafe(method(convertPoint:toView:))]
+498:         #[unsafe(method_family = none)]
+499:         pub fn convertPoint_toView(&self, point: NSPoint, view: Option<&NSView>) -> NSPoint;
+500: 
+501:         #[unsafe(method(convertSize:fromView:))]
+502:         #[unsafe(method_family = none)]
+503:         pub fn convertSize_fromView(&self, size: NSSize, view: Option<&NSView>) -> NSSize;
+504: 
+505:         #[unsafe(method(convertSize:toView:))]
+506:         #[unsafe(method_family = none)]
+507:         pub fn convertSize_toView(&self, size: NSSize, view: Option<&NSView>) -> NSSize;
+508: 
+509:         #[unsafe(method(convertRect:fromView:))]
+
+SDK convertPoint_fromView
+147: @property (getter=isOpaque, readonly) BOOL opaque;
+148: 
+149: - (NSPoint)convertPoint:(NSPoint)point fromView:(nullable NSView *)view;
+150: - (NSPoint)convertPoint:(NSPoint)point toView:(nullable NSView *)view;
+151: - (NSSize)convertSize:(NSSize)size fromView:(nullable NSView *)view;
+152: - (NSSize)convertSize:(NSSize)size toView:(nullable NSView *)view;
+153: - (NSRect)convertRect:(NSRect)rect fromView:(nullable NSView *)view;
+154: - (NSRect)convertRect:(NSRect)rect toView:(nullable NSView *)view;
+155: 
+156: /* Uses NSIntegralRectWithOptions() to produce a backing store pixel aligned rectangle from the given input rectangle in local view coordinates.
+
+SDK convertPoint_fromView
+148: 
+149: - (NSPoint)convertPoint:(NSPoint)point fromView:(nullable NSView *)view;
+150: - (NSPoint)convertPoint:(NSPoint)point toView:(nullable NSView *)view;
+151: - (NSSize)convertSize:(NSSize)size fromView:(nullable NSView *)view;
+152: - (NSSize)convertSize:(NSSize)size toView:(nullable NSView *)view;
+153: - (NSRect)convertRect:(NSRect)rect fromView:(nullable NSView *)view;
+154: - (NSRect)convertRect:(NSRect)rect toView:(nullable NSView *)view;
+155: 
+156: /* Uses NSIntegralRectWithOptions() to produce a backing store pixel aligned rectangle from the given input rectangle in local view coordinates.
+157:  */
+
+SDK convertPoint_fromView
+161: /* New methods for converting to and from backing store pixels */
+162: 
+163: - (NSPoint)convertPointToBacking:(NSPoint)point API_AVAILABLE(macos(10.7));
+164: - (NSPoint)convertPointFromBacking:(NSPoint)point API_AVAILABLE(macos(10.7));
+165: - (NSSize)convertSizeToBacking:(NSSize)size API_AVAILABLE(macos(10.7));
+166: - (NSSize)convertSizeFromBacking:(NSSize)size API_AVAILABLE(macos(10.7));
+167: - (NSRect)convertRectToBacking:(NSRect)rect API_AVAILABLE(macos(10.7));
+168: - (NSRect)convertRectFromBacking:(NSRect)rect API_AVAILABLE(macos(10.7));
+169: 
+170: /* Use these methods to transform geometry between a view's interior (bounds) coordinate space and its layer's interior coordinate space.  The layer's space is virtual, and doesn't take into account the layer's contentsScale setting.  For conversion between view space and layer pixels, use -convert(Point/Size/Rect)(To/From)Backing: instead.
+
+BINDING convertRectToBacking
+534:         #[unsafe(method_family = none)]
+535:         pub fn convertPointFromBacking(&self, point: NSPoint) -> NSPoint;
+536: 
+537:         #[unsafe(method(convertSizeToBacking:))]
+538:         #[unsafe(method_family = none)]
+539:         pub fn convertSizeToBacking(&self, size: NSSize) -> NSSize;
+540: 
+541:         #[unsafe(method(convertSizeFromBacking:))]
+542:         #[unsafe(method_family = none)]
+543:         pub fn convertSizeFromBacking(&self, size: NSSize) -> NSSize;
+544: 
+545:         #[unsafe(method(convertRectToBacking:))]
+546:         #[unsafe(method_family = none)]
+547:         pub fn convertRectToBacking(&self, rect: NSRect) -> NSRect;
+548: 
+549:         #[unsafe(method(convertRectFromBacking:))]
+550:         #[unsafe(method_family = none)]
+551:         pub fn convertRectFromBacking(&self, rect: NSRect) -> NSRect;
+552: 
+553:         #[unsafe(method(convertPointToLayer:))]
+554:         #[unsafe(method_family = none)]
+555:         pub fn convertPointToLayer(&self, point: NSPoint) -> NSPoint;
+556: 
+557:         #[unsafe(method(convertPointFromLayer:))]
+558:         #[unsafe(method_family = none)]
+559:         pub fn convertPointFromLayer(&self, point: NSPoint) -> NSPoint;
+560: 
+561:         #[unsafe(method(convertSizeToLayer:))]
+
+SDK convertRectToBacking
+165: - (NSSize)convertSizeToBacking:(NSSize)size API_AVAILABLE(macos(10.7));
+166: - (NSSize)convertSizeFromBacking:(NSSize)size API_AVAILABLE(macos(10.7));
+167: - (NSRect)convertRectToBacking:(NSRect)rect API_AVAILABLE(macos(10.7));
+168: - (NSRect)convertRectFromBacking:(NSRect)rect API_AVAILABLE(macos(10.7));
+169: 
+170: /* Use these methods to transform geometry between a view's interior (bounds) coordinate space and its layer's interior coordinate space.  The layer's space is virtual, and doesn't take into account the layer's contentsScale setting.  For conversion between view space and layer pixels, use -convert(Point/Size/Rect)(To/From)Backing: instead.
+171: */
+172: - (NSPoint)convertPointToLayer:(NSPoint)point API_AVAILABLE(macos(10.7));
+173: - (NSPoint)convertPointFromLayer:(NSPoint)point API_AVAILABLE(macos(10.7));
+174: - (NSSize)convertSizeToLayer:(NSSize)size API_AVAILABLE(macos(10.7));
+
+BINDING setWantsLayer
+809:         #[unsafe(method_family = none)]
+810:         pub fn setLayerContentsPlacement(
+811:             &self,
+812:             layer_contents_placement: NSViewLayerContentsPlacement,
+813:         );
+814: 
+815:         #[unsafe(method(wantsLayer))]
+816:         #[unsafe(method_family = none)]
+817:         pub fn wantsLayer(&self) -> bool;
+818: 
+819:         /// Setter for [`wantsLayer`][Self::wantsLayer].
+820:         #[unsafe(method(setWantsLayer:))]
+821:         #[unsafe(method_family = none)]
+822:         pub fn setWantsLayer(&self, wants_layer: bool);
+823: 
+824:         #[cfg(feature = "objc2-quartz-core")]
+825:         #[cfg(target_vendor = "apple")]
+826:         #[unsafe(method(layer))]
+827:         #[unsafe(method_family = none)]
+828:         pub fn layer(&self) -> Option<Retained<CALayer>>;
+829: 
+830:         #[cfg(feature = "objc2-quartz-core")]
+831:         #[cfg(target_vendor = "apple")]
+832:         /// Setter for [`layer`][Self::layer].
+833:         #[unsafe(method(setLayer:))]
+834:         #[unsafe(method_family = none)]
+835:         pub fn setLayer(&self, layer: Option<&CALayer>);
+836: 
+
+BINDING setLayer
+822:         pub fn setWantsLayer(&self, wants_layer: bool);
+823: 
+824:         #[cfg(feature = "objc2-quartz-core")]
+825:         #[cfg(target_vendor = "apple")]
+826:         #[unsafe(method(layer))]
+827:         #[unsafe(method_family = none)]
+828:         pub fn layer(&self) -> Option<Retained<CALayer>>;
+829: 
+830:         #[cfg(feature = "objc2-quartz-core")]
+831:         #[cfg(target_vendor = "apple")]
+832:         /// Setter for [`layer`][Self::layer].
+833:         #[unsafe(method(setLayer:))]
+834:         #[unsafe(method_family = none)]
+835:         pub fn setLayer(&self, layer: Option<&CALayer>);
+836: 
+837:         #[unsafe(method(wantsUpdateLayer))]
+838:         #[unsafe(method_family = none)]
+839:         pub fn wantsUpdateLayer(&self) -> bool;
+840: 
+841:         #[unsafe(method(updateLayer))]
+842:         #[unsafe(method_family = none)]
+843:         pub fn updateLayer(&self);
+844: 
+845:         #[unsafe(method(canDrawSubviewsIntoLayer))]
+846:         #[unsafe(method_family = none)]
+847:         pub fn canDrawSubviewsIntoLayer(&self) -> bool;
+848: 
+849:         /// Setter for [`canDrawSubviewsIntoLayer`][Self::canDrawSubviewsIntoLayer].
+
+BINDING registerForDraggedTypes
+1401:             items: &NSArray<NSDraggingItem>,
+1402:             event: &NSEvent,
+1403:             source: &ProtocolObject<dyn NSDraggingSource>,
+1404:         ) -> Retained<NSDraggingSession>;
+1405: 
+1406:         #[cfg(feature = "NSPasteboard")]
+1407:         #[unsafe(method(registeredDraggedTypes))]
+1408:         #[unsafe(method_family = none)]
+1409:         pub fn registeredDraggedTypes(&self) -> Retained<NSArray<NSPasteboardType>>;
+1410: 
+1411:         #[cfg(feature = "NSPasteboard")]
+1412:         #[unsafe(method(registerForDraggedTypes:))]
+1413:         #[unsafe(method_family = none)]
+1414:         pub fn registerForDraggedTypes(&self, new_types: &NSArray<NSPasteboardType>);
+1415: 
+1416:         #[unsafe(method(unregisterDraggedTypes))]
+1417:         #[unsafe(method_family = none)]
+1418:         pub fn unregisterDraggedTypes(&self);
+1419:     );
+1420: }
+1421: 
+1422: /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsviewfullscreenmodeoptionkey?language=objc)
+1423: // NS_TYPED_ENUM
+1424: pub type NSViewFullScreenModeOptionKey = NSString;
+1425: 
+1426: extern "C" {
+1427:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsfullscreenmodeallscreens?language=objc)
+1428:     pub static NSFullScreenModeAllScreens: &'static NSViewFullScreenModeOptionKey;
+
+SDK registerForDraggedTypes
+499: 
+500: @property (readonly, copy) NSArray<NSPasteboardType> *registeredDraggedTypes;
+501: - (void)registerForDraggedTypes:(NSArray<NSPasteboardType> *)newTypes;
+502: - (void)unregisterDraggedTypes;
+503: @end
+504: 
+505: /* Constants for options when entering and exiting full screen mode */
+506: typedef NSString * NSViewFullScreenModeOptionKey NS_TYPED_ENUM;
+507: APPKIT_EXTERN NSViewFullScreenModeOptionKey const NSFullScreenModeAllScreens API_AVAILABLE(macos(10.5));                      // NSNumber numberWithBool:YES/NO
+508: APPKIT_EXTERN NSViewFullScreenModeOptionKey const NSFullScreenModeSetting API_AVAILABLE(macos(10.5));                         // NSDictionary (obtained from CGSDisplay based functions)
+
+BINDING updateTrackingAreas
+1649: 
+1650:         #[cfg(feature = "NSTrackingArea")]
+1651:         #[unsafe(method(removeTrackingArea:))]
+1652:         #[unsafe(method_family = none)]
+1653:         pub fn removeTrackingArea(&self, tracking_area: &NSTrackingArea);
+1654: 
+1655:         #[cfg(feature = "NSTrackingArea")]
+1656:         #[unsafe(method(trackingAreas))]
+1657:         #[unsafe(method_family = none)]
+1658:         pub fn trackingAreas(&self) -> Retained<NSArray<NSTrackingArea>>;
+1659: 
+1660:         #[unsafe(method(updateTrackingAreas))]
+1661:         #[unsafe(method_family = none)]
+1662:         pub fn updateTrackingAreas(&self);
+1663: 
+1664:         #[cfg(feature = "NSCursor")]
+1665:         #[unsafe(method(addCursorRect:cursor:))]
+1666:         #[unsafe(method_family = none)]
+1667:         pub fn addCursorRect_cursor(&self, rect: NSRect, object: &NSCursor);
+1668: 
+1669:         #[cfg(feature = "NSCursor")]
+1670:         #[unsafe(method(removeCursorRect:cursor:))]
+1671:         #[unsafe(method_family = none)]
+1672:         pub fn removeCursorRect_cursor(&self, rect: NSRect, object: &NSCursor);
+1673: 
+1674:         #[unsafe(method(discardCursorRects))]
+1675:         #[unsafe(method_family = none)]
+1676:         pub fn discardCursorRects(&self);
+
+SDK updateTrackingAreas
+638: @property (readonly, copy) NSArray<NSTrackingArea *> *trackingAreas API_AVAILABLE(macos(10.5));
+639: 
+640: /* updateTrackingAreas should be overridden to remove out of date tracking areas and add recomputed tracking areas, and should call super.
+641: */
+642: - (void)updateTrackingAreas API_AVAILABLE(macos(10.5));
+643: 
+644: /* The following methods are soft deprecated. Use the above NSTrackingArea API instead.
+645: */
+646: - (void)addCursorRect:(NSRect)rect cursor:(NSCursor *)object;
+647: - (void)removeCursorRect:(NSRect)rect cursor:(NSCursor *)object;
+
+SDK updateTrackingAreas
+640: /* updateTrackingAreas should be overridden to remove out of date tracking areas and add recomputed tracking areas, and should call super.
+641: */
+642: - (void)updateTrackingAreas API_AVAILABLE(macos(10.5));
+643: 
+644: /* The following methods are soft deprecated. Use the above NSTrackingArea API instead.
+645: */
+646: - (void)addCursorRect:(NSRect)rect cursor:(NSCursor *)object;
+647: - (void)removeCursorRect:(NSRect)rect cursor:(NSCursor *)object;
+648: - (void)discardCursorRects;
+649: - (void)resetCursorRects;
+
+SDK updateTrackingAreas
+714: APPKIT_EXTERN NSNotificationName NSViewGlobalFrameDidChangeNotification API_DEPRECATED("Use NSOpenGLView instead.", macos(10.0,10.14));
+715: 
+716: /* This notification is sent whenever tracking areas should be recalculated for the view.  It is sent after the view receives -updateTrackingAreas.
+717:  */
+718: APPKIT_EXTERN NSNotificationName NSViewDidUpdateTrackingAreasNotification API_AVAILABLE(macos(10.5));
+719: 
+720: 
+721: 
+722: API_UNAVAILABLE_END
+723: NS_HEADER_AUDIT_END(nullability, sendability)

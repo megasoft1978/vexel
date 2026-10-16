@@ -1,0 +1,60 @@
+{
+  "result": "repair_candidate_verified_pending_independent_re_review_audit_fresh_main",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-scene -p vexel-svg-animation --locked --offline",
+      "exit_code": 0,
+      "log": "viewport-repair-check.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-scene -p vexel-svg-animation --locked --offline",
+      "exit_code": 0,
+      "log": "viewport-repair-test.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SCENE-DECODE-INITIALIZATION-01 --ready",
+      "exit_code": 0,
+      "log": "viewport-repair-wo.log"
+    }
+  ],
+  "counts": {
+    "scene": 177,
+    "animation": 21
+  },
+  "preserved_accepted_checks": {
+    "scene": 156,
+    "animation": 21
+  },
+  "initialization_fixture_tests": 19,
+  "compile_fail_total": 4,
+  "repair_added_runtime": 3,
+  "repair_added_compile_fail": 1,
+  "changed_since_previous_candidate": [
+    "rust/crates/vexel-scene/README.md",
+    "rust/crates/vexel-scene/src/decode_initialization.rs",
+    "rust/crates/vexel-scene/tests/decode_initialization.rs"
+  ],
+  "candidate_hashes": {
+    "rust/crates/vexel-scene/README.md": "7c46be28cd5a471a73159f190978bb33802af6f8f58170faa1fa971cafc4fde2",
+    "rust/crates/vexel-scene/src/decode_initialization.rs": "c434e3268cb84b50fb35b23de220f737d14ec7a287f1c108258875f6877c8416",
+    "rust/crates/vexel-scene/tests/decode_initialization.rs": "2c9d200eede3951504fc50b144590e9500e16b59527465a00fd6242f799e5fba"
+  },
+  "protected_existing_test_files_compared": 14,
+  "protected_existing_test_mismatches": [],
+  "line_counts": {
+    "rust/crates/vexel-scene/README.md": 679,
+    "rust/crates/vexel-scene/src/decode_initialization.rs": 283,
+    "rust/crates/vexel-scene/tests/decode_initialization.rs": 659
+  },
+  "prior_candidate_snapshot": [
+    "viewport-repair-before-source.txt",
+    "viewport-repair-before-tests.txt"
+  ],
+  "api_coverage": {
+    "provenance": "initialize_root(source, root, control) has no Viewport/external-attributes/proof parameter. It calls accepted parse_root_viewport over five fixed canonical attribute spans.",
+    "guards": "Canonical same-allocation source/depth-zero SVG root, CSS display, missing/malformed/zero dimensions, namespace/viewBox/aspect errors, cancellation/work/overflow rollback and retry.",
+    "preserved": "Late animation ownership/accounting, hidden no-viewport completion, TraversalView render/frame type guard, media/source-map requests, typed owners/planners, child drafts/seal, deferred render/request completion and pending-scope freeze guards.",
+    "downstream": "Call ordered initialization after original supported-attribute/style/display/visible-transform checks; parse/install actual same-source animation after traversal/root_seen. Hidden skips viewport parsing. Original accepted new constructor/literals/signatures unchanged."
+  },
+  "acceptance": "Root independent re-review, protected audit and fresh main checks still required; no acceptance/seeding or full-product claim."
+}

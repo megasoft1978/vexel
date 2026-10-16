@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-ANIMATION-FRAME-01",
+  "candidate_status": "complete owned frame/clip candidate; pending independent review; later product integrations remain separate gates",
+  "commands": [
+    {
+      "command": "rustc +stable --version",
+      "result": "PASS",
+      "evidence": "rustc 1.99.0 (b940084d7 2026-09-28)"
+    },
+    {
+      "command": "rustfmt +stable --edition 2024 --check rust/crates/vexel-svg-animation-frame/src/*.rs rust/crates/vexel-svg-animation-frame/tests/*.rs rust/crates/vexel-svg-animation-frame/tests/support/mod.rs",
+      "result": "PASS",
+      "evidence": "All owned Rust source and integration test files are formatted. Current line counts: apply.rs 210, clips.rs 723, lib.rs 630, frame_scene.rs 89, original_clip.rs 331, original_frame.rs 351, tests/support/mod.rs 422; all below 800."
+    },
+    {
+      "command": "cargo +stable check -p vexel-svg-animation-frame --locked --offline",
+      "result": "PASS",
+      "evidence": "Scoped package completed locked offline dev check with 0 errors and 0 warnings after configured-budget and cancellation-loop fixes."
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-animation-frame --locked --offline",
+      "result": "PASS",
+      "evidence": "7 unit tests + 2 frame_scene tests + 8 original_clip tests + 10 original_frame tests passed (27 total); 0 failed; 0 doc tests. Includes configured budget/default cap, actual old+new overlap, and cancellation after work begins in all three targeted loops."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-ANIMATION-FRAME-01 --ready",
+      "result": "PASS",
+      "evidence": "valid WO-RUST-SVG-ANIMATION-FRAME-01 revision 1; sha256 c78952300be9cbbed7a1aaa1395acf38da41cae33aee6cb8c6d772a39841213d"
+    }
+  ],
+  "not_run": [
+    "Renderer pixel oracles from anim_test.c: the real frame/geometry/clip assertions are ported; raster sampling requires later actual DecodeOperations/KernelResources/FlatKernel/native providers.",
+    "Original render CLI output/sequence/frame-count tests: later accepted runtime CLI composition.",
+    "Original authoring/editor mutation suites: later source-preserving authoring engine.",
+    "Original fuzz campaign: later Rust decoder/fuzz harness.",
+    "Broad UI/E2E, final app/runtime/release and authentic MCP demo: later product gates."
+  ],
+  "scope_audit": {
+    "owned_paths": "crate src, crate README, new tests under crate, own artifact directory except scope.json",
+    "protected_edits_by_this_work": [],
+    "immutable_scope_sha256": "1ef66c85354c47f8c0ae077af7e3f43001566c790a9d20c2e332f5c56c68bd55"
+  }
+}

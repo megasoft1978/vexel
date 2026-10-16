@@ -1,0 +1,3286 @@
+{
+  "requested_at_utc": "2026-10-14T10:56:54.513052+00:00",
+  "method": "GET",
+  "url": "https://api.sciencemadereadable.com/api/data/walk?id=10.1145%2F2980179.2982434&k=10",
+  "command": "walk",
+  "http_status": 200,
+  "response": {
+    "focus": "W2553243490",
+    "nodes": {
+      "W2553243490": {
+        "id": "W2553243490",
+        "title": "Efficient GPU path rendering using scanline rasterization",
+        "year": 2016,
+        "cited_by": 25,
+        "refs_reported": 29,
+        "refs_indexed": 29,
+        "citers_indexed": 25,
+        "type": "article",
+        "complete": true,
+        "column": "x",
+        "records": [
+          "W2553243490"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "outlier": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:efficient gpu path rendering using scanline rasterization",
+        "mx": -0.08207104963806844,
+        "my": 0.21623007669827682,
+        "sem": 0.0,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2075315695",
+            "similarity": 0.5896448009843316
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.5666022698545925
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.5617182012000664
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.5530890417046865
+          },
+          {
+            "id": "W3099631837",
+            "similarity": 0.5488838230508997
+          }
+        ],
+        "vector_source_id": "W2553243490",
+        "x": 0.66712,
+        "y": 0.14347,
+        "readable": false
+      },
+      "W2063777854": {
+        "id": "W2063777854",
+        "title": "Silhouette maps for improved texture magnification",
+        "year": 2004,
+        "cited_by": 57,
+        "refs_reported": 17,
+        "refs_indexed": 17,
+        "citers_indexed": 57,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2063777854"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 5,
+        "outlier": null,
+        "answer": true,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:silhouette maps for improved texture magnification",
+        "mx": -0.11423763008677357,
+        "my": -0.3873928240114352,
+        "sem": 0.5884828162025861,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2509279253",
+            "similarity": 0.6949850520697032
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.6144634356274356
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5377519599087284
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.5251168903174623
+          },
+          {
+            "id": "W2044869572",
+            "similarity": 0.52348969385119
+          }
+        ],
+        "vector_source_id": "W2063777854",
+        "x": 0.66576,
+        "y": 0.14313,
+        "readable": false
+      },
+      "W1988973985": {
+        "id": "W1988973985",
+        "title": "Algebraic properties of plane offset curves",
+        "year": 1990,
+        "cited_by": 127,
+        "refs_reported": 14,
+        "refs_indexed": 13,
+        "citers_indexed": 127,
+        "type": "article",
+        "complete": false,
+        "column": "candidates",
+        "records": [
+          "W1988973985"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 4,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Advanced Numerical Analysis Techniques",
+        "subfield": "Computational Mechanics",
+        "atlas_key": "title:algebraic properties of plane offset curves",
+        "mx": null,
+        "my": null,
+        "sem": null,
+        "region": null,
+        "map_status": "missing_vector",
+        "semantic_neighbors": [],
+        "readable": null
+      },
+      "W2115276098": {
+        "id": "W2115276098",
+        "title": "Pinchmaps: textures with customizable discontinuities",
+        "year": 2005,
+        "cited_by": 24,
+        "refs_reported": 6,
+        "refs_indexed": 5,
+        "citers_indexed": 24,
+        "type": "article",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2115276098"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 4,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:pinchmaps textures with customizable discontinuities",
+        "mx": -0.1403448612366629,
+        "my": -0.3871281338195175,
+        "sem": 0.545881061111419,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1882343795",
+            "similarity": 0.6169213625825205
+          },
+          {
+            "id": "W2063777854",
+            "similarity": 0.6144634356274356
+          },
+          {
+            "id": "W2509279253",
+            "similarity": 0.6001349934215968
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.5903142200970166
+          },
+          {
+            "id": "W2270860968",
+            "similarity": 0.5651146819775402
+          }
+        ],
+        "vector_source_id": "W2115276098",
+        "x": 0.66829,
+        "y": 0.14608,
+        "readable": false
+      },
+      "W2144250001": {
+        "id": "W2144250001",
+        "title": "An efficient filling algorithm for non-simple closed curves using the point containment paradigm",
+        "year": 2002,
+        "cited_by": 9,
+        "refs_reported": 15,
+        "refs_indexed": 15,
+        "citers_indexed": 9,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2144250001"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 4,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Digital Image Processing Techniques",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:an efficient filling algorithm for non simple closed curves using the point containment paradigm",
+        "mx": 0.31332398424367675,
+        "my": 0.16259549335407872,
+        "sem": 0.620609914767217,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2160066414",
+            "similarity": 0.4530915182191655
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.4134562936163234
+          },
+          {
+            "id": "W2042768395",
+            "similarity": 0.4106751440009707
+          },
+          {
+            "id": "W2125036434",
+            "similarity": 0.39725040425201374
+          },
+          {
+            "id": "W2023016685",
+            "similarity": 0.3926863802430606
+          }
+        ],
+        "vector_source_id": "W2144250001",
+        "x": 0.66755,
+        "y": 0.14355,
+        "readable": false
+      },
+      "W2133301102": {
+        "id": "W2133301102",
+        "title": "A survey of stroke-based rendering",
+        "year": 2003,
+        "cited_by": 243,
+        "refs_reported": 21,
+        "refs_indexed": 21,
+        "citers_indexed": 243,
+        "type": "article",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2133301102"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:a survey of stroke based rendering",
+        "mx": 0.3077247449613304,
+        "my": 0.1278456780499714,
+        "sem": 0.6368136432300819,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W3038646634",
+            "similarity": 0.38030709900216686
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.3794830034601755
+          },
+          {
+            "id": "W2038825728",
+            "similarity": 0.36651927944452156
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.36318635676991806
+          },
+          {
+            "id": "W2044869572",
+            "similarity": 0.3581246115364879
+          }
+        ],
+        "vector_source_id": "W2133301102",
+        "x": 0.66586,
+        "y": 0.14378,
+        "readable": false
+      },
+      "W2093207728": {
+        "id": "W2093207728",
+        "title": "Analytic properties of plane offset curves",
+        "year": 1990,
+        "cited_by": 175,
+        "refs_reported": 18,
+        "refs_indexed": 17,
+        "citers_indexed": 175,
+        "type": "article",
+        "complete": false,
+        "column": "candidates",
+        "records": [
+          "W2093207728"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Advanced Numerical Analysis Techniques",
+        "subfield": "Computational Mechanics",
+        "atlas_key": "title:analytic properties of plane offset curves",
+        "mx": null,
+        "my": null,
+        "sem": null,
+        "region": null,
+        "map_status": "missing_vector",
+        "semantic_neighbors": [],
+        "readable": null
+      },
+      "W2135525032": {
+        "id": "W2135525032",
+        "title": "Perfect spatial hashing",
+        "year": 2006,
+        "cited_by": 174,
+        "refs_reported": 34,
+        "refs_indexed": 33,
+        "citers_indexed": 174,
+        "type": "article",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2135525032",
+          "W4242274649"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Advanced Image and Video Retrieval Techniques",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:perfect spatial hashing",
+        "mx": -0.08767538470585753,
+        "my": -0.1282520584498024,
+        "sem": 0.6168563062463328,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1997146690",
+            "similarity": 0.534808533913359
+          },
+          {
+            "id": "W2270860968",
+            "similarity": 0.48136302572006695
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.4641405657584593
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.46200332776452535
+          },
+          {
+            "id": "W2090836717",
+            "similarity": 0.45181807474181057
+          }
+        ],
+        "vector_source_id": "W2135525032",
+        "x": 0.66575,
+        "y": 0.1428,
+        "readable": false
+      },
+      "W2044869572": {
+        "id": "W2044869572",
+        "title": "Shadow silhouette maps",
+        "year": 2003,
+        "cited_by": 92,
+        "refs_reported": 18,
+        "refs_indexed": 16,
+        "citers_indexed": 92,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2044869572",
+          "W2997504940"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:shadow silhouette maps",
+        "mx": 0.06783022862885413,
+        "my": -0.13010301889574616,
+        "sem": 0.5190705915716481,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2063777854",
+            "similarity": 0.52348969385119
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.48092940842835186
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.46134489866748474
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.4606081194761561
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.4471494624863912
+          }
+        ],
+        "vector_source_id": "W2044869572",
+        "x": 0.66763,
+        "y": 0.14349,
+        "readable": false
+      },
+      "W1882343795": {
+        "id": "W1882343795",
+        "title": "Bixels: Picture Samples with Sharp Embedded Boundaries",
+        "year": 2004,
+        "cited_by": 51,
+        "refs_reported": 33,
+        "refs_indexed": 33,
+        "citers_indexed": 51,
+        "type": "article",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W1882343795"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:bixels picture samples with sharp embedded boundaries",
+        "mx": -0.07508202358745082,
+        "my": -0.24930149291079132,
+        "sem": 0.5936702181662419,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2115276098",
+            "similarity": 0.6169213625825205
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.4972387886854026
+          },
+          {
+            "id": "W2090836717",
+            "similarity": 0.4946436272506609
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.49095861377833283
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.48942099495578706
+          }
+        ],
+        "vector_source_id": "W1882343795",
+        "x": 0.68222,
+        "y": 0.15024,
+        "readable": false
+      },
+      "W2105520795": {
+        "id": "W2105520795",
+        "title": "A quadrilateral rendering primitive",
+        "year": 2004,
+        "cited_by": 33,
+        "refs_reported": 15,
+        "refs_indexed": 15,
+        "citers_indexed": 33,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2105520795"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:a quadrilateral rendering primitive",
+        "mx": -0.009985452234139219,
+        "my": -0.03611623952858979,
+        "sem": 0.5800093001191405,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2004850474",
+            "similarity": 0.5639306938741876
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.5314047243459361
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.5294026169780116
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.5060487673386489
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.5041237276685607
+          }
+        ],
+        "vector_source_id": "W2105520795",
+        "x": 0.6658,
+        "y": 0.14319,
+        "readable": false
+      },
+      "W2018615265": {
+        "id": "W2018615265",
+        "title": "A Fresh Look at Generalized Sampling",
+        "year": 2014,
+        "cited_by": 17,
+        "refs_reported": 39,
+        "refs_indexed": 39,
+        "citers_indexed": 17,
+        "type": "book",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W2018615265",
+          "W4205992357"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Image and Signal Denoising Methods",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:a fresh look at generalized sampling",
+        "mx": 0.20431098084001587,
+        "my": -0.15189544998629292,
+        "sem": 0.6283804771801632,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2115276098",
+            "similarity": 0.48192119715483495
+          },
+          {
+            "id": "W2509279253",
+            "similarity": 0.44135009017280646
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.4394598814068327
+          },
+          {
+            "id": "W1882343795",
+            "similarity": 0.43523923979935764
+          },
+          {
+            "id": "W2295798009",
+            "similarity": 0.4307845269721575
+          }
+        ],
+        "vector_source_id": "W2018615265",
+        "x": 0.7253,
+        "y": 0.14577,
+        "readable": false
+      },
+      "W122327486": {
+        "id": "W122327486",
+        "title": "Vector Texture Maps on the GPU",
+        "year": 2006,
+        "cited_by": 13,
+        "refs_reported": 12,
+        "refs_indexed": 12,
+        "citers_indexed": 13,
+        "type": "article",
+        "complete": true,
+        "column": "candidates",
+        "records": [
+          "W122327486"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "support": 3,
+        "outlier": null,
+        "answer": false,
+        "shared": null,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:vector texture maps on the gpu",
+        "mx": -0.20158327624133265,
+        "my": -0.09588510335954949,
+        "sem": 0.5720935045533375,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1980789236",
+            "similarity": 0.5660436158709246
+          },
+          {
+            "id": "W2270860968",
+            "similarity": 0.5524680547668241
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.5448449671296385
+          },
+          {
+            "id": "W2075121120",
+            "similarity": 0.5366470909333418
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.503653036466322
+          }
+        ],
+        "vector_source_id": "W122327486",
+        "x": 0.66684,
+        "y": 0.14348,
+        "readable": false
+      },
+      "W2948697123": {
+        "id": "W2948697123",
+        "title": "Hierarchical Rasterization of Curved Primitives for Vector Graphics Rendering on the GPU",
+        "year": 2019,
+        "cited_by": 12,
+        "refs_reported": 35,
+        "refs_indexed": 35,
+        "citers_indexed": 12,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W2948697123"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 17,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:hierarchical rasterization of curved primitives for vector graphics rendering on the gpu",
+        "mx": -0.23734556097176518,
+        "my": 0.07974115909328544,
+        "sem": 0.4382817987999337,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1997146690",
+            "similarity": 0.6760689060026288
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.6402860973503925
+          },
+          {
+            "id": "W2023016685",
+            "similarity": 0.570221909908835
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.5617182012000664
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.5616067534618204
+          }
+        ],
+        "vector_source_id": "W2948697123",
+        "x": 0.66673,
+        "y": 0.14309,
+        "readable": false
+      },
+      "W2075315695": {
+        "id": "W2075315695",
+        "title": "Massively-parallel vector graphics",
+        "year": 2014,
+        "cited_by": 21,
+        "refs_reported": 52,
+        "refs_indexed": 49,
+        "citers_indexed": 21,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W2075315695"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "shared": 14,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:massively parallel vector graphics",
+        "mx": -0.23077470993577992,
+        "my": 0.0894571450535749,
+        "sem": 0.4103551990156682,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1997146690",
+            "similarity": 0.7355578276380352
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.6402860973503925
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5984084073578743
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.5896448009843316
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.5880646124820041
+          }
+        ],
+        "vector_source_id": "W2075315695",
+        "x": 0.66579,
+        "y": 0.14282,
+        "readable": false
+      },
+      "W7166566179": {
+        "id": "W7166566179",
+        "title": "Warnock: Harnessing GPU Geometry Amplification for Vector Graphics 57",
+        "year": 2026,
+        "cited_by": 0,
+        "refs_reported": 30,
+        "refs_indexed": 30,
+        "citers_indexed": 0,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W7166566179"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 9,
+        "topic": "Parallel Computing and Optimization Techniques",
+        "subfield": "Hardware and Architecture",
+        "atlas_key": "title:warnock harnessing gpu geometry amplification for vector graphics 57",
+        "mx": -0.08011685758691407,
+        "my": 0.3158630990548947,
+        "sem": 0.6386248921470215,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W3038646634",
+            "similarity": 0.49215139130250507
+          },
+          {
+            "id": "W3099631837",
+            "similarity": 0.48933904357692093
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.4616436728874975
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.44196638361473406
+          },
+          {
+            "id": "W2075121120",
+            "similarity": 0.44057255483811997
+          }
+        ],
+        "vector_source_id": "W7166566179",
+        "x": 0.66679,
+        "y": 0.14302,
+        "readable": false
+      },
+      "W2509279253": {
+        "id": "W2509279253",
+        "title": "Infinite resolution textures",
+        "year": 2016,
+        "cited_by": 1,
+        "refs_reported": 34,
+        "refs_indexed": 32,
+        "citers_indexed": 1,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W2509279253"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 8,
+        "topic": "Advanced Vision and Imaging",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:infinite resolution textures",
+        "mx": -0.05215101631518688,
+        "my": -0.3799231751820689,
+        "sem": 0.554998501998124,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2063777854",
+            "similarity": 0.6949850520697032
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.6001349934215968
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5004461916576108
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.49567769497831693
+          },
+          {
+            "id": "W2039372057",
+            "similarity": 0.4817289006524115
+          }
+        ],
+        "vector_source_id": "W2509279253",
+        "x": 0.66816,
+        "y": 0.14585,
+        "readable": false
+      },
+      "W2270860968": {
+        "id": "W2270860968",
+        "title": "Vector Regression Functions for Texture Compression",
+        "year": 2015,
+        "cited_by": 16,
+        "refs_reported": 47,
+        "refs_indexed": 46,
+        "citers_indexed": 16,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W2270860968"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 8,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:vector regression functions for texture compression",
+        "mx": -0.2447004946742151,
+        "my": -0.2268580050113952,
+        "sem": 0.5735400177097862,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1997146690",
+            "similarity": 0.5800226872451362
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.5651146819775402
+          },
+          {
+            "id": "W2090836717",
+            "similarity": 0.5567378199873387
+          },
+          {
+            "id": "W122327486",
+            "similarity": 0.5524680547668241
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5402155750923401
+          }
+        ],
+        "vector_source_id": "W2270860968",
+        "x": 0.66572,
+        "y": 0.1429,
+        "readable": false
+      },
+      "W3038646634": {
+        "id": "W3038646634",
+        "title": "Polar Stroking: New Theory and Methods for Stroking Paths",
+        "year": 2020,
+        "cited_by": 1,
+        "refs_reported": 36,
+        "refs_indexed": 34,
+        "citers_indexed": 1,
+        "type": "preprint",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W3038646634"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 7,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:polar stroking new theory and methods for stroking paths",
+        "mx": -0.14466657824864318,
+        "my": 0.49032637633363896,
+        "sem": 0.453478905643364,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W3099631837",
+            "similarity": 0.9737019909703397
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.5975195933869515
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5657660798325277
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.5465210943566361
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5374364152235945
+          }
+        ],
+        "vector_source_id": "W3038646634",
+        "x": 0.66535,
+        "y": 0.18069,
+        "readable": false
+      },
+      "W3107232127": {
+        "id": "W3107232127",
+        "title": "Differentiable vector graphics rasterization for editing and learning",
+        "year": 2020,
+        "cited_by": 183,
+        "refs_reported": 60,
+        "refs_indexed": 49,
+        "citers_indexed": 183,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W3107232127"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 7,
+        "topic": "Advanced Vision and Imaging",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:differentiable vector graphics rasterization for editing and learning",
+        "mx": -0.18091561892814634,
+        "my": 0.042865022831372106,
+        "sem": 0.496110546607085,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2075315695",
+            "similarity": 0.5880646124820041
+          },
+          {
+            "id": "W3011071166",
+            "similarity": 0.5873813927771928
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.578442864952032
+          },
+          {
+            "id": "W2023016685",
+            "similarity": 0.577142532855617
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.5616067534618204
+          }
+        ],
+        "vector_source_id": "W3107232127",
+        "x": 0.64533,
+        "y": 0.18192,
+        "readable": false
+      },
+      "W2736310260": {
+        "id": "W2736310260",
+        "title": "Exploiting Budan-Fourier and Vincent's theorems for ray tracing 3D Bézier curves",
+        "year": 2017,
+        "cited_by": 7,
+        "refs_reported": 54,
+        "refs_indexed": 54,
+        "citers_indexed": 7,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W2736310260"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 7,
+        "topic": "Advanced Numerical Analysis Techniques",
+        "subfield": "Computational Mechanics",
+        "atlas_key": "title:exploiting budan fourier and vincent s theorems for ray tracing 3d bézier curves",
+        "mx": 0.017647441407059972,
+        "my": 0.14671140902157298,
+        "sem": 0.5826726482835312,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2160066414",
+            "similarity": 0.5057625807476169
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.44114089178386695
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.4329491824600842
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.41732735171646884
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.41023480199466933
+          }
+        ],
+        "vector_source_id": "W2736310260",
+        "x": 0.76222,
+        "y": 0.14072,
+        "readable": false
+      },
+      "W2339690121": {
+        "id": "W2339690121",
+        "title": "Resolution Independent Real-Time Vector-Embedded Mesh for Animation",
+        "year": 2016,
+        "cited_by": 5,
+        "refs_reported": 36,
+        "refs_indexed": 30,
+        "citers_indexed": 5,
+        "type": "article",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W2339690121"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 6,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:resolution independent real time vector embedded mesh for animation",
+        "mx": -0.2455838404202603,
+        "my": 0.057996680582385725,
+        "sem": 0.4966138368149269,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1980789236",
+            "similarity": 0.6337752454794756
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.6119769865252798
+          },
+          {
+            "id": "W2038825728",
+            "similarity": 0.5826078257942078
+          },
+          {
+            "id": "W3099631837",
+            "similarity": 0.5751589502081457
+          },
+          {
+            "id": "W3038646634",
+            "similarity": 0.5657660798325277
+          }
+        ],
+        "vector_source_id": "W2339690121",
+        "x": 0.66748,
+        "y": 0.14355,
+        "readable": false
+      },
+      "W3099631837": {
+        "id": "W3099631837",
+        "title": "Polar stroking",
+        "year": 2020,
+        "cited_by": 4,
+        "refs_reported": 34,
+        "refs_indexed": 34,
+        "citers_indexed": 4,
+        "type": "preprint",
+        "complete": true,
+        "column": "similar",
+        "records": [
+          "W3099631837"
+        ],
+        "x_cites": false,
+        "also_similar": false,
+        "shared": 6,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "record:W3099631837",
+        "mx": -0.16242959945114466,
+        "my": 0.48481844735873414,
+        "sem": 0.45111617694910044,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W3038646634",
+            "similarity": 0.9737019909703397
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.594905873123573
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5751589502081457
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.5488838230508997
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5436779644152808
+          }
+        ],
+        "vector_source_id": "W3099631837",
+        "x": 0.66542,
+        "y": 0.18062,
+        "readable": false
+      },
+      "W2160066414": {
+        "id": "W2160066414",
+        "title": "Resolution independent curve rendering using programmable graphics hardware",
+        "year": 2005,
+        "cited_by": 94,
+        "refs_reported": 23,
+        "refs_indexed": 21,
+        "citers_indexed": 94,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2160066414",
+          "W4248524036"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 9,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:resolution independent curve rendering using programmable graphics hardware",
+        "mx": -0.1118034389099223,
+        "my": 0.05833266724910524,
+        "sem": 0.44691095829531347,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1980789236",
+            "similarity": 0.6120552604144884
+          },
+          {
+            "id": "W2039372057",
+            "similarity": 0.599910591971936
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.5822367486275213
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.5758277510610896
+          },
+          {
+            "id": "W1979962465",
+            "similarity": 0.5638443169923604
+          }
+        ],
+        "vector_source_id": "W2160066414",
+        "x": 0.66598,
+        "y": 0.14323,
+        "readable": false
+      },
+      "W1985598934": {
+        "id": "W1985598934",
+        "title": "GPU-accelerated path rendering",
+        "year": 2012,
+        "cited_by": 46,
+        "refs_reported": 27,
+        "refs_indexed": 26,
+        "citers_indexed": 46,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W1985598934"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 9,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:gpu accelerated path rendering",
+        "mx": 0.00949866522485508,
+        "my": 0.4025204332669591,
+        "sem": 0.4333977301454076,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W3038646634",
+            "similarity": 0.5975195933869515
+          },
+          {
+            "id": "W3099631837",
+            "similarity": 0.594905873123573
+          },
+          {
+            "id": "W2075121120",
+            "similarity": 0.577080326970098
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.5666022698545925
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.5372691642220988
+          }
+        ],
+        "vector_source_id": "W1985598934",
+        "x": 0.6661,
+        "y": 0.14341,
+        "readable": false
+      },
+      "W1997146690": {
+        "id": "W1997146690",
+        "title": "Random-access rendering of general vector graphics",
+        "year": 2008,
+        "cited_by": 52,
+        "refs_reported": 36,
+        "refs_indexed": 34,
+        "citers_indexed": 52,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W1997146690",
+          "W4248677751"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 8,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:random access rendering of general vector graphics",
+        "mx": -0.24649349881389074,
+        "my": 0.021113492676867882,
+        "sem": 0.45857044187610063,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2075315695",
+            "similarity": 0.7355578276380352
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.6760689060026288
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.6119769865252798
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.598289121369488
+          },
+          {
+            "id": "W2270860968",
+            "similarity": 0.5800226872451362
+          }
+        ],
+        "vector_source_id": "W1997146690",
+        "x": 0.66737,
+        "y": 0.14343,
+        "readable": false
+      },
+      "W1980789236": {
+        "id": "W1980789236",
+        "title": "Precise vector textures for real-time 3D rendering",
+        "year": 2008,
+        "cited_by": 35,
+        "refs_reported": 22,
+        "refs_indexed": 22,
+        "citers_indexed": 35,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W1980789236"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 7,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:precise vector textures for real time 3d rendering",
+        "mx": -0.24151381419185883,
+        "my": 0.018135126700370537,
+        "sem": 0.5057725690380643,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2339690121",
+            "similarity": 0.6337752454794756
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.6167240806812498
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.6120552604144884
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.5984084073578743
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.598289121369488
+          }
+        ],
+        "vector_source_id": "W1980789236",
+        "x": 0.66752,
+        "y": 0.14366,
+        "readable": false
+      },
+      "W2038825728": {
+        "id": "W2038825728",
+        "title": "Diffusion curves",
+        "year": 2008,
+        "cited_by": 248,
+        "refs_reported": 31,
+        "refs_indexed": 30,
+        "citers_indexed": 248,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2038825728"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 5,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "record:W2038825728",
+        "mx": -0.2171958025730646,
+        "my": -0.05074748739723709,
+        "sem": 0.5252003608636686,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2039372057",
+            "similarity": 0.6924313433723222
+          },
+          {
+            "id": "W3011071166",
+            "similarity": 0.6857777216639575
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5826078257942078
+          },
+          {
+            "id": "W2053304443",
+            "similarity": 0.5789729223288795
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.5562877867149911
+          }
+        ],
+        "vector_source_id": "W2038825728",
+        "x": 0.66569,
+        "y": 0.18053,
+        "readable": false
+      },
+      "W2004850474": {
+        "id": "W2004850474",
+        "title": "Real-time rendering of textures with feature curves",
+        "year": 2008,
+        "cited_by": 54,
+        "refs_reported": 45,
+        "refs_indexed": 40,
+        "citers_indexed": 54,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2004850474"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 5,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:real time rendering of textures with feature curves",
+        "mx": -0.16987151505027923,
+        "my": -0.14711204634035333,
+        "sem": 0.521191584601372,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1980789236",
+            "similarity": 0.6167240806812498
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.5903142200970166
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.5822367486275213
+          },
+          {
+            "id": "W2105520795",
+            "similarity": 0.5639306938741876
+          },
+          {
+            "id": "W2038825728",
+            "similarity": 0.5562877867149911
+          }
+        ],
+        "vector_source_id": "W2004850474",
+        "x": 0.66578,
+        "y": 0.1431,
+        "readable": false
+      },
+      "W2070299543": {
+        "id": "W2070299543",
+        "title": "A device independent graphics imaging model for use with raster devices",
+        "year": 1982,
+        "cited_by": 52,
+        "refs_reported": 4,
+        "refs_indexed": 4,
+        "citers_indexed": 52,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2070299543",
+          "W4235066770"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 5,
+        "topic": "Augmented Reality Applications",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:a device independent graphics imaging model for use with raster devices",
+        "mx": 0.44593633659052406,
+        "my": -0.1241986453614559,
+        "sem": 0.7085092127976853,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1979962465",
+            "similarity": 0.4838107174598486
+          },
+          {
+            "id": "W1975470983",
+            "similarity": 0.4609041387597168
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.38392503099306796
+          },
+          {
+            "id": "W2295798009",
+            "similarity": 0.356850986560621
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.3513347538060545
+          }
+        ],
+        "vector_source_id": "W2070299543",
+        "x": 0.84641,
+        "y": 0.3512,
+        "readable": false
+      },
+      "W2075121120": {
+        "id": "W2075121120",
+        "title": "Accelerating vector graphics rendering using the graphics hardware pipeline",
+        "year": 2015,
+        "cited_by": 17,
+        "refs_reported": 23,
+        "refs_indexed": 19,
+        "citers_indexed": 17,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2075121120"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 5,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:accelerating vector graphics rendering using the graphics hardware pipeline",
+        "mx": -0.08912440590140099,
+        "my": 0.26169552503143945,
+        "sem": 0.5024004639574112,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2075315695",
+            "similarity": 0.5841234998771747
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.577080326970098
+          },
+          {
+            "id": "W122327486",
+            "similarity": 0.5366470909333418
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5351907114178792
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.5342109370549453
+          }
+        ],
+        "vector_source_id": "W2075121120",
+        "x": 0.66633,
+        "y": 0.14276,
+        "readable": false
+      },
+      "W2039372057": {
+        "id": "W2039372057",
+        "title": "Diffusion curve textures for resolution independent texture mapping",
+        "year": 2012,
+        "cited_by": 49,
+        "refs_reported": 42,
+        "refs_indexed": 42,
+        "citers_indexed": 49,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2039372057"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 4,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:diffusion curve textures for resolution independent texture mapping",
+        "mx": -0.1842574671040756,
+        "my": -0.14146010298804976,
+        "sem": 0.5278201820037438,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2038825728",
+            "similarity": 0.6924313433723222
+          },
+          {
+            "id": "W2053304443",
+            "similarity": 0.6027063631502798
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.599910591971936
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.539156238888693
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5337399768063511
+          }
+        ],
+        "vector_source_id": "W2039372057",
+        "x": 0.64428,
+        "y": 0.18357,
+        "readable": false
+      },
+      "W1979962465": {
+        "id": "W1979962465",
+        "title": "Resolution independent rendering of deformable vector objects using graphics hardware",
+        "year": 2006,
+        "cited_by": 17,
+        "refs_reported": 1,
+        "refs_indexed": 1,
+        "citers_indexed": 17,
+        "type": "conference-abstract",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W1979962465"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 4,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:resolution independent rendering of deformable vector objects using graphics hardware",
+        "mx": 0.12820144508885908,
+        "my": -0.05208068639678302,
+        "sem": 0.629220277244668,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2160066414",
+            "similarity": 0.5638443169923604
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.5217470328564461
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.5125690687725513
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.49821907546335065
+          },
+          {
+            "id": "W1975470983",
+            "similarity": 0.4878115372059397
+          }
+        ],
+        "vector_source_id": "W1979962465",
+        "x": 0.51829,
+        "y": 0.47808,
+        "readable": false
+      },
+      "W2042768395": {
+        "id": "W2042768395",
+        "title": "The edge flag algorithm — A fill method for raster scan displays",
+        "year": 1981,
+        "cited_by": 69,
+        "refs_reported": 7,
+        "refs_indexed": 7,
+        "citers_indexed": 69,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2042768395"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 3,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:the edge flag algorithm a fill method for raster scan displays",
+        "mx": 0.3369292813480255,
+        "my": 0.02825251002158032,
+        "sem": 0.6432944782352956,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2125036434",
+            "similarity": 0.4693489178612069
+          },
+          {
+            "id": "W2144250001",
+            "similarity": 0.4106751440009707
+          },
+          {
+            "id": "W2023016685",
+            "similarity": 0.37259749234360984
+          },
+          {
+            "id": "W2295798009",
+            "similarity": 0.3691791176063983
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.35670552176470427
+          }
+        ],
+        "vector_source_id": "W2042768395",
+        "x": 0.68221,
+        "y": 0.16465,
+        "readable": false
+      },
+      "W3011071166": {
+        "id": "W3011071166",
+        "title": "Freeform vector graphics with controlled thin-plate splines",
+        "year": 2011,
+        "cited_by": 66,
+        "refs_reported": 26,
+        "refs_indexed": 25,
+        "citers_indexed": 66,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W1963717421",
+          "W3011071166"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 3,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:freeform vector graphics with controlled thin plate splines",
+        "mx": -0.18191830675631157,
+        "my": 0.022339995125724016,
+        "sem": 0.5730424119055465,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2038825728",
+            "similarity": 0.6857777216639575
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.5873813927771928
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.5720053657413071
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.539417580191828
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5307040205241067
+          }
+        ],
+        "vector_source_id": "W3011071166",
+        "x": 0.66595,
+        "y": 0.1812,
+        "readable": false
+      },
+      "W2053304443": {
+        "id": "W2053304443",
+        "title": "Fast multipole representation of diffusion curves and points",
+        "year": 2014,
+        "cited_by": 32,
+        "refs_reported": 32,
+        "refs_indexed": 31,
+        "citers_indexed": 32,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2053304443"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 3,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:fast multipole representation of diffusion curves and points",
+        "mx": -0.15372306204160632,
+        "my": -0.10664457244856218,
+        "sem": 0.6184396604029808,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2039372057",
+            "similarity": 0.6027063631502798
+          },
+          {
+            "id": "W2038825728",
+            "similarity": 0.5789729223288795
+          },
+          {
+            "id": "W2090836717",
+            "similarity": 0.4787785055252056
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.4669782457100329
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.4452315094347514
+          }
+        ],
+        "vector_source_id": "W2053304443",
+        "x": 0.51935,
+        "y": 0.52974,
+        "readable": false
+      },
+      "W2125036434": {
+        "id": "W2125036434",
+        "title": "Scanline Edge-flag Algorithm for Antialiasing",
+        "year": 2007,
+        "cited_by": 23,
+        "refs_reported": 14,
+        "refs_indexed": 14,
+        "citers_indexed": 23,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2125036434"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 3,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:scanline edge flag algorithm for antialiasing",
+        "mx": 0.2984099693781825,
+        "my": 0.17590988061694693,
+        "sem": 0.5015470059811511,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2553243490",
+            "similarity": 0.4984529940188488
+          },
+          {
+            "id": "W2042768395",
+            "similarity": 0.4693489178612069
+          },
+          {
+            "id": "W1985598934",
+            "similarity": 0.46288816780378084
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.4156774869726051
+          },
+          {
+            "id": "W2044869572",
+            "similarity": 0.4036997127318953
+          }
+        ],
+        "vector_source_id": "W2125036434",
+        "x": 0.66788,
+        "y": 0.1434,
+        "readable": false
+      },
+      "W2023016685": {
+        "id": "W2023016685",
+        "title": "Analytic Rasterization of Curves with Polynomial Filters",
+        "year": 2013,
+        "cited_by": 14,
+        "refs_reported": 45,
+        "refs_indexed": 43,
+        "citers_indexed": 14,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2023016685"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 3,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:analytic rasterization of curves with polynomial filters",
+        "mx": 0.003959572720798005,
+        "my": 0.03327886551927238,
+        "sem": 0.501115960763511,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W4247416164",
+            "similarity": 0.6129898712680532
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.577142532855617
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.570221909908835
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.49888403923648883
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.49768894992461676
+          }
+        ],
+        "vector_source_id": "W2023016685",
+        "x": 0.6687,
+        "y": 0.14502,
+        "readable": false
+      },
+      "W2033857673": {
+        "id": "W2033857673",
+        "title": "Offsets of Two-Dimensional Profiles",
+        "year": 1984,
+        "cited_by": 191,
+        "refs_reported": 10,
+        "refs_indexed": 10,
+        "citers_indexed": 191,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2033857673"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 2,
+        "topic": "Advanced Numerical Analysis Techniques",
+        "subfield": "Computational Mechanics",
+        "atlas_key": "title:offsets of two dimensional profiles",
+        "mx": 0.32754032820630513,
+        "my": 0.04778297851223107,
+        "sem": 0.7912205301727755,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2160066414",
+            "similarity": 0.3536884578720766
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.3484867403587806
+          },
+          {
+            "id": "W2144250001",
+            "similarity": 0.34834190110458285
+          },
+          {
+            "id": "W3011071166",
+            "similarity": 0.3415239755948526
+          },
+          {
+            "id": "W2004850474",
+            "similarity": 0.3397523378944596
+          }
+        ],
+        "vector_source_id": "W2033857673",
+        "x": 0.76761,
+        "y": 0.17604,
+        "readable": false
+      },
+      "W2065638643": {
+        "id": "W2065638643",
+        "title": "Half-tone perspective drawings by computer",
+        "year": 1967,
+        "cited_by": 77,
+        "refs_reported": 0,
+        "refs_indexed": 0,
+        "citers_indexed": 79,
+        "type": "conference-abstract",
+        "complete": false,
+        "column": "refs",
+        "records": [
+          "W2065638643"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 2,
+        "topic": "3D Surveying and Cultural Heritage",
+        "subfield": "Geology",
+        "atlas_key": "title:half tone perspective drawings by computer",
+        "mx": 0.4481705036738194,
+        "my": -0.035577588886627515,
+        "sem": 0.7791568288369143,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2105520795",
+            "similarity": 0.3465967498205874
+          },
+          {
+            "id": "W2018615265",
+            "similarity": 0.3272280765686144
+          },
+          {
+            "id": "W2125036434",
+            "similarity": 0.31358762417201513
+          },
+          {
+            "id": "W2144250001",
+            "similarity": 0.2864359386612102
+          },
+          {
+            "id": "W1979962465",
+            "similarity": 0.2802170675442094
+          }
+        ],
+        "vector_source_id": "W2065638643",
+        "x": 0.59033,
+        "y": 0.21866,
+        "readable": false
+      },
+      "W2004197874": {
+        "id": "W2004197874",
+        "title": "LSI logic testing — An overview",
+        "year": 1981,
+        "cited_by": 59,
+        "refs_reported": 44,
+        "refs_indexed": 43,
+        "citers_indexed": 59,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2004197874"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 1,
+        "topic": "VLSI and Analog Circuit Testing",
+        "subfield": "Hardware and Architecture",
+        "atlas_key": "title:lsi logic testing an overview",
+        "mx": 0.5935333611282955,
+        "my": -0.11818668881531555,
+        "sem": 0.8386735372032287,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1975470983",
+            "similarity": 0.30968387612983217
+          },
+          {
+            "id": "W2070299543",
+            "similarity": 0.3019698761915429
+          },
+          {
+            "id": "W2018615265",
+            "similarity": 0.2569880542447658
+          },
+          {
+            "id": "W1979962465",
+            "similarity": 0.239886850346955
+          },
+          {
+            "id": "W2042768395",
+            "similarity": 0.2213964316778212
+          }
+        ],
+        "vector_source_id": "W2004197874",
+        "x": 0.64931,
+        "y": 0.12884,
+        "readable": false
+      },
+      "W2090836717": {
+        "id": "W2090836717",
+        "title": "Vector solid textures",
+        "year": 2010,
+        "cited_by": 32,
+        "refs_reported": 46,
+        "refs_indexed": 44,
+        "citers_indexed": 32,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2090836717"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 1,
+        "topic": "Image Retrieval and Classification Techniques",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:vector solid textures",
+        "mx": -0.1394565693248189,
+        "my": -0.2606359320899322,
+        "sem": 0.6498427857524435,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2270860968",
+            "similarity": 0.5567378199873387
+          },
+          {
+            "id": "W2339690121",
+            "similarity": 0.5476964181234406
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.5336605243375921
+          },
+          {
+            "id": "W1980789236",
+            "similarity": 0.5298231547755645
+          },
+          {
+            "id": "W2115276098",
+            "similarity": 0.5248508218797607
+          }
+        ],
+        "vector_source_id": "W2090836717",
+        "x": 0.66567,
+        "y": 0.143,
+        "readable": false
+      },
+      "W4247416164": {
+        "id": "W4247416164",
+        "title": "Wavelet Rasterization",
+        "year": 2011,
+        "cited_by": 19,
+        "refs_reported": 33,
+        "refs_indexed": 31,
+        "citers_indexed": 19,
+        "type": "article",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W4247416164"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 1,
+        "topic": "Advanced Numerical Analysis Techniques",
+        "subfield": "Computational Mechanics",
+        "atlas_key": "title:wavelet rasterization",
+        "mx": 0.012972037836150824,
+        "my": 0.04813095584148117,
+        "sem": 0.5452596288243498,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W2023016685",
+            "similarity": 0.6129898712680532
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.5333859084429027
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.5145969424461806
+          },
+          {
+            "id": "W3107232127",
+            "similarity": 0.4834747352785682
+          },
+          {
+            "id": "W1997146690",
+            "similarity": 0.45683790023978454
+          }
+        ],
+        "vector_source_id": "W4247416164",
+        "x": 0.66733,
+        "y": 0.14362,
+        "readable": false
+      },
+      "W2295798009": {
+        "id": "W2295798009",
+        "title": "Two dimensional hidden surface removal with frame-to-frame coherence",
+        "year": 2015,
+        "cited_by": 2,
+        "refs_reported": 18,
+        "refs_indexed": 18,
+        "citers_indexed": 2,
+        "type": "conference-paper",
+        "complete": true,
+        "column": "refs",
+        "records": [
+          "W2295798009"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 1,
+        "topic": "Computer Graphics and Visualization Techniques",
+        "subfield": "Computer Graphics and Computer-Aided Design",
+        "atlas_key": "title:two dimensional hidden surface removal with frame to frame coherence",
+        "mx": 0.07398569792356688,
+        "my": -0.07084147345832058,
+        "sem": 0.5405771506549389,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1997146690",
+            "similarity": 0.5424526454340054
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.5090801228713678
+          },
+          {
+            "id": "W2105520795",
+            "similarity": 0.4699453968414943
+          },
+          {
+            "id": "W2948697123",
+            "similarity": 0.466589663696213
+          },
+          {
+            "id": "W2553243490",
+            "similarity": 0.45942284934506095
+          }
+        ],
+        "vector_source_id": "W2295798009",
+        "x": 0.66744,
+        "y": 0.14331,
+        "readable": false
+      },
+      "W1975470983": {
+        "id": "W1975470983",
+        "title": "Principles of Interactive Computer Graphics",
+        "year": 1975,
+        "cited_by": 1572,
+        "refs_reported": 0,
+        "refs_indexed": 0,
+        "citers_indexed": 1572,
+        "type": "article",
+        "complete": false,
+        "column": "refs_out",
+        "records": [
+          "W1975470983"
+        ],
+        "x_cites": true,
+        "also_similar": false,
+        "ref_support": 1,
+        "outlier": "1,572 citations",
+        "topic": "Augmented Reality Applications",
+        "subfield": "Computer Vision and Pattern Recognition",
+        "atlas_key": "title:principles of interactive computer graphics",
+        "mx": 0.43504725572925046,
+        "my": -0.051602292655938936,
+        "sem": 0.6939009497790747,
+        "region": null,
+        "map_status": "placed",
+        "semantic_neighbors": [
+          {
+            "id": "W1979962465",
+            "similarity": 0.4878115372059397
+          },
+          {
+            "id": "W2070299543",
+            "similarity": 0.4609041387597168
+          },
+          {
+            "id": "W2018615265",
+            "similarity": 0.36172538157988343
+          },
+          {
+            "id": "W2160066414",
+            "similarity": 0.33820609663455237
+          },
+          {
+            "id": "W2075315695",
+            "similarity": 0.3295380927669589
+          }
+        ],
+        "vector_source_id": "W1975470983",
+        "x": 0.3974,
+        "y": 0.34242,
+        "readable": false
+      }
+    },
+    "columns": {
+      "refs": [
+        "W2160066414",
+        "W1985598934",
+        "W1997146690",
+        "W1980789236",
+        "W2038825728",
+        "W2004850474",
+        "W2070299543",
+        "W2075121120",
+        "W2039372057",
+        "W1979962465",
+        "W2042768395",
+        "W3011071166",
+        "W2053304443",
+        "W2125036434",
+        "W2023016685",
+        "W2033857673",
+        "W2065638643",
+        "W2004197874",
+        "W2090836717",
+        "W4247416164",
+        "W2295798009"
+      ],
+      "refs_out": [
+        "W1975470983"
+      ],
+      "similar": [
+        "W2948697123",
+        "W2075315695",
+        "W7166566179",
+        "W2509279253",
+        "W2270860968",
+        "W3038646634",
+        "W3107232127",
+        "W2736310260",
+        "W2339690121",
+        "W3099631837"
+      ],
+      "similar_out": [],
+      "candidates": [
+        "W2063777854",
+        "W1988973985",
+        "W2115276098",
+        "W2144250001",
+        "W2133301102",
+        "W2093207728",
+        "W2135525032",
+        "W2044869572",
+        "W1882343795",
+        "W2105520795",
+        "W2018615265",
+        "W122327486"
+      ],
+      "candidates_out": []
+    },
+    "links": [
+      {
+        "s": "W2553243490",
+        "t": "W2075315695",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2160066414",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W1985598934",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W1997146690",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W1980789236",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2038825728",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2004850474",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2070299543",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2075121120",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2039372057",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W1979962465",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2042768395",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W3011071166",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2053304443",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2125036434",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2023016685",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2033857673",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2065638643",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2004197874",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2090836717",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W4247416164",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W2295798009",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2553243490",
+        "t": "W1975470983",
+        "kind": "x-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W1975470983",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2004850474",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W3011071166",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2038825728",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2144250001",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2042768395",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2065638643",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2070299543",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2075121120",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2090836717",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2023016685",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2295798009",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W2053304443",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2948697123",
+        "t": "W1979962465",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W4247416164",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2135525032",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2004850474",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W3011071166",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2018615265",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2038825728",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2063777854",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2065638643",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W122327486",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2070299543",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2044869572",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2039372057",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2023016685",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W2053304443",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2075315695",
+        "t": "W1979962465",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2004850474",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2144250001",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2042768395",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2125036434",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2070299543",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2075121120",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2948697123",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2093207728",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W2105520795",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W1988973985",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W7166566179",
+        "t": "W1979962465",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2018615265",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2038825728",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2063777854",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2115276098",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W122327486",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2075121120",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2044869572",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2039372057",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W1882343795",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2509279253",
+        "t": "W2270860968",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2135525032",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2004850474",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W3011071166",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2038825728",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2063777854",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2115276098",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2039372057",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W1882343795",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2270860968",
+        "t": "W2053304443",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2144250001",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2042768395",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2125036434",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2133301102",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2033857673",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2070299543",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2948697123",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W3099631837",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2093207728",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W2105520795",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3038646634",
+        "t": "W1988973985",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W2038825728",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W2133301102",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W2075121120",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W3099631837",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W2023016685",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3107232127",
+        "t": "W1988973985",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2018615265",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2063777854",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2115276098",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2075121120",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2039372057",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2736310260",
+        "t": "W2509279253",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W2135525032",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W2004850474",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W2063777854",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W2115276098",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W122327486",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W2044869572",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W1980789236",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W1997146690",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W1882343795",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W2339690121",
+        "t": "W1979962465",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W1985598934",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2144250001",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2125036434",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2133301102",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2033857673",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2070299543",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2004197874",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2075315695",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2948697123",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W3038646634",
+        "kind": "y-sim"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2160066414",
+        "kind": "y-ref"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2093207728",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W2105520795",
+        "kind": "y-cand"
+      },
+      {
+        "s": "W3099631837",
+        "t": "W1988973985",
+        "kind": "y-cand"
+      }
+    ],
+    "answers": [
+      "W2063777854"
+    ],
+    "similar": [
+      "W2948697123",
+      "W2075315695",
+      "W7166566179",
+      "W2509279253",
+      "W2270860968",
+      "W3038646634",
+      "W3107232127",
+      "W2736310260",
+      "W2339690121",
+      "W3099631837"
+    ],
+    "stats": {
+      "refs_indexed": 29,
+      "ref_publications": 27,
+      "refs_outliers": 2,
+      "refs_used": 25,
+      "refs_shared": 22,
+      "refs_shared_hidden": 0,
+      "refs_not_shared": 4,
+      "refs_skipped": 0,
+      "skipped_examples": [],
+      "citing_links_scanned": 1846,
+      "papers_sharing_a_reference": 1419,
+      "similar_outliers_skipped": 0,
+      "candidate_outliers_above": 0,
+      "max_refs": 300,
+      "max_cites": 500,
+      "k": 10,
+      "normalize": false,
+      "best_support": 5,
+      "records_merged": 7,
+      "duplicates_skipped": [],
+      "seconds": 0.26,
+      "semantic": {
+        "method": "Frozen local PCA; cosine distances use the original vectors",
+        "with_vector": 43,
+        "nodes": 45,
+        "model": "DenseOn",
+        "indexed": 203742913
+      },
+      "request_seconds": 0.401
+    },
+    "map": {
+      "atlas": "20261009T190750-tsne-mode",
+      "placed": 43,
+      "papers": 45
+    },
+    "timing": {
+      "walk_ms": 421.5,
+      "map_ms": 2.7
+    }
+  }
+}

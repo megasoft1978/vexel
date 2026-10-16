@@ -1,0 +1,35 @@
+{
+  "status": "PASS scoped work-order verification; no product acceptance claim",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-scene --locked --offline",
+      "exit": 0,
+      "log": "check.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-scene --locked --offline",
+      "exit": 0,
+      "log": "test.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-PAINT-CHANNEL-CONTRACT-01 --ready",
+      "exit": 0,
+      "log": "wo-validate.log"
+    }
+  ],
+  "runtime_tests_passed": 152,
+  "compile_fail_doctests_passed": 2,
+  "new_runtime_tests": 1,
+  "accepted_input_assertions_modified": false,
+  "line_counts": {
+    "production_decode.rs": 461,
+    "pattern_publication.rs": 242,
+    "paint_channel_contracts.rs": 131
+  },
+  "source_sha256": {
+    "rust/crates/vexel-scene/src/production_decode.rs": "0a4e4f594bc0efbab460c876c965f2f227c0b5f79ed3e01fe9804652490cda15",
+    "rust/crates/vexel-scene/src/pattern_publication.rs": "7c4415ffe8d0f61b8a150af1b14c36c3f425272ac29954bbba43f92f6810f4a3",
+    "rust/crates/vexel-scene/tests/paint_channel_contracts.rs": "a7b2d71440b6dc0859ec5f434a4ac980bd69c65f3f02589733121bfffec8bf38",
+    "rust/crates/vexel-scene/README.md": "15ca5ca925cfd4cac6b71541965b8b8d1c3ab16a26330f516ae7e676876fe2d1"
+  }
+}

@@ -1,0 +1,25 @@
+WO-RUST-PROTOCOL-01 local verification
+
+Toolchain and build environment
+- rustc +stable --version: rustc 1.99.0 (b940084d7 2026-09-28)
+- CARGO_HOME: .cache/cargo (repository-local)
+- TMPDIR: .cache/tmp (repository-local)
+- CARGO_TARGET_DIR: build/rust (repository-local)
+- MACOSX_DEPLOYMENT_TARGET: 13.0
+- Cargo test target reported: aarch64-apple-darwin
+
+Named work-order checks
+- cargo +stable check -p vexel-protocol --locked --offline: PASS
+- cargo +stable test -p vexel-protocol --locked --offline: PASS; 9 parity tests, 0 failed; unit/doc test harnesses also passed (0 tests each). The synchronous fallback regression parsed both isError variants and asserted one text content block; Tasks regressions parsed failed task-result and top-level RPC-error envelopes separately.
+- python3 scripts/wo_validate.py WO-RUST-PROTOCOL-01 --ready: PASS; revision 1 and frozen SHA-256 matched.
+- python3 scripts/ledger.py validate ledger.jsonl: PASS; 1096 entries.
+- git diff --check: PASS; no output.
+- python3 -m json.tool artifacts/WO-RUST-PROTOCOL-01/parity-map.json: PASS.
+
+Formatting/lint tools
+- rustfmt and clippy are not installed in this environment, as noted by the work order. Neither was installed or claimed as run.
+
+Scope and limitations
+- Changed only rust/crates/vexel-protocol/src/**, rust/crates/vexel-protocol/tests/**, and artifacts/WO-RUST-PROTOCOL-01/**.
+- The crate remains std-only and forbids unsafe code. No main, app, OS, broker, transport, manifest, lockfile, or ledger integration is claimed.
+- Application backends must implement the safe ProtocolBackend/AsyncBackend traits in a later integration order.

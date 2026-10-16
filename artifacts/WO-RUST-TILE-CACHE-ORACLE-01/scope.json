@@ -1,0 +1,124 @@
+{
+  "work_order": "WO-RUST-TILE-CACHE-ORACLE-01",
+  "source": "tests/raster/cache/cache_contract.c",
+  "source_sha256": "e69a30865eaa2212561b9283d0cb2b6325ed72760d557981c8b56406cb8ab602",
+  "check_count": 29,
+  "checks": [
+    {
+      "line": 19,
+      "source": "CHECK(!raster_tile_cache_create(0, 2, 1, 1, &cache));"
+    },
+    {
+      "line": 20,
+      "source": "CHECK(!raster_tile_cache_create(RASTER_TILE_CACHE_MAX_BYTES + 1U, 2, 1, 1, &cache));"
+    },
+    {
+      "line": 21,
+      "source": "CHECK(!raster_tile_cache_create(8192, 500, 1, 1, &cache));"
+    },
+    {
+      "line": 22,
+      "source": "CHECK(raster_tile_cache_create(1024, 2, 1, 1, &cache));"
+    },
+    {
+      "line": 24,
+      "source": "CHECK(raster_tile_cache_get_stats(cache, &initial_stats));"
+    },
+    {
+      "line": 25,
+      "source": "CHECK(initial_stats.accounted_bytes <= initial_stats.byte_cap);"
+    },
+    {
+      "line": 27,
+      "source": "CHECK(raster_tile_create(17, 17, &bad));"
+    },
+    {
+      "line": 29,
+      "source": "CHECK(!raster_tile_cache_put(cache, 1, &bad) && bad.rgba == owned);"
+    },
+    {
+      "line": 33,
+      "source": "CHECK(raster_tile_cache_put(cache, 1, &a) && a.rgba == NULL);"
+    },
+    {
+      "line": 34,
+      "source": "CHECK(raster_tile_cache_put(cache, 2, &b) && b.rgba == NULL);"
+    },
+    {
+      "line": 35,
+      "source": "CHECK(raster_tile_cache_get(cache, 1) != NULL);"
+    },
+    {
+      "line": 36,
+      "source": "CHECK(raster_tile_cache_put(cache, 3, &c) && c.rgba == NULL);"
+    },
+    {
+      "line": 37,
+      "source": "CHECK(raster_tile_cache_get(cache, 1) != NULL && raster_tile_cache_get(cache, 2) == NULL);"
+    },
+    {
+      "line": 38,
+      "source": "CHECK(raster_tile_cache_get(cache, 3) != NULL);"
+    },
+    {
+      "line": 39,
+      "source": "CHECK(a_ptr != NULL);"
+    },
+    {
+      "line": 41,
+      "source": "CHECK(raster_tile_cache_get(cache, 3) != NULL);"
+    },
+    {
+      "line": 43,
+      "source": "CHECK(raster_tile_cache_put(cache, 4, &e) && e.rgba == NULL);"
+    },
+    {
+      "line": 44,
+      "source": "CHECK(raster_tile_cache_get(cache, 1) == NULL && raster_tile_cache_get(cache, 2) == NULL);"
+    },
+    {
+      "line": 45,
+      "source": "CHECK(raster_tile_cache_get(cache, 3) != NULL && raster_tile_cache_get(cache, 4) != NULL);"
+    },
+    {
+      "line": 46,
+      "source": "CHECK(raster_tile_cache_set_epoch(cache, 2, 1));"
+    },
+    {
+      "line": 47,
+      "source": "CHECK(raster_tile_cache_get(cache, 1) == NULL && raster_tile_cache_get(cache, 3) == NULL && raster_tile_cache_get(cache, 4) == NULL);"
+    },
+    {
+      "line": 49,
+      "source": "CHECK(raster_tile_cache_put(cache, 4, &d));"
+    },
+    {
+      "line": 50,
+      "source": "CHECK(raster_tile_cache_set_epoch(cache, 2, 2));"
+    },
+    {
+      "line": 51,
+      "source": "CHECK(raster_tile_cache_get(cache, 4) == NULL);"
+    },
+    {
+      "line": 55,
+      "source": "CHECK(raster_tile_cache_create(cap, max_entries, 7, 3, &cache));"
+    },
+    {
+      "line": 59,
+      "source": "CHECK(tile.rgba != NULL && raster_tile_cache_put(cache, i, &tile) && tile.rgba == NULL);"
+    },
+    {
+      "line": 61,
+      "source": "CHECK(raster_tile_cache_get_stats(cache, &stats));"
+    },
+    {
+      "line": 62,
+      "source": "CHECK(stats.accounted_bytes <= cap && stats.entry_count <= max_entries);"
+    },
+    {
+      "line": 66,
+      "source": "CHECK(raster_tile_cache_get_stats(cache, &stats));"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+WO-MCP-TRANSPORT-01 revision 3 scope freeze
+Base HEAD: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Frozen spec SHA-256: 8925bb9e6f9f92d5143e1a6ac67e44980c6e9f0a873ab114ee025449a1b3a03a
+
+Revision 3 supersedes r2 after the focused read-only review in review-r2-sol.txt.
+It adds a pending-request broker-inactivity bound while preserving idle stdio,
+adds a deterministic silent-broker test, and explicitly permits updating the
+stale real-broker E2E expected tool inventory to include the 11 already-exposed
+native timeline tools. All other E2E behavior assertions must remain byte-exact.
+The r2 implementation and all r2 evidence remain preserved. No new broad UI,
+full-suite, corpus, fuzz, performance, sanitizer, release, or live-client runs.

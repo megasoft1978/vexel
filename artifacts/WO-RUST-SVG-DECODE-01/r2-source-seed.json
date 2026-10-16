@@ -1,0 +1,121 @@
+{
+  "revision": 2,
+  "accepted_inputs": [
+    "WO-RUST-PAINT-PUBLICATION-01",
+    "WO-RUST-MEDIA-SOURCE-MAP-01",
+    "WO-RUST-SVG-CSS-MARKER-CONTEXT-01",
+    "WO-RUST-RENDER-FIXTURE-SETUP-01"
+  ],
+  "full_scope_unchanged": true,
+  "terminal_before_seed": true,
+  "files": {
+    "work/WO-RUST-SVG-DECODE-01.md": {
+      "before": "8c905a1d4fb8b2a7d133bfa2902f4088f2381297fb791b539c6373cd5fc9ad2d",
+      "after": "dfaded83b0ca79d679debdc748d0a4e2b083bfbfd077568a3ef95cb97014e662"
+    },
+    "Cargo.lock": {
+      "before": "ac075027b563347f505d9279d7f24d021d3fb796472b99156fcf5d3d46514bde",
+      "after": "8be68268b6360093118274b436d232375e10532bff383468a9074c6d28999036"
+    },
+    "rust/crates/vexel-svg-paint/Cargo.toml": {
+      "before": "781206a3c1a2dcaab1cf964b7917917545793679e4c56fd9d7ee4672a13a40b0",
+      "after": "80ed28cf63acab093a7b08b335031ba023180c2532c53c73db34cec386caa670"
+    },
+    "rust/crates/vexel-svg-definitions/Cargo.toml": {
+      "before": "7a5928830f9d2d437b1cf7d654c2c29ce15119c67c74949bc0debfa6dab1c37d",
+      "after": "2b7f889cbc6259ac25fce3bc1634d54346f7cb2e06afa34dba6a69576b18ab17"
+    },
+    "rust/crates/vexel-svg-media/Cargo.toml": {
+      "before": "fa3067dd918ffca9939dbf23c93f80fb8ee29ac91d73530f6b1f9291f57eb7a8",
+      "after": "702fadb6108d425c53101f49a4e520f6369a1f78df08aae21aa016df01c72fcc"
+    },
+    "rust/crates/vexel-scene-query/Cargo.toml": {
+      "before": "fe28e518a6a6ce19a3ccb7018e9ec0c758954c51bb8571f6b68e36587b45c74c",
+      "after": "b510500831f6cccee0574ec08a4564fe8e0e1e4a3498fab96d9b183c9d216f95"
+    },
+    "rust/crates/vexel-svg-scalar-index/Cargo.toml": {
+      "before": "28d2439fa99f8ef5303a65e954776f6221a733f79b4a6714525b060c8d5a8a2c",
+      "after": "e15d8e08567c853a3d3c4f94bea9c5db9669fc8d3bdf25dab39aca3b99534e5a"
+    },
+    "rust/crates/vexel-svg-scalar-sample/Cargo.toml": {
+      "before": "1b637388db57f8458d8c032003ead663f9a2101bfd697b0d820d86d88486e947",
+      "after": "4de4cc22ef2532c35124c3cec4b53b64055b13c6f6890dc471c049ad783703ac"
+    },
+    "rust/crates/vexel-svg-animation-frame/Cargo.toml": {
+      "before": "1eb7adf2e6fbce8c81a413dd565bcb5085172a1addb564e2cbad7016fb4d87c7",
+      "after": "f39040f317102c3e4453cc67c78adf37b03d9b4400817dbcf6a157e2003ac4c2"
+    },
+    "rust/crates/vexel-scene/README.md": {
+      "before": "9a7e9e012485061e7a47b596e664ccce295fb1e7e20fd4b7fcfffcce72e2314f",
+      "after": "054d73f32f43124438a17f2fc9cfd2c349e434194cbec22696f1aa57f23df7d0"
+    },
+    "rust/crates/vexel-scene/tests/media_source_map.rs": {
+      "before": null,
+      "after": "4dcc8b5a75535b28052058b2511ea84824fb8df14a3d9eae8a68984d18c19dd4"
+    },
+    "rust/crates/vexel-scene/tests/consumer_contracts.rs": {
+      "before": null,
+      "after": "56138ea6d435887b1aa65a587dcdddc8e0ea45efe233f9dab4387d6bced801fe"
+    },
+    "rust/crates/vexel-scene/tests/paint_publication.rs": {
+      "before": null,
+      "after": "8d595007cfb77670dfe64b503fc43ef60a58f3d2555e92dfae80c414021a0287"
+    },
+    "rust/crates/vexel-scene/src/decode_contract.rs": {
+      "before": "806b19df794a831bbb90cb6575046bd3aa918b5aeb5cb6a4feb46a6ec1f2b0f3",
+      "after": "cd9997694bcbee60e3666f3dd47bbcda8cc452b6790a7dbfc312b9be67fe3529"
+    },
+    "rust/crates/vexel-scene/src/media_source_map.rs": {
+      "before": null,
+      "after": "6096b5bdb00ec89704d88606cefc76af08c667bc0be334c7b71eb48fac76cd46"
+    },
+    "rust/crates/vexel-scene/src/lib.rs": {
+      "before": "8b0bc2356ab3039f5e4bbfb45c8ecba19ad5ba514c418dd12e2b229996ccf7af",
+      "after": "fd4d935cf06c25bc291d6c06b5bd13eb12974d6c1e8e92b78adc4aa8e860f2db"
+    },
+    "rust/crates/vexel-scene/src/contract_storage.rs": {
+      "before": "9f990135cdae62efe4a4260a47b9bced98b2a141a1406cae641d7f8a37b02005",
+      "after": "acddcc4180a602724511b7899d18a15c5f6cf44b2bc8dbeed784c54d0e0757c5"
+    },
+    "rust/crates/vexel-scene/src/paint_publication_tests.rs": {
+      "before": null,
+      "after": "8500743b6dc157c58b6b97fe6522972a7e3013640432c829a59877107bfb59d3"
+    },
+    "rust/crates/vexel-scene/src/source_context.rs": {
+      "before": "e0ee7343122cc60c0bab5ec653f99eeb5b5bc7a1595feaa79202eaf10c1af80b",
+      "after": "ca99d2fda2ebf50e5cfee9b81a46371f1f0783b0f70b4ebcbca151738347e8b5"
+    },
+    "rust/crates/vexel-scene/src/frame.rs": {
+      "before": "73527780415669adf0b0ee1214a5cff7c2b0ba12f34017cd4ef7cf3da6431f06",
+      "after": "652634caeff248b612b5041964245e3aa8048f7ec4662a9fa5ae4812271684bc"
+    },
+    "rust/crates/vexel-scene/src/validate.rs": {
+      "before": "c69e7c45cf6d2377a1d8fbdba3dd9f129bb4d7fc488b1a880191ddd4fb567002",
+      "after": "d6bce782a30dac715d35c3b9ca0a67e3744459e63d16e33a2ef6550cd1bc588d"
+    },
+    "rust/crates/vexel-scene/src/model.rs": {
+      "before": "7ba0317648e8017129e89d68c639b5ba277e17b7baf27998dc13d2f6d33fe0b6",
+      "after": "d5b1b80685bd875112e81e410a70404f5afa40fa46911bd1d5e57ae141f32c72"
+    },
+    "rust/crates/vexel-scene/src/builder.rs": {
+      "before": "de4f320d0486c43152a40b93eeba59eaf2b221e975b898c5a9cdbe011d6c9d9c",
+      "after": "db180b2faefc9054cbca3fdc9f12dbb84255582a39d2981d7ead8ae010b373c1"
+    },
+    "rust/crates/vexel-scene/src/paint_publication.rs": {
+      "before": null,
+      "after": "64b70fbc2f743e3def30890fa08e58bf3fbbdeca8c56ad3359f86e364b3c6973"
+    },
+    "rust/crates/vexel-svg-css/src/lib.rs": {
+      "before": "64d5e23e811bb0f31e6db4df2c26ae11d56e98c00b94e0165df16cb0b6367141",
+      "after": "37cb72ac7302f7716cb0ef79b8eebf7e0bb00f476fa3aee98cdba83b7a061dde"
+    },
+    "rust/crates/vexel-svg-css/tests/marker_context.rs": {
+      "before": null,
+      "after": "defb56f5352a5bfb56beabe1e0bb5da97153721d33f66d89ef82c4998904f7ee"
+    },
+    "rust/crates/vexel-svg-css/README.md": {
+      "before": null,
+      "after": "187568da72ad95b5d3cc445351b214710085c84f9fd6f687d305c686b82e5856"
+    }
+  }
+}

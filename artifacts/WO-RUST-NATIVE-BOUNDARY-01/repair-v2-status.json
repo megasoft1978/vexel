@@ -1,0 +1,13 @@
+{
+  "name": "native-boundary",
+  "wo": "WO-RUST-NATIVE-BOUNDARY-01",
+  "session": "01a13aa9-744a-7b71-9caa-986c71e581cd",
+  "pid": 66946,
+  "mode": "repair",
+  "model": "gpt-6-luna",
+  "effort": "low",
+  "status": "completed",
+  "started_epoch": 1791987196.239685,
+  "exit_code": 0,
+  "duration_seconds": 49.43030405044556
+}

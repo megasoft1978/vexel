@@ -1,0 +1,7 @@
+# PAINT candidate result
+
+**Status: blocked candidate; the frozen order is not complete.** Implemented safe owned edge-span access, full-key gradient cache primitives, and linear/radial paint sampling with stop-range and monotonicity validation. Focused sampler/range/cache tests pass; scoped offline package check and test pass.
+
+The exact shared-contract blocker is `vexel_scene::PaintCache`: `GradientCacheEntry` stores only `definition`, `paint`, and `stop_range`, with no viewport or full resolution-context key. `ResolveContext` exposes that cache as the accepted integration cache. Reusing entries across viewport sizes would change gradient defaults/coordinates; bypassing it with the crate-local cache would replace the accepted shared contract. Per order, coordinator repair is required before implementing resolver/cache composition.
+
+Consequently gradient attribute/CSS parsing, local href chain and inherited stops, currentColor, units/spread/transform resolution, bbox setup, pattern classification/planning, token/work charging, append-time stop leases and rollback behavior, and the original renderer integration assertions are unimplemented/unproven. No full-port or renderer parity claim is made. The three focused Rust tests cover edge-span behavior, midpoint byte rounding, invalid-stop no-write behavior, and viewport-key isolation. Mixed renderer suites remain later integration gates.

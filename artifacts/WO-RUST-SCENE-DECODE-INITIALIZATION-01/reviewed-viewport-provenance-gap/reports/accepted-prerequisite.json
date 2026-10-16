@@ -1,0 +1,31 @@
+{
+  "prerequisite": "WO-RUST-PAINT-CHANNEL-CONTRACT-01 r3 accepted",
+  "main_scene_checks": 156,
+  "original_animation_checks": 21,
+  "latest_ledger_accepted": {
+    "ts": "2026-10-15T04:25:21Z",
+    "wo_id": "WO-RUST-PAINT-CHANNEL-CONTRACT-01",
+    "event": "accepted",
+    "revision": 3,
+    "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "run_id": "WO-RUST-PAINT-CHANNEL-CONTRACT-01-r3-main-status-corrected-accepted",
+    "session_id": "coordinator-main-channel",
+    "model": "gpt-6.1-sol",
+    "cli_version": "0.162.1",
+    "duration_s": 0,
+    "usage": {
+      "input_tokens": null,
+      "output_tokens": null
+    },
+    "status": "accepted",
+    "artifacts": [
+      "artifacts/WO-RUST-PAINT-CHANNEL-CONTRACT-01/main-verification.json",
+      "artifacts/WO-RUST-PAINT-CHANNEL-CONTRACT-01/review.md"
+    ],
+    "note": "Correct prior verified-event status metadata (must be pass); same exact source/evidence. R3 source accepted after root LunaHigh review,1677protected audit and freshmain156checks (153preserved+3new). Distinct host/reference roles preserved, no original test altered.603legacy/157frozen/HEAD/index unchanged. No fullrenderer/native/UI/product claim."
+  },
+  "prior_writers_and_reviewer_terminal": true,
+  "current_source_equal_to_accepted_main": true,
+  "historical_candidate_reports": "Prior reports are preserved history; the coordinator acceptance above is current authority."
+}

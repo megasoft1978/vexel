@@ -1,0 +1,33 @@
+{
+  "work_order": "WO-RUST-SVG-PATH-COMPACT-OPERANDS-01",
+  "revision": 1,
+  "spec_sha256": "73173144addc6407ee1c564f1c6cc1e81f0325eca3421ef7c64f44532ba9b09a",
+  "candidate_seed_exact_match": true,
+  "integrated_paths": [
+    "rust/crates/vexel-svg-path/src/reader.rs",
+    "rust/crates/vexel-svg-path/src/parser.rs",
+    "rust/crates/vexel-svg-path/tests/number_separator.rs"
+  ],
+  "candidate_sha256": {
+    "rust/crates/vexel-svg-path/src/reader.rs": "8ed5c38fd11b9f27e7da38e74d1fab3d47aa33fa93f2fe3fa646bf232a924596",
+    "rust/crates/vexel-svg-path/src/parser.rs": "026800ac9920cd6c4fe6de21f71ba2669d561fbbf1185dac6710b43835ecf717",
+    "rust/crates/vexel-svg-path/tests/number_separator.rs": "b6e6f2f7b8e2c565cffd217bf31be2a8bc002283939dc6e2ceaf09ea19c30a68"
+  },
+  "main_hashes_match_candidate": true,
+  "review": {
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "result": "pass"
+  },
+  "main_verification": {
+    "vexel_svg_path_check": "pass",
+    "vexel_svg_path_tests": "40 passed",
+    "scoped_rustfmt": "pass (style_edition=2021, edition=2024, skip_children=true)",
+    "work_order_validation": "pass",
+    "ledger_validation_before_acceptance": "pass (1771 entries)",
+    "ledger_validation_after_acceptance": "pass (1774 entries)",
+    "trailing_whitespace": "pass",
+    "root_decoder_test_target": "unavailable; candidate real-decoder regression passed"
+  },
+  "evidence_directory": "artifacts/WO-RUST-SVG-PATH-COMPACT-OPERANDS-01/"
+}

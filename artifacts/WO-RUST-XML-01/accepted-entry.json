@@ -1,0 +1,26 @@
+{
+  "ts": "2026-10-14T06:41:04Z",
+  "wo_id": "WO-RUST-XML-01",
+  "event": "accepted",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-XML-01-accepted",
+  "session_id": "rust-foundation-parallel-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": 3112722,
+    "output_tokens": 47386
+  },
+  "status": "accepted",
+  "artifacts": [
+    "artifacts/WO-RUST-XML-01/verification-integrated.txt",
+    "artifacts/WO-RUST-XML-01/integration-audit.txt",
+    "artifacts/WO-RUST-XML-01/review.md",
+    "artifacts/WO-RUST-XML-01/review-final.md",
+    "artifacts/WO-RUST-XML-01/parity-map.json"
+  ],
+  "note": "Scoped Rust XMLreader or strict bundle-v1 accepted after High review/narrow repair/exact integration audit/main checks. Diagnostic name-boundary tests and assetCRC cursor error_offset parity corrected. Original code/fixtures/manifest/index retained; no full tokenizer/project/app claim."
+}

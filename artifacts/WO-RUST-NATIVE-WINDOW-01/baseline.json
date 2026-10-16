@@ -1,0 +1,11 @@
+{
+  "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "files": {
+    "rust/crates/vexel-platform-apple/Cargo.toml": "ee32a45e1f4d191d1b63c9e3b5ce730eccbbc3d3f424ebdb043e6b097409554e",
+    "rust/crates/vexel-platform-apple/tests/native_boundary.rs": "bcd53787bec0b75098c8746023d8f0e944a8961edb9a2787aae8d79f3fb075c3",
+    "rust/crates/vexel-platform-apple/src/native_boundary.rs": "9614d537b7e9c1e2c7df4bd427f37c78254b11523525dfda269874d2c6663098",
+    "rust/crates/vexel-platform-apple/src/lib.rs": "7f13bc43e996a38f3d44df2a90272a5456ea2c2b2b1f33afa5b35c5318d846ee",
+    "rust/crates/vexel-platform-apple/src/main_thread.rs": "19f7dbb4c106a51ced188fa991bd08536e69c50be4ccec980a3b8671e41a9340"
+  }
+}

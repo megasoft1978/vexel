@@ -1,0 +1,52 @@
+$ cmake --preset mac-debug
+Preset CMake variables:
+
+  CMAKE_BUILD_TYPE="Debug"
+  CMAKE_OSX_ARCHITECTURES="arm64"
+  CMAKE_OSX_DEPLOYMENT_TARGET="13.0"
+
+-- Configuring done (0.1s)
+-- Generating done (0.1s)
+-- Build files have been written to: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+
+exit 0
+$ cmake --build build/mac-debug --target svgworkbench mcp_broker_io_test
+[1/6] Building C object CMakeFiles/svgworkbench.dir/src/app/mcp_broker_io.c.o
+[2/6] Building C object CMakeFiles/mcp_broker_io_test.dir/src/app/mcp_broker_io.c.o
+[3/6] Building C object CMakeFiles/mcp_broker_io_test.dir/tests/mcp/mcp_broker_io_test.c.o
+[4/6] Building C object CMakeFiles/svgworkbench.dir/src/app/mcp_broker_hook.c.o
+[5/6] Linking C executable bin/mcp_broker_io_test
+[6/6] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a', 'libvexel_platform_media.a', 'libvexel_shape.a', 'libvexel_ui_state.a'
+
+exit 0
+$ ctest --test-dir build/mac-debug --output-on-failure -R ^mcp-broker-io$
+Internal ctest changing into directory: /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+Test project /Users/megasoft78/Desktop/Freelance/vexel/build/mac-debug
+    Start 4: mcp-broker-io
+1/1 Test #4: mcp-broker-io ....................   Passed    0.18 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.18 sec
+
+exit 0
+$ build/mac-debug/bin/mcp_broker_io_test
+stalled-peer poll: 1000 ns, 4 syscalls, 0 written bytes
+
+exit 0
+$ python3 scripts/wo_validate.py WO-MCP-SOCKET-IO-01 --ready
+valid WO-MCP-SOCKET-IO-01 revision 1 sha256 71c0f2cee0289c3cb4d2b8f888393d2e2d9b3b23cd16e861d02b006048c92d43
+
+exit 0
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 1036 entries
+
+exit 0
+$ git diff --check
+
+exit 0
+src/app/mcp_broker_io.c: 460lines
+src/app/mcp_broker_io.h: 81lines
+src/app/mcp_broker_hook.c: 495lines
+tests/mcp/mcp_broker_io_test.c: 442lines

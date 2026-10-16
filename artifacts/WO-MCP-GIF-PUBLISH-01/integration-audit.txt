@@ -1,0 +1,1 @@
+PASS all overlay baseline files retained and only3allowlisted product/test paths changed; corresponding main versions were exact baseline beforecopy. Original test assertions inspected: formatting/additive helpers and stronger GIF assertion, no weakening. No CMake/map delta. Main HEAD/index untouched. Changed C<800.

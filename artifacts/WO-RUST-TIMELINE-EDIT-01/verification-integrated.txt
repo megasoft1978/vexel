@@ -1,0 +1,75 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-timeline --locked --offline
+EXIT: 0
+    Checking vexel-timeline v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-timeline)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.39s
+
+COMMAND: cargo +stable test -p vexel-timeline --locked --offline
+EXIT: 0
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 15 tests
+test edit_errors_keep_failure_offsets_and_source ... ok
+test loop_onion_controls_are_source_preserving_locale_independent_and_undoable ... ok
+test history_limits_trim_and_reject_without_partial_commit ... ok
+test snapshots_copy_source_and_leases_survive_editor_drop_and_are_send_sync ... ok
+test leases_survive_history_eviction_without_copying_their_snapshot ... ok
+test rejected_edits_preserve_source_cursor_and_redo ... ok
+test context_is_per_operation_and_failed_redo_keeps_cursor ... ok
+test original_byte_limited_history_fixture_trims_and_preserves_redo_on_rejection ... ok
+test undo_redo_and_branching_restore_exact_sources ... ok
+test item_moves_keep_payload_and_reject_baseline_or_collision ... ok
+test property_track_keys_and_combined_authoring_preserve_raw_values ... ok
+test empty_required_property_arguments_match_c_errors_without_changing_history ... ok
+test splices_preserve_other_tracks_and_surrounding_source_bytes ... ok
+test drawing_track_cel_edits_keep_json_strings_and_baseline_rules ... ok
+test editor_track_limit_is_exact_and_rejection_is_atomic ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 14 tests
+test bounded_context_and_empty_source_cleanup ... ok
+test exact_error_categories_and_offsets ... ok
+test cancellation_stops_long_source_scan_and_reports_owned_cleanup_state ... ok
+test string_copy_enforces_decoded_byte_limit_with_large_output ... ok
+test property_track_iteration_and_raw_value_spans_are_preserved ... ok
+test borrowed_view_accessors_and_json_spans_match_c_contract ... ok
+test escaped_keys_surrogates_and_duplicate_decoded_fields ... ok
+test iterator_is_bound_to_one_track_until_reset ... ok
+test schema_property_value_reference_and_tick_rules ... ok
+test source_limit_is_checked_before_parse ... ok
+test track_count_limit_is_exact ... ok
+test cancellation_is_polled_during_later_validation_rescans ... ok
+test per_track_limit_and_large_sequential_iteration_are_bounded ... ok
+test total_item_limit_covers_items_across_tracks ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.85s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling vexel-timeline v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-timeline)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.78s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_timeline-f257a538709ad400)
+     Running tests/edit.rs (build/rust/aarch64-apple-darwin/debug/deps/edit-3fe981b9f83506d2)
+     Running tests/parity.rs (build/rust/aarch64-apple-darwin/debug/deps/parity-8acf7f95fea386b7)
+   Doc-tests vexel_timeline
+
+COMMAND: python3 scripts/wo_validate.py WO-RUST-TIMELINE-EDIT-01 --ready
+EXIT: 0
+valid WO-RUST-TIMELINE-EDIT-01 revision 1 sha256 a6b224d6cd33352803a92610635211fbd850c52ff89bc24e7a87fcccba07c2c3
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1214 entries
+
+COMMAND: git diff --check
+EXIT: 0

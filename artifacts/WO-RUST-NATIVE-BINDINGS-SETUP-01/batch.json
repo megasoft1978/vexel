@@ -1,0 +1,9 @@
+{
+  "native-boundary": {
+    "wo": "WO-RUST-NATIVE-BOUNDARY-01",
+    "crate": "vexel-platform-apple",
+    "effort": "high",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-native-boundary"
+  }
+}

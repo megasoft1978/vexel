@@ -1,0 +1,7 @@
+**BLOCKER — `SVG_ALLOC_TRACKER_CAPACITY` does not bound all active leases.**
+
+[`allocation.rs`](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/rust/crates/vexel-scene-query/src/allocation.rs:51) enforces the 65,536-record limit only in `AllocationTracking::track_capacity`. [`reserve_table`](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-QUERY-01/worker/rust/crates/vexel-scene-query/src/allocation.rs:108) admits replacement capacities directly through `ChargeLedger::admit` and returns a bare lease, without consulting or updating that tracking scope’s active count. With a ledger configured above 65,536 leases, replacement-buffer leases can exceed the catalog’s required tracker limit. The parity map’s claim that the ledger limit may be stricter does not cover this case.
+
+The selection port’s zero-edge IDs, stale/foreign handle checks, painter order, fill and stroke rules, source lookup, bounds, tolerance, and cancellation paths are supported by source and focused tests. The recorded scoped check, test, and work-order validation are reported passed; I did not rerun them.
+
+The original mixed `measure_allocation_source` assertions remain explicitly unexecuted. Decoder/reference-index, clip-copy, raster-output composition, and broader product QA remain integration gates, as reported.

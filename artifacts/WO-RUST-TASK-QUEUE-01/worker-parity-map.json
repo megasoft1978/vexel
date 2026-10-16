@@ -1,0 +1,310 @@
+{
+  "work_order": "WO-RUST-TASK-QUEUE-01",
+  "revision": 1,
+  "source_overlay": {
+    "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+    "dirty_source_baseline": "artifacts/WO-RUST-PLAN-01/source-baseline.json",
+    "note": "Compared against the current dirty platform_task.c/h and owner-owned native_task_tests.c, not a checkout reconstructed from HEAD."
+  },
+  "rust_surface": {
+    "crate": "rust/crates/vexel-platform-tasks",
+    "files": [
+      "rust/crates/vexel-platform-tasks/src/lib.rs",
+      "rust/crates/vexel-platform-tasks/src/queue.rs",
+      "rust/crates/vexel-platform-tasks/src/tests.rs"
+    ],
+    "limits": {
+      "capacity": "1..=64",
+      "workers": "1..=4",
+      "initial_generation": 1
+    },
+    "no_unsafe": true,
+    "external_dependencies_added": 0
+  },
+  "status_mapping": [
+    {
+      "c": "PLATFORM_TASK_OK",
+      "rust": "Ok(()) or Some(TaskResult)",
+      "parity": "success"
+    },
+    {
+      "c": "PLATFORM_TASK_INVALID",
+      "rust": "QueueError::Invalid",
+      "parity": "exact"
+    },
+    {
+      "c": "PLATFORM_TASK_FULL",
+      "rust": "QueueError::Full",
+      "parity": "exact"
+    },
+    {
+      "c": "PLATFORM_TASK_DUPLICATE",
+      "rust": "QueueError::Duplicate",
+      "parity": "exact"
+    },
+    {
+      "c": "PLATFORM_TASK_STALE",
+      "rust": "QueueError::Stale",
+      "parity": "exact"
+    },
+    {
+      "c": "PLATFORM_TASK_NOT_FOUND",
+      "rust": "QueueError::NotFound",
+      "parity": "exact"
+    },
+    {
+      "c": "PLATFORM_TASK_NOMEM",
+      "rust": "QueueError::NoMemory",
+      "parity": "exact for fallible bounded reservations, allocation-gate denial, and worker-start failure"
+    },
+    {
+      "c": "PLATFORM_TASK_STOPPED",
+      "rust": "QueueError::Stopped",
+      "parity": "exact"
+    }
+  ],
+  "type_mapping": [
+    {
+      "c": "platform_task_queue",
+      "rust": "TaskQueue",
+      "adaptation": "Opaque raw pointer becomes an owned, Clone-able safe handle around Arc-shared state."
+    },
+    {
+      "c": "platform_task_cancel_token",
+      "rust": "CancellationToken<'callback>",
+      "adaptation": "A borrow of a stable AtomicBool prevents retention beyond callback lifetime."
+    },
+    {
+      "c": "platform_task_callback",
+      "rust": "TaskCallback::new<C,F>",
+      "adaptation": "One-shot safe callback receives &mut C and a borrowed token; C must be Send + 'static."
+    },
+    {
+      "c": "platform_task_context_cleanup",
+      "rust": "Drop for owned context C",
+      "adaptation": "Context is retained by TaskCallback until terminal slot transition, then dropped outside the mutex."
+    },
+    {
+      "c": "platform_task_alloc_fn / platform_task_free_fn",
+      "rust": "vexel_base::AllocationGate plus fallible Vec reservations",
+      "adaptation": "No caller allocator pointer/context is retained."
+    },
+    {
+      "c": "platform_task_config",
+      "rust": "QueueConfig",
+      "adaptation": "Only bounded capacity and worker count remain; allocation hooks are replaced by safe allocation gating."
+    },
+    {
+      "c": "platform_task_result",
+      "rust": "TaskResult",
+      "adaptation": "task_id becomes id and C output-pointer filling becomes an owned Option result."
+    }
+  ],
+  "symbols": [
+    {
+      "c": "platform_task_queue_create",
+      "source": "src/platform/macos/platform_task.c:163-211; src/platform/platform_task.h:47-48",
+      "rust": "TaskQueue::new / with_allocation_gate_and_spawn; QueueConfig; queue.rs:203-270",
+      "tests": [
+        "configuration_and_fallible_bounded_allocations",
+        "worker_start_failure_stops_and_joins_started_workers"
+      ],
+      "ownership_and_limits": "Validates 1..64 capacity and 1..4 workers before allocation. Starts workers only after bounded Vec/VecDeque reservations and safe AllocationGate permits. Partial thread startup signals stop and joins every started worker before returning NoMemory.",
+      "adaptation": "Custom C allocate/free callbacks map to accepted vexel_base::AllocationGate plus Vec::try_reserve_exact and std thread spawn errors. A five-point safe gate covers bounded slot, pending, handle, shared-control, and worker-owner allocations; it does not claim deterministic injection of system allocator OOM inside Arc::new or Rust runtime internals."
+    },
+    {
+      "c": "platform_task_submit",
+      "source": "src/platform/platform_task.h:49-51; src/platform/macos/platform_task.c:249-254",
+      "rust": "TaskQueue::submit; TaskCallback::new; queue.rs:92-111, 273-283",
+      "tests": [
+        "status_priority_duplicate_full_stale_and_stopped",
+        "rejected_submission_returns_callback_and_context"
+      ],
+      "ownership_and_limits": "A caller-created TaskCallback contains a Send+'static owned context and one-shot callback. Rejected submission returns the same TaskCallback; accepted context is dropped once outside the mutex after terminal state publication/discard.",
+      "adaptation": "C borrowed void* context is replaced with an owned typed context. Shared context uses Arc<T> as the typed context. The callback receives &mut T and a lifetime-bound cancellation token, so safe code cannot retain the native token past callback execution."
+    },
+    {
+      "c": "platform_task_submit_owned",
+      "source": "src/platform/platform_task.h:52-57; src/platform/macos/platform_task.c:256-263",
+      "rust": "TaskCallback::new<C,F> and TaskQueue::submit; queue.rs:70-111, 273-283",
+      "tests": [
+        "rejected_submission_returns_callback_and_context",
+        "queued_cancel_drops_owned_context_once_outside_queue_lock",
+        "completion_releases_id_only_after_poll"
+      ],
+      "ownership_and_limits": "Task context is owned by TaskCallback; context Drop is the cleanup operation. Rejected submission returns ownership and does not invoke the callback. The worker frees/updates the slot under lock, releases the lock, then drops the task context exactly once.",
+      "adaptation": "C's optional raw cleanup function becomes Rust Drop on the typed context, with no separate raw cleanup callback."
+    },
+    {
+      "c": "platform_task_cancel",
+      "source": "src/platform/platform_task.h:58; src/platform/macos/platform_task.c:265-283",
+      "rust": "TaskQueue::cancel; CancellationToken::is_cancelled; queue.rs:61-67, 285-299",
+      "tests": [
+        "status_priority_duplicate_full_stale_and_stopped",
+        "queued_cancel_drops_owned_context_once_outside_queue_lock",
+        "running_cancel_and_generation_advance_suppress_publication"
+      ],
+      "ownership_and_limits": "Queued work is retired without running; running work receives an atomic cooperative cancellation signal; completed work becomes discarded. Unknown and zero IDs retain native status behavior.",
+      "adaptation": "CancellationToken borrows a stable per-slot AtomicBool only for callback lifetime; no raw pointer or cloneable stale token is exposed."
+    },
+    {
+      "c": "platform_task_advance_generation",
+      "source": "src/platform/platform_task.h:59-60; src/platform/macos/platform_task.c:285-307",
+      "rust": "TaskQueue::advance_generation; queue.rs:301-321",
+      "tests": [
+        "running_cancel_and_generation_advance_suppress_publication",
+        "status_priority_duplicate_full_stale_and_stopped"
+      ],
+      "ownership_and_limits": "Only strictly greater generations are accepted. Older queued work is discarded, running work is cooperatively canceled, and old completions cannot be polled.",
+      "adaptation": "u64 generation arithmetic has no increment or wrap; the caller supplies the next generation as in C."
+    },
+    {
+      "c": "platform_task_poll",
+      "source": "src/platform/platform_task.h:61; src/platform/macos/platform_task.c:309-321",
+      "rust": "TaskQueue::poll -> Option<TaskResult>; queue.rs:323-335",
+      "tests": [
+        "completion_releases_id_only_after_poll",
+        "callback_failure_and_panic_are_retired_as_results",
+        "queued_cancel_drops_owned_context_once_outside_queue_lock"
+      ],
+      "ownership_and_limits": "Returns one current-generation result and frees its slot/ID under the mutex. Failure results are retained just like success results.",
+      "adaptation": "The C output pointer becomes an owned Option value; no caller-provided pointer can be invalid."
+    },
+    {
+      "c": "platform_task_shutdown",
+      "source": "src/platform/platform_task.h:62-63; src/platform/macos/platform_task.c:323-344",
+      "rust": "TaskQueue::shutdown and final-owner Drop; queue.rs:337-377",
+      "tests": [
+        "queued_cancel_drops_owned_context_once_outside_queue_lock",
+        "shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins",
+        "worker_start_failure_stops_and_joins_started_workers"
+      ],
+      "ownership_and_limits": "Marks stopping, signals queued/running cancellation, discards completions, drops queued owned contexts outside the mutex, and joins worker handles. Repeated concurrent shutdown is serialized by the worker-handle mutex.",
+      "adaptation": "A worker callback can request shutdown without attempting to join itself; thread-local worker identity avoids deadlock with another thread that is joining it. A reentrant worker call requests stop and returns; an external shutdown joins every worker before returning."
+    },
+    {
+      "c": "platform_task_destroy",
+      "source": "src/platform/platform_task.h:64-65; src/platform/macos/platform_task.c:346-357",
+      "rust": "TaskQueue::Drop on final queue owner; queue.rs:373-377",
+      "tests": [
+        "shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins"
+      ],
+      "ownership_and_limits": "Safe references and Arc ownership prevent destruction while a safe API borrow is active. Final owner drop requests shutdown and joins workers; callers need no separate unsafe destroy call.",
+      "adaptation": "The C active-call counter/assertion and explicit destroy become Rust borrowing/Arc lifetime enforcement plus final-owner shutdown."
+    },
+    {
+      "c": "platform_task_test_pause_next_api_call / platform_task_test_wait_until_paused / platform_task_test_release_paused_call",
+      "source": "src/platform/platform_task.h:67-70; src/platform/macos/platform_task.c:71-93",
+      "rust": "No production counterpart; concurrent safe API lifetime exercised by shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins",
+      "tests": [
+        "shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins"
+      ],
+      "ownership_and_limits": "The test-only C global pause gate existed to probe destroy during an admitted raw-pointer call. Rust's safe borrow/Arc ownership removes that invalid lifetime path.",
+      "adaptation": "Omitted as an unsafe misuse probe; safe concurrent API calls racing shutdown are directly tested instead."
+    },
+    {
+      "c": "api_enter / api_leave",
+      "source": "src/platform/macos/platform_task.c:51-69",
+      "rust": "Rust shared-reference borrows and Arc<TaskQueue> lifetime; queue.rs:166-181, 373-377",
+      "tests": [
+        "shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins"
+      ],
+      "ownership_and_limits": "Rust lifetime tracking replaces the C active-call atomic counter."
+    },
+    {
+      "c": "default_allocate / default_deallocate",
+      "source": "src/platform/macos/platform_task.c:95-105",
+      "rust": "Vec::try_reserve_exact, VecDeque::try_reserve_exact, AllocationGate; queue.rs:225-252, 407-420",
+      "tests": [
+        "configuration_and_fallible_bounded_allocations"
+      ],
+      "ownership_and_limits": "Owned standard-library containers release automatically on all construction rollback paths."
+    },
+    {
+      "c": "discard_slot",
+      "source": "src/platform/macos/platform_task.c:107-111",
+      "rust": "TaskQueue::cancel, advance_generation, shutdown; queue.rs:285-363",
+      "tests": [
+        "running_cancel_and_generation_advance_suppress_publication",
+        "status_priority_duplicate_full_stale_and_stopped"
+      ],
+      "ownership_and_limits": "State transition and atomic cancellation update occur while holding the queue mutex."
+    },
+    {
+      "c": "worker_main",
+      "source": "src/platform/macos/platform_task.c:113-161",
+      "rust": "worker_loop; queue.rs:422-490",
+      "tests": [
+        "queued_cancel_drops_owned_context_once_outside_queue_lock",
+        "cancellation_after_running_transition_still_invokes_callback_without_publication",
+        "running_cancel_and_generation_advance_suppress_publication",
+        "callback_failure_and_panic_are_retired_as_results",
+        "completion_releases_id_only_after_poll"
+      ],
+      "ownership_and_limits": "Fixed worker count, bounded FIFO pending indices, cancellation/generation checks, completion publication under mutex, and context drop after unlock. A task transitioned to Running is invoked even if cancellation arrives before callback entry; cancellation suppresses publication. Canceled queued/stale work is discarded without invocation. Callback panics become failed results with value 0 so the worker remains alive.",
+      "adaptation": "The test-only entry gate pauses after the Running transition and mutex release to exercise the C callback-entry cancellation race deterministically. Rust panic containment has no C equivalent."
+    },
+    {
+      "c": "submit_internal",
+      "source": "src/platform/macos/platform_task.c:213-247",
+      "rust": "available_slot and install; queue.rs:379-405",
+      "tests": [
+        "status_priority_duplicate_full_stale_and_stopped",
+        "rejected_submission_returns_callback_and_context"
+      ],
+      "ownership_and_limits": "Preserves exact priority: invalid input, duplicate ID, stale generation, stopped queue, then full capacity. Queue state and pending indices are committed atomically under one mutex."
+    }
+  ],
+  "native_test_parity": [
+    {
+      "c_test": "test_config_and_allocations",
+      "rust_test": "configuration_and_fallible_bounded_allocations",
+      "result": "ported; failure injection is safe AllocationGate denial, not system OOM injection"
+    },
+    {
+      "c_test": "test_cancel_and_bounds",
+      "rust_tests": [
+        "status_priority_duplicate_full_stale_and_stopped",
+        "queued_cancel_drops_owned_context_once_outside_queue_lock",
+        "running_cancel_and_generation_advance_suppress_publication",
+        "cancellation_after_running_transition_still_invokes_callback_without_publication"
+      ],
+      "result": "ported and expanded; deterministic Running-to-callback cancellation race confirms invocation and result suppression"
+    },
+    {
+      "c_test": "test_generation_and_result",
+      "rust_tests": [
+        "running_cancel_and_generation_advance_suppress_publication",
+        "completion_releases_id_only_after_poll",
+        "cancellation_after_running_transition_still_invokes_callback_without_publication"
+      ],
+      "result": "ported with exact result field assertions"
+    },
+    {
+      "c_test": "test_callback_failure_result",
+      "rust_test": "callback_failure_and_panic_are_retired_as_results",
+      "result": "ported; Rust panic maps to failed value 0"
+    },
+    {
+      "c_test": "native_task_smoke lifecycle cycles",
+      "rust_tests": [
+        "shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins",
+        "cleanup_can_request_shutdown_while_another_thread_joins"
+      ],
+      "result": "focused lifecycle and concurrent shutdown coverage; no performance campaign"
+    },
+    {
+      "c_test": "trigger_death_assertion",
+      "rust_test": "shutdown_races_safely_with_cloned_api_calls_and_final_drop_joins",
+      "result": "raw-pointer misuse probe replaced with safe ownership/concurrency coverage"
+    }
+  ],
+  "diagnostic_spans": [
+    "src/platform/platform_task.h:9-70",
+    "src/platform/macos/platform_task.c:51-357",
+    "app/test_driver/native_task_tests.c:107-220, 232-277",
+    "rust/crates/vexel-platform-tasks/src/queue.rs:11-542",
+    "rust/crates/vexel-platform-tasks/src/tests.rs:1-311"
+  ],
+  "remaining_product_scope": "No application, MCP/export wiring, platform integration, UI/E2E, or overall product completion is claimed. Coordinator review, API integration, and integrated application checks remain."
+}

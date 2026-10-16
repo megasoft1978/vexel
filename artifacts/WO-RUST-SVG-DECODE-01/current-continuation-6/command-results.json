@@ -1,0 +1,26 @@
+[
+  {
+    "name": "check",
+    "command": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-6/target\" cargo +stable check -p vexel-svg-decode --locked --offline",
+    "exit_code": 0,
+    "log": "check.log"
+  },
+  {
+    "name": "package-test",
+    "command": "CARGO_HOME=\"$PWD/.cache/cargo\" CARGO_TARGET_DIR=\"$PWD/.cache/WO-RUST-SVG-DECODE-01/current-continuation-6/target\" cargo +stable test -p vexel-svg-decode --locked --offline",
+    "exit_code": 0,
+    "log": "package-test.log"
+  },
+  {
+    "name": "format-check",
+    "command": "CARGO_HOME=\"$PWD/.cache/cargo\" cargo +stable fmt --manifest-path Cargo.toml --package vexel-svg-decode -- --check",
+    "exit_code": 0,
+    "log": "format-check.log"
+  },
+  {
+    "name": "validator",
+    "command": "CARGO_HOME=\"$PWD/.cache/cargo\" python3 scripts/wo_validate.py WO-RUST-SVG-DECODE-01 --ready",
+    "exit_code": 0,
+    "log": "validator.log"
+  }
+]

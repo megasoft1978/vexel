@@ -1,0 +1,11 @@
+Complete uncommitted candidate for frozen WO-RUST-SVG-PATH-CONTROL-01; root review and main integration remain required.
+
+Implemented PathParseSession::new/step/finish, parse_path_controlled, and flatten_cubic_controlled. Legacy parsing and cubic flattening drive these same state engines with a private no-stop policy. Construction checks only span/transform and fixed initialization; scanning and geometry occur inside controlled work.
+
+Persistent cursors cover the complete comma pass and whitespace neighbors, command/operand separators, bytewise significand/fraction/exponent lookahead/digits, packed arc flags, repeated/relative M/L/H/V/C/S/Q/T/A/Z, reflection/subpath state, individual number/segment/subpath metadata, cubic nodes and arc samples/appends. Each accepted charge is one real operation; Pending reports this call's accepted work. Zero quantum checks control without progress; terminal results are sticky. Early finish and failed sessions never return partial documents.
+
+The shared cubic walker uses an inline seventeen-node stack at the original depth-sixteen limit. Arc setup retains the original math and upfront sample-cap check/reservation; sampling retains its index and pending point. Numeric operations, transformed 0.25 tolerance, authored spans, diagnostics, comma precedence, option clamps and frozen caps are preserved. Vector growth uses checked counts/bytes and fallible bounded real reservations; original allocation diagnostics retain source offsets.
+
+All named frozen checks pass on installed Rust 1.99.0 via +stable, locked/offline, inherited repository Cargo/cache/tmp. There are 36 passing tests: 12 original tests unchanged, one retained initial test, and 23 new tests. Seventy-four pre-rewrite bitwise fixtures match legacy, controlled and five tiny/normal quantum drives. Tests prove real long-stream and geometry Pending work, cancellation/limits at all active phases/subcursors, typed overflow, terminal/drop behavior and cubic partial appends.
+
+Baseline copies, exact command output, charge metrics, candidate.diff and preservation hashes are attached. All 2,746 protected files remain unchanged; every source/test file is below 800 lines. No dependencies, unsafe code, network, installation, agents or protected writes were introduced.

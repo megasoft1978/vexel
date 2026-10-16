@@ -1,0 +1,7 @@
+**REJECT**
+
+1. **Running cancellation can skip the callback, diverging from C semantics.** In [queue.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/rust/crates/vexel-platform-tasks/src/queue.rs:440), the worker marks a task `Running` and releases the mutex; at line 457 it then skips invocation if cancellation arrived in between. C invokes the callback after marking `TASK_RUNNING`, even if cancellation arrives before callback entry; cancellation suppresses publication, not invocation ([platform_task.c](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/src/platform/macos/platform_task.c:141)). Carry an explicit “discard without invocation” decision for canceled queued/stale work, and always invoke work already transitioned to `Running`. Add a deterministic regression that cancels in that gap, asserts the callback runs and observes cancellation, and verifies no result is published.
+
+The scoped review found status priority, bounded configuration, retirement, rejected-submission ownership, cleanup outside the mutex, generation suppression, shutdown/join handling, and panic containment represented in the implementation and parity map. The original native task cases and relevant cleanup/export queue cases were inspected. The recorded verification was read, not rerun; this is not a runtime or full-product claim.
+
+**Nonblocking gap:** The allocation gate does not inject system allocator failures inside `Arc::new` or Rust runtime internals; this limitation is documented in the parity map and verification record.

@@ -1,0 +1,137 @@
+{
+  "status": "BLOCKED",
+  "reason": "first crates.io request failed DNS; no further HTTPS attempted",
+  "pins": [
+    {
+      "name": "objc2",
+      "exact_pin": null,
+      "requested_candidate": "current metadata",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-encode",
+      "exact_pin": null,
+      "requested_candidate": "current metadata",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-foundation",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-app-kit",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-core-foundation",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-core-graphics",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-core-text",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-metal",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "objc2-quartz-core",
+      "exact_pin": null,
+      "requested_candidate": "0.3.2",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    },
+    {
+      "name": "block2",
+      "exact_pin": null,
+      "requested_candidate": "current metadata",
+      "default_features": false,
+      "features": null,
+      "checksum": null,
+      "license_expression": null,
+      "license_text_sha256": null,
+      "rust_version": null,
+      "status": "unverified"
+    }
+  ],
+  "transitive_closure": null,
+  "resolution_rules": [
+    "Obtain current metadata and exact 0.3.2 framework versions; reject yanked/unpublished candidates.",
+    "Read normalized published Cargo.toml and Cargo.toml.orig, checksums and license files; bound and verify archives before reading.",
+    "For Apple Silicon macOS only, expand requested features to fixed point including dependency feature edges, weak dep?/feature edges, optional dep: edges, target predicates and default-feature activation.",
+    "Constrain every activated package/version including build dependencies; verify semver ranges, resolver3 Rust1.99 compatibility and registry checksums.",
+    "Record all resolved licenses and exact pins; published feature lists and closure remain unknown here.",
+    "No Cargo fetch/compile in this audit; future approved adoption must confirm lock resolution and API type checking."
+  ],
+  "block2_justification": "Proposal requires Metal completion and asynchronous sheets/observers; Apple headers show block parameters. Rust block API/export/features/licenses remain unverified; no adoption.",
+  "exception_boundary": "Must verify objc2 exception handling against published implementation and helper/build dependency closure; Rust catch_unwind alone is not an Objective-C exception fence. No C shim approved."
+}

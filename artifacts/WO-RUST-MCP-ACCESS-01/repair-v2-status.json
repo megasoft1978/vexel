@@ -1,0 +1,13 @@
+{
+  "name": "access",
+  "wo": "WO-RUST-MCP-ACCESS-01",
+  "session": "01a139f8-0a56-73a3-aee0-98f2b0b389ae",
+  "pid": 83356,
+  "mode": "repair",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791974772.663755,
+  "exit_code": 0,
+  "duration_seconds": 213.86557793617249
+}

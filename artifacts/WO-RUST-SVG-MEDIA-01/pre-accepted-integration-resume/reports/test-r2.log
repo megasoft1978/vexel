@@ -1,0 +1,79 @@
+   Compiling vexel-svg-media v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SVG-MEDIA-01/worker/rust/crates/vexel-svg-media)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_svg_media-c9bcdd3d0171dfcd)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/atomicity_gap.rs (build/rust/aarch64-apple-darwin/debug/deps/atomicity_gap-d651887a5280f664)
+
+running 7 tests
+test accepted_public_api_rejects_request_savepoints_inside_outer_draft ... ok
+test image_late_cancellation_documents_residual_pixels_and_missing_atomicity ... ok
+test text_second_run_limit_documents_retained_first_run_state_and_cache ... ok
+test text_finalization_cancel_documents_retained_shape_after_glyph_work ... ok
+test image_late_capacity_admission_failure_documents_residual_pixels ... ok
+test image_late_shape_limit_documents_residual_pixels_and_missing_atomicity ... ok
+test text_late_capacity_failure_documents_retained_layout_state_and_cache ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/cache_limits.rs (build/rust/aarch64-apple-darwin/debug/deps/cache_limits-6c5fe344b21a8843)
+
+running 3 tests
+test cache_key_distinguishes_owned_family_and_each_font_parameter ... ok
+test local_and_accepted_shared_cache_admit_exactly_256_kib_then_return_owned_misses ... ok
+test local_and_accepted_shared_cache_enforce_cumulative_and_per_layout_command_caps ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/document_budget_gap.rs (build/rust/aarch64-apple-darwin/debug/deps/document_budget_gap-bad3378bf661fd6d)
+
+running 1 test
+test document_command_limit_is_missing_on_repeated_cached_layout_uses ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/media_parity.rs (build/rust/aarch64-apple-darwin/debug/deps/media_parity-bb15dcf8790810df)
+
+running 8 tests
+test malformed_provider_pixels_keep_unsupported_classification ... ok
+test image_sampler_matches_premultiplied_bilinear_rounding_and_bounds ... ok
+test image_data_uri_and_base64_keep_exact_grammar_and_offsets ... ok
+test glyph_outline_closure_and_command_range_validation_inputs_are_owned ... ok
+test text_cache_owns_keys_and_reuses_exact_layout_requests ... ok
+test text_cache_entry_cap_and_image_capacity_validation_fail_closed ... ok
+test image_geometry_preserves_meet_slice_none_and_viewport_lengths ... ok
+test text_entities_whitespace_and_position_lists_match_source_contract ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/source_map_requests.rs (build/rust/aarch64-apple-darwin/debug/deps/source_map_requests-f653b7aeabf8c83c)
+
+running 3 tests
+test canceled_typed_request_stops_before_provider_or_append ... ok
+test invalid_typed_source_map_stops_before_provider_or_append ... ok
+test typed_text_and_image_requests_append_with_host_annotation ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/style_and_layout.rs (build/rust/aarch64-apple-darwin/debug/deps/style_and_layout-890eb80fbd88bbf3)
+
+running 8 tests
+test malformed_position_keeps_number_classification_and_source_offset ... ok
+test unavailable_native_provider_stays_unsupported_at_text_run_offset ... ok
+test explicit_text_request_end_bounds_authored_runs ... ok
+test compound_contours_keep_winding_closure_and_scene_subpath_boundaries ... ok
+test family_count_limit_and_relative_lengths_keep_original_style_errors_and_units ... ok
+test style_defaults_and_original_inherited_font_values_reach_provider ... ok
+test anchor_modes_and_oblique_normal_spacing_use_original_units ... ok
+test malformed_style_is_unsupported_at_exact_property_offset_before_provider ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_svg_media
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

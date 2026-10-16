@@ -1,0 +1,23 @@
+Work order: WO-RUST-DOCUMENT-OWNED-01 revision 1
+Execution target: aarch64-apple-darwin
+rustc +stable --version: rustc 1.99.0 (b940084d7 2026-09-28)
+cargo +stable --version: cargo 1.99.0 (5f94df478 2026-08-27)
+Installed Rust target list: aarch64-apple-darwin
+
+Command: cargo +stable check -p vexel-document --locked --offline
+Result: PASS; finished dev profile, no dependency/network activity.
+
+Command: cargo +stable test -p vexel-document --locked --offline
+Result: PASS; 13 unit tests passed, 0 failed; 0 doc tests.
+Coverage includes all 9 preserved original tests, owned query/delete/foreign handle parity, Arc pointer reuse/drop/thread lifetime, unchanged legacy 16 MiB rejection at diagnostic offset 0, XML-validation and index-build cancellation, >16 MiB borrowed parsing, and a 100 MiB owned source.
+
+Command: python3 scripts/wo_validate.py WO-RUST-DOCUMENT-OWNED-01 --ready
+Result: PASS; valid revision 1, spec SHA-256 ba1c5417fad26e6f4d92619bbdb6d861e5193ec866b3149f71eb5ba8d0bbc737.
+
+Command: python3 scripts/ledger.py validate ledger.jsonl
+Result: PASS; valid ledger, 1260 entries.
+
+Command: git diff --check
+Result: PASS; no output.
+
+Adaptation: the accepted XmlTokenStream reports Canceled but has no public cursor. XML-phase Canceled.offset is therefore defined as source offset 0; table-build cancellation reports the next XML token's source offset. Resource caps and parse diagnostics retain precedence as described in result.md. No missing contract, dependency, or peer change.

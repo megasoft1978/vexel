@@ -1,0 +1,497 @@
+BINDING CTRunGetGlyphCount
+91:     /// Gets the glyph count for the run.
+92:     ///
+93:     ///
+94:     /// Parameter `run`: The run whose glyph count you wish to access.
+95:     ///
+96:     ///
+97:     /// Returns: The number of glyphs that the run contains. It is totally
+98:     /// possible that this function could return a value of zero,
+99:     /// indicating that there are no glyphs in this run.
+100:     #[doc(alias = "CTRunGetGlyphCount")]
+101:     #[inline]
+102:     pub unsafe fn glyph_count(&self) -> CFIndex {
+103:         extern "C-unwind" {
+104:             fn CTRunGetGlyphCount(run: &CTRun) -> CFIndex;
+105:         }
+106:         unsafe { CTRunGetGlyphCount(self) }
+107:     }
+108: 
+109:     /// Returns the attribute dictionary that was used to create the
+110:     /// glyph run.
+111:     ///
+112:     ///
+113:     /// This dictionary returned is either the same exact one that was
+114:     /// set as an attribute dictionary on the original attributed string
+115:     /// or a dictionary that has been manufactured by the layout engine.
+116:     /// Attribute dictionaries can be manufactured in the case of font
+117:     /// substitution or if they are missing critical attributes.
+118:     ///
+
+BINDING CTRunGetGlyphCount
+609:     #[doc(alias = "CTRunDraw")]
+610:     #[cfg(feature = "objc2-core-graphics")]
+611:     #[inline]
+612:     pub unsafe fn draw(&self, context: &CGContext, range: CFRange) {
+613:         extern "C-unwind" {
+614:             fn CTRunDraw(run: &CTRun, context: &CGContext, range: CFRange);
+615:         }
+616:         unsafe { CTRunDraw(self, context, range) }
+617:     }
+618: }
+619: 
+620: extern "C-unwind" {
+621:     #[deprecated = "renamed to `CTRun::glyph_count`"]
+622:     pub fn CTRunGetGlyphCount(run: &CTRun) -> CFIndex;
+623: }
+624: 
+625: #[deprecated = "renamed to `CTRun::attributes`"]
+626: #[inline]
+627: pub unsafe extern "C-unwind" fn CTRunGetAttributes(run: &CTRun) -> CFRetained<CFDictionary> {
+628:     extern "C-unwind" {
+629:         fn CTRunGetAttributes(run: &CTRun) -> Option<NonNull<CFDictionary>>;
+630:     }
+631:     let ret = unsafe { CTRunGetAttributes(run) };
+632:     let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
+633:     unsafe { CFRetained::retain(ret) }
+634: }
+635: 
+636: extern "C-unwind" {
+
+SDK CTRunGetGlyphCount
+79: 
+80: /*!
+81:     @function   CTRunGetGlyphCount
+82:     @abstract   Gets the glyph count for the run.
+83: 
+84:     @param      run
+85:                 The run whose glyph count you wish to access.
+86: 
+87:     @result     The number of glyphs that the run contains. It is totally
+88:                 possible that this function could return a value of zero,
+
+SDK CTRunGetGlyphCount
+91: 
+92: CT_EXPORT
+93: CFIndex CTRunGetGlyphCount(
+94:     CTRunRef run ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+95: 
+96: 
+97: /*!
+98:     @function   CTRunGetAttributes
+99:     @abstract   Returns the attribute dictionary that was used to create the
+100:                 glyph run.
+
+SDK CTRunGetGlyphCount
+145: 
+146:     @discussion The glyph array will have a length equal to the value returned by
+147:                 CTRunGetGlyphCount. The caller should be prepared for this
+148:                 function to return NULL even if there are glyphs in the stream.
+149:                 Should this function return NULL, the caller will need to
+150:                 allocate their own buffer and call CTRunGetGlyphs to fetch the
+151:                 glyphs.
+152: 
+153:     @param      run
+154:                 The run whose glyphs you wish to access.
+
+BINDING CTRunGetGlyphs
+196:     ///
+197:     ///
+198:     /// Parameter `buffer`: The buffer where the glyphs will be copied to. The buffer must be
+199:     /// allocated to at least the value specified by the range's length.
+200:     ///
+201:     /// # Safety
+202:     ///
+203:     /// `buffer` must be a valid pointer.
+204:     #[doc(alias = "CTRunGetGlyphs")]
+205:     #[cfg(feature = "objc2-core-graphics")]
+206:     #[inline]
+207:     pub unsafe fn glyphs(&self, range: CFRange, buffer: NonNull<CGGlyph>) {
+208:         extern "C-unwind" {
+209:             fn CTRunGetGlyphs(run: &CTRun, range: CFRange, buffer: NonNull<CGGlyph>);
+210:         }
+211:         unsafe { CTRunGetGlyphs(self, range, buffer) }
+212:     }
+213: 
+214:     /// Returns a direct pointer for the glyph position array stored in
+215:     /// the run.
+216:     ///
+217:     ///
+218:     /// The glyph positions in a run are relative to the origin of the
+219:     /// line containing the run. The position array will have a length
+220:     /// equal to the value returned by CTRunGetGlyphCount. The caller
+221:     /// should be prepared for this function to return NULL even if there
+222:     /// are glyphs in the stream. Should this function return NULL, the
+223:     /// caller will need to allocate their own buffer and call
+
+BINDING CTRunGetGlyphs
+637:     #[deprecated = "renamed to `CTRun::status`"]
+638:     pub fn CTRunGetStatus(run: &CTRun) -> CTRunStatus;
+639: }
+640: 
+641: extern "C-unwind" {
+642:     #[cfg(feature = "objc2-core-graphics")]
+643:     #[deprecated = "renamed to `CTRun::glyphs_ptr`"]
+644:     pub fn CTRunGetGlyphsPtr(run: &CTRun) -> *const CGGlyph;
+645: }
+646: 
+647: extern "C-unwind" {
+648:     #[cfg(feature = "objc2-core-graphics")]
+649:     #[deprecated = "renamed to `CTRun::glyphs`"]
+650:     pub fn CTRunGetGlyphs(run: &CTRun, range: CFRange, buffer: NonNull<CGGlyph>);
+651: }
+652: 
+653: extern "C-unwind" {
+654:     #[deprecated = "renamed to `CTRun::positions_ptr`"]
+655:     pub fn CTRunGetPositionsPtr(run: &CTRun) -> *const CGPoint;
+656: }
+657: 
+658: extern "C-unwind" {
+659:     #[deprecated = "renamed to `CTRun::positions`"]
+660:     pub fn CTRunGetPositions(run: &CTRun, range: CFRange, buffer: NonNull<CGPoint>);
+661: }
+662: 
+663: extern "C-unwind" {
+664:     #[deprecated = "renamed to `CTRun::advances_ptr`"]
+
+SDK CTRunGetGlyphs
+141: 
+142: /*!
+143:     @function   CTRunGetGlyphsPtr
+144:     @abstract   Returns a direct pointer for the glyph array stored in the run.
+145: 
+146:     @discussion The glyph array will have a length equal to the value returned by
+147:                 CTRunGetGlyphCount. The caller should be prepared for this
+148:                 function to return NULL even if there are glyphs in the stream.
+149:                 Should this function return NULL, the caller will need to
+150:                 allocate their own buffer and call CTRunGetGlyphs to fetch the
+
+SDK CTRunGetGlyphs
+148:                 function to return NULL even if there are glyphs in the stream.
+149:                 Should this function return NULL, the caller will need to
+150:                 allocate their own buffer and call CTRunGetGlyphs to fetch the
+151:                 glyphs.
+152: 
+153:     @param      run
+154:                 The run whose glyphs you wish to access.
+155: 
+156:     @result     A valid pointer to an array of CGGlyph structures or NULL.
+157: */
+
+SDK CTRunGetGlyphs
+158: 
+159: CT_EXPORT
+160: const CGGlyph * _Nullable CTRunGetGlyphsPtr(
+161:     CTRunRef run ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+162: 
+163: 
+164: /*!
+165:     @function   CTRunGetGlyphs
+166:     @abstract   Copies a range of glyphs into user-provided buffer.
+167: 
+
+BINDING CTRunGetPositions
+254:     ///
+255:     ///
+256:     /// Parameter `buffer`: The buffer where the glyph positions will be copied to. The buffer
+257:     /// must be allocated to at least the value specified by the range's
+258:     /// length.
+259:     ///
+260:     /// # Safety
+261:     ///
+262:     /// `buffer` must be a valid pointer.
+263:     #[doc(alias = "CTRunGetPositions")]
+264:     #[inline]
+265:     pub unsafe fn positions(&self, range: CFRange, buffer: NonNull<CGPoint>) {
+266:         extern "C-unwind" {
+267:             fn CTRunGetPositions(run: &CTRun, range: CFRange, buffer: NonNull<CGPoint>);
+268:         }
+269:         unsafe { CTRunGetPositions(self, range, buffer) }
+270:     }
+271: 
+272:     /// Returns a direct pointer for the glyph advance array stored in
+273:     /// the run.
+274:     ///
+275:     ///
+276:     /// The advance array will have a length equal to the value returned
+277:     /// by CTRunGetGlyphCount. The caller should be prepared for this
+278:     /// function to return NULL even if there are glyphs in the stream.
+279:     /// Should this function return NULL, the caller will need to
+280:     /// allocate their own buffer and call CTRunGetAdvances to fetch the
+281:     /// advances. Note that advances alone are not sufficient for correctly
+
+BINDING CTRunGetPositions
+647: extern "C-unwind" {
+648:     #[cfg(feature = "objc2-core-graphics")]
+649:     #[deprecated = "renamed to `CTRun::glyphs`"]
+650:     pub fn CTRunGetGlyphs(run: &CTRun, range: CFRange, buffer: NonNull<CGGlyph>);
+651: }
+652: 
+653: extern "C-unwind" {
+654:     #[deprecated = "renamed to `CTRun::positions_ptr`"]
+655:     pub fn CTRunGetPositionsPtr(run: &CTRun) -> *const CGPoint;
+656: }
+657: 
+658: extern "C-unwind" {
+659:     #[deprecated = "renamed to `CTRun::positions`"]
+660:     pub fn CTRunGetPositions(run: &CTRun, range: CFRange, buffer: NonNull<CGPoint>);
+661: }
+662: 
+663: extern "C-unwind" {
+664:     #[deprecated = "renamed to `CTRun::advances_ptr`"]
+665:     pub fn CTRunGetAdvancesPtr(run: &CTRun) -> *const CGSize;
+666: }
+667: 
+668: extern "C-unwind" {
+669:     #[deprecated = "renamed to `CTRun::advances`"]
+670:     pub fn CTRunGetAdvances(run: &CTRun, range: CFRange, buffer: NonNull<CGSize>);
+671: }
+672: 
+673: extern "C-unwind" {
+674:     #[deprecated = "renamed to `CTRun::string_indices_ptr`"]
+
+SDK CTRunGetPositions
+188: 
+189: /*!
+190:     @function   CTRunGetPositionsPtr
+191:     @abstract   Returns a direct pointer for the glyph position array stored in
+192:                 the run.
+193: 
+194:     @discussion The glyph positions in a run are relative to the origin of the
+195:                 line containing the run. The position array will have a length
+196:                 equal to the value returned by CTRunGetGlyphCount. The caller
+197:                 should be prepared for this function to return NULL even if there
+
+SDK CTRunGetPositions
+198:                 are glyphs in the stream. Should this function return NULL, the
+199:                 caller will need to allocate their own buffer and call
+200:                 CTRunGetPositions to fetch the positions.
+201: 
+202:     @param      run
+203:                 The run whose positions you wish to access.
+204: 
+205:     @result     A valid pointer to an array of CGPoint structures or NULL.
+206: */
+207: 
+
+SDK CTRunGetPositions
+207: 
+208: CT_EXPORT
+209: const CGPoint * _Nullable CTRunGetPositionsPtr(
+210:     CTRunRef run ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+211: 
+212: 
+213: /*!
+214:     @function   CTRunGetPositions
+215:     @abstract   Copies a range of glyph positions into a user-provided buffer.
+216: 
+
+BINDING CTRunGetAdvances
+310:     ///
+311:     ///
+312:     /// Parameter `buffer`: The buffer where the glyph advances will be copied to. The buffer
+313:     /// must be allocated to at least the value specified by the range's
+314:     /// length.
+315:     ///
+316:     /// # Safety
+317:     ///
+318:     /// `buffer` must be a valid pointer.
+319:     #[doc(alias = "CTRunGetAdvances")]
+320:     #[inline]
+321:     pub unsafe fn advances(&self, range: CFRange, buffer: NonNull<CGSize>) {
+322:         extern "C-unwind" {
+323:             fn CTRunGetAdvances(run: &CTRun, range: CFRange, buffer: NonNull<CGSize>);
+324:         }
+325:         unsafe { CTRunGetAdvances(self, range, buffer) }
+326:     }
+327: 
+328:     /// Returns a direct pointer for the string indices stored in the run.
+329:     ///
+330:     ///
+331:     /// The indices are the character indices that originally spawned the
+332:     /// glyphs that make up the run. They can be used to map the glyphs in
+333:     /// the run back to the characters in the backing store. The string
+334:     /// indices array will have a length equal to the value returned by
+335:     /// CTRunGetGlyphCount. The caller should be prepared for this
+336:     /// function to return NULL even if there are glyphs in the stream.
+337:     /// Should this function return NULL, the caller will need to allocate
+
+BINDING CTRunGetAdvances
+657: 
+658: extern "C-unwind" {
+659:     #[deprecated = "renamed to `CTRun::positions`"]
+660:     pub fn CTRunGetPositions(run: &CTRun, range: CFRange, buffer: NonNull<CGPoint>);
+661: }
+662: 
+663: extern "C-unwind" {
+664:     #[deprecated = "renamed to `CTRun::advances_ptr`"]
+665:     pub fn CTRunGetAdvancesPtr(run: &CTRun) -> *const CGSize;
+666: }
+667: 
+668: extern "C-unwind" {
+669:     #[deprecated = "renamed to `CTRun::advances`"]
+670:     pub fn CTRunGetAdvances(run: &CTRun, range: CFRange, buffer: NonNull<CGSize>);
+671: }
+672: 
+673: extern "C-unwind" {
+674:     #[deprecated = "renamed to `CTRun::string_indices_ptr`"]
+675:     pub fn CTRunGetStringIndicesPtr(run: &CTRun) -> *const CFIndex;
+676: }
+677: 
+678: extern "C-unwind" {
+679:     #[deprecated = "renamed to `CTRun::string_indices`"]
+680:     pub fn CTRunGetStringIndices(run: &CTRun, range: CFRange, buffer: NonNull<CFIndex>);
+681: }
+682: 
+683: extern "C-unwind" {
+684:     #[deprecated = "renamed to `CTRun::string_range`"]
+
+SDK CTRunGetAdvances
+241: 
+242: /*!
+243:     @function   CTRunGetAdvancesPtr
+244:     @abstract   Returns a direct pointer for the glyph advance array stored in
+245:                 the run.
+246: 
+247:     @discussion The advance array will have a length equal to the value returned
+248:                 by CTRunGetGlyphCount. The caller should be prepared for this
+249:                 function to return NULL even if there are glyphs in the stream.
+250:                 Should this function return NULL, the caller will need to
+
+SDK CTRunGetAdvances
+249:                 function to return NULL even if there are glyphs in the stream.
+250:                 Should this function return NULL, the caller will need to
+251:                 allocate their own buffer and call CTRunGetAdvances to fetch the
+252:                 advances. Note that advances alone are not sufficient for correctly
+253:                 positioning glyphs in a line, as a run may have a non-identity
+254:                 matrix or the initial glyph in a line may have a non-zero origin;
+255:                 callers should consider using positions instead.
+256: 
+257:     @param      run
+258:                 The run whose advances you wish to access.
+
+SDK CTRunGetAdvances
+262: 
+263: CT_EXPORT
+264: const CGSize * _Nullable CTRunGetAdvancesPtr(
+265:     CTRunRef run ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+266: 
+267: 
+268: /*!
+269:     @function   CTRunGetAdvances
+270:     @abstract   Copies a range of glyph advances into a user-provided buffer.
+271: 
+
+BINDING CTRunGetAttributes
+115:     /// or a dictionary that has been manufactured by the layout engine.
+116:     /// Attribute dictionaries can be manufactured in the case of font
+117:     /// substitution or if they are missing critical attributes.
+118:     ///
+119:     ///
+120:     /// Parameter `run`: The run whose attributes you wish to access.
+121:     ///
+122:     ///
+123:     /// Returns: The attribute dictionary.
+124:     #[doc(alias = "CTRunGetAttributes")]
+125:     #[inline]
+126:     pub unsafe fn attributes(&self) -> CFRetained<CFDictionary> {
+127:         extern "C-unwind" {
+128:             fn CTRunGetAttributes(run: &CTRun) -> Option<NonNull<CFDictionary>>;
+129:         }
+130:         let ret = unsafe { CTRunGetAttributes(self) };
+131:         let ret =
+132:             ret.expect("function was marked as returning non-null, but actually returned NULL");
+133:         unsafe { CFRetained::retain(ret) }
+134:     }
+135: 
+136:     /// Returns the run's status.
+137:     ///
+138:     ///
+139:     /// In addition to attributes, runs also have status that can be
+140:     /// used to expedite certain operations. Knowing the direction and
+141:     /// ordering of a run's glyphs can aid in string index analysis,
+142:     /// whereas knowing whether the positions reference the identity
+
+BINDING CTRunGetAttributes
+614:             fn CTRunDraw(run: &CTRun, context: &CGContext, range: CFRange);
+615:         }
+616:         unsafe { CTRunDraw(self, context, range) }
+617:     }
+618: }
+619: 
+620: extern "C-unwind" {
+621:     #[deprecated = "renamed to `CTRun::glyph_count`"]
+622:     pub fn CTRunGetGlyphCount(run: &CTRun) -> CFIndex;
+623: }
+624: 
+625: #[deprecated = "renamed to `CTRun::attributes`"]
+626: #[inline]
+627: pub unsafe extern "C-unwind" fn CTRunGetAttributes(run: &CTRun) -> CFRetained<CFDictionary> {
+628:     extern "C-unwind" {
+629:         fn CTRunGetAttributes(run: &CTRun) -> Option<NonNull<CFDictionary>>;
+630:     }
+631:     let ret = unsafe { CTRunGetAttributes(run) };
+632:     let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
+633:     unsafe { CFRetained::retain(ret) }
+634: }
+635: 
+636: extern "C-unwind" {
+637:     #[deprecated = "renamed to `CTRun::status`"]
+638:     pub fn CTRunGetStatus(run: &CTRun) -> CTRunStatus;
+639: }
+640: 
+641: extern "C-unwind" {
+
+BINDING CTRunGetAttributes
+616:         unsafe { CTRunDraw(self, context, range) }
+617:     }
+618: }
+619: 
+620: extern "C-unwind" {
+621:     #[deprecated = "renamed to `CTRun::glyph_count`"]
+622:     pub fn CTRunGetGlyphCount(run: &CTRun) -> CFIndex;
+623: }
+624: 
+625: #[deprecated = "renamed to `CTRun::attributes`"]
+626: #[inline]
+627: pub unsafe extern "C-unwind" fn CTRunGetAttributes(run: &CTRun) -> CFRetained<CFDictionary> {
+628:     extern "C-unwind" {
+629:         fn CTRunGetAttributes(run: &CTRun) -> Option<NonNull<CFDictionary>>;
+630:     }
+631:     let ret = unsafe { CTRunGetAttributes(run) };
+632:     let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
+633:     unsafe { CFRetained::retain(ret) }
+634: }
+635: 
+636: extern "C-unwind" {
+637:     #[deprecated = "renamed to `CTRun::status`"]
+638:     pub fn CTRunGetStatus(run: &CTRun) -> CTRunStatus;
+639: }
+640: 
+641: extern "C-unwind" {
+642:     #[cfg(feature = "objc2-core-graphics")]
+643:     #[deprecated = "renamed to `CTRun::glyphs_ptr`"]
+
+SDK CTRunGetAttributes
+96: 
+97: /*!
+98:     @function   CTRunGetAttributes
+99:     @abstract   Returns the attribute dictionary that was used to create the
+100:                 glyph run.
+101: 
+102:     @discussion This dictionary returned is either the same exact one that was
+103:                 set as an attribute dictionary on the original attributed string
+104:                 or a dictionary that has been manufactured by the layout engine.
+105:                 Attribute dictionaries can be manufactured in the case of font
+
+SDK CTRunGetAttributes
+113: 
+114: CT_EXPORT
+115: CFDictionaryRef CTRunGetAttributes(
+116:     CTRunRef run ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+117: 
+118: 
+119: /*!
+120:     @function   CTRunGetStatus
+121:     @abstract   Returns the run's status.
+122: 

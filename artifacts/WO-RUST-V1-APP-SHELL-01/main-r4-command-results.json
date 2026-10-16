@@ -1,0 +1,40 @@
+{
+  "work_order": "WO-RUST-V1-APP-SHELL-01",
+  "environment": {
+    "CARGO_HOME": "$PWD/.cache/cargo",
+    "CARGO_TARGET_DIR": "$PWD/.cache/build-v1-app-shell-r3",
+    "network": "offline"
+  },
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-app --locked --offline",
+      "log": "main-r4-app-check.log",
+      "exit_code": 0,
+      "log_sha256": "b75f1399ef68696481b6cd704005042e359a6bed4141569f62bdc989f50b8895"
+    },
+    {
+      "command": "cargo +stable test -p vexel-app --locked --offline",
+      "log": "main-r4-app-test.log",
+      "exit_code": 0,
+      "log_sha256": "fd061748c7f5d1d48f3d775b28cd01f88eb7aadf95a65a813829c25efbd4848b"
+    },
+    {
+      "command": "cargo +stable check -p vexel-platform-apple --locked --offline",
+      "log": "main-r4-apple-check.log",
+      "exit_code": 0,
+      "log_sha256": "a13905646e2aed93ec6ea9ed6ac91490a4e01f91af0215c3965279a910612149"
+    },
+    {
+      "command": "cargo +stable test -p vexel-platform-apple --locked --offline",
+      "log": "main-r4-apple-test.log",
+      "exit_code": 0,
+      "log_sha256": "5d35fcd582589d1be3679db0cbaae67530d7fd80441a59071936e42598a64003"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-V1-APP-SHELL-01 --ready",
+      "log": "main-r4-validator.log",
+      "exit_code": 0,
+      "log_sha256": "d5aacaa1f52e7eaba11e4ff5fda96029ec321d7bfe3696dc90287f8e02f52da0"
+    }
+  ]
+}

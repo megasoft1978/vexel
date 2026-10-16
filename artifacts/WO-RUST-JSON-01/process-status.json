@@ -1,0 +1,11 @@
+{
+  "name": "json",
+  "wo": "WO-RUST-JSON-01",
+  "pid": 35640,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791957018.420495,
+  "exit_code": 0,
+  "duration_seconds": 181.15924382209778
+}

@@ -1,0 +1,35 @@
+360:     API_AVAILABLE(macos(10.4), ios(2.0));
+361: 
+362: /* The types of path elements returned by `CGPathApply'. */
+363: 
+364: typedef CF_ENUM(int32_t, CGPathElementType) {
+365:   kCGPathElementMoveToPoint,
+366:   kCGPathElementAddLineToPoint,
+367:   kCGPathElementAddQuadCurveToPoint,
+
+370: };
+371: 
+372: /* An element of a path returned by `CGPathApply'. */
+373: 
+374: struct CGPathElement {
+375:   CGPathElementType type;
+376:   CGPoint *  points;
+377: };
+
+378: typedef struct CGPathElement CGPathElement;
+379: 
+380: /* The prototype for the function called by `CGPathApplyFunction'. */
+381: 
+382: typedef void (*CGPathApplierFunction)(void * __nullable info,
+383:   const CGPathElement *  element);
+384: 
+385: /* For element of `path', call `function', passing it the path element and
+
+392: typedef void (^CGPathApplyBlock)(const CGPathElement * element);
+393: 
+394: CG_EXTERN void CGPathApplyWithBlock(CGPathRef path, CGPathApplyBlock CF_NOESCAPE block)
+395:     API_AVAILABLE(macos(10.13), ios(11.0));
+396: 
+397: 
+398: /* Returns a new weakly-simple path without self-intersections and with a normalized orientation. Filling the resulting path using even-odd or non-zero filling is identical. */
+399: 

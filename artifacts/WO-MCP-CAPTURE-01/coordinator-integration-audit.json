@@ -1,0 +1,27 @@
+{
+  "work_order": "WO-MCP-CAPTURE-01 r1",
+  "recorded_utc": "2026-10-15T15:01:08.616510+00:00",
+  "status": "SUPERSEDED - legacy C implementation preserved as migration reference",
+  "reason": "Current owner-approved project rules target Rust for all first-party code and prohibit resuming legacy C implementation work orders.",
+  "candidate_preserved_at": ".worktrees/mcp-owned-capture",
+  "candidate_checks": "Historical focused checks passed and are documented in artifacts/WO-MCP-CAPTURE-01/verification-integrated.txt; these do not establish active Rust product capability.",
+  "root_restoration": {
+    "seven_existing_source_test_files_restored_to_overlay_baseline": {
+      "src/mcp/mcp_export_snapshot.c": true,
+      "src/mcp/mcp_export_snapshot.h": true,
+      "src/mcp/mcp_export_job.c": true,
+      "src/mcp/mcp_export_job.h": true,
+      "src/project/project_bundle.c": true,
+      "src/project/project_bundle.h": true,
+      "tests/mcp/mcp_export_job_test.c": true
+    },
+    "capture_source_test_copies_removed": true,
+    "capture_build_test_registration_removed": true,
+    "existing_mcp_broker_io_registration_preserved": true,
+    "test_map_capture_entry_removed": true,
+    "cmake_configure_after_restoration": "PASS",
+    "target_help_shows_capture_target": false
+  },
+  "next_active_implementation": "Reimplement bounded owned capture and worker-side finalization in the Rust application under a new Rust work order.",
+  "live_owner_bridge_ui_generation_cancel_client_and_full_product_gates": "open"
+}

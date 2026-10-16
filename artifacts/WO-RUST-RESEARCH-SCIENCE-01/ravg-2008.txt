@@ -1,0 +1,666 @@
+                      Random-Access Rendering of General Vector Graphics
+                                                        Diego Nehab                   Hugues Hoppe
+                                                                      Microsoft Research
+
+
+
+
+Figure 1: Given a vector graphics drawing, we locally specialize its description to each cell of a lattice, and apply both prefiltering and spatially adaptive
+supersampling to produce high-quality antialiased renderings over arbitrary surfaces on the GPU.
+
+
+Abstract                                                                             to support discontinuities in images, or to encode glyph regions.
+We introduce a novel representation for random-access rendering                      Our aim is to directly model general vector graphics, composed of
+of antialiased vector graphics on the GPU, along with efficient                      multiple semitransparent layers of overlapping gradient-filled and
+encoding and rendering algorithms. The representation supports a                     outlined primitives, including thin strokes that would be difficult
+broad class of vector primitives, including multiple layers of                       to antialias properly when represented as filled primitives.
+semitransparent filled and stroked shapes, with quadratic outlines                   Approach: Like [Ramanarayanan et al. 2004], we construct a
+and color gradients. Our approach is to create a coarse lattice in                   lattice in which each cell contains a local graphics description
+which each cell contains a variable-length encoding of the                           specialized to that cell region. We store this local description as a
+graphics primitives it overlaps. These cell-specialized encodings                    variable-length stream that is parsed within a programmable pixel
+are interpreted at runtime within a pixel shader. Advantages                         shader at rendering time. The complexity of each cell stream is
+include localized memory access and the ability to map vector                        directly related to the number of vector primitives overlapping the
+graphics onto arbitrary surfaces, or under arbitrary deformations.                   cell, and thus complexity can be arbitrary and is only introduced
+Most importantly, we perform both prefiltering and supersampling                     where needed. Moreover, processing time in the pixel shader also
+within a single pixel shader invocation, achieving inter-primitive                   adapts to this complexity (subject to local SIMD parallelism), so
+antialiasing at no added memory bandwidth cost. We present an                        that large areas of continuous color are rendered quickly.
+efficient encoding algorithm, and demonstrate high-quality real-
+time rendering of complex, real-world examples.                                      We show that traditional vector graphics can be quickly converted
+                                                                                     into cell-specialized streams using a novel lattice-clipping algo-
+                                                                                     rithm that is simpler and asymptotically faster than hierarchical
+1. Introduction                                                                      clipping schemes. A unique aspect of the algorithm is that it
+Vector graphics are commonly used to represent symbolic infor-                       requires a single traversal of the input graphics primitives.
+mation such as text, maps, diagrams, and illustrations. Because
+                                                                                     Benefits: Cell-specialized streams nicely encapsulate the data
+finding the color of an individual pixel within a vector graphics                    involved in rendering a region of the domain. Conventional
+object requires traversing all its primitives, the object is usually
+                                                                                     vector graphics rasterization would traverse all input primitives
+rendered atomically into a framebuffer.
+                                                                                     and perform row-by-row updates to the output raster. Instead, we
+In contrast, raster images offer efficient random-access evaluation                  read a small subset of specialized primitives (which gets cached
+at any point by filtering of a local pixel neighborhood. Such                        across nearby pixels), combine the primitives within the shader
+random access allows images to be texture-mapped onto arbitrary                      (albeit with significant computation), and directly obtain the color
+surfaces, and permits efficient magnification and minification.                      of any individual pixel. Such low-bandwidth localized memory
+However, images do not accurately represent sharp color discon-                      access on both input and output should become increasingly
+tinuities: as one zooms in on a discontinuity, image magnification                   advantageous in many-core architectures.
+reveals a blurred or jagged boundary.
+                                                                                     Another benefit is antialiasing. Because cell streams provide a
+As reviewed in Section 2, recent vector texture schemes explore                      (conservative) list of all primitives overlapping a pixel, we can
+encoding vector primitives within a raster structure, for instance                   evaluate an antialiased pixel color in a single rendering pass,
+                                                                                     without resorting to A-buffer fragment lists [Carpenter 1984].
+                                                                                     Our scheme combines the power of two antialiasing techniques:
+                                                                                     (1) approximate prefiltering within each vector primitive, and
+                                                                                     (2) supersampling across primitives. Although supersampling
+                                                                                     adds computational cost, it involves no extra memory access.
+                                                                                     Moreover, we show that it is easy to spatially adapt the super-
+                                                                                     sampling density to local graphics complexity, e.g. falling back to
+                                                                                     a single sample per pixel in regions of continuous color. Such
+                                                                                     sampling adaptivity has only recently been explored in real-time
+                                                                                     rendering applications [Persson 2007].
+Our cell-specialized graphics inherit advantages already shown in          mentable on present GPUs, given a scheme to pack the variable-
+vector texture schemes. Shape primitives can be encoded using              length texel descriptions. Whereas their strategy is to add discon-
+lower-precision (e.g. 8- or 16-bit) cell-local coordinates. Also,          tinuities to raster images, ours is to directly render general vector
+since the vector graphics can be evaluated entirely in a shader,           graphics. This requires high-quality prefiltering (especially of
+they can be mapped onto general surfaces just like texture images.         thin strokes) and correct blending of transparent gradients, neither
+Contributions:                                                             of which seems feasible with a region-based decomposition. Our
+                                                                           strategy of maintaining a layered description and representing
+• Variable-length cell streams for locally specialized encoding of         paths explicitly was guided by these requirements.
+  general vector graphics including multiple layers and strokes;
+                                                                           Like [Frisken et al. 2000; Loop and Blinn 2005; Ray et al. 2005],
+• Efficient construction from a vector graphics input, using a             we use approximate distances to primitives for screen-space
+  novel and efficient lattice-clipping algorithm;                          prefiltering. Qin et al. [2008] present an iterative method for
+• Concept of overlapping extended cells for correct prefiltering;          computing precise distances to curved segments within their
+• Fast computation of approximate distance to a quadratic curve;           radius of curvature. We instead present a formula for approximate
+                                                                           distance to quadratic segments that is spatially continuous and
+• Fast anisotropic prefiltering approximation of thin strokes;             faster to evaluate.
+• Low-bandwidth high-quality antialiasing by combining prefil-
+                                                                           The recent work of Qin et al. [2008] builds on some of the ideas
+  tering and supersampling in a single pass;
+                                                                           presented in a previous version of this paper [Nehab and Hoppe
+• Random-access vector graphics with linear and radial gradients.          2007]. In particular, Qin et al. also consider general vector
+Limitations:                                                               graphics defined as layers of filled and stroked primitives, use
+                                                                           extended cells for correct prefilter antialiasing, and render thin
+• Rendering from cell-specialized representations assumes a static         curved strokes using a distance function. Whereas they use
+  layout of graphics primitives in the domain, so animations               corners to attempt to infer the sign of the distance from the nearest
+  would require re-encoding dynamic shapes at each frame                   feature (which can lead to artifacts), our features are simply the
+  (which fortunately is very fast);                                        path segments themselves. This simplicity, which comes from the
+• The description of each vector path segment is replicated in all         fact that our inside/outside classification is separate from the
+  cells over which it overlaps, but there is little effective storage      distance computation, leads to an efficient representation that
+  overhead because segments typically have small footprint;                guarantees exact interior classification.
+• All cells in the interior of a filled shape must include the shape
+  color, just as in an ordinary image; on the other hand, there is no      3. Our vector graphics representation
+  need to store a tessellation of the shape;
+                                                                           Our basic shape primitive is a path with linear and/or quadratic
+• The current implementation does not support all vector graphics          segments specified by a sequence of 2D points. Cubic segments
+  attributes, such as stylized strokes or image-space blur filters,        are adaptively subdivided into quadratic ones; these form an
+  but these can be implemented as pre- or post-processing;                 excellent approximation for rendering purposes. Paths are defined
+• Filtered minification requires fallback to a mipmap image                by lists of points, each one marked by one of four possible tags:
+  pyramid, but this is true of all other approaches;                       Moveto, Drawto, Curvepoint, or Last, as shown in Figure 2a.
+• Because the cell descriptions have variable lengths, we must use
+                                                                                                                           { a-Moveto,
+  an indirection scheme to compact the data.                                       (a)                e                     b-Last,
+                                                                                                 a                 d        c-Moveto,
+                                                                                                                            d-Curvepoint,
+2. Related work                                                                                        g               b    e-Drawto,
+Several schemes incorporate sharp outlines in a raster texture by                                                           c-Last,
+                                                                                                                            f-Moveto,
+encoding extra information within its pixels. Prior GPU schemes                                                        h    g-Drawto,
+                                                                                                 f
+limit the complexity of the outline within each image cell, such as                                          c              h-Last }
+a few line segments [Sen et al. 2003, 2004; Tumblin and
+                                                                                         Stroke Width Color M ax ay L bx by
+Choudhury 2004; Lefebvre and Hoppe 2006], an implicit bilinear                     (b)
+curve [Tarini and Cignoni 2005; Loviscach 2005], a parametric                             Fill       Color M cx cy C dx dy D ex ey L cx cy
+cubic curve [Ray et al. 2005], two quadratic segments [Parilov                           Stroke Width Color M fx       fy C gx gy L hx hy
+and Zorin 2008], or a fixed number of corner features [Qin et al.                        …
+2006]. A drawback of fixed-complexity cells is that small areas of                   Figure 2: Example vector graphics and its encoding.
+high detail (e.g. cities on maps, or font serifs) require fine lattices,
+which globally increases storage cost. A quadtree structure                A layer associates a rendering state to the path, including whether
+provides adaptivity [Frisken et al. 2000], but still limits the num-       it is stroked and/or filled, its color, and stroke width. A filled path
+ber of primitives at the leaf nodes. Our variable-length cell              must be closed; we define its interior using the even-odd fill rule.
+representation allows for graphics of arbitrary complexity.                The overall vector graphics consists of a back-to-front ordered list
+Most prior schemes consider a single layer of non-overlapping              of layers, and is encoded as a stream of instructions (Figure 2b).
+vector graphics. An extension explored by Ray et al. [2005] is to          The color specification consists of either a constant RGBA tuple
+create a specialized shader that implements a fixed compositing            or an index into an array of gradient descriptors (Section 6).
+hierarchy of several vector textures. However, such hierarchies
+may become impractical as the input complexity increases.                  4. Rendering
+Moreover, the high evaluation cost is uniform over all pixels. In          Most rendering algorithms for vector graphics objects operate by
+essence, our scheme adaptively simplifies this hierarchy per cell.         rasterizing the input into an uniformly sampled output image.
+The feature-based textures of Ramanarayanan et al. [2004] allow            Instead, to support random-access, we must design an algorithm
+each image texel to contain an arbitrary set of regions used to            that can efficiently evaluate the color at any given point, in any
+override smooth interpolation. Their approach should be imple-             order, as requested by a pixel shader program.
+        (a)                 (b)               (c)               (d)             No prefiltering         Box              Parabolic        Gaussian
+Figure 3: The importance of compositing in the correct color-space.           Figure 4: Prefiltering results using different kernels. The Moiré patterns
+(a) Correct, linear coverage computation. (b) Incorrect thicker results due   are due to inter-primitive interactions, and are handled by the super-
+to nonlinear coverage. (c) Nonlinear intrinsic transparency expected by       sampling strategy of Section 4.5.
+the artist. (d) Result of linear compositing. Our hybrid blending operation
+combines (a) and (c) to always produce the correct/expected results.          difference between two half-spaces, offset each way by half the
+                                                                              stroke width. Since convolution is a linear operation, stroke
+The basic approach is to compute the color (including a partial               prefiltering also reduces to convolution between a kernel and a
+coverage opacity) contributed by each graphics layer at the                   half-space: 𝑘 ∗ (𝑙+𝑤 − 𝑙−𝑤 ) = 𝑘 ∗ 𝑙+𝑤 − 𝑘 ∗ 𝑙−𝑤 .
+current pixel 𝑝, and to composite these colors in back-to-front
+order, all within a single invocation of the pixel shader.                    Kernel choice: If the kernel is radially symmetric, or if the
+                                                                              kernel is rotationally aligned with the half-space (which does not
+                                                                              seem to degrade the quality of the results), the convolution can be
+4.1 Compositing                                                               expressed as a function 𝑜(𝑑) of the signed distance 𝑑 between the
+When compositing, it is vital to distinguish between the two                  pixel and the half-space [Gupta and Sproull 1981].
+sources of a layer’s transparency: the intrinsic transparency from
+                                                                              We have experimented with box, parabolic, and
+its color specification (alpha component), and the partial coverage
+                                                                              Gaussian kernels. Figure 4 shows prefiltered
+opacity near primitive boundaries. Partial coverage must be dealt
+with in a linear color-space, lest dark primitives appear thicker             renderings of the inset resolution chart. Since
+than they should [Blinn 1998] (see Figure 3a-b). Unfortunately,               the simple box kernel is clearly unsatisfactory,
+most content creation tools represent colors in a nonlinear, gam-             our preferred choice is the parabolic kernel
+ma-adjusted space (e.g. sRGB [Stokes et al. 1996]), and perform               𝑘𝑝 (𝑑) = 43(1 − 𝑑2 ), 𝑑 ∈ [−1,1], which yields
+compositing in this space. Misguided by this feedback, artists                       𝑜𝑝 (𝑑) = 12 + 14 (3𝑑 − 𝑑3 ) = smoothstep(−1, 1, 𝑑).
+select transparency parameters that would look entirely different if
+linearly composited (see Figure 3c-d). Caught between the                     This provides a good tradeoff between quality and simplicity, and
+hammer and the anvil, we must resort to a hybrid blending opera-              is equivalent to the transition function intuitively proposed by
+tion that independently treats each source of transparency.                   [Qin et al. 2006].
+Our hybrid blending operation takes an sRGB input layer color 𝑓̃              Evaluation: Each filled layer successively updates the pixel
+(including an intrinsic alpha), a coverage opacity 𝑜 ∈ [0,1], and a           color 𝑐, by means of the hybrid blending operation defined in
+background color 𝑐 in linear space, and returns the composite                 Section 4.1:
+color also in linear space:
+                                                                                                 𝑐 = blend�𝑐, fillcolor, 𝑜𝑝 (𝑑)�.
+    blend�𝑐, 𝑓̃, 𝑜� = lerp �sRGB −1 �over(𝑓̃, sRGB(𝑐)� , 𝑐, 𝑜�.               Similarly, a stroked layer with half-width 𝑤 updates the pixel
+                                                                              color 𝑐 according to the rule:
+For efficiency, the over compositing operation can assume
+premultiplied alpha, as long as the color-space conversion func-                  𝑐 = blend �𝑐, strokecolor, 𝑜𝑝 (|𝑑| + 𝑤) − 𝑜𝑝 (|𝑑| − 𝑤)�.
+tions sRGB and sRGB −1 also operate in that space. Needless to
+say, the process would be much simpler if all operations could be             For paths that are both filled and stroked, we perform two succes-
+performed in a linear color space, as they were meant to be.                  sive blend operations, first with the fill, and next with the stroke.
+The following section describes how to compute the partial                    For simplicity, we first compute 𝑑′ and 𝑤 ′ in texture space, then
+coverage opacity 𝑜 by prefiltering the vector graphics.                       map them to screen space. The sign of 𝑑′ , which defines the
+                                                                              interior of filled primitives, is obtained by shooting a ray from the
+4.2 Prefiltering                                                              pixel to the right (+𝑥), tracking the number of intersections with
+                                                                              the path segments [Foley et al. 1990]. For each segment, we
+Prefiltering eliminates high frequencies from the vector graphics             determine the number ℎ𝑖 of ray intersections and the vector 𝑣𝑖
+before sampling to prevent them from causing aliasing artifacts.              from the pixel to the closest point on the segment (see Sec-
+Given a kernel 𝑘(𝑝) (i.e. a low-pass filter) and an indicator                 tions 4.3 and 4.4). We combine these as
+function 𝑙(𝑝) for a layer (i.e. 𝑙(𝑝) = 1 inside and 0 outside), the
+partial coverage opacity is given by a screen-space 2D convolu-                           𝑣 = arg min𝑣𝑖 ‖𝑣𝑖 ‖ and ℎ = ( ∑𝑖 ℎ𝑖 ) mod 2,
+tion 𝑜(𝑝) = 𝑘 ∗ 𝑙 = ∬ 𝑘(𝑝 ′ − 𝑝) ∙ 𝑙(𝑝′ ) 𝑑𝑝′ .                               to obtain
+Although exact prefiltering would be too costly to evaluate in                                          𝑑′ = −(−1)ℎ ‖𝑣‖.
+real-time, we employ a variety of simplifying assumptions that
+make the process practical. For instance, we prefilter each layer             Now consider the half-space perpendicular to vector 𝑣. Using the
+independently, which ignores the fact that layer compositing and              Jacobian 𝐽 of the map from screen to texture coordinates (which
+prefiltering do not generally commute, and thus may be incorrect              we obtain directly from the built-in ddx/ddy operations), we can
+when multiple layers partially overlap a pixel.                               transform this half-space to screen coordinates. There, it lies at a
+                                                                              distance 𝑑 = 𝑠(𝑣) 𝑑′ from the pixel, with an anisotropic scaling
+Furthermore, within each path, we consider only the closest                   factor
+segment to a pixel (which is incorrect when multiple path features                                               ‖𝑣‖
+overlap a pixel). Then, in the case of filled paths, we locally                                         𝑠(𝑣) =        .
+                                                                                                                ‖ 𝐽𝐽‖
+approximate 𝑙 by an infinite half-space (which breaks down near
+sharp angles). Stroked paths can similarly be approximated by the             Stroke widths are similarly scaled by 𝑠(𝑣), so that 𝑤 = 𝑠(𝑣) 𝑤 ′ .
+                                                                                                    bi+1                                         bi
+
+                                                                                   (a)                                        (b)
+                    (a) Isotropic filtering for comparison.
+                                                                                             vi
+                                                                                                           +x ray
+                                                                                                    qi                                     vi
+                                                                                      p                                                               +x ray
+                                                                                    pixel                                                  p
+                                                                                                                             bi+1        pixel        bi-1
+           (b) Prefiltering of Section 4.2, using a parabolic filter.                                      bi
+                                                                                Figure 6: Ray intersection testing and distance computation, for (a) linear
+                                                                                and (b) quadratic path segments.
+
+       (c) Supersampling of Section 4.5, 𝑘 = 400 (no prefiltering).             Computing the distance to the quadratic Bézier curve involves
+    Figure 5: Anisotropic antialiasing of filled and stroked primitives.        finding the roots of a cubic polynomial. Analytic roots require
+                                                                                transcendental functions and are thus expensive to evaluate [Blinn
+The example in Figure 5 shows two characters, a filled ‘A’ and a                2006]. Iterative solvers [Qin et al. 2008] can be a faster alterna-
+stroked ‘B’, rendered at a grazing angle. The difference between                tive within the radius of curvature of the curve.
+(a) and (b) shows the importance of anisotropy. The similarity                  Instead, like Loop and Blinn [2005], we develop a fast approxi-
+between (b) and (c) shows the accuracy of our approximation.                    mate technique based on implicitization. But whereas their
+The overall rendering algorithm can be summarized as follows:                   triangle-bounded rasterization approach only needs distance to an
+                                                                                infinite curve, we require distance to a curve segment, i.e. taking
+  Initialize the pixel color, e.g. to white or transparent.                     the endpoints into account.
+  for (each layer)
+       Initialize the pixel winding parity ℎ to 0 and distance vector 𝑣 to ∞.   At rendering time, we convert the Bézier curve to its implicit
+       for (each segment in layer)                                              quadratic representation 𝑓(𝑝) = 0, given by the Bezout form of
+          Shoot ray from pixel through segment and update ℎ.                    its resultant [Goldman et al. 1984]:
+          Compute distance vector to segment and update 𝑣.
+       Compute texture-space signed distance 𝑑 ′ from ℎ and 𝑣.
+                                                                                                    𝑓(𝑝) = 𝛽(𝑝) 𝛿(𝑝) − 𝛼 2 (𝑝), with
+       Use 𝑣 to obtain screen-space signed distance 𝑑 and stroke width 𝑤.             𝛽(𝑝) = 2 Det(𝑝, 𝑏𝑖 , 𝑏𝑖−1 ), 𝛿(𝑝) = 2 Det(𝑝, 𝑏𝑖+1 , 𝑏𝑖 ),
+       if (fill) Blend fill color with prefiltered opacity.
+       if (stroke) Blend stroke color with prefiltered opacity.                                                                           𝑝 𝑞 𝑟
+                                                                                     𝛼(𝑝) = Det(𝑝, 𝑏𝑖−1 , 𝑏𝑖+1 ), and Det(𝑝, 𝑞, 𝑟) = �           �.
+                                                                                                                                          1 1 1
+We now describe the process of obtaining the winding number                     The zero set of the first-order Taylor expansion of 𝑓 centered at 𝑝
+increment ℎ𝑖 and vector distance 𝑣𝑖 for each segment type.                      defines a line, and the closest point 𝑝 ′ to 𝑝 on this line is given by
+
+4.3 Linear segments                                                                                                       𝑓(𝑝) ∇𝑓(𝑝)
+                                                                                                               𝑝′ = 𝑝 −              .
+                                                                                                                          ‖∇𝑓(𝑝)‖2
+For each linear segment (𝑏𝑖 , 𝑏𝑖+1 ), the ray intersection count
+ℎ𝑖 ∈ {0,1} and distance vector 𝑣𝑖 are given by (see Figure 6a):                 For 𝑝′ exactly on the curve, we can find the parameter 𝑡 ′ such that
+                                                                                𝑏(𝑡 ′ ) = 𝑝′ by inversion. In the quadratic Bézier case, Goldman et
+                𝑝𝑦 − 𝑏𝑖,𝑦
+         𝑡𝑖 =               ,     𝑞𝑖 = lerp(𝑏𝑖 , 𝑏𝑖+1 , 𝑡𝑖 ) ,                  al. [1984] show that inversion can be obtained by
+              𝑏𝑖+1,𝑦 − 𝑏𝑖,𝑦
+                                                                                              𝑢𝑗′                                   𝛽(𝑝′ )          𝛼(𝑝′ )
+                   1, if 0 ≤ 𝑡𝑖 ≤ 1 and 𝑞𝑖,𝑥 > 𝑝𝑥                                    𝑡′ =           ,      with either 𝑢1′ =               or 𝑢2′ =        .
+            ℎ𝑖 = �                                                                          1 + 𝑢𝑗′                                 𝛼(𝑝 )
+                                                                                                                                       ′            𝛿(𝑝′ )
+                   0, otherwise ,
+                                                                                In fact, if 𝑝′ lies on the curve, the resultant vanishes, and 𝑢1′ = 𝑢2′ .
+                          (𝑝 − 𝑏𝑖 ) ⋅ (𝑏𝑖+1 − 𝑏𝑖 )                              Since this is generally not the case, the two values differ, and we
+            𝑡𝑖′ = clamp �                            , 0,1� ,
+                         (𝑏𝑖+1 − 𝑏𝑖 ) ⋅ (𝑏𝑖+1 − 𝑏𝑖 )                            must rely on an approximation. Our contribution is the choice
+            𝑣𝑖 = 𝑝 − lerp(𝑏𝑖 , 𝑏𝑖+1 , 𝑡𝑖′ ) .                                                                          𝛼(𝑝′ ) + 𝛽(𝑝′ )
+                                                                                                                𝑢� =
+                                                                                                                       𝛼(𝑝′ ) + 𝛿(𝑝′ )
+If the ray passes exactly through a vertex at rendering time, we                which gives
+perturb its vertical coordinate imperceptibly for robustness.
+                                                                                                                   𝛼(𝑝′ ) + 𝛽(𝑝′ )
+                                                                                                        𝑡̅ =                             .
+4.4 Quadratic segments                                                                                         2𝛼(𝑝′ ) + 𝛽(𝑝′ ) + 𝛿(𝑝′ )
+Each segment (𝑏𝑖−1 , 𝑏𝑖 , 𝑏𝑖+1 ), with 𝑏𝑖 tagged Curvepoint, defines            Notice that 𝑡̅ is exact whenever 𝑝′ is on the curve. The biggest
+a Bézier curve 𝑏(𝑡) = (1 − 𝑡)2 𝑏𝑖−1 + 2(1 − 𝑡)𝑡 𝑏𝑖 + 𝑡 2 𝑏𝑖+1 on                advantage of 𝑡̅, however, is that it is continuous, even when 𝑝′
+the interval 0 ≤ 𝑡 ≤ 1. The intersection count ℎ𝑖 ∈ {0,1,2} and                 coincides with one of the control points, where either 𝑢1′ or 𝑢2′
+vector 𝑣𝑖 are found as follows (see Figure 6b).                                 becomes undefined. The denominator of 𝑡̅ is zero only if 𝑏0 , 𝑏1 ,
+                                                                                and 𝑏2 are collinear, in which case we would have converted the
+Any intersections of the +𝑥 ray from pixel 𝑝 with the (infinite)                primitive to a linear segment. The same holds for ‖∇𝑓(𝑝)‖.
+quadratic curve are found as the roots 𝑡1 and 𝑡2 of the quadratic
+equation 𝑏𝑦 (𝑡𝑗 ) = 𝑝𝑦 . For each root 𝑡𝑗 , we increment the ray                From 𝑡̅, we then obtain the distance vector as
+intersection count 𝑤𝑖 if the point 𝑏(𝑡𝑗 ) lies within the curve                                          𝑣𝑖 = 𝑝 − 𝑏�clamp(𝑡̅, 0,1)� .
+segment (i.e. 0 ≤ 𝑡𝑗 ≤ 1) and to the right of 𝑝 (i.e. 𝑏𝑥 (𝑡𝑗 ) > 𝑝𝑥 ).
+                                                                                Note that implementation of these formulas is simpler if the
+The quadratic equation 𝑏𝑦 (𝑡) = 𝑝𝑦 becomes linear if the parabola               Bézier points 𝑏 are translated so as to place 𝑝 (and later 𝑝′ ) at the
+axis is horizontal, i.e. 𝑏𝑖,𝑦 = 12�𝑏𝑖−1,𝑦 + 𝑏𝑖+1,𝑦 �. To avoid having           origin. The HLSL source code shown below compiles to just 32
+to test this condition at runtime, we imperceptibly perturb the                 assembly instructions, contains only two division instructions and
+point 𝑏𝑖 by one bit during encoding.                                            no transcendental functions, square roots, loops, or branching.
+                                                                                              (k=16)                                        p′
+                                                                                                                p′
+
+
+
+
+                                                                                                     Screen-space pixel         Texture-space cell
+                                                                                     Figure 8: Supersample antialiasing evaluates color at multiple samples
+      (a)                     (b)                      (c)                           (shown in green) during a single shader evaluation.
+Figure 7: (a) Exact distance to a quadratic curve involves cubic polynomi-
+al roots. (b) A first-order implicit approximation [Loop and Blinn 2005]             Aila [2006]. Unfortunately current hardware does not permit this,
+does not capture the segment endpoints. (c) Our inversion-based approx-              but perhaps this will be possible in the future.
+imation is fast, and visual analysis reveals that it is sufficiently accurate in     We traverse the cell stream just once, updating all samples 𝑐𝑗 as
+the vicinity of the curve.                                                           each primitive is decoded. This requires allocating a few tempo-
+                                                                                     rary registers per sample (accumulated color 𝑐, accumulated
+  inline float det(float2 a, float2 b) { return a.x*b.y-b.x*a.y; }                   winding parity ℎ, and shortest distance vector 𝑣). For each
+  // Find vector 𝑣𝑖 given pixel 𝑝=(0,0) and Bézier points 𝑏0 ,𝑏1 ,𝑏2 .               subpixel sample, we still evaluate the prefilter antialiasing of
+  float2 get_distance_vector(float2 b0, float2 b1, float2 b2) {
+       float a=det(b0,b2), b=2*det(b1,b0), d=2*det(b2,b1);         // 𝛼,𝛽,𝛿(𝑝)       Section 4.2, but with a modified Jacobian matrix 𝐽′ = �𝑠/𝑘 𝐽
+       float f=b*d-a*a;                                            // 𝑓(𝑝)           where 𝑠 is the kernel support area in pixels, to account for the
+       float d21=b2-b1, d10=b1-b0, d20=b2-b0;                                        changed inter-sample spacing.
+       float2 gf=2*(b*d21+d*d10+a*d20);
+       gf=float2(gf.y,-gf.x);                                      // ∇𝑓(𝑝)          The number 𝑘 of samples is adaptively selected based on the cell
+       float2 pp=-f*gf/dot(gf,gf);                                 // 𝑝′             complexity. In our current system, we use the simple approach of
+       float2 d0p=b0-pp;                                           // 𝑝′ to origin   overriding 𝑘 to equal 1 in cells containing a single graphics layer
+       float ap=det(d0p,d20), bp=2*det(d10,d0p);                   // 𝛼,𝛽(𝑝′ )
+       // (note that 2*ap+bp+dp=2*a+b+d=4*area(b0,b1,b2))
+                                                                                     with uniform color. An alternative would be to let the cell encod-
+       float t=clamp((ap+bp)/(2*a+b+d), 0,1);                      // 𝑡̅             ing explicitly specify the desired supersampling complexity.
+       return lerp(lerp(b0,b1,t),lerp(b1,b2,t),t);                 // 𝑣𝑖 = 𝑏(𝑡̅)     Figure 9 compares the rendering quality with different antialiasing
+  }
+                                                                                     settings. Although the computation has a cost that scales as 𝑂(𝑘),
+We have found that this approximate distance is sufficiently                         it is performed entirely on local data, and is therefore amenable to
+accurate for the purpose of prefiltering and thin-stroke rendering,                  additional parallelism in future GPUs. For ground-truth, we use
+as visually demonstrated in Figure 7. Note the correct behavior at                   𝑘=400 samples, weighted according to the (13, 13) kernel of Mitchell
+the endpoints, and the high precision in the neighborhood of the                     and Netravali [1988]. Notice how results are close to ground-
+curve, where it is most relevant for prefiltering. Wide stroke                       truth with just 8 samples/pixel, but only if prefiltering is enabled.
+paths whose outlines are poorly approximated are pre-converted                       The overall rendering algorithm with supersample antialiasing can
+to filled primitives. It would be desirable to characterize the                      be summarized as follows:
+maximum error analytically, but unfortunately this seems hard.
+                                                                                       for (each sample)
+                                                                                            Initialize the sample color, e.g. to white or transparent.
+4.5 Supersampling                                                                      for (each layer)
+The prefiltering strategy described in Section 4.2 relies on simpli-                        for (each sample 𝑖)
+                                                                                              Initialize the sample winding parity ℎ𝑗 to 0.
+fying assumptions that break down when many primitives overlap                                Initialize the sample distance vector 𝑣𝑗 to ∞.
+a pixel. One possible high-quality approximation in traditional                             for (each segment in layer)
+rasterization is the A-buffer [Carpenter 1984], which maintains                               for (each sample 𝑖)
+per-pixel lists of fragments, with each fragment containing a                                    Shoot ray from sample through segment, and update ℎ𝑗 .
+                                                                                                 Compute absolute distance to segment, and update 𝑣𝑗 .
+subpixel bitmask. However, this approach is challenging to                                  for (each sample 𝑖)
+implement efficiently in hardware [Winner et al. 1997].                                       Use 𝑣𝑖 to obtain screen space distance 𝑑𝑗 and stroke width 𝑤𝑗 .
+                                                                                              if (fill) Blend fill color over sample with prefilter opacity.
+Because cells store the full list of relevant vector primitives (on                           if (stroke) Blend stroke color over sample with prefilter opacity.
+the current surface), we can evaluate and combine colors at
+                                                                                       Compute the weighted sum of sample colors to obtain the pixel color.
+multiple subpixel samples, without any added bandwidth.
+The first step is to determine the footprint of the pixel in texture                     1 sample             4 samples            8 samples             400 samples
+space, just as in anisotropic texture filtering [Heckbert 1989].
+This footprint could overlap several cells, which would require
+parsing of multiple cell streams. Fortunately, use of extended
+cells (Section 5.1) provides a margin so we need only consider the
+current cell. When a pixel footprint grows larger than the overlap
+region, we transition to conventional anisotropic mipmapping.
+                                                                                                                     Without prefiltering
+Our system evaluates a set of 𝑘 weighted samples within a paral-
+lelogram footprint as shown in Figure 8. More precisely, given a
+sampling pattern defined by local displacements 𝑢𝑗 and weights
+𝑎𝑗 , the final pixel color is computed as the weighted sum ∑𝑗 𝑎𝑗 𝑐𝑗
+where 𝑐𝑗 is the sample color evaluated at displaced position
+𝑝𝑗 = 𝑝 + 𝐽𝑢𝑗 . We use sampling patterns P(1,4,2) or P(1,4,4) from
+[Laine and Aila 2006], corresponding to 𝑘=4 or 8. Because the                                                      With prefiltering
+footprints overlap in screen space, it would be ideal if samples                     Figure 9: Use of supersampling to resolve interactions between multiple
+could be shared among adjacent pixels, as suggested by Laine and                     primitives per pixel, with and without the prefiltering of Section 4.2.
+                                       Extended cell includes
+                                       overlap region
+
+
+
+                                       ~10-20%
+
+Figure 10: For correct antialiasing, each cell stores all primitives that
+affect an extended cell region.
+
+5. Conversion to specialized cells
+We now describe our method for converting vector graphics to a
+cell-specialized description, to enable compact storage and effi-
+cient runtime evaluation. Because the conversion algorithm is               Figure 11: For a filled shape, polygon clipping to each extended cell
+very fast, it may also prove useful for software rasterization,             gives the paths on the right; the dashed segments have no effect on our
+                                                                            winding rule computation and are therefore ignored, whereas the red
+especially on many-core processors.                                         segments must be included.
+
+5.1 Extended cells
+First, we must identify the set of primitives that could contribute         5.3 Fast lattice-clipping algorithm
+to the rendering of any pixel falling within a given cell. Obvious-         Figure 11 shows an example of the desired output. The main
+ly, any filled path must be included if its interior overlaps the cell.     difficulty is the introduction of auxiliary segments on the right
+Stroked paths must be included if the path outline (offset either           boundary of each extended cell (shown in red), so that rays cast in
+way by half the stroke width) overlaps the cell.                            the +𝑥 direction encounter the correct number of intersections. In
+Furthermore, when either prefiltering or supersampling is enabled,          the top row of the example, these auxiliary segments are connect-
+a primitive must also be represented in a cell if its convolution           ed to the bottom of the cell. However, in the bottom row they are
+with the associated kernel overlaps the cell, i.e., the minimum             connected to the top. Unfortunately, there is no local decision
+screen-space distance between the primitive and the cell is less            procedure for determining which is the case at hand. Notice that,
+than the finite kernel support (see Section 4.2 and 4.5). This              compared to a downward auxiliary segment, an upward auxiliary
+screen-space distance may vary at runtime. As the cells shrink to           segment uniformly increments the winding number within the
+the size of a screen pixel, the width of the kernel may become as           cell. The trick is therefore to make a consistent, arbitrary deci-
+large as an entire cell. At extreme minification, several cells map         sion, and correct it afterwards.
+into individual pixels, so antialiasing breaks down, and one must           To that end, we always extend the path segments crossing the
+instead transition to a conventional raster mipmap pyramid.                 right boundary of a cell to the top right corner of the cell. Figure
+To allow satisfactory antialiasing up to a reasonable minification          12 shows this intermediary representation (notice the green
+level (where we transition to a mipmap), we find the primitives             arrows). Whenever a path segment crosses the bottom of a cell,
+that overlap an extended cell as illustrated in Figure 10. Growing          we know that every cell to its left will make a mistake. We
+this extended cell allows a coarser mipmap pyramid, but increases           therefore record into the cell a change Δℎ in winding number, to
+the length of the cell streams since more primitives lie in the             affect all cells to the left in that row (+1 for upward segment and
+extended cell. We have found that a good tradeoff is to set the             −1 for downward segment). Once all segments have been pro-
+overlap band to be 10-20% of the cell size.                                 cessed, we efficiently traverse each row right-to-left, integrating
+                                                                            the winding number changes. For each cell with a resulting
+                                                                            nonzero winding increment, we add an appropriate number of
+5.2 Cell-based specialization                                               upward or downward auxiliary segments, spanning the entire row
+Although specializing stroked paths to an extended cell is trivial,         (see the red arrows in the figure). The resulting green and red
+dealing with filled primitives requires some form of polygon                edges are finally merged together to produce a result equivalent to
+clipping. Of course, independently clipping each filled input path          that of Figure 11.
+against each extended cell in an entire lattice would be prohibi-
+                                                                            For completeness we provide here a more detailed algorithm:
+tively inefficient. The time required (say, by using an extension
+of [Sutherland-Hodgman 1974] to piecewise quadratic segments)                 for (each segment in a layer)
+would be proportional to 𝑂(𝑛 𝑟 2 ), where 𝑛 is the number of input                 Enter the segment into the lattice cell(s) that it overlaps,
+vertices and 𝑟 2 is the number of grid cells. To accelerate the                        clipping it to the cell boundaries.
+process, we could perhaps use recursive subdivision over a quad-                   if the segment leaves a cell through its right boundary,
+                                                                                       add a segment from the intersection to the top right corner.
+tree of cells, in line with what is described by [Warnock 1969].                   if the segment enters a cell through its right boundary,
+This strategy could reduce the time complexity to 𝑂(𝑛 log 𝑟 + 𝑎),                      add a segment from the top right corner to the intersection.
+where 𝑎 is the output size.                                                        if the segment enters a cell through its lower boundary,
+                                                                                       increment Δℎ𝑐 on the cell.
+Fortunately, we can do even better than that. Our lattice-clipping                 if the segment leaves a through its lower boundary,
+algorithm streams over the primitives just once, and directly clips                    decrement Δℎ𝑐 on the cell.
+each filled path against every cell that overlaps it. The resulting           Sort all modified Δℎ𝑐 (merge rows, bucket sort columns, split rows)
+time complexity is only 𝑂(𝑛 + 𝑟 + 𝑎), and the simplicity of the               for (each row of modified cells)
+algorithm contributes to its speed in practice.                                    Initialize the winding number ℎ = 0 (associated with the row).
+                                                                                   for (each span of cells in right-to-left order) {
+To achieve a more compact representation, we exploit knowledge                        Add |h| vertical segments on the right boundary of the cell,
+of our particular rendering algorithm. Specifically, since render-                       pointing up if ℎ > 0, or down otherwise.
+ing is based on shooting rays in the +𝑥 direction, we can safely                      Merge the cell segments if possible.
+                                                                                      Update the winding number as the running sum ℎ = ℎ + Δℎ𝑐 .
+omit segments that lie above, to the left, or below each extended
+cell, as they never take part in the winding number computation.              Clear only the modified Δℎ𝑐 (i.e., using linked lists)
+                                                1          1          0
+ ∆h=−1                    ∆h=+1
+
+
+
+                                                1          1          0
+ ∆h=−1                  ∆h=+1
+
+
+
+                                                0          0          0
+
+Figure 12: To recover correct winding numbers within the cells, our fast
+algorithm inserts auxiliary segments (green) on right boundaries, and
+makes a right-to-left sum of bottom-boundary intersections to appropriate-
+ly insert right-boundary edges (red). After some local simplification, the   Figure 13: Demonstration of our fast cell-specialization algorithm on a
+result is equivalent to that in Figure 11.                                   complex shape with self-intersections.
+
+Overall the algorithm is extremely fast, processing even our most            Gradient fills can be used to map 2D global coordinates to colors.
+complicated example (~100K segments) in less than a second (see              This mapping consists of four stages: (1) an affine mapping 𝑀
+Table 3). For the case of the even-odd fill rule, the algorithm can          from 2D lattice coordinates to 2D gradient space, (2) a linear or
+be simplified further to preserve just the parity of the winding             radial mapping from 2D gradient space to a parameter 𝑡 ′ ∈ ℝ,
+number. Figure 13 shows an example with an intricate self-                   (3) a wrapping function from 𝑡 ′ to 𝑡 ∈ [0,1], (4) and a piecewise-
+intersecting shape. On the right, the figure shows the resulting             linear color ramp function 𝐶 sampled at 𝑡.
+intermediary and final specialized encodings for selected cells.
+                                                                             We encode these gradient mappings as follows. We store an
+As a final step, we convert all points to a [0 … 1]2 coordinate
+                                                                             approximation of each color ramp function 𝐶 as a rasterized 1D
+system over the extended cell. In the rare case that a middle
+                                                                             texture, and concatenate these into a single 1D texture.
+Curvepoint Bézier control point lies outside the extended cell, we
+recursively subdivide the curve into smaller Bézier segments.                To evaluate the gradient color for a layer, we first obtain the point
+                                                                             𝑝𝑔 = 𝑀 𝑝 in gradient space. Then, for linear gradients, 𝑡 ′ is
+5.4 Occlusion optimization                                                   simply given by the 𝑥-coordinate of 𝑝𝑔 (Figure 15 left). Radial
+                                                                             gradients are parameterized by a scalar 𝑐𝑥 that defines the center
+When the vector graphics is specialized to a cell, it is possible for        (𝑐𝑥 , 0) of a unit circle in gradient space. The value 𝑡 ′ is then
+the shape within one layer to become completely occluded by one              given by the ratio �𝑝𝑔 �/‖𝑞‖, where point 𝑞 is the intersection of
+or more layers in front of it. In traditional rendering this would           the ray �0, 𝑝𝑔 � with the unit circle (Figure 15 right). Thus, a
+cause overdraw. Now we have the opportunity to locally remove                radial gradient descriptor requires the full 2×3-matrix 𝑀 plus the
+the occluded layer. One could use general polygon-polygon                    value 𝑐𝑥 (7 floats); a linear gradient requires only the first row of
+clipping [Greiner and Hormann 1998] to check if any layer is                 𝑀 (3 floats). We pack these coefficients into 4-vectors, using the
+fully occluded by the union of the layers in front of it. In our             leftover element to store an offset into the concatenated ramp
+current system, we simply check if any opaque, filled layer fully            texture. We store these in a linear buffer of gradient descriptors.
+occludes the cell, and if so remove all layers behind it. As an
+example, for the Tiger model in Figure 19, the average cell stream           If the Gradient flag of a layer header is set, we use the color
+length is reduced from 9.5 to 7.0 words.                                     channels to encode an index into the gradient descriptor buffer,
+                                                                             and a scaling factor used in accessing the gradient ramp texture.
+                                                                             The type of gradient (linear or radial) and the wrapping function
+6. Implementation details                                                    for 𝑡 ′ → 𝑡 (clamp, reflect, or repeat) are encoded by three bits in
+Our system uses the Microsoft DirectX 10 API to benefit from                 the layer header.
+linear memory buffers. (An earlier implementation using Di-
+rectX 9 was slightly more complicated [Nehab and Hoppe 2007].)               Each layer header is followed by a stream of cell-local coordi-
+                                                                             nates (𝑥, 𝑦), quantized to 16 bits. We reserve one bit of each
+Storage of nonuniform cells: Cell streams are variable-length,               coordinate to encode the 4 tags: Moveto, Drawto, Curvepoint, and
+so we need a data structure to pack them in memory. Note that                Last. As an optimization, we assume that each layer is implicitly
+the cell streams are self-terminating, so it is unnecessary to store         prefixed by a Moveto instruction to the lower-right of the cell, as
+their lengths explicitly. We simply concatenate all streams in               this helps remove a point in many cases (e.g. all 6 cells with red
+raster-scan order into a linear memory buffer (Figure 14), letting a         segments in Figure 11). Table 1 shows the storage size of differ-
+2D indirection table contain pointers to the start of each cell              ent path configurations per layer.
+stream. Naturally, we coalesce identical streams to allow for
+sharing between cells. Although our implementation employs a
+flat indirection structure, it would be easy to replace it with a
+                                                                                Lattice cells    Indirection table      Data
+variable-rate perfect spatial hash [Nehab and Hoppe 2007] or                                                                          Gradient
+other space-efficient data structure [Lefohn et al. 2006].                                                           1D buffer        descriptors
+Cell stream encoding: Our streams follow a simple grammar
+that closely resembles a sequence of instructions (Figure 2b).                                                            Cell
+Each layer starts with a 32-bit RGBA layer header. We reserve                                                             stream      Concatenated
+one bit of each channel to define 4 flags: Last, Stroke, Fill, and                                                                    gradient ramps
+Gradient. For stroked paths, the stroke width is stored in the alpha
+channel. The same layer path can be both stroked and filled in the           Figure 14: We pack the variable-length cell streams into a 1D memory
+common case that its stroke color is black and fill color is opaque.         buffer using a 2D indirection table.
+                                                                                                                                              Prefilter +
+                                                        𝑞                         Vector primitive types         No prefilter   Prefilter
+                                                                                                                                            supersampling
+                 𝑝𝑔                                𝑝𝑔
+                                                                                 Linear paths, no strokes            117          145           205
+                      (1,0)                                      (1+𝑐𝑥 , 0)     Linear paths, with strokes           152          167           230
+                                                                                Quadratic paths, no strokes          160          221           301
+                �𝑝𝑔𝑥 , 0�                         (𝑐𝑥 , 0)
+                                                                                 Quadratic, with strokes             228          243           327
+                                                                                       + Gradients                   310          325           418
+                                                                                      Table 2: Pixel shader instruction counts (including loops).
+
+        Figure 15: Evaluation of linear and radial color gradients.
+                                                                              tings, the cell specialized representation is comparable in size to
+                                                                              the input textual vector graphics description. Naturally, as shown
+                  Cell contents               Length                          in Figure 16, the stream buffer size grows linearly with the lattice
+                 Constant color                  1*                           resolution. This was expected due to increased sharing of con-
+                1 linear segment                 3                            stant color cells at higher resolutions (i.e., only boundaries need
+                2 linear segments               4-5                           be encoded individually). In contrast, the memory requirements
+                3 linear segments               5-7                           of the indirection table grow quadratically with the lattice resolu-
+              1 quadratic segment                4
+                                                                              tion (just like a regular image). Fortunately, if memory is at a
+              2 quadratic segments              6-7
+              3 quadratic segments             8-10                           premium and the lattice resolution is very high, this problem
+                                                                              could be eliminated by replacing the currently flat indirection
+Table 1: Number of 32-bit words required per cell layer as a function of      structure with a hierarchical data structure, such as a quadtree.
+path complexity. Ranges depend on whether Moveto points are needed.
+*Likely shared by many cells.                                                 We manually selected lattice resolutions. Table 3 shows the
+                                                                              chosen values for each dataset. Note that the memory sizes are on
+Cell stream parsing: Within the pixel shader, we interpret the                the same order as a typical image representation (but of course
+cell stream and evaluate the rendering algorithm of Section 5.                cell-specialized graphics allow resolution-independent rendering).
+This interpretation involves a set of nested loops: over layers,              Figure 17 shows a histogram of cell stream lengths for the Lion
+control points, and supersample locations. The resulting pixel                example. The most common type of cell is one containing a
+shader program complexities for various graphics types are                    single word indicating a constant color. Figure 18 visualizes the
+summarized in Table 2.                                                        varying length of the cell streams for another encoded illustration.
+                                                                              Examples: Figure 19 presents a collection of vector graphics
+7. Results and discussion                                                     examples of various types, and Table 3 reports on their complexi-
+All results are obtained using an NVIDIA GeForce 8800 GTX, in                 ties, sizes, and rendering rates. Our representation is trivial to
+a 7202 window. The examples in this section use an overlap                    map onto surfaces as demonstrated in Figure 1, or to deform by
+region of size 10-20% (depending on the maximum stroke width).                arbitrary parametric warps, as shown in Figure 20.
+Timing analysis: As far as preprocessing is concerned, the
+construction method of Section 5.3 takes less than a second to                                               Cell-specialized representation
+                                                                                                  Encoding                                     Rendering
+encode even our most complex examples (see Table 3). Although                           Input                                     Stream         (fps)
+                                                                               Dataset vertices     time       Size  Lattice
+this was not our goal, simple animated textures (i.e., few thousand                                  (s)                          length
+animated vertices, or restricted to particular layers) should be                                              (KB) resolution
+                                                                                                                                Avg. Max.       𝑘=1 𝑘=8
+possible. By spreading the encoding across multiple CPU cores,
+                                                                              Glass       390       0.02       20     24×32      6.3     69    238.2 44.3
+it should be possible to support even complex animated textures.
+                                                                              Logo        498       0.01       16     32×19      5.1     39    381.4 70.5
+Figure 16 plots the rendering rate from cell streams as a function            Dice        942       0.02       20     32×20      7.3     85    271.2 42.4
+of lattice resolution, for the Tiger in Figure 19. At coarse lattice
+                                                                              Eyes       1061       0.05       44     64×41      4.3     58    285.9 54.9
+resolutions, the larger cells increase the number of primitives per
+                                                                              Penguin    1760       0.05       36     64×58      2.6     92    294.9 53.7
+cell, which in turn increases the per-pixel rendering cost and
+therefore lead to slower rendering rates. Conversely, at very fine            Lion       2078       0.06       48     21×32     17.4     80    212.4 30.8
+lattice resolutions, the majority of cells contain a uniform (solid or        Scorpion   2129       0.06       80     63×64      5.0     92    193.1 31.1
+gradient) color, so rendering speed reaches a plateau.                        Dragonfly 2696        0.14      128   128×128      2.9     96    214.9 43.0
+                                                                              Dancer     2935       0.10       80     35×64      9.1     71    217.4 35.4
+Our evaluation algorithm should not be memory-bound because
+the same cell data is reused by many nearby pixels. Indeed, we                Skater     4122       0.07       64     30×48     11.1    132    176.6 26.8
+have run some tests where we let each pixel parse its cell stream             Drops      5716       0.27      344   115×128      6.6    110    141.8 23.7
+without performing rendering computations, and the frame rates                Butterfly  5836       0.08       92     64×41      8.8     91    194.0 31.0
+increased by a factor of 3–4. This indicates that we are presently            Desktop    8687       0.11      132     64×41     13.7    280    113.4 16.8
+compute-bound, and performance will benefit greatly from addi-                Reschart   9445       0.23      212    128×79      6.3    132    232.7 37.1
+tional computational cores in future hardware.                                Hygieia    9922       0.10      128     28×64     18.0    107    162.4 23.2
+The pixel shader makes several coarse-grain branching decisions,              Tiger     16315       0.44      428   125×128      7.0    134    123.5 17.5
+based on the number and types of primitives in the cell stream.               Embrace 18761         1.02      792   240×256      4.5    165    129.7 22.8
+Fortunately, these decisions are identical for nearby pixels access-          CAD       22393       0.30      360   128×100      7.5    172    140.0 24.0
+ing the same stream, which occurs if pixels lie in the same lattice           Denmark 101386        0.59      912    128×99     19.2    286     58.2 7.9
+cell, or if adjacent cells share the same cell stream (e.g., in areas         Boston 108719         0.91     1132   200×180      8.8    351     63.2 8.4
+of constant color), so the SIMD branching penalty is reduced.
+                                                                              Table 3: Quantitative results, including input vertices, construction times,
+Space analysis: Table 3 shows the size of the stream buffers for              cell stream statistics, and rendering rates without/with supersampling.
+each of our examples. Under reasonable lattice resolution set-                Stream lengths are in 32-bit words.
+8. Summary and future work
+Cell streams are constructed by spatially specializing a vector
+graphics description to the cells of a lattice using a fast algorithm.
+These streams allow efficient random-access evaluation of com-
+posited layers of filled and stroked shapes, complete with
+transparency, color gradients, and high-quality antialiasing.
+Avenues for future work include:
+• Extension of cell streams to allow more rendering attributes
+  (e.g. blurs or vector graphics instancing). Streams could gener-
+  alize to full programs, including subroutines and recursion;
+                                                                                                                             Cell stream lengths
+• Improvements to the adaptivity of the supersampling algorithm;                                 Close-up of lattice
+                                                                                                                              (darker is longer)
+• Parallelized implementation of the encoding stage, enabling                   Figure 18: Visualization of the varying length of cell streams.
+  real-time animations, perhaps even a GPU implementation;
+• Generalization of the concept of cell-based specialization to            FOLEY J., VAN DAM A., FEINER S., AND HUGHES J. 1990. Computer
+  other applications besides vector graphics.                                Graphics: Principles and Practice. Addison Wesley.
+                                                                           FRISKEN S., PERRY R., ROCKWOOD A., AND JONES T. 2000. Adap-
+                                                                             tively sampled distance fields: A general representation of
+                                                                             shape for computer graphics. ACM SIGGRAPH, 249-254.
+                                                                           GOLDMAN R., SEDERBERG T., AND ANDERSON D. 1984. Vector
+                                                                             elimination: A technique for the implicitization, inversion, and
+                                                                             intersection of planar parametric rational polynomial curves.
+                                                                             CAGD 1, 327-356.
+                                                                           GREINER G., AND HORMANN K. 1998. Efficient clipping of
+                                                                             arbitrary polygons. ACM TOG 17(2), 71-83.
+                                                                           GUPTA S., AND SPROULL R. 1981. Filtering edges for gray-scale
+                                                                             displays. ACM SIGGRAPH.
+                                                                           HECKBERT P. 1989. Fundamentals of texture mapping and image
+Figure 16: Memory usage and rendering rate as a function of lattice
+                                                                             warping. M.S. Thesis, UC Berkeley, Dept of EECS.
+resolution for the Tiger in Figure 19.                                     LAINE S., AND AILA T. 2006. A weighted error metric and optimi-
+                                                                             zation method for antialiasing patterns. Eurographics, 83-94.
+                                                                           MITCHELL D., AND NETRAVALI A. 1988. Reconstruction filters in
+                                                                             computer graphics. ACM SIGGRAPH, 221-228.
+                                                                           LEFEBVRE S., AND HOPPE H. 2006. Perfect spatial hashing. ACM
+                                                                             SIGGRAPH, 579-588.
+                                                                           LEFOHN A., KNISS J., STRZODKA R., SENGUPTA S., AND OWENS J.
+                                                                             2006. Glift: Generic efficient random-access GPU data struc-
+                                                                             tures, ACM TOG 25(1), 1-37.
+                                                                           LOOP C., AND BLINN J. 2005. Resolution-independent curve
+                                                                             rendering using programmable graphics hardware. ACM SIG-
+                                                                             GRAPH, 1000-1009.
+                                                                           LOVISCACH J. 2005. Efficient magnification of bi-level textures.
+   Figure 17: Histogram of cell stream lengths for the Lion in Figure 1.     ACM SIGGRAPH Sketches.
+                                                                           NEHAB D., AND HOPPE H. 2007. Texel programs for random-
+                                                                             access antialiased vector graphics. Microsoft Research Tech-
+Acknowledgments                                                              nical Report MSR-TR-2007-95, July 2007.
+The authors would like to thank Renato Werneck and Pedro V.                PARILOV E., AND ZORIN D. 2008. Real-time rendering of textures
+Sander for fruitful discussions about the lattice-clipping algo-             with feature curves. ACM TOG, 27(1).
+rithm. Daniel Szecket created the 3D model for the foldable map            QIN Z., MCCOOL M., AND KAPLAN C. 2006. Real-time texture-
+in Figure 1. The vector art on the cup model in the same figure is           mapped vector glyphs. Symposium on Interactive 3D Graphics
+based on work by Aurelio A. Heckert.                                         and Games, 125-132.
+                                                                           QIN Z., MCCOOL M., AND KAPLAN C. 2008. Precise vector
+References                                                                   textures for real-time 3D rendering. Symposium on Interactive
+BLINN J. 1998. A ghost in a snowstorm, IEEE CG&A, 18(1), 79-                 3D Graphics and Games.
+  84.                                                                      RAMANARAYANAN G., BALA K., AND WALTER B. 2004. Feature-
+BLINN J. 2006. How to solve a cubic equation, Part 2: The 11                 based textures. Symposium on Rendering, 65-73.
+  Case. IEEE CG&A, 26(4), 90-100.                                          RAY N., CAVIN X., AND LÉVY B. 2005. Vector texture maps on the
+CARPENTER L. 1984. The A-buffer, an antialiased hidden surface               GPU. Technical Report ALICE-TR-05-003.
+  method. ACM SIGGRAPH, 103-108.                                           PERSSON E. 2007. Selective supersampling. Shader X5, 177-183.
+                                          (a)                 (b)                    SEN P., CAMMARANO M., AND HANRAHAN P. 2003. Shadow
+                                                                                       silhouette maps. ACM SIGGRAPH, 521-526.
+                                                                                     SEN P. 2004. Silhouette maps for improved texture magnifica-
+                                                                                       tion. Symposium on Graphics Hardware, 65-73.
+                                                                                     STOKES M., ANDERSON M., CHANDRASEKAR S. AND MOTTA R.
+                                                                                       1996. A standard default color space for the Internet – sRGB
+                                           (c)                (d)                       http://www.w3.org/Graphics/Color/sRGB.html
+                                                                                     SUTHERLAND I., AND HODGMAN G. 1974. Reentrant polygon
+                                                                                       clipping. Communications of the ACM 17(1), 32-42.
+                                                                                     TARINI M., AND CIGNONI P. 2005. Pinchmaps: Textures with
+                                                                                       customizable discontinuities. Eurographics, 557-568.
+                                                                                     TUMBLIN J., AND CHOUDHURY P. 2004. Bixels: Picture samples
+                                                                                       with sharp embedded boundaries. Symposium on Rendering,
+                                                                                       186-194.
+                                                                                     WARNOCK J. 1969. A hidden surface algorithm for computer
+                                                                                       generated halftone pictures. PhD Thesis, University of Utah.
+                                                                                     WINNER S., KELLEY M., PEASE B., RIVARD B., AND YEN A. 1997.
+                                                                                       Hardware accelerated rendering of antialiasing using a modi-
+                                                                                       fied A-buffer algorithm. ACM SIGGRAPH, 307-316.
+
+
+
+
+ (Already close-up)
+
+
+
+
+                                                                                     Figure 20: Parametric warps. By perturbing the texture coordinates prior
+Figure 19: Example rendering results. On the left, prefilter antialiased results.    to rendering, we can produce distortion effects that are gaining popularity
+The close-ups on the right show (a) high-resolution renderings overlaid with         in modern user interfaces, while retaining the crispness and resolution-
+the lattice grid, (b) non-antialiased, (c) prefiltering only, and (d) prefiltering   independence of the vector graphics description.
+with 𝑘=8 supersampling.
+

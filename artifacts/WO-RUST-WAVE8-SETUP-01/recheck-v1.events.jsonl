@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a13a69-9911-7053-8726-be8e9687de66"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"**ACCEPT.** The pending `run_started` state is expected before root records setup acceptance. The helper’s accepted-only manifest check is correctly fail-closed until that gate; it does not indicate a setup defect. After root verification and acceptance, the new writer can launch and old-editor integration can use the accepted registration hashes."}}
+{"type":"turn.completed","usage":{"input_tokens":481334,"cached_input_tokens":376576,"cache_write_input_tokens":0,"output_tokens":3638,"reasoning_output_tokens":868}}

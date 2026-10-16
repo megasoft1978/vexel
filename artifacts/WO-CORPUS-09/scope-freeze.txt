@@ -1,0 +1,4 @@
+WO-CORPUS-09 revision 1
+Base SHA: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: d3c8bb45d2fc1fbfd4c10ca3dc166c806b1497ddecdce00bbf1b5e79ac5e7ddc
+Scratch-only constructor-branch instrumentation for T1.

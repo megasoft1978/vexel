@@ -1,0 +1,66 @@
+{
+ "schema_version": 1,
+ "before_source": "artifacts/WO-CORPUS-01/delta.json histogram_after (== artifacts/WO-M4-10/render-diagnostics.json)",
+ "after_source": "artifacts/WO-CORPUS-04/render-diagnostics.json",
+ "manifest_sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30",
+ "histogram_before": {
+  "limit": 17,
+  "ok": 3,
+  "path": 2,
+  "skipped": 19,
+  "unsupported": 11,
+  "viewport": 2,
+  "xml": 4
+ },
+ "histogram_after": {
+  "limit": 15,
+  "ok": 5,
+  "path": 2,
+  "skipped": 19,
+  "unsupported": 11,
+  "viewport": 2,
+  "xml": 4
+ },
+ "histogram_before_matches_m4_10": true,
+ "ok_before": 3,
+ "ok_after": 5,
+ "ok_files_before": [
+  "commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg",
+  "generated-cnc_t1",
+  "generated-embedded_t1"
+ ],
+ "ok_files_after": [
+  "commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg",
+  "generated-cnc_t1",
+  "generated-embedded_t1",
+  "generated-embedded_t2",
+  "generated-science_t1"
+ ],
+ "regressions_from_ok": [],
+ "per_file_changes": [
+  {
+   "id": "generated-embedded_t2",
+   "before": {
+    "verdict": "limit",
+    "offset": 0
+   },
+   "after": {
+    "verdict": "ok",
+    "offset": null
+   },
+   "verdict_changed": true
+  },
+  {
+   "id": "generated-science_t1",
+   "before": {
+    "verdict": "limit",
+    "offset": 0
+   },
+   "after": {
+    "verdict": "ok",
+    "offset": null
+   },
+   "verdict_changed": true
+  }
+ ]
+}

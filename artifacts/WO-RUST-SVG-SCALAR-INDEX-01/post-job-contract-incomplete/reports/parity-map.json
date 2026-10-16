@@ -1,0 +1,920 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-SCALAR-INDEX-01",
+  "owner": "RASTER_INDEX",
+  "source_symbol_count": 73,
+  "symbols": [
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "checked_add_size",
+      "source_key": "src/raster/shape_bounds.c:20:definition:checked_add_size",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "add",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "checked_mul_size",
+      "source_key": "src/raster/shape_bounds.c:27:definition:checked_mul_size",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "mul",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "bounds_include",
+      "source_key": "src/raster/shape_bounds.c:34:definition:bounds_include",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "GeomBounds::include",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "pixel_range",
+      "source_key": "src/raster/shape_bounds.c:52:definition:pixel_range",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "pixel_range",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "full_tile_bounds",
+      "source_key": "src/raster/shape_bounds.c:67:definition:full_tile_bounds",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "full_tile",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "map_user_box",
+      "source_key": "src/raster/shape_bounds.c:78:definition:map_user_box",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "map_bounds",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "stroke_padding",
+      "source_key": "src/raster/shape_bounds.c:116:definition:stroke_padding",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "stroke_padding",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_build",
+      "source_key": "src/raster/shape_bounds.c:139:definition:raster_shape_bounds_build",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "build_bounds",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_destroy",
+      "source_key": "src/raster/shape_bounds.c:227:definition:raster_shape_bounds_destroy",
+      "rust_module": "Rust ownership",
+      "rust_symbol": "BoundsSet/Vec Drop",
+      "coverage": "implemented",
+      "adaptation": "owning Vec values drop normally; no raw-pointer release callback or manual reference count",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "edge_stroke_radius",
+      "source_key": "src/raster/shape_bounds.c:234:definition:edge_stroke_radius",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "edge_radius",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "boundary_pixel_range",
+      "source_key": "src/raster/shape_bounds.c:255:declaration:boundary_pixel_range",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "boundary_pixel_range",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "point_boundary_bounds",
+      "source_key": "src/raster/shape_bounds.c:258:definition:point_boundary_bounds",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "point_box",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_pixel",
+      "source_key": "src/raster/shape_bounds.c:284:declaration:mark_pixel",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "mark_pixel",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "add_boundary_box_work",
+      "source_key": "src/raster/shape_bounds.c:286:definition:add_boundary_box_work",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "add_work + checked_area",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_boundary_box",
+      "source_key": "src/raster/shape_bounds.c:298:definition:mark_boundary_box",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "mark_box",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "boundary_pixel_range",
+      "source_key": "src/raster/shape_bounds.c:310:definition:boundary_pixel_range",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "boundary_pixel_range",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_pixel",
+      "source_key": "src/raster/shape_bounds.c:322:definition:mark_pixel",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "mark_pixel",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_mark_boundaries",
+      "source_key": "src/raster/shape_bounds.c:330:definition:raster_shape_bounds_mark_boundaries",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "mark_boundaries",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "clip_edge_pixel_bounds",
+      "source_key": "src/raster/shape_bounds.c:467:definition:clip_edge_pixel_bounds",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "clip mapping visitor inside mark_clip_boundaries",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "add_clip_edge_work",
+      "source_key": "src/raster/shape_bounds.c:491:definition:add_clip_edge_work",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "checked add/cap in mark_clip_boundaries",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "preflight_clip_boundary_visits",
+      "source_key": "src/raster/shape_bounds.c:498:definition:preflight_clip_boundary_visits",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "clip_work_counts admission in mark_clip_boundaries",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "visit_clip_boundary_edge",
+      "source_key": "src/raster/shape_bounds.c:528:definition:visit_clip_boundary_edge",
+      "rust_module": "vexel-scene::KernelResources",
+      "rust_symbol": "clip_boundary_edges visitor",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_full_boundary_mask",
+      "source_key": "src/raster/shape_bounds.c:561:definition:mark_full_boundary_mask",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "full_boundary_additions",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_mark_clip_boundaries",
+      "source_key": "src/raster/shape_bounds.c:570:definition:raster_shape_bounds_mark_clip_boundaries",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "mark_clip_boundaries",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_boundary_mask_destroy",
+      "source_key": "src/raster/shape_bounds.c:629:definition:raster_boundary_mask_destroy",
+      "rust_module": "Rust ownership",
+      "rust_symbol": "BoundaryMask/Vec Drop",
+      "coverage": "implemented",
+      "adaptation": "owning Vec values drop normally; no raw-pointer release callback or manual reference count",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_boundary_mask_test",
+      "source_key": "src/raster/shape_bounds.c:636:definition:raster_boundary_mask_test",
+      "rust_module": "src/bounds.rs",
+      "rust_symbol": "boundary_test",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: bounds and ordinary boundary marking have job-owned entrypoints; clip boundary path remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "raster_preflight_work_budget",
+      "source_key": "src/raster/shape_render_preflight.c:34:definition:raster_preflight_work_budget",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "work_budget",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "work_add",
+      "source_key": "src/raster/shape_render_preflight.c:51:definition:work_add",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "work_add",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "checked_add_size",
+      "source_key": "src/raster/shape_render_preflight.c:59:definition:checked_add_size",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "add",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "checked_mul_size",
+      "source_key": "src/raster/shape_render_preflight.c:66:definition:checked_mul_size",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "mul",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "sample_is_in_view",
+      "source_key": "src/raster/shape_render_preflight.c:73:definition:sample_is_in_view",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "sample_in_view",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "pixel_is_fully_in_view",
+      "source_key": "src/raster/shape_render_preflight.c:85:definition:pixel_is_fully_in_view",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "pixel_fully_in_view",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "active_count_for",
+      "source_key": "src/raster/shape_render_preflight.c:97:definition:active_count_for",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "active_count",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "sample_aux_work",
+      "source_key": "src/raster/shape_render_preflight.c:104:definition:sample_aux_work",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "aux_work",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "add_fast_sample",
+      "source_key": "src/raster/shape_render_preflight.c:142:definition:add_fast_sample",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "inline fast-fill accounting in preflight",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "count_fast_fill_intervals_for_runs",
+      "source_key": "src/raster/shape_render_preflight.c:155:definition:count_fast_fill_intervals_for_runs",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "inline interval/run preflight loops",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "raster_shape_render_work_preflight",
+      "source_key": "src/raster/shape_render_preflight.c:201:definition:raster_shape_render_work_preflight",
+      "rust_module": "src/preflight.rs",
+      "rust_symbol": "preflight",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "user_scanline_y",
+      "source_key": "src/raster/shape_scanline.c:12:definition:user_scanline_y",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "user_y",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "first_scanline_at_or_above",
+      "source_key": "src/raster/shape_scanline.c:21:definition:first_scanline_at_or_above",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "first_at_or_above",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "compare_events",
+      "source_key": "src/raster/shape_scanline.c:36:definition:compare_events",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "event_cmp",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "compare_shape_events",
+      "source_key": "src/raster/shape_scanline.c:48:definition:compare_shape_events",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "shape_event_cmp",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "node_height",
+      "source_key": "src/raster/shape_scanline.c:60:definition:node_height",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "height",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "update_height",
+      "source_key": "src/raster/shape_scanline.c:65:definition:update_height",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "update",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "rotate_left",
+      "source_key": "src/raster/shape_scanline.c:75:definition:rotate_left",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "rotate_left",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "rotate_right",
+      "source_key": "src/raster/shape_scanline.c:85:definition:rotate_right",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "rotate_right",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "rebalance",
+      "source_key": "src/raster/shape_scanline.c:95:definition:rebalance",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "rebalance",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "insert_node",
+      "source_key": "src/raster/shape_scanline.c:118:definition:insert_node",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "insert",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "remove_node",
+      "source_key": "src/raster/shape_scanline.c:139:definition:remove_node",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "remove",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "append_tree_in_order",
+      "source_key": "src/raster/shape_scanline.c:170:definition:append_tree_in_order",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "append_order",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_create",
+      "source_key": "src/raster/shape_scanline.c:192:definition:raster_scanline_index_create",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "create_scanlines",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_reset",
+      "source_key": "src/raster/shape_scanline.c:281:definition:raster_scanline_index_reset",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "reset_scanlines",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_destroy",
+      "source_key": "src/raster/shape_scanline.c:292:definition:raster_scanline_index_destroy",
+      "rust_module": "Rust ownership",
+      "rust_symbol": "ScanlineIndex/Vec Drop",
+      "coverage": "implemented",
+      "adaptation": "owning Vec values drop normally; no raw-pointer release callback or manual reference count",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_build_row",
+      "source_key": "src/raster/shape_scanline.c:303:definition:raster_scanline_index_build_row",
+      "rust_module": "src/scanline.rs",
+      "rust_symbol": "build_row",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "partial: event/index construction has a job-owned entrypoint; row mutation remains Vec-based"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "checked_add_size",
+      "source_key": "src/raster/shape_scanline_fill.c:13:definition:checked_add_size",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "add",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "checked_mul_size",
+      "source_key": "src/raster/shape_scanline_fill.c:20:definition:checked_mul_size",
+      "rust_module": "src/util.rs",
+      "rust_symbol": "mul",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "shape_is_uniform_filled",
+      "source_key": "src/raster/shape_scanline_fill.c:27:definition:shape_is_uniform_filled",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "uniform_fill",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "pixel_is_fully_in_view",
+      "source_key": "src/raster/shape_scanline_fill.c:48:definition:pixel_is_fully_in_view",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "pixel_fully_in_view",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "crossing_less",
+      "source_key": "src/raster/shape_scanline_fill.c:60:definition:crossing_less",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "cross_less",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "swap_crossings",
+      "source_key": "src/raster/shape_scanline_fill.c:68:definition:swap_crossings",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "swap",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "sift_down",
+      "source_key": "src/raster/shape_scanline_fill.c:76:definition:sift_down",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "sift_down",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "sort_crossings",
+      "source_key": "src/raster/shape_scanline_fill.c:90:definition:sort_crossings",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "heap_sort",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "ceil_log2",
+      "source_key": "src/raster/shape_scanline_fill.c:100:definition:ceil_log2",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "ceil_log2",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "build_intervals",
+      "source_key": "src/raster/shape_scanline_fill.c:112:definition:build_intervals",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "build_intervals",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_create",
+      "source_key": "src/raster/shape_scanline_fill.c:183:definition:raster_fill_scanline_cache_create",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "create_fill_cache",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_destroy",
+      "source_key": "src/raster/shape_scanline_fill.c:257:definition:raster_fill_scanline_cache_destroy",
+      "rust_module": "Rust ownership",
+      "rust_symbol": "FillCache/Vec Drop",
+      "coverage": "implemented",
+      "adaptation": "owning Vec values drop normally; no raw-pointer release callback or manual reference count",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "scalar/helper; no owned payload buffer"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_is_eligible",
+      "source_key": "src/raster/shape_scanline_fill.c:267:definition:raster_fill_scanline_cache_is_eligible",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "eligible",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_color",
+      "source_key": "src/raster/shape_scanline_fill.c:274:definition:raster_fill_scanline_cache_color",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "color",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_build_row",
+      "source_key": "src/raster/shape_scanline_fill.c:283:definition:raster_fill_scanline_cache_build_row",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "build_fill_row",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_build_pixel_runs",
+      "source_key": "src/raster/shape_scanline_fill.c:321:definition:raster_fill_scanline_cache_build_pixel_runs",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "build_runs",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_pixel_runs",
+      "source_key": "src/raster/shape_scanline_fill.c:368:definition:raster_fill_scanline_cache_pixel_runs",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "pixel_runs",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "first_sample_x_at_least",
+      "source_key": "src/raster/shape_scanline_fill.c:377:definition:first_sample_x_at_least",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "first_sample_x",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_interval_pixel_range",
+      "source_key": "src/raster/shape_scanline_fill.c:396:definition:raster_fill_scanline_interval_pixel_range",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "interval_pixel_range",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_contains",
+      "source_key": "src/raster/shape_scanline_fill.c:426:definition:raster_fill_scanline_cache_contains",
+      "rust_module": "src/fill.rs",
+      "rust_symbol": "fill_contains",
+      "coverage": "implemented",
+      "adaptation": "safe Rust equivalent preserving original ordering, limits, error behavior and source data; implementation is listed below",
+      "pure_algorithm_port": "implemented",
+      "job_storage": "not_converted: Vec-based algorithm only"
+    }
+  ],
+  "algorithms": [
+    {
+      "name": "conservative shape bounds",
+      "implementation": "bounds::build_bounds",
+      "preserved": "filled edges, stroked edge extents, inverse stroke expansion, finite checks, conservative full tile, 4x4 footprint and roundoff margin",
+      "job_storage": "bounds builder converted; full owner algorithm not complete"
+    },
+    {
+      "name": "boundary mask and work cap",
+      "implementation": "bounds::mark_boundaries",
+      "preserved": "edge and miter boxes, unique bit count, checked area sum, 200000000 work cap, out-of-range test is true",
+      "job_storage": "ordinary boundaries converted; clip boundaries not converted"
+    },
+    {
+      "name": "clip boundary culling",
+      "implementation": "bounds::mark_clip_boundaries + KernelResources::clip_boundary_edges",
+      "preserved": "two controlled visits, exact preflight visits/edge costs, invalid mapping forces full mask",
+      "job_storage": "ordinary boundaries converted; clip boundaries not converted"
+    },
+    {
+      "name": "scanline row event index",
+      "implementation": "scanline::create_scanlines/build_row",
+      "preserved": "5 y samples, event/tie ordering, AVL insert/remove, ascending edge and shape order, explicit row capacities",
+      "job_storage": "event construction converted; rows not converted"
+    },
+    {
+      "name": "uniform fill fast path",
+      "implementation": "fill::create_fill_cache/build_fill_row/build_runs",
+      "preserved": "uniform colors, no visible stroke, at most 4096 edges, heap crossing order, nonzero/evenodd winding, binary interval conversion and center/subpixel runs",
+      "job_storage": "not converted to accepted job buffers"
+    },
+    {
+      "name": "oversized fill fallback",
+      "implementation": "fill::create_fill_cache eligibility false above 4096 edges",
+      "preserved": "shape remains eligible for scalar path; no refusal",
+      "job_storage": "not converted to accepted job buffers"
+    },
+    {
+      "name": "render work budget and preflight",
+      "implementation": "preflight::work_budget/preflight",
+      "preserved": "200M base; 1048576 ramp start; 24576 per extra pixel; 16B cap; full base/event/row/stroke/clip/paint/fill/scalar charges",
+      "job_storage": "not converted to accepted job buffers"
+    }
+  ],
+  "operations": [
+    {
+      "name": "bounds",
+      "rust_api": [
+        "build_bounds",
+        "mark_boundaries",
+        "mark_clip_boundaries",
+        "boundary_test"
+      ],
+      "resources": "real KernelResources argument; native implementation supplied by coordinator"
+    },
+    {
+      "name": "scanline",
+      "rust_api": [
+        "create_scanlines",
+        "reset_scanlines",
+        "prepare_rows",
+        "build_row"
+      ],
+      "resources": "real KernelResources argument; row buffers are prepared once and reused"
+    },
+    {
+      "name": "fill cache",
+      "rust_api": [
+        "create_fill_cache",
+        "eligible",
+        "color",
+        "build_fill_row",
+        "build_runs",
+        "pixel_runs",
+        "interval_pixel_range",
+        "fill_contains"
+      ],
+      "resources": "real KernelResources argument"
+    },
+    {
+      "name": "preflight",
+      "rust_api": [
+        "work_budget",
+        "preflight"
+      ],
+      "resources": "real KernelResources argument; no thread-local budget"
+    }
+  ],
+  "accepted_contract_blocker": null,
+  "completion_status": "partial_candidate_not_owner_scope_complete",
+  "job_storage": {
+    "implemented": [
+      "build_bounds_job",
+      "mark_boundaries_job",
+      "create_scanlines_job"
+    ],
+    "uses": "accepted RasterJob, JobRasterScratch, same ChargeLedger, source identity validation, pre-reserve actual Vec capacity admission and WorkControl loops",
+    "not_converted": [
+      "mark_clip_boundaries",
+      "build_row and row buffers",
+      "fill eligibility/crossings/intervals/runs",
+      "preflight and actual controlled clip/stroke calls"
+    ],
+    "legacy_vec_entrypoints": "pure parity/fixture compatibility only; not a production adapter"
+  },
+  "remaining_gaps": [
+    "The assigned algorithms still need job-owned buffer conversion for clip boundaries, row construction, fill cache/interval/run buffers and exact work preflight.",
+    "Non-empty canonical animation fixture construction needs XmlToken input; vexel-xml is not a direct accepted dependency and manifests are protected. The new fixture uses the real SceneBuilder/path API with an empty animation token stream."
+  ]
+}

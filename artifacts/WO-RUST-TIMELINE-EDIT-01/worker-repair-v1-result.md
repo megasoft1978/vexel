@@ -1,0 +1,5 @@
+Both property-track APIs now reject empty required arguments with `InvalidArgument` at offset 0. Added exact checks for source and history preservation, plus a byte-limited history regression covering snapshot trimming and rejected edits. The original 13 edit tests and all 14 decoder parity tests remain; 15 edit tests now pass.
+
+All named checks passed: locked offline `cargo +stable check` and `test`, work-order validation, ledger validation, and `git diff --check`.
+
+Updated [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-timeline-edit/artifacts/WO-RUST-TIMELINE-EDIT-01/parity-map.json), [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-timeline-edit/artifacts/WO-RUST-TIMELINE-EDIT-01/verification.txt), and [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-timeline-edit/artifacts/WO-RUST-TIMELINE-EDIT-01/result.md). The candidate remains uncommitted for independent review.

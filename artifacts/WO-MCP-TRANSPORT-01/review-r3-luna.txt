@@ -1,0 +1,17 @@
+Luna High read-only review of revision 3 (2026-10-13)
+1. app/vexel_mcp_main.c:291: additional client requests reset pending_deadline,
+   so client traffic can keep a silent broker alive. Set deadline only on the
+   transition from no pending requests; subsequent renewal requires broker bytes.
+2. app/vexel_mcp_main.c:278: response accounting waits for stdout flush. Receive
+   completion should clear outstanding state independently of stdout stall bounds.
+3. Canceled legacy requests have no response and remain counted. ID-aware bounded
+   accounting is needed to avoid idle timeouts and late-response double removal.
+No edits or tests were made by the reviewer. All 12 existing fixtures and the two
+focused CTests passed, but do not cover these scenarios. No r3 acceptance claim.
+
+Evidence correction: verify-execution-r3.py was copied from the r2 helper and
+retained its output filename. Its first successful invocation overwrote the
+historical derived execution-r2-delta.diff. The original digest is retained in
+execution-r3-start-manifest.json; the original derived bytes are not available.
+The r2 baseline source copies, build/test logs and review remain intact. The r3
+helper now writes execution-r3-delta.diff. Do not claim r2 diff preservation.

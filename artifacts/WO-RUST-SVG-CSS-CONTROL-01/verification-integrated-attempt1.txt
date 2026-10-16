@@ -1,0 +1,18 @@
+Compiler: rustc 1.99.0 (b940084d7 2026-09-28)
+
+COMMAND: cargo +stable check -p vexel-svg-css --locked --offline
+EXIT: 0
+    Checking vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-css)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+
+COMMAND: cargo +stable test -p vexel-svg-css --locked --offline
+EXIT: 101
+   Compiling vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-css)
+error: couldn't find file `rust/crates/vexel-svg-css/tests/../../../../artifacts/WO-RUST-SVG-CSS-CONTROL-01/baseline/lib.rs`
+ --> rust/crates/vexel-svg-css/tests/legacy_oracle.rs:4:1
+  |
+4 | mod original;
+  | ^^^^^^^^^^^^^
+
+error: could not compile `vexel-svg-css` (test "legacy_oracle") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...

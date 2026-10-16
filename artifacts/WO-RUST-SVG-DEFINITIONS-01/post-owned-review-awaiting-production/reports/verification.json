@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-DEFINITIONS-01",
+  "status": "INCOMPLETE_CANDIDATE",
+  "commands": [
+    {
+      "command": "rustfmt +stable --edition 2024 rust/crates/vexel-svg-definitions/src/clip.rs rust/crates/vexel-svg-definitions/src/color.rs rust/crates/vexel-svg-definitions/src/common.rs rust/crates/vexel-svg-definitions/src/filter.rs rust/crates/vexel-svg-definitions/src/lib.rs rust/crates/vexel-svg-definitions/src/marker.rs rust/crates/vexel-svg-definitions/src/pattern.rs rust/crates/vexel-svg-definitions/src/planner.rs rust/crates/vexel-svg-definitions/src/planner_support.rs rust/crates/vexel-svg-definitions/src/reference.rs rust/crates/vexel-svg-definitions/src/tests.rs rust/crates/vexel-svg-definitions/tests/clip_rollback.rs rust/crates/vexel-svg-definitions/tests/definition_plans.rs rust/crates/vexel-svg-definitions/tests/paint_clip_generator.rs rust/crates/vexel-svg-definitions/tests/support/mod.rs rust/crates/vexel-svg-definitions/tests/support/paint_clip_generator.rs",
+      "exit_code": 0,
+      "result": "formatted every source/test file in the owned crate scope"
+    },
+    {
+      "command": "cargo +stable check -p vexel-svg-definitions --locked --offline",
+      "exit_code": 0,
+      "stdout": "Finished dev profile; no warnings"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-definitions --locked --offline",
+      "exit_code": 0,
+      "stdout_summary": "25 unit tests passed; 1 clip_rollback integration test passed; 5 definition_plans integration tests passed; 1 paint_clip_generator integration test passed; 0 failures; doc-tests 0"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-DEFINITIONS-01 --ready",
+      "exit_code": 0,
+      "stdout": "valid WO-RUST-SVG-DEFINITIONS-01 revision 1 sha256 0a99711ad6d9d8356a5395384bdf69645d6531e296453e8a68549add61eb1e8d"
+    }
+  ],
+  "scope_catalog_sha256": "1435986a9a2a30a7d7e8591a24d7cd0fd5c54111f78754692888fd91118c34d2",
+  "immutability_and_protected_audit": {
+    "scope_json_sha256": "1435986a9a2a30a7d7e8591a24d7cd0fd5c54111f78754692888fd91118c34d2",
+    "fixture_source_seed_sha256": "3734b153089121cf54344e9e83f4f3cee2e2f4eee02b86bba4ad34ad4330eb5d",
+    "accepted_note_sha256": {
+      "WO-RUST-SVG-CSS-MARKER-CONTEXT-01-accepted.md": "d07357d5505bfef51b5f491699da6e299f3a034e74f52918548299478a00d48a",
+      "WO-RUST-MEDIA-SOURCE-MAP-01-accepted.md": "57045d05310296160c9aad466eda9a020186360cb395e7f59a94d98885bec7b3",
+      "WO-RUST-PAINT-PUBLICATION-01-accepted.md": "f7061203dd1de89412536d43107b5d7caf3d0823e81ab9ec10f51dce25915127"
+    },
+    "frozen_catalog_sources_and_original_suites_checked": 16,
+    "frozen_source_suite_hash_mismatches": 0,
+    "frozen_source_suite_mismatch_paths": [],
+    "coordinator_seeded_protected_paths_checked": 26,
+    "seeded_protected_hash_mismatches": 0,
+    "seeded_protected_mismatch_paths": [],
+    "parity_symbol_count": 79,
+    "original_suite_count": 10,
+    "original_case_count": 24,
+    "source_and_focused_test_max_lines": 757,
+    "scope_json_unchanged": true,
+    "original_inputs_and_oracles_unchanged": true,
+    "audit_boundary": "isolated candidate evidence; coordinator must independently audit exact transfer scope and fresh main tree before acceptance"
+  },
+  "not_run": [
+    "the 10 original C/Python renderer/oracle suites as full harness executions; the assigned random_paint_clip_document pure generator itself is ported and tested",
+    "full traversal with actual DecodeOperations/KernelResources/FlatKernel and native provider composition",
+    "shared pattern-mapping and empty-group API handoffs",
+    "independent Luna candidate review and coordinator-owned protected-scope audit",
+    "fresh main focused checks after candidate transfer",
+    "full integrated application/runtime/release/authentic MCP demonstration"
+  ],
+  "accepted_contract_blocker": {
+    "api": "vexel_scene::PatternDescriptor / PatternRequest / Pattern",
+    "missing": [
+      "tile origin x/y",
+      "user-to-pattern inverse for patternTransform"
+    ],
+    "preserved": "Owned PatternMapping and exact PatternCacheKey retain the source-derived mapping. The accepted shared records cannot carry the complete mapping; coordinator-owned shared repair or explicit adapter handoff is required before renderer acceptance.",
+    "separate_pending_handoff": "Shared pattern mapping and empty-group API composition remain coordinator integration work; no local fake/default behavior is provided."
+  }
+}

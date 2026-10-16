@@ -1,0 +1,5 @@
+**ACCEPT — readiness plan only.** The current candidate reflects the accepted binding and ABI decision; the prior pending-audit text does not block it. The pinned helper/build closure is already in the manifest and lock, selected bindings compiled offline, and the boundary evidence includes a real Foundation exception probe. No new dependency or manifest change is needed.
+
+The revised plan specifies appearance events, sequenced input reset, and reset acknowledgement alongside the retained registry, weak generation handles, reentrancy-safe borrowing, IME snapshot validation, bounded event delivery, and teardown order. The listed downstream gates remain explicit and mandatory.
+
+This accepts plan readiness only. It does not claim implementation, full source parity, GUI acceptance, or macOS 13 runtime completion.

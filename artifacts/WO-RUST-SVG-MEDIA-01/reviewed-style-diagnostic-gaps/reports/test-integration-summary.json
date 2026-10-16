@@ -1,0 +1,59 @@
+{
+  "command": "cargo +stable test -p vexel-svg-media --locked --offline",
+  "exit_code": 0,
+  "evidence_kind": "structured results observed from the scoped test invocation; not raw stdout",
+  "integration_tests_passed": 34,
+  "integration_tests_failed": 0,
+  "unit_tests": 0,
+  "doc_tests": 0,
+  "tests_by_file": {
+    "tests/source_map_requests.rs": [
+      "typed_text_and_image_requests_append_with_host_annotation",
+      "invalid_typed_source_map_stops_before_provider_or_append",
+      "canceled_typed_request_stops_before_provider_or_append"
+    ],
+    "tests/document_budget_gap.rs": [
+      "seventeenth_cached_layout_use_hits_document_limit_and_restores_counters"
+    ],
+    "tests/atomicity_gap.rs": [
+      "accepted_request_savepoint_preserves_prefix_and_outer_draft_usability",
+      "image_late_shape_limit_restores_prefix_without_residual_pixels",
+      "image_late_cancellation_restores_prefix_without_residual_pixels",
+      "image_late_capacity_failure_restores_prefix_without_residual_pixels",
+      "text_late_capacity_failure_restores_layout_state_cache_and_prefix",
+      "text_second_run_limit_restores_first_run_state_cache_and_prefix",
+      "text_finalization_cancel_restores_shape_state_cache_and_allows_retry"
+    ],
+    "tests/style_and_layout.rs": [
+      "style_defaults_and_original_inherited_font_values_reach_provider",
+      "family_count_limit_and_relative_lengths_keep_original_style_errors_and_units",
+      "malformed_style_is_unsupported_at_exact_property_offset_before_provider",
+      "anchor_modes_and_oblique_normal_spacing_use_original_units",
+      "compound_contours_keep_winding_closure_and_scene_subpath_boundaries",
+      "unavailable_native_provider_stays_unsupported_at_text_run_offset",
+      "explicit_text_request_end_bounds_authored_runs",
+      "malformed_position_keeps_number_classification_and_source_offset"
+    ],
+    "tests/media_parity.rs": [
+      "image_data_uri_and_base64_keep_exact_grammar_and_offsets",
+      "image_geometry_preserves_meet_slice_none_and_viewport_lengths",
+      "text_entities_whitespace_and_position_lists_match_source_contract",
+      "malformed_provider_pixels_keep_unsupported_classification",
+      "image_sampler_matches_premultiplied_bilinear_rounding_and_bounds",
+      "text_cache_owns_keys_and_reuses_exact_layout_requests",
+      "text_cache_entry_cap_and_image_capacity_validation_fail_closed",
+      "glyph_outline_closure_and_command_range_validation_inputs_are_owned"
+    ],
+    "tests/request_failures.rs": [
+      "image_every_control_boundary_restores_prefix_through_request_commit",
+      "text_every_control_boundary_restores_state_cache_and_prefix_through_request_commit",
+      "second_text_provider_failure_or_malformed_layout_restores_entire_request",
+      "image_provider_failures_preserve_original_classes_offsets_and_outer_prefix"
+    ],
+    "tests/cache_limits.rs": [
+      "local_and_accepted_shared_cache_admit_exactly_256_kib_then_return_owned_misses",
+      "local_and_accepted_shared_cache_enforce_cumulative_and_per_layout_command_caps",
+      "cache_key_distinguishes_owned_family_and_each_font_parameter"
+    ]
+  }
+}

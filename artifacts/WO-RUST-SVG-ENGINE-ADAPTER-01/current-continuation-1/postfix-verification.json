@@ -1,0 +1,29 @@
+{
+  "work_order": "WO-RUST-SVG-ENGINE-ADAPTER-01 revision 2",
+  "candidate_only": true,
+  "offline": true,
+  "locked": true,
+  "post_fix_commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-engine --locked --offline",
+      "exit_code": 0,
+      "log": "r2-postfix-1.log",
+      "log_sha256": "6d77f64dfc8c5325b90fdbe05d8be367bdd578bcccec24f275c5ffee7d03dd6e",
+      "output": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.01s\n"
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-engine --locked --offline",
+      "exit_code": 0,
+      "log": "r2-postfix-2.log",
+      "log_sha256": "e02e4a8c1ce252a802dd3b8eb3071ca24e1747e790190d336af8991bb18d24f2",
+      "output": "TER-01/current/target/aarch64-apple-darwin/debug/deps/vexel_svg_engine-93552d95a7c5a500)\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n     Running tests/decoder.rs (.cache/WO-RUST-SVG-ENGINE-ADAPTER-01/current/target/aarch64-apple-darwin/debug/deps/decoder-6ec652f332ef4b13)\n\nrunning 5 tests\ntest actual_image_request_unsupported_error_points_to_image_element ... ok\ntest actual_text_request_unsupported_error_points_to_text_element ... ok\ntest real_decoder_publishes_vector_shapes_transform_solid_channels_and_source ... ok\ntest actual_clip_planner_path_reports_observed_invalid_argument_without_typed_blocker ... ok\ntest real_decoder_resolves_local_gradient_through_cached_paint_path ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n   Doc-tests vexel_svg_engine\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n"
+    },
+    {
+      "command": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-svg-engine -- --check",
+      "exit_code": 0,
+      "log": "r2-postfix-3.log",
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output": ""
+    }
+  ]
+}

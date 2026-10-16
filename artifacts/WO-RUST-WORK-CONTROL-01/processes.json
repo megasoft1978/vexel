@@ -1,0 +1,12 @@
+[
+  {
+    "name": "work-control",
+    "wo": "WO-RUST-WORK-CONTROL-01",
+    "pid": 81414,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-work-control",
+    "model": "gpt-6-luna",
+    "effort": "medium",
+    "status": "running",
+    "overlay_file_count": 1577
+  }
+]

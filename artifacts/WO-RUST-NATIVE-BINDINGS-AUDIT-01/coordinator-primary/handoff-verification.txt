@@ -1,0 +1,1 @@
+10 bounded published archives match official registry checksums; selected evidence file hashes match index. Research inputs only, no Cargo dependencies installed/adopted. Accepted Rust/metadata/original603legacy/index preserved. Prior CLI DNS failure retained; coordinator authorized route succeeded.

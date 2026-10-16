@@ -1,0 +1,16 @@
+{
+  "work_order": "WO-RUST-UI-ICON-HASH-01",
+  "revision": 1,
+  "seed_test_sha256": "53f7ea51b517035b32642fcf78dad785fb930327b5b025aff40492b2e00b5eef",
+  "integrated_test_sha256": "f5c81985580e2fa2d8ba5f21853fcaf1b8aec16a03fb4bc1601e917407dab10f",
+  "candidate_exact_match": true,
+  "c_oracle_sources_unchanged": true,
+  "expected_asset_hashes": {
+    "1x": "dd0cedd4ec723d06",
+    "2x": "2d4e975f7b5775c5",
+    "3x": "be120e3a5aa41d42"
+  },
+  "independent_review": "passed",
+  "main_test_result": "12 passed",
+  "production_code_changed": false
+}

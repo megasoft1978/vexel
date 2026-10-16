@@ -1,0 +1,5 @@
+WO-SVG-CLIP-01 revision 1 scope freeze
+Timestamp: 2026-10-13T17:17:14Z
+Base commit: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Frozen work-order SHA-256: 51d98ff4a992c6285a6acbdfe1be5200e5812ca7aa7b899637d9e3254e71dc32
+Scope: skip unprefixed local clipPath definitions during rendered traversal while retaining original-reference lookup; add synthetic integration coverage only. No corpus file access or broad UI/E2E suite.

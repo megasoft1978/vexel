@@ -1,0 +1,12 @@
+{
+  "head": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "index_sha256": "029e7357a5bd47cff817431ffd258c0064e80c06f0c65817b4959c44b8feee6c",
+  "files": {
+    "Cargo.toml": "36ce30d416437865895dd4925e7d56c781959639484db05de2ef050465525689",
+    "Cargo.lock": "d8a14a9274471188102c3f25a5d0832f32f4a7b3a6c7d15b4f032c6181ae4aae",
+    "STATE.md": "00b8ff661572faf29f82e28ee6be576b88ddd0e753d264cc405e09d6169c72e7",
+    "LEDGER.md": "688c2a1402271419ed78f98172defb90a2d70e6719a6b98ee0d6fb2d6fa426e2",
+    "ledger.jsonl": "140e41d7b84c83f3a626be8f9caf35dd38e65aac07b25fc354eb92035d00d782",
+    "docs/product/rust-port-goal-and-plan.md": "2ee45d27a7831b8752a0c8d1149b21142b6c7bd8f5b0097780ecc9703d12c9f6"
+  }
+}

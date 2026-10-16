@@ -1,0 +1,25 @@
+Toolchain:
+$ rustc +stable --version
+rustc 1.99.0 (b940084d7 2026-09-28)
+$ cargo +stable --version
+cargo 1.99.0 (5f94df478 2026-08-27)
+
+Frozen commands:
+$ cargo +stable check -p vexel-svg-animation --locked --offline
+PASS (exit 0)
+$ cargo +stable test -p vexel-svg-animation --locked --offline
+PASS (exit 0): 6 unit tests; 15 integration tests; 0 failed; 0 doc tests.
+$ python3 scripts/wo_validate.py WO-RUST-SVG-ANIMATION-CONTROL-01 --ready
+PASS: valid WO-RUST-SVG-ANIMATION-CONTROL-01 revision 1 sha256 88a26c879d8b9faee5313b4fe3b8812370d699cd3c9fa572cda4adac52e89675
+$ python3 scripts/ledger.py validate ledger.jsonl
+PASS: valid ledger, 1347 entries
+$ git diff --check
+PASS (exit 0)
+
+Original assertion audit:
+Compared accepted-baseline/tests/animation.rs with current tests/animation.rs by test name; all 12 original test bodies match after whitespace normalization. Three added integration tests compare controlled/uncontrolled fixture results across 15 fixtures and cover typed stops/errors/source ownership.
+
+In-loop control tests:
+6 deterministic unit tests trigger Canceled during attribute and element token walks, CSS text matching, separator/value splitting, numeric/list parsing, path-shape scanning, motion path parsing, mpath/reference lookup, and a 4,096-byte ID comparison. Assertions verify stop kind and exact work threshold reached. All source/test files remain below 800 lines.
+
+The prior verification record was copied unchanged to prior-verification.txt before this replacement; it contained stale test-count evidence and is retained for audit. The root review.md was read and its precharge/loop-instrumentation and inaccurate-test-count blockers were addressed.

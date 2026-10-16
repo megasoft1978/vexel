@@ -1,0 +1,5 @@
+Repaired the oversized-source branch: it still returns `InputLimit`, but now leaves the parse diagnostic at `None`/offset 0 and native flags at their defaults. Updated that assertion and added an empty-source regression for `IncompleteDocument` at offset 0 with all adapter gates untouched. The five integration tests remain.
+
+Archived the prior candidate assertion and evidence under [archive/prior-candidate](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-source-save/artifacts/WO-RUST-SOURCE-SAVE-01/archive/prior-candidate). The inherited dirty C fixture was not touched.
+
+All named checks passed: offline locked Cargo check and tests (5 passed), work-order validation, ledger validation (1260 entries), and `git diff --check`. Updated [result.md](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-source-save/artifacts/WO-RUST-SOURCE-SAVE-01/result.md), [parity-map.json](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-source-save/artifacts/WO-RUST-SOURCE-SAVE-01/parity-map.json), and [verification.txt](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust6-source-save/artifacts/WO-RUST-SOURCE-SAVE-01/verification.txt).

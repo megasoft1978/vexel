@@ -1,0 +1,4 @@
+WO-CORPUS-15 revision 1
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: f1a8ce908adcf4bbad4f218688f4af77d643071db6fc135420c6a1898b2e94cf
+Scope: Release renderer build and two local, byte-derived W13 SVG ablation rerenders; compare to already saved Inkscape references. Only cache/build generated outputs plus evidence/state/ledgers. No source, test, corpus, golden, UI, sanitizer, fuzz or broad suite changes.

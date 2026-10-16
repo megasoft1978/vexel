@@ -1,0 +1,10 @@
+Clarify your last narrowed rejection against the actual frozen geometry contract. You said parent a=1.0e12 is already outside accepted affine limits, but rust/crates/vexel-geometry/src/lib.rs:38-43 has a/b/c/d.abs() <= 1.0e12 (inclusive), while only translation e/f are <=1.0e6. Parent Affine{a:1e12,..identity()} and local scale(2) are individually valid; composition a=2e12 is invalid. Inspect the actual accepted affine_valid/affine_compose and current transform regression before deciding. Do not change a fixture based on a mistaken limit. Recheck only this last diagnostic-coverage finding; earlier form-feed/cap corrections already inspected. Return ACCEPT or concrete remaining REJECT <=200 words. Read-only, no edits/tests/build/network/agents.
+Closed the three review findings within the crate and artifact scope:
+
+- Numeric lists and aspect values now reject form feed; whitespace matches space, tab, CR, and LF.
+- Parent/local transform overflow now has a regression asserting the element-name byte offset.
+- `parse_preserve_aspect` rejects sources over 16 MiB, with a regression test.
+
+The parity map and verification note are updated. Final named checks passed: `cargo +stable check`, `cargo +stable test` (12 passed), work-order validation, ledger validation (1,096 entries), and `git diff --check`. Rust/Cargo 1.99.0.
+
+Tests remain inline; there is no separate crate `tests/` directory. Independent narrowed recheck and main integration remain outstanding. **This does not declare acceptance.**

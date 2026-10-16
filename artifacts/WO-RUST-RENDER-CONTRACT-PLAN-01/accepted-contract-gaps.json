@@ -1,0 +1,96 @@
+{
+  "schema": 1,
+  "status": "hard-gaps-proposed-additions-not-consumable-until-reviewed-and-accepted",
+  "gaps": [
+    {
+      "id": "G1",
+      "owner": "coordinator/accepted animation crate",
+      "evidence": [
+        "rust/crates/vexel-svg-animation/src/lib.rs:248 Document owns Vec tracks but borrows source",
+        "rust/crates/vexel-svg-animation/src/eval.rs:347 evaluate takes &Document"
+      ],
+      "proposal": [
+        "pub struct AnimationView<'a> { pub source: &'a [u8], pub tracks: &'a [Track], pub diagnostics: &'a [Diagnostic] }",
+        "pub struct OwnedAnimation { source: Arc<Vec<u8>>, tracks: Vec<Track>, diagnostics: Vec<Diagnostic> }",
+        "pub fn parse_owned(source: &Arc<Vec<u8>>, tokens: &[XmlToken]) -> Result<OwnedAnimation, ParseError>;",
+        "pub fn view(&self) -> AnimationView<'_>;",
+        "pub fn evaluate_view(doc: AnimationView<'_>, time_seconds: f64) -> Option<Overlay>;"
+      ],
+      "implementation_rule": "parse once with accepted parse, move vectors after dropping borrowed doc, Arc::clone same owner; refactor existing evaluator internal helpers to slices shared by existing evaluate and evaluate_view; no clone tracks, duplicate eval or shadow animation parser. Existing error/assertion behavior unchanged."
+    },
+    {
+      "id": "G2",
+      "owner": "coordinator/accepted values crate",
+      "evidence": [
+        "rust/crates/vexel-svg-values/src/lib.rs:21 MAX_SOURCE_BYTES=16MiB and MAX_ATTRIBUTES=256",
+        "rust/crates/vexel-svg-values/src/number.rs:90,99,114 whole containing-source limit",
+        "rust/crates/vexel-xml/src/tokenizer.rs:7 MAX_ATTRIBUTES_PER_ELEMENT=4096"
+      ],
+      "proposal": [
+        "pub struct ValueLimits { pub source_bytes: usize, pub attributes: usize }",
+        "pub fn AttributeList::new_with_limits(source: &'a [u8], element_name: Span, attributes: &'a [Attribute], limits: ValueLimits) -> Result<Self, AdapterError>;",
+        "pub fn parse_number_with_limits(source: &[u8], span: Span, limits: ValueLimits) -> Result<f64, ValueError>;",
+        "pub fn parse_number_list_with_limits(source: &[u8], span: Span, count: usize, limits: ValueLimits) -> Result<Vec<f64>, ValueError>;",
+        "pub fn parse_length_with_limits(source: &[u8], span: Span, reference: f64, limits: ValueLimits) -> Result<f64, ValueError>;",
+        "pub fn parse_transform_with_limits(source: &[u8], span: Span, limits: ValueLimits) -> Result<(Affine,usize),TransformError>;"
+      ],
+      "implementation_rule": "same existing grammar functions, policy parameter max1GiB/4096attrs; original 16MiB/256 entry points stay unchanged. All viewport/transform-node methods consume validated AttributeList. Absolute source spans kept, no slice/rebase shortcut to hide whole-source limit."
+    },
+    {
+      "id": "G3",
+      "owner": "coordinator/accepted values and path crates",
+      "evidence": [
+        "rust/crates/vexel-svg-values/src/number.rs Reader is pub(crate), variable-length length lists inaccessible",
+        "rust/crates/vexel-svg-path/src/flatten.rs curve/edge/arc private",
+        "src/svg/shape/shape_geometry.c and text.c need same transformed flattening without new path parser"
+      ],
+      "proposal": [
+        "pub struct NumberCursor<'a> { /* private accepted Reader state */ }",
+        "pub fn NumberCursor::new(source: &'a [u8], span: Span, limits: ValueLimits) -> Result<Self, ValueError>;",
+        "pub fn NumberCursor::number(&mut self) -> Result<f64,ValueError>;",
+        "pub fn NumberCursor::length(&mut self, reference: f64) -> Result<f64,ValueError>;",
+        "pub fn NumberCursor::separator(&mut self) -> bool;",
+        "pub fn NumberCursor::finished(&mut self) -> bool;",
+        "pub fn NumberCursor::absolute(&self) -> usize;",
+        "pub fn flatten_cubic(points: [Point;4], transform: Affine, options: ParseOptions, source_offset: usize, out: &mut Vec<Edge>) -> Result<(),Diagnostic>;",
+        "pub fn append_edge(from: Point, to: Point, transform: Affine, max_edges: usize, source_offset: usize, out: &mut Vec<Edge>) -> Result<(),Diagnostic>;",
+        "pub fn transformed_tolerance(transform: Affine) -> f64; // safe exposure of accepted flatten::tolerance, exact transformed0.25 policy"
+      ],
+      "implementation_rule": "expose accepted algorithms by safe wrappers; no second number/path decoder. Accepted parse_path owns all M/L/H/V/C/S/Q/T/A/Z handling. Shape_path private record/arc helpers replaced by parser output and table-rebase adapter, not rebuilt."
+    },
+    {
+      "id": "G4",
+      "owner": "coordinator/accepted base then controlled API owners",
+      "evidence": [
+        "accepted CSS/reference create and lookups expose no cancellation callback or actual capacity stats",
+        "accepted path parse/evaluator one-shot routines cannot yield per bounded unit",
+        "accepted queue callback results are scalar TaskOutput, not owned tiles"
+      ],
+      "proposal": [
+        "pub trait WorkControl { fn charge(&mut self, kind: WorkKind, units: u64) -> Result<(),Stop>; fn checkpoint(&mut self) -> Result<(),Stop>; } // vexel-base",
+        "pub enum ControlledError<E> { Original(E), Canceled, Limit, OutOfMemory }",
+        "pub fn CssSheet::create_controlled(source: &'a [u8], tokens: &'a [XmlToken], control: &mut dyn WorkControl) -> Result<Self,ControlledError<CssError>>;",
+        "pub fn CssSheet::compute_controlled(&mut self, element: usize, parent: Option<&CssPaint<'a>>, control: &mut dyn WorkControl) -> Result<CssPaint<'a>,ControlledError<CssError>>;",
+        "pub fn CssSheet::allocated_bytes(&self) -> usize;",
+        "pub fn ReferenceIndex::create_controlled(source: &'a [u8], tokens: &'a [XmlToken], control: &mut dyn WorkControl) -> Result<Self,ControlledError<ReferenceDiagnostic>>;",
+        "pub fn ReferenceIndex::find_controlled(&mut self, id: XmlSpan, control: &mut dyn WorkControl) -> Result<Option<usize>,ControlledError<ReferenceDiagnostic>>;",
+        "pub fn ReferenceIndex::allocated_bytes(&self) -> usize;",
+        "pub fn parse_path_controlled(source: &[u8], span: Span, transform: Affine, options: ParseOptions, control: &mut dyn WorkControl) -> Result<PathDocument,ControlledError<Diagnostic>>;",
+        "pub fn flatten_cubic_controlled(points: [Point;4], transform: Affine, options: ParseOptions, source_offset: usize, out: &mut Vec<Edge>, control: &mut dyn WorkControl) -> Result<(),ControlledError<Diagnostic>>;",
+        "pub fn parse_owned_controlled(source: &Arc<Vec<u8>>, tokens: &[XmlToken], control: &mut dyn WorkControl) -> Result<OwnedAnimation,ControlledError<ParseError>>;",
+        "pub enum EvaluationError { InvalidTime, InvalidTrack, OutOfMemory, Canceled, Limit }",
+        "pub fn evaluate_view_controlled(view: AnimationView<'_>, time_seconds: f64, control: &mut dyn WorkControl) -> Result<Overlay,EvaluationError>;",
+        "pub enum ControlledStep<T,E> { Pending { charged_units: u64 }, Complete(T), Failed(ControlledError<E>) }",
+        "pub struct CssBuildSession<'a>; pub fn CssBuildSession::new(source: &'a [u8], tokens: &'a [XmlToken]) -> Result<Self,ControlledError<CssError>>; pub fn CssBuildSession::step(&mut self, quantum: u64, control: &mut dyn WorkControl) -> ControlledStep<(),CssError>; pub fn CssBuildSession::finish(self) -> Result<CssSheet<'a>,ControlledError<CssError>>;",
+        "pub struct ReferenceBuildSession<'a>; pub fn ReferenceBuildSession::new(source: &'a [u8], tokens: &'a [XmlToken]) -> Result<Self,ControlledError<ReferenceDiagnostic>>; pub fn ReferenceBuildSession::step(&mut self, quantum: u64, control: &mut dyn WorkControl) -> ControlledStep<(),ReferenceDiagnostic>; pub fn ReferenceBuildSession::finish(self) -> Result<ReferenceIndex<'a>,ControlledError<ReferenceDiagnostic>>;",
+        "pub struct PathParseSession<'a>; pub fn PathParseSession::new(source: &'a [u8], span: Span, transform: Affine, options: ParseOptions) -> Result<Self,ControlledError<Diagnostic>>; pub fn PathParseSession::step(&mut self, quantum: u64, control: &mut dyn WorkControl) -> ControlledStep<(),Diagnostic>; pub fn PathParseSession::finish(self) -> Result<PathDocument,ControlledError<Diagnostic>>;"
+      ],
+      "implementation_rule": "new typed controlled errors wrap original errors + Canceled/Limit/OOM; legacy entry points run same internal engine with existing budget/no-cancel policy. Charge source operands, token comparisons and actual reserve capacity. No lower crate imports scene, all control lives in base. Controlled resumable progress is required for product incremental decoder, not alleged implemented here. Queue itself unchanged: owned job context contains source lease + bounded owned result slot/channel keyed id/generation, publishes Tile there and TaskOutput completion id only; rejected submit returns context, stale/canceled work drops tile. Sessions retain real parser/cascade/index loop cursors and flatten stacks, never fake progress or restart from source. Pending never exposes final success; finish fails unless complete. Existing one-shot methods drive same sessions to completion. CSS compute/gradient/reference lookup continuations inside Decoder must also retain real cursor state when quantum ends. Renderer row/group/filter continuations follow the same control contract; broad responsive product gate remains measured later."
+    }
+  ],
+  "excluded_candidates": [
+    "rust/crates/vexel-document-edit (candidate, no imports/signature assumptions)",
+    "native binding audit/desktop proposal (planning only, no framework crate adoption)"
+  ],
+  "native_gate": "Actual CoreText/ImageIO replacement requires separate full boundary ABI/ownership/macOS13 availability/thread/drop audit and accepted order; no implementation launches on unaccepted bindings. Native .m files remain reference."
+}

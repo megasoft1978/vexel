@@ -1,0 +1,3 @@
+Exact repaired worker audit passed; all baseline source retained and historical tracked artifacts matched immutable git blobs.
+Integrated only: rust/crates/vexel-timeline/src/lib.rs, rust/crates/vexel-timeline/tests/edit.rs, rust/crates/vexel-timeline/src/edit.rs, rust/crates/vexel-timeline/src/edit/ops.rs.
+603 original legacy code hashes and HEAD/index preserved. Shared manifests/lock unchanged; accepted narrowed independent review recheck-v1.

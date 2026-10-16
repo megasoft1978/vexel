@@ -1,0 +1,57 @@
+{
+  "wo": "WO-RUST-SVG-INDEX-01",
+  "changed_baseline_files": [
+    "rust/crates/vexel-svg-index/src/lib.rs"
+  ],
+  "new_files": [
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v2.events.jsonl",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v2.stderr.log",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v1-result.md",
+    "artifacts/WO-RUST-SVG-INDEX-01/worker.events.jsonl",
+    "artifacts/WO-RUST-SVG-INDEX-01/result.md",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v3.events.jsonl",
+    "artifacts/WO-RUST-SVG-INDEX-01/verification.txt",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v2.prompt.txt",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v1.prompt.txt",
+    "artifacts/WO-RUST-SVG-INDEX-01/parity-map.json",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v3-result.md",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v3.stderr.log",
+    "artifacts/WO-RUST-SVG-INDEX-01/worker.stderr.log",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v1.events.jsonl",
+    "artifacts/WO-RUST-SVG-INDEX-01/worker.prompt.txt",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v2-result.md",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v3.prompt.txt",
+    "artifacts/WO-RUST-SVG-INDEX-01/repair-v1.stderr.log",
+    "rust/crates/vexel-svg-index/tests/index_contract.rs",
+    "rust/crates/vexel-svg-index/src/index_tests.rs"
+  ],
+  "unchanged_inherited_git_blob_files": 1168,
+  "out_of_scope": [],
+  "missing_baseline_files": [],
+  "main_module_conflicts": [],
+  "source_line_cap_violations": [],
+  "pass": true,
+  "accepted_review": "recheck-v3",
+  "authorized_coordinator_input_deltas": {
+    "rust/crates/vexel-xml/src/stream.rs": {
+      "before_sha256": "f51b16a203eb68924fc3ea046ddadf627f77bba3a9556ec7c349d3b82b971667",
+      "after_sha256": "888a62d7a05959d4db1d6f9ff011dd84e64b97ed493518ffe12a711755156780",
+      "coordinator_authorization": "WO-RUST-XML-STORAGE-01"
+    },
+    "rust/crates/vexel-xml/src/stream_tests.rs": {
+      "before_sha256": "8a69726aa40401981342678e844728fe27588ce19479b2fc954a22fb488fbbdc",
+      "after_sha256": "5e871b6838e294161a4a0d7cea0d16e028b914ed523ffcbce381964e9e92c6fe",
+      "coordinator_authorization": "WO-RUST-XML-STORAGE-01"
+    },
+    "work/WO-RUST-XML-STORAGE-01.md": {
+      "before_sha256": null,
+      "after_sha256": "ee7af0059020a3f87d5914bf2e950190fdcb7c659dae077c0d2953882ed74176",
+      "coordinator_authorization": "WO-RUST-XML-STORAGE-01"
+    },
+    "ledger.jsonl": {
+      "before_sha256": "245d7cba74c111ee79a733395256f9f38e3c53fed752324feeefc669679c2445",
+      "after_sha256": "05939ca64bac32c55c925fde328e0d694ea07f0994b93731bace19c78696d9a5",
+      "coordinator_authorization": "WO-RUST-XML-STORAGE-01"
+    }
+  }
+}

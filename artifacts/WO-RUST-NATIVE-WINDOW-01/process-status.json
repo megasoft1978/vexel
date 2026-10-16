@@ -1,0 +1,11 @@
+{
+  "pid": 90051,
+  "status": "completed",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-NATIVE-WINDOW-01/worker",
+  "started_epoch": 1792001418.8182552,
+  "child_pid": 90073,
+  "exit_code": 0,
+  "duration_seconds": 516.3228888511658
+}

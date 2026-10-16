@@ -1,0 +1,17 @@
+{
+  "contract": "WO-RUST-SVG-PATH-GEOMETRY-01 revision 1",
+  "implementation": {
+    "transformed_tolerance": "rust/crates/vexel-svg-path/src/flatten.rs::tolerance",
+    "append_edge": "rust/crates/vexel-svg-path/src/flatten.rs::edge",
+    "flatten_cubic": "rust/crates/vexel-svg-path/src/flatten.rs::curve"
+  },
+  "validation": "Wrappers call vexel_geometry::affine_valid and validate all points with flatten::bounded before calling shared engines; failures use supplied source_offset.",
+  "limits": "max_edges is clamped to MAX_PATH_EDGES; engines count preexisting output edges and retain try_reserve and diagnostic behavior.",
+  "flatten_cubic_append_contract": "Upfront invalid transforms/points leave out unchanged. Recursive flattening may append edges before a later Limit or OutOfMemory error and does not roll back; callers may record out.len() and truncate after failure.",
+  "parser_parity": "Parser implementation and all nine original integration tests/assertions unchanged.",
+  "focused_tests": [
+    "cubic_wrapper_matches_parser_for_transforms_and_degenerate_curves",
+    "edge_wrapper_transforms_appends_and_observes_prefilled_cap",
+    "wrappers_validate_before_mutation_and_preserve_failure_offsets"
+  ]
+}

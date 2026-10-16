@@ -1,0 +1,2 @@
+[1/2] Building C object CMakeFiles/mcp_protocol_async_test.dir/tests/mcp/mcp_protocol_async_test.c.o
+[2/2] Linking C executable bin/mcp_protocol_async_test

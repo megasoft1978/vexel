@@ -1,0 +1,776 @@
+{
+  "schema": 2,
+  "work_order": "WO-RUST-SVG-SCALAR-INDEX-01",
+  "revision": 2,
+  "owner": "RASTER_INDEX",
+  "source_symbol_count": 73,
+  "symbols": [
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "checked_add_size",
+      "source_key": "src/raster/shape_bounds.c:20:definition:checked_add_size",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "add",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "checked_mul_size",
+      "source_key": "src/raster/shape_bounds.c:27:definition:checked_mul_size",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "mul",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "bounds_include",
+      "source_key": "src/raster/shape_bounds.c:34:definition:bounds_include",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/bounds.rs",
+      "rust_symbol": "GeomBounds::include",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "pixel_range",
+      "source_key": "src/raster/shape_bounds.c:52:definition:pixel_range",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "pixel_range",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "full_tile_bounds",
+      "source_key": "src/raster/shape_bounds.c:67:definition:full_tile_bounds",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/bounds.rs",
+      "rust_symbol": "full_tile",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "map_user_box",
+      "source_key": "src/raster/shape_bounds.c:78:definition:map_user_box",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/bounds.rs",
+      "rust_symbol": "map_bounds",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "stroke_padding",
+      "source_key": "src/raster/shape_bounds.c:116:definition:stroke_padding",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/bounds.rs",
+      "rust_symbol": "stroke_padding",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_build",
+      "source_key": "src/raster/shape_bounds.c:139:definition:raster_shape_bounds_build",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_bounds.rs",
+      "rust_symbol": "build_bounds_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_destroy",
+      "source_key": "src/raster/shape_bounds.c:227:definition:raster_shape_bounds_destroy",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_engine.rs",
+      "rust_symbol": "ScalarIndex::release / RasterJob::finish / Drop",
+      "status": "implemented_production",
+      "adaptation": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "edge_stroke_radius",
+      "source_key": "src/raster/shape_bounds.c:234:definition:edge_stroke_radius",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/bounds.rs",
+      "rust_symbol": "edge_radius",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "boundary_pixel_range",
+      "source_key": "src/raster/shape_bounds.c:255:declaration:boundary_pixel_range",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "boundary_pixel_range",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "point_boundary_bounds",
+      "source_key": "src/raster/shape_bounds.c:258:definition:point_boundary_bounds",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/bounds.rs",
+      "rust_symbol": "point_box",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_pixel",
+      "source_key": "src/raster/shape_bounds.c:284:declaration:mark_pixel",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_bounds.rs",
+      "rust_symbol": "mark_job_box; job_clip::mark_box/full; marked_pixel_count_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "add_boundary_box_work",
+      "source_key": "src/raster/shape_bounds.c:286:definition:add_boundary_box_work",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_bounds.rs",
+      "rust_symbol": "add_work_checked + bounds::checked_area",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_boundary_box",
+      "source_key": "src/raster/shape_bounds.c:298:definition:mark_boundary_box",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_bounds.rs",
+      "rust_symbol": "mark_job_box",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "boundary_pixel_range",
+      "source_key": "src/raster/shape_bounds.c:310:definition:boundary_pixel_range",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "boundary_pixel_range",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_pixel",
+      "source_key": "src/raster/shape_bounds.c:322:definition:mark_pixel",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_bounds.rs",
+      "rust_symbol": "mark_job_box; job_clip::mark_box/full; marked_pixel_count_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_mark_boundaries",
+      "source_key": "src/raster/shape_bounds.c:330:definition:raster_shape_bounds_mark_boundaries",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_bounds.rs",
+      "rust_symbol": "mark_boundaries_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "clip_edge_pixel_bounds",
+      "source_key": "src/raster/shape_bounds.c:467:definition:clip_edge_pixel_bounds",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_clip.rs",
+      "rust_symbol": "box_for",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "add_clip_edge_work",
+      "source_key": "src/raster/shape_bounds.c:491:definition:add_clip_edge_work",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_clip.rs",
+      "rust_symbol": "capped + RasterJob::charge_boundary",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "preflight_clip_boundary_visits",
+      "source_key": "src/raster/shape_bounds.c:498:definition:preflight_clip_boundary_visits",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_clip.rs",
+      "rust_symbol": "mark_clip_boundaries_job header/count preflight",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "visit_clip_boundary_edge",
+      "source_key": "src/raster/shape_bounds.c:528:definition:visit_clip_boundary_edge",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_clip.rs",
+      "rust_symbol": "collect / box_for / mark_box",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "mark_full_boundary_mask",
+      "source_key": "src/raster/shape_bounds.c:561:definition:mark_full_boundary_mask",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_clip.rs",
+      "rust_symbol": "full",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_shape_bounds_mark_clip_boundaries",
+      "source_key": "src/raster/shape_bounds.c:570:definition:raster_shape_bounds_mark_clip_boundaries",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_clip.rs",
+      "rust_symbol": "mark_clip_boundaries_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_boundary_mask_destroy",
+      "source_key": "src/raster/shape_bounds.c:629:definition:raster_boundary_mask_destroy",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_engine.rs",
+      "rust_symbol": "ScalarIndex::release / RasterJob finish/Drop",
+      "status": "implemented_production",
+      "adaptation": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+    },
+    {
+      "source": "src/raster/shape_bounds.c",
+      "source_symbol": "raster_boundary_mask_test",
+      "source_key": "src/raster/shape_bounds.c:636:definition:raster_boundary_mask_test",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "boundary_test_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "raster_preflight_work_budget",
+      "source_key": "src/raster/shape_render_preflight.c:34:definition:raster_preflight_work_budget",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/preflight.rs",
+      "rust_symbol": "work_budget",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "work_add",
+      "source_key": "src/raster/shape_render_preflight.c:51:definition:work_add",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/preflight.rs",
+      "rust_symbol": "work_add",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "checked_add_size",
+      "source_key": "src/raster/shape_render_preflight.c:59:definition:checked_add_size",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "add",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "checked_mul_size",
+      "source_key": "src/raster/shape_render_preflight.c:66:definition:checked_mul_size",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "mul",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "sample_is_in_view",
+      "source_key": "src/raster/shape_render_preflight.c:73:definition:sample_is_in_view",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_preflight.rs",
+      "rust_symbol": "in_view",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "pixel_is_fully_in_view",
+      "source_key": "src/raster/shape_render_preflight.c:85:definition:pixel_is_fully_in_view",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "fully_in_view",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "active_count_for",
+      "source_key": "src/raster/shape_render_preflight.c:97:definition:active_count_for",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_preflight.rs",
+      "rust_symbol": "active",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "sample_aux_work",
+      "source_key": "src/raster/shape_render_preflight.c:104:definition:sample_aux_work",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_preflight.rs",
+      "rust_symbol": "aux",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "add_fast_sample",
+      "source_key": "src/raster/shape_render_preflight.c:142:definition:add_fast_sample",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_preflight.rs",
+      "rust_symbol": "fast_intervals sample charge/count",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "count_fast_fill_intervals_for_runs",
+      "source_key": "src/raster/shape_render_preflight.c:155:definition:count_fast_fill_intervals_for_runs",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_preflight.rs",
+      "rust_symbol": "fast_intervals",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_render_preflight.c",
+      "source_symbol": "raster_shape_render_work_preflight",
+      "source_key": "src/raster/shape_render_preflight.c:201:definition:raster_shape_render_work_preflight",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_preflight.rs",
+      "rust_symbol": "preflight_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "user_scanline_y",
+      "source_key": "src/raster/shape_scanline.c:12:definition:user_scanline_y",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "user_y",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "first_scanline_at_or_above",
+      "source_key": "src/raster/shape_scanline.c:21:definition:first_scanline_at_or_above",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "first_controlled",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "compare_events",
+      "source_key": "src/raster/shape_scanline.c:36:definition:compare_events",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "event_cmp",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "compare_shape_events",
+      "source_key": "src/raster/shape_scanline.c:48:definition:compare_shape_events",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "shape_event_cmp",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "node_height",
+      "source_key": "src/raster/shape_scanline.c:60:definition:node_height",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "height",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "update_height",
+      "source_key": "src/raster/shape_scanline.c:65:definition:update_height",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "update",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "rotate_left",
+      "source_key": "src/raster/shape_scanline.c:75:definition:rotate_left",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "rotate_left",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "rotate_right",
+      "source_key": "src/raster/shape_scanline.c:85:definition:rotate_right",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "rotate_right",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "rebalance",
+      "source_key": "src/raster/shape_scanline.c:95:definition:rebalance",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "rebalance",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "insert_node",
+      "source_key": "src/raster/shape_scanline.c:118:definition:insert_node",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_rows.rs",
+      "rust_symbol": "insert",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "remove_node",
+      "source_key": "src/raster/shape_scanline.c:139:definition:remove_node",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_rows.rs",
+      "rust_symbol": "remove",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "append_tree_in_order",
+      "source_key": "src/raster/shape_scanline.c:170:definition:append_tree_in_order",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_rows.rs",
+      "rust_symbol": "append",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_create",
+      "source_key": "src/raster/shape_scanline.c:192:definition:raster_scanline_index_create",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/scanline.rs",
+      "rust_symbol": "create_scanlines_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_reset",
+      "source_key": "src/raster/shape_scanline.c:281:definition:raster_scanline_index_reset",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_rows.rs",
+      "rust_symbol": "reset_scanlines_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_destroy",
+      "source_key": "src/raster/shape_scanline.c:292:definition:raster_scanline_index_destroy",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_engine.rs",
+      "rust_symbol": "ScalarIndex::release / RasterJob finish/Drop",
+      "status": "implemented_production",
+      "adaptation": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+    },
+    {
+      "source": "src/raster/shape_scanline.c",
+      "source_symbol": "raster_scanline_index_build_row",
+      "source_key": "src/raster/shape_scanline.c:303:definition:raster_scanline_index_build_row",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_rows.rs",
+      "rust_symbol": "build_row_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "checked_add_size",
+      "source_key": "src/raster/shape_scanline_fill.c:13:definition:checked_add_size",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "add",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "checked_mul_size",
+      "source_key": "src/raster/shape_scanline_fill.c:20:definition:checked_mul_size",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/util.rs",
+      "rust_symbol": "mul",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "shape_is_uniform_filled",
+      "source_key": "src/raster/shape_scanline_fill.c:27:definition:shape_is_uniform_filled",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "uniform",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "pixel_is_fully_in_view",
+      "source_key": "src/raster/shape_scanline_fill.c:48:definition:pixel_is_fully_in_view",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "fully_in_view",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "crossing_less",
+      "source_key": "src/raster/shape_scanline_fill.c:60:definition:crossing_less",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/fill.rs",
+      "rust_symbol": "cross_less",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "swap_crossings",
+      "source_key": "src/raster/shape_scanline_fill.c:68:definition:swap_crossings",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/fill.rs",
+      "rust_symbol": "swap",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "sift_down",
+      "source_key": "src/raster/shape_scanline_fill.c:76:definition:sift_down",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/fill.rs",
+      "rust_symbol": "sift_down",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "sort_crossings",
+      "source_key": "src/raster/shape_scanline_fill.c:90:definition:sort_crossings",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/fill.rs",
+      "rust_symbol": "heap_sort",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "ceil_log2",
+      "source_key": "src/raster/shape_scanline_fill.c:100:definition:ceil_log2",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "intervals checked sort-level loop",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "build_intervals",
+      "source_key": "src/raster/shape_scanline_fill.c:112:definition:build_intervals",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "intervals",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_create",
+      "source_key": "src/raster/shape_scanline_fill.c:183:definition:raster_fill_scanline_cache_create",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "create_fill_cache_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_destroy",
+      "source_key": "src/raster/shape_scanline_fill.c:257:definition:raster_fill_scanline_cache_destroy",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_engine.rs",
+      "rust_symbol": "ScalarIndex::release / RasterJob finish/Drop",
+      "status": "implemented_production",
+      "adaptation": "full-port owning scope Drop/borrow or validated arena-ID sharing; no raw pointer callbacks/refcount API needed in Rust; legacy no-double-release and failure cleanup assertions assigned"
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_is_eligible",
+      "source_key": "src/raster/shape_scanline_fill.c:267:definition:raster_fill_scanline_cache_is_eligible",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "eligible_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_color",
+      "source_key": "src/raster/shape_scanline_fill.c:274:definition:raster_fill_scanline_cache_color",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/fill.rs",
+      "rust_symbol": "fill_color (public allocation-free scene helper)",
+      "status": "implemented_production",
+      "adaptation": "Public crate-root fill_color preserves the exact first-edge color lookup and Option behavior without allocating; it accepts SceneView/ShapeId and does not create or retain legacy storage."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_build_row",
+      "source_key": "src/raster/shape_scanline_fill.c:283:definition:raster_fill_scanline_cache_build_row",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "build_fill_row_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_build_pixel_runs",
+      "source_key": "src/raster/shape_scanline_fill.c:321:definition:raster_fill_scanline_cache_build_pixel_runs",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "build_fill_runs_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_pixel_runs",
+      "source_key": "src/raster/shape_scanline_fill.c:368:definition:raster_fill_scanline_cache_pixel_runs",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "pixel_runs_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "first_sample_x_at_least",
+      "source_key": "src/raster/shape_scanline_fill.c:377:definition:first_sample_x_at_least",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "interval_pixel_range_controlled search closure",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_interval_pixel_range",
+      "source_key": "src/raster/shape_scanline_fill.c:396:definition:raster_fill_scanline_interval_pixel_range",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "interval_pixel_range_controlled",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    },
+    {
+      "source": "src/raster/shape_scanline_fill.c",
+      "source_symbol": "raster_fill_scanline_cache_contains",
+      "source_key": "src/raster/shape_scanline_fill.c:426:definition:raster_fill_scanline_cache_contains",
+      "rust_module": "rust/crates/vexel-svg-scalar-index/src/job_fill.rs",
+      "rust_symbol": "fill_contains_job",
+      "status": "implemented_production",
+      "adaptation": "Original algorithm/math/order/errors retained; actual variable loops receive WorkControl. Heap payloads use admitted RasterJob handles. Fixed scalar/stack state allocates no heap."
+    }
+  ],
+  "algorithms": [
+    {
+      "name": "conservative bounds and stroke expansion",
+      "entrypoint": "build_bounds_job",
+      "proof": [
+        "canonical_scene_path_uses_same_job_for_bounds_boundary_and_rows",
+        "invalid_stroke_inverse_keeps_full_bounds_but_original_miter_marking_error"
+      ],
+      "preserved": "filled/stroked extents, full-tile invalid bounds, hypot/sqrt/miter/square cap, pixel margins and source offsets"
+    },
+    {
+      "name": "boundary and controlled clip marking",
+      "entrypoint": "mark_boundaries_job + mark_clip_boundaries_job",
+      "proof": [
+        "boundary_200m_is_work_not_bytes_and_rejects_before_mask_publication",
+        "controlled_clip_two_visits_actual_filled_counts_and_conservative_invalid_inverse",
+        "second_clip_pass_invalid_inverse_still_marks_conservatively_full"
+      ],
+      "preserved": "200M marking work, unique bitmap count, chain/child overhead, actual filled-edge visits, two traversals, both-pass invalid inverse/full-mask fallback"
+    },
+    {
+      "name": "scanline events / AVL rows",
+      "entrypoint": "create_scanlines_job + build_row_job + reset_scanlines_job",
+      "proof": [
+        "all_five_rows_match_brute_edges_and_painter_order_through_two_child_removal",
+        "avl_events_remain_sorted_and_removal_releases_all_nodes"
+      ],
+      "preserved": "five offsets .125/.375/.5/.625/.875, original edge and shape event ties, 64-level AVL cap, ascending painter/edge order, removal node state"
+    },
+    {
+      "name": "uniform fill / crossing heapsort / winding",
+      "entrypoint": "create_fill_cache_job + build_fill_row_job",
+      "proof": [
+        "nonzero_evenodd_coincident_crossings_and_half_open_intervals",
+        "one_edge_uniform_fill_and_valid_empty_scene_have_source_defined_results",
+        "exactly_4096_edges_fast_and_4097_edges_scalar_fallback"
+      ],
+      "preserved": "uniform color/filled/stroke eligibility, one edge, >4096 fallback, 8MiB run bound, x/edge ties, grouped winding/parity and infinities, exact crossing setup costs"
+    },
+    {
+      "name": "fast runs / interval ranges / containment",
+      "entrypoint": "build_fill_runs_job + interval_pixel_range_controlled + fill_contains_job",
+      "proof": [
+        "rectangle_preflight_matches_original_exact_cost_terms_and_has_no_row_allocation",
+        "interval_binary_search_keeps_half_open_edges_and_comparison_count"
+      ],
+      "preserved": "view coverage and bitmap transitions, half-open runs/intervals, five slots, exact binary comparisons"
+    },
+    {
+      "name": "exact complete work preflight",
+      "entrypoint": "preflight_job",
+      "proof": [
+        "original_raster_budget_inside_1000_and_over_1100_exact_work_and_error",
+        "rectangle_preflight_matches_original_exact_cost_terms_and_has_no_row_allocation",
+        "original_5000_shape_culling_counter_predicates_on_canonical_path_scene"
+      ],
+      "preserved": "200M base, 1048576 ramp, 24576/pixel, 16B cap, all event/lookup/stroke/grid/setup/row/run/fast/scalar/sample/aux costs and offset-0 refusal"
+    },
+    {
+      "name": "admission / lifetime / atomic state",
+      "entrypoint": "ScalarIndex + job_storage + RasterJob",
+      "proof": [
+        "row_fill_and_whole_preflight_cancel_restore_payload_and_scalar_state",
+        "every_engine_descriptor_uses_one_source_charge_and_partial_bytes_count_once",
+        "admission_failure_wrong_source_alias_rows_and_malformed_storage_are_errors"
+      ],
+      "preserved": "one source owner/ledger, requested/actual capacities and metadata admitted before publication, old/new overlap, reusable backup storage, no per-row allocation, unconditional failure cleanup"
+    }
+  ],
+  "operations": [
+    {
+      "owner": "RASTER_INDEX",
+      "name": "bounds",
+      "signature": "fn build_bounds(view: SceneView<'_>, map: ViewMapping, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<BoundsSet>; fn mark_boundaries(view: SceneView<'_>, map: ViewMapping, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<BoundaryMask>; fn mark_clip_boundaries(view: SceneView<'_>, map: ViewMapping, boundary: &mut BoundaryMask, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<()>; fn boundary_test(mask: &BoundaryMask, pixel: usize) -> bool",
+      "contract": "Bounds include every paintable scalar sample: caps/joins/dashes/clips. Full boundary marking on invalid clip inverse. Preserve conservative degenerate/full-tile cases; 200M boundary-work cap; own/drop arrays. KernelResources is passed explicitly to operations requiring clip/stroke queries; lower writer consumes the shared interface and the coordinator supplies actual implementations."
+    },
+    {
+      "owner": "RASTER_INDEX",
+      "name": "scanline",
+      "signature": "fn create_scanlines(view: SceneView<'_>, bounds: &BoundsSet, map: ViewMapping, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<ScanlineIndex>; fn reset_scanlines(index: &mut ScanlineIndex); fn build_row(index: &mut ScanlineIndex, view: SceneView<'_>, pixel_y: u32, rows: &mut RowBuffers, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<usize>",
+      "contract": "Original event/tree algorithm, 5 samples rows, active capacities explicit, no hidden allocations per row; ascending shape painter order, original tiebreaks. KernelResources is passed explicitly to operations requiring clip/stroke queries; lower writer consumes the shared interface and the coordinator supplies actual implementations."
+    },
+    {
+      "owner": "RASTER_INDEX",
+      "name": "fill cache",
+      "signature": "fn create_fill_cache(view: SceneView<'_>, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<FillCache>; fn eligible(cache: &FillCache, shape: ShapeId) -> bool; fn color(view: SceneView<'_>, shape: ShapeId) -> Option<[u8;4]>; fn build_fill_row(cache: &mut FillCache, view: SceneView<'_>, shape: ShapeId, y: u32, map: ViewMapping, rows: &RowBuffers, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<FillRowWork>; fn build_runs(cache: &mut FillCache, view: SceneView<'_>, bounds: PixelBounds, y: u32, boundary: &BoundaryMask, map: ViewMapping, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<usize>; fn pixel_runs(cache: &FillCache) -> &[PixelRun]; fn interval_pixel_range(view: SceneView<'_>, bounds: PixelBounds, map: ViewMapping, sample_offset: f64, interval: FillInterval) -> Result<(TableRange,usize)>; fn fill_contains(cache: &FillCache, sample_row: usize, x: f64) -> (bool,usize)",
+      "contract": "FillRowWork records edge_visits/work_units. Entire uniform fill eligibility/exclusions, heap sort crossings/winding/interval algorithms and binary comparisons stay; >4096-edge shapes use original scalar fallback rather than refusal. KernelResources is passed explicitly to operations requiring clip/stroke queries; lower writer consumes the shared interface and the coordinator supplies actual implementations."
+    },
+    {
+      "owner": "RASTER_INDEX",
+      "name": "preflight",
+      "signature": "fn work_budget(width: u32, height: u32) -> u64; fn preflight(view: SceneView<'_>, scratch: &mut RasterScratch, map: ViewMapping, stats: &mut WorkStats, resources: &dyn KernelResources, control: &mut dyn WorkControl) -> Result<()>",
+      "contract": "Exact ramp min(16e9,200e6+max(0,pixels-1048576)*24576), all clip/paint/stroke/grid/dash/interval/boundary/row costs charged, identical count to real traversal including fast fill branches; cancellation is separate. No ThreadLocal budget leakage across jobs. KernelResources is passed explicitly to operations requiring clip/stroke queries; lower writer consumes the shared interface and the coordinator supplies actual implementations."
+    }
+  ],
+  "production_surface": [
+    "ScalarIndex::build/build_row/reset/build_fill_row/build_fill_runs/release",
+    "preflight_job",
+    "all exported *_job functions and interval_pixel_range_controlled",
+    "fill_color(SceneView, ShapeId): allocation-free first-edge color lookup"
+  ],
+  "legacy": "Historical Vec-only entry points and allocating helpers are cfg(test), private and absent from normal builds. Original unit fixture implementations/assertions remain preserved. Production exposes owning-job engines plus allocation-free fill_color and internal shared helpers.",
+  "accepted_contract_blocker": {
+    "status": "resolved_by_coordinator_peer_seed",
+    "historical_evidence": "accepted-contract-blocker.json",
+    "seed": "r2-accepted-path-peer-seed.json",
+    "verification": "r2-peer-repaired-test.log"
+  },
+  "candidate_status": "owned_engine_implemented_focused_checks_pass_candidate_only",
+  "remaining_composition": "Actual native DecodeOperations/ControlledKernelResources/sample/FlatKernel adapters, renderer pixels/hash/performance/app acceptance remain coordinator integration gates."
+}

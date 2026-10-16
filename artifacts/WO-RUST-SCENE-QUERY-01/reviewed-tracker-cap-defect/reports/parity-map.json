@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "selection.c": [
+    {"symbol":"svg_shape_source_assign","implementation":"source_assign","status":"adapted","proof":"Sets ShapeInput.source.element before SceneBuilder::append_shape; source slice checked. Published source ranges stay immutable."},
+    {"symbol":"view_transform","implementation":"selection::mapping","status":"ported","proof":"Finite viewport validation, default centered meet, slice/none aspect mapping, finite scales and offsets."},
+    {"symbol":"svg_shape_bounds_query","implementation":"bounds_query + bounds_query_controlled","status":"ported","proof":"Validates generation-checked IDs and ranges, scans finite coordinates, maps bounds; controlled form charges each edge."},
+    {"symbol":"segment_distance","implementation":"selection::segment_distance","status":"ported","proof":"Clamped projection and degenerate-edge hypot behavior."},
+    {"symbol":"fill_contains","implementation":"selection::fill_contains","status":"ported","proof":"Image-paint/per-edge-alpha visibility, fill-enabled check, winding/even-odd crossing; charges each edge."},
+    {"symbol":"stroke_contains","implementation":"selection::stroke_contains","status":"ported","proof":"Inverse-transform query and endpoints, Frobenius inverse norm tolerance expansion, open-subpath final-edge exclusion, charged segments."},
+    {"symbol":"svg_shape_hit_test","implementation":"hit_test","status":"ported","proof":"Finite/range validation, reverse painter order, real caller KernelResources clip provider, fill/stroke behavior and stop/error propagation."},
+    {"symbol":"svg_shape_element_at_offset","implementation":"element_at_offset + element_at_offset_controlled","status":"ported","proof":"Half-open ranges; narrowest range then later shape wins; checked SceneView::shape_id enumeration includes zero-edge records; controlled form charges visited records."}
+  ],
+  "shape_alloc.c": [
+    {"symbol":"pointer_hash","implementation":"AllocationLease owner/slot/serial","status":"safe_adaptation","proof":"Raw pointer identity and open-address hash are unnecessary with typed owner-scoped lease identities."},
+    {"symbol":"add_saturating","implementation":"checked_add and ChargeLedger::admit","status":"safe_adaptation","proof":"Overflow returns Arithmetic Limit and is not reported as successful saturation."},
+    {"symbol":"find_record","implementation":"ChargeLedger internal lease table","status":"safe_adaptation","proof":"Safe Vec registry with opaque stale/foreign lease rejection."},
+    {"symbol":"track_add","implementation":"AllocationTracking::track_capacity","status":"safe_adaptation","proof":"Admits actual Vec capacity and returns an opaque lease owned beside the buffer; shared ledger reports counters and charges its sole registry."},
+    {"symbol":"track_remove","implementation":"AllocationTracking::release(job, lease)","status":"safe_adaptation","proof":"Resource owner releases its opaque lease; stale/foreign/double release is rejected by shared ledger."},
+    {"symbol":"svg_shape_alloc_tracking_start","implementation":"AllocationTracking::tracking_start(job)","status":"safe_adaptation","proof":"Creates an isolated scope with active-record cap and Arc identity token; shared ledger remains the sole lease registry."},
+    {"symbol":"svg_shape_alloc_tracking_stop","implementation":"AllocationTracking::tracking_stop(job)","status":"safe_adaptation","proof":"Returns authoritative shared ChargeLedger capacity counters; no unsafe global toggling."},
+    {"symbol":"svg_shape_malloc","implementation":"reserve_table","status":"safe_adaptation","proof":"Fallible Vec replacement uses try_reserve, actual capacity admission, checked sizes, and publish-after-charge; caller keeps old capacity lease through overlap."},
+    {"symbol":"svg_shape_calloc","implementation":"Rust Vec zeroed-element ownership plus reserve_table","status":"safe_adaptation","proof":"Callers provide initialized Vec<T>; no C count*size API. Checked capacity multiplication."},
+    {"symbol":"svg_shape_realloc","implementation":"reserve_table","status":"safe_adaptation","proof":"Fresh capacity is charged while caller's old-capacity lease remains live; values transfer only after admission and failure preserves old Vec."},
+    {"symbol":"svg_shape_free","implementation":"ChargeLedger::release via returned AllocationLease","status":"safe_adaptation","proof":"Typed explicit release replaces raw pointer free; stale/double release rejected by shared ledger."},
+    {"symbol":"svg_shape_alloc_set_tag","implementation":"AllocationTracking::track_capacity(tag)","status":"safe_adaptation","proof":"Tag supplied at charge time and bytes accumulated by tag; no pointer retag operation."},
+    {"symbol":"svg_shape_alloc_note_external","implementation":"AllocationTracking::track_capacity","status":"safe_adaptation","proof":"External Vec capacities can be admitted explicitly under their real lifetime owner."},
+    {"symbol":"svg_shape_alloc_forget_external","implementation":"AllocationTracking::release_last","status":"safe_adaptation","proof":"External capacity lease must be explicitly released; no raw pointer registry."}
+  ],
+  "catalog_limits": [{"name":"SVG_ALLOC_TRACKER_CAPACITY","legacy":65536,"replacement":"vexel_scene_query::SVG_ALLOC_TRACKER_CAPACITY actively bounds tracked leases; ChargeLedger::max_leases may impose a stricter job-wide bound, with registry growth charged by the shared ledger"}],
+  "adaptations": ["No borrowed query plans retain context/control/provider references.","No fake clip provider or default rendering resource is supplied; fixture clip provider exists only in tests.","The accepted scene model assigns source at append time and exposes immutable published views.","The accepted SceneView::shape_id(index) enumerator safely includes zero-edge shapes and guards stale/foreign identities.","C allocator call count/pointer identity is not claimed; stats count explicit admitted capacity leases and actual overlap."]
+}

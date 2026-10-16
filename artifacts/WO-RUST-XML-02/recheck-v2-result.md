@@ -1,0 +1,7 @@
+**REJECT**
+
+1. **Name parsing exceeds the one-byte parse budget on partial UTF-8 scalars.** In [scan_name](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/src/stream.rs:310), each step calls `utf8_next` from `partial_start`, which decodes the full scalar even when it extends past `limit`; lines 320–323 then advance only to the limit and retry that decode on the next step. After character validation completes, this work is charged against the remaining parse budget. The C scanner checks scalar width against the limit before decoding ([xml_stream_internal.inc:58–67](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/src/svg/xml/xml_stream_internal.inc:58)). Current tests assert cursor/frontier progress, not parser bytes examined ([stream_tests.rs:32–40](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/src/stream_tests.rs:32)).
+
+   **Repair:** persist partial name-scalar decode state so each step examines no more than its remaining byte budget. Add a budget-one multibyte-name regression that measures parser scan work per step, not only cursor advancement.
+
+The other three reviewed fixes are present: partial UTF-8 validation and cancellation tests, cancelable batch APIs driven through the resumable parser, and terminal cleanup of tokens/results. Visitor capacity accounting and the QName offset fix remain. The accepted reader tests are still present. No tests or builds were run for this review.

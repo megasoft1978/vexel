@@ -1,0 +1,4 @@
+$ rustc +stable --edition 2021 --crate-name cache_publication_lower_example --target aarch64-apple-darwin artifacts/WO-RUST-CACHE-PUBLICATION-01/lower-example.rs -L dependency=build/rust/aarch64-apple-darwin/debug/deps --extern vexel_scene=build/rust/aarch64-apple-darwin/debug/deps/libvexel_scene-3fcbcfdce8712392.rlib -o .cache/tmp/cache-publication-lower-example
+exit=0
+$ .cache/tmp/cache-publication-lower-example
+exit=0

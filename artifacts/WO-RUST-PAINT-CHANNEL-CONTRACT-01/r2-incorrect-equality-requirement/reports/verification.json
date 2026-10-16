@@ -1,0 +1,37 @@
+{
+  "status": "PASS scoped repair verification; candidate pending independent re-review, protected audit, and fresh main checks",
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-scene --locked --offline",
+      "exit": 0,
+      "log": "check.log"
+    },
+    {
+      "command": "cargo +stable test -p vexel-scene --locked --offline",
+      "exit": 0,
+      "log": "test.log"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-PAINT-CHANNEL-CONTRACT-01 --ready",
+      "exit": 0,
+      "log": "wo-validate.log"
+    }
+  ],
+  "runtime_tests_passed": 153,
+  "compile_fail_doctests_passed": 2,
+  "new_runtime_tests": 2,
+  "new_publication_cases": 8,
+  "combined_trait_object_dispatch": "one concrete ChannelAwareProductionDecodeOperations object dispatches pattern and typed group filter through one dyn reference",
+  "accepted_input_assertions_modified": false,
+  "line_counts": {
+    "production_decode.rs": 499,
+    "pattern_publication.rs": 242,
+    "paint_channel_contracts.rs": 250
+  },
+  "source_sha256": {
+    "rust/crates/vexel-scene/src/production_decode.rs": "0042dbf31a134c858fc6474ec6dc9fbbcd5fd59fca9cb1462d041b944694aec5",
+    "rust/crates/vexel-scene/src/pattern_publication.rs": "7c4415ffe8d0f61b8a150af1b14c36c3f425272ac29954bbba43f92f6810f4a3",
+    "rust/crates/vexel-scene/tests/paint_channel_contracts.rs": "9806365916d6f16d65467cd7f880740a1cb7310d875bba3a2778c608832b327c",
+    "rust/crates/vexel-scene/README.md": "8fd325e60875242d7e413bf6941eb1209fa41cb0002474604192e763fb7a4b36"
+  }
+}

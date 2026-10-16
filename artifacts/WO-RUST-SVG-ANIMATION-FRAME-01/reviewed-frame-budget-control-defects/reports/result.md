@@ -1,0 +1,9 @@
+# WO-RUST-SVG-ANIMATION-FRAME-01 result
+
+Status: **complete owned frame/clip candidate; awaiting independent review**.
+
+Implemented the entire owned animation-frame and clip-owner partition against the current accepted APIs. `evaluate_frame` uses existing parsed `DocumentView` overlays, current scene handles, actual `SceneBuilder`-owned fixture data, and copy-on-change frame tables. Active color/opacity, stroke, numeric geometry, transform, motion, paint bounds/inverses, instance ancestry, and clip-owner-before-suffix behavior are covered. Clip tables and nested geometry are fallibly cloned within the 64 MiB cap using actual Vec capacities. `update_animation_clips` performs the complete checked-shape operation and publishes only with finished-frame `replace_clips`; failures leave frame data unchanged. No static-frame fallback is used for unsupported active frame values.
+
+Tests now construct real scenes from canonical `LexicalDocument` tokens, accepted animation parsing, and the seeded `vexel-svg-path` test dependency. They exercise original numeric/color/opacity/repeat/syncbase/transform/motion assertions, all 15 original fixture inputs, shared ClipId identity, zero-edge IDs, nested ancestor products, object-box paint/clip bounds, source/base immutability, work limits, cancellation, and rollback. `coverage.json` retains all 52 assigned cases and distinguishes owned algorithm proofs from later decoder/raster/CLI/authoring/fuzz integration.
+
+`parity-map.json` maps all 31 catalog symbols, including safe-owned adaptations for pointer hashing/refcounts. `verification.json` records exact scoped commands. Full FlatKernel/native renderer, CLI, authoring/editor, fuzz, app/runtime, final QA, release and authentic MCP demo are later integrations; none are faked here. The immutable original catalog and fixture seed are unchanged. Independent Luna review and protected-path audit remain required before acceptance.

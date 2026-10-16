@@ -1,0 +1,13 @@
+{
+  "name": "values-policy",
+  "wo": "WO-RUST-SVG-VALUES-POLICY-01",
+  "session": "01a13ac0-d941-7763-aa06-c5de8416bf86",
+  "pid": 83842,
+  "mode": "repair",
+  "model": "gpt-6-luna",
+  "effort": "medium",
+  "status": "completed",
+  "started_epoch": 1791987524.57599,
+  "exit_code": 0,
+  "duration_seconds": 94.56172609329224
+}

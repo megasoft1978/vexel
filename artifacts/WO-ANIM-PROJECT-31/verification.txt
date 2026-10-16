@@ -1,0 +1,16 @@
+WO-ANIM-PROJECT-31 verification
+Date: 2026-10-13
+
+Exact commands and results:
+- `cmake --build build/mac-debug --target svgworkbench viewer_timeline_native_test`: passed; both strict Debug targets built.
+- `ctest --test-dir build/mac-debug --output-on-failure -R '^viewer-timeline-native$'`: passed 1/1.
+- `python3 scripts/wo_validate.py WO-ANIM-PROJECT-31 --ready`: passed; frozen revision 1 SHA-256 `e5b4a74ace2850260b20df308a904642bd7eb5a37cfb5428737f5ae26a2278dd`.
+- `python3 -c "import json; json.load(open('tests/test_map.json'))"`: passed.
+- `python3 scripts/ledger.py validate ledger.jsonl`: passed; 936 entries after closeout.
+- `git diff --check`: passed.
+
+Focused coverage exercises default visible, explicit hidden/collapse, CSS/style rejection, hidden ancestor rejection, stylesheet rejection, missing and duplicate IDs, native boolean step-track creation, baseline and later tick, same-value no-op, undo/redo, accessible Key Visibility label, pointer dispatch, and unchanged SVG source bytes. Existing focused test coverage also continues to exercise color, opacity, transform, cels, playback, and timeline operations.
+
+Changed C source/test line counts: viewer_editor_visibility.c 139; viewer_timeline.c 792; viewer_timeline_transform.c 558; viewer_timeline_layout.c 787; viewer_timeline_native_move.c 80; viewer_timeline_accessibility.c 421; viewer_timeline_ui.c 736; viewer_timeline_native_test.c 799; viewer_editor_visibility_test.c 60. All are below 800.
+
+The shared checkout already contained extensive modifications before this order; those changes were preserved. The new order's edited paths were limited to its allowlist. No application UI/E2E, broad CTest/Python suite, corpus, performance, fuzz, sanitizer matrix, or release gate was run.

@@ -1,0 +1,21 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_v1_document-cfe18239765989b9)
+
+running 8 tests
+test tests::dimensions_are_bounded ... ok
+test tests::blank_svg_is_valid_and_exact ... ok
+test tests::invalid_inputs_do_not_change_source_history_or_dirty_state ... ok
+test tests::fractional_geometry_has_fixed_scientific_values ... ok
+test tests::undo_redo_restore_byte_identical_sources_and_saved_state ... ok
+test tests::smallest_positive_subnormal_formats_bounded_and_round_trips ... ok
+test tests::all_drag_directions_insert_identical_one_step_rectangle ... ok
+test tests::editor_allocation_failures_are_atomic ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_v1_document
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

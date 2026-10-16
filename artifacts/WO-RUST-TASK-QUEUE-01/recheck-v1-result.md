@@ -1,0 +1,5 @@
+**ACCEPT**
+
+The prior blocker is fixed. The worker records whether a task should be invoked while holding the mutex: canceled queued and stale work are discarded, while work transitioned to `Running` proceeds to callback invocation ([queue.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/rust/crates/vexel-platform-tasks/src/queue.rs:434)). Cancellation is checked when deciding whether to publish the callback’s result, not to skip that callback ([queue.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/rust/crates/vexel-platform-tasks/src/queue.rs:476)).
+
+The new test-only gate pauses after the `Running` transition and mutex release; the regression cancels during that gap, asserts the callback observes cancellation, and confirms no result is published ([tests.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-queue/rust/crates/vexel-platform-tasks/src/tests.rs:211)). The parity map records the corrected behavior. No remaining blocker found in this targeted recheck. I did not run tests or builds, and make no application or performance completion claim.

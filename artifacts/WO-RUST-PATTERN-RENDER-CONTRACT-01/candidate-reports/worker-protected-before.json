@@ -1,0 +1,20 @@
+{
+  "rust/crates/vexel-scene/tests/decode_initialization.rs": "2c9d200eede3951504fc50b144590e9500e16b59527465a00fd6242f799e5fba",
+  "rust/crates/vexel-scene/tests/render_integration_contracts.rs": "515f85904a823eb508ff83ada4a851a12909c07f7d9b5c7200746aa5bc68d5e9",
+  "rust/crates/vexel-scene/tests/media_source_map.rs": "4dcc8b5a75535b28052058b2511ea84824fb8df14a3d9eae8a68984d18c19dd4",
+  "rust/crates/vexel-scene/tests/support.rs": "b6bceb8a0e14de9642f000cb23001fc7a9fa728e93f6ef3125df9336be0ee010",
+  "rust/crates/vexel-scene/tests/paint_channel_contracts.rs": "c668ebcd3d6d2bfc226034a3c47e2a2f581fd2c334bd0391a1f62f8602efc194",
+  "rust/crates/vexel-scene/tests/raster_job_contracts.rs": "c7b942d655d03dfe35c85f46fda0eefe8da9a09e6daf0c019cf52bfbe359aeda",
+  "rust/crates/vexel-scene/tests/draft.rs": "75052622263a260e7fce0e8aac83b31ce420ef6e43cf46d586c04a3530a341c4",
+  "rust/crates/vexel-scene/tests/decode_publication_contracts.rs": "a993536d4eb50a27047cae1e64d97aec5ac0849659aa30f26bfeb97ebf702481",
+  "rust/crates/vexel-scene/tests/cache_publication.rs": "d6b7d403e2124a260a670d97ef6ca507e72cc7faea43ca5296b08e3a72411db7",
+  "rust/crates/vexel-scene/tests/consumer_contracts.rs": "56138ea6d435887b1aa65a587dcdddc8e0ea45efe233f9dab4387d6bced801fe",
+  "rust/crates/vexel-scene/tests/contracts.rs": "5c43d4f54c33a437c6ffdb53d92115535b80a6a6b805922ca679de0b26d092ad",
+  "rust/crates/vexel-scene/tests/model.rs": "8519d7925639cb9e9dbb0b1bfbbc36ed6d67bd619196f6cf79ef3965ca1eb4ee",
+  "rust/crates/vexel-scene/tests/paint_publication.rs": "8d595007cfb77670dfe64b503fc43ef60a58f3d2555e92dfae80c414021a0287",
+  "Cargo.toml": "f9015bdb91feb11a6fa0bb8eb9d1fb7135feca86a8d1720a219439f5f64757ce",
+  "Cargo.lock": "8be68268b6360093118274b436d232375e10532bff383468a9074c6d28999036",
+  "STATE.md": "b6c682db5cf3e3e45ff9c001f5addcdc2be46c96d2a328d98d526cb64ce49768",
+  "ledger.jsonl": "d7ca57791d97d02f5d8b8c6f334f7af2091094bcefc44dffc56fd1413e23203a",
+  "LEDGER.md": "e9ca3f0d084ce45f6022d6df53702903f3fc0c68b32dd5287b1afb9ced83abab"
+}

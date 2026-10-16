@@ -1,0 +1,4 @@
+WO-MCP-TRANSPORT-01 r4
+HEAD 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+spec_sha256 7030942e3972fbe7bfd0bd5eb35645539d7132b98c38ac0aa9e414d3f31a86e6
+Owner authorized Luna effort selection and parallel implementation in isolated repo-local worktrees; shared integration is coordinator-owned.

@@ -1,0 +1,12 @@
+**BLOCK — registry capacity-delta accounting is still incorrect.**
+
+- [accounting.rs:212](/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-OBSERVABILITY-01/worker/rust/crates/vexel-scene/src/accounting.rs:212) adds `new` to `None` history. The reserve helper returns **full replacement bytes**, alongside `old`; the required retained-capacity delta is `new - old`. Subsequent registry growth therefore recounts old capacity. The exact-delta test starts at zero capacity, so it misses this defect. Add proof covering a second growth, caller `None` payload, release, and slot reuse while preserving existing total-history semantics.
+- Registry-history exhaustion is converted into a reserve-budget restriction. Insufficient cumulative `None` headroom consequently returns `ReservedBytes`, without setting the arithmetic-overflow flag. This boundary needs explicit arithmetic-error and atomicity proof.
+
+Other reviewed gates pass: actual reference-index probe forwarding; caller-tag separation; cumulative payload-overflow testing that reaches history overflow before live-byte exhaustion; cancellation after copying nonempty replacement values preserving original contents/capacity and replacement history; unchanged public stats/API/oracles; bounded counters; and source line caps (**504 / 331 / 242**).
+
+Evidence hashes match current files. Main matches all 64 seed entries; candidate seeded differences are confined to the three allowed existing files, plus the new test. Supplied package check/tests pass, including eight observability tests and ten compile-fail doctests. I independently confirmed changed-file rustfmt and ledger validation (**1,696 entries**).
+
+Full package fmt’s recorded failures concern protected pre-existing files; current diff-check fails only on protected `STATE.md:1341`. These are not candidate defects.
+
+Read-only, headless review; no files edited.

@@ -1,0 +1,7 @@
+Implemented the consolidated repair in [stream.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/src/stream.rs), with regressions in [tests.rs](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/rust/crates/vexel-xml/src/tests.rs). Parsing now resumes within the step budget and supports cancellation during parsing; visitor mode uses bounded per-tag scratch; `<a:b:c/>` reports `InvalidName` at byte 2. Tests cover one-byte steps, 2,000 children, and cancellation during a 256 KiB text run.
+
+The [parity map](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/parity-map.json) and [verification record](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/verification.txt) document behavior, adaptations, checks, and remaining gaps.
+
+**Checks:** cargo check PASS; cargo test PASS (17 passed, 0 failed; doc tests 0); WO validator PASS; ledger validator PASS (1,096 entries); JSON and diff checks PASS.
+
+Remaining review gaps: the original C malformed-input fuzz loop is not ported, and span tests cover representative cases rather than every emitted span. Independent review and main integration remain; this does not declare acceptance.

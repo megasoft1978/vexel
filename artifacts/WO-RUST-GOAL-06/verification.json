@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-GOAL-06 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-GOAL-06 revision 1 sha256 59272368fa0151dbf0137da77eb1e2e507e459d6171c60f15e3c2f29d28745e7\n"
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit_code": 0,
+      "output": "valid ledger: 1391 entries\n"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "scope_audit": "scope-audit.json",
+  "application_or_UI_tests_run": false
+}

@@ -1,0 +1,98 @@
+49:  
+50:  @constant MTLCommandBufferStatusCompleted
+51:  The command buffer has finished executing successfully: any blocks set with -addCompletedHandler: may now be called.
+52:  
+53:  @constant MTLCommandBufferStatusError
+54:  Execution of the command buffer was aborted due to an error during execution.  Check -error for more information.
+55:  */
+56: typedef NS_ENUM(NSUInteger, MTLCommandBufferStatus) {
+
+343: 
+344: /*!
+345:  @method addCompletedHandler:block:
+346:  @abstract Add a block to be called when this command buffer has completed execution.
+347:  */
+348: - (void)addCompletedHandler:(MTLCommandBufferHandler)block;
+349: 
+350: /*!
+
+346:  @abstract Add a block to be called when this command buffer has completed execution.
+347:  */
+348: - (void)addCompletedHandler:(MTLCommandBufferHandler)block;
+349: 
+350: /*!
+351:  @method waitUntilCompleted
+352:  @abstract Synchronously wait for this command buffer to complete.
+353:  */
+
+313: 
+314: /*!
+315:  @method presentDrawable:
+316:  @abstract Add a drawable present that will be invoked when this command buffer has been scheduled for execution.
+317:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+318:  */
+319: - (void)presentDrawable:(id <MTLDrawable>)drawable;
+320: 
+
+317:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+318:  */
+319: - (void)presentDrawable:(id <MTLDrawable>)drawable;
+320: 
+321: /*!
+322:  @method presentDrawable:atTime:
+323:  @abstract Add a drawable present for a specific host time that will be invoked when this command buffer has been scheduled for execution.
+324:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+
+320: 
+321: /*!
+322:  @method presentDrawable:atTime:
+323:  @abstract Add a drawable present for a specific host time that will be invoked when this command buffer has been scheduled for execution.
+324:  @discussion The submission thread will be lock stepped with present call been serviced by window server
+325: */
+326: - (void)presentDrawable:(id <MTLDrawable>)drawable atTime:(CFTimeInterval)presentationTime;
+327: 
+
+34:  @enum MTLCommandBufferStatus
+35:  
+36:  @abstract MTLCommandBufferStatus reports the current stage in the lifetime of MTLCommandBuffer, as it proceeds to enqueued, committed, scheduled, and completed.
+37:  
+38:  @constant MTLCommandBufferStatusNotEnqueued
+39:  The command buffer has not been enqueued yet.
+40:  
+41:  @constant MTLCommandBufferStatusEnqueued
+
+40:  
+41:  @constant MTLCommandBufferStatusEnqueued
+42:  This command buffer is enqueued, but not committed.
+43:  
+44:  @constant MTLCommandBufferStatusCommitted
+45:  Commited to its command queue, but not yet scheduled for execution.
+46:  
+47:  @constant MTLCommandBufferStatusScheduled
+
+301: 
+302: /*!
+303:  @method commit
+304:  @abstract Commit a command buffer so it can be executed as soon as possible.
+305:  */
+306: - (void)commit;
+307: 
+308: /*!
+
+349: 
+350: /*!
+351:  @method waitUntilCompleted
+352:  @abstract Synchronously wait for this command buffer to complete.
+353:  */
+354: - (void)waitUntilCompleted NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use 'await completed()' instead.");
+355: 
+356: /*!
+
+352:  @abstract Synchronously wait for this command buffer to complete.
+353:  */
+354: - (void)waitUntilCompleted NS_SWIFT_UNAVAILABLE_FROM_ASYNC("Use 'await completed()' instead.");
+355: 
+356: /*!
+357:  @property status
+358:  @abstract status reports the current stage in the lifetime of MTLCommandBuffer, as it proceeds to enqueued, committed, scheduled, and completed.
+359:  */

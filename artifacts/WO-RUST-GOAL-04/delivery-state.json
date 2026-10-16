@@ -1,0 +1,256 @@
+{
+  "recorded_utc": "2026-10-14T07:33:36Z",
+  "goal": "Full Vexel Rust application completed, comprehensively tested, packaged, documented and ready to use; accepted live agent workflows and recorded demos delivered.",
+  "authority": "docs/product/rust-port-goal-and-plan.md",
+  "goal_tracker": {
+    "status": "paused",
+    "replacement_rejected": "unfinished previous goal",
+    "prior_goal_falsely_completed": false,
+    "no_registration_retry_loop": true
+  },
+  "platform": "Apple Silicon macOS 13+",
+  "subscription_policy": "existing allowance only, Standard service, no additional credits/API billing",
+  "application_complete": false,
+  "full_final_testing_complete": false,
+  "accepted_foundations": [
+    {
+      "wo": "WO-RUST-BASE-01",
+      "ledger_event": "accepted",
+      "accepted_focused_test_count": 7,
+      "main_evidence": "artifacts/WO-RUST-BASE-01/verification-integrated.txt"
+    },
+    {
+      "wo": "WO-RUST-GEOMETRY-01",
+      "ledger_event": "accepted",
+      "accepted_focused_test_count": 5,
+      "main_evidence": "artifacts/WO-RUST-GEOMETRY-01/verification-integrated.txt"
+    },
+    {
+      "wo": "WO-RUST-XML-01",
+      "ledger_event": "accepted",
+      "accepted_focused_test_count": 10,
+      "main_evidence": "artifacts/WO-RUST-XML-01/verification-integrated.txt"
+    },
+    {
+      "wo": "WO-RUST-JSON-01",
+      "ledger_event": "accepted",
+      "accepted_focused_test_count": 5,
+      "main_evidence": "artifacts/WO-RUST-JSON-01/verification-integrated.txt"
+    },
+    {
+      "wo": "WO-RUST-PROJECT-01",
+      "ledger_event": "accepted",
+      "accepted_focused_test_count": 8,
+      "main_evidence": "artifacts/WO-RUST-PROJECT-01/verification-integrated.txt"
+    },
+    {
+      "wo": "WO-RUST-RASTER-01",
+      "ledger_event": "accepted",
+      "accepted_focused_test_count": 5,
+      "main_evidence": "artifacts/WO-RUST-RASTER-01/verification-integrated.txt"
+    }
+  ],
+  "accepted_foundation_test_count": 40,
+  "completed_candidate_workers": [
+    {
+      "lane": "xml-tokenizer",
+      "wo": "WO-RUST-XML-02",
+      "crate": "vexel-xml",
+      "worktree": ".worktrees/rust2-xml-tokenizer",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "process_status": "completed",
+      "exit_code": 0,
+      "ledger_event": "run_started",
+      "integration_status": "pending independent review, scope audit, repairs if needed and main checks",
+      "worker_reported_focused_tests": 17,
+      "test_count_is_not_main_acceptance": true,
+      "evidence": {
+        "result.md": {
+          "path": ".worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/result.md",
+          "sha256": "a4b10265762935ce38753297903e29e4399f7dbd4066843dc280e3b9bc71a1a2"
+        },
+        "verification.txt": {
+          "path": ".worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/verification.txt",
+          "sha256": "66d2aa3bab995bfc601fe3082de7a4eba407721cb795d24fc019991d34793f3f"
+        },
+        "parity-map.json": {
+          "path": ".worktrees/rust2-xml-tokenizer/artifacts/WO-RUST-XML-02/parity-map.json",
+          "sha256": "cbd017bf8733ec7187768af01e845384af5a03aa97fbd12488eb64b256b4a5b5"
+        }
+      },
+      "review_attention": "Worker reports scan-then-parse and retained visitor tokens; bounded-step/storage parity needs independent review and possible repair."
+    },
+    {
+      "lane": "spatial",
+      "wo": "WO-RUST-SPATIAL-01",
+      "crate": "vexel-spatial",
+      "worktree": ".worktrees/rust2-spatial",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "process_status": "completed",
+      "exit_code": 0,
+      "ledger_event": "run_started",
+      "integration_status": "pending independent review, scope audit, repairs if needed and main checks",
+      "worker_reported_focused_tests": 8,
+      "test_count_is_not_main_acceptance": true,
+      "evidence": {
+        "result.md": {
+          "path": ".worktrees/rust2-spatial/artifacts/WO-RUST-SPATIAL-01/result.md",
+          "sha256": "60b34c3f6c7c0b4054ea66678014c0a597ea5f78726ca9b7a156f509c6f6e64b"
+        },
+        "verification.txt": {
+          "path": ".worktrees/rust2-spatial/artifacts/WO-RUST-SPATIAL-01/verification.txt",
+          "sha256": "a80ca342c2501995110a0e6c15c98159af33a423e7e99d401b7a4afef34f9c64"
+        },
+        "parity-map.json": {
+          "path": ".worktrees/rust2-spatial/artifacts/WO-RUST-SPATIAL-01/parity-map.json",
+          "sha256": "5a6eda46176a6fb629adae2a3b9051014f7370c9656af001aaa77138aa4fc001"
+        }
+      },
+      "review_attention": "Review complete frozen behavior, safety/limits, parity and scope before integration."
+    },
+    {
+      "lane": "svg-values",
+      "wo": "WO-RUST-SVG-VALUES-01",
+      "crate": "vexel-svg-values",
+      "worktree": ".worktrees/rust2-svg-values",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "process_status": "completed",
+      "exit_code": 0,
+      "ledger_event": "run_started",
+      "integration_status": "pending independent review, scope audit, repairs if needed and main checks",
+      "worker_reported_focused_tests": 12,
+      "test_count_is_not_main_acceptance": true,
+      "evidence": {
+        "result.md": {
+          "path": ".worktrees/rust2-svg-values/artifacts/WO-RUST-SVG-VALUES-01/result.md",
+          "sha256": "68ad8591d4775149a8334012c5612e90346dbef2788fbd5519a58288b740fea5"
+        },
+        "verification.txt": {
+          "path": ".worktrees/rust2-svg-values/artifacts/WO-RUST-SVG-VALUES-01/verification.txt",
+          "sha256": "e006fb5573ada6ed7db9176684d905b818aab98a579761d91e8cff630f6781f2"
+        },
+        "parity-map.json": {
+          "path": ".worktrees/rust2-svg-values/artifacts/WO-RUST-SVG-VALUES-01/parity-map.json",
+          "sha256": "d665674a3887dd810a3ff13f9514ba6a0c99bad6e969a92e2631c354dcb45a96"
+        }
+      },
+      "review_attention": "Review complete frozen behavior, safety/limits, parity and scope before integration."
+    },
+    {
+      "lane": "protocol",
+      "wo": "WO-RUST-PROTOCOL-01",
+      "crate": "vexel-protocol",
+      "worktree": ".worktrees/rust2-protocol",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "process_status": "completed",
+      "exit_code": 0,
+      "ledger_event": "run_started",
+      "integration_status": "pending independent review, scope audit, repairs if needed and main checks",
+      "worker_reported_focused_tests": 9,
+      "test_count_is_not_main_acceptance": true,
+      "evidence": {
+        "result.md": {
+          "path": ".worktrees/rust2-protocol/artifacts/WO-RUST-PROTOCOL-01/result.md",
+          "sha256": "3c4f39f15340347b5b4048c014acaf58f31510b6c041938d6a09c9a38d52de48"
+        },
+        "verification.txt": {
+          "path": ".worktrees/rust2-protocol/artifacts/WO-RUST-PROTOCOL-01/verification.txt",
+          "sha256": "38350fea749fc7de440843f40806063d9613ee2ed02058de0c45e7a0c744060f"
+        },
+        "parity-map.json": {
+          "path": ".worktrees/rust2-protocol/artifacts/WO-RUST-PROTOCOL-01/parity-map.json",
+          "sha256": "5772b04554d5c07357477230b854d4945f4c34a603d83e1f01b7465e1e994f6b"
+        }
+      },
+      "review_attention": "Review complete frozen behavior, safety/limits, parity and scope before integration."
+    },
+    {
+      "lane": "ui",
+      "wo": "WO-RUST-UI-CORE-01",
+      "crate": "vexel-ui",
+      "worktree": ".worktrees/rust2-ui",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "process_status": "completed",
+      "exit_code": 0,
+      "ledger_event": "run_started",
+      "integration_status": "pending independent review, scope audit, repairs if needed and main checks",
+      "worker_reported_focused_tests": 7,
+      "test_count_is_not_main_acceptance": true,
+      "evidence": {
+        "result.md": {
+          "path": ".worktrees/rust2-ui/artifacts/WO-RUST-UI-CORE-01/result.md",
+          "sha256": "991b7a2808b29850efc3bb3a55df186b89b47e224f9ac627ee28c22fc4ba1da5"
+        },
+        "verification.txt": {
+          "path": ".worktrees/rust2-ui/artifacts/WO-RUST-UI-CORE-01/verification.txt",
+          "sha256": "48ca65f6d67fae250b76a55618bc5d792e1d53dde6ac9b79faeaa137b94dc3da"
+        },
+        "parity-map.json": {
+          "path": ".worktrees/rust2-ui/artifacts/WO-RUST-UI-CORE-01/parity-map.json",
+          "sha256": "00ae9984e6f0f829d07028bf47332d4af312af1899480065dc2adbe988028873"
+        }
+      },
+      "review_attention": "Review complete frozen behavior, safety/limits, parity and scope before integration."
+    },
+    {
+      "lane": "platform",
+      "wo": "WO-RUST-NATIVE-SYSTEM-01",
+      "crate": "vexel-platform-macos",
+      "worktree": ".worktrees/rust2-platform",
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "process_status": "completed",
+      "exit_code": 0,
+      "ledger_event": "run_started",
+      "integration_status": "pending independent review, scope audit, repairs if needed and main checks",
+      "worker_reported_focused_tests": 8,
+      "test_count_is_not_main_acceptance": true,
+      "evidence": {
+        "result.md": {
+          "path": ".worktrees/rust2-platform/artifacts/WO-RUST-NATIVE-SYSTEM-01/result.md",
+          "sha256": "20b789a131bdf8e64d6255a65163357dbde79ef868545f991cb0573cefa4339b"
+        },
+        "verification.txt": {
+          "path": ".worktrees/rust2-platform/artifacts/WO-RUST-NATIVE-SYSTEM-01/verification.txt",
+          "sha256": "3ca62d9286388103a3b5af33ed5c978e09ac31f89e3b2f7fdfa6616d128a1f2f"
+        },
+        "parity-map.json": {
+          "path": ".worktrees/rust2-platform/artifacts/WO-RUST-NATIVE-SYSTEM-01/parity-map.json",
+          "sha256": "6ee13f4ed1ddd61b41dd4b87c540007e052114594ad0081460419023a61be183"
+        }
+      },
+      "review_attention": "Review complete frozen behavior, safety/limits, parity and scope before integration."
+    }
+  ],
+  "candidate_tests_must_not_be_summed_as_unique_integrated_tests": true,
+  "next_gate": [
+    "independent scoped review",
+    "repair named findings and targeted recheck",
+    "exact worker/main source and scope audit",
+    "coordinator integration of reviewed candidates",
+    "named main-tree check/test and ledger acceptance",
+    "freeze next ready disjoint work orders"
+  ],
+  "remaining_lanes": [
+    "XML/document/scene",
+    "SVG/renderer",
+    "projects/animation",
+    "native platform/custom UI",
+    "MCP/jobs/live bridge",
+    "Rust tooling/release"
+  ],
+  "final_gates": [
+    "close migration/feature inventory",
+    "comprehensive final acceptance after feature completion",
+    "repair release blockers and retest",
+    "packaged clean-install usability and documentation",
+    "real live Codex and Claude integration",
+    "reviewed character-animation demos on website/README",
+    "reconcile release evidence"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "work_order": "WO-RUST-V1-APP-SHELL-01",
+  "candidate_fingerprint": "3495ed103c7bb395b602cbf93713dc82cac0567ecfd4c30ba18c8be2362057df",
+  "sol_review": "artifacts/WO-RUST-V1-APP-SHELL-01/sol-final-review-r2.log",
+  "integrated_paths": [
+    "rust/crates/vexel-app/README.md",
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-app/src/model.rs",
+    "rust/crates/vexel-app/src/render.rs",
+    "rust/crates/vexel-platform-apple/src/lib.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/app.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/callbacks.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/frame.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/mod.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/route.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/text.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/text_tests.rs",
+    "rust/crates/vexel-platform-apple/src/native_window/window.rs"
+  ],
+  "source_seed_sha256": "8be263dd4b122b256fc803fbd8c5f34ab559ee17760f2c4820998d413ecc9000",
+  "headless_candidate_checks_passed": true,
+  "native_gui_verified": false
+}

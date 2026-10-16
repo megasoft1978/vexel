@@ -1,0 +1,26 @@
+(lldb) target create "build/mac-debug/bin/mcp_protocol_async_test"
+Current executable set to '/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/build/mac-debug/bin/mcp_protocol_async_test' (arm64).
+(lldb) run
+Process 65064 launched: '/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/build/mac-debug/bin/mcp_protocol_async_test' (arm64)
+Process 65064 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+       frame #0: 0x00000001977d9130 libsystem_platform.dylib`_platform_strcmp$VARIANT$Base + 64
+libsystem_platform.dylib`_platform_strcmp$VARIANT$Base:
+->  0x1977d9130 <+64>: ldr    q0, [x0], #0x10
+    0x1977d9134 <+68>: ldr    q1, [x1], #0x10
+    0x1977d9138 <+72>: cmeq.16b v1, v0, v1
+    0x1977d913c <+76>: and.16b v0, v0, v1
+Target 0: (mcp_protocol_async_test) stopped.
+(lldb) target create "build/mac-debug/bin/mcp_protocol_async_test"
+Current executable set to '/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/build/mac-debug/bin/mcp_protocol_async_test' (arm64).
+(lldb) run
+Process 65517 launched: '/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/build/mac-debug/bin/mcp_protocol_async_test' (arm64)
+Process 65517 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = EXC_BAD_ACCESS (code=1, address=0x0)
+       frame #0: 0x00000001977d9130 libsystem_platform.dylib`_platform_strcmp$VARIANT$Base + 64
+libsystem_platform.dylib`_platform_strcmp$VARIANT$Base:
+->  0x1977d9130 <+64>: ldr    q0, [x0], #0x10
+    0x1977d9134 <+68>: ldr    q1, [x1], #0x10
+    0x1977d9138 <+72>: cmeq.16b v1, v0, v1
+    0x1977d913c <+76>: and.16b v0, v0, v1
+Target 0: (mcp_protocol_async_test) stopped.

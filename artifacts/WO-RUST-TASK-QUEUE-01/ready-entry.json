@@ -1,0 +1,22 @@
+{
+  "ts": "2026-10-14T08:01:49Z",
+  "wo_id": "WO-RUST-TASK-QUEUE-01",
+  "event": "ready",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "WO-RUST-TASK-QUEUE-01-ready",
+  "session_id": "rust-wave3-parallel-2026-10-14",
+  "model": "gpt-6-luna",
+  "cli_version": "0.162.1",
+  "duration_s": 0,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "status": "ready",
+  "artifacts": [
+    "work/WO-RUST-TASK-QUEUE-01.md"
+  ],
+  "note": "Full named source scope frozen; disjoint third-batch writer uses accepted contracts, isolated current-source overlay/local outputs, subscription Standard Luna effort scoped. Root shared metadata/integration; candidate acceptance pending."
+}

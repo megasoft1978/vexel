@@ -1,0 +1,17 @@
+{
+  "ts": "2026-10-13T20:14:21Z",
+  "wo_id": "WO-MCP-TRANSPORT-01",
+  "event": "ready",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "mcp-transport-01-ready-2026-10-13",
+  "session_id": "codex-mcp-transport-01-2026-10-13",
+  "model": "gpt-6.1-sol",
+  "cli_version": "codex 0.162.1",
+  "duration_s": 0,
+  "usage": {"input_tokens": null, "output_tokens": null},
+  "status": "ready",
+  "artifacts": ["work/WO-MCP-TRANSPORT-01.md", "artifacts/WO-MCP-TRANSPORT-01/scope-freeze.txt"],
+  "note": "Freeze bounded stdio MCP multiplexing and deterministic focused relay tests as prerequisite to async native export. No product code, build, or tests run during order preparation."
+}

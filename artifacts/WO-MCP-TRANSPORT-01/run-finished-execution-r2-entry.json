@@ -1,0 +1,24 @@
+{
+  "ts": "2026-10-13T20:27:05Z",
+  "wo_id": "WO-MCP-TRANSPORT-01",
+  "revision": 2,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "head_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "run_id": "mcp-transport-01-r2-finished-2026-10-13",
+  "session_id": "codex-mcp-transport-01-r2-2026-10-13",
+  "model": "gpt-6",
+  "cli_version": "not reported (API executor)",
+  "duration_s": 478.49,
+  "usage": {
+    "input_tokens": null,
+    "output_tokens": null
+  },
+  "artifacts": [
+    "artifacts/WO-MCP-TRANSPORT-01/verification.txt",
+    "artifacts/WO-MCP-TRANSPORT-01/execution-r2-start-manifest.json",
+    "artifacts/WO-MCP-TRANSPORT-01/scope-audit-execution-r2.txt"
+  ],
+  "event": "run_finished",
+  "status": "implemented_runtime_unverified",
+  "note": "Bounded poll relay and 11 focused public socket-fixture tests implemented; docs/inventory updated. Only vexel-mcp and mcp_headless_broker builds pass. New relay cases and existing mcp-stdio-e2e all skip on sandbox bind EPERM; AC-2 unverified, no acceptance. Shared baseline, task store, original E2E assertions, prior evidence, HEAD and index preserved. No staging/commit, broader suites, async task/export or live-client claim."
+}

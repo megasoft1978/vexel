@@ -1,0 +1,60 @@
+{
+  "work_order": "WO-RUST-PROTOCOL-01",
+  "scope": "Owned synchronous and opt-in asynchronous MCP protocol behavior, with the complete in-repository tool schema registry.",
+  "reference_symbols": {
+    "src/mcp/mcp_protocol.c": [
+      "mcp_protocol_session_reset -> ProtocolSession::reset",
+      "mcp_protocol_handle -> handle",
+      "mcp_protocol_handle_async -> handle_async",
+      "mcp_protocol_request_expects_response -> request_expects_response",
+      "append_initialize / append_discover / request_is_modern / validate_modern_envelope -> ProtocolSession and version/envelope dispatch",
+      "append_capabilities / append_response_suffix / append_async_payload -> capabilities, metadata envelope merge, and original ID preservation",
+      "append_tool_call / append_resource_read / append_task_method -> synchronous and asynchronous dispatch"
+    ],
+    "src/mcp/mcp_protocol_async.c": [
+      "mcp_protocol_async_tasks_ready -> tasks_ready",
+      "mcp_protocol_async_task_id -> bounded decoded task ID validation within Tasks dispatch",
+      "mcp_protocol_async_validate_payload -> validate_async_payload",
+      "mcp_protocol_async_legacy_progress -> legacy_progress"
+    ],
+    "src/mcp/mcp_tools.c": [
+      "mcp_tools_list_json -> tool_schemas",
+      "mcp_tool_validate -> validate_tool_arguments"
+    ]
+  },
+  "behavior_and_tests": {
+    "tests": "rust/crates/vexel-protocol/tests/parity.rs; 9 focused tests",
+    "protocol": "Legacy 2025-11-25 initialization and initialized notification, current 2026-07-28 discovery and per-request metadata enforcement, repeated initialize rejection, session reset, unknown methods, notification suppression, and 120-request/60-second session window with -32000 limit error.",
+    "discovery": "Tools/resources/prompts capability listings and resource/prompt reads; current Tasks capability appears only when opted-in backend reports readiness.",
+    "schemas": "All 42 C-owned schemas are represented in the Rust registry; required/unknown/type checks, native loop enum, template attribute maps, bounded transaction length, and list serialization are covered.",
+    "sync_async": "Async UNHANDLED falls through to sync backend; when sync content_json is empty, both success and error fallback texts are emitted as one-element content arrays containing a text block and verified after parsing. Legacy DEFERRED emits no response; current DEFERRED errors; legacy notifications/cancelled invokes request cancellation without a response.",
+    "tasks": "Negotiated create returns flat task metadata; get returns detailed task state; cancel accepts the empty complete ACK; completion with result.isError remains a successful JSON-RPC result; a failed task state is emitted inside JSON-RPC result with its task error, while AsyncDisposition::Error emits a top-level JSON-RPC error; foreign/unavailable task errors remain JSON-RPC errors. No experimental Tasks methods or Tasks progress notifications are added.",
+    "validation": "Async error/result/create/get/cancel payload shapes, content block variants and tokenizer token bound, 2 MiB payload bound, task timestamps/status/TTL/poll interval, task ID NUL/size, cancel ACK exact fields, and legacy progress token/range/monotonicity/message/buffer rollback are exercised.",
+    "envelopes": "Tests parse every emitted response and assert jsonrpc/result-or-error shape plus byte-identical request ID token; current async metadata merge retains backend metadata and overrides backend serverInfo with Vexel identity. Malformed async JSON is rejected as -32603."
+  },
+  "protocol_errors": {
+    "-32700": "malformed JSON parse error",
+    "-32600": "invalid request and repeated/invalid initialize",
+    "-32601": "unknown method or unavailable/unnegotiated Tasks method",
+    "-32602": "invalid tool/resource parameters or missing/invalid taskId",
+    "-32603": "failed/deferred current async operation, malformed async backend JSON, or oversized async response",
+    "-32000": "more than 120 requests inside the current 60-second session window",
+    "-32002": "request before initialization and missing resource",
+    "-32004": "unsupported legacy initialize version",
+    "-32021": "Tasks capability not negotiated for this request",
+    "-32022": "missing/unsupported current-version request metadata",
+    "-32023": "backend task unavailable/foreign/expired (JSON-RPC error disposition)",
+    "tool_result": "Tool schema/argument failures remain tool results with isError:true; unknown tool uses structured error code unknown_tool, while other validation failures use invalid_arguments."
+  },
+  "api_adaptations": [
+    "Former void-pointer callback tables become safe ProtocolBackend and AsyncBackend traits with borrowed JsonDocument views and owned Vec payloads; applications implement these traits in a later integration order.",
+    "C output buffers become bounded JsonBuffer instances; returned payloads are copied with fallible reservation, without unsafe code or a C shim.",
+    "The C version string field is represented by a private protocol-version enum and exposed read-only as a static string; session reset clears negotiation and rate state.",
+    "Rust AsyncBackend has required methods rather than nullable callback slots; tasks_available is the opt-in readiness bit, and the sync-only handle uses an internal unavailable backend.",
+    "The progress helper accepts an owned raw token byte slice and mutable prior counter; it constructs output locally and advances prior progress only after a successful append."
+  ],
+  "not_claimed": [
+    "No application broker, socket transport, macOS service, or whole-app integration is included.",
+    "The C callback contract could emit malformed synchronous structured/content/resource JSON; this order preserves its raw payload contract, while the focused fake backends provide valid JSON."
+  ]
+}

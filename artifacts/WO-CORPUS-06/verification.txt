@@ -1,0 +1,22 @@
+WO-CORPUS-06 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Identity and scratch snapshot
+- External corpus manifest: SHA-256 9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30.
+- T1 `files/generated/inkscape_t1.svg`: 979,796 bytes; SHA-256 3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5.
+- T2 `files/generated/inkscape_t2.svg`: 10,062,253 bytes; SHA-256 b0b7223ac34f78d64f8d37e7e6f82e05b76f626d9f1b01183cc533515a2d17d1.
+- Scratch snapshot created under ignored `.cache/WO-CORPUS-06/source`; selected pre-instrument hashes matched current shared sources: `CMakeLists.txt` ea618a4e0902e348fce86690747759e44961bfc717f071d6245ebf6e621e66d6; `src/raster/shape_render_preflight.c` b6cd8865b117c84020ea910aa1ea72398d165afcd8a8e48d1d02a28581733303; `src/raster/shape_render.c` ec25eeeac3134e10e53ce7cf873a59a0e855deb9d75415d4f79a76616b7c31c8; `src/svg/shape/shape_geometry.c` 59dbf34064c6b9abee7f061adfec867f4d81be0af58a40d74b05aa6fd78011d9.
+- Instrumentation was confined to the scratch copy. Shared source still hashes to the four recorded values above. In the snapshot, preflight/render sources differ only because of diagnostic instrumentation.
+
+Build and exactly two targeted probes
+- Configured Release with `cmake --preset mac-release` and built only `svgworkbench` (232 build steps; successful; duplicate-library linker warning).
+- T1 at 128x128: exit 1, `limit at byte 0`; instrumented exact refusal is `dash_cache_reserve_segments`, requested 65,537 segments against `RASTER_DASH_CACHE_MAX_ENTRIES=65,536`. This occurs before raster work preflight; no work-add total applies. 0.26 s real, 102,481,920-byte max RSS (instrumented run; timing varies across runs).
+- T2 at 128x128: exit 1, SVG decode error category 5 (`SVG_SHAPE_ERROR_LIMIT`) at byte 1,848,989; the byte falls at the 65,537th simple `<path>` entry (65,536 precede it), matching `SVG_SHAPE_MAX_SHAPES=65,536`. It fails before raster work preflight. 0.09 s real, 138,936,320-byte max RSS.
+- No complete requested-work total exists for either document because both fail earlier than `raster_shape_render_work_preflight`. No finite work cap was changed.
+
+Interpretation and next slice
+- The two failures are independent input-size/complexity limits: T1 exceeds the dash segment cache entry cap by one; T2 exceeds the decoded shape count by one. The 16,000,000,000 raster work cap was not reached and raising it cannot fix either failure.
+- Next SVG work should be split: (a) investigate a bounded streaming/chunked dash representation or a carefully justified cache cap adjustment for T1; (b) design a memory-bounded shape storage/rendering strategy or evidence-backed shape-limit change for T2. Measure memory and preserve protection against adversarial files before changing either limit.
+- Existing accepted corpus evidence remains 3/39 rendered; the unaccepted candidate remains 5/39, with 19/58 skipped. These two targeted failures do not change those counts.
+- No product source, corpus, UI/E2E, fuzz or broad benchmark was modified/run. No full app test suite or commit.

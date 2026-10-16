@@ -1,0 +1,31 @@
+19:  @interface MTLResidencySetDescriptor
+20:  @abstract Specifies the parameters for MTLResidencySet creation.
+21:  */
+22: API_AVAILABLE(macos(15.0), ios(18.0))
+23: @interface MTLResidencySetDescriptor : NSObject<NSCopying>
+24: /*!
+25:  @property label
+26:  @abstract An optional label for the MTLResidencySet.
+27:  */
+28: @property (nullable, copy, nonatomic) NSString *label;
+29: 
+30: /*!
+31:  @property initialCapacity
+32:  @abstract If non-zero, defines the number of allocations for which to initialize the internal arrays. Defaults to zero.
+33:  */
+
+43:  Resources and heaps are added and removed uncommitted and a subsequent commit call applies all
+44:  of the changes in bulk.
+45:  */
+46: API_AVAILABLE(macos(15.0), ios(18.0))
+47: @protocol MTLResidencySet <NSObject>
+48: /*!
+49:  @property device
+50:  @abstract The device that created the residency set
+51:  */
+52: @property (readonly) id<MTLDevice> _Nonnull device;
+53: 
+54: /*!
+55:  @property label
+56:  @abstract The label specified at creation.
+57:  */

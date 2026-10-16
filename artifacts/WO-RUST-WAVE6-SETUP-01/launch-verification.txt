@@ -1,0 +1,1 @@
+Accepted setup before launch; four disjoint actualCLI processes/current-source overlays. Local ledgers valid; original source/index preserved; no application/UI checks.

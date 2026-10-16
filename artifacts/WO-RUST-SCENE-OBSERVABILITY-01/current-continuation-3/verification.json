@@ -1,0 +1,93 @@
+{
+  "candidate_only": true,
+  "acceptance_claimed": false,
+  "commands": {
+    "changed-file-rustfmt": {
+      "command": [
+        "rustfmt",
+        "+stable",
+        "--edition",
+        "2021",
+        "--check",
+        "rust/crates/vexel-scene/src/accounting.rs",
+        "rust/crates/vexel-scene/src/source_context.rs",
+        "rust/crates/vexel-scene/tests/observability_contracts.rs"
+      ],
+      "exit_code": 0
+    },
+    "ready": {
+      "command": [
+        "python3",
+        "scripts/wo_validate.py",
+        "WO-RUST-SCENE-OBSERVABILITY-01",
+        "--ready"
+      ],
+      "exit_code": 0
+    },
+    "ledger": {
+      "command": [
+        "python3",
+        "scripts/ledger.py",
+        "validate",
+        "ledger.jsonl"
+      ],
+      "exit_code": 0
+    },
+    "diff-check": {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exit_code": 2
+    },
+    "check": {
+      "command": "CARGO_HOME=\"/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-OBSERVABILITY-01/worker/.cache/cargo\" cargo +stable check --manifest-path Cargo.toml -p vexel-scene --locked --offline",
+      "exit_code": 0,
+      "log": "check.log"
+    },
+    "test": {
+      "command": "CARGO_HOME=\"/Users/megasoft78/Desktop/Freelance/vexel/.cache/WO-RUST-SCENE-OBSERVABILITY-01/worker/.cache/cargo\" cargo +stable test --manifest-path Cargo.toml -p vexel-scene --locked --offline",
+      "exit_code": 0,
+      "log": "test.log"
+    }
+  },
+  "scope": {
+    "changed_since_continuation_3_start": [
+      "rust/crates/vexel-scene/README.md",
+      "rust/crates/vexel-scene/src/accounting.rs",
+      "rust/crates/vexel-scene/tests/observability_contracts.rs"
+    ],
+    "protected_changes": [],
+    "current_sha256": {
+      "rust/crates/vexel-scene/README.md": "291c031b26f6b3ed1e96c0a7927652e41b6042bb2b1acc1a30dae068f58983f7",
+      "rust/crates/vexel-scene/src/source_context.rs": "d92f0032cb226c1b87392decc514a0a7b24428e0620ca1cdda8de8b4be594326",
+      "rust/crates/vexel-scene/src/accounting.rs": "d8684c0bedfc2bbc0e3cd788a654a3015268c32de63f6795bde2cf1d8984b869",
+      "rust/crates/vexel-scene/tests/observability_contracts.rs": "4f3e4de63f6e620fd52945b9e566a0d952ff19fa9e19f09f8b61015cd308fa96"
+    },
+    "line_counts": {
+      "rust/crates/vexel-scene/README.md": 875,
+      "rust/crates/vexel-scene/src/source_context.rs": 331,
+      "rust/crates/vexel-scene/src/accounting.rs": 608,
+      "rust/crates/vexel-scene/tests/observability_contracts.rs": 275
+    }
+  },
+  "seed_entries": 64,
+  "main_seed_mismatches": [],
+  "test_result_summary": {
+    "passed": 246,
+    "failed": 0,
+    "ignored": 0,
+    "measured": 0,
+    "filtered_out": 0
+  },
+  "test_result_blocks": 20,
+  "observability_tests": 9,
+  "unit_tests": 17,
+  "doctests": 10,
+  "hashes": {
+    "source_seed": "231d24e5592c8b28e9841e8225bd4f51593c972725b1c33c2690ba242bb66373",
+    "frozen_work_order": "087afa495e859cb5b39f34ac5a86cba7d9bb7a2e86dffbd19c44b7ec65c8e251",
+    "review_continuation_2": "ca82f798965bc47cbb9c5dcbda2fdeec4e5ead5dade7eee1888560b028da15a7"
+  }
+}

@@ -1,0 +1,26 @@
+WO-ANIM-PROJECT-08 verification
+Date: 2026-10-13
+
+Debug build:
+`cmake --build --preset mac-debug --target svgworkbench mcp_features_test mcp_protocol_test mcp_native_timeline_test project_timeline_session_test project_save_test -j 4` — PASS (targets up to date).
+
+Debug focused tests:
+`ctest --test-dir build/mac-debug --output-on-failure -R '^(mcp-features|mcp-native-timeline|mcp-protocol|project-save|project-timeline-session)$'` — PASS, 5/5.
+
+ASan/UBSan build:
+`cmake --build --preset mac-asan --target svgworkbench mcp_features_test mcp_protocol_test mcp_native_timeline_test project_timeline_session_test project_save_test -j 4` — PASS (targets up to date).
+
+ASan/UBSan focused tests:
+`ctest --test-dir build/mac-asan --output-on-failure -R '^(mcp-features|mcp-native-timeline|mcp-protocol|project-save|project-timeline-session)$'` — PASS, 5/5.
+
+Repository checks:
+`python3 scripts/wo_validate.py WO-ANIM-PROJECT-08 --ready` — PASS; frozen revision/hash valid.
+`python3 scripts/ledger.py validate ledger.jsonl` — PASS before completion transitions (652 entries).
+`python3 -m json.tool tests/test_map.json >/dev/null` — PASS.
+`git diff --check` — PASS.
+Source lengths: `src/mcp/mcp_broker_native_timeline.c` 222 lines; `tests/mcp/mcp_native_timeline_test.c` 312 lines (both below 800).
+
+Independent scoped review:
+Final read-only `codex exec -m gpt-6.1-sol` review — no blocking/high findings. The reviewer notes one medium embedded-NUL Save As finding from its earlier snapshot; it is fixed by rejecting embedded NULs in `src/mcp/mcp_broker_tools.c` and the focused regression test passes in both builds. The final review confirms the fix.
+
+No broad UI/E2E tests were run, per the work order. No commit was created.

@@ -1,0 +1,25 @@
+WO-RUST-UI-DRAW-01 follow-up integration (2026-10-15)
+
+Reviewed candidate production files were applied as narrow hunks. Hashes for icons.rs, paint.rs, tree.rs, and widget_add.rs are identical to the reviewed R2 candidate. Main tests preserve frozen icon hash constants, include the candidate's underflow/clipped-edge/oversized-text regressions, and restore five missing regressions already accepted by WO-RUST-UI-WIDGETS-01. Main UI test source is 311 lines (<800).
+
+Root workspace commands:
+- cargo +stable check -p vexel-ui --locked --offline: BLOCKED before compiling vexel-ui because offline resolution cannot find `objc2-image-io`, required by vexel-platform-apple.
+- cargo +stable test -p vexel-ui --locked --offline: same dependency-resolution failure.
+
+Hash-matched isolated package verification:
+- Copied current main vexel-base, vexel-geometry, vexel-raster, and vexel-ui package trees to .cache/ui-main-verify; `diff -qr` confirmed byte identity before execution.
+- cargo +stable check -p vexel-ui --locked --offline --manifest-path .cache/ui-main-verify/Cargo.toml: PASS.
+- cargo +stable test -p vexel-ui --locked --offline --manifest-path .cache/ui-main-verify/Cargo.toml: PASS, 18 passed, 0 failed; doc tests 0.
+
+Repository validation:
+- python3 scripts/wo_validate.py WO-RUST-UI-DRAW-01 --ready: PASS, frozen SHA unchanged.
+- python3 scripts/ledger.py validate ledger.jsonl: PASS, 1766 entries.
+- git diff --check (five UI source/test files): PASS.
+
+No broad UI, GUI, or E2E tests were run. The owner requested those at final acceptance. Exact source hashes and the isolated workspace description are in coordinator-integration-r2.json. The unrelated offline dependency cache limitation is retained as an explicit remaining environment gate.
+
+Root-workspace verification rerun with the repository-local cache (2026-10-15):
+- CARGO_HOME="$PWD/.cache/cargo" cargo +stable check -p vexel-ui --locked --offline: PASS.
+- CARGO_HOME="$PWD/.cache/cargo" cargo +stable test -p vexel-ui --locked --offline: PASS, 18 passed, 0 failed; doc tests 0.
+The exact locked `objc2-image-io 0.3.2` archive and sparse index were already present in `.cache/cargo`; its archive SHA-256 matches the lockfile. No network access or repository dependency change was needed. This supersedes the earlier default-CARGO_HOME resolution failure above.
+

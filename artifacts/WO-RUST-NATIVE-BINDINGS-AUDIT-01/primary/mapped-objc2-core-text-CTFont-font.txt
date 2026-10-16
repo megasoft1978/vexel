@@ -1,0 +1,605 @@
+BINDING CTFontCreateWithName
+228:     /// Returns: This function will return a CTFontRef that best matches the name provided with size and matrix attributes. The name parameter is the only required parameters, and default values will be used for unspecified parameters. A best match will be found if all parameters cannot be matched identically.
+229:     ///
+230:     /// # Safety
+231:     ///
+232:     /// `matrix` must be a valid pointer or null.
+233:     #[doc(alias = "CTFontCreateWithName")]
+234:     #[inline]
+235:     pub unsafe fn with_name(
+236:         name: &CFString,
+237:         size: CGFloat,
+238:         matrix: *const CGAffineTransform,
+239:     ) -> CFRetained<CTFont> {
+240:         extern "C-unwind" {
+241:             fn CTFontCreateWithName(
+242:                 name: &CFString,
+243:                 size: CGFloat,
+244:                 matrix: *const CGAffineTransform,
+245:             ) -> Option<NonNull<CTFont>>;
+246:         }
+247:         let ret = unsafe { CTFontCreateWithName(name, size, matrix) };
+248:         let ret =
+249:             ret.expect("function was marked as returning non-null, but actually returned NULL");
+250:         unsafe { CFRetained::from_raw(ret) }
+251:     }
+252: 
+253:     /// Returns a new font reference that best matches the font descriptor.
+254:     ///
+255:     ///
+
+BINDING CTFontCreateWithName
+2534:             fn CTFontDrawImageFromAdaptiveImageProviderAtPoint(
+2535:                 font: &CTFont,
+2536:                 provider: &ProtocolObject<dyn CTAdaptiveImageProviding>,
+2537:                 point: CGPoint,
+2538:                 context: &CGContext,
+2539:             );
+2540:         }
+2541:         unsafe { CTFontDrawImageFromAdaptiveImageProviderAtPoint(self, provider, point, context) }
+2542:     }
+2543: }
+2544: 
+2545: #[deprecated = "renamed to `CTFont::with_name`"]
+2546: #[inline]
+2547: pub unsafe extern "C-unwind" fn CTFontCreateWithName(
+2548:     name: &CFString,
+2549:     size: CGFloat,
+2550:     matrix: *const CGAffineTransform,
+2551: ) -> CFRetained<CTFont> {
+2552:     extern "C-unwind" {
+2553:         fn CTFontCreateWithName(
+2554:             name: &CFString,
+2555:             size: CGFloat,
+2556:             matrix: *const CGAffineTransform,
+2557:         ) -> Option<NonNull<CTFont>>;
+2558:     }
+2559:     let ret = unsafe { CTFontCreateWithName(name, size, matrix) };
+2560:     let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
+2561:     unsafe { CFRetained::from_raw(ret) }
+
+BINDING CTFontCreateWithName
+2540:         }
+2541:         unsafe { CTFontDrawImageFromAdaptiveImageProviderAtPoint(self, provider, point, context) }
+2542:     }
+2543: }
+2544: 
+2545: #[deprecated = "renamed to `CTFont::with_name`"]
+2546: #[inline]
+2547: pub unsafe extern "C-unwind" fn CTFontCreateWithName(
+2548:     name: &CFString,
+2549:     size: CGFloat,
+2550:     matrix: *const CGAffineTransform,
+2551: ) -> CFRetained<CTFont> {
+2552:     extern "C-unwind" {
+2553:         fn CTFontCreateWithName(
+2554:             name: &CFString,
+2555:             size: CGFloat,
+2556:             matrix: *const CGAffineTransform,
+2557:         ) -> Option<NonNull<CTFont>>;
+2558:     }
+2559:     let ret = unsafe { CTFontCreateWithName(name, size, matrix) };
+2560:     let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
+2561:     unsafe { CFRetained::from_raw(ret) }
+2562: }
+2563: 
+2564: #[cfg(feature = "CTFontDescriptor")]
+2565: #[deprecated = "renamed to `CTFont::with_font_descriptor`"]
+2566: #[inline]
+2567: pub unsafe extern "C-unwind" fn CTFontCreateWithFontDescriptor(
+
+SDK CTFontCreateWithName
+150: 
+151: /*!
+152:     @function   CTFontCreateWithName
+153:     @abstract   Returns a new font reference for the given name.
+154: 
+155:     @discussion This function uses font descriptor matching so only registered fonts can be returned; see CTFontManager.h for more information. If you are trying to create a system UI font (with name beginning with a "."), you should use CTFontCreateUIFontForLanguage() or appropriate AppKit/UIKit APIs instead.
+156: 
+157:     @param      name
+158:                 The font name for which you wish to create a new font reference. A valid PostScript name is preferred, although other font name types will be matched in a fallback manner. Any font name beginning with a "." is reserved for the system and should not be used here.
+159: 
+
+SDK CTFontCreateWithName
+167: */
+168: CT_EXPORT
+169: CTFontRef CTFontCreateWithName(
+170:     CFStringRef                 name,
+171:     CGFloat                     size,
+172:     const CGAffineTransform * _Nullable matrix ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+173: 
+174: #ifdef __swift__
+175: 
+176: static inline CF_SWIFT_NAME(CTFont.init(_:size:)) CTFontRef _CTFontCreateWithName(CFStringRef name, CGFloat size)
+
+SDK CTFontCreateWithName
+174: #ifdef __swift__
+175: 
+176: static inline CF_SWIFT_NAME(CTFont.init(_:size:)) CTFontRef _CTFontCreateWithName(CFStringRef name, CGFloat size)
+177: {
+178:     return CTFontCreateWithName(name, size, NULL);
+179: }
+180: 
+181: static inline CF_SWIFT_NAME(CTFont.init(_:transform:)) CTFontRef _CTFontCreateWithNameAndMatrix(CFStringRef name, CGAffineTransform matrix)
+182: {
+183:     return CTFontCreateWithName(name, 1.0, &matrix);
+
+BINDING CTFontCreateCopyWithSymbolicTraits
+657:     ///
+658:     /// `matrix` must be a valid pointer or null.
+659:     #[doc(alias = "CTFontCreateCopyWithSymbolicTraits")]
+660:     #[cfg(feature = "CTFontTraits")]
+661:     #[inline]
+662:     pub unsafe fn copy_with_symbolic_traits(
+663:         &self,
+664:         size: CGFloat,
+665:         matrix: *const CGAffineTransform,
+666:         sym_trait_value: CTFontSymbolicTraits,
+667:         sym_trait_mask: CTFontSymbolicTraits,
+668:     ) -> Option<CFRetained<CTFont>> {
+669:         extern "C-unwind" {
+670:             fn CTFontCreateCopyWithSymbolicTraits(
+671:                 font: &CTFont,
+672:                 size: CGFloat,
+673:                 matrix: *const CGAffineTransform,
+674:                 sym_trait_value: CTFontSymbolicTraits,
+675:                 sym_trait_mask: CTFontSymbolicTraits,
+676:             ) -> Option<NonNull<CTFont>>;
+677:         }
+678:         let ret = unsafe {
+679:             CTFontCreateCopyWithSymbolicTraits(self, size, matrix, sym_trait_value, sym_trait_mask)
+680:         };
+681:         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
+682:     }
+683: 
+684:     /// Returns a new font in the specified family based on the traits of the original font.
+
+BINDING CTFontCreateCopyWithSymbolicTraits
+2658:             size: CGFloat,
+2659:             matrix: *const CGAffineTransform,
+2660:             attributes: Option<&CTFontDescriptor>,
+2661:         ) -> Option<NonNull<CTFont>>;
+2662:     }
+2663:     let ret = unsafe { CTFontCreateCopyWithAttributes(font, size, matrix, attributes) };
+2664:     let ret = ret.expect("function was marked as returning non-null, but actually returned NULL");
+2665:     unsafe { CFRetained::from_raw(ret) }
+2666: }
+2667: 
+2668: #[cfg(feature = "CTFontTraits")]
+2669: #[deprecated = "renamed to `CTFont::copy_with_symbolic_traits`"]
+2670: #[inline]
+2671: pub unsafe extern "C-unwind" fn CTFontCreateCopyWithSymbolicTraits(
+2672:     font: &CTFont,
+2673:     size: CGFloat,
+2674:     matrix: *const CGAffineTransform,
+2675:     sym_trait_value: CTFontSymbolicTraits,
+2676:     sym_trait_mask: CTFontSymbolicTraits,
+2677: ) -> Option<CFRetained<CTFont>> {
+2678:     extern "C-unwind" {
+2679:         fn CTFontCreateCopyWithSymbolicTraits(
+2680:             font: &CTFont,
+2681:             size: CGFloat,
+2682:             matrix: *const CGAffineTransform,
+2683:             sym_trait_value: CTFontSymbolicTraits,
+2684:             sym_trait_mask: CTFontSymbolicTraits,
+2685:         ) -> Option<NonNull<CTFont>>;
+
+BINDING CTFontCreateCopyWithSymbolicTraits
+2666: }
+2667: 
+2668: #[cfg(feature = "CTFontTraits")]
+2669: #[deprecated = "renamed to `CTFont::copy_with_symbolic_traits`"]
+2670: #[inline]
+2671: pub unsafe extern "C-unwind" fn CTFontCreateCopyWithSymbolicTraits(
+2672:     font: &CTFont,
+2673:     size: CGFloat,
+2674:     matrix: *const CGAffineTransform,
+2675:     sym_trait_value: CTFontSymbolicTraits,
+2676:     sym_trait_mask: CTFontSymbolicTraits,
+2677: ) -> Option<CFRetained<CTFont>> {
+2678:     extern "C-unwind" {
+2679:         fn CTFontCreateCopyWithSymbolicTraits(
+2680:             font: &CTFont,
+2681:             size: CGFloat,
+2682:             matrix: *const CGAffineTransform,
+2683:             sym_trait_value: CTFontSymbolicTraits,
+2684:             sym_trait_mask: CTFontSymbolicTraits,
+2685:         ) -> Option<NonNull<CTFont>>;
+2686:     }
+2687:     let ret = unsafe {
+2688:         CTFontCreateCopyWithSymbolicTraits(font, size, matrix, sym_trait_value, sym_trait_mask)
+2689:     };
+2690:     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
+2691: }
+2692: 
+2693: #[deprecated = "renamed to `CTFont::copy_with_family`"]
+
+SDK CTFontCreateCopyWithSymbolicTraits
+455: 
+456: /*!
+457:     @function   CTFontCreateCopyWithSymbolicTraits
+458:     @abstract   Returns a new font based on the original font with the specified symbolic traits.
+459: 
+460:     @param      font
+461:                 Original font reference on which to base the new font.
+462: 
+463:     @param      size
+464:                 The point size for the font reference. If 0.0 is specified, the original font's size will be preserved.
+
+SDK CTFontCreateCopyWithSymbolicTraits
+476: */
+477: CT_EXPORT
+478: CTFontRef _Nullable CTFontCreateCopyWithSymbolicTraits(
+479:     CTFontRef                   font,
+480:     CGFloat                     size,
+481:     const CGAffineTransform * _Nullable matrix,
+482:     CTFontSymbolicTraits        symTraitValue,
+483:     CTFontSymbolicTraits        symTraitMask ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+484: 
+485: /*!
+
+BINDING CTFontCreatePathForGlyph
+1605:     ///
+1606:     /// # Safety
+1607:     ///
+1608:     /// `matrix` must be a valid pointer or null.
+1609:     #[doc(alias = "CTFontCreatePathForGlyph")]
+1610:     #[cfg(feature = "objc2-core-graphics")]
+1611:     #[inline]
+1612:     pub unsafe fn path_for_glyph(
+1613:         &self,
+1614:         glyph: CGGlyph,
+1615:         matrix: *const CGAffineTransform,
+1616:     ) -> Option<CFRetained<CGPath>> {
+1617:         extern "C-unwind" {
+1618:             fn CTFontCreatePathForGlyph(
+1619:                 font: &CTFont,
+1620:                 glyph: CGGlyph,
+1621:                 matrix: *const CGAffineTransform,
+1622:             ) -> Option<NonNull<CGPath>>;
+1623:         }
+1624:         let ret = unsafe { CTFontCreatePathForGlyph(self, glyph, matrix) };
+1625:         ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
+1626:     }
+1627: }
+1628: 
+1629: extern "C" {
+1630:     /// kCTFontVariationAxisIdentifierKey
+1631:     ///
+1632:     /// Key to get the variation axis identifier.
+
+BINDING CTFontCreatePathForGlyph
+3050:     #[cfg(feature = "objc2-core-graphics")]
+3051:     #[deprecated = "renamed to `CTFont::vertical_translations_for_glyphs`"]
+3052:     pub fn CTFontGetVerticalTranslationsForGlyphs(
+3053:         font: &CTFont,
+3054:         glyphs: NonNull<CGGlyph>,
+3055:         translations: NonNull<CGSize>,
+3056:         count: CFIndex,
+3057:     );
+3058: }
+3059: 
+3060: #[cfg(feature = "objc2-core-graphics")]
+3061: #[deprecated = "renamed to `CTFont::path_for_glyph`"]
+3062: #[inline]
+3063: pub unsafe extern "C-unwind" fn CTFontCreatePathForGlyph(
+3064:     font: &CTFont,
+3065:     glyph: CGGlyph,
+3066:     matrix: *const CGAffineTransform,
+3067: ) -> Option<CFRetained<CGPath>> {
+3068:     extern "C-unwind" {
+3069:         fn CTFontCreatePathForGlyph(
+3070:             font: &CTFont,
+3071:             glyph: CGGlyph,
+3072:             matrix: *const CGAffineTransform,
+3073:         ) -> Option<NonNull<CGPath>>;
+3074:     }
+3075:     let ret = unsafe { CTFontCreatePathForGlyph(font, glyph, matrix) };
+3076:     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
+3077: }
+
+BINDING CTFontCreatePathForGlyph
+3056:         count: CFIndex,
+3057:     );
+3058: }
+3059: 
+3060: #[cfg(feature = "objc2-core-graphics")]
+3061: #[deprecated = "renamed to `CTFont::path_for_glyph`"]
+3062: #[inline]
+3063: pub unsafe extern "C-unwind" fn CTFontCreatePathForGlyph(
+3064:     font: &CTFont,
+3065:     glyph: CGGlyph,
+3066:     matrix: *const CGAffineTransform,
+3067: ) -> Option<CFRetained<CGPath>> {
+3068:     extern "C-unwind" {
+3069:         fn CTFontCreatePathForGlyph(
+3070:             font: &CTFont,
+3071:             glyph: CGGlyph,
+3072:             matrix: *const CGAffineTransform,
+3073:         ) -> Option<NonNull<CGPath>>;
+3074:     }
+3075:     let ret = unsafe { CTFontCreatePathForGlyph(font, glyph, matrix) };
+3076:     ret.map(|ret| unsafe { CFRetained::from_raw(ret) })
+3077: }
+3078: 
+3079: #[deprecated = "renamed to `CTFont::variation_axes`"]
+3080: #[inline]
+3081: pub unsafe extern "C-unwind" fn CTFontCopyVariationAxes(
+3082:     font: &CTFont,
+3083: ) -> Option<CFRetained<CFArray>> {
+
+SDK CTFontCreatePathForGlyph
+1135: 
+1136: /*!
+1137:     @function   CTFontCreatePathForGlyph
+1138:     @abstract   Creates a path for the specified glyph.
+1139: 
+1140:     @discussion Creates a path from the outlines of the glyph for the specified font. The path will reflect the font point size, matrix, and transform parameter, in that order. The transform parameter will most commonly be used to provide a translation to the desired glyph origin.
+1141: 
+1142:     @param      font
+1143:                 The font reference.
+1144: 
+
+SDK CTFontCreatePathForGlyph
+1152: */
+1153: CT_EXPORT
+1154: CGPathRef _Nullable CTFontCreatePathForGlyph(
+1155:     CTFontRef                   font,
+1156:     CGGlyph                     glyph,
+1157:     const CGAffineTransform * _Nullable matrix ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+1158: 
+1159: /*! --------------------------------------------------------------------------
+1160:     @group Font Variations
+1161: *///--------------------------------------------------------------------------
+
+BINDING CTFontGetAscent
+1188:     }
+1189: 
+1190:     /// Returns the scaled font ascent metric.
+1191:     ///
+1192:     ///
+1193:     /// Parameter `font`: The font reference.
+1194:     ///
+1195:     ///
+1196:     /// Returns: This function returns the font ascent metric scaled based on the point size and matrix of the font reference.
+1197:     #[doc(alias = "CTFontGetAscent")]
+1198:     #[inline]
+1199:     pub unsafe fn ascent(&self) -> CGFloat {
+1200:         extern "C-unwind" {
+1201:             fn CTFontGetAscent(font: &CTFont) -> CGFloat;
+1202:         }
+1203:         unsafe { CTFontGetAscent(self) }
+1204:     }
+1205: 
+1206:     /// Returns the scaled font descent metric.
+1207:     ///
+1208:     ///
+1209:     /// Parameter `font`: The font reference.
+1210:     ///
+1211:     ///
+1212:     /// Returns: This function returns the font descent metric scaled based on the point size and matrix of the font reference.
+1213:     #[doc(alias = "CTFontGetDescent")]
+1214:     #[inline]
+1215:     pub unsafe fn descent(&self) -> CGFloat {
+
+BINDING CTFontGetAscent
+2927: extern "C-unwind" {
+2928:     #[cfg(feature = "objc2-core-graphics")]
+2929:     #[deprecated = "renamed to `CTFont::glyphs_for_characters`"]
+2930:     pub fn CTFontGetGlyphsForCharacters(
+2931:         font: &CTFont,
+2932:         characters: NonNull<UniChar>,
+2933:         glyphs: NonNull<CGGlyph>,
+2934:         count: CFIndex,
+2935:     ) -> bool;
+2936: }
+2937: 
+2938: extern "C-unwind" {
+2939:     #[deprecated = "renamed to `CTFont::ascent`"]
+2940:     pub fn CTFontGetAscent(font: &CTFont) -> CGFloat;
+2941: }
+2942: 
+2943: extern "C-unwind" {
+2944:     #[deprecated = "renamed to `CTFont::descent`"]
+2945:     pub fn CTFontGetDescent(font: &CTFont) -> CGFloat;
+2946: }
+2947: 
+2948: extern "C-unwind" {
+2949:     #[deprecated = "renamed to `CTFont::leading`"]
+2950:     pub fn CTFontGetLeading(font: &CTFont) -> CGFloat;
+2951: }
+2952: 
+2953: extern "C-unwind" {
+2954:     #[deprecated = "renamed to `CTFont::units_per_em`"]
+
+SDK CTFontGetAscent
+851: 
+852: /*!
+853:     @function   CTFontGetAscent
+854:     @abstract   Returns the scaled font ascent metric.
+855: 
+856:     @param      font
+857:                 The font reference.
+858: 
+859:     @result     This function returns the font ascent metric scaled based on the point size and matrix of the font reference.
+860: */
+
+SDK CTFontGetAscent
+860: */
+861: CT_EXPORT
+862: CGFloat CTFontGetAscent( CTFontRef font ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+863: 
+864: /*!
+865:     @function   CTFontGetDescent
+866:     @abstract   Returns the scaled font descent metric.
+867: 
+868:     @param      font
+869:                 The font reference.
+
+BINDING CTFontGetDescent
+1204:     }
+1205: 
+1206:     /// Returns the scaled font descent metric.
+1207:     ///
+1208:     ///
+1209:     /// Parameter `font`: The font reference.
+1210:     ///
+1211:     ///
+1212:     /// Returns: This function returns the font descent metric scaled based on the point size and matrix of the font reference.
+1213:     #[doc(alias = "CTFontGetDescent")]
+1214:     #[inline]
+1215:     pub unsafe fn descent(&self) -> CGFloat {
+1216:         extern "C-unwind" {
+1217:             fn CTFontGetDescent(font: &CTFont) -> CGFloat;
+1218:         }
+1219:         unsafe { CTFontGetDescent(self) }
+1220:     }
+1221: 
+1222:     /// Returns the scaled font leading metric.
+1223:     ///
+1224:     ///
+1225:     /// Parameter `font`: The font reference.
+1226:     ///
+1227:     ///
+1228:     /// Returns: This function returns the font leading metric scaled based on the point size and matrix of the font reference.
+1229:     #[doc(alias = "CTFontGetLeading")]
+1230:     #[inline]
+1231:     pub unsafe fn leading(&self) -> CGFloat {
+
+BINDING CTFontGetDescent
+2932:         characters: NonNull<UniChar>,
+2933:         glyphs: NonNull<CGGlyph>,
+2934:         count: CFIndex,
+2935:     ) -> bool;
+2936: }
+2937: 
+2938: extern "C-unwind" {
+2939:     #[deprecated = "renamed to `CTFont::ascent`"]
+2940:     pub fn CTFontGetAscent(font: &CTFont) -> CGFloat;
+2941: }
+2942: 
+2943: extern "C-unwind" {
+2944:     #[deprecated = "renamed to `CTFont::descent`"]
+2945:     pub fn CTFontGetDescent(font: &CTFont) -> CGFloat;
+2946: }
+2947: 
+2948: extern "C-unwind" {
+2949:     #[deprecated = "renamed to `CTFont::leading`"]
+2950:     pub fn CTFontGetLeading(font: &CTFont) -> CGFloat;
+2951: }
+2952: 
+2953: extern "C-unwind" {
+2954:     #[deprecated = "renamed to `CTFont::units_per_em`"]
+2955:     pub fn CTFontGetUnitsPerEm(font: &CTFont) -> c_uint;
+2956: }
+2957: 
+2958: extern "C-unwind" {
+2959:     #[deprecated = "renamed to `CTFont::glyph_count`"]
+
+SDK CTFontGetDescent
+863: 
+864: /*!
+865:     @function   CTFontGetDescent
+866:     @abstract   Returns the scaled font descent metric.
+867: 
+868:     @param      font
+869:                 The font reference.
+870: 
+871:     @result     This function returns the font descent metric scaled based on the point size and matrix of the font reference.
+872: */
+
+SDK CTFontGetDescent
+872: */
+873: CT_EXPORT
+874: CGFloat CTFontGetDescent( CTFontRef font ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+875: 
+876: /*!
+877:     @function   CTFontGetLeading
+878:     @abstract   Returns the scaled font leading metric.
+879: 
+880:     @param      font
+881:                 The font reference.
+
+BINDING CTFontGetLeading
+1220:     }
+1221: 
+1222:     /// Returns the scaled font leading metric.
+1223:     ///
+1224:     ///
+1225:     /// Parameter `font`: The font reference.
+1226:     ///
+1227:     ///
+1228:     /// Returns: This function returns the font leading metric scaled based on the point size and matrix of the font reference.
+1229:     #[doc(alias = "CTFontGetLeading")]
+1230:     #[inline]
+1231:     pub unsafe fn leading(&self) -> CGFloat {
+1232:         extern "C-unwind" {
+1233:             fn CTFontGetLeading(font: &CTFont) -> CGFloat;
+1234:         }
+1235:         unsafe { CTFontGetLeading(self) }
+1236:     }
+1237: 
+1238:     /// Returns the units per em metric.
+1239:     ///
+1240:     ///
+1241:     /// Parameter `font`: The font reference.
+1242:     ///
+1243:     ///
+1244:     /// Returns: This function returns the units per em of the font.
+1245:     #[doc(alias = "CTFontGetUnitsPerEm")]
+1246:     #[inline]
+1247:     pub unsafe fn units_per_em(&self) -> c_uint {
+
+BINDING CTFontGetLeading
+2937: 
+2938: extern "C-unwind" {
+2939:     #[deprecated = "renamed to `CTFont::ascent`"]
+2940:     pub fn CTFontGetAscent(font: &CTFont) -> CGFloat;
+2941: }
+2942: 
+2943: extern "C-unwind" {
+2944:     #[deprecated = "renamed to `CTFont::descent`"]
+2945:     pub fn CTFontGetDescent(font: &CTFont) -> CGFloat;
+2946: }
+2947: 
+2948: extern "C-unwind" {
+2949:     #[deprecated = "renamed to `CTFont::leading`"]
+2950:     pub fn CTFontGetLeading(font: &CTFont) -> CGFloat;
+2951: }
+2952: 
+2953: extern "C-unwind" {
+2954:     #[deprecated = "renamed to `CTFont::units_per_em`"]
+2955:     pub fn CTFontGetUnitsPerEm(font: &CTFont) -> c_uint;
+2956: }
+2957: 
+2958: extern "C-unwind" {
+2959:     #[deprecated = "renamed to `CTFont::glyph_count`"]
+2960:     pub fn CTFontGetGlyphCount(font: &CTFont) -> CFIndex;
+2961: }
+2962: 
+2963: extern "C-unwind" {
+2964:     #[deprecated = "renamed to `CTFont::bounding_box`"]
+
+SDK CTFontGetLeading
+875: 
+876: /*!
+877:     @function   CTFontGetLeading
+878:     @abstract   Returns the scaled font leading metric.
+879: 
+880:     @param      font
+881:                 The font reference.
+882: 
+883:     @result     This function returns the font leading metric scaled based on the point size and matrix of the font reference.
+884: */
+
+SDK CTFontGetLeading
+884: */
+885: CT_EXPORT
+886: CGFloat CTFontGetLeading( CTFontRef font ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
+887: 
+888: /*!
+889:     @function   CTFontGetUnitsPerEm
+890:     @abstract   Returns the units per em metric.
+891: 
+892:     @param      font
+893:                 The font reference.

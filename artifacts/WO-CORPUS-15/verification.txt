@@ -1,0 +1,32 @@
+WO-CORPUS-15 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: f1a8ce908adcf4bbad4f218688f4af77d643071db6fc135420c6a1898b2e94cf
+
+Input identities
+- Filtered-path-only SVG: 1,226 bytes, SHA-256 `7eb595b9428c2fc59fb57529bcda783103d0b2108e87de88551e107d98a2e263`.
+- Gradient-stroke-group-only SVG: 979,694 bytes, SHA-256 `defc175694894fc45df932ec8177f4a28760f48c4db558fed27f39bc4c0cb8b2`.
+- Saved Inkscape A reference: 1600x1000, SHA-256 `efab09c907df35f558464077fc83916d1a6ff6da846dc9d702e42a589fd55a31`.
+- Saved Inkscape B reference: 1600x1000, SHA-256 `b0ca12daffa547685a8e50a00fd894329dde0309f68314dafdf3470a1ef547e0`.
+- Current Vexel A RGBA: 6,400,000 bytes, SHA-256 `8536d06c780d66e22b126f7a139b8583ca280e9f4d53c94f54ef6aba9ab7cc1b`.
+- Current Vexel B RGBA: 6,400,000 bytes, SHA-256 `3fdce743657c570f3f2930755aa7de8483038d06307aaf8778ea8693982dca7b`.
+
+Build and rendering
+- `cmake --build --preset mac-release --target shape_render_cli`: PASS; CMake reconfigured cleanly and Ninja reported no work required.
+- Current renderer command rendered both existing W13 derived inputs to native-size RGBA. Outputs were white-composited with the `pixdiff.py` floor integer formula and compared to the saved transparent Inkscape PNG references at tolerance 2. No external corpus file was accessed and Inkscape was not rerun.
+
+Results
+- Filtered-path-only A: 2,301 / 1,600,000 pixels differ (0.144%), max delta 149, mean differing-pixel delta 5.2, bbox x15..602/y10..134. Heatmap: `.cache/WO-CORPUS-15/a-diff.png`.
+- Gradient-stroke group-only B: 10,523 / 1,600,000 pixels differ (0.658%), max delta 3, mean delta 3.0, bbox x4..1599/y0..999. Heatmap: `.cache/WO-CORPUS-15/b-diff.png`.
+- In full T1, 69 pixels exceed delta 10. All 69 overlap the A-only mask where A's own delta exceeds 10; A has 83 pixels above delta 10. B has none above delta 10. This associates the localized high-error hotspot with the leading filtered-path feature family.
+- Of the full T1 tolerance-2 residual, 2,121 pixels overlap A's mismatch mask and 10,387 overlap B's; A/B mismatch masks overlap at 7 pixels. Thus most full residual pixels are also present in the group-only comparison, but the experiment does not by itself explain cross-feature compositing interactions.
+- Machine-readable metrics and input hashes: `artifacts/WO-CORPUS-15/ablation-analysis.json`.
+
+Interpretation and next step
+- The inherited gradient-stroke group produces a broad low-amplitude delta-3 component. The high-error hotspot follows the filtered leading path. Do not change the group gradient implementation based only on its delta-3 comparison.
+- The leading path combines gradient fill, Gaussian blur filter, and end marker; this order cannot isolate which one causes its hotspot. Next, make byte-derived one-feature-at-a-time variants of A (disable filter, marker, and gradient fill independently), render them with the current Vexel and installed Inkscape binaries, and identify the responsible semantics before implementing a fix.
+- This is component-level diagnostic evidence, not accepted SVG parity or a corpus-wide claim.
+
+Scope and hygiene
+- No product/test/corpus/golden source, thresholds, or budgets changed. No broad suite ran; no UI/E2E ran. Build and diagnostics only.
+- Frozen work order, ledger, output dimensions, comparisons, and `git diff --check` verified. Generated products are confined to ignored `.cache/WO-CORPUS-15/` and `build/mac-release/`. Work remains uncommitted.

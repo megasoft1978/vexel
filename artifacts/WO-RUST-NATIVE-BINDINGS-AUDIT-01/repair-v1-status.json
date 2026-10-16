@@ -1,0 +1,13 @@
+{
+  "name": "native-audit",
+  "wo": "WO-RUST-NATIVE-BINDINGS-AUDIT-01",
+  "session": "01a13a6b-e31f-7ee1-a6e4-cf087f7bef2f",
+  "pid": 16627,
+  "mode": "repair",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "status": "completed",
+  "started_epoch": 1791982027.8420758,
+  "exit_code": 0,
+  "duration_seconds": 1242.8402981758118
+}

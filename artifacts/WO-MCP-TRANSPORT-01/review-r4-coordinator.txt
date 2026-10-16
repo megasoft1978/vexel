@@ -1,0 +1,14 @@
+Coordinator reviewed r4 accounting and focused coverage independently of the worker.
+Broker-only renewal, reserve-before-forward, once-only receive-time retirement,
+fully-forwarded matching cancellation, ID-type separation, escaped Unicode
+comparison and all terminal cleanup paths were examined. Review requests for
+null-ID error forwarding, broker-method+ID classification and total accounting
+metadata/scratch budgeting were corrected and tested before integration.
+The final matcher compares response/cancellation tokens without allocating large
+ID copies. Request candidate allocation is preflighted against pending budget;
+fixed table metadata is charged from initialization. The original 12 relay test
+bodies and real-broker E2E suffix are byte-identical. No remaining actionable
+correctness finding in this bounded review. Numeric IDs compare their literal
+JSON number text, documented. This does not verify future async export behavior.
+Exact worker/root conflict audit is transport-integration-audit.json.
+Main HEAD and index are unchanged; unrelated current source remains preserved.

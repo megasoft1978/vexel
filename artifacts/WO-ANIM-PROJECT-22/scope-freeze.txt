@@ -1,0 +1,9 @@
+WO-ANIM-PROJECT-22 r1 scope freeze
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+Spec SHA-256: 6b218bb87100dd2243d327aa18ab3ef5927b7f514078738411077d2dd6de4938
+Status: ready; implementation not started at freeze.
+
+Carries forward the Add Track/Add Cel UI behavior while extracting native
+timeline checks into a separate focused executable so source files remain
+below the 800-line cap.

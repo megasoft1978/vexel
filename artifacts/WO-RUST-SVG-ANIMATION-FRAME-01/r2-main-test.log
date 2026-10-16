@@ -1,0 +1,69 @@
+   Compiling vexel-svg-animation-frame v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-animation-frame)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.98s
+     Running unittests src/lib.rs (build/rust/aarch64-apple-darwin/debug/deps/vexel_svg_animation_frame-4d6c0752fd0d8257)
+
+running 9 tests
+test tests::invalid_transform_input_does_not_produce_a_matrix ... ok
+test loop_tests::edge_mapping_and_shape_bounds_poll_each_edge_keep_original_work_math ... ok
+test clips::tests::clip_owner_before_suffix_and_bounds_follow_complete_ancestor_chain ... ok
+test clips::tests::update_without_bounds_preserves_object_box_bounds ... ok
+test clips::tests::clip_estimation_capacity_and_owner_walk_poll_cancellation_in_loop ... ok
+test tests::transform_matrix_keeps_svg_order_and_rotation_center ... ok
+test tests::transform_matrix_preserves_translate_scale_and_skew_components ... ok
+test clips::tests::suffix_polling_preserves_legacy_clip_local_work_and_caps ... ok
+test tests::inverse_uses_animation_singularity_threshold ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/frame_scene.rs (build/rust/aarch64-apple-darwin/debug/deps/frame_scene-92b0e5c1efd77022)
+
+running 2 tests
+test invalid_time_and_cancellation_are_reported_without_a_frame ... ok
+test empty_owned_scene_evaluates_without_copying_or_losing_child_lookup ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/original_clip.rs (build/rust/aarch64-apple-darwin/debug/deps/original_clip-7c822d426b06703f)
+
+running 8 tests
+test limit_and_cancellation_do_not_publish_a_partial_real_frame ... ok
+test public_clip_update_can_refresh_inverse_without_replacing_object_bounds ... ok
+test actual_clip_operation_preserves_ancestor_before_suffix_and_full_owner_products ... ok
+test clip_update_near_publication_work_limit_keeps_all_old_clip_values ... ok
+test configured_frame_budget_rejects_small_limit_and_honors_explicit_policy ... ok
+test clip_replacement_budget_counts_old_plus_new_capacity_overlap ... ok
+test clip_update_capacity_and_cancel_failures_leave_the_frame_unpublished ... ok
+test original_clip_overlay_updates_real_owned_clip_and_rolls_back_to_base ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_frame.rs (build/rust/aarch64-apple-darwin/debug/deps/original_frame-f92e67cd0aec4e64)
+
+running 10 tests
+test active_transform_overlay_updates_real_edges_and_keeps_repeated_frames_independent ... ok
+test original_color_opacity_and_discrete_assertions_reach_effective_shape_colors ... ok
+test direct_motion_and_mpath_use_owned_motion_points_on_real_scene_geometry ... ok
+test object_paint_bounds_stroke_inverse_and_motion_follow_effective_geometry ... ok
+test original_numeric_overlay_samples_repeat_without_mutating_owned_source ... ok
+test unsupported_negative_stroke_animation_fails_without_a_frame ... ok
+test original_python_linear_reference_samples_are_preserved_by_animation_overlay ... ok
+test original_unsupported_timing_css_and_timeline_limit_keep_diagnostics ... ok
+test original_python_spline_discrete_and_syncbase_assertions_are_preserved ... ok
+test original_fifteen_authored_fixtures_keep_their_source_token_animation_inputs ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/r2_policy.rs (build/rust/aarch64-apple-darwin/debug/deps/r2_policy-575f836cf78a00f1)
+
+running 2 tests
+test normal_entrypoint_honors_policy_above_64mib_with_separate_clip_cap ... ok
+test bounds_scan_observes_cancel_in_zero_node_zero_edge_suffix_atomically ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_svg_animation_frame
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

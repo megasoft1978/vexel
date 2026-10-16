@@ -1,0 +1,28 @@
+WO-ANIM-PROJECT-11 verification
+Date: 2026-10-13
+
+Builds:
+- `cmake --build --preset mac-debug --target svgworkbench viewer_timeline_test viewer_timeline_keyframe_test mcp_native_timeline_test` — PASS.
+- `cmake --build --preset mac-asan --target svgworkbench viewer_timeline_test viewer_timeline_keyframe_test mcp_native_timeline_test` — PASS.
+- `cmake --build --preset mac-ubsan --target viewer_timeline_test` — PASS.
+
+Focused tests:
+- `ctest --test-dir build/mac-debug -R '^(viewer-timeline|viewer-timeline-keyframes|mcp-native-timeline|project-timeline-session|project-animation-render)$' --output-on-failure` — PASS, 5/5.
+- `ctest --preset mac-asan -R '^(viewer-timeline|viewer-timeline-keyframes|mcp-native-timeline|project-timeline-session|project-animation-render)$' --output-on-failure` — PASS, 5/5.
+- `ctest --preset mac-ubsan -R '^viewer-timeline$' --output-on-failure` — PASS, 1/1. The configured UBSan lane registers only this focused timeline test.
+
+Repository checks:
+- `python3 scripts/wo_validate.py WO-ANIM-PROJECT-11 --ready` — PASS; frozen order hash validated.
+- `python3 scripts/ledger.py validate ledger.jsonl` — PASS, 669 entries.
+- `git diff --check` — PASS after final changes.
+
+Independent review:
+- Final scoped `codex exec review --model gpt-6.1-sol` confirmed the MCP dock/canvas synchronization and floating-point tick-boundary fixes; no blocking/high findings.
+
+No broad UI/E2E automation was run. Changes remain uncommitted. The linker reported existing duplicate-library warnings for application/test links.
+
+Final review follow-up:
+- The reviewer initially identified two P2 issues: stale editor dock/canvas state after adding the first native track through MCP, and floating-point underflow at some exact tick boundaries.
+- Both were fixed. The final independent review confirmed both fixes and found no blocking/high findings.
+- After the fixes: Debug focused suite PASS 5/5; ASan focused suite PASS 5/5; configured UBSan timeline PASS 1/1.
+- Source line counts after the rendering preparation split: `src/app/viewer_timeline.c` 768 lines and `src/app/viewer_timeline_ui.c` 710 lines (both under the 800-line project limit).

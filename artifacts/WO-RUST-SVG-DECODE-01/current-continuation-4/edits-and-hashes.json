@@ -1,0 +1,63 @@
+{
+  "allowed_source_and_test_files": [
+    {
+      "path": "rust/crates/vexel-svg-decode/src/decode.rs",
+      "sha256": "5a09e5f291a0d5525f913f15a6338fd05abbcb768d6211c0744d64177e98f57b",
+      "lines": 764
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/traversal.rs",
+      "sha256": "e81cf0c4d38077845ad135378b9eeaf71cd9cb606523ad41864d527693f15e17",
+      "lines": 796
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/requests.rs",
+      "sha256": "db6dd250813f475aa778dd966be8446ccacc7fc78395d66a0b09b6321a498ce8",
+      "lines": 65
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/src/lib.rs",
+      "sha256": "b56e2fe0e751a0b84fe34a0dfdf6776b2a8f27b9a148becb1b7fb4f9f28097e9",
+      "lines": 128
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/tests/production_engine.rs",
+      "sha256": "b34dd89f00621b2df113701e0a6e89d9bbf74dca53aba9847cdf75f76be676ef",
+      "lines": 268
+    },
+    {
+      "path": "rust/crates/vexel-svg-decode/tests/production_failures.rs",
+      "sha256": "b45635685b2becfdc2edb102853f049571f649c2efa4294309120802089bad86",
+      "lines": 210
+    }
+  ],
+  "source_test_limit": 800,
+  "all_allowed_source_and_test_files_below_800": true,
+  "scope_catalog_sha256": "2c6ceb9b08eff33b84e63ea6d3fb03bf4b5069e9f659038aadf073744a7b8e08",
+  "source_seed_json_expected": "artifacts/WO-RUST-SVG-DECODE-01/accepted-child-requests-source-seed.json",
+  "source_seed_json_present": false,
+  "scene_files_written_by_continuation": [],
+  "scene_inputs_current_hashes": [
+    {
+      "path": "rust/crates/vexel-scene/src/request.rs",
+      "sha256": "2824537c7a2db3f6f0d00d41081a824c5e305bae5cc4ea3fd3a494f8fa53e1cc"
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/static_pattern.rs",
+      "sha256": "4938490f9fe393c1f486c04a7dd80e97425f6b85b549be7c9d12e9d24e34f8c0"
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/pattern_ticket.rs",
+      "sha256": "235d0c7aa0e6572705d9a4886288e0f6c147d7ab1eafb8ab0c6c53187b7b6251"
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/scoped_media.rs",
+      "sha256": "de052841a6d51d03b2bf197b2097c6d110ff0a72cf931bd17e9698b6a87e3bd7"
+    },
+    {
+      "path": "rust/crates/vexel-scene/src/common_raster.rs",
+      "sha256": "1750f6a3e774297c2ad4046722b5e091f97536c15b36214fa653f1420a74d1f3"
+    }
+  ],
+  "scene_seed_hash_comparison": "Unavailable: named accepted-child-requests-source-seed.json is absent from this worker; these are current hashes, and no Scene path was edited."
+}

@@ -1,0 +1,5 @@
+**ACCEPT.** The owned import validates nonzero dimensions within `MAX_AXIS`, computes RGBA byte count with checked arithmetic, requires exact length, and rejects `Vec` capacity above 64 MiB. The success path moves the original `Vec` directly into `Tile`; it does not clone, resize, or allocate. Each error returns that same buffer, preserving its contents, pointer, and capacity. `allocated_byte_count()` reports the actual `Vec::capacity()` and documents that allocator bookkeeping and resident memory are outside that measure.
+
+The three added tests cover pointer and spare-capacity preservation on import, invalid dimension/length retention, over-capacity retention, and capacity reporting for newly allocated tiles.
+
+**Test gaps, not source defects:** the added tests do not explicitly exercise checked-arithmetic overflow or a capacity exactly at the 64 MiB limit. The source handles overflow and accepts capacity equal to the limit. Existing test bodies were not inspected, as requested. No claim about renderer/app behavior or system-wide OOM.

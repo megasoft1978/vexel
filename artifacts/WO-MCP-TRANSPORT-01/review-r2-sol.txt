@@ -1,0 +1,10 @@
+WO-MCP-TRANSPORT-01 r2 focused gpt-6.1-sol read-only review
+Date: 2026-10-13
+
+Findings
+- P2: app/vexel_mcp_main.c:219 allowed poll(..., -1) when a request had been fully sent but the broker had not sent any bytes. This loses the existing 30-second socket inactivity bound. Add a bounded pending-request inactivity deadline; progress/partial broker bytes renew it, complete responses clear a pending request, and idle stdio without pending requests remains open.
+- P2: artifacts/WO-MCP-TRANSPORT-01/verify-execution-r2.py:55 deliberately expands the original broker E2E expected-tool inventory with 11 already-advertised native timeline tools, but its output at line 77 calls the entire assertion suffix byte-identical. Update the audit/evidence to state the precise exception and retain every other E2E behavior assertion unchanged.
+
+Review was read-only. No tests or UI automation were run by the reviewer. The review request treated host-shell logs as current evidence; they report 11/11 relay cases and 2/2 focused CTests. The earlier nested sandbox skips remain historical.
+
+Disposition: r2 is superseded before transport acceptance. Revision 3 is required to close both findings and truthfully record the narrow E2E expected-tool inventory update. Preserve the r2 implementation, host logs, baseline, and review unchanged.

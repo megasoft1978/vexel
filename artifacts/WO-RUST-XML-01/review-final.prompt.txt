@@ -1,0 +1,1 @@
+Final NARROW recheck of prior WO-RUST-XML-01 repair only; no full re-audit/edits/tests/network/agents. XML exact diagnostic byte-offset assertions and name4096accept/4097reject added; source unchanged. Inspect repaired source/tests/parity-map against prior finding; return<=160words ACCEPT/REJECT concrete remaining issue. Preserve std/unsafe/other source constraints.

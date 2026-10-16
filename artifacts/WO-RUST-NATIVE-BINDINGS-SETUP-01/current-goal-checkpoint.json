@@ -1,0 +1,312 @@
+{
+  "recorded_utc": "2026-10-14T16:04:11.426495+00:00",
+  "goal_status": "active",
+  "goal": "Full Rust Vexel application completed, comprehensively tested, packaged/documented and ready to use, including real live agents and recorded demos",
+  "authority": "docs/product/rust-port-goal-and-plan.md",
+  "turn_classification": "progress",
+  "accepted_main_focused_test_count": 460,
+  "package_counts": {
+    "vexel-base": 14,
+    "vexel-geometry": 5,
+    "vexel-xml": 31,
+    "vexel-json": 5,
+    "vexel-project": 8,
+    "vexel-raster": 8,
+    "vexel-spatial": 9,
+    "vexel-svg-values": 19,
+    "vexel-protocol": 9,
+    "vexel-ui": 17,
+    "vexel-platform-macos": 25,
+    "vexel-svg-path": 36,
+    "vexel-timeline": 29,
+    "vexel-tile-cache": 11,
+    "vexel-platform-tasks": 11,
+    "vexel-svg-color": 3,
+    "vexel-mcp-tasks": 8,
+    "vexel-mcp-access": 12,
+    "vexel-project-io": 8,
+    "vexel-svg-index": 12,
+    "vexel-document": 13,
+    "vexel-svg-reference": 18,
+    "vexel-document-io": 5,
+    "vexel-svg-css": 63,
+    "vexel-svg-animation": 21,
+    "vexel-document-edit": 53,
+    "vexel-platform-apple": 7
+  },
+  "workers": [
+    {
+      "wo": "WO-RUST-SVG-REFERENCE-CONTROL-01",
+      "accepted": true,
+      "handles": [
+        {
+          "name": "reference-control",
+          "wo": "WO-RUST-SVG-REFERENCE-CONTROL-01",
+          "pid": 96541,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791988215.1960719,
+          "exit_code": 0,
+          "duration_seconds": 1039.3071591854095,
+          "evidence": "artifacts/WO-RUST-SVG-REFERENCE-CONTROL-01/process-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "reference-control",
+          "wo": "WO-RUST-SVG-REFERENCE-CONTROL-01",
+          "pid": 55077,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791989936.2061682,
+          "exit_code": 0,
+          "duration_seconds": 117.22031998634338,
+          "evidence": "artifacts/WO-RUST-SVG-REFERENCE-CONTROL-01/review-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "reference-control",
+          "wo": "WO-RUST-SVG-REFERENCE-CONTROL-01",
+          "session": "01a13ad2-2df7-7cd3-88e8-5c4b0e0488a3",
+          "pid": 65935,
+          "mode": "repair",
+          "model": "gpt-6-luna",
+          "effort": "low",
+          "status": "completed",
+          "started_epoch": 1791990170.571869,
+          "exit_code": 0,
+          "duration_seconds": 122.72505021095276,
+          "evidence": "artifacts/WO-RUST-SVG-REFERENCE-CONTROL-01/repair-v1-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "reference-control",
+          "wo": "WO-RUST-SVG-REFERENCE-CONTROL-01",
+          "session": "01a13aec-70c2-7e53-822d-f801fc24bd84",
+          "pid": 75419,
+          "mode": "review",
+          "model": "gpt-6-luna",
+          "effort": "low",
+          "status": "completed",
+          "started_epoch": 1791990358.0889401,
+          "exit_code": 0,
+          "duration_seconds": 15.545820713043213,
+          "evidence": "artifacts/WO-RUST-SVG-REFERENCE-CONTROL-01/recheck-v1-status.json",
+          "supervisor_confirmed_live": false
+        }
+      ]
+    },
+    {
+      "wo": "WO-RUST-SVG-CSS-CONTROL-01",
+      "accepted": true,
+      "handles": [
+        {
+          "name": "css-control",
+          "wo": "WO-RUST-SVG-CSS-CONTROL-01",
+          "pid": 1537,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791988313.334077,
+          "exit_code": 0,
+          "duration_seconds": 104.55549120903015,
+          "evidence": "artifacts/WO-RUST-SVG-CSS-CONTROL-01/process-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "css-control",
+          "wo": "WO-RUST-SVG-CSS-CONTROL-01",
+          "pid": 79890,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791990531.5779688,
+          "exit_code": 0,
+          "duration_seconds": 82.32093524932861,
+          "evidence": "artifacts/WO-RUST-SVG-CSS-CONTROL-01/review-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "css-control",
+          "wo": "WO-RUST-SVG-CSS-CONTROL-01",
+          "session": "01a13ad3-ad8b-7643-9555-d659af6e19b2",
+          "pid": 7968,
+          "mode": "repair",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "status": "completed",
+          "started_epoch": 1791988538.6608891,
+          "exit_code": 0,
+          "duration_seconds": 1815.918058872223,
+          "evidence": "artifacts/WO-RUST-SVG-CSS-CONTROL-01/r2-implementation-status.json",
+          "supervisor_confirmed_live": false
+        }
+      ]
+    },
+    {
+      "wo": "WO-RUST-SVG-PATH-CONTROL-01",
+      "accepted": true,
+      "handles": [
+        {
+          "name": "path-control",
+          "wo": "WO-RUST-SVG-PATH-CONTROL-01",
+          "pid": 1536,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791988313.3344052,
+          "exit_code": 0,
+          "duration_seconds": 132.55229783058167,
+          "evidence": "artifacts/WO-RUST-SVG-PATH-CONTROL-01/process-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "path-control",
+          "wo": "WO-RUST-SVG-PATH-CONTROL-01",
+          "pid": 98936,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791991294.881529,
+          "exit_code": 0,
+          "duration_seconds": 76.10106086730957,
+          "evidence": "artifacts/WO-RUST-SVG-PATH-CONTROL-01/review-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "path-control",
+          "wo": "WO-RUST-SVG-PATH-CONTROL-01",
+          "session": "01a13ad3-ad8b-7081-925f-87b7703aa292",
+          "pid": 7969,
+          "mode": "repair",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "status": "completed",
+          "started_epoch": 1791988538.665096,
+          "exit_code": 0,
+          "duration_seconds": 2488.377270936966,
+          "evidence": "artifacts/WO-RUST-SVG-PATH-CONTROL-01/r2-implementation-status.json",
+          "supervisor_confirmed_live": false
+        }
+      ]
+    },
+    {
+      "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+      "accepted": true,
+      "handles": [
+        {
+          "name": "animation-control",
+          "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+          "pid": 6132,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791988440.695544,
+          "exit_code": 0,
+          "duration_seconds": 331.7213351726532,
+          "evidence": "artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/process-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "animation-control",
+          "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+          "pid": 55078,
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791989936.213086,
+          "exit_code": 0,
+          "duration_seconds": 83.75944495201111,
+          "evidence": "artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/review-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "animation-control",
+          "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+          "session": "01a13ad5-9ed2-7bd0-9b84-e1b9b281eacd",
+          "pid": 63913,
+          "mode": "repair",
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791990097.2045922,
+          "exit_code": 0,
+          "duration_seconds": 703.3031077384949,
+          "evidence": "artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/repair-v1-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "animation-control",
+          "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+          "session": "01a13aec-70ca-7021-a0c0-d9b47a89e6c9",
+          "pid": 98935,
+          "mode": "review",
+          "model": "gpt-6-luna",
+          "effort": "high",
+          "status": "completed",
+          "started_epoch": 1791991294.8751822,
+          "exit_code": 0,
+          "duration_seconds": 144.67918062210083,
+          "evidence": "artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/recheck-v1-status.json",
+          "supervisor_confirmed_live": false
+        },
+        {
+          "name": "animation-control",
+          "wo": "WO-RUST-SVG-ANIMATION-CONTROL-01",
+          "session": "01a13aec-70ca-7021-a0c0-d9b47a89e6c9",
+          "pid": 3735,
+          "mode": "review",
+          "model": "gpt-6-luna",
+          "effort": "low",
+          "status": "completed",
+          "started_epoch": 1791991513.2127428,
+          "exit_code": 0,
+          "duration_seconds": 4.884234189987183,
+          "evidence": "artifacts/WO-RUST-SVG-ANIMATION-CONTROL-01/recheck-v2-status.json",
+          "supervisor_confirmed_live": false
+        }
+      ]
+    }
+  ],
+  "scientific_review": {
+    "wo": "WO-RUST-RESEARCH-SCIENCE-01",
+    "accepted_as": "research only",
+    "report": "docs/product/rust-rendering-research.md",
+    "api_envelopes": 8,
+    "primary_pdfs": 5
+  },
+  "full_application_complete": false,
+  "full_final_testing_complete": false,
+  "broad_ui_e2e": "final gate after feature completion",
+  "billing": "existing subscription, Standard service, no purchased credits/API billing",
+  "next_gate": "Coordinator must implement/review/register full owned scene/shared renderer contracts, then launch disjoint complete decoder/paint/definitions/media/selection/scalar/animation partitions. Native shell/text/presentation/menu/AX, actual Rust executable and live MCP composition, large editing/save policies and performance, Rust tooling, full final UI/fidelity/robustness/release and authentic recorded demos remain required.",
+  "known_product_gap": "Large-source owned parsing accepted; default source editing/save remain16MiB. No100MB workflow/performance acceptance.",
+  "native_primary_inputs": {
+    "archive_count": 16,
+    "pinned_license_statement_revisions": 4,
+    "evidence": "artifacts/WO-RUST-NATIVE-BINDINGS-AUDIT-01/coordinator-primary",
+    "adopted": true,
+    "adoption_scope": "exact reviewed compiled registrations; boundary accepted, native GUI/media implementation remains"
+  },
+  "native_bindings": {
+    "setup": "WO-RUST-NATIVE-BINDINGS-SETUP-01 r2",
+    "accepted": true,
+    "active_packages": 16,
+    "lock_records": 18,
+    "gui_complete": false,
+    "mac13runtime_verified": false
+  },
+  "model_policy": "Prefer Luna for scoped implementation and reviews; Sol for specific architecture/repeated-debugging escalation.",
+  "goal_tracker_status": "active (verified goal API after owner resume)",
+  "test_count_basis": "Recorded passing named Cargo test entries in accepted main packages; includes two compile-fail native checks and original CSS cases exercised through two additional controlled routes. Not a claim of 460 distinct original input fixtures or comprehensive product QA.",
+  "controlled_engine_scope": {
+    "reference": "genuine resumable build/find; support helper decoder continuations remain composition scope",
+    "css": "genuine resumable build/compute",
+    "path": "genuine resumable validation/operand/geometry/metadata parsing",
+    "animation": "controlled one-shot parse/evaluate with actual in-loop polling; no resumable animation-session claim"
+  },
+  "canonical_objective": "Deliver Vexel as a complete, high-quality Rust vector drawing and 2D cartoon animation application for Apple Silicon macOS 13+, fully implemented, integrated, comprehensively tested, packaged, documented, and ready for real use. Port every first-party application, platform, UI, XML/SVG parser/rasterizer, geometry, scene, document, project, animation, MCP, development, test, benchmark, and release component to Rust while preserving migration references and frozen acceptance evidence. Provide an original modern custom interface informed by Blender and other modern drawing/animation tools; complete vector editing and cartoon animation workflows; faithful source-preserving Inkscape SVG import/export; versioned native projects containing artwork, animation, assets, metadata, and recovery; and measured high performance on large files, including memory, build time, and release bundle size. Provide detailed discoverable, authorized, live and visible MCP control for Codex, Claude Code, and compatible agents, including drawing, editing, animation, undo/redo, save/export, progress, errors, and cancellation. After feature completion, pass comprehensive UI/end-to-end, fidelity, performance, accessibility, malformed-input, recovery, MCP interoperability, and packaged fresh-install acceptance, fix release blockers, and deliver release artifacts and documentation. Record authentic live Codex character creation and animation in Vexel, with reusable projects, prompts, exports, captions/transcript, and accepted website/README presentation. Preserve macOS-only initial support, MPL-2.0, owned SVG/XML/raster code, minimal audited pinned dependencies, no GPL editor source or external SVG fetching, and safe ownership/resource limits. Use useful disjoint parallel Luna Codex exec workers at task-appropriate effort and Standard speed within the existing subscription allowance, with named escalations only; keep focused correctness checks during implementation and reserve broad automated UI/E2E for the final stage. Completion requires all agreed product outcomes and release evidence, not foundation tests or partial functionality.",
+  "full_goal_authority": "artifacts/WO-RUST-GOAL-05/full-goal.json",
+  "tracker_objective_edit_available": false
+}

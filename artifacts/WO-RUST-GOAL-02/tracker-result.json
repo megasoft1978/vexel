@@ -1,0 +1,8 @@
+{
+  "action": "create_goal",
+  "requested_scope": "full Rust migration and completed Vexel product, detailed in docs/product/rust-port-goal-and-plan.md",
+  "result": "rejected",
+  "reason": "cannot create a new goal because this thread has an unfinished goal; complete the existing goal first",
+  "previous_goal_status": "paused",
+  "previous_goal_marked_complete": false
+}

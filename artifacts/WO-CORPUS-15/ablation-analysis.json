@@ -1,0 +1,71 @@
+{
+  "dimensions": [
+    1600,
+    1000
+  ],
+  "full_t1": {
+    "different_pixels": 12526,
+    "max_delta": 149,
+    "pixels_delta_gt_10": 69
+  },
+  "inputs": {
+    "a_current": {
+      "path": ".cache/WO-CORPUS-15/a-current.rgba",
+      "sha256": "8536d06c780d66e22b126f7a139b8583ca280e9f4d53c94f54ef6aba9ab7cc1b"
+    },
+    "a_reference": {
+      "path": ".cache/WO-CORPUS-13/a-inkscape.png",
+      "sha256": "efab09c907df35f558464077fc83916d1a6ff6da846dc9d702e42a589fd55a31"
+    },
+    "b_current": {
+      "path": ".cache/WO-CORPUS-15/b-current.rgba",
+      "sha256": "3fdce743657c570f3f2930755aa7de8483038d06307aaf8778ea8693982dca7b"
+    },
+    "b_reference": {
+      "path": ".cache/WO-CORPUS-13/b-inkscape.png",
+      "sha256": "b0ca12daffa547685a8e50a00fd894329dde0309f68314dafdf3470a1ef547e0"
+    },
+    "filtered_svg": {
+      "path": ".cache/WO-CORPUS-13/filtered-path-only.svg",
+      "sha256": "7eb595b9428c2fc59fb57529bcda783103d0b2108e87de88551e107d98a2e263"
+    },
+    "group_svg": {
+      "path": ".cache/WO-CORPUS-13/gradient-stroke-group-only.svg",
+      "sha256": "defc175694894fc45df932ec8177f4a28760f48c4db558fed27f39bc4c0cb8b2"
+    }
+  },
+  "interpretation": "The filtered-path-only variant carries all 69 full-T1 pixels with delta >10 (83 such pixels in its isolated render). The gradient-stroke-group-only variant accounts for distributed delta-3 differences and has no pixel above delta 10. This separates observed residual magnitudes by variant but does not distinguish gradient fill, filter, and marker contributions within the leading path.",
+  "tolerance": 2,
+  "variant_diff_mask_overlap": 7,
+  "variants": {
+    "filtered_path_only": {
+      "bbox": [
+        15,
+        10,
+        602,
+        134
+      ],
+      "different_pixels": 2301,
+      "fraction": 0.00143812,
+      "max_delta": 149,
+      "mean_delta_differing": 5.21,
+      "overlap_full_t1_delta_gt_10": 69,
+      "overlap_full_t1_diff_mask": 2121,
+      "pixels_delta_gt_10": 83
+    },
+    "gradient_stroke_group_only": {
+      "bbox": [
+        4,
+        0,
+        1599,
+        999
+      ],
+      "different_pixels": 10523,
+      "fraction": 0.00657688,
+      "max_delta": 3,
+      "mean_delta_differing": 3.0,
+      "overlap_full_t1_diff_mask": 10387,
+      "pixels_delta_gt_10": 0
+    }
+  }
+}

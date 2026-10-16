@@ -1,0 +1,53 @@
+[
+  {
+    "url": "https://crates.io/api/v1/crates/objc2",
+    "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>",
+    "phase": "initial registry metadata",
+    "attempts": 1,
+    "status": "stopped; no retry",
+    "downloaded_bytes": 0
+  },
+  {
+    "phase": "local source excerpt command",
+    "error": "zsh no matches found: src/platform/macos/platform_window_events*",
+    "resolution": "scoped file discovery; real window.m read; no network retry"
+  },
+  {
+    "phase": "xcrun SDK queries",
+    "error": "DVTFilePathFSEvents and DARWIN_USER_CACHE_DIR warnings",
+    "status": "queries returned SDK path/version; no failure claim"
+  },
+  {
+    "phase": "offline resume",
+    "route": "coordinator-authorized public primary fetch",
+    "status": "successful; files verified against registry/index; no worker network requests",
+    "packages": 13
+  },
+  {
+    "phase": "feature name reconciliation",
+    "status": "resolved",
+    "detail": "MTLTextureDescriptor is provided by MTLTexture; MTLFunction by MTLLibrary. Neither is a Cargo feature."
+  },
+  {
+    "revision": "7b1abfd750a2cacaea71d6a56ecfb83cb7de560b",
+    "path": "LICENSE-MIT.txt",
+    "url": "https://raw.githubusercontent.com/madsmtm/objc2/7b1abfd750a2cacaea71d6a56ecfb83cb7de560b/LICENSE-MIT.txt",
+    "error": "HTTPError: HTTP Error 404: Not Found",
+    "status": "failed"
+  },
+  {
+    "phase": "coordinator supplemental offline inputs",
+    "status": "successful; 16 packages and complete manifest closure verified",
+    "network": "no worker network calls"
+  },
+  {
+    "phase": "local metadata assembly",
+    "error": "duplicate status keyword when composing license record",
+    "status": "fixed by preserving upstream status and using separate verification field"
+  },
+  {
+    "phase": "symbol excerpt evidence",
+    "error": "two scopes shared one NSAccessibility excerpt path",
+    "status": "fixed with scope-specific paths; no source changes"
+  }
+]

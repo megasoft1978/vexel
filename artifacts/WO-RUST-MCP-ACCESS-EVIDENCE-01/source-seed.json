@@ -1,0 +1,14 @@
+{
+  "work_order": "WO-RUST-MCP-ACCESS-EVIDENCE-01",
+  "revision": 1,
+  "base_sha": "19234a036ed6a8d40c2ccdaec9b8186806d70eca",
+  "work_order_sha256": "c86607a32d067c65202641dc3b13b024aeaac4ab4a7be1a6674054c5f1dcc01e",
+  "production_source_sha256": "2071c94dd85cbb85d92e047a2d519afd5a8acfca2ead9eb1131992d9fbdd33c1",
+  "pre_edit_test_sha256": "bd96853c6b86b72e347d6decd4ce96013c9aef9d2a865021438a7c36bef7e706",
+  "integrated_test_sha256": "c72cebe712bdb39872806e823b738295a04f58631215d4fc000ea12b0d4bd2e7",
+  "scope": [
+    "work/WO-RUST-MCP-ACCESS-EVIDENCE-01.md",
+    "rust/crates/vexel-mcp-access/tests/access.rs",
+    "artifacts/WO-RUST-MCP-ACCESS-EVIDENCE-01/**"
+  ]
+}

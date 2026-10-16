@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "kind": "required-work-order-validators-not-builds-or-tests",
+  "initial": [
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-RENDER-CONTRACT-PLAN-01 --ready",
+      "chunk_id": "bcbaf1",
+      "wall_time_seconds": 2e-06,
+      "exit_code": 0,
+      "original_token_count": 31,
+      "output": "valid WO-RUST-RENDER-CONTRACT-PLAN-01 revision 1 sha256 596baaba56cc119c521cc75d2561f209b31d888188b0e8945561926201aa8725\n"
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "chunk_id": "44d68b",
+      "wall_time_seconds": 2.5e-06,
+      "exit_code": 0,
+      "original_token_count": 7,
+      "output": "valid ledger: 1303 entries\n"
+    },
+    {
+      "command": "git diff --check",
+      "chunk_id": "4be7e6",
+      "wall_time_seconds": 1.834e-06,
+      "exit_code": 0,
+      "original_token_count": 0,
+      "output": ""
+    }
+  ],
+  "final": [
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-RENDER-CONTRACT-PLAN-01 --ready",
+      "exit_code": 0,
+      "result": "valid revision 1 sha256 596baaba56cc119c521cc75d2561f209b31d888188b0e8945561926201aa8725"
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit_code": 0,
+      "result": "valid ledger: 1322 entries",
+      "note": "Concurrent pre-existing ledger changes detected; this repair did not edit ledger.jsonl."
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "result": "no output"
+    },
+    {
+      "command": "python3 JSON/lifetime assertions",
+      "exit_code": 0,
+      "result": "shared-contracts.json and result.json parsed; independent source/context lifetime assertions passed"
+    }
+  ],
+  "note": "Ledger changed concurrently from 1306 to 1322 entries and is outside the repair allowlist; this worker did not edit it. No product/renderer acceptance follows."
+}

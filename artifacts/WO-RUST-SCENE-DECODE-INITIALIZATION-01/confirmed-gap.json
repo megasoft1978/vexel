@@ -1,0 +1,24 @@
+{
+  "status": "confirmed source gap; not yet implemented or accepted",
+  "original_order": [
+    {
+      "path": "src/svg/shape/traverse.c",
+      "lines": "433-448",
+      "behavior": "Root display:none exits before transform and viewport parsing."
+    },
+    {
+      "path": "src/svg/shape/decode.c",
+      "lines": "198-216",
+      "behavior": "Traverse entire source and establish root_seen before animation parsing."
+    }
+  ],
+  "current_rust_mismatch": [
+    {
+      "path": "rust/crates/vexel-scene/src/builder.rs",
+      "lines": "70-84",
+      "behavior": "Constructor requires parsed source-owned animation and valid nonzero viewport before any traversal."
+    }
+  ],
+  "needed_contract": "Explicit source-owned provisional scene initialization/finalization preserving old accepted public APIs, late actual animation installation/admission, hidden-root representation without invented viewport. No render/freeze/finished graph with unresolved initialization, no fake empty animation or reparsed source substitution. Preserve original diagnostic priority, allocation overlap, bounded work, cancellation and cleanup.",
+  "execution": "Single shared writer after current paint-channel candidate review/integration. Decoder continues independent source proofs; no implicit workaround accepted."
+}

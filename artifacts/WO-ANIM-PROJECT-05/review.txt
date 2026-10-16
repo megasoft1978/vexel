@@ -1,0 +1,13 @@
+WO-ANIM-PROJECT-05 revision 2 independent review summary
+Date: 2026-10-13
+
+The full allowed-path review found no blocking or high-severity findings. It confirmed fixes for active JavaScript anchor URL normalization, save cancellation callback propagation, cancellation polls in the main traversal and long whitespace/matching scans, and output cleanup after post-animation cancellation.
+
+The final focused review of the last fixes found no concrete defects and no high findings. It checked raw CDATA CSS scanning, cancellation diagnostics preserved by source-span callers, and the scene-ID limit documentation against the 256-byte implementation limit.
+
+Lower-priority follow-up findings from the full review:
+- Existing reference-index, CSS-sheet, and SMIL parsing routines do not accept cancellation callbacks internally. The decoder checks cancellation after these operations, so cancellation latency can still depend on those phase durations.
+- CSS diagnostic offsets after XML entity decoding may not map exactly to authored source bytes.
+- Allocation failure paths are checked, but no deterministic fault-injection test seam exists. Load cancellation through a live task token and UI-triggered cancellation of synchronous save are not exercised by these focused unit tests.
+
+Review was read-only; no tests were run by the reviewer. Verification evidence is recorded separately in `verification.txt`.

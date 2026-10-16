@@ -1,0 +1,13 @@
+{
+  "name": "timeline",
+  "wo": "WO-RUST-TIMELINE-01",
+  "session": "01a139b7-12c0-7bc0-9797-6ebb575296e8",
+  "pid": 76079,
+  "mode": "review",
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791971536.7106318,
+  "exit_code": 0,
+  "duration_seconds": 39.08657908439636
+}

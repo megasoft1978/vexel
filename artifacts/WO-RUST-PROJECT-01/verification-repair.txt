@@ -1,0 +1,15 @@
+WO-RUST-PROJECT-01 narrowed repair — asset decode error cursor
+
+Repair
+- `read_asset` now advances its cursor as the C `take_slice` sequence does: after the record header, each consumed field, then the complete record before semantic/CRC validation. Post-slice rejection reports the consumed cursor.
+- `test_asset_validation` asserts an asset CRC failure has `Error::Corrupt` and `error_offset == 121`. The offset is the C decoder cursor after the 56-byte bundle header, 2-byte manifest, 6-byte scene, 2-byte timeline, and 55-byte asset record (`16 + 10 + 24 + 5`).
+- Updated `parity-map.json` to document C-compatible post-slice error offsets.
+
+Checks run once after the repair
+- `cargo +stable check -p vexel-project --locked --offline` — PASS.
+- `cargo +stable test -p vexel-project --locked --offline` — PASS; 8 focused tests, 0 failures; unit/doc targets passed.
+- `python3 scripts/wo_validate.py WO-RUST-PROJECT-01 --ready` — PASS; frozen revision 1 SHA matched.
+- `python3 scripts/ledger.py validate ledger.jsonl` — PASS; 1058 entries.
+- `git diff --check` — PASS.
+
+No C tests, unrelated modules, manifests, contracts, coordinator records, or initial artifacts/logs were changed. No dependency, unsafe code, or network access was used. Changes remain uncommitted.

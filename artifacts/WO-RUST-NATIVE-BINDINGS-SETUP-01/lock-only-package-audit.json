@@ -1,0 +1,31 @@
+{
+  "active_package_count": 16,
+  "lock_record_count": 18,
+  "inactive_lock_packages": [
+    {
+      "name": "dispatch2",
+      "version": "0.3.1",
+      "checksum": "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "manifest_license": "Zlib OR Apache-2.0 OR MIT",
+      "manifest_rust_version": "1.71",
+      "active_in_selected_build": false,
+      "direct_dependency": false,
+      "cache_observed": ".cache/cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/dispatch2-0.3.1.crate"
+    },
+    {
+      "name": "objc2-io-surface",
+      "version": "0.3.2",
+      "checksum": "180788110936d59bab6bd83b6060ffdfffb3b922ba1396b312ae795e1de9d81d",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "manifest_license": "Zlib OR Apache-2.0 OR MIT",
+      "manifest_rust_version": "1.71",
+      "active_in_selected_build": false,
+      "direct_dependency": false,
+      "cache_observed": ".cache/cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/objc2-io-surface-0.3.2.crate"
+    }
+  ],
+  "active_build_tree": "active-build-tree.txt",
+  "cargo_reference": "https://doc.rust-lang.org/cargo/reference/resolver.html#features",
+  "incident": "R1 specified only16 downloads; Cargo fetch also cached2inactive locked archives. No source/runtime feature adoption, no new writer started. Retained evidence; R2 scope explicitly handles inactive Cargo lock/fetch records and rejects active expansion."
+}

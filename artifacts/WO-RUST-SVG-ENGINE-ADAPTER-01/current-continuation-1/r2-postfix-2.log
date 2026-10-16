@@ -1,0 +1,24 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (.cache/WO-RUST-SVG-ENGINE-ADAPTER-01/current/target/aarch64-apple-darwin/debug/deps/vexel_svg_engine-93552d95a7c5a500)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/decoder.rs (.cache/WO-RUST-SVG-ENGINE-ADAPTER-01/current/target/aarch64-apple-darwin/debug/deps/decoder-6ec652f332ef4b13)
+
+running 5 tests
+test actual_image_request_unsupported_error_points_to_image_element ... ok
+test actual_text_request_unsupported_error_points_to_text_element ... ok
+test real_decoder_publishes_vector_shapes_transform_solid_channels_and_source ... ok
+test actual_clip_planner_path_reports_observed_invalid_argument_without_typed_blocker ... ok
+test real_decoder_resolves_local_gradient_through_cached_paint_path ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_svg_engine
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

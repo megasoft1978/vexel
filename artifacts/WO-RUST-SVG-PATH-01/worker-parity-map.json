@@ -1,0 +1,52 @@
+{
+  "work_order": "WO-RUST-SVG-PATH-01",
+  "reference_provenance": {
+    "source": "artifacts/WO-RUST-PLAN-01/source-baseline.json",
+    "kind": "hashes of the current dirty-source overlay captured by the owner; no GPL editor or external algorithm source used",
+    "sha256": {
+      "src/svg/shape/shape_path.c": "232f882b1910b4b278bbcf7e541c236fea71eafd8ec0bbbfbe08ee6af9e11eba",
+      "src/svg/shape/shape_geometry.c": "59dbf34064c6b9abee7f061adfec867f4d81be0af58a40d74b05aa6fd78011d9",
+      "src/svg/shape/shape.c": "b25de60b0bac55fd268db61721d08a39a5b09307f8bc7abc85526f5f4587e066",
+      "src/svg/shape/shape.h": "f923e5ddea9103e76f5abaa2e54f691a918c047eb46de66dbadd48165d239003",
+      "src/svg/shape/shape_internal.h": "fffcef90b6b19ab2f588ff5c28bd51899b465e2f211f5b7e66124a6068716436",
+      "tests/svg/shape/path_number_test.c": "2873387dde31e5c326aee95c3a30fc117b548f4b9c5271f77b8fc98f31eaf9ad",
+      "tests/svg/shape/test_shape.c": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9"
+    }
+  },
+  "api": "parse_path(source: &[u8], span: Span, transform: Affine, options: ParseOptions) -> Result<PathDocument, Diagnostic>",
+  "symbol_parity": [
+    { "c_symbol": "svg_shape_path_decode", "rust_symbol": "parser::parse / parse_path", "coverage": "all M/L/H/V/C/S/Q/T/A/Z forms; absolute and relative values; implicit groups; path-first rule; closure and subpath accounting", "tests": ["supports_every_command_relative_forms_and_authored_command_provenance", "implicit_repeats_move_to_lines_and_subpath_closure_match_reference", "malformed_grammar_and_numeric_failures_report_absolute_original_offsets"] },
+    { "c_symbol": "record_path_subpath", "rust_symbol": "Parser::record_subpath / PathSubpath", "coverage": "owned first-edge/count/explicit-Z closed flag; empty subpaths omitted", "tests": ["implicit_repeats_move_to_lines_and_subpath_closure_match_reference", "supports_every_command_relative_forms_and_authored_command_provenance"] },
+    { "c_symbol": "add_arc", "rust_symbol": "flatten::arc", "coverage": "endpoint-to-center conversion, radii correction, large/sweep selection, zero radii, same-endpoint no-op, transformed flatness steps, bounded generated points", "tests": ["arcs_cover_degenerate_same_end_corrected_and_flag_validation_cases", "supports_every_command_relative_forms_and_authored_command_provenance", "transform_changes_edge_coordinates_and_flatness"] },
+    { "c_symbol": "record_path_segment", "rust_symbol": "Parser::record_segment / PathSegment", "coverage": "authored command case, absolute command offset or implicit None, source range, number range, flattened-edge range", "tests": ["supports_every_command_relative_forms_and_authored_command_provenance", "implicit_repeats_move_to_lines_and_subpath_closure_match_reference", "compact_numbers_and_arc_flags_keep_exact_source_ranges"] },
+    { "c_symbol": "add_path_quad", "rust_symbol": "Parser::add_quad", "coverage": "quadratic-to-cubic conversion preserving endpoints and adaptive flattening", "tests": ["supports_every_command_relative_forms_and_authored_command_provenance", "smooth_reflection_and_reset_rules_have_exact_control_geometry"] },
+    { "c_symbol": "add_edge / svg_shape_builder_add_edge", "rust_symbol": "flatten::edge / Parser::add_edge", "coverage": "coordinate validation, affine mapping, edge cap, fallible owned storage", "tests": ["implicit_repeats_move_to_lines_and_subpath_closure_match_reference", "transform_changes_edge_coordinates_and_flatness", "path_span_validation_and_hard_limits_are_explicit"] },
+    { "c_symbol": "point_segment_distance, midpoint, add_curve_recursive, add_curve, svg_shape_builder_add_curve", "rust_symbol": "flatten::{point_segment_distance, midpoint, curve_recursive, curve} / Parser::add_curve", "coverage": "de Casteljau subdivision, reference tolerance, recursion depth 16 and edge budget", "tests": ["smooth_reflection_and_reset_rules_have_exact_control_geometry", "transform_changes_edge_coordinates_and_flatness"] },
+    { "c_symbol": "svg_shape_transformed_flatness_tolerance", "rust_symbol": "flatten::tolerance", "coverage": "same affine row/column norm scale and minimum scale of 1", "tests": ["transform_changes_edge_coordinates_and_flatness"] },
+    { "c_symbol": "svg_shape_point_bounded", "rust_symbol": "flatten::bounded / Parser::check_points", "coverage": "finite coordinates bounded to 1,000,000; transformed endpoints pass accepted affine mapper limits", "tests": ["malformed_grammar_and_numeric_failures_report_absolute_original_offsets", "transform_changes_edge_coordinates_and_flatness"] },
+    { "c_symbol": "svg_shape_skip_path_separators, svg_shape_path_operand_boundary", "rust_symbol": "Reader::skip_separators / reader::operand_boundary", "coverage": "SVG whitespace/comma separators, adjacent signs/decimal points, compact arc flags", "tests": ["compact_numbers_and_arc_flags_keep_exact_source_ranges", "malformed_grammar_and_numeric_failures_report_absolute_original_offsets"] },
+    { "c_symbol": "read_number, svg_shape_read_number_value, svg_shape_read_arc_flag", "rust_symbol": "Reader::number / Reader::arc_flag", "coverage": "locale-independent decimal and exponent reader, 1e6 input bound, strict one-byte 0/1 flags", "tests": ["compact_numbers_and_arc_flags_keep_exact_source_ranges", "arcs_cover_degenerate_same_end_corrected_and_flag_validation_cases", "malformed_grammar_and_numeric_failures_report_absolute_original_offsets"] },
+    { "c_symbol": "svg_shape_fail and builder allocation/error paths", "rust_symbol": "Diagnostic / fallible Vec::try_reserve / owned PathDocument", "coverage": "typed error class and absolute source offset; OOM/limit distinguishable; Rust drop cleans partial parse state", "tests": ["malformed_grammar_and_numeric_failures_report_absolute_original_offsets", "path_span_validation_and_hard_limits_are_explicit"] }
+  ],
+  "limits": {
+    "default_commands": 4194304,
+    "default_edges": 4194304,
+    "default_numbers": 29360128,
+    "coordinate_absolute": 1000000,
+    "curve_depth": 16,
+    "whole_container_source_cap": null,
+    "caller_options": "may lower limits; values above frozen hard caps are clamped"
+  },
+  "ownership_and_adaptations": [
+    "The source is borrowed only during parsing; returned geometry, subpaths, segments, and number values are owned vectors.",
+    "Source provenance is represented as checked absolute half-open Span offsets; no source pointer or lifetime is retained.",
+    "Accepted vexel_geometry Point/Affine and affine_map_point replace C geometry structs and pointer outputs.",
+    "Fallible vector reservations map allocation failures to OutOfMemory; Rust ownership drops partial output on any diagnostic.",
+    "The C shape builder's document-wide edge/color/shape arrays and shape_index are integration concerns; this API returns one complete path's edges and does not mutate shared document storage.",
+    "Arc and cubic math are ported from the owner-owned local C reference only; no third-party algorithm was imported."
+  ],
+  "legacy_test_parity": [
+    { "test": "tests/svg/shape/path_number_test.c", "sha256": "2873387dde31e5c326aee95c3a30fc117b548f4b9c5271f77b8fc98f31eaf9ad", "rust_tests": ["compact_numbers_and_arc_flags_keep_exact_source_ranges", "malformed_grammar_and_numeric_failures_report_absolute_original_offsets"] },
+    { "test": "tests/svg/shape/test_shape.c path assertions at current dirty-source lines 644-650, 694-713", "sha256": "bc9a33f41ee1c18eb438e48232046d59e4bbe6be29b702be28b5db791fcfede9", "rust_tests": ["smooth_reflection_and_reset_rules_have_exact_control_geometry", "arcs_cover_degenerate_same_end_corrected_and_flag_validation_cases", "malformed_grammar_and_numeric_failures_report_absolute_original_offsets"] }
+  ]
+}

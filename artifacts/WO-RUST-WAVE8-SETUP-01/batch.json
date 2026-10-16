@@ -1,0 +1,14 @@
+{
+  "svg-animation": {
+    "wo": "WO-RUST-SVG-ANIMATION-01",
+    "crate": "vexel-svg-animation",
+    "effort": "high",
+    "model": "gpt-6-luna",
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust8-svg-animation",
+    "scope": "Port all of src/svg/animation/animation.h, animation_internal.h, smil.c,\nsmil_tracks.c, evaluate.c and motion_path.c into safe std-only Rust. Preserve\nall parse/evaluate/public helper semantics and original supported SMIL grammar,\nlimits (128 tracks, 256 values, 128 diagnostics, 3600 seconds, and every internal\nmotion/path/string bound), timing priority, diagnostic order/offsets, namespace\nand byte-span behavior, target/xlink resolution, syncbase graph/cycles,\nrepeat/duration/end/fill, set/animate/animateTransform/animateMotion,\nlinear/spline/discrete/paced modes, additive/accumulation flags, path structure\ncompatibility and numeric/color/transform/motion interpolation. No substitute\nsimplified timeline. Unsupported tracks are preserved/reported as the C scope\ndefines; raw source is never rewritten. Owned arrays plus a borrowed source or\nArc source owner with spans; no self-reference, unsafe, whole-source copies or\nquery-time parsing. Significant allocations fallible and capacity/resource\ncharges checked; document safe Rust adaptations explicitly without fake OOM.\nRejected parse/eval leaves no partial result. Define canonical new exported\nRust types so the renderer and authoring ports can consume this complete scope.\nPort all meaningful parse/eval assertions from tests/anim/test_animation.py and\nanimation_eval_cli.c, exact sample values/timing/attributes/active states; read\nall relevant project-authored fixtures, including both motion fixtures. Add\nexplicit bounds, unsupported/sync-cycle, source lifetime/spans and deterministic\nend/repeat/motion cases for public APIs. Render CLI assertions require the later\nfull renderer/CLI port and must be listed pending, not silently omitted or\nclaimed by parse/eval. Authoring.c/create and native timeline are separate\naccounted scopes, not part of this read-only SMIL parse/eval port. No broad UI,\nrender campaign, fuzz or performance test. Split cohesive modules below800lines.\n",
+    "deps": [
+      "vexel-base",
+      "vexel-xml"
+    ]
+  }
+}

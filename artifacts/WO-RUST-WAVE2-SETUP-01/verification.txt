@@ -1,0 +1,26 @@
+$ cargo +stable generate-lockfile --offline
+
+exit 0
+$ cargo +stable check --workspace --locked --offline
+    Checking vexel-geometry v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-geometry)
+    Checking vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-raster)
+    Checking vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-svg-values)
+    Checking vexel-ui v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-ui)
+    Checking vexel-protocol v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-protocol)
+    Checking vexel-platform-macos v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-platform-macos)
+    Checking vexel-spatial v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/crates/vexel-spatial)
+    Checking vexel-dev v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/rust/tools/vexel-dev)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+
+exit 0
+$ python3 scripts/wo_validate.py WO-RUST-WAVE2-SETUP-01 --ready
+valid WO-RUST-WAVE2-SETUP-01 revision 1 sha256 ccd731b2e35b72d852af152b3db770b909fe7231f52fa50d77c0c988e0ac51bf
+
+exit 0
+$ python3 scripts/ledger.py validate ledger.jsonl
+valid ledger: 1081 entries
+
+exit 0
+$ git diff --check
+
+exit 0

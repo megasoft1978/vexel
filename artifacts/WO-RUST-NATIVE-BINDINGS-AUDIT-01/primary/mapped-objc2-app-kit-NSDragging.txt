@@ -1,0 +1,203 @@
+BINDING draggingEntered
+243: 
+244:         #[unsafe(method(resetSpringLoading))]
+245:         #[unsafe(method_family = none)]
+246:         fn resetSpringLoading(&self);
+247:     }
+248: );
+249: 
+250: extern_protocol!(
+251:     /// [Apple's documentation](https://developer.apple.com/documentation/appkit/nsdraggingdestination?language=objc)
+252:     pub unsafe trait NSDraggingDestination: NSObjectProtocol + MainThreadOnly {
+253:         #[optional]
+254:         #[unsafe(method(draggingEntered:))]
+255:         #[unsafe(method_family = none)]
+256:         fn draggingEntered(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> NSDragOperation;
+257: 
+258:         #[optional]
+259:         #[unsafe(method(draggingUpdated:))]
+260:         #[unsafe(method_family = none)]
+261:         fn draggingUpdated(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> NSDragOperation;
+262: 
+263:         #[optional]
+264:         #[unsafe(method(draggingExited:))]
+265:         #[unsafe(method_family = none)]
+266:         fn draggingExited(&self, sender: Option<&ProtocolObject<dyn NSDraggingInfo>>);
+267: 
+268:         #[optional]
+269:         #[unsafe(method(prepareForDragOperation:))]
+270:         #[unsafe(method_family = none)]
+
+SDK draggingEntered
+90: @property BOOL animatesToDestination NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));
+91: 
+92: /* During draggingEntered: or draggingUpdated:, you are responsible for returning the drag operation. In some cases, you may accept some, but not all items on the dragging pasteboard. (For example, you only accept image files.) If you only accept some of the items, you should set this property so the drag manager can update the drag count badge. When -updateItems: is called, you should set the image of non valid dragging items to nil. If none of the drag items are valid then do not call this method. Simply return NSDragOperationNone from draggingEntered: and/or draggingUpdated: and do not modify any drag item properties.
+93:  */
+94: @property NSInteger numberOfValidItemsForDrop NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));
+95: 
+96: /* Use the following enumerate method to modify the properties of each dragging item. For example, change the drag image and size.
+97:    Note: All changes made here are only in effect while the drag is over the destination. When the drag exits the destination all properties return to the values last set by the dragging session.
+98: */
+99: 
+
+SDK draggingEntered
+116: @protocol NSDraggingDestination <NSObject>
+117: @optional
+118: - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+119: - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR; /* if the destination responded to draggingEntered: but not to draggingUpdated: the return value from draggingEntered: is used */
+120: - (void)draggingExited:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+121: - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+122: - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+123: - (void)concludeDragOperation:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+124: /* draggingEnded: is implemented as of Mac OS 10.5 */
+125: - (void)draggingEnded:(id<NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+
+SDK draggingEntered
+117: @optional
+118: - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+119: - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR; /* if the destination responded to draggingEntered: but not to draggingUpdated: the return value from draggingEntered: is used */
+120: - (void)draggingExited:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+121: - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+122: - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+123: - (void)concludeDragOperation:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+124: /* draggingEnded: is implemented as of Mac OS 10.5 */
+125: - (void)draggingEnded:(id<NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+126: /* the receiver of -wantsPeriodicDraggingUpdates should return NO if it does not require periodic -draggingUpdated messages (eg. not autoscrolling or otherwise dependent on draggingUpdated: sent while mouse is stationary) */
+
+BINDING draggingExited
+253:         #[optional]
+254:         #[unsafe(method(draggingEntered:))]
+255:         #[unsafe(method_family = none)]
+256:         fn draggingEntered(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> NSDragOperation;
+257: 
+258:         #[optional]
+259:         #[unsafe(method(draggingUpdated:))]
+260:         #[unsafe(method_family = none)]
+261:         fn draggingUpdated(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> NSDragOperation;
+262: 
+263:         #[optional]
+264:         #[unsafe(method(draggingExited:))]
+265:         #[unsafe(method_family = none)]
+266:         fn draggingExited(&self, sender: Option<&ProtocolObject<dyn NSDraggingInfo>>);
+267: 
+268:         #[optional]
+269:         #[unsafe(method(prepareForDragOperation:))]
+270:         #[unsafe(method_family = none)]
+271:         fn prepareForDragOperation(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> bool;
+272: 
+273:         #[optional]
+274:         #[unsafe(method(performDragOperation:))]
+275:         #[unsafe(method_family = none)]
+276:         fn performDragOperation(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> bool;
+277: 
+278:         #[optional]
+279:         #[unsafe(method(concludeDragOperation:))]
+280:         #[unsafe(method_family = none)]
+
+SDK draggingExited
+118: - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+119: - (NSDragOperation)draggingUpdated:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR; /* if the destination responded to draggingEntered: but not to draggingUpdated: the return value from draggingEntered: is used */
+120: - (void)draggingExited:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+121: - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+122: - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+123: - (void)concludeDragOperation:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+124: /* draggingEnded: is implemented as of Mac OS 10.5 */
+125: - (void)draggingEnded:(id<NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+126: /* the receiver of -wantsPeriodicDraggingUpdates should return NO if it does not require periodic -draggingUpdated messages (eg. not autoscrolling or otherwise dependent on draggingUpdated: sent while mouse is stationary) */
+127: - (BOOL)wantsPeriodicDraggingUpdates NS_SWIFT_UI_ACTOR;
+
+BINDING performDragOperation
+263:         #[optional]
+264:         #[unsafe(method(draggingExited:))]
+265:         #[unsafe(method_family = none)]
+266:         fn draggingExited(&self, sender: Option<&ProtocolObject<dyn NSDraggingInfo>>);
+267: 
+268:         #[optional]
+269:         #[unsafe(method(prepareForDragOperation:))]
+270:         #[unsafe(method_family = none)]
+271:         fn prepareForDragOperation(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> bool;
+272: 
+273:         #[optional]
+274:         #[unsafe(method(performDragOperation:))]
+275:         #[unsafe(method_family = none)]
+276:         fn performDragOperation(&self, sender: &ProtocolObject<dyn NSDraggingInfo>) -> bool;
+277: 
+278:         #[optional]
+279:         #[unsafe(method(concludeDragOperation:))]
+280:         #[unsafe(method_family = none)]
+281:         fn concludeDragOperation(&self, sender: Option<&ProtocolObject<dyn NSDraggingInfo>>);
+282: 
+283:         #[optional]
+284:         #[unsafe(method(draggingEnded:))]
+285:         #[unsafe(method_family = none)]
+286:         fn draggingEnded(&self, sender: &ProtocolObject<dyn NSDraggingInfo>);
+287: 
+288:         #[optional]
+289:         #[unsafe(method(wantsPeriodicDraggingUpdates))]
+290:         #[unsafe(method_family = none)]
+
+SDK performDragOperation
+86: @property NSDraggingFormation draggingFormation NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));
+87: 
+88: /* During the conclusion of an accepted drag, if this property is set to YES, the drag manager will animate each dragging image to their NSDraggingFormationNone locations. Otherwise, the drag images are removed without any animation. Note: This property is inspected between -prepareForDragOperation: and -performDragOperation:. If the final destination frames do not match the current NSDraggingFormationNone frames, then enumerate through the draggingItems during -performDragOperation: to set thier NSDraggingFormationNone frames to the correct destinations.
+89:  */
+90: @property BOOL animatesToDestination NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));
+91: 
+92: /* During draggingEntered: or draggingUpdated:, you are responsible for returning the drag operation. In some cases, you may accept some, but not all items on the dragging pasteboard. (For example, you only accept image files.) If you only accept some of the items, you should set this property so the drag manager can update the drag count badge. When -updateItems: is called, you should set the image of non valid dragging items to nil. If none of the drag items are valid then do not call this method. Simply return NSDragOperationNone from draggingEntered: and/or draggingUpdated: and do not modify any drag item properties.
+93:  */
+94: @property NSInteger numberOfValidItemsForDrop NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));
+95: 
+
+SDK performDragOperation
+120: - (void)draggingExited:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+121: - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+122: - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+123: - (void)concludeDragOperation:(nullable id <NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+124: /* draggingEnded: is implemented as of Mac OS 10.5 */
+125: - (void)draggingEnded:(id<NSDraggingInfo>)sender NS_SWIFT_UI_ACTOR;
+126: /* the receiver of -wantsPeriodicDraggingUpdates should return NO if it does not require periodic -draggingUpdated messages (eg. not autoscrolling or otherwise dependent on draggingUpdated: sent while mouse is stationary) */
+127: - (BOOL)wantsPeriodicDraggingUpdates NS_SWIFT_UI_ACTOR;
+128: 
+129: /* While a destination may change the dragging images at any time, it is recommended to wait until this method is called before updating the dragging image. This allows the system to delay changing the dragging images until it is likely that the user will drop on this destination. Otherwise, the dragging images will change too often during the drag which would be distracting to the user. The destination may update the dragging images by calling one of the -enumerateDraggingItems methods on the sender.
+
+BINDING draggingPasteboard
+156:         #[unsafe(method(draggedImageLocation))]
+157:         #[unsafe(method_family = none)]
+158:         fn draggedImageLocation(&self) -> NSPoint;
+159: 
+160:         #[cfg(feature = "NSImage")]
+161:         #[deprecated = "Use NSDraggingItem objects instead"]
+162:         #[unsafe(method(draggedImage))]
+163:         #[unsafe(method_family = none)]
+164:         fn draggedImage(&self) -> Option<Retained<NSImage>>;
+165: 
+166:         #[cfg(feature = "NSPasteboard")]
+167:         #[unsafe(method(draggingPasteboard))]
+168:         #[unsafe(method_family = none)]
+169:         fn draggingPasteboard(&self) -> Retained<NSPasteboard>;
+170: 
+171:         #[unsafe(method(draggingSource))]
+172:         #[unsafe(method_family = none)]
+173:         fn draggingSource(&self) -> Option<Retained<AnyObject>>;
+174: 
+175:         #[unsafe(method(draggingSequenceNumber))]
+176:         #[unsafe(method_family = none)]
+177:         fn draggingSequenceNumber(&self) -> NSInteger;
+178: 
+179:         #[unsafe(method(slideDraggedImageTo:))]
+180:         #[unsafe(method_family = none)]
+181:         fn slideDraggedImageTo(&self, screen_point: NSPoint);
+182: 
+183:         #[deprecated = "Use NSFilePromiseReceiver objects instead"]
+
+SDK draggingPasteboard
+77: @property (readonly) NSPoint draggedImageLocation NS_SWIFT_UI_ACTOR;
+78: @property (nullable, readonly) NSImage *draggedImage API_DEPRECATED("Use NSDraggingItem objects instead", macos(10.0, 11.0));
+79: @property (readonly) NSPasteboard *draggingPasteboard NS_SWIFT_UI_ACTOR;
+80: @property (nullable, readonly) id draggingSource NS_SWIFT_UI_ACTOR;
+81: @property (readonly) NSInteger draggingSequenceNumber NS_SWIFT_UI_ACTOR;
+82: - (void)slideDraggedImageTo:(NSPoint)screenPoint NS_SWIFT_UI_ACTOR;
+83: - (nullable NSArray<NSString *> *)namesOfPromisedFilesDroppedAtDestination:(NSURL *)dropDestination API_DEPRECATED("Use NSFilePromiseReceiver objects instead", macos(10.0,10.13));
+84: 
+85: /* Controls the dragging formation while the drag is over this destination. The default value is the current drag formation. */
+86: @property NSDraggingFormation draggingFormation NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.7));

@@ -1,0 +1,29 @@
+WO-CORPUS-13 revision 1 verification
+Date: 2026-10-13
+Base: 19234a036ed6a8d40c2ccdaec9b8186806d70eca
+
+Original and derived inputs
+- Original T1: 979,796 bytes; SHA-256 3578c89a2a55b487de739846aeac4fe84ba3bf0d71b2b03387afe3c822cf33b5.
+- Variant A keeps the leading filtered gradient path and removes the following large group: 1,226 bytes; SHA-256 7eb595b9428c2fc59fb57529bcda783103d0b2108e87de88551e107d98a2e263.
+- Variant B removes only the leading filtered path and retains the group of 34,714 gradient-stroked child paths: 979,694 bytes; SHA-256 defc175694894fc45df932ec8177f4a28760f48c4db558fed27f39bc4c0cb8b2.
+- Both copies retain the document root dimensions/viewBox and definitions; original external corpus file remains unchanged.
+- Reference: installed Inkscape 1.4.4 (dcaf3e7, 2026-05-05), same export options as WO-CORPUS-12. Variant B reports the warning that its unknown LPE stack is disabled.
+
+Variant A: filtered gradient path only
+- Vexel render: 1,600x1,000 RGBA; 0.05 s real, 54,050,816-byte max RSS.
+- Inkscape output: 1,600x1,000 RGBA PNG; 0.31 s real, 147,865,600-byte max RSS.
+- Composited-over-white comparison at tolerance 2: 2,301 / 1,600,000 pixels differ (0.144%), max channel delta 151, mean differing-pixel delta 5.3, bbox x15..602 y10..134.
+
+Variant B: inherited gradient-stroke group only
+- Vexel render: 1,600x1,000 RGBA; 1.31 s real, 78,708,736-byte max RSS.
+- Inkscape output: 1,600x1,000 RGBA PNG; 11.74 s real, 577,175,552-byte max RSS.
+- Composited-over-white comparison at tolerance 2: 191,589 / 1,600,000 pixels differ (11.974%), max channel delta 104, mean differing-pixel delta 65.1, bbox x0..1599 y0..999.
+
+Interpretation
+- The filtered leading path alone accounts for very little of the mismatch area. The gradient-stroke group alone reproduces almost all of the original T1 mismatch. Prioritize inherited/objectBoundingBox gradient stroke color coordinates and stroke-sample/coverage behavior on the many small closed paths. This ablation identifies the feature family, not the exact renderer defect.
+- The next focused order should add a small default objectBoundingBox gradient-stroke fixture, compare Vexel against Inkscape on the same native output surface, then fix the measured semantic difference. Do not infer corpus-wide parity from these variants.
+
+Scope and hygiene
+- All derived inputs and renders live under ignored `.cache/WO-CORPUS-13/`. No source, tests, original corpus, budgets, or acceptance thresholds changed.
+- No test suite, UI/E2E, corpus sweep, fuzz, sanitizer or broad benchmark ran. The commands were four scoped reference/render invocations and two pixel comparisons.
+- Frozen work order and ledger validate; `git diff --check` passes. No commit.

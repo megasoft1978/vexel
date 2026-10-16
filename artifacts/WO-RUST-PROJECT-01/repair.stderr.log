@@ -1,0 +1,2 @@
+2026-10-14T06:11:11.761044Z ERROR codex_core::tools::router: error=apply_patch verification failed: Failed to find expected lines in /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-project/artifacts/WO-RUST-PROJECT-01/parity-map.json:
+    {"c": "per-asset CRC over name, media type, and data", "rust": "bundle::asset_crc32", "evidence": "test_asset_validation"},

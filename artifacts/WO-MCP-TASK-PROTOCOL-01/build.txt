@@ -1,0 +1,109 @@
+[1/111] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_chars.c.o
+[2/111] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer_api.c.o
+[3/111] Building C object CMakeFiles/vexel_document.dir/src/document/source_save.c.o
+[4/111] Building C object CMakeFiles/vexel_shape.dir/src/geom/geometry.c.o
+[5/111] Building C object CMakeFiles/vexel_base.dir/src/base/base.c.o
+[6/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_model.c.o
+[7/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_snapshot.c.o
+[8/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_region.c.o
+[9/111] Building C object CMakeFiles/vexel_document.dir/src/platform/macos/platform_atomic_file.c.o
+[10/111] Building C object CMakeFiles/vexel_document.dir/src/platform/macos/platform_atomic_new_file.c.o
+[11/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_group.c.o
+[12/111] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_reader.c.o
+[13/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_insert.c.o
+[14/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit.c.o
+[15/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_ops.c.o
+[16/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_history.c.o
+[17/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/animation/smil.c.o
+[18/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_text_insert.c.o
+[19/111] Building C object CMakeFiles/vexel_document.dir/src/document/document_edit_piece_table.c.o
+[20/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/animation/smil_tracks.c.o
+[21/111] Building C object CMakeFiles/vexel_xml.dir/src/svg/xml/xml_tokenizer.c.o
+[22/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/color.c.o
+[23/111] Linking C static library libvexel_base.a
+[24/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape_clip_apply.c.o
+[25/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/animation/motion_path.c.o
+[26/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/css/css.c.o
+[27/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/animation/evaluate.c.o
+[28/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/viewport.c.o
+[29/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape_alloc.c.o
+[30/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape.c.o
+[31/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/reference/reference.c.o
+[32/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/document.c.o
+[33/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/transform.c.o
+[34/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape_style.c.o
+[35/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/clip/clip.c.o
+[36/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render.c.o
+[37/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape_geometry.c.o
+[38/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse.c.o
+[39/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/paint/paint.c.o
+[40/111] Linking C static library libvexel_xml.a
+[41/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_animation_clips.c.o
+[42/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_group.c.o
+[43/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_animation.c.o
+[44/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_sample.c.o
+[45/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/tile.c.o
+[46/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_stroke.c.o
+[47/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_stroke_grid.c.o
+[48/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline.c.o
+[49/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_dash_cache.c.o
+[50/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape_custom.c.o
+[51/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse_use.c.o
+[52/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/text.c.o
+[53/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/text_cache.c.o
+[54/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/image.c.o
+[55/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/selection.c.o
+[56/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_bounds.c.o
+[57/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/traverse_switch.c.o
+[58/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/mask.c.o
+[59/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/filter.c.o
+[60/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/shape_path.c.o
+[61/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/decode.c.o
+[62/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/ignored.c.o
+[63/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/pattern.c.o
+[64/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/shape/marker.c.o
+[65/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_fill.c.o
+[66/111] Building C object CMakeFiles/vexel_platform_media.dir/src/platform/media/platform_media.c.o
+[67/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_scanline_fill.c.o
+[68/111] Linking C static library libvexel_document.a
+[69/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_filter.c.o
+[70/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/animation/authoring_create.c.o
+[71/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_bundle.c.o
+[72/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_recovery.c.o
+[73/111] Building C object CMakeFiles/vexel_shape.dir/src/raster/shape_render_preflight.c.o
+[74/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_bundle_asset_overlay.c.o
+[75/111] Building C object CMakeFiles/vexel_shape.dir/src/svg/animation/authoring.c.o
+[76/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_file.c.o
+[77/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_timeline.c.o
+[78/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_drawing_asset.c.o
+[79/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_timeline_session.c.o
+[80/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_timeline_integration.c.o
+[81/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_timeline_json.c.o
+[82/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_tools.c.o
+[83/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol.c.o
+FAILED: [code=1] CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol.c.o 
+/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/mcp -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/document -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/platform -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/svg/xml -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/svg/index -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/base -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/geom -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/svg/shape -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/svg/css -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/svg/reference -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/raster -I/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/project -g -std=c17 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk -mmacosx-version-min=13.0 -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wshadow -Wstrict-prototypes -Wmissing-prototypes -Werror -MD -MT CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol.c.o -MF CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol.c.o.d -o CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol.c.o -c /Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/mcp/mcp_protocol.c
+/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/async-task-protocol/src/mcp/mcp_protocol.c:206:13: error: unused function 'payload_is_task' [-Werror,-Wunused-function]
+  206 | static bool payload_is_task(const char *data, size_t length)
+      |             ^~~~~~~~~~~~~~~
+1 error generated.
+[84/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_animation_render.c.o
+[85/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_protocol_async.c.o
+[86/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_json.c.o
+[87/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_socket.c.o
+[88/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker_tools.c.o
+[89/111] Building C object CMakeFiles/vexel_project.dir/src/project/project_timeline_edit.c.o
+[90/111] Linking C static library libvexel_shape.a
+[91/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker.c.o
+[92/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_access.c.o
+[93/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_export_snapshot.c.o
+[94/111] Building C object CMakeFiles/vexel_mcp.dir/src/app/media_providers.c.o
+[95/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker_docs.c.o
+[96/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker_native_timeline.c.o
+[97/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker_edit.c.o
+[98/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker_animation.c.o
+[99/111] Building C object CMakeFiles/vexel_mcp.dir/src/mcp/mcp_broker_render.c.o
+[100/111] Building OBJC object CMakeFiles/vexel_platform_media.dir/src/platform/media/platform_animation.m.o
+[101/111] Building OBJC object CMakeFiles/vexel_platform_media.dir/src/platform/media/platform_image.m.o
+[102/111] Building OBJC object CMakeFiles/vexel_platform_media.dir/src/platform/media/platform_text.m.o
+ninja: build stopped: subcommand failed.

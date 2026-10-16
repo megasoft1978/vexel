@@ -1,0 +1,10 @@
+COMMAND: python3 scripts/wo_validate.py WO-RUST-GOAL-05 --ready
+EXIT: 0
+valid WO-RUST-GOAL-05 revision 1 sha256 f97c2d5217e599cfe7bb556d8732020aa85d99858fefd3999276afff29731bf9
+
+COMMAND: python3 scripts/ledger.py validate ledger.jsonl
+EXIT: 0
+valid ledger: 1361 entries
+
+COMMAND: git diff --check
+EXIT: 0

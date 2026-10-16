@@ -1,0 +1,11 @@
+{
+  "name": "source-save",
+  "wo": "WO-RUST-SOURCE-SAVE-01",
+  "pid": 85155,
+  "model": "gpt-6-luna",
+  "effort": "high",
+  "status": "completed",
+  "started_epoch": 1791978248.663806,
+  "exit_code": 0,
+  "duration_seconds": 220.17568612098694
+}

@@ -1,0 +1,17 @@
+{
+  "allowed_changed_files": [
+    "rust/crates/vexel-scene/src/builder.rs",
+    "rust/crates/vexel-scene/src/decode_initialization.rs",
+    "rust/crates/vexel-scene/src/draft.rs",
+    "rust/crates/vexel-scene/src/request.rs",
+    "rust/crates/vexel-scene/tests/child_request_contracts.rs"
+  ],
+  "source_line_counts": {
+    "rust/crates/vexel-scene/src/builder.rs": 406,
+    "rust/crates/vexel-scene/src/decode_initialization.rs": 465,
+    "rust/crates/vexel-scene/src/draft.rs": 142,
+    "rust/crates/vexel-scene/src/request.rs": 229,
+    "rust/crates/vexel-scene/tests/child_request_contracts.rs": 683
+  },
+  "over_800_lines": []
+}

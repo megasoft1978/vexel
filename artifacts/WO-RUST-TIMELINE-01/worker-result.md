@@ -1,0 +1,7 @@
+Implemented the frozen timeline decoder scope in the crate. It includes the bounded streaming JSON reader, schema and reference validation, source-borrowing immutable views, accessors, sequential iteration, string copying, and native-v1 classification. The general JSON DOM limits are not applied to timeline input.
+
+**Verification:** package check passed; all 12 focused tests passed, including 100,000-item iteration, track and total-item limits, cancellation, and source spans. The work-order validator, 1,143-entry ledger validator, and `git diff --check` passed. All six named legacy references match their recorded dirty-overlay hashes.
+
+The required [parity map](</Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/artifacts/WO-RUST-TIMELINE-01/parity-map.json>), [verification record](</Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/artifacts/WO-RUST-TIMELINE-01/verification.txt>), and [180-word result summary](</Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust3-timeline/artifacts/WO-RUST-TIMELINE-01/result-summary.md>) are in the work-order artifact directory. The legacy header declares `project_timeline_json_classify`, but the named C source has no implementation; the Rust behavior follows the declared schema/version contract and this is documented in the parity map.
+
+Changes remain uncommitted and are a candidate for coordinator review. Native editing, session, playback, rendering, app integration, and the full Rust product remain outside this port.

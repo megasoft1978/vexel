@@ -1,0 +1,32 @@
+{
+  "status": "pass",
+  "checks": [
+    {
+      "command": "cargo +stable generate-lockfile --offline",
+      "exit_code": 0,
+      "output": "     Locking 18 packages to highest Rust 1.99 compatible versions\n"
+    },
+    {
+      "command": "cargo +stable check -p vexel-platform-apple --locked --offline",
+      "exit_code": 0,
+      "output": "    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.04s\n"
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-NATIVE-WINDOW-FEATURE-01 --ready",
+      "exit_code": 0,
+      "output": "valid WO-RUST-NATIVE-WINDOW-FEATURE-01 revision 1 sha256 841597b97d1d53fa680a9f84e2b8ee6450e0e1860617011390b1a4a4405c4c9a\n"
+    },
+    {
+      "command": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit_code": 0,
+      "output": "valid ledger: 1394 entries\n"
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "output": ""
+    }
+  ],
+  "scoped_native_tests": "verification-tests.txt: original 5 integration plus 2 compile-fail passed",
+  "graph": "graph-verification.json: existing 16 active /18 lock, pins/checksums unchanged"
+}

@@ -1,0 +1,7 @@
+**REJECT**
+
+- **TreeRow preflight still misses the maximum indent offset.** [`widget_bounds_preflight`](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/rust/crates/vexel-ui/src/widget_canvas.rs:47) reserves 128 points, but [`draw_tree_row`](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/rust/crates/vexel-ui/src/widget_canvas.rs:81) adds the uncapped `u8` indent at 14 points per level. A near-`u32::MAX` x coordinate can pass preflight with `indent = 255`, then overflow while computing `start` and panic in debug builds. The new direct TreeRow test uses indent 6, so it misses this case.
+
+- **The shared 128-point preflight rejects valid geometry.** [`widget_paint`](/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust4-widgets/rust/crates/vexel-ui/src/widget_canvas.rs:50) applies it to every kind. For example, a nonfocused Label at `x = u32::MAX - 64`, width 16 has a nonoverflowing rectangle, but is rejected because the unrelated 128-point allowance overflows. The C path can scale that rectangle at scale 1 and pass it to the text callback. This narrows accepted geometry.
+
+The earlier three fixes and their regression assertions remain present; the crate manifest uses only the existing local `vexel-base` and `vexel-raster` dependencies.

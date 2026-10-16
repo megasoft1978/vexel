@@ -1,0 +1,12 @@
+{
+  "path": "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.0.sdk",
+  "version": "27.0",
+  "settings_sha256": "7b93ad7e534cc4b31c6a4e39d19b5e0288acf2168c2649479a796d1cb51939fb",
+  "target": "arm64-apple-darwin; macOS13+",
+  "runtime_verified": false,
+  "binding_generator_sdk_provenance": null,
+  "notes": [
+    "xcrun emitted DVTFilePathFSEvents and DARWIN_USER_CACHE_DIR warnings but returned path/version successfully.",
+    "Installed SDK declaration checks do not prove macOS13 runtime behavior."
+  ]
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "name": "path-geometry",
+    "wo": "WO-RUST-SVG-PATH-GEOMETRY-01",
+    "pid": 60795,
+    "worktree": "/Users/megasoft78/Desktop/Freelance/vexel/.worktrees/rust-path-geometry",
+    "model": "gpt-6-luna",
+    "effort": "medium",
+    "status": "running",
+    "overlay_file_count": 1573
+  }
+]

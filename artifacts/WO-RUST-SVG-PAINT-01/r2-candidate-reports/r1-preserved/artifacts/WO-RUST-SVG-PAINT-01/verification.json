@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "work_order": "WO-RUST-SVG-PAINT-01",
+  "candidate_only": true,
+  "seeded_contracts": [
+    "artifacts/WO-RUST-SVG-PAINT-01/publication-seed.json",
+    "artifacts/WO-RUST-SVG-PAINT-01/consumer-seed.json",
+    "artifacts/WO-RUST-SVG-PAINT-01/publication-api.md"
+  ],
+  "commands": [
+    {
+      "command": "cargo +stable check -p vexel-svg-paint --locked --offline",
+      "exit_code": 0,
+      "result": "Finished dev profile successfully; no warnings."
+    },
+    {
+      "command": "cargo +stable test -p vexel-svg-paint --locked --offline",
+      "exit_code": 0,
+      "result": "6 paint_parity tests passed; 10 resolver_parity tests passed; 0 failed. Library and doc-test targets each contain 0 tests."
+    },
+    {
+      "command": "rustfmt --check --edition 2024 rust/crates/vexel-svg-paint/src/lib.rs rust/crates/vexel-svg-paint/src/paint.rs rust/crates/vexel-svg-paint/src/control.rs rust/crates/vexel-svg-paint/src/cache.rs rust/crates/vexel-svg-paint/src/gradient_data.rs rust/crates/vexel-svg-paint/src/resolver.rs rust/crates/vexel-svg-paint/tests/paint_parity.rs rust/crates/vexel-svg-paint/tests/resolver_parity.rs",
+      "exit_code": 0,
+      "result": "All owned Rust source and test files formatted."
+    },
+    {
+      "command": "python3 scripts/wo_validate.py WO-RUST-SVG-PAINT-01 --ready",
+      "exit_code": 0,
+      "result": "valid WO-RUST-SVG-PAINT-01 revision 1 sha256 971265fa4ce5b36ad88602c6a8b523fbdd2c998fbc7a511d2717186201cf25f3"
+    }
+  ],
+  "focused_tests": [
+    "edge_span_preserves_empty_and_invalid_range_contract",
+    "linear_sampling_matches_lround_interpolation_at_midpoint",
+    "exact_gradient_sample_matches_frozen_pixel_channel_oracle",
+    "invalid_stop_ranges_and_order_leave_destination_untouched",
+    "repeat_reflect_degenerate_linear_and_invalid_geometry_match_sampler_rules",
+    "radial_focal_degenerate_fallback_and_negative_discriminant_no_write",
+    "resolves_href_inheritance_current_color_transform_and_scene_stop_sharing",
+    "radial_defaults_and_pattern_classification_are_explicit",
+    "href_cycles_bad_stop_order_and_empty_edges_fail_without_fake_success",
+    "resolver_preserves_fill_offsets_and_cancellation_kind",
+    "bound_xlink_and_child_stop_override_follow_the_nearest_gradient",
+    "cache_admits_exact_global_stop_limit_and_rejects_the_next_template",
+    "one_gradient_cannot_exceed_256_stops",
+    "external_references_and_singular_gradient_transforms_are_rejected_at_fill",
+    "current_color_without_a_computed_color_uses_opaque_black",
+    "cached_gradient_scan_original_scale_and_css_stop_cascade"
+  ],
+  "catalog_counts": {
+    "symbols": 23,
+    "algorithms": 27,
+    "original_cases": 6
+  },
+  "source_line_counts": {
+    "rust/crates/vexel-svg-paint/src/lib.rs": 13,
+    "rust/crates/vexel-svg-paint/src/paint.rs": 159,
+    "rust/crates/vexel-svg-paint/src/control.rs": 70,
+    "rust/crates/vexel-svg-paint/src/cache.rs": 380,
+    "rust/crates/vexel-svg-paint/src/gradient_data.rs": 410,
+    "rust/crates/vexel-svg-paint/src/resolver.rs": 406,
+    "rust/crates/vexel-svg-paint/tests/paint_parity.rs": 176,
+    "rust/crates/vexel-svg-paint/tests/resolver_parity.rs": 601
+  },
+  "scope_sha256": "7c12c639e75d7974da41ec91737f5a3086c785c757f51d6ac2f21d7ae5cc5972",
+  "owned_file_sha256": {
+    "rust/crates/vexel-svg-paint/README.md": "91b33611e9f306760a65073d1cda01754bfe9685dbefdb27937bfa42b821f2be",
+    "rust/crates/vexel-svg-paint/src/lib.rs": "563dabd2745b3fa5d3ff607265f545806b499c2fe65e1a2e3a1e2451732e5a5e",
+    "rust/crates/vexel-svg-paint/src/paint.rs": "b71c1690f5871e055528a1b30cd58ef4084225893db20fed64db388158f3850f",
+    "rust/crates/vexel-svg-paint/src/control.rs": "409bbef938480bae1c82541ec774fb467cd2ef61b9a834b3d4c493db7ddc3d6a",
+    "rust/crates/vexel-svg-paint/src/cache.rs": "e61f12873004b3120c48065536c4f22fbdf22df0c2dd231f64837da205d7e13a",
+    "rust/crates/vexel-svg-paint/src/gradient_data.rs": "9e7537fdc883dc0770296ad642f218a7216460bb1617bca78512fdeb9f685144",
+    "rust/crates/vexel-svg-paint/src/resolver.rs": "b95ce40b4c35a908fd3979e4d34574c5e584ecc545b161853596ee42b2a49182",
+    "rust/crates/vexel-svg-paint/tests/paint_parity.rs": "fa4f73e033f8ba25d8bcad704f5ca94dd3b0182e30ef67a9e152dada20f1168f",
+    "rust/crates/vexel-svg-paint/tests/resolver_parity.rs": "fa01032b25e26d02d272ceee182cdc8bdd65ad7afa4a152bcd47e5183e76a9fe",
+    "artifacts/WO-RUST-SVG-PAINT-01/parity-map.json": "b216835b7a941a848c947db362255bef4c9fd1f75db3bb96f8b154b468d9ebb3",
+    "artifacts/WO-RUST-SVG-PAINT-01/coverage.json": "4fb06262ae73ff1238225e0d63fd656bf13dfb7f5dc4a8a1e271c2535d66ef74",
+    "artifacts/WO-RUST-SVG-PAINT-01/result.md": "06f4443ceffb27d38f50df0cae8fd4aa7d96d1013f6a7ed3574e92de59b7e63b",
+    "artifacts/WO-RUST-SVG-PAINT-01/last-message.md": "a3419913369e7aa692b153a655a864bfc0a40fe10d5ccd02ccbf6c29a65159c5",
+    "artifacts/WO-RUST-SVG-PAINT-01/repair-last-message.md": "91b6e58225bc03bde35d5986da2047e50ad4a018d126ffc48d672d888827e68a"
+  },
+  "source_audit": {
+    "unsafe_added": false,
+    "new_dependencies": false,
+    "source_or_oracle_changes": false,
+    "each_owned_rust_file_under_800_lines": true
+  },
+  "protected_path_audit": "Worker writes are confined to assigned crate source/new tests/README and own work-order reports. Coordinator/root must perform the independent full protected-path audit.",
+  "original_mixed_renderer_suites": "Preserved and not run. Raster/compositing, decoder shape-count, and application assertions require actual downstream DECODE/native-provider/RENDER composition.",
+  "accepted_publication_proof": "Seeded SceneBuilder contract includes accepted 40,000-instance/two-stop and 32,768-template/65,536-stop publication evidence; this crate command did not rerun the independent shared-scene suite.",
+  "result_word_count": 232,
+  "acceptance": "Pending independent root review, fresh main focused checks, and protected-path audit.",
+  "immutable_input_sha256": {
+    "artifacts/WO-RUST-SVG-PAINT-01/scope.json": "7c12c639e75d7974da41ec91737f5a3086c785c757f51d6ac2f21d7ae5cc5972",
+    "artifacts/WO-RUST-SVG-PAINT-01/publication-seed.json": "357cfd3a371f270c60348759eb031cbd86125f34ee925b949b4cc25b965767eb",
+    "artifacts/WO-RUST-SVG-PAINT-01/consumer-seed.json": "73f1469561067e4955c0f607a0824d8fe91eb9aa9a71efb3997d4a44cd0ee3d5",
+    "artifacts/WO-RUST-SVG-PAINT-01/publication-api.md": "c1325daab9a8a0c2dcd9632907c8de7d2e38ff26fd541106f0dfdf4358683032"
+  }
+}
