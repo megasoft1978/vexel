@@ -1,0 +1,15 @@
+{
+  "check": "pass (cargo +stable check -p vexel-app -p vexel-svg-decode -p vexel-svg-engine --locked --offline), logs/check.txt",
+  "test": "pass: 425 passed, 0 failed, 1 ignored (pre-existing) across vexel-app, vexel-svg-decode, vexel-svg-engine; 27 tests added (10 png/inflate, 9 compose_unsupported, 6 marker_instances, 2 definition_bounds); 2 existing marker fail-closed tests rewritten in place; logs/test.txt",
+  "fmt": "pass (cargo +stable fmt --manifest-path Cargo.toml --package vexel-app --package vexel-svg-decode --package vexel-svg-engine -- --check); baseline failed on tests/mask_group.rs and tests/filter_decode.rs, formatted (whitespace only)",
+  "sweep_in_repo": "ok 24, unsupported 0, other 0 (before: ok 23, unsupported 1); in-repo/report.md",
+  "sweep_external": "ok 6, unsupported 0, limit 29, xml 2, timeout 2, skipped 19 (before: ok 5, unsupported 2, limit 29, xml 2, timeout 1, skipped 19); external/report.md. The frozen command omits --pins, which the tool requires, so the same pins.json was passed",
+  "wo_validate": "valid WO-RUST-CORPUS-UNSUPPORTED-01 revision 1",
+  "ledger": "valid ledger: 1944 entries",
+  "diff_check": "pass (git diff --check, tracked files)",
+  "cargo_tree": "no Cargo.toml or Cargo.lock change; logs/cargo-tree.txt",
+  "unsafe": "none (vexel-app is forbid(unsafe_code); no `unsafe` in the new files)",
+  "line_limit": "all files under 800 lines (largest touched: tests_wire.rs 455)",
+  "parity": "marker-end, marker-mid-end, image-png-rgba byte-exact vs legacy C; image-png-types max delta 1, 20 channel values (0.33% of pixels); fixtures rust/fixtures/unsupported",
+  "logs": ["logs/check.txt", "logs/test.txt", "logs/fmt.txt", "logs/cargo-tree.txt", "logs/in-repo-run.txt", "logs/external-run.txt"]
+}

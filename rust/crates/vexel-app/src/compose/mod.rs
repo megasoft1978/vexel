@@ -10,9 +10,11 @@
 mod clips;
 mod decode;
 mod error;
+mod inflate;
 mod launch;
 mod layers;
 mod open;
+mod png;
 mod pointer;
 mod present;
 mod render_scene;
@@ -25,6 +27,8 @@ mod worker;
 mod tests;
 #[cfg(test)]
 mod tests_chrome;
+#[cfg(test)]
+mod tests_image;
 #[cfg(test)]
 mod tests_open;
 #[cfg(test)]

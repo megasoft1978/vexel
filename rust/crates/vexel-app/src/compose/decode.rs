@@ -47,7 +47,8 @@ impl WorkControl for CancelControl<'_> {
 }
 
 /// Present only so the decoder reaches the engine's own providers: text goes
-/// through the engine's `TextLayoutProvider`, and images stay unsupported.
+/// through the engine's `TextLayoutProvider`; data-URI PNG images decode here
+/// (JPEG and interlaced PNG stay unsupported).
 pub(crate) struct Gate;
 
 impl MediaProvider for Gate {
@@ -60,10 +61,11 @@ impl MediaProvider for Gate {
     }
     fn decode_image(
         &mut self,
-        _: &[u8],
-        _: &mut dyn WorkControl,
+        encoded: &[u8],
+        control: &mut dyn WorkControl,
     ) -> Result<ImagePixels, MediaError> {
-        Err(MediaError::Unsupported)
+        control.checkpoint().map_err(|_| MediaError::Limit)?;
+        super::png::decode(encoded)
     }
 }
 

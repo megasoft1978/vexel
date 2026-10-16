@@ -208,6 +208,8 @@ impl<'src> Decoder<'src, '_> {
                 offset,
             });
         }
-        Ok([b[0], b[1], b[2] - b[0], b[3] - b[1]])
+        // Planners read `[x0, y0, x1, y1]`; width/height here made any shape
+        // with x0 > width or y0 > height fail the planner's bounds check.
+        Ok(b)
     }
 }

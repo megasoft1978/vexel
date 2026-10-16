@@ -37,5 +37,8 @@ fn unreferenced_mask_still_preserved_and_invalid_reference_still_fails() {
     let graph = decode_ok(&unreferenced);
     assert!(graph.root().masks.is_empty() && graph.root().groups.is_empty());
     let missing = format!("{HEAD}<g mask='url(#nope)'><rect width='8' height='8'/></g></svg>");
-    assert_eq!(decode_err(&missing).kind, vexel_scene::ErrorKind::Unsupported);
+    assert_eq!(
+        decode_err(&missing).kind,
+        vexel_scene::ErrorKind::Unsupported
+    );
 }

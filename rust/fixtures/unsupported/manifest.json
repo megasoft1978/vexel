@@ -1,0 +1,36 @@
+{
+  "generator": "svgworkbench debug build (legacy C, frozen), native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha)",
+  "legacy_tag": "legacy-c-final",
+  "binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "note": "goldens for WO-RUST-CORPUS-UNSUPPORTED-01; marker-start.svg has no golden (the legacy C draws the start marker twice per subpath) and is checked against a hand-derived oracle",
+  "goldens": [
+    {
+      "fixture_id": "marker-end",
+      "source_sha256": "b09bfe32f49efe81b71803d52d941ed6550dfecc90ca9f885f9925991b7a275b",
+      "ppm_sha256": "99266a250c7eb24b476a8913c3ca5c264aa48f5fe31c3e728a6bcf0a36bf16bc",
+      "size": "64 48",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "marker-mid-end",
+      "source_sha256": "1c4ad378602d5465ea933cd0f154915743dd5e87a816250df9b91978e080fe08",
+      "ppm_sha256": "1e736a4ed832efa8fcf68a9f81b7a7e0949af868b79a2823b43e3baaea74b947",
+      "size": "96 64",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "image-png-rgba",
+      "source_sha256": "757b0118bed4275f2efd6504d001d223a68b8459e3c6369b3b3e72eb253ad6be",
+      "ppm_sha256": "395e5e263527c26edf7b614181ced503c7b43ac38c6779f878e851b70b06e970",
+      "size": "64 48",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "image-png-types",
+      "source_sha256": "84cb6c4569a7659053fbb9e4d151bb3178401af46129d008726bb02e91febac1",
+      "ppm_sha256": "0aeba762316472e54be0768fa5abfcb9501fe264cb8847567fa2f72935511773",
+      "size": "96 64",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}

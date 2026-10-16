@@ -76,13 +76,22 @@ fn mask_unreferenced_preserved_untouched_with_shapes_published() {
     ));
 }
 
+// WO-RUST-CORPUS-UNSUPPORTED-01 deliberately lifts the earlier fail-closed behaviour: a
+// referenced marker now decodes and publishes one instance per placement (see
+// tests/marker_instances.rs for placement geometry).
 #[test]
-fn marker_referenced_fail_closed_unsupported_at_marker_element() {
+fn marker_referenced_decodes_and_publishes_an_instance() {
     let svg = format!(
         "{HEAD}<defs><marker id='m' markerWidth='2' markerHeight='2'><rect width='1' height='1'/></marker></defs>\
 <path d='M0 0L8 8' stroke='red' marker-end='url(#m)'/></svg>"
     );
-    assert_fail_closed_at_element(&svg, "marker");
+    let graph = decode_ok(&svg);
+    assert_eq!(graph.source(), svg.as_bytes(), "source bytes untouched");
+    assert_eq!(
+        graph.root().shapes.len(),
+        2,
+        "host path plus one marker instance"
+    );
 }
 
 #[test]

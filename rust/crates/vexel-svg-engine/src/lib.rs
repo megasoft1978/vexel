@@ -3,8 +3,12 @@
 //!
 //! Gradients resolve through the retained paint cache and are published via the
 //! scene's borrowed cached-paint handoff. Definitions use the real planner.
-//! Text and images currently return source-offset `Unsupported` diagnostics.
+//! Text without a layout provider returns a source-offset `Unsupported`
+//! diagnostic; images decode through the session's `MediaProvider`, and
+//! markers are instanced once per placement (`marker.rs`).
 
+mod image;
+mod marker;
 mod text;
 pub use text::TextLayoutProvider;
 
@@ -126,14 +130,6 @@ impl vexel_scene::DefinitionPlanner for SvgEngineOperations {
         style: &CssPaint<'src>,
         control: &mut dyn WorkControl,
     ) -> Result<ProductionDefinitionPlan<'src>> {
-        // V1 subset policy: markers are deferred and fail closed at the
-        // definition element (marker output is not subset-verified).
-        if matches!(kind, DefinitionKind::Marker) {
-            return Err(Diagnostic {
-                kind: ErrorKind::Unsupported,
-                offset: definition_offset(ctx, element),
-            });
-        }
         if kind == DefinitionKind::Clip {
             self.clip_plan_attempted = true;
             self.clip_plan_definition = Some(element.0);
@@ -152,6 +148,12 @@ impl vexel_scene::DefinitionPlanner for SvgEngineOperations {
             style,
             control,
         );
+        let planned = match planned {
+            Ok(plan) if kind == DefinitionKind::Marker => {
+                marker::instance(ctx, element, owner, transform, style, plan, control)
+            }
+            other => other,
+        };
         // The planner reports some unsupported owners with offset 0; point the
         // typed diagnostic at the definition element instead.
         let planned = planned.map_err(|error| match error.kind {
@@ -263,10 +265,20 @@ impl vexel_svg_decode::DecoderProductionOperations for SvgEngineOperations {
         &mut self,
         request: ImageDecodeRequest<'_, '_>,
         builder: &mut SceneBuilder,
-        _: &DraftToken,
+        draft: &DraftToken,
         control: &mut dyn WorkControl,
     ) -> Result<ShapeId> {
-        MediaDecodeOperations::decode_image(self, request, builder, control)
+        // Data-URI PNG/JPEG decode through the session's media provider; an
+        // unsupported or undecodable payload stays a typed `Unsupported`
+        // diagnostic at the image element.
+        let offset = media_offset(&request.element);
+        image::decode(request, builder, draft, control).map_err(|error| match error.kind {
+            ErrorKind::Unsupported => Diagnostic {
+                kind: ErrorKind::Unsupported,
+                offset,
+            },
+            _ => error,
+        })
     }
 }
 

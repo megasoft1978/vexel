@@ -1,0 +1,8 @@
+{
+  "AC1": "pass: causes.md lists the in-repo 7 and external 7 unsupported files with the cause (element, byte offset) at the reference report and at current HEAD",
+  "AC2": "pass: external unsupported 2 -> 0 (embedded_t1 ok; inkscape_t1 renders but exceeds the 60 s sweep timeout, residual named in result.md: quadratic scene validation for non-batched shapes, outside scope); text_t1 residual is the TextCommands limit in vexel-scene (protected); the other five of the order's seven are ok; in-repo 7 all ok",
+  "AC3": "pass: per-file before/after diff in causes.md, 0 previously-ok files regressed in either sweep; in-repo ok 24 >= 17",
+  "AC4": "pass: every new construct has fixtures in rust/fixtures/unsupported and tests (compose_unsupported.rs, marker_instances.rs, definition_bounds.rs, tests_image.rs); no existing golden touched; test count 398 -> 425; two marker fail-closed assertions were superseded in place and are listed in changed-path-audit.json",
+  "AC5": "pass: no Cargo.toml/Cargo.lock change, cargo tree log, no unsafe",
+  "AC6": "pass: result.md"
+}

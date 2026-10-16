@@ -1,0 +1,69 @@
+    Finished `release` profile [optimized] target(s) in 0.03s
+     Running `.cache/target/aarch64-apple-darwin/release/vexel-corpus run --manifest /Users/megasoft78/Desktop/Freelance/vexel-corpus-real/manifest.json --pins rust/tools/vexel-corpus/pins.json --out artifacts/WO-RUST-CORPUS-UNSUPPORTED-01/external`
+generated-cad_t1                         ok           43768 ms
+generated-cad_t2                         limit        15 ms
+generated-cad_t3                         skipped      0 ms
+generated-cnc_t1                         timeout      60014 ms
+generated-cnc_t2                         limit        15 ms
+generated-cnc_t3                         skipped      0 ms
+generated-embedded_t1                    ok           1186 ms
+generated-embedded_t2                    limit        15 ms
+generated-embedded_t3                    skipped      0 ms
+generated-giant_path_t1                  ok           54660 ms
+generated-giant_path_t2                  limit        331 ms
+generated-giant_path_t3                  skipped      0 ms
+generated-giant_path_t4                  skipped      0 ms
+generated-inkscape_t1                    timeout      60014 ms
+generated-inkscape_t2                    limit        15 ms
+generated-inkscape_t3                    skipped      0 ms
+generated-map_t1                         xml          2241 ms
+generated-map_t2                         limit        15 ms
+generated-map_t3                         skipped      0 ms
+generated-nested_t1                      xml          15 ms
+generated-nested_t2                      limit        10 ms
+generated-nested_t3                      skipped      0 ms
+generated-science_t1                     ok           4301 ms
+generated-science_t2                     limit        15 ms
+generated-science_t3                     skipped      0 ms
+generated-science_t4                     skipped      0 ms
+generated-text_t1                        limit        18546 ms
+generated-text_t2                        limit        10 ms
+generated-text_t3                        skipped      0 ms
+generated-use_t1                         limit        6502 ms
+generated-use_t2                         limit        15 ms
+generated-use_t3                         skipped      0 ms
+generated-use_t4                         skipped      0 ms
+commons-1-42-polytope-7-cube-svg         limit        15 ms
+commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg limit        15 ms
+commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg limit        15 ms
+commons-amhara-topographic-map-svg       limit        12 ms
+commons-bulgaria-in-1915-geographic-map-en-svg limit        15 ms
+commons-cambodia-geographic-map-en-svg   limit        15 ms
+commons-chuaattractormodified-svg        limit        15 ms
+commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg limit        15 ms
+commons-coat-of-arms-of-villa-alemana-svg skipped      0 ms
+commons-columbiarivermap-svg             limit        15 ms
+commons-comunas-occitanas-d-alemanha-svg skipped      0 ms
+commons-corsica-geographic-map-svg       limit        11 ms
+commons-corvuscoraxiucn-svg              limit        13 ms
+commons-dibujo-piu-svg                   skipped      0 ms
+commons-dukesofhohenbergarms-svg         limit        15 ms
+commons-france-osm-mapnik-svg            limit        15 ms
+commons-gaussian-2d-svg                  limit        14 ms
+commons-geographic-map-of-norway-sweden-finland-and-denmark-svg limit        10 ms
+commons-germany-districts-municipalities-location-map-2013-svg limit        15 ms
+commons-ideogram-human-chromosome-20-svg limit        15 ms
+commons-koppen-geiger-map-a-present-svg  skipped      0 ms
+commons-municipalities-of-italy-svg      skipped      0 ms
+commons-spain-languages-de-svg           skipped      0 ms
+natural-earth-world-map-blank            ok           99 ms
+natural-earth-world-map-countries        ok           171 ms
+ok            6
+unsupported   0
+limit         29
+xml           2
+timeout       2
+rss_exceeded  0
+skipped       19
+crash         0
+guard_failed  0

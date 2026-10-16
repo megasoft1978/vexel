@@ -45,13 +45,14 @@ fn unreferenced_filter_is_preserved_untouched() {
     assert!(graph.root().filters.is_empty() && graph.root().groups.is_empty());
 }
 
+// Superseded by WO-RUST-CORPUS-UNSUPPORTED-01: referenced markers now decode.
 #[test]
-fn referenced_marker_still_fails_closed() {
+fn referenced_marker_decodes_with_one_instance() {
     let svg = format!(
         "{HEAD}<defs><marker id='m' markerWidth='2' markerHeight='2'><rect width='1' height='1'/></marker></defs>\
 <path d='M0 0L8 8' stroke='red' marker-end='url(#m)'/></svg>"
     );
-    assert_eq!(decode_err(&svg).kind, ErrorKind::Unsupported);
+    assert_eq!(decode_ok(&svg).root().shapes.len(), 2);
 }
 
 #[test]
@@ -71,6 +72,10 @@ fn unsupported_primitives_keep_typed_errors() {
         );
         let error = decode_err(&svg);
         assert_eq!(error.kind, kind, "{name}");
-        assert_eq!(error.offset, svg.find(&format!("<{name}")).unwrap() + 1, "{name}");
+        assert_eq!(
+            error.offset,
+            svg.find(&format!("<{name}")).unwrap() + 1,
+            "{name}"
+        );
     }
 }

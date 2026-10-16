@@ -1,0 +1,3 @@
+    Checking vexel-svg-engine v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a0ae07e739dc604c0/rust/crates/vexel-svg-engine)
+    Checking vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a0ae07e739dc604c0/rust/crates/vexel-app)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s

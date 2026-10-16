@@ -1,0 +1,31 @@
+{
+  "added": [
+    "rust/crates/vexel-app/src/compose/png.rs",
+    "rust/crates/vexel-app/src/compose/inflate.rs",
+    "rust/crates/vexel-app/src/compose/tests_image.rs",
+    "rust/crates/vexel-app/tests/compose_unsupported.rs",
+    "rust/crates/vexel-svg-engine/src/marker.rs",
+    "rust/crates/vexel-svg-engine/src/image.rs",
+    "rust/crates/vexel-svg-engine/tests/marker_instances.rs",
+    "rust/crates/vexel-svg-engine/tests/definition_bounds.rs",
+    "rust/fixtures/unsupported/** (5 svg, 4 C golden ppm, manifest.json)",
+    "artifacts/WO-RUST-CORPUS-UNSUPPORTED-01/**"
+  ],
+  "modified": [
+    "rust/crates/vexel-app/src/compose/decode.rs (Gate decodes PNG)",
+    "rust/crates/vexel-app/src/compose/mod.rs (module lines)",
+    "rust/crates/vexel-app/src/compose/shapes.rs (images as shared pattern tiles)",
+    "rust/crates/vexel-app/src/compose/render_scene.rs (fill_paint)",
+    "rust/crates/vexel-svg-decode/src/definition_links.rs (bounds convention fix)",
+    "rust/crates/vexel-svg-engine/src/lib.rs (marker instancing, image decode)",
+    "rust/crates/vexel-svg-engine/tests/deferred_features.rs (marker fail-closed test superseded)",
+    "rust/crates/vexel-svg-engine/tests/filter_decode.rs (marker fail-closed test superseded; rustfmt of one pre-existing line)",
+    "rust/crates/vexel-svg-engine/tests/mask_group.rs (rustfmt only)"
+  ],
+  "protected_untouched": true,
+  "decode_cap_untouched": "MAX_SVG_BYTES and the 8 MiB path in compose/decode.rs are unchanged (only the Gate impl and its doc comment differ)",
+  "superseded_expectations": [
+    {"test": "deferred_features::marker_referenced_fail_closed_unsupported_at_marker_element -> marker_referenced_decodes_and_publishes_an_instance", "before": "Unsupported at the marker element", "after": "decodes, host plus one marker instance", "reason": "markers instanced"},
+    {"test": "filter_decode::referenced_marker_still_fails_closed -> referenced_marker_decodes_with_one_instance", "before": "Unsupported", "after": "decodes, 2 shapes", "reason": "markers instanced"}
+  ]
+}

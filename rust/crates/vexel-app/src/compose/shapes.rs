@@ -1,7 +1,9 @@
 //! Owned render shapes extracted from a decoded scene, plus hit testing.
 
 use std::ops::Range;
+use std::sync::Arc;
 use vexel_geometry::Affine;
+use vexel_raster::Tile;
 use vexel_render::{
     DashedShape, FlatEdge, PatternPaint, RenderError, RenderShape, StrokeStyle, UnsupportedKind,
     from_scene_shape_with_pattern,
@@ -141,6 +143,70 @@ pub(crate) struct Prepared<'a> {
     pub fill: Option<PatternPaint<'a>>,
     pub stroke: Option<PatternPaint<'a>>,
     pub clip: Option<usize>,
+    /// Image fill: a padded copy of the pixels and the local-to-tile mapping.
+    pub image: Option<(Arc<Tile>, Affine)>,
+}
+
+impl Prepared<'_> {
+    /// The fill paint: its pattern, or the image drawn as a pattern tile.
+    pub fn fill_paint(&self) -> Option<PatternPaint<'_>> {
+        self.fill.or_else(|| {
+            self.image.as_ref().map(|(tile, inverse)| PatternPaint {
+                tile: Some(&**tile),
+                inverse: *inverse,
+                opacity: 1.0,
+            })
+        })
+    }
+}
+
+/// An `<image>` as a pattern tile: the pixels with a one pixel border of
+/// replicated edge pixels, so the pattern sampler's wrapping bilinear lookup
+/// equals the clamped lookup of the image sampler. `inverse` maps the shape's
+/// local space to tile pixels over the draw rectangle.
+fn image_tile(
+    image: &vexel_scene::Image,
+    shared: &mut Vec<Arc<Tile>>,
+) -> Result<(Arc<Tile>, Affine), RenderError> {
+    let pixels = &image.pixels;
+    pixels
+        .validate(0)
+        .map_err(|_| RenderError::InvalidGeometry)?;
+    let (w, h) = (pixels.width as usize, pixels.height as usize);
+    let mut rgba = Vec::new();
+    rgba.try_reserve_exact((w + 2) * (h + 2) * 4)
+        .map_err(|_| RenderError::LimitExceeded)?;
+    for y in 0..h + 2 {
+        let row = y.saturating_sub(1).min(h - 1) * pixels.row_stride;
+        for x in 0..w + 2 {
+            let at = row + x.saturating_sub(1).min(w - 1) * 4;
+            rgba.extend_from_slice(&pixels.rgba[at..at + 4]);
+        }
+    }
+    let tile = Tile::from_owned_rgba(w as u32 + 2, h as u32 + 2, rgba)
+        .map_err(|_| RenderError::LimitExceeded)?;
+    // Images with the same pixels share one tile: the renderer bounds the number
+    // of distinct tiles per batch, and a page of repeated icons is common.
+    let tile = match shared.iter().find(|t| {
+        t.width() == tile.width() && t.height() == tile.height() && t.rgba() == tile.rgba()
+    }) {
+        Some(existing) => existing.clone(),
+        None => {
+            let new = Arc::new(tile);
+            shared.push(new.clone());
+            new
+        }
+    };
+    let (sx, sy) = (w as f64 / image.draw_width, h as f64 / image.draw_height);
+    let inverse = Affine {
+        a: sx,
+        b: 0.0,
+        c: 0.0,
+        d: sy,
+        e: 1.0 - image.draw_x * sx,
+        f: 1.0 - image.draw_y * sy,
+    };
+    Ok((tile, inverse))
 }
 
 /// A scene shape is either drawn or skipped with the deferred feature named.
@@ -168,13 +234,14 @@ fn lift<'a, V: ViewportRead, A: Copy>(
 
 /// Prepares every shape of `scene` for the renderer. Solid, dashed, pattern
 /// and clipped shapes are drawn; a shape with a deferred feature (gradient,
-/// image, crisp edges, paint order, or a combination the renderer cannot
+/// crisp edges, paint order, or a combination the renderer cannot
 /// express such as a clipped or patterned dashed shape) is returned as
 /// [`Entry::Skip`], never dropped silently.
 pub(crate) fn prepare<'a, V: ViewportRead, A: Copy>(
     scene: &SceneView<'a, V, A>,
 ) -> Result<Vec<Entry<'a>>, RenderError> {
     let bad = RenderError::InvalidGeometry;
+    let mut shared_tiles: Vec<Arc<Tile>> = Vec::new();
     let mut entries = Vec::new();
     entries
         .try_reserve_exact(scene.shapes.len())
@@ -220,6 +287,17 @@ pub(crate) fn prepare<'a, V: ViewportRead, A: Copy>(
         let mut solid = *shape;
         solid.clip = None;
         solid.stroke.dash_values = TableRange::EMPTY;
+        let image = match shape.image {
+            Some(index) => {
+                solid.image = None;
+                solid.fill_paint = None;
+                Some(image_tile(
+                    scene.images.get(index).ok_or(bad)?,
+                    &mut shared_tiles,
+                )?)
+            }
+            None => None,
+        };
         let resolve = |id| scene.pattern(id);
         let converted = from_scene_shape_with_pattern(
             &solid,
@@ -239,7 +317,7 @@ pub(crate) fn prepare<'a, V: ViewportRead, A: Copy>(
             }
             Err(error) => return Err(error),
         };
-        let patterned = paint.fill.is_some() || paint.stroke.is_some();
+        let patterned = paint.fill.is_some() || paint.stroke.is_some() || image.is_some();
         let render = paint.shape;
         if render.stroke.is_some_and(|s| s.crisp_edges) {
             entries.push(Entry::Skip(UnsupportedKind::CrispEdges));
@@ -266,12 +344,13 @@ pub(crate) fn prepare<'a, V: ViewportRead, A: Copy>(
                 stroke: render.stroke,
                 transform: render.transform,
                 dashes: dashes.to_vec(),
-                fill_pattern: paint.fill.is_some(),
+                fill_pattern: paint.fill.is_some() || image.is_some(),
                 stroke_pattern: paint.stroke.is_some(),
             },
             fill: lift(scene, paint.fill, shape.fill_paint, scene.fill_paints),
             stroke: lift(scene, paint.stroke, shape.stroke_paint, scene.stroke_paints),
             clip: shape.clip.map(|clip| clip.index()),
+            image,
         }));
     }
     Ok(entries)

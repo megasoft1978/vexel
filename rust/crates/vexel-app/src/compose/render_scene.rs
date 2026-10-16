@@ -107,7 +107,7 @@ enum Kind {
 fn kind_of(prepared: &Prepared<'_>) -> Kind {
     if prepared.clip.is_some() {
         Kind::Clipped
-    } else if prepared.fill.is_some() || prepared.stroke.is_some() {
+    } else if prepared.fill_paint().is_some() || prepared.stroke.is_some() {
         Kind::Pattern
     } else if !prepared.shape.dashes.is_empty() {
         Kind::Dashed
@@ -377,7 +377,7 @@ impl Renderer<'_> {
                     .iter()
                     .map(|p| PatternPaintShape {
                         shape: p.shape.as_render(),
-                        fill: p.fill,
+                        fill: p.fill_paint(),
                         stroke: p.stroke,
                     })
                     .collect();
