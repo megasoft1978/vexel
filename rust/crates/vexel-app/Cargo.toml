@@ -31,4 +31,3 @@ vexel-base = { path = "../vexel-base" }
 vexel-svg-animation-frame = { path = "../vexel-svg-animation-frame" }
 vexel-gif = { path = "../vexel-gif" }
 vexel-mcp-access = { path = "../vexel-mcp-access" }
-vexel-svg-decode = { path = "../vexel-svg-decode" }
