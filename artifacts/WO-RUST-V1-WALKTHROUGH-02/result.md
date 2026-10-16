@@ -24,4 +24,4 @@ All native-window rows (manual-checklist.md M1-M10), including real-client `--gr
 `render_png` stays unrouted (no PNG encoder; MCP-TOOLS-01); not a cutline item.
 
 ## Git
-Sandbox hook refused git commands; work is left uncommitted on the branch.
+Committed by the coordinator (the worker sandbox refused git).
