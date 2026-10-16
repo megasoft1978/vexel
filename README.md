@@ -1,16 +1,32 @@
 # vexel
 
-vexel is a macOS-first, C17 SVG editor: a custom-drawn editing surface, an owned
-SVG parser and rasteriser, SMIL/CSS animation with a docked timeline, and an MCP
-server so an agent can drive the same editor. It aims to be a practical
-alternative to Inkscape for the documents it supports, with animation and agent
-access as first-class features (`docs/adr/0016-product-target-and-gates.md`).
+Vexel is a macOS-first vector drawing and editing application with a goal of
+becoming a high-quality alternative to Inkscape, while making 2D cartoon
+animation and live AI-agent collaboration first-class workflows. The product
+uses a custom-drawn interface and owned SVG parser/rasterizer. Claude Code,
+Codex, and compatible agents can work through a local MCP server against the
+same open document. See the [product goal and staged delivery plan](docs/product/vexel-goal-and-delivery-plan.md)
+and its governing [ADR](docs/adr/0018-product-goal-and-completion-gates.md).
 
 ## Status
 
-| Feature | Status |
-| --- | --- |
-| SVG editor with animation and MCP | Built |
+Vexel now has a versioned `.vexel` project with editable native animation
+timelines, drawing cels, property keys, playback, and local MCP control/export.
+These workflows are in progress rather than release-complete: SVG/Inkscape
+fidelity, large-document performance, project recovery/migration, broader
+animation authoring, and long-running MCP progress/cancellation remain open.
+The full UI/end-to-end acceptance pass stays at the end of feature work. See the
+[delivery plan](docs/product/vexel-goal-and-delivery-plan.md) for measured
+corpus status and the remaining work.
+
+## Product showcase
+
+The product goal includes example footage showing Codex creating a sample
+character and animating it through live MCP while Vexel updates on screen. The
+reviewed video (or coordinated short clips) will demonstrate accepted product
+capabilities on the product website and here. Recording and publication come
+after feature work and final UI/end-to-end and release acceptance; the showcase
+has not yet been recorded or published.
 
 ## Usage
 

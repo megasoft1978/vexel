@@ -11,8 +11,10 @@ verified, and recorded in `STATE.md` and the ledgers.
   shims, CI jobs, runners, packaging, or portability work.
 - Keep platform implementations behind `platform/` interfaces; do not add
   stubs for unsupported operating systems.
-- C17, MPL-2.0, minimal dependencies, custom-drawn UI, and an owned SVG
-  parser/rasterizer are locked decisions. See `docs/adr/`.
+- Rust for all first-party code is the active owner-approved migration target.
+  MPL-2.0, minimal pinned dependencies, custom-drawn UI, and an owned SVG
+  parser/rasterizer remain locked. Legacy C17 code is preserved as migration
+  reference; do not resume old C implementation orders. See ADR-0022.
 - Never read, fetch, or copy GPL SVG-editor source. Do not fetch external SVG
   resources from the application. Record provenance for external algorithms.
 
@@ -28,6 +30,9 @@ verified, and recorded in `STATE.md` and the ledgers.
 - `artifacts/`: work-order evidence; `build/` and `.cache/` are generated.
 
 ## Commands
+
+The commands below are the preserved legacy C workflow. Rust workspace/build
+commands become authoritative only through their implementation orders.
 
 - `./dev build`: configure and build Debug.
 - `./dev test-fast`: run local Python tests and validate the ledger.
@@ -50,3 +55,16 @@ Never weaken frozen acceptance tests or oracles. Run commands named by the
 active work order, then report exact evidence. Do not invent test or performance
 results. Keep source files focused and under 800 lines; split cohesive modules
 before they grow further.
+
+## Rust migration execution
+
+Follow `docs/product/rust-port-goal-and-plan.md` and ready Rust work orders.
+Multiple Luna codex exec processes are authorized, with isolated current-source
+worktrees and disjoint modules; coordinator alone changes shared manifests,
+locks, interfaces and ledgers. Use Low for inventory/docs, Medium for routine
+ports, High for parser/renderer/concurrency/unsafe FFI. Escalate only on a named
+problem; use the existing subscription allowance and no purchased credits.
+Preserve strict validation, original fixtures/assertions and byte-preserving
+round trips. Rust ownership replaces manual C ownership conventions; bounded
+inputs, checked arithmetic, safe cleanup and source limits still apply. Keep
+unsafe operations behind documented platform/FFI boundaries.

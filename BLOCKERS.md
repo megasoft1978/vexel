@@ -43,6 +43,15 @@ on later constructs. Next blocker per file: `artifacts/WO-CORPUS-01/residual-cau
 histogram delta: `artifacts/WO-CORPUS-01/delta.json`. The order's stop condition
 applies and the next step needs planner review.
 
+Update (WO-CORPUS-04 candidate, not yet accepted): a bounded, canvas-size-aware
+raster preflight work budget changes the pinned full-render sweep from 3/39 to
+5/39 (`generated-science_t1` and `generated-embedded_t2` now render; no former
+`ok` file regressed). The implementation and evidence are present in the
+working tree under `artifacts/WO-CORPUS-04/`. Focused CTest passed 88/88 and the
+two measured renders remain under 60 s and 2 GiB, but the remaining frozen
+verification commands and fresh read-only review have not run. Treat this as a
+candidate, not a cleared blocker, until that verification is complete.
+
 ### 3. Native goldens follow the host backing scale
 
 `native_ui_render` follows the host backing scale, so on a Retina host every
