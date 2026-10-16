@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="96" viewBox="0 0 128 96">
+<defs><filter id="f" ><feGaussianBlur in="SourceAlpha" result="b" stdDeviation="3"/><feOffset in="b" result="o" dx="6" dy="6"/><feFlood result="fl" flood-color="#222222" flood-opacity="0.6"/><feComposite in="fl" in2="o" result="sh" operator="in"/><feMerge ><feMergeNode in="sh"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<g filter="url(#f)"><rect x="20.5" y="18.25" width="44" height="34" fill="#d33"/><polygon points="60,40 100,44.5 84,78" fill="#36c" fill-opacity="0.5"/><rect x="88.25" y="12" width="24" height="16.5" fill="#fc0"/></g>
+</svg>

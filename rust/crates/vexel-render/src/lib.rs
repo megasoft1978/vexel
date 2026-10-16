@@ -19,6 +19,7 @@ mod clip;
 mod composite;
 mod dash;
 mod fill;
+pub mod filter;
 mod group;
 mod mask;
 mod pattern;

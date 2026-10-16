@@ -126,10 +126,9 @@ impl vexel_scene::DefinitionPlanner for SvgEngineOperations {
         style: &CssPaint<'src>,
         control: &mut dyn WorkControl,
     ) -> Result<ProductionDefinitionPlan<'src>> {
-        // V1 subset policy: filters and markers are deferred and fail closed at
-        // the definition element. (The planner/Decoder filter contracts disagree
-        // on the post operation, and marker output is not subset-verified.)
-        if matches!(kind, DefinitionKind::Filter | DefinitionKind::Marker) {
+        // V1 subset policy: markers are deferred and fail closed at the
+        // definition element (marker output is not subset-verified).
+        if matches!(kind, DefinitionKind::Marker) {
             return Err(Diagnostic {
                 kind: ErrorKind::Unsupported,
                 offset: definition_offset(ctx, element),
@@ -161,6 +160,20 @@ impl vexel_scene::DefinitionPlanner for SvgEngineOperations {
                 offset: definition_offset(ctx, element),
             },
             _ => error,
+        });
+        // Filter contract fix (WO-RUST-SVG-FILTER-01): the planner tags a filter
+        // plan `FinishGroup`, but the Decoder publishes the filter group itself
+        // (`publish_group_filter`) and rejects any post on the filter path with
+        // `InvalidArgument`. Drop the redundant post here.
+        let planned = planned.map(|plan| match plan {
+            ProductionDefinitionPlan::Definition(mut plan)
+                if kind == DefinitionKind::Filter
+                    && matches!(plan.post, PostOperation::FinishGroup(_)) =>
+            {
+                plan.post = PostOperation::None;
+                ProductionDefinitionPlan::Definition(plan)
+            }
+            other => other,
         });
         if kind == DefinitionKind::Clip && planned.is_ok() {
             self.successful_clip_plan = true;

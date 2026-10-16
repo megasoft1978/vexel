@@ -265,7 +265,6 @@ fn size_limits_are_typed() {
 #[test]
 fn filter_mask_and_text_fixtures_yield_unsupported() {
     for (name, feature) in [
-        ("unsupported-filter.svg", "filter"),
         ("unsupported-text.svg", "text"),
     ] {
         match compose_svg(&fixture(name), 40, 40) {
@@ -281,24 +280,27 @@ fn filter_mask_and_text_fixtures_yield_unsupported() {
             other => panic!("{name}: expected Unsupported({feature}), got {other:?}"),
         }
     }
-    // WO-RUST-SVG-MASK-01: a mask now decodes, so the compose-level rejection is for the
-    // resulting opacity group until the SVG wiring order routes groups to the renderer.
-    match compose_svg(&fixture("unsupported-mask.svg"), 40, 40) {
-        Err(ComposeError::Unsupported {
-            feature,
-            offset: None,
-            element: None,
-        }) => assert_eq!(feature, "opacity group"),
-        other => panic!("unsupported-mask.svg: expected Unsupported(opacity group), got {other:?}"),
+    // WO-RUST-SVG-MASK-01 / WO-RUST-SVG-FILTER-01: masks and filters now decode, so the
+    // compose-level rejection is for the resulting group until the SVG wiring order routes
+    // groups to the renderer.
+    for name in ["unsupported-mask.svg", "unsupported-filter.svg"] {
+        match compose_svg(&fixture(name), 40, 40) {
+            Err(ComposeError::Unsupported {
+                feature,
+                offset: None,
+                element: None,
+            }) => assert_eq!(feature, "opacity group", "{name}"),
+            other => panic!("{name}: expected Unsupported(opacity group), got {other:?}"),
+        }
     }
 }
 
 #[test]
 fn unsupported_error_text_names_feature_and_location() {
-    let error = compose_svg(&fixture("unsupported-filter.svg"), 40, 40).unwrap_err();
+    let error = compose_svg(&fixture("unsupported-text.svg"), 40, 40).unwrap_err();
     let text = error.to_string();
     assert!(
-        text.contains("unsupported in V1") && text.contains("filter"),
+        text.contains("unsupported in V1") && text.contains("text"),
         "{text}"
     );
 }

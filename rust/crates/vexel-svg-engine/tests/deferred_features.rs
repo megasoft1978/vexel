@@ -34,19 +34,8 @@ fn assert_preserved_untouched(svg: &str) {
     assert!(scene.groups.is_empty());
 }
 
-#[test]
-fn filter_referenced_fail_closed_unsupported_at_filter_element() {
-    let svg = format!(
-        "{HEAD}<defs><filter id='f'><feGaussianBlur stdDeviation='1'/></filter></defs>\
-<rect width='8' height='8' filter='url(#f)'/></svg>"
-    );
-    assert_fail_closed_at_element(&svg, "filter");
-    let svg_group = format!(
-        "{HEAD}<defs><filter id='f'><feOffset dx='1'/></filter></defs>\
-<g filter='url(#f)'><rect width='8' height='8'/></g></svg>"
-    );
-    assert_fail_closed_at_element(&svg_group, "filter");
-}
+// `filter_referenced_fail_closed_*` was superseded by WO-RUST-SVG-FILTER-01: a
+// referenced filter now decodes (see tests/filter_decode.rs).
 
 #[test]
 fn filter_unreferenced_preserved_untouched_with_shapes_published() {

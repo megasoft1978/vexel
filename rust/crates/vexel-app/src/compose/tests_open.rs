@@ -239,7 +239,7 @@ fn view_failures_are_typed_status_text_and_keep_the_last_document() {
     assert!(view.composed().is_some(), "previous document stays");
     let mut revision = 1000;
     for (name, expect) in [
-        ("unsupported-filter.svg", "unsupported in V1: filter"),
+        ("unsupported-filter.svg", "unsupported in V1: opacity group"),
         ("unsupported-mask.svg", "unsupported in V1: opacity group"),
         ("unsupported-text.svg", "unsupported in V1: text"),
     ] {

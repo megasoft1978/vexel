@@ -1,0 +1,25 @@
+[216/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_recovery_store.m.o
+[217/239] Linking C static library libvexel_mcp.a
+[218/239] Linking OBJC static library libvexel_platform_png.a
+[219/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window_files.m.o
+[220/239] Building OBJC object CMakeFiles/vexel_platform_text_ui.dir/src/platform/platform_text_ui.m.o
+[221/239] Building OBJC object CMakeFiles/vexel_platform_text_ui.dir/src/platform/macos/platform_accessibility.m.o
+[222/239] Linking C static library libvexel_platform_text_ui.a
+[223/239] Building OBJC object CMakeFiles/vexel_platform_dialog.dir/src/platform/macos/platform_dialog.m.o
+[224/239] Linking C static library libvexel_editor_ui.a
+[225/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_settings.m.o
+[226/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_recents.m.o
+[227/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_welcome.m.o
+[228/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_feedback.m.o
+[229/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window_geometry.m.o
+[230/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window.m.o
+[231/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window_native_shell.m.o
+[232/239] Linking OBJC static library libvexel_platform_dialog.a
+[233/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window_menus.m.o
+[234/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_window_animation.m.o
+[235/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_clipboard.m.o
+[236/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_menus.m.o
+[237/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o
+[238/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_cursor.m.o
+[239/239] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a', 'libvexel_platform_media.a', 'libvexel_shape.a', 'libvexel_ui_state.a'

@@ -1,0 +1,249 @@
+{
+  "generator": "svgworkbench debug build (legacy C, frozen), native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha); fixtures and the Rust case table in rust/crates/vexel-render/tests/common/filter_data.rs are generated from one table",
+  "legacy_tag": "legacy-c-final",
+  "legacy_tag_commit": "cb9661144907e909a0e7950243e9dc3fcfefb5bc",
+  "legacy_tag_commit_note": "value of .git/refs/tags/legacy-c-final read as a file (git was not usable in the worker sandbox); tree extracted outside the repo by the coordinator",
+  "binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "build_commands": [
+    "git archive legacy-c-final | tar -x -C <scratch>/legacy-c",
+    "cmake --preset mac-debug   (CMAKE_BUILD_TYPE=Debug, arm64, deployment target 13.0)",
+    "cmake --build --preset mac-debug --target svgworkbench"
+  ],
+  "cmake_version": "3.31.6",
+  "compiler": "AppleClang 21.0.0.21000334 (Apple clang version 21.0.0 clang-2100.3.34.2), arm64-apple-darwin27.0.0",
+  "macos": "macOS 27.0.1 (26A434)",
+  "goldens": [
+    {
+      "fixture_id": "f-blend-darken",
+      "source_sha256": "499a7930435a3d8e2003aefb92c81b5e0bb7f7d4c3a563f7e8f5a3dee7bfe15f",
+      "ppm_sha256": "152d3227312c7f99889d462d3820dce5d7094eddf1cf79e62a928d749e003860",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blend-lighten",
+      "source_sha256": "57ecbcd3aea9697df227f1d91909b1f00003a0aba360f9a8b562edffcdb96618",
+      "ppm_sha256": "446fb1ef11aafd6164428c87c57ac498cfa81bce675ee21e9394510c4f94702b",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blend-multiply",
+      "source_sha256": "6880b85e9523a27c6fc06c7d74ae7044b6d39830beaa9a129bdcaca7fba982d0",
+      "ppm_sha256": "c491f0f4083c8e694c6bbe07c8c3b1c60be38d6a7008b82aa8af9d0b44ef2b71",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blend-normal",
+      "source_sha256": "34b579078bf5219a10f0cc79dc5d12d3e99bbf1210186654a8116a797ab9dccf",
+      "ppm_sha256": "29d570f85a460b10a07d68a8e4c23ece966284153b4502c367e61d52e05237f7",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blend-screen",
+      "source_sha256": "304537cdfbfc5028d543f3aec83bd83189388e33ff8b6d130e4261ea75d7ec56",
+      "ppm_sha256": "1479a13bf4f8557fe48b4e8d1b559c4740a27f0ac0d6650ae06ff02ba5d1238f",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blur-xy",
+      "source_sha256": "d98e5e71b5b38ae7828d50192e59606c47d8f0e942385aa570713fdf382c2baf",
+      "ppm_sha256": "dd31233c81925b7061ba06ab8e87f879811a478254f2ae9e9b3c964c00b815c0",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blur-zero",
+      "source_sha256": "a26dd1e6f0e6d7f04da7aff57c237b414c023b3c4a0fe7c5dafd827a2f55ed49",
+      "ppm_sha256": "c66f4f5c2578cd5600f1198fe6285ff292047b5290f9c77a4f9e1a4632dd17b6",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-blur",
+      "source_sha256": "15ab7a375bfafe845e4dc32dece8b629db0d012cc84f8be1a363ddac0ef8c3cc",
+      "ppm_sha256": "49851d6349164243c1bce59dd7a02f241ccdef160a402e4b22f58f6647fc32ea",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-chained-drop-shadow",
+      "source_sha256": "44568ef98aa882cea79acc4864bb5496a676a47fa0c58e34f1881310679b53b1",
+      "ppm_sha256": "01d92b18c3382fe5a5c44553b2f1b530e9f859711b642c5859f807bc59b2f822",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-colormatrix-huerotate",
+      "source_sha256": "3726e61c6488602adc42320cd32a391933f7eb136ea27a0d45fb6005be7e04db",
+      "ppm_sha256": "80a5fece7b33386acceffd0c0881e9e8b81d99430bad08c52d306e9da5bcaacc",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-colormatrix-luminance",
+      "source_sha256": "458dd5458ad66a393a33b73feb159bcb25db1983476a8b992b8f57d71bdce512",
+      "ppm_sha256": "54069afdb07518d12c62f774680cee1fdeb41e619b68f6b1b210c0c36bc36387",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-colormatrix-matrix",
+      "source_sha256": "f6a99a5b3943b05e6e67268ea564355c711651ed7a9e84a39a66bae128aedaca",
+      "ppm_sha256": "d7184f384664d6062291241c7fd352558d637f98b08ac1228e83ef899a0ab920",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-colormatrix-saturate",
+      "source_sha256": "c38b84d4540d691a77a043a50746e97d73da3b961cd5ae43c6cb4af9181af4ff",
+      "ppm_sha256": "eceae5abebc9ff616221a5e2347970c262c600836e9866ceb64b1b3fddb6d02c",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-arithmetic",
+      "source_sha256": "59ed146e8abda43be3ef17cbad9a3c7f14c9f0dbea5c427420ae73c0cdb2da1f",
+      "ppm_sha256": "a08bd32ee8eed2bfdd2b4cf9b8d1522038349908f658e285e0ea1e93f5ac1468",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-atop",
+      "source_sha256": "96114f2ae8ca120ce841ffd7e466ca6f7434b7bdb82acc832fbfdd89b0fa3a31",
+      "ppm_sha256": "6b7a19c52fc15682d24f2fa55b1cc06f821d647a0c253c627ab5d39d7a851476",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-in",
+      "source_sha256": "9f524a05536ab1d435fe9e104dfd2bbea84d65fd5c3e10d986d0a4affa795802",
+      "ppm_sha256": "37b4d052b4841dd427509961a44e9b1c8e57a71fe1420053eb660d9495c1f796",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-lighter",
+      "source_sha256": "9c10d3e4fd34f6a9289cee58fa8dec0ef1249186e0a402b7ee8dcd802500008c",
+      "ppm_sha256": "2e8ce98b4ae68747d8ad206a83485e4f91d227f941b8c1193128d37362a328d0",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-out",
+      "source_sha256": "18ef0b982fba09b7bb1ec9c65783f8bb31d5dfcb953d72f2c4100bdd1f44caee",
+      "ppm_sha256": "f74c2aafe91ed1fcb7b48157d02d2b015d0d60be207b79a553919f576940ba66",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-over",
+      "source_sha256": "b3e6dbbb262cdee4e22e309c8ee33fee6c8ef22391f54cc83378b15a624b8fac",
+      "ppm_sha256": "88da693daa3ad70415ecf36e09c719d2ef300e2d346d495bf6329d7611e651f5",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-composite-xor",
+      "source_sha256": "0e3b894353e2bcd2542c3c0095bbbab12a5cfcefd4b0b03914189572119c30c0",
+      "ppm_sha256": "d8b2c7b288a9d5c053e997b372b5864e5df2488adc0217872536911f504f886b",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-dropshadow",
+      "source_sha256": "69acfcc4fe904889f1b0fabb4021412c39b37000b65994f4c5eafd8c2868f655",
+      "ppm_sha256": "79bafd58a387d18de326910d9c2574ed3c61ff78bc867cd9261c28313f1e4d7e",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-flood",
+      "source_sha256": "381e04f1a5d512a80d70078c00f2e938750c20ba80545727395b722bd51185c5",
+      "ppm_sha256": "e63e780df4f7849ada27d5f9d9ac1e25068ad28fa352512f3de930299ece6871",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-identity-offset",
+      "source_sha256": "1e490f8165784979f8b26f1692edeb345b05ae3e01497c114b42f4850238f31f",
+      "ppm_sha256": "c66f4f5c2578cd5600f1198fe6285ff292047b5290f9c77a4f9e1a4632dd17b6",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-merge",
+      "source_sha256": "a69d455d36331e1e635eb780ca8010f89f7009bb936729c9ffecdb5b832af4ad",
+      "ppm_sha256": "374d82beac3fd90077d17e25d226e4d0a19ca2b639bfdd9acf192219e2a927b2",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-offset-bbox",
+      "source_sha256": "09de4c018b32c935c4548a065919c26c754e0872af0913e671496281edb3f36a",
+      "ppm_sha256": "be5aa169f39b3ddc0025989ef2dd5e03d1a983a797f818bbb2420d4e775149cd",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-offset",
+      "source_sha256": "e8fcc7f4e5aac320b3aace8499ebd89d35095d13874cf86ba0cb3b424734b72f",
+      "ppm_sha256": "6e6d883c06840c8c7f3ebd2049c2fc8b736d15835c2899e363c06c4f91afd4fe",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-region-bbox-wide",
+      "source_sha256": "56550931c44332dbb1daf00e88b18f83e5dc4367d40a33935da400f278cf2fb7",
+      "ppm_sha256": "bb1aaa47cc6f597cd0188262c77c426a17d22ef389b684d2096ffc82352cf4ed",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-region-bbox",
+      "source_sha256": "2e3c379039e47abf811576d9a0b05a59454814b3d5ede3ded519593709d15aab",
+      "ppm_sha256": "c8ca0aa7063588c5fa082b18bd951fe9560783a94758ecc82708ba3fc76306d5",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "f-region-user-space",
+      "source_sha256": "ad82dc3419dc72b81e2361994024ff883ba7c52daa29fbf55ddb06b79a8e8490",
+      "ppm_sha256": "a4e45b53d625c0ce92d0812d87b2ca1dd924381c390d57ec48674a5c3e914c76",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}
