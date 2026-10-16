@@ -22,3 +22,8 @@ vexel-xml = { path = "../vexel-xml" }
 vexel-svg-animation = { path = "../vexel-svg-animation" }
 vexel-project = { path = "../vexel-project" }
 vexel-project-io = { path = "../vexel-project-io" }
+vexel-svg-engine = { path = "../vexel-svg-engine" }
+vexel-svg-decode = { path = "../vexel-svg-decode" }
+vexel-scene = { path = "../vexel-scene" }
+vexel-render = { path = "../vexel-render" }
+vexel-geometry = { path = "../vexel-geometry" }
