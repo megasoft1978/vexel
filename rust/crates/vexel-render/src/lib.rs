@@ -26,7 +26,11 @@ mod pattern;
 mod pattern_boundary;
 mod presentation;
 mod render;
+mod scan;
+#[cfg(test)]
+mod scene_tests;
 mod stroke;
+mod stroke_grid;
 mod text;
 mod validate;
 mod view;

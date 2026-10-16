@@ -1,0 +1,21 @@
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-aa50ae253d8b1f917/rust/crates/vexel-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.50s
+     Running unittests src/lib.rs (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-aa50ae253d8b1f917/.cache/target/aarch64-apple-darwin/debug/deps/vexel_render-b24d0e063d095000)
+
+running 6 tests
+test scene_tests::large_path_fill_matches_reference ... scene path_fill_20k_256: optimised_ms=21.1 naive_ms=436.5 hash=927046392990bf95
+scene walk_fill_3k_256: optimised_ms=451.1 naive_ms=5867.3 hash=17e535d0e344ed5a
+ok
+test scene_tests::large_path_stroke_matches_reference ... scene path_stroke_600_128: optimised_ms=33.5 naive_ms=1775.0 hash=0a78274367a99885
+scene walk_fillstroke_500_128: optimised_ms=980.6 naive_ms=1174.2 hash=f5be3f7ab5d666ee
+ok
+test scene_tests::large_path_timings ... scene path_fill_100k_512 / path_stroke_5k_512: fill_ms=86.9 fill_hash=fd2ba9ba24a86055 stroke_ms=744.6 stroke_hash=7b1b96a31ece1785
+ok
+test scene_tests::letterboxed_and_scaled_views_match_reference ... ok
+test scene_tests::overlapping_strokes_and_clips_match_reference ... scene overlap_strokes_clips_160: optimised_ms=908.4 naive_ms=1311.7 hash=77b97907575ce5b4
+ok
+test scene_tests::rects_2000_match_reference ... scene rects_2000_512: optimised_ms=151.5 naive_ms=1310.8 hash=14d8a8b65dcb325d
+ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 15.90s
+

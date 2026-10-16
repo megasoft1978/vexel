@@ -1,0 +1,15 @@
+{
+  "changed": [
+    "rust/crates/vexel-render/src/fill.rs",
+    "rust/crates/vexel-render/src/lib.rs",
+    "rust/crates/vexel-render/src/render.rs",
+    "rust/crates/vexel-render/src/stroke.rs",
+    "rust/crates/vexel-render/src/view.rs",
+    "rust/crates/vexel-render/src/scan.rs (new)",
+    "rust/crates/vexel-render/src/stroke_grid.rs (new)",
+    "rust/crates/vexel-render/src/scene_tests.rs (new)",
+    "rust/ci/perf-baseline.json (compose_2000_rects_512 only)",
+    "artifacts/WO-RUST-RENDER-PERF-01/*"
+  ],
+  "protected_paths_touched": false
+}

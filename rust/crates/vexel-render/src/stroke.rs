@@ -7,6 +7,7 @@
 //! ported (see parity-map.json).
 
 use crate::dash::{self, Budget, Pattern};
+use crate::stroke_grid::{self, Grid};
 use crate::{Linecap, Linejoin, RenderError, RenderShape, StrokeStyle};
 use vexel_geometry::{Affine, Point, affine_map_point, affine_valid};
 
@@ -78,7 +79,11 @@ pub(crate) fn range_at(shape: &RenderShape<'_>, index: usize) -> StrokeRange {
 impl StrokeRange {
     /// Edge count after dropping the implicit fill-closing edge of an open path.
     pub fn stroked_count(&self) -> usize {
-        if !self.closed && self.implicit_close && self.count > 0 { self.count - 1 } else { self.count }
+        if !self.closed && self.implicit_close && self.count > 0 {
+            self.count - 1
+        } else {
+            self.count
+        }
     }
 
     /// Number of segments and joins this range contributes.
@@ -114,6 +119,7 @@ pub(crate) struct StrokePrims {
     join: Linejoin,
     miter_limit: f64,
     join_reach: f64,
+    grid: Option<Grid>,
 }
 
 pub(crate) fn reserve<T>(vec: &mut Vec<T>, additional: usize) -> Result<(), RenderError> {
@@ -184,39 +190,62 @@ impl StrokePrims {
             }
         }
         let radius = stroke.width * 0.5;
-        let join_reach = if stroke.join == Linejoin::Miter { radius * stroke.miter_limit } else { radius };
-        Ok(Self { segments, joins, radius, join: stroke.join, miter_limit: stroke.miter_limit, join_reach })
+        let join_reach =
+            if stroke.join == Linejoin::Miter { radius * stroke.miter_limit } else { radius };
+        let grid = Grid::build(&segments, &joins, radius, join_reach)?;
+        Ok(Self {
+            segments,
+            joins,
+            radius,
+            join: stroke.join,
+            miter_limit: stroke.miter_limit,
+            join_reach,
+            grid,
+        })
     }
 
-    /// C `dash_cache_contains` (non-grid branch) for a local-space sample.
+    /// C `dash_cache_contains` for a local-space sample: any segment or join
+    /// hits. With a grid only the candidates of the sample's cell are tested.
     pub(crate) fn contains(&self, px: f64, py: f64) -> bool {
+        let Some(grid) = self.grid.as_ref() else {
+            return self.contains_linear(px, py);
+        };
+        grid.candidates(px, py).iter().any(|tag| {
+            let (is_join, index) = stroke_grid::decode(*tag);
+            if is_join {
+                self.join_hit_at(&self.joins[index], px, py)
+            } else {
+                self.segment_hit_at(&self.segments[index], px, py)
+            }
+        })
+    }
+
+    /// Every primitive tested in order (the grid-free path).
+    pub(crate) fn contains_linear(&self, px: f64, py: f64) -> bool {
+        self.segments.iter().any(|segment| self.segment_hit_at(segment, px, py))
+            || self.joins.iter().any(|join| self.join_hit_at(join, px, py))
+    }
+
+    fn segment_hit_at(&self, segment: &Segment, px: f64, py: f64) -> bool {
         let radius = self.radius;
-        for segment in &self.segments {
-            let square = segment.start_cap == Linecap::Square || segment.end_cap == Linecap::Square;
-            let margin = if square { radius * SQRT_2 } else { radius };
-            if edge_box_contains(segment.a, segment.b, px, py, margin)
-                && segment_hit_caps(
-                    segment.a,
-                    segment.b,
-                    px,
-                    py,
-                    radius,
-                    segment.start_cap,
-                    segment.end_cap,
-                )
-            {
-                return true;
-            }
-        }
-        for join in &self.joins {
-            if (px - join.vertex.x).abs() <= self.join_reach
-                && (py - join.vertex.y).abs() <= self.join_reach
-                && join_hit(join, px, py, radius, self.join, self.miter_limit)
-            {
-                return true;
-            }
-        }
-        false
+        let square = segment.start_cap == Linecap::Square || segment.end_cap == Linecap::Square;
+        let margin = if square { radius * SQRT_2 } else { radius };
+        edge_box_contains(segment.a, segment.b, px, py, margin)
+            && segment_hit_caps(
+                segment.a,
+                segment.b,
+                px,
+                py,
+                radius,
+                segment.start_cap,
+                segment.end_cap,
+            )
+    }
+
+    fn join_hit_at(&self, join: &Join, px: f64, py: f64) -> bool {
+        (px - join.vertex.x).abs() <= self.join_reach
+            && (py - join.vertex.y).abs() <= self.join_reach
+            && join_hit(join, px, py, self.radius, self.join, self.miter_limit)
     }
 }
 
@@ -319,8 +348,10 @@ fn join_hit(join: &Join, px: f64, py: f64, radius: f64, style: Linejoin, miter_l
         return false;
     }
     let side = if cross > 0.0 { -1.0 } else { 1.0 };
-    let p1 = Point { x: vertex.x + side * (-ay / al) * radius, y: vertex.y + side * (ax / al) * radius };
-    let p2 = Point { x: vertex.x + side * (-by / bl) * radius, y: vertex.y + side * (bx / bl) * radius };
+    let p1 =
+        Point { x: vertex.x + side * (-ay / al) * radius, y: vertex.y + side * (ax / al) * radius };
+    let p2 =
+        Point { x: vertex.x + side * (-by / bl) * radius, y: vertex.y + side * (bx / bl) * radius };
     if style == Linejoin::Bevel {
         return in_triangle(px, py, vertex, p1, p2);
     }

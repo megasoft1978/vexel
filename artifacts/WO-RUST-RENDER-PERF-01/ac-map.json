@@ -1,0 +1,9 @@
+{
+  "AC1": "pass: all vexel-raster/render/spatial/vexel-app tests, no golden edited",
+  "AC2": "pass: vexel-render/src/scene_tests.rs, 6 differential tests",
+  "AC3": "pass: median 1957.09 ms vs 3178.29 (1.62x), perf_gate passes against updated file",
+  "AC4": "pass: see result.md",
+  "AC5": "pass: RSS unchanged",
+  "AC6": "pass: no manifest change, forbid(unsafe_code)",
+  "AC7": "pass: result.md"
+}

@@ -1,0 +1,9 @@
+{
+  "cargo check --workspace": "pass",
+  "cargo test -p vexel-raster -p vexel-render -p vexel-spatial": "pass (vexel-svg-parity is not a package)",
+  "cargo test -p vexel-app": "pass including perf_gate",
+  "cargo fmt --check": "fails at base too (654 diffs), not introduced here",
+  "wo_validate --ready": "pass",
+  "ledger validate": "pass (1934 entries)",
+  "diff --check": "pass"
+}

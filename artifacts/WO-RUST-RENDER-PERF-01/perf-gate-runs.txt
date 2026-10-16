@@ -1,0 +1,10 @@
+base perf compose_2000_rects_512: measured_ms=3112.96 max_ms=25500
+new  perf compose_2000_rects_512: measured_ms=1979.39 max_ms=25500
+base perf compose_2000_rects_512: measured_ms=3119.59 max_ms=25500
+new  perf compose_2000_rects_512: measured_ms=1940.82 max_ms=25500
+base perf compose_2000_rects_512: measured_ms=3116.96 max_ms=25500
+new  perf compose_2000_rects_512: measured_ms=1973.85 max_ms=25500
+base perf compose_2000_rects_512: measured_ms=3111.43 max_ms=25500
+new  perf compose_2000_rects_512: measured_ms=1957.09 max_ms=25500
+base perf compose_2000_rects_512: measured_ms=3107.83 max_ms=25500
+new  perf compose_2000_rects_512: measured_ms=1947.82 max_ms=25500

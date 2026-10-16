@@ -1,0 +1,6 @@
+base             18726912  maximum resident set size
+new              17137664  maximum resident set size
+base             17334272  maximum resident set size
+new              17039360  maximum resident set size
+base             17072128  maximum resident set size
+new              18726912  maximum resident set size

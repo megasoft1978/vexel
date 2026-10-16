@@ -91,12 +91,19 @@ impl ViewMap {
 
     /// C `sample_is_in_view`: the content rectangle excludes meet letterboxing.
     pub(crate) fn sample_in_view(&self, sample_x: f64, sample_y: f64) -> bool {
+        self.x_in_view(sample_x) && self.y_in_view(sample_y)
+    }
+
+    /// x half of [`Self::sample_in_view`].
+    pub(crate) fn x_in_view(&self, sample_x: f64) -> bool {
         let content_width = self.view.width * self.scale_x;
+        sample_x >= self.offset_x && sample_x < self.offset_x + content_width
+    }
+
+    /// y half of [`Self::sample_in_view`].
+    pub(crate) fn y_in_view(&self, sample_y: f64) -> bool {
         let content_height = self.view.height * self.scale_y;
-        sample_x >= self.offset_x
-            && sample_y >= self.offset_y
-            && sample_x < self.offset_x + content_width
-            && sample_y < self.offset_y + content_height
+        sample_y >= self.offset_y && sample_y < self.offset_y + content_height
     }
 
     /// Device sample position to user space.

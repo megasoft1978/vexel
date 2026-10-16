@@ -1,0 +1,5 @@
+Original algorithm, debug, same scenes (pre-optimisation run of scene_tests), ms:
+path_fill_20k_256: 454.6   walk_fill_3k_256: 6276.7   path_stroke_600_128: 1247.8
+walk_fillstroke_500_128: 977.8   path_fill_100k_512: 3343.7   path_stroke_5k_512: 175159.8
+overlap_strokes_clips_160: 969.4   rects_2000_512 (render only): 1295.3
+Output hashes before == after for every scene (scene-timings-after.txt).
