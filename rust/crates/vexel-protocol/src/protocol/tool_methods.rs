@@ -49,6 +49,7 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             "animation_list",
             "animation_add",
             "animation_control",
+            "export_animation",
         ]
         .contains(&name.as_str())
     {
@@ -134,6 +135,34 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
                 id,
                 session.modern,
                 "animation control requires play, pause, or seek with a seek time",
+                "invalid_arguments",
+            );
+        }
+    }
+    if session.live_preview && name == "export_animation" {
+        let number = |key: &[u8]| {
+            doc.object_get(args, key)
+                .and_then(|v| doc.raw_token(v))
+                .and_then(|bytes| std::str::from_utf8(&bytes).ok())
+                .and_then(|value| value.parse::<f64>().ok())
+                .filter(|value| value.is_finite())
+        };
+        let valid_path = doc
+            .object_get(args, b"path")
+            .and_then(|v| doc.decoded_string(v))
+            .is_some_and(|path| !path.is_empty() && path.len() < 1024 && !path.contains(&0));
+        let valid_format = doc
+            .object_get(args, b"format")
+            .is_some_and(|v| doc.string_equals(v, b"gif"));
+        let valid_fps = number(b"fps").is_some_and(|v| v.fract() == 0.0 && (1.0..=30.0).contains(&v));
+        let valid_duration = number(b"duration").is_some_and(|v| (0.01..=10.0).contains(&v));
+        if !(valid_path && valid_format && valid_fps && valid_duration) {
+            return append_tool_error(
+                out,
+                doc,
+                id,
+                session.modern,
+                "export requires a path, gif format, fps 1-30 and duration 0.01-10 seconds",
                 "invalid_arguments",
             );
         }

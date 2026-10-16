@@ -339,6 +339,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
                             | "animation_list"
                             | "animation_add"
                             | "animation_control"
+                            | "export_animation"
                     ))
         })
         .collect();
@@ -352,6 +353,8 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
             .map_err(ProtocolError::Buffer)?;
         let description = if preview && tool.name == "element_add" {
             "Add a rectangle or ellipse to the live preview document."
+        } else if preview && tool.name == "export_animation" {
+            "Export the live preview loop as a GIF inside a granted directory."
         } else {
             tool.description
         };
@@ -365,6 +368,8 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
                 r#"{"documentId":{"type":"string"},"targetId":{"type":"string","minLength":1,"maxLength":128},"xml":{"type":"string","maxLength":4096,"pattern":"^<animate\\s[^>]*\\s/>$"}}"#
             } else if preview && tool.name == "animation_control" {
                 r#"{"documentId":{"type":"string"},"action":{"type":"string","enum":["play","pause","seek"]},"timeMs":{"type":"number","minimum":0,"maximum":10000}}"#
+            } else if preview && tool.name == "export_animation" {
+                r#"{"documentId":{"type":"string"},"path":{"type":"string","minLength":1,"maxLength":1023},"format":{"type":"string","enum":["gif"]},"fps":{"type":"integer","minimum":1,"maximum":30},"duration":{"type":"number","minimum":0.01,"maximum":10}}"#
             } else {
                 tool.properties
             };

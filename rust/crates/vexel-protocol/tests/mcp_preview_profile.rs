@@ -65,7 +65,7 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     let doc = JsonDocument::parse(&listing).unwrap();
     let result = doc.object_get(doc.root(), b"result").unwrap();
     let tools = doc.object_get(result, b"tools").unwrap();
-    assert_eq!(doc.token(tools).unwrap().child_count, 8);
+    assert_eq!(doc.token(tools).unwrap().child_count, 9);
     for (idx, name) in [
         "document_list",
         "document_info",
@@ -112,6 +112,37 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     assert!(String::from_utf8_lossy(&listing).contains("animation_add"));
     assert!(String::from_utf8_lossy(&listing).contains("animation_control"));
     assert!(String::from_utf8_lossy(&listing).contains("\"maximum\":10000"));
+    assert!(String::from_utf8_lossy(&listing).contains("export_animation"));
+}
+
+#[test]
+fn preview_export_animation_validates_gif_fps_duration_and_path() {
+    let mut session = ProtocolSession::live_preview();
+    let mut backend = Backend::default();
+    initialize(&mut session, &mut backend);
+    let request = |id: u32, args: &str| {
+        format!(
+            r#"{{"jsonrpc":"2.0","id":{id},"method":"tools/call","params":{{"name":"export_animation","arguments":{{"documentId":"d",{args}}}}}}}"#
+        )
+    };
+    let valid = request(2, r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":1.5"#);
+    assert!(
+        String::from_utf8_lossy(&call(&mut session, &mut backend, &valid))
+            .contains("\"isError\":false")
+    );
+    for (id, args) in [
+        (3, r#""path":"/tmp/a.gif","format":"frames","fps":10,"duration":1"#),
+        (4, r#""path":"/tmp/a.gif","format":"gif","fps":31,"duration":1"#),
+        (5, r#""path":"/tmp/a.gif","format":"gif","fps":0,"duration":1"#),
+        (6, r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":10.5"#),
+        (7, r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":0"#),
+        (8, r#""path":"","format":"gif","fps":10,"duration":1"#),
+        (9, r#""format":"gif","fps":10,"duration":1"#),
+    ] {
+        let out = call(&mut session, &mut backend, &request(id, args));
+        assert!(String::from_utf8_lossy(&out).contains("\"isError\":true"), "{args}");
+    }
+    assert_eq!(backend.calls, ["export_animation"]);
 }
 
 #[test]
