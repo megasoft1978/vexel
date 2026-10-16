@@ -50,6 +50,12 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             "animation_add",
             "animation_control",
             "export_animation",
+            "document_open",
+            "attribute_set",
+            "element_delete",
+            "save",
+            "save_as",
+            "export_svg",
         ]
         .contains(&name.as_str())
     {
@@ -60,9 +66,11 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
     }
     if session.live_preview && name == "element_add" {
         let template = doc.object_get(args, b"template");
-        if !template
-            .is_some_and(|v| doc.string_equals(v, b"rect") || doc.string_equals(v, b"ellipse"))
-        {
+        if !template.is_some_and(|v| {
+            [b"rect".as_slice(), b"ellipse", b"line", b"path"]
+                .iter()
+                .any(|candidate| doc.string_equals(v, candidate))
+        }) {
             return append_tool_error(
                 out,
                 doc,

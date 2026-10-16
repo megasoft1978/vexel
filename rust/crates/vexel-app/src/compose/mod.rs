@@ -24,7 +24,7 @@ mod tests_stale;
 
 pub use decode::MAX_SVG_BYTES;
 pub use error::{ComposeError, Disclosure};
-pub use launch::{Launch, parse_launch};
+pub use launch::{Launch, parse_launch, parse_launch_with_home};
 pub use open::{OpenError, open_path};
 pub use pointer::PointMap;
 pub use present::{DocumentView, blit_document, fill, status_text};

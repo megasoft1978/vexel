@@ -1,0 +1,16 @@
+{
+  "work_order": "WO-RUST-V1-MCP-TOOLS-01",
+  "env": "CARGO_HOME=<main>/.cache/cargo, CARGO_TARGET_DIR=<worktree>/.cache/target, --locked --offline",
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-app --locked --offline", "result": "pass", "warnings": 0, "log": "check.log"},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "result": "pass", "counts": {"lib unit": 173, "bin unit": 1, "tests/mcp_tools_edit.rs": 16, "tests/mcp_tools_files.rs": 9}, "log": "test-vexel-app.log"},
+    {"cmd": "cargo +stable test -p vexel-protocol -p vexel-mcp-stdio -p vexel-v1-document --locked --offline", "result": "pass", "counts": {"vexel-mcp-stdio": 8, "mcp_preview_profile": 8, "parity": 9, "vexel-v1-document": 31}, "log": "test-protocol-stdio-document.log"},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-app --package vexel-protocol -- --check", "result": "vexel-app clean; vexel-protocol FAIL on pre-existing unformatted lines (async_protocol.rs, lib.rs, parity.rs, old hunks in tool_methods.rs and mcp_preview_profile.rs); no hunk in lines added by this order"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-V1-MCP-TOOLS-01 --ready", "result": "pass", "log": "wo_validate.log"},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "result": "pass (1874 entries)", "log": "ledger_validate.log"},
+    {"cmd": "git diff --check", "result": "not run: sandbox hook refuses git; manual trailing-whitespace grep over changed files was clean"}
+  ],
+  "unsafe_added": false,
+  "new_external_packages": false,
+  "commit": "not made: git refused by sandbox hook"
+}

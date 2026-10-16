@@ -340,6 +340,12 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
                             | "animation_add"
                             | "animation_control"
                             | "export_animation"
+                            | "document_open"
+                            | "attribute_set"
+                            | "element_delete"
+                            | "save"
+                            | "save_as"
+                            | "export_svg"
                     ))
         })
         .collect();

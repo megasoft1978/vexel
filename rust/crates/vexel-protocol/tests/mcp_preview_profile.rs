@@ -65,13 +65,27 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     let doc = JsonDocument::parse(&listing).unwrap();
     let result = doc.object_get(doc.root(), b"result").unwrap();
     let tools = doc.object_get(result, b"tools").unwrap();
-    assert_eq!(doc.token(tools).unwrap().child_count, 9);
+    // The 9 original preview tools plus the 6 routed by WO-RUST-V1-MCP-TOOLS-01
+    // (document_open, attribute_set, element_delete, save, save_as, export_svg),
+    // in declaration order; render_png stays unlisted.
+    assert_eq!(doc.token(tools).unwrap().child_count, 15);
+    assert!(!String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
+        "document_open",
         "document_list",
         "document_info",
+        "attribute_set",
         "element_add",
+        "element_delete",
         "undo",
         "redo",
+        "save",
+        "save_as",
+        "animation_list",
+        "animation_add",
+        "animation_control",
+        "export_animation",
+        "export_svg",
     ]
     .iter()
     .enumerate()
@@ -267,4 +281,38 @@ fn preview_modern_discovery_omits_unavailable_capabilities() {
     let task_text = String::from_utf8_lossy(&task_output);
     assert!(task_text.contains("\"code\":-32601"));
     assert!(task_text.contains("method not found"));
+}
+
+#[test]
+fn live_preview_forwards_routed_file_edit_and_line_path_calls() {
+    let mut session = ProtocolSession::live_preview();
+    let mut backend = Backend::default();
+    initialize(&mut session, &mut backend);
+    let requests = [
+        r#"{"name":"save","arguments":{"documentId":"d"}}"#,
+        r#"{"name":"save_as","arguments":{"documentId":"d","path":"/x/a.vexel"}}"#,
+        r#"{"name":"document_open","arguments":{"path":"/x/a.vexel"}}"#,
+        r##"{"name":"attribute_set","arguments":{"documentId":"d","elementId":"e","name":"fill","value":"#000000"}}"##,
+        r#"{"name":"element_delete","arguments":{"documentId":"d","elementId":"e"}}"#,
+        r#"{"name":"export_svg","arguments":{"documentId":"d"}}"#,
+        r#"{"name":"element_add","arguments":{"documentId":"d","parentId":"root","template":"line","attributes":{}}}"#,
+        r#"{"name":"element_add","arguments":{"documentId":"d","parentId":"root","template":"path","attributes":{}}}"#,
+    ];
+    for (id, params) in requests.iter().enumerate() {
+        let request = format!(
+            r#"{{"jsonrpc":"2.0","id":{},"method":"tools/call","params":{params}}}"#,
+            id + 10
+        );
+        let out = call(&mut session, &mut backend, &request);
+        assert!(
+            String::from_utf8_lossy(&out).contains("\"isError\":false"),
+            "{params}"
+        );
+    }
+    assert_eq!(backend.calls.len(), requests.len());
+    // render_png is not routed: the profile refuses it before the backend.
+    let png = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"render_png","arguments":{"documentId":"d"}}}"#;
+    let out = call(&mut session, &mut backend, png);
+    assert!(String::from_utf8_lossy(&out).contains("unknown tool"));
+    assert_eq!(backend.calls.len(), requests.len());
 }

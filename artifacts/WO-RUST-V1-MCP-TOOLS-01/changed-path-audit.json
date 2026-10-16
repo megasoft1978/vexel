@@ -1,0 +1,29 @@
+{
+  "work_order": "WO-RUST-V1-MCP-TOOLS-01",
+  "within_allowed": [
+    "rust/crates/vexel-app/Cargo.toml ([lib] table only)",
+    "rust/crates/vexel-app/src/lib.rs (new)",
+    "rust/crates/vexel-app/src/main.rs",
+    "rust/crates/vexel-app/src/preview.rs",
+    "rust/crates/vexel-app/src/preview/args.rs (new)",
+    "rust/crates/vexel-app/src/preview_app.rs (start_server pub)",
+    "rust/crates/vexel-app/src/compose/launch.rs",
+    "rust/crates/vexel-app/src/compose/mod.rs (re-export)",
+    "rust/crates/vexel-app/src/session/mod.rs",
+    "rust/crates/vexel-app/src/session/mcp.rs",
+    "rust/crates/vexel-app/src/session/mcp_tools.rs (new)",
+    "rust/crates/vexel-app/src/session/grants.rs (new)",
+    "rust/crates/vexel-app/tests/common/mod.rs (new)",
+    "rust/crates/vexel-app/tests/mcp_tools_edit.rs (new)",
+    "rust/crates/vexel-app/tests/mcp_tools_files.rs (new)",
+    "rust/crates/vexel-protocol/src/tools.rs (preview allow-list only)",
+    "rust/crates/vexel-protocol/tests/mcp_preview_profile.rs (count/order assertion updated, one test added)",
+    "rust/fixtures/v1/mcp-tools/open.svg (new)",
+    "artifacts/WO-RUST-V1-MCP-TOOLS-01/**"
+  ],
+  "outside_allowed_list": [
+    "rust/crates/vexel-protocol/src/protocol/tool_methods.rs: second preview allow-list and element_add template gate (rect/ellipse only); required for tools/call to reach the backend"
+  ],
+  "protected_touched": false,
+  "git_state": "uncommitted; git refused by sandbox hook"
+}

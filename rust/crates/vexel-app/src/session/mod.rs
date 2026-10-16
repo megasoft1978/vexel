@@ -12,8 +12,10 @@
 //! module depends on neither.
 #![allow(dead_code, unused_imports)]
 
+mod grants;
 mod hooks;
 mod mcp;
+mod mcp_tools;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
@@ -21,6 +23,7 @@ mod tests_mcp;
 #[cfg(test)]
 mod tests_playback;
 
+pub use grants::{GrantError, McpGrants};
 pub use hooks::{DocumentEditor, EditAction, EditOutcome, PlaybackHost, edit_shortcut};
 pub use mcp::{McpHost, McpOutcome};
 

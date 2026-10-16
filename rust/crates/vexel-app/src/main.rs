@@ -1,36 +1,25 @@
 #![forbid(unsafe_code)]
 
-mod animation;
-mod compose;
-mod file_flow;
-mod file_ui;
-mod model;
-mod preview;
-mod preview_app;
-mod project_session;
-mod render;
-mod session;
-mod tools;
-
-use animation::{
-    driver::{Driver, TickOutcome},
-    job::ExportJob,
-    keys::{self, playback_key},
-    playback::MonotonicClock,
-    strip::{self, Strip, StripPointer},
-};
-use file_flow::FlowOutcome;
-use file_ui::FileUi;
-use model::{Layout, Mode, Model, Target};
-use preview::UiRequest;
-use session::{EditAction, McpHost, McpOutcome, edit_shortcut};
 use std::{
     num::NonZeroUsize,
     sync::mpsc::{self, Receiver},
     thread,
     time::Duration,
 };
-use tools::{Key, Outcome, PointerInput, ToolController};
+use vexel_app::animation::{
+    driver::{Driver, TickOutcome},
+    job::ExportJob,
+    keys::{self, playback_key},
+    playback::MonotonicClock,
+    strip::{self, Strip, StripPointer},
+};
+use vexel_app::file_flow::FlowOutcome;
+use vexel_app::file_ui::FileUi;
+use vexel_app::model::{self, Layout, Mode, Model, Target};
+use vexel_app::preview::{self, Operation, UiRequest};
+use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
+use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
+use vexel_app::{compose, preview_app, render};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
     WindowEvent,
@@ -43,15 +32,20 @@ fn main() {
     let result = match compose::parse_launch(std::env::args_os().skip(1)) {
         // One process, one window: the shell also serves the MCP preview
         // requests through the shared document session.
-        compose::Launch::McpPreview => run(None, true),
-        compose::Launch::Shell { open } => run(open, false),
+        compose::Launch::McpPreview => run(None, Some(McpGrants::none())),
+        compose::Launch::McpPreviewGranted(grants) => run(None, Some(grants)),
+        compose::Launch::Shell { open } => run(open, None),
         compose::Launch::Usage(message) => Err(message),
     };
     if let Err(message) = result {
         eprintln!("Vexel shell stopped: {message}");
     }
 }
-fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'static str> {
+fn run(
+    mut pending_open: Option<std::path::PathBuf>,
+    grants: Option<McpGrants>,
+) -> Result<(), &'static str> {
+    let mcp = grants.is_some();
     let main_thread =
         MainThread::acquire().map_err(|_| "launch must begin on the macOS main thread")?;
     let mut app = NativeApp::start(main_thread).map_err(|_| "macOS application startup failed")?;
@@ -115,7 +109,7 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
     } else {
         None
     };
-    let mut mcp_host = McpHost::new();
+    let mut mcp_host = McpHost::with_policy(grants.unwrap_or_default().policy());
     let mut export: Option<ExportJob> = None;
     let mut driver = Driver::new(MonotonicClock::new());
     let mut strip = Strip::default();
@@ -138,8 +132,15 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
             if let Some(UiRequest { operation, reply }) =
                 mcp_rx.as_ref().and_then(|rx| rx.try_recv().ok())
             {
+                let opens = matches!(operation, Operation::Open { .. });
                 match mcp_host.handle_with(files.document_mut(), operation, &mut driver) {
                     Ok(McpOutcome::Reply(json)) => {
+                        if opens {
+                            // Selection ids belong to the replaced document.
+                            let tool = tools.tool();
+                            tools = ToolController::new();
+                            tools.set_tool(tool);
+                        }
                         let _ = reply.send(Ok(json));
                     }
                     Ok(McpOutcome::Export {
@@ -148,10 +149,9 @@ fn run(mut pending_open: Option<std::path::PathBuf>, mcp: bool) -> Result<(), &'
                         fps,
                         duration,
                     }) => {
-                        let policy = vexel_mcp_access::AccessPolicy::from_environment();
                         match ExportJob::spawn(
                             source,
-                            policy,
+                            mcp_host.policy().clone(),
                             path.into(),
                             fps,
                             duration,

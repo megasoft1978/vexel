@@ -6,7 +6,8 @@
 //! is saved, undone and re-rendered like any other edit. Element ids are read
 //! from the document source, so opened documents work too.
 
-use super::AppDocument;
+use super::mcp_tools::{attribute_set, delete, export_svg};
+use super::{AppDocument, McpGrants};
 use crate::animation::driver::Driver;
 use crate::animation::playback::LoopClock;
 use crate::preview::{
@@ -14,6 +15,7 @@ use crate::preview::{
     object_id, validate_animation_fragment, validate_shape,
 };
 use std::cell::Cell;
+use vexel_mcp_access::AccessPolicy;
 use vexel_v1_document::{V1Document, V1DocumentError};
 
 const SOURCE_LIMIT: usize = 64 * 1024;
@@ -47,20 +49,40 @@ impl LoopClock for ExternalClock {
 /// passes the one shared [`Driver`] (keyboard, strip and MCP use the same
 /// clock) to [`McpHost::handle_with`]. The document itself lives only in the
 /// [`AppDocument`].
-#[derive(Default)]
 pub struct McpHost {
-    next_id: u64,
+    pub(super) next_id: u64,
+    /// The one grant policy of this process: every path tool and the GIF
+    /// export job use it. Fixed at construction.
+    policy: AccessPolicy,
     /// Driver for the clock-argument [`McpHost::handle`] form (tests, callers
     /// without a shell driver); the shell never uses it.
     standalone: Option<Driver<ExternalClock>>,
 }
 
+impl Default for McpHost {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl McpHost {
+    /// A host whose policy comes from the environment and config file only
+    /// (no explicit `--grant-dir`).
     pub fn new() -> Self {
+        Self::with_policy(McpGrants::none().policy())
+    }
+
+    pub fn with_policy(policy: AccessPolicy) -> Self {
         Self {
             next_id: 1,
-            ..Self::default()
+            policy,
+            standalone: None,
         }
+    }
+
+    /// The grant policy used by path tools; hand a clone to `ExportJob::spawn`.
+    pub fn policy(&self) -> &AccessPolicy {
+        &self.policy
     }
 
     /// Whether the standalone driver of [`McpHost::handle`] is playing.
@@ -125,6 +147,32 @@ impl McpHost {
                 .map_err(|_| "nothing to redo")
                 .and_then(|()| changed(app, "Redo complete")),
             Operation::Control(control) => control_playback(app, control, driver),
+            Operation::Save => self.save(app),
+            Operation::SaveAs { path } => self.save_as(app, &path),
+            Operation::Open { path } => self.open(app, &path),
+            Operation::AttributeSet { element_id, change } => {
+                attribute_set(app, &element_id, &change)
+            }
+            Operation::Delete { element_id } => delete(app, &element_id),
+            Operation::AddLine {
+                x1,
+                y1,
+                x2,
+                y2,
+                stroke,
+                width,
+            } => self.add_element(app, |doc, id| {
+                doc.add_line_with_id(x1, y1, x2, y2, &stroke, width, id)
+            }),
+            Operation::AddPath {
+                d,
+                fill,
+                stroke,
+                width,
+            } => self.add_element(app, |doc, id| {
+                doc.add_path_with_id(&d, &fill, &stroke, width, id)
+            }),
+            Operation::ExportSvg => export_svg(app),
             Operation::Export {
                 path,
                 fps,
@@ -140,6 +188,23 @@ impl McpHost {
 
     fn add(&mut self, app: &mut AppDocument, shape: Shape) -> Result<McpOutcome, &'static str> {
         validate_shape(shape)?;
+        let (id, count) = self.reserve_id(app)?;
+        app.edit(|doc| add_shape(doc, shape, &id))
+            .map_err(|_| "shape validation failed")?;
+        self.next_id += 1;
+        Ok(McpOutcome::Reply(format!(
+            "{{\"ok\":true,\"shapeCount\":{},\"elementId\":\"{id}\",\"message\":\"Shape added\"}}",
+            count + 1
+        )))
+    }
+
+    /// Checks the scene and source limits and returns the next free
+    /// `vexel-object-N` id with the current element count. The id counter
+    /// advances only when the caller's edit succeeds.
+    pub(super) fn reserve_id(
+        &mut self,
+        app: &AppDocument,
+    ) -> Result<(String, usize), &'static str> {
         let source = source(app)?;
         let ids = stable_ids(&source);
         if ids.len() >= SCENE_LIMIT {
@@ -156,13 +221,7 @@ impl McpHost {
                 .ok_or("preview stable ID limit reached")?;
             id = object_id(self.next_id);
         }
-        app.edit(|doc| add_shape(doc, shape, &id))
-            .map_err(|_| "shape validation failed")?;
-        self.next_id += 1;
-        Ok(McpOutcome::Reply(format!(
-            "{{\"ok\":true,\"shapeCount\":{},\"elementId\":\"{id}\",\"message\":\"Shape added\"}}",
-            ids.len() + 1
-        )))
+        Ok((id, ids.len()))
     }
 }
 
@@ -200,7 +259,7 @@ fn control_playback<C: LoopClock>(
     )))
 }
 
-fn source(app: &AppDocument) -> Result<Vec<u8>, &'static str> {
+pub(super) fn source(app: &AppDocument) -> Result<Vec<u8>, &'static str> {
     app.source_bytes().map_err(|_| "preview allocation failed")
 }
 
@@ -258,7 +317,7 @@ fn count(haystack: &[u8], needle: &[u8]) -> usize {
 }
 
 /// Values of every ` id="..."` attribute in `source`, in document order.
-fn stable_ids(source: &[u8]) -> Vec<String> {
+pub(super) fn stable_ids(source: &[u8]) -> Vec<String> {
     const MARKER: &[u8] = b" id=\"";
     let mut ids = Vec::new();
     let mut at = 0;

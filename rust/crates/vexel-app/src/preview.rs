@@ -6,6 +6,7 @@ use vexel_protocol::{ProtocolBackend, ToolResponse};
 use vexel_v1_document::{V1Document, V1DocumentError};
 
 mod animation;
+mod args;
 pub(crate) use animation::{
     animation_list_json, document_duration, validate_animation_fragment, validate_shape,
 };
@@ -56,6 +57,45 @@ pub enum Operation {
     },
     Undo,
     Redo,
+    Save,
+    SaveAs {
+        path: String,
+    },
+    Open {
+        path: String,
+    },
+    AttributeSet {
+        element_id: String,
+        change: AttributeChange,
+    },
+    Delete {
+        element_id: String,
+    },
+    AddLine {
+        x1: f64,
+        y1: f64,
+        x2: f64,
+        y2: f64,
+        stroke: String,
+        width: f64,
+    },
+    AddPath {
+        d: String,
+        fill: String,
+        stroke: String,
+        width: f64,
+    },
+    ExportSvg,
+}
+
+/// One validated `attribute_set` change (names limited to the walkthrough set).
+#[derive(Clone, Debug, PartialEq)]
+pub enum AttributeChange {
+    Fill(String),
+    Stroke(String),
+    StrokeWidth(f64),
+    /// `transform="translate(dx dy)"`: a document-space move by this delta.
+    Translate(f64, f64),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -463,6 +503,16 @@ fn tool_error(message: &str) -> ToolResponse {
         "unsupported preview shape" => message,
         "unknown preview document" => message,
         "invalid preview fill color" => message,
+        "unsupported preview operation" => message,
+        "path not granted" => message,
+        "path not found" => message,
+        "unsupported file type" => message,
+        "invalid project file" => message,
+        "unknown element" => message,
+        "unsupported attribute" => message,
+        "document has no path" => message,
+        "export_svg too large" => message,
+        "file operation failed" => message,
         m if m.starts_with("export ") => m,
         _ => "invalid preview tool arguments",
     };
@@ -483,11 +533,19 @@ pub(super) fn parse_operation(
     if name == "document_list" {
         return Ok(Operation::List);
     }
+    if name == "document_open" {
+        return args::open(doc, args);
+    }
     if string_field(doc, args, b"documentId").as_deref() != Some(DOCUMENT_ID) {
         return Err("unknown preview document");
     }
     match name {
         "document_info" => Ok(Operation::Info),
+        "save" => Ok(Operation::Save),
+        "export_svg" => Ok(Operation::ExportSvg),
+        "save_as" => args::save_as(doc, args),
+        "attribute_set" => args::attribute_set(doc, args),
+        "element_delete" => args::delete(doc, args),
         "animation_list" => Ok(Operation::AnimationList),
         "undo" => Ok(Operation::Undo),
         "redo" => Ok(Operation::Redo),
@@ -618,6 +676,8 @@ pub(super) fn parse_operation(
             let allowed: &[&[u8]] = match template.as_str() {
                 "rect" => &[b"x", b"y", b"width", b"height", b"fill"],
                 "ellipse" => &[b"cx", b"cy", b"rx", b"ry", b"fill"],
+                "line" => args::LINE_KEYS,
+                "path" => args::PATH_KEYS,
                 _ => return Err("unsupported preview shape"),
             };
             let mut key = doc.token(attrs).and_then(|t| t.first_child);
@@ -639,6 +699,11 @@ pub(super) fn parse_operation(
                     return Err("invalid preview tool arguments");
                 }
                 key = doc.token(value).and_then(|t| t.next_sibling);
+            }
+            match template.as_str() {
+                "line" => return args::line(doc, attrs),
+                "path" => return args::path(doc, attrs),
+                _ => {}
             }
             let num = |k: &[u8]| number_field(doc, attrs, k);
             let fill = parse_color(

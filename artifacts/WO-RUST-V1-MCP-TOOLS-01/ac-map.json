@@ -1,0 +1,11 @@
+{
+  "AC1": {"status": "pass", "evidence": "bin and lib build; tests/mcp_tools_edit.rs library_target_links_and_lists_routed_tools uses vexel_app::session::AppDocument"},
+  "AC2": {"status": "pass with deviation", "evidence": "preview tools/list = 15 incl. 6 new names (order says 8; scope yields 6), render_png absent; existing 9 tools' tests unmodified except protocol count/order assertion (see result.md)"},
+  "AC3": {"status": "pass", "evidence": "tool-matrix.md; success tests check exact bytes, dirty, revision+1, one history entry, undo and redo bytes; rejection tests check typed error and unchanged bytes/history/revision"},
+  "AC4": {"status": "pass", "evidence": "save_as_then_open_..., open_svg_..., path_tool_failures_... (untitled, ungranted, missing, wrong ext, corrupt, truncated, flipped)"},
+  "AC5": {"status": "pass", "evidence": "missing_grant_refuses_every_path_tool, grant_dir_flag_parsing, symlinks_cannot_escape_the_grant, export_job_and_tool_share_the_grant_policy, explicit_grants_combine_..."},
+  "AC6": {"status": "pass", "evidence": "export_svg_decodes_and_equals_the_source (JSON-decoded svg == source(); compose_svg via vexel-svg-decode gives identical pixels)"},
+  "AC7": {"status": "pass", "evidence": "every_routed_edit_resyncs_the_shared_driver, host_driver_follows_routed_edits"},
+  "AC8": {"status": "pass", "evidence": "vexel-app 173 lib + 1 bin (same 174 as before) + 25 new integration; protocol/stdio/document all pass; no new packages; no unsafe"},
+  "AC9": {"status": "pass", "evidence": "result.md"}
+}
