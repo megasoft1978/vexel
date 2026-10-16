@@ -10,7 +10,9 @@ use vexel_scene::{ImagePixels, MediaError};
 
 const SIGNATURE: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a];
 /// Largest decoded RGBA image, in bytes (the media layer bounds pixels again).
-const MAX_RGBA_BYTES: usize = 256 * 1024 * 1024;
+// 64 MiB of RGBA (4096x4096): decoding holds the raw, unfiltered and RGBA buffers at once, so a
+// crafted tiny PNG could otherwise force an allocation of several times this value.
+const MAX_RGBA_BYTES: usize = 64 * 1024 * 1024;
 
 struct Header {
     width: usize,
