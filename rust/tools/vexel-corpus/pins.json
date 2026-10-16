@@ -1,0 +1,14 @@
+{
+  "pins": [
+    {
+      "name": "in-repo",
+      "manifest": "bench/corpus/manifest.json",
+      "sha256": "a05dcf0da95bd7c53ce6faec6704f7b739d6cbd9cf829dfff74b50dfb8359bbd"
+    },
+    {
+      "name": "external",
+      "manifest": "vexel-corpus-real/manifest.json",
+      "sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "AC1": "tests/guard.rs: altered_manifest_byte_is_refused, file_hash_mismatch_is_guard_failed, writes_only_under_out",
+  "AC2": "src/verdict.rs tests: every_compose_error_variant_maps, non_compose_verdicts; tests/guard.rs: synthetic_verdicts_through_the_pipeline, non_zero_exit_is_crash_with_status",
+  "AC3": "tests/guard.rs: timeout_kills_the_process_group (<4 s for 2 s timeout), rss_limit_reports_rss_exceeded",
+  "AC4": "in-repo/report.{json,md}: 24 files, ok 17, unsupported 7, no crash or guard_failed",
+  "AC5": "external/report.{json,md}: 58 files, 19 skipped, comparison section vs 3/39 and 5/39 appended",
+  "AC6": "external/report.md and in-repo/report.md first paragraph; corpus bytes not copied",
+  "AC7": "cargo tree depth 1 shows path crates only; no unsafe",
+  "AC8": "result.md"
+}
