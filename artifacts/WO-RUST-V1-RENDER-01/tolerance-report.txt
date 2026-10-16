@@ -1,0 +1,20 @@
+WO-RUST-V1-RENDER-01 tolerance report
+Thresholds (tests/parity.rs, mod tolerance): per-channel delta <= 1, differing pixels <= 0.5%,
+no pixel delta > 2, pixels farther than 1 px (center distance <= 1 + 0.75 slack) from any
+shape edge (stroke extent included) exactly equal.
+Space: C write_tile_ppm output (rgb + 255 - alpha over white); Rust tile converted identically.
+C reference: svgworkbench debug build at 8f10553a1a7874c1843ae8161e82c8c2de255351.
+
+fixture                         pixels  max_delta  differing  over_two  outside_dilation
+shapes-basic                     12288          0          0         0                 0
+shapes-rounded                   12288          0          0         0                 0
+shapes-lines-polygons            12288          0          0         0                 0
+path-line-curves                 12288          0          0         0                 0
+path-relative-commands           12288          0          0         0                 0
+style-presentation-attributes    12288          0          0         0                 0
+render-extra (crate-local)       16000          0          0         0                 0
+
+Negative control (shapes-basic, every edge shifted +0.5 px): max_delta=128 differing=218
+over_two=218 outside_dilation=0 -> harness verdict FAIL as required.
+
+Result: byte-exact parity on all 7 cases (target of the order: exact).

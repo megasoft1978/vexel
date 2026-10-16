@@ -1,0 +1,24 @@
+WO-RUST-V1-RENDER-01 verification (worktree agent-aed5362f3e5d51ad3, macOS arm64)
+env: CARGO_HOME=<repo>/.cache/cargo, CARGO_TARGET_DIR=<worktree>/build/cargo-target, MACOSX_DEPLOYMENT_TARGET=13, cargo +stable, --offline
+
+cargo +stable check -p vexel-render --locked --offline          -> ok, no warnings
+cargo +stable test  -p vexel-render --locked --offline          -> 49 passed, 0 failed
+  tests/errors.rs      11 passed (AC-4)
+  tests/fill.rs         8 passed (AC-1)
+  tests/stroke.rs      13 passed (AC-2)
+  tests/parity.rs       9 passed (AC-3: 6 fixtures + 1 extra + manifest + negative control)
+  tests/offscreen.rs    5 passed (AC-5, AC-6)
+  tests/parity_map.rs   3 passed (AC-7, includes C function inventory scan of the 4 reference files)
+python3 scripts/wo_validate.py WO-RUST-V1-RENDER-01 --ready    -> valid
+python3 scripts/ledger.py validate ledger.jsonl                -> valid ledger: 1827 entries
+git diff --check                                               -> clean
+Source files all < 800 lines (largest: src/stroke.rs 308, tests/common/parity_data.rs 447).
+Not run: rustfmt, clippy (not installed, per order); ./dev builds of the C tree.
+
+C goldens: built with `cmake --preset mac-debug && cmake --build --preset mac-debug --target svgworkbench`
+at 8f10553a (svgworkbench links; the editor test targets are not needed). PPMs generated with
+`svgworkbench --render-animation <svg> --fps 1 --duration 1 --out <dir>` (native-size tile through
+write_tile_ppm). `--render-frame` was not used because it composes the tile onto the viewer
+checkerboard at the --size viewport. Hashes pinned in rust/crates/vexel-render/tests/golden/manifest.json.
+Flattened edge literals in tests/common/parity_data.rs were dumped from the C decoder
+(svg_shape_decode) by a scratch program outside the repo; no C source or golden was modified.

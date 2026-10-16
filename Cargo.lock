@@ -343,6 +343,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "vexel-render"
+version = "0.1.0"
+dependencies = [
+ "vexel-geometry",
+ "vexel-raster",
+ "vexel-scene",
+]
+
+[[package]]
 name = "vexel-scene"
 version = "0.1.0"
 dependencies = [

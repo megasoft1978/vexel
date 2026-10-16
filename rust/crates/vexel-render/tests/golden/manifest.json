@@ -1,0 +1,69 @@
+{
+  "generator": "svgworkbench debug build, native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha)",
+  "goldens": [
+    {
+      "fixture_id": "shapes-basic",
+      "source_sha256": "6f546464f23d6cd95be30fe2c98130b84b0f75796e4578b330b0695dcf6de5c7",
+      "ppm_sha256": "fd17c64c48366c94d5462b803119c5016db36a27ea8e58a40840131385752cc4",
+      "width": 128,
+      "height": 96,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "shapes-rounded",
+      "source_sha256": "88e98733851a8204ac3759b0aa4399408b0b8edd0df4b3da601c2c468df14f12",
+      "ppm_sha256": "fef874139223b2dffa9e1c48e7ab7833bc095b1cf0213630070542d5d4ae9f7f",
+      "width": 128,
+      "height": 96,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "shapes-lines-polygons",
+      "source_sha256": "96bfb3f921790ec6dad2101d6c7a6431761ab3c2536cce857a7895dbb0965296",
+      "ppm_sha256": "3b9b27515a5999c4399ac486a3ac1505c0df229e99d50cd18147a9927535b6b2",
+      "width": 128,
+      "height": 96,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "path-line-curves",
+      "source_sha256": "802a63d44517df171682f3676c8c39baa93dd80d2735eba85df0eaba62b5cde7",
+      "ppm_sha256": "0437ea65b62239dd11f6aaf5c18f5964b1ca87090d610d2fb53ab550ae8d1ffd",
+      "width": 128,
+      "height": 96,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "path-relative-commands",
+      "source_sha256": "f393af8a0fcb25a450a2f509d8489467af43068b95642c0e0bb83104540993f8",
+      "ppm_sha256": "1f01a78258e94b8ff01d0003a0400219a48339286a1b4d38189c880e24b74543",
+      "width": 128,
+      "height": 96,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "style-presentation-attributes",
+      "source_sha256": "8a4741889fe76bcc26446b8d11b10198d92e65dcaa2bb7fdae1dfc9a44553fa3",
+      "ppm_sha256": "df9f3775fc0d9c6967505b687c179fd10bfdcce2eebf610e91e541d5863c4a8a",
+      "width": 128,
+      "height": 96,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "render-extra",
+      "source": "rust/crates/vexel-render/tests/golden/render-extra.svg (crate-local, not a corpus fixture)",
+      "source_sha256": "739a79cf366345b8c133b9c37f82a7a1b42deed4c15b2dbb1769f4c9a1f9b49b",
+      "ppm_sha256": "c0d63c6252ea53a44e8c8fb77112b0ac79fb86c42d7fac5f997b3d33a11b11b2",
+      "width": 160,
+      "height": 100,
+      "svgworkbench_git_sha": "8f10553a1a7874c1843ae8161e82c8c2de255351",
+      "command": "svgworkbench --render-animation <svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}
