@@ -25,3 +25,10 @@ objc2-exception-helper = { version = "=0.1.1", default-features = false }
 cc = { version = "=1.8.0", default-features = false }
 find-msvc-tools = { version = "=0.1.14", default-features = false }
 shlex = { version = "=2.0.1", default-features = false }
+
+[dev-dependencies]
+vexel-render = { path = "../vexel-render" }
+vexel-svg-engine = { path = "../vexel-svg-engine" }
+vexel-svg-decode = { path = "../vexel-svg-decode" }
+vexel-scene = { path = "../vexel-scene" }
+vexel-raster = { path = "../vexel-raster" }

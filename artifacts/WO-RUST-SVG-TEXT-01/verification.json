@@ -1,0 +1,13 @@
+{
+  "commands": {
+    "cargo check -p vexel-platform-apple -p vexel-svg-engine -p vexel-render --locked --offline": "pass",
+    "cargo test -p vexel-platform-apple": "pass (89 tests)",
+    "cargo test -p vexel-svg-engine": "pass (47 tests)",
+    "cargo test -p vexel-render": "pass (50 tests)",
+    "cargo test -p vexel-app": "pass (203 tests)",
+    "scripts/wo_validate.py WO-RUST-SVG-TEXT-01 --ready": "valid",
+    "scripts/ledger.py validate ledger.jsonl": "valid ledger: 1884 entries",
+    "git diff --check": "not run: sandbox refuses git"
+  },
+  "logs": ["check.log", "test-platform.log", "test-engine.log", "test-render.log", "test-app.log"]
+}

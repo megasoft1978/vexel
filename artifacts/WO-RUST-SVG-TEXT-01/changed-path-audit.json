@@ -1,0 +1,23 @@
+{
+  "new": [
+    "rust/crates/vexel-platform-apple/src/text_layout.rs",
+    "rust/crates/vexel-platform-apple/tests/text_layout.rs",
+    "rust/crates/vexel-platform-apple/tests/text_parity.rs",
+    "rust/crates/vexel-svg-engine/src/text.rs (not in the order's list; keeps lib.rs hunks minimal)",
+    "rust/crates/vexel-svg-engine/tests/text_decode.rs",
+    "rust/crates/vexel-render/src/text.rs",
+    "rust/fixtures/render-text/**",
+    "artifacts/WO-RUST-SVG-TEXT-01/**"
+  ],
+  "modified_additive": [
+    "rust/crates/vexel-platform-apple/src/lib.rs (mod + pub use)",
+    "rust/crates/vexel-svg-engine/src/lib.rs (mod/pub use, provider field+setters, decode_text_scoped)",
+    "rust/crates/vexel-render/src/lib.rs (mod + pub use)"
+  ],
+  "protected_but_changed_needs_coordinator": [
+    "rust/crates/vexel-svg-engine/Cargo.toml: + vexel-svg-media path dep",
+    "rust/crates/vexel-platform-apple/Cargo.toml: + [dev-dependencies] vexel-render, vexel-svg-engine, vexel-svg-decode, vexel-scene, vexel-raster (path)",
+    "Cargo.lock: regenerated offline for the above (workspace path crates only)"
+  ],
+  "unsafe": "only rust/crates/vexel-platform-apple/src/text_layout.rs"
+}

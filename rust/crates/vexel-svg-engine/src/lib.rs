@@ -5,6 +5,9 @@
 //! scene's borrowed cached-paint handoff. Definitions use the real planner.
 //! Text and images currently return source-offset `Unsupported` diagnostics.
 
+mod text;
+pub use text::TextLayoutProvider;
+
 use vexel_base::WorkControl;
 use vexel_geometry::{Affine, Edge};
 use vexel_scene::*;
@@ -25,6 +28,7 @@ pub struct SvgEngineOperations {
     clip_plan_error: Option<Diagnostic>,
     clip_context_error: Option<Diagnostic>,
     clip_owner_error: Option<Diagnostic>,
+    text_provider: Option<Box<dyn TextLayoutProvider>>,
 }
 impl Default for SvgEngineOperations {
     fn default() -> Self {
@@ -44,7 +48,12 @@ impl SvgEngineOperations {
             clip_plan_error: None,
             clip_context_error: None,
             clip_owner_error: None,
+            text_provider: None,
         }
+    }
+    /// Injects the text layout source; without one `<text>` stays `Unsupported`.
+    pub fn set_text_provider(&mut self, provider: Box<dyn TextLayoutProvider>) {
+        self.text_provider = Some(provider);
     }
     pub fn paint_cache(&self) -> &PaintCache {
         &self.paint_cache
@@ -229,10 +238,13 @@ impl vexel_svg_decode::DecoderProductionOperations for SvgEngineOperations {
         &mut self,
         request: TextDecodeRequest<'_, '_>,
         builder: &mut SceneBuilder,
-        _: &DraftToken,
+        draft: &DraftToken,
         control: &mut dyn WorkControl,
     ) -> Result<bool> {
-        MediaDecodeOperations::decode_text(self, request, builder, control)
+        match self.text_provider.as_deref_mut() {
+            Some(provider) => text::decode(provider, request, builder, draft, control),
+            None => MediaDecodeOperations::decode_text(self, request, builder, control),
+        }
     }
     fn decode_image_scoped(
         &mut self,
@@ -295,6 +307,10 @@ impl<'src, 'ctx> SvgEngineSession<'src, 'ctx> {
     }
     pub fn blocked_contract(&self) -> Option<vexel_svg_decode::ContractBlocker> {
         self.decoder.blocked_contract()
+    }
+    /// Injects the text layout provider into the session's operations.
+    pub fn set_text_provider(&mut self, provider: Box<dyn TextLayoutProvider>) {
+        self.operations.set_text_provider(provider);
     }
     pub fn operations(&self) -> &SvgEngineOperations {
         &self.operations

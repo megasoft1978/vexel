@@ -1,0 +1,169 @@
+{
+  "generator": "svgworkbench debug build (legacy C, tag legacy-c-final), native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha)",
+  "legacy_tag": "legacy-c-final",
+  "legacy_tag_ref_value": "cb9661144907e909a0e7950243e9dc3fcfefb5bc",
+  "legacy_tag_note": "value read from .git/refs/tags/legacy-c-final; `git rev-parse` was not run (sandbox refuses git)",
+  "legacy_tree_prepared_by": "git archive legacy-c-final extracted outside the repository (scratchpad legacy-c)",
+  "build_commands": [
+    "cmake --preset mac-debug",
+    "cmake --build --preset mac-debug --target svgworkbench"
+  ],
+  "binary": "build/mac-debug/bin/svgworkbench",
+  "binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "cmake_version": "cmake version 3.31.6",
+  "compiler_version": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "macos": {
+    "product_version": "27.0.1",
+    "build_version": "26A434",
+    "uname": "Darwin Gabrieles-Mac-Studio.local 27.0.0 Darwin Kernel Version 27.0.0: Tue Aug 11 21:06:40 PDT 2026; root:xnu-13432.1.9~1/RELEASE_ARM64_T6050 arm64"
+  },
+  "fonts": {
+    "Helvetica": {
+      "file": "/System/Library/Fonts/Helvetica.ttc",
+      "version": "22.0d2e1"
+    },
+    "Times": {
+      "file": "/System/Library/Fonts/Times.ttc",
+      "version": "22.0d2e1"
+    },
+    "Menlo": {
+      "file": "/System/Library/Fonts/Menlo.ttc",
+      "version": "22.0d2e1"
+    },
+    "Helvetica Neue": {
+      "file": "/System/Library/Fonts/HelveticaNeue.ttc",
+      "version": "22.0d2e1"
+    }
+  },
+  "font_notes": "Rust text parity depends on the installed fonts and macOS version; the parity test reports an explicit skip if the recorded font files are missing.",
+  "goldens": [
+    {
+      "fixture_id": "anchor-end",
+      "source_sha256": "a86703a9f3d6696ecafe7559ea22c56f7f6ca75d7ce4ac14fed5359faed357b4",
+      "ppm_sha256": "376fc39138da9b53746f36706b6fac37c99e683e35078ef05ddee63c94a6eef0",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "anchor-middle",
+      "source_sha256": "ca41556b36564e8f0001086c5110b360c5efffa84a6fbedc4a9170169c706136",
+      "ppm_sha256": "3f7aed0d9e7a2d5222f079e20dd20ec818adee6deb49b8442f88201cf8a4af68",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "bold",
+      "source_sha256": "24cb91e85a2dc5772c60271aea693231187d4e9c6b1dc1aa23ca05315d8d7862",
+      "ppm_sha256": "d20054b9bad2a76840ea0fa5e43fe4b53ec748b8d7025307ac8a6566124eb5d2",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "corpus-text-basic",
+      "source_sha256": "48741c4f973924b1d29fc1f86f32e1b48b1fb61207f29e4cd62051e44cce4c91",
+      "ppm_sha256": "db2b337aa550d3b3023396186cb9240f995b66b95717d956d47b895d03137e70",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "corpus-text-positioning",
+      "source_sha256": "f09f30c074085b2b9c781d77262fe2812f17f5707ed0ba587fa525f53934fd5c",
+      "ppm_sha256": "344526d359e40a8f4aea4466ce28abbcb3e7bc514fe4778f31534b3e80f9eb27",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "corpus-text-spans",
+      "source_sha256": "97d40453681ac75e58748076076b0be6b98ca1dfdd4e94d6cd1627374b8af949",
+      "ppm_sha256": "c3daa506558ff8da2fe745e05c5b27ed6a1313c071b7427ecda8dd0a876ac34c",
+      "width": 128,
+      "height": 96,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "glyph-dx-only",
+      "source_sha256": "fb88924e9dbaa8ba3ec09a794ec63298c420c10c04e4923f9447a0668c55cf08",
+      "ppm_sha256": "12d64906ea840b7fca3125be33a49029e8efe2f712d07b9da4cf8e2654de9d1d",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "glyph-x-dx",
+      "source_sha256": "7af84322a741546cbbdde2f0d8db28531ae308ed9276cfed96356b1c86ef29fa",
+      "ppm_sha256": "31ef2838f3cbcc8fb8447d909e5086bf4aa6138fd9f93a4150369546bd0522db",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "helvetica-line",
+      "source_sha256": "62f2151cfc41a4ccbd8870ccd2ca733cd602cd32418136231669cb1ae44ee02b",
+      "ppm_sha256": "d8c4d6bad0d018e4b74e28d545ee0771ae14b60ed8bd2e9e3fd4f2cbc7850278",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "italic",
+      "source_sha256": "ae3f5e620e06d6debc09635d20c7efe8d7c2818bac81ccb984465f2918774550",
+      "ppm_sha256": "d30277dafa2c08d556d91dadce935aa120af165b9b1744c15545a01d87ce7fbd",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "letter-spacing",
+      "source_sha256": "fd980bc87c0d1a4252b3232cbdf3241a8bab7de1c0f915d5ed4954b7b797a82c",
+      "ppm_sha256": "11820b9d1f78b168ba54391d12a80faeda6f471b40d53533005810e864c4330a",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "menlo",
+      "source_sha256": "d81bce5b70e7535074ba28c2b1f77e831cfe6b50788ab01dee2668c4b9d90f77",
+      "ppm_sha256": "cfa50a45eb00744d93c80963cc4fb9bcb516740e04f1489e183b379c092c526f",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "times",
+      "source_sha256": "378a7740bf64dd7a8d5399eef4b642160bc83826ba04b8069c7049ffa9bf3971",
+      "ppm_sha256": "c9f10c487358e69a9aa6cf08f12721af7aed5b33d0425ce8d94b4627311c09aa",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "transform",
+      "source_sha256": "6ae0d24a70a28dcc81be4c6afce8f03e05ed0972b3b8d6ddeb8ca6260e70c531",
+      "ppm_sha256": "ad0d5baf0a17702cd54dbb15292562569b9b69cca8ba0db0facfe5aaa417a2ff",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "tspan-colour",
+      "source_sha256": "581d3acd2d753df0b72747482cde9bb6fafed783a8801d57b8ec59b624af78c8",
+      "ppm_sha256": "6a03a675c71b252836ff8a0f58aeb24d2d93351dfed934d458a16e93cfd3df1f",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    },
+    {
+      "fixture_id": "word-spacing",
+      "source_sha256": "6aeb0dfc314265b78d383d816d195076d365f0bf8e12795d3ecb7f344cb6f454",
+      "ppm_sha256": "f31192e5d7c9e3393c06b2f8153b50d60cece1660aa923c5686ee082b82e36d2",
+      "width": 160,
+      "height": 80,
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}

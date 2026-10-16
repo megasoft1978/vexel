@@ -1,0 +1,5 @@
+[236/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_menus.m.o
+[237/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_metal.m.o
+[238/239] Building OBJC object CMakeFiles/svgworkbench.dir/src/platform/macos/platform_cursor.m.o
+[239/239] Linking C executable bin/svgworkbench
+ld: warning: ignoring duplicate libraries: 'libvexel_index.a', 'libvexel_platform_media.a', 'libvexel_shape.a', 'libvexel_ui_state.a'

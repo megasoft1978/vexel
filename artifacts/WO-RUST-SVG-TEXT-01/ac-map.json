@@ -1,0 +1,11 @@
+{
+  "AC1": "vexel-platform-apple/tests/text_parity.rs: 16 fixtures, all max_delta=0 differing=0 (see test-platform.log with --nocapture rerun)",
+  "AC2": "vexel-platform-apple/tests/text_layout.rs (11 tests, values recorded from C harness) + src unit test for injected panic",
+  "AC3": "vexel-svg-engine/tests/text_decode.rs (9 tests, stub provider)",
+  "AC4": "text_decode.rs source_bytes_and_element_ranges_are_untouched_with_foreign_content",
+  "AC5": "platform unit test injected_panic_is_a_typed_fault; engine provider_panic_is_a_typed_error_not_an_unwind",
+  "AC6": "all pre-existing tests pass, counts only increased",
+  "AC7": "rust/fixtures/render-text/manifest.json + text_parity.rs manifest_hashes_match_every_fixture_file",
+  "AC8": "cargo tree: no new package (only workspace path deps added)",
+  "AC9": "result.md"
+}

@@ -1,0 +1,16 @@
+PARITY corpus-text-positioning: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY corpus-text-basic: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY anchor-middle: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY word-spacing: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY corpus-text-spans: pixels=12288 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY tspan-colour: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY glyph-x-dx: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY anchor-end: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY glyph-dx-only: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY bold: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY italic: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY letter-spacing: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY transform: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY helvetica-line: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY menlo: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0
+PARITY times: pixels=12800 max_delta=0 differing=0 over_two=0 outside_dilation=0

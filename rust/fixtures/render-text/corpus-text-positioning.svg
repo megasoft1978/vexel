@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 128 96" width="128" height="96">
+  <title>Text Positioning</title>
+  <text x="12" y="28" font-size="12"><tspan x="12" dy="0">First line</tspan><tspan x="12" dy="20">Second line</tspan></text>
+</svg>

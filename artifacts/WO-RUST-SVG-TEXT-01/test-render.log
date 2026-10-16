@@ -1,0 +1,100 @@
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-ad2c7ba3b77e3bf11/rust/crates/vexel-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.94s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_render-b24d0e063d095000)
+
+running 1 test
+test text::tests::only_stroke_and_text_path_stay_unsupported ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/errors.rs (.cache/target/aarch64-apple-darwin/debug/deps/errors-927ad69ad0f3ebde)
+
+running 11 tests
+test adapter_reports_each_unsupported_paint_kind ... ok
+test adapter_reports_dash_image_paint_order_and_paint_server ... ok
+test empty_inputs_are_valid_and_leave_the_tile_empty ... ok
+test adapter_accepts_a_solid_shape_and_inverts_the_stroke_transform ... ok
+test crisp_edges_is_unsupported_at_render_time ... ok
+test scene_level_features_each_have_their_kind ... ok
+test view_and_tile_size_mismatch_is_invalid ... ok
+test non_empty_tile_is_rejected_without_touching_it ... ok
+test non_finite_and_overflowing_geometry_is_invalid ... ok
+test cancellation_stops_at_row_granularity ... ok
+test over_limit_input_returns_limit_exceeded ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/fill.rs (.cache/target/aarch64-apple-darwin/debug/deps/fill-7ef262b4b7cb5978)
+
+running 8 tests
+test unfilled_shape_paints_no_fill_even_with_a_fill_colour ... ok
+test half_pixel_rectangle_covers_8_of_16_samples ... ok
+test half_pixel_in_x_and_quarter_coverage ... ok
+test rgb_is_averaged_over_nontransparent_samples_only ... ok
+test shapes_composite_source_over_in_document_order ... ok
+test nested_ring_opposite_direction_is_a_hole_for_both_rules ... ok
+test nested_ring_same_direction_nonzero_fills_evenodd_holes ... ok
+test self_intersecting_star_nonzero_vs_evenodd ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/offscreen.rs (.cache/target/aarch64-apple-darwin/debug/deps/offscreen-9f493680f92e396c)
+
+running 5 tests
+test offscreen_size_ignores_any_simulated_host_scale ... ok
+test offscreen_module_never_reads_a_host_scale ... ok
+test render_offscreen_uses_the_one_to_one_tile ... ok
+test view_mapping_slice_and_none ... ok
+test identical_input_renders_byte_identical_tiles ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/parity.rs (.cache/target/aarch64-apple-darwin/debug/deps/parity-f0e21ab35a8c122f)
+
+running 9 tests
+test every_golden_is_listed_in_the_manifest_with_its_size ... ok
+test shapes_lines_polygons ... ok
+test shapes_basic ... ok
+test path_relative_commands ... ok
+test harness_rejects_a_deliberately_shifted_shape ... ok
+test shapes_rounded ... ok
+test style_presentation_attributes ... ok
+test render_extra ... ok
+test path_line_curves ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/parity_map.rs (.cache/target/aarch64-apple-darwin/debug/deps/parity_map-3729f4f03cedd2fc)
+
+running 3 tests
+test every_c_function_is_mapped_to_a_symbol_and_test_or_a_named_deferral ... ok
+test parity_map_lists_exactly_the_functions_defined_in_the_c_files ... ok
+test mapped_symbols_and_tests_exist_in_the_crate ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/stroke.rs (.cache/target/aarch64-apple-darwin/debug/deps/stroke-a4a4195b16750504)
+
+running 13 tests
+test bevel_join_cuts_the_outer_corner ... ok
+test odd_width_gives_half_coverage_rows ... ok
+test round_join_is_a_disc_at_the_vertex ... ok
+test zero_width_or_transparent_stroke_draws_nothing ... ok
+test width_covers_exact_band ... ok
+test round_cap_is_a_half_disc ... ok
+test miter_join_fills_the_outer_corner ... ok
+test square_cap_extends_by_half_width ... ok
+test stroke_is_painted_over_fill ... ok
+test explicit_subpath_closed_flags_are_honoured ... ok
+test closed_subpath_joins_the_seam_open_does_not ... ok
+test zero_length_segment_follows_the_cap ... ok
+test miter_limit_crossing_falls_back_to_bevel ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_render
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

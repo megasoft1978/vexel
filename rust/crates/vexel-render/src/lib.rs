@@ -26,6 +26,7 @@ mod pattern_boundary;
 mod presentation;
 mod render;
 mod stroke;
+mod text;
 mod validate;
 mod view;
 
@@ -44,6 +45,7 @@ pub use pattern::{
 };
 pub use presentation::{OFFSCREEN_BACKING_SCALE, offscreen_tile_size, render_offscreen};
 pub use render::{DashedShape, render_dashed_shapes, render_shapes};
+pub use text::require_fill_only_text;
 pub use view::{PreserveAspect, ViewBox, ViewMap};
 
 use std::ops::Range;
