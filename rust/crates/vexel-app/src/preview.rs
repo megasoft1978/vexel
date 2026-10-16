@@ -157,6 +157,9 @@ fn document_error(error: V1DocumentError) -> &'static str {
         V1DocumentError::Allocation | V1DocumentError::FormattingLimit => {
             "preview allocation or formatting failed"
         }
+        V1DocumentError::InvalidStableId
+        | V1DocumentError::MissingStableId
+        | V1DocumentError::InvalidAnimationFragment => "animation validation failed",
         V1DocumentError::Edit(_) => "document edit failed",
     }
 }

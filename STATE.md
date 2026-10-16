@@ -1711,3 +1711,22 @@ document, and app candidates are being developed in separate Luna worktrees;
 root manifests, lockfile, product docs/state/ledger, and integration remain
 coordinator-owned. Full V1 and the final recorded website/README demonstration
 remain active requirements.
+
+## 2026-10-16 — re-baseline and repository security
+
+All work since `19234a0` is now committed and pushed (`2898e15`..), tag `legacy-c-final`
+marks the last tree with C. Large artifacts and third-party PDFs are excluded
+(`artifacts/EXCLUDED-LARGE.txt`). Six blocked C orders and WO-CORPUS-01/02 are
+`superseded` (directive 4).
+
+Baseline (this Mac, `CARGO_HOME=.cache/cargo`; default CARGO_HOME fails offline
+resolution of `objc2-image-io`):
+- `cargo check --workspace --offline`: failed at start on `vexel-app` (non-exhaustive
+  `V1DocumentError` match in `preview.rs`, left by the unfinished live-animation
+  integration); fixed by mapping the three animation errors. Check now passes.
+- `cargo test --workspace --offline --exclude vexel-app`: 170 suites, 1049 passed, 0 failed.
+  `cargo test -p vexel-app`: 16 passed.
+- `./dev verify` (C, frozen reference): fails at link — `viewer_editor_byte_length`,
+  `_can_redo`, `_can_undo`, `_select_at_source_offset`, `_selection_span` are declared in
+  `src/app/viewer_editor.h` but defined nowhere. C is frozen; not fixed. Recorded so the C
+  tree is not mistaken for green.
