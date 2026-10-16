@@ -1,0 +1,7 @@
+legacy binary: prebuilt by the coordinator, not rebuilt in this run
+path: legacy-c/build/mac-debug/bin/svgworkbench (scratchpad extraction of legacy-c-final, read-only)
+binary_sha256: f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590
+tag ref value (read from refs file, git on the tag refused): cb9661144907e909a0e7950243e9dc3fcfefb5bc
+cmake 3.31.6, AppleClang 21.0.0, macOS 27.0.1 (26A434)
+goldens: svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir>, frame-0000.ppm
+hashes: rust/fixtures/v1/wire/manifest.json (checked by tests_wire::manifest_hashes_match_the_files)

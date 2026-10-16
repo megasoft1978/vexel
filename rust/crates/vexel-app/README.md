@@ -17,8 +17,14 @@ RGBA frame presentation.
 ## Opening an SVG
 
 `vexel <file.svg>` opens one SVG (ADR-0029 subset, at most 8 MiB) in the shell stage:
-decode, scene, scalar render at 1 pixel per point, then presentation. Deferred
-features are reported in the status bar, never dropped silently. Retina output
+decode, scene, scalar render at 1 pixel per point, then presentation. Masks,
+opacity and clip groups, pattern paint, filters (blur, offset, flood, blend,
+composite, merge, colour matrix, drop shadow), dashed strokes and `<text>`
+(CoreText, macOS) render. Still deferred and reported in the status bar, never
+dropped silently: gradient paint, images, crisp edges, paint order, an
+unsupported filter primitive, `textPath` and stroked text, group blend modes,
+and clipped shapes that are also dashed or pattern painted. Animation frames
+render the same features except dashes. Retina output
 is pixel-replicated, not re-rendered. There is no File > Open... menu yet.
 
 ## Animation playback

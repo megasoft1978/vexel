@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="80" viewBox="0 0 160 80">
+  <text x="10" y="34" font-family="Helvetica" font-size="22" fill="#106040">Wire text</text>
+  <text x="152" y="66" font-family="Helvetica" font-size="14" text-anchor="end" fill="#a02020">Endpoint</text>
+</svg>

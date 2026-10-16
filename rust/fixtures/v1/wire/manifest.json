@@ -1,0 +1,84 @@
+{
+  "generator": "svgworkbench debug build (legacy C, frozen), native-size tile composited over white by write_tile_ppm (rgb + 255 - alpha)",
+  "legacy_tag": "legacy-c-final",
+  "legacy_tag_commit": "cb9661144907e909a0e7950243e9dc3fcfefb5bc",
+  "legacy_tag_commit_note": "value of .git/refs/tags/legacy-c-final read as a file (git on the tag is refused in the worker sandbox); tree is the coordinator-prepared extraction outside the repo",
+  "binary_sha256": "f90da8223aa2976e0b0c2a01b391e9d4cc3e457bd9e25f243bf8748439578590",
+  "cmake_version": "cmake version 3.31.6",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "macos": "macOS 27.0.1 (26A434)",
+  "fonts": {"Helvetica": {"file": "/System/Library/Fonts/Helvetica.ttc"}},
+  "goldens": [
+    {
+      "fixture_id": "wire-combined",
+      "source_sha256": "b8f072ff4eb0d0f00c79377a2ea450abc3d24a6b14edc0fbae23e111f2663e03",
+      "ppm_sha256": "642f386d5f50ef30e5fab7f3c15fd4d128489d8e9d7ddde44790e86ab8e45d73",
+      "size": "128 96",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-dash",
+      "source_sha256": "085c985297e1a2e6f33f0ae12470bdff8e9996d8b03fc294ef5807b81a7bd27a",
+      "ppm_sha256": "6541efd926525905db38e40d01e159d0f20488dd5c7515e4b4f49f0cd4476e9c",
+      "size": "64 48",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-filter-mask",
+      "source_sha256": "cd6da9aa39adbb19a28c17f6ef841239a4880ec692ee532d4b8c7e1ac1892c06",
+      "ppm_sha256": "c6f90ed74480da7fd704f350271ce5d01f806e3bca3526df7bd8f777816b95e5",
+      "size": "64 48",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-filter",
+      "source_sha256": "11195c16a17c0c4ac177cea00a3d238efcc99f1f30c15d51f1658c26583e422f",
+      "ppm_sha256": "abcea3244a30d724c3499b9f92547213ab86f191631affe231ef2c7f2b687099",
+      "size": "96 64",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-group",
+      "source_sha256": "e037131c3d51cafc34ef67cf3b33a5c3758ce99c0b44df100bcfd342b8f3d20c",
+      "ppm_sha256": "b42079912c74211682e47ba0ba8b3c1317dd816356374ed5e45b40ec2cb68c5a",
+      "size": "64 48",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-mask",
+      "source_sha256": "005acdeb994da0be3941925477c8bf5d0910cfff3843e7ab4e8f08f42a663c12",
+      "ppm_sha256": "4fe1dd808a1ffac6235040f9b9950a6fe7b86d3b2adb33659262f40bfa723c4b",
+      "size": "64 48",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-pattern-group",
+      "source_sha256": "318edf84281554f005fe5eeb22e955bc17d26cbe863ae3a2ddeed2d4543062d5",
+      "ppm_sha256": "fa904f4bf2c14a9a33c08e76c8e1ab30b7f4397b91bedb4fac69b82a1914cbcb",
+      "size": "96 64",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-pattern",
+      "source_sha256": "58a5fef4712860a52ff985562ebb4a3278f4d62ab4c2d665296917d897b2b16a",
+      "ppm_sha256": "aed2f64b4281759c660a9b39b30dcbff077d86f60bf2ac3323180901c888fffc",
+      "size": "96 64",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+    ,
+    {
+      "fixture_id": "wire-text",
+      "source_sha256": "91c9bba6527064eb18d2c7e8a6244f3daa14db0c6234d0563d74cdbcfd01ef24",
+      "ppm_sha256": "041ffac22dc6d3f6c0dcb6f982aabb49342b0db6c594049ec2b5f314d8a7efab",
+      "size": "160 80",
+      "command": "svgworkbench --render-animation <fixture.svg> --fps 1 --duration 1 --out <dir> (frame-0000.ppm)"
+    }
+  ]
+}

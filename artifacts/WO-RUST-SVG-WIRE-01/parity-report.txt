@@ -1,0 +1,9 @@
+PARITY wire-mask: pixels=3072 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-group: pixels=3072 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-pattern: pixels=6144 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-pattern-group: pixels=6144 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-filter: pixels=6144 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-text: pixels=12800 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-dash: pixels=3072 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-filter-mask: pixels=3072 max_delta=0 differing=0 over_limit=0 outside_dilation=0
+PARITY wire-combined: pixels=12288 max_delta=0 differing=0 over_limit=0 outside_dilation=0

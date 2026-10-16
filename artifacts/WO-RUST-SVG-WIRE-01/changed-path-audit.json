@@ -1,0 +1,31 @@
+{
+  "added": [
+    "rust/crates/vexel-app/src/compose/render_scene.rs",
+    "rust/crates/vexel-app/src/compose/layers.rs",
+    "rust/crates/vexel-app/src/compose/clips.rs",
+    "rust/crates/vexel-app/src/compose/text.rs",
+    "rust/crates/vexel-app/src/compose/tests_wire.rs",
+    "rust/fixtures/v1/wire/** (9 svg, 9 ppm golden, manifest.json)",
+    "artifacts/WO-RUST-SVG-WIRE-01/**"
+  ],
+  "modified": [
+    "rust/crates/vexel-app/src/compose/mod.rs",
+    "rust/crates/vexel-app/src/compose/decode.rs",
+    "rust/crates/vexel-app/src/compose/shapes.rs",
+    "rust/crates/vexel-app/src/compose/error.rs",
+    "rust/crates/vexel-app/src/animation/frame.rs",
+    "rust/crates/vexel-app/src/compose/tests.rs (AC2)",
+    "rust/crates/vexel-app/src/compose/tests_open.rs (AC2)",
+    "rust/crates/vexel-app/tests/walkthrough.rs (AC2 fixture)",
+    "rust/crates/vexel-app/README.md"
+  ],
+  "protected_untouched": true,
+  "fixtures_v1_compose_changed": false,
+  "fixture_expectation_table": [
+    {"test": "compose::tests::filter_mask_and_text_fixtures_yield_unsupported -> filter_mask_and_text_fixtures_now_compose", "before": "unsupported-text.svg Err Unsupported(text); unsupported-mask.svg and unsupported-filter.svg Err Unsupported(opacity group)", "after": "all three Ok, no disclosures; mask keeps rect, blur partial alpha at edge, glyph pixels drawn", "reason": "mask, filter, text wired"},
+    {"test": "compose::tests::unsupported_error_text_names_feature_and_location", "before": "unsupported-text.svg error text", "after": "inline textPath document, same 'unsupported in V1' + text + element", "reason": "plain text renders; textPath stays deferred"},
+    {"test": "compose::tests::deferred_shapes_are_skipped_and_disclosed_not_dropped_silently", "before": "1 shape, disclosures [gradient paint, dashed stroke], status '2 deferred'", "after": "2 shapes, disclosures [gradient paint], status '1 deferred', dash drawn and gap open", "reason": "dashed strokes wired (compose)"},
+    {"test": "compose::tests_open::view_failures_are_typed_status_text_and_keep_the_last_document", "before": "unsupported-filter/mask.svg -> 'opacity group', unsupported-text.svg -> 'text'", "after": "inline unsupported primitive -> 'filter', image -> 'image', textPath -> 'text'", "reason": "the three fixtures compose now"},
+    {"test": "tests/walkthrough.rs step_i_open_and_edit_an_svg_and_disclose_unsupported_content", "before": "unsupported-text.svg -> 'unsupported in V1: text'", "after": "inline textPath document -> same message", "reason": "plain text renders"}
+  ]
+}

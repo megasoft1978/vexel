@@ -2,7 +2,7 @@
 //! reported with a source offset; nothing is dropped silently.
 
 use std::fmt;
-use vexel_render::UnsupportedKind;
+use vexel_render::{RenderError, UnsupportedKind};
 use vexel_scene::{Diagnostic, ErrorKind};
 
 /// One deferred item that was not drawn, with where it came from.
@@ -85,6 +85,24 @@ impl fmt::Display for ComposeError {
 }
 
 impl std::error::Error for ComposeError {}
+
+impl From<RenderError> for ComposeError {
+    fn from(error: RenderError) -> Self {
+        match error {
+            RenderError::Cancelled => Self::Cancelled,
+            RenderError::LimitExceeded => Self::LimitExceeded,
+            RenderError::Unsupported(kind) => Self::Unsupported {
+                feature: feature_name(kind),
+                offset: None,
+                element: None,
+            },
+            RenderError::InvalidGeometry | RenderError::TileNotEmpty => Self::Malformed {
+                detail: "render geometry",
+                offset: 0,
+            },
+        }
+    }
+}
 
 pub(crate) fn feature_name(kind: UnsupportedKind) -> &'static str {
     match kind {

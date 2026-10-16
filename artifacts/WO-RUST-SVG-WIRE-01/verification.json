@@ -1,0 +1,13 @@
+{
+  "check": "pass (cargo +stable check -p vexel-app --locked --offline)",
+  "vexel-app": "pass: 209 lib + 1 bin + 5 + 16 + 9 + 1 + 4 integration, 0 failed (was 191 lib before; 4 failures were the AC2 tests)",
+  "vexel-render": "pass: 0 failed",
+  "fmt": "pass (cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check)",
+  "wo_validate": "valid WO-RUST-SVG-WIRE-01 revision 1",
+  "ledger": "valid, 1934 entries",
+  "diff_check": "not run: git refused in the worker sandbox; trailing-whitespace grep over every changed file is clean",
+  "cargo_tree": "no Cargo.toml or Cargo.lock change; --locked builds pass; see cargo-tree.txt",
+  "unsafe": "none (vexel-app is forbid(unsafe_code))",
+  "parity": "9/9 wire fixtures max_delta 0, differing 0, outside_dilation 0 (parity-report.txt)",
+  "logs": ["check.log", "test-app.log", "test-render.log", "parity-report.txt", "cargo-tree.txt"]
+}

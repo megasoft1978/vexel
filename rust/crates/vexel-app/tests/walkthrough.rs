@@ -437,12 +437,10 @@ fn step_i_open_and_edit_an_svg_and_disclose_unsupported_content() {
     assert!(String::from_utf8_lossy(&exported).contains(&drawn));
 
     // Unsupported content is disclosed, never silently dropped or drawn.
-    let text_svg = fs::read(format!(
-        "{}/../../fixtures/v1/compose/unsupported-text.svg",
-        env!("CARGO_MANIFEST_DIR")
-    ))
-    .unwrap();
-    let error = compose_svg(&text_svg, 60, 40).unwrap_err().to_string();
+    // WO-RUST-SVG-WIRE-01: plain `<text>` now renders, so the disclosure is
+    // exercised with `textPath`, which stays deferred.
+    let text_svg = br##"<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40"><defs><path id="p" d="M0 20 L60 20"/></defs><text font-size="12"><textPath href="#p">Hi</textPath></text></svg>"##;
+    let error = compose_svg(text_svg, 60, 40).unwrap_err().to_string();
     assert!(error.contains("unsupported in V1: text"), "{error}");
 }
 

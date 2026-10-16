@@ -1,0 +1,10 @@
+{
+  "AC1": "pass: compose::tests_wire::every_wire_fixture_composes_and_matches_its_c_golden, 9 fixtures, all max_delta 0 / 0 differing / 0 outside dilation (parity-report.txt)",
+  "AC2": "pass: unsupported-mask/filter/text.svg and deferred-paint.svg compose; 5 expectation changes listed in changed-path-audit.json; no other assertion weakened",
+  "AC3": "pass: tests_wire unsupported_filter_primitive, text_path, gradient_paint disclosure, image, gradient_inside_a_pattern_tile, clipped_pattern_shape; animation_frames_keep_dashes_deferred",
+  "AC4": "pass: all tests run without a display; lib tests 191 -> 209; the only changed existing tests are the AC2 ones",
+  "AC5": "pass: tests_stale and every_wire_fixture_honours_cancellation; oversize_filter_blur / oversize_filter_surface / layer_memory_is_bounded_by_the_scratch_limit return LimitExceeded",
+  "AC6": "pass: open_and_save_keep_feature_documents_byte_identical (6 documents, byte compare after project save and reopen)",
+  "AC7": "pass: no Cargo.toml/Cargo.lock change, cargo-tree.txt, no unsafe",
+  "AC8": "pass: result.md"
+}

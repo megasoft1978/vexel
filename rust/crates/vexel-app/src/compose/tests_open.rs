@@ -238,14 +238,37 @@ fn view_failures_are_typed_status_text_and_keep_the_last_document() {
     );
     assert!(view.composed().is_some(), "previous document stays");
     let mut revision = 1000;
-    for (name, expect) in [
-        ("unsupported-filter.svg", "unsupported in V1: opacity group"),
-        ("unsupported-mask.svg", "unsupported in V1: opacity group"),
-        ("unsupported-text.svg", "unsupported in V1: text"),
+    // WO-RUST-SVG-WIRE-01: the unsupported-{filter,mask,text}.svg fixtures now
+    // compose, so the typed-failure status path is exercised with content the
+    // renderer still defers (unsupported primitive, textPath, image).
+    let svg = |body: &str| {
+        format!("<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>{body}</svg>")
+            .into_bytes()
+    };
+    for (name, source, expect) in [
+        (
+            "turbulence.svg",
+            svg(
+                "<defs><filter id='f'><feTurbulence baseFrequency='0.1'/></filter></defs>\
+                 <rect width='30' height='30' filter='url(#f)'/>",
+            ),
+            "unsupported in V1: filter",
+        ),
+        (
+            "image.svg",
+            svg("<image width='10' height='10' href='data:image/png;base64,iVBORw0KGgo='/>"),
+            "unsupported in V1: image",
+        ),
+        (
+            "textpath.svg",
+            svg("<defs><path id='p' d='M0 20 L40 20'/></defs>\
+                 <text font-size='10'><textPath href='#p'>Hi</textPath></text>"),
+            "unsupported in V1: text",
+        ),
     ] {
         revision += 1;
         view.set_name(name);
-        view.show(&fixture(name), revision, (80, 80));
+        view.show(&source, revision, (80, 80));
         wait_for(&mut view, |v| v.status().is_some_and(|s| s.1));
         assert!(view.composed().is_none());
         let text = view.status().unwrap().0.to_owned();

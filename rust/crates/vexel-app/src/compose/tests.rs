@@ -262,45 +262,57 @@ fn size_limits_are_typed() {
     assert_eq!(compose_svg(&huge, 10, 10), Err(ComposeError::LimitExceeded));
 }
 
+// WO-RUST-SVG-WIRE-01 (deliberate behaviour change): the unsupported-{mask,filter,
+// text}.svg fixtures used to be rejected; masks, filters and text now render, so
+// these assertions describe the rendered result instead of the typed failure.
 #[test]
-fn filter_mask_and_text_fixtures_yield_unsupported() {
-    for (name, feature) in [
-        ("unsupported-text.svg", "text"),
-    ] {
-        match compose_svg(&fixture(name), 40, 40) {
-            Err(ComposeError::Unsupported {
-                feature: got,
-                offset,
-                element,
-            }) => {
-                assert_eq!(got, feature, "{name}");
-                assert_eq!(element.as_deref(), Some(feature), "{name}");
-                assert!(offset.is_some(), "{name}");
-            }
-            other => panic!("{name}: expected Unsupported({feature}), got {other:?}"),
-        }
-    }
-    // WO-RUST-SVG-MASK-01 / WO-RUST-SVG-FILTER-01: masks and filters now decode, so the
-    // compose-level rejection is for the resulting group until the SVG wiring order routes
-    // groups to the renderer.
-    for name in ["unsupported-mask.svg", "unsupported-filter.svg"] {
-        match compose_svg(&fixture(name), 40, 40) {
-            Err(ComposeError::Unsupported {
-                feature,
-                offset: None,
-                element: None,
-            }) => assert_eq!(feature, "opacity group", "{name}"),
-            other => panic!("{name}: expected Unsupported(opacity group), got {other:?}"),
-        }
-    }
+fn filter_mask_and_text_fixtures_now_compose() {
+    let mask = compose_svg(&fixture("unsupported-mask.svg"), 40, 40).unwrap();
+    assert!(mask.disclosures.is_empty(), "{:?}", mask.disclosures);
+    assert_eq!(
+        px(&mask, 10, 10),
+        [255, 0, 0, 255],
+        "white mask keeps the rect"
+    );
+    assert_eq!(px(&mask, 35, 10), [0, 0, 0, 0]);
+
+    let filter = compose_svg(&fixture("unsupported-filter.svg"), 40, 40).unwrap();
+    assert!(filter.disclosures.is_empty(), "{:?}", filter.disclosures);
+    assert_eq!(
+        px(&filter, 15, 15),
+        [255, 0, 0, 255],
+        "blur keeps the interior"
+    );
+    let edge = px(&filter, 30, 15);
+    assert!(
+        edge[3] > 0 && edge[3] < 255,
+        "blurred edge is partially transparent: {edge:?}"
+    );
+
+    let text = compose_svg(&fixture("unsupported-text.svg"), 60, 40).unwrap();
+    assert!(text.disclosures.is_empty(), "{:?}", text.disclosures);
+    assert_eq!(
+        px(&text, 5, 5),
+        [0, 255, 0, 255],
+        "the plain rect is still drawn"
+    );
+    let glyph_pixels = (18..32)
+        .flat_map(|y| (4..24).map(move |x| (x, y)))
+        .filter(|&(x, y)| px(&text, x, y)[3] > 128)
+        .count();
+    assert!(glyph_pixels > 8, "text glyphs are drawn ({glyph_pixels})");
 }
 
 #[test]
 fn unsupported_error_text_names_feature_and_location() {
-    let error = compose_svg(&fixture("unsupported-text.svg"), 40, 40).unwrap_err();
+    // `textPath` is still deferred; the typed error keeps feature and element.
+    let svg = b"<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>\
+        <defs><path id='p' d='M0 20 L40 20'/></defs>\
+        <text font-size='10'><textPath href='#p'>Hi</textPath></text></svg>";
+    let error = compose_svg(svg, 40, 40).unwrap_err();
     let text = error.to_string();
     assert!(
-        text.contains("unsupported in V1") && text.contains("text"),
+        text.contains("unsupported in V1") && text.contains("text") && text.contains("textPath"),
         "{text}"
     );
 }
@@ -309,20 +321,16 @@ fn unsupported_error_text_names_feature_and_location() {
 fn deferred_shapes_are_skipped_and_disclosed_not_dropped_silently() {
     let svg = fixture("deferred-paint.svg");
     let composed = compose_document(&svg, 60, 40, &|| false).unwrap();
-    assert_eq!(composed.shapes.len(), 1, "only the solid rect is drawn");
+    // The dashed line now renders (WO-RUST-V1-RENDER-DASH-01 is integrated); only
+    // the gradient rect is still deferred.
+    assert_eq!(composed.shapes.len(), 2, "solid rect and dashed line drawn");
     let features: Vec<_> = composed
         .frame
         .disclosures
         .iter()
         .map(|d| (d.feature, d.element.as_deref()))
         .collect();
-    assert_eq!(
-        features,
-        [
-            ("gradient paint", Some("rect")),
-            ("dashed stroke", Some("line"))
-        ]
-    );
+    assert_eq!(features, [("gradient paint", Some("rect"))]);
     assert!(
         composed
             .frame
@@ -336,11 +344,14 @@ fn deferred_shapes_are_skipped_and_disclosed_not_dropped_silently() {
         [0, 0, 0, 0],
         "gradient rect not drawn"
     );
+    // dasharray "4 2" from x=2: on 2..6, off 6..8.
+    assert_eq!(px(&composed.frame, 3, 29), [0, 0, 0, 255], "dash drawn");
+    assert_eq!(px(&composed.frame, 6, 29), [0, 0, 0, 0], "gap left open");
     let text = status_text("deferred-paint.svg", &composed);
     assert!(
-        text.contains("2 deferred")
+        text.contains("1 deferred")
             && text.contains("gradient paint")
-            && text.contains("dashed stroke"),
+            && !text.contains("dashed stroke"),
         "{text}"
     );
 }

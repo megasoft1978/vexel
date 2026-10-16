@@ -1,10 +1,15 @@
-//! Bytes to `SceneGraph` through the real resumable decoder.
+//! Bytes to `SceneGraph` through the real resumable decoder, with the text
+//! layout provider injected and pattern tiles rendered on `NeedPattern`.
 
 use super::error::{ComposeError, from_diagnostic};
+use super::render_scene::render_scene;
 use std::sync::Arc;
+use vexel_raster::Tile;
+use vexel_render::{PreserveAspect, RenderError, ViewBox};
 use vexel_scene::{
-    ChargeLedger, DecodeOptions, DecodeSource, DecodedScene, LexicalDocument, Limits, RasterJob,
-    SceneGraph, Stop, WorkControl, WorkKind,
+    ChargeLedger, DecodeOptions, DecodeSource, DecodedScene, Diagnostic, ImagePixels,
+    JobRenderOutput, LexicalDocument, Limits, MediaError, MediaProvider, RasterJob, RasterPool,
+    SceneGraph, Stop, TextLayout, TextRequest, WorkControl, WorkKind,
 };
 use vexel_svg_decode::TraversalDecodeEvent;
 use vexel_svg_engine::SvgEngineSession;
@@ -30,6 +35,118 @@ impl WorkControl for CancelControl<'_> {
     }
 }
 
+/// Present only so the decoder reaches the engine's own providers: text goes
+/// through the engine's `TextLayoutProvider`, and images stay unsupported.
+pub(crate) struct Gate;
+
+impl MediaProvider for Gate {
+    fn layout_text(
+        &mut self,
+        _: TextRequest<'_>,
+        _: &mut dyn WorkControl,
+    ) -> Result<TextLayout, MediaError> {
+        Err(MediaError::Unsupported)
+    }
+    fn decode_image(
+        &mut self,
+        _: &[u8],
+        _: &mut dyn WorkControl,
+    ) -> Result<ImagePixels, MediaError> {
+        Err(MediaError::Unsupported)
+    }
+}
+
+/// Why a decode session stopped.
+pub(crate) enum SessionError {
+    Decode(Diagnostic),
+    Render(RenderError),
+}
+
+impl From<Diagnostic> for SessionError {
+    fn from(diagnostic: Diagnostic) -> Self {
+        Self::Decode(diagnostic)
+    }
+}
+
+impl From<RenderError> for SessionError {
+    fn from(error: RenderError) -> Self {
+        Self::Render(error)
+    }
+}
+
+/// Installs the CoreText layout provider (macOS); elsewhere text stays unsupported.
+pub(crate) fn install_text(session: &mut SvgEngineSession<'_, '_>) {
+    #[cfg(target_os = "macos")]
+    session.set_text_provider(Box::new(super::text::CoreText));
+    #[cfg(not(target_os = "macos"))]
+    let _ = session;
+}
+
+/// Steps `session` to completion. A `NeedPattern` suspension renders the
+/// pattern tile with the scene renderer and resumes the decoder with it.
+pub(crate) fn run(
+    session: &mut SvgEngineSession<'_, '_>,
+    job: &mut RasterJob,
+    quantum: u64,
+    generation: u64,
+    control: &mut dyn WorkControl,
+    cancel: &dyn Fn() -> bool,
+) -> Result<(), SessionError> {
+    loop {
+        let (ticket, width, height, pixels) = match session.step(quantum, job, control)? {
+            TraversalDecodeEvent::Progress { .. } => continue,
+            TraversalDecodeEvent::Complete => return Ok(()),
+            TraversalDecodeEvent::NeedPattern(request) => {
+                let mut tile = blank(request.width, request.height)?;
+                let view_box = ViewBox {
+                    x: 0.0,
+                    y: 0.0,
+                    width: request.tile_width,
+                    height: request.tile_height,
+                };
+                let aspect = PreserveAspect {
+                    align_x: 0.0,
+                    align_y: 0.0,
+                    none: true,
+                    slice: false,
+                };
+                render_scene(
+                    &request.child,
+                    view_box,
+                    Some(aspect),
+                    &mut tile,
+                    true,
+                    cancel,
+                )?;
+                (request.ticket, request.width, request.height, tile)
+            }
+        };
+        let buffer = job.buffer::<u8>(RasterPool::Output, pixels.byte_count(), control)?;
+        job.reserve(buffer, pixels.byte_count(), control)?;
+        job.extend(buffer, pixels.rgba(), control)?;
+        let output = JobRenderOutput {
+            generation,
+            pixels: buffer,
+            width,
+            height,
+            stride: width as usize * 4,
+        };
+        session.resume_pattern(ticket, job, Ok(output), control)?;
+    }
+}
+
+fn blank(width: u32, height: u32) -> Result<Tile, RenderError> {
+    let bytes = (width as usize)
+        .checked_mul(height as usize)
+        .and_then(|pixels| pixels.checked_mul(4))
+        .ok_or(RenderError::LimitExceeded)?;
+    let mut rgba = Vec::new();
+    rgba.try_reserve_exact(bytes)
+        .map_err(|_| RenderError::LimitExceeded)?;
+    rgba.resize(bytes, 0);
+    Tile::from_owned_rgba(width, height, rgba).map_err(|_| RenderError::LimitExceeded)
+}
+
 pub(crate) fn decode(bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<SceneGraph, ComposeError> {
     if bytes.len() > MAX_SVG_BYTES {
         return Err(ComposeError::LimitExceeded);
@@ -45,31 +162,24 @@ pub(crate) fn decode(bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<SceneGra
     let document = LexicalDocument::parse(owner.clone(), 1 << 24, &mut control).map_err(diag)?;
     let mut source = DecodeSource::new(&document, &mut control).map_err(diag)?;
     let ledger = ChargeLedger::new(&owner, 1 << 24, 65536).map_err(diag)?;
-    let job = RasterJob::new(ledger).map_err(|_| ComposeError::LimitExceeded)?;
+    let mut job = RasterJob::new(ledger).map_err(|_| ComposeError::LimitExceeded)?;
+    let mut gate = Gate;
     let options = DecodeOptions {
         limits: Limits {
             source_bytes: MAX_SVG_BYTES,
             ..Limits::default()
         },
         system_language: b"en",
-        media: None,
+        media: Some(&mut gate),
     };
     let mut session =
         SvgEngineSession::from_source(&document, &mut source, 1, options, &mut control)
             .map_err(diag)?;
-    loop {
-        match session.step(64, &job, &mut control).map_err(diag)? {
-            TraversalDecodeEvent::Progress { .. } => {}
-            TraversalDecodeEvent::Complete => break,
-            TraversalDecodeEvent::NeedPattern(_) => {
-                return Err(ComposeError::Unsupported {
-                    feature: "pattern paint",
-                    offset: None,
-                    element: None,
-                });
-            }
-        }
-    }
+    install_text(&mut session);
+    run(&mut session, &mut job, 64, 1, &mut control, cancel).map_err(|error| match error {
+        SessionError::Decode(d) => from_diagnostic(d, bytes),
+        SessionError::Render(e) => e.into(),
+    })?;
     match session.finish(&mut control).map_err(diag)? {
         DecodedScene::Drawable(graph) => Ok(graph),
         DecodedScene::Hidden(_) => Err(ComposeError::Hidden),

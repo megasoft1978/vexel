@@ -3,19 +3,16 @@
 //! Nothing here approximates: anything the decoder, the frame evaluator or the
 //! scalar renderer does not support is returned as a typed [`AnimationError`].
 
+use crate::compose::{Gate, SessionError, blank_tile, install_text, render_scene, run};
 use std::sync::{Arc, atomic::AtomicBool};
 use vexel_base::BudgetControl;
 use vexel_raster::Tile;
-use vexel_render::{
-    FlatEdge, PreserveAspect, RenderError, SceneFeatures, ViewBox, from_scene_shape,
-    render_offscreen,
-};
+use vexel_render::{PreserveAspect, RenderError, UnsupportedKind, ViewBox, offscreen_tile_size};
 use vexel_scene::{
     ChargeLedger, DecodeOptions, DecodeSource, DecodedScene, Diagnostic, EvaluatedFrame,
     LexicalDocument, Limits, RasterJob, SceneGraph, SceneView,
 };
 use vexel_svg_animation_frame::evaluate_frame;
-use vexel_svg_decode::TraversalDecodeEvent;
 use vexel_svg_engine::SvgEngineSession;
 
 /// Longest loop the app plays or exports, matching the MCP seek bound.
@@ -31,8 +28,6 @@ pub enum AnimationError {
     Decode(Diagnostic),
     /// The document has no drawable content (hidden/empty scene).
     NotDrawable,
-    /// Decoding needs pattern rendering, which V1 does not support.
-    PatternUnsupported,
     /// `evaluate_frame` failed or the time was invalid.
     Evaluate(Diagnostic),
     /// The scalar renderer rejected the frame (including deferred features).
@@ -58,7 +53,8 @@ pub fn decode(source: &[u8]) -> Result<AnimatedScene, AnimationError> {
         .map_err(AnimationError::Decode)?;
     let mut src = DecodeSource::new(&doc, &mut control).map_err(AnimationError::Decode)?;
     let ledger = ChargeLedger::new(&owner, 1 << 24, 65536).map_err(AnimationError::Decode)?;
-    let job = RasterJob::new(ledger).map_err(|_| AnimationError::Limit)?;
+    let mut job = RasterJob::new(ledger).map_err(|_| AnimationError::Limit)?;
+    let mut gate = Gate;
     let mut session = SvgEngineSession::from_source(
         &doc,
         &mut src,
@@ -66,21 +62,19 @@ pub fn decode(source: &[u8]) -> Result<AnimatedScene, AnimationError> {
         DecodeOptions {
             limits: Limits::default(),
             system_language: b"en",
-            media: None,
+            media: Some(&mut gate),
         },
         &mut control,
     )
     .map_err(AnimationError::Decode)?;
-    loop {
-        match session
-            .step(256, &job, &mut control)
-            .map_err(AnimationError::Decode)?
-        {
-            TraversalDecodeEvent::Progress { .. } => {}
-            TraversalDecodeEvent::Complete => break,
-            TraversalDecodeEvent::NeedPattern(_) => return Err(AnimationError::PatternUnsupported),
-        }
-    }
+    install_text(&mut session);
+    let stop = || cancel.load(std::sync::atomic::Ordering::Relaxed);
+    run(&mut session, &mut job, 256, 1, &mut control, &stop).map_err(|e| match e {
+        SessionError::Decode(d) => AnimationError::Decode(d),
+        SessionError::Render(RenderError::Cancelled) => AnimationError::Cancelled,
+        SessionError::Render(RenderError::LimitExceeded) => AnimationError::Limit,
+        SessionError::Render(other) => AnimationError::Render(other),
+    })?;
     match session
         .finish(&mut control)
         .map_err(AnimationError::Decode)?
@@ -182,75 +176,13 @@ fn render_view(
     size: (u32, u32),
     stop: &dyn Fn() -> bool,
 ) -> Result<Tile, AnimationError> {
-    let features = SceneFeatures {
-        clips: view.clips.len(),
-        opacity_groups: view.groups.len(),
-        masks: view.masks.len(),
-        filters: view.filters.len(),
-        text_runs: 0,
-        animation_overlay: false,
-        smil: false,
-    };
-    features
-        .require_supported()
-        .map_err(AnimationError::Render)?;
-
-    struct Owned {
-        edges: Vec<FlatEdge>,
-        ranges: Vec<std::ops::Range<usize>>,
-        closed: Vec<bool>,
-    }
-    let mut owned = Vec::new();
-    owned
-        .try_reserve_exact(view.shapes.len())
-        .map_err(|_| AnimationError::Limit)?;
-    for shape in view.shapes {
-        let source = shape
-            .edges
-            .slice(view.edges)
-            .ok_or(AnimationError::Render(RenderError::InvalidGeometry))?;
-        let subs = shape
-            .subpaths
-            .slice(view.path_subpaths)
-            .ok_or(AnimationError::Render(RenderError::InvalidGeometry))?;
-        let mut ranges = Vec::new();
-        let mut closed = Vec::new();
-        for sub in subs {
-            let start = sub
-                .first_edge
-                .checked_sub(shape.edges.first)
-                .ok_or(AnimationError::Render(RenderError::InvalidGeometry))?;
-            ranges.push(start..start + sub.edge_count);
-            closed.push(sub.closed);
-        }
-        owned.push(Owned {
-            edges: source.iter().copied().map(FlatEdge::from).collect(),
-            ranges,
-            closed,
-        });
-    }
-    let mut shapes = Vec::new();
-    shapes
-        .try_reserve_exact(owned.len())
-        .map_err(|_| AnimationError::Limit)?;
-    for (shape, geometry) in view.shapes.iter().zip(&owned) {
-        let fill = view
-            .edge_colors
-            .get(shape.edges.first)
-            .copied()
-            .unwrap_or([0; 4]);
-        shapes.push(
-            from_scene_shape(
-                shape,
-                fill,
-                view.fill_paints,
-                view.stroke_paints,
-                &geometry.edges,
-                &geometry.ranges,
-                &geometry.closed,
-            )
-            .map_err(AnimationError::Render)?,
-        );
+    // Animation frames keep dashed strokes deferred (existing contract, pinned
+    // by `unsupported_or_invalid_inputs_are_typed_not_approximated`); every
+    // other scene feature renders through the compose scene renderer.
+    if view.shapes.iter().any(|s| s.stroke.dash_values.count != 0) {
+        return Err(AnimationError::Render(RenderError::Unsupported(
+            UnsupportedKind::Dash,
+        )));
     }
     let vp = view.viewport;
     let aspect = vp.aspect.set.then_some(PreserveAspect {
@@ -265,19 +197,15 @@ fn render_view(
         width: vp.view_width,
         height: vp.view_height,
     };
-    render_offscreen(
-        &shapes,
-        view_box,
-        aspect,
-        f64::from(size.0),
-        f64::from(size.1),
-        stop,
-    )
-    .map_err(|e| match e {
+    let (width, height) = offscreen_tile_size(f64::from(size.0), f64::from(size.1))
+        .map_err(AnimationError::Render)?;
+    let mut tile = blank_tile(width, height).map_err(|_| AnimationError::Limit)?;
+    render_scene(view, view_box, aspect, &mut tile, true, stop).map_err(|e| match e {
         RenderError::Cancelled => AnimationError::Cancelled,
         RenderError::LimitExceeded => AnimationError::Limit,
         other => AnimationError::Render(other),
-    })
+    })?;
+    Ok(tile)
 }
 
 /// Composites straight-alpha RGBA over opaque white (the GIF and display

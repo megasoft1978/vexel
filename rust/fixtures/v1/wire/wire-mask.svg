@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" viewBox="0 0 64 48">
+  <defs>
+    <mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="48">
+      <rect x="4" y="4" width="28" height="40" fill="white"/>
+      <rect x="32" y="4" width="28" height="40" fill="#808080"/>
+    </mask>
+  </defs>
+  <g mask="url(#m)" opacity="0.8">
+    <rect x="0" y="8" width="64" height="32" fill="#c02020"/>
+    <polygon points="32,10 46,24 32,38 18,24" fill="#2040c0"/>
+  </g>
+</svg>
