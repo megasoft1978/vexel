@@ -1,0 +1,10 @@
+{
+  "AC1": "pass: compose_large_doc.rs (9 MiB, 30 MiB ok; 33 MiB and cap+1 LimitDecode; constant asserted)",
+  "AC2": "pass (success measure): ok 1 -> 2; remaining files named in result.md",
+  "AC3": "pass: no baseline ok regression; in-repo 17/7/0 unchanged",
+  "AC4": "partial: rss_exceeded 0; 7 new timeouts listed as findings in result.md",
+  "AC5": "pass: immediate_cancel_stops_decode_of_large_source",
+  "AC6": "pass: verdict, report and compare tests",
+  "AC7": "pass: counts increased; no new packages; no unsafe",
+  "AC8": "pass: result.md"
+}

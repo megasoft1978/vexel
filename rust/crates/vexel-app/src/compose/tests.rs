@@ -259,7 +259,7 @@ fn size_limits_are_typed() {
     assert_eq!(compose_svg(&svg, 10, 0), Err(ComposeError::InvalidSize));
     assert_eq!(compose_svg(&svg, 5000, 10), Err(ComposeError::InvalidSize));
     let huge = vec![b' '; MAX_SVG_BYTES + 1];
-    assert_eq!(compose_svg(&huge, 10, 10), Err(ComposeError::LimitExceeded));
+    assert_eq!(compose_svg(&huge, 10, 10), Err(ComposeError::LimitDecode));
 }
 
 // WO-RUST-SVG-WIRE-01 (deliberate behaviour change): the unsupported-{mask,filter,

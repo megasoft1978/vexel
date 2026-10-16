@@ -227,3 +227,56 @@ pub fn write_reports(cfg: &Config, meta: &Meta, results: &[FileResult]) -> Resul
     std::fs::write(cfg.out.join("report.md"), to_markdown(cfg, meta, results))
         .map_err(|e| format!("write report.md: {e}"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn result(id: &str, verdict: Verdict) -> FileResult {
+        FileResult {
+            id: id.to_string(),
+            tier: "t".to_string(),
+            kind: "k".to_string(),
+            bytes: 1,
+            verdict,
+            detail: "d".to_string(),
+            wall_ms: 1,
+            peak_rss_bytes: None,
+        }
+    }
+
+    #[test]
+    fn json_and_markdown_carry_both_limit_verdicts() {
+        let cfg = Config {
+            manifest: PathBuf::new(),
+            pins: PathBuf::new(),
+            out: PathBuf::new(),
+            width: 8,
+            height: 8,
+            max_bytes: 1,
+            timeout_secs: 1,
+            rss_limit_mib: 1,
+            only: Vec::new(),
+        };
+        let meta = Meta {
+            git_sha: "s".to_string(),
+            manifest_sha: "m".to_string(),
+            manifest_label: "l".to_string(),
+            host: "h".to_string(),
+        };
+        let rs = [
+            result("a", Verdict::LimitDecode),
+            result("b", Verdict::LimitRender),
+            result("c", Verdict::LimitRender),
+        ];
+        let json = to_json(&cfg, &meta, &rs);
+        assert!(json.contains(r#""verdict": "limit_decode""#), "{json}");
+        assert!(
+            json.contains(r#""limit_decode": 1, "limit_render": 2"#),
+            "{json}"
+        );
+        let md = to_markdown(&cfg, &meta, &rs);
+        assert!(md.contains("| limit_decode | 1 |"), "{md}");
+        assert!(md.contains("| limit_render | 2 |"), "{md}");
+    }
+}

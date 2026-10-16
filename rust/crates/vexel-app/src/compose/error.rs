@@ -46,8 +46,10 @@ pub enum ComposeError {
     },
     /// Valid document with nothing drawable (no viewport).
     Hidden,
-    /// A work, memory or size limit was reached.
-    LimitExceeded,
+    /// Source size or a structural decode budget was reached.
+    LimitDecode,
+    /// A raster work or size budget was reached while rendering.
+    LimitRender,
     /// Superseded by a newer request; the frame must be discarded.
     Cancelled,
 }
@@ -78,7 +80,8 @@ impl fmt::Display for ComposeError {
                 Ok(())
             }
             Self::Hidden => write!(f, "document has nothing drawable"),
-            Self::LimitExceeded => write!(f, "document exceeds a safety limit"),
+            Self::LimitDecode => write!(f, "document exceeds a decode safety limit"),
+            Self::LimitRender => write!(f, "document exceeds a render safety limit"),
             Self::Cancelled => write!(f, "superseded by a newer request"),
         }
     }
@@ -90,7 +93,7 @@ impl From<RenderError> for ComposeError {
     fn from(error: RenderError) -> Self {
         match error {
             RenderError::Cancelled => Self::Cancelled,
-            RenderError::LimitExceeded => Self::LimitExceeded,
+            RenderError::LimitExceeded => Self::LimitRender,
             RenderError::Unsupported(kind) => Self::Unsupported {
                 feature: feature_name(kind),
                 offset: None,
@@ -164,7 +167,7 @@ pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeE
             element: element_at(source, offset),
         },
         ErrorKind::Canceled => ComposeError::Cancelled,
-        ErrorKind::Limit(_) | ErrorKind::OutOfMemory => ComposeError::LimitExceeded,
+        ErrorKind::Limit(_) | ErrorKind::OutOfMemory => ComposeError::LimitDecode,
         ErrorKind::Xml(_) => ComposeError::Malformed {
             detail: "XML",
             offset,

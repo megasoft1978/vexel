@@ -6,7 +6,8 @@ use vexel_app::compose::ComposeError;
 pub enum Verdict {
     Ok,
     Unsupported,
-    Limit,
+    LimitDecode,
+    LimitRender,
     Xml,
     Timeout,
     RssExceeded,
@@ -16,10 +17,11 @@ pub enum Verdict {
 }
 
 impl Verdict {
-    pub const ALL: [Verdict; 9] = [
+    pub const ALL: [Verdict; 10] = [
         Verdict::Ok,
         Verdict::Unsupported,
-        Verdict::Limit,
+        Verdict::LimitDecode,
+        Verdict::LimitRender,
         Verdict::Xml,
         Verdict::Timeout,
         Verdict::RssExceeded,
@@ -32,7 +34,8 @@ impl Verdict {
         match self {
             Verdict::Ok => "ok",
             Verdict::Unsupported => "unsupported",
-            Verdict::Limit => "limit",
+            Verdict::LimitDecode => "limit_decode",
+            Verdict::LimitRender => "limit_render",
             Verdict::Xml => "xml",
             Verdict::Timeout => "timeout",
             Verdict::RssExceeded => "rss_exceeded",
@@ -53,18 +56,21 @@ impl Verdict {
 /// |------------------------------------|---------------|
 /// | `Ok(Composed)`                     | `ok`          |
 /// | `Unsupported`, `Hidden`            | `unsupported` |
-/// | `LimitExceeded`                    | `limit`       |
+/// | `LimitDecode`                      | `limit_decode`|
+/// | `LimitRender`                      | `limit_render`|
 /// | `Malformed`, `InvalidUtf8`         | `xml`         |
 /// | `InvalidSize`, `Cancelled`         | `crash`       |
 ///
-/// `InvalidSize` and `Cancelled` cannot occur for a fixed valid size and a
+/// Legacy reports use a single `limit` verdict; `compare` treats it as
+/// equivalent to either new verdict. `InvalidSize` and `Cancelled` cannot occur for a fixed valid size and a
 /// never-cancelled run; seeing one is a tool or pipeline defect, so it is
 /// reported as `crash` with an `internal:` detail rather than hidden.
 pub fn from_compose_error(error: &ComposeError) -> (Verdict, String) {
     let detail = error.to_string();
     match error {
         ComposeError::Unsupported { .. } | ComposeError::Hidden => (Verdict::Unsupported, detail),
-        ComposeError::LimitExceeded => (Verdict::Limit, detail),
+        ComposeError::LimitDecode => (Verdict::LimitDecode, detail),
+        ComposeError::LimitRender => (Verdict::LimitRender, detail),
         ComposeError::Malformed { .. } | ComposeError::InvalidUtf8 { .. } => (Verdict::Xml, detail),
         ComposeError::InvalidSize | ComposeError::Cancelled => {
             (Verdict::Crash, format!("internal: {detail}"))
@@ -131,7 +137,8 @@ mod tests {
                 Verdict::Unsupported,
             ),
             (ComposeError::Hidden, Verdict::Unsupported),
-            (ComposeError::LimitExceeded, Verdict::Limit),
+            (ComposeError::LimitDecode, Verdict::LimitDecode),
+            (ComposeError::LimitRender, Verdict::LimitRender),
             (ComposeError::Cancelled, Verdict::Crash),
         ];
         for (error, want) in cases {
@@ -161,5 +168,6 @@ mod tests {
             assert_eq!(Verdict::parse(v.name()), Some(v));
         }
         assert_eq!(Verdict::parse("path"), None);
+        assert_eq!(Verdict::parse("limit"), None);
     }
 }

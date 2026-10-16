@@ -1,0 +1,13 @@
+{
+  "work_order": "WO-RUST-LARGE-DOC-01",
+  "commands": [
+    {"cmd": "cargo check -p vexel-app -p vexel-corpus", "result": "pass"},
+    {"cmd": "cargo test -p vexel-app", "result": "pass (191 lib + integration incl. 7 compose_large_doc)"},
+    {"cmd": "cargo test -p vexel-corpus", "result": "pass (11 unit + 7 guard)"},
+    {"cmd": "cargo test -p vexel-svg-values", "result": "pass, unchanged"},
+    {"cmd": "cargo fmt --check vexel-app vexel-corpus", "result": "pass (also reformatted pre-existing tests.rs hunk)"},
+    {"cmd": "corpus run in-repo", "result": "17 ok / 7 unsupported"},
+    {"cmd": "corpus run external", "result": "2 ok / 14 unsupported / 4 limit_decode / 1 limit_render / 10 xml / 8 timeout / 19 skipped"},
+    {"cmd": "wo_validate --ready; ledger validate", "result": "pass"}
+  ]
+}

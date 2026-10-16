@@ -14,8 +14,19 @@ use vexel_scene::{
 use vexel_svg_decode::TraversalDecodeEvent;
 use vexel_svg_engine::SvgEngineSession;
 
-/// Largest source accepted by the compose pipeline (matches the open cap).
-pub const MAX_SVG_BYTES: usize = 8 * 1024 * 1024;
+/// Largest source accepted by the compose pipeline: one cap shared by
+/// `open_path` and `decode`. Larger sources are refused (`TooLarge` /
+/// `LimitDecode`); streaming decode of bigger files is a separate work order.
+pub const MAX_SVG_BYTES: usize = 32 * 1024 * 1024;
+
+/// Token-storage budget for the lexical pass (the scene crate clamps it to
+/// 256 MiB). Measured: token storage runs about 4 bytes per source byte on
+/// the large corpus files, so 8x the cap covers every accepted source; the
+/// former 16 MiB limit refused such files at ~4 MiB of input.
+const TOKEN_STORAGE_LIMIT: usize = 8 * MAX_SVG_BYTES;
+
+/// Charge-ledger reservation (source copy plus decode work), twice the cap.
+const LEDGER_RESERVE: usize = 2 * MAX_SVG_BYTES;
 
 /// Work control that stops at the next checkpoint once `cancel` is true.
 pub(crate) struct CancelControl<'a> {
@@ -149,7 +160,7 @@ fn blank(width: u32, height: u32) -> Result<Tile, RenderError> {
 
 pub(crate) fn decode(bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<SceneGraph, ComposeError> {
     if bytes.len() > MAX_SVG_BYTES {
-        return Err(ComposeError::LimitExceeded);
+        return Err(ComposeError::LimitDecode);
     }
     if let Err(error) = std::str::from_utf8(bytes) {
         return Err(ComposeError::InvalidUtf8 {
@@ -159,10 +170,11 @@ pub(crate) fn decode(bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<SceneGra
     let mut control = CancelControl { cancel };
     let owner = Arc::new(bytes.to_vec());
     let diag = |d| from_diagnostic(d, bytes);
-    let document = LexicalDocument::parse(owner.clone(), 1 << 24, &mut control).map_err(diag)?;
+    let document =
+        LexicalDocument::parse(owner.clone(), TOKEN_STORAGE_LIMIT, &mut control).map_err(diag)?;
     let mut source = DecodeSource::new(&document, &mut control).map_err(diag)?;
-    let ledger = ChargeLedger::new(&owner, 1 << 24, 65536).map_err(diag)?;
-    let mut job = RasterJob::new(ledger).map_err(|_| ComposeError::LimitExceeded)?;
+    let ledger = ChargeLedger::new(&owner, LEDGER_RESERVE, 65536).map_err(diag)?;
+    let mut job = RasterJob::new(ledger).map_err(|_| ComposeError::LimitDecode)?;
     let mut gate = Gate;
     let options = DecodeOptions {
         limits: Limits {

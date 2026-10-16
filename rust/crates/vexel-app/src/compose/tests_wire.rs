@@ -310,7 +310,8 @@ fn oversize_filter_blur_returns_the_typed_limit_error() {
          <feGaussianBlur stdDeviation='100'/></filter></defs>\
          <g filter='url(#f)'><rect width='20' height='20' fill='red'/></g>",
     );
-    assert_eq!(composed(&svg, 40, 40), Err(ComposeError::LimitExceeded));
+    // The decoder rejects the oversize deviation before rendering, so this is a decode limit.
+    assert_eq!(composed(&svg, 40, 40), Err(ComposeError::LimitDecode));
 }
 
 #[test]
@@ -320,7 +321,7 @@ fn oversize_filter_surface_returns_the_typed_limit_error() {
          <g filter='url(#f)'><rect width='20' height='20' fill='red'/></g></svg>";
     assert_eq!(
         compose_svg(svg.as_bytes(), 3000, 3000),
-        Err(ComposeError::LimitExceeded)
+        Err(ComposeError::LimitRender)
     );
 }
 
@@ -333,7 +334,7 @@ fn layer_memory_is_bounded_by_the_scratch_limit() {
          <g mask='url(#m)'><rect width='20' height='20' fill='red'/></g></svg>";
     assert_eq!(
         compose_svg(svg.as_bytes(), 3000, 3000),
-        Err(ComposeError::LimitExceeded)
+        Err(ComposeError::LimitRender)
     );
     // The same group on a small canvas is fine.
     let small = svg.replace("3000", "100");

@@ -1,0 +1,16 @@
+{
+  "changed": [
+    "rust/crates/vexel-app/src/compose/decode.rs",
+    "rust/crates/vexel-app/src/compose/error.rs",
+    "rust/crates/vexel-app/src/compose/mod.rs",
+    "rust/crates/vexel-app/src/compose/tests.rs",
+    "rust/crates/vexel-app/tests/compose_large_doc.rs",
+    "rust/tools/vexel-corpus/src/compare.rs",
+    "rust/tools/vexel-corpus/src/report.rs",
+    "rust/tools/vexel-corpus/src/runner.rs",
+    "rust/tools/vexel-corpus/src/verdict.rs",
+    "artifacts/WO-RUST-LARGE-DOC-01/**"
+  ],
+  "vexel-svg-values": "unchanged (no failing test required it)",
+  "protected_paths_touched": false
+}

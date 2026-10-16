@@ -28,6 +28,13 @@ fn mapped(category: &str) -> &str {
     legacy_mapping(category).unwrap_or(category)
 }
 
+/// Legacy `limit` (one verdict before the decode/render split) matches either
+/// new limit verdict, in both directions.
+fn limit_pair(a: &str, b: &str) -> bool {
+    let is_limit = |v: &str| matches!(v, "limit" | "limit_decode" | "limit_render");
+    is_limit(a) && is_limit(b) && (a == "limit" || b == "limit")
+}
+
 pub fn load(label: &str, path: &Path) -> Result<Report, String> {
     let bytes = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let doc = JsonDocument::parse(&bytes).map_err(|e| format!("{}: {e:?}", path.display()))?;
@@ -66,6 +73,8 @@ pub fn markdown(baselines: &[Report], current: &Report) -> String {
         "ok",
         "unsupported",
         "limit",
+        "limit_decode",
+        "limit_render",
         "xml",
         "timeout",
         "rss_exceeded",
@@ -141,7 +150,7 @@ pub fn markdown(baselines: &[Report], current: &Report) -> String {
                 new_ok.push(format!("`{id}`: {old} -> ok"));
             } else if old == "ok" {
                 regress.push(format!("`{id}`: ok -> {new}"));
-            } else if mapped(old) == *new {
+            } else if mapped(old) == *new || limit_pair(old, new) {
                 same += 1;
                 changed.push(format!(
                     "`{id}`: {old} -> {new} (same category after mapping)"
@@ -176,4 +185,62 @@ pub fn markdown(baselines: &[Report], current: &Report) -> String {
         ));
     }
     s
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn report(label: &str, files: &[(&str, &str)]) -> Report {
+        Report {
+            label: label.to_string(),
+            sha256: "x".to_string(),
+            files: files
+                .iter()
+                .map(|(i, v)| (i.to_string(), v.to_string()))
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn legacy_limit_matches_either_new_verdict() {
+        assert!(limit_pair("limit", "limit_decode"));
+        assert!(limit_pair("limit", "limit_render"));
+        assert!(limit_pair("limit_decode", "limit"));
+        assert!(!limit_pair("limit_decode", "limit_render"));
+        assert!(!limit_pair("limit", "xml"));
+        let base = report("old", &[("a", "limit"), ("b", "limit"), ("c", "limit")]);
+        let cur = report(
+            "new",
+            &[("a", "limit_decode"), ("b", "limit_render"), ("c", "ok")],
+        );
+        let md = markdown(&[base], &cur);
+        assert!(md.contains("`a`: limit -> limit_decode (same category after mapping)"));
+        assert!(md.contains("`b`: limit -> limit_render (same category after mapping)"));
+        assert!(md.contains("`c`: limit -> ok"));
+        assert!(md.contains("| limit_decode |") && md.contains("| limit_render |"));
+    }
+
+    #[test]
+    fn split_limit_verdicts_are_distinct_from_each_other() {
+        let base = report("old", &[("a", "limit_decode")]);
+        let cur = report("new", &[("a", "limit_render")]);
+        let md = markdown(&[base], &cur);
+        assert!(md.contains("`a`: limit_decode -> limit_render\n"), "{md}");
+    }
+
+    #[test]
+    fn old_reports_still_parse() {
+        let dir = std::env::temp_dir().join(format!("vexel-corpus-cmp-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("old.json");
+        std::fs::write(
+            &path,
+            br#"{"files":[{"id":"a","verdict":"limit"},{"id":"b","verdict":"ok"}]}"#,
+        )
+        .unwrap();
+        let r = load("old", &path).unwrap();
+        assert_eq!(r.files[0], ("a".to_string(), "limit".to_string()));
+        std::fs::remove_dir_all(&dir).ok();
+    }
 }

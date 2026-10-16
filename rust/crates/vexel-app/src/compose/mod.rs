@@ -151,11 +151,11 @@ pub(crate) fn blank_tile(width: u32, height: u32) -> Result<vexel_raster::Tile, 
     let bytes = (width as usize)
         .checked_mul(height as usize)
         .and_then(|pixels| pixels.checked_mul(4))
-        .ok_or(ComposeError::LimitExceeded)?;
+        .ok_or(ComposeError::LimitRender)?;
     let mut rgba = Vec::new();
     rgba.try_reserve_exact(bytes)
-        .map_err(|_| ComposeError::LimitExceeded)?;
+        .map_err(|_| ComposeError::LimitRender)?;
     rgba.resize(bytes, 0);
     vexel_raster::Tile::from_owned_rgba(width, height, rgba)
-        .map_err(|_| ComposeError::LimitExceeded)
+        .map_err(|_| ComposeError::LimitRender)
 }

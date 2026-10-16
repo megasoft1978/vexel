@@ -186,8 +186,8 @@ mod tests {
 
     #[test]
     fn parses_result_line() {
-        let (v, d) = parse_result("noise\nVEXEL-CORPUS-RESULT\tlimit\tx y\n").unwrap();
-        assert_eq!((v, d.as_str()), (Verdict::Limit, "x y"));
+        let (v, d) = parse_result("noise\nVEXEL-CORPUS-RESULT\tlimit_render\tx y\n").unwrap();
+        assert_eq!((v, d.as_str()), (Verdict::LimitRender, "x y"));
         assert!(parse_result("VEXEL-CORPUS-RESULT\tbogus\tx").is_none());
     }
 }
