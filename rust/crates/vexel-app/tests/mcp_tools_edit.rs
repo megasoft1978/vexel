@@ -105,7 +105,10 @@ fn render_png_without_required_arguments_is_a_typed_error() {
     let before = rig.state();
     let reply = rig.doc_tool("render_png", "");
     assert!(reply.is_error);
-    assert!(!reply.body.contains("unknown tool"), "{}", reply.body);
+    assert_eq!(
+        reply.body,
+        r#"{"error":{"code":"invalid_arguments","message":"render_png requires a path"}}"#
+    );
     assert_eq!(rig.state(), before);
 }
 

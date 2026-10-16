@@ -321,7 +321,8 @@ fn live_preview_forwards_routed_file_edit_and_line_path_calls() {
     // path/width/height arguments is refused by validation before the backend.
     let png = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"render_png","arguments":{"documentId":"d"}}}"#;
     let out = call(&mut session, &mut backend, png);
-    assert!(!String::from_utf8_lossy(&out).contains("\"isError\":false"));
-    assert!(!String::from_utf8_lossy(&out).contains("unknown tool"));
+    let text = String::from_utf8_lossy(&out);
+    assert!(text.contains("\"isError\":true"), "{text}");
+    assert!(text.contains("invalid_arguments"), "{text}");
     assert_eq!(backend.calls.len(), requests.len());
 }

@@ -130,7 +130,10 @@ fn walk() -> Outputs {
     ] {
         assert!(tools.iter().any(|n| n == name), "tools/list lacks {name}");
     }
-    assert!(tools.iter().any(|n| n == "render_png"), "render_png routed since WO-RUST-V1-PNG-01");
+    assert!(
+        tools.iter().any(|n| n == "render_png"),
+        "render_png routed since WO-RUST-V1-PNG-01"
+    );
     assert!(!tools.iter().any(|n| n.contains("grant")), "no grant tool");
     assert!(rig.state().source.windows(4).any(|w| w == b"<svg"));
 
