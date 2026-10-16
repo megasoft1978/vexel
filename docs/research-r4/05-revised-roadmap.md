@@ -1,5 +1,15 @@
 # Revised roadmap, estimates, and work orders
 
+> **Active product target:** the owner-approved goal and current delivery order
+> are defined in [ADR-0018](../adr/0018-product-goal-and-completion-gates.md)
+> and the [Vexel goal and delivery plan](../product/vexel-goal-and-delivery-plan.md).
+> This research roadmap is retained as historical architecture and work-order
+> input; its initial viewer-first framing, cost/model assumptions, and estimates
+> are stale and are not the current feature sequence. Linux and Windows rows
+> below are retired by `OWNER-DIRECTIVES.md`; do not implement them. Use the
+> active plan for SVG fidelity, native projects, animation, UI, MCP, performance,
+> and final acceptance sequencing.
+
 All dates/runs are estimates; no implementation throughput data exists for this exact model pair and product. A run means one headless Luna session, not a token quota. Normal WOs: Luna drafts a candidate from this roadmap; Sonnet checks scope and acceptance. M0–M3 end with a progressive Mac viewer and a go/no-go. This is a work queue, not a promise of full SVG fidelity.
 
 ## Schedule and budget estimates
@@ -56,7 +66,7 @@ Published at research time: OpenAI API pricing lists GPT-6 Luna standard input $
 | **M10 Mac editor gate** | full corpus/security/perf audit, package/pilots/competitor check; 15–30 runs | supported fixtures, fuzz/crash report | **Yes:** ship/pivot/stop |
 | **M11 Linux** | Wayland/X11 shims, portal, text input, AT-SPI, Weston headless; 25–50 runs | Linux CI + headless scripts | Yes: compositor spot-check |
 | **M12 Windows** | native input, DirectWrite, IME/UI Automation, packaging; 25–50 runs | Windows CI + scripts | Yes: real machine/IME |
-| **M13 animation** | separate demand/semantics ADR then bounded SMIL/CSS timeline, deterministic frames; 30–60 runs | frame goldens and round-trip | Yes: demand gate |
+| **M13 animation (superseded by ADR-0018/0020)** | Owner-approved native project animation proceeds through ordinary scoped work orders: bounded project/timeline integration, native drawing assets, editing and playback, deterministic export, onion skins, and live observable MCP authoring. SVG SMIL remains an interchange path; no demand gate blocks implementation. | Focused project correctness checks per work order; final frame goldens, round-trip, live UI/MCP review, and comprehensive UI/E2E acceptance at the end | No; owner decision is recorded in ADR-0018 and STATE.md |
 | **M14 maintenance/release** | installer, signing, SBOM, update/security/fuzz process; 15–30 runs | reproducible package/install/update | Yes: release |
 
 ## Complete work-order texts: M0–M3

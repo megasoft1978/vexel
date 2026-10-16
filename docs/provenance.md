@@ -29,3 +29,14 @@ height placeholders. Each trial can write only its designated `.cache` PNG,
 with a 2 MiB file-size limit; configuration is capped at eight adapters. No
 package or runtime dependency was added; adapters that require subprocess
 helpers or external resources report failed trials explicitly.
+
+
+ADR0026 selects exact published Apple binding and exception-helper dependencies
+for the Rust platform boundary. Version/checksum/feature/host-build and upstream
+license records are pinned in [objc2-macos.lock.json](dependencies/objc2-macos.lock.json).
+The upstream Objective-C exception helper is third-party FFI code; all first-party
+implementation remains Rust. The owned SVG/parser/raster and custom UI remain
+project-owned. No Cargo dependency is accepted by a download alone: setup lock,
+compile, graph audit and subsequent real boundary probes are required. Canonical
+license texts and upstream declarations are retained without invented copyright;
+release attribution and SDK distribution review remain explicit final gates.

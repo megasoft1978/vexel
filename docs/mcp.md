@@ -12,6 +12,53 @@ The implementation follows the [MCP 2026-07-28 specification](https://modelconte
 clients. It provides tools, resources, and one inspection prompt. There is no
 HTTP endpoint.
 
+## Stdio relay contract
+
+The sidecar uses bounded `poll` multiplexing of stdin, the broker socket, and
+stdout. Complete client lines reach the broker in input order, including
+notifications sent while earlier requests remain outstanding. Every complete
+broker line reaches stdout unchanged, including progress notifications and
+responses with unrelated or out-of-order IDs. Partial reads/writes and coalesced
+line tails are retained. The relay tracks IDs only for inactivity accounting:
+matching responses and forwarded cancellation notifications retire pending
+entries, while clients retain protocol correlation. It never rewrites lines or
+synthesizes cancellation replies.
+
+Each direction holds at most one 2 MiB message (plus its newline) and one 8 KiB
+read chunk. Backpressure pauses that direction while the other can continue.
+Overlong stdin lines are discarded through the next newline (or EOF) and emit
+one bounded parse error; an overlong or truncated broker line fails the
+transport without publishing that partial JSON message. CRLF client delimiters
+and a final unterminated client line retain their prior behavior.
+
+After stdin EOF, queued client data is sent, broker input is half-closed, and
+broker output is drained until closure or a 30-second drain deadline. Socket
+writes, partial broker-line reads, stdout writes, and broker inactivity while a
+client request is outstanding retain 30-second bounds. Only broker bytes renew
+broker inactivity; new client traffic does not. A matching response clears its
+pending entry when the broker line is framed, independently of stdout drain.
+Idle open stdin with no pending requests has no deadline. Accounting is limited
+to 256 simultaneous IDs and 2 MiB including table metadata; duplicate active
+IDs or capacity exhaustion fail before forwarding the request. String IDs are
+compared after JSON escape decoding; numeric IDs retain their JSON number text
+and remain distinct from string IDs. This is transport readiness only:
+cooperative task/export progress and cancellation still need broker integration.
+The private socket checks and file-grant policy are unchanged.
+
+The focused `mcp-stdio-relay` fixture exercises the public executable without
+app UI automation. The r4 host run passed all 21 relay fixtures and both focused
+CTest registrations (`mcp-stdio-relay` and `mcp-stdio-e2e`, 2/2), including
+silent-broker deadlines, broker-only renewal, idle-after-completion/cancellation,
+response retirement during slow stdout drain, invalid-ID forwarding, duplicate
+and capacity rejection, and ID-specific late-response handling. This verifies
+the local relay and headless broker path; it does not establish live
+Codex/Claude interoperability or implement cooperative task/export cancellation.
+
+Revision 4 is accepted after coordinator review and a fresh integrated run of all
+21 relay fixtures plus the headless broker E2E registration (2/2 CTests). The
+original 12 fixture bodies and broker E2E assertions are preserved. See
+[revision 4 evidence](../artifacts/WO-MCP-TRANSPORT-01/verification-r4.txt).
+
 ## Start and grant access
 
 Start Vexel and open a document in the viewer. The app creates a per-user
@@ -111,12 +158,25 @@ Codex MCP configuration is documented at https://developers.openai.com/codex/mcp
 
 ## Tools
 
-The server publishes `document_open`, `document_close`, `document_list`,
-`document_info`, `tree_get`, `element_get`, `element_query`, `attribute_set`,
-`attribute_remove`, `text_set`, `element_add`, `element_delete`,
-`element_duplicate`, `element_reorder`, `element_group`, `element_ungroup`,
-`transaction`, `undo`, `redo`, `save`, `save_as`, `render_png`,
-`selection_get`, `selection_set`, and `export_svg`.
+The server publishes document and SVG editing tools: `document_open`,
+`document_close`, `document_list`, `document_info`, `tree_get`, `element_get`,
+`element_query`, `attribute_set`, `attribute_remove`, `text_set`,
+`element_add`, `element_add_fragment`, `element_delete`, `element_duplicate`,
+`element_reorder`, `element_group`, `element_ungroup`, `transaction`, `undo`,
+`redo`, `save`, `save_as`, `render_png`, `selection_get`, `selection_set`, and
+`export_svg`. SVG animation tools are `animation_list`, `animation_add`,
+`animation_set`, and `animation_remove`.
+
+On the active app-owned native `.vexel` project, `native_timeline_get`,
+`native_timeline_add_track`, `native_timeline_add_drawing_asset`,
+`native_timeline_add_property_track`, `native_timeline_set_property_key`,
+`native_timeline_set_cel`, `native_timeline_remove_cel`,
+`native_timeline_move_item`, `native_timeline_set_loop`,
+`native_timeline_undo`, `native_timeline_redo`, and `export_animation` expose
+undoable timeline authoring and GIF/PNG-sequence export. Native timeline
+authoring tools target only the active app-owned `.vexel` project. For
+`export_animation`, `.vexel` uses its native timeline and a standalone SVG uses
+its SMIL document clock.
 
 Resources expose the current source, bounded tree data, and most recent PNG
 render. The `inspect-document` prompt directs a client to inspect the open
@@ -127,21 +187,75 @@ also returns an MCP image content block.
 
 - JSON requests and responses are limited to 2 MiB, parser depth to 32, and
   parser tokens to 65,536; the rate limit is 120 calls per minute per client.
-  Sidecar IPC send/receive waits time out after 30 seconds.
+  Sidecar socket/stdout stalls and EOF draining are bounded to 30 seconds
+  as described in the relay contract above.
 - The broker holds at most eight documents and 64 MiB per document. Tree/query
   pages are limited to 512 rows; an atomic transaction is limited to 64 edits.
-- PNG output is limited to 512 pixels per axis.
+- PNG output is limited to 512 pixels per axis. Animation export is capped at
+  30 FPS, 120 frames, and 16 million cumulative frame pixels.
 - Opening is limited to explicitly granted directories. No shell commands,
   network access, or external SVG resources are available.
 - The active app document cannot be closed through MCP. MCP-opened dirty
-  documents return `unsaved_changes` on close. `save_as` replaces an existing
-  file only.
-- The existing public edit API has no text-element insertion template. The
-  tool schema lists `text`, but calling it returns `invalid_operation`; use
-  `text_set` on existing text nodes instead.
-- Cancellation/progress notifications are accepted but are not wired to
-  interrupt an in-flight edit/render. PNG rendering uses the current decoder
-  and rasterizer subset.
-- The raw stdio integration test requires local Unix-domain socket binding;
+  documents return `unsaved_changes` on close. `save_as` accepts an existing
+  regular file or a new path inside a granted directory; new files are
+  published atomically.
+- `element_add` supports an empty `text` template and `text_set` inserts or
+  removes escaped text. New graphics roots without an ID receive a unique
+  `vexel-object-N` ID in the same undoable edit; the returned `elementId` can
+  target later animation work. Existing unique IDs are preserved, and a
+  duplicate supplied root ID is rejected.
+- The app shows each completed MCP tool and its success/failure in the bounded
+  operator log and status strip. Progress and cancellation notifications are
+  accepted by the protocol but do not interrupt in-flight edits or renders.
+  PNG rendering uses the current decoder and rasterizer subset.
+- Verified live sessions with Codex, Claude Code, and an independent test
+  client are still pending; the listed tool surface does not claim those
+  interoperability gates are complete.
+- The live async owner bridge remains pending. Sidecar transport r4, the strict
+  owned snapshot, snapshot-only GIF worker, optional async protocol adapter r2,
+  and atomic synchronous GIF publication are accepted in the working tree.
+  The adapter validates per-request Tasks support, operation-specific results,
+  legacy deferred/cancellation routing, and bounded monotonic progress. The app
+  still installs the synchronous backend, so production does not advertise Tasks
+  or run the new worker yet. The legacy C `WO-MCP-CAPTURE-01` candidate and its
+  focused review evidence are preserved under `.worktrees/mcp-owned-capture`
+  and `artifacts/WO-MCP-CAPTURE-01/` as migration reference. They are not a
+  current production capability; the owner-capture path must be implemented in
+  Rust. The live owner bridge, stale-generation protection and visible Cancel
+  remain pending.
+  Historical WO-MCP-ASYNC-03 r2 scope audit is preserved at
+  [execution audit](../artifacts/WO-MCP-ASYNC-03/scope-block-execution-r2.txt).
+  Current evidence: [transport r4](../artifacts/WO-MCP-TRANSPORT-01/verification-r4.txt),
+  [GIF worker](../artifacts/WO-MCP-GIF-WORKER-01/verification-integrated.txt),
+  [protocol r2](../artifacts/WO-MCP-TASK-PROTOCOL-01/verification-integrated-r2.txt).
+- Both synchronous GIF routes now use atomic no-replace publication after a
+  final canonical grant check. Responses include `published` and `durable`;
+  `published:true,durable:false` means the output exists but cleanup or directory
+  durability was not confirmed. Required response metadata is encoded before
+  publication; failure to encode it leaves no output. PNG sequences retain their
+  existing per-frame route. [Focused evidence](../artifacts/WO-MCP-GIF-PUBLISH-01/verification-integrated.txt).
+- The blocked design is limited to native `.vexel` GIF `export_animation`.
+  For `2026-07-28`, it requires the request's `io.modelcontextprotocol/tasks`
+  extension before returning `resultType:"task"`, with `tasks/get` and
+  `tasks/cancel`; task cancellation never uses `notifications/cancelled`.
+  For `2025-11-25`, progress requires a valid request `progressToken`, and
+  `notifications/cancelled` targets the in-flight original request, suppressing
+  its eventual response. Planned bounds are two active tasks, eight retained
+  terminal tasks, 15-minute lifetime, 16 MiB scene and 64 MiB encoded bundle
+  snapshots, alongside the existing frame/pixel limits. These are frozen
+  requirements, not implemented async task/export capability or acceptance.
+- The focused relay fixture and raw stdio integration test require local
+  Unix-domain socket binding;
   the constrained execution environment may deny `bind(2)` with `EPERM`.
 
+
+### App socket scheduling
+
+The hook uses a nonblocking owner-thread IO pool with stable connection IDs.
+Each transport poll transfers at most64KiB across reads+writes and8KiB per
+client, dispatches at most8lines and consumes at most128socket syscalls.
+Progress queues coalesce unsent messages only; terminal replies are retained
+until drained or an explicit connection close. Queue allocation limits include
+partially sent frames. Expensive synchronous tool callbacks are outside this
+transport bound and remain part of the pending async bridge work.
+[Focused socket evidence](../artifacts/WO-MCP-SOCKET-IO-01/verification-integrated.txt).

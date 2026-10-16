@@ -1,0 +1,72 @@
+{
+  "status": "accepted metadata prerequisite",
+  "decision": "ADR0028",
+  "workspace_version": "0.1.0",
+  "development_edges": {
+    "vexel-svg-paint": [
+      "vexel-svg-path",
+      "vexel-svg-animation"
+    ],
+    "vexel-svg-definitions": [
+      "vexel-svg-animation"
+    ],
+    "vexel-svg-media": [
+      "vexel-svg-animation"
+    ],
+    "vexel-scene-query": [
+      "vexel-svg-path",
+      "vexel-svg-animation"
+    ],
+    "vexel-svg-scalar-index": [
+      "vexel-svg-path",
+      "vexel-svg-animation"
+    ],
+    "vexel-svg-scalar-sample": [
+      "vexel-svg-path",
+      "vexel-svg-animation"
+    ],
+    "vexel-svg-animation-frame": [
+      "vexel-svg-path"
+    ]
+  },
+  "accepted_local_dependency_pins": {
+    "vexel-svg-animation": {
+      "version": "0.1.0",
+      "license": "MPL-2.0",
+      "provenance": "owned repository code, already accepted work orders",
+      "files": {
+        "rust/crates/vexel-svg-animation/Cargo.toml": "d80be79ae08bedc79acc22968b64beae3aad5b9ff611d86d9d141139d7a5aced",
+        "rust/crates/vexel-svg-animation/tests/animation.rs": "8d7b604b016ccbbe38cd98790cd64dace538a06f6c6686c6cff66f67e153bb7c",
+        "rust/crates/vexel-svg-animation/src/control.rs": "954031add9e7c59a0d0b06e456205c44f10717cac1760d00e660b1e213edb79f",
+        "rust/crates/vexel-svg-animation/src/lib.rs": "0c40829042928df2c4f978ba09f188ba0f5a9e1a94e291e00c451390f620b540",
+        "rust/crates/vexel-svg-animation/src/parse.rs": "25dcbda0019ada33a83f306394c551d29e892a3c83c5806eb7ace00cbbd1244f",
+        "rust/crates/vexel-svg-animation/src/eval.rs": "870acd049cf2d68eefe8785196ec3bd4ea1ae7b71624bd11eb10e75e9040b095",
+        "rust/crates/vexel-svg-animation/src/parse_values.rs": "2f63353412e320367e640cb3e7f0f773177813bb5261ae16fecba3f4913be2e3",
+        "rust/crates/vexel-svg-animation/src/control_scan_tests.rs": "725658551c0bdd3021b351f0833e804daea3101b11712444223137c332d53bf8",
+        "rust/crates/vexel-svg-animation/src/motion.rs": "ffdb15c9f835be0fe8b07f7cd8dda141e77cf76cfeb584a8053ad8e5a27e3d0c"
+      }
+    },
+    "vexel-svg-path": {
+      "version": "0.1.0",
+      "license": "MPL-2.0",
+      "provenance": "owned repository code, already accepted work orders",
+      "files": {
+        "rust/crates/vexel-svg-path/Cargo.toml": "4a005072f40bc0005a66c5a9f8a758d3908df31e4a56467d866230c58c3b3bb6",
+        "rust/crates/vexel-svg-path/tests/controlled.rs": "15ef434c6fa9c1bcdd06c16b4782e3f4c5d767adb6f0d6ca081331173d3d6739",
+        "rust/crates/vexel-svg-path/tests/parity.rs": "6859534e46d51b463527e987ef09c4a5b54d55ac4ca88b4e00db2df6a467d645",
+        "rust/crates/vexel-svg-path/tests/path.rs": "1b2dc9abd849d35f06111532163ecbe09d68980f09f5aa00f01a08af50795ce2",
+        "rust/crates/vexel-svg-path/src/control.rs": "9d04fb3e695757c4b5a53017d0b345c73e5a9f9c6da36a3398546189dc398c9e",
+        "rust/crates/vexel-svg-path/src/flatten.rs": "a2eeb6f45ee553cd8dafb3036c34f3b2e57a08c6735186d2a01d61f1bc41aff7",
+        "rust/crates/vexel-svg-path/src/lib.rs": "850477ab3415a59a890c295979bad162e60557a759016addcbc0d1e0518dc625",
+        "rust/crates/vexel-svg-path/src/arc.rs": "ddeacdbe5160927ec51547143382241ef28ac48447c6889e8fdc7665743b2fd6",
+        "rust/crates/vexel-svg-path/src/reader.rs": "4aaaa54cbae0db9d9ab5981af223d6d1eeafe95d5cd9b8aa2a18daa221a74944",
+        "rust/crates/vexel-svg-path/src/parser.rs": "da929d1c7fe674ec33f16e3ed18def54fa7a46b9656811e795e410f3a5c8f878",
+        "rust/crates/vexel-svg-path/src/curve.rs": "a8f8adfafb89dc574fa35deb0c00963b7f84f47c79d5b66d522e5f24bbef949d",
+        "rust/crates/vexel-svg-path/tests/support/mod.rs": "4358c0c4da583fc45ddb5ce533e98720350d1787aa9df7067e3c8e64f848333e",
+        "rust/crates/vexel-svg-path/src/parser/commands.rs": "4aef4d97ceb0e0272d6b3ba4801ce094a588ebb4ad601c21240697dbaccad509",
+        "rust/crates/vexel-svg-path/src/parser/tests.rs": "9377d87873ac3bb5f7ca823b747728b8d4295ff09080d782889d14652cf55a25"
+      }
+    }
+  },
+  "external_dependency_changes": false
+}

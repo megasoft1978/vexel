@@ -4,7 +4,7 @@
 
 The dashed cubic reproduction (`demo3.svg`) failed preflight because stroke work expanded across repeated dash pieces for each sample. Stroke geometry is now materialized once and queried through a conservative, bounded local-space grid. Solid strokes use the same cache. If a shape exceeds the grid bounds, rendering falls back to a bounded linear scan and charges that work during preflight. The test-only scalar renderer remains available for byte comparisons.
 
-The grid uses cells at least 1 user unit wide, at most 128 cells per axis, and global limits of 65,536 cells, 1,000,000 references, and 16 MiB. Stroke pieces and joins are each capped at 65,536; dash construction is capped at 1,000,000 steps. The renderer retains its checked 200,000,000-operation work limit. Boundary marking now applies miter reach at joins instead of over-expanding every edge.
+The grid uses cells at least 1 user unit wide, at most 128 cells per axis, and global limits of 65,536 cells, 1,000,000 references, and 16 MiB. Stroke-cache allocation is bounded by a combined 16 MiB byte budget; dash construction is capped at 1,000,000 steps. Segment and join arrays use checked 1.125x capacity growth and preflight the combined allocation before each growth; counts are constrained by those byte and step budgets rather than a separate 65,536-entry ceiling. The renderer retains its checked 200,000,000-operation work limit. Boundary marking now applies miter reach at joins instead of over-expanding every edge.
 
 The original `demo3.svg` renders successfully at 1280×800 with the Release workbench command. Namespace-prefixed export metadata attributes and `sodipodi:namedview` metadata are also handled without weakening checks for recognized SVG attributes.
 

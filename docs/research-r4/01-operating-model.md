@@ -54,7 +54,7 @@ At session start executor reads only `AGENTS.md`, `STATE.md`, assigned WO, named
 ## Git, integration, parallelism
 
 - One branch and worktree per WO; main remains green. One commit per coherent WO (small internal commits allowed, report all). Never share a mutable worktree between agents.
-- Parallelism: default one executor plus one verifier sequentially. Allow at most two executor WOs only when file sets/contracts are disjoint and both were explicitly declared parallel-safe; integrate one at a time. Avoid parallel work on renderer semantics, document model, core UI, golden baselines, build configuration, or shared headers.
+- Parallelism: this historical r4 cap is superseded by the owner-approved Rust migration policy in [OWNER-DIRECTIVES.md](../../OWNER-DIRECTIVES.md). Use as many useful disjoint Luna workers as available capacity and subscription allowance permit; keep one writer per module and serialize shared integration, manifests, interfaces and ledgers. The architecture-specific cautions below remain useful where applicable.
 - Worktree create from pinned main SHA; validate allowlist after run using changed paths and git status. New files also checked. Merge only if base SHA is unchanged or rebase/reverify.
 - Protect tests: `tests/oracle/`, `tests/golden/manifest.lock`, `bench/corpus/manifest.lock`, schemas, and verifier scripts require a separate test-change WO. Executor WO may add unit tests outside frozen oracle only when requested. Any golden update requires a baseline-change record, side-by-side image, explicit reason, and verifier pass against independent oracle.
 

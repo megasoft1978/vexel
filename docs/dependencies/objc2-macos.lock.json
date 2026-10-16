@@ -1,0 +1,554 @@
+{
+  "decision": "ADR0026 accepted after independent technical/provenance review; setup compilation/graph checks pending",
+  "target": "aarch64-apple-darwin",
+  "minimum_os": "13.0",
+  "roots": {
+    "objc2": {
+      "version": "=0.6.5",
+      "default_features": false,
+      "features": [
+        "catch-all",
+        "std"
+      ]
+    },
+    "objc2-encode": {
+      "version": "=4.1.0",
+      "default_features": false,
+      "features": [
+        "std"
+      ]
+    },
+    "block2": {
+      "version": "=0.6.2",
+      "default_features": false,
+      "features": [
+        "std"
+      ]
+    },
+    "objc2-app-kit": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "NSAccessibility",
+        "NSAccessibilityConstants",
+        "NSAccessibilityElement",
+        "NSAccessibilityProtocols",
+        "NSAlert",
+        "NSAppearance",
+        "NSApplication",
+        "NSButton",
+        "NSColor",
+        "NSColorSpace",
+        "NSControl",
+        "NSCursor",
+        "NSDragging",
+        "NSEvent",
+        "NSGraphics",
+        "NSMenu",
+        "NSMenuItem",
+        "NSOpenPanel",
+        "NSPanel",
+        "NSPasteboard",
+        "NSResponder",
+        "NSRunningApplication",
+        "NSSavePanel",
+        "NSScreen",
+        "NSTextInputClient",
+        "NSTextInputContext",
+        "NSTrackingArea",
+        "NSView",
+        "NSWindow",
+        "NSWorkspace",
+        "block2",
+        "objc2-core-graphics",
+        "objc2-quartz-core",
+        "std"
+      ]
+    },
+    "objc2-foundation": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "NSArray",
+        "NSAttributedString",
+        "NSData",
+        "NSDate",
+        "NSDictionary",
+        "NSError",
+        "NSException",
+        "NSGeometry",
+        "NSKeyValueObserving",
+        "NSNotification",
+        "NSObject",
+        "NSOperation",
+        "NSRange",
+        "NSRunLoop",
+        "NSSet",
+        "NSString",
+        "NSThread",
+        "NSTimer",
+        "NSUserDefaults",
+        "NSValue",
+        "block2",
+        "std"
+      ]
+    },
+    "objc2-core-foundation": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CFArray",
+        "CFAttributedString",
+        "CFData",
+        "CFDictionary",
+        "CFNumber",
+        "CFRunLoop",
+        "CFString",
+        "objc2",
+        "std"
+      ]
+    },
+    "objc2-core-graphics": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CGBitmapContext",
+        "CGColor",
+        "CGColorSpace",
+        "CGContext",
+        "CGDataProvider",
+        "CGDirectDisplay",
+        "CGFont",
+        "CGImage",
+        "CGPath",
+        "objc2",
+        "std"
+      ]
+    },
+    "objc2-core-text": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CTFont",
+        "CTFontDescriptor",
+        "CTLine",
+        "CTRun",
+        "CTStringAttributes",
+        "objc2",
+        "objc2-core-graphics",
+        "std"
+      ]
+    },
+    "objc2-metal": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "MTLBlitCommandEncoder",
+        "MTLCommandBuffer",
+        "MTLCommandEncoder",
+        "MTLCommandQueue",
+        "MTLDevice",
+        "MTLDrawable",
+        "MTLLibrary",
+        "MTLPixelFormat",
+        "MTLRenderCommandEncoder",
+        "MTLRenderPass",
+        "MTLRenderPipeline",
+        "MTLResource",
+        "MTLTexture",
+        "MTLTypes",
+        "block2",
+        "std"
+      ]
+    },
+    "objc2-quartz-core": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CALayer",
+        "CAMediaTiming",
+        "CAMetalLayer",
+        "objc2-core-foundation",
+        "objc2-core-graphics",
+        "objc2-metal",
+        "std"
+      ]
+    },
+    "objc2-image-io": {
+      "version": "=0.3.2",
+      "default_features": false,
+      "features": [
+        "CGImageDestination",
+        "CGImageProperties",
+        "CGImageSource",
+        "objc2",
+        "objc2-core-graphics",
+        "std"
+      ]
+    }
+  },
+  "packages": [
+    {
+      "name": "objc2",
+      "version": "0.6.5",
+      "registry_url": "https://crates.io/api/v1/crates/objc2",
+      "registry_sha256": "d2b4e5cb324c14ca6864b0d3c1df2d71b0598fa7fa18f18b54d185555dd281fc",
+      "archive_url": "https://static.crates.io/crates/objc2/objc2-0.6.5.crate",
+      "archive_sha256": "08849bbd4767dfae9457696856ae1c84fe4e0281bbe4a7abff2d0e06fb7981f8",
+      "license_expression": "MIT",
+      "rust_version": "1.71",
+      "created_at": "2026-10-05T18:26:53.790244Z",
+      "selected_files": {
+        "Cargo.toml": "5556dba493fc18e98ebf82f587011f76df6c8c26532613e4c8f904ee586d7cf0",
+        "Cargo.toml.orig": "4a1e1561612efc4a8aea4dd574c781f6215fa5416696425227558fc782353cba",
+        "README.md": "5da56f1508a87b982a23e6bad2ff09b329f7fcf9181ea15eac17788f8d1c6824",
+        "build.rs": "f13d2effabc1cfa07fa5018c78eadc645914d676c034adf78acb24b8b419ce7a",
+        "src/exception.rs": "495502e59fef75d7a1eac3bfb7f6ea83c21d46d42bc39f4a700cac28c2ed88c6",
+        "src/lib.rs": "1a1d7b121bfe025b9aab46d861a9007ac5508ee8773941b7f67f05a44bae6ac7",
+        "src/main_thread_marker.rs": "66676a96c255c1b5215860722b3e47f4c4ec8033b0237798ba261ff456b32be7"
+      },
+      "retrieved_utc": "2026-10-14T12:45:02.691679+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-encode",
+      "version": "4.1.0",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-encode",
+      "registry_sha256": "9159246e731b7074a27f75ddbbe5aff18427f5585949fd4a7c95548463728a0f",
+      "archive_url": "https://static.crates.io/crates/objc2-encode/objc2-encode-4.1.0.crate",
+      "archive_sha256": "ef25abbcd74fb2609453eb695bd2f860d389e457f67dc17cafc8b8cbc89d0c33",
+      "license_expression": "MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-01-22T23:40:12.051433Z",
+      "selected_files": {
+        "Cargo.toml": "cf9a8cc812710344d7fe618a5e615530baeeceae5c2826b9d5bb557dc419f159",
+        "Cargo.toml.orig": "12972b1faf213492f9e78226f23642c461284b739f7be5437d9401465a2869a6",
+        "README.md": "e980a74b88a62193f7908df3c27e7915f38559870f5e033ddb77fbed65e024a5",
+        "src/lib.rs": "6d526334bf38275d812335c1f18542adfb5c0a247a4b822342e6770a03c5491d"
+      },
+      "retrieved_utc": "2026-10-14T12:45:03.849324+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-foundation",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-foundation",
+      "registry_sha256": "461382b5d18ebd703c705be97ae5e002a3125af600e86382097740cfca58cf57",
+      "archive_url": "https://static.crates.io/crates/objc2-foundation/objc2-foundation-0.3.2.crate",
+      "archive_sha256": "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272",
+      "license_expression": "MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T15:47:21.149969Z",
+      "selected_files": {
+        "Cargo.toml": "eabbe24e325c7b474c6f5de2e955f4f942ecd385608e4b6609b89a1f68ef39cc",
+        "Cargo.toml.orig": "71158540d55a9b5ce073c856347f0ed1e0e71f4210cfb48a82b1f0e505ba6a50",
+        "README.md": "50be6f8e1214bd644cdc32c9610278c004205cdddbe2aaed7887d8bad48dd6c5",
+        "src/exception.rs": "a798e0675075c6828756e1257fa383077e79d7ea014492e5b9cd025ea2a5a39a",
+        "src/lib.rs": "960d1558eebcfbd7531a4db9c556a1bfea093373369031ce7497797762e3f97f"
+      },
+      "retrieved_utc": "2026-10-14T12:45:05.363504+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-app-kit",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-app-kit",
+      "registry_sha256": "249898572025b29efa17f9178e43609913121d9fac4c261e663c0e713f4f654a",
+      "archive_url": "https://static.crates.io/crates/objc2-app-kit/objc2-app-kit-0.3.2.crate",
+      "archive_sha256": "d49e936b501e5c5bf01fda3a9452ff86dc3ea98ad5f283e1455153142d97518c",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T16:16:50.311115Z",
+      "selected_files": {
+        "Cargo.toml": "11a761a52774ed9738fb854ba3eecb48fa360b6ce43dddc00c338346853717b5",
+        "Cargo.toml.orig": "a15eb82815ce282d59a2f5be179556695ce678790129c30e1d86567c1e2c684e",
+        "README.md": "da145d375986071fdf836604db8c6e99438bb484ad51b8775455635e36fc2ce3",
+        "src/lib.rs": "5129f8c1e7707e6729a76f7829e2c803cb9a847f791ee184a6052c69769b822c"
+      },
+      "retrieved_utc": "2026-10-14T12:45:06.962129+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-core-foundation",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-core-foundation",
+      "registry_sha256": "e5affc1e2c3829d18adbfa0ee59c5bb0bb6cddf9ddaac41ad4418e721e3ac285",
+      "archive_url": "https://static.crates.io/crates/objc2-core-foundation/objc2-core-foundation-0.3.2.crate",
+      "archive_sha256": "2a180dd8642fa45cdb7dd721cd4c11b1cadd4929ce112ebd8b9f5803cc79d536",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T15:46:51.264986Z",
+      "selected_files": {
+        "Cargo.toml": "c0f54260fa1396923f2db4edf1e2d54e8ab09dea214af4b8ce37aaefa7185e60",
+        "Cargo.toml.orig": "44cd6a4440c3ea1ba85df240ab9b9e7a95da3a5873ce623ac426ac5acfbe507f",
+        "README.md": "c02a9b113d8855df956d9d854321c5bfef3c2921131070dc0c64870053b42459",
+        "src/lib.rs": "83f4ca0f26d5d8e423f1cb80de4b9f1dd7f7f58b98da8b24832446c6e013f164"
+      },
+      "retrieved_utc": "2026-10-14T12:45:08.283357+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-core-graphics",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-core-graphics",
+      "registry_sha256": "c7b9f9ae6e7202ef31604067517f0e3d6764b8342ae8ce133954191ce37beb14",
+      "archive_url": "https://static.crates.io/crates/objc2-core-graphics/objc2-core-graphics-0.3.2.crate",
+      "archive_sha256": "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T15:47:47.786249Z",
+      "selected_files": {
+        "Cargo.toml": "9756d343dc626faf07cdef1cdef29a2b3efed0f6a2fc44ae35fd828e2f482dc1",
+        "Cargo.toml.orig": "8156455095991b7501f4fa30bdf29c5a541a41e3c479558e757932b07d0b16d1",
+        "README.md": "6361def881598a3b6d19e7e0d45d77aa5f8c87980db0c36d895cc33bb83f10bf",
+        "src/lib.rs": "62a1d4bac29749ef0806aeb2b78e893dcb13dfbaa51157197f23d980187e426b"
+      },
+      "retrieved_utc": "2026-10-14T12:45:09.543873+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-core-text",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-core-text",
+      "registry_sha256": "a22fde3306a358f006a75f7454b7133dd053ebf0a8b60e4c44e5846024ab9f47",
+      "archive_url": "https://static.crates.io/crates/objc2-core-text/objc2-core-text-0.3.2.crate",
+      "archive_sha256": "0cde0dfb48d25d2b4862161a4d5fcc0e3c24367869ad306b0c9ec0073bfed92d",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T16:15:20.614374Z",
+      "selected_files": {
+        "Cargo.toml": "ee9c5dd4f36414afdf971820df60d8b4ea4f0767f93c6ea7fdbcf71e6cbab250",
+        "Cargo.toml.orig": "03598c2d46443f2cff2d4898c72d78b8be884768ef946f42515babe773faf021",
+        "README.md": "055ed475047a908398289da206178ad9c0e76224b6f55dbea3613227b1c070bf",
+        "src/lib.rs": "86c83fae54da4cd32fa65c3905cdf31f0a9162c489dd3a369080f00c5f4e106d"
+      },
+      "retrieved_utc": "2026-10-14T12:45:10.786982+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-metal",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-metal",
+      "registry_sha256": "5099dbe215079ec86be253561c910b6b4d2412316e4b55c3b17e7f755f27546c",
+      "archive_url": "https://static.crates.io/crates/objc2-metal/objc2-metal-0.3.2.crate",
+      "archive_sha256": "a0125f776a10d00af4152d74616409f0d4a2053a6f57fa5b7d6aa2854ac04794",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T15:47:38.897269Z",
+      "selected_files": {
+        "Cargo.toml": "8ea9d2d00d2e462d2f1e0a5bb242ccc8753c2bcd3441edd1d2cf05cba69092ff",
+        "Cargo.toml.orig": "aeaa98ce9f8fb6e92e995b794f49f3a5d0c2a40f443dc2427154b356f5a1b8f8",
+        "README.md": "d55a05ffe37725dade5124e86a457b5d3c83bbdada1868233ede24a3dec8dbd9",
+        "src/lib.rs": "1859aa0e4b568190efd4ebe8ffbc68dda9ac33e4e17e414bdb5bfe05c9087078"
+      },
+      "retrieved_utc": "2026-10-14T12:45:13.144827+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-quartz-core",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-quartz-core",
+      "registry_sha256": "51dae0b6b67419ac8f730725c0b172992823877564cfb38198bac5e49f6b2873",
+      "archive_url": "https://static.crates.io/crates/objc2-quartz-core/objc2-quartz-core-0.3.2.crate",
+      "archive_sha256": "96c1358452b371bf9f104e21ec536d37a650eb10f7ee379fff67d2e08d537f1f",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T16:15:28.249318Z",
+      "selected_files": {
+        "Cargo.toml": "7af27150fadd5ac0b3e86ec173b4e3e2b0dd42d614de963a0c9f0bf55cc7b4d9",
+        "Cargo.toml.orig": "ca303efdd2bcb7958d3e0a08f9b7adb327a2942d0730cda5991365c48016f4d4",
+        "README.md": "655e91cca9d73db675f3ceb77d74c77a2261425c9b250a904f732704abcd4650",
+        "src/lib.rs": "7530d7a324c83c5a1429a3182b6de08b44d3781d86f82e9ab45de68fb97a920e"
+      },
+      "retrieved_utc": "2026-10-14T12:45:14.359223+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "block2",
+      "version": "0.6.2",
+      "registry_url": "https://crates.io/api/v1/crates/block2",
+      "registry_sha256": "14d2a5b1a9b34f9f564926f00737d63c3b53bf46af78f7929b2e3a33f4c046ae",
+      "archive_url": "https://static.crates.io/crates/block2/block2-0.6.2.crate",
+      "archive_sha256": "cdeb9d870516001442e364c5220d3574d2da8dc765554b4a617230d33fa58ef5",
+      "license_expression": "MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T16:00:20.987008Z",
+      "selected_files": {
+        "Cargo.toml": "e325c51f01145af3e11f2ee5ce7c47f10697d936c1d90b9ee81a0cf4f700f6d7",
+        "Cargo.toml.orig": "d18aec0c39956f1a29b6d157c13ec51ce53d7c2a2982c307528215f8870720ac",
+        "README.md": "99073a83cfe6ee090546e3063f41251f7309fe2a017c4add8494e4ad7990d058",
+        "src/lib.rs": "75e11b6c8d0d45df8ddbd44cbb65c96b41c57b9dd95bc9a089428b3d2eccb654"
+      },
+      "retrieved_utc": "2026-10-14T12:45:15.728711+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "bitflags",
+      "version": "2.13.2",
+      "registry_url": "https://crates.io/api/v1/crates/bitflags",
+      "registry_sha256": "55191f2641570d5c933a69ffdd771e028788eb7c8541b909511de3d41de7cc00",
+      "archive_url": "https://static.crates.io/crates/bitflags/bitflags-2.13.2.crate",
+      "archive_sha256": "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06",
+      "license_expression": "MIT OR Apache-2.0",
+      "rust_version": "1.56.0",
+      "created_at": "2026-09-10T01:11:38.500809Z",
+      "selected_files": {
+        "Cargo.toml": "562e660adbb084de042fc9ecc5ac7ba32b5f565d53188823bab9159a027b2b44",
+        "Cargo.toml.orig": "5556d6c09fb1d46628bfddace388f99cc80cfb982149d70b2ee62760003b7f84",
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "6485b8ed310d3f0340bf1ad1f47645069ce4069dcc6bb46c7d5c6faf41de1fdb",
+        "README.md": "1d3819b03f783a3e311f6df7753d74a3329a6461591bbb9dbbf91a899c5eeaf6",
+        "src/lib.rs": "f8d141a1ba6b1996b33eb34669786ef389d4d5226edad46cec22a561588c324b"
+      },
+      "retrieved_utc": "2026-10-14T12:52:03.071762+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-exception-helper",
+      "version": "0.1.1",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-exception-helper",
+      "registry_sha256": "f057c3cef0c417bffb3f36fb6d7879f5e6480775409fec005bdd4bc2d2ad5132",
+      "archive_url": "https://static.crates.io/crates/objc2-exception-helper/objc2-exception-helper-0.1.1.crate",
+      "archive_sha256": "c7a1c5fbb72d7735b076bb47b578523aedc40f3c439bea6dfd595c089d79d98a",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-01-22T23:40:21.951433Z",
+      "selected_files": {
+        "Cargo.toml": "11418770c4b19efe4ff9dcbc7a2aebfda1fb1f0eb4291e3225b20aed5c38a515",
+        "Cargo.toml.orig": "b8bf2ffec7fd293d53a316893362ca12e06c3f1fef1fa2d476161e256214ee6e",
+        "README.md": "b0afbec3a223fc72d479bf60dd84311b622b4d9fb283a8dd60068d0e87d2b66a",
+        "build.rs": "6c338b9ad9f2d47c6c9d4e3d9d604334828da36dfda4bc4d999b99aab005ceba",
+        "src/lib.rs": "06f4241213dd4c5887e1e4cd79a6d37a1db2b39ea3c0fb0f37a3187a70124b0c"
+      },
+      "retrieved_utc": "2026-10-14T12:52:04.180541+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "objc2-image-io",
+      "version": "0.3.2",
+      "registry_url": "https://crates.io/api/v1/crates/objc2-image-io",
+      "registry_sha256": "e841b83e305b29c32d691042b31d8dcc2c8749f89092a9861da06eaeed25515d",
+      "archive_url": "https://static.crates.io/crates/objc2-image-io/objc2-image-io-0.3.2.crate",
+      "archive_sha256": "32b0446e98cf4a784cc7a0177715ff317eeaa8463841c616cfc78aa4f953c4ea",
+      "license_expression": "Zlib OR Apache-2.0 OR MIT",
+      "rust_version": "1.71",
+      "created_at": "2025-10-04T16:14:57.634106Z",
+      "selected_files": {
+        "Cargo.toml": "3b944c934cc3db5e031db1cb3bb4390c1682845781e727fbdfc46415e24d351d",
+        "Cargo.toml.orig": "250d26341e336c569ebefd4cc61efdde1fb3f519afec9764485ad4fc6b75bb2e",
+        "README.md": "16a7defc511f07758599fa1a22176cb7f80dba7d57414b385bec30d4616e5558",
+        "src/lib.rs": "c1cd6182042f805c454fc839b060a762eb8d05aade3bb603676cc3d6c1e9a669"
+      },
+      "retrieved_utc": "2026-10-14T12:52:04.978957+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "cc",
+      "version": "1.8.0",
+      "registry_url": "https://crates.io/api/v1/crates/cc",
+      "registry_sha256": "f5e39773c43068b395a43553b6d056a387e5db90d5790a43d299000515430249",
+      "archive_url": "https://static.crates.io/crates/cc/cc-1.8.0.crate",
+      "archive_sha256": "6651c9ed80effdc7db0ff72512157f901af5e3549e341e24b1dd4887d836d838",
+      "license_expression": "MIT OR Apache-2.0",
+      "rust_version": "1.65.0",
+      "created_at": "2026-10-11T14:17:35.305208Z",
+      "selected_files": {
+        "Cargo.toml": "c3c712e6bbbd9410761aefd36ff4dac3828eb2f78d02419e59c2518544eea806",
+        "Cargo.toml.orig": "87dffec9c97534bf011c9617b115550969ea700362f452b276a3a8c8a4e11400",
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "README.md": "cc952a506dc726eed3e128d47d62defbac4470bbb0e465f6a043ae8bf0c96d19",
+        "src/lib.rs": "f7a6eff54efe2d223b7a338262b9dbdf8ebeeb7acb75fd455b2928dd6c5d221a"
+      },
+      "retrieved_utc": "2026-10-14T12:55:40.538606+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "find-msvc-tools",
+      "version": "0.1.14",
+      "registry_url": "https://crates.io/api/v1/crates/find-msvc-tools",
+      "registry_sha256": "ba42a9f5a1198b482d4195e3fa9b749bc7d19cf088b09e1e28fbca86e0e8d662",
+      "archive_url": "https://static.crates.io/crates/find-msvc-tools/find-msvc-tools-0.1.14.crate",
+      "archive_sha256": "aedcfb3409746eddb02b9e19ebda1c3394f759a152e48ee875a0844d1b955484",
+      "license_expression": "MIT OR Apache-2.0",
+      "rust_version": "1.65.0",
+      "created_at": "2026-09-25T10:09:48.951244Z",
+      "selected_files": {
+        "Cargo.toml": "93c75555b239de87c5869944510eb5ceff973a9bf85ddcd3113d2833d5137431",
+        "Cargo.toml.orig": "039660a12573282743ae9c34931dd4978b8f7d91318fcd7d60f70350ca506a7c",
+        "LICENSE-APACHE": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+        "LICENSE-MIT": "378f5840b258e2779c39418f3f2d7b2ba96f1c7917dd6be0713f88305dbda397",
+        "README.md": "5e7b2b1f5ffc1da7695d3e151a2d4d0b8f681e65a24ddf85a353d4bcfa81967a",
+        "src/lib.rs": "a2751cf88dc5a60d16a263594e41cdde2e40ae8179ec7dc311ee29fc88209a3b"
+      },
+      "retrieved_utc": "2026-10-14T12:56:03.560203+00:00",
+      "status": "verified_download"
+    },
+    {
+      "name": "shlex",
+      "version": "2.0.1",
+      "registry_url": "https://crates.io/api/v1/crates/shlex",
+      "registry_sha256": "292c1ac93844013053a11603f9fc596fa01086cf4d46c98672cc6e710dbb6e87",
+      "archive_url": "https://static.crates.io/crates/shlex/shlex-2.0.1.crate",
+      "archive_sha256": "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba",
+      "license_expression": "MIT OR Apache-2.0",
+      "rust_version": "1.46.0",
+      "created_at": "2026-05-17T18:56:12.775983Z",
+      "selected_files": {
+        "Cargo.toml": "b6ead6cf404555ced33f7574c6c11413e29e7bcd5eb0ceeb59452830a46675ed",
+        "Cargo.toml.orig": "c5a6784dc911e13f22aa3fdb79f83142a64777047534ce447dc94783c58389b7",
+        "LICENSE-APACHE": "553fffcd9b1cb158bc3e9edc35da85ca5c3b3d7d2e61c883ebcfa8a65814b583",
+        "LICENSE-MIT": "4455bf75a91154108304cb283e0fea9948c14f13e20d60887cf2552449dea3b1",
+        "README.md": "082e505bba5dffc5904af5602b45d01129173e617db62c81e6c11d71c964ea71",
+        "src/lib.rs": "d707a605a9dbe52b48c53f5d0209ab457d1db535f10acad060883b6c3d8d7a91"
+      },
+      "retrieved_utc": "2026-10-14T12:56:04.799446+00:00",
+      "status": "verified_download"
+    }
+  ],
+  "host_build_pins": [
+    "cc",
+    "find-msvc-tools",
+    "shlex"
+  ],
+  "audit": "WO-RUST-NATIVE-BINDINGS-AUDIT-01",
+  "feature_delta": {
+    "objc2-foundation": [
+      "NSException"
+    ],
+    "reason": "real native exception probes/diagnostics; no new dependency"
+  },
+  "licenses": "MIT selection where published expressions allow; preserve all upstream notices/authors; canonical templates are not invented copyright",
+  "abi": "private audited objc2 helper C-unwind; catch converted message exceptions/Rust panics at public operations/inbound callback; unsupported cleanup/abort cases explicit",
+  "adopted": true,
+  "adr_review": "artifacts/WO-RUST-NATIVE-BINDINGS-SETUP-01/review.md",
+  "inactive_lock_records": [
+    {
+      "name": "dispatch2",
+      "version": "0.3.1",
+      "checksum": "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "manifest_license": "Zlib OR Apache-2.0 OR MIT",
+      "manifest_rust_version": "1.71",
+      "active_in_selected_build": false,
+      "direct_dependency": false,
+      "cache_observed": ".cache/cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/dispatch2-0.3.1.crate"
+    },
+    {
+      "name": "objc2-io-surface",
+      "version": "0.3.2",
+      "checksum": "180788110936d59bab6bd83b6060ffdfffb3b922ba1396b312ae795e1de9d81d",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "manifest_license": "Zlib OR Apache-2.0 OR MIT",
+      "manifest_rust_version": "1.71",
+      "active_in_selected_build": false,
+      "direct_dependency": false,
+      "cache_observed": ".cache/cargo/registry/cache/index.crates.io-1949cf8c6b5b557f/objc2-io-surface-0.3.2.crate"
+    }
+  ],
+  "active_package_count": 16,
+  "lock_record_count": 18,
+  "activation_rule": "Inactive records never directdeps; selected build exactly16, future activation requires independent review and ADR change",
+  "adopted_as": "Exact compiled native registration only; boundary/runtime proof pending",
+  "setup_acceptance": "WO-RUST-NATIVE-BINDINGS-SETUP-01 r2"
+}
