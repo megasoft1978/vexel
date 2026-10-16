@@ -94,17 +94,18 @@ fn library_target_links_and_lists_routed_tools() {
     for name in ROUTED.iter().chain(&ORIGINAL) {
         assert!(names.iter().any(|n| n == name), "missing {name}");
     }
-    assert_eq!(names.len(), ROUTED.len() + ORIGINAL.len());
-    assert!(!names.iter().any(|n| n == "render_png"));
+    // render_png is routed since WO-RUST-V1-PNG-01.
+    assert_eq!(names.len(), ROUTED.len() + ORIGINAL.len() + 1);
+    assert!(names.iter().any(|n| n == "render_png"));
 }
 
 #[test]
-fn render_png_is_not_routed() {
+fn render_png_without_required_arguments_is_a_typed_error() {
     let mut rig = rig();
     let before = rig.state();
     let reply = rig.doc_tool("render_png", "");
     assert!(reply.is_error);
-    assert!(reply.body.contains("unknown"), "{}", reply.body);
+    assert!(!reply.body.contains("unknown tool"), "{}", reply.body);
     assert_eq!(rig.state(), before);
 }
 

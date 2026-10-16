@@ -66,10 +66,10 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     let result = doc.object_get(doc.root(), b"result").unwrap();
     let tools = doc.object_get(result, b"tools").unwrap();
     // The 9 original preview tools plus the 6 routed by WO-RUST-V1-MCP-TOOLS-01
-    // (document_open, attribute_set, element_delete, save, save_as, export_svg),
-    // in declaration order; render_png stays unlisted.
-    assert_eq!(doc.token(tools).unwrap().child_count, 15);
-    assert!(!String::from_utf8_lossy(&listing).contains("render_png"));
+    // (document_open, attribute_set, element_delete, save, save_as, export_svg)
+    // plus render_png added by WO-RUST-V1-PNG-01, in declaration order.
+    assert_eq!(doc.token(tools).unwrap().child_count, 16);
+    assert!(String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
         "document_open",
         "document_list",
@@ -81,6 +81,7 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
         "redo",
         "save",
         "save_as",
+        "render_png",
         "animation_list",
         "animation_add",
         "animation_control",
@@ -316,9 +317,11 @@ fn live_preview_forwards_routed_file_edit_and_line_path_calls() {
         );
     }
     assert_eq!(backend.calls.len(), requests.len());
-    // render_png is not routed: the profile refuses it before the backend.
+    // render_png is routed since WO-RUST-V1-PNG-01, but a call without the required
+    // path/width/height arguments is refused by validation before the backend.
     let png = r#"{"jsonrpc":"2.0","id":30,"method":"tools/call","params":{"name":"render_png","arguments":{"documentId":"d"}}}"#;
     let out = call(&mut session, &mut backend, png);
-    assert!(String::from_utf8_lossy(&out).contains("unknown tool"));
+    assert!(!String::from_utf8_lossy(&out).contains("\"isError\":false"));
+    assert!(!String::from_utf8_lossy(&out).contains("unknown tool"));
     assert_eq!(backend.calls.len(), requests.len());
 }
