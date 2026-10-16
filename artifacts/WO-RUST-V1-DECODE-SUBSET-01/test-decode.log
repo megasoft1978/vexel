@@ -1,0 +1,263 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.02s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_svg_decode-645ddac8c05f52d9)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/capacity_journal.rs (.cache/target/aarch64-apple-darwin/debug/deps/capacity_journal-b438d7302985e910)
+
+running 2 tests
+test canonical_source_token_index_and_stack_capacity_are_retained_and_admitted ... ok
+test actual_clip_temporary_capacity_has_no_live_leases_after_parent_completion ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/control_and_style.rs (.cache/target/aarch64-apple-darwin/debug/deps/control_and_style-27b5713b20e6326a)
+
+running 5 tests
+test numeric_variable_loops_preserve_cancellation ... ok
+test actual_step_cancel_rolls_back_and_forbids_finish ... ok
+test original_empty_group_clip_does_not_resolve_a_missing_definition ... ok
+test actual_non_scaling_stroke_uniformity_and_paint_order_offsets ... ok
+test actual_style_context_current_color_alpha_and_dash_limits ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/custom_publication.rs (.cache/target/aarch64-apple-darwin/debug/deps/custom_publication-91f78e43ff2960c7)
+
+running 10 tests
+test custom_singular_transform_reports_the_original_paint_offset ... ok
+test custom_solid_geometry_uses_guarded_request_publication ... ok
+test custom_hidden_geometry_publishes_no_shape ... ok
+test custom_late_pattern_failure_rolls_back_custom_suffix ... ok
+test custom_wrong_job_and_reused_ticket_fail_without_retaining_output ... ok
+test custom_resume_cancellation_rolls_back_and_reclaims_output ... ok
+test nested_custom_pattern_child_resumes_before_its_parent ... ok
+test custom_clip_is_finalized_and_missing_clip_keeps_source_offset ... ok
+test custom_resume_rejects_wrong_dimensions_and_generation_and_reclaims_output ... ok
+test custom_fill_and_stroke_patterns_publish_through_sequential_resumes ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/decoder_observability_path.rs (.cache/target/aarch64-apple-darwin/debug/deps/decoder_observability_path-87dc6fe280ebb09d)
+
+running 4 tests
+test opacity_group_range_and_context_are_published ... ok
+test original_three_input_source_token_and_reference_accounting_deltas ... ok
+test original_reference_memory_decoder_owned_predicates_include_actual_clip_copy_history ... ok
+test reference_probes_and_index_capacity_come_from_decoder_traversal ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+
+     Running tests/decoder_path.rs (.cache/target/aarch64-apple-darwin/debug/deps/decoder_path-4de462162d3f6723)
+
+running 3 tests
+test cancellation_rolls_back_active_scene_draft ... ok
+test missing_path_data_preserves_original_path_error_and_element_offset ... ok
+test owned_transaction_steps_and_finishes_path_scene ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/definition_lifecycle.rs (.cache/target/aarch64-apple-darwin/debug/deps/definition_lifecycle-39732e2676256f0c)
+
+running 3 tests
+test exact_pattern_tile_reaches_named_handoff_blocker_and_rolls_back ... ok
+test actual_pattern_child_ticket_wrong_dimensions_abort ... ok
+test actual_clip_child_traversal_sealing_and_parent_link ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/helpers.rs (.cache/target/aarch64-apple-darwin/debug/deps/helpers-67c3c5a660915da2)
+
+running 3 tests
+test span_point_and_transformed_tolerance_boundaries ... ok
+test original_path_number_and_arc_flag_boundaries ... ok
+test preserve_aspect_ratio_and_viewbox_original_fingerprints ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/initialization_lifecycle.rs (.cache/target/aarch64-apple-darwin/debug/deps/initialization_lifecycle-bfb4e24938130d28)
+
+running 4 tests
+test finalized_once_repeated_complete_is_read_only_and_actual_source_retained ... ok
+test real_pattern_ticket_precedes_parent_animation_and_child_failure_wins ... ok
+test actual_hidden_outcome_has_no_viewport_and_retains_actual_late_animation ... ok
+test completed_pattern_then_actual_late_animation_limit_and_failed_finish ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/original_command_cap.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_command_cap-ec671ce9ab1a349e)
+
+running 1 test
+test original_four_million_command_cap_probe ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.34s
+
+     Running tests/original_css.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_css-31c3a46b89999fdd)
+
+running 5 tests
+test original_height_and_transform_diagnostics ... ok
+test original_w5_crisp_edges_and_extended_join_decode_inputs ... ok
+test original_class_tokens_and_initial_paint ... ok
+test original_css_cascade_precedence_and_retained_bytes ... ok
+test original_nine_invalid_paint_values_keep_exact_offsets ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_fuzz_features.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_fuzz_features-7fa971634da1614d)
+
+running 1 test
+test original_whole_shape_cases_retain_all_twenty_two_feature_classes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_ignored.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_ignored-211191a0a58c89ed)
+
+running 4 tests
+test original_doctype_entity_and_position_fail_as_xml ... ok
+test original_ignored_foreign_attributes_and_rendering_rejection ... ok
+test expanded_unknown_attribute_notes_count_once_and_choose_minimum_source_offset ... ok
+test original_ignored_inputs_counts_offsets_and_geometry ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_limits_math.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_limits_math-05c517017625efab)
+
+running 4 tests
+test original_composition_singular_and_64_affine_samples ... ok
+test original_viewbox_meet_geometry_and_hidden_nested_priority ... ok
+test original_css_three_stylesheet_limits_and_zero_opacity ... ok
+test original_css_rule_match_work_limit ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.21s
+
+     Running tests/original_m4_boundaries.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_m4_boundaries-2f4f3638fee4fa13)
+
+running 3 tests
+test original_long_viewbox_values_use_canonical_source_without_wrapper_reparse ... ok
+test original_group_clip_resolves_once_and_shares_one_owned_geometry ... ok
+test original_decode_job_total_exact_one_megabyte_and_plus_one ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/original_metadata.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_metadata-7961ca7fae18efbc)
+
+running 1 test
+test original_post_close_metadata_and_authored_numbers_survive_actual_use_instances ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_number_scene.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_number_scene-0406a3b8cbe24b59)
+
+running 1 test
+test original_path_number_main_all_assertions_through_real_decoder_scene ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_probe_scan.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_probe_scan-103a9dba935e3e1e)
+
+running 2 tests
+test original_full_4096_comment_512_shape_cached_stop_publication_input ... ok
+test original_512_late_gradient_index_probe_bounds_and_actual_graph_publication ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.27s
+
+     Running tests/original_references.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_references-f2474b542813f9c0)
+
+running 6 tests
+test original_w5_switch_language_data ... ok
+test original_mapped_error_offset_and_definition_only ... ok
+test original_use_transform_order_and_host_source_maps ... ok
+test original_local_reference_rejection_cases ... ok
+test original_reference_exact_bytes_and_depth_boundaries ... ok
+test original_use_instance_boundary_and_aggregate_byte_limit ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.10s
+
+     Running tests/original_shapes.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_shapes-3e97f0b218b373d7)
+
+running 5 tests
+test original_shape_main_pure_errors_and_offsets ... ok
+test original_primitive_geometry_shape_flags_rounding_and_zero_records ... ok
+test original_eccentric_ellipse_chord_error_bound ... ok
+test original_smooth_equivalences_use_real_lexical_animation_and_scene ... ok
+test original_many_shapes_limit has been running for over 60 seconds
+test original_many_shapes_limit ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 64.29s
+
+     Running tests/original_stroke_metadata.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_stroke_metadata-6ccff23912d7e91c)
+
+running 2 tests
+test original_open_stroke_path_and_implicit_fill_closure_metadata ... ok
+test original_default_authored_strokes_transform_join_and_error_predicates ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/original_zero_area_gradient.rs (.cache/target/aarch64-apple-darwin/debug/deps/original_zero_area_gradient-666ed4f3e8d8cb87)
+
+running 3 tests
+test zero_area_gradient_resolver_limit_precedes_fallback ... ok
+test zero_area_gradient_resolver_malformed_diagnostic_precedes_fallback ... ok
+test original_zero_area_gradient_fails_at_value_offset_without_partial_geometry ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/path_number.rs (.cache/target/aarch64-apple-darwin/debug/deps/path_number-050dfb357f87289b)
+
+running 2 tests
+test original_malformed_path_offset_assertion ... ok
+test original_compact_and_separated_path_number_assertions ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/production_engine.rs (.cache/target/aarch64-apple-darwin/debug/deps/production_engine-45b2f706e31da8a3)
+
+running 10 tests
+test production_rejects_wrong_flavor_before_child_publication ... ok
+test scoped_production_pattern_event_contains_minted_static_child_capability ... ok
+test production_nested_patterns_seal_complete_and_resume_before_parent ... ok
+test scoped_nested_patterns_hold_lifo_scene_requests_and_restore_source_on_completion ... ok
+test nested_gradient_clip_and_marker_content_is_complete_before_pattern_request ... ok
+test production_filter_real_empty_group_and_original_pre_geometry_failure_priority ... ok
+test production_fill_and_stroke_pattern_channels_are_explicit ... ok
+test actual_marker_child_host_annotation_and_mask_sealed_content ... ok
+test root_shape_batching_preserves_clip_at_every_threshold ... ok
+test original_512_late_gradient_instances_use_production_cache_handoff ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+
+     Running tests/production_failures.rs (.cache/target/aarch64-apple-darwin/debug/deps/production_failures-cfbfbadab948d7f4)
+
+running 5 tests
+test wrong_ticket_aborts_and_reclaims_only_transferred_job_output ... ok
+test explicit_definition_channels_preserve_distinct_requested_opacities ... ok
+test cancellation_at_pattern_completion_releases_pixels_and_cannot_finish ... ok
+test nested_pattern_failure_and_cancellation_unwind_every_request_and_keep_source_identity ... ok
+test child_draft_cancellation_sweep_rolls_back_every_admitted_draft ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/production_media.rs (.cache/target/aarch64-apple-darwin/debug/deps/production_media-27473999accf1901)
+
+running 2 tests
+test actual_media_scope_limit_rolls_back_before_provider_and_scene_publication ... ok
+test nested_use_media_calls_actual_fixture_provider_and_preserves_host_maps ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/zz_contract_priority.rs (.cache/target/aarch64-apple-darwin/debug/deps/zz_contract_priority-4c37596140ff1da7)
+
+running 2 tests
+test original_traversal_error_precedes_animation_track_exhaustion ... ok
+test original_hidden_root_bypasses_authored_transform_and_viewport ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests vexel_svg_decode
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

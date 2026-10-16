@@ -1,0 +1,37 @@
+{
+  "AC1": {"outcome": "pass", "tests": ["cargo test -p vexel-svg-decode: 93 passed, 0 failed (unchanged R11)", "cargo test -p vexel-svg-engine: 6 pre-existing (tests/decoder.rs) passed; clip test completes, not InvalidArgument"]},
+  "AC2": {"outcome": "pass", "file": "rust/crates/vexel-svg-engine/tests/subset_decode.rs", "tests": [
+    "subset_publishes_exact_shape_kinds_in_source_order",
+    "subset_publishes_root_viewport_from_viewbox",
+    "subset_resolves_group_transforms_and_user_space_edges",
+    "subset_publishes_solid_fill_and_stroke_channels"]},
+  "AC3": {"outcome": "pass", "file": "rust/crates/vexel-svg-engine/tests/subset_decode.rs", "tests": [
+    "unknown_elements_namespace_attributes_and_editor_metadata_preserve_source",
+    "preserved_element_offsets_match_text_and_published_source_equals_input"]},
+  "AC4": {"outcome": "pass", "file": "rust/crates/vexel-svg-engine/tests/deferred_features.rs", "tests": {
+    "filter": ["filter_referenced_fail_closed_unsupported_at_filter_element", "filter_unreferenced_preserved_untouched_with_shapes_published"],
+    "mask": ["mask_referenced_fail_closed_unsupported_at_mask_element", "mask_unreferenced_preserved_untouched_with_shapes_published"],
+    "pattern": ["pattern_referenced_pending_never_success_until_resumed", "pattern_unreferenced_preserved_untouched_with_shapes_published", "session_contract::pending_pattern_is_never_success_and_failed_render_rolls_back"],
+    "text": ["text_fail_closed_unsupported_at_text_element"],
+    "marker": ["marker_referenced_fail_closed_unsupported_at_marker_element", "marker_unreferenced_preserved_untouched_with_shapes_published"]},
+    "note": "Referenced pattern is neither Unsupported nor preserved: the Decoder suspends (NeedPattern); finish is rejected and a failed render resumes as a typed error. See result.md gaps."},
+  "AC5": {"outcome": "pass", "file": "rust/crates/vexel-svg-engine/tests/malformed_limits.rs", "tests": [
+    "every_truncation_of_a_valid_document_is_a_typed_error",
+    "truncated_open_tag_reports_xml_error_at_the_unterminated_element",
+    "non_numeric_path_data_is_a_path_error_inside_the_d_value",
+    "huge_coordinates_are_rejected_with_a_typed_error",
+    "nan_and_infinite_lengths_are_number_errors_at_the_value",
+    "cancel_at_every_work_point_returns_canceled_and_never_a_scene",
+    "cancel_mid_step_fails_the_decoder_and_finish_cannot_publish",
+    "rejected_documents_leave_no_partial_state_for_a_following_decode"]},
+  "AC6": {"outcome": "pass", "file": "rust/crates/vexel-svg-engine/tests/session_contract.rs", "tests": [
+    "finish_before_complete_is_rejected_at_every_step_boundary",
+    "finish_succeeds_only_after_complete",
+    "step_is_bounded_by_the_quantum",
+    "pending_pattern_is_never_success_and_failed_render_rolls_back",
+    "pending_pattern_finish_is_rejected_without_resume",
+    "clip_owner_publishes_a_clip_with_geometry"]},
+  "AC7": {"outcome": "pass", "artifact": "source-diff.json", "note": "0 decoder files changed vs seed; one engine src change justified by failing AC4 tests"},
+  "AC8": {"outcome": "pass", "artifact": "result.md"},
+  "AC9": {"outcome": "pass", "artifact": "verification.json", "note": "cargo tree -p vexel-svg-engine lists only vexel-* path crates"}
+}

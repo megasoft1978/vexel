@@ -1,0 +1,15 @@
+{
+  "filter": {"referenced": "typed Unsupported at <filter> element name offset (engine fail-closed)", "unreferenced": "preserved untouched, subset shapes published, no filter published"},
+  "mask": {"referenced": "typed Unsupported at <mask> element (planner returns offset 0 for group owners; engine remaps to the element)", "unreferenced": "preserved untouched"},
+  "pattern": {"referenced": "Decoder suspends with NeedPattern; finish rejected; failed render resumes as typed error; never success (no renderer in scope)", "unreferenced": "preserved untouched"},
+  "text/tspan": {"referenced": "typed Unsupported at <text> element"},
+  "marker": {"referenced": "typed Unsupported at <marker> element (engine fail-closed; decoder+planner can expand markers but output is not subset-verified)", "unreferenced": "preserved untouched"},
+  "image": {"referenced": "typed Unsupported at <image> element (pre-existing engine test)"},
+  "gradients": "linear gradient through cached-paint path publishes (pre-existing engine test); not otherwise expanded",
+  "use": "decodes (shape published); not subset-verified beyond no-panic",
+  "css_style_selectors": "decodes without panic, source preserved; selector application not verified",
+  "smil_animation": "decodes without panic, source preserved; animation not rendered",
+  "external_references": "typed Unsupported at the url(http...) value offset inside the host element",
+  "unknown_rendered_elements": "typed Unsupported at the element; unknown elements inside metadata/defs and known editor namespaces (sodipodi/inkscape) are preserved source-only",
+  "silent_drop_or_success": "none observed in the cases above"
+}

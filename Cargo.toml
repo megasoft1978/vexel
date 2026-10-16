@@ -33,6 +33,7 @@ members = [
   "rust/crates/vexel-app",
   "rust/crates/vexel-scene",
   "rust/crates/vexel-svg-decode",
+  "rust/crates/vexel-svg-engine",
   "rust/crates/vexel-svg-paint",
   "rust/crates/vexel-svg-definitions",
   "rust/crates/vexel-svg-media",

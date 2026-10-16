@@ -1,0 +1,10 @@
+{
+  "allowed": [
+    "rust/crates/vexel-svg-decode/** (seeded from continuation-11, byte-identical)",
+    "rust/crates/vexel-svg-engine/** (seeded from reseed-r4; src/lib.rs modified; tests added)",
+    "artifacts/WO-RUST-V1-DECODE-SUBSET-01/**"
+  ],
+  "coordinator_only": ["Cargo.toml (workspace member)", "Cargo.lock (package entry)"],
+  "protected_untouched": "no other crate, fixture, oracle, tests/, work/, docs/, STATE.md or ledger file changed; main checkout and cache dirs read only",
+  "line_limit": "all source/test files under 800 lines (max 317 new engine test file; decoder max 792 src/traversal.rs, unchanged)"
+}

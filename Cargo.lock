@@ -443,6 +443,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "vexel-svg-engine"
+version = "0.1.0"
+dependencies = [
+ "vexel-base",
+ "vexel-geometry",
+ "vexel-scene",
+ "vexel-svg-animation",
+ "vexel-svg-css",
+ "vexel-svg-decode",
+ "vexel-svg-definitions",
+ "vexel-svg-paint",
+ "vexel-xml",
+]
+
+[[package]]
 name = "vexel-svg-index"
 version = "0.1.0"
 dependencies = [

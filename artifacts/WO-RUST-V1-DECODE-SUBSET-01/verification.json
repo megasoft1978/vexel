@@ -1,0 +1,46 @@
+{
+ "check-decode": {
+  "exit": 0,
+  "command": "cargo +stable check -p vexel-svg-decode --locked --offline"
+ },
+ "test-decode": {
+  "exit": 0,
+  "passed": 93,
+  "failed": 0,
+  "command": "cargo +stable test -p vexel-svg-decode --locked --offline"
+ },
+ "check-engine": {
+  "exit": 0,
+  "command": "cargo +stable check -p vexel-svg-engine --locked --offline"
+ },
+ "test-engine": {
+  "exit": 0,
+  "passed": 38,
+  "failed": 0,
+  "command": "cargo +stable test -p vexel-svg-engine --locked --offline"
+ },
+ "fmt": {
+  "exit": 0,
+  "command": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-svg-decode --package vexel-svg-engine -- --check"
+ },
+ "tree": {
+  "exit": 0,
+  "command": "cargo +stable tree -p vexel-svg-engine --locked --offline",
+  "non_vexel_packages": []
+ },
+ "test-definitions": {
+  "exit": 0,
+  "passed": 40,
+  "failed": 0,
+  "command": "cargo +stable test -p vexel-svg-definitions --locked --offline"
+ },
+ "wo-validate": {
+  "exit": 0,
+  "command": "python3 scripts/wo_validate.py WO-RUST-V1-DECODE-SUBSET-01 --ready"
+ },
+ "ledger": {
+  "exit": 0,
+  "command": "python3 scripts/ledger.py validate ledger.jsonl"
+ },
+ "env": "CARGO_HOME=<main>/.cache/cargo, CARGO_TARGET_DIR=<worktree>/.cache/target"
+}

@@ -1,0 +1,53 @@
+{
+ "decoder_files_changed_vs_seed": [],
+ "decoder_changed_count": 0,
+ "engine_and_other_changes": [
+  {
+   "path": "rust/crates/vexel-svg-engine/src/lib.rs",
+   "status": "modified",
+   "sha256": "9787ccab6d6bed97ce85e2f9ea7d85abe5487d7a82ce376d5ac1aa420feec323",
+   "seed_sha256": "ca2dd2bb9380514a0099d2eaf042ff4df20ccba8635e8b9ec775955285ec429b",
+   "reason": "AC4: Filter/Marker fail closed Unsupported at definition element; offset-0 Unsupported (mask on group) remapped to the definition element. Justified by failing tests filter_*/mask_*/marker_*_fail_closed_*."
+  },
+  {
+   "path": "rust/crates/vexel-svg-engine/tests/common/mod.rs",
+   "status": "added",
+   "sha256": "4fdf834add188a9d30a30e8ec8a921b97b291122d19b7ce91880d98c5e29acec",
+   "reason": "new additive test/support file for the V1 subset ACs"
+  },
+  {
+   "path": "rust/crates/vexel-svg-engine/tests/deferred_features.rs",
+   "status": "added",
+   "sha256": "7cb9270b74e5fa98d198070ce0f9ee9cebc21541cc2a13a91e68440ab55ee81d",
+   "reason": "new additive test/support file for the V1 subset ACs"
+  },
+  {
+   "path": "rust/crates/vexel-svg-engine/tests/malformed_limits.rs",
+   "status": "added",
+   "sha256": "1abf6b01275dfd8ef3a62c2c3787b1111a3eebeca6e75b912d797ee085590ea6",
+   "reason": "new additive test/support file for the V1 subset ACs"
+  },
+  {
+   "path": "rust/crates/vexel-svg-engine/tests/session_contract.rs",
+   "status": "added",
+   "sha256": "fb0b6386d2a9bd8220d0df2fa049b8a01be30ad472081855fa8e098ab23193b0",
+   "reason": "new additive test/support file for the V1 subset ACs"
+  },
+  {
+   "path": "rust/crates/vexel-svg-engine/tests/subset_decode.rs",
+   "status": "added",
+   "sha256": "c71920badf7a9d031ac56a57edb1cd06f3308afc0a38d578284234d98f9e0342",
+   "reason": "new additive test/support file for the V1 subset ACs"
+  }
+ ],
+ "coordinator_manifest_changes": [
+  {
+   "path": "Cargo.toml",
+   "change": "registered rust/crates/vexel-svg-engine as workspace member"
+  },
+  {
+   "path": "Cargo.lock",
+   "change": "added vexel-svg-engine package entry (existing path crates only), via cargo metadata --offline"
+  }
+ ]
+}
