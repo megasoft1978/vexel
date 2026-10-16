@@ -1,0 +1,11 @@
+[package]
+name = "vexel-mcp-access"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+vexel-base = { path = "../vexel-base" }
+vexel-platform-macos = { path = "../vexel-platform-macos" }

@@ -1,0 +1,22 @@
+[package]
+name = "vexel-app"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "vexel"
+path = "src/main.rs"
+
+[dependencies]
+vexel-platform-apple = { path = "../vexel-platform-apple" }
+vexel-raster = { path = "../vexel-raster" }
+vexel-ui = { path = "../vexel-ui" }
+vexel-json = { path = "../vexel-json" }
+vexel-protocol = { path = "../vexel-protocol" }
+vexel-mcp-stdio = { path = "../vexel-mcp-stdio" }
+vexel-v1-document = { path = "../vexel-v1-document" }
+vexel-xml = { path = "../vexel-xml" }
+vexel-svg-animation = { path = "../vexel-svg-animation" }

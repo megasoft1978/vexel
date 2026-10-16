@@ -1,0 +1,11 @@
+[package]
+name = "vexel-mcp-stdio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+vexel-json = { path = "../vexel-json" }
+vexel-protocol = { path = "../vexel-protocol" }

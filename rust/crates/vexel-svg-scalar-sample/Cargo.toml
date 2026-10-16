@@ -1,0 +1,17 @@
+[package]
+name = "vexel-svg-scalar-sample"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+vexel-scene = { path = "../vexel-scene" }
+vexel-base = { path = "../vexel-base" }
+vexel-geometry = { path = "../vexel-geometry" }
+vexel-raster = { path = "../vexel-raster" }
+
+[dev-dependencies]
+vexel-svg-path = { path = "../vexel-svg-path" }
+vexel-svg-animation = { path = "../vexel-svg-animation" }

@@ -1,0 +1,13 @@
+[package]
+name = "vexel-document-edit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+vexel-base = { path = "../vexel-base" }
+vexel-xml = { path = "../vexel-xml" }
+vexel-document = { path = "../vexel-document" }
+vexel-document-io = { path = "../vexel-document-io" }

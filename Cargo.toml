@@ -1,0 +1,51 @@
+[workspace]
+resolver = "3"
+members = [
+  "rust/crates/vexel-base",
+  "rust/crates/vexel-geometry",
+  "rust/crates/vexel-xml",
+  "rust/crates/vexel-json",
+  "rust/crates/vexel-project",
+  "rust/crates/vexel-raster",
+  "rust/crates/vexel-spatial",
+  "rust/crates/vexel-svg-values",
+  "rust/crates/vexel-protocol",
+  "rust/crates/vexel-ui",
+  "rust/crates/vexel-platform-macos",
+  "rust/crates/vexel-svg-path",
+  "rust/crates/vexel-timeline",
+  "rust/crates/vexel-tile-cache",
+  "rust/crates/vexel-platform-tasks",
+  "rust/crates/vexel-svg-color",
+  "rust/crates/vexel-mcp-tasks",
+  "rust/crates/vexel-mcp-stdio",
+  "rust/crates/vexel-mcp-access",
+  "rust/crates/vexel-project-io",
+  "rust/crates/vexel-svg-index",
+  "rust/crates/vexel-document",
+  "rust/crates/vexel-svg-css",
+  "rust/crates/vexel-svg-reference",
+  "rust/crates/vexel-document-io",
+  "rust/crates/vexel-document-edit",
+  "rust/crates/vexel-v1-document",
+  "rust/crates/vexel-svg-animation",
+  "rust/crates/vexel-platform-apple",
+  "rust/crates/vexel-app",
+  "rust/crates/vexel-scene",
+  "rust/crates/vexel-svg-decode",
+  "rust/crates/vexel-svg-paint",
+  "rust/crates/vexel-svg-definitions",
+  "rust/crates/vexel-svg-media",
+  "rust/crates/vexel-scene-query",
+  "rust/crates/vexel-svg-scalar-index",
+  "rust/crates/vexel-svg-scalar-sample",
+  "rust/crates/vexel-svg-animation-frame",
+  "rust/tools/vexel-dev"
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MPL-2.0"
+publish = false

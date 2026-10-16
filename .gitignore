@@ -4,3 +4,4 @@
 /artifacts/runs/
 __pycache__/
 *.py[cod]
+**/target/

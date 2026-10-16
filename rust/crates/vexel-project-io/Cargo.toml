@@ -1,0 +1,12 @@
+[package]
+name = "vexel-project-io"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+vexel-base = { path = "../vexel-base" }
+vexel-project = { path = "../vexel-project" }
+vexel-platform-macos = { path = "../vexel-platform-macos" }
