@@ -87,6 +87,7 @@
         "NSString",
         "NSThread",
         "NSTimer",
+        "NSURL",
         "NSUserDefaults",
         "NSValue",
         "block2",
