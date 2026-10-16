@@ -15,31 +15,28 @@ owner intends to delete it once Rust reaches parity.
 
 ## State
 
-- **Rust workspace** (`rust/`, 39 crates, ~88k LOC): accepted libraries for XML,
-  JSON, scene model, SVG values/paint/path/CSS/animation, tile cache, timeline,
-  document edit, project IO, MCP stdio/protocol, UI toolkit and Apple platform
-  bindings. `vexel-app` runs a basic-shape live MCP preview only.
-- **Not connected yet (V1 critical path):**
-  1. `vexel-svg-decode` is a stub. WO-RUST-SVG-DECODE-01 is still `running` in the
-     ledger, but no process is live; the best candidate is
-     `.cache/WO-RUST-SVG-DECODE-01/current-continuation-11/` (not in git).
-  2. No renderer crate (C reference: `src/raster/shape_render*.c`).
-  3. App composition, `.vexel` save/reopen wiring, animation playback, GIF export.
-- **C implementation**: passed `./dev final` at `bcdc3fa`; work after that (anim
-  project, recovery, SVG paint/clip, MCP async) is committed but has no fresh full
-  gate. Corpus: 3/39 render (5/39 candidate WO-CORPUS-04, unaccepted).
-- **Superseded** under directive 4: the six C orders blocked on 2026-10-12 and
-  WO-CORPUS-01/02. The `work/WO-GAP-*` files stay READY but are not to be run.
-- Large artifacts (>1 MiB) and third-party PDFs are not committed; see
-  `artifacts/EXCLUDED-LARGE.txt` (sha256 manifest; originals only on the author disk).
-
-## V1 critical path (ADR-0029)
-
-decode subset → renderer crate → app composition → save/reopen → animation + GIF →
-Codex MCP walkthrough. Orders: `work/WO-RUST-V1-DECODE-SUBSET-01.md`,
-`work/WO-RUST-V1-RENDER-01.md`; later orders are listed in
-`docs/product/vexel-v1-vertical-slice.md`. Freeze new library/contract orders that
-are not on this path.
+- **Rust V1 slice is built and accepted at the automated level** (main `49ef038f`,
+  1473 workspace tests pass). Accepted orders: decode subset (`vexel-svg-engine`),
+  render (`vexel-render`, byte-exact vs C goldens), save/reopen, native Open/Save panels,
+  SVG compose, animation + GIF (`vexel-gif`), drawing tools, integration (single
+  `AppDocument` session), playback + timeline strip, MCP tools (save/open/attribute/
+  delete/export_svg, launch-time `--grant-dir`), automated MCP walkthrough of the
+  ADR-0029 cutline.
+- **Not yet verified on screen:** every native/live behaviour. Run
+  `artifacts/WO-RUST-V1-WALKTHROUGH-02/manual-checklist.md` (M1-M10) plus the live-check
+  lists in each order's `result.md` (via `git log` / tag history): native Save/Open panels and a
+  possible double-fire on Cmd+S, drawing in the window, playback strip and held-Space
+  repeat, edit-while-playing blank frame, MCP session from a real Codex client.
+- **Known gaps:** filters, mask-on-group, patterns, dashes, text; `render_png` (no PNG
+  encoder crate); File > Open panel offers `.vexel` only (`.svg` via path/CLI/MCP);
+  `element_add` schema enum stale (line/path work but unadvertised); legacy
+  `McpHost::handle` and `preview_app.rs` dead code; synchronous playback render; no
+  corpus measurement for Rust.
+- **Legacy C** (`src/`, `app/`, `CMakeLists.txt`, C-bound scripts/tests, fuzz/nightly/release
+  workflows) is still in the tree, frozen; `./dev verify` does not link (undefined
+  `viewer_editor_*`). Tag `legacy-c-final` marks the last tree before the Rust work landed.
+  Deletion plan: archive/port per the cleanup map, delete after owner sign-off.
+- Large artifacts and third-party PDFs are not committed: `docs/archive/EXCLUDED-LARGE.txt`.
 
 ## How work is done here
 

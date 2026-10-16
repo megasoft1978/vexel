@@ -1734,3 +1734,7 @@ resolution of `objc2-image-io`):
 ## 2026-10-16 — V1 critical path: decode, render, save accepted
 
 Integrated on main after fresh read-only reviews (all ACCEPT-WITH-AMENDMENT, no blockers): WO-RUST-V1-DECODE-SUBSET-01 (`8ea3e78b`; vexel-svg-engine, decoder 93 / engine 38 / definitions 40 tests), WO-RUST-V1-RENDER-01 (`5e67bb50`; vexel-render, 49 tests, byte-exact vs C goldens on 7 fixtures), WO-RUST-V1-SAVE-01 (vexel-app project_session, 48 app+document tests). WO-RUST-SVG-DECODE-01 superseded. Open: native Save/Open panels, filters/mask-on-group/patterns/dash, app composition, animation+GIF, MCP walkthrough.
+
+## 2026-10-16 — V1 slice accepted (automated level)
+
+Accepted after independent reviews and merged on main (`49ef038f`, 1473 workspace tests, ledger 1884 entries): INTEGRATE-01, PLAYBACK-01, MCP-TOOLS-01, WALKTHROUGH-02 (WALKTHROUGH-01 superseded) on top of DECODE-SUBSET, RENDER, SAVE, NATIVE-PANELS, APP-COMPOSE, ANIM, DRAW-TOOLS. Outstanding: live window verification (manual-checklist.md M1-M10 and per-order lists), legacy C removal, deferred SVG features, render_png.
