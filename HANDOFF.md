@@ -32,10 +32,11 @@ owner intends to delete it once Rust reaches parity.
   `element_add` schema enum stale (line/path work but unadvertised); legacy
   `McpHost::handle` and `preview_app.rs` dead code; synchronous playback render; no
   corpus measurement for Rust.
-- **Legacy C** (`src/`, `app/`, `CMakeLists.txt`, C-bound scripts/tests, fuzz/nightly/release
-  workflows) is still in the tree, frozen; `./dev verify` does not link (undefined
-  `viewer_editor_*`). Tag `legacy-c-final` marks the last tree before the Rust work landed.
-  Deletion plan: archive/port per the cleanup map, delete after owner sign-off.
+- **Legacy C removed** (`27602ed2`): `src/`, `app/`, CMake, `./dev`, C-bound scripts, tests,
+  fuzz/nightly/release workflows and packaging are gone from the tree. Everything is
+  recoverable at tag `legacy-c-final`. The four C raster files the render parity map
+  anchors to are kept under `rust/fixtures/legacy/c-raster/`. Still to rebuild in Rust:
+  release bundling/DMG/signing, fuzz and perf gates, a Rust CI beyond check/test.
 - Large artifacts and third-party PDFs are not committed: `docs/archive/EXCLUDED-LARGE.txt`.
 
 ## How work is done here

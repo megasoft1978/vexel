@@ -1738,3 +1738,7 @@ Integrated on main after fresh read-only reviews (all ACCEPT-WITH-AMENDMENT, no 
 ## 2026-10-16 — V1 slice accepted (automated level)
 
 Accepted after independent reviews and merged on main (`49ef038f`, 1473 workspace tests, ledger 1884 entries): INTEGRATE-01, PLAYBACK-01, MCP-TOOLS-01, WALKTHROUGH-02 (WALKTHROUGH-01 superseded) on top of DECODE-SUBSET, RENDER, SAVE, NATIVE-PANELS, APP-COMPOSE, ANIM, DRAW-TOOLS. Outstanding: live window verification (manual-checklist.md M1-M10 and per-order lists), legacy C removal, deferred SVG features, render_png.
+
+## 2026-10-16 — legacy C removed
+
+Removed the C implementation and C-bound tooling (`27602ed2`; tag `legacy-c-final`). 1473 Rust tests and 50 Python harness tests pass afterwards. Repository: 1378 tracked files (was ~7,900 untracked + tracked sprawl); top level is `rust/`, `docs/`, `work/`, `artifacts/`, `bench/corpus`, `scripts/` (ledger/WO tooling), `tests/` (harness tests).
