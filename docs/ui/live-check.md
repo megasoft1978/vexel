@@ -48,3 +48,9 @@ No open defect for check 4. Model test ui_wiring_export.rs covers Esc.
 | 6 | NOT RUN: needs an in-memory edit first (rectangle tool drag); not done this round. | |
 | 8 | NOT RUN: no reliable scroll-event tool confirmed. | |
 | 1, 9, 10 | OWNER: appearance change, export-to-file and quit, external Codex client. | |
+
+## Round 3 (2026-10-17)
+
+- Row 5: Cmd+O via System Events produced no Open panel in a screenshot. Not verified. Cmd+S left untested: it could write the tracked fixture. Repo verified unchanged (`git status` clean, fixture sha matches).
+- Row 3: still inconclusive (synthetic moves give no hover feedback).
+- Rows 6 and 8: not run. Row 6 needs an in-memory edit on the open document. Row 8 needs a scroll-event check that was not executed.
