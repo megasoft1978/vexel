@@ -139,7 +139,10 @@ pub(crate) fn element_at(source: &[u8], offset: usize) -> Option<String> {
 /// Name of the start tag enclosing `offset`: the element whose `<` is the last
 /// one before it. Attribute values cannot contain `<`, so this is sound.
 pub(crate) fn enclosing_element(source: &[u8], offset: usize) -> Option<String> {
-    let start = source.get(..offset)?.iter().rposition(|&b| b == b'<')?;
+    const MAX_TAG_LOOKBACK: usize = 4096;
+    let head = source.get(..offset)?;
+    let base = head.len().saturating_sub(MAX_TAG_LOOKBACK);
+    let start = base + head[base..].iter().rposition(|&b| b == b'<')?;
     element_at(source, start)
 }
 
@@ -149,8 +152,13 @@ pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeE
     match diagnostic.kind {
         ErrorKind::Unsupported => {
             // The offset may sit inside an attribute value (e.g. a `fill` in a
-            // `style`), so fall back to the enclosing start tag.
-            let element = element_at(source, offset).or_else(|| enclosing_element(source, offset));
+            // `style`), so prefer the enclosing start tag; only an offset that
+            // is itself at a `<` names the element starting there.
+            let element = if source.get(offset) == Some(&b'<') {
+                element_at(source, offset)
+            } else {
+                enclosing_element(source, offset)
+            };
             let feature = match element.as_deref() {
                 Some("filter") => "filter",
                 Some("mask") => "mask",
@@ -197,5 +205,31 @@ pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeE
             detail: "invalid value",
             offset,
         },
+    }
+}
+
+#[cfg(test)]
+mod enclosing_tests {
+    use super::{element_at, enclosing_element};
+
+    #[test]
+    fn offset_inside_attribute_names_the_start_tag() {
+        let source = b"<svg><g style=\"fill:red\"><path/></g></svg>";
+        let fill = source.windows(4).position(|w| w == b"fill").unwrap();
+        assert_eq!(enclosing_element(source, fill).as_deref(), Some("g"));
+    }
+
+    #[test]
+    fn offset_at_a_tag_names_that_tag() {
+        let source = b"<svg><filter id=\"f\"/></svg>";
+        let filter = source.windows(7).position(|w| w == b"<filter").unwrap();
+        assert_eq!(element_at(source, filter).as_deref(), Some("filter"));
+    }
+
+    #[test]
+    fn lookback_is_bounded() {
+        let mut source = b"<svg>".to_vec();
+        source.extend(std::iter::repeat_n(b' ', 10_000));
+        assert_eq!(enclosing_element(&source, source.len()), None);
     }
 }
