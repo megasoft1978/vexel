@@ -114,4 +114,4 @@ pending gap-closure orders or an owner decision to supersede.
 
 - Root size above 4096 (aegean, norway): keep refusal. Raster caps and the frozen oracle (height=5000 as error) unchanged. Both files stay `xml`.
 - Limit-blocked files (9): keep edge (4.19M) and text-command budgets. Files stay `limit_decode`.
-- Symbol clip (use_t2): conditional clip only (emit when symbol content may exceed the use viewport). No clip-cap change. In progress.
+- Symbol clip (use_t2): conditional clip tried. Rejected: the document-wide `<style>` check blocks the gate, so use_t2 stays limit_decode. Decision: no symbol clipping on main (use_t2 ok). Candidate kept at `.cache/symbol-clip-candidate.patch` (local, not committed) for a later selector-aware gate (option A).
