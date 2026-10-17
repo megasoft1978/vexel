@@ -449,10 +449,12 @@ fn run(
                 WindowEvent::Scroll(scroll) => {
                     if let Some(footer) = model.layout(logical.0, logical.1).and_then(|l| l.footer)
                     {
-                        let (x, y) = scroll.logical;
-                        if x >= footer.x as i32 && y >= footer.y as i32 {
-                            let tl = timeline::layout::TimelineLayout::new(footer);
-                            dirty |= model.timeline.scroll_by_points(scroll.delta.y, &tl);
+                        // Only a wheel over the footer scrolls its rows (not the inspector
+                        // or status bar, which lie right of / below the footer's origin).
+                        if let Some(moved) =
+                            model.timeline.wheel(footer, scroll.logical, scroll.delta.y)
+                        {
+                            dirty |= moved;
                         }
                     }
                 }

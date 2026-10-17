@@ -60,6 +60,11 @@ impl ExportJob {
         self.cancel.store(true, Ordering::Relaxed);
     }
 
+    /// True while the job's reply is still pending (the worker may still be writing).
+    pub fn is_running(&self) -> bool {
+        self.reply.is_some()
+    }
+
     /// Returns a status line once the job has finished and its reply was sent.
     pub fn poll(&mut self) -> Option<String> {
         self.reply.as_ref()?;

@@ -147,7 +147,18 @@ struct GifRun {
 
 impl Drop for GifRun {
     fn drop(&mut self) {
+        // Cancel, give the worker a short bounded time to stop writing, then remove the
+        // private staging directory so quitting mid-export never leaves it behind.
         self.job.cancel();
+        if self.job.is_running() {
+            for _ in 0..200 {
+                if self.job.poll().is_some() {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+        }
+        self.stage.discard();
     }
 }
 
