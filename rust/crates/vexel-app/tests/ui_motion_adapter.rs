@@ -95,10 +95,20 @@ fn press_release_hover_focus_cycle_and_frame_values() {
         assert!(m.tab(false));
         assert_eq!(m.registry().focused(), Some(*expect));
     }
+    // Pin updated (WO-RUST-UI-WIRING-01): FOCUS_ORDER grew by the toolbar buttons;
+    // the check follows its last entry instead of a fixed index.
     assert!(m.tab(true));
-    assert_eq!(m.registry().focused(), Some(FOCUS_ORDER[6]));
+    assert_eq!(
+        m.registry().focused(),
+        Some(FOCUS_ORDER[FOCUS_ORDER.len() - 1])
+    );
     time.set(time.get() + 130 * MS);
-    assert_eq!(m.frame(true, Mode::Draw).get(FOCUS_ORDER[6]).focus, 1.0);
+    assert_eq!(
+        m.frame(true, Mode::Draw)
+            .get(FOCUS_ORDER[FOCUS_ORDER.len() - 1])
+            .focus,
+        1.0
+    );
     m.pointer(&layout, PointerKind::Down, (2000, 2000), true);
     assert_eq!(m.registry().focused(), None);
     // The rest frame is the static look.

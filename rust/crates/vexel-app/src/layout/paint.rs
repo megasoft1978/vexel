@@ -144,7 +144,7 @@ pub fn draw_chrome(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model) {
 }
 
 /// Paints the interpolated hover/press fill of an animated control, if it differs from rest.
-fn motion_fill(
+pub(crate) fn motion_fill(
     c: &mut WidgetCanvas<'_>,
     motion: Option<&MotionFrame>,
     id: u32,
@@ -238,13 +238,14 @@ pub fn draw_chrome_with(
             _ => ControlState::Rest,
         };
         icon_centered(c, l.buttons[i], kind, s, &t);
+        button_ring(c, motion, model, button, l.buttons[i]);
     }
     let toggle = if model.ui.inspector_visible {
         ControlState::Selected
     } else {
         ControlState::Rest
     };
-    if l.inspector.is_none() {
+    if !model.target_enabled(l, Target::Button(Button::ToggleInspector)) {
         icon_centered(
             c,
             l.buttons[4],
@@ -261,6 +262,7 @@ pub fn draw_chrome_with(
         };
         icon_centered(c, l.buttons[4], IconKind::SIDEBAR_RIGHT, state, &t);
     }
+    button_ring(c, motion, model, Button::ToggleInspector, l.buttons[4]);
 
     // Tool rail: level 1, selected tool is accent.subtle with an accent glyph.
     c.paint_rect(l.rail, t.panel);
@@ -296,6 +298,26 @@ pub fn draw_chrome_with(
     }
 
     draw_status(c, l, model, motion);
+}
+
+/// Keyboard focus ring of a toolbar button: the animated ring when a motion
+/// frame is given, the static one otherwise.
+fn button_ring(
+    c: &mut WidgetCanvas<'_>,
+    motion: Option<&MotionFrame>,
+    model: &Model,
+    button: Button,
+    rect: Rect,
+) {
+    match motion {
+        Some(m) => crate::motion::paint::ring(
+            c,
+            rect,
+            &m.get(crate::motion::control_id(Target::Button(button))),
+        ),
+        None if model.focus_button == Some(button) => focus_ring(c, rect, 6),
+        None => {}
+    }
 }
 
 /// Hover/press fill of a toolbar button over its group container; true when

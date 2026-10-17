@@ -20,18 +20,20 @@ use vexel_ui::{Theme, Tokens, theme_tokens};
 pub const ID_DRAW: u32 = 1;
 pub const ID_ANIMATE: u32 = 2;
 const ID_TOOL0: u32 = 10;
-/// Keyboard focus order: mode tabs, then the tool rail.
-pub const FOCUS_ORDER: [u32; 7] = [ID_DRAW, ID_ANIMATE, 10, 11, 12, 13, 14];
+/// Keyboard focus order: mode tabs, the toolbar buttons (Undo, Redo, Save,
+/// Export, inspector toggle), then the tool rail.
+pub const FOCUS_ORDER: [u32; 12] = [ID_DRAW, ID_ANIMATE, 20, 21, 22, 23, 24, 10, 11, 12, 13, 14];
 const ID_BUTTON0: u32 = 20;
 const ID_SECTION0: u32 = 40;
 const ID_SPLITTER0: u32 = 60;
+const ID_MENU0: u32 = 70;
 /// Section headers the registry can track.
 pub const MAX_HEADERS: usize = 8;
 /// The single registry id map: every id a [`Target`] maps to. Tab order is
 /// [`FOCUS_ORDER`] (modes, tools); the rest react to hover and press only.
-pub const REGISTERED: [u32; 24] = [
+pub const REGISTERED: [u32; 27] = [
     ID_DRAW, ID_ANIMATE, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 25, 26, 40, 41, 42, 43, 44, 45,
-    46, 47, 60, 61,
+    46, 47, 60, 61, 70, 71, 72,
 ];
 /// Hover delay before a tooltip shows.
 pub const TOOLTIP_DELAY_NS: u64 = 500_000_000;
@@ -42,9 +44,14 @@ pub fn control_id(target: Target) -> u32 {
         Target::AnimateMode => ID_ANIMATE,
         Target::Tool(tool) => ID_TOOL0 + tool as u32,
         Target::Button(button) => ID_BUTTON0 + button as u32,
+        Target::MenuItem(format) => ID_MENU0 + format as u32,
         Target::SectionHeader(index) => ID_SECTION0 + index.min(MAX_HEADERS - 1) as u32,
         Target::Splitter(splitter) => ID_SPLITTER0 + splitter as u32,
     }
+}
+/// Which popovers are open: (MCP, Export).
+fn popovers(model: &Model) -> (bool, bool) {
+    (model.ui.mcp_open, model.export_open)
 }
 pub fn tool_id(tool: Tool) -> u32 {
     control_id(Target::Tool(tool))
@@ -72,7 +79,9 @@ impl Clock for SystemClock {
 /// fill), rail buttons carry a dimmed glyph until hovered.
 pub fn colors_for(t: &Tokens, id: u32, selected: bool) -> ControlColors {
     let tab = id == ID_DRAW || id == ID_ANIMATE;
-    let (rest_fill, hover_fill, pressed_fill) = if id >= ID_SPLITTER0 {
+    let (rest_fill, hover_fill, pressed_fill) = if id >= ID_MENU0 {
+        (t.pressed_fill, t.panel_hover, t.surface[5])
+    } else if id >= ID_SPLITTER0 {
         (t.window, t.control_edge, t.accent)
     } else if id >= ID_SECTION0 {
         (t.panel, t.panel_hover, t.pressed_fill)
@@ -176,11 +185,11 @@ impl<C: Clock> MotionAdapter<C> {
         logical: (i32, i32),
         primary: bool,
     ) -> (Option<Target>, bool) {
-        self.pointer_inner(layout, kind, logical, primary, false, &|_| true)
+        self.pointer_inner(layout, kind, logical, primary, (false, false), &|_| true)
     }
-    /// [`MotionAdapter::pointer`] aware of the open MCP popover (points under
-    /// it hit the popover, not the chrome beneath) and of disabled controls
-    /// (they never hover or press).
+    /// [`MotionAdapter::pointer`] aware of the open MCP and Export popovers
+    /// (points under one hit the popover, not the chrome beneath) and of
+    /// disabled controls (they never hover or press).
     pub fn pointer_in(
         &mut self,
         layout: &Layout,
@@ -190,7 +199,7 @@ impl<C: Clock> MotionAdapter<C> {
         model: &Model,
     ) -> (Option<Target>, bool) {
         let enabled = |t: Target| model.target_enabled(layout, t);
-        self.pointer_inner(layout, kind, logical, primary, model.ui.mcp_open, &enabled)
+        self.pointer_inner(layout, kind, logical, primary, popovers(model), &enabled)
     }
     fn pointer_inner(
         &mut self,
@@ -198,7 +207,7 @@ impl<C: Clock> MotionAdapter<C> {
         kind: PointerKind,
         logical: (i32, i32),
         primary: bool,
-        popover_open: bool,
+        popovers: (bool, bool),
         enabled: &dyn Fn(Target) -> bool,
     ) -> (Option<Target>, bool) {
         let now = self.clock.now_ns();
@@ -208,11 +217,13 @@ impl<C: Clock> MotionAdapter<C> {
             self.registry.focused(),
         );
         let hit = (logical.0 >= 0 && logical.1 >= 0)
-            .then(|| layout.hit_test_with((logical.0 as u32, logical.1 as u32), popover_open))
+            .then(|| {
+                layout.hit_test_menus((logical.0 as u32, logical.1 as u32), popovers.0, popovers.1)
+            })
             .flatten();
         let over = hit.filter(|t| enabled(*t)).map(control_id);
         if kind == PointerKind::Move || self.tip.target != hit {
-            let tip = hit.filter(|t| !popover_open && layout::tooltip(*t).is_some());
+            let tip = hit.filter(|t| !(popovers.0 || popovers.1) && layout::tooltip(*t).is_some());
             if tip != self.tip.target {
                 self.tip = Tip {
                     target: tip,
@@ -240,6 +251,11 @@ impl<C: Clock> MotionAdapter<C> {
             self.registry.focused(),
         );
         (hit, before != after)
+    }
+    /// Mirrors the keyboard focus the model holds (a toolbar button or an
+    /// Export row) into the registry so its ring animates. No-op when equal.
+    pub fn sync_focus(&mut self, id: Option<u32>) {
+        self.registry.focus(id, self.clock.now_ns());
     }
     /// Tab / Shift-Tab through [`FOCUS_ORDER`]. Always consumed.
     pub fn tab(&mut self, backward: bool) -> bool {

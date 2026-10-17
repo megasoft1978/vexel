@@ -21,4 +21,5 @@ pub mod project_session;
 pub mod render;
 pub mod session;
 pub mod timeline;
+pub mod toolbar_actions;
 pub mod tools;

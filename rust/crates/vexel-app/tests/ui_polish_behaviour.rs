@@ -3,7 +3,7 @@
 use std::cell::Cell;
 use std::rc::Rc;
 use vexel_app::chrome::{AppState, Inspector, ShapeProps, chrome_text};
-use vexel_app::history::History;
+use vexel_app::history::{self, Availability};
 use vexel_app::layout::{
     Button, EMPTY_CARD_BODY_H, Layout, SECTION_BODY_H, SECTIONS, Splitter, UiState, status_hint,
     tooltip, tooltip_rect,
@@ -145,6 +145,8 @@ fn all_targets() -> Vec<Target> {
         ]
         .map(Target::Button),
     );
+    // Pin updated (WO-RUST-UI-WIRING-01): the Export popover rows are registered too.
+    v.extend(vexel_app::model::ExportFormat::ALL.map(Target::MenuItem));
     v.extend((0..8).map(Target::SectionHeader));
     v.extend([Splitter::Inspector, Splitter::Footer].map(Target::Splitter));
     v
@@ -389,46 +391,44 @@ fn edit(app: &mut AppDocument, id: &str, x: f64) {
 
 #[test]
 fn redo_is_enabled_only_after_an_undo_and_a_load_resets_it() {
+    // Pin updated (WO-RUST-UI-WIRING-01): the shell keeps no redo counter any
+    // more; availability is read from the core's history cursor.
     let mut app = AppDocument::new(200, 100).unwrap();
-    let mut h = History::default();
-    let model_with = |h: History| {
-        let mut m = open_model(Mode::Draw, false);
-        m.history = h;
-        m
-    };
+    let mut model = open_model(Mode::Draw, false);
+    let l = model.layout(1280, 800).unwrap();
+    let redo = |m: &Model| m.target_enabled(&l, Target::Button(Button::Redo));
+    let cursor = |a: &AppDocument| (a.document().history_cursor(), a.document().history_count());
     edit(&mut app, "a", 10.0);
-    h.observe(app.revision());
     edit(&mut app, "b", 50.0);
-    h.observe(app.revision());
-    assert!(!h.can_redo());
-    assert!(h.apply(&mut app, EditAction::Undo));
-    assert!(h.can_redo());
-    let l = open_model(Mode::Draw, false).layout(1280, 800).unwrap();
-    assert!(model_with(h).target_enabled(&l, Target::Button(Button::Redo)));
-    assert!(h.apply(&mut app, EditAction::Undo));
-    assert_eq!(h.redo_depth(), 2);
-    // The core's own cursor agrees with the shell's counter.
+    model.sync_history(app.document());
+    assert!(!redo(&model));
+    assert!(history::apply(&mut app, EditAction::Undo));
+    model.sync_history(app.document());
+    assert!(redo(&model));
+    assert!(history::apply(&mut app, EditAction::Undo));
+    assert_eq!(cursor(&app), (0, 2));
     assert_eq!(
         app.document().history_count() - app.document().history_cursor(),
         2
     );
-    assert!(h.apply(&mut app, EditAction::Redo));
-    assert!(h.can_redo());
-    assert_eq!(h.redo_depth(), 1);
+    assert!(history::apply(&mut app, EditAction::Redo));
+    model.sync_history(app.document());
+    assert!(redo(&model));
+    assert_eq!(cursor(&app), (1, 2));
     edit(&mut app, "c", 90.0);
-    h.observe(app.revision());
-    assert!(!h.can_redo());
-    assert!(!model_with(h).target_enabled(&l, Target::Button(Button::Redo)));
+    model.sync_history(app.document());
+    assert!(!redo(&model));
     // Redo while disabled is a no-op: the document does not change.
     let (rev, src) = (app.revision(), app.source_bytes().unwrap());
-    assert!(!h.apply(&mut app, EditAction::Redo));
+    assert!(!history::apply(&mut app, EditAction::Redo));
     assert_eq!((app.revision(), app.source_bytes().unwrap()), (rev, src));
     // Load resets.
-    h.apply(&mut app, EditAction::Undo);
-    assert!(h.can_redo());
+    history::apply(&mut app, EditAction::Undo);
+    assert!(Availability::of(app.document()).redo);
     let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/v1/compose/compose-v1.svg");
     app.open_path(&fixture).unwrap();
-    assert!(h.observe(app.revision()));
-    assert!(!h.can_redo());
+    assert_eq!(Availability::of(app.document()), Availability::default());
+    assert!(model.sync_history(app.document()));
+    assert!(!redo(&model));
 }

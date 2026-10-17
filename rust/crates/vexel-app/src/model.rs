@@ -1,6 +1,6 @@
 use crate::chrome::{ChromeText, Inspector};
-use crate::history::History;
-use crate::layout::{Button, Focus, Splitter, UiState, contains};
+use crate::history::Availability;
+use crate::layout::{Button, Focus, INSPECTOR_MIN_WINDOW, SECTIONS, Splitter, UiState, contains};
 use crate::timeline::Timeline;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,8 +22,51 @@ pub enum Target {
     AnimateMode,
     Tool(Tool),
     Button(Button),
+    /// A row of the Export popover.
+    MenuItem(ExportFormat),
     SectionHeader(usize),
     Splitter(Splitter),
+}
+
+/// Export file formats offered by the Export popover.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExportFormat {
+    Gif,
+    Svg,
+    Png,
+}
+impl ExportFormat {
+    pub const ALL: [Self; 3] = [Self::Gif, Self::Svg, Self::Png];
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Gif => "Export as GIF\u{2026}",
+            Self::Svg => "Export as SVG\u{2026}",
+            Self::Png => "Export as PNG\u{2026}",
+        }
+    }
+    pub fn extension(self) -> &'static str {
+        match self {
+            Self::Gif => "gif",
+            Self::Svg => "svg",
+            Self::Png => "png",
+        }
+    }
+}
+
+/// What the shell must execute after a toolbar press or key.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ButtonAction {
+    Undo,
+    Redo,
+    Save,
+    Export(ExportFormat),
+}
+
+/// A keyboard stop: the segmented control, a section header or a toolbar button.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Stop {
+    Ui(Focus),
+    Button(Button),
 }
 
 pub use crate::layout::Layout;
@@ -92,8 +135,14 @@ pub struct Model {
     pub ui: UiState,
     /// Animate footer: tracks, playback readout and interaction state.
     pub timeline: Timeline,
-    /// Redo cursor (see `history`).
-    pub history: History,
+    /// Undo/redo availability, refreshed from the document by the shell.
+    pub history: Availability,
+    /// The Export popover is open.
+    pub export_open: bool,
+    /// Toolbar button holding keyboard focus.
+    pub focus_button: Option<Button>,
+    /// Export popover row holding keyboard focus (index into `ExportFormat::ALL`).
+    pub menu_focus: Option<usize>,
 }
 impl Model {
     pub fn new(dark: bool) -> Self {
@@ -107,7 +156,10 @@ impl Model {
             mcp: McpState::Unavailable,
             ui: UiState::default(),
             timeline: Timeline::default(),
-            history: History::default(),
+            history: Availability::default(),
+            export_open: false,
+            focus_button: None,
+            menu_focus: None,
         }
     }
     /// Layout for the current mode, UI state and selection.
@@ -116,16 +168,21 @@ impl Model {
         ui.empty_selection = matches!(self.chrome.inspector, Inspector::NoSelection);
         Layout::with_state(width, height, self.mode, &ui)
     }
-    /// Whether a control reacts to hover and clicks. Undo keeps today's rule
-    /// (document open and modified); Redo needs a redoable step.
+    /// Whether a control reacts to hover and clicks. Undo and Redo follow the
+    /// document's history cursor; Save needs a modified document; Export a
+    /// document; its GIF row an animation; the inspector toggle a window wide
+    /// enough to hold the inspector.
     pub fn target_enabled(&self, layout: &Layout, target: Target) -> bool {
         let state = &self.chrome.state;
         match target {
-            Target::Button(Button::Undo | Button::Save) => state.open && state.dirty,
-            Target::Button(Button::Redo) => state.open && self.history.can_redo(),
+            Target::Button(Button::Undo) => state.open && self.history.undo,
+            Target::Button(Button::Redo) => state.open && self.history.redo,
+            Target::Button(Button::Save) => state.open && state.dirty,
             Target::Button(Button::Export) => state.open,
-            Target::Button(Button::ToggleInspector) => layout.inspector.is_some(),
+            Target::Button(Button::ToggleInspector) => layout.width >= INSPECTOR_MIN_WINDOW,
             Target::Button(Button::Connect) => false,
+            Target::MenuItem(ExportFormat::Gif) => state.open && state.loop_seconds > 0.0,
+            Target::MenuItem(_) => state.open,
             _ => true,
         }
     }
@@ -144,13 +201,19 @@ impl Model {
             _ => false,
         }
     }
-    /// Keyboard focus: Tab / Shift-Tab move through the stops, Left/Right
-    /// change the focused segmented control, Space/Return toggle a focused
-    /// section header, Escape clears focus. True when the key was consumed.
+    /// Keyboard focus without a layout: the inspector toggle is a stop exactly
+    /// when the inspector is shown (see [`Model::nav`]).
     pub fn focus_key(&mut self, code: u16, shift: bool, has_inspector: bool) -> bool {
+        self.nav(code, shift, has_inspector, has_inspector)
+    }
+    /// Keyboard focus: Tab / Shift-Tab move through the stops (segmented
+    /// control, enabled toolbar buttons, section headers), Left/Right change
+    /// the focused segmented control, Space/Return toggle a focused section
+    /// header, Escape clears focus. True when the key was consumed.
+    pub fn nav(&mut self, code: u16, shift: bool, has_inspector: bool, toggle: bool) -> bool {
         let consumed = match (code, self.ui.focus) {
             (48, _) => {
-                self.ui.tab(!shift, has_inspector);
+                self.tab(!shift, has_inspector, toggle);
                 true
             }
             (123, Some(Focus::Segmented)) => {
@@ -166,39 +229,234 @@ impl Model {
                 self.ui.focus = None;
                 true
             }
+            (53, None) => self.focus_button.take().is_some(),
             _ => false,
         };
         self.dirty |= consumed;
         consumed
     }
+    fn button_enabled(&self, button: Button, toggle: bool) -> bool {
+        let state = &self.chrome.state;
+        match button {
+            Button::Undo => state.open && self.history.undo,
+            Button::Redo => state.open && self.history.redo,
+            Button::Save => state.open && state.dirty,
+            Button::Export => state.open,
+            Button::ToggleInspector => toggle,
+            Button::Mcp | Button::Connect => false,
+        }
+    }
+    fn tab(&mut self, forward: bool, has_inspector: bool, toggle: bool) {
+        let mut order = vec![Stop::Ui(Focus::Segmented)];
+        order.extend(
+            [
+                Button::Undo,
+                Button::Redo,
+                Button::Save,
+                Button::Export,
+                Button::ToggleInspector,
+            ]
+            .into_iter()
+            .filter(|b| self.button_enabled(*b, toggle))
+            .map(Stop::Button),
+        );
+        if has_inspector {
+            order.extend((0..SECTIONS).map(|i| Stop::Ui(Focus::Section(i))));
+        }
+        let current = self
+            .focus_button
+            .map(Stop::Button)
+            .or(self.ui.focus.map(Stop::Ui));
+        let at = current.and_then(|f| order.iter().position(|o| *o == f));
+        let next = match (at, forward) {
+            (None, true) => Some(0),
+            (None, false) => Some(order.len() - 1),
+            (Some(i), true) => (i + 1 < order.len()).then_some(i + 1),
+            (Some(i), false) => i.checked_sub(1),
+        };
+        self.export_open = false;
+        self.menu_focus = None;
+        self.ui.focus = None;
+        self.focus_button = None;
+        match next.map(|i| order[i]) {
+            Some(Stop::Ui(f)) => self.ui.focus = Some(f),
+            Some(Stop::Button(b)) => self.focus_button = Some(b),
+            None => {}
+        }
+    }
+    /// Motion-registry id of the control holding button or menu focus.
+    pub fn focus_id(&self) -> Option<u32> {
+        use crate::motion::control_id;
+        match (self.menu_focus, self.focus_button) {
+            (Some(i), _) if self.export_open => ExportFormat::ALL
+                .get(i)
+                .map(|f| control_id(Target::MenuItem(*f))),
+            (_, Some(b)) => Some(control_id(Target::Button(b))),
+            _ => None,
+        }
+    }
+    /// Refreshes undo/redo availability from the document; true on change.
+    pub fn sync_history(&mut self, doc: &vexel_v1_document::V1Document) -> bool {
+        let next = Availability::of(doc);
+        let changed = next != self.history;
+        self.history = next;
+        self.dirty |= changed;
+        changed
+    }
+    /// Activates a toolbar button exactly as a click does. Undo, Redo and Save
+    /// come back as an action for the shell to run; Export toggles its
+    /// popover, the toggle flips the inspector, MCP toggles its popover.
+    /// Disabled buttons do nothing.
+    pub fn button(&mut self, button: Button, layout: &Layout) -> Option<ButtonAction> {
+        if button != Button::Mcp && !self.target_enabled(layout, Target::Button(button)) {
+            return None;
+        }
+        let action = match button {
+            Button::Undo => Some(ButtonAction::Undo),
+            Button::Redo => Some(ButtonAction::Redo),
+            Button::Save => Some(ButtonAction::Save),
+            Button::Export => {
+                self.export_open = !self.export_open;
+                self.ui.mcp_open = false;
+                self.menu_focus = None;
+                None
+            }
+            Button::ToggleInspector => {
+                self.ui.inspector_visible = !self.ui.inspector_visible;
+                None
+            }
+            Button::Mcp => {
+                self.ui.mcp_open = !self.ui.mcp_open;
+                self.export_open = false;
+                None
+            }
+            Button::Connect => return None,
+        };
+        self.dirty = true;
+        action
+    }
+    /// An Export popover row; closes the popover when it fires.
+    pub fn menu_item(&mut self, format: ExportFormat, layout: &Layout) -> Option<ButtonAction> {
+        if !self.export_open || !self.target_enabled(layout, Target::MenuItem(format)) {
+            return None;
+        }
+        self.export_open = false;
+        self.menu_focus = None;
+        self.dirty = true;
+        Some(ButtonAction::Export(format))
+    }
+    /// Space/Return on the focused button or popover row.
+    pub fn activate_focused(&mut self, layout: &Layout) -> Option<ButtonAction> {
+        if self.export_open {
+            let format = *ExportFormat::ALL.get(self.menu_focus?)?;
+            let action = self.menu_item(format, layout);
+            if action.is_some() {
+                self.focus_button = Some(Button::Export);
+            }
+            return action;
+        }
+        let action = self.button(self.focus_button?, layout);
+        if self.export_open {
+            self.menu_focus = ExportFormat::ALL
+                .iter()
+                .position(|f| self.target_enabled(layout, Target::MenuItem(*f)));
+        }
+        action
+    }
+    /// Up/Down inside the open Export popover moves the row focus.
+    pub fn menu_nav(&mut self, down: bool, layout: &Layout) -> bool {
+        if !self.export_open {
+            return false;
+        }
+        let rows: Vec<usize> = (0..ExportFormat::ALL.len())
+            .filter(|i| self.target_enabled(layout, Target::MenuItem(ExportFormat::ALL[*i])))
+            .collect();
+        if rows.is_empty() {
+            return true;
+        }
+        let at = self
+            .menu_focus
+            .and_then(|f| rows.iter().position(|r| *r == f));
+        let next = match (at, down) {
+            (None, true) => rows[0],
+            (None, false) => rows[rows.len() - 1],
+            (Some(i), true) => rows[(i + 1) % rows.len()],
+            (Some(i), false) => rows[(i + rows.len() - 1) % rows.len()],
+        };
+        self.menu_focus = Some(next);
+        self.dirty = true;
+        true
+    }
+    /// Escape closes the Export popover and returns focus to its button.
+    pub fn close_export(&mut self) -> bool {
+        if !self.export_open {
+            return false;
+        }
+        self.export_open = false;
+        self.menu_focus = None;
+        self.focus_button = Some(Button::Export);
+        self.dirty = true;
+        true
+    }
+    /// Whether `point` is inside an open popover (such clicks never reach the
+    /// chrome or canvas beneath).
+    pub fn popover_hit(&self, layout: &Layout, point: (u32, u32)) -> bool {
+        (self.ui.mcp_open && contains(layout.mcp_popover, point))
+            || (self.export_open && contains(layout.export_popover(), point))
+    }
     pub fn pointer(&mut self, layout: &Layout, point: (u32, u32)) -> bool {
-        let open = self.ui.mcp_open;
-        let inside_popover = open && contains(layout.mcp_popover, point);
-        let target = layout.hit_test_with(point, open);
-        let mut changed = match target {
+        self.pointer_action(layout, point).0
+    }
+    /// A primary press at `point`: (redraw needed, action for the shell).
+    pub fn pointer_action(
+        &mut self,
+        layout: &Layout,
+        point: (u32, u32),
+    ) -> (bool, Option<ButtonAction>) {
+        let (mcp, export) = (self.ui.mcp_open, self.export_open);
+        let inside_popover = self.popover_hit(layout, point);
+        let target = layout.hit_test_menus(point, mcp, export);
+        let mut action = None;
+        let mut changed = self.focus_button.take().is_some() | self.menu_focus.take().is_some();
+        changed |= match target {
             Some(Target::DrawMode) => self.select_mode(Mode::Draw),
             Some(Target::AnimateMode) => self.select_mode(Mode::Animate),
             Some(Target::SectionHeader(i)) => {
                 self.ui.focus = Some(Focus::Section(i));
                 self.ui.toggle_section(i)
             }
-            Some(Target::Button(Button::ToggleInspector)) => {
-                self.ui.inspector_visible = !self.ui.inspector_visible;
-                true
+            Some(Target::Button(button)) => {
+                let before = (
+                    self.export_open,
+                    self.ui.mcp_open,
+                    self.ui.inspector_visible,
+                );
+                action = self.button(button, layout);
+                action.is_some()
+                    || before
+                        != (
+                            self.export_open,
+                            self.ui.mcp_open,
+                            self.ui.inspector_visible,
+                        )
             }
-            Some(Target::Button(Button::Mcp)) => {
-                self.ui.mcp_open = !open;
-                true
+            Some(Target::MenuItem(format)) => {
+                action = self.menu_item(format, layout);
+                action.is_some()
             }
             _ => false,
         };
-        let keeps_popover = matches!(target, Some(Target::Button(Button::Mcp | Button::Connect)));
-        if open && !inside_popover && !keeps_popover {
+        let keeps_mcp = matches!(target, Some(Target::Button(Button::Mcp | Button::Connect)));
+        if mcp && !inside_popover && !keeps_mcp {
             self.ui.mcp_open = false;
             changed = true;
         }
+        if export && self.export_open && !inside_popover {
+            self.export_open = false;
+            changed = true;
+        }
         self.dirty |= changed;
-        changed
+        (changed, action)
     }
     /// Splitter drag; `layout` is the current layout, `window` its size.
     pub fn splitter(

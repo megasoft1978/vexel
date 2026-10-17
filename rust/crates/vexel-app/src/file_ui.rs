@@ -65,6 +65,17 @@ impl<B: PanelBackend> FileUi<B> {
         Some(self.run(action))
     }
 
+    /// The Save toolbar button: the same flow as Cmd+S (an untitled document
+    /// opens the Save panel).
+    pub fn save(&mut self) -> FlowOutcome {
+        self.run(FileAction::Save)
+    }
+
+    /// The panel backend, for the Export panels.
+    pub fn backend(&self) -> &B {
+        &self.backend
+    }
+
     pub fn menu(&mut self, tag: u32) -> Option<FlowOutcome> {
         let action = action_for_tag(tag)?;
         Some(self.run(action))

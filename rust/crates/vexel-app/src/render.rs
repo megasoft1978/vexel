@@ -1,6 +1,6 @@
 use crate::inspector::draw_inspector;
 use crate::layout::paint::centred;
-use crate::layout::{draw_chrome_with, draw_popover};
+use crate::layout::{draw_chrome_with, draw_export_menu, draw_popover};
 use crate::model::{Model, checked_pixel_geometry};
 use crate::motion::MotionFrame;
 use std::cell::Cell;
@@ -122,6 +122,7 @@ pub fn render_with(
         }
         draw_inspector(&mut c, &layout, model, motion);
         draw_popover(&mut c, &layout, model);
+        draw_export_menu(&mut c, &layout, model, Some(motion));
     }
     if text_failed.get() {
         return Err("CoreText rejected bounded workbench text");

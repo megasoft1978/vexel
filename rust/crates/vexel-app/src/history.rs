@@ -1,51 +1,35 @@
-//! In-memory redo cursor. `V1Document` has no availability query (a core
-//! accessor is the proper follow-up), so the shell counts: a successful undo
-//! adds one redoable step, a successful redo removes one, and any other change
-//! of the document revision (new edit, load, MCP operation) clears them all.
+//! Undo/redo availability, read straight from the document's own history
+//! (`V1Document::history_cursor` / `history_count`). The shell keeps no
+//! counter: a new edit, a load or an MCP operation changes the core cursor and
+//! therefore the availability, with nothing to reset here.
 
 use crate::session::{AppDocument, EditAction};
+use vexel_v1_document::V1Document;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct History {
-    redo_depth: u32,
-    seen: u64,
+pub struct Availability {
+    pub undo: bool,
+    pub redo: bool,
 }
 
-impl History {
-    pub fn redo_depth(&self) -> u32 {
-        self.redo_depth
-    }
-
-    pub fn can_redo(&self) -> bool {
-        self.redo_depth > 0
-    }
-
-    /// Notes the document revision; a change not made by [`History::apply`]
-    /// is a new edit or a load. True when the redo availability changed.
-    pub fn observe(&mut self, revision: u64) -> bool {
-        if revision == self.seen {
-            return false;
+impl Availability {
+    /// Undo is possible iff `cursor > 0`, redo iff `cursor < count`.
+    pub fn of(doc: &V1Document) -> Self {
+        Self {
+            undo: doc.history_cursor() > 0,
+            redo: doc.history_cursor() < doc.history_count(),
         }
-        self.seen = revision;
-        std::mem::take(&mut self.redo_depth) > 0
     }
+}
 
-    /// Runs undo or redo on `doc`. Redo while nothing is redoable is a no-op.
-    /// Returns true when the document was changed.
-    pub fn apply(&mut self, doc: &mut AppDocument, action: EditAction) -> bool {
-        self.observe(doc.revision());
-        let ok = match action {
-            EditAction::Undo => doc.undo().is_ok(),
-            EditAction::Redo if self.can_redo() => doc.redo().is_ok(),
-            EditAction::Redo => return false,
-        };
-        self.seen = doc.revision();
-        if ok {
-            match action {
-                EditAction::Undo => self.redo_depth += 1,
-                EditAction::Redo => self.redo_depth -= 1,
-            }
-        }
-        ok
+/// Runs undo or redo on `doc`; an unavailable action changes nothing. The one
+/// function behind the toolbar buttons and Cmd+Z / Shift+Cmd+Z. True when the
+/// document changed.
+pub fn apply(doc: &mut AppDocument, action: EditAction) -> bool {
+    let available = Availability::of(doc.document());
+    match action {
+        EditAction::Undo if available.undo => doc.undo().is_ok(),
+        EditAction::Redo if available.redo => doc.redo().is_ok(),
+        _ => false,
     }
 }

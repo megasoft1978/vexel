@@ -6,12 +6,14 @@
 //! absent. Splitters are 4 px strips; they are exempt from the 28 px target
 //! minimum on their thin axis (their long axis is the whole panel edge).
 
+mod menu;
 pub(crate) mod paint;
 mod state;
 #[cfg(test)]
 mod tests;
 mod tooltip;
 
+pub use menu::draw_export_menu;
 pub use paint::{draw_chrome, draw_chrome_with, draw_popover, status_hint, tooltip};
 pub use state::{Focus, UiState};
 pub use tooltip::{draw_tooltip, tooltip_rect};
@@ -316,6 +318,7 @@ impl Layout {
             Target::Button(Button::Mcp) => self.mcp,
             Target::Button(Button::Connect) => self.mcp_connect,
             Target::Button(b) => self.buttons[b as usize],
+            Target::MenuItem(f) => self.export_items()[f as usize],
             Target::SectionHeader(i) => *self.section_headers.get(i)?,
             Target::Splitter(Splitter::Inspector) => self.inspector_splitter?,
             Target::Splitter(Splitter::Footer) => self.footer_splitter?,
@@ -336,6 +339,30 @@ impl Layout {
     }
 
     pub fn hit_test_with(&self, point: (u32, u32), popover_open: bool) -> Option<Target> {
+        self.hit_test_menus(point, popover_open, false)
+    }
+
+    /// [`Layout::hit_test`] with the MCP and/or Export popover live: points
+    /// under a popover hit it (or one of its rows), never the chrome beneath.
+    pub fn hit_test_menus(
+        &self,
+        point: (u32, u32),
+        popover_open: bool,
+        export_open: bool,
+    ) -> Option<Target> {
+        if export_open {
+            for (format, rect) in crate::model::ExportFormat::ALL
+                .iter()
+                .zip(self.export_items())
+            {
+                if contains(rect, point) {
+                    return Some(Target::MenuItem(*format));
+                }
+            }
+            if contains(self.export_popover(), point) {
+                return None;
+            }
+        }
         if popover_open {
             if contains(self.mcp_connect, point) {
                 return Some(Target::Button(Button::Connect));

@@ -1,0 +1,1 @@
+{"changed":["vexel-app src: main, model, history, file_ui, lib, render, toolbar_actions, layout/{mod,paint,menu}, motion/mod","tests/ui_wiring_*.rs","artifacts/WO-RUST-UI-WIRING-01/**"],"protected_touched":["tests/ui_polish_behaviour.rs (pin)","tests/ui_motion_adapter.rs (pin)"],"unlisted":["render.rs one line"]}

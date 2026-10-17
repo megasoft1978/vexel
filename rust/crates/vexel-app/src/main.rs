@@ -22,6 +22,7 @@ use vexel_app::motion::MotionAdapter;
 use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{McpGrants, McpHost, McpOutcome, edit_shortcut};
+use vexel_app::toolbar_actions::{self, Exports};
 use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
 use vexel_app::{canvas, compose, overlay, preview_app, render, timeline};
 use vexel_platform_apple::{
@@ -115,6 +116,7 @@ fn run(
     };
     let mut mcp_host = McpHost::with_policy(grants.unwrap_or_default().policy());
     let mut export: Option<ExportJob> = None;
+    let mut exports = Exports::default();
     let mut driver = Driver::new(MonotonicClock::new());
     let mut strip = Strip::default();
     let mut was_playing = false;
@@ -127,6 +129,10 @@ fn run(
     let event_budget = NonZeroUsize::new(128).ok_or("invalid event budget")?;
     let mut closing = false;
     while !closing {
+        if let Some(done) = exports.poll() {
+            model.status = done;
+            dirty = true;
+        }
         if let Some(done) = export.as_mut().and_then(ExportJob::poll) {
             export = None;
             model.status = if done.starts_with("Exported") {
@@ -232,7 +238,8 @@ fn run(
             model.chrome = chrome_text;
             dirty = true;
         }
-        dirty |= model.history.observe(files.document().revision());
+        dirty |= model.sync_history(files.document().document());
+        motion.sync_focus(model.focus_id());
         dirty |= motion.redraw_after().is_some() | motion.poll_tooltip();
         if dirty || model.dirty {
             let (draw_size, draw_scale) = if geometry_valid {
@@ -285,7 +292,15 @@ fn run(
         for event in batch.events {
             if let Some(layout) = model.layout(logical.0, logical.1) {
                 let select = model.mode == Mode::Draw && tools.tool() == Tool::Select;
-                let used = canvas::handle_event(&mut doc, &event, layout.stage, select);
+                // Events under an open popover belong to the popover, not the canvas.
+                let under = matches!(&event, WindowEvent::Pointer(p)
+                    if p.logical.0 >= 0 && p.logical.1 >= 0
+                        && model.popover_hit(&layout, (p.logical.0 as u32, p.logical.1 as u32)));
+                let used = if under {
+                    Default::default()
+                } else {
+                    canvas::handle_event(&mut doc, &event, layout.stage, select)
+                };
                 dirty |= used.redraw;
                 if used.consumed {
                     // The canvas took the event (pan/zoom/cluster); chrome hover and press
@@ -358,13 +373,21 @@ fn run(
                 WindowEvent::KeyDown {
                     code, modifiers, ..
                 } => {
-                    let has_inspector = model
-                        .layout(logical.0, logical.1)
-                        .is_some_and(|l| l.inspector.is_some());
-                    if model.focus_key(code, modifiers.0 & Modifiers::SHIFT != 0, has_inspector) {
+                    let layout = model.layout(logical.0, logical.1);
+                    if layout.as_ref().is_some_and(|l| {
+                        toolbar_actions::key(
+                            l,
+                            &mut model,
+                            &mut files,
+                            &mut exports,
+                            code,
+                            modifiers,
+                        )
+                    }) {
+                        let _ = files.refresh_menu(&app);
                         dirty = true;
                     } else if let Some(action) = edit_shortcut(code, modifiers) {
-                        model.history.apply(files.document_mut(), action);
+                        toolbar_actions::edit(&mut model, files.document_mut(), action);
                         dirty = true;
                     } else if let Some(outcome) =
                         file_key(&mut files, &mut dedup, started.elapsed(), code, modifiers)
@@ -416,7 +439,11 @@ fn run(
                             &mut files,
                             &mut tools,
                             (&mut driver, &mut strip),
+                            &mut exports,
                         );
+                        if pointer.kind == PointerKind::Down {
+                            let _ = files.refresh_menu(&app);
+                        }
                     }
                 }
                 WindowEvent::Scroll(scroll) => {
@@ -527,6 +554,7 @@ fn route_pointer(
     files: &mut FileUi<NativePanels>,
     tools: &mut ToolController,
     (driver, strip): (&mut Driver<MonotonicClock>, &mut Strip),
+    exports: &mut Exports,
 ) -> bool {
     let primary = pointer_accepts_mode(pointer.button);
     let mut redraw = false;
@@ -581,7 +609,8 @@ fn route_pointer(
                 redraw = true;
             }
             let select = tools.tool() == Tool::Select;
-            redraw |= model.pointer(layout, point) || doc.pointer_with(layout.stage, point, select);
+            redraw |= toolbar_actions::press(layout, point, model, files, exports)
+                || doc.pointer_with(layout.stage, point, select);
         }
     }
     if model.mode != Mode::Draw {
