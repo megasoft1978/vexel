@@ -68,7 +68,7 @@ impl<'src> Decoder<'src, '_> {
                 offset: href.offset,
             });
         }
-        if self.active.uses.len() >= 16 || self.use_instances >= 65_536 {
+        if self.active.uses.len() >= 16 || self.use_instances >= MAX_USE_INSTANCES {
             return Err(Diagnostic {
                 kind: ErrorKind::Limit(LimitKind::References),
                 offset: t.name.offset,

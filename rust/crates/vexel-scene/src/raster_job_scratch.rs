@@ -34,7 +34,7 @@ impl JobRasterScratch {
             let dash = JobDashCache {
                 segments: job.buffer(RasterPool::Dash, usize::MAX, control)?,
                 joins: job.buffer(RasterPool::Dash, usize::MAX, control)?,
-                shapes: job.buffer(RasterPool::Dash, 65536, control)?,
+                shapes: job.buffer(RasterPool::Dash, MAX_SHAPES, control)?,
                 build_steps: 0,
             };
             macro_rules! scratch {

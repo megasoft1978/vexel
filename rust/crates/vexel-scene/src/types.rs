@@ -93,6 +93,13 @@ pub enum IgnoredKind {
     Doctype,
     WritingMode,
 }
+/// The single shape-count cap: per scene, per raster-job dash pool, and the bound on
+/// `<use>` instances (`MAX_USE_INSTANCES`). Memory proof: artifacts/WO-RUST-SCENE-SHAPES-01/shapes.md.
+pub const MAX_SHAPES: usize = 262_144;
+/// Decoder-wide `<use>` expansion bound. Equal to `MAX_SHAPES` by construction.
+pub const MAX_USE_INSTANCES: usize = MAX_SHAPES;
+const _: () = assert!(MAX_SHAPES <= u32::MAX as usize);
+const _: () = assert!(MAX_USE_INSTANCES == MAX_SHAPES);
 /// Per-scene reference admission bounds. Byte policy is explicitly caller configurable.
 #[derive(Debug, Clone, Copy)]
 pub struct Limits {
@@ -117,7 +124,7 @@ impl Default for Limits {
             source_bytes: 1 << 30,
             reserved_bytes: usize::MAX,
             scenes: 65536,
-            shapes: 65536,
+            shapes: MAX_SHAPES,
             edges: 4 * 1024 * 1024,
             commands: 4 * 1024 * 1024,
             numbers: 28 * 1024 * 1024,
@@ -395,6 +402,8 @@ impl ErrorKind {
         }
     }
 }
+// Shape-record bytes alone stay within 512 MiB at the cap (see shapes.md for the full bound).
+const _: () = assert!(MAX_SHAPES * std::mem::size_of::<Shape>() <= 512 * 1024 * 1024);
 impl Limits {
     pub(crate) fn effective(self) -> Self {
         let d = Self::default();

@@ -5,7 +5,7 @@ pub const STROKE_GRID_JOIN_BIT: u32 = 0x8000_0000;
 impl DashCache {
     pub fn validate(&self, control: &mut dyn WorkControl) -> Result<()> {
         control.checkpoint().map_err(stopped)?;
-        if self.shapes.len() > 65536 {
+        if self.shapes.len() > MAX_SHAPES {
             return Err(limit(LimitKind::Shapes));
         }
         for segment in &self.segments {

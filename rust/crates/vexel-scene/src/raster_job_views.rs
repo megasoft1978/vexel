@@ -81,7 +81,7 @@ impl<'a> JobDashView<'a> {
         ))
     }
     pub fn validate(&self, control: &mut dyn WorkControl) -> Result<()> {
-        if self.shapes.len() > 65536 {
+        if self.shapes.len() > MAX_SHAPES {
             return Err(limit(LimitKind::Shapes));
         }
         for segment in self.segments {

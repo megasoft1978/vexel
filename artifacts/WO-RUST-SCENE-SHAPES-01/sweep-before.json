@@ -1,0 +1,428 @@
+{
+ "label": "before",
+ "pins": "rust/tools/vexel-corpus/pins.json",
+ "manifest": "external (owner-local, read-only)",
+ "size": "128x128",
+ "timeout_secs": 60,
+ "rss_limit_mib": 2048,
+ "histogram": {
+  "ok": 12,
+  "unsupported": 9,
+  "limit_decode": 12,
+  "limit_render": 3,
+  "xml": 3,
+  "timeout": 0,
+  "rss_exceeded": 0,
+  "skipped": 19,
+  "crash": 0,
+  "guard_failed": 0
+ },
+ "files": [
+  {
+   "id": "generated-cad_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 358,
+   "peak_rss_bytes": 230391808
+  },
+  {
+   "id": "generated-cad_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 717,
+   "peak_rss_bytes": 249167872
+  },
+  {
+   "id": "generated-cad_t3",
+   "verdict": "skipped",
+   "detail": "not read: 109719583 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-cnc_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 182,
+   "peak_rss_bytes": 98304000
+  },
+  {
+   "id": "generated-cnc_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 491,
+   "peak_rss_bytes": 249987072
+  },
+  {
+   "id": "generated-cnc_t3",
+   "verdict": "skipped",
+   "detail": "not read: 102580014 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-embedded_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 269,
+   "peak_rss_bytes": 24674304
+  },
+  {
+   "id": "generated-embedded_t2",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 24034,
+   "peak_rss_bytes": 184877056
+  },
+  {
+   "id": "generated-embedded_t3",
+   "verdict": "skipped",
+   "detail": "not read: 93970295 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-giant_path_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 55099,
+   "peak_rss_bytes": 60211200
+  },
+  {
+   "id": "generated-giant_path_t2",
+   "verdict": "limit_render",
+   "detail": "document exceeds a render safety limit",
+   "wall_ms": 341,
+   "peak_rss_bytes": 339951616
+  },
+  {
+   "id": "generated-giant_path_t3",
+   "verdict": "skipped",
+   "detail": "not read: 91963466 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-giant_path_t4",
+   "verdict": "skipped",
+   "detail": "not read: 827663466 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-inkscape_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 34715 disclosure(s)",
+   "wall_ms": 181,
+   "peak_rss_bytes": 163184640
+  },
+  {
+   "id": "generated-inkscape_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 536,
+   "peak_rss_bytes": 318881792
+  },
+  {
+   "id": "generated-inkscape_t3",
+   "verdict": "skipped",
+   "detail": "not read: 100883678 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-map_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 79,
+   "peak_rss_bytes": 47824896
+  },
+  {
+   "id": "generated-map_t2",
+   "verdict": "limit_render",
+   "detail": "document exceeds a render safety limit",
+   "wall_ms": 534,
+   "peak_rss_bytes": 335134720
+  },
+  {
+   "id": "generated-map_t3",
+   "verdict": "skipped",
+   "detail": "not read: 150627424 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-nested_t1",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 12,
+   "peak_rss_bytes": 10190848
+  },
+  {
+   "id": "generated-nested_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 25,
+   "peak_rss_bytes": 27115520
+  },
+  {
+   "id": "generated-nested_t3",
+   "verdict": "skipped",
+   "detail": "not read: 93956332 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-science_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 108,
+   "peak_rss_bytes": 74334208
+  },
+  {
+   "id": "generated-science_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 352,
+   "peak_rss_bytes": 213630976
+  },
+  {
+   "id": "generated-science_t3",
+   "verdict": "skipped",
+   "detail": "not read: 117860153 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-science_t4",
+   "verdict": "skipped",
+   "detail": "not read: 635202435 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-text_t1",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 368,
+   "peak_rss_bytes": 391659520
+  },
+  {
+   "id": "generated-text_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 540,
+   "peak_rss_bytes": 459341824
+  },
+  {
+   "id": "generated-text_t3",
+   "verdict": "skipped",
+   "detail": "not read: 90488308 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-use_t1",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 277,
+   "peak_rss_bytes": 91537408
+  },
+  {
+   "id": "generated-use_t2",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 1555,
+   "peak_rss_bytes": 329105408
+  },
+  {
+   "id": "generated-use_t3",
+   "verdict": "skipped",
+   "detail": "not read: 100542256 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "generated-use_t4",
+   "verdict": "skipped",
+   "detail": "not read: 1005597835 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "commons-1-42-polytope-7-cube-svg",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 1136,
+   "peak_rss_bytes": 213991424
+  },
+  {
+   "id": "commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 677,
+   "peak_rss_bytes": 517816320
+  },
+  {
+   "id": "commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg",
+   "verdict": "xml",
+   "detail": "malformed SVG: viewport at byte 70",
+   "wall_ms": 118,
+   "peak_rss_bytes": 72925184
+  },
+  {
+   "id": "commons-amhara-topographic-map-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: text (<text> at byte 14693546)",
+   "wall_ms": 377,
+   "peak_rss_bytes": 314572800
+  },
+  {
+   "id": "commons-bulgaria-in-1915-geographic-map-en-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<circle> at byte 15068031)",
+   "wall_ms": 795,
+   "peak_rss_bytes": 562380800
+  },
+  {
+   "id": "commons-cambodia-geographic-map-en-svg",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 1057,
+   "peak_rss_bytes": 487456768
+  },
+  {
+   "id": "commons-chuaattractormodified-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<translate> at byte 2053)",
+   "wall_ms": 552,
+   "peak_rss_bytes": 157728768
+  },
+  {
+   "id": "commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<use> at byte 457167)",
+   "wall_ms": 161,
+   "peak_rss_bytes": 84393984
+  },
+  {
+   "id": "commons-coat-of-arms-of-villa-alemana-svg",
+   "verdict": "skipped",
+   "detail": "not read: 42628426 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "commons-columbiarivermap-svg",
+   "verdict": "xml",
+   "detail": "malformed SVG: XML at byte 917",
+   "wall_ms": 49,
+   "peak_rss_bytes": 41336832
+  },
+  {
+   "id": "commons-comunas-occitanas-d-alemanha-svg",
+   "verdict": "skipped",
+   "detail": "not read: 43507208 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "commons-corsica-geographic-map-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<tspan3993> at byte 14832988)",
+   "wall_ms": 79,
+   "peak_rss_bytes": 52805632
+  },
+  {
+   "id": "commons-corvuscoraxiucn-svg",
+   "verdict": "limit_render",
+   "detail": "document exceeds a render safety limit",
+   "wall_ms": 894,
+   "peak_rss_bytes": 565575680
+  },
+  {
+   "id": "commons-dibujo-piu-svg",
+   "verdict": "skipped",
+   "detail": "not read: 87755815 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "commons-dukesofhohenbergarms-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute",
+   "wall_ms": 191,
+   "peak_rss_bytes": 96403456
+  },
+  {
+   "id": "commons-france-osm-mapnik-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<overflow> at byte 289)",
+   "wall_ms": 756,
+   "peak_rss_bytes": 841531392
+  },
+  {
+   "id": "commons-gaussian-2d-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<translate> at byte 6158)",
+   "wall_ms": 95,
+   "peak_rss_bytes": 56311808
+  },
+  {
+   "id": "commons-geographic-map-of-norway-sweden-finland-and-denmark-svg",
+   "verdict": "xml",
+   "detail": "malformed SVG: viewport at byte 70",
+   "wall_ms": 134,
+   "peak_rss_bytes": 82690048
+  },
+  {
+   "id": "commons-germany-districts-municipalities-location-map-2013-svg",
+   "verdict": "limit_decode",
+   "detail": "document exceeds a decode safety limit",
+   "wall_ms": 1326,
+   "peak_rss_bytes": 1352400896
+  },
+  {
+   "id": "commons-ideogram-human-chromosome-20-svg",
+   "verdict": "unsupported",
+   "detail": "unsupported in V1: unsupported element or attribute (<11px> at byte 20677771)",
+   "wall_ms": 386,
+   "peak_rss_bytes": 130646016
+  },
+  {
+   "id": "commons-koppen-geiger-map-a-present-svg",
+   "verdict": "skipped",
+   "detail": "not read: 79058833 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "commons-municipalities-of-italy-svg",
+   "verdict": "skipped",
+   "detail": "not read: 91915099 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "commons-spain-languages-de-svg",
+   "verdict": "skipped",
+   "detail": "not read: 90812529 bytes exceeds --max-bytes 33554432",
+   "wall_ms": 0,
+   "peak_rss_bytes": null
+  },
+  {
+   "id": "natural-earth-world-map-blank",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 46,
+   "peak_rss_bytes": 20709376
+  },
+  {
+   "id": "natural-earth-world-map-countries",
+   "verdict": "ok",
+   "detail": "128x128 frame, 0 disclosure(s)",
+   "wall_ms": 61,
+   "peak_rss_bytes": 29638656
+  }
+ ]
+}

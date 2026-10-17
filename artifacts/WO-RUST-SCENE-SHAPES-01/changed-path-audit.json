@@ -1,0 +1,35 @@
+{
+  "wo": "WO-RUST-SCENE-SHAPES-01",
+  "allowed_globs": [
+    "rust/crates/vexel-scene/src/types.rs",
+    "rust/crates/vexel-scene/src/dash_validate.rs",
+    "rust/crates/vexel-scene/src/raster_job_views.rs",
+    "rust/crates/vexel-scene/src/raster_job_scratch.rs",
+    "rust/crates/vexel-scene/src/validation_tests.rs",
+    "rust/crates/vexel-scene/tests/**",
+    "rust/crates/vexel-svg-decode/src/use_expansion.rs",
+    "rust/crates/vexel-svg-decode/tests/**",
+    "rust/crates/vexel-svg-engine/src/** (no change: no shape-count site)",
+    "artifacts/WO-RUST-SCENE-SHAPES-01/**"
+  ],
+  "changed": [
+    {"path": "rust/crates/vexel-scene/src/types.rs", "kind": "modified", "allowed": true, "change": "MAX_SHAPES, MAX_USE_INSTANCES, const asserts, Limits::default().shapes = MAX_SHAPES"},
+    {"path": "rust/crates/vexel-scene/src/dash_validate.rs", "kind": "modified", "allowed": true, "change": "65536 -> MAX_SHAPES"},
+    {"path": "rust/crates/vexel-scene/src/raster_job_views.rs", "kind": "modified", "allowed": true, "change": "65536 -> MAX_SHAPES (shapes.len() check only; grid caps unchanged)"},
+    {"path": "rust/crates/vexel-scene/src/raster_job_scratch.rs", "kind": "modified", "allowed": true, "change": "Dash shapes buffer cap 65536 -> MAX_SHAPES"},
+    {"path": "rust/crates/vexel-scene/src/validation_tests.rs", "kind": "modified", "allowed": true, "change": "pin 65536 -> MAX_SHAPES"},
+    {"path": "rust/crates/vexel-svg-decode/src/use_expansion.rs", "kind": "modified", "allowed": true, "change": "use_instances >= 65_536 -> MAX_USE_INSTANCES"},
+    {"path": "rust/crates/vexel-svg-decode/tests/original_references.rs", "kind": "modified", "allowed": true, "change": "use-instance boundary pin -> MAX_USE_INSTANCES"},
+    {"path": "rust/crates/vexel-svg-decode/tests/original_shapes.rs", "kind": "modified", "allowed": true, "change": "70,000-path pin replaced with exact MAX_SHAPES / MAX_SHAPES+1 boundary"},
+    {"path": "rust/crates/vexel-scene/tests/shape_cap_contracts.rs", "kind": "added", "allowed": true, "change": "default cap, builder append boundary, DashCache boundary, shape record size"},
+    {"path": "rust/crates/vexel-svg-decode/tests/shape_cap_contracts.rs", "kind": "added", "allowed": true, "change": "corpus use_t2 need, flat and use boundaries, nested expansion refusal, cancellation latency"},
+    {"path": "artifacts/WO-RUST-SCENE-SHAPES-01/", "kind": "added", "allowed": true, "change": "evidence"}
+  ],
+  "not_changed_protected": ["vexel-app (all)", "vexel-render", "vexel-raster", "vexel-svg-media", "vexel-svg-reference", "vexel-scene-query", "vexel-xml (vexel-xml caps)", "Cargo.toml", "Cargo.lock", "rust/tools/**", "goldens", "docs/**", "BLOCKERS.md", "STATE.md", "LEDGER*.md", "ledger.jsonl", "work/**", "git HEAD and index", "external corpus (read-only, never copied)"],
+  "unsafe_added": 0,
+  "new_dependencies": 0,
+  "generated_not_tracked": ["build/rust/ (gitignored target dir)"],
+  "temporary_files_removed": ["rust/crates/vexel-svg-decode/tests/zz_probe_tmp.rs (probe, deleted before commit)"],
+  "scratch_outside_repo": ["/private/tmp/wo-shapes/ (synthetic SVGs, base and new corpus binaries, logs; external corpus outputs)"],
+  "corpus_bytes_in_repo": false
+}

@@ -3,7 +3,7 @@ mod inputs;
 mod support;
 use inputs::*;
 use support::*;
-use vexel_scene::{ErrorKind, LimitKind};
+use vexel_scene::{ErrorKind, LimitKind, MAX_SHAPES};
 
 #[test]
 fn original_smooth_equivalences_use_real_lexical_animation_and_scene() {
@@ -132,15 +132,25 @@ fn original_eccentric_ellipse_chord_error_bound() {
     }
     assert!(max_error <= 0.250001);
 }
+// WO-RUST-SCENE-SHAPES-01: PATH_START plus k PATH_MIDDLE repeats yields k + 1 paths.
+// The old 70,000-path pin moved to the exact MAX_SHAPES boundary: MAX_SHAPES shapes
+// are admitted and MAX_SHAPES + 1 are refused with Limit(Shapes).
 #[test]
 fn original_many_shapes_limit() {
-    let mut source = String::from(PATH_START);
-    for _ in 0..70000 {
-        source.push_str(PATH_MIDDLE);
-    }
-    source.push_str(PATH_END);
+    let paths = |shapes: usize| {
+        let mut source = String::from(PATH_START);
+        for _ in 0..shapes - 1 {
+            source.push_str(PATH_MIDDLE);
+        }
+        source.push_str(PATH_END);
+        source
+    };
+    assert_eq!(
+        decode(&paths(MAX_SHAPES)).unwrap().root().shapes.len(),
+        MAX_SHAPES
+    );
     assert!(matches!(
-        decode(&source).unwrap_err().kind,
+        decode(&paths(MAX_SHAPES + 1)).unwrap_err().kind,
         ErrorKind::Limit(LimitKind::Shapes)
     ));
 }

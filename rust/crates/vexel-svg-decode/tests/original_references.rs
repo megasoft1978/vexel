@@ -1,6 +1,6 @@
 mod support;
 use support::*;
-use vexel_scene::{ErrorKind, LimitKind};
+use vexel_scene::{ErrorKind, LimitKind, MAX_USE_INSTANCES};
 #[test]
 fn original_use_transform_order_and_host_source_maps() {
     let inputs = [
@@ -110,7 +110,8 @@ fn original_w5_switch_language_data() {
 fn original_use_instance_boundary_and_aggregate_byte_limit() {
     let prefix = "<svg width=\"1\" height=\"1\"><defs><g id=\"g\"/></defs>";
     let shape = "<use href=\"#g\"/>";
-    for (n, good) in [(65536, true), (65537, false)] {
+    // WO-RUST-SCENE-SHAPES-01: the instance boundary moved from 65,536 to MAX_USE_INSTANCES.
+    for (n, good) in [(MAX_USE_INSTANCES, true), (MAX_USE_INSTANCES + 1, false)] {
         let s = format!("{prefix}{}</svg>", shape.repeat(n));
         let result = decode(&s);
         if good {

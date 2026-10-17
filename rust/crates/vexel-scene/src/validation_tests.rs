@@ -100,7 +100,7 @@ fn publication_rechecks_ranges_and_actual_memory_statistics() {
 fn default_policy_preserves_reference_caps_and_clamps_larger_overrides() {
     let d = Limits::default();
     assert_eq!(d.source_bytes, 1 << 30);
-    assert_eq!(d.shapes, 65536);
+    assert_eq!(d.shapes, MAX_SHAPES);
     assert_eq!(d.edges, 4194304);
     assert_eq!(d.commands, 4194304);
     assert_eq!(d.numbers, 29360128);

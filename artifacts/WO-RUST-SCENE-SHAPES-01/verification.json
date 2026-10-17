@@ -1,0 +1,69 @@
+{
+  "wo": "WO-RUST-SCENE-SHAPES-01",
+  "base_sha": "87fd52864959e5f1a7aef77e454c3b67304f2b15",
+  "worktree_head_before_edits": "c2c28874 (docs-only commit after base)",
+  "toolchain": "cargo 1.99.0 (rust-toolchain pinned by repo), CARGO_HOME=.cache/cargo, --offline --locked",
+  "checks": [
+    {
+      "name": "cargo test --offline --locked --no-fail-fast --workspace",
+      "result": "pass",
+      "summary": "cargo test: 1965 passed, 5 ignored (294 suites, 382.75s); 0 failed",
+      "note": "vexel-platform-apple expected panic line is inside an intentional abort test; the final summary line is the result."
+    },
+    {
+      "name": "cargo test --offline --locked -p vexel-scene -p vexel-svg-decode -p vexel-svg-engine (frozen 1, per package)",
+      "result": "pass",
+      "summary": "vexel-scene and vexel-svg-decode shape-cap suites green after final edits; full frozen-1 invocation was run before the last test-harness fix (one failing test then, flat_shape_boundary, fixed); the workspace run above covers these packages on the final tree",
+      "logs": ["/private/tmp/wo-shapes/green2.log", "/private/tmp/wo-shapes/green3.log"]
+    },
+    {
+      "name": "python3 scripts/check_rust_fmt.py",
+      "result": "pass",
+      "summary": "rust fmt policy: pass (18 clean-listed crates)"
+    },
+    {
+      "name": "rustfmt --edition 2024 --check on every changed or new .rs file",
+      "result": "pass"
+    },
+    {
+      "name": "python3 scripts/wo_validate.py --ready WO-RUST-SCENE-SHAPES-01",
+      "result": "pass",
+      "summary": "valid WO-RUST-SCENE-SHAPES-01 revision 1 sha256 caf4550b7025a17bc81814daf356b212ee0b833534c9e467525dabe044f0c2a5"
+    },
+    {
+      "name": "python3 scripts/ledger.py validate ledger.jsonl",
+      "result": "pass",
+      "summary": "valid ledger: 2064 entries"
+    },
+    {
+      "name": "git diff --check (system git)",
+      "result": "pass"
+    },
+    {
+      "name": "cargo build --release -p vexel-corpus",
+      "result": "pass"
+    },
+    {
+      "name": "corpus in-repo run (bench/corpus/manifest.json)",
+      "result": "pass",
+      "summary": "24/24 ok before and after",
+      "out": "artifacts/WO-RUST-SCENE-SHAPES-01/in-repo"
+    },
+    {
+      "name": "corpus external run (owner-local manifest, read-only)",
+      "result": "pass_with_gaps",
+      "summary": "ok 12 -> 12; limit_decode 12 -> 10; limit_render 3 -> 5; 0 ok->non-ok; 0 rss_exceeded; 0 crash",
+      "artifacts": ["sweep-before.json", "sweep-after.json"],
+      "gaps": ["named limit for cad_t2, cnc_t2, inkscape_t2, cambodia not established", "render-stage kind for use_t2 and science_t2 not exposed by verdict tool"]
+    },
+    {
+      "name": "pipeline_hashes.rs (vexel-app, read only)",
+      "result": "pass",
+      "summary": "passes in the workspace run; no hash edited"
+    }
+  ],
+  "not_run": [
+    "base-tree workspace test count (static count used: +10 tests, 0 removed)",
+    "cargo tree -p vexel-app diff (no Cargo.toml or Cargo.lock change, so the tree is unchanged by construction)"
+  ]
+}
