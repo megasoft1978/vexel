@@ -366,3 +366,129 @@ fn join_hit(join: &Join, px: f64, py: f64, radius: f64, style: Linejoin, miter_l
     }
     in_triangle(px, py, vertex, p1, miter) || in_triangle(px, py, vertex, miter, p2)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::FlatEdge;
+    use vexel_geometry::affine_identity;
+
+    /// xorshift64*: deterministic samples without a dev-dependency.
+    struct Rng(u64);
+
+    impl Rng {
+        fn unit(&mut self) -> f64 {
+            self.0 ^= self.0 >> 12;
+            self.0 ^= self.0 << 25;
+            self.0 ^= self.0 >> 27;
+            (self.0.wrapping_mul(0x2545_F491_4F6C_DD1D) >> 11) as f64 / (1u64 << 53) as f64
+        }
+
+        fn range(&mut self, lo: f64, hi: f64) -> f64 {
+            lo + (hi - lo) * self.unit()
+        }
+    }
+
+    fn style(cap: Linecap, join: Linejoin, width: f64) -> StrokeStyle {
+        StrokeStyle {
+            rgba: [0, 0, 0, 255],
+            width,
+            miter_limit: 4.0,
+            dash_offset: 0.0,
+            cap,
+            join,
+            crisp_edges: false,
+        }
+    }
+
+    fn build(points: &[(f64, f64)], closed: bool, stroke: StrokeStyle) -> StrokePrims {
+        let edges: Vec<FlatEdge> = points
+            .windows(2)
+            .map(|w| FlatEdge { x0: w[0].0, y0: w[0].1, x1: w[1].0, y1: w[1].1 })
+            .collect();
+        let shape = RenderShape {
+            edges: &edges,
+            subpaths: &[],
+            subpath_closed: &[],
+            stroke_closed: closed,
+            evenodd: false,
+            filled: false,
+            fill_rgba: [0; 4],
+            stroke: Some(stroke),
+            transform: affine_identity(),
+        };
+        let mut budget = Budget { steps: 0, bytes: 0 };
+        StrokePrims::build(&shape, &stroke, affine_identity(), None, &mut budget).unwrap()
+    }
+
+    /// Samples inside the box around `points` plus samples near the vertices.
+    fn samples(rng: &mut Rng, points: &[(f64, f64)], count: usize, slack: f64) -> Vec<(f64, f64)> {
+        let (mut x0, mut y0, mut x1, mut y1) = (f64::MAX, f64::MAX, f64::MIN, f64::MIN);
+        for &(x, y) in points {
+            x0 = x0.min(x);
+            y0 = y0.min(y);
+            x1 = x1.max(x);
+            y1 = y1.max(y);
+        }
+        (0..count)
+            .map(|i| {
+                if i % 3 == 0 {
+                    let index = ((rng.unit() * points.len() as f64) as usize).min(points.len() - 1);
+                    let (x, y) = points[index];
+                    (x + rng.range(-slack, slack), y + rng.range(-slack, slack))
+                } else {
+                    (rng.range(x0 - slack, x1 + slack), rng.range(y0 - slack, y1 + slack))
+                }
+            })
+            .collect()
+    }
+
+    fn assert_equal_everywhere(prims: &StrokePrims, samples: &[(f64, f64)]) {
+        for &(px, py) in samples {
+            assert_eq!(
+                prims.contains(px, py),
+                prims.contains_linear(px, py),
+                "grid and linear scan disagree at ({px}, {py})"
+            );
+        }
+    }
+
+    /// Short segments: the grid is built here, so the grid path is exercised.
+    #[test]
+    fn grid_contains_equals_linear_scan_on_dense_path() {
+        let mut rng = Rng(0x9E37_79B9_7F4A_7C15);
+        let mut points = vec![(0.0, 0.0)];
+        for _ in 0..400 {
+            let (x, y) = *points.last().unwrap();
+            points.push((x + rng.range(-3.0, 3.0), y + rng.range(-3.0, 3.0)));
+        }
+        for (cap, join) in [(Linecap::Butt, Linejoin::Miter), (Linecap::Round, Linejoin::Round)] {
+            let prims = build(&points, false, style(cap, join, 0.8));
+            assert!(prims.grid.is_some(), "dense path must get a grid");
+            let probes = samples(&mut rng, &points, 20_000, 2.0);
+            assert_equal_everywhere(&prims, &probes);
+        }
+    }
+
+    /// Long, wide, and closed strokes: whether or not a grid is built, the
+    /// answer must match the linear scan at every sample.
+    #[test]
+    fn grid_contains_equals_linear_scan_on_long_strokes() {
+        let mut rng = Rng(0x0123_4567_89AB_CDEF);
+        let mut points = vec![(0.0, 0.0)];
+        for _ in 0..500 {
+            let (x, y) = *points.last().unwrap();
+            points.push((x + rng.range(-40.0, 40.0), y + rng.range(-40.0, 40.0)));
+        }
+        let cases = [
+            (false, Linecap::Butt, Linejoin::Miter, 0.8),
+            (true, Linecap::Square, Linejoin::Bevel, 2.5),
+            (false, Linecap::Round, Linejoin::Round, 6.0),
+        ];
+        for (closed, cap, join, width) in cases {
+            let prims = build(&points, closed, style(cap, join, width));
+            let probes = samples(&mut rng, &points, 8_000, 2.0 * width);
+            assert_equal_everywhere(&prims, &probes);
+        }
+    }
+}

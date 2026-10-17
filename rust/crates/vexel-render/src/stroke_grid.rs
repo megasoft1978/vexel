@@ -51,6 +51,14 @@ fn segment_rect(segment: &Segment, radius: f64) -> Rect {
     }
 }
 
+/// Cells along one axis: `axis` cells, but never narrower than the mean
+/// primitive extent `mean`. A primitive spanning many thin cells lists each of
+/// them, and the reference budget would then refuse the whole grid.
+fn cells_along(span: f64, axis: usize, mean: f64) -> usize {
+    let cell = (span / axis as f64).max(mean);
+    ((span / cell).ceil() as usize).clamp(1, axis)
+}
+
 fn join_rect(join: &Join, reach: f64) -> Rect {
     let pad = reach + (reach + join.vertex.x.abs().max(join.vertex.y.abs())) * SLACK;
     Rect {
@@ -92,8 +100,13 @@ impl Grid {
             return Ok(None);
         }
         let axis = ((count as f64).sqrt().ceil() as usize).clamp(2, MAX_AXIS_CELLS);
-        let columns = if width > 0.0 { axis } else { 1 };
-        let rows = if height > 0.0 { axis } else { 1 };
+        let (mut sum_w, mut sum_h) = (0.0, 0.0);
+        for r in &rects {
+            sum_w += r.x1 - r.x0;
+            sum_h += r.y1 - r.y0;
+        }
+        let columns = if width > 0.0 { cells_along(width, axis, sum_w / count as f64) } else { 1 };
+        let rows = if height > 0.0 { cells_along(height, axis, sum_h / count as f64) } else { 1 };
         let mut grid = Self {
             min_x,
             min_y,
