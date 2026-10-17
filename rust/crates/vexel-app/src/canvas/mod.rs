@@ -24,7 +24,9 @@ pub use natural::natural_size;
 pub use overlay::{
     HANDLE, HOVER_OPACITY, HOVER_WIDTH, SELECTION_WIDTH, handle_points, handle_rect,
 };
-pub use paint::{CHECKER, SHADOW_LAYERS, StagePaint, artboard_device_rect, over, paint_stage};
+pub use paint::{
+    CHECKER, SHADOW_LAYERS, StagePaint, artboard_device_rect, over, paint_stage, well_fill,
+};
 pub use size::{artboard_pixels, frame_matches, target_compose_size};
 pub use state::CanvasState;
-pub use view::{FIT_MARGIN, MAX_ZOOM, MIN_ZOOM, View, ZOOM_STEP};
+pub use view::{FIT_MARGIN, FIT_MAX_ZOOM, MAX_ZOOM, MIN_ZOOM, View, ZOOM_STEP, percent_label};

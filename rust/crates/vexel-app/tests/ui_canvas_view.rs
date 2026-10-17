@@ -3,7 +3,9 @@
 mod support;
 
 use support::Lcg;
-use vexel_app::canvas::{ControlKind, FIT_MARGIN, MAX_ZOOM, MIN_ZOOM, View, controls};
+use vexel_app::canvas::{
+    ControlKind, FIT_MARGIN, FIT_MAX_ZOOM, MAX_ZOOM, MIN_ZOOM, View, controls,
+};
 
 const STAGES: [(f64, f64); 8] = [
     (260.0, 140.0),
@@ -28,14 +30,18 @@ const DOCS: [(f64, f64); 9] = [
 ];
 
 #[test]
-fn fit_centres_with_margin_and_never_exceeds_100_percent() {
+fn fit_centres_with_margin_and_never_exceeds_400_percent() {
     let mut checked = 0;
     for stage in STAGES {
         for doc in DOCS {
             let limit =
                 ((stage.0 - 2.0 * FIT_MARGIN) / doc.0).min((stage.1 - 2.0 * FIT_MARGIN) / doc.1);
             let view = View::fit(stage, doc);
-            assert!(view.zoom <= 1.0 + 1e-12, "{stage:?} {doc:?}: {}", view.zoom);
+            assert!(
+                view.zoom <= FIT_MAX_ZOOM + 1e-12,
+                "{stage:?} {doc:?}: {}",
+                view.zoom
+            );
             if limit < MIN_ZOOM {
                 // Below the zoom floor the margin cannot be honoured.
                 assert_eq!(view.zoom, MIN_ZOOM);
@@ -52,8 +58,8 @@ fn fit_centres_with_margin_and_never_exceeds_100_percent() {
             assert!((x0 - (stage.0 - x1)).abs() < 1e-6, "centred x");
             assert!((y0 - (stage.1 - y1)).abs() < 1e-6, "centred y");
             assert!(view.zoom <= limit + 1e-12);
-            if limit >= 1.0 {
-                assert_eq!(view.zoom, 1.0, "documents that fit show at 100%, no more");
+            if limit >= FIT_MAX_ZOOM {
+                assert_eq!(view.zoom, FIT_MAX_ZOOM, "Fit magnifies to 400%, no more");
             } else {
                 assert!(
                     (view.zoom - limit).abs() < 1e-12,

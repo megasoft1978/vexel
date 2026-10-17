@@ -21,9 +21,9 @@ use vexel_app::model::{self, DragPhase, Layout, Mode, Model, Target, Tool};
 use vexel_app::motion::MotionAdapter;
 use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
-use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
+use vexel_app::session::{McpGrants, McpHost, McpOutcome, edit_shortcut};
 use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
-use vexel_app::{canvas, compose, preview_app, render, timeline};
+use vexel_app::{canvas, compose, overlay, preview_app, render, timeline};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
     WindowEvent,
@@ -232,7 +232,8 @@ fn run(
             model.chrome = chrome_text;
             dirty = true;
         }
-        dirty |= motion.redraw_after().is_some();
+        dirty |= model.history.observe(files.document().revision());
+        dirty |= motion.redraw_after().is_some() | motion.poll_tooltip();
         if dirty || model.dirty {
             let (draw_size, draw_scale) = if geometry_valid {
                 (logical, scale as u32)
@@ -252,10 +253,11 @@ fn run(
                             let frame = compose::blit_document(frame, &doc, &layout, model.dark);
                             let bar = strip::layout(layout.stage)
                                 .filter(|_| driver.strip_visible() && layout.footer.is_none());
-                            match bar {
+                            let frame = match bar {
                                 Some(bar) => strip::draw(frame, &bar, &driver, model.dark),
                                 None => frame,
-                            }
+                            };
+                            overlay::overlay_tooltip(frame, &model, &layout, motion.tooltip())
                         }
                         None => frame,
                     };
@@ -291,7 +293,7 @@ fn run(
                     if let WindowEvent::Pointer(pointer) = &event {
                         let primary = pointer_accepts_mode(pointer.button);
                         dirty |= motion
-                            .pointer(&layout, pointer.kind, pointer.logical, primary)
+                            .pointer_in(&layout, pointer.kind, pointer.logical, primary, &model)
                             .1;
                     }
                     continue;
@@ -362,10 +364,7 @@ fn run(
                     if model.focus_key(code, modifiers.0 & Modifiers::SHIFT != 0, has_inspector) {
                         dirty = true;
                     } else if let Some(action) = edit_shortcut(code, modifiers) {
-                        let _ = match action {
-                            EditAction::Undo => files.document_mut().undo(),
-                            EditAction::Redo => files.document_mut().redo(),
-                        };
+                        model.history.apply(files.document_mut(), action);
                         dirty = true;
                     } else if let Some(outcome) =
                         file_key(&mut files, &mut dedup, started.elapsed(), code, modifiers)
@@ -407,7 +406,7 @@ fn run(
                     if let Some(layout) = model.layout(logical.0, logical.1) {
                         let primary = pointer_accepts_mode(pointer.button);
                         dirty |= motion
-                            .pointer(&layout, pointer.kind, pointer.logical, primary)
+                            .pointer_in(&layout, pointer.kind, pointer.logical, primary, &model)
                             .1;
                         dirty |= route_pointer(
                             &pointer,

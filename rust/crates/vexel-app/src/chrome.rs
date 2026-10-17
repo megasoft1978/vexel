@@ -46,6 +46,8 @@ pub struct AppState {
     pub selection: Option<ShapeProps>,
     /// SMIL loop length in seconds; `0` for a static document.
     pub loop_seconds: f64,
+    /// Canvas zoom in whole percent (the same number the zoom cluster shows).
+    pub zoom_percent: u32,
 }
 
 impl AppState {
@@ -65,6 +67,7 @@ impl AppState {
                 .map(|(text, _)| text.to_owned()),
             selection: view.selected_shape().map(ShapeProps::from_shape),
             loop_seconds: 0.0,
+            zoom_percent: view.canvas.view.percent(),
         }
     }
 }

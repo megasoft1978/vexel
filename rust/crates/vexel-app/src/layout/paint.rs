@@ -1,7 +1,7 @@
 //! Chrome painting: toolbar, tool rail, status bar and the MCP popover. All
 //! colours come from `Tokens`; geometry comes from [`Layout`].
 
-use super::{Button, Layout};
+use super::{Button, Layout, Splitter};
 use crate::model::{McpState, Mode, Model, Target, Tool};
 use crate::motion::MotionFrame;
 use vexel_ui::{
@@ -187,20 +187,21 @@ pub fn draw_chrome_with(
     }
 
     // Grouped icon buttons share one rounded container each.
-    let (open, dirty) = (state.open, state.dirty);
     c.paint_round(l.history_group, 8, t.surface[3], 0, 0);
     c.paint_round(l.file_group, 8, t.surface[3], 0, 0);
     let items = [
-        (IconKind::UNDO, open && dirty),
-        (IconKind::REDO, false),
-        (IconKind::SAVE, open && dirty),
-        (IconKind::EXPORT, open),
+        (IconKind::UNDO, Button::Undo),
+        (IconKind::REDO, Button::Redo),
+        (IconKind::SAVE, Button::Save),
+        (IconKind::EXPORT, Button::Export),
     ];
-    for (i, (kind, enabled)) in items.into_iter().enumerate() {
-        let s = if enabled {
-            ControlState::Rest
-        } else {
-            ControlState::Disabled
+    for (i, (kind, button)) in items.into_iter().enumerate() {
+        let enabled = model.target_enabled(l, Target::Button(button));
+        let hovered = enabled && toolbar_hover(c, motion, button, l.buttons[i]);
+        let s = match (enabled, hovered) {
+            (false, _) => ControlState::Disabled,
+            (true, true) => ControlState::Hover,
+            _ => ControlState::Rest,
         };
         icon_centered(c, l.buttons[i], kind, s, &t);
     }
@@ -218,7 +219,13 @@ pub fn draw_chrome_with(
             &t,
         );
     } else {
-        icon_centered(c, l.buttons[4], IconKind::SIDEBAR_RIGHT, toggle, &t);
+        let hovered = toolbar_hover(c, motion, Button::ToggleInspector, l.buttons[4]);
+        let state = if hovered && toggle == ControlState::Rest {
+            ControlState::Hover
+        } else {
+            toggle
+        };
+        icon_centered(c, l.buttons[4], IconKind::SIDEBAR_RIGHT, state, &t);
     }
 
     // Tool rail: level 1, selected tool is accent.subtle with an accent glyph.
@@ -242,21 +249,57 @@ pub fn draw_chrome_with(
         }
     }
 
-    draw_status(c, l, model);
+    // Splitters: a hover/drag strip over the window fill.
+    for (rect, splitter) in [
+        (l.inspector_splitter, Splitter::Inspector),
+        (l.footer_splitter, Splitter::Footer),
+    ] {
+        if let Some(rect) = rect {
+            let target = Target::Splitter(splitter);
+            let id = crate::motion::control_id(target);
+            motion_fill(c, motion, id, false, rect, 0);
+        }
+    }
+
+    draw_status(c, l, model, motion);
 }
 
-fn draw_status(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model) {
+/// Hover/press fill of a toolbar button over its group container; true when
+/// the control is hovered or pressed.
+fn toolbar_hover(
+    c: &mut WidgetCanvas<'_>,
+    motion: Option<&MotionFrame>,
+    button: Button,
+    rect: Rect,
+) -> bool {
+    let id = crate::motion::control_id(Target::Button(button));
+    motion_fill(c, motion, id, false, rect, 6);
+    motion.is_some_and(|m| m.get(id).hover > 0.5)
+}
+
+/// The context hint shown at the left of the status bar.
+pub fn status_hint(model: &Model) -> &'static str {
+    if !model.chrome.state.open {
+        return "Open an SVG to begin (Cmd+O)";
+    }
+    match (model.mode, model.tool) {
+        (Mode::Animate, _) => "Space plays, drag the strip to scrub",
+        (Mode::Draw, Tool::Select) => "Click a shape to select it",
+        (Mode::Draw, Tool::Pen) => "Click to add points, double-click or Return to finish",
+        (Mode::Draw, Tool::Rectangle) => "Drag on the canvas to draw a rectangle",
+        (Mode::Draw, Tool::Ellipse) => "Drag on the canvas to draw an ellipse",
+        (Mode::Draw, Tool::Line) => "Drag on the canvas to draw a line",
+    }
+}
+
+fn draw_status(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model, motion: Option<&MotionFrame>) {
     let t = c.tokens;
     let state = &model.chrome.state;
     c.paint_rect(l.status, t.window);
-    let hint = match model.mode {
-        Mode::Draw => "Click a shape to select it",
-        Mode::Animate => "Space plays, drag the strip to scrub",
-    };
     text(
         c,
-        hint,
-        l.status_hint,
+        status_hint(model),
+        l.status_row(l.status_hint),
         t.text_tertiary,
         12,
         FontWeight::Regular,
@@ -266,39 +309,49 @@ fn draw_status(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model) {
         (None, s) if !s.is_empty() => (s.to_owned(), t.text_secondary),
         _ => ("Ready".to_owned(), t.text_secondary),
     };
-    centred(c, &report, l.status_report, color, 12, FontWeight::Regular);
+    centred(
+        c,
+        &report,
+        l.status_row(l.status_report),
+        color,
+        12,
+        FontWeight::Regular,
+    );
+    let [zoom, size, save, mcp_label] = l.status_texts();
     if state.open {
-        let [zoom, size, save] = l.status_readouts;
         let dims = format!("{} x {}", state.size.0, state.size.1);
         let saved = if state.dirty { "Unsaved" } else { "Saved" };
         if zoom.width > 0 {
-            mono(c, "Fit", zoom, t.text_secondary, 12);
+            let percent = crate::canvas::percent_label(state.zoom_percent);
+            mono(c, &percent, zoom, t.text_secondary, 12);
             mono(c, &dims, size, t.text_secondary, 12);
         }
         mono(c, saved, save, t.text_secondary, 12);
     }
     // MCP indicator: dot plus word, never colour alone.
+    let id = crate::motion::control_id(Target::Button(Button::Mcp));
+    let bar_hit = Rect {
+        y: l.status.y,
+        height: l.status.height,
+        ..l.mcp
+    };
+    motion_fill(c, motion, id, false, bar_hit, 4);
     let dot_color = match model.mcp {
         McpState::Unavailable => t.text_tertiary,
         McpState::Ready => t.success,
         McpState::Active => t.accent,
     };
     let dot = Rect {
-        x: l.mcp.x,
+        x: l.mcp.x + 2,
         y: l.status.y + (l.status.height - 8) / 2,
         width: 8,
         height: 8,
     };
     c.paint_round(dot, 4, dot_color, 0, 0);
-    let label = Rect {
-        x: l.mcp.x + 14,
-        width: l.mcp.width - 14,
-        ..l.status
-    };
     text(
         c,
         model.mcp.label(),
-        label,
+        mcp_label,
         t.text_secondary,
         12,
         FontWeight::Regular,

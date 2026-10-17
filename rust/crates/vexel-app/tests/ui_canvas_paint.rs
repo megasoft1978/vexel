@@ -51,14 +51,20 @@ fn artboard_with_well_shadow_hairline_and_document_pixels() {
             let s = scene(scale, dark, view, natural, Some(&doc.frame));
             let shot = render(&s);
             let t = tokens(dark);
-            let well = rgb(t.canvas_well);
+            let well = rgb(vexel_app::canvas::well_fill(&t));
             let (ax, ay, w, h) = artboard_device_rect(view, natural, s.stage, scale);
             let sc = i64::from(scale);
             assert_eq!((w, h), (i64::from(aw), i64::from(ah)));
 
             // Well fills the stage, and only the stage (sentinel outside).
             let stage_x0 = 10 * sc;
-            assert_eq!(shot.at(stage_x0, 20 * sc), well, "stage corner is the well");
+            // Pin updated (POLISH-01): the stage has a 1 px `border` edge.
+            assert_eq!(shot.at(stage_x0, 20 * sc), rgb(t.border), "stage edge");
+            assert_eq!(
+                shot.at(stage_x0 + sc, 20 * sc + sc),
+                well,
+                "inside the edge"
+            );
             assert_eq!(
                 shot.at(stage_x0 - 1, 20 * sc),
                 [0x12, 0x34, 0x56],
@@ -209,7 +215,7 @@ fn checkerboard_is_clipped_to_the_stage_when_the_artboard_overflows_it() {
     let shot = render(&s);
     let t = tokens(true);
     // Inside the stage everything is checker; outside it the sentinel survives.
-    for (x, y) in [(10, 20), (409, 299), (200, 150)] {
+    for (x, y) in [(11, 21), (408, 298), (200, 150)] {
         let p = shot.at(x, y);
         assert!(
             p == rgb(t.checker_a) || p == rgb(t.checker_b),

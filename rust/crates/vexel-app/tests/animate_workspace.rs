@@ -78,13 +78,14 @@ fn screen(view: &DocumentView, mode: Mode) -> RgbaFrame {
     blit_document(frame, view, &layout(mode), true)
 }
 
-/// RGBA of the stage region of `frame`.
+/// RGBA of the stage region of `frame`, inside its 1 px edge (pin updated by
+/// POLISH-01: the stage now carries a `border` edge on its inner border).
 fn stage_pixels(frame: &RgbaFrame, mode: Mode) -> Vec<u8> {
     let s = layout(mode).stage;
     let mut out = Vec::new();
-    for y in s.y..s.y + s.height {
-        let start = ((y * W + s.x) * 4) as usize;
-        out.extend_from_slice(&frame.pixels()[start..start + (s.width * 4) as usize]);
+    for y in s.y + 1..s.y + s.height - 1 {
+        let start = ((y * W + s.x + 1) * 4) as usize;
+        out.extend_from_slice(&frame.pixels()[start..start + ((s.width - 2) * 4) as usize]);
     }
     out
 }
@@ -205,9 +206,16 @@ fn static_stage_in_animate_equals_compose_at_that_size() {
     let composed = &view.composed().unwrap().frame;
     assert_eq!(composed.rgba, expect.rgba);
     // The blitted stage is that frame composited over white.
+    let inner = |i: &usize| {
+        let (x, y) = (*i as u32 % w, *i as u32 / w);
+        x > 0 && y > 0 && x < w - 1 && y < h - 1
+    };
     let over: Vec<u8> = expect
         .rgba
         .chunks_exact(4)
+        .enumerate()
+        .filter(|(i, _)| inner(i))
+        .map(|(_, p)| p)
         .flat_map(|p| {
             let a = u32::from(p[3]);
             let f = |c: u8| ((u32::from(c) * a + 255 * (255 - a) + 127) / 255) as u8;

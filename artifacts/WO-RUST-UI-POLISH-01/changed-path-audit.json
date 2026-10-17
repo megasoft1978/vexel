@@ -1,0 +1,6 @@
+{
+  "src": "rust/crates/vexel-app/src/{canvas,layout,motion}/**, render.rs, inspector.rs, chrome.rs, model.rs, main.rs (12/11 lines), lib.rs (2 mod lines); new history.rs, overlay.rs, layout/tooltip.rs",
+  "existing_tests_edited_for_pins": ["animate_workspace.rs", "ui_canvas_paint.rs", "ui_canvas_pointer.rs", "ui_canvas_view.rs"],
+  "new": ["tests/ui_polish_canvas.rs", "tests/ui_polish_behaviour.rs", "tests/ui_polish_goldens.rs", "artifacts/WO-RUST-UI-POLISH-01/**", "docs/archive/live/2026-10-17-ui-polish-01-*.png"],
+  "protected_touched": "none (an accidental cargo fmt of vexel-ui was reverted; accepted fixtures restored)"
+}

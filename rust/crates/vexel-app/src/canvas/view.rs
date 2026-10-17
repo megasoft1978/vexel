@@ -10,6 +10,8 @@ pub const MAX_ZOOM: f64 = 32.0;
 pub const ZOOM_STEP: f64 = 1.25;
 /// Minimum free space around a fitted artboard, in logical points.
 pub const FIT_MARGIN: f64 = 24.0;
+/// Fit never magnifies beyond this (400%).
+pub const FIT_MAX_ZOOM: f64 = 4.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct View {
@@ -50,14 +52,18 @@ impl View {
     }
 
     /// Whole artboard visible and centred with at least [`FIT_MARGIN`] around
-    /// it; never above 100%.
+    /// it; never above [`FIT_MAX_ZOOM`].
     pub fn fit(stage: (f64, f64), doc: (f64, f64)) -> View {
         if !(doc.0 > 0.0 && doc.1 > 0.0 && doc.0.is_finite() && doc.1.is_finite()) {
             return Self::IDENTITY;
         }
         let fit_x = (stage.0 - 2.0 * FIT_MARGIN) / doc.0;
         let fit_y = (stage.1 - 2.0 * FIT_MARGIN) / doc.1;
-        Self::centred(stage, doc, Self::clamp_zoom(fit_x.min(fit_y).min(1.0)))
+        Self::centred(
+            stage,
+            doc,
+            Self::clamp_zoom(fit_x.min(fit_y).min(FIT_MAX_ZOOM)),
+        )
     }
 
     /// 100%, artboard centred.
@@ -107,4 +113,10 @@ impl View {
     pub fn percent(self) -> u32 {
         (self.zoom * 100.0).round() as u32
     }
+}
+
+/// The one zoom readout string (`NNN%`), shared by the zoom cluster and the
+/// status bar.
+pub fn percent_label(percent: u32) -> String {
+    format!("{percent}%")
 }

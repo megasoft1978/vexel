@@ -120,7 +120,7 @@ pub fn render_with(
         if let Some(footer) = layout.footer {
             crate::timeline::paint(&mut c, footer, &model.timeline);
         }
-        draw_inspector(&mut c, &layout, model);
+        draw_inspector(&mut c, &layout, model, motion);
         draw_popover(&mut c, &layout, model);
     }
     if text_failed.get() {
@@ -142,7 +142,22 @@ pub(crate) fn label(
 /// Stage placeholder; a composed document is blitted over it by the shell.
 fn draw_stage_empty(c: &mut WidgetCanvas<'_>, stage: Rect) {
     let tokens = c.tokens;
-    c.paint_rect(stage, tokens.canvas_well);
+    c.paint_rect(stage, crate::canvas::well_fill(&tokens));
+    let mut edge = |x, y, width, height| {
+        c.paint_rect(
+            Rect {
+                x,
+                y,
+                width,
+                height,
+            },
+            tokens.border,
+        )
+    };
+    edge(stage.x, stage.y, stage.width, 1);
+    edge(stage.x, stage.y + stage.height - 1, stage.width, 1);
+    edge(stage.x, stage.y, 1, stage.height);
+    edge(stage.x + stage.width - 1, stage.y, 1, stage.height);
     let w = stage.width.saturating_sub(24).min(480).max(1);
     let x = stage.x + stage.width.saturating_sub(w) / 2;
     let mid = stage.y + stage.height / 2;

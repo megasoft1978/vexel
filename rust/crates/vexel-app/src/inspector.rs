@@ -4,17 +4,18 @@
 
 use crate::animation::strip;
 use crate::chrome::{Inspector, ShapeProps, number};
-use crate::layout::paint::{mono, paint_focus, text, text_width};
-use crate::layout::{Focus, Layout, SECTION_BODY_H, SECTION_NAMES, SECTIONS};
+use crate::layout::paint::{centred, mono, paint_focus, text, text_width};
+use crate::layout::{EMPTY_CARD_BODY_H, Focus, Layout, SECTION_BODY_H, SECTION_NAMES, SECTIONS};
 use crate::model::Model;
+use crate::motion::{self, MotionFrame};
 use vexel_ui::{FontWeight, IconKind, Rect, WidgetCanvas};
 
-pub const NOTHING_SELECTED: &str = "Nothing selected";
-pub const PICK_HINT: &str = "Pick a shape with the Select tool.";
+pub const CARD_TITLE: &str = "Select a shape";
+pub const CARD_HINT: &str = "Click one on the canvas to edit it.";
 
 /// Empty-state line of a section: only Selection has one.
 pub fn section_empty_text(section: usize, content: &Inspector) -> Option<&'static str> {
-    (section == 0 && matches!(content, Inspector::NoSelection)).then_some(NOTHING_SELECTED)
+    (section == 0 && matches!(content, Inspector::NoSelection)).then_some(CARD_TITLE)
 }
 
 fn pack(c: [u8; 4]) -> u32 {
@@ -30,19 +31,33 @@ fn inset(r: Rect, x: u32, y: u32, h: u32) -> Rect {
     }
 }
 
-pub(crate) fn draw_inspector(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model) {
+pub(crate) fn draw_inspector(
+    c: &mut WidgetCanvas<'_>,
+    l: &Layout,
+    model: &Model,
+    frame: &MotionFrame,
+) {
     let (Some(panel), content) = (l.inspector, &model.chrome.inspector) else {
         return;
     };
     let t = c.tokens;
     c.paint_rect(panel, t.panel);
+    let empty = matches!(content, Inspector::NoSelection);
     for i in 0..SECTIONS {
         let head = l.section_headers[i];
         if head.width == 0 {
             continue;
         }
         let open = l.section_bodies[i].height > 0;
-        c.paint_rect(head, t.panel_raised);
+        // No band at rest: transparent over the panel, a hover fill and a
+        // 1 px divider above (except the first header).
+        let hover = frame.get(motion::control_id(crate::model::Target::SectionHeader(i)));
+        if hover.fill != t.panel {
+            c.paint_rect(head, hover.fill);
+        }
+        if i > 0 {
+            c.paint_rect(Rect { height: 1, ..head }, t.separator);
+        }
         let chevron = if open {
             IconKind::CHEVRON_DOWN
         } else {
@@ -82,7 +97,12 @@ pub(crate) fn draw_inspector(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model
             );
         }
         let body = l.section_bodies[i];
-        if body.height == SECTION_BODY_H[i] {
+        let full = if i == 0 && empty {
+            EMPTY_CARD_BODY_H
+        } else {
+            SECTION_BODY_H[i]
+        };
+        if body.height == full {
             draw_body(c, i, body, content, model);
         }
     }
@@ -102,24 +122,7 @@ fn draw_body(
     };
     match section {
         0 => match shape {
-            None => {
-                text(
-                    c,
-                    section_empty_text(0, content).unwrap_or(""),
-                    inset(body, 12, 8, 20),
-                    t.text_secondary,
-                    13,
-                    FontWeight::Regular,
-                );
-                text(
-                    c,
-                    PICK_HINT,
-                    inset(body, 12, 28, 20),
-                    t.text_tertiary,
-                    12,
-                    FontWeight::Regular,
-                );
-            }
+            None => empty_card(c, body),
             Some(p) => {
                 text(
                     c,
@@ -209,6 +212,42 @@ fn draw_body(
     }
 }
 
+/// The one empty-state card: icon, title and one hint line.
+fn empty_card(c: &mut WidgetCanvas<'_>, body: Rect) {
+    let t = c.tokens;
+    let card = inset(body, 12, 8, body.height.saturating_sub(16));
+    c.paint_round(card, 8, t.surface[3], 0, 0);
+    let icon = Rect {
+        x: card.x + (card.width.saturating_sub(16)) / 2,
+        y: card.y + 18,
+        width: 16,
+        height: 16,
+    };
+    c.paint_icon_color(IconKind::SELECT, icon, t.text_secondary);
+    let row = |y: u32| Rect {
+        x: card.x + 8,
+        y: card.y + y,
+        width: card.width.saturating_sub(16),
+        height: 20,
+    };
+    centred(
+        c,
+        section_empty_text(0, &Inspector::NoSelection).unwrap_or(""),
+        row(44),
+        t.text_primary,
+        13,
+        FontWeight::Semibold,
+    );
+    centred(
+        c,
+        CARD_HINT,
+        row(66),
+        t.text_tertiary,
+        12,
+        FontWeight::Regular,
+    );
+}
+
 /// Field container: level 3 fill, 6 px radius, no edge.
 fn field_box(c: &mut WidgetCanvas<'_>, r: Rect) {
     let fill = c.tokens.surface[3];
@@ -274,7 +313,19 @@ fn number_field(c: &mut WidgetCanvas<'_>, r: Rect, caption: &str, value: Option<
             mono(c, v, vrect, t.text_primary, 12);
             if !unit.is_empty() {
                 let ux = vx + v.chars().count() as u32 * 8 + 4;
-                mono(c, unit, Rect { x: ux, ..vrect }, t.text_secondary, 12);
+                let width = vrect.width.saturating_sub(ux - vx);
+                // Bounded to the field: a rect past the window edge is rejected.
+                mono(
+                    c,
+                    unit,
+                    Rect {
+                        x: ux,
+                        width,
+                        ..vrect
+                    },
+                    t.text_secondary,
+                    12,
+                );
             }
         }
         None => mono(c, "\u{2014}", vrect, t.text_secondary, 12),

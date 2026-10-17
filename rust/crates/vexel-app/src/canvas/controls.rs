@@ -73,7 +73,7 @@ pub fn controls(width: u32, height: u32, percent: u32) -> Option<Controls> {
     Some(Controls {
         container,
         items,
-        label: format!("{percent}%"),
+        label: super::view::percent_label(percent),
     })
 }
 

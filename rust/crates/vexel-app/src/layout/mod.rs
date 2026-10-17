@@ -10,9 +10,11 @@ pub(crate) mod paint;
 mod state;
 #[cfg(test)]
 mod tests;
+mod tooltip;
 
-pub use paint::{draw_chrome, draw_chrome_with, draw_popover, tooltip};
+pub use paint::{draw_chrome, draw_chrome_with, draw_popover, status_hint, tooltip};
 pub use state::{Focus, UiState};
+pub use tooltip::{draw_tooltip, tooltip_rect};
 
 use crate::model::{Mode, Target, Tool};
 use vexel_ui::Rect;
@@ -21,6 +23,7 @@ pub const TOOLBAR_H: u32 = 44;
 pub const RAIL_W: u32 = 44;
 pub const STATUS_H: u32 = 24;
 pub const SPLITTER: u32 = 4;
+pub const STATUS_ROW_H: u32 = 16;
 pub const MIN_W: u32 = 720;
 pub const MIN_H: u32 = 480;
 pub const MAX_AXIS: u32 = 4096;
@@ -35,6 +38,8 @@ pub const STAGE_MIN_W: u32 = 260;
 pub const STAGE_MIN_H: u32 = 140;
 pub const SECTIONS: usize = 5;
 pub const SECTION_HEADER_H: u32 = 32;
+/// Selection body height while it holds the empty-state card.
+pub const EMPTY_CARD_BODY_H: u32 = 112;
 /// Body heights of Selection, Fill, Stroke, Transform, Animation.
 pub const SECTION_BODY_H: [u32; SECTIONS] = [52, 44, 76, 84, 52];
 pub const SECTION_NAMES: [&str; SECTIONS] =
@@ -200,15 +205,23 @@ impl Layout {
             let bottom = panel.y + panel.height;
             let mut y = panel.y;
             for i in 0..SECTIONS {
+                if ui.empty_selection && (1..=3).contains(&i) {
+                    continue;
+                }
                 if y + SECTION_HEADER_H + 4 > bottom {
                     break;
                 }
                 headers[i] = r(panel.x, y, panel.width, SECTION_HEADER_H);
                 y += SECTION_HEADER_H;
                 if !ui.collapsed[i] {
-                    let h = SECTION_BODY_H[i].min(bottom - y);
+                    let full = if ui.empty_selection && i == 0 {
+                        EMPTY_CARD_BODY_H
+                    } else {
+                        SECTION_BODY_H[i]
+                    };
+                    let h = full.min(bottom - y);
                     bodies[i] = r(panel.x, y, panel.width, h);
-                    y += SECTION_BODY_H[i];
+                    y += full;
                 }
             }
         }
@@ -264,6 +277,48 @@ impl Layout {
             mcp,
             mcp_popover: pop,
             mcp_connect: r(pop.x + 16, pop.y + pop.height - 16 - 28, 96, 28),
+        })
+    }
+
+    /// A status-bar text row: every readout shares this one vertical band so
+    /// all baselines agree.
+    pub fn status_row(&self, r: Rect) -> Rect {
+        Rect {
+            y: self.status.y + (STATUS_H - STATUS_ROW_H) / 2,
+            height: STATUS_ROW_H,
+            ..r
+        }
+    }
+
+    /// Text rects of the zoom, size, save and MCP readouts (empty ones on
+    /// narrow windows keep zero width).
+    pub fn status_texts(&self) -> [Rect; 4] {
+        let [zoom, size, save] = self.status_readouts;
+        let mcp = Rect {
+            x: self.mcp.x + 14,
+            width: self.mcp.width - 14,
+            ..self.status
+        };
+        let mut rows = [zoom, size, save, mcp].map(|r| self.status_row(r));
+        // The monospaced face sits about a point high in the same band.
+        for r in &mut rows[..3] {
+            r.y += 1;
+        }
+        rows
+    }
+
+    /// Screen rect of a hit target (the tooltip anchor).
+    pub fn target_rect(&self, target: Target) -> Option<Rect> {
+        Some(match target {
+            Target::DrawMode => self.draw_mode,
+            Target::AnimateMode => self.animate_mode,
+            Target::Tool(tool) => self.tools[tool as usize],
+            Target::Button(Button::Mcp) => self.mcp,
+            Target::Button(Button::Connect) => self.mcp_connect,
+            Target::Button(b) => self.buttons[b as usize],
+            Target::SectionHeader(i) => *self.section_headers.get(i)?,
+            Target::Splitter(Splitter::Inspector) => self.inspector_splitter?,
+            Target::Splitter(Splitter::Footer) => self.footer_splitter?,
         })
     }
 

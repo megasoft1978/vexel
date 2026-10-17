@@ -22,6 +22,18 @@ pub const SHADOW_LAYERS: [(f64, f64); 2] = [(12.0, 0.22), (5.0, 0.15)];
 pub const SHADOW_DROP: f64 = 2.0;
 const SHADOW_RADIUS: f64 = 4.0;
 
+/// The well fill. Light mode sits a ramp step below the panels (level 2) so
+/// the stage reads as a recessed area; dark keeps the level 0 well.
+pub fn well_fill(tokens: &Tokens) -> u32 {
+    let luma =
+        |c: u32| (299 * (c >> 24 & 255) + 587 * (c >> 16 & 255) + 114 * (c >> 8 & 255)) / 1000;
+    if luma(tokens.window) > 128 {
+        tokens.surface[2]
+    } else {
+        tokens.canvas_well
+    }
+}
+
 /// What to draw into the stage.
 pub struct StagePaint<'a> {
     pub view: View,
@@ -76,18 +88,35 @@ pub fn paint_stage(
         clip,
         scale: s,
     };
-    surface.fill(clip.x0, clip.y0, clip.x1, clip.y1, rgb(tokens.canvas_well));
-    let Some(paint) = paint else {
-        return;
-    };
+    surface.fill(clip.x0, clip.y0, clip.x1, clip.y1, rgb(well_fill(tokens)));
+    if let Some(paint) = paint {
+        paint_document(&mut surface, stage, scale, tokens, paint);
+    }
+    // 1 px edge on the stage's inner border, over everything else.
+    let edge = rgb(tokens.border);
+    surface.fill(clip.x0, clip.y0, clip.x1, clip.y0 + s, edge);
+    surface.fill(clip.x0, clip.y1 - s, clip.x1, clip.y1, edge);
+    surface.fill(clip.x0, clip.y0, clip.x0 + s, clip.y1, edge);
+    surface.fill(clip.x1 - s, clip.y0, clip.x1, clip.y1, edge);
+}
+
+fn paint_document(
+    surface: &mut Surface<'_>,
+    stage: Rect,
+    scale: u32,
+    tokens: &Tokens,
+    paint: &StagePaint<'_>,
+) {
+    let s = surface.scale;
+    let clip = surface.clip;
     let (ax, ay, aw, ah) = artboard_device_rect(paint.view, paint.artboard, stage, scale);
-    shadow(&mut surface, (ax, ay, aw, ah));
+    shadow(surface, (ax, ay, aw, ah));
     let edge = rgb(tokens.control_edge);
     surface.fill(ax - s, ay - s, ax + aw + s, ay, edge);
     surface.fill(ax - s, ay + ah, ax + aw + s, ay + ah + s, edge);
     surface.fill(ax - s, ay, ax, ay + ah, edge);
     surface.fill(ax + aw, ay, ax + aw + s, ay + ah, edge);
-    artboard(&mut surface, (ax, ay, aw, ah), tokens, paint.frame);
+    artboard(surface, (ax, ay, aw, ah), tokens, paint.frame);
     let origin = (clip.x0 as f64, clip.y0 as f64);
     let device = |b: Bounds| -> DeviceRect {
         let f = s as f64;
@@ -101,7 +130,7 @@ pub fn paint_stage(
     let accent = tokens.accent;
     if let Some(hover) = paint.hover.filter(|h| Some(*h) != paint.selection) {
         overlay::outline(
-            &mut surface,
+            surface,
             device(hover),
             overlay::HOVER_WIDTH * s as f64,
             accent,
@@ -111,13 +140,13 @@ pub fn paint_stage(
     if let Some(selection) = paint.selection {
         let rect = device(selection);
         overlay::outline(
-            &mut surface,
+            surface,
             rect,
             overlay::SELECTION_WIDTH * s as f64,
             accent,
             1.0,
         );
-        overlay::handles(&mut surface, rect, accent);
+        overlay::handles(surface, rect, accent);
     }
 }
 

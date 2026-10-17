@@ -1,4 +1,5 @@
-use crate::chrome::ChromeText;
+use crate::chrome::{ChromeText, Inspector};
+use crate::history::History;
 use crate::layout::{Button, Focus, Splitter, UiState, contains};
 use crate::timeline::Timeline;
 
@@ -91,6 +92,8 @@ pub struct Model {
     pub ui: UiState,
     /// Animate footer: tracks, playback readout and interaction state.
     pub timeline: Timeline,
+    /// Redo cursor (see `history`).
+    pub history: History,
 }
 impl Model {
     pub fn new(dark: bool) -> Self {
@@ -104,11 +107,27 @@ impl Model {
             mcp: McpState::Unavailable,
             ui: UiState::default(),
             timeline: Timeline::default(),
+            history: History::default(),
         }
     }
-    /// Layout for the current mode and UI state.
+    /// Layout for the current mode, UI state and selection.
     pub fn layout(&self, width: u32, height: u32) -> Option<Layout> {
-        Layout::with_state(width, height, self.mode, &self.ui)
+        let mut ui = self.ui;
+        ui.empty_selection = matches!(self.chrome.inspector, Inspector::NoSelection);
+        Layout::with_state(width, height, self.mode, &ui)
+    }
+    /// Whether a control reacts to hover and clicks. Undo keeps today's rule
+    /// (document open and modified); Redo needs a redoable step.
+    pub fn target_enabled(&self, layout: &Layout, target: Target) -> bool {
+        let state = &self.chrome.state;
+        match target {
+            Target::Button(Button::Undo | Button::Save) => state.open && state.dirty,
+            Target::Button(Button::Redo) => state.open && self.history.can_redo(),
+            Target::Button(Button::Export) => state.open,
+            Target::Button(Button::ToggleInspector) => layout.inspector.is_some(),
+            Target::Button(Button::Connect) => false,
+            _ => true,
+        }
     }
     pub fn select_mode(&mut self, mode: Mode) -> bool {
         if self.mode == mode {

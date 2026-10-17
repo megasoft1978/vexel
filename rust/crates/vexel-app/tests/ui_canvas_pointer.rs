@@ -108,10 +108,13 @@ fn view_changes_recompose_only_beyond_twice_the_cached_resolution() {
     settle(&mut view, 1);
     let base = view.compose_requests();
     assert!(base >= 1);
+    // Pin updated (POLISH-01): Fit now magnifies up to 400%, so the zoom
+    // factors below are relative to the fitted zoom instead of absolute.
+    let z0 = view.canvas.view.zoom;
     let size = view.compose_target(STAGE, 1);
 
     // Zoom within the cached band, and pan: no compose at all.
-    for zoom in [1.5, 1.9, 0.6, 1.0] {
+    for zoom in [1.5, 1.9, 0.6, 1.0].map(|z| z * z0) {
         view.canvas
             .zoom_by((200.0, 150.0), zoom / view.canvas.view.zoom);
         let target = view.compose_target(STAGE, 1);
@@ -124,13 +127,13 @@ fn view_changes_recompose_only_beyond_twice_the_cached_resolution() {
 
     // Beyond 2x the cache is replaced once, then 2.5x is served from the new one.
     view.canvas
-        .zoom_by((200.0, 150.0), 2.5 / view.canvas.view.zoom);
+        .zoom_by((200.0, 150.0), 2.5 * z0 / view.canvas.view.zoom);
     let bigger = view.compose_target(STAGE, 1);
     assert!(bigger.0 > size.0 * 2 - 3, "{bigger:?} vs {size:?}");
     settle(&mut view, 1);
     assert_eq!(view.compose_requests(), base + 1);
     view.canvas
-        .zoom_by((200.0, 150.0), 4.0 / view.canvas.view.zoom);
+        .zoom_by((200.0, 150.0), 4.0 * z0 / view.canvas.view.zoom);
     assert_eq!(
         view.compose_target(STAGE, 1),
         bigger,

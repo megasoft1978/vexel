@@ -1,0 +1,12 @@
+{
+  "AC1": {"status": "pass", "evidence": "ui_polish_canvas: fit_is_min_of_both_axes..., five_thousand_seeded_cases..."},
+  "AC2": {"status": "pass", "evidence": "ui_polish_canvas: status_zoom_equals_the_cluster_label_in_every_zoom_state"},
+  "AC3": {"status": "pass", "evidence": "ui_polish_canvas: light_well_differs_from_the_panel_and_both_themes_have_a_border_edge"},
+  "AC4": {"status": "pass", "evidence": "ui_polish_behaviour: empty_selection_lays_out_one_card..., headers_have_no_band_at_rest"},
+  "AC5": {"status": "pass", "evidence": "ui_polish_behaviour: every_target_has_a_unique_registered_id, hovering_every_chrome_control..., popover test (FOCUS_ORDER kept at 7 stops)"},
+  "AC6": {"status": "pass", "evidence": "ui_polish_behaviour: tooltip_* (4 tests)"},
+  "AC7": {"status": "pass", "evidence": "ui_polish_behaviour: status_readouts_share_one_baseline_and_hints_follow_the_context"},
+  "AC8": {"status": "pass", "evidence": "ui_polish_behaviour: redo_is_enabled_only_after_an_undo_and_a_load_resets_it"},
+  "AC9": {"status": "candidates written, not accepted", "evidence": "review/ (16 new, existing chrome and canvas re-blessed candidates)"},
+  "AC10": {"status": "partial", "evidence": "all pass except 2 golden tests awaiting acceptance; pins listed in result.md"}
+}

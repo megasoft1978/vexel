@@ -35,6 +35,9 @@ pub struct UiState {
     pub inspector_visible: bool,
     pub mcp_open: bool,
     pub focus: Option<Focus>,
+    /// Nothing is selected: Fill, Stroke and Transform are left out and the
+    /// Selection section holds the "Select a shape" card.
+    pub empty_selection: bool,
     drag: Option<Drag>,
 }
 
@@ -47,6 +50,7 @@ impl Default for UiState {
             inspector_visible: true,
             mcp_open: false,
             focus: None,
+            empty_selection: false,
             drag: None,
         }
     }

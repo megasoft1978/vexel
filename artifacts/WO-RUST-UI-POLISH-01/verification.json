@@ -1,0 +1,9 @@
+{
+  "check -p vexel-ui -p vexel-app": "ok",
+  "test -p vexel-ui": "46 passed",
+  "test -p vexel-app": "235 lib + all integration pass except ui_chrome_goldens::chrome_frames_match_first_party_goldens and ui_canvas_golden::stage_goldens_match_first_party_images (candidates pending acceptance); new tests 11 + 4 + 1",
+  "fmt --check": "vexel-app clean; vexel-ui pre-existing diffs (protected)",
+  "wo_validate --ready": "valid",
+  "ledger validate": "valid, 1989 entries",
+  "git diff --check": "clean"
+}
