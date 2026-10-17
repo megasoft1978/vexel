@@ -157,8 +157,6 @@ pub(crate) struct NumberCursor {
     negative: bool,
     value: f64,
     digits: usize,
-    integer_digits: bool,
-    compact_dot_boundary: bool,
     scale: f64,
     exponent: i32,
     exponent_negative: bool,
@@ -185,8 +183,6 @@ impl NumberCursor {
             negative: false,
             value: 0.0,
             digits: 0,
-            integer_digits: false,
-            compact_dot_boundary: false,
             scale: 0.1,
             exponent: 0,
             exponent_negative: false,
@@ -225,7 +221,6 @@ impl NumberCursor {
                         .digits
                         .checked_add(1)
                         .ok_or(ControlledError::Overflow)?;
-                    self.integer_digits = true;
                     if !self.value.is_finite() || self.value > 1.0e300 {
                         return Err(self.error(reader));
                     }
@@ -246,10 +241,6 @@ impl NumberCursor {
                         .checked_add(1)
                         .ok_or(ControlledError::Overflow)?;
                 } else {
-                    // A following decimal point starts the next compact path
-                    // operand. The parser decides whether that boundary is
-                    // valid in the current command position.
-                    self.compact_dot_boundary = self.integer_digits && reader.peek() == Some(b'.');
                     self.end_digits(reader)?;
                 }
             }
@@ -338,8 +329,5 @@ impl NumberCursor {
     }
     fn error(&self, reader: &Reader<'_>) -> ControlledError<Diagnostic> {
         ControlledError::Original(failure(DiagnosticKind::Path, reader.absolute()))
-    }
-    pub fn used_compact_dot_boundary(&self) -> bool {
-        self.compact_dot_boundary
     }
 }

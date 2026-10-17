@@ -1,12 +1,13 @@
 use std::sync::atomic::AtomicBool;
-use vexel_base::{BudgetControl, ControlledError, ControlledStep, Span};
+use vexel_base::{BudgetControl, ControlledStep, Span};
 use vexel_geometry::affine_identity;
 use vexel_svg_path::{
-    parse_path, parse_path_controlled, Diagnostic, DiagnosticKind, ParseOptions, PathParseSession,
+    parse_path, parse_path_controlled, DiagnosticKind, ParseOptions, PathParseSession,
 };
 
 #[test]
-fn integer_fraction_adjacency_rejects_second_decimal_across_entry_points() {
+fn integer_fraction_adjacency_splits_second_decimal_across_entry_points() {
+    // `1.2.3` is `1.2` then `.3`; the following `4 5` is an implicit L repeat.
     let source = b"prefix:M0 0 L1.2.3 4 5:suffix";
     let start = b"prefix:".len();
     let path = b"M0 0 L1.2.3 4 5";
@@ -14,21 +15,31 @@ fn integer_fraction_adjacency_rejects_second_decimal_across_entry_points() {
         start,
         end: start + path.len(),
     };
-    let group_start = path.iter().position(|byte| *byte == b'1').unwrap();
-    let expected = Diagnostic {
-        kind: DiagnosticKind::Path,
-        offset: start + group_start,
-    };
+    let spaced_source = b"M0 0 L1.2 .3 4 5";
+    let spaced = parse_path(
+        spaced_source,
+        Span {
+            start: 0,
+            end: spaced_source.len(),
+        },
+        affine_identity(),
+        ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(spaced.numbers.len(), 6);
+    assert_eq!(spaced.segments.len(), 3);
 
-    assert_eq!(
-        parse_path(
-            source,
-            selected_span,
-            affine_identity(),
-            ParseOptions::default()
-        ),
-        Err(expected)
-    );
+    let parsed = parse_path(
+        source,
+        selected_span,
+        affine_identity(),
+        ParseOptions::default(),
+    )
+    .unwrap();
+    assert_eq!(parsed.numbers.len(), 6);
+    assert_eq!(parsed.edges, spaced.edges);
+    assert_eq!(parsed.segments.len(), 3);
+
     let cancel = AtomicBool::new(false);
     let mut control = BudgetControl::new(&cancel, u64::MAX);
     assert_eq!(
@@ -39,7 +50,7 @@ fn integer_fraction_adjacency_rejects_second_decimal_across_entry_points() {
             ParseOptions::default(),
             &mut control
         ),
-        Err(ControlledError::Original(expected))
+        Ok(parsed.clone())
     );
 
     let mut session = PathParseSession::new(
@@ -49,16 +60,15 @@ fn integer_fraction_adjacency_rejects_second_decimal_across_entry_points() {
         ParseOptions::default(),
     )
     .unwrap();
-    let failure = loop {
+    loop {
         let mut control = BudgetControl::new(&cancel, u64::MAX);
         match session.step(2, &mut control) {
             ControlledStep::Pending { charged_units } => assert!(charged_units <= 2),
-            ControlledStep::Failed(error) => break error,
-            ControlledStep::Complete(()) => panic!("malformed decimal pair was accepted"),
+            ControlledStep::Failed(error) => panic!("valid compact decimal failed: {error:?}"),
+            ControlledStep::Complete(()) => break,
         }
-    };
-    assert_eq!(failure, ControlledError::Original(expected));
-    assert_eq!(session.finish(), Err(ControlledError::Original(expected)));
+    }
+    assert_eq!(session.finish(), Ok(parsed));
 
     let compact = b"M.6.5";
     let accepted = parse_path(
@@ -236,8 +246,9 @@ fn compact_arc_endpoint_allows_an_implicit_repeated_arc_group() {
     assert_eq!(explicit_path.numbers.len(), 16);
     assert_eq!(compact_path.edges.len(), explicit_path.edges.len());
 
+    // `A2.3.4` is radii 2.3 and .4; the following `2 3 ...` is an implicit arc.
     let compact_radius = b"M0 0 A2.3.4 0 0 1 4 5 2 3 0 0 1 6 7";
-    let error = parse_path(
+    let radius = parse_path(
         compact_radius,
         Span {
             start: 0,
@@ -246,7 +257,9 @@ fn compact_arc_endpoint_allows_an_implicit_repeated_arc_group() {
         affine_identity(),
         ParseOptions::default(),
     )
-    .unwrap_err();
-    assert_eq!(error.kind, DiagnosticKind::Path);
-    assert_eq!(error.offset, 6);
+    .unwrap();
+    assert_eq!(radius.numbers.len(), 16);
+    assert!((radius.numbers[2].value - 2.3).abs() < 1.0e-12);
+    assert!((radius.numbers[3].value - 0.4).abs() < 1.0e-12);
+    assert_eq!(radius.segments.len(), 3);
 }

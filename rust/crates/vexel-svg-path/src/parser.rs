@@ -119,8 +119,7 @@ pub struct PathParseSession<'src> {
     quad_reflect: bool,
     previous_number: bool,
     previous_arc_flag: bool,
-    compact_dot_boundary: bool,
-    had_separator: bool,
+        had_separator: bool,
     current_subpath_edge: usize,
     last_group_offset: usize,
     geometry: Option<GeometryCursor>,
@@ -174,8 +173,7 @@ impl<'src> PathParseSession<'src> {
             quad_reflect: false,
             previous_number: false,
             previous_arc_flag: false,
-            compact_dot_boundary: false,
-            had_separator: false,
+                        had_separator: false,
             current_subpath_edge: 0,
             last_group_offset: span.start,
             geometry: None,
@@ -330,8 +328,6 @@ impl<'src> PathParseSession<'src> {
                             other => other,
                         })?;
                 if let Some(number) = parsed {
-                    self.compact_dot_boundary |= self.number.used_compact_dot_boundary()
-                        && !(self.group.upper == b'A' && self.group.operand == 5);
                     self.operand(number)?;
                 }
             }
@@ -457,15 +453,6 @@ impl<'src> PathParseSession<'src> {
         self.group.start = self.reader.index;
         self.group.first_edge = self.document.edges.len();
         let byte = self.reader.peek().ok_or(ControlledError::Overflow)?;
-        if self.compact_dot_boundary {
-            if !byte.is_ascii_alphabetic() {
-                return Err(ControlledError::Original(failure(
-                    DiagnosticKind::Path,
-                    self.last_group_offset,
-                )));
-            }
-            self.compact_dot_boundary = false;
-        }
         if byte.is_ascii_alphabetic() {
             self.group.command_offset = Some(self.reader.absolute());
             self.command = byte;
@@ -477,7 +464,7 @@ impl<'src> PathParseSession<'src> {
                 self.reader.absolute(),
             )));
         } else {
-            if self.previous_number && !self.had_separator && !matches!(byte, b'+' | b'-') {
+            if self.previous_number && !self.had_separator && !matches!(byte, b'+' | b'-' | b'.') {
                 return Err(ControlledError::Original(failure(
                     DiagnosticKind::Path,
                     self.reader.absolute(),
