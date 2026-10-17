@@ -160,6 +160,5 @@ pub(crate) fn blank_tile(width: u32, height: u32) -> Result<vexel_raster::Tile, 
     rgba.try_reserve_exact(bytes)
         .map_err(|_| ComposeError::LimitRender)?;
     rgba.resize(bytes, 0);
-    vexel_raster::Tile::from_owned_rgba(width, height, rgba)
-        .map_err(|_| ComposeError::LimitRender)
+    vexel_raster::Tile::from_owned_rgba(width, height, rgba).map_err(|_| ComposeError::LimitRender)
 }

@@ -1,0 +1,23 @@
+warning: variable does not need to be mutable
+warning: `vexel-app` (lib test) generated 1 warning (run `cargo fix --lib -p vexel-app --tests` to apply 1 suggestion)
+     Running unittests src/lib.rs (build/target/aarch64-apple-darwin/debug/deps/vexel_app-16c0961446fb8619)
+test result: ok. 219 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.51s
+     Running unittests src/main.rs (build/target/aarch64-apple-darwin/debug/deps/vexel-aede774d86463324)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/animate_workspace.rs (build/target/aarch64-apple-darwin/debug/deps/animate_workspace-e56f6dbe192661e4)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.14s
+     Running tests/compose_large_doc.rs (build/target/aarch64-apple-darwin/debug/deps/compose_large_doc-47675461ae9aee4c)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.62s
+     Running tests/compose_unsupported.rs (build/target/aarch64-apple-darwin/debug/deps/compose_unsupported-5690f2dee3d77ce4)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.25s
+     Running tests/mcp_render_png.rs (build/target/aarch64-apple-darwin/debug/deps/mcp_render_png-b987a247674ddc30)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+     Running tests/mcp_tools_edit.rs (build/target/aarch64-apple-darwin/debug/deps/mcp_tools_edit-24c684e55e4f5833)
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+     Running tests/mcp_tools_files.rs (build/target/aarch64-apple-darwin/debug/deps/mcp_tools_files-748e380a3b9ab06e)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+     Running tests/perf_gate.rs (build/target/aarch64-apple-darwin/debug/deps/perf_gate-898ff09a83c90ed6)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.43s
+     Running tests/walkthrough.rs (build/target/aarch64-apple-darwin/debug/deps/walkthrough-840f31bd473f5777)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.58s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

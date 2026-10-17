@@ -12,6 +12,7 @@ pub mod job;
 pub mod keys;
 pub mod playback;
 pub mod present;
+pub mod stage;
 pub mod strip;
 
 #[cfg(test)]

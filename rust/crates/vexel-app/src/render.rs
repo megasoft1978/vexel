@@ -285,6 +285,7 @@ pub fn render(
             draw_timeline(
                 &mut c,
                 layout.timeline.expect("animate layout has timeline"),
+                &model.chrome.timeline,
             );
         }
         if let Some(panel) = layout.inspector {
@@ -388,7 +389,7 @@ mod geometry_tests {
         }
     }
 }
-fn draw_timeline(c: &mut WidgetCanvas<'_>, r: Rect) {
+fn draw_timeline(c: &mut WidgetCanvas<'_>, r: Rect, text: &str) {
     let tokens = c.tokens;
     c.paint_rect(r, tokens.panel);
     c.paint_rect(
@@ -414,7 +415,7 @@ fn draw_timeline(c: &mut WidgetCanvas<'_>, r: Rect) {
     if let Some(bounds) = rows[1] {
         label(
             c,
-            "No document to animate",
+            text,
             bounds,
             tokens.text_secondary,
             11,

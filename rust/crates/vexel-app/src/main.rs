@@ -7,10 +7,11 @@ use std::{
     time::{Duration, Instant},
 };
 use vexel_app::animation::{
-    driver::{Driver, TickOutcome},
+    driver::Driver,
     job::ExportJob,
     keys::{self, playback_key},
     playback::MonotonicClock,
+    stage,
     strip::{self, Strip, StripPointer},
 };
 use vexel_app::chrome::{self, AppState};
@@ -180,34 +181,9 @@ fn run(
                 doc.open(files.document_mut(), &path, stage);
                 dirty = true;
             }
-            // Render trigger: the session revision (or stage size) moved.
-            let revision = files.document().revision();
-            if revision > 0 && !doc.is_current(revision, stage) {
-                if let Ok(bytes) = files.document().source_bytes() {
-                    let name = files.document().display_name();
-                    doc.set_name(name.as_deref().unwrap_or("Untitled"));
-                    doc.show(&bytes, revision, stage);
-                    dirty = true;
-                }
-            }
-            // Playback: the driver renders the current loop time at stage size
-            // once the static compose of this revision is on screen.
-            driver.set_size(stage);
-            if revision > 0 && doc.is_current(revision, stage) && doc.composed().is_some() {
-                if !doc.animated_shown() {
-                    driver.invalidate();
-                }
-                if !driver.knows(revision) {
-                    let time = driver.time();
-                    let _ = files.document().request_frame(&mut driver, time);
-                }
-                if let TickOutcome::Frame(animated) = driver.tick(revision, &[]) {
-                    if doc.present_animated(animated.revision, animated.frame) {
-                        dirty = true;
-                    } else {
-                        driver.invalidate();
-                    }
-                }
+            // Render trigger (revision or stage size moved) and playback.
+            if stage::sync(&mut driver, files.document(), &mut doc, stage) {
+                dirty = true;
             }
             if driver.is_playing() != was_playing {
                 was_playing = driver.is_playing();
@@ -224,7 +200,11 @@ fn run(
         }
         // Title, top bar, status bar and inspector derive from the open
         // document; resize and scale handlers never write them.
-        let chrome_text = chrome::chrome_text(&AppState::from_session(files.document(), &doc));
+        let mut app_state = AppState::from_session(files.document(), &doc);
+        if driver.knows(files.document().revision()) {
+            app_state.loop_seconds = driver.loop_seconds();
+        }
+        let chrome_text = chrome::chrome_text(&app_state);
         if chrome_text != model.chrome {
             model.chrome = chrome_text;
             dirty = true;

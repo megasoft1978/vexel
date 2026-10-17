@@ -27,6 +27,10 @@ pub struct DocumentView {
     stage: (u32, u32),
     pub(super) generation: u64,
     composed: Option<Composed>,
+    /// The last composed frame, kept while a compose for a new revision or
+    /// stage size is pending so the stage never goes blank; only the blit
+    /// reads it (scaled to fit).
+    previous: Option<Composed>,
     /// True while `composed.frame` holds an animated frame (not the static one).
     animated: bool,
     status: Option<(String, bool)>,
@@ -50,6 +54,7 @@ impl DocumentView {
             stage: (0, 0),
             generation: 0,
             composed: None,
+            previous: None,
             animated: false,
             status: None,
             selected: None,
@@ -128,7 +133,9 @@ impl DocumentView {
         }
         self.revision = Some(revision);
         self.stage = stage;
-        self.composed = None;
+        if let Some(shown) = self.composed.take() {
+            self.previous = Some(shown);
+        }
         self.animated = false;
         let name = self.name().unwrap_or("Untitled").to_owned();
         self.status = Some((format!("Composing {name}..."), false));
@@ -153,6 +160,7 @@ impl DocumentView {
                 Ok(bytes) => {
                     self.name = Some(name);
                     self.selected = None;
+                    self.previous = None;
                     self.show(&bytes, app.revision(), stage);
                     return;
                 }
@@ -191,11 +199,13 @@ impl DocumentView {
                     self.selected = None;
                 }
                 self.composed = Some(composed);
+                self.previous = None;
                 self.animated = false;
             }
             Err(ComposeError::Cancelled) => return false,
             Err(error) => {
                 self.composed = None;
+                self.previous = None;
                 self.animated = false;
                 self.status = Some((format!("{name}: {error}"), true));
             }
@@ -312,15 +322,13 @@ pub fn blit_document(
     let (width, height, scale) = (frame.width(), frame.height(), frame.backing_scale() as u32);
     let mut pixels = frame.pixels().to_vec();
     let tokens = theme_tokens(if dark { Theme::Dark } else { Theme::Light }, false);
-    if let Some(composed) = view
+    let exact = view
         .composed()
-        .filter(|c| c.frame.width == layout.stage.width && c.frame.height == layout.stage.height)
-    {
+        .filter(|c| c.frame.width == layout.stage.width && c.frame.height == layout.stage.height);
+    if let Some(composed) = exact {
         let (sw, s) = (composed.frame.width as usize, scale as usize);
         for (i, px) in composed.frame.rgba.chunks_exact(4).enumerate() {
-            let a = u32::from(px[3]);
-            let over = |c: u8| (u32::from(c) * a + 255 * (255 - a) + 127) / 255;
-            let out = [over(px[0]) as u8, over(px[1]) as u8, over(px[2]) as u8, 255];
+            let out = over_white(px);
             let (x, y) = (i % sw, i / sw);
             for dy in 0..s {
                 let row = (layout.stage.y as usize + y) * s + dy;
@@ -332,8 +340,58 @@ pub fn blit_document(
                 }
             }
         }
+    } else if let Some(old) = view.previous.as_ref() {
+        // A compose at the new stage size is pending: show the last frame
+        // scaled to fit (nearest neighbour, centred) instead of a blank stage.
+        fill(&mut pixels, width, scale, layout.stage, tokens.canvas_well);
+        blit_scaled(
+            &mut pixels,
+            width as usize,
+            scale as usize,
+            &old.frame,
+            layout.stage,
+        );
     } else {
         fill(&mut pixels, width, scale, layout.stage, tokens.canvas_well);
     }
     RgbaFrame::new(width, height, f64::from(scale), pixels).unwrap_or(frame)
+}
+
+fn over_white(px: &[u8]) -> [u8; 4] {
+    let a = u32::from(px[3]);
+    let over = |c: u8| ((u32::from(c) * a + 255 * (255 - a) + 127) / 255) as u8;
+    [over(px[0]), over(px[1]), over(px[2]), 255]
+}
+
+/// Nearest-neighbour copy of `frame` over white into `stage`, uniformly scaled
+/// to fit and centred; the rest of the stage is left as it is.
+fn blit_scaled(pixels: &mut [u8], width: usize, s: usize, frame: &Frame, stage: Rect) {
+    let (fw, fh) = (frame.width as usize, frame.height as usize);
+    let (sw, sh) = (stage.width as usize, stage.height as usize);
+    if fw == 0 || fh == 0 || sw == 0 || sh == 0 || frame.rgba.len() != fw * fh * 4 {
+        return;
+    }
+    // Fit: the smaller of the two ratios, kept as integer fractions.
+    let (dw, dh) = if sw * fh <= sh * fw {
+        (sw, (fh * sw / fw).max(1))
+    } else {
+        ((fw * sh / fh).max(1), sh)
+    };
+    let (ox, oy) = ((sw - dw) / 2, (sh - dh) / 2);
+    for y in 0..dh {
+        let src_row = (y * fh / dh).min(fh - 1);
+        for x in 0..dw {
+            let src = (src_row * fw + (x * fw / dw).min(fw - 1)) * 4;
+            let out = over_white(&frame.rgba[src..src + 4]);
+            for dy in 0..s {
+                let row = (stage.y as usize + oy + y) * s + dy;
+                let col = (stage.x as usize + ox + x) * s;
+                let start = (row * width + col) * 4;
+                if let Some(span) = pixels.get_mut(start..start + s * 4) {
+                    span.chunks_exact_mut(4)
+                        .for_each(|p| p.copy_from_slice(&out));
+                }
+            }
+        }
+    }
 }

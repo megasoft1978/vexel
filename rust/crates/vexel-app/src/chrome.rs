@@ -3,6 +3,7 @@
 //! stale "No document open" behind. The literal is produced only here, and
 //! only when no document is open.
 
+use crate::animation::strip;
 use crate::compose::{DocumentView, OwnedShape};
 use crate::model::{Layout, Tool};
 use crate::session::{AppDocument, window_title};
@@ -11,6 +12,20 @@ use vexel_ui::Rect;
 
 pub const NO_DOCUMENT: &str = "No document open";
 pub const NO_SELECTION: &str = "No selection";
+pub const NO_DOCUMENT_TO_ANIMATE: &str = "No document to animate";
+pub const NO_ANIMATION: &str = "No animation in this document";
+
+/// Timeline panel line: a pure function of whether a document is open and the
+/// length of its SMIL loop (`0` for a static document).
+pub fn timeline_text(open: bool, loop_seconds: f64) -> String {
+    if !open {
+        NO_DOCUMENT_TO_ANIMATE.to_owned()
+    } else if loop_seconds > 0.0 {
+        format!("Animated, loop {}", strip::format_time(loop_seconds))
+    } else {
+        NO_ANIMATION.to_owned()
+    }
+}
 
 /// Everything the chrome shows about the document, as plain data.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -29,6 +44,8 @@ pub struct AppState {
     /// Typed error of the last failed open or compose.
     pub error: Option<String>,
     pub selection: Option<ShapeProps>,
+    /// SMIL loop length in seconds; `0` for a static document.
+    pub loop_seconds: f64,
 }
 
 impl AppState {
@@ -47,6 +64,7 @@ impl AppState {
                 .filter(|(_, error)| *error)
                 .map(|(text, _)| text.to_owned()),
             selection: view.selected_shape().map(ShapeProps::from_shape),
+            loop_seconds: 0.0,
         }
     }
 }
@@ -141,6 +159,8 @@ pub struct ChromeText {
     pub top: String,
     pub status: String,
     pub inspector: Inspector,
+    /// Timeline panel line (Animate workspace).
+    pub timeline: String,
 }
 
 impl Default for ChromeText {
@@ -190,6 +210,7 @@ pub fn chrome_text(state: &AppState) -> ChromeText {
         top,
         status,
         inspector,
+        timeline: timeline_text(state.open, state.loop_seconds),
     }
 }
 
