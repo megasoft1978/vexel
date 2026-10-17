@@ -115,3 +115,8 @@ pending gap-closure orders or an owner decision to supersede.
 - Root size above 4096 (aegean, norway): keep refusal. Raster caps and the frozen oracle (height=5000 as error) unchanged. Both files stay `xml`.
 - Limit-blocked files (9): keep edge (4.19M) and text-command budgets. Files stay `limit_decode`.
 - Symbol clip (use_t2): conditional clip tried. Rejected: the document-wide `<style>` check blocks the gate, so use_t2 stays limit_decode. Decision: no symbol clipping on main (use_t2 ok). Candidate kept at `.cache/symbol-clip-candidate.patch` (local, not committed) for a later selector-aware gate (option A).
+
+## Corpus known-unsupported (2026-10-17, decided by Sonnet 5.5)
+
+- **corsica:** two independent blockers. (1) Prefixed SVG elements: `<svg:switch>` at byte 5116 is rejected by `vexel-svg-decode/src/traversal.rs` (`t.prefix.length != 0`). Fixing needs namespace-bound prefix support across css, media, animation, index and scene crates; planned as a work order, not a quick fix. (2) `<tspan id="tspan3993">` in `text14619` near byte 14832283: unresolved; native CoreText and stub providers both accept the tspan in isolation. Left unsupported.
+- **ideogram:** `<path id="path277302">` near byte 20705253 is rejected. Not caused by the gradient fill (a solid-fill copy still fails on a path), not by the clip-path ancestors, and not by `inkscape:connector-curvature` alone (removing it moves the failure to an earlier path). Multiple rejected constructs; left unsupported.
