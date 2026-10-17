@@ -98,26 +98,32 @@ fn the_strip_has_no_accent_block_only_a_thin_thumb_and_a_body_size_readout() {
     ] {
         let (w, _, px, bar) = draw_window(size, dark, scale, 0.5);
         let accent = tokens(dark).accent.to_be_bytes();
-        let mut widest = 0u32;
+        // Accent is the elapsed rule (2 px tall) plus the 3 px thumb, so no
+        // column may carry more accent than the thumb is tall.
+        let scrub = strip::layout(Layout::new(size.0, size.1, Mode::Draw).unwrap().stage)
+            .unwrap()
+            .scrub;
+        let thumb_h = (scrub.height - 4) * scale;
+        let mut tallest = 0u32;
         let mut seen = 0u32;
-        for y in bar.y * scale..(bar.y + bar.height) * scale {
+        for x in bar.x * scale..(bar.x + bar.width) * scale {
             let mut run = 0u32;
-            for x in bar.x * scale..(bar.x + bar.width) * scale {
+            for y in bar.y * scale..(bar.y + bar.height) * scale {
                 let at = ((y * w + x) * 4) as usize;
                 if px[at..at + 3] == accent[..3] {
                     run += 1;
                     seen += 1;
                 } else {
-                    widest = widest.max(run);
+                    tallest = tallest.max(run);
                     run = 0;
                 }
             }
-            widest = widest.max(run);
+            tallest = tallest.max(run);
         }
         assert!(seen > 0, "{size:?}: the thumb is accent");
         assert!(
-            widest <= 4 * scale,
-            "{size:?} dark={dark}: accent run of {widest} device px (thumb only)"
+            tallest <= thumb_h,
+            "{size:?} dark={dark}: accent column of {tallest} device px (thumb is {thumb_h})"
         );
     }
 }

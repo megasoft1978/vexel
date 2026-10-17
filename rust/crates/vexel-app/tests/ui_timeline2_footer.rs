@@ -84,7 +84,7 @@ fn twelve_rows_in_six_show_a_proportional_thumb_that_tracks_scroll() {
 }
 
 #[test]
-fn the_thumb_is_painted_in_the_edge_colour_only_when_rows_overflow() {
+fn the_thumb_is_painted_in_the_text_tertiary_colour_only_when_rows_overflow() {
     for dark in [true, false] {
         let tk = tokens(dark);
         let f = footer(SIZE);
@@ -97,7 +97,12 @@ fn the_thumb_is_painted_in_the_edge_colour_only_when_rows_overflow() {
             .scroll_thumb(12, 2)
             .expect("12 rows overflow the 1280x800 footer");
         let (cx, cy) = (thumb.x + thumb.width / 2, thumb.y + thumb.height / 2);
-        assert_eq!(pixel(&shot, 1, cx, cy), rgb(tk.control_edge), "dark={dark}");
+        // POLISH-02: the thumb is 6 px wide in text.tertiary (was 3 px in control.edge).
+        assert_eq!(
+            pixel(&shot, 1, cx, cy),
+            rgb(tk.text_tertiary),
+            "dark={dark}"
+        );
         let d2 = driver_with(LOOP);
         let few = timeline_of(LOOP, &d2);
         let shot = frame(SIZE, dark, 1, few);

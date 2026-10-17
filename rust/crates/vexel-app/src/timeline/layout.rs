@@ -44,7 +44,7 @@ const FRAME_TICK_PX: f64 = 6.0;
 const KEY_BUTTON_W: u32 = 64;
 const HANDLE_W: u32 = 12;
 /// Scroll thumb width in the name column edge.
-pub const THUMB_W: u32 = 3;
+pub const THUMB_W: u32 = 6;
 const THUMB_MIN: u32 = 12;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -65,6 +65,8 @@ pub enum Hit {
     Chevron(usize),
     /// Empty track-lane space (scrubs, never selects).
     Lane,
+    /// Scroll thumb in the name column edge (hover only).
+    Thumb,
     /// Name column or other inert panel space.
     Panel,
 }
@@ -451,6 +453,13 @@ impl TimelineLayout {
         }
         if !inside(self.tracks, x, y) {
             return Hit::Panel;
+        }
+        // Scroll thumb: hover feedback only (it is not draggable yet).
+        if self
+            .scroll_thumb(rows.len(), scroll)
+            .is_some_and(|t| inside(t, x, y))
+        {
+            return Hit::Thumb;
         }
         let slot = (y as u32 - self.tracks.y) / ROW_H;
         let Some(row) = rows

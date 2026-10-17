@@ -368,7 +368,12 @@ fn paint_tracks(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, tl: &Timeline, t: 
     let bottom = l.tracks.y + l.tracks.height;
     c.paint_rect(rc(divider_x, top, 1, bottom - top), t.separator);
     if let Some(thumb) = l.scroll_thumb(rows.len(), tl.scroll) {
-        c.paint_round(thumb, THUMB_W / 2, t.control_edge, 0, 0);
+        let fill = if tl.hover == Some(Hit::Thumb) {
+            t.text_primary
+        } else {
+            t.text_tertiary
+        };
+        c.paint_round(thumb, THUMB_W / 2, fill, 0, 0);
     }
 }
 

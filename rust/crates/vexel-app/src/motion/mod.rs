@@ -80,7 +80,7 @@ impl Clock for SystemClock {
 pub fn colors_for(t: &Tokens, id: u32, selected: bool) -> ControlColors {
     let tab = id == ID_DRAW || id == ID_ANIMATE;
     let (rest_fill, hover_fill, pressed_fill) = if id >= ID_MENU0 {
-        (t.pressed_fill, t.panel_hover, t.surface[5])
+        (t.pressed_fill, t.selection_fill, t.surface[5])
     } else if id >= ID_SPLITTER0 {
         (t.window, t.control_edge, t.accent)
     } else if id >= ID_SECTION0 {

@@ -22,7 +22,7 @@ const LABEL_WIDTH: u32 = 150;
 const PAD: u32 = 8;
 /// Slider travel reserved for the thumb (the drawn rule is 2 px wide).
 const THUMB_WIDTH: u32 = 8;
-const RULE_WIDTH: u32 = 2;
+const RULE_WIDTH: u32 = 3;
 /// Readout size: the body type size.
 pub const READOUT_PT: u32 = vexel_ui::type_scale().body_pt as u32;
 
@@ -263,7 +263,7 @@ pub fn draw<C: LoopClock>(
         IconKind::PLAY
     };
     c.paint_icon_color(kind, icon, t.text_primary);
-    // Scrub rule: a 2 px track, progress in secondary text, a 2 px accent thumb.
+    // Scrub rule: a 2 px track, the elapsed part filled in accent, a 3 px accent thumb.
     let loop_seconds = driver.loop_seconds();
     let time = quantize(driver.time(), loop_seconds);
     let mid = layout.scrub.y + layout.scrub.height / 2;
@@ -284,7 +284,7 @@ pub fn draw<C: LoopClock>(
         width: travel + THUMB_WIDTH / 2,
         ..track
     };
-    c.paint_rect(progress, t.text_secondary);
+    c.paint_rect(progress, t.accent);
     let thumb = Rect {
         x: layout.scrub.x + travel + (THUMB_WIDTH - RULE_WIDTH) / 2,
         y: layout.scrub.y + 2,
