@@ -1,6 +1,6 @@
 # WO-RUST-SCENE-LIMITS-01 result
 
-Candidate, uncommitted (git commit not available to this worker through the shell wrapper).
+Candidate commit 763e84d8 on branch worktree-agent-a1166d62f8219823f (this file amended in a follow-up commit).
 
 | file | before | after | remaining ceiling |
 |---|---|---|---|
