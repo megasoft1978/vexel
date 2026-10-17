@@ -326,5 +326,8 @@ fn opening_a_different_document_never_shows_the_old_frame_while_composing() {
     // composed frame and no parked previous frame to draw.
     view.open(&mut app, &second, (STAGE.width, STAGE.height));
     assert!(view.composed().is_none(), "old composed frame must be gone");
-    assert!(!view.has_previous(), "old document frame must not be parked");
+    assert!(
+        !view.has_previous(),
+        "old document frame must not be parked"
+    );
 }
