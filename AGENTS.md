@@ -70,3 +70,9 @@ Preserve strict validation, original fixtures/assertions and byte-preserving
 round trips. Rust ownership replaces manual C ownership conventions; bounded
 inputs, checked arithmetic, safe cleanup and source limits still apply. Keep
 unsafe operations behind documented platform/FFI boundaries.
+
+## Orchestration
+
+- Sol plans and reviews; Luna implements in parallel, one writer per module (see ~/.codex/AGENTS.md).
+- Sol Medium only for a named hard decision, repeated failed implementation, or final review (OWNER-DIRECTIVES.md).
+- Coordinator alone changes shared manifests, locks, interfaces, and ledgers.
