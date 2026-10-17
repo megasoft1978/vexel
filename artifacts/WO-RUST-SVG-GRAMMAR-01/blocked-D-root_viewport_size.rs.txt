@@ -1,0 +1,52 @@
+use vexel_base::Span;
+use vexel_svg_values::{Attribute, AttributeList, ValueLimits, parse_root_viewport};
+
+fn root_result(width: &str, height: &str) -> Result<(u32, u32), ()> {
+    let source = format!(r#"<svg width="{width}" height="{height}"/>"#);
+    let source = source.as_bytes();
+    let span_of = |needle: &str| {
+        let start = source
+            .windows(needle.len())
+            .position(|window| window == needle.as_bytes())
+            .unwrap();
+        Span {
+            start,
+            end: start + needle.len(),
+        }
+    };
+    let attrs = [
+        Attribute {
+            name: span_of("width"),
+            value: span_of(width),
+            prefix: None,
+        },
+        Attribute {
+            name: span_of("height"),
+            value: span_of(height),
+            prefix: None,
+        },
+    ];
+    let limits = ValueLimits {
+        source_bytes: source.len(),
+        attributes: 2,
+    };
+    let list = AttributeList::new_with_limits(source, span_of("svg"), &attrs, limits).unwrap();
+    parse_root_viewport(list)
+        .map(|root| (root.width, root.height))
+        .map_err(|_| ())
+}
+
+#[test]
+fn large_real_map_roots_parse_without_a_policy_cap() {
+    assert_eq!(root_result("7409", "2600"), Ok((7409, 2600)));
+    assert_eq!(root_result("4600", "6056"), Ok((4600, 6056)));
+    assert_eq!(root_result("4097", "4097"), Ok((4097, 4097)));
+}
+
+#[test]
+fn invalid_root_sizes_still_fail() {
+    for size in ["0", "-1", "NaN", "inf", "-inf", "1e30"] {
+        assert!(root_result(size, "10").is_err(), "width {size} must fail");
+        assert!(root_result("10", size).is_err(), "height {size} must fail");
+    }
+}

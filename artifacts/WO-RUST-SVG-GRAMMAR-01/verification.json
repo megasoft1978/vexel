@@ -1,0 +1,23 @@
+{
+  "work_order": "WO-RUST-SVG-GRAMMAR-01",
+  "status": "partial",
+  "toolchain_note": "cargo +stable used for frozen commands; repo rust-toolchain.toml pins 1.99.0",
+  "commands": [
+    {"cmd": "cargo +stable test -p vexel-svg-path --locked --offline", "result": "pass"},
+    {"cmd": "cargo +stable test -p vexel-xml --locked --offline", "result": "pass"},
+    {"cmd": "cargo +stable test -p vexel-svg-decode --locked --offline", "result": "pass"},
+    {"cmd": "cargo +stable test -p vexel-svg-values --locked --offline", "result": "pass"},
+    {"cmd": "cargo +stable test -p vexel-scene --locked --offline", "result": "pass"},
+    {"cmd": "cargo +stable test -p vexel-app --test pipeline_hashes --locked --offline", "result": "pass", "tests": 2},
+    {"cmd": "cargo test --offline --locked --no-fail-fast --workspace", "result": "fail_preexisting_only", "failing": ["vexel-svg-scalar-index tests/original_suites.rs original_reference_same_length_padding_token_growth_fixed_index_and_source_identity"], "preexisting_on_head": true, "log": "artifacts/WO-RUST-SVG-GRAMMAR-01/corpus/ws.log"},
+    {"cmd": "python3 scripts/check_rust_fmt.py", "result": "pass", "clean_crates": 18},
+    {"cmd": "cargo +stable fmt --package vexel-svg-path --package vexel-xml --package vexel-svg-decode --package vexel-svg-values --package vexel-scene -- --check", "result": "fail_preexisting_drift", "note": "drift in untouched files/lines of vexel-svg-path, vexel-xml, vexel-scene"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-SVG-GRAMMAR-01 --ready", "result": "pass"},
+    {"cmd": "git diff --check", "result": "pass"},
+    {"cmd": "corpus run --only (7 ids), before/after", "result": "measured", "before": "artifacts/WO-RUST-SVG-GRAMMAR-01/corpus/before", "after": "artifacts/WO-RUST-SVG-GRAMMAR-01/corpus/after"},
+    {"cmd": "corpus run in-repo manifest (bench/corpus/manifest.json)", "result": "ok 24/24", "log": "artifacts/WO-RUST-SVG-GRAMMAR-01/corpus/inrepo-run.txt"}
+  ],
+  "new_tests": {"vexel-svg-decode/tests/unknown_data_attributes.rs": 2, "vexel-scene/tests/xml_limit_kinds.rs": 5},
+  "updated_existing_tests": [],
+  "archived_blocked_tests": ["artifacts/WO-RUST-SVG-GRAMMAR-01/blocked-A-implicit_dot_repeat.rs.txt", "artifacts/WO-RUST-SVG-GRAMMAR-01/blocked-D-root_viewport_size.rs.txt"]
+}

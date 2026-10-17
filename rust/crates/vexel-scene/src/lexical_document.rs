@@ -48,10 +48,14 @@ impl LexicalDocument {
                 StreamStatus::Failed => {
                     let d = stream.result().diagnostic;
                     return Err(Diagnostic {
-                        kind: if d.category == XmlError::OutputExhausted {
-                            ErrorKind::Limit(LimitKind::TokenBytes)
-                        } else {
-                            ErrorKind::Xml(d.category)
+                        kind: match d.category {
+                            XmlError::OutputExhausted => ErrorKind::Limit(LimitKind::TokenBytes),
+                            XmlError::InputLimit => ErrorKind::Limit(LimitKind::SourceBytes),
+                            XmlError::DepthLimit => ErrorKind::Limit(LimitKind::Depth),
+                            XmlError::NodeLimit => ErrorKind::Limit(LimitKind::Nodes),
+                            XmlError::AttributeLimit => ErrorKind::Limit(LimitKind::Attributes),
+                            XmlError::TextLimit => ErrorKind::Limit(LimitKind::TextBytes),
+                            other => ErrorKind::Xml(other),
                         },
                         offset: d.offset,
                     });

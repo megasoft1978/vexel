@@ -634,21 +634,23 @@ impl<'src, 'ctx> Decoder<'src, 'ctx> {
         let mut quantum = DecodeQuantum::new(work_quantum)?;
         while quantum.work().total_work < work_quantum {
             let Some(task) = self.tasks.pop() else {
-                quantum
-                    .atomic(control, |c| {
-                        self.flush_shape_request(c)?;
-                        self.ignored
-                            .publish(self.builder.as_mut().ok_or_else(|| invalid(0))?, c)
-                    })
-                    .map_err(|e| self.abort(e))?;
                 if !self.root_seen {
                     return Err(self.abort(Diagnostic {
                         kind: ErrorKind::Viewport,
                         offset: 0,
                     }));
                 }
+                // This loop runs only while the quantum has budget, so this one
+                // atomic step always executes. Splitting the publish and the
+                // finalization into two atomic steps would let the second become a
+                // boundary that is skipped, completing an un-finalized scene.
                 quantum
-                    .atomic(control, |c| self.finalize_animation(c))
+                    .atomic(control, |c| {
+                        self.flush_shape_request(c)?;
+                        self.ignored
+                            .publish(self.builder.as_mut().ok_or_else(|| invalid(0))?, c)?;
+                        self.finalize_animation(c)
+                    })
                     .map_err(|e| self.abort(e))?;
                 self.state = DecoderState::Complete;
                 return Ok(Advance::Complete);

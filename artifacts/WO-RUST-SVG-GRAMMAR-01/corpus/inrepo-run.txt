@@ -1,0 +1,34 @@
+clip-path                                ok           27 ms
+image-embedded-data                      ok           24 ms
+metadata-namespaces                      ok           13 ms
+metadata-rdf-like                        ok           16 ms
+namespaces-custom-attributes             ok           11 ms
+path-arcs                                ok           24 ms
+path-line-curves                         ok           12 ms
+path-relative-commands                   ok           17 ms
+shapes-basic                             ok           25 ms
+shapes-lines-polygons                    ok           12 ms
+shapes-rounded                           ok           13 ms
+stress-long-path                         ok           130 ms
+stress-many-shapes                       ok           10 ms
+stress-nested-groups                     ok           14 ms
+stress-text-collection                   ok           27 ms
+style-css-class                          ok           18 ms
+style-gradient                           ok           11 ms
+style-opacity-transform                  ok           13 ms
+style-presentation-attributes            ok           21 ms
+text-basic                               ok           22 ms
+text-positioning                         ok           12 ms
+text-spans                               ok           12 ms
+use-local-reference                      ok           12 ms
+viewbox-preserve                         ok           12 ms
+ok            24
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0

@@ -1,0 +1,18 @@
+{
+  "work_order": "WO-RUST-SVG-GRAMMAR-01",
+  "changed": [
+    {"path": "rust/crates/vexel-scene/src/lexical_document.rs", "allowed": true, "reason": "minimal mapping edit (C)", "lines_after": 81},
+    {"path": "rust/crates/vexel-svg-decode/src/decode.rs", "allowed": true, "reason": "vexel-svg-decode/src (B)", "lines_after": 780},
+    {"path": "rust/crates/vexel-scene/tests/xml_limit_kinds.rs", "allowed": true, "reason": "new test (C)", "lines_after": 55},
+    {"path": "rust/crates/vexel-svg-decode/tests/unknown_data_attributes.rs", "allowed": true, "reason": "new test (B)", "lines_after": 38},
+    {"path": "artifacts/WO-RUST-SVG-GRAMMAR-01/**", "allowed": true, "reason": "evidence"}
+  ],
+  "reverted_during_work": [
+    {"path": "rust/crates/vexel-svg-values/src/viewport.rs", "reason": "D blocked; reverted to HEAD"},
+    {"path": "rust/crates/vexel-scene/src/types.rs", "reason": "temporary probe, reverted to HEAD"},
+    {"path": "rust/crates/vexel-scene/src/decode_initialization.rs", "reason": "temporary probe, reverted to HEAD"},
+    {"path": "rust/crates/vexel-svg-decode/src/lib.rs", "reason": "temporary probe, reverted to HEAD"}
+  ],
+  "protected_touched": [],
+  "protected_note": "No changes to parity.rs, rust/fixtures, limit/tokenizer constants, Cargo manifests, STATE.md, LEDGER*, ledger.jsonl, or git HEAD/index."
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "tool": {"name": "vexel-corpus", "git_sha": "ba2442d65be4fbb3089a9b1be25c981285f6af97"},
+  "manifest": {"path": "~/Desktop/Freelance/vexel-corpus-real/manifest.json", "sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30"},
+  "size": "128x128",
+  "max_bytes": 33554432,
+  "timeout_secs": 60,
+  "rss_limit_mib": 2048,
+  "host": "ProductName: macOS ProductVersion: 27.0.1 BuildVersion: 26A434; arm64",
+  "files": [
+    {"id": "generated-map_t1", "tier": "T1", "kind": "generated", "bytes": 1310972, "verdict": "ok", "detail": "128x128 frame, 0 disclosure(s)", "wall_ms": 85, "peak_rss_bytes": 47267840},
+    {"id": "generated-nested_t1", "tier": "T1", "kind": "generated", "bytes": 978645, "verdict": "limit_decode", "detail": "document exceeds a decode safety limit", "wall_ms": 12, "peak_rss_bytes": 10141696},
+    {"id": "commons-1-42-polytope-7-cube-svg", "tier": "T3", "kind": "real", "bytes": 29836045, "verdict": "limit_decode", "detail": "document exceeds a decode safety limit", "wall_ms": 1227, "peak_rss_bytes": 213942272},
+    {"id": "commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg", "tier": "T3", "kind": "real", "bytes": 22666147, "verdict": "xml", "detail": "malformed SVG: viewport at byte 70", "wall_ms": 121, "peak_rss_bytes": 72892416},
+    {"id": "commons-columbiarivermap-svg", "tier": "T2", "kind": "real", "bytes": 16687292, "verdict": "xml", "detail": "malformed SVG: XML at byte 917", "wall_ms": 47, "peak_rss_bytes": 41304064},
+    {"id": "commons-france-osm-mapnik-svg", "tier": "T2", "kind": "real", "bytes": 19491319, "verdict": "xml", "detail": "malformed SVG: path data at byte 28855", "wall_ms": 95, "peak_rss_bytes": 55771136},
+    {"id": "commons-germany-districts-municipalities-location-map-2013-svg", "tier": "T3", "kind": "real", "bytes": 26486961, "verdict": "xml", "detail": "malformed SVG: path data at byte 474", "wall_ms": 135, "peak_rss_bytes": 70057984}
+  ],
+  "histogram": {"ok": 1, "unsupported": 0, "limit_decode": 2, "limit_render": 0, "xml": 4, "timeout": 0, "rss_exceeded": 0, "skipped": 0, "crash": 0, "guard_failed": 0},
+  "totals": {"files": 7, "wall_ms_sum": 1722},
+  "slowest": [{"id": "commons-1-42-polytope-7-cube-svg", "value": 1227}, {"id": "commons-germany-districts-municipalities-location-map-2013-svg", "value": 135}, {"id": "commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg", "value": 121}, {"id": "commons-france-osm-mapnik-svg", "value": 95}, {"id": "generated-map_t1", "value": 85}],
+  "largest_rss": [{"id": "commons-1-42-polytope-7-cube-svg", "value": 213942272}, {"id": "commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg", "value": 72892416}, {"id": "commons-germany-districts-municipalities-location-map-2013-svg", "value": 70057984}, {"id": "commons-france-osm-mapnik-svg", "value": 55771136}, {"id": "generated-map_t1", "value": 47267840}]
+}

@@ -1,0 +1,15 @@
+{
+  "work_order": "WO-RUST-SVG-GRAMMAR-01",
+  "acceptance": [
+    {"ac": 1, "text": "failing-first for items 1-5", "status": "partial", "evidence": "result.md failing outputs for A, B, C, D; E not written (blocked)"},
+    {"ac": 2, "text": "(A) compact-dot samples parse as spaced form; number_separator unchanged", "status": "fail", "reason": "BLOCKED: conflicts with corpus-parity golden grammar-7 and number_separator.rs negative case", "evidence": "artifacts/WO-RUST-SVG-GRAMMAR-01/blocked-A-implicit_dot_repeat.rs.txt"},
+    {"ac": 3, "text": "(B) 200 and 2000 data-region decode; output identical to no data-*", "status": "partial", "evidence": "unknown_data_attributes.rs 2 passed; output-identity not asserted (SceneGraph offsets differ)"},
+    {"ac": 4, "text": "(C) 1000 nested g -> Limit; 250,002-node input -> Limit; limit constants unchanged", "status": "pass", "evidence": "xml_limit_kinds.rs 5 passed; node test uses 1,000,010 elements (default MAX_NODES is 1,000,000); tokenizer.rs untouched"},
+    {"ac": 5, "text": "(D) 7409x2600 and 4600x6056 roots decode; invalid sizes fail; render limit unchanged", "status": "fail", "reason": "BLOCKED: frozen original_css.rs:95 pins height 5000 as Viewport error; change reverted", "evidence": "artifacts/WO-RUST-SVG-GRAMMAR-01/blocked-D-root_viewport_size.rs.txt"},
+    {"ac": 6, "text": "(E) &ns_extend; -> Unsupported naming entity; no expansion", "status": "fail", "reason": "BLOCKED: Diagnostic/ErrorKind carry no name; frozen original_ignored.rs pins DOCTYPE entity refs as Xml", "evidence": "result.md"},
+    {"ac": 7, "text": "corpus verdicts for 7 ids", "status": "fail", "evidence": "corpus/before and corpus/after report.json; generated-map_t1 ok, nested limit_decode, polytope limit_decode; germany, france, aegean, columbia still xml"},
+    {"ac": 8, "text": "no regression: in-repo 24/24 ok; pipeline_hashes identical", "status": "pass", "evidence": "corpus/inrepo-run.txt ok 24; pipeline_hashes 2 passed"},
+    {"ac": 9, "text": "parity.rs and legacy oracle fixtures byte-identical", "status": "pass", "evidence": "no changes under vexel-svg-path or rust/fixtures"},
+    {"ac": 10, "text": "workspace tests pass; git diff --check clean", "status": "fail_preexisting", "evidence": "only vexel-svg-scalar-index original_suites.rs:124 fails, reproduced on HEAD sources; git diff --check clean"}
+  ]
+}

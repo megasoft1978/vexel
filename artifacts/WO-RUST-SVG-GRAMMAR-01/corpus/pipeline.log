@@ -1,0 +1,18 @@
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-scene)
+   Compiling vexel-svg-paint v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-svg-paint)
+   Compiling vexel-svg-media v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-svg-media)
+   Compiling vexel-svg-definitions v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-svg-definitions)
+   Compiling vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-svg-decode)
+   Compiling vexel-svg-engine v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-svg-engine)
+   Compiling vexel-svg-animation-frame v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-svg-animation-frame)
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-render)
+   Compiling vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a21830c9f11d8d603/rust/crates/vexel-app)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.00s
+     Running tests/pipeline_hashes.rs (build/rust/aarch64-apple-darwin/debug/deps/pipeline_hashes-b8d2f94091d5cb19)
+
+running 2 tests
+test record_hashes ... ok
+test pipeline_common::sha256_known_vectors ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
