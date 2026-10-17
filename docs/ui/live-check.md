@@ -37,3 +37,14 @@ Capture a window: find its id with Python `Quartz.CGWindowListCopyWindowInfo` (o
 | 1, 3, 5-10 | NOT RUN | |
 
 No open defect for check 4. Model test ui_wiring_export.rs covers Esc.
+
+## Round 2 results (2026-10-17, unlocked, System Events key codes and cliclick)
+
+| # | Result | Evidence |
+|---|--------|----------|
+| 7 | PASS: after releasing Export focus (two Escapes, click on inspector), Space started playback (readout 0:00.53, pause icon), second Space paused (readout identical across two captures). Home=0:00.00, Right x2=0:00.07, Left x1=0:00.03 (1/30 s grid). | scratchpad row7-*.png |
+| 3 | INCONCLUSIVE: synthetic cliclick moves over Undo produced no hover fill and no tooltip after 0.8 s, nor after a retry with a 1 px wiggle. Needs a real mouse at the Mac. | scratchpad row3-*.png |
+| 5 | NOT RUN: Cmd+S on a tracked fixture (`loop.svg`) could overwrite the repo file if it saves directly instead of opening a panel. Needs a supervised run. | |
+| 6 | NOT RUN: needs an in-memory edit first (rectangle tool drag); not done this round. | |
+| 8 | NOT RUN: no reliable scroll-event tool confirmed. | |
+| 1, 9, 10 | OWNER: appearance change, export-to-file and quit, external Codex client. | |
