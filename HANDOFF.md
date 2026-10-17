@@ -28,9 +28,9 @@ owner intends to delete it once Rust reaches parity.
   stroke dashes, markers, PNG images, 32 MiB compose cap with `limit_decode`/`limit_render`
   verdicts, renderer speed-ups, Rust release tooling (`vexel-dev bundle|dmg|sbom|install-smoke`,
   ad-hoc signed), fmt gate, seeded fuzz tests, perf gate, `vexel-corpus` measurement tool.
-- **Corpus (external, read-only at `~/Desktop/Freelance/vexel-corpus-real`):** 12/39 ok (legacy C: 3/39), 0 timeouts
-  (`STATE.md` 2026-10-17). Remaining: 3 xml failures (root size above 4096, DOCTYPE internal entities, one more), 9 unsupported
-  constructs, 15 limits (65,536 shape clamp and text commands in protected `vexel-scene`).
+- **Corpus (external, read-only at `~/Desktop/Freelance/vexel-corpus-real`):** 18/39 ok (legacy C: 3/39), 1 timeout
+  (`STATE.md` 2026-10-17). Remaining: 3 xml failures (root size above 4096, DOCTYPE internal entities, one more), 10 unsupported
+  constructs, 7 limit-blocked (edges above 4.19M and text-command budgets need their own memory proofs).
 - **Verified on a real window (2026-10-16/17):** app launches, opens SVGs, renders them, and the new UI
   (toolbar, rail, sectioned inspector, artboard canvas at 400% fit, status bar; screenshots in
   `docs/archive/live/`). **Not yet verified
