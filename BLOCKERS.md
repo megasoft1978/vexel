@@ -1,5 +1,7 @@
 # Blockers
 
+Large documents: files over 32 MiB stay refused by design (about 22 bytes of RSS per source byte; raising caps to 160 MiB would need about 3.5 GB). The fix is streaming/lazy decode, not higher limits; measured 2026-10-17 in `STATE.md`.
+
 Active blockers: **none** for any merged work order. Everything below is either a
 resolved item kept for history or an open *defect* with its own work order.
 
