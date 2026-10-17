@@ -1,0 +1,24 @@
+   Compiling vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-css)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s
+     Running tests/limits03_rule_matches.rs (target/aarch64-apple-darwin/debug/deps/limits03_rule_matches-f2f3d712fbedd804)
+
+running 1 test
+test limit03_rule_match_quota_admits_8m_and_refuses_the_next ... FAILED
+
+failures:
+
+---- limit03_rule_match_quota_admits_8m_and_refuses_the_next stdout ----
+
+thread 'limit03_rule_match_quota_admits_8m_and_refuses_the_next' (6329392) panicked at rust/crates/vexel-svg-css/tests/limits03_rule_matches.rs:8:5:
+assertion `left == right` failed
+  left: 4194304
+ right: 8388608
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    limit03_rule_match_quota_admits_8m_and_refuses_the_next
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vexel-svg-css --test limits03_rule_matches`

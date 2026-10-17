@@ -1,0 +1,45 @@
+   Compiling vexel-base v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-base)
+   Compiling vexel-xml v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-xml)
+   Compiling vexel-geometry v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-geometry)
+   Compiling vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-values)
+   Compiling vexel-svg-path v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-path)
+   Compiling vexel-svg-css v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-css)
+   Compiling vexel-svg-animation v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-animation)
+   Compiling vexel-svg-reference v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-reference)
+   Compiling vexel-raster v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-raster)
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-scene)
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.97s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/vexel_render-b24d0e063d095000)
+
+running 4 tests
+test dash::tests::limit03_record_sizes_match_the_budget_constants ... ok
+test dash::tests::limit03_refused_primitive_allocates_nothing ... ok
+test dash::tests::limit03_step_budget_admits_4m_and_refuses_the_next ... FAILED
+test dash::tests::limit03_byte_budget_admits_192_mib_and_refuses_the_next ... FAILED
+
+failures:
+
+---- dash::tests::limit03_step_budget_admits_4m_and_refuses_the_next stdout ----
+
+thread 'dash::tests::limit03_step_budget_admits_4m_and_refuses_the_next' (6285045) panicked at rust/crates/vexel-render/src/dash/tests.rs:239:5:
+assertion `left == right` failed
+  left: 1000000
+ right: 4000000
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- dash::tests::limit03_byte_budget_admits_192_mib_and_refuses_the_next stdout ----
+
+thread 'dash::tests::limit03_byte_budget_admits_192_mib_and_refuses_the_next' (6285040) panicked at rust/crates/vexel-render/src/dash/tests.rs:248:5:
+assertion `left == right` failed
+  left: 16777216
+ right: 201326592
+
+
+failures:
+    dash::tests::limit03_byte_budget_admits_192_mib_and_refuses_the_next
+    dash::tests::limit03_step_budget_admits_4m_and_refuses_the_next
+
+test result: FAILED. 2 passed; 2 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p vexel-render --lib`

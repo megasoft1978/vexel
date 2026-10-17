@@ -115,6 +115,15 @@ fn default_policy_preserves_reference_caps_and_clamps_larger_overrides() {
     assert_eq!(actual.reserved_bytes, 123);
 }
 #[test]
+fn limit03_shape_override_clamps_to_the_524288_default() {
+    // effective() clamps to the default: a raised default is what admits the cap.
+    let mut larger = Limits::default();
+    larger.shapes = 524_289;
+    assert_eq!(larger.effective().shapes, 524_288);
+    larger.shapes = 524_288;
+    assert_eq!(larger.effective().shapes, 524_288);
+}
+#[test]
 fn source_capacity_is_included_exactly_once_in_admission_and_freeze() {
     let b = builder();
     let expected = b.animation.storage_bytes().unwrap()

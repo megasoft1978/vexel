@@ -1,0 +1,81 @@
+{
+  "wo": "WO-RUST-LIMITS-03",
+  "branch": "worktree-agent-a3f261139dcc6ed2e",
+  "base_sha": "139f0be196f31bb69c564aacf6f968deeaa8bd9f",
+  "worktree_head": "eb6adb69 (adds only work/WO-RUST-LIMITS-03.md)",
+  "toolchain": "cargo +stable (rust-toolchain pinned by repo), CARGO_HOME=.cache/cargo, CARGO_TARGET_DIR=worktree target, --offline --locked",
+  "committed": false,
+  "commit_note": "WO protected paths forbid commit, stage and reset; changes left in the worktree",
+  "checks": [
+    {
+      "name": "red runs before raise (render lib, scene lib, scene integration, css, svg-decode, render stroke jobs)",
+      "result": "pass (each red as intended)",
+      "logs": ["artifacts/WO-RUST-LIMITS-03/red/"]
+    },
+    {
+      "name": "cargo +stable test -p vexel-scene -p vexel-render -p vexel-svg-css -p vexel-svg-decode --locked --offline --no-fail-fast",
+      "result": "pass",
+      "summary": "285 passed, 0 failed (run before the formatting-only edits; render lib limit03 re-run after them: 6 passed)",
+      "log": "artifacts/WO-RUST-LIMITS-03/green-crates.txt"
+    },
+    {
+      "name": "cargo +stable test --offline --locked --no-fail-fast --workspace (final tree)",
+      "result": "pass",
+      "summary": "cargo test: 1981 passed, 5 ignored (298 suites); 0 failed. Expected intentional abort-test panic lines in vexel-platform-apple native_boundary.rs",
+      "log": "artifacts/WO-RUST-LIMITS-03/workspace-final.txt"
+    },
+    {
+      "name": "python3 scripts/check_rust_fmt.py",
+      "result": "pass",
+      "summary": "rust fmt policy: pass (18 clean-listed crates)"
+    },
+    {
+      "name": "rustfmt --check on new test files",
+      "result": "pass",
+      "summary": "no diff in any new file; this WO's hunks in debt-listed crates formatted"
+    },
+    {
+      "name": "python3 scripts/wo_validate.py --ready WO-RUST-LIMITS-03",
+      "result": "pass",
+      "summary": "valid WO-RUST-LIMITS-03 revision 1 sha256 5cc9783d18cec8dcc3ed1570297f3b266387831002f60dde4812e45c0fa8ccfa"
+    },
+    {
+      "name": "python3 scripts/ledger.py validate ledger.jsonl",
+      "result": "pass",
+      "summary": "valid ledger: 2069 entries"
+    },
+    {
+      "name": "git diff --check",
+      "result": "pass"
+    },
+    {
+      "name": "unsafe in diff",
+      "result": "pass",
+      "summary": "0 added lines contain unsafe"
+    },
+    {
+      "name": "corpus in-repo run (bench/corpus/manifest.json, after binary)",
+      "result": "pass",
+      "summary": "24/24 ok",
+      "out": "artifacts/WO-RUST-LIMITS-03/in-repo"
+    },
+    {
+      "name": "corpus external run before and after (owner-local manifest, read-only)",
+      "result": "pass_with_gaps",
+      "summary": "ok 12 -> 18; limit_decode 10 -> 7; limit_render 5 -> 0; unsupported 9 -> 10; timeout 0 -> 1; 0 ok->non-ok; 0 rss_exceeded; 0 crash; max peak RSS 1.42 GB",
+      "artifacts": ["sweep-before.json", "sweep-after.json"],
+      "gaps": ["named limit and offset for refusals not exposed by the verdict tool", "cancellation debug bound 1 s (release 250 ms enforced)"]
+    },
+    {
+      "name": "synthetic memory cases (outside repo) release, /usr/bin/time -l",
+      "result": "pass",
+      "summary": "all peaks < 2 GiB; largest 1,857,732,608 B (<use> at 524,288)",
+      "table": "result.md Memory section"
+    },
+    {
+      "name": "cargo tree -p vexel-app",
+      "result": "not diffed",
+      "summary": "no Cargo.toml or Cargo.lock change, unchanged by construction"
+    }
+  ]
+}

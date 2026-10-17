@@ -18,12 +18,14 @@ fn original_css_three_stylesheet_limits_and_zero_opacity() {
 }
 #[test]
 fn original_css_rule_match_work_limit() {
+    // WO-RUST-LIMITS-03: moved from 2050 rects (4,198,400 matches, now under the raised
+    // MAX_RULE_MATCHES = 8,388,608) to 4100 rects (2048 * 4100 = 8,396,800 matches).
     let rules = (0..2048)
         .map(|i| format!(".c{i} {{ fill: red; }}"))
         .collect::<String>();
     let source = format!(
         "<svg width=\"8\" height=\"8\"><style>{rules}</style>{}</svg>",
-        "<rect width=\"1\" height=\"1\"/>".repeat(2050)
+        "<rect width=\"1\" height=\"1\"/>".repeat(4100)
     );
     let e = decode(&source).unwrap_err();
     assert_eq!(e.kind, ErrorKind::Limit(LimitKind::PaintVisits));

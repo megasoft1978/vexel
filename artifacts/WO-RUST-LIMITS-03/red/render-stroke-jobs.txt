@@ -1,0 +1,31 @@
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-render)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.00s
+     Running tests/limit03_stroke_jobs.rs (target/aarch64-apple-darwin/debug/deps/limit03_stroke_jobs-f3b90f3d28f2cbec)
+
+running 2 tests
+test limit03_dash_job_admits_31000_edges_and_refuses_31001 ... FAILED
+test limit03_cancel_during_largest_accepted_dash_job_is_prompt ... FAILED
+
+failures:
+
+---- limit03_dash_job_admits_31000_edges_and_refuses_31001 stdout ----
+
+thread 'limit03_dash_job_admits_31000_edges_and_refuses_31001' (6422478) panicked at rust/crates/vexel-render/tests/limit03_stroke_jobs.rs:37:5:
+assertion failed: render(LARGEST_ACCEPTED_EDGES, NEVER).is_ok()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- limit03_cancel_during_largest_accepted_dash_job_is_prompt stdout ----
+
+thread 'limit03_cancel_during_largest_accepted_dash_job_is_prompt' (6422477) panicked at rust/crates/vexel-render/tests/limit03_stroke_jobs.rs:62:5:
+assertion `left == right` failed: job finished before the cancel
+  left: Err(LimitExceeded)
+ right: Err(Cancelled)
+
+
+failures:
+    limit03_cancel_during_largest_accepted_dash_job_is_prompt
+    limit03_dash_job_admits_31000_edges_and_refuses_31001
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p vexel-render --test limit03_stroke_jobs`

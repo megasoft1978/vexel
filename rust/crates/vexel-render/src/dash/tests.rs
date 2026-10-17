@@ -231,3 +231,82 @@ fn step_and_byte_budgets_are_enforced() {
     );
     assert_eq!(result, Err(RenderError::LimitExceeded));
 }
+
+// WO-RUST-LIMITS-03 boundary pins, written before the constants were raised.
+// The literals are the frozen targets; the constants must equal them.
+#[test]
+fn limit03_step_budget_admits_4m_and_refuses_the_next() {
+    assert_eq!(MAX_STROKE_STEPS, 4_000_000);
+    let mut budget = Budget { steps: 0, bytes: 0 };
+    assert_eq!(budget.step(4_000_000), Ok(()));
+    assert_eq!(budget.steps, 4_000_000);
+    assert_eq!(budget.step(1), Err(RenderError::LimitExceeded));
+}
+
+#[test]
+fn limit03_byte_budget_admits_192_mib_and_refuses_the_next() {
+    assert_eq!(MAX_STROKE_BYTES, 192 * 1024 * 1024);
+    // 4,194,304 joins of JOIN_BYTES (48) are exactly 192 MiB.
+    let mut budget = Budget { steps: 0, bytes: 0 };
+    assert_eq!(budget.primitives(0, 4_194_304), Ok(()));
+    assert_eq!(budget.bytes, 192 * 1024 * 1024);
+    assert_eq!(budget.primitives(0, 1), Err(RenderError::LimitExceeded));
+}
+
+#[test]
+fn limit03_refused_primitive_allocates_nothing() {
+    // The byte charge precedes the reservation: a refused push leaves capacity 0.
+    let seg = Segment {
+        a: p(0.0, 0.0),
+        b: p(1.0, 0.0),
+        start_cap: Linecap::Butt,
+        end_cap: Linecap::Butt,
+    };
+    let join = Join {
+        previous: p(0.0, 0.0),
+        vertex: p(1.0, 0.0),
+        next: p(1.0, 1.0),
+    };
+    let mut segments = Vec::new();
+    let mut joins = Vec::new();
+    let mut budget = Budget {
+        steps: 0,
+        bytes: MAX_STROKE_BYTES,
+    };
+    assert_eq!(
+        push_segment(&mut segments, &mut budget, seg),
+        Err(RenderError::LimitExceeded)
+    );
+    assert_eq!(
+        push_join(&mut joins, &mut budget, join),
+        Err(RenderError::LimitExceeded)
+    );
+    assert_eq!(segments.capacity(), 0);
+    assert_eq!(joins.capacity(), 0);
+}
+
+#[test]
+fn limit03_one_edge_range_costs_five_steps() {
+    // Pattern [64, 64] over one 128-unit edge: pattern (2) + edge (1) + two dashes (2).
+    let pat = pattern(&[64.0, 64.0], 0.0);
+    let mut budget = Budget { steps: 0, bytes: 0 };
+    let (mut segments, mut joins) = (Vec::new(), Vec::new());
+    let edges = [(p(0.0, 0.0), p(128.0, 0.0))];
+    build_range(
+        &mut segments,
+        &mut joins,
+        &mut budget,
+        &pat,
+        Linecap::Butt,
+        &edges,
+        false,
+    )
+    .unwrap();
+    assert_eq!(budget.steps, 5);
+}
+
+#[test]
+fn limit03_record_sizes_match_the_budget_constants() {
+    assert_eq!(std::mem::size_of::<Segment>(), SEGMENT_BYTES);
+    assert_eq!(std::mem::size_of::<Join>(), JOIN_BYTES);
+}

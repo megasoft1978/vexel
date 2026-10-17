@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
+     Running tests/limit03_stroke_jobs.rs (target/aarch64-apple-darwin/debug/deps/limit03_stroke_jobs-f3b90f3d28f2cbec)
+
+running 2 tests
+test limit03_cancel_during_largest_accepted_dash_job_is_prompt ... MEASURE limit03_cancel_latency_us=375332
+ok
+test limit03_dash_job_admits_800000_ranges_and_refuses_800001 ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.28s
+

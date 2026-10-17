@@ -1,0 +1,42 @@
+   Compiling vexel-svg-color v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-color)
+   Compiling vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a3f261139dcc6ed2e/rust/crates/vexel-svg-decode)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.13s
+     Running tests/limits03_boundaries.rs (target/aarch64-apple-darwin/debug/deps/limits03_boundaries-b743a114815f0663)
+
+running 4 tests
+test limit03_shape_boundary_is_524288 ... FAILED
+test limit03_use_instance_boundary_is_524288 ... FAILED
+test limit03_use_target_1_mib_is_accepted_and_the_next_byte_refused ... FAILED
+test limit03_nested_use_product_is_refused_at_the_instance_cap ... ok
+
+failures:
+
+---- limit03_shape_boundary_is_524288 stdout ----
+
+thread 'limit03_shape_boundary_is_524288' (6354715) panicked at rust/crates/vexel-svg-decode/tests/limits03_boundaries.rs:67:5:
+assertion `left == right` failed
+  left: 262144
+ right: 524288
+
+---- limit03_use_instance_boundary_is_524288 stdout ----
+
+thread 'limit03_use_instance_boundary_is_524288' (6354716) panicked at rust/crates/vexel-svg-decode/tests/limits03_boundaries.rs:74:5:
+assertion `left == right` failed
+  left: 262144
+ right: 524288
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- limit03_use_target_1_mib_is_accepted_and_the_next_byte_refused stdout ----
+
+thread 'limit03_use_target_1_mib_is_accepted_and_the_next_byte_refused' (6354717) panicked at rust/crates/vexel-svg-decode/tests/limits03_boundaries.rs:52:57:
+decode must succeed: Diagnostic { kind: Limit(References), offset: 1048642 }
+
+
+failures:
+    limit03_shape_boundary_is_524288
+    limit03_use_instance_boundary_is_524288
+    limit03_use_target_1_mib_is_accepted_and_the_next_byte_refused
+
+test result: FAILED. 1 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.03s
+
+error: test failed, to rerun pass `-p vexel-svg-decode --test limits03_boundaries`

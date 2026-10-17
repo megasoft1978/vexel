@@ -92,3 +92,60 @@ pub(crate) fn validate(
     }
     Ok(Budget { steps, bytes })
 }
+
+#[cfg(test)]
+mod limit03_tests {
+    use super::validate;
+    use crate::{
+        FlatEdge, Linecap, Linejoin, RenderError, RenderShape, StrokeStyle, ViewBox, ViewMap,
+    };
+    use vexel_geometry::affine_identity;
+    use vexel_raster::Tile;
+
+    /// Steps `validate` charges for one closed solid ring of `n` identical edges.
+    fn ring_steps(n: usize) -> Result<usize, RenderError> {
+        let unit = FlatEdge {
+            x0: 1.0,
+            y0: 1.0,
+            x1: 2.0,
+            y1: 1.0,
+        };
+        let edges = vec![unit; n];
+        let stroke = StrokeStyle {
+            rgba: [0, 0, 0, 255],
+            width: 1.0,
+            miter_limit: 4.0,
+            dash_offset: 0.0,
+            cap: Linecap::Butt,
+            join: Linejoin::Miter,
+            crisp_edges: false,
+        };
+        let shape = RenderShape {
+            edges: &edges,
+            subpaths: &[],
+            subpath_closed: &[],
+            stroke_closed: true,
+            evenodd: false,
+            filled: false,
+            fill_rgba: [0; 4],
+            stroke: Some(stroke),
+            transform: affine_identity(),
+        };
+        let vb = ViewBox {
+            x: 0.0,
+            y: 0.0,
+            width: 4.0,
+            height: 4.0,
+        };
+        let view = ViewMap::from_viewbox(vb, 4, 4, None).unwrap();
+        let tile = Tile::from_owned_rgba(4, 4, vec![0; 64]).unwrap();
+        validate(&[shape], &[], &view, &tile).map(|budget| budget.steps)
+    }
+
+    #[test]
+    fn limit03_solid_ring_steps_admit_4m_and_refuse_the_next() {
+        // A closed ring of E edges costs E segments plus E joins: 2E steps.
+        assert_eq!(ring_steps(2_000_000), Ok(4_000_000));
+        assert_eq!(ring_steps(2_000_001), Err(RenderError::LimitExceeded));
+    }
+}

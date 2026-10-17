@@ -1,0 +1,83 @@
+{
+  "wo": "WO-RUST-LIMITS-03",
+  "acceptance": [
+    {
+      "ac": 1,
+      "text": "each raised constant has one named definition, const assertions, no old literal at its site",
+      "status": "pass",
+      "evidence": ["rust/crates/vexel-scene/src/types.rs", "rust/crates/vexel-render/src/lib.rs", "rust/crates/vexel-svg-css/src/lib.rs", "rust/crates/vexel-svg-decode/src/use_expansion.rs", "result.md AC1 grep"],
+      "note": "remaining 4_194_304 hits are separate traversal visit counters, not raised sites"
+    },
+    {
+      "ac": 2,
+      "text": "failing-first red output recorded before each raise, green after",
+      "status": "pass_with_gap",
+      "evidence": ["artifacts/WO-RUST-LIMITS-03/red/"],
+      "gap": "validate.rs solid-ring boundary and the moved errors.rs pin were written after the raise; stroke-job test redesigned after its first red run"
+    },
+    {
+      "ac": 3,
+      "text": "boundary tests N accepted / N+1 refused with typed error unchanged, for all five raises",
+      "status": "pass",
+      "evidence": {
+        "shapes": ["rust/crates/vexel-scene/tests/limits03_shape_literal.rs", "rust/crates/vexel-svg-decode/tests/limits03_boundaries.rs"],
+        "steps": ["rust/crates/vexel-render/src/dash/tests.rs limit03_step_budget_admits_4m_and_refuses_the_next", "rust/crates/vexel-render/tests/limit03_stroke_jobs.rs", "rust/crates/vexel-render/src/validate.rs limit03_tests"],
+        "bytes": ["rust/crates/vexel-render/src/dash/tests.rs limit03_byte_budget_admits_192_mib_and_refuses_the_next"],
+        "rule_matches": ["rust/crates/vexel-svg-css/tests/limits03_rule_matches.rs"],
+        "use_target": ["rust/crates/vexel-svg-decode/tests/limits03_boundaries.rs"]
+      }
+    },
+    {
+      "ac": 4,
+      "text": "adversarial tests 2a-2c pass with recorded numbers",
+      "status": "pass_with_deviation",
+      "evidence": ["limit03_nested_use_product_is_refused_at_the_instance_cap 13229 ms debug", "limit03_cancel_during_largest_accepted_dash_job_is_prompt 52.7 ms release, 375 ms debug", "limit03_refused_primitive_allocates_nothing", "artifacts/WO-RUST-LIMITS-03/cancel-measure-*.txt", "artifacts/WO-RUST-LIMITS-03/svg-decode-measure-debug.txt"],
+      "deviation": "debug-profile cancel bound is 1 s; release enforces 250 ms"
+    },
+    {
+      "ac": 5,
+      "text": "peak RSS recorded for each Scope 3 item; each < 2 GiB; no rss_exceeded or crash",
+      "status": "pass",
+      "evidence": ["result.md Memory section", "largest 1,857,732,608 B (<use> at 524,288)"]
+    },
+    {
+      "ac": 6,
+      "text": "sweep: no ok becomes non-ok; ok >= 12; expected new ok reported; refusals recorded with named limit and offset",
+      "status": "pass_with_gap",
+      "evidence": ["artifacts/WO-RUST-LIMITS-03/sweep-base.json", "artifacts/WO-RUST-LIMITS-03/sweep-after.json", "result.md corpus section"],
+      "gap": "named limit and offset per refused file are not exposed by the verdict tool"
+    },
+    {
+      "ac": 7,
+      "text": "in-repo corpus 24/24 ok; pipeline_hashes.rs passes with no hash edited",
+      "status": "pass",
+      "evidence": ["artifacts/WO-RUST-LIMITS-03/in-repo", "workspace-final.txt"]
+    },
+    {
+      "ac": 8,
+      "text": "cargo test --offline --locked --workspace passes; test count >= base",
+      "status": "pass_with_gap",
+      "evidence": ["workspace-final.txt: 298 suites, 1981 passed, 0 failed, 5 ignored"],
+      "gap": "base count on 139f0be1 not re-run; compared with SHAPES-01 recorded base 1965 (+16 new tests)"
+    },
+    {
+      "ac": 9,
+      "text": "check_rust_fmt.py no worse than base; new files clean",
+      "status": "pass",
+      "evidence": ["python3 scripts/check_rust_fmt.py: pass"]
+    },
+    {
+      "ac": 10,
+      "text": "cargo tree -p vexel-app unchanged; no unsafe in diff; git diff --check clean",
+      "status": "pass",
+      "evidence": ["no Cargo.toml or Cargo.lock change", "0 unsafe added lines", "git diff --check clean"],
+      "note": "cargo tree not diffed; unchanged by construction"
+    },
+    {
+      "ac": 11,
+      "text": "limits.md <= 300 words with per-constant old/new, proving test, RSS and time, sweep counts, remaining ceiling",
+      "status": "pass",
+      "evidence": ["artifacts/WO-RUST-LIMITS-03/limits.md (298 words by wc -w)"]
+    }
+  ]
+}

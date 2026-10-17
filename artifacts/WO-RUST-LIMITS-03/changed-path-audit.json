@@ -1,0 +1,43 @@
+{
+  "wo": "WO-RUST-LIMITS-03",
+  "allowed_globs": [
+    "rust/crates/vexel-render/src/lib.rs",
+    "rust/crates/vexel-render/src/dash.rs",
+    "rust/crates/vexel-render/src/validate.rs",
+    "rust/crates/vexel-render/src/dash/tests.rs",
+    "rust/crates/vexel-render/tests/** (new files only)",
+    "rust/crates/vexel-scene/src/types.rs",
+    "rust/crates/vexel-scene/src/validation_tests.rs",
+    "rust/crates/vexel-scene/tests/** (new files only)",
+    "rust/crates/vexel-svg-css/src/lib.rs",
+    "rust/crates/vexel-svg-css/tests/** (new files only)",
+    "rust/crates/vexel-svg-decode/src/use_expansion.rs",
+    "rust/crates/vexel-svg-decode/tests/** (new files only)",
+    "artifacts/WO-RUST-LIMITS-03/**"
+  ],
+  "changed": [
+    {"path": "rust/crates/vexel-render/src/lib.rs", "kind": "modified", "class": "allowed", "change": "MAX_STROKE_STEPS 4,000,000; MAX_STROKE_BYTES 192 MiB; const asserts"},
+    {"path": "rust/crates/vexel-render/src/dash.rs", "kind": "modified", "class": "allowed", "change": "size assertions for SEGMENT_BYTES / JOIN_BYTES and 192 MiB divisibility"},
+    {"path": "rust/crates/vexel-render/src/validate.rs", "kind": "modified", "class": "allowed", "change": "limit03_tests module (solid ring step boundary)"},
+    {"path": "rust/crates/vexel-render/src/dash/tests.rs", "kind": "modified", "class": "allowed", "change": "limit03 budget boundary and allocation tests"},
+    {"path": "rust/crates/vexel-scene/src/types.rs", "kind": "modified", "class": "allowed", "change": "MAX_SHAPES 524,288 with pin assert"},
+    {"path": "rust/crates/vexel-scene/src/validation_tests.rs", "kind": "modified", "class": "allowed", "change": "limit03 clamp test"},
+    {"path": "rust/crates/vexel-svg-css/src/lib.rs", "kind": "modified", "class": "allowed", "change": "MAX_RULE_MATCHES 8,388,608 with assert"},
+    {"path": "rust/crates/vexel-svg-decode/src/use_expansion.rs", "kind": "modified", "class": "allowed", "change": "MAX_USE_TARGET_BYTES 1 MiB const and assert; check uses it"},
+    {"path": "rust/crates/vexel-render/src/dash/tests.rs", "kind": "modified", "class": "allowed", "change": "see above"},
+    {"path": "rust/crates/vexel-render/tests/errors.rs", "kind": "modified", "class": "boundary pin move (existing file, outside new-files-only rule; WO scope 1)", "change": "ring 600,000 to 2,000,001 edges"},
+    {"path": "rust/crates/vexel-svg-decode/tests/original_limits_math.rs", "kind": "modified", "class": "boundary pin move (existing file, outside new-files-only rule; WO scope 1)", "change": "CSS match pin 2050 to 4100 rects"},
+    {"path": "rust/crates/vexel-svg-decode/tests/original_references.rs", "kind": "modified", "class": "boundary pin move (existing file, outside new-files-only rule; WO scope 1)", "change": "target-span pin 64 KiB to 1 MiB"},
+    {"path": "rust/crates/vexel-svg-decode/tests/shape_cap_contracts.rs", "kind": "modified", "class": "boundary pin move and fixture (existing file, outside new-files-only rule; WO scope 1)", "change": "nested fan 65 to 81; use target fixture 36 B to 28 B"},
+    {"path": "rust/crates/vexel-render/tests/limit03_stroke_jobs.rs", "kind": "added", "class": "allowed (new file)"},
+    {"path": "rust/crates/vexel-scene/tests/limits03_shape_literal.rs", "kind": "added", "class": "allowed (new file)"},
+    {"path": "rust/crates/vexel-svg-css/tests/limits03_rule_matches.rs", "kind": "added", "class": "allowed (new file)"},
+    {"path": "rust/crates/vexel-svg-decode/tests/limits03_boundaries.rs", "kind": "added", "class": "allowed (new file)"},
+    {"path": "artifacts/WO-RUST-LIMITS-03/", "kind": "added", "class": "allowed (evidence)"}
+  ],
+  "protected_touched": [],
+  "manifests_touched": [],
+  "unsafe_added": 0,
+  "outside_repo": ["/private/tmp/limits03-* (scratch: base/after binaries, synthetic SVGs, sweep outputs; corpus read-only)"],
+  "corpus_bytes_in_repo": false
+}

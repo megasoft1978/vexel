@@ -42,7 +42,8 @@ fn original_local_reference_rejection_cases() {
 #[test]
 fn original_reference_exact_bytes_and_depth_boundaries() {
     let fixed = "<g id=\"x\"><!----></g>".len();
-    for (size, good) in [(64 * 1024, true), (64 * 1024 + 1, false)] {
+    // WO-RUST-LIMITS-03: the target-span pin moved from 64 KiB to MAX_USE_TARGET_BYTES = 1 MiB.
+    for (size, good) in [(1024 * 1024, true), (1024 * 1024 + 1, false)] {
         let s = format!(
             "<svg width=\"1\" height=\"1\"><defs><g id=\"x\"><!--{}--></g></defs><use href=\"#x\"/></svg>",
             "a".repeat(size - fixed)

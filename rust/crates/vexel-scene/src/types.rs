@@ -94,8 +94,10 @@ pub enum IgnoredKind {
     WritingMode,
 }
 /// The single shape-count cap: per scene, per raster-job dash pool, and the bound on
-/// `<use>` instances (`MAX_USE_INSTANCES`). Memory proof: artifacts/WO-RUST-SCENE-SHAPES-01/shapes.md.
-pub const MAX_SHAPES: usize = 262_144;
+/// `<use>` instances (`MAX_USE_INSTANCES`). Memory proof: artifacts/WO-RUST-SCENE-SHAPES-01/shapes.md
+/// and artifacts/WO-RUST-LIMITS-03/limits.md (raised from 262,144 to 524,288).
+pub const MAX_SHAPES: usize = 524_288;
+const _: () = assert!(MAX_SHAPES == 524_288);
 /// Decoder-wide `<use>` expansion bound. Equal to `MAX_SHAPES` by construction.
 pub const MAX_USE_INSTANCES: usize = MAX_SHAPES;
 const _: () = assert!(MAX_SHAPES <= u32::MAX as usize);

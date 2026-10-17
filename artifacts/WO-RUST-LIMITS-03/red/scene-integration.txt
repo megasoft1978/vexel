@@ -1,0 +1,30 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running tests/limits03_shape_literal.rs (target/aarch64-apple-darwin/debug/deps/limits03_shape_literal-facffe4879ff86d7)
+
+running 2 tests
+test limit03_shape_cap_is_524288 ... FAILED
+test limit03_dash_cache_accepts_524288_and_refuses_524289 ... FAILED
+
+failures:
+
+---- limit03_shape_cap_is_524288 stdout ----
+
+thread 'limit03_shape_cap_is_524288' (6349226) panicked at rust/crates/vexel-scene/tests/limits03_shape_literal.rs:33:5:
+assertion `left == right` failed
+  left: 262144
+ right: 524288
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- limit03_dash_cache_accepts_524288_and_refuses_524289 stdout ----
+
+thread 'limit03_dash_cache_accepts_524288_and_refuses_524289' (6349225) panicked at rust/crates/vexel-scene/tests/limits03_shape_literal.rs:39:5:
+assertion failed: dash_cache_with(524_288).validate(&mut Run).is_ok()
+
+
+failures:
+    limit03_dash_cache_accepts_524288_and_refuses_524289
+    limit03_shape_cap_is_524288
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p vexel-scene --test limits03_shape_literal`

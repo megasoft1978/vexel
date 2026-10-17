@@ -22,7 +22,9 @@ pub const MAX_RULES: usize = 4096;
 pub const MAX_DECLARATIONS: usize = 16384;
 pub const MAX_CLASSES: usize = 16;
 pub const MAX_SELECTOR_TERMS: usize = 4;
-pub const MAX_RULE_MATCHES: usize = 4_194_304;
+/// WO-RUST-LIMITS-03 raised 4,194,304 to 8,388,608 (two times the former quota).
+pub const MAX_RULE_MATCHES: usize = 8_388_608;
+const _: () = assert!(MAX_RULE_MATCHES == 2 * 4_194_304);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(usize)]

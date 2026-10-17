@@ -21,6 +21,11 @@ use vexel_geometry::Point;
 pub const MAX_DASH_VALUES: usize = 16;
 /// C `RASTER_STROKE_DASH_EPSILON`.
 pub(crate) const DASH_EPSILON: f64 = 1e-12;
+// The byte budget charges SEGMENT_BYTES / JOIN_BYTES per record; they must be the real sizes.
+const _: () = assert!(std::mem::size_of::<Segment>() == SEGMENT_BYTES);
+const _: () = assert!(std::mem::size_of::<Join>() == JOIN_BYTES);
+// Joins alone at the byte cap: 192 MiB / 48 B is an integer count (limit03 boundary test).
+const _: () = assert!(MAX_STROKE_BYTES % JOIN_BYTES == 0);
 
 /// Document-wide stroke build budget (C `build_steps` and the cache byte limit).
 #[derive(Debug, Clone, Copy, Default)]

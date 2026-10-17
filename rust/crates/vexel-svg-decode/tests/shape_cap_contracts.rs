@@ -32,7 +32,9 @@ fn flat_shapes(n: usize) -> String {
 }
 
 fn use_rects(n: usize) -> String {
-    let mut s = format!("{SVG_OPEN}<defs><rect id=\"r\" width=\"1\" height=\"1\"/></defs>");
+    // A 28-byte target keeps 524,288 instances under the 16 MiB reference-bytes budget
+    // (a 36-byte rect target would be refused there first; WO-RUST-LIMITS-03).
+    let mut s = format!("{SVG_OPEN}<defs><path id=\"r\" d=\"M0 0h1v1z\"/></defs>");
     s.push_str(&"<use href=\"#r\"/>".repeat(n));
     s.push_str("</svg>");
     s
@@ -111,9 +113,10 @@ fn use_instance_boundary_accepts_max_and_refuses_next() {
 
 #[test]
 fn nested_use_product_is_refused_at_the_instance_cap() {
-    // Three levels of fan-out 65: 65 + 65^2 + 65^3 = 274,490 expansions, above
-    // MAX_USE_INSTANCES, while the product 65^3 of leaves alone is above MAX_SHAPES.
-    let fan = 65;
+    // Three levels of fan-out 81: 81 + 81^2 + 81^3 = 538,083 expansions, above
+    // MAX_USE_INSTANCES = 524,288 (WO-RUST-LIMITS-03 moved this from fan 65, which
+    // is 274,490 and now under the cap), while the leaves alone 81^3 are above MAX_SHAPES.
+    let fan = 81;
     let mut defs = String::from("<defs><g id=\"g0\"><rect width=\"1\" height=\"1\"/></g>");
     for level in 1..=3 {
         let uses = format!("<use href=\"#g{}\"/>", level - 1).repeat(fan);

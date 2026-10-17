@@ -65,10 +65,14 @@ pub const MAX_EDGES: usize = 4 * 1024 * 1024;
 pub const MAX_SHAPES: usize = MAX_EDGES;
 /// Largest accepted subpath count (a subpath owns at least one edge slot).
 pub const MAX_SUBPATHS: usize = MAX_EDGES;
-/// Stroke primitive build steps (C `RASTER_DASH_CACHE_MAX_STEPS`).
-pub const MAX_STROKE_STEPS: usize = 1_000_000;
-/// Stroke primitive byte budget (C `RASTER_DASH_CACHE_BYTE_LIMIT`).
-pub const MAX_STROKE_BYTES: usize = 16 * 1024 * 1024;
+/// Stroke primitive build steps (C `RASTER_DASH_CACHE_MAX_STEPS`). WO-RUST-LIMITS-03
+/// raised 1,000,000 to 4,000,000: the corpus needs 1.25M to 2.9M (measured).
+pub const MAX_STROKE_STEPS: usize = 4_000_000;
+/// Stroke primitive byte budget (C `RASTER_DASH_CACHE_BYTE_LIMIT`). WO-RUST-LIMITS-03
+/// raised 16 MiB to 192 MiB: the corpus needs up to 129.5 MB (measured).
+pub const MAX_STROKE_BYTES: usize = 192 * 1024 * 1024;
+const _: () = assert!(MAX_STROKE_STEPS >= 1_250_000);
+const _: () = assert!(MAX_STROKE_BYTES <= 192 * 1024 * 1024);
 /// Largest accepted absolute coordinate, as in `vexel_geometry::affine_map_point`.
 pub const MAX_COORDINATE: f64 = 1.0e6;
 

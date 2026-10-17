@@ -5,6 +5,10 @@ use crate::{
     tasks::{Context, Finish, Task},
 };
 use vexel_scene::*;
+/// Largest `<use>` target span in bytes (WO-RUST-LIMITS-03 raised 64 KiB to 1 MiB).
+/// Each target is also charged against the 16 MiB reference-bytes budget below.
+const MAX_USE_TARGET_BYTES: usize = 1024 * 1024;
+const _: () = assert!(MAX_USE_TARGET_BYTES <= 16 * 1_048_576);
 impl<'src> Decoder<'src, '_> {
     pub(crate) fn expand_use(
         &mut self,
@@ -96,7 +100,9 @@ impl<'src> Decoder<'src, '_> {
             })?;
         let span = crate::source::element_span(tokens, target.0, end, source)?;
         let bytes = span.end - span.start;
-        if bytes > 64 * 1024 || bytes > (16 * 1_048_576usize).saturating_sub(self.reference_bytes) {
+        if bytes > MAX_USE_TARGET_BYTES
+            || bytes > (16 * 1_048_576usize).saturating_sub(self.reference_bytes)
+        {
             return Err(Diagnostic {
                 kind: ErrorKind::Limit(LimitKind::References),
                 offset: t.name.offset,
