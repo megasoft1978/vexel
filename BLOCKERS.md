@@ -11,8 +11,8 @@ failed independent review and are `blocked` in the ledger; see defect 4.
 
 No automated blockers. Open items: (1) live-window verification of pointer drawing, shortcuts,
 panels, playback and a real Codex MCP session (automated click injection did not reach the
-window; see `HANDOFF.md`); (2) corpus: 11/39 ok vs legacy 3/39, 0 timeouts; 10 XML-strictness
-failures, 8 unsupported constructs, 10 limits (shape clamp and text commands in protected `vexel-scene`); (3) owner-gated: signing/notarization, icon and bundle id, VoiceOver/IME,
+window; see `HANDOFF.md`); (2) corpus: 12/39 ok vs legacy 3/39, 0 timeouts; 3 XML failures,
+9 unsupported constructs, 15 limits (shape clamp and text commands in protected `vexel-scene`); (3) owner-gated: signing/notarization, icon and bundle id, VoiceOver/IME,
 M4-08 scope, final UI/E2E and showcase recording. Defect 4 and WO-CORPUS-01/02 are `superseded`.
 
 ## Open defects
