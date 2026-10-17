@@ -86,8 +86,11 @@ fn corpus_use_t2_shape_need_decodes() {
 }
 
 #[test]
-fn use_instance_cap_is_the_shape_cap() {
-    assert_eq!(MAX_USE_INSTANCES, MAX_SHAPES);
+fn use_instance_cap_never_exceeds_the_shape_cap() {
+    // WO-RUST-LIMITS-03 decoupled the two: shapes 524,288, use instances 262,144 (the
+    // `<use>`-heavy worst case dominates peak memory).
+    assert!(MAX_USE_INSTANCES <= MAX_SHAPES);
+    assert_eq!(MAX_USE_INSTANCES, 262_144);
 }
 
 #[test]

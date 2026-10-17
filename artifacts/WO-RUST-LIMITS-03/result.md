@@ -119,3 +119,8 @@ In-repo corpus (bench/corpus/manifest.json): 24 of 24 ok, `artifacts/WO-RUST-LIM
 5. `generated-science_t2` time rose to 35 s.
 6. Commit not made: the WO's protected list forbids commit, stage and reset, so changes are left in the worktree.
 7. `vexel-scene`, `vexel-render` and `vexel-svg-css` are rustfmt debt-listed crates. Only this WO's hunks were formatted; pre-existing drift was left untouched.
+
+
+## Coordinator amendment (2026-10-17)
+
+`MAX_USE_INSTANCES` was decoupled from `MAX_SHAPES` and kept at 262,144: the `<use>`-heavy worst case peaked at 1.86 GB at 524,288 instances, too close to the 2 GiB bound, and the corpus needs at most 178,589 instances. Shapes stay at 524,288. The two boundary tests and the equality test were updated accordingly.

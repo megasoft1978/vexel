@@ -93,15 +93,17 @@ pub enum IgnoredKind {
     Doctype,
     WritingMode,
 }
-/// The single shape-count cap: per scene, per raster-job dash pool, and the bound on
-/// `<use>` instances (`MAX_USE_INSTANCES`). Memory proof: artifacts/WO-RUST-SCENE-SHAPES-01/shapes.md
-/// and artifacts/WO-RUST-LIMITS-03/limits.md (raised from 262,144 to 524,288).
+/// The shape-count cap: per scene and per raster-job dash pool. Memory proof:
+/// artifacts/WO-RUST-SCENE-SHAPES-01/shapes.md and artifacts/WO-RUST-LIMITS-03/limits.md
+/// (raised from 262,144 to 524,288).
 pub const MAX_SHAPES: usize = 524_288;
 const _: () = assert!(MAX_SHAPES == 524_288);
-/// Decoder-wide `<use>` expansion bound. Equal to `MAX_SHAPES` by construction.
-pub const MAX_USE_INSTANCES: usize = MAX_SHAPES;
+/// Decoder-wide `<use>` expansion bound. Kept at 262,144 (not raised with `MAX_SHAPES`): the
+/// worst-case `<use>` scene peaked at 1.86 GB at 524,288 instances (WO-RUST-LIMITS-03 memory
+/// table), too close to the 2 GiB bound, and the corpus needs at most 178,589 instances.
+pub const MAX_USE_INSTANCES: usize = 262_144;
 const _: () = assert!(MAX_SHAPES <= u32::MAX as usize);
-const _: () = assert!(MAX_USE_INSTANCES == MAX_SHAPES);
+const _: () = assert!(MAX_USE_INSTANCES <= MAX_SHAPES);
 /// Per-scene reference admission bounds. Byte policy is explicitly caller configurable.
 #[derive(Debug, Clone, Copy)]
 pub struct Limits {

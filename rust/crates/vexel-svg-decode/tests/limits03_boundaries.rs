@@ -78,11 +78,11 @@ fn limit03_shape_boundary_is_524288() {
 }
 
 #[test]
-fn limit03_use_instance_boundary_is_524288() {
-    assert_eq!(MAX_USE_INSTANCES, 524_288);
-    assert_eq!(root_shapes(&use_rects(524_288)), 524_288);
+fn limit03_use_instance_boundary_is_262144() {
+    assert_eq!(MAX_USE_INSTANCES, 262_144);
+    assert_eq!(root_shapes(&use_rects(262_144)), 262_144);
     assert_eq!(
-        refusal(&use_rects(524_289)),
+        refusal(&use_rects(262_145)),
         ErrorKind::Limit(LimitKind::References)
     );
 }
@@ -109,7 +109,7 @@ fn limit03_use_target_1_mib_is_accepted_and_the_next_byte_refused() {
 #[test]
 fn limit03_nested_use_product_is_refused_at_the_instance_cap() {
     // Fan-out 3 over 12 levels: 3^12 = 531,441 leaves and (3^13 - 1) / 2 = 797,161
-    // instances in total, above MAX_USE_INSTANCES = 524,288. Depth 12 stays under
+    // instances in total, above MAX_USE_INSTANCES = 262,144. Depth 12 stays under
     // the 16-deep active-use bound, so the instance cap is the limit that fires.
     let fan = 3;
     let mut defs = String::from("<defs><g id=\"g0\"><rect width=\"1\" height=\"1\"/></g>");
