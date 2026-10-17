@@ -264,6 +264,14 @@ fn run(
                 let used = canvas::handle_event(&mut doc, &event, layout.stage, select);
                 dirty |= used.redraw;
                 if used.consumed {
+                    // The canvas took the event (pan/zoom/cluster); chrome hover and press
+                    // state must still follow the pointer.
+                    if let WindowEvent::Pointer(pointer) = &event {
+                        let primary = pointer_accepts_mode(pointer.button);
+                        dirty |= motion
+                            .pointer(&layout, pointer.kind, pointer.logical, primary)
+                            .1;
+                    }
                     continue;
                 }
             }
