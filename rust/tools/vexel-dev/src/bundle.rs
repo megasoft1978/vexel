@@ -1,5 +1,5 @@
 //! `Vexel.app` assembly: release build, bundle layout, ad-hoc signing.
-use crate::plist::{BUNDLE_ID, EXECUTABLE, render_info_plist};
+use crate::plist::{BUNDLE_ID, EXECUTABLE, ICON_NAME, render_info_plist};
 use crate::runner::{Invocation, Runner, run_checked};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -7,6 +7,8 @@ use std::path::{Path, PathBuf};
 
 pub const TARGET_TRIPLE: &str = "aarch64-apple-darwin";
 pub const APP_NAME: &str = "Vexel.app";
+/// Default icon source, relative to the repository root (`scripts/make_icon.py`).
+pub const ICON_SOURCE: &str = "resources/AppIcon.icns";
 
 /// Repo-local cargo locations; `CARGO_HOME` / `CARGO_TARGET_DIR` from the
 /// environment win so isolated worktrees can share an offline registry.
@@ -67,31 +69,39 @@ pub struct BundlePlan {
     pub lproj: PathBuf,
     pub strings: PathBuf,
     pub plist: PathBuf,
-    /// Destination of the optional icon inside `Contents/Resources`.
-    pub icon: Option<PathBuf>,
+    /// Always `Contents/Resources/AppIcon.icns`, whatever the source is named.
+    pub icon: PathBuf,
 }
 
-pub fn plan(out: &Path, icon: Option<&Path>) -> Result<BundlePlan, String> {
+pub fn plan(out: &Path, icon_source: &Path) -> Result<BundlePlan, String> {
+    if !icon_source.extension().is_some_and(|e| e == "icns") {
+        return Err(format!(
+            "icon `{}` must be a .icns file",
+            icon_source.display()
+        ));
+    }
     let contents = out.join(APP_NAME).join("Contents");
     let resources = contents.join("Resources");
-    let icon = match icon {
-        None => None,
-        Some(path) => {
-            let name = path
-                .file_name()
-                .filter(|_| path.extension().is_some_and(|e| e == "icns"))
-                .ok_or_else(|| format!("icon `{}` must be a .icns file", path.display()))?;
-            Some(resources.join(name))
-        }
-    };
     Ok(BundlePlan {
         app: out.join(APP_NAME),
         executable: contents.join("MacOS").join(EXECUTABLE),
         lproj: resources.join("en.lproj"),
         strings: resources.join("en.lproj").join("Localizable.strings"),
         plist: contents.join("Info.plist"),
-        icon,
+        icon: resources.join(format!("{ICON_NAME}.icns")),
     })
+}
+
+/// Fails with the regeneration hint when the icon source is absent.
+pub fn require_icon(icon_source: &Path) -> Result<(), String> {
+    if icon_source.is_file() {
+        Ok(())
+    } else {
+        Err(format!(
+            "app icon `{}` not found; generate it with `python3 scripts/make_icon.py`",
+            icon_source.display()
+        ))
+    }
 }
 
 fn io_err(action: &str, path: &Path, error: std::io::Error) -> String {
@@ -105,9 +115,10 @@ pub fn assemble(
     plan: &BundlePlan,
     binary: &Path,
     strings_source: &Path,
-    icon_source: Option<&Path>,
+    icon_source: &Path,
     version: &str,
 ) -> Result<(), String> {
+    require_icon(icon_source)?;
     if plan.app.exists() {
         fs::remove_dir_all(&plan.app).map_err(|e| io_err("remove old bundle", &plan.app, e))?;
     }
@@ -119,14 +130,8 @@ pub fn assemble(
     fs::set_permissions(&plan.executable, fs::Permissions::from_mode(0o755))
         .map_err(|e| io_err("chmod", &plan.executable, e))?;
     fs::copy(strings_source, &plan.strings).map_err(|e| io_err("copy", strings_source, e))?;
-    let icon_name = match (icon_source, &plan.icon) {
-        (Some(source), Some(dest)) => {
-            fs::copy(source, dest).map_err(|e| io_err("copy icon", source, e))?;
-            dest.file_name().map(|n| n.to_string_lossy().into_owned())
-        }
-        _ => None,
-    };
-    let plist = render_info_plist(version, BUNDLE_ID, icon_name.as_deref());
+    fs::copy(icon_source, &plan.icon).map_err(|e| io_err("copy icon", icon_source, e))?;
+    let plist = render_info_plist(version, BUNDLE_ID);
     fs::write(&plan.plist, plist).map_err(|e| io_err("write", &plan.plist, e))?;
     run_checked(
         runner,
@@ -162,7 +167,7 @@ mod tests {
 
     #[test]
     fn plan_places_every_piece_inside_the_bundle() {
-        let plan = plan(Path::new("/o"), Some(Path::new("/x/Art.icns"))).unwrap();
+        let plan = plan(Path::new("/o"), Path::new("/x/Art.icns")).unwrap();
         assert_eq!(plan.app, Path::new("/o/Vexel.app"));
         assert_eq!(
             plan.executable,
@@ -174,11 +179,10 @@ mod tests {
             Path::new("/o/Vexel.app/Contents/Resources/en.lproj/Localizable.strings")
         );
         assert_eq!(
-            plan.icon.as_deref(),
-            Some(Path::new("/o/Vexel.app/Contents/Resources/Art.icns"))
+            plan.icon,
+            Path::new("/o/Vexel.app/Contents/Resources/AppIcon.icns")
         );
-        assert_eq!(super::plan(Path::new("/o"), None).unwrap().icon, None);
-        assert!(super::plan(Path::new("/o"), Some(Path::new("/x/a.png"))).is_err());
+        assert!(super::plan(Path::new("/o"), Path::new("/x/a.png")).is_err());
     }
 
     #[test]
@@ -214,9 +218,11 @@ mod tests {
         let strings = dir.join("Localizable.strings");
         fs::write(&binary, b"bin").unwrap();
         fs::write(&strings, b"\"a\" = \"b\";").unwrap();
-        let plan = plan(&dir.join("out"), None).unwrap();
+        let icon = dir.join("AppIcon.icns");
+        fs::write(&icon, b"icns").unwrap();
+        let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| None);
-        assemble(&mut runner, &plan, &binary, &strings, None, "9.8.7").unwrap();
+        assemble(&mut runner, &plan, &binary, &strings, &icon, "9.8.7").unwrap();
         assert_eq!(
             runner.calls,
             [
@@ -235,23 +241,38 @@ mod tests {
         assert_eq!(fs::read(&plan.strings).unwrap(), b"\"a\" = \"b\";");
         let plist = fs::read_to_string(&plan.plist).unwrap();
         assert!(plist.contains("<string>9.8.7</string>"));
-        assert!(!plist.contains("CFBundleIconFile"));
+        assert!(plist.contains("<key>CFBundleIconFile</key>\n\t<string>AppIcon</string>"));
         fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
-    fn assemble_copies_icon_and_names_it_in_the_plist() {
+    fn assemble_copies_icon_to_the_fixed_resource_name() {
         let dir = temp("icon");
-        let (binary, strings, icon) = (dir.join("b"), dir.join("s"), dir.join("Vexel.icns"));
+        let (binary, strings, icon) = (dir.join("b"), dir.join("s"), dir.join("Source.icns"));
         for file in [&binary, &strings, &icon] {
-            fs::write(file, b"x").unwrap();
+            fs::write(file, b"icns-bytes").unwrap();
         }
-        let plan = plan(&dir.join("out"), Some(&icon)).unwrap();
+        let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| None);
-        assemble(&mut runner, &plan, &binary, &strings, Some(&icon), "1.0.0").unwrap();
-        assert!(plan.icon.as_ref().unwrap().is_file());
-        let plist = fs::read_to_string(&plan.plist).unwrap();
-        assert!(plist.contains("<key>CFBundleIconFile</key>\n\t<string>Vexel.icns</string>"));
+        assemble(&mut runner, &plan, &binary, &strings, &icon, "1.0.0").unwrap();
+        assert_eq!(fs::read(&plan.icon).unwrap(), b"icns-bytes");
+        assert!(plan.icon.ends_with("Contents/Resources/AppIcon.icns"));
+        fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn a_missing_icon_fails_before_anything_is_written() {
+        let dir = temp("noicon");
+        let (binary, strings) = (dir.join("b"), dir.join("s"));
+        fs::write(&binary, b"x").unwrap();
+        fs::write(&strings, b"x").unwrap();
+        let icon = dir.join("AppIcon.icns");
+        let plan = plan(&dir.join("out"), &icon).unwrap();
+        let mut runner = RecordingRunner::new(|_| None);
+        let error = assemble(&mut runner, &plan, &binary, &strings, &icon, "1.0.0").unwrap_err();
+        assert!(error.contains("scripts/make_icon.py"), "{error}");
+        assert!(runner.calls.is_empty());
+        assert!(!plan.app.exists());
         fs::remove_dir_all(&dir).unwrap();
     }
 
@@ -261,9 +282,11 @@ mod tests {
         let (binary, strings) = (dir.join("b"), dir.join("s"));
         fs::write(&binary, b"x").unwrap();
         fs::write(&strings, b"x").unwrap();
-        let plan = plan(&dir.join("out"), None).unwrap();
+        let icon = dir.join("AppIcon.icns");
+        fs::write(&icon, b"icns").unwrap();
+        let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| Some(fail("no identity")));
-        let error = assemble(&mut runner, &plan, &binary, &strings, None, "1.0.0").unwrap_err();
+        let error = assemble(&mut runner, &plan, &binary, &strings, &icon, "1.0.0").unwrap_err();
         assert!(error.contains("codesign") && error.contains("no identity"));
         assert_eq!(runner.calls.len(), 1);
         fs::remove_dir_all(&dir).unwrap();

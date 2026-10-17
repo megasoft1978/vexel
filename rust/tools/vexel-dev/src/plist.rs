@@ -4,6 +4,8 @@
 pub const BUNDLE_ID: &str = "app.vexel.Vexel";
 pub const MIN_MACOS: &str = "13.0";
 pub const EXECUTABLE: &str = "vexel";
+/// Icon base name: `CFBundleIconFile` and `Contents/Resources/<name>.icns`.
+pub const ICON_NAME: &str = "AppIcon";
 
 /// Escapes the five XML special characters.
 pub fn escape(text: &str) -> String {
@@ -21,12 +23,12 @@ pub fn escape(text: &str) -> String {
     out
 }
 
-/// Renders the bundle `Info.plist`. `icon_file` is the file name inside
-/// `Contents/Resources`, present only when the owner supplies an icon.
-pub fn render_info_plist(version: &str, bundle_id: &str, icon_file: Option<&str>) -> String {
-    let mut entries: Vec<(&str, String)> = vec![
+/// Renders the bundle `Info.plist`.
+pub fn render_info_plist(version: &str, bundle_id: &str) -> String {
+    let entries: Vec<(&str, String)> = vec![
         ("CFBundleDevelopmentRegion", string("en")),
         ("CFBundleExecutable", string(EXECUTABLE)),
+        ("CFBundleIconFile", string(ICON_NAME)),
         ("CFBundleIdentifier", string(bundle_id)),
         ("CFBundleInfoDictionaryVersion", string("6.0")),
         ("CFBundleName", string("Vexel")),
@@ -36,9 +38,6 @@ pub fn render_info_plist(version: &str, bundle_id: &str, icon_file: Option<&str>
         ("LSMinimumSystemVersion", string(MIN_MACOS)),
         ("NSHighResolutionCapable", "<true/>".to_string()),
     ];
-    if let Some(icon) = icon_file {
-        entries.push(("CFBundleIconFile", string(icon)));
-    }
     let mut out = String::from(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
 <!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n\
@@ -68,13 +67,14 @@ mod tests {
     }
 
     #[test]
-    fn key_set_is_exact_without_icon() {
-        let plist = render_info_plist("1.2.3", BUNDLE_ID, None);
+    fn key_set_is_exact() {
+        let plist = render_info_plist("1.2.3", BUNDLE_ID);
         assert_eq!(
             keys(&plist),
             [
                 "CFBundleDevelopmentRegion",
                 "CFBundleExecutable",
+                "CFBundleIconFile",
                 "CFBundleIdentifier",
                 "CFBundleInfoDictionaryVersion",
                 "CFBundleName",
@@ -89,9 +89,10 @@ mod tests {
 
     #[test]
     fn required_values_and_version_are_rendered() {
-        let plist = render_info_plist("0.1.0", BUNDLE_ID, None);
+        let plist = render_info_plist("0.1.0", BUNDLE_ID);
         for expected in [
             "<key>CFBundleExecutable</key>\n\t<string>vexel</string>",
+            "<key>CFBundleIconFile</key>\n\t<string>AppIcon</string>",
             "<key>CFBundleIdentifier</key>\n\t<string>app.vexel.Vexel</string>",
             "<key>CFBundleShortVersionString</key>\n\t<string>0.1.0</string>",
             "<key>LSMinimumSystemVersion</key>\n\t<string>13.0</string>",
@@ -104,16 +105,16 @@ mod tests {
     }
 
     #[test]
-    fn icon_key_appears_only_with_an_icon() {
-        assert!(!render_info_plist("1", BUNDLE_ID, None).contains("CFBundleIconFile"));
-        let with = render_info_plist("1", BUNDLE_ID, Some("Vexel.icns"));
-        assert!(with.contains("<key>CFBundleIconFile</key>\n\t<string>Vexel.icns</string>"));
+    fn icon_key_names_the_bundled_icon_without_extension() {
+        let plist = render_info_plist("1", BUNDLE_ID);
+        assert!(plist.contains("<key>CFBundleIconFile</key>\n\t<string>AppIcon</string>"));
+        assert!(!plist.contains("AppIcon.icns"));
     }
 
     #[test]
     fn values_are_xml_escaped() {
         assert_eq!(escape("a&b<c>\"d'"), "a&amp;b&lt;c&gt;&quot;d&apos;");
-        let plist = render_info_plist("1.0 <beta> & \"rc\"", "a&b", None);
+        let plist = render_info_plist("1.0 <beta> & \"rc\"", "a&b");
         assert!(plist.contains("<string>1.0 &lt;beta&gt; &amp; &quot;rc&quot;</string>"));
         assert!(plist.contains("<string>a&amp;b</string>"));
         assert!(!plist.contains("<beta>"));

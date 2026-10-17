@@ -85,14 +85,16 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
         Command::Bundle { out, icon } => {
             let cargo = toolchain_and_cache(runner, &root)?;
             let out = out_dir(&root, out)?;
-            let plan = bundle::plan(&out, icon.as_deref())?;
+            let icon = icon.unwrap_or_else(|| root.join(bundle::ICON_SOURCE));
+            bundle::require_icon(&icon)?;
+            let plan = bundle::plan(&out, &icon)?;
             run_checked(runner, &bundle::release_build(&root, &cargo))?;
             bundle::assemble(
                 runner,
                 &plan,
                 &bundle::built_binary(&cargo),
                 &root.join("resources/en.lproj/Localizable.strings"),
-                icon.as_deref(),
+                &icon,
                 env!("CARGO_PKG_VERSION"),
             )?;
             println!("bundle: {}", plan.app.display());
