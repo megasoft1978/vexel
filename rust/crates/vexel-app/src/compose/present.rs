@@ -120,6 +120,12 @@ impl DocumentView {
         }
     }
 
+    /// True while a frame of an earlier compose is parked for drawing (tests).
+    #[cfg(test)]
+    pub(super) fn has_previous(&self) -> bool {
+        self.previous.is_some()
+    }
+
     /// True when `show(_, revision, stage)` would not start new work.
     pub fn is_current(&self, revision: u64, stage: (u32, u32)) -> bool {
         self.revision == Some(revision) && self.stage == stage
@@ -160,8 +166,10 @@ impl DocumentView {
                 Ok(bytes) => {
                     self.name = Some(name);
                     self.selected = None;
-                    self.previous = None;
                     self.show(&bytes, app.revision(), stage);
+                    // `show` parks the old frame as `previous`; it belongs to a different
+                    // document here, so it must never be drawn while the new one composes.
+                    self.previous = None;
                     return;
                 }
                 Err(error) => error,

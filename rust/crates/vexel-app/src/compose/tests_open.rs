@@ -311,3 +311,20 @@ fn view_resize_supersedes_and_never_shows_a_stale_size() {
     let frame = &view.composed().unwrap().frame;
     assert_eq!((frame.width, frame.height), (200, 150));
 }
+
+#[test]
+fn opening_a_different_document_never_shows_the_old_frame_while_composing() {
+    let dir = TempDir::new();
+    let first = dir.file("first.svg", &fixture("compose-v1.svg"));
+    let second = dir.file("second.svg", &fixture("compose-v1.svg"));
+    let mut view = DocumentView::new();
+    let mut app = AppDocument::new(10, 10).unwrap();
+    view.open(&mut app, &first, (STAGE.width, STAGE.height));
+    wait_for(&mut view, |v| v.composed().is_some());
+    assert!(view.composed().is_some());
+    // The second open supersedes the first: until its compose lands there is no
+    // composed frame and no parked previous frame to draw.
+    view.open(&mut app, &second, (STAGE.width, STAGE.height));
+    assert!(view.composed().is_none(), "old composed frame must be gone");
+    assert!(!view.has_previous(), "old document frame must not be parked");
+}
