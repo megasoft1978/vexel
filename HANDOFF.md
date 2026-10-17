@@ -28,13 +28,13 @@ owner intends to delete it once Rust reaches parity.
   stroke dashes, markers, PNG images, 32 MiB compose cap with `limit_decode`/`limit_render`
   verdicts, renderer speed-ups, Rust release tooling (`vexel-dev bundle|dmg|sbom|install-smoke`,
   ad-hoc signed), fmt gate, seeded fuzz tests, perf gate, `vexel-corpus` measurement tool.
-- **Corpus (external, read-only at `~/Desktop/Freelance/vexel-corpus-real`):** see
-  `STATE.md` 2026-10-17 for the latest measured histogram. Legacy C was 3/39; the Rust
-  pipeline is above that. Residuals: `generated-inkscape_t1` (~160 s, quadratic scene validation
-  for non-root-batched shapes), `generated-text_t1` (`TextCommands` limit in `vexel-scene`),
-  timeouts on big generated files, 4–6 hard `use`/reference limits in `vexel-svg-decode`.
-- **Verified on a real window (2026-10-16/17):** app launches, opens SVGs, renders them,
-  title/status/inspector/glyph fixes (screenshot in `docs/archive/live/`). **Not yet verified
+- **Corpus (external, read-only at `~/Desktop/Freelance/vexel-corpus-real`):** 11/39 ok (legacy C: 3/39), 0 timeouts
+  (`STATE.md` 2026-10-17). Remaining: 10 xml-strictness failures (viewport at byte 70, path data,
+  XML at specific bytes), 8 unsupported constructs, 10 limits (65,536 shape clamp and text commands in
+  protected `vexel-scene`).
+- **Verified on a real window (2026-10-16/17):** app launches, opens SVGs, renders them, and the new UI
+  (toolbar, rail, sectioned inspector, artboard canvas at 400% fit, status bar; screenshots in
+  `docs/archive/live/`). **Not yet verified
   live:** pointer drawing, Undo/Redo shortcuts, Save/Open panels, playback strip, MCP session from
   a real Codex client, the Cmd+S double-fire guard — automated click injection did not reach
   the window (process not frontmost when launched from a harness terminal). Run
