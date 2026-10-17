@@ -174,6 +174,37 @@ impl<'src> Decoder<'src, '_> {
             kind: ErrorKind::Number,
             offset: t.name.offset,
         })?;
+        // A symbol clips to its use viewport (x, y, width, height) unless overflow is visible/auto.
+        let viewport_clip = if symbol && symbol_clips(source, tokens, target.0) {
+            let width = use_length(
+                source,
+                tokens,
+                element,
+                b"width",
+                parent.viewport[0],
+                control,
+            )?;
+            let height = use_length(
+                source,
+                tokens,
+                element,
+                b"height",
+                parent.viewport[1],
+                control,
+            )?;
+            let owner =
+                vexel_geometry::affine_compose(parent.transform, local).ok_or(Diagnostic {
+                    kind: ErrorKind::Number,
+                    offset: t.name.offset,
+                })?;
+            let points = viewport_points(owner, x, y, width, height).ok_or(Diagnostic {
+                kind: ErrorKind::Number,
+                offset: t.name.offset,
+            })?;
+            Some((points, owner))
+        } else {
+            None
+        };
         let node = self.builder_mut()?.append_transform(
             parent.scene,
             TransformFrame {
@@ -230,7 +261,7 @@ impl<'src> Decoder<'src, '_> {
                 first_shape,
                 group,
                 style,
-                viewport_clip: None,
+                viewport_clip,
                 reference: Some(target),
                 text_root: false,
                 clip_done: false,
@@ -256,6 +287,47 @@ fn xlink_bound(source: &[u8], tokens: &[vexel_xml::XmlToken], root: usize) -> bo
         .is_some_and(|t| t.kind == vexel_xml::TokenKind::StartElement)
         && attribute(source, tokens, root, b"xlink", Some(b"xmlns")).and_then(|v| v.slice(source))
             == Some(b"http://www.w3.org/1999/xlink")
+}
+
+/// SVG symbols default to `overflow: hidden`; only `visible` and `auto` disable the clip.
+/// Values were validated against the exact allowed set by `symbol_attributes_supported`.
+fn symbol_clips(source: &[u8], tokens: &[vexel_xml::XmlToken], target: usize) -> bool {
+    !attribute(source, tokens, target, b"overflow", None)
+        .and_then(|v| v.slice(source))
+        .is_some_and(|v| v == b"visible" || v == b"auto")
+}
+
+/// Resolves a `<use>` viewport length, defaulting to 100% of the parent viewport.
+fn use_length(
+    source: &[u8],
+    tokens: &[vexel_xml::XmlToken],
+    element: usize,
+    name: &[u8],
+    reference: f64,
+    control: &mut dyn WorkControl,
+) -> Result<f64> {
+    match attribute(source, tokens, element, name, None) {
+        Some(v) => crate::read_length_controlled(source, v, reference, control),
+        None => Ok(reference),
+    }
+}
+
+/// Maps the viewport rectangle `(x, y, width, height)` into the owner's pre-suffix space.
+fn viewport_points(owner: Affine, x: f64, y: f64, width: f64, height: f64) -> Option<[Point; 4]> {
+    let local = [
+        Point { x, y },
+        Point { x: x + width, y },
+        Point {
+            x: x + width,
+            y: y + height,
+        },
+        Point { x, y: y + height },
+    ];
+    let mut points = [Point { x: 0.0, y: 0.0 }; 4];
+    for (slot, point) in points.iter_mut().zip(local) {
+        *slot = vexel_geometry::affine_map_point(owner, point)?;
+    }
+    Some(points)
 }
 pub fn use_attributes_supported(
     source: &[u8],
