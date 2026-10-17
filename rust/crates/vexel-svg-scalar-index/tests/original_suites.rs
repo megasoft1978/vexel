@@ -163,7 +163,7 @@ fn original_bounds_diagnostic_full_svg_sources_reject_paths_with_absolute_offset
         "<svg width=\"16\" height=\"16\"><path d=\"M0 0 L1000001 1\"/></svg>",
         "<svg width=\"16\" height=\"16\"><path d=\"M0 0 Lnan 1\"/></svg>",
         "<svg width=\"16\" height=\"16\"><path d=\"M,,0 1\"/></svg>",
-        "<svg width=\"16\" height=\"16\"><path d=\"M0 0 L1.2.3 4 5\"/></svg>",
+        "<svg width=\"16\" height=\"16\"><path d=\"M0 0 L1.2.3 4\"/></svg>", // incomplete pair; `L1.2.3 4 5` became valid with compact-dot numbers
         "<svg width=\"16\" height=\"16\"><path d=\"M0 0 A1 1 0 2 0 4 4\"/></svg>",
         "<svg width=\"16\" height=\"16\"><path d=\"M0 0 A1 1 0 1.0 0 4 4\"/></svg>",
         "<svg width=\"16\" height=\"16\"><path d=\"L0 0\"/></svg>",
