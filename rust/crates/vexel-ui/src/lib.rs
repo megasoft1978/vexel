@@ -6,6 +6,7 @@ mod draw;
 mod icons;
 mod icon_paths;
 mod paint;
+mod theme;
 mod tokens;
 mod tree;
 mod widget_add;
@@ -13,7 +14,7 @@ mod widget_input;
 mod widget_canvas;
 
 pub use interaction::{CommandBinding, CommandRegistry, SemanticsNode, SemanticsSnapshot};
-pub use tokens::{design_metrics, theme_tokens, theme_tokens_accented, type_scale, Metrics, Theme, Tokens, TypeScale};
+pub use tokens::{design_metrics, theme_tokens, theme_tokens_accented, type_scale, Metrics, Motion, Theme, Tokens, TypeScale};
 pub use tree::{Axis, Node, NodeSpec, Rect, Role, Tree, TreeError, MAX_COMMANDS, MAX_DEPTH, MAX_NODES, MAX_TEXT_BYTES, MAX_TEXT_TOTAL_BYTES, ROOT_ID};
 pub use draw::scalar_text_draw;
 pub use icons::{IconCache, IconBounds, IconError, IconKind, ControlState};
@@ -26,3 +27,5 @@ pub use vexel_raster::Tile;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_tokens;

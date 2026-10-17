@@ -16,12 +16,12 @@ fn contrast(first:u32,second:u32)->f64{
 #[test]
 fn tokens_type_scale_and_metrics_match_core_defaults(){
     let dark=theme_tokens(Theme::Dark,false);let light=theme_tokens(Theme::Light,false);
-    assert_eq!(dark.window,0x171a20ff);assert_eq!(dark.panel,0x20242bff);assert_eq!(dark.accent,0x83b4ffff);
+    assert_eq!(dark.window,0x171a1dff);assert_eq!(dark.panel,0x1e2125ff);assert_eq!(dark.accent,0x5ea3faff);
     assert_eq!(dark.panel_alt,dark.panel_raised);assert_eq!(dark.canvas,dark.canvas_well);assert_eq!(dark.text,dark.text_primary);
     let light_high=theme_tokens(Theme::Light,true);let dark_high=theme_tokens(Theme::Dark,true);
-    assert_eq!(light.window,0xf2f4f7ff);assert_eq!(light.panel_raised,0xedf0f4ff);assert_eq!(light.canvas_well,0xe7ebf0ff);
-    assert_eq!(dark.panel_raised,0x292e37ff);assert_eq!(dark.canvas_well,0x11151bff);assert_eq!(light.accent,0x185fc5ff);
-    assert_eq!(dark_high.focus_ring,0xbedaffff);
+    assert_eq!(light.window,0xf8fbfeff);assert_eq!(light.panel_raised,0xe4e7eaff);assert_eq!(light.canvas_well,0xf8fbfeff);
+    assert_eq!(dark.panel_raised,0x25282cff);assert_eq!(dark.canvas_well,0x171a1dff);assert_eq!(light.accent,0x006dbeff);
+    assert_eq!(dark_high.focus_ring,0xadd9ffff);
     assert_eq!(contrast(light.text_primary,light.panel)>=14.0,true);assert_eq!(contrast(light.text_secondary,light.panel_raised)>=5.5,true);
     assert_eq!(contrast(dark.text_primary,dark.panel)>=14.0,true);assert_eq!(contrast(dark.text_secondary,dark.panel_raised)>=5.5,true);
     assert!(contrast(light_high.text_secondary,light_high.panel_raised)>contrast(light.text_secondary,light.panel_raised));
@@ -29,7 +29,7 @@ fn tokens_type_scale_and_metrics_match_core_defaults(){
     assert!(contrast(light_high.control_edge,light_high.panel)>contrast(light.control_edge,light.panel));
     assert!(contrast(dark_high.control_edge,dark_high.panel)>contrast(dark.control_edge,dark.panel));
     assert_eq!(type_scale().geometry_pt,12);assert!(type_scale().geometry_monospaced&&type_scale().title_semibold);
-    assert_eq!(design_metrics().toolbar_height,40);assert_eq!(design_metrics().inspector_width,320);assert_eq!(design_metrics().control_radius,6);
+    assert_eq!(design_metrics().toolbar_height,44);assert_eq!(design_metrics().inspector_width,296);assert_eq!(design_metrics().control_radius,6);
 }
 
 #[test]
@@ -202,7 +202,7 @@ fn scalar_draw_and_tree_paint_validate_before_writing(){
     let mut alpha=[0u8;4];crate::draw::blend(&mut alpha,0x33669980,255);assert_eq!(alpha,[0x33,0x66,0x99,0x80]);
     let mut tree=Tree::accessible(Theme::Dark,false).unwrap();let mut spec=NodeSpec::new(2,ROOT_ID);spec.role=Role::Button;spec.color=0xff000080;spec.state=1<<5;tree.add(spec).unwrap();tree.layout(4,4).unwrap();
     let mut short=vec![0x5a;63];assert_eq!(tree.paint_into(&mut short,16),Err(PaintError::InvalidBuffer));assert!(short.iter().all(|b|*b==0x5a));
-    let mut rgba=vec![0;4*4*4];tree.paint_into(&mut rgba,16).unwrap();assert_eq!(&rgba[(1*4+1)*4..(1*4+1)*4+4],&[38,60,88,255]);
+    let mut rgba=vec![0;4*4*4];tree.paint_into(&mut rgba,16).unwrap();assert_eq!(&rgba[(1*4+1)*4..(1*4+1)*4+4],&[40,54,71,255]);
     let mut background=vec![0;4*4*4];tree.paint_backgrounds_into(&mut background,16).unwrap();assert_eq!(background,rgba);
     tree.find_mut(2).unwrap().spec.state=1<<2;let mut focused=vec![0;4*4*4];tree.paint_into(&mut focused,16).unwrap();
     let ring=tree.tokens.focus_ring;assert_eq!(&focused[4..8],&[(ring>>24)as u8,(ring>>16)as u8,(ring>>8)as u8,255]);
