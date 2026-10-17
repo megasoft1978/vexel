@@ -1,0 +1,11 @@
+{
+  "1": {"status": "pass", "tests": ["ui_timeline_model::animated_fixtures_have_tracks_with_sorted_keys_inside_the_loop", "ui_timeline_model::element_and_property_names_come_from_the_document", "ui_timeline_model::static_and_missing_documents_show_the_existing_empty_states"]},
+  "2": {"status": "pass", "tests": ["ui_timeline_model::layout_bands_never_overlap_and_stay_inside_for_all_sizes"]},
+  "3": {"status": "pass", "tests": ["ui_timeline_model::time_x_mapping_round_trips_and_the_playhead_clamps_to_the_ruler", "ui_timeline_model::ruler_labels_never_overlap_and_fit_in_the_panel", "ui_timeline_model::major_ticks_are_one_second_apart_when_there_is_room"]},
+  "4": {"status": "pass", "tests": ["ui_timeline_input::dragging_the_ruler_scrubs_clamped_and_release_keeps_the_time", "ui_timeline_input::arrow_keys_step_one_24fps_frame_and_wrap_per_loop_mode", "ui_timeline_input::space_home_end_and_l_use_the_driver_and_chords_are_ignored"]},
+  "5": {"status": "pass", "tests": ["ui_timeline_input::transport_buttons_fire_on_release_over_the_pressed_button", "ui_timeline_input::clicking_a_diamond_selects_it_and_empty_lane_space_does_not", "ui_timeline_input::chevrons_collapse_rows_and_long_lists_scroll_in_whole_rows"]},
+  "6": {"status": "pass", "tests": ["ui_timeline_paint::playhead_diamonds_and_ticks_are_painted_at_their_mapped_positions", "ui_timeline_paint::the_timeline_draws_nothing_outside_its_rect", "ui_timeline_paint::hover_and_pressed_states_paint_visibly_different_buttons", "ui_timeline_paint::empty_states_paint_without_tracks"], "note": "text-cell containment asserted via layout geometry plus nothing drawn outside the footer rect"},
+  "7": {"status": "pass", "tests": ["animation::tests_ui (unchanged)", "animate_workspace (unchanged, Draw<->Animate switch keeps stage composed)"]},
+  "8": {"status": "pass-candidate", "tests": ["ui_timeline_golden::footer_frames_match_first_party_goldens"], "note": "12 candidate goldens; not accepted until a human views review PNGs"},
+  "9": {"status": "pass", "note": "all existing tests pass after re-blessing 16 Animate chrome goldens (see result.md); no new package; no unsafe"}
+}

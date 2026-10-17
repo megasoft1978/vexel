@@ -18,4 +18,5 @@ pub mod preview_app;
 pub mod project_session;
 pub mod render;
 pub mod session;
+pub mod timeline;
 pub mod tools;

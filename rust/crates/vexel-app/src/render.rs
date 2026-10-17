@@ -118,7 +118,7 @@ pub fn render_with(
         draw_chrome_with(&mut c, &layout, model, Some(motion));
         draw_stage_empty(&mut c, layout.stage);
         if let Some(footer) = layout.footer {
-            draw_timeline(&mut c, footer, &model.chrome.timeline);
+            crate::timeline::paint(&mut c, footer, &model.timeline);
         }
         draw_inspector(&mut c, &layout, model);
         draw_popover(&mut c, &layout, model);
@@ -139,91 +139,6 @@ pub(crate) fn label(
 ) {
     let _ = c.paint_text(text, bounds, color, FontFamily::System, weight, size);
 }
-#[cfg(test)]
-mod geometry_tests {
-    use super::*;
-    #[test]
-    fn timeline_rows_are_omitted_until_their_full_bounds_fit() {
-        for height in [51, 106] {
-            let r = Rect {
-                x: 54,
-                y: 100,
-                width: 386,
-                height,
-            };
-            for row in timeline_content_rows(r).into_iter().flatten() {
-                assert!(row.x >= r.x && row.y >= r.y);
-                assert!(row.x + row.width <= r.x + r.width);
-                assert!(row.y + row.height <= r.y + r.height);
-            }
-            if height == 51 {
-                assert!(timeline_content_rows(r)[1].is_none());
-                assert!(timeline_content_rows(r)[2].is_none());
-            }
-        }
-    }
-}
-fn draw_timeline(c: &mut WidgetCanvas<'_>, r: Rect, text: &str) {
-    let tokens = c.tokens;
-    c.paint_rect(r, tokens.panel);
-    c.paint_rect(
-        Rect {
-            x: r.x,
-            y: r.y,
-            width: r.width,
-            height: 1,
-        },
-        tokens.separator,
-    );
-    let rows = timeline_content_rows(r);
-    if let Some(bounds) = rows[0] {
-        label(
-            c,
-            "Timeline",
-            bounds,
-            tokens.text_primary,
-            13,
-            FontWeight::Semibold,
-        );
-    }
-    if let Some(bounds) = rows[1] {
-        label(
-            c,
-            text,
-            bounds,
-            tokens.text_secondary,
-            11,
-            FontWeight::Regular,
-        );
-    }
-    if let Some(track) = rows[2] {
-        c.paint_round(track, 3, tokens.panel_raised, tokens.separator, 1);
-    }
-}
-
-fn timeline_content_rows(r: Rect) -> [Option<Rect>; 3] {
-    [
-        (r.height >= 32).then_some(Rect {
-            x: r.x + 14,
-            y: r.y + 8,
-            width: 94,
-            height: 24,
-        }),
-        (r.height >= 64).then_some(Rect {
-            x: r.x + 14,
-            y: r.y + 42,
-            width: 220,
-            height: 22,
-        }),
-        (r.height >= 96).then_some(Rect {
-            x: r.x + 14,
-            y: r.y + 74,
-            width: r.width.saturating_sub(28),
-            height: 18,
-        }),
-    ]
-}
-
 /// Stage placeholder; a composed document is blitted over it by the shell.
 fn draw_stage_empty(c: &mut WidgetCanvas<'_>, stage: Rect) {
     let tokens = c.tokens;

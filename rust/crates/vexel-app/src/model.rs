@@ -1,5 +1,6 @@
 use crate::chrome::ChromeText;
 use crate::layout::{Button, Focus, Splitter, UiState, contains};
+use crate::timeline::Timeline;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
@@ -88,6 +89,8 @@ pub struct Model {
     pub mcp: McpState,
     /// Panel sizes, collapsed sections, focus and popover (in memory only).
     pub ui: UiState,
+    /// Animate footer: tracks, playback readout and interaction state.
+    pub timeline: Timeline,
 }
 impl Model {
     pub fn new(dark: bool) -> Self {
@@ -100,6 +103,7 @@ impl Model {
             chrome: ChromeText::default(),
             mcp: McpState::Unavailable,
             ui: UiState::default(),
+            timeline: Timeline::default(),
         }
     }
     /// Layout for the current mode and UI state.

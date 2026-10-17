@@ -23,7 +23,7 @@ use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
 use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
-use vexel_app::{canvas, compose, preview_app, render};
+use vexel_app::{canvas, compose, preview_app, render, timeline};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
     WindowEvent,
@@ -193,6 +193,26 @@ fn run(
                 dirty = true;
             }
         }
+        {
+            // Timeline footer: tracks per document revision, playback every frame.
+            let revision = files.document().revision();
+            if revision == 0 {
+                if model.timeline.model.open {
+                    model.timeline.clear();
+                    dirty = true;
+                }
+            } else if driver.knows(revision) && model.timeline.model.revision != Some(revision) {
+                if let Ok(bytes) = files.document().source_bytes() {
+                    model
+                        .timeline
+                        .set_document(revision, &bytes, driver.loop_seconds());
+                    dirty = true;
+                }
+            }
+            if model.timeline.model.open && model.timeline.model.sync_playback(&driver) {
+                dirty = true;
+            }
+        }
         if files.document().revision() != menu_revision {
             menu_revision = files.document().revision();
             let _ = files.refresh_menu(&app);
@@ -230,7 +250,9 @@ fn run(
                     let frame = match model.layout(draw_size.0, draw_size.1) {
                         Some(layout) => {
                             let frame = compose::blit_document(frame, &doc, &layout, model.dark);
-                            match strip::layout(layout.stage).filter(|_| driver.strip_visible()) {
+                            let bar = strip::layout(layout.stage)
+                                .filter(|_| driver.strip_visible() && layout.footer.is_none());
+                            match bar {
                                 Some(bar) => strip::draw(frame, &bar, &driver, model.dark),
                                 None => frame,
                             }
@@ -351,6 +373,10 @@ fn run(
                         apply_file_outcome(
                             outcome, &mut model, &files, &app, &mut dirty, &mut tools, &mut doc,
                         );
+                    } else if model.mode == Mode::Animate
+                        && timeline::key(code, modifiers, &mut driver)
+                    {
+                        dirty = true;
                     } else if playback_key(code, modifiers)
                         .is_some_and(|key| keys::apply(&mut driver, key, false, tools.owns_keys()))
                     {
@@ -392,6 +418,16 @@ fn run(
                             &mut tools,
                             (&mut driver, &mut strip),
                         );
+                    }
+                }
+                WindowEvent::Scroll(scroll) => {
+                    if let Some(footer) = model.layout(logical.0, logical.1).and_then(|l| l.footer)
+                    {
+                        let (x, y) = scroll.logical;
+                        if x >= footer.x as i32 && y >= footer.y as i32 {
+                            let tl = timeline::layout::TimelineLayout::new(footer);
+                            dirty |= model.timeline.scroll_by_points(scroll.delta.y, &tl);
+                        }
                     }
                 }
                 WindowEvent::CloseRequested => {
@@ -495,8 +531,25 @@ fn route_pointer(
 ) -> bool {
     let primary = pointer_accepts_mode(pointer.button);
     let mut redraw = false;
-    // The timeline strip overlays the stage bottom and takes its pointer events.
-    if let Some(bar) = strip::layout(layout.stage).filter(|_| driver.strip_visible()) {
+    if let Some(footer) = layout.footer.filter(|_| model.mode == Mode::Animate) {
+        let phase = match pointer.kind {
+            PointerKind::Down if primary => Some(timeline::Phase::Down),
+            PointerKind::Move => Some(timeline::Phase::Move),
+            PointerKind::Up if primary => Some(timeline::Phase::Up),
+            _ => None,
+        };
+        let tl = timeline::layout::TimelineLayout::new(footer);
+        if let Some(out) = phase.map(|p| model.timeline.pointer(p, pointer.logical, &tl, driver)) {
+            redraw |= out.redraw;
+            if out.consumed {
+                return true;
+            }
+        }
+    }
+    // The timeline strip overlays the stage bottom (Draw mode) and takes its pointer events.
+    if let Some(bar) =
+        strip::layout(layout.stage).filter(|_| driver.strip_visible() && layout.footer.is_none())
+    {
         let kind = match pointer.kind {
             PointerKind::Down if primary => Some(StripPointer::Down),
             PointerKind::Move => Some(StripPointer::Move),

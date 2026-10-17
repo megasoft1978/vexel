@@ -1,0 +1,13 @@
+{
+  "work_order": "WO-RUST-UI-TIMELINE-01",
+  "commands": [
+    {"cmd": "cargo +stable check -p vexel-ui -p vexel-app --locked --offline", "exit": 0},
+    {"cmd": "cargo +stable test -p vexel-ui --locked --offline", "exit": 0, "passed": 46, "failed": 0},
+    {"cmd": "cargo +stable test -p vexel-app --locked --offline", "exit": 0, "passed": 339, "failed": 0},
+    {"cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-ui --package vexel-app -- --check", "exit": 1, "note": "diffs only in vexel-ui files not touched by this order (pre-existing); vexel-app clean"},
+    {"cmd": "python3 scripts/wo_validate.py WO-RUST-UI-TIMELINE-01 --ready", "exit": 0},
+    {"cmd": "python3 scripts/ledger.py validate ledger.jsonl", "exit": 0},
+    {"cmd": "git diff --check", "exit": 0}
+  ],
+  "logs": "artifacts/WO-RUST-UI-TIMELINE-01/logs/"
+}

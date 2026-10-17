@@ -1,0 +1,23 @@
+{
+  "work_order": "WO-RUST-UI-TIMELINE-01",
+  "new": [
+    "rust/crates/vexel-app/src/timeline/{mod,model,layout,paint}.rs",
+    "rust/crates/vexel-app/tests/ui_timeline_{support,model,input,paint,golden,look}.rs",
+    "rust/fixtures/ui/timeline/many.svg",
+    "rust/fixtures/ui/timeline/footer-*.rle (12)",
+    "artifacts/WO-RUST-UI-TIMELINE-01/**",
+    "docs/archive/live/2026-10-17-ui-timeline-01-*.png (4, worker-recorded before/after)"
+  ],
+  "modified_registration_wiring": [
+    "rust/crates/vexel-app/src/lib.rs (1 line)",
+    "rust/crates/vexel-app/src/model.rs (import, field, init)",
+    "rust/crates/vexel-app/src/render.rs (call-site; placeholder draw_timeline and its test removed)",
+    "rust/crates/vexel-app/src/main.rs (timeline sync, pointer, key, wheel; strip limited to Draw)"
+  ],
+  "modified_goldens_outside_allowed_paths": [
+    "rust/fixtures/ui/chrome/*animate*.rle (16, re-blessed, footer only)",
+    "artifacts/WO-RUST-UI-CHROME-01/review/*animate*.png (16)"
+  ],
+  "untouched": ["Cargo.toml files", "Cargo.lock", "other crates", "STATE.md", "LEDGER*.md", "ledger.jsonl", "work/**"],
+  "deviations": "main.rs and render.rs wiring exceeds 30 changed lines; chrome goldens re-blessed (unavoidable); docs/archive/live screenshots written by worker as requested by the coordinator brief; .target-wt/ (build output) is untracked and not committed"
+}
