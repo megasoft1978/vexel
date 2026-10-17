@@ -4,6 +4,7 @@
 mod interaction;
 mod draw;
 mod icons;
+mod icons_draw;
 mod icon_paths;
 mod paint;
 mod theme;
@@ -18,6 +19,7 @@ pub use tokens::{design_metrics, theme_tokens, theme_tokens_accented, type_scale
 pub use tree::{Axis, Node, NodeSpec, Rect, Role, Tree, TreeError, MAX_COMMANDS, MAX_DEPTH, MAX_NODES, MAX_TEXT_BYTES, MAX_TEXT_TOTAL_BYTES, ROOT_ID};
 pub use draw::scalar_text_draw;
 pub use icons::{IconCache, IconBounds, IconError, IconKind, ControlState};
+pub use icons_draw::icon_centered;
 pub use paint::PaintError;
 pub use icon_paths::{icon_definitions, icon_path_count, icon_path_at, icon_path_validate, icon_validate_all, IconDefinition};
 pub use widget_add::{WidgetSpec, add_button, add_checkbox, add_text_field, add_slider, add_row};
@@ -29,3 +31,5 @@ pub use vexel_raster::Tile;
 mod tests;
 #[cfg(test)]
 mod tests_tokens;
+#[cfg(test)]
+mod tests_icons;

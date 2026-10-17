@@ -122,8 +122,8 @@ fn basic_render_and_focus_ring_use_owned_rgba_tile(){
 
 #[test]
 fn icon_catalog_strict_paths_masks_and_frozen_hash_relationships(){
-    assert_eq!(icon_path_count(),53);assert!(icon_validate_all());
-    assert_eq!(icon_path_at(0).unwrap().name,"select");assert_eq!(icon_path_at(52).unwrap().name,"sidebar_right");assert!(icon_path_at(53).is_none());
+    assert_eq!(icon_path_count(),66);assert!(icon_validate_all());
+    assert_eq!(icon_path_at(0).unwrap().name,"select");assert_eq!(icon_path_at(52).unwrap().name,"sidebar_right");assert_eq!(icon_path_at(65).unwrap().name,"timeline");assert!(icon_path_at(66).is_none());
     assert_eq!(icon_path_validate("M0 12 A12 12 0 0 1 24 12").unwrap(),IconBounds{left:0.0,top:0.0,right:24.0,bottom:12.0});
     for bad in ["M0 0 L30 30","M0 0 H10","M0 0 m1 1","M0 12 A12 12 0 2 1 24 12","M1 1 A24 24 0 1 1 2 1"] {
         assert_eq!(icon_path_validate(bad),Err(IconError::InvalidPath),"{bad}");
@@ -140,11 +140,12 @@ fn icon_catalog_strict_paths_masks_and_frozen_hash_relationships(){
     assert_eq!(icon_path_validate(&dense),Err(IconError::TooComplex));
     assert!(icon_path_validate("M0 0 C1 1 2 2 3 3").is_ok());
     let mut cache=IconCache::new();let dark_1=cache.asset_hash(Theme::Dark,1);let light_1=cache.asset_hash(Theme::Light,1);let dark_2=cache.asset_hash(Theme::Dark,2);let dark_3=cache.asset_hash(Theme::Dark,3);
-    // Frozen ui_icon_asset_hash outputs from the owner C implementation.
-    assert_eq!(dark_1,0xdd0c_edd4_ec72_3d06);assert_eq!(light_1,0xdd0c_edd4_ec72_3d06);
-    assert_eq!(dark_2,0x2d4e_975f_7b57_75c5);assert_eq!(dark_3,0xbe12_0e3a_5aa4_1d42);
-    assert_eq!(cache.asset_hash(Theme::Light,2),0x2d4e_975f_7b57_75c5);
-    assert_eq!(cache.asset_hash(Theme::Light,3),0xbe12_0e3a_5aa4_1d42);
+    // ui_icon_asset_hash pins, re-pinned by WO-RUST-UI-ICONS-01: the 24-unit C-oracle masks were replaced by 16-unit
+    // first-party masks (old pins 0xdd0cedd4ec723d06, 0x2d4e975f7b5775c5, 0xbe120e3a5aa41d42 for 1x/2x/3x).
+    assert_eq!(dark_1,0x4be4_3e53_9790_107d);assert_eq!(light_1,0x4be4_3e53_9790_107d);
+    assert_eq!(dark_2,0x1086_30f4_149d_90e8);assert_eq!(dark_3,0x1d17_10bb_3b10_e309);
+    assert_eq!(cache.asset_hash(Theme::Light,2),0x1086_30f4_149d_90e8);
+    assert_eq!(cache.asset_hash(Theme::Light,3),0x1d17_10bb_3b10_e309);
     assert_ne!(dark_1,0);assert_eq!(dark_1,light_1);assert_ne!(dark_2,0);assert_ne!(dark_1,dark_2);
     let mut hashes=[0u64;15];let kinds=[IconKind::PEN,IconKind::NODE_EDIT,IconKind::PENCIL,IconKind::STROKE,IconKind::UNGROUP,IconKind::MORE,IconKind::CIRCLE,IconKind::ELLIPSE,IconKind::DOCUMENT,IconKind::STOP,IconKind::PATH,IconKind::POLYLINE,IconKind::IMAGE,IconKind::SIDEBAR_LEFT,IconKind::SIDEBAR_RIGHT];
     for (i,icon) in kinds.into_iter().enumerate(){let mut rgba=vec![0;48*48*4];cache.paint(icon,Theme::Light,2.0,Rect{x:0,y:0,width:48,height:48},0x1f2732ff,&mut rgba,48,48,48*4).unwrap();let mut h=1_469_598_103_934_665_603u64;let mut visible=0;for at in (3..rgba.len()).step_by(4){if rgba[at]!=0{visible+=1;h=(h^((at/4)as u64)).wrapping_mul(1_099_511_628_211)}}assert!(visible>=16);hashes[i]=h;assert!(hashes[..i].iter().all(|prior|*prior!=h));}

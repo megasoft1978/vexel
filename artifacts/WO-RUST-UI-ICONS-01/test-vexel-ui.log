@@ -1,0 +1,39 @@
+   Compiling vexel-ui v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-a891731f14d93a34d/rust/crates/vexel-ui)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running unittests src/lib.rs (.cache/target/aarch64-apple-darwin/debug/deps/vexel_ui-2b51bdcb2ee7b980)
+
+running 25 tests
+test tests::tokens_type_scale_and_metrics_match_core_defaults ... ok
+test tests::basic_render_and_focus_ring_use_owned_rgba_tile ... ok
+test tests::scalar_draw_and_tree_paint_validate_before_writing ... ok
+test tests::clipped_semantic_outline_uses_canvas_edges ... ok
+test tests::original_layout_cases_fixed_flexible_overflow_and_trailing_fixed ... ok
+test tests::depth_limit_layout_failure_is_atomic_and_retryable ... ok
+test tests::accent_choices_keep_contrast_on_both_surfaces_in_all_modes ... ok
+test tests::widget_input_preserves_utf8_editing_and_transactional_rules ... ok
+test tests::focus_commands_checkboxes_and_disabled_nodes ... ok
+test tests::semantics_are_owned_full_text_and_preserve_defaults_frames ... ok
+test tests::five_widget_add_wrappers_preserve_roles_and_owned_text ... ok
+test tests::widget_number_color_slider_dropdown_and_pointer_keep_original_semantics ... ok
+test tests::add_caps_duplicate_and_failure_leave_tree_unchanged ... ok
+test tests_icons::ac5_stroke_width_and_joins_are_global_constants ... ok
+test tests_icons::ac1_every_kind_defined_unique_snake_case_and_bounded ... ok
+test tests_icons::ac3_geometry_stays_inside_keyline_and_is_centred ... ok
+test tests::legacy_pan_mask_matches_frozen_c_reference_at_scales_one_through_four ... ok
+test tests::widget_tree_row_keeps_unicode_ellipsis_and_callback_segments ... ok
+test tests::widget_canvas_keeps_native_text_hook_focus_and_buffer_bounds ... ok
+test tests_icons::ac6_centred_helper_centres_tool_icons_in_a_32_target ... ok
+test tests_icons::ac4_axis_aligned_icons_are_crisp ... ok
+test tests_icons::ac2_masks_are_non_empty_and_scale_consistently ... ok
+test tests::icon_catalog_strict_paths_masks_and_frozen_hash_relationships ... ok
+test tests_icons::ac7_deterministic_and_cache_is_bounded ... ok
+test tests::widget_painter_covers_every_named_kind_and_state_transition ... ok
+
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.63s
+
+   Doc-tests vexel_ui
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

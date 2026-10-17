@@ -295,3 +295,5 @@ before goldens are generated, and a fresh read-only reviewer.
 ## Implementation notes (2026-10-17, from the independent review of WO-RUST-UI-TOKENS-01)
 
 Measured against the first proposal: dark `text.high` is L95 `#EEF1F4` (L93 gave 13.54:1, below the 14:1 pin; L95 gives 14.26:1 on level 1); the dark focus ring is accent L+10 (`#ADD9FF`); light success, warning and error are L45; the light accent is L45. All values were independently recomputed (CIE LCH(ab), D65 to sRGB, WCAG relative luminance) and match the code.
+
+Icons (2026-10-17, from the review of WO-RUST-UI-ICONS-01): the stroke is nominally 1.5 units on the 16 px grid but is rendered at an even device width (2 px at 1x, 4 px at 2x, 6 px at 3x) because a true 1.5 px stroke cannot be crisp at 1x and also scale cleanly at 2x/3x (the order's own AC2 and AC4 conflict at 1.5). `snapped_width` is the asserted value. Seven icons are weak and are to be redrawn in a follow-up before the chrome uses them: pause, gradient, timeline, eyedropper, ruler, actual_size, group (pen and node_edit are also noisy at 1x).
