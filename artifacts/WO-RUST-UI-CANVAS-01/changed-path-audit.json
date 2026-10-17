@@ -1,0 +1,3 @@
+{"added":["rust/crates/vexel-app/src/canvas/**","rust/crates/vexel-app/tests/ui_canvas_*.rs","rust/fixtures/ui/canvas/*.png","artifacts/WO-RUST-UI-CANVAS-01/**"],
+"modified":["rust/crates/vexel-app/src/lib.rs (1 line)","rust/crates/vexel-app/src/compose/present.rs","rust/crates/vexel-app/src/main.rs (about 14 lines)"],
+"protected_touched":[]}

@@ -1,13 +1,16 @@
 //! Shell-side state for one opened SVG and its presentation into the stage.
 //!
-//! The composed frame is 1 pixel per point at the stage size. On a Retina
-//! backing the presenter replicates each pixel scale x scale, so the document
-//! fills the same logical area but is not rendered at native sharpness (a
-//! disclosed later item).
+//! The composed frame is the artboard rendered at the resolution the current
+//! zoom needs (see `canvas::size`); `blit_document` presents it through the
+//! canvas view (artboard, shadow, checkerboard, overlays). A view that was never
+//! adopted by the shell (`compose_target` not called) keeps the legacy
+//! behaviour: the frame is the stage and view points equal frame pixels.
 
 use super::{ComposeError, ComposeWorker, Composed, Disclosure, Frame, OwnedShape, WorkerEvent};
+use crate::canvas::{self, CanvasState, StagePaint, ViewMap};
 use crate::model::Layout;
 use crate::session::AppDocument;
+use crate::tools::CanvasMap;
 use std::path::Path;
 use std::sync::Arc;
 use vexel_platform_apple::RgbaFrame;
@@ -37,6 +40,13 @@ pub struct DocumentView {
     /// Scene index of the shape picked with the select tool, shown by the
     /// inspector.
     selected: Option<usize>,
+    /// Natural size of the last shown document, read from its root tag.
+    parsed: Option<(f64, f64)>,
+    /// Natural size adopted by the shell through `compose_target`.
+    artboard: Option<(f64, f64)>,
+    compose_requests: u64,
+    /// Zoom, pan, fit and hover state of the canvas well.
+    pub canvas: CanvasState,
 }
 
 impl Default for DocumentView {
@@ -58,6 +68,10 @@ impl DocumentView {
             animated: false,
             status: None,
             selected: None,
+            parsed: None,
+            artboard: None,
+            compose_requests: 0,
+            canvas: CanvasState::default(),
         }
     }
 
@@ -139,6 +153,7 @@ impl DocumentView {
         }
         self.revision = Some(revision);
         self.stage = stage;
+        self.parsed = canvas::natural_size(bytes);
         if let Some(shown) = self.composed.take() {
             self.previous = Some(shown);
         }
@@ -148,6 +163,7 @@ impl DocumentView {
         match &self.worker {
             Some(worker) => {
                 self.generation = worker.request(Arc::new(bytes.to_vec()), stage.0, stage.1);
+                self.compose_requests += 1;
             }
             None => self.status = Some(("Cannot start the compose worker".to_owned(), true)),
         }
@@ -166,6 +182,9 @@ impl DocumentView {
                 Ok(bytes) => {
                     self.name = Some(name);
                     self.selected = None;
+                    self.canvas.hover = None;
+                    // A new document is fitted again (see `compose_target`).
+                    self.artboard = None;
                     self.show(&bytes, app.revision(), stage);
                     // `show` parks the old frame as `previous`; it belongs to a different
                     // document here, so it must never be drawn while the new one composes.
@@ -241,22 +260,24 @@ impl DocumentView {
 
     /// Like [`DocumentView::pointer`]; with `select` (the select tool is
     /// active) the click also picks the topmost shape under it, or clears the
-    /// selection when it lands on empty canvas.
+    /// selection when it lands on empty canvas. The window position goes
+    /// through the canvas view, so zoom and pan do not change what is hit.
     pub fn pointer_with(&mut self, stage: Rect, logical: (u32, u32), select: bool) -> bool {
         let Some(composed) = &self.composed else {
             return false;
         };
-        if composed.frame.width != stage.width || composed.frame.height != stage.height {
-            return false;
-        }
         let Some((cx, cy)) = Self::canvas_point(stage, logical) else {
             return false;
         };
-        let Some((dx, dy)) = composed.map.canvas_to_doc(cx, cy) else {
+        let Some(map) = self.view_map() else {
             return false;
         };
+        let Some((dx, dy)) = map.to_doc(cx, cy) else {
+            return false;
+        };
+        let (fx, fy) = map.view_to_frame((cx, cy));
         let name = self.name().unwrap_or("document");
-        let hit = composed.hit_test(cx, cy);
+        let hit = composed.hit_test(fx, fy);
         let text = match hit {
             Some(index) => format!("{name}: shape {index} at ({dx:.1}, {dy:.1})"),
             None => format!("{name}: no shape at ({dx:.1}, {dy:.1})"),
@@ -266,6 +287,89 @@ impl DocumentView {
         }
         self.status = Some((text, false));
         true
+    }
+
+    /// Natural (100%) size of the artboard once the shell has adopted it.
+    pub fn artboard(&self) -> Option<(f64, f64)> {
+        self.artboard
+    }
+
+    /// Number of composes requested so far.
+    pub fn compose_requests(&self) -> u64 {
+        self.compose_requests
+    }
+
+    /// The compose size the shell should ask for (use it as the `stage` of
+    /// `show` and `stage::sync`): the stage until the document's size is known,
+    /// then the artboard at the resolution the current zoom needs, which is
+    /// kept while the zoom stays within the cached resolution band. Also adopts
+    /// the artboard and refits while the view follows the stage.
+    pub fn compose_target(&mut self, stage: Rect, backing: u32) -> (u32, u32) {
+        let Some(natural) = self.parsed else {
+            return (stage.width, stage.height);
+        };
+        let size = (f64::from(stage.width), f64::from(stage.height));
+        if self.artboard != Some(natural) {
+            self.artboard = Some(natural);
+            self.canvas.fit = true;
+        }
+        self.canvas.refit(size, natural);
+        let current = (self.stage != (0, 0)).then_some(self.stage);
+        canvas::target_compose_size(natural, self.canvas.view.zoom, backing, current)
+    }
+
+    /// The frame being presented: the newest compose, else the parked one.
+    fn shown(&self) -> Option<&Composed> {
+        self.composed.as_ref().or(self.previous.as_ref())
+    }
+
+    /// Window-point mapping for the newest compose (tools, picking, hover).
+    pub fn view_map(&self) -> Option<ViewMap> {
+        self.map_for(self.composed.as_ref()?)
+    }
+
+    fn map_for(&self, composed: &Composed) -> Option<ViewMap> {
+        let size = (composed.frame.width, composed.frame.height);
+        let artboard = self
+            .artboard
+            .unwrap_or((f64::from(size.0), f64::from(size.1)));
+        ViewMap::new(self.canvas.view, artboard, size, composed.map)
+    }
+
+    /// Sets the hovered shape from a window point (`None` clears it). True
+    /// when it changed.
+    pub fn set_hover(&mut self, stage: Rect, logical: Option<(u32, u32)>) -> bool {
+        let hit = logical.and_then(|at| {
+            let (cx, cy) = Self::canvas_point(stage, at)?;
+            let map = self.view_map()?;
+            map.to_doc(cx, cy)?;
+            let (fx, fy) = map.view_to_frame((cx, cy));
+            self.composed.as_ref()?.hit_test(fx, fy)
+        });
+        let changed = hit != self.canvas.hover;
+        self.canvas.hover = hit;
+        changed
+    }
+
+    /// What the stage should show, or `None` while there is no usable frame.
+    pub fn stage_paint(&self) -> Option<StagePaint<'_>> {
+        let shown = self.shown()?;
+        let map = self.map_for(shown)?;
+        let size = (shown.frame.width, shown.frame.height);
+        let artboard = self
+            .artboard
+            .unwrap_or((f64::from(size.0), f64::from(size.1)));
+        let bounds = |index: usize| {
+            let shape = shown.shapes.iter().find(|s| s.scene_index == index)?;
+            map.shape_bounds(shape)
+        };
+        Some(StagePaint {
+            view: self.canvas.view,
+            artboard,
+            frame: Some(&shown.frame),
+            selection: self.selected.and_then(bounds),
+            hover: self.canvas.hover.and_then(bounds),
+        })
     }
 }
 
@@ -313,11 +417,11 @@ pub fn fill(pixels: &mut [u8], width: u32, scale: u32, rect: Rect, color: u32) {
     }
 }
 
-/// Copies the composed frame over white into the stage. Returns the original
-/// frame when nothing is open or the composed copy cannot be built. The status
-/// text is drawn by `render` from the document-derived chrome text, inside the
-/// status bar (the old label here was positioned in points on a pixel buffer,
-/// so it landed at mid-height over the tool rail on Retina backings).
+/// Paints the canvas well into the stage: the artboard presented through the
+/// canvas view with its shadow, checkerboard and overlays, and the zoom
+/// controls once the shell has adopted the artboard. Returns the original
+/// frame when nothing is open. The status text is drawn by `render` from the
+/// document-derived chrome text, inside the status bar.
 pub fn blit_document(
     frame: RgbaFrame,
     view: &DocumentView,
@@ -329,77 +433,32 @@ pub fn blit_document(
     }
     let (width, height, scale) = (frame.width(), frame.height(), frame.backing_scale() as u32);
     let mut pixels = frame.pixels().to_vec();
-    let tokens = theme_tokens(if dark { Theme::Dark } else { Theme::Light }, false);
-    let exact = view
-        .composed()
-        .filter(|c| c.frame.width == layout.stage.width && c.frame.height == layout.stage.height);
-    if let Some(composed) = exact {
-        let (sw, s) = (composed.frame.width as usize, scale as usize);
-        for (i, px) in composed.frame.rgba.chunks_exact(4).enumerate() {
-            let out = over_white(px);
-            let (x, y) = (i % sw, i / sw);
-            for dy in 0..s {
-                let row = (layout.stage.y as usize + y) * s + dy;
-                let col = (layout.stage.x as usize + x) * s;
-                let start = (row * width as usize + col) * 4;
-                if let Some(span) = pixels.get_mut(start..start + s * 4) {
-                    span.chunks_exact_mut(4)
-                        .for_each(|p| p.copy_from_slice(&out));
-                }
-            }
-        }
-    } else if let Some(old) = view.previous.as_ref() {
-        // A compose at the new stage size is pending: show the last frame
-        // scaled to fit (nearest neighbour, centred) instead of a blank stage.
-        fill(&mut pixels, width, scale, layout.stage, tokens.canvas_well);
-        blit_scaled(
+    let mut tokens = theme_tokens(if dark { Theme::Dark } else { Theme::Light }, false);
+    if view.artboard.is_none() {
+        // Not adopted by the shell: the frame is the stage, shown over white.
+        tokens.checker_a = 0xffff_ffff;
+        tokens.checker_b = 0xffff_ffff;
+    }
+    let paint = view.stage_paint();
+    canvas::paint_stage(
+        &mut pixels,
+        width,
+        scale,
+        layout.stage,
+        &tokens,
+        paint.as_ref(),
+    );
+    if paint.is_some() && view.artboard.is_some() {
+        let percent = view.canvas.view.percent();
+        canvas::paint_cluster(
             &mut pixels,
-            width as usize,
-            scale as usize,
-            &old.frame,
+            (width, height),
+            scale,
             layout.stage,
+            dark,
+            percent,
+            true,
         );
-    } else {
-        fill(&mut pixels, width, scale, layout.stage, tokens.canvas_well);
     }
     RgbaFrame::new(width, height, f64::from(scale), pixels).unwrap_or(frame)
-}
-
-fn over_white(px: &[u8]) -> [u8; 4] {
-    let a = u32::from(px[3]);
-    let over = |c: u8| ((u32::from(c) * a + 255 * (255 - a) + 127) / 255) as u8;
-    [over(px[0]), over(px[1]), over(px[2]), 255]
-}
-
-/// Nearest-neighbour copy of `frame` over white into `stage`, uniformly scaled
-/// to fit and centred; the rest of the stage is left as it is.
-fn blit_scaled(pixels: &mut [u8], width: usize, s: usize, frame: &Frame, stage: Rect) {
-    let (fw, fh) = (frame.width as usize, frame.height as usize);
-    let (sw, sh) = (stage.width as usize, stage.height as usize);
-    if fw == 0 || fh == 0 || sw == 0 || sh == 0 || frame.rgba.len() != fw * fh * 4 {
-        return;
-    }
-    // Fit: the smaller of the two ratios, kept as integer fractions.
-    let (dw, dh) = if sw * fh <= sh * fw {
-        (sw, (fh * sw / fw).max(1))
-    } else {
-        ((fw * sh / fh).max(1), sh)
-    };
-    let (ox, oy) = ((sw - dw) / 2, (sh - dh) / 2);
-    for y in 0..dh {
-        let src_row = (y * fh / dh).min(fh - 1);
-        for x in 0..dw {
-            let src = (src_row * fw + (x * fw / dw).min(fw - 1)) * 4;
-            let out = over_white(&frame.rgba[src..src + 4]);
-            for dy in 0..s {
-                let row = (stage.y as usize + oy + y) * s + dy;
-                let col = (stage.x as usize + ox + x) * s;
-                let start = (row * width + col) * 4;
-                if let Some(span) = pixels.get_mut(start..start + s * 4) {
-                    span.chunks_exact_mut(4)
-                        .for_each(|p| p.copy_from_slice(&out));
-                }
-            }
-        }
-    }
 }

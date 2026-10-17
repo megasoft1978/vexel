@@ -4,6 +4,7 @@
 //! binary and by integration tests.
 
 pub mod animation;
+pub mod canvas;
 pub mod chrome;
 pub mod compose;
 pub mod file_flow;

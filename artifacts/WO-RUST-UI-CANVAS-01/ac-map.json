@@ -1,0 +1,9 @@
+{"AC1":"ui_canvas_view: fit_centres..., zoom_at_keeps..., view_to_doc_inverts...",
+"AC2":"ui_canvas_pointer: identity_view_map_equals..., a_click_at_200_percent...",
+"AC3":"ui_canvas_paint: artboard_with_well_shadow_hairline_and_document_pixels",
+"AC4":"ui_canvas_paint: checkerboard_*",
+"AC5":"ui_canvas_paint: outlines_keep_their_width..., handles_are_eight...",
+"AC6":"ui_canvas_view: zoom_label..., zoom_cluster_* (corner clearance for stage heights >= 180)",
+"AC7":"ui_canvas_pointer: view_changes_recompose_only_beyond_twice..., a_thousand_pan_events...",
+"AC8":"ui_canvas_golden + rust/fixtures/ui/canvas/stage-{dark,light}@{1,2}x.png (candidates)",
+"AC9":"full vexel-app suite green; no new deps; no unsafe"}

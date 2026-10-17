@@ -23,7 +23,7 @@ use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
 use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
-use vexel_app::{compose, preview_app, render};
+use vexel_app::{canvas, compose, preview_app, render};
 use vexel_platform_apple::{
     MainThread, Modifiers, NativeApp, NativePanels, PointerEvent, PointerKind, WindowConfig,
     WindowEvent,
@@ -179,7 +179,7 @@ fn run(
             }
         }
         if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
-            let stage = (layout.stage.width, layout.stage.height);
+            let stage = doc.compose_target(layout.stage, scale as u32);
             if let Some(path) = pending_open.take() {
                 doc.open(files.document_mut(), &path, stage);
                 dirty = true;
@@ -259,6 +259,14 @@ fn run(
             .poll_events(window.id(), event_budget)
             .map_err(|_| "native event polling failed")?;
         for event in batch.events {
+            if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
+                let select = model.mode == Mode::Draw && tools.tool() == Tool::Select;
+                let used = canvas::handle_event(&mut doc, &event, layout.stage, select);
+                dirty |= used.redraw;
+                if used.consumed {
+                    continue;
+                }
+            }
             match event {
                 WindowEvent::Open => dirty = true,
                 WindowEvent::Focus(focused) => {
@@ -501,11 +509,7 @@ fn route_pointer(
     if model.mode != Mode::Draw {
         return redraw;
     }
-    let map = doc
-        .composed()
-        .filter(|c| c.frame.width == layout.stage.width && c.frame.height == layout.stage.height)
-        .map(|c| c.map);
-    let Some(map) = map else {
+    let Some(map) = doc.view_map() else {
         return redraw;
     };
     let canvas = point.and_then(|p| compose::DocumentView::canvas_point(layout.stage, p));
