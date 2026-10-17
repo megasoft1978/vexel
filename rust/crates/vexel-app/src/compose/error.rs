@@ -136,12 +136,21 @@ pub(crate) fn element_at(source: &[u8], offset: usize) -> Option<String> {
     (end > 0 && end <= 64).then(|| String::from_utf8_lossy(&rest[..end]).into_owned())
 }
 
+/// Name of the start tag enclosing `offset`: the element whose `<` is the last
+/// one before it. Attribute values cannot contain `<`, so this is sound.
+pub(crate) fn enclosing_element(source: &[u8], offset: usize) -> Option<String> {
+    let start = source.get(..offset)?.iter().rposition(|&b| b == b'<')?;
+    element_at(source, start)
+}
+
 /// Maps a decoder diagnostic. `Unsupported` keeps its element for disclosure.
 pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeError {
     let offset = diagnostic.offset;
     match diagnostic.kind {
         ErrorKind::Unsupported => {
-            let element = element_at(source, offset);
+            // The offset may sit inside an attribute value (e.g. a `fill` in a
+            // `style`), so fall back to the enclosing start tag.
+            let element = element_at(source, offset).or_else(|| enclosing_element(source, offset));
             let feature = match element.as_deref() {
                 Some("filter") => "filter",
                 Some("mask") => "mask",

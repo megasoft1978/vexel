@@ -211,6 +211,31 @@ fn wrap(body: &str) -> String {
     format!("<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>{body}</svg>")
 }
 
+#[test]
+fn unsupported_paint_on_clip_child_names_its_element_and_offset() {
+    // A paint on a clipPath child is deferred; the offset falls inside the
+    // attribute value, so the element must be recovered from the enclosing tag.
+    let body = "<defs><clipPath id='c'><path d='M0 0H10V10Z' fill='#000000'/></clipPath></defs>\
+         <rect width='30' height='30' clip-path='url(#c)'/>";
+    let svg = wrap(body);
+    let start = svg.find("<path").unwrap();
+    let end = start + svg[start..].find("/>").unwrap();
+    match composed(&svg, 40, 40) {
+        Err(ComposeError::Unsupported {
+            offset: Some(offset),
+            element,
+            ..
+        }) => {
+            assert!(
+                (start..end).contains(&offset),
+                "offset {offset} not in <path>"
+            );
+            assert_eq!(element.as_deref(), Some("path"));
+        }
+        other => panic!("expected Unsupported with offset and element, got {other:?}"),
+    }
+}
+
 fn pixel(frame: &Frame, x: u32, y: u32) -> [u8; 4] {
     let at = (y as usize * frame.width as usize + x as usize) * 4;
     frame.rgba[at..at + 4].try_into().unwrap()
