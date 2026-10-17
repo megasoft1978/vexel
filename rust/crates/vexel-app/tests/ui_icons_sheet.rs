@@ -146,7 +146,7 @@ fn icon_sheet_matches_first_party_goldens() {
             if bless {
                 std::fs::create_dir_all(golden.parent().unwrap()).unwrap();
                 std::fs::write(&golden, &file).unwrap();
-                let review = root().join("artifacts/WO-RUST-UI-ICONS-01/review");
+                let review = root().join("artifacts/WO-RUST-UI-ICONS-02/review");
                 std::fs::create_dir_all(&review).unwrap();
                 png(
                     review.join(format!("icon-sheet-{name}-{scale}x.png")),

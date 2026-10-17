@@ -1,0 +1,15 @@
+{
+  "allowed": true,
+  "changed": [
+    "rust/crates/vexel-ui/src/icon_paths.rs",
+    "rust/crates/vexel-ui/src/tests_icons.rs",
+    "rust/crates/vexel-ui/src/tests.rs",
+    "rust/crates/vexel-app/tests/ui_icons_sheet.rs",
+    "rust/fixtures/ui/icons/icon-sheet-dark-1x.rgba",
+    "rust/fixtures/ui/icons/icon-sheet-dark-2x.rgba",
+    "rust/fixtures/ui/icons/icon-sheet-light-1x.rgba",
+    "rust/fixtures/ui/icons/icon-sheet-light-2x.rgba",
+    "artifacts/WO-RUST-UI-ICONS-02/**"
+  ],
+  "outside_allowed": []
+}

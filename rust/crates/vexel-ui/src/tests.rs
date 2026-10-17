@@ -142,10 +142,11 @@ fn icon_catalog_strict_paths_masks_and_frozen_hash_relationships(){
     let mut cache=IconCache::new();let dark_1=cache.asset_hash(Theme::Dark,1);let light_1=cache.asset_hash(Theme::Light,1);let dark_2=cache.asset_hash(Theme::Dark,2);let dark_3=cache.asset_hash(Theme::Dark,3);
     // ui_icon_asset_hash pins, re-pinned by WO-RUST-UI-ICONS-01: the 24-unit C-oracle masks were replaced by 16-unit
     // first-party masks (old pins 0xdd0cedd4ec723d06, 0x2d4e975f7b5775c5, 0xbe120e3a5aa41d42 for 1x/2x/3x).
-    assert_eq!(dark_1,0x4be4_3e53_9790_107d);assert_eq!(light_1,0x4be4_3e53_9790_107d);
-    assert_eq!(dark_2,0x1086_30f4_149d_90e8);assert_eq!(dark_3,0x1d17_10bb_3b10_e309);
-    assert_eq!(cache.asset_hash(Theme::Light,2),0x1086_30f4_149d_90e8);
-    assert_eq!(cache.asset_hash(Theme::Light,3),0x1d17_10bb_3b10_e309);
+    // Re-pinned again by WO-RUST-UI-ICONS-02 (redrawn artwork; ICONS-01 pins 0x4be43e539790107d, 0x108630f4149d90e8, 0x1d1710bb3b10e309).
+    assert_eq!(dark_1,0x1187_2e29_62e7_ae15);assert_eq!(light_1,0x1187_2e29_62e7_ae15);
+    assert_eq!(dark_2,0xf55c_7d47_474e_2645);assert_eq!(dark_3,0xdd56_a472_0e58_2873);
+    assert_eq!(cache.asset_hash(Theme::Light,2),0xf55c_7d47_474e_2645);
+    assert_eq!(cache.asset_hash(Theme::Light,3),0xdd56_a472_0e58_2873);
     assert_ne!(dark_1,0);assert_eq!(dark_1,light_1);assert_ne!(dark_2,0);assert_ne!(dark_1,dark_2);
     let mut hashes=[0u64;15];let kinds=[IconKind::PEN,IconKind::NODE_EDIT,IconKind::PENCIL,IconKind::STROKE,IconKind::UNGROUP,IconKind::MORE,IconKind::CIRCLE,IconKind::ELLIPSE,IconKind::DOCUMENT,IconKind::STOP,IconKind::PATH,IconKind::POLYLINE,IconKind::IMAGE,IconKind::SIDEBAR_LEFT,IconKind::SIDEBAR_RIGHT];
     for (i,icon) in kinds.into_iter().enumerate(){let mut rgba=vec![0;48*48*4];cache.paint(icon,Theme::Light,2.0,Rect{x:0,y:0,width:48,height:48},0x1f2732ff,&mut rgba,48,48,48*4).unwrap();let mut h=1_469_598_103_934_665_603u64;let mut visible=0;for at in (3..rgba.len()).step_by(4){if rgba[at]!=0{visible+=1;h=(h^((at/4)as u64)).wrapping_mul(1_099_511_628_211)}}assert!(visible>=16);hashes[i]=h;assert!(hashes[..i].iter().all(|prior|*prior!=h));}

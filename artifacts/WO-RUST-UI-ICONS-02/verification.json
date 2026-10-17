@@ -1,0 +1,40 @@
+{
+  "work_order": "WO-RUST-UI-ICONS-02",
+  "commands": [
+    {
+      "cmd": "cargo +stable check -p vexel-ui -p vexel-app --locked --offline",
+      "exit": 0,
+      "note": ""
+    },
+    {
+      "cmd": "cargo +stable test -p vexel-ui --locked --offline",
+      "exit": 0,
+      "note": "38 passed"
+    },
+    {
+      "cmd": "cargo +stable test -p vexel-app --locked --offline",
+      "exit": 0,
+      "note": "282 passed"
+    },
+    {
+      "cmd": "cargo +stable fmt --manifest-path Cargo.toml --package vexel-ui --package vexel-app -- --check",
+      "exit": 0,
+      "note": ""
+    },
+    {
+      "cmd": "python3 scripts/wo_validate.py --ready WO-RUST-UI-ICONS-02",
+      "exit": 0,
+      "note": ""
+    },
+    {
+      "cmd": "python3 scripts/ledger.py validate ledger.jsonl",
+      "exit": 0,
+      "note": ""
+    },
+    {
+      "cmd": "git diff --check",
+      "exit": 0,
+      "note": ""
+    }
+  ]
+}
