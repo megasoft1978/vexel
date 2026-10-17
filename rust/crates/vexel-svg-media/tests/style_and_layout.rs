@@ -3,8 +3,8 @@ use support::*;
 use vexel_scene::*;
 use vexel_svg_css::Property;
 use vexel_svg_media::{
-    parse_families, parse_size, parse_spacing, parse_text_style, parse_weight, render_text_request,
-    text_path_geometry,
+    parse_families, parse_position_list, parse_size, parse_spacing, parse_text_style, parse_weight,
+    render_text_request, text_path_geometry,
 };
 
 #[test]
@@ -697,4 +697,30 @@ fn malformed_position_keeps_number_classification_and_source_offset() {
     assert_eq!(provider.seen.len(), 1);
     assert!(fixture.builder.scene(scene).unwrap().shapes.is_empty());
     fixture.builder.rollback_draft(draft).unwrap();
+}
+
+#[test]
+fn font_size_and_position_values_are_not_bounded_by_whole_document_size() {
+    // The value parser's source cap (16 MiB) must apply to the value span, not
+    // to the enclosing document: valid px values in a larger document parse.
+    let padding = "x".repeat(16 * 1024 * 1024);
+    let document = format!(
+        "<svg><!--{padding}--><text x=\"962.77893\" style=\"font-size:21.3333px\">A</text></svg>"
+    );
+    let source = document.as_bytes();
+    let fixture = Fixture::new(source, Limits::default());
+    let mut shared = DecodeSource::new(&fixture.lex, &mut Run).unwrap();
+    let style = shared
+        .compute_style(ElementId(fixture.index(b"text")), None, &mut Run)
+        .unwrap();
+    let values = parse_text_style(source, &style, [100., 100.]).unwrap();
+    assert!((values.size_points - 21.3333 * 0.75).abs() < 1e-9);
+    let offset = document.find("962.77893").unwrap();
+    let span = vexel_xml::XmlSpan {
+        offset,
+        length: "962.77893".len(),
+    };
+    let positions = parse_position_list(source, span, 100.).unwrap();
+    assert_eq!(positions.len(), 1);
+    assert!((positions[0] - 962.77893).abs() < 1e-9);
 }

@@ -427,7 +427,9 @@ pub(crate) fn parse_position_list_controlled(
         }
         let item = Span::from_offset_length(span.offset + start, i - start)
             .ok_or_else(|| fail(ErrorKind::Limit(LimitKind::Arithmetic), span.offset + start))?;
-        let value = vexel_svg_values::parse_length(source, item, reference)
+        let relative = Span::from_offset_length(start, i - start)
+            .ok_or_else(|| fail(ErrorKind::Limit(LimitKind::Arithmetic), span.offset + start))?;
+        let value = vexel_svg_values::parse_length(bytes, relative, reference)
             .map_err(|_| fail(ErrorKind::Number, item.start))?;
         values.push(value);
         need_value = false;
@@ -680,13 +682,13 @@ pub fn text_attribute(
     super::image::attribute(source, tokens, element, end, local, prefix)
 }
 
-pub fn parse_size(source: &[u8], style: &CssPaint<'_>, viewport_height: f64) -> Result<f64> {
+pub fn parse_size(_source: &[u8], style: &CssPaint<'_>, viewport_height: f64) -> Result<f64> {
     let Some(v) = style.value(Property::FontSize) else {
         return Ok(16.);
     };
     let value = vexel_svg_values::parse_length(
-        source,
-        Span::from_offset_length(v.span.offset, v.span.length)
+        v.bytes,
+        Span::from_offset_length(0, v.bytes.len())
             .ok_or_else(|| fail(ErrorKind::Unsupported, v.span.offset))?,
         viewport_height,
     )
@@ -697,7 +699,7 @@ pub fn parse_size(source: &[u8], style: &CssPaint<'_>, viewport_height: f64) -> 
     Ok(value)
 }
 
-pub fn parse_weight(source: &[u8], style: &CssPaint<'_>) -> Result<f64> {
+pub fn parse_weight(_source: &[u8], style: &CssPaint<'_>) -> Result<f64> {
     let Some(v) = style.value(Property::FontWeight) else {
         return Ok(400.);
     };
@@ -708,8 +710,8 @@ pub fn parse_weight(source: &[u8], style: &CssPaint<'_>) -> Result<f64> {
         return Ok(700.);
     }
     let n = vexel_svg_values::parse_number(
-        source,
-        Span::from_offset_length(v.span.offset, v.span.length)
+        v.bytes,
+        Span::from_offset_length(0, v.bytes.len())
             .ok_or_else(|| fail(ErrorKind::Unsupported, v.span.offset))?,
     )
     .map_err(|_| fail(ErrorKind::Unsupported, v.span.offset))?;
@@ -720,7 +722,7 @@ pub fn parse_weight(source: &[u8], style: &CssPaint<'_>) -> Result<f64> {
 }
 
 pub fn parse_spacing(
-    source: &[u8],
+    _source: &[u8],
     style: &CssPaint<'_>,
     property: Property,
     reference: f64,
@@ -732,8 +734,8 @@ pub fn parse_spacing(
         return Ok(0.);
     }
     vexel_svg_values::parse_length(
-        source,
-        Span::from_offset_length(v.span.offset, v.span.length)
+        v.bytes,
+        Span::from_offset_length(0, v.bytes.len())
             .ok_or_else(|| fail(ErrorKind::Unsupported, v.span.offset))?,
         reference,
     )
