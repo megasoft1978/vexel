@@ -27,3 +27,13 @@ Capture a window: find its id with Python `Quartz.CGWindowListCopyWindowInfo` (o
 | 8 | Scroll over the inspector and over the footer | Only the footer scrolls its rows |
 | 9 | Start a GIF export and quit mid-way | No `.vexel-export-*` directory is left beside the target |
 | 10 | Real Codex client over `--mcp-preview` with `--grant-dir` | Tools list, draw, save, export; activity shown in the status bar |
+
+## Results (2026-10-17, unlocked session, automated clicks via cliclick)
+
+| # | Result | Evidence |
+|---|--------|----------|
+| 2 | PASS: Animate shows transport, ruler, tracks, diamonds, playhead; stage stays visible | scratchpad row2-animate2.png |
+| 4 | PARTIAL: popover anchored under Export with GIF/SVG/PNG rows. Esc did NOT close it (keypress sent with vexel frontmost). Outside click closes it. Native Save panels not opened (not clicked). | scratchpad row4-export.png, row4-esc.png |
+| 1, 3, 5-10 | NOT RUN | |
+
+Open defect: Export popover does not close on Esc (check 4).
