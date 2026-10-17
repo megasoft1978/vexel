@@ -52,9 +52,10 @@ fn playhead_diamonds_and_ticks_are_painted_at_their_mapped_positions() {
             let mut count = 0;
             for (slot, row) in rows.iter().enumerate() {
                 let mid = l.row_rect(slot).y + (ROW_H - 1) / 2;
+                // Dark: unselected diamonds are text_secondary on every row.
                 let want = match row {
-                    Row::Element(_) => tk.text_tertiary,
-                    Row::Prop(..) => tk.text_secondary,
+                    Row::Element(_) if !dark => tk.text_tertiary,
+                    _ => tk.text_secondary,
                 };
                 for time in tl.model.row_keys(*row) {
                     let x = l.time_to_x(time, 1.0).round() as u32;
@@ -74,7 +75,7 @@ fn playhead_diamonds_and_ticks_are_painted_at_their_mapped_positions() {
             // text_tertiary just above the ruler's bottom edge.
             let ticks = l.ticks(1.0);
             let majors: Vec<_> = ticks.iter().filter(|t| t.major).collect();
-            assert_eq!(majors.len(), 2);
+            assert_eq!(majors.len(), 3, "0, 0.5 and 1 s");
             let base = l.ruler.y + l.ruler.height - 1;
             for tick in majors {
                 let x = tick.x.round() as u32;
@@ -85,7 +86,7 @@ fn playhead_diamonds_and_ticks_are_painted_at_their_mapped_positions() {
                 );
             }
             let spacing = majors_spacing(&l);
-            assert!((spacing - (l.lane_x1 - l.lane_x0)).abs() < 1e-9);
+            assert!((spacing - (l.lane_x1 - l.lane_x0) / 2.0).abs() < 1e-9);
         }
     }
 }

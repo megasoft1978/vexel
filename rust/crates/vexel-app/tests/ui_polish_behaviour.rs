@@ -377,7 +377,7 @@ fn status_readouts_share_one_baseline_and_hints_follow_the_context() {
         assert_eq!(status_hint(&m), text);
     }
     m.mode = Mode::Animate;
-    assert_eq!(status_hint(&m), "Space plays, drag the strip to scrub");
+    assert_eq!(status_hint(&m), "Space plays, drag the ruler to scrub");
 }
 
 // ---- 8: history ----

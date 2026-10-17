@@ -11,10 +11,10 @@ pub mod layout;
 pub mod model;
 pub mod paint;
 
-use crate::animation::driver::Driver;
+use crate::animation::driver::{Driver, quantize};
 use crate::animation::playback::LoopClock;
 use layout::{Hit, ROW_H, TimelineLayout};
-use model::{FPS, KeyRef, Row, TimelineModel};
+use model::{KeyRef, Row, TimelineModel};
 use vexel_platform_apple::Modifiers;
 
 pub use paint::paint;
@@ -77,6 +77,16 @@ impl Timeline {
         moved
     }
 
+    /// A wheel event at `at`: `None` when it is outside `footer` (the stage
+    /// keeps it, for zoom or pan), else whether the rows moved. Anywhere over
+    /// the footer (transport, ruler, names, lanes) scrolls the rows.
+    pub fn wheel(&mut self, footer: vexel_ui::Rect, at: (i32, i32), dy: f64) -> Option<bool> {
+        point_in(footer, at.0, at.1).then(|| {
+            let layout = TimelineLayout::new(footer);
+            self.scroll_by_points(dy, &layout)
+        })
+    }
+
     /// Wheel/trackpad delta in points; accumulates to whole rows.
     pub fn scroll_by_points(&mut self, dy: f64, layout: &TimelineLayout) -> bool {
         self.scroll_acc += dy;
@@ -85,12 +95,27 @@ impl Timeline {
         rows != 0.0 && self.scroll_rows(-(rows as i64), layout)
     }
 
+    /// Starts, keeps or clears the hover timer of a disabled control.
+    fn track_tip<C: LoopClock>(&mut self, over: Option<Hit>, driver: &Driver<C>) {
+        let now = driver.playback().clock().now_seconds();
+        match (over, self.model.tip) {
+            (Some(hit), Some((held, _))) if hit == held => {}
+            (Some(hit), _) => self.model.tip = Some((hit, now)),
+            (None, _) => self.model.tip = None,
+        }
+        self.model.now = now;
+    }
+
     fn hit(&self, layout: &TimelineLayout, x: i32, y: i32) -> Hit {
         layout.hit_test(&self.model, &self.rows(), self.scroll, x, y)
     }
 
     fn scrub<C: LoopClock>(&self, layout: &TimelineLayout, x: i32, driver: &mut Driver<C>) {
-        driver.seek(layout.x_to_time(f64::from(x), driver.loop_seconds()));
+        let loop_seconds = driver.loop_seconds();
+        driver.seek(quantize(
+            layout.x_to_time(f64::from(x), loop_seconds),
+            loop_seconds,
+        ));
     }
 
     /// Routes a pointer event. Buttons fire on release over the pressed
@@ -109,6 +134,8 @@ impl Timeline {
         match phase {
             Phase::Move => {
                 self.hover = (hit != Hit::Panel).then_some(hit);
+                let disabled = layout.disabled_at(x, y).map(|(h, _)| h);
+                self.track_tip(disabled, driver);
                 if self.scrubbing {
                     self.scrub(layout, x, driver);
                     consumed = true;
@@ -183,22 +210,9 @@ fn point_in(r: vexel_ui::Rect, x: i32, y: i32) -> bool {
     x >= r.x as i32 && y >= r.y as i32 && x < (r.x + r.width) as i32 && y < (r.y + r.height) as i32
 }
 
-/// Steps one 24 fps frame, pausing first. Wraps when looping, clamps otherwise.
+/// Steps one frame through the shared [`Driver::step`] (pauses first).
 pub fn step<C: LoopClock>(driver: &mut Driver<C>, forward: bool) -> bool {
-    let loop_seconds = driver.loop_seconds();
-    if loop_seconds <= 0.0 {
-        return false;
-    }
-    driver.pause();
-    let frames = ((loop_seconds * FPS) - 1e-9).ceil().max(1.0) as i64;
-    let current = (driver.time() * FPS).round() as i64;
-    let next = current + if forward { 1 } else { -1 };
-    let next = if driver.is_looping() {
-        next.rem_euclid(frames)
-    } else {
-        next.clamp(0, frames)
-    };
-    driver.seek(next as f64 / FPS)
+    driver.step(forward)
 }
 
 const KEY_L: u16 = 37;

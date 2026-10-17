@@ -5,7 +5,7 @@
 
 use super::{
     FOOTER_DEFAULT, FOOTER_MIN, INSPECTOR_DEFAULT, INSPECTOR_MAX, INSPECTOR_MIN, Layout, SECTIONS,
-    Splitter,
+    SPLITTER, STAGE_MIN_H, Splitter,
 };
 use crate::model::Mode;
 use vexel_ui::Rect;
@@ -62,7 +62,11 @@ impl UiState {
     }
 
     pub fn set_footer_height(&mut self, height: u32, content_height: u32) {
-        self.footer_h = height.clamp(FOOTER_MIN, (content_height / 2).max(FOOTER_MIN));
+        // Same bound as `Layout::with_state`: half the content, and the stage
+        // keeps at least STAGE_MIN_H above the splitter.
+        let room = content_height.saturating_sub(SPLITTER + STAGE_MIN_H);
+        let max = (content_height / 2).min(room).max(FOOTER_MIN);
+        self.footer_h = height.clamp(FOOTER_MIN, max);
     }
 
     pub fn toggle_section(&mut self, index: usize) -> bool {

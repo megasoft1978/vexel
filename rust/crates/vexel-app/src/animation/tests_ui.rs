@@ -73,12 +73,11 @@ fn keys_drive_the_playback_state() {
     let mut driver = loaded();
     assert!(apply(&mut driver, PlaybackKey::Toggle, false, false));
     assert!(driver.is_playing());
-    // Stepping needs a pause.
-    assert!(!apply(&mut driver, PlaybackKey::StepForward, false, false));
-    driver.playback().clock().advance(0.5);
-    assert!(apply(&mut driver, PlaybackKey::Toggle, false, false));
+    // Stepping while playing pauses first, then steps one frame.
+    assert!(apply(&mut driver, PlaybackKey::StepForward, false, false));
     assert!(!driver.is_playing());
-    assert!((driver.time() - 0.5).abs() < 1e-9);
+    assert!((driver.time() - FRAME_STEP).abs() < 1e-9);
+    assert!(driver.seek(0.5));
     assert!(apply(&mut driver, PlaybackKey::StepForward, false, false));
     assert!((driver.time() - (0.5 + FRAME_STEP)).abs() < 1e-9);
     assert!(apply(&mut driver, PlaybackKey::StepBack, false, false));
@@ -86,10 +85,11 @@ fn keys_drive_the_playback_state() {
     assert!((driver.time() - (0.5 - FRAME_STEP)).abs() < 1e-9);
     assert!(apply(&mut driver, PlaybackKey::Home, false, false));
     assert_eq!(driver.time(), 0.0);
-    // Stepping back at 0 stays at 0.
-    assert!(apply(&mut driver, PlaybackKey::StepBack, false, false));
-    assert_eq!(driver.time(), 0.0);
+    // Looping: stepping back at 0 wraps to the last frame of the 2 s loop.
     assert!(driver.is_looping());
+    assert!(apply(&mut driver, PlaybackKey::StepBack, false, false));
+    assert!((driver.time() - 59.0 * FRAME_STEP).abs() < 1e-9);
+    assert!(driver.seek(0.0));
     assert!(apply(&mut driver, PlaybackKey::ToggleLoop, false, false));
     assert!(!driver.is_looping());
     // Home keeps the play state.
@@ -139,8 +139,13 @@ fn a_tool_gesture_owns_the_keys_until_it_ends() {
 fn strip_layout_sits_at_the_stage_bottom_with_disjoint_controls() {
     let (stage, bar) = (stage(), bar());
     assert_eq!(bar.bar.height, STRIP_HEIGHT);
-    assert_eq!(bar.bar.y + bar.bar.height, stage.y + stage.height);
-    assert_eq!((bar.bar.x, bar.bar.width), (stage.x, stage.width));
+    // The bar floats 8 px inside the stage and 8 px above the zoom cluster.
+    let cluster = crate::canvas::controls(stage.width, stage.height, 100).unwrap();
+    assert_eq!(
+        bar.bar.y + bar.bar.height + 8,
+        stage.y + cluster.container.y
+    );
+    assert_eq!((bar.bar.x, bar.bar.width), (stage.x + 8, stage.width - 16));
     assert!(bar.button.x + bar.button.width <= bar.scrub.x);
     assert!(bar.scrub.x + bar.scrub.width <= bar.label.x);
     assert!(bar.label.x + bar.label.width <= bar.bar.x + bar.bar.width);

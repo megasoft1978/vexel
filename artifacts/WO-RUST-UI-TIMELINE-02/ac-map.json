@@ -1,0 +1,9 @@
+{"1":{"status":"pass","tests":["ui_timeline2_step::*"]},
+"2":{"status":"pass","tests":["ui_timeline2_footer::twelve_rows*","the_thumb_is_painted*","wheel_over*","footer_drags*"]},
+"3":{"status":"pass","tests":["ui_timeline2_footer::ruler_*","frame_ticks_*"]},
+"4":{"status":"pass","tests":["ui_timeline2_footer::dark_unselected*","selected_diamonds*"]},
+"5":{"status":"pass","tests":["ui_timeline2_footer::transport_buttons*","hovering_a_disabled*"]},
+"6":{"status":"pass","tests":["ui_timeline2_step::hints*","chrome_timeline_text_keeps_its_reader"],"note":"chrome.timeline kept; reader tests/animate_workspace.rs"},
+"7":{"status":"pass","tests":["ui_timeline2_strip::*"]},
+"8":{"status":"candidates written","path":"review/"},
+"9":{"status":"partial","note":"2 accepted golden tests fail by design; pins listed in result.md"}}

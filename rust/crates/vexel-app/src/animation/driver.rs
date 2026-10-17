@@ -55,6 +55,17 @@ pub struct Driver<C: LoopClock> {
     cancel: Arc<AtomicBool>,
 }
 
+/// Frames of one loop (the last may be partial).
+pub fn frame_count(loop_seconds: f64) -> i64 {
+    ((loop_seconds / FRAME_STEP) - 1e-9).ceil().max(1.0) as i64
+}
+
+/// `seconds` snapped to the frame grid and kept inside `[0, loop_seconds]`.
+pub fn quantize(seconds: f64, loop_seconds: f64) -> f64 {
+    let snapped = (seconds / FRAME_STEP).round() * FRAME_STEP;
+    snapped.clamp(0.0, loop_seconds.max(0.0))
+}
+
 fn step_of(time: f64) -> i64 {
     (time / FRAME_STEP).floor() as i64
 }
@@ -168,13 +179,23 @@ impl<C: LoopClock> Driver<C> {
         self.playback.seek(seconds)
     }
 
-    /// Steps one frame while paused; ignored while playing or without a loop.
+    /// Steps one frame on the 1/30 s grid. Playing or paused, it pauses first
+    /// and stays paused. Wraps when looping, clamps to the loop otherwise.
     pub fn step(&mut self, forward: bool) -> bool {
-        if self.is_playing() || !self.strip_visible() {
+        let loop_seconds = self.loop_seconds();
+        if loop_seconds <= 0.0 {
             return false;
         }
-        let frame = (self.time() / FRAME_STEP).round() + if forward { 1.0 } else { -1.0 };
-        self.seek(frame * FRAME_STEP)
+        self.pause();
+        let frames = frame_count(loop_seconds);
+        let current = (self.time() / FRAME_STEP).round() as i64;
+        let next = current + if forward { 1 } else { -1 };
+        let next = if self.is_looping() {
+            next.rem_euclid(frames)
+        } else {
+            next.clamp(0, frames)
+        };
+        self.seek(next as f64 * FRAME_STEP)
     }
 
     pub fn toggle_looping(&mut self) {

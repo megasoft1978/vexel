@@ -4,6 +4,7 @@
 //! fit are zero-height rects at the bottom edge.
 
 use super::model::{KeyRef, Row, TimelineModel};
+use crate::animation::driver::FRAME_STEP;
 use vexel_ui::Rect;
 
 pub const TRANSPORT_H: u32 = 32;
@@ -21,7 +22,30 @@ const LANE_RIGHT: u32 = 16;
 pub const KEY_HIT: i32 = 8;
 const READOUT_W: u32 = 132;
 const LABEL_CHAR_W: u32 = 8;
-const MAJOR_STEPS: [f64; 10] = [1.0, 2.0, 5.0, 10.0, 15.0, 30.0, 60.0, 120.0, 300.0, 600.0];
+/// Major tick steps in seconds with the number of minor divisions of each.
+const MAJOR_STEPS: [(f64, usize); 11] = [
+    (0.5, 2),
+    (1.0, 4),
+    (2.0, 4),
+    (5.0, 5),
+    (10.0, 5),
+    (15.0, 3),
+    (30.0, 3),
+    (60.0, 4),
+    (120.0, 4),
+    (300.0, 5),
+    (600.0, 5),
+];
+/// Loops shorter than this may use 0.5 s major ticks (0.25 s minors).
+const SHORT_LOOP: f64 = 3.0;
+/// Smallest on-screen frame width at which frame ticks are drawn.
+const FRAME_TICK_PX: f64 = 6.0;
+/// Width of the Ease / + Key button and of the gap around the playhead handle.
+const KEY_BUTTON_W: u32 = 64;
+const HANDLE_W: u32 = 12;
+/// Scroll thumb width in the name column edge.
+pub const THUMB_W: u32 = 3;
+const THUMB_MIN: u32 = 12;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Hit {
@@ -31,9 +55,9 @@ pub enum Hit {
     StepForward,
     SkipEnd,
     Loop,
-    /// Drawn disabled: the easing menu is not available yet.
+    /// Drawn disabled and never returned by hit-testing: no easing menu yet.
     Ease,
-    /// Drawn disabled: adding keys is not available yet.
+    /// Drawn disabled and never returned by hit-testing: no adding keys yet.
     AddKey,
     Ruler,
     Key(KeyRef),
@@ -83,6 +107,8 @@ pub struct TimelineLayout {
     pub readout: Option<Rect>,
     pub loop_btn: Option<Rect>,
     pub speed: Option<Rect>,
+    /// Rounded container of the disabled Ease and + Key pair.
+    pub group: Option<Rect>,
     pub ease: Option<Rect>,
     pub add_key: Option<Rect>,
 }
@@ -147,9 +173,13 @@ impl TimelineLayout {
         let play = next(PLAY_W, &mut x);
         let step_forward = next(BUTTON, &mut x);
         let skip_end = next(BUTTON, &mut x);
-        let all_buttons = skip_end.is_some();
+        let loop_btn = if skip_end.is_some() {
+            next(BUTTON, &mut x)
+        } else {
+            None
+        };
         x += 10;
-        let readout = if all_buttons {
+        let readout = if loop_btn.is_some() {
             fit(x, READOUT_W, limit)
         } else {
             None
@@ -157,24 +187,20 @@ impl TimelineLayout {
         if readout.is_some() {
             x += READOUT_W + 6;
         }
-        let loop_btn = if readout.is_some() {
-            fit(x, BUTTON, limit)
-        } else {
-            None
-        };
-        let left_end = loop_btn.map_or(x, |l| l.x + l.width) + PAD;
-        // Right cluster, right to left: "+ key", "Ease", speed label.
-        let mut rx = limit;
-        let mut place = |w: u32| {
-            let start = rx.checked_sub(w)?;
-            (loop_btn.is_some() && start >= left_end && transport_h >= BUTTON).then(|| {
-                rx = start.saturating_sub(8);
-                r(start, by, w, BUTTON)
-            })
-        };
-        let add_key = place(64);
-        let ease = if add_key.is_some() { place(64) } else { None };
-        let speed = if ease.is_some() { place(36) } else { None };
+        let left_end = x + PAD;
+        // Right cluster, right to left: Ease + "+ Key" in one container, then
+        // the speed label. It needs the whole left cluster first.
+        let group_w = 2 * KEY_BUTTON_W + 4;
+        let group = limit
+            .checked_sub(group_w)
+            .filter(|start| loop_btn.is_some() && *start >= left_end && transport_h >= BUTTON)
+            .map(|start| r(start, by, group_w, BUTTON));
+        let ease = group.map(|g| r(g.x + 2, by, KEY_BUTTON_W, BUTTON));
+        let add_key = group.map(|g| r(g.x + 2 + KEY_BUTTON_W, by, KEY_BUTTON_W, BUTTON));
+        let speed = group.and_then(|g| {
+            let start = g.x.checked_sub(8 + 36)?;
+            (start >= left_end).then(|| r(start, by, 36, BUTTON))
+        });
         Self {
             rect,
             transport,
@@ -191,6 +217,7 @@ impl TimelineLayout {
             readout,
             loop_btn,
             speed,
+            group,
             ease,
             add_key,
         }
@@ -205,12 +232,25 @@ impl TimelineLayout {
             (Hit::StepForward, self.step_forward),
             (Hit::SkipEnd, self.skip_end),
             (Hit::Loop, self.loop_btn),
-            (Hit::Ease, self.ease),
-            (Hit::AddKey, self.add_key),
         ]
         .into_iter()
         .filter_map(|(h, rc)| rc.map(|rc| (h, rc)))
         .collect()
+    }
+
+    /// The disabled controls: drawn and given a tooltip, never hit-tested.
+    pub fn disabled_controls(&self) -> Vec<(Hit, Rect)> {
+        [(Hit::Ease, self.ease), (Hit::AddKey, self.add_key)]
+            .into_iter()
+            .filter_map(|(h, rc)| rc.map(|rc| (h, rc)))
+            .collect()
+    }
+
+    /// The disabled control under `(x, y)`, if any.
+    pub fn disabled_at(&self, x: i32, y: i32) -> Option<(Hit, Rect)> {
+        self.disabled_controls()
+            .into_iter()
+            .find(|(_, rc)| inside(*rc, x, y))
     }
 
     // ---- time <-> x ------------------------------------------------------
@@ -239,30 +279,37 @@ impl TimelineLayout {
 
     // ---- ruler -----------------------------------------------------------
 
-    /// Ruler ticks: major every `step` seconds (1 s, thinned as the panel
-    /// narrows), minor at a quarter of the step when there is room. Labels
-    /// never overlap and always fit inside the panel.
+    /// Pixels per second of the lane.
+    fn pixels_per_second(&self, loop_seconds: f64) -> f64 {
+        (self.lane_x1 - self.lane_x0) / loop_seconds
+    }
+
+    /// Ruler ticks. The major step comes from the pixels per second (0.5 s
+    /// only for loops under 3 s, otherwise from 1 s up) so labels fit; minors
+    /// divide it (0.25 s for short loops) when they are 6 px apart. Time and x
+    /// strictly increase and labels never overlap or leave the panel.
     pub fn ticks(&self, loop_seconds: f64) -> Vec<Tick> {
         if loop_seconds <= 0.0 || self.ruler.height == 0 {
             return Vec::new();
         }
-        let pps = (self.lane_x1 - self.lane_x0) / loop_seconds;
-        let widest = label_text(loop_seconds.floor()).len() as u32 * LABEL_CHAR_W;
+        let pps = self.pixels_per_second(loop_seconds);
+        let first = usize::from(loop_seconds >= SHORT_LOOP);
+        let widest = label_text(widest_label_time(loop_seconds)).len() as u32 * LABEL_CHAR_W;
         let need = f64::from(widest + 16);
-        let step = MAJOR_STEPS
+        let (step, divisions) = MAJOR_STEPS[first..]
             .iter()
             .copied()
-            .find(|s| s * pps >= need)
+            .find(|(s, _)| s * pps >= need)
             .unwrap_or(MAJOR_STEPS[MAJOR_STEPS.len() - 1]);
-        let minor = step / 4.0;
+        let minor = step / divisions as f64;
         let draw_minor = minor * pps >= 6.0;
-        let count = (loop_seconds / minor).floor() as usize;
+        let count = (loop_seconds / minor + 1e-9).floor() as usize;
         let right = self.rect.x + self.rect.width;
         let mut out: Vec<Tick> = Vec::new();
         let mut last_label_end = 0u32;
         for i in 0..=count.min(4096) {
             let time = i as f64 * minor;
-            let major = i % 4 == 0;
+            let major = i % divisions == 0;
             if !major && !draw_minor {
                 continue;
             }
@@ -290,6 +337,69 @@ impl TimelineLayout {
             });
         }
         out
+    }
+
+    /// `(time, x)` of every frame boundary (1/30 s) that is not one of
+    /// [`Self::ticks`]; empty unless a frame is at least 6 px wide.
+    pub fn frame_ticks(&self, loop_seconds: f64) -> Vec<(f64, f64)> {
+        if loop_seconds <= 0.0 || self.ruler.height == 0 {
+            return Vec::new();
+        }
+        if self.pixels_per_second(loop_seconds) * FRAME_STEP < FRAME_TICK_PX {
+            return Vec::new();
+        }
+        let ticks = self.ticks(loop_seconds);
+        let frames = (loop_seconds / FRAME_STEP + 1e-9).floor() as usize;
+        (0..=frames.min(4096))
+            .map(|k| k as f64 * FRAME_STEP)
+            .filter(|t| !ticks.iter().any(|tick| (tick.time - t).abs() < 1e-6))
+            .map(|t| (t, self.time_to_x(t, loop_seconds)))
+            .collect()
+    }
+
+    /// The playhead handle over the ruler (12 x 12, centred on the playhead).
+    pub fn playhead_handle(&self, seconds: f64, loop_seconds: f64) -> Rect {
+        let x = self.playhead_x(seconds, loop_seconds).round() as u32;
+        r(
+            x.saturating_sub(HANDLE_W / 2),
+            self.ruler.y + 2,
+            HANDLE_W,
+            HANDLE_W,
+        )
+    }
+
+    /// The labels to draw: those not touched by the playhead handle (with a
+    /// 2 px margin).
+    pub fn visible_labels(&self, loop_seconds: f64, seconds: f64) -> Vec<(String, Rect)> {
+        let handle = self.playhead_handle(seconds, loop_seconds);
+        self.ticks(loop_seconds)
+            .into_iter()
+            .filter_map(|t| t.label)
+            .filter(|(_, cell)| {
+                cell.x >= handle.x + handle.width + 2 || cell.x + cell.width + 2 <= handle.x
+            })
+            .collect()
+    }
+
+    /// The scroll thumb in the name column edge when `total` rows exceed the
+    /// visible rows; its length is proportional to the visible share and its
+    /// position follows `scroll`.
+    pub fn scroll_thumb(&self, total: usize, scroll: usize) -> Option<Rect> {
+        let visible = self.visible_rows();
+        if visible == 0 || total <= visible || self.tracks.height < 8 {
+            return None;
+        }
+        let area = self.tracks.height - 4;
+        let len = (area as usize * visible / total).max(THUMB_MIN as usize) as u32;
+        let len = len.min(area);
+        let max = (total - visible) as u32;
+        let offset = (area - len) * (scroll.min(max as usize) as u32) / max;
+        Some(r(
+            self.rect.x + self.name_w - THUMB_W - 2,
+            self.tracks.y + 2 + offset,
+            THUMB_W,
+            len,
+        ))
     }
 
     // ---- rows ------------------------------------------------------------
@@ -392,8 +502,21 @@ impl TimelineLayout {
     }
 }
 
-/// Ruler label: `Ns` below a minute, `m:ss` from a minute.
+/// Time of the widest label of a loop (for sizing label cells).
+fn widest_label_time(loop_seconds: f64) -> f64 {
+    if loop_seconds < SHORT_LOOP {
+        (loop_seconds * 2.0).floor() / 2.0 + 0.5
+    } else {
+        loop_seconds.floor()
+    }
+}
+
+/// Ruler label: `0.5s` for half seconds, `Ns` below a minute, `m:ss` from a
+/// minute.
 pub fn label_text(seconds: f64) -> String {
+    if seconds < 60.0 && (seconds - seconds.round()).abs() > 1e-6 {
+        return format!("{seconds:.1}s");
+    }
     let s = seconds.round() as u64;
     if s >= 60 {
         format!("{}:{:02}", s / 60, s % 60)

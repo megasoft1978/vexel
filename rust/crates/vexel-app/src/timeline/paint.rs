@@ -3,10 +3,11 @@
 //! with a handle over the ruler. Every cell stays inside its band.
 
 use super::Timeline;
-use super::layout::{Hit, ROW_H, TimelineLayout};
+use super::layout::{Hit, ROW_H, THUMB_W, TimelineLayout};
 use super::model::{Row, TimelineModel};
+use crate::animation::driver::quantize;
 use crate::animation::strip;
-use crate::layout::paint::{centred, mono, text};
+use crate::layout::paint::{centred, mono, paint_tip, text, tip_size};
 use vexel_ui::motion::lerp_color;
 use vexel_ui::{FontWeight, IconKind, Rect, Theme, Tokens, WidgetCanvas};
 
@@ -37,11 +38,30 @@ pub fn paint(c: &mut WidgetCanvas<'_>, rect: Rect, tl: &Timeline) {
     paint_transport(c, &layout, tl, &t);
     if let Some(message) = model.empty_state() {
         paint_empty(c, &layout, &message, &t);
-        return;
+    } else {
+        paint_ruler(c, &layout, model, &t);
+        paint_tracks(c, &layout, tl, &t);
+        paint_playhead(c, &layout, model, &t);
     }
-    paint_ruler(c, &layout, model, &t);
-    paint_tracks(c, &layout, tl, &t);
-    paint_playhead(c, &layout, model, &t);
+    paint_disabled_tip(c, &layout, model);
+}
+
+/// The tooltip of a disabled control the pointer has rested on, below it and
+/// inside the footer (the stage is blitted over anything above).
+fn paint_disabled_tip(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, model: &TimelineModel) {
+    let Some(hit) = model.tip_ready() else { return };
+    let (Some(hint), Some((_, cell))) = (
+        hit.disabled_hint(),
+        l.disabled_controls().into_iter().find(|(h, _)| *h == hit),
+    ) else {
+        return;
+    };
+    let (w, h) = tip_size(hint, "");
+    let right = l.rect.x + l.rect.width;
+    let x = (cell.x + cell.width).saturating_sub(w).max(l.rect.x + 4);
+    let x = x.min(right.saturating_sub(w + 4).max(l.rect.x));
+    let y = cell.y + cell.height + 6;
+    paint_tip(c, rc(x, y, w, h), hint, "");
 }
 
 fn paint_transport(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, tl: &Timeline, t: &Tokens) {
@@ -93,18 +113,6 @@ fn paint_transport(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, tl: &Timeline, 
                 };
                 icon(c, cell, kind, glyph);
             }
-            Hit::Ease | Hit::AddKey => {
-                c.paint_round(cell, 6, 0, t.separator, 1);
-                let label = if hit == Hit::Ease { "Ease" } else { "+ Key" };
-                centred(
-                    c,
-                    label,
-                    rc(cell.x, cell.y + 6, cell.width, 16),
-                    t.disabled_text,
-                    12,
-                    FontWeight::Regular,
-                );
-            }
             Hit::Loop => {
                 let on = model.looping && live;
                 if on {
@@ -142,9 +150,26 @@ fn paint_transport(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, tl: &Timeline, 
             }
         }
     }
+    if let Some(group) = l.group {
+        c.paint_round(group, 8, t.surface[3], 0, 0);
+        for (hit, cell) in l.disabled_controls() {
+            let label = if hit == Hit::Ease { "Ease" } else { "+ Key" };
+            centred(
+                c,
+                label,
+                rc(cell.x, cell.y + 6, cell.width, 16),
+                t.disabled_text,
+                12,
+                FontWeight::Regular,
+            );
+        }
+        if let Some(add) = l.add_key {
+            c.paint_rect(rc(add.x, add.y + 6, 1, add.height - 12), t.separator);
+        }
+    }
     if let Some(cell) = l.readout {
         let (now, total) = (
-            strip::format_time(model.time),
+            strip::format_time(quantize(model.time, model.loop_seconds)),
             strip::format_time(model.loop_seconds),
         );
         let y = cell.y + 6;
@@ -226,6 +251,9 @@ fn paint_ruler(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, model: &TimelineMod
         );
     }
     let base = r.y + r.height - 1;
+    for (_, x) in l.frame_ticks(model.loop_seconds) {
+        c.paint_rect(rc(x.round() as u32, base - 3, 1, 3), t.control_edge);
+    }
     for tick in l.ticks(model.loop_seconds) {
         let x = tick.x.round() as u32;
         let h = if tick.major { 10 } else { 5 };
@@ -235,14 +263,10 @@ fn paint_ruler(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, model: &TimelineMod
             t.control_edge
         };
         c.paint_rect(rc(x, base - h, 1, h), color);
-        if let Some((label, cell)) = tick.label {
-            // The playhead handle (12 px wide) hides the label it sits on.
-            let head = l.playhead_x(model.time, model.loop_seconds).round() as u32;
-            let covered = head + 8 > cell.x && head < cell.x + cell.width + 8;
-            if !covered {
-                mono(c, &label, cell, t.text_secondary, 12);
-            }
-        }
+    }
+    // Labels, minus the one the playhead handle sits on.
+    for (label, cell) in l.visible_labels(model.loop_seconds, model.time) {
+        mono(c, &label, cell, t.text_secondary, 12);
     }
     // Loop end cap.
     let end = l.lane_x1.round() as u32;
@@ -327,7 +351,7 @@ fn paint_tracks(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, tl: &Timeline, t: 
                 t.accent
             } else if hovered {
                 t.text_primary
-            } else if group {
+            } else if group && c.theme == Theme::Light {
                 t.text_tertiary
             } else {
                 t.text_secondary
@@ -343,6 +367,9 @@ fn paint_tracks(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, tl: &Timeline, t: 
     };
     let bottom = l.tracks.y + l.tracks.height;
     c.paint_rect(rc(divider_x, top, 1, bottom - top), t.separator);
+    if let Some(thumb) = l.scroll_thumb(rows.len(), tl.scroll) {
+        c.paint_round(thumb, THUMB_W / 2, t.control_edge, 0, 0);
+    }
 }
 
 fn paint_playhead(c: &mut WidgetCanvas<'_>, l: &TimelineLayout, model: &TimelineModel, t: &Tokens) {

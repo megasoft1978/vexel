@@ -10,7 +10,7 @@ use vexel_app::timeline::{Phase, key};
 use vexel_platform_apple::Modifiers;
 
 const NONE: Modifiers = Modifiers(0);
-const FRAME: f64 = 1.0 / 24.0;
+const FRAME: f64 = 1.0 / 30.0;
 
 fn setup() -> (
     vexel_app::animation::driver::Driver<vexel_app::animation::playback::ManualClock>,
@@ -53,7 +53,7 @@ fn dragging_the_ruler_scrubs_clamped_and_release_keeps_the_time() {
 }
 
 #[test]
-fn arrow_keys_step_one_24fps_frame_and_wrap_per_loop_mode() {
+fn arrow_keys_step_one_30fps_frame_and_wrap_per_loop_mode() {
     let (mut d, _, _) = setup();
     assert!(key(124, NONE, &mut d));
     assert!((d.time() - FRAME).abs() < 1e-9);
@@ -61,11 +61,11 @@ fn arrow_keys_step_one_24fps_frame_and_wrap_per_loop_mode() {
     assert!((d.time() - 2.0 * FRAME).abs() < 1e-9);
     assert!(key(123, NONE, &mut d));
     assert!((d.time() - FRAME).abs() < 1e-9);
-    // Looping: back from frame 0 wraps to the last frame (23 of 24).
+    // Looping: back from frame 0 wraps to the last frame (29 of 30).
     d.seek(0.0);
     assert!(d.is_looping());
     key(123, NONE, &mut d);
-    assert!((d.time() - 23.0 * FRAME).abs() < 1e-9);
+    assert!((d.time() - 29.0 * FRAME).abs() < 1e-9);
     key(124, NONE, &mut d);
     assert_eq!(d.time(), 0.0);
     // Play once: clamps at both ends (the end frame is the loop end).
@@ -129,7 +129,7 @@ fn transport_buttons_fire_on_release_over_the_pressed_button() {
     assert!((d.time() - FRAME).abs() < 1e-9);
     press(&mut tl, &mut d, centre(l.loop_btn.unwrap()));
     assert!(!d.is_looping());
-    // Disabled controls are hit but inert, and carry a hint.
+    // Disabled controls are not hit-testable, inert, and carry a hint.
     let before = d.time();
     press(&mut tl, &mut d, centre(l.add_key.unwrap()));
     press(&mut tl, &mut d, centre(l.ease.unwrap()));

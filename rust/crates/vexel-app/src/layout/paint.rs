@@ -27,6 +27,40 @@ pub fn tooltip(target: Target) -> Option<(&'static str, &'static str)> {
     })
 }
 
+const TIP_H: u32 = 24;
+const TIP_PAD: u32 = 8;
+
+/// Tooltip label size from the (estimated) text widths.
+pub(crate) fn tip_size(name: &str, shortcut: &str) -> (u32, u32) {
+    let shortcut_w = if shortcut.is_empty() {
+        0
+    } else {
+        text_width(shortcut, 12) + 10
+    };
+    (2 * TIP_PAD + text_width(name, 12) + shortcut_w, TIP_H)
+}
+
+/// Paints a rounded level-3 tooltip label (name plus shortcut) filling `r`.
+pub(crate) fn paint_tip(c: &mut WidgetCanvas<'_>, r: Rect, name: &str, shortcut: &str) {
+    let t = c.tokens;
+    c.paint_round(r, 6, t.surface[3], t.control_edge, 1);
+    let label = Rect {
+        x: r.x + TIP_PAD,
+        width: r.width - 2 * TIP_PAD,
+        ..r
+    };
+    text(c, name, label, t.text_primary, 12, FontWeight::Regular);
+    if !shortcut.is_empty() {
+        let x = r.x + TIP_PAD + text_width(name, 12) + 10;
+        let rect = Rect {
+            x,
+            width: (r.x + r.width).saturating_sub(x + TIP_PAD / 2),
+            ..label
+        };
+        text(c, shortcut, rect, t.text_secondary, 12, FontWeight::Regular);
+    }
+}
+
 /// Rough text width in points, for centring labels (CoreText gives no measure).
 pub(crate) fn text_width(text: &str, size: u32) -> u32 {
     (text.chars().count() as u32 * size * 56 + 50) / 100
@@ -283,7 +317,7 @@ pub fn status_hint(model: &Model) -> &'static str {
         return "Open an SVG to begin (Cmd+O)";
     }
     match (model.mode, model.tool) {
-        (Mode::Animate, _) => "Space plays, drag the strip to scrub",
+        (Mode::Animate, _) => "Space plays, drag the ruler to scrub",
         (Mode::Draw, Tool::Select) => "Click a shape to select it",
         (Mode::Draw, Tool::Pen) => "Click to add points, double-click or Return to finish",
         (Mode::Draw, Tool::Rectangle) => "Drag on the canvas to draw a rectangle",

@@ -1,0 +1,4 @@
+{"allowed_touched":["rust/crates/vexel-app/src/timeline/**","src/animation/{driver,keys,strip,tests_ui}.rs","src/layout/{state,paint,tooltip}.rs","tests/ui_timeline2_*.rs","rust/fixtures/ui/timeline2/**","artifacts/WO-RUST-UI-TIMELINE-02/**","docs/archive/live/*timeline-02*.png (coordinator request)"],
+"existing_test_pins_edited":["tests/ui_timeline_input.rs","tests/ui_timeline_paint.rs","tests/ui_polish_behaviour.rs"],
+"untouched":["main.rs","model.rs","motion/**","Cargo.toml","vexel-ui"],
+"tooltip_rs":"layout/tooltip.rs edited (<30 lines) per order assumption"}

@@ -1,0 +1,8 @@
+{"wo":"WO-RUST-UI-TIMELINE-02","commands":[
+{"cmd":"cargo +stable check -p vexel-ui -p vexel-app --locked --offline","result":"pass"},
+{"cmd":"cargo +stable test -p vexel-ui --locked --offline","result":"pass","passed":46},
+{"cmd":"cargo +stable test -p vexel-app --locked --offline","result":"fail","passed":344,"failed":2,"failing":["ui_chrome_goldens::chrome_frames_match_first_party_goldens","ui_timeline_golden::footer_frames_match_first_party_goldens"],"reason":"accepted goldens superseded by order-mandated visual changes; coordinator re-bless"},
+{"cmd":"cargo +stable fmt --manifest-path Cargo.toml --package vexel-ui --package vexel-app -- --check","result":"fail","reason":"pre-existing vexel-ui diffs at HEAD; vexel-app clean"},
+{"cmd":"python3 scripts/wo_validate.py WO-RUST-UI-TIMELINE-02 --ready","result":"pass"},
+{"cmd":"python3 scripts/ledger.py validate ledger.jsonl","result":"pass"},
+{"cmd":"git diff --check","result":"not-run-by-worker-shell-guard; see final report"}]}

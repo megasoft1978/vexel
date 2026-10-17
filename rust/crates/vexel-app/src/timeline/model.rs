@@ -1,15 +1,15 @@
 //! Pure timeline data: tracks and key times derived read-only from the
 //! document's SMIL animation, plus the playback state shown by the panel.
 
+use super::layout::Hit;
 use crate::animation::driver::Driver;
 use crate::animation::playback::LoopClock;
 use crate::chrome::{NO_ANIMATION, NO_DOCUMENT_TO_ANIMATE};
+use crate::motion::TOOLTIP_DELAY_NS;
 use std::sync::Arc;
 use vexel_svg_animation::{Track, attribute_name, parse_owned};
 use vexel_xml::{XmlLimits, tokenize};
 
-/// Frames per second of the ruler and of frame stepping.
-pub const FPS: f64 = 24.0;
 /// Source bytes the track reader accepts (same bound as the animation decoder).
 const SOURCE_LIMIT: usize = 1 << 20;
 
@@ -67,6 +67,10 @@ pub struct TimelineModel {
     pub playing: bool,
     pub looping: bool,
     pub elements: Vec<ElementTrack>,
+    /// The driver clock at the last sync (drives the tooltip delay).
+    pub now: f64,
+    /// The disabled control the pointer rests on and since when (clock seconds).
+    pub tip: Option<(Hit, f64)>,
 }
 
 impl TimelineModel {
@@ -95,9 +99,18 @@ impl TimelineModel {
             driver.is_playing(),
             driver.is_looping(),
         );
+        let tip_before = self.tip_ready();
         let changed = next != (self.loop_seconds, self.time, self.playing, self.looping);
         (self.loop_seconds, self.time, self.playing, self.looping) = next;
-        changed
+        self.now = driver.playback().clock().now_seconds();
+        changed || tip_before != self.tip_ready()
+    }
+
+    /// The disabled control whose tooltip is showing: hovered for the tooltip
+    /// delay of the polish layer.
+    pub fn tip_ready(&self) -> Option<Hit> {
+        let (hit, since) = self.tip?;
+        (self.now - since >= TOOLTIP_DELAY_NS as f64 / 1e9).then_some(hit)
     }
 
     /// The text shown instead of tracks, or `None` when there are tracks.

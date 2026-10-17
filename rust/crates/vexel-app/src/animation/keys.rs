@@ -4,8 +4,8 @@
 //! |-------|-----------------------------------------|
 //! | Space | play / pause                            |
 //! | Home  | seek to 0 (play state kept)             |
-//! | Left  | step one frame back (only while paused) |
-//! | Right | step one frame on (only while paused)   |
+//! | Left  | step one 1/30 s frame back (pauses)     |
+//! | Right | step one 1/30 s frame on (pauses)       |
 //! | L     | toggle loop / play-once                 |
 //!
 //! Escape, Delete, Return (tools), D/A (modes) and every Command/Control/
