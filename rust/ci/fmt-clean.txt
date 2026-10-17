@@ -15,3 +15,5 @@ vexel-svg-scalar-index
 vexel-svg-values
 vexel-tile-cache
 vexel-v1-document
+vexel-corpus
+vexel-png
