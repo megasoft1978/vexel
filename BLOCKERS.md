@@ -120,3 +120,10 @@ pending gap-closure orders or an owner decision to supersede.
 
 - **corsica:** two independent blockers. (1) Prefixed SVG elements: `<svg:switch>` at byte 5116 is rejected by `vexel-svg-decode/src/traversal.rs` (`t.prefix.length != 0`). Fixing needs namespace-bound prefix support across css, media, animation, index and scene crates; planned as a work order, not a quick fix. (2) `<tspan id="tspan3993">` in `text14619` near byte 14832283: unresolved; native CoreText and stub providers both accept the tspan in isolation. Left unsupported.
 - **ideogram:** `<path id="path277302">` near byte 20705253 is rejected. Not caused by the gradient fill (a solid-fill copy still fails on a path), not by the clip-path ancestors, and not by `inkscape:connector-curvature` alone (removing it moves the failure to an earlier path). Multiple rejected constructs; left unsupported.
+
+## Ideogram: headless investigation (2026-10-17)
+
+- Enumeration: 60 gradient-filled `<path>` elements each reject in turn (fill:url(#linearN) with a `style` value). Single-path edits never reach a composable file.
+- Ruled out: ancestor clip-paths, ancestor transforms (all invertible), the `affine_inverse` check at `publication.rs:184-223` (instrumented: never fires for this file), and removing `inkscape:connector-curvature`.
+- Open candidates: a gradient paint publication path that reports `value.offset` (likely `custom_publication.rs` around lines 45 and 263, or `traversal.rs` ~501-525). Not confirmed.
+- Status: left as known-unsupported. A fix needs a traced diagnostic, which is beyond the headless budget used so far.
