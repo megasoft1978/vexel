@@ -106,9 +106,10 @@ Neutral: hue 265, chroma 3 (tinted, never pure grey or black).
 
 Separator = level 4 (#36393D, 1 px, used sparingly). Control edge = L 34
 (#4D5055; 1.83:1 on level 2, so edges are decorative only and every control also
-has a filled background). Light theme mirrors: L 95 window, 98.5 panel,
-100 raised, 93 control, 90 hover, 87 pressed (chroma 2). Light elevation uses
-a 1 px edge plus a soft shadow because lightness cannot rise further.
+has a filled background). Light theme (as implemented in `vexel-ui` tokens, WO-RUST-UI-TOKENS-01): L 98.5 window,
+95, 91.5, 88, 84.5, 81 for the following levels (chroma 2, falling with elevation), so in light
+mode the window is the lightest surface. Light elevation uses a 1 px edge plus a soft shadow
+because lightness cannot rise further.
 
 ### 4.2 Text emphasis (dark; contrast on level 1 / level 2)
 
@@ -119,7 +120,7 @@ a 1 px edge plus a soft shadow because lightness cannot rise further.
 | text.low (metadata, placeholders) | 60 | #8E9196 | 45% | 5.1 / 4.7 |
 | text.disabled (exempt from AA) | 40 | #5B5F63 | 38% | 2.5 |
 
-Light: text.high L 12 (#1D2024, 15.8), medium L 38 (#575A5E, 6.7), low L 46
+Light: text.high L 12 (#1D2024, 15.8), medium L 38 (#575A5E, 6.7), low L 43 (4.65:1 on level 2)
 (target at least 4.5 on panel, enforced by test), disabled L 65.
 Gate: body text at least 4.5:1, text at 18 px or larger and UI component edges
 or glyphs at least 3:1 on the surface they sit on.
@@ -128,7 +129,7 @@ or glyphs at least 3:1 on the surface they sit on.
 
 | Token | Dark (LCH, sRGB, on level 1) | Light (LCH, sRGB) |
 |---|---|---|
-| accent | 66/50/275 #5EA3FA, 6.2:1 | 48/50/275 #1074C6, 4.6:1 |
+| accent | 66/50/275 #5EA3FA, 6.2:1 | 45/50/275 #006DBE, 4.7:1 (L48 measured 4.27:1, below AA) |
 | accent.hover | accent L +6 | accent L -5 |
 | accent.subtle (selection fill, selected row) | accent at 16% over surface | 12% |
 | success | 75/40/160 #6FCA9E, 8.2:1 | L 50 |
@@ -289,3 +290,8 @@ before goldens are generated, and a fresh read-only reviewer.
 - Material needs `vexel-platform-apple` changes outside these orders (Q2).
 - Raising the minimum font to 12 pt and the inspector to 296 px lowers the
   minimum usable window; `Layout::new` thresholds are re-derived in CHROME.
+
+
+## Implementation notes (2026-10-17, from the independent review of WO-RUST-UI-TOKENS-01)
+
+Measured against the first proposal: dark `text.high` is L95 `#EEF1F4` (L93 gave 13.54:1, below the 14:1 pin; L95 gives 14.26:1 on level 1); the dark focus ring is accent L+10 (`#ADD9FF`); light success, warning and error are L45; the light accent is L45. All values were independently recomputed (CIE LCH(ab), D65 to sRGB, WCAG relative luminance) and match the code.

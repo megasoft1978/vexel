@@ -15,3 +15,12 @@ dark.window/panel/accent, light.window/panel_raised/canvas_well/accent, dark.pan
 
 ## Goldens
 Candidates only, in rust/fixtures/ui/tokens; review PNGs in artifacts/.../review. Not accepted.
+
+
+## Token changes (old -> new) and pin updates
+
+- Dark: window/panel/panel_raised/canvas_well/accent and the six surface levels are now LCH-derived (`#171A1D`, `#1E2125`, `#25282C`, `#2E3135`, `#36393D`, `#3F4247`); `text.high` L93 -> L95; `focus_ring` -> `#ADD9FF`.
+- Light: ramp L98.5 down to L81 in 3.5 steps; accent L48 -> L45 (`#006DBE`); success/warning/error L45; `text.low` L46 -> L43.
+- Pins in `tests.rs`: dark and light colour pins, the selection pixel [38,60,88] -> [40,54,71] (accent_subtle blend on surface 1), toolbar 40 -> 44, inspector 320 -> 296. The 14:1 and 5.5:1 contrast asserts are unchanged.
+- Side effect: `canvas_well` now equals `window` in both themes (the well was previously darker).
+- Coordinator: removed a stray `tests.rs-e` sed backup; the live screenshot is archived by the coordinator.
