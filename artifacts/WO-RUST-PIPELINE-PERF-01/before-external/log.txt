@@ -1,0 +1,726 @@
+generated-cad_t1                         ok           57886 ms
+ok            1
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-cad_t2                         timeout      60005 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-cad_t2                         timeout      60016 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-cnc_t1                         timeout      60008 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-cnc_t1                         timeout      60005 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-cnc_t2                         timeout      60009 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-embedded_t1                    ok           1295 ms
+ok            1
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-cnc_t2                         timeout      60010 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-embedded_t2                    timeout      60007 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-embedded_t2                    timeout      60008 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-giant_path_t1                  ok           56339 ms
+ok            1
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-giant_path_t2                  limit_render 345 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  1
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-giant_path_t1                  ok           56086 ms
+ok            1
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-inkscape_t1                    timeout      60006 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-inkscape_t1                    timeout      60011 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-inkscape_t2                    timeout      60003 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-map_t1                         xml          2535 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-inkscape_t2                    timeout      60002 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-map_t2                         timeout      60013 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-nested_t1                      xml          12 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-nested_t2                      xml          35 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-science_t1                     ok           4183 ms
+ok            1
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-map_t2                         timeout      60003 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-science_t2                     timeout      60010 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-science_t2                     timeout      60002 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-text_t1                        limit_decode 20177 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-text_t1                        limit_decode 19302 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-text_t2                        limit_decode 20247 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-use_t1                         limit_decode 8784 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-use_t2                         limit_decode 9214 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-1-42-polytope-7-cube-svg         xml          1764 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+generated-use_t2                         limit_decode 9007 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg timeout      60002 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-aegean-sea-anatolia-and-armenian-highlands-regions-large-topographic-basemap-svg xml          123 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-2015-louisiana-gubernatorial-election-runoff-by-precinct-svg timeout      60002 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-amhara-topographic-map-svg       unsupported  687 ms
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-amhara-topographic-map-svg       unsupported  664 ms
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-bulgaria-in-1915-geographic-map-en-svg timeout      60007 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-bulgaria-in-1915-geographic-map-en-svg timeout      60008 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-cambodia-geographic-map-en-svg   timeout      60011 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-cambodia-geographic-map-en-svg   timeout      60005 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-chuaattractormodified-svg        limit_decode 586 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-coat-of-arms-of-the-kingdom-of-naples-1808-svg unsupported  180 ms
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-chuaattractormodified-svg        limit_decode 574 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-columbiarivermap-svg             xml          54 ms
+commons-columbiarivermap-svg             xml          55 ms
+ok            0
+okunsupported       0 
+ limit_decode     0 
+limit_render    00
+
+unsupportedxml      0 
+ limit_decode     0 
+ limit_render  1 
+0timeout
+ xml            0 
+ rss_exceeded     01
+
+skippedtimeout              00
+
+crashrss_exceeded     0 
+ skipped        0 
+ guard_failed  0 
+0crash
+         0
+guard_failed  0
+commons-corsica-geographic-map-svg       unsupported  82 ms
+commons-corsica-geographic-map-svg       unsupported  83 ms
+ok            0
+okunsupported       1 
+ limit_decode     0 
+ limit_render  0 
+0unsupported
+ xml    1 
+ limit_decode     0 
+ limit_render    00
+
+timeoutxml              0 
+ rss_exceeded    00
+
+timeoutskipped              00
+
+rss_exceededcrash    0 
+ skipped          0 
+ guard_failed0 
+ crash0 
+        0
+guard_failed  0
+commons-corvuscoraxiucn-svg              timeout      60006 ms
+commons-corvuscoraxiucn-svg              timeout      60011 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       1
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-dukesofhohenbergarms-svg         unsupported  275 ms
+commons-dukesofhohenbergarms-svg         unsupported  280 ms
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-france-osm-mapnik-svg            xml          94 ms
+commons-france-osm-mapnik-svg            xml          100 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-gaussian-2d-svg                  unsupported  95 ms
+commons-gaussian-2d-svg                  unsupported  100 ms
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+ok            0
+unsupported   1
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-geographic-map-of-norway-sweden-finland-and-denmark-svg xml          156 ms
+commons-geographic-map-of-norway-sweden-finland-and-denmark-svg xml          159 ms
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+ok            0
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           1
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+commons-germany-districts-municipalities-location-map-2013-svgcommons-germany-districts-municipalities-location-map-2013-svg  xmlxml                    130130 ms
+ ms
+ok            0
+unsupported   0ok
+ limit_decode     0 
+ limit_render     0 
+ xml  0 
+ unsupported       0 
+ limit_decode    10
+
+timeoutlimit_render     0 
+ xml    0 
+ rss_exceeded     0 
+ skipped    1 
+ timeout      0 
+ crash    0 
+ rss_exceeded     0 
+ skipped0 
+ guard_failed     0 
+ 0
+crash         0
+guard_failed  0
+commons-ideogram-human-chromosome-20-svg limit_decode 310 ms
+commons-ideogram-human-chromosome-20-svg limit_decode 314 ms
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+ok            0
+unsupported   0
+limit_decode  1
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0
+natural-earth-world-map-blank            ok           110 ms
+natural-earth-world-map-blank            ok           109 ms
+ok    ok                1 
+ unsupported    1 
+0unsupported
+ limit_decode    00
+
+limit_decodelimit_render    00
+
+limit_renderxml    0 
+ xml              0 
+ timeout    0 
+ timeout      0 
+ rss_exceeded    00
+
+rss_exceededskipped    0 
+ skipped      0 
+ crash    0 
+ crash          0 
+ guard_failed    00
+
+guard_failed  0
+natural-earth-world-map-countries        ok           180 ms
+natural-earth-world-map-countries        ok           180 ms
+ok            1
+unsupported   0
+limit_decode ok  0 
+ limit_render     0 
+ xml        1 
+ unsupported       0 
+0limit_decode
+ timeout  0 
+ limit_render     0 
+0xml
+ rss_exceeded     0 
+ skipped          0 
+ timeout0 
+ crash          0 
+ rss_exceeded    00
+
+guard_failedskipped    0 
+    0
+crash         0
+guard_failed  0

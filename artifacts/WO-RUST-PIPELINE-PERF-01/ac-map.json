@@ -1,0 +1,11 @@
+{
+  "AC1": "pass: before.json == after.json (cmp identical); all 854 tests in the frozen packages pass",
+  "AC2": "pass: R8000 44.5 ms, P8000 628 ms, S8000 43.2 ms, G8000 44.4 ms, R16000 86.3 ms (1.94x R8000); pipeline_perf.rs release",
+  "AC3": "pass: rust/crates/vexel-scene/src/request_tests.rs (9 mutations + admission, constants and whole-scene comparison, multi-request equality, freeze still strict)",
+  "AC4": "pass: tests/pipeline_batching.rs, constants captured with the whole-scene commit (base behaviour); no decode edit",
+  "AC5": "pass: external 12 timeouts -> 0, none ok regressed, no rss_exceeded/crash, in-repo 24/24 ok identical",
+  "AC6": "pass: perf-baseline.json updated (2000: 235.16 / 1882, added 4000: 495.82 / 3967)",
+  "AC7": "pass: cancel_stops_r8000_within_one_poll, 0 polls after flag",
+  "AC8": "pass: no manifest change, no unsafe",
+  "AC9": "pass: result.md"
+}

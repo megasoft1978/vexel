@@ -1,0 +1,12 @@
+{
+  "check": "pass (vexel-app, vexel-scene, vexel-svg-decode)",
+  "test_debug": "pass: 854 passed, 0 failed (vexel-app, vexel-scene, vexel-svg-decode, vexel-svg-engine, vexel-render)",
+  "pipeline_perf_release": "pass: 7/7; pipeline_batching 2/2",
+  "fmt_check": "FAIL at base too: pre-existing diffs in files outside this order; new/edited files rustfmt-clean",
+  "corpus_in_repo": "24/24 ok, identical to WO-RUST-CORPUS-UNSUPPORTED-01",
+  "corpus_external": "0 timeouts (base 12); run per file with the same flags (128x128, 60 s, 2048 MiB)",
+  "wo_validate": "valid",
+  "ledger_validate": "valid, 1964 entries",
+  "git_diff_check": "not run: git not available to this worker",
+  "unexecuted": ["live app", "text documents (CoreText)", "git commit"]
+}

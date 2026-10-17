@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "tool": {"name": "vexel-corpus", "git_sha": "b2092b74da9c5b3ceb51494e46c292c9fac05d49"},
+  "manifest": {"path": "~/Desktop/Freelance/vexel-corpus-real/manifest.json", "sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30"},
+  "size": "128x128",
+  "max_bytes": 33554432,
+  "timeout_secs": 60,
+  "rss_limit_mib": 2048,
+  "host": "ProductName: macOS ProductVersion: 27.0.1 BuildVersion: 26A434; arm64",
+  "files": [
+    {"id": "commons-france-osm-mapnik-svg", "tier": "T2", "kind": "real", "bytes": 19491319, "verdict": "xml", "detail": "malformed SVG: path data at byte 28855", "wall_ms": 100, "peak_rss_bytes": 53329920}
+  ],
+  "histogram": {"ok": 0, "unsupported": 0, "limit_decode": 0, "limit_render": 0, "xml": 1, "timeout": 0, "rss_exceeded": 0, "skipped": 0, "crash": 0, "guard_failed": 0},
+  "totals": {"files": 1, "wall_ms_sum": 100},
+  "slowest": [{"id": "commons-france-osm-mapnik-svg", "value": 100}],
+  "largest_rss": [{"id": "commons-france-osm-mapnik-svg", "value": 53329920}]
+}

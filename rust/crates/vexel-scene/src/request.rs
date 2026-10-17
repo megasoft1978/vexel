@@ -146,7 +146,8 @@ impl SceneBuilder {
     ) -> Result<()> {
         self.request_index(draft, token)?;
         control.checkpoint().map_err(stopped)?;
-        crate::validate::scene(self, token.scene, control)?;
+        let from = self.top_request().map_or([0; 28], |r| r.mark.lengths);
+        crate::validate::scene_from(self, token.scene, control, &from)?;
         for scene in &self.scenes {
             for admission in &scene.shape_admissions {
                 control
@@ -227,3 +228,6 @@ impl SceneBuilder {
     }
 }
 pub const DOCUMENT_TEXT_COMMAND_LIMIT: usize = 4 * 1024 * 1024;
+#[cfg(test)]
+#[path = "request_tests.rs"]
+mod incremental_tests;

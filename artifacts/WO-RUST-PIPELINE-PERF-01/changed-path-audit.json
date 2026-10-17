@@ -1,0 +1,17 @@
+{
+  "protected_edits": [
+    {"path": "rust/crates/vexel-scene/src/validate.rs", "why": "incremental scene_from + group_view; proven by pipeline_perf.rs and request_tests.rs"},
+    {"path": "rust/crates/vexel-scene/src/request.rs", "why": "commit passes request-begin lengths; #[path] test module declaration"},
+    {"path": "rust/crates/vexel-scene/src/request_tests.rs", "why": "new differential tests; file is outside the literal allow list (src/**) but is the test module of request.rs; lib.rs untouched"}
+  ],
+  "allowed_edits": [
+    "rust/crates/vexel-app/tests/pipeline_perf.rs",
+    "rust/crates/vexel-app/tests/pipeline_hashes.rs",
+    "rust/crates/vexel-app/tests/pipeline_batching.rs",
+    "rust/crates/vexel-app/tests/pipeline_common/mod.rs",
+    "rust/crates/vexel-app/tests/perf_gate.rs",
+    "rust/ci/perf-baseline.json",
+    "artifacts/WO-RUST-PIPELINE-PERF-01/**"
+  ],
+  "untouched": ["vexel-svg-decode", "vexel-svg-engine", "vexel-render", "goldens", "manifests", "lock files", "external corpus"]
+}

@@ -3,7 +3,8 @@
   "rule": "max_ms = max(250, 8 x baseline_ms), rounded up; the test never rewrites this file",
   "cases": {
     "xml_tokenize_1mib": { "baseline_ms": 6.41, "max_ms": 250 },
-    "compose_2000_rects_512": { "baseline_ms": 1957.09, "max_ms": 15657 },
+    "compose_2000_rects_512": { "baseline_ms": 235.16, "max_ms": 1882 },
+    "compose_4000_rects_512": { "baseline_ms": 495.82, "max_ms": 3967 },
     "tools_list_1000_round_trips": { "baseline_ms": 85.38, "max_ms": 700 }
   }
 }

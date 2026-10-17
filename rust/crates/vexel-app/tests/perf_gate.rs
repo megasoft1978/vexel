@@ -55,6 +55,12 @@ fn compose_two_thousand_rects() {
     assert_eq!((frame.width, frame.height), (512, 512));
 }
 
+fn compose_four_thousand_rects() {
+    let source = rect_document(4000, 0);
+    let frame = compose_svg(&source, 512, 512).expect("compose workload must succeed");
+    assert_eq!((frame.width, frame.height), (512, 512));
+}
+
 fn thousand_tools_list_round_trips() {
     let init = br#"{"jsonrpc":"2.0","id":0,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"perf","version":"1"}}}"#;
     let ready = br#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#;
@@ -103,9 +109,10 @@ fn workloads_stay_within_baseline_max_ms() {
     let text = std::fs::read(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
     let baseline = JsonDocument::parse(&text).expect("perf-baseline.json must be valid JSON");
     let print = std::env::var("VEXEL_PERF_PRINT").is_ok_and(|v| v == "1");
-    let cases: [(&str, fn()); 3] = [
+    let cases: [(&str, fn()); 4] = [
         ("xml_tokenize_1mib", tokenize_one_mebibyte),
         ("compose_2000_rects_512", compose_two_thousand_rects),
+        ("compose_4000_rects_512", compose_four_thousand_rects),
         (
             "tools_list_1000_round_trips",
             thousand_tools_list_round_trips,

@@ -473,7 +473,14 @@ pub(crate) fn group(
     index: usize,
     control: &mut dyn WorkControl,
 ) -> Result<()> {
-    let scene = builder.traversal_scene(id)?;
+    group_view(builder.traversal_scene(id)?, value, index, control)
+}
+fn group_view<V: ViewportRead, A: Copy>(
+    scene: SceneView<'_, V, A>,
+    value: &OpacityGroup,
+    index: usize,
+    control: &mut dyn WorkControl,
+) -> Result<()> {
     value.shapes.require(scene.shapes.len(), 0)?;
     if !value.opacity.is_finite() || !(0.0..=1.0).contains(&value.opacity) || value.blend_mode > 4 {
         return Err(invalid(0));
@@ -546,6 +553,28 @@ pub(crate) fn scene(
     id: SceneId,
     control: &mut dyn WorkControl,
 ) -> Result<()> {
+    scene_from(builder, id, control, &[0; 28])
+}
+/// Whole-scene validation where the per-record tables that grow with every
+/// shape (edges, shapes, path segments, path numbers, transforms) are checked
+/// only from `from` (a `SceneData::lengths` snapshot taken when the request
+/// began), plus the one record before the snapshot as a seam check. Records
+/// before the snapshot were validated when they were appended or committed;
+/// `scene` (zero snapshot) re-checks everything at seal/freeze.
+pub(crate) fn scene_from(
+    builder: &SceneBuilder,
+    id: SceneId,
+    control: &mut dyn WorkControl,
+    from: &[usize; 28],
+) -> Result<()> {
+    let seam = |n: usize| n.saturating_sub(1);
+    let (from_edges, from_shapes, from_segments, from_numbers, from_transforms) = (
+        seam(from[0]),
+        seam(from[3]),
+        seam(from[5]),
+        seam(from[6]),
+        seam(from[7]),
+    );
     control.checkpoint().map_err(stopped)?;
     let i = builder.index(id)?;
     let data = &builder.scenes[i];
@@ -557,7 +586,12 @@ pub(crate) fn scene(
     }
     data.validate_publications(control)?;
     let view = builder.traversal_scene(id)?;
-    crate::shape_geometry::validate_scene_sources(&view, &builder.source, control)?;
+    let mut sources = view;
+    sources.geometry_sources = view
+        .geometry_sources
+        .get(seam(from[27])..)
+        .unwrap_or_default();
+    crate::shape_geometry::validate_scene_sources(&sources, &builder.source, control)?;
     if let Some(value) = view.viewport {
         viewport(value)?;
     } else if id != builder.root_id() {
@@ -579,7 +613,7 @@ pub(crate) fn scene(
             return Err(invalid(0));
         }
     }
-    for (index, &e) in view.edges.iter().enumerate() {
+    for (index, &e) in view.edges.iter().enumerate().skip(from_edges) {
         charge(control, WorkKind::Edge)?;
         edge(e)?;
         let shape = view
@@ -590,8 +624,8 @@ pub(crate) fn scene(
             return Err(invalid(0));
         }
     }
-    for (shape_index, shape) in view.shapes.iter().enumerate() {
-        shape_attributes(builder, id, shape, control)?;
+    for (shape_index, shape) in view.shapes.iter().enumerate().skip(from_shapes) {
+        shape_attributes_view(view, shape, control)?;
         shape.edges.require(view.edges.len(), 0)?;
         shape.subpaths.require(view.path_subpaths.len(), 0)?;
         let mut end = shape.edges.first;
@@ -632,8 +666,11 @@ pub(crate) fn scene(
             )?;
         }
     }
-    let mut previous_shape = 0;
-    for segment in view.path_segments {
+    let mut previous_shape = from_segments
+        .checked_sub(1)
+        .and_then(|last| view.path_segments.get(last))
+        .map_or(0, |segment| segment.shape.index());
+    for segment in view.path_segments.iter().skip(from_segments) {
         charge(control, WorkKind::TokenVisit)?;
         if segment.shape.index() < previous_shape {
             return Err(invalid(0));
@@ -654,21 +691,28 @@ pub(crate) fn scene(
             return Err(invalid(0));
         }
     }
-    for number in view.path_numbers {
+    for number in view.path_numbers.iter().skip(from_numbers) {
         charge(control, WorkKind::SourceRead)?;
         span(&builder.source, number.source)?;
         if !number.value.is_finite() {
             return Err(invalid(number.source.start));
         }
     }
-    for (index, value) in view.transforms.iter().enumerate() {
+    for (index, value) in view.transforms.iter().enumerate().skip(from_transforms) {
         transform(builder, id, value, control)?;
         if value.parent.is_some_and(|p| p.index() >= index) {
             return Err(invalid(value.source_offset));
         }
     }
+    let from_images = seam(from[8]);
     let mut pixels = 0usize;
-    for value in view.images {
+    for value in view.images.iter().take(from_images) {
+        pixels = crate::memory::add(
+            pixels,
+            (value.pixels.width as usize) * (value.pixels.height as usize),
+        )?;
+    }
+    for value in view.images.iter().skip(from_images) {
         image(value, control)?;
         pixels = crate::memory::add(
             pixels,
@@ -681,22 +725,24 @@ pub(crate) fn scene(
     if pixels != data.image_pixels {
         return Err(invalid(0));
     }
-    for (index, value) in view.clips.iter().enumerate() {
-        clip(builder, id, value, control)?;
+    for (index, value) in view.clips.iter().enumerate().skip(seam(from[18])) {
+        clip_view(view, value, control)?;
         if value.parent.is_some_and(|p| p.index() >= index) {
             return Err(invalid(0));
         }
     }
-    for value in view.patterns {
+    for value in view.patterns.iter().skip(seam(from[13])) {
         pattern(builder, id, value, control)?;
     }
-    for value in view.masks {
+    for value in view.masks.iter().skip(seam(from[12])) {
         mask(builder, id, value, control)?;
     }
-    for value in view.fill_paints.iter().chain(view.stroke_paints) {
-        paint(builder, id, value, control)?;
+    let fills = view.fill_paints.iter().skip(seam(from[14]));
+    let strokes = view.stroke_paints.iter().skip(seam(from[15]));
+    for value in fills.chain(strokes) {
+        paint_view(view, value, control)?;
     }
-    for value in view.filters {
+    for value in view.filters.iter().skip(seam(from[10])) {
         charge(control, WorkKind::FilterPixel)?;
         value.primitives.require(view.filter_primitives.len(), 0)?;
         let primitives = value
@@ -709,20 +755,20 @@ pub(crate) fn scene(
             source_offset(&builder.source, primitive.source_offset)?;
         }
     }
-    for (index, value) in view.groups.iter().enumerate() {
-        group(builder, id, value, index, control)?;
+    for (index, value) in view.groups.iter().enumerate().skip(seam(from[9])) {
+        group_view(view, value, index, control)?;
         if value.parent.is_some_and(|p| p.index() >= index) {
             return Err(invalid(0));
         }
     }
-    for value in view.dash_values {
+    for value in view.dash_values.iter().skip(seam(from[16])) {
         charge(control, WorkKind::StrokeTest)?;
         if !coord(*value) || *value < 0.0 {
             return Err(invalid(0));
         }
     }
     // Unreferenced stops and primitives are still retained user input and must validate.
-    for value in view.stops {
+    for value in view.stops.iter().skip(seam(from[17])) {
         charge(control, WorkKind::PaintVisit)?;
         if !value.offset.is_finite() || !(0.0..=1.0).contains(&value.offset) {
             return Err(invalid(0));

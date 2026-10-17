@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "tool": {"name": "vexel-corpus", "git_sha": "b2092b74da9c5b3ceb51494e46c292c9fac05d49"},
+  "manifest": {"path": "~/Desktop/Freelance/vexel-corpus-real/manifest.json", "sha256": "9fbf9a2f384d70a41da72e99ac259d2c5d137ffd3c8a01ce4be4741c1c29bc30"},
+  "size": "128x128",
+  "max_bytes": 33554432,
+  "timeout_secs": 60,
+  "rss_limit_mib": 2048,
+  "host": "ProductName: macOS ProductVersion: 27.0.1 BuildVersion: 26A434; arm64",
+  "files": [
+    {"id": "commons-1-42-polytope-7-cube-svg", "tier": "T3", "kind": "real", "bytes": 29836045, "verdict": "xml", "detail": "malformed SVG: XML at byte 15241908", "wall_ms": 1764, "peak_rss_bytes": 213958656}
+  ],
+  "histogram": {"ok": 0, "unsupported": 0, "limit_decode": 0, "limit_render": 0, "xml": 1, "timeout": 0, "rss_exceeded": 0, "skipped": 0, "crash": 0, "guard_failed": 0},
+  "totals": {"files": 1, "wall_ms_sum": 1764},
+  "slowest": [{"id": "commons-1-42-polytope-7-cube-svg", "value": 1764}],
+  "largest_rss": [{"id": "commons-1-42-polytope-7-cube-svg", "value": 213958656}]
+}
