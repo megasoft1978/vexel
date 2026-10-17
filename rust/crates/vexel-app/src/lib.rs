@@ -10,6 +10,7 @@ pub mod compose;
 pub mod file_flow;
 pub mod file_ui;
 mod inspector;
+pub mod layout;
 pub mod model;
 pub mod motion;
 pub mod preview;

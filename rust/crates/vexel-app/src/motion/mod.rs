@@ -27,6 +27,11 @@ pub fn control_id(target: Target) -> u32 {
         Target::DrawMode => ID_DRAW,
         Target::AnimateMode => ID_ANIMATE,
         Target::Tool(tool) => ID_TOOL0 + tool as u32,
+        // Chrome controls beyond the animated set map to ids outside FOCUS_ORDER
+        // (they keep the rest look until the registry grows to cover them).
+        Target::Button(button) => 20 + button as u32,
+        Target::SectionHeader(index) => 40 + index as u32,
+        Target::Splitter(splitter) => 60 + splitter as u32,
     }
 }
 pub fn tool_id(tool: Tool) -> u32 {

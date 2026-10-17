@@ -1,187 +1,284 @@
-//! Read-only inspector panel: the picked shape's fill, stroke, stroke width
-//! and transform, or an explicit "No selection" with placeholder fields.
+//! Inspector: collapsible grouped sections (Selection, Fill, Stroke,
+//! Transform, Animation), read-only for now. Geometry comes from the layout
+//! module; this file paints rows into the section rects.
 
-use crate::chrome::{Inspector, NO_SELECTION};
-use crate::render::label;
-use vexel_ui::{FontWeight, Rect, WidgetCanvas};
+use crate::animation::strip;
+use crate::chrome::{Inspector, ShapeProps, number};
+use crate::layout::paint::{mono, paint_focus, text, text_width};
+use crate::layout::{Focus, Layout, SECTION_BODY_H, SECTION_NAMES, SECTIONS};
+use crate::model::Model;
+use vexel_ui::{FontWeight, IconKind, Rect, WidgetCanvas};
 
-const PLACEHOLDER: &str = "\u{2014}";
+pub const NOTHING_SELECTED: &str = "Nothing selected";
+pub const PICK_HINT: &str = "Pick a shape with the Select tool.";
 
-pub(crate) fn draw_inspector(c: &mut WidgetCanvas<'_>, r: Rect, content: &Inspector) {
-    let tokens = c.tokens;
-    c.paint_rect(r, tokens.panel);
-    c.paint_rect(
-        Rect {
-            x: r.x,
-            y: r.y,
-            width: 1,
-            height: r.height,
-        },
-        tokens.separator,
-    );
-    // The full inspector has fixed rows through y=374. On compact layouts the
-    // layout omits it; keep this guard so future callers cannot paint them past
-    // a shorter panel or turn one bad label into a failed whole-frame render.
-    if r.height < 414 {
-        return;
-    }
-    let (heading, hint, fill, stroke, position, matrix) = match content {
-        Inspector::NoSelection => (
-            NO_SELECTION.to_owned(),
-            "Pick a shape with the Select tool to see its properties.".to_owned(),
-            None,
-            None,
-            None,
-            None,
-        ),
-        Inspector::Shape(p) => (
-            format!("Shape {}", p.index),
-            "Read-only; editing is not available yet.".to_owned(),
-            Some(p.fill_text()),
-            Some(format!("{}, width {}", p.stroke_text(), p.width_text())),
-            Some(p.position_text()),
-            Some(p.matrix_text()),
-        ),
-    };
-    let width = r.width.saturating_sub(32);
-    label(
-        c,
-        "Inspector",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 14,
-            width: r.width - 28,
-            height: 24,
-        },
-        tokens.text_primary,
-        14,
-        FontWeight::Semibold,
-    );
-    c.paint_rect(
-        Rect {
-            x: r.x + 14,
-            y: r.y + 48,
-            width: r.width - 28,
-            height: 1,
-        },
-        tokens.separator,
-    );
-    label(
-        c,
-        &heading,
-        Rect {
-            x: r.x + 16,
-            y: r.y + 62,
-            width: r.width - 28,
-            height: 22,
-        },
-        tokens.text_secondary,
-        12,
-        FontWeight::Regular,
-    );
-    label(
-        c,
-        &hint,
-        Rect {
-            x: r.x + 16,
-            y: r.y + 94,
-            width,
-            height: 48,
-        },
-        tokens.text_tertiary,
-        11,
-        FontWeight::Regular,
-    );
-    // (caption row y, box y, box height, value)
-    let fields = [
-        ("Fill", 166, 190, 32, fill, PLACEHOLDER),
-        ("Stroke", 242, 266, 30, stroke, PLACEHOLDER),
-    ];
-    for (caption, caption_y, box_y, height, value, placeholder) in fields {
-        field(
-            c,
-            r,
-            (caption, caption_y),
-            (box_y, height),
-            value,
-            placeholder,
-        );
-    }
-    label(
-        c,
-        "Transform",
-        Rect {
-            x: r.x + 16,
-            y: r.y + 318,
-            width,
-            height: 20,
-        },
-        tokens.text_secondary,
-        11,
-        FontWeight::Semibold,
-    );
-    for (i, (value, placeholder)) in [(position, "Position"), (matrix, "Matrix")]
-        .into_iter()
-        .enumerate()
-    {
-        field(c, r, ("", 0), (344 + i as u32 * 40, 30), value, placeholder);
+/// Empty-state line of a section: only Selection has one.
+pub fn section_empty_text(section: usize, content: &Inspector) -> Option<&'static str> {
+    (section == 0 && matches!(content, Inspector::NoSelection)).then_some(NOTHING_SELECTED)
+}
+
+fn pack(c: [u8; 4]) -> u32 {
+    u32::from_be_bytes(c)
+}
+
+fn inset(r: Rect, x: u32, y: u32, h: u32) -> Rect {
+    Rect {
+        x: r.x + x,
+        y: r.y + y,
+        width: r.width.saturating_sub(2 * x),
+        height: h,
     }
 }
 
-/// One captioned input box. Without a value the placeholder is drawn dimmed.
-fn field(
-    c: &mut WidgetCanvas<'_>,
-    r: Rect,
-    (caption, caption_y): (&str, u32),
-    (box_y, height): (u32, u32),
-    value: Option<String>,
-    placeholder: &str,
-) {
-    let tokens = c.tokens;
-    if !caption.is_empty() {
-        label(
+pub(crate) fn draw_inspector(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model) {
+    let (Some(panel), content) = (l.inspector, &model.chrome.inspector) else {
+        return;
+    };
+    let t = c.tokens;
+    c.paint_rect(panel, t.panel);
+    for i in 0..SECTIONS {
+        let head = l.section_headers[i];
+        if head.width == 0 {
+            continue;
+        }
+        let open = l.section_bodies[i].height > 0;
+        c.paint_rect(head, t.panel_raised);
+        let chevron = if open {
+            IconKind::CHEVRON_DOWN
+        } else {
+            IconKind::CHEVRON_RIGHT
+        };
+        let g = Rect {
+            x: head.x + 10,
+            y: head.y + (head.height - 16) / 2,
+            width: 16,
+            height: 16,
+        };
+        c.paint_icon_color(chevron, g, t.text_secondary);
+        let label = Rect {
+            x: head.x + 32,
+            y: head.y,
+            width: head.width - 40,
+            height: head.height,
+        };
+        text(
             c,
-            caption,
-            Rect {
-                x: r.x + 16,
-                y: r.y + caption_y,
-                width: r.width.saturating_sub(32),
-                height: 20,
-            },
-            tokens.text_secondary,
-            11,
+            SECTION_NAMES[i],
+            label,
+            t.text_primary,
+            13,
             FontWeight::Semibold,
         );
+        if model.ui.focus == Some(Focus::Section(i)) {
+            paint_focus(
+                c,
+                Rect {
+                    x: head.x + 2,
+                    y: head.y + 2,
+                    width: head.width - 4,
+                    height: head.height - 4,
+                },
+                4,
+            );
+        }
+        let body = l.section_bodies[i];
+        if body.height == SECTION_BODY_H[i] {
+            draw_body(c, i, body, content, model);
+        }
     }
-    c.paint_round(
-        Rect {
-            x: r.x + 16,
-            y: r.y + box_y,
-            width: r.width.saturating_sub(32),
-            height,
-        },
-        4,
-        tokens.panel_raised,
-        tokens.separator,
-        1,
-    );
-    let (text, color) = match &value {
-        Some(text) => (text.as_str(), tokens.text_primary),
-        None => (placeholder, tokens.disabled_text),
+}
+
+fn draw_body(
+    c: &mut WidgetCanvas<'_>,
+    section: usize,
+    body: Rect,
+    content: &Inspector,
+    model: &Model,
+) {
+    let t = c.tokens;
+    let shape = match content {
+        Inspector::Shape(p) => Some(p),
+        Inspector::NoSelection => None,
     };
-    label(
+    match section {
+        0 => match shape {
+            None => {
+                text(
+                    c,
+                    section_empty_text(0, content).unwrap_or(""),
+                    inset(body, 12, 8, 20),
+                    t.text_secondary,
+                    13,
+                    FontWeight::Regular,
+                );
+                text(
+                    c,
+                    PICK_HINT,
+                    inset(body, 12, 28, 20),
+                    t.text_tertiary,
+                    12,
+                    FontWeight::Regular,
+                );
+            }
+            Some(p) => {
+                text(
+                    c,
+                    &format!("Shape {}", p.index),
+                    inset(body, 12, 8, 20),
+                    t.text_primary,
+                    13,
+                    FontWeight::Regular,
+                );
+                text(
+                    c,
+                    "Read-only for now",
+                    inset(body, 12, 28, 20),
+                    t.text_tertiary,
+                    12,
+                    FontWeight::Regular,
+                );
+            }
+        },
+        1 => colour_field(
+            c,
+            inset(body, 12, 8, 28),
+            shape.map(ShapeProps::fill_text),
+            shape.and_then(|p| p.fill),
+        ),
+        2 => {
+            colour_field(
+                c,
+                inset(body, 12, 8, 28),
+                shape.map(ShapeProps::stroke_text),
+                shape.and_then(|p| p.stroke),
+            );
+            let w = shape.map(ShapeProps::width_text);
+            number_field(c, inset(body, 12, 44, 28), "Width", w.as_deref(), "px");
+        }
+        3 => {
+            let (x, y) = shape.map_or((None, None), |p| {
+                (Some(number(p.transform.e)), Some(number(p.transform.f)))
+            });
+            let row = inset(body, 12, 8, 28);
+            let half = (row.width - 8) / 2;
+            number_field(c, Rect { width: half, ..row }, "X", x.as_deref(), "");
+            number_field(
+                c,
+                Rect {
+                    x: row.x + half + 8,
+                    width: half,
+                    ..row
+                },
+                "Y",
+                y.as_deref(),
+                "",
+            );
+            let m = shape.map(|p| {
+                let t = p.transform;
+                format!(
+                    "{} {} {} {}",
+                    number(t.a),
+                    number(t.b),
+                    number(t.c),
+                    number(t.d)
+                )
+            });
+            number_field(c, inset(body, 12, 44, 28), "Matrix", m.as_deref(), "");
+        }
+        _ => {
+            let loop_s = model.chrome.state.loop_seconds;
+            if model.chrome.state.open && loop_s > 0.0 {
+                number_field(
+                    c,
+                    inset(body, 12, 8, 28),
+                    "Loop",
+                    Some(&strip::format_time(loop_s)),
+                    "",
+                );
+            } else {
+                text(
+                    c,
+                    "No animation",
+                    inset(body, 12, 8, 20),
+                    t.text_tertiary,
+                    12,
+                    FontWeight::Regular,
+                );
+            }
+        }
+    }
+}
+
+/// Field container: level 3 fill, 6 px radius, no edge.
+fn field_box(c: &mut WidgetCanvas<'_>, r: Rect) {
+    let fill = c.tokens.surface[3];
+    c.paint_round(r, 6, fill, 0, 0);
+}
+
+fn colour_field(c: &mut WidgetCanvas<'_>, r: Rect, label: Option<String>, colour: Option<[u8; 4]>) {
+    let t = c.tokens;
+    field_box(c, r);
+    let swatch = Rect {
+        x: r.x + 8,
+        y: r.y + (r.height - 16) / 2,
+        width: 16,
+        height: 16,
+    };
+    match colour {
+        Some(col) => c.paint_round(swatch, 4, pack(col), t.control_edge, 1),
+        None => c.paint_round(swatch, 4, 0, t.control_edge, 1),
+    }
+    let (s, color) = match &label {
+        Some(s) => (s.as_str(), t.text_primary),
+        None => ("\u{2014}", t.text_secondary),
+    };
+    mono(
         c,
-        text,
+        s,
         Rect {
-            x: r.x + 24,
-            y: r.y + box_y + height.saturating_sub(20) / 2,
-            width: r.width.saturating_sub(48),
-            height: 20,
+            x: r.x + 32,
+            y: r.y,
+            width: r.width.saturating_sub(40),
+            height: r.height,
         },
         color,
-        11,
+        12,
+    );
+}
+
+fn number_field(c: &mut WidgetCanvas<'_>, r: Rect, caption: &str, value: Option<&str>, unit: &str) {
+    let t = c.tokens;
+    field_box(c, r);
+    text(
+        c,
+        caption,
+        Rect {
+            x: r.x + 8,
+            y: r.y,
+            width: 52,
+            height: r.height,
+        },
+        t.text_secondary,
+        12,
         FontWeight::Regular,
     );
+    let vx = r.x + 8 + text_width(caption, 12).max(14) + 12;
+    let vrect = Rect {
+        x: vx,
+        y: r.y,
+        width: (r.x + r.width).saturating_sub(vx + 6),
+        height: r.height,
+    };
+    match value {
+        Some(v) => {
+            mono(c, v, vrect, t.text_primary, 12);
+            if !unit.is_empty() {
+                let ux = vx + v.chars().count() as u32 * 8 + 4;
+                mono(c, unit, Rect { x: ux, ..vrect }, t.text_secondary, 12);
+            }
+        }
+        None => mono(c, "\u{2014}", vrect, t.text_secondary, 12),
+    }
 }
 
 #[cfg(test)]

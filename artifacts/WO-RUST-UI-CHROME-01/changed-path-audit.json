@@ -1,0 +1,24 @@
+{
+  "allowed_modified": [
+    "rust/crates/vexel-app/src/model.rs",
+    "rust/crates/vexel-app/src/render.rs",
+    "rust/crates/vexel-app/src/chrome.rs",
+    "rust/crates/vexel-app/src/inspector.rs",
+    "rust/crates/vexel-app/src/lib.rs (one mod line)",
+    "rust/crates/vexel-app/src/main.rs (call-site wiring, about 30 lines)"
+  ],
+  "allowed_new": [
+    "rust/crates/vexel-app/src/layout/mod.rs",
+    "rust/crates/vexel-app/src/layout/state.rs",
+    "rust/crates/vexel-app/src/layout/paint.rs",
+    "rust/crates/vexel-app/src/layout/tests.rs",
+    "rust/crates/vexel-app/tests/ui_chrome_goldens.rs",
+    "rust/crates/vexel-app/tests/ui_chrome_tokens.rs",
+    "rust/fixtures/ui/chrome/*.rle",
+    "artifacts/WO-RUST-UI-CHROME-01/**"
+  ],
+  "outside_allowed": [
+    "docs/archive/live/2026-10-17-ui-chrome-01-*.png (screenshots requested by the coordinator brief; docs/** is otherwise protected)"
+  ],
+  "protected_touched": []
+}

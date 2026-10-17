@@ -136,7 +136,7 @@ fn color_text(color: Option<[u8; 4]>) -> String {
 }
 
 /// Up to three decimals, trailing zeros trimmed, no "-0".
-fn number(value: f64) -> String {
+pub(crate) fn number(value: f64) -> String {
     let text = format!("{value:.3}");
     let text = text.trim_end_matches('0').trim_end_matches('.');
     if text == "-0" || text.is_empty() {
@@ -161,6 +161,8 @@ pub struct ChromeText {
     pub inspector: Inspector,
     /// Timeline panel line (Animate workspace).
     pub timeline: String,
+    /// The document facts the chrome is drawn from.
+    pub state: AppState,
 }
 
 impl Default for ChromeText {
@@ -211,6 +213,7 @@ pub fn chrome_text(state: &AppState) -> ChromeText {
         status,
         inspector,
         timeline: timeline_text(state.open, state.loop_seconds),
+        state: state.clone(),
     }
 }
 

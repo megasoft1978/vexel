@@ -1,25 +1,31 @@
-use crate::chrome::{rail_glyph, status_label_rect, top_label_rect};
 use crate::inspector::draw_inspector;
-use crate::model::{Layout, Mode, Model, Tool, checked_pixel_geometry};
-use crate::motion::{self, MotionFrame, paint};
+use crate::layout::paint::centred;
+use crate::layout::{draw_chrome_with, draw_popover};
+use crate::model::{Model, checked_pixel_geometry};
+use crate::motion::MotionFrame;
 use std::cell::Cell;
 use vexel_platform_apple::{RgbaFrame, TextEmphasis, TextFace, draw_text_rgba};
-use vexel_ui::{
-    ControlState, FontFamily, FontWeight, Rect, Theme, WidgetCanvas, WidgetDrawSpec, WidgetKind,
-    widget_paint,
-};
+use vexel_ui::{FontFamily, FontWeight, Rect, Theme, WidgetCanvas};
 
 const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
 
-pub fn render(w: u32, h: u32, scale: u32, model: &Model) -> Result<RgbaFrame, &'static str> {
+pub fn render(
+    width_points: u32,
+    height_points: u32,
+    scale: u32,
+    model: &Model,
+) -> Result<RgbaFrame, &'static str> {
     render_with(
-        w,
-        h,
+        width_points,
+        height_points,
         scale,
         model,
         &MotionFrame::rest(model.dark, model.mode),
     )
 }
+
+/// [`render`] with the interpolated hover/press/focus visuals of the UI
+/// micro-transitions (the rest frame reproduces the static look exactly).
 pub fn render_with(
     width_points: u32,
     height_points: u32,
@@ -39,7 +45,8 @@ pub fn render_with(
         .try_reserve_exact(len)
         .map_err(|_| "frame allocation failed")?;
     pixels.resize(len, 0);
-    let layout = Layout::new(width_points, height_points, model.mode)
+    let layout = model
+        .layout(width_points, height_points)
         .ok_or("window is too small for the shell layout")?;
     let theme = if model.dark {
         Theme::Dark
@@ -108,238 +115,13 @@ pub fn render_with(
             },
             tokens.window,
         );
-        c.paint_rect(layout.top, tokens.window);
-        c.paint_rect(
-            Rect {
-                x: 0,
-                y: layout.top.height.saturating_sub(1),
-                width: width_points,
-                height: 1,
-            },
-            tokens.separator,
-        );
-        label(
-            &mut c,
-            "Vexel",
-            Rect {
-                x: 18,
-                y: 8,
-                width: 86,
-                height: 30,
-            },
-            tokens.text_primary,
-            16,
-            FontWeight::Semibold,
-        );
-        if width_points >= 1000 {
-            label(
-                &mut c,
-                &model.chrome.top,
-                top_label_rect(&layout),
-                tokens.text_secondary,
-                12,
-                FontWeight::Regular,
-            );
+        draw_chrome_with(&mut c, &layout, model, Some(motion));
+        draw_stage_empty(&mut c, layout.stage);
+        if let Some(footer) = layout.footer {
+            draw_timeline(&mut c, footer, &model.chrome.timeline);
         }
-        let (draw, anim) = (motion::ID_DRAW, motion::ID_ANIMATE);
-        paint::segment(&mut c, "Draw", layout.draw_mode, &motion.get(draw));
-        paint::segment(&mut c, "Animate", layout.animate_mode, &motion.get(anim));
-        if width_points >= 1000 {
-            label(
-                &mut c,
-                "No history",
-                Rect {
-                    x: width_points.saturating_sub(368),
-                    y: 10,
-                    width: 62,
-                    height: 26,
-                },
-                tokens.text_tertiary,
-                10,
-                FontWeight::Regular,
-            );
-            button(
-                &mut c,
-                "Undo",
-                Rect {
-                    x: width_points.saturating_sub(300),
-                    y: 8,
-                    width: 54,
-                    height: 30,
-                },
-            );
-            button(
-                &mut c,
-                "Redo",
-                Rect {
-                    x: width_points.saturating_sub(240),
-                    y: 8,
-                    width: 54,
-                    height: 30,
-                },
-            );
-            button(
-                &mut c,
-                "Save",
-                Rect {
-                    x: width_points.saturating_sub(176),
-                    y: 8,
-                    width: 54,
-                    height: 30,
-                },
-            );
-            button(
-                &mut c,
-                "Export",
-                Rect {
-                    x: width_points.saturating_sub(116),
-                    y: 8,
-                    width: 70,
-                    height: 30,
-                },
-            );
-        }
-
-        c.paint_rect(layout.rail, tokens.panel);
-        for (i, tool) in [
-            Tool::Select,
-            Tool::Pen,
-            Tool::Rectangle,
-            Tool::Ellipse,
-            Tool::Line,
-        ]
-        .iter()
-        .enumerate()
-        {
-            let r = layout.tools[i];
-            let v = motion.get(motion::tool_id(*tool));
-            c.paint_round(r, 5, v.fill, tokens.separator, 1);
-            let (glyph, caption) = rail_glyph(*tool);
-            label(
-                &mut c,
-                glyph,
-                Rect {
-                    x: r.x + 2,
-                    y: r.y + 6,
-                    width: r.width.saturating_sub(4),
-                    height: 22,
-                },
-                v.glyph,
-                13,
-                FontWeight::Regular,
-            );
-            if r.height >= 42 {
-                label(
-                    &mut c,
-                    caption,
-                    Rect {
-                        x: r.x + 1,
-                        y: r.y + 23,
-                        width: r.width.saturating_sub(2),
-                        height: 16,
-                    },
-                    v.glyph,
-                    9,
-                    FontWeight::Regular,
-                );
-            }
-            paint::ring(&mut c, r, &v);
-        }
-
-        c.paint_rect(layout.stage, tokens.canvas_well);
-        let stage = layout.stage;
-        let mark_w = stage.width.saturating_sub(24).min(480).max(1);
-        let mark_x = stage.x + stage.width.saturating_sub(mark_w) / 2;
-        let center = stage.y + stage.height / 2;
-        label(
-            &mut c,
-            "No document is open",
-            Rect {
-                x: mark_x,
-                y: center.saturating_sub(56),
-                width: mark_w,
-                height: 32,
-            },
-            tokens.text_primary,
-            21,
-            FontWeight::Semibold,
-        );
-        label(
-            &mut c,
-            "Drawing and project actions are unavailable in this shell.",
-            Rect {
-                x: mark_x,
-                y: center.saturating_sub(16),
-                width: mark_w,
-                height: 24,
-            },
-            tokens.text_secondary,
-            12,
-            FontWeight::Regular,
-        );
-        label(
-            &mut c,
-            "Use Draw or Animate above to switch workspaces.",
-            Rect {
-                x: mark_x,
-                y: center + 8,
-                width: mark_w,
-                height: 24,
-            },
-            tokens.text_secondary,
-            12,
-            FontWeight::Regular,
-        );
-        if model.mode == Mode::Animate {
-            draw_timeline(
-                &mut c,
-                layout.timeline.expect("animate layout has timeline"),
-                &model.chrome.timeline,
-            );
-        }
-        if let Some(panel) = layout.inspector {
-            draw_inspector(&mut c, panel, &model.chrome.inspector);
-        }
-        draw_activity(&mut c, layout.activity, model.status);
-        c.paint_rect(layout.status, tokens.panel_raised);
-        label(
-            &mut c,
-            "Ready",
-            Rect {
-                x: 14,
-                y: layout.status.y + 3,
-                width: 66,
-                height: 22,
-            },
-            tokens.success,
-            11,
-            FontWeight::Semibold,
-        );
-        label(
-            &mut c,
-            &model.chrome.status,
-            status_label_rect(&layout),
-            tokens.text_secondary,
-            11,
-            FontWeight::Regular,
-        );
-        label(
-            &mut c,
-            if model.mode == Mode::Draw {
-                "Draw workspace"
-            } else {
-                "Animate workspace"
-            },
-            Rect {
-                x: width_points.saturating_sub(166),
-                y: layout.status.y + 3,
-                width: 152,
-                height: 22,
-            },
-            tokens.text_secondary,
-            11,
-            FontWeight::Regular,
-        );
+        draw_inspector(&mut c, &layout, model);
+        draw_popover(&mut c, &layout, model);
     }
     if text_failed.get() {
         return Err("CoreText rejected bounded workbench text");
@@ -357,13 +139,6 @@ pub(crate) fn label(
 ) {
     let _ = c.paint_text(text, bounds, color, FontFamily::System, weight, size);
 }
-fn button(c: &mut WidgetCanvas<'_>, text: &str, bounds: Rect) {
-    let mut s = WidgetDrawSpec::new(WidgetKind::ButtonSecondary, bounds);
-    s.label = Some(text);
-    s.state = ControlState::Disabled;
-    let _ = widget_paint(c, &s);
-}
-
 #[cfg(test)]
 mod geometry_tests {
     use super::*;
@@ -448,65 +223,34 @@ fn timeline_content_rows(r: Rect) -> [Option<Rect>; 3] {
         }),
     ]
 }
-fn draw_activity(c: &mut WidgetCanvas<'_>, r: Rect, status: &str) {
+
+/// Stage placeholder; a composed document is blitted over it by the shell.
+fn draw_stage_empty(c: &mut WidgetCanvas<'_>, stage: Rect) {
     let tokens = c.tokens;
-    c.paint_rect(r, tokens.window);
-    c.paint_rect(
-        Rect {
-            x: r.x,
-            y: r.y,
-            width: r.width,
-            height: 1,
-        },
-        tokens.separator,
-    );
-    label(
+    c.paint_rect(stage, tokens.canvas_well);
+    let w = stage.width.saturating_sub(24).min(480).max(1);
+    let x = stage.x + stage.width.saturating_sub(w) / 2;
+    let mid = stage.y + stage.height / 2;
+    let row = |y: u32, h: u32| Rect {
+        x,
+        y,
+        width: w,
+        height: h,
+    };
+    centred(
         c,
-        "MCP activity",
-        Rect {
-            x: 16,
-            y: r.y + 10,
-            width: 148,
-            height: 22,
-        },
+        "No document open",
+        row(mid.saturating_sub(40), 32),
         tokens.text_primary,
-        12,
+        20,
         FontWeight::Semibold,
     );
-    label(
+    centred(
         c,
-        "Unavailable in this shell",
-        Rect {
-            x: 16,
-            y: r.y + 38,
-            width: 230,
-            height: 20,
-        },
-        tokens.disabled_text,
-        11,
-        FontWeight::Regular,
-    );
-    label(
-        c,
-        status,
-        Rect {
-            x: 250,
-            y: r.y + 38,
-            width: r.width.saturating_sub(390),
-            height: 20,
-        },
+        "Use File > Open to load an SVG or project.",
+        row(mid.saturating_sub(4), 24),
         tokens.text_secondary,
-        11,
+        13,
         FontWeight::Regular,
-    );
-    button(
-        c,
-        "Connect",
-        Rect {
-            x: r.width.saturating_sub(100),
-            y: r.y + 18,
-            width: 84,
-            height: 30,
-        },
     );
 }

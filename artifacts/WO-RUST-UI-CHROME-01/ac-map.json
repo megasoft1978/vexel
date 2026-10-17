@@ -1,0 +1,11 @@
+{
+  "AC1": ["layout::tests::geometry_holds_from_the_minimum_to_4096", "layout::tests::sizes_below_the_minimum_or_above_the_maximum_are_rejected", "layout::tests::five_thousand_seeded_sizes_never_panic"],
+  "AC2": ["layout::tests::splitter_drags_clamp_and_never_shrink_the_stage_below_260", "layout::tests::layout_round_trips_a_set_size"],
+  "AC3": ["layout::tests::every_target_hit_tests_to_itself_and_targets_are_big_enough"],
+  "AC4": ["layout::tests::selecting_animate_moves_the_thumb_target_and_keys_work_when_focused"],
+  "AC5": ["layout::tests::collapsing_a_section_removes_its_rows_and_moves_the_next_header_up", "layout::tests::focus_order_follows_reading_order", "layout::tests::space_and_return_toggle_a_focused_section_header", "layout::tests::empty_state_is_shown_in_the_selection_section_only"],
+  "AC6": ["layout::tests::the_activity_band_is_gone_and_chrome_is_44_plus_24", "layout::tests::mcp_state_is_conveyed_by_word_and_the_popover_keeps_the_old_text"],
+  "AC7": ["tests/ui_chrome_tokens.rs"],
+  "AC8": ["tests/ui_chrome_goldens.rs (32 candidate frames, not accepted)"],
+  "AC9": ["full vexel-app and vexel-ui suites pass; layout pins updated per result.md; no new packages; no unsafe"]
+}

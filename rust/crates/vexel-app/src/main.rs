@@ -17,7 +17,7 @@ use vexel_app::animation::{
 use vexel_app::chrome::{self, AppState};
 use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
-use vexel_app::model::{self, Layout, Mode, Model, Target, Tool};
+use vexel_app::model::{self, DragPhase, Layout, Mode, Model, Target, Tool};
 use vexel_app::motion::MotionAdapter;
 use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
@@ -72,7 +72,7 @@ fn run(
                 let logical = checked_points(points.width, points.height).unwrap_or((1280, 820));
                 let valid = model::checked_pixel_geometry(logical, scale as u32)
                     == Some((pixels.width, pixels.height))
-                    && Layout::new(logical.0, logical.1, Mode::Draw).is_some();
+                    && Model::new(true).layout(logical.0, logical.1).is_some();
                 (
                     logical,
                     scale,
@@ -178,7 +178,7 @@ fn run(
                 dirty = true;
             }
         }
-        if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
+        if let Some(layout) = model.layout(logical.0, logical.1) {
             let stage = doc.compose_target(layout.stage, scale as u32);
             if let Some(path) = pending_open.take() {
                 doc.open(files.document_mut(), &path, stage);
@@ -227,7 +227,7 @@ fn run(
                 &motion.frame(model.dark, model.mode),
             ) {
                 Ok(frame) => {
-                    let frame = match Layout::new(draw_size.0, draw_size.1, model.mode) {
+                    let frame = match model.layout(draw_size.0, draw_size.1) {
                         Some(layout) => {
                             let frame = compose::blit_document(frame, &doc, &layout, model.dark);
                             match strip::layout(layout.stage).filter(|_| driver.strip_visible()) {
@@ -259,7 +259,7 @@ fn run(
             .poll_events(window.id(), event_budget)
             .map_err(|_| "native event polling failed")?;
         for event in batch.events {
-            if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
+            if let Some(layout) = model.layout(logical.0, logical.1) {
                 let select = model.mode == Mode::Draw && tools.tool() == Tool::Select;
                 let used = canvas::handle_event(&mut doc, &event, layout.stage, select);
                 dirty |= used.redraw;
@@ -295,7 +295,7 @@ fn run(
                         dirty = true;
                         geometry_valid = model::checked_pixel_geometry(logical, scale as u32)
                             == Some((pixels.width, pixels.height))
-                            && Layout::new(logical.0, logical.1, model.mode).is_some();
+                            && model.layout(logical.0, logical.1).is_some();
                         model.status = if geometry_valid {
                             ""
                         } else {
@@ -318,7 +318,7 @@ fn run(
                             == Some((pixels.width, pixels.height))
                     {
                         scale = next_scale;
-                        geometry_valid = Layout::new(logical.0, logical.1, model.mode).is_some();
+                        geometry_valid = model.layout(logical.0, logical.1).is_some();
                         model.status = if geometry_valid {
                             ""
                         } else {
@@ -334,7 +334,12 @@ fn run(
                 WindowEvent::KeyDown {
                     code, modifiers, ..
                 } => {
-                    if let Some(action) = edit_shortcut(code, modifiers) {
+                    let has_inspector = model
+                        .layout(logical.0, logical.1)
+                        .is_some_and(|l| l.inspector.is_some());
+                    if model.focus_key(code, modifiers.0 & Modifiers::SHIFT != 0, has_inspector) {
+                        dirty = true;
+                    } else if let Some(action) = edit_shortcut(code, modifiers) {
                         let _ = match action {
                             EditAction::Undo => files.document_mut().undo(),
                             EditAction::Redo => files.document_mut().redo(),
@@ -373,7 +378,7 @@ fn run(
                     }
                 }
                 WindowEvent::Pointer(pointer) => {
-                    if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
+                    if let Some(layout) = model.layout(logical.0, logical.1) {
                         let primary = pointer_accepts_mode(pointer.button);
                         dirty |= motion
                             .pointer(&layout, pointer.kind, pointer.logical, primary)
@@ -502,12 +507,25 @@ fn route_pointer(
             return true;
         }
     }
+    let phase = match pointer.kind {
+        PointerKind::Down if primary => Some(DragPhase::Down),
+        PointerKind::Move if model.ui.dragging() => Some(DragPhase::Move),
+        PointerKind::Up if model.ui.dragging() => Some(DragPhase::Up),
+        _ => None,
+    };
+    if let Some(phase) = phase {
+        let window = (layout.width, layout.height);
+        if model.splitter(phase, pointer.logical, layout, window) {
+            return true;
+        }
+    }
     let point = (pointer.logical.0 >= 0 && pointer.logical.1 >= 0)
         .then(|| (pointer.logical.0 as u32, pointer.logical.1 as u32));
     if pointer.kind == PointerKind::Down && primary {
         if let Some(point) = point {
             if let Some(Target::Tool(tool)) = layout.hit_test(point) {
                 tools.set_tool(tool);
+                model.tool = tool;
                 redraw = true;
             }
             let select = tools.tool() == Tool::Select;
@@ -563,9 +581,9 @@ fn safe_render_geometry(points: (u32, u32), scale: f64) -> ((u32, u32), u32) {
     } else {
         1
     };
-    let max_points = (4096 / safe_scale).max(440);
-    let width = points.0.clamp(440, max_points);
-    let height = points.1.clamp(300, max_points);
+    let max_points = (4096 / safe_scale).max(720);
+    let width = points.0.clamp(720, max_points);
+    let height = points.1.clamp(480, max_points);
     ((width, height), safe_scale)
 }
 
