@@ -54,3 +54,12 @@ No open defect for check 4. Model test ui_wiring_export.rs covers Esc.
 - Row 5: Cmd+O via System Events produced no Open panel in a screenshot. Not verified. Cmd+S left untested: it could write the tracked fixture. Repo verified unchanged (`git status` clean, fixture sha matches).
 - Row 3: still inconclusive (synthetic moves give no hover feedback).
 - Rows 6 and 8: not run. Row 6 needs an in-memory edit on the open document. Row 8 needs a scroll-event check that was not executed.
+
+## Headless evidence (model level, no screen touched; 2026-10-17)
+
+Run: `cargo test -p vexel-app --test <file>` for ui_polish_behaviour (11 pass), ui_timeline2_footer (11), ui_wiring_keys (4), ui_wiring_toolbar (5), ui_wiring_export (6), ui_timeline_input (6). All pass.
+
+- Row 3 (tooltip): `tooltip_appears_after_500_ms_and_goes_on_press_or_leave`, `reduced_motion_still_delays_the_tooltip`, `tooltip_rects_stay_inside_the_window_for_every_target`. Timing and placement verified in the model. Visual hover on the real window still needs the Mac.
+- Row 6 (undo/redo): `redo_is_enabled_only_after_an_undo_and_a_load_resets_it`. Redo gating verified in the model. Key-driven undo on the real window still needs the Mac.
+- Row 8 (scroll): `wheel_over_the_whole_footer_scrolls_and_clamps_and_never_reaches_the_stage`, `twelve_rows_in_six_show_a_proportional_thumb_that_tracks_scroll`. Footer wheel behaviour verified in the model. Real wheel events still need the Mac.
+- Row 5 (file panels): export and key routing verified in ui_wiring_export and ui_wiring_keys. Native Save/Open panel counts cannot be tested headless: still needs the Mac.
