@@ -230,3 +230,39 @@ fn xlink_binding_uses_root_namespace_and_use_allowlist_is_complete() {
     let use_index = bad_tokens.iter().position(|t| t.kind == TokenKind::EmptyElement).unwrap();
     assert!(!use_attributes_supported(bad_attr, &bad_tokens, use_index));
 }
+
+fn many_ids(count: usize) -> String {
+    let mut source = String::from("<svg>");
+    for n in 0..count { source.push_str(&format!("<g id='i{n}'/>")); }
+    source.push_str("</svg>");
+    source
+}
+
+#[test]
+fn corpus_measured_id_counts_are_indexed() {
+    // WO-RUST-SCENE-LIMITS-01: chuaattractormodified has 100,088 id attributes and
+    // ideogram-human-chromosome-20 has 144,217; both were refused at 65,536.
+    for count in [100_088usize, 144_217] {
+        let source = many_ids(count);
+        let tokens = parsed(source.as_bytes());
+        let index = ReferenceIndex::create(source.as_bytes(), &tokens).unwrap();
+        assert_eq!(index.id_count(), count);
+    }
+}
+
+#[test]
+fn id_table_geometry_is_a_bounded_power_of_two() {
+    assert!(REFERENCE_SLOT_CAPACITY.is_power_of_two());
+    assert!(REFERENCE_SLOT_CAPACITY >= 2 * MAX_REFERENCE_IDS);
+    // Worst-case table allocation: one u32 per slot, never more.
+    assert!(REFERENCE_SLOT_CAPACITY * size_of::<u32>() <= 2 * 1024 * 1024);
+}
+
+#[test]
+fn adversarial_id_overflow_is_refused_in_the_counting_phase() {
+    // N+1 ids fail before the slot table is allocated.
+    let source = many_ids(MAX_REFERENCE_IDS + 1);
+    let tokens = parsed(source.as_bytes());
+    let error = ReferenceIndex::create(source.as_bytes(), &tokens).unwrap_err();
+    assert_eq!(error.category, ReferenceError::Limit);
+}

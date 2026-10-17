@@ -122,13 +122,31 @@ fn original_use_instance_boundary_and_aggregate_byte_limit() {
             )
         }
     }
-    let s = format!(
-        "<svg width=\"8\" height=\"8\"><defs><g id=\"x\"><!--{}--><rect width=\"1\" height=\"1\"/></g></defs>{}</svg>",
-        "b".repeat(48 * 1024),
-        "<use href=\"#x\"/>".repeat(22)
-    );
+    // WO-RUST-SCENE-LIMITS-01: the cumulative budget moved from 1 MiB (22 uses of a
+    // 48 KiB+ target refused) to 16 MiB; a 64 KiB target is accepted exactly 256
+    // times and the 257th reference is refused.
+    let target = |n: usize| {
+        format!(
+            "<svg width=\"8\" height=\"8\"><defs><g id=\"x\"><!--{}--><rect width=\"1\" height=\"1\"/></g></defs>{}</svg>",
+            "b".repeat(64 * 1024 - "<g id=\"x\"><!----><rect width=\"1\" height=\"1\"/></g>".len()),
+            "<use href=\"#x\"/>".repeat(n)
+        )
+    };
+    assert_eq!(decode(&target(256)).unwrap().root().shapes.len(), 256);
     assert_eq!(
-        decode(&s).unwrap_err().kind,
+        decode(&target(257)).unwrap_err().kind,
         ErrorKind::Limit(LimitKind::References)
     );
+}
+#[test]
+fn use_reference_budget_admits_the_measured_generated_use_t1_shape() {
+    // generated-use_t1: 17,536 uses of a 91-byte symbol (1.6 MB cumulative) tripped
+    // the former 1 MiB budget at byte 648,183.
+    let base = "<g id=\"x\"><!----><rect width=\"1\" height=\"1\"/></g>";
+    let s = format!(
+        "<svg width=\"8\" height=\"8\"><defs><g id=\"x\"><!--{}--><rect width=\"1\" height=\"1\"/></g></defs>{}</svg>",
+        "p".repeat(91 - base.len()),
+        "<use href=\"#x\"/>".repeat(17_536)
+    );
+    assert_eq!(decode(&s).unwrap().root().shapes.len(), 17_536);
 }

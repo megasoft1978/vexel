@@ -96,7 +96,7 @@ impl<'src> Decoder<'src, '_> {
             })?;
         let span = crate::source::element_span(tokens, target.0, end, source)?;
         let bytes = span.end - span.start;
-        if bytes > 64 * 1024 || bytes > 1_048_576usize.saturating_sub(self.reference_bytes) {
+        if bytes > 64 * 1024 || bytes > (16 * 1_048_576usize).saturating_sub(self.reference_bytes) {
             return Err(Diagnostic {
                 kind: ErrorKind::Limit(LimitKind::References),
                 offset: t.name.offset,

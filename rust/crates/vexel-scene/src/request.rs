@@ -228,6 +228,10 @@ impl SceneBuilder {
     }
 }
 pub const DOCUMENT_TEXT_COMMAND_LIMIT: usize = 4 * 1024 * 1024;
+// Worst-case retained text commands stay within 512 MiB (224 MiB at 56 bytes each).
+const _: () = assert!(
+    DOCUMENT_TEXT_COMMAND_LIMIT * core::mem::size_of::<crate::media::TextCommand>() <= 512 << 20
+);
 #[cfg(test)]
 #[path = "request_tests.rs"]
 mod incremental_tests;

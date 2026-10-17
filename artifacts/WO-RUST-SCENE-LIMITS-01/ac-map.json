@@ -1,0 +1,11 @@
+{
+  "AC1": {"status": "pass", "evidence": "limits.md"},
+  "AC2": {"status": "pass", "evidence": "vexel-svg-reference tests/reference.rs (N, N+1), vexel-app tests/scene_limits.rs; chua and ideogram now unsupported (translate at 2053, 11px at 20677771)"},
+  "AC3": {"status": "partial", "evidence": "use_t1 ok (255 ms, 91 MB); use_t2 stops at Limit(Shapes) byte 3683732, needs 178589; shape raise blocked by vexel-scene clamp outside allowed paths"},
+  "AC4": {"status": "pass", "evidence": "text_t1 needs 15849329 commands > 8388608, limit kept 4194304; text_t2 needs > 70.3M; limits.md"},
+  "AC5": {"status": "pass", "evidence": "limits.md memory table; assertions in reference lib.rs and scene request.rs; adversarial N+1 tests and RSS runs; shapes not raised"},
+  "AC6": {"status": "pass", "evidence": "external/report.md, in-repo/report.md: ok 10 to 11, no regressions, no rss_exceeded or crash, newly decoded use_t1 91 MB"},
+  "AC7": {"status": "pass", "evidence": "851 tests pass, none removed; in-repo verdicts and pipeline_hashes unchanged; two 1 MiB pins moved to the 16 MiB boundary as authorised"},
+  "AC8": {"status": "pass", "evidence": "Cargo.lock unchanged, no manifest change, no unsafe"},
+  "AC9": {"status": "pass", "evidence": "result.md"}
+}

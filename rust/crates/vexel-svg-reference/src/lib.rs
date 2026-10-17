@@ -9,8 +9,14 @@ mod find;
 pub use build::ReferenceBuildSession;
 pub use find::ReferenceFindSession;
 
-pub const MAX_REFERENCE_IDS: usize = 65_536;
-pub const REFERENCE_SLOT_CAPACITY: usize = 131_072;
+/// Measured need: ideogram-human-chromosome-20 has 144,217 `id` attributes.
+pub const MAX_REFERENCE_IDS: usize = 262_144;
+/// Power of two, at least twice the id cap; the table is `u32` slots, so at most
+/// 2 MiB per index.
+pub const REFERENCE_SLOT_CAPACITY: usize = 524_288;
+
+const _: () = assert!(REFERENCE_SLOT_CAPACITY.is_power_of_two());
+const _: () = assert!(REFERENCE_SLOT_CAPACITY >= 2 * MAX_REFERENCE_IDS);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReferenceError {

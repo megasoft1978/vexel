@@ -1,0 +1,11 @@
+{
+  "check": "pass",
+  "test": {"result": "pass", "passed": 851, "failed": 0, "ignored": 2},
+  "fmt": {"result": "fail-preexisting", "note": "vexel-scene and vexel-svg-reference test files unformatted on base; files added here are clean"},
+  "corpus_in_repo": {"ok": 24, "of": 24, "regressions": 0, "out": "in-repo/"},
+  "corpus_external": {"ok_before": 10, "ok_after": 11, "regressions": 0, "rss_exceeded": 0, "crash": 0, "out": "external/"},
+  "wo_validate": "valid",
+  "ledger_validate": "valid ledger: 1994 entries",
+  "git_diff_check": "clean",
+  "cargo_tree_new_packages": 0
+}

@@ -11,13 +11,17 @@ fn original_decode_job_total_exact_one_megabyte_and_plus_one() {
     let big = 64 * 1024 - 1;
     let target = format!("{head}{}{end}", "a".repeat(big - head.len() - end.len()));
     assert_eq!(target.len(), big);
-    for (id, tiny, ok) in [("tiny12", 16, true), ("tiny123", 17, false)] {
-        let small = format!("<g id=\"{id}\"/>");
+    // WO-RUST-SCENE-LIMITS-01: the cumulative budget moved from 1 MiB to 16 MiB,
+    // so the boundary is 256 big references plus a 256-byte (accepted) or
+    // 257-byte (refused) final target.
+    for (id, tiny, ok) in [("tiny12", 256, true), ("tiny123", 257, false)] {
+        let pad = tiny - format!("<g id=\"{id}\"><!----></g>").len();
+        let small = format!("<g id=\"{id}\"><!--{}--></g>", "a".repeat(pad));
         assert_eq!(small.len(), tiny);
-        assert_eq!(16 * big + tiny, 1024 * 1024 + usize::from(!ok));
+        assert_eq!(256 * big + tiny, 16 * 1024 * 1024 + usize::from(!ok));
         let input = format!(
             "<svg width=\"1\" height=\"1\"><defs>{target}{small}</defs>{}<use href=\"#{id}\"/></svg>",
-            "<use href=\"#big\"/>".repeat(16)
+            "<use href=\"#big\"/>".repeat(256)
         );
         let decoded = decode(&input);
         if ok {

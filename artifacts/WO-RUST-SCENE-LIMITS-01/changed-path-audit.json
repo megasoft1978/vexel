@@ -1,0 +1,17 @@
+{
+  "modified": [
+    {"path": "rust/crates/vexel-svg-reference/src/lib.rs", "kind": "protected-constants + 2 const assertions", "proof": "tests/reference.rs corpus_measured_id_counts_are_indexed (failed before)"},
+    {"path": "rust/crates/vexel-svg-reference/tests/reference.rs", "kind": "tests added"},
+    {"path": "rust/crates/vexel-svg-decode/src/use_expansion.rs", "kind": "protected-constant (reference byte budget)", "proof": "tests/original_references.rs (failed before)"},
+    {"path": "rust/crates/vexel-svg-decode/tests/original_references.rs", "kind": "1 MiB pin moved to 16 MiB boundary, test added"},
+    {"path": "rust/crates/vexel-svg-decode/tests/original_m4_boundaries.rs", "kind": "1 MiB pin moved to 16 MiB boundary (same strength)"},
+    {"path": "rust/crates/vexel-scene/src/request.rs", "kind": "one const assertion, constant unchanged"}
+  ],
+  "added": [
+    "rust/crates/vexel-app/tests/scene_limits.rs",
+    "rust/crates/vexel-app/tests/scene_limits_measure.rs",
+    "artifacts/WO-RUST-SCENE-LIMITS-01/**"
+  ],
+  "experiments_reverted": ["vexel-scene types.rs Limits default", "vexel-scene request.rs text limit", "vexel-app compose/decode.rs shapes", "use_expansion.rs instances", "temporary eprintln diagnostics"],
+  "protected_paths_touched_outside_allowance": []
+}
