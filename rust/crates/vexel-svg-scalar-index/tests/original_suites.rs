@@ -121,7 +121,8 @@ fn original_reference_same_length_padding_token_growth_fixed_index_and_source_id
         assert!(Arc::ptr_eq(context.source_owner(), source));
         assert_eq!(context.source().as_ptr(), source.as_ptr());
         assert!(token_bytes[i] > 0);
-        assert_eq!(indexes[i], 131072 * std::mem::size_of::<u32>());
+        // WO-RUST-SCENE-LIMITS-01 raised REFERENCE_SLOT_CAPACITY from 131,072 to 524,288 slots.
+        assert_eq!(indexes[i], 524288 * std::mem::size_of::<u32>());
         assert!(probes[i] > 0);
     }
     assert!(token_bytes[1] <= inputs[1].len());
