@@ -1,0 +1,1 @@
+{"verdict":"candidate","frozen_crate_tests":"pass","workspace":{"passed":2006,"ignored":5,"failed_suites":0,"base_passed":1981},"in_repo_corpus":"24/24 ok","fmt":"pass","diff_check":"clean","external_sweep":{"base_ok":18,"after_ok":19}}

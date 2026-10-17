@@ -1,0 +1,33 @@
+   Compiling vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-values)
+   Compiling vexel-svg-path v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-path)
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-scene)
+   Compiling vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-decode)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.23s
+     Running tests/svg_compat01.rs (target/aarch64-apple-darwin/debug/deps/svg_compat01-499c8039b580832a)
+
+running 22 tests
+test separator_free_matplotlib_style_transform_parses ... ok
+test separator_free_chain_beyond_operation_cap_is_refused ... ok
+test separator_free_transform_adversarial_inputs_are_rejected ... ok
+test nested_colon_names_are_malformed_xml_and_refused ... ok
+test svg_bound_prefix_still_rejects_shape_attribute ... ok
+test foreign_binding_with_entity_reference_fails_closed ... ok
+test nearest_svg_rebinding_still_rejects_shape_attribute ... ok
+test foreign_xlink_href_on_shape_still_rejects ... ok
+test unbound_prefix_still_rejects_shape_and_common_attributes ... ok
+test overflow_on_non_symbol_elements_is_unchanged ... ok
+test separator_free_transform_list_equals_spaced_composition ... ok
+test foreign_prefixed_common_attribute_is_ignored_on_group_and_path ... ok
+test foreign_prefix_with_dotted_local_name_is_ignored ... ok
+test nearest_foreign_binding_wins_over_outer_svg_binding ... ok
+test foreign_binding_declared_on_ancestor_is_ignored ... ok
+test foreign_prefixed_shape_attributes_are_ignored_like_plain_ones ... ok
+test huge_use_width_is_refused_by_validity_check ... ok
+test symbol_without_viewbox_and_without_use_size_renders ... ok
+test symbol_without_viewbox_maps_by_identity_at_use_origin ... ok
+test use_without_width_or_height_defaults_to_full_viewport ... ok
+test symbol_overflow_invalid_values_are_rejected ... ok
+test symbol_overflow_visible_and_hidden_render ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+

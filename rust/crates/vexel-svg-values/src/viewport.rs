@@ -364,31 +364,31 @@ pub fn parse_symbol_mapping(
         return Err(err(MappingErrorKind::InvalidArgument, 0));
     }
     let source = target.source();
-    let view_span = target
-        .get(b"viewBox")
-        .ok_or(err(MappingErrorKind::Viewport, target.element_name().start))?;
+    // Without a viewBox the symbol maps by identity; without use width/height the size is 100%.
+    let view = match target.get(b"viewBox") {
+        Some(view_span) => Some(parse_viewbox(source, view_span, target.limits())?),
+        None => None,
+    };
     let use_source = use_element.source();
-    let view = parse_viewbox(source, view_span, target.limits())?;
-    let width_span = use_element.get(b"width").ok_or(err(
-        MappingErrorKind::Viewport,
-        use_element.element_name().start,
-    ))?;
-    let height_span = use_element.get(b"height").ok_or(err(
-        MappingErrorKind::Viewport,
-        use_element.element_name().start,
-    ))?;
-    let width =
-        parse_length_with_limits(use_source, width_span, viewport_width, use_element.limits())
-            .map_err(value_error)?;
-    let height = parse_length_with_limits(
-        use_source,
-        height_span,
-        viewport_height,
-        use_element.limits(),
-    )
-    .map_err(value_error)?;
+    let width_span = use_element.get(b"width");
+    let height_span = use_element.get(b"height");
+    let width = match width_span {
+        Some(span) => {
+            parse_length_with_limits(use_source, span, viewport_width, use_element.limits())
+                .map_err(value_error)?
+        }
+        None => viewport_width,
+    };
+    let height = match height_span {
+        Some(span) => {
+            parse_length_with_limits(use_source, span, viewport_height, use_element.limits())
+                .map_err(value_error)?
+        }
+        None => viewport_height,
+    };
     if width <= 0.0 || height <= 0.0 {
-        return Err(err(MappingErrorKind::Viewport, width_span.start));
+        let at = width_span.or(height_span).map_or(0, |span| span.start);
+        return Err(err(MappingErrorKind::Viewport, at));
     }
     let x = optional_length(use_element, b"x", viewport_width, 0.0)?;
     let y = optional_length(use_element, b"y", viewport_height, 0.0)?;
@@ -406,14 +406,21 @@ pub fn parse_symbol_mapping(
         }
         _ => Aspect::default(),
     };
-    viewbox_transform(
-        view[0], view[1], view[2], view[3], x, y, width, height, aspect,
-    )
+    match view {
+        Some(view) => viewbox_transform(
+            view[0], view[1], view[2], view[3], x, y, width, height, aspect,
+        ),
+        None => Ok(Affine {
+            e: x,
+            f: y,
+            ..identity()
+        }),
+    }
 }
 
 /// Return the first unsupported attribute's name offset, matching symbol fail-closed behavior.
 pub fn symbol_attributes_supported(attributes: AttributeList<'_>) -> Result<(), MappingError> {
-    const ALLOWED: [&[u8]; 22] = [
+    const ALLOWED: [&[u8]; 23] = [
         b"id",
         b"class",
         b"style",
@@ -436,7 +443,10 @@ pub fn symbol_attributes_supported(attributes: AttributeList<'_>) -> Result<(), 
         b"visibility",
         b"display",
         b"color",
+        b"overflow",
     ];
+    // Clipping is not applied to symbols; overflow values are validated only.
+    const OVERFLOW: [&[u8]; 4] = [b"visible", b"hidden", b"scroll", b"auto"];
     for attribute in attributes.attributes() {
         let name = attribute
             .name
@@ -444,6 +454,15 @@ pub fn symbol_attributes_supported(attributes: AttributeList<'_>) -> Result<(), 
             .unwrap_or_default();
         if attribute.prefix.is_some() || !ALLOWED.contains(&name) {
             return Err(err(MappingErrorKind::Unsupported, attribute.name.start));
+        }
+        if name == b"overflow" {
+            let value = attribute
+                .value
+                .slice(attributes.source())
+                .unwrap_or_default();
+            if !OVERFLOW.contains(&value) {
+                return Err(err(MappingErrorKind::Unsupported, attribute.name.start));
+            }
         }
     }
     Ok(())

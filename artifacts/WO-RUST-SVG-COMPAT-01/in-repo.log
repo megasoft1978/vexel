@@ -1,0 +1,49 @@
+   Compiling vexel-svg-values v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-values)
+   Compiling vexel-svg-reference v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-reference)
+   Compiling vexel-svg-path v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-path)
+   Compiling vexel-scene v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-scene)
+   Compiling vexel-svg-definitions v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-definitions)
+   Compiling vexel-svg-paint v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-paint)
+   Compiling vexel-svg-media v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-media)
+   Compiling vexel-svg-decode v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-decode)
+   Compiling vexel-svg-animation-frame v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-animation-frame)
+   Compiling vexel-svg-engine v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-svg-engine)
+   Compiling vexel-render v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-render)
+   Compiling vexel-app v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/crates/vexel-app)
+   Compiling vexel-corpus v0.1.0 (/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-af2e37888bc65a68e/rust/tools/vexel-corpus)
+    Finished `release` profile [optimized] target(s) in 8.54s
+     Running `target/aarch64-apple-darwin/release/vexel-corpus run --manifest bench/corpus/manifest.json --pins rust/tools/vexel-corpus/pins.json --out artifacts/WO-RUST-SVG-COMPAT-01/in-repo`
+clip-path                                ok           12 ms
+image-embedded-data                      ok           12 ms
+metadata-namespaces                      ok           12 ms
+metadata-rdf-like                        ok           12 ms
+namespaces-custom-attributes             ok           11 ms
+path-arcs                                ok           15 ms
+path-line-curves                         ok           13 ms
+path-relative-commands                   ok           15 ms
+shapes-basic                             ok           12 ms
+shapes-lines-polygons                    ok           15 ms
+shapes-rounded                           ok           15 ms
+stress-long-path                         ok           113 ms
+stress-many-shapes                       ok           11 ms
+stress-nested-groups                     ok           15 ms
+stress-text-collection                   ok           30 ms
+style-css-class                          ok           15 ms
+style-gradient                           ok           12 ms
+style-opacity-transform                  ok           15 ms
+style-presentation-attributes            ok           11 ms
+text-basic                               ok           26 ms
+text-positioning                         ok           15 ms
+text-spans                               ok           12 ms
+use-local-reference                      ok           13 ms
+viewbox-preserve                         ok           15 ms
+ok            24
+unsupported   0
+limit_decode  0
+limit_render  0
+xml           0
+timeout       0
+rss_exceeded  0
+skipped       0
+crash         0
+guard_failed  0

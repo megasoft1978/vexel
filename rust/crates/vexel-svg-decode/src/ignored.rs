@@ -223,7 +223,16 @@ pub fn attributes_supported(
     let window = tokens
         .get(element..attr_end)
         .ok_or_else(|| crate::invalid(t.name.offset))?;
-    if vexel_svg_reference::attributes_supported(source, window, 0, root, t.local_name) {
+    let bindings = Bindings::resolve(source, tokens, element, control)?;
+    let foreign = |p: XmlSpan| bindings.is_foreign(source, p);
+    if vexel_svg_reference::attributes_supported_with(
+        source,
+        window,
+        0,
+        root,
+        t.local_name,
+        &foreign,
+    ) {
         return Ok(true);
     }
     for (i, a) in tokens
@@ -234,7 +243,27 @@ pub fn attributes_supported(
     {
         charge(control, WorkKind::TokenVisit, 1, a.name.offset)?;
         let pair = [*t, *a];
-        if vexel_svg_reference::attributes_supported(source, &pair, 0, root, t.local_name) {
+        if vexel_svg_reference::attributes_supported_with(
+            source,
+            &pair,
+            0,
+            root,
+            t.local_name,
+            &foreign,
+        ) {
+            // A foreign-prefixed attribute that the SVG rules would reject is ignored and noted once.
+            if a.prefix.length != 0
+                && !vexel_svg_reference::attributes_supported(source, &pair, 0, root, t.local_name)
+            {
+                let first = visited.get_mut(i).ok_or(Diagnostic {
+                    kind: ErrorKind::InvalidArgument,
+                    offset: a.name.offset,
+                })?;
+                if !*first {
+                    *first = true;
+                    sink.note(IgnoredKind::UnknownAttribute, a.name.offset)?
+                }
+            }
             continue;
         }
         if a.prefix.length != 0 {
@@ -260,6 +289,104 @@ pub fn attributes_supported(
     }
     Ok(true)
 }
+
+/// Prefix bindings in scope for one element: each distinct attribute prefix with whether its
+/// nearest `xmlns:prefix` declaration binds a non-SVG namespace. Unbound prefixes are not foreign.
+struct Bindings(Vec<(XmlSpan, bool)>);
+
+impl Bindings {
+    fn resolve(
+        source: &[u8],
+        tokens: &[XmlToken],
+        element: usize,
+        control: &mut dyn WorkControl,
+    ) -> Result<Self> {
+        let mut out: Vec<(XmlSpan, bool)> = Vec::new();
+        for a in tokens
+            .iter()
+            .skip(element + 1)
+            .take_while(|a| a.kind == TokenKind::Attribute)
+        {
+            if a.prefix.length == 0 {
+                continue;
+            }
+            let Some(p) = a.prefix.slice(source) else {
+                continue;
+            };
+            if p == b"xmlns" || p == b"xml" || out.iter().any(|(q, _)| q.slice(source) == Some(p)) {
+                continue;
+            }
+            let foreign = nearest_binding_is_foreign(source, tokens, element, p, control)?;
+            out.push((a.prefix, foreign));
+        }
+        Ok(Self(out))
+    }
+    fn is_foreign(&self, source: &[u8], prefix: XmlSpan) -> bool {
+        let Some(p) = prefix.slice(source) else {
+            return false;
+        };
+        self.0
+            .iter()
+            .any(|(q, foreign)| *foreign && q.slice(source) == Some(p))
+    }
+}
+
+/// Nearest in-scope `xmlns:prefix` declaration: the element itself first, then ancestors
+/// (nearest first). Walks back by depth, so each ancestor start tag is visited once.
+fn nearest_binding_is_foreign(
+    source: &[u8],
+    tokens: &[XmlToken],
+    element: usize,
+    prefix: &[u8],
+    control: &mut dyn WorkControl,
+) -> Result<bool> {
+    let Some(own) = tokens.get(element) else {
+        return Ok(false);
+    };
+    if let Some(decision) = declared_binding(source, tokens, element, prefix) {
+        return Ok(decision);
+    }
+    let mut level = own.depth;
+    for i in (0..element).rev() {
+        let t = tokens[i];
+        charge(control, WorkKind::TokenVisit, 1, t.name.offset)?;
+        if t.kind != TokenKind::StartElement || t.depth >= level {
+            continue;
+        }
+        level = t.depth;
+        if let Some(decision) = declared_binding(source, tokens, i, prefix) {
+            return Ok(decision);
+        }
+        if level == 0 {
+            break;
+        }
+    }
+    Ok(false)
+}
+
+/// Some(true) when the start tag at `element` declares `xmlns:prefix` to a non-SVG namespace,
+/// Some(false) for an SVG or unusable (empty, entity-bearing) URI, None when not declared there.
+fn declared_binding(
+    source: &[u8],
+    tokens: &[XmlToken],
+    element: usize,
+    prefix: &[u8],
+) -> Option<bool> {
+    tokens
+        .iter()
+        .skip(element + 1)
+        .take_while(|a| a.kind == TokenKind::Attribute)
+        .find(|a| {
+            a.prefix.slice(source) == Some(b"xmlns") && a.local_name.slice(source) == Some(prefix)
+        })
+        .map(|a| match a.value.slice(source) {
+            Some(uri) if !uri.is_empty() && !uri.contains(&b'&') => {
+                uri != b"http://www.w3.org/2000/svg"
+            }
+            _ => false,
+        })
+}
+
 pub fn traverse_attributes_supported(
     source: &[u8],
     tokens: &[XmlToken],

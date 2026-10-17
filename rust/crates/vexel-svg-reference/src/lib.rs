@@ -190,10 +190,23 @@ pub fn attributes_supported(
     root: bool,
     kind: XmlSpan,
 ) -> bool {
+    attributes_supported_with(source, tokens, element, root, kind, &|_| false)
+}
+
+/// Like [`attributes_supported`], but `foreign(prefix)` reports whether a prefix resolves
+/// to a non-SVG namespace in scope. Such prefixed attributes are ignored, not matched.
+pub fn attributes_supported_with(
+    source: &[u8],
+    tokens: &[XmlToken],
+    element: usize,
+    root: bool,
+    kind: XmlSpan,
+    foreign: &dyn Fn(XmlSpan) -> bool,
+) -> bool {
     if validate_tokens(source, tokens).is_err() {
         return false;
     }
-    attributes_supported_inner(source, tokens, element, root, kind)
+    attributes_supported_inner(source, tokens, element, root, kind, foreign)
 }
 
 pub fn xlink_is_bound(source: &[u8], tokens: &[XmlToken]) -> bool {
@@ -336,6 +349,7 @@ fn attributes_supported_inner(
     element: usize,
     root: bool,
     kind: XmlSpan,
+    foreign: &dyn Fn(XmlSpan) -> bool,
 ) -> bool {
     let Some(element_token) = tokens.get(element) else {
         return false;
@@ -365,6 +379,9 @@ fn attributes_supported_inner(
                 ))
         {
             if common || shape || xlink_href {
+                if !xlink_href && foreign(attr.prefix) {
+                    continue;
+                }
                 return false;
             }
             continue;

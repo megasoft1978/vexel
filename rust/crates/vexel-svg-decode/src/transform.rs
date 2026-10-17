@@ -140,7 +140,8 @@ pub fn parse_transform_controlled(
             if r.index == r.end {
                 return Err(fail(span));
             }
-        } else if r.index < r.end && !spaced {
+        } else if r.index < r.end && !spaced && !r.peek().is_some_and(|b| b.is_ascii_alphabetic()) {
+            // Zero separator is valid only before a function name; the name match above decides validity.
             return Err(fail(span));
         }
     }

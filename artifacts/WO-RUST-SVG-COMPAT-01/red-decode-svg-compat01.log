@@ -1,0 +1,64 @@
+---- separator_free_matplotlib_style_transform_parses stdout ----
+
+thread 'separator_free_matplotlib_style_transform_parses' (7245122) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:132:5:
+assertion failed: transform_ok("translate(1 2)scale(3 4)rotate(10)")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- foreign_prefix_with_nested_or_malformed_local_names_is_ignored_only_for_plain_names stdout ----
+
+thread 'foreign_prefix_with_nested_or_malformed_local_names_is_ignored_only_for_plain_names' (7245113) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Xml(InvalidName), offset: 96 }
+
+---- separator_free_chain_beyond_operation_cap_is_refused stdout ----
+
+thread 'separator_free_chain_beyond_operation_cap_is_refused' (7245121) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:159:5:
+assertion failed: transform_ok(&"scale(1)".repeat(64))
+
+---- foreign_prefixed_shape_attributes_are_ignored_like_plain_ones stdout ----
+
+thread 'foreign_prefixed_shape_attributes_are_ignored_like_plain_ones' (7245115) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 95 }
+
+---- separator_free_transform_list_equals_spaced_composition stdout ----
+
+thread 'separator_free_transform_list_equals_spaced_composition' (7245124) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 40 }
+
+---- foreign_prefixed_common_attribute_is_ignored_on_group_and_path stdout ----
+
+thread 'foreign_prefixed_common_attribute_is_ignored_on_group_and_path' (7245114) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 88 }
+
+---- foreign_binding_declared_on_ancestor_is_ignored stdout ----
+
+thread 'foreign_binding_declared_on_ancestor_is_ignored' (7245111) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 91 }
+
+---- nearest_foreign_binding_wins_over_outer_svg_binding stdout ----
+
+thread 'nearest_foreign_binding_wins_over_outer_svg_binding' (7245118) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 128 }
+
+---- symbol_overflow_visible_and_hidden_render stdout ----
+
+thread 'symbol_overflow_visible_and_hidden_render' (7245127) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:170:52:
+visible: Diagnostic { kind: Unsupported, offset: 41 }
+
+---- symbol_without_viewbox_and_without_use_size_renders stdout ----
+
+thread 'symbol_without_viewbox_and_without_use_size_renders' (7245128) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:219:31:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 92 }
+
+---- symbol_without_viewbox_maps_by_identity_at_use_origin stdout ----
+
+thread 'symbol_without_viewbox_maps_by_identity_at_use_origin' (7245129) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 92 }
+
+---- use_without_width_or_height_defaults_to_full_viewport stdout ----
+
+thread 'use_without_width_or_height_defaults_to_full_viewport' (7245131) panicked at rust/crates/vexel-svg-decode/tests/svg_compat01.rs:24:23:
+called `Result::unwrap()` on an `Err` value: Diagnostic { kind: Unsupported, offset: 110 }
+
+
+test result: FAILED. 9 passed; 12 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+[full output: ~/Library/Application Support/rtk/tee/1792239818_cargo_test.log]

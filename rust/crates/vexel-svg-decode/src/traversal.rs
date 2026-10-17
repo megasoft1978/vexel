@@ -325,24 +325,22 @@ impl<'src> Decoder<'src, '_> {
             viewport_clip = Some((view.clip_points, current));
         }
         if symbol {
-            let span = attribute(source, self.shared.tokens(), element, b"viewBox", None).ok_or(
-                Diagnostic {
-                    kind: ErrorKind::Unsupported,
-                    offset: t.name.offset,
-                },
-            )?;
-            let v =
-                crate::viewport::read_viewbox_controlled(source, span, control).map_err(|e| {
-                    if e.kind == ErrorKind::Number {
-                        Diagnostic {
-                            kind: ErrorKind::Unsupported,
-                            offset: t.name.offset,
+            // Without a viewBox the symbol keeps the inherited viewport for percentages (approximation).
+            if let Some(span) = attribute(source, self.shared.tokens(), element, b"viewBox", None) {
+                let v = crate::viewport::read_viewbox_controlled(source, span, control).map_err(
+                    |e| {
+                        if e.kind == ErrorKind::Number {
+                            Diagnostic {
+                                kind: ErrorKind::Unsupported,
+                                offset: t.name.offset,
+                            }
+                        } else {
+                            e
                         }
-                    } else {
-                        e
-                    }
-                })?;
-            context.viewport = [v[2], v[3]];
+                    },
+                )?;
+                context.viewport = [v[2], v[3]];
+            }
             if style
                 .value(Property::ClipPath)
                 .is_some_and(|v| !v.bytes.eq_ignore_ascii_case(b"none"))
