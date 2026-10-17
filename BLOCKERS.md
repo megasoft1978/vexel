@@ -13,7 +13,7 @@ failed independent review and are `blocked` in the ledger; see defect 4.
 
 No automated blockers. Open items: (1) live-window verification of pointer drawing, shortcuts,
 panels, playback and a real Codex MCP session (automated click injection did not reach the
-window; see `HANDOFF.md`); (2) corpus: 19/39 ok vs legacy 3/39, 1 timeout; 3 XML failures,
+window; see `HANDOFF.md`); (2) corpus: 21/39 ok vs legacy 3/39, 0 timeouts; 2 XML failures (root size above 4096),
 6 unsupported constructs (mostly stroked text), 9 limit-blocked (edges and text commands need memory proofs); (3) owner-gated: signing/notarization, icon and bundle id, VoiceOver/IME,
 M4-08 scope, final UI/E2E and showcase recording. Defect 4 and WO-CORPUS-01/02 are `superseded`.
 

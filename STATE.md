@@ -1766,3 +1766,12 @@ Final external corpus sweep (release, 128x128, 60 s timeout, manifest-hash guard
 2026-10-17 (final, after WO-RUST-SVG-COMPAT-01): external sweep **ok 19 of 39 attempted** (legacy C 3/39): unsupported 6 (mostly stroked text and in-context constructs), limit_decode 9, limit_render 1, xml 3, timeout 1, skipped 19 (>32 MiB), crash 0, rss_exceeded 0. Workspace 2006 tests pass.
 
 2026-10-17 (>32 MiB files, measured in a scratch copy with caps raised to 160 MiB; not merged): of the 19 over-size corpus files, 2 render (municipalities-of-italy 87.7 MiB at 1.96 GiB RSS; map_t3 143.6 MiB at 2.82 GiB, over the bound), 7 stop at attribute/shape/depth/paint limits, 3 on XML number grammar, 4 unsupported, 1 times out (giant_path_t3, 4.4 GiB), 3 exceed 160 MiB. Memory cost is about 20-23 bytes of peak RSS per source byte, so 2 GiB caps input near 90 MB and a 160 MiB cap would need about 3.5 GB. **Decision: keep the 32 MiB cap.** Rendering larger documents needs streaming or lazy decode (a separate work order), not higher limits.
+
+## 2026-10-17 corpus sweep-final7 (main after dukes and DTD mapping)
+
+- Merged: cd55ac7c + 7c2c3e1e (unsupported diagnostics name the enclosing element; bounded tag lookback), cambodia 0921d0e8 (per-value text cap).
+- Full workspace before DTD change: 2012 passed, 5 ignored, 0 failed.
+- DTD change: `XmlError::UnsupportedDtd` maps to `unsupported` (feature "DTD entity") instead of `xml`.
+- Sweep: ok 21, unsupported 6, limit_decode 9, limit_render 1, xml 2, timeout 0, crash 0, rss_exceeded 0, skipped 19.
+- Moved: columbiarivermap xml→unsupported; cambodia and giant_path_t2 ok; dukes unsupported names `<path>` at byte 26509048.
+- Still open: aegean and norway root size above 4096 (owner decision); symbol clipping (clip budget, owner decision); 9 limit-blocked; stroked text.

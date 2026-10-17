@@ -185,6 +185,11 @@ pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeE
         },
         ErrorKind::Canceled => ComposeError::Cancelled,
         ErrorKind::Limit(_) | ErrorKind::OutOfMemory => ComposeError::LimitDecode,
+        ErrorKind::Xml(vexel_xml::XmlError::UnsupportedDtd) => ComposeError::Unsupported {
+            feature: "DTD entity",
+            offset: Some(offset),
+            element: enclosing_element(source, offset),
+        },
         ErrorKind::Xml(_) => ComposeError::Malformed {
             detail: "XML",
             offset,
@@ -210,7 +215,24 @@ pub(crate) fn from_diagnostic(diagnostic: Diagnostic, source: &[u8]) -> ComposeE
 
 #[cfg(test)]
 mod enclosing_tests {
-    use super::{element_at, enclosing_element};
+    use super::{ComposeError, element_at, enclosing_element, from_diagnostic};
+    use vexel_scene::{Diagnostic, ErrorKind};
+
+    #[test]
+    fn unsupported_dtd_entity_names_its_element() {
+        let source = b"<svg><path fill=\"&ns;\"/></svg>";
+        let offset = source.windows(3).position(|w| w == b"&ns").unwrap();
+        let diagnostic = Diagnostic {
+            kind: ErrorKind::Xml(vexel_xml::XmlError::UnsupportedDtd),
+            offset,
+        };
+        match from_diagnostic(diagnostic, source) {
+            ComposeError::Unsupported { element, .. } => {
+                assert_eq!(element.as_deref(), Some("path"));
+            }
+            _ => panic!("expected unsupported"),
+        }
+    }
 
     #[test]
     fn offset_inside_attribute_names_the_start_tag() {
