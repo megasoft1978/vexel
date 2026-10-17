@@ -1,6 +1,7 @@
 use crate::chrome::{rail_glyph, status_label_rect, top_label_rect};
 use crate::inspector::draw_inspector;
 use crate::model::{Layout, Mode, Model, Tool, checked_pixel_geometry};
+use crate::motion::{self, MotionFrame, paint};
 use std::cell::Cell;
 use vexel_platform_apple::{RgbaFrame, TextEmphasis, TextFace, draw_text_rgba};
 use vexel_ui::{
@@ -10,11 +11,21 @@ use vexel_ui::{
 
 const MAX_FRAME_BYTES: usize = 64 * 1024 * 1024;
 
-pub fn render(
+pub fn render(w: u32, h: u32, scale: u32, model: &Model) -> Result<RgbaFrame, &'static str> {
+    render_with(
+        w,
+        h,
+        scale,
+        model,
+        &MotionFrame::rest(model.dark, model.mode),
+    )
+}
+pub fn render_with(
     width_points: u32,
     height_points: u32,
     scale: u32,
     model: &Model,
+    motion: &MotionFrame,
 ) -> Result<RgbaFrame, &'static str> {
     let (width, height) = checked_pixel_geometry((width_points, height_points), scale)
         .ok_or("window pixels exceed checked scale or frame limits")?;
@@ -130,13 +141,9 @@ pub fn render(
                 FontWeight::Regular,
             );
         }
-        segment(&mut c, "Draw", layout.draw_mode, model.mode == Mode::Draw);
-        segment(
-            &mut c,
-            "Animate",
-            layout.animate_mode,
-            model.mode == Mode::Animate,
-        );
+        let (draw, anim) = (motion::ID_DRAW, motion::ID_ANIMATE);
+        paint::segment(&mut c, "Draw", layout.draw_mode, &motion.get(draw));
+        paint::segment(&mut c, "Animate", layout.animate_mode, &motion.get(anim));
         if width_points >= 1000 {
             label(
                 &mut c,
@@ -205,7 +212,8 @@ pub fn render(
         .enumerate()
         {
             let r = layout.tools[i];
-            c.paint_round(r, 5, tokens.panel_raised, tokens.separator, 1);
+            let v = motion.get(motion::tool_id(*tool));
+            c.paint_round(r, 5, v.fill, tokens.separator, 1);
             let (glyph, caption) = rail_glyph(*tool);
             label(
                 &mut c,
@@ -216,7 +224,7 @@ pub fn render(
                     width: r.width.saturating_sub(4),
                     height: 22,
                 },
-                tokens.disabled_text,
+                v.glyph,
                 13,
                 FontWeight::Regular,
             );
@@ -230,11 +238,12 @@ pub fn render(
                         width: r.width.saturating_sub(2),
                         height: 16,
                     },
-                    tokens.disabled_text,
+                    v.glyph,
                     9,
                     FontWeight::Regular,
                 );
             }
+            paint::ring(&mut c, r, &v);
         }
 
         c.paint_rect(layout.stage, tokens.canvas_well);
@@ -347,16 +356,6 @@ pub(crate) fn label(
     weight: FontWeight,
 ) {
     let _ = c.paint_text(text, bounds, color, FontFamily::System, weight, size);
-}
-fn segment(c: &mut WidgetCanvas<'_>, text: &str, bounds: Rect, selected: bool) {
-    let mut s = WidgetDrawSpec::new(WidgetKind::ButtonSecondary, bounds);
-    s.label = Some(text);
-    s.state = if selected {
-        ControlState::Selected
-    } else {
-        ControlState::Rest
-    };
-    let _ = widget_paint(c, &s);
 }
 fn button(c: &mut WidgetCanvas<'_>, text: &str, bounds: Rect) {
     let mut s = WidgetDrawSpec::new(WidgetKind::ButtonSecondary, bounds);

@@ -10,6 +10,7 @@ pub mod file_flow;
 pub mod file_ui;
 mod inspector;
 pub mod model;
+pub mod motion;
 pub mod preview;
 pub mod preview_app;
 pub mod project_session;

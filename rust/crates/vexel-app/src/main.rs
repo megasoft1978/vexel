@@ -18,6 +18,7 @@ use vexel_app::chrome::{self, AppState};
 use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
 use vexel_app::model::{self, Layout, Mode, Model, Target, Tool};
+use vexel_app::motion::MotionAdapter;
 use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{EditAction, McpGrants, McpHost, McpOutcome, edit_shortcut};
@@ -120,6 +121,8 @@ fn run(
     let mut dedup = ShortcutDedup::new();
     let started = Instant::now();
     let mut menu_revision = files.document().revision();
+    // No platform accessor for reduce-motion yet (gap): constant false.
+    let mut motion = MotionAdapter::new(false);
     let mut dirty = true;
     let event_budget = NonZeroUsize::new(128).ok_or("invalid event budget")?;
     let mut closing = false;
@@ -209,13 +212,20 @@ fn run(
             model.chrome = chrome_text;
             dirty = true;
         }
+        dirty |= motion.redraw_after().is_some();
         if dirty || model.dirty {
             let (draw_size, draw_scale) = if geometry_valid {
                 (logical, scale as u32)
             } else {
                 safe_render_geometry(logical, scale)
             };
-            match render::render(draw_size.0, draw_size.1, draw_scale, &model) {
+            match render::render_with(
+                draw_size.0,
+                draw_size.1,
+                draw_scale,
+                &model,
+                &motion.frame(model.dark, model.mode),
+            ) {
                 Ok(frame) => {
                     let frame = match Layout::new(draw_size.0, draw_size.1, model.mode) {
                         Some(layout) => {
@@ -332,6 +342,8 @@ fn run(
                             .document_mut()
                             .edit(|document| tools.key(key, document));
                         dirty |= !matches!(result, Ok(Outcome::Ignored));
+                    } else if code == 48 && motion.tab(modifiers.0 & Modifiers::SHIFT != 0) {
+                        dirty = true;
                     } else if model.key(code) {
                         dirty = true;
                     }
@@ -346,6 +358,10 @@ fn run(
                 }
                 WindowEvent::Pointer(pointer) => {
                     if let Some(layout) = Layout::new(logical.0, logical.1, model.mode) {
+                        let primary = pointer_accepts_mode(pointer.button);
+                        dirty |= motion
+                            .pointer(&layout, pointer.kind, pointer.logical, primary)
+                            .1;
                         dirty |= route_pointer(
                             &pointer,
                             &layout,

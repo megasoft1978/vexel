@@ -2,6 +2,7 @@
 //! Safe retained UI core: bounded layout, primitive fills, keyboard focus and owned semantics.
 
 mod interaction;
+pub mod motion;
 mod draw;
 mod icons;
 mod icons_draw;
@@ -33,3 +34,5 @@ mod tests;
 mod tests_tokens;
 #[cfg(test)]
 mod tests_icons;
+#[cfg(test)]
+mod tests_motion;

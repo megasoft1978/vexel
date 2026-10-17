@@ -1,0 +1,15 @@
+{
+  "order": "WO-RUST-UI-MOTION-01",
+  "amendment_ac2": "a 120 ms hover-in transition is between 50% and 90% complete at t0+60 ms (the section 4.5 ease_out cubic-bezier(0.2,0,0,1) gives 87.8% there)",
+  "acs": {
+    "1": {"pass": true, "tests": ["vexel-ui tests_motion::ac1_easing_endpoints_monotonic_and_reference_table", "tests_motion::ac1_solver_curves_match_the_motion_tokens"]},
+    "2": {"pass": true, "tests": ["tests_motion::ac2_hover_durations_and_reentry_continuity", "tests_motion::ac2_durations_of_each_state"], "note": "amended as quoted above"},
+    "3": {"pass": true, "tests": ["tests_motion::ac3_random_sequences_never_panic_and_settle", "tests_motion::ac3_excess_controls_snap_to_target"]},
+    "4": {"pass": true, "tests": ["tests_motion::ac4_reduced_motion_is_instant_with_no_deadline", "ui_motion_adapter::ac4_reduced_motion_adapter_never_schedules"], "gap": "main passes constant false; no platform accessor"},
+    "5": {"pass": true, "tests": ["ui_motion_adapter::ac5_idle_requests_no_redraw_and_activity_requests_one"]},
+    "6": {"pass": true, "tests": ["ui_motion_adapter::ac6_press_is_set_and_action_fires_on_the_first_event"]},
+    "7": {"pass": true, "tests": ["ui_motion_budget::frame_of_64_animating_controls_is_allocation_free_and_fast"], "median_us_release": 2.38, "allocations": 0},
+    "8": {"pass": true, "candidate": true, "tests": ["ui_motion_swatch::state_swatch_sheets_match_first_party_goldens", "ui_motion_swatch::control_visual_end_states_equal_token_fills"], "note": "goldens await human review"},
+    "9": {"pass": true, "note": "no new packages, no unsafe in app/ui code (test allocator is test-only unsafe impl of GlobalAlloc)"}
+  }
+}

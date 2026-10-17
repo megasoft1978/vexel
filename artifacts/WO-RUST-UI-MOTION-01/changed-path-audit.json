@@ -1,0 +1,19 @@
+{
+  "order": "WO-RUST-UI-MOTION-01",
+  "allowed": [
+    "rust/crates/vexel-ui/src/motion.rs",
+    "rust/crates/vexel-ui/src/tests_motion.rs",
+    "rust/crates/vexel-ui/src/lib.rs (2 registration lines)",
+    "rust/crates/vexel-app/src/motion/mod.rs",
+    "rust/crates/vexel-app/src/motion/paint.rs",
+    "rust/crates/vexel-app/src/lib.rs (1 registration line)",
+    "rust/crates/vexel-app/src/main.rs (wiring +17/-1)",
+    "rust/crates/vexel-app/src/render.rs (wiring +20/-21)",
+    "rust/crates/vexel-app/tests/ui_motion_adapter.rs",
+    "rust/crates/vexel-app/tests/ui_motion_budget.rs",
+    "rust/crates/vexel-app/tests/ui_motion_swatch.rs",
+    "rust/fixtures/ui/motion/*.png",
+    "artifacts/WO-RUST-UI-MOTION-01/**"
+  ],
+  "protected_touched": []
+}
