@@ -1742,3 +1742,9 @@ Accepted after independent reviews and merged on main (`49ef038f`, 1473 workspac
 ## 2026-10-16 — legacy C removed
 
 Removed the C implementation and C-bound tooling (`27602ed2`; tag `legacy-c-final`). 1473 Rust tests and 50 Python harness tests pass afterwards. Repository: 1378 tracked files (was ~7,900 untracked + tracked sprawl); top level is `rust/`, `docs/`, `work/`, `artifacts/`, `bench/corpus`, `scripts/` (ledger/WO tooling), `tests/` (harness tests).
+
+## 2026-10-17 — post-V1 waves merged; measured corpus on the merged tree
+
+Merged and accepted since the V1 slice: polish, PNG, render dashes, release/CI/fuzz/perf, live fixes, corpus measurement, masks/groups, patterns, filters, text, renderer performance, SVG wiring, large-document cap, unsupported-cause closure (markers, PNG images). 1727+ workspace tests pass; ledger 1954 entries.
+
+Final external sweep (release build, 128x128, 60 s timeout, 2 GiB RSS bound, manifest-hash guarded, one run on one host; verdict counts only, no fidelity claim): **ok 6 of 39 attempted** (legacy C 3/39, earlier C candidate 5/39): `generated-cad_t1`, `generated-embedded_t1`, `generated-giant_path_t1`, `generated-science_t1`, `natural-earth-world-map-blank`, `natural-earth-world-map-countries`. Other verdicts: timeout 12, xml 9, unsupported 5, limit_decode 6, limit_render 1, skipped 19 (>32 MiB), crash 0, rss_exceeded 0. Louisiana ran at the timeout boundary in earlier runs and timed out here. Render itself is a small share of the time on large inputs (compose of 2000 rects: render ~150 ms of ~2 s): decode, scene validation and compose in `vexel-app` dominate, so the next lever is pipeline speed, then `vexel-svg-decode` `use`/reference limits and the `TextCommands` limit in `vexel-scene`.

@@ -7,12 +7,14 @@ Last full gate: `./dev final` passed on 2026-10-12 at `bcdc3fa` (log
 `.cache/final-gate-2026-10-12.log`; summary in `STATE.md`). Six work orders
 failed independent review and are `blocked` in the ledger; see defect 4.
 
-## Rust port status (2026-10-16)
+## Rust port status (2026-10-17)
 
-No automated blockers for the V1 slice. Open items: live-window verification of native
-behaviour (see `HANDOFF.md`), legacy C removal (owner sign-off), deferred SVG features
-(filters, mask-on-group, patterns, dashes, text), `render_png`, corpus measurement for
-Rust. Defect 4 and WO-CORPUS-01/02 are `superseded` by directive 4 (history only).
+No automated blockers. Open items: (1) live-window verification of pointer drawing, shortcuts,
+panels, playback and a real Codex MCP session (automated click injection did not reach the
+window; see `HANDOFF.md`); (2) corpus: 6/39 ok vs legacy 3/39, 12 timeouts (pipeline speed in
+decode/scene-validation/compose), `use`/reference limits in `vexel-svg-decode`, `TextCommands`
+limit in `vexel-scene`; (3) owner-gated: signing/notarization, icon and bundle id, VoiceOver/IME,
+M4-08 scope, final UI/E2E and showcase recording. Defect 4 and WO-CORPUS-01/02 are `superseded`.
 
 ## Open defects
 
