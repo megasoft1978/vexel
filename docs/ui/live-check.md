@@ -33,7 +33,7 @@ Capture a window: find its id with Python `Quartz.CGWindowListCopyWindowInfo` (o
 | # | Result | Evidence |
 |---|--------|----------|
 | 2 | PASS: Animate shows transport, ruler, tracks, diamonds, playhead; stage stays visible | scratchpad row2-animate2.png |
-| 4 | PARTIAL: popover anchored under Export with GIF/SVG/PNG rows. Esc did NOT close it (keypress sent with vexel frontmost). Outside click closes it. Native Save panels not opened (not clicked). | scratchpad row4-export.png, row4-esc.png |
+| 4 | PASS (Esc): popover anchored under Export with GIF/SVG/PNG rows; a real Escape (System Events key code 53) closed it and focus returned to Export. Outside click also closes it. Earlier 'Esc failed' was the cliclick kp:esc tool not delivering the key, not the app. Native Save panels not opened. | scratchpad repro-open.png, repro-esc2.png |
 | 1, 3, 5-10 | NOT RUN | |
 
-Open defect: Export popover does not close on Esc (check 4).
+No open defect for check 4. Model test ui_wiring_export.rs covers Esc.
