@@ -203,9 +203,45 @@ fn without_a_provider_text_is_the_current_typed_unsupported() {
 }
 
 #[test]
+fn plain_stroke_publishes_stroke_state_and_no_fill() {
+    let plain = ok("<text x='1' y='9' stroke='#000'>AB</text>");
+    assert!(plain.root().shapes[0].filled);
+    assert_eq!(plain.root().shapes[0].stroke.rgba, [0, 0, 0, 255]);
+    let g = ok("<text x='10' y='20' fill='none' stroke='#fff' stroke-width='3'>AB</text>");
+    assert_eq!(g.root().shapes.len(), 1);
+    let shape = &g.root().shapes[0];
+    assert!(!shape.filled);
+    assert_eq!(shape.stroke.rgba, [255, 255, 255, 255]);
+    assert!(near(shape.stroke.width, 3.0));
+    assert!(shape.stroke_closed);
+}
+
+#[test]
+fn stroke_dasharray_publishes_dash_values() {
+    let g = ok("<text x='1' y='9' stroke='#000' stroke-dasharray='2 1'>AB</text>");
+    assert!(g.root().shapes[0].stroke.dash_values.count > 0);
+}
+
+#[test]
+fn fill_none_without_stroke_publishes_no_shape() {
+    // Nothing visible to draw: no fill and no stroke alpha, so no shape is published.
+    let g = ok("<text x='10' y='20' fill='none'>AB</text>");
+    assert_eq!(g.root().shapes.len(), 0);
+}
+
+#[test]
+fn stroke_under_singular_transform_fails_closed() {
+    let input = svg("<text transform='scale(0)' x='1' y='9' stroke='#000'>AB</text>");
+    let error = decode(&input, Some(Stub { panic: false })).unwrap_err();
+    assert_eq!(error.kind, ErrorKind::Unsupported);
+    // Offset is the element name (just past `<`), as in the stroke check.
+    assert_eq!(error.offset, input.find("<text").unwrap() + 1);
+}
+
+#[test]
 fn stroke_paint_server_and_text_path_fail_closed() {
     for body in [
-        "<text x='1' y='9' stroke='#000'>AB</text>",
+        "<text x='1' y='9' stroke='url(#g)'>AB</text>",
         "<text x='1' y='9' fill='url(#g)'>AB</text>",
         "<text x='1' y='9'><textPath href='#p'>AB</textPath></text>",
     ] {

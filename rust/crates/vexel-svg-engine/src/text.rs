@@ -6,8 +6,8 @@
 //! the advance, per-glyph `x/y/dx/dy` lists and word spacing in
 //! `text_path_geometry_at`. Layout comes from an injected
 //! [`TextLayoutProvider`]; without one the engine keeps returning `Unsupported`.
-//! Only solid fill is published: stroke, paint servers and clip paths on text
-//! stay typed `Unsupported`, as does `textPath`.
+//! Solid fill and solid stroke (with dashes) are published; paint servers and
+//! clip paths on text stay typed `Unsupported`, as does `textPath`.
 
 use vexel_base::{WorkControl, WorkKind};
 use vexel_scene::*;
@@ -94,12 +94,12 @@ pub(crate) fn decode(
         viewport,
         control,
     )?;
-    // Fill-only subset: stroke, paint servers and clip paths fail closed.
+    // Paint servers and clip paths fail closed.
     if let Some(span) = style.fill_server.or(style.stroke_server).or(style.clip) {
         return Err(fail(ErrorKind::Unsupported, span.offset));
     }
-    if style.stroke.rgba[3] != 0 {
-        return Err(fail(ErrorKind::Unsupported, own.name.offset));
+    if style.dash_count > 16 {
+        return Err(fail(ErrorKind::InvalidArgument, own.name.offset));
     }
     let families: Vec<&[u8]> = values.families.iter().map(Vec::as_slice).collect();
     let inner = tokens
@@ -217,12 +217,28 @@ pub(crate) fn decode(
                 offset,
                 control,
             )?;
-            if !path.edges.is_empty() {
+            // Neither fill nor stroke paints anything: publish no shape.
+            let paints = style.fill[3] != 0 || style.stroke.rgba[3] != 0;
+            if !path.edges.is_empty() && paints {
+                let inverse = vexel_svg_decode::affine_inverse(request.transform);
+                if inverse.is_none() && style.stroke.rgba[3] != 0 {
+                    return Err(fail(ErrorKind::Unsupported, own.name.offset));
+                }
                 let mut shape = Shape::new(request.source_map);
-                shape.filled = true;
+                shape.filled = style.fill[3] != 0;
                 shape.evenodd = style.evenodd;
-                if let Some(inverse) = vexel_svg_decode::affine_inverse(request.transform) {
+                // Glyph contours are closed, as for the image outline.
+                shape.stroke_closed = true;
+                shape.stroke = style.stroke;
+                if let Some(inverse) = inverse {
                     shape.stroke_inverse = inverse;
+                }
+                if style.dash_count != 0 {
+                    shape.stroke.dash_values = builder.append_dashes(
+                        request.scene,
+                        &style.dash_values[..style.dash_count],
+                        control,
+                    )?;
                 }
                 let mut colors = Vec::new();
                 colors
