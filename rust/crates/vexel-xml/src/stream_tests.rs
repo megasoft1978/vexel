@@ -359,3 +359,59 @@ fn cancelable_batch_and_stream_match_batch_tokens_errors_limits_and_capacity() {
         assert_eq!(actual, result); assert_eq!(actual_tokens, tokens);
     }
 }
+
+fn entity_outcome(source: &[u8], budget: usize) -> (StreamStatus, XmlDiagnostic) {
+    let mut stream = XmlTokenStream::new(source, 64 * size_of::<XmlToken>()).unwrap();
+    let status = finish(&mut stream, budget);
+    assert!(stream.tokens().is_empty());
+    (status, stream.result().diagnostic)
+}
+
+fn last_offset_of(source: &[u8], needle: &[u8]) -> usize {
+    source.windows(needle.len()).rposition(|w| w == needle).unwrap()
+}
+
+#[test]
+fn declared_internal_entity_reference_is_unsupported_dtd_at_the_reference() {
+    let cases: &[(&[u8], &[u8])] = &[
+        (b"<!DOCTYPE svg [\n<!ENTITY ns_extend \"x\">\n]><svg>&ns_extend;</svg>", b"&ns_extend;"),
+        (b"<!DOCTYPE svg [<!ENTITY ns_extend 'x'>]><svg a=\"1&ns_extend;\"/>", b"&ns_extend;"),
+    ];
+    for &(source, needle) in cases {
+        let at = last_offset_of(source, needle);
+        for budget in [1, 2, 3, 64] {
+            let (status, diagnostic) = entity_outcome(source, budget);
+            assert_eq!(status, StreamStatus::Failed, "budget={budget}");
+            assert_eq!(diagnostic, XmlDiagnostic { category: XmlError::UnsupportedDtd, offset: at }, "budget={budget}");
+        }
+    }
+}
+
+#[test]
+fn entity_adversarial_inputs_fail_typed_without_panic_or_expansion() {
+    let mut laughs = String::from("<!DOCTYPE l [<!ENTITY lol \"lol\">");
+    for i in 1..=9 {
+        laughs.push_str(&format!("<!ENTITY lol{i} \"&lol{p};&lol{p};\">", p = i - 1));
+    }
+    laughs.push_str("]><l>&lol9;</l>");
+    let laughs = laughs.into_bytes();
+    let cases: &[(&[u8], XmlError, &[u8])] = &[
+        (b"<!DOCTYPE a [<!ENTITY e \"x\">]><a>&e", XmlError::MalformedSyntax, b"&e"),
+        (b"<!DOCTYPE a [<!ENTITY e \"x\">]><a>&e</a>", XmlError::MalformedSyntax, b"&e"),
+        (b"<!DOCTYPE a [<!ENTITY e \"x\">]><a>&nope;</a>", XmlError::MalformedSyntax, b"&nope;"),
+        (b"<!DOCTYPE a [<!ENTITY % p \"x\">]><a>&p;</a>", XmlError::MalformedSyntax, b"&p;"),
+        (b"<!DOCTYPE a [<!ENTITY ns_extend_x \"x\">]><a>&ns_extend;</a>", XmlError::MalformedSyntax, b"&ns_extend;"),
+        (b"<!DOCTYPE a [<!ENTITY e \"&e;\">]><a>&e;</a>", XmlError::UnsupportedDtd, b"&e;</a>"),
+        (b"<!DOCTYPE a [<!ENTITY e \"&e;\">]><a x=\"&e;\"/>", XmlError::UnsupportedDtd, b"&e;\"/>"),
+        (&laughs, XmlError::UnsupportedDtd, b"&lol9;"),
+    ];
+    for &(source, category, needle) in cases {
+        let at = last_offset_of(source, needle);
+        for budget in [1, 2, 7, 64] {
+            let (status, diagnostic) = entity_outcome(source, budget);
+            assert_eq!(status, StreamStatus::Failed, "source={source:?} budget={budget}");
+            assert_eq!(diagnostic.category, category, "source={source:?} budget={budget}");
+            assert_eq!(diagnostic.offset, at, "source={source:?} budget={budget}");
+        }
+    }
+}
