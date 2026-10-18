@@ -10,3 +10,4 @@ publish.workspace = true
 vexel-geometry = { path = "../vexel-geometry" }
 vexel-raster = { path = "../vexel-raster" }
 vexel-scene = { path = "../vexel-scene" }
+vexel-svg-paint = { path = "../vexel-svg-paint" }

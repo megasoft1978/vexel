@@ -383,6 +383,7 @@ dependencies = [
  "vexel-geometry",
  "vexel-raster",
  "vexel-scene",
+ "vexel-svg-paint",
 ]
 
 [[package]]
