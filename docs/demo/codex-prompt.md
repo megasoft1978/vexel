@@ -23,4 +23,4 @@ Rules:
 ## Notes for the operator
 
 - `--mcp-preview` exposes only `document_list`, `document_info`, `element_add`, `undo`, and `redo`. Steps 3 to 6 need the full MCP profile.
-- The grant directory is set with `VEXEL_MCP_ALLOWED_DIRS` (documented). `--grant-dir` is not documented.
+- The grant directory is set with `--grant-dir <directory>` on the `--mcp-preview` command line (supported by `rust/crates/vexel-app/src/compose/launch.rs`).

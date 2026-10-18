@@ -9,7 +9,7 @@ Tool status key:
 
 Open issues for this storyboard:
 - `draw_rect` and `draw_path` are **planned**. No doc defines them. Scene 2 uses `element_add_fragment` (existing) as the working route.
-- `--grant-dir` is **not documented** anywhere in `docs/`. The documented grant is the `VEXEL_MCP_ALLOWED_DIRS` env var (or `~/.config/vexel/mcp-allowed-dirs.txt`).
+- The grant is `--grant-dir <directory>` (supported by `rust/crates/vexel-app/src/compose/launch.rs`; not yet in `docs/`).
 - `--mcp-preview` exposes only 5 tools. Scenes 3 to 6 need the full profile from `docs/mcp.md`. Full-profile launch flags are not documented. Confirm before recording.
 - Native timeline tools (scenes 4 and 6) act only on the active app-owned `.vexel` project.
 

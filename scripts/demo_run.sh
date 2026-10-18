@@ -17,25 +17,22 @@ args = []
 startup_timeout_sec = 10
 tool_timeout_sec = 60
 
-[mcp_servers.vexel.env]
-VEXEL_MCP_ALLOWED_DIRS = "$GRANT_DIR"
-
 # 3. Preview profile, documented in docs/product/mcp-live-preview.md
 #    (5 tools only; full-profile demo steps need the full profile):
 [mcp_servers.vexel_preview]
 command = "cargo"
-args = ["run", "-p", "vexel-app", "--", "--mcp-preview"]
+args = ["run", "-p", "vexel-app", "--", "--mcp-preview", "--grant-dir", "$GRANT_DIR"]
 cwd = "$VEXEL_ROOT"
 
 # 4. Run commands (run these yourself; this script does not launch them):
 #    Build the sidecar:
 #      cargo build --release -p vexel-app
 #    Start the app (live-check path, docs/ui/live-check.md):
-#      VEXEL_MCP_ALLOWED_DIRS="$GRANT_DIR" \\
-#        "$VEXEL_ROOT/build/rust/aarch64-apple-darwin/release/vexel" \\
+#      "$VEXEL_ROOT/build/rust/aarch64-apple-darwin/release/vexel" \\
+#        --grant-dir "$GRANT_DIR" \\
 #        "$VEXEL_ROOT/rust/fixtures/v1/anim/loop.svg"
 
 # Notes:
-#  - --grant-dir is NOT documented in docs/; the grant is VEXEL_MCP_ALLOWED_DIRS.
+#  - --grant-dir <directory> is the grant (rust/crates/vexel-app/src/compose/launch.rs). It is repeatable.
 #  - Remove the grant directory when done: rm -rf "$GRANT_DIR"
 EOF
