@@ -235,15 +235,7 @@ fn resolve_inner(
     }
 
     let mut chain = [ElementId(0); 16];
-    let chain_count = collect_chain(
-        shared,
-        target,
-        linear,
-        &mut chain,
-        cache,
-        control,
-        value.offset,
-    )?;
+    let chain_count = collect_chain(shared, target, &mut chain, cache, control, value.offset)?;
     let kind = if linear {
         PaintKind::Linear
     } else {
@@ -348,7 +340,6 @@ fn bind_instance(
 fn collect_chain(
     shared: &mut DecodeSource<'_>,
     target: ElementId,
-    linear: bool,
     chain: &mut [ElementId; 16],
     cache: &mut vexel_scene::PaintCache,
     control: &mut PaintControl<'_>,
@@ -365,10 +356,12 @@ fn collect_chain(
         let token = tokens.get(current.0).ok_or_else(|| invalid(offset))?;
         let is_linear = eq(source, token.local_name, b"linearGradient");
         let is_radial = eq(source, token.local_name, b"radialGradient");
-        if (!is_linear && !is_radial) || is_linear != linear || token.prefix.length != 0 {
+        if (!is_linear && !is_radial) || token.prefix.length != 0 {
             return Err(unsupported(offset));
         }
-        attributes_supported(source, tokens, current.0, linear, cache, control, offset)?;
+        // Each element is checked against its own kind. read_coordinates reads only
+        // the target kind's geometry names, so cross-kind geometry is ignored.
+        attributes_supported(source, tokens, current.0, is_linear, cache, control, offset)?;
         chain[count] = current;
         count += 1;
         let Some(href) = gradient_href(source, tokens, current.0, offset)? else {
@@ -430,12 +423,38 @@ fn attributes_supported(
         };
         let coordinate =
             token.prefix.length == 0 && coordinates.iter().any(|n| eq(source, name, n));
-        if !href && !common && !coordinate {
+        let collect = eq(source, name, b"collect")
+            && eq(source, token.prefix, b"inkscape")
+            && inkscape_is_bound(source, tokens);
+        if !href && !common && !coordinate && !collect {
             return Err(unsupported(offset));
         }
         i += 1;
     }
     Ok(())
+}
+
+/// Same root-declaration rule as `vexel_svg_reference::xlink_is_bound`.
+fn inkscape_is_bound(source: &[u8], tokens: &[XmlToken]) -> bool {
+    for (i, token) in tokens.iter().enumerate() {
+        if token.kind != TokenKind::StartElement || token.depth != 0 {
+            continue;
+        }
+        return tokens
+            .get(i + 1..)
+            .unwrap_or_default()
+            .iter()
+            .take_while(|t| t.kind == TokenKind::Attribute)
+            .any(|attr| {
+                eq(source, attr.name, b"xmlns:inkscape")
+                    && eq(
+                        source,
+                        attr.value,
+                        b"http://www.inkscape.org/namespaces/inkscape",
+                    )
+            });
+    }
+    false
 }
 
 fn gradient_href(

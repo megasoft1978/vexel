@@ -2,7 +2,10 @@
 
 The full PAINT resolver and sampler retain the frozen href/CSS/currentColor,
 linear/radial coordinate, units, spread, transform, limits, error offsets and
-rounding behavior. All original catalog symbols and algorithms remain mapped.
+rounding behavior. Gradient href chains may mix linear and radial kinds: stops,
+units, spread and transform inherit across kinds, coordinates inherit only from
+same-kind gradients, and `inkscape:collect` is accepted when its prefix is bound
+to the Inkscape namespace. All original catalog symbols and algorithms remain mapped.
 
 For normal per-instance graph composition use `resolve_cached_fill`, or consume
 `CachedResolveContext` with `resolve_cached_context`. Both return `CachedPaint`
