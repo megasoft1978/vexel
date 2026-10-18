@@ -63,3 +63,13 @@ Run: `cargo test -p vexel-app --test <file>` for ui_polish_behaviour (11 pass), 
 - Row 6 (undo/redo): `redo_is_enabled_only_after_an_undo_and_a_load_resets_it`. Redo gating verified in the model. Key-driven undo on the real window still needs the Mac.
 - Row 8 (scroll): `wheel_over_the_whole_footer_scrolls_and_clamps_and_never_reaches_the_stage`, `twelve_rows_in_six_show_a_proportional_thumb_that_tracks_scroll`. Footer wheel behaviour verified in the model. Real wheel events still need the Mac.
 - Row 5 (file panels): export and key routing verified in ui_wiring_export and ui_wiring_keys. Native Save/Open panel counts cannot be tested headless: still needs the Mac.
+
+## Round 4: real window, scratch copy only (2026-10-18)
+
+Ran on a scratchpad copy of loop.svg; the repo fixture was never opened for editing or saving.
+
+- Row 3 (tooltip): PASS. Hovering Undo shows the hover fill and "Undo ⌘Z". Rail Rectangle: no tooltip at 0.25 s, "Rectangle R" tooltip at 1.0 s.
+- Row 6 (undo/redo): PASS. Cmd+Z removes the rectangle and enables Redo; Cmd+Shift+Z restores it and disables Redo. Undo and Redo buttons produce the same artboard states.
+- Row 8 (scroll): INCONCLUSIVE. Real wheel events over the inspector and the footer changed nothing, because the footer has four rows and no overflow.
+- Row 5 (file panels): INCONCLUSIVE. Cmd+S left the document Unsaved with no visible Save panel; the window count rose by one, source unknown. Cmd+Shift+S and Cmd+O were not run after the earlier stuck Open panel.
+- Row 7: PASS (round 2).
