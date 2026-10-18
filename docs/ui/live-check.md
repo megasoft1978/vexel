@@ -73,3 +73,9 @@ Ran on a scratchpad copy of loop.svg; the repo fixture was never opened for edit
 - Row 8 (scroll): INCONCLUSIVE. Real wheel events over the inspector and the footer changed nothing, because the footer has four rows and no overflow.
 - Row 5 (file panels): INCONCLUSIVE. Cmd+S left the document Unsaved with no visible Save panel; the window count rose by one, source unknown. Cmd+Shift+S and Cmd+O were not run after the earlier stuck Open panel.
 - Row 7: PASS (round 2).
+
+## Round 5: real window, scratch copies only (2026-10-18)
+
+- Row 8 (scroll): PASS. On a 14-track scratch file, a real wheel over the footer scrolled the rows (first visible row changed to r9) and showed a scroll thumb. Inspector control not run.
+- Row 5 (Cmd+S): PASS for "one Save panel per Cmd+S". On an edited scratch copy, one Save panel appeared (window count +1), no file was written, and Escape cancelled it. Cmd+Shift+S and Cmd+O not run.
+- Observation: the system appearance now reads Light; the app follows it. Row 1 (dark mode) still needs an owner check in both appearances.
