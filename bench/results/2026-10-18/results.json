@@ -1,0 +1,164 @@
+{
+  "date": "2026-10-18",
+  "method": {
+    "vexel": "vexel-corpus --one <file> --size 128x128 (compose only, raster frame)",
+    "inkscape": "inkscape --export-type=png --export-filename=/dev/null <file> (document size)",
+    "timing": "wall-clock perf_counter around /usr/bin/time -l; peak RSS = 'maximum resident set size'",
+    "runs": 3,
+    "statistic": "median"
+  },
+  "host": {
+    "machine": "arm64",
+    "macos": "27.0.1",
+    "python": "3.12.8"
+  },
+  "vexel_binary": "/Users/megasoft78/Desktop/Freelance/vexel/.claude/worktrees/agent-adc8eb2a5a9b15ebc/build/rust/aarch64-apple-darwin/release/vexel-corpus",
+  "inkscape": {
+    "path": "/opt/homebrew/bin/inkscape",
+    "version": "Inkscape 1.4.4 (dcaf3e7, 2026-05-05)"
+  },
+  "files": [
+    {
+      "name": "files/real/world-map-blank.svg",
+      "bytes": 241682,
+      "sha256": "af3baeb067ad198fcf3c2b805e9c95d2dc6b7297cf4113d6c0ed5e0df80209a6",
+      "vexel": {
+        "status": "ok",
+        "runs_ms": [
+          262.054,
+          40.781,
+          40.421
+        ],
+        "median_ms": 40.781,
+        "runs_rss_bytes": [
+          20250624,
+          19578880,
+          20021248
+        ],
+        "median_rss_bytes": 20021248
+      },
+      "inkscape": {
+        "status": "ok",
+        "runs_ms": [
+          374.992,
+          258.892,
+          275.306
+        ],
+        "median_ms": 275.306,
+        "runs_rss_bytes": [
+          146374656,
+          146685952,
+          147226624
+        ],
+        "median_rss_bytes": 146685952
+      }
+    },
+    {
+      "name": "files/generated/cnc_t1.svg",
+      "bytes": 990772,
+      "sha256": "3854c3d66922e0463c9072d356866b424b497a42a14ac06fbd069449b3c6cf5e",
+      "vexel": {
+        "status": "ok",
+        "runs_ms": [
+          166.943,
+          165.14,
+          166.103
+        ],
+        "median_ms": 166.103,
+        "runs_rss_bytes": [
+          98369536,
+          98287616,
+          98304000
+        ],
+        "median_rss_bytes": 98304000
+      },
+      "inkscape": {
+        "status": "ok",
+        "runs_ms": [
+          616.851,
+          642.916,
+          696.782
+        ],
+        "median_ms": 642.916,
+        "runs_rss_bytes": [
+          449544192,
+          450658304,
+          452329472
+        ],
+        "median_rss_bytes": 450658304
+      }
+    },
+    {
+      "name": "files/real_inkscape/greater-coat-of-arms-of-blas-de-lezo.svg",
+      "bytes": 4898525,
+      "sha256": "a6be50df740a366004461c3d9b43001df2e2122b27c8d7bd38fe25ade36b73b1",
+      "vexel": {
+        "status": "failed",
+        "error": "compose verdict: VEXEL-CORPUS-RESULT\tunsupported\tunsupported in V1: unsupported element or attribute (<path> at byte 744649)"
+      },
+      "inkscape": {
+        "status": "ok",
+        "runs_ms": [
+          495.761,
+          482.86,
+          478.136
+        ],
+        "median_ms": 482.86,
+        "runs_rss_bytes": [
+          246890496,
+          245972992,
+          246677504
+        ],
+        "median_rss_bytes": 246677504
+      }
+    },
+    {
+      "name": "files/real_inkscape/kymijoki-drainage-basin-map-svg.svg",
+      "bytes": 17449181,
+      "sha256": "07c5426c8080eaf56a4c07e75d39b2e80a2e0070bd9a9be34bca62bd37f2ed11",
+      "vexel": {
+        "status": "failed",
+        "error": "compose verdict: VEXEL-CORPUS-RESULT\tunsupported\tunsupported in V1: unsupported element or attribute (<svg> at byte 152)"
+      },
+      "inkscape": {
+        "status": "ok",
+        "runs_ms": [
+          1843.064,
+          1812.624,
+          1803.858
+        ],
+        "median_ms": 1812.624,
+        "runs_rss_bytes": [
+          971227136,
+          971980800,
+          970883072
+        ],
+        "median_rss_bytes": 971227136
+      }
+    },
+    {
+      "name": "files/real/geographic-map-of-norway-sweden-finland-and-denmark-svg.svg",
+      "bytes": 20101913,
+      "sha256": "a5bd32f11baecad21e08441ce622f524f50239387438926aed582b5995800f61",
+      "vexel": {
+        "status": "failed",
+        "error": "compose verdict: VEXEL-CORPUS-RESULT\txml\tmalformed SVG: viewport at byte 70"
+      },
+      "inkscape": {
+        "status": "ok",
+        "runs_ms": [
+          2304.978,
+          2332.241,
+          2341.432
+        ],
+        "median_ms": 2332.241,
+        "runs_rss_bytes": [
+          1129676800,
+          1133985792,
+          1133264896
+        ],
+        "median_rss_bytes": 1133264896
+      }
+    }
+  ]
+}
