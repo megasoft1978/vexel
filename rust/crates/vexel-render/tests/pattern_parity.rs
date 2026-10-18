@@ -117,6 +117,8 @@ fn render_shape<'a>(
     let join = [Linejoin::Miter, Linejoin::Bevel, Linejoin::Round][b.data.join as usize];
     PatternPaintShape {
         shape: RenderShape {
+            fill_gradient: None,
+            stroke_gradient: None,
             edges: &b.edges,
             subpaths: &b.ranges,
             subpath_closed: &b.closed,

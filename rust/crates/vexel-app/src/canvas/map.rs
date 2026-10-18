@@ -92,7 +92,7 @@ fn doc_bounds(shape: &OwnedShape) -> Option<Bounds> {
     let t = shape.transform;
     let reach = shape
         .stroke
-        .filter(|s| s.rgba[3] > 0 || shape.stroke_pattern)
+        .filter(|s| s.rgba[3] > 0 || shape.stroke_pattern || shape.stroke_gradient.is_some())
         .map_or(0.0, |s| {
             s.width * (t.a * t.d - t.b * t.c).abs().sqrt() / 2.0
         });
@@ -101,4 +101,64 @@ fn doc_bounds(shape: &OwnedShape) -> Option<Bounds> {
         .iter()
         .all(|v| v.is_finite())
         .then_some(b)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Bounds, doc_bounds};
+    use crate::compose::compose_document;
+    use vexel_geometry::affine_identity;
+    use vexel_render::GradientRef;
+    use vexel_scene::{Paint, PaintKind, PaintStop, Spread, TableRange};
+
+    /// Bounds of a 4-wide stroke along y = 10 whose colour is fully transparent,
+    /// with a transparent linear gradient in place of the solid colour if asked.
+    fn stroke_bounds(gradient: bool) -> Bounds {
+        let svg = "<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'>\
+             <path d='M5 10 L35 10' fill='none' stroke-width='4' stroke='rgba(0,0,0,0)'/></svg>";
+        let composed = compose_document(svg.as_bytes(), 40, 40, &|| false).unwrap();
+        let mut shape = composed.shapes.into_iter().next().expect("one path");
+        assert_eq!(shape.stroke.map(|s| s.rgba[3]), Some(0));
+        if gradient {
+            let paint = Paint {
+                kind: PaintKind::Linear,
+                spread: Spread::Pad,
+                object_bounding_box: false,
+                coordinates: [0.0, 0.0, 40.0, 0.0, 0.0, 0.0],
+                bounds: [0.0; 4],
+                user_inverse: affine_identity(),
+                gradient_inverse: affine_identity(),
+                stops: TableRange { first: 0, count: 2 },
+                pattern: None,
+                pattern_inverse: affine_identity(),
+                pattern_opacity: 1.0,
+            };
+            let stops = [
+                PaintStop {
+                    offset: 0.0,
+                    rgba: [255, 0, 0, 0],
+                },
+                PaintStop {
+                    offset: 1.0,
+                    rgba: [0, 0, 255, 0],
+                },
+            ];
+            let gradient = GradientRef {
+                paint: &paint,
+                stops: &stops,
+            };
+            shape.set_stroke_gradient_for_test(gradient).unwrap();
+        }
+        doc_bounds(&shape).expect("bounds")
+    }
+
+    #[test]
+    fn stroke_reach_counts_a_gradient_even_at_alpha_zero() {
+        // Solid colour at alpha 0: no reach, the box is the centre line.
+        let solid = stroke_bounds(false);
+        assert_eq!((solid.1, solid.3), (10.0, 10.0), "{solid:?}");
+        // Gradient stroke at alpha 0: half the width of reach on each side.
+        let gradient = stroke_bounds(true);
+        assert_eq!((gradient.1, gradient.3), (8.0, 12.0), "{gradient:?}");
+    }
 }

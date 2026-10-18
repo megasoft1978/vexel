@@ -1,25 +1,50 @@
 //! Adapter from `vexel_scene` records to [`RenderShape`], reporting every
 //! deferred feature as a typed error instead of skipping it.
 
-use crate::stroke::{invert, is_visible};
-use crate::{DashedShape, FlatEdge, RenderError, RenderShape, StrokeStyle, UnsupportedKind};
+use crate::stroke::{invert, is_painted};
+use crate::{
+    DashedShape, FlatEdge, GradientRef, RenderError, RenderShape, StrokeStyle, UnsupportedKind,
+};
 use std::ops::Range;
 use vexel_geometry::affine_identity;
-use vexel_scene::{Paint, PaintKind, Shape};
+use vexel_scene::{Paint, PaintKind, PaintStop, Shape};
 
-fn classify(index: Option<usize>, paints: &[Paint]) -> Result<(), RenderError> {
+/// Whether a paint channel is a gradient. Gradients are `Unsupported` unless
+/// `gradients` is set, which only [`from_scene_shape_with_gradients`] does.
+fn classify(index: Option<usize>, paints: &[Paint], gradients: bool) -> Result<bool, RenderError> {
     let Some(index) = index else {
-        return Ok(());
+        return Ok(false);
     };
     let paint = paints.get(index).ok_or(RenderError::InvalidGeometry)?;
     match paint.kind {
-        PaintKind::Solid => Ok(()),
+        PaintKind::Solid => Ok(false),
+        PaintKind::Linear | PaintKind::Radial if gradients => Ok(true),
         PaintKind::Linear | PaintKind::Radial => {
             Err(RenderError::Unsupported(UnsupportedKind::GradientPaint))
         }
         PaintKind::Pattern => Err(RenderError::Unsupported(UnsupportedKind::PatternPaint)),
         PaintKind::Image => Err(RenderError::Unsupported(UnsupportedKind::ImagePaint)),
     }
+}
+
+/// The gradient of a channel that [`classify`] accepted, with the scene stop
+/// table its paint indexes. Solid or absent paint gives `None`.
+fn gradient_ref<'a>(
+    index: Option<usize>,
+    paints: &'a [Paint],
+    stops: &'a [PaintStop],
+) -> Result<Option<GradientRef<'a>>, RenderError> {
+    let Some(index) = index else {
+        return Ok(None);
+    };
+    let paint = paints.get(index).ok_or(RenderError::InvalidGeometry)?;
+    if !matches!(paint.kind, PaintKind::Linear | PaintKind::Radial) {
+        return Ok(None);
+    }
+    if paint.stops.slice(stops).is_none() {
+        return Err(RenderError::InvalidGeometry);
+    }
+    Ok(Some(GradientRef { paint, stops }))
 }
 
 /// Converts one scene shape. `edges`, `subpaths` (ranges relative to `edges`)
@@ -36,7 +61,46 @@ pub fn from_scene_shape<'a>(
     subpaths: &'a [Range<usize>],
     subpath_closed: &'a [bool],
 ) -> Result<RenderShape<'a>, RenderError> {
-    convert(shape, fill_rgba, fill_paints, stroke_paints, edges, subpaths, subpath_closed, false)
+    convert(
+        shape,
+        fill_rgba,
+        fill_paints,
+        stroke_paints,
+        edges,
+        subpaths,
+        subpath_closed,
+        false,
+        false,
+    )
+}
+
+/// [`from_scene_shape`] that also accepts linear and radial gradient paint on
+/// fill and stroke. `stops` is the scene's whole stop table, which the paints
+/// index. Every other deferral is reported exactly as by `from_scene_shape`.
+pub fn from_scene_shape_with_gradients<'a>(
+    shape: &Shape,
+    fill_rgba: [u8; 4],
+    fill_paints: &'a [Paint],
+    stroke_paints: &'a [Paint],
+    stops: &'a [PaintStop],
+    edges: &'a [FlatEdge],
+    subpaths: &'a [Range<usize>],
+    subpath_closed: &'a [bool],
+) -> Result<RenderShape<'a>, RenderError> {
+    let mut render = convert(
+        shape,
+        fill_rgba,
+        fill_paints,
+        stroke_paints,
+        edges,
+        subpaths,
+        subpath_closed,
+        false,
+        true,
+    )?;
+    render.fill_gradient = gradient_ref(shape.fill_paint, fill_paints, stops)?;
+    render.stroke_gradient = gradient_ref(shape.stroke_paint, stroke_paints, stops)?;
+    Ok(render)
 }
 
 /// Like [`from_scene_shape`] but accepts dashed strokes. `dashes` is the
@@ -55,8 +119,17 @@ pub fn from_scene_shape_with_dashes<'a>(
     if dashes.len() != shape.stroke.dash_values.count {
         return Err(RenderError::InvalidGeometry);
     }
-    let shape =
-        convert(shape, fill_rgba, fill_paints, stroke_paints, edges, subpaths, subpath_closed, true)?;
+    let shape = convert(
+        shape,
+        fill_rgba,
+        fill_paints,
+        stroke_paints,
+        edges,
+        subpaths,
+        subpath_closed,
+        true,
+        false,
+    )?;
     Ok(DashedShape { shape, dashes })
 }
 
@@ -70,6 +143,7 @@ fn convert<'a>(
     subpaths: &'a [Range<usize>],
     subpath_closed: &'a [bool],
     allow_dashes: bool,
+    gradients: bool,
 ) -> Result<RenderShape<'a>, RenderError> {
     if edges.len() != shape.edges.count || subpaths.len() != shape.subpaths.count {
         return Err(RenderError::InvalidGeometry);
@@ -80,8 +154,8 @@ fn convert<'a>(
     if shape.image.is_some() {
         return Err(RenderError::Unsupported(UnsupportedKind::ImagePaint));
     }
-    classify(shape.fill_paint, fill_paints)?;
-    classify(shape.stroke_paint, stroke_paints)?;
+    classify(shape.fill_paint, fill_paints, gradients)?;
+    let stroke_gradient = classify(shape.stroke_paint, stroke_paints, gradients)?;
     let scene_stroke = &shape.stroke;
     if scene_stroke.paint_server && shape.stroke_paint.is_none() {
         return Err(RenderError::Unsupported(UnsupportedKind::GradientPaint));
@@ -103,7 +177,9 @@ fn convert<'a>(
     };
     let transform = match invert(shape.stroke_inverse) {
         Some(forward) => forward,
-        None if is_visible(&style) && !edges.is_empty() => return Err(RenderError::InvalidGeometry),
+        None if is_painted(&style, stroke_gradient) && !edges.is_empty() => {
+            return Err(RenderError::InvalidGeometry);
+        }
         None => affine_identity(),
     };
     Ok(RenderShape {
@@ -116,6 +192,8 @@ fn convert<'a>(
         fill_rgba,
         stroke: Some(style),
         transform,
+        fill_gradient: None,
+        stroke_gradient: None,
     })
 }
 

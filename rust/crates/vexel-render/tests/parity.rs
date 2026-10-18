@@ -89,6 +89,8 @@ fn shapes(built: &[Built]) -> Vec<RenderShape<'_>> {
     built
         .iter()
         .map(|b| RenderShape {
+            fill_gradient: None,
+            stroke_gradient: None,
             edges: &b.edges,
             subpaths: &b.ranges,
             subpath_closed: &b.closed,

@@ -11,7 +11,7 @@ use crate::pattern_boundary::{mark_boundaries, pixel_fully_in_view};
 use crate::scan::{AxisTables, SAMPLE_LOCATIONS, Sweep};
 use crate::stroke::{self, StrokePrims};
 use crate::validate::validate;
-use crate::{RenderError, RenderShape, SAMPLES_PER_AXIS, ViewMap};
+use crate::{GradientRef, RenderError, RenderShape, SAMPLES_PER_AXIS, ViewMap};
 use vexel_geometry::{Affine, Point, affine_map_point};
 use vexel_raster::Tile;
 
@@ -116,7 +116,9 @@ pub(crate) fn render_core(
         if control() {
             return Err(RenderError::Cancelled);
         }
-        let style = shape.stroke.filter(|s| stroke::is_visible(s) && !shape.edges.is_empty());
+        let stroke_gradient = shape.stroke_gradient.is_some();
+        let style =
+            shape.stroke.filter(|s| stroke::is_painted(s, stroke_gradient) && !shape.edges.is_empty());
         let patterned = fill_pattern.is_some() || stroke_pattern.is_some();
         let inverse =
             if style.is_some() || patterned { stroke::invert(shape.transform) } else { None };
@@ -134,7 +136,10 @@ pub(crate) fn render_core(
             shape,
             prims,
             inverse,
-            fill_visible: shape.filled && (fill_pattern.is_some() || shape.fill_rgba[3] != 0),
+            fill_visible: shape.filled
+                && (fill_pattern.is_some()
+                    || shape.fill_gradient.is_some()
+                    || shape.fill_rgba[3] != 0),
             clips: clips.get(shape_index).copied().unwrap_or(&[]),
             fill_pattern,
             stroke_pattern,
@@ -142,7 +147,10 @@ pub(crate) fn render_core(
         sweep.reset(shape.edges, &tables, bounds.y_first, bounds.y_last)?;
         // Without stroke or pattern paint only the fill can touch a pixel, so
         // rows and spans with no crossing can be skipped outright.
-        let fill_only = pass.prims.is_none() && fill_pattern.is_none() && stroke_pattern.is_none();
+        let fill_only = pass.prims.is_none()
+            && fill_pattern.is_none()
+            && stroke_pattern.is_none()
+            && shape.fill_gradient.is_none();
         if fill_only && !pass.fill_visible {
             continue;
         }
@@ -300,30 +308,50 @@ fn paint_sample(
     }
     let local = pass.inverse.and_then(|inverse| affine_map_point(inverse, Point { x: px, y: py }));
     if pass.fill_visible && fill_inside() {
-        match pass.fill_pattern {
-            Some(paint) => {
+        match (pass.fill_pattern, shape.fill_gradient) {
+            (Some(paint), _) => {
                 if let Some(sampled) = local.and_then(|p| sample_pattern(&paint, p))
                     && sampled[3] != 0
                 {
                     source_over(out, sampled);
                 }
             }
-            None => source_over(out, shape.fill_rgba),
+            (None, Some(gradient)) => {
+                let sampled = sample_gradient(&gradient, px, py);
+                if sampled[3] != 0 {
+                    source_over(out, sampled);
+                }
+            }
+            (None, None) => source_over(out, shape.fill_rgba),
         }
     }
     if let (Some(prims), Some(style), Some(local)) =
         (pass.prims.as_ref(), shape.stroke.as_ref(), local)
         && prims.contains(local.x, local.y)
     {
-        match pass.stroke_pattern {
-            Some(paint) => {
+        match (pass.stroke_pattern, shape.stroke_gradient) {
+            (Some(paint), _) => {
                 if let Some(sampled) = sample_pattern(&paint, local)
                     && sampled[3] != 0
                 {
                     source_over(out, sampled);
                 }
             }
-            None => source_over(out, style.rgba),
+            (None, Some(gradient)) => {
+                let sampled = sample_gradient(&gradient, px, py);
+                if sampled[3] != 0 {
+                    source_over(out, sampled);
+                }
+            }
+            (None, None) => source_over(out, style.rgba),
         }
     }
+}
+
+/// Colour of a gradient channel at document point `(x, y)`, through the frozen
+/// sampler. A point the sampler cannot place keeps alpha 0 and paints nothing.
+fn sample_gradient(gradient: &GradientRef<'_>, x: f64, y: f64) -> [u8; 4] {
+    let mut rgba = [0u8; 4];
+    vexel_svg_paint::sample(gradient.paint, gradient.stops, x, y, &mut rgba);
+    rgba
 }

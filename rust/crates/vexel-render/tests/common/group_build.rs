@@ -86,6 +86,8 @@ fn shape(data: &'static ShapeData) -> RenderShape<'static> {
     let ranges: Vec<_> = data.subpaths.iter().map(|s| s.0..s.1).collect();
     let closed: Vec<bool> = data.subpaths.iter().map(|s| s.2).collect();
     RenderShape {
+        fill_gradient: None,
+        stroke_gradient: None,
         edges: leak(flat(data.edges)),
         subpaths: leak(ranges),
         subpath_closed: leak(closed),

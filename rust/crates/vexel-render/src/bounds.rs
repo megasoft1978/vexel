@@ -64,7 +64,7 @@ pub(crate) fn shape_bounds(
     }
     let mut stroke_box: Option<Extent> = None;
     if let (Some(style), Some(inverse)) = (shape.stroke.as_ref(), inverse)
-        && stroke::is_visible(style)
+        && stroke::is_painted(style, shape.stroke_gradient.is_some())
         && !shape.edges.is_empty()
     {
         for edge in shape.edges {
@@ -101,4 +101,116 @@ pub(crate) fn shape_bounds(
         return Ok(None);
     };
     Ok(Some(PixelBounds { x_first, x_last, y_first, y_last }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shape_bounds;
+    use crate::{
+        FlatEdge, GradientRef, Linecap, Linejoin, RenderShape, StrokeStyle, ViewBox, ViewMap,
+    };
+    use vexel_geometry::affine_identity;
+    use vexel_scene::{Paint, PaintKind, PaintStop, Spread, TableRange};
+
+    /// Transparent at both stops, so the gradient stroke has alpha 0 everywhere.
+    const CLEAR_STOPS: [PaintStop; 2] = [
+        PaintStop {
+            offset: 0.0,
+            rgba: [0, 0, 0, 0],
+        },
+        PaintStop {
+            offset: 1.0,
+            rgba: [255, 255, 255, 0],
+        },
+    ];
+
+    fn view() -> ViewMap {
+        let vb = ViewBox {
+            x: 0.0,
+            y: 0.0,
+            width: 8.0,
+            height: 8.0,
+        };
+        ViewMap::from_viewbox(vb, 8, 8, None).unwrap()
+    }
+
+    fn gradient() -> Paint {
+        Paint {
+            kind: PaintKind::Linear,
+            spread: Spread::Pad,
+            object_bounding_box: false,
+            coordinates: [0.0, 0.0, 8.0, 0.0, 0.0, 0.0],
+            bounds: [0.0; 4],
+            user_inverse: affine_identity(),
+            gradient_inverse: affine_identity(),
+            stops: TableRange { first: 0, count: 2 },
+            pattern: None,
+            pattern_inverse: affine_identity(),
+            pattern_opacity: 1.0,
+        }
+    }
+
+    /// Open stroke (0,4)-(8,4), width 2, butt caps.
+    fn stroked<'a>(
+        edges: &'a [FlatEdge],
+        rgba: [u8; 4],
+        stroke_gradient: Option<GradientRef<'a>>,
+    ) -> RenderShape<'a> {
+        RenderShape {
+            edges,
+            subpaths: &[],
+            subpath_closed: &[],
+            stroke_closed: false,
+            evenodd: false,
+            filled: false,
+            fill_rgba: [0; 4],
+            stroke: Some(StrokeStyle {
+                rgba,
+                width: 2.0,
+                miter_limit: 4.0,
+                dash_offset: 0.0,
+                cap: Linecap::Butt,
+                join: Linejoin::Miter,
+                crisp_edges: false,
+            }),
+            transform: affine_identity(),
+            fill_gradient: None,
+            stroke_gradient,
+        }
+    }
+
+    #[test]
+    fn gradient_stroke_at_zero_alpha_keeps_its_box() {
+        let edges = [FlatEdge {
+            x0: 0.0,
+            y0: 4.0,
+            x1: 8.0,
+            y1: 4.0,
+        }];
+        let paint = gradient();
+        let gradient = GradientRef {
+            paint: &paint,
+            stops: &CLEAR_STOPS,
+        };
+        let shape = stroked(&edges, [0; 4], Some(gradient));
+        let bounds = shape_bounds(&shape, &view(), Some(affine_identity()))
+            .unwrap()
+            .expect("gradient stroke has bounds");
+        // The stroke covers rows 3 and 4 (y in [3, 5]) across x in [0, 8).
+        assert!(bounds.y_first <= 3 && bounds.y_last >= 4, "{bounds:?}");
+        assert_eq!((bounds.x_first, bounds.x_last), (0, 7));
+    }
+
+    #[test]
+    fn solid_stroke_at_zero_alpha_is_still_skipped() {
+        let edges = [FlatEdge {
+            x0: 0.0,
+            y0: 4.0,
+            x1: 8.0,
+            y1: 4.0,
+        }];
+        let shape = stroked(&edges, [0; 4], None);
+        let bounds = shape_bounds(&shape, &view(), Some(affine_identity())).unwrap();
+        assert!(bounds.is_none(), "{bounds:?}");
+    }
 }

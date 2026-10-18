@@ -6,9 +6,12 @@ use vexel_geometry::{Affine, affine_identity};
 use vexel_raster::Tile;
 use vexel_render::{
     FlatEdge, Linecap, Linejoin, RenderError, RenderShape, SceneFeatures,
-    UnsupportedKind, ViewBox, ViewMap, from_scene_shape, render_shapes,
+    UnsupportedKind, ViewBox, ViewMap, from_scene_shape, from_scene_shape_with_gradients,
+    render_shapes,
 };
-use vexel_scene::{Affine as SceneAffine, Paint, PaintKind, Shape, SourceMap, Span, Spread, TableRange};
+use vexel_scene::{
+    Affine as SceneAffine, Paint, PaintKind, PaintStop, Shape, SourceMap, Span, Spread, TableRange,
+};
 
 const RED: [u8; 4] = [255, 0, 0, 255];
 
@@ -75,6 +78,63 @@ fn adapter_reports_each_unsupported_paint_kind() {
     let mut dangling = scene_shape();
     dangling.fill_paint = Some(3);
     assert_eq!(convert(&dangling, &[], &[]), Err(RenderError::InvalidGeometry));
+}
+
+fn gradient_convert<'a>(
+    shape: &Shape,
+    fill: &'a [Paint],
+    stroke: &'a [Paint],
+    stops: &'a [PaintStop],
+) -> Result<RenderShape<'a>, RenderError> {
+    from_scene_shape_with_gradients(shape, RED, fill, stroke, stops, &[], &[], &[])
+}
+
+#[test]
+fn linear_and_radial_paints_convert_to_render_shapes() {
+    let stops = [
+        PaintStop {
+            offset: 0.0,
+            rgba: RED,
+        },
+        PaintStop {
+            offset: 1.0,
+            rgba: [0, 0, 255, 255],
+        },
+    ];
+    for kind in [PaintKind::Linear, PaintKind::Radial] {
+        let mut gradient = paint(kind);
+        gradient.stops = TableRange { first: 0, count: 2 };
+        let paints = [gradient];
+        let mut fill = scene_shape();
+        fill.fill_paint = Some(0);
+        let render = gradient_convert(&fill, &paints, &[], &stops).unwrap();
+        assert_eq!(render.fill_gradient.map(|g| g.paint.kind), Some(kind));
+        assert!(render.stroke_gradient.is_none());
+        let mut stroke = scene_shape();
+        stroke.stroke_paint = Some(0);
+        let render = gradient_convert(&stroke, &[], &paints, &stops).unwrap();
+        assert_eq!(render.stroke_gradient.map(|g| g.paint.kind), Some(kind));
+        assert!(render.fill_gradient.is_none());
+    }
+    // A stop span outside the scene stop table is invalid input.
+    let mut dangling = scene_shape();
+    dangling.fill_paint = Some(0);
+    let mut bad = paint(PaintKind::Linear);
+    bad.stops = TableRange { first: 1, count: 2 };
+    assert_eq!(
+        gradient_convert(&dangling, &[bad], &[], &stops).map(|_| ()),
+        Err(RenderError::InvalidGeometry)
+    );
+    let mut gradient = paint(PaintKind::Linear);
+    gradient.stops = TableRange { first: 0, count: 2 };
+    let paints = [gradient];
+    // Solid-only entry points still refuse gradients.
+    let mut solid_only = scene_shape();
+    solid_only.fill_paint = Some(0);
+    assert_eq!(
+        from_scene_shape(&solid_only, RED, &paints, &[], &[], &[], &[]).map(|_| ()),
+        Err(unsupported(UnsupportedKind::GradientPaint))
+    );
 }
 
 #[test]

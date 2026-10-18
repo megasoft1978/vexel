@@ -110,6 +110,8 @@ fn rect(x: f64, y: f64, w: f64, h: f64) -> Vec<FlatEdge> {
 
 fn fill_shape(edges: &[FlatEdge], rgba: [u8; 4], evenodd: bool) -> RenderShape<'_> {
     RenderShape {
+        fill_gradient: None,
+        stroke_gradient: None,
         edges,
         subpaths: &[],
         subpath_closed: &[],

@@ -49,6 +49,8 @@ pub fn pixel(tile: &Tile, x: u32, y: u32) -> [u8; 4] {
 /// Solid filled shape with no stroke.
 pub fn fill_shape<'a>(edges: &'a [FlatEdge], rgba: [u8; 4], evenodd: bool) -> RenderShape<'a> {
     RenderShape {
+        fill_gradient: None,
+        stroke_gradient: None,
         edges,
         subpaths: &[],
         subpath_closed: &[],
@@ -86,6 +88,8 @@ pub fn stroke_shape<'a>(
     stroke: StrokeStyle,
 ) -> RenderShape<'a> {
     RenderShape {
+        fill_gradient: None,
+        stroke_gradient: None,
         edges,
         subpaths: &[],
         subpath_closed: &[],

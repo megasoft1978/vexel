@@ -321,37 +321,26 @@ fn unsupported_error_text_names_feature_and_location() {
 fn deferred_shapes_are_skipped_and_disclosed_not_dropped_silently() {
     let svg = fixture("deferred-paint.svg");
     let composed = compose_document(&svg, 60, 40, &|| false).unwrap();
-    // The dashed line now renders (WO-RUST-V1-RENDER-DASH-01 is integrated); only
-    // the gradient rect is still deferred.
-    assert_eq!(composed.shapes.len(), 2, "solid rect and dashed line drawn");
-    let features: Vec<_> = composed
-        .frame
-        .disclosures
-        .iter()
-        .map(|d| (d.feature, d.element.as_deref()))
-        .collect();
-    assert_eq!(features, [("gradient paint", Some("rect"))]);
+    // Dashed strokes and linear gradient fills both render now, so nothing in
+    // this document is deferred.
+    assert_eq!(
+        composed.shapes.len(),
+        3,
+        "solid rect, gradient rect and dashed line drawn"
+    );
     assert!(
-        composed
-            .frame
-            .disclosures
-            .iter()
-            .all(|d| d.offset.is_some())
+        composed.frame.disclosures.is_empty(),
+        "{:?}",
+        composed.frame.disclosures
     );
     assert_eq!(px(&composed.frame, 8, 8), [0, 0xaa, 0, 255]);
-    assert_eq!(
-        px(&composed.frame, 26, 8),
-        [0, 0, 0, 0],
-        "gradient rect not drawn"
-    );
+    assert_eq!(px(&composed.frame, 26, 8)[3], 255, "gradient rect drawn");
     // dasharray "4 2" from x=2: on 2..6, off 6..8.
     assert_eq!(px(&composed.frame, 3, 29), [0, 0, 0, 255], "dash drawn");
     assert_eq!(px(&composed.frame, 6, 29), [0, 0, 0, 0], "gap left open");
     let text = status_text("deferred-paint.svg", &composed);
     assert!(
-        text.contains("1 deferred")
-            && text.contains("gradient paint")
-            && !text.contains("dashed stroke"),
+        !text.contains("gradient paint") && !text.contains("dashed stroke"),
         "{text}"
     );
 }

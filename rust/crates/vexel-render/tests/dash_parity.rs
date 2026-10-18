@@ -101,6 +101,8 @@ fn dashed(built: &[Built], use_dashes: bool) -> Vec<DashedShape<'_>> {
         .iter()
         .map(|b| DashedShape {
             shape: RenderShape {
+                fill_gradient: None,
+                stroke_gradient: None,
                 edges: &b.edges,
                 subpaths: &b.ranges,
                 subpath_closed: &b.closed,
@@ -326,6 +328,8 @@ fn empty_dashes_match_render_shapes_on_every_parity_case() {
         let shapes: Vec<RenderShape<'_>> = built
             .iter()
             .map(|(transform, edges, ranges, closed, data)| RenderShape {
+                fill_gradient: None,
+                stroke_gradient: None,
                 edges,
                 subpaths: ranges,
                 subpath_closed: closed,

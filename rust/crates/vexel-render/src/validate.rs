@@ -43,7 +43,7 @@ fn validate_shape(shape: &RenderShape<'_>) -> Result<(), RenderError> {
     {
         return Err(RenderError::InvalidGeometry);
     }
-    if stroke::is_visible(&stroke) && !shape.edges.is_empty() {
+    if stroke::is_painted(&stroke, shape.stroke_gradient.is_some()) && !shape.edges.is_empty() {
         if !affine_valid(shape.transform) || stroke::invert(shape.transform).is_none() {
             return Err(RenderError::InvalidGeometry);
         }
@@ -121,6 +121,8 @@ mod limit03_tests {
             crisp_edges: false,
         };
         let shape = RenderShape {
+            fill_gradient: None,
+            stroke_gradient: None,
             edges: &edges,
             subpaths: &[],
             subpath_closed: &[],

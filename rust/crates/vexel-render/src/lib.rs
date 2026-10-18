@@ -5,7 +5,8 @@
 //! sample grid per pixel, nonzero/evenodd fill, stroke with caps, joins and
 //! miter limit, and per-shape source-over compositing in document order.
 //! Dashes are available through [`render_dashed_shapes`]; [`render_shapes`] and
-//! [`from_scene_shape`] stay solid-only. Non-solid paint, clips, masks, filters, opacity groups, text,
+//! [`from_scene_shape`] stay solid-only; linear and radial gradient paint enters
+//! through [`from_scene_shape_with_gradients`]. Pattern and image paint, clips, masks, filters, opacity groups, text,
 //! animation, SMIL and crisp edges are deferred and reported as
 //! [`RenderError::Unsupported`]. No performance claim is made.
 //!
@@ -35,7 +36,9 @@ mod text;
 mod validate;
 mod view;
 
-pub use adapter::{SceneFeatures, from_scene_shape, from_scene_shape_with_dashes};
+pub use adapter::{
+    SceneFeatures, from_scene_shape, from_scene_shape_with_dashes, from_scene_shape_with_gradients,
+};
 pub use clip::{ClipShape, MAX_CLIP_CHAIN, MAX_CLIP_EDGES, RenderClip};
 pub use dash::MAX_DASH_VALUES;
 pub use group::{
@@ -56,6 +59,7 @@ pub use view::{PreserveAspect, ViewBox, ViewMap};
 use std::ops::Range;
 pub use vexel_geometry::Affine;
 pub use vexel_scene::{Linecap, Linejoin};
+use vexel_scene::{Paint, PaintStop};
 
 /// Samples per pixel axis of the anti-aliasing grid.
 pub const SAMPLES_PER_AXIS: usize = 4;
@@ -108,6 +112,15 @@ pub struct StrokeStyle {
     pub crisp_edges: bool,
 }
 
+/// A linear or radial gradient paint of one fill or stroke channel. `paint` is
+/// the scene paint and `stops` the scene's whole stop table, because
+/// `Paint::stops` indexes into it (the layout `vexel_svg_paint::sample` takes).
+#[derive(Debug, Clone, Copy)]
+pub struct GradientRef<'a> {
+    pub paint: &'a Paint,
+    pub stops: &'a [PaintStop],
+}
+
 /// One shape ready to rasterize.
 ///
 /// `edges` are the shape's own edges in document space (after the element
@@ -130,6 +143,10 @@ pub struct RenderShape<'a> {
     pub fill_rgba: [u8; 4],
     pub stroke: Option<StrokeStyle>,
     pub transform: Affine,
+    /// Gradient fill paint; `None` paints `fill_rgba`.
+    pub fill_gradient: Option<GradientRef<'a>>,
+    /// Gradient stroke paint; `None` paints `stroke`'s colour.
+    pub stroke_gradient: Option<GradientRef<'a>>,
 }
 
 /// A deferred feature that must never be silently skipped.

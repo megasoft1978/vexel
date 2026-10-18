@@ -275,7 +275,7 @@ fn text_path_stays_a_typed_error() {
 }
 
 #[test]
-fn gradient_paint_stays_a_disclosure_beside_rendered_content() {
+fn linear_gradient_fill_composes_to_a_gradient_pixel_run() {
     let svg = wrap(
         "<defs><linearGradient id='g'><stop offset='0' stop-color='red'/>\
          <stop offset='1' stop-color='blue'/></linearGradient></defs>\
@@ -283,10 +283,19 @@ fn gradient_paint_stays_a_disclosure_beside_rendered_content() {
          <rect x='20' width='10' height='10' fill='url(#g)'/>",
     );
     let frame = composed(&svg, 40, 40).unwrap();
-    let features: Vec<_> = frame.disclosures.iter().map(|d| d.feature).collect();
-    assert_eq!(features, ["gradient paint"]);
+    assert!(
+        frame.disclosures.is_empty(),
+        "supported gradient is not disclosed"
+    );
     assert_eq!(pixel(&frame, 5, 5), [0, 0xaa, 0, 255]);
-    assert_eq!(pixel(&frame, 25, 5), [0, 0, 0, 0], "gradient not drawn");
+    let run: Vec<[u8; 4]> = (20..30).map(|x| pixel(&frame, x, 5)).collect();
+    assert!(run.iter().all(|p| p[3] == 255), "{run:?}");
+    assert!(
+        run.windows(2).any(|w| w[0] != w[1]),
+        "gradient run is uniform: {run:?}"
+    );
+    // Red at the start of the box, blue at its end.
+    assert!(run[0][0] > run[9][0] && run[0][2] < run[9][2], "{run:?}");
 }
 
 #[test]
@@ -299,7 +308,7 @@ fn image_stays_a_typed_error() {
 }
 
 #[test]
-fn gradient_inside_a_pattern_tile_is_not_silently_dropped() {
+fn gradient_inside_a_pattern_tile_is_drawn_in_every_tile() {
     let svg = wrap(
         "<defs><linearGradient id='g'><stop offset='0' stop-color='red'/>\
          <stop offset='1' stop-color='blue'/></linearGradient>\
@@ -307,9 +316,14 @@ fn gradient_inside_a_pattern_tile_is_not_silently_dropped() {
          <rect width='8' height='8' fill='url(#g)'/></pattern></defs>\
          <rect width='30' height='30' fill='url(#p)'/>",
     );
-    match composed(&svg, 40, 40) {
-        Err(ComposeError::Unsupported { feature, .. }) => assert_eq!(feature, "gradient paint"),
-        other => panic!("expected Unsupported(gradient paint), got {other:?}"),
+    let frame = composed(&svg, 40, 40).unwrap();
+    assert!(frame.disclosures.is_empty(), "{:?}", frame.disclosures);
+    // Each 8 px tile runs red to blue across its width, so the first and last
+    // columns of a tile are the two ends of the ramp.
+    for tile_x in [0, 8, 16] {
+        let (start, end) = (pixel(&frame, tile_x, 4), pixel(&frame, tile_x + 7, 4));
+        assert!(start[0] > 200 && start[2] < 40, "{start:?}");
+        assert!(end[2] > 200 && end[0] < 40, "{end:?}");
     }
 }
 

@@ -43,6 +43,12 @@ pub(crate) fn is_visible(stroke: &StrokeStyle) -> bool {
     stroke.rgba[3] != 0 && stroke.width > 0.0
 }
 
+/// [`is_visible`] for a stroke whose colour may be a gradient: a gradient
+/// stroke ignores the solid colour's alpha, so only its width decides.
+pub(crate) fn is_painted(stroke: &StrokeStyle, gradient: bool) -> bool {
+    stroke.width > 0.0 && (gradient || stroke.rgba[3] != 0)
+}
+
 /// One stroked edge range: first edge, edge count, closed, implicit-close.
 pub(crate) struct StrokeRange {
     pub first: usize,
@@ -407,6 +413,8 @@ mod tests {
             .map(|w| FlatEdge { x0: w[0].0, y0: w[0].1, x1: w[1].0, y1: w[1].1 })
             .collect();
         let shape = RenderShape {
+            fill_gradient: None,
+            stroke_gradient: None,
             edges: &edges,
             subpaths: &[],
             subpath_closed: &[],

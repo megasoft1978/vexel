@@ -9,12 +9,13 @@ use vexel_raster::Tile;
 use vexel_render::{
     FlatEdge, Linecap, Linejoin, PATTERN_MAX_INSTANCES, PatternPaint, PatternPaintShape,
     PatternTileSpec, PreserveAspect, RenderError, RenderShape, StrokeStyle, UnsupportedKind,
-    ViewBox, ViewMap, from_scene_shape_with_pattern, pattern_pixel_size, render_pattern_shapes,
-    render_pattern_tile, render_pattern_tiles, render_shapes,
+    ViewBox, ViewMap, from_scene_shape_with_gradients, from_scene_shape_with_pattern,
+    pattern_pixel_size, render_pattern_shapes, render_pattern_tile, render_pattern_tiles,
+    render_shapes,
 };
 use vexel_scene::{
-    Affine as SceneAffine, Paint, PaintKind, PatternDescriptor, PatternMapping, Shape, SourceMap,
-    Span, Spread, TableRange,
+    Affine as SceneAffine, Paint, PaintKind, PaintStop, PatternDescriptor, PatternMapping, Shape,
+    SourceMap, Span, Spread, TableRange,
 };
 
 const RED: [u8; 4] = [255, 0, 0, 255];
@@ -546,6 +547,34 @@ fn scene_adapter_keeps_other_deferrals_and_rejects_unresolved_patterns() {
     assert_eq!(identity, scene_shape().stroke_inverse);
 }
 
+#[test]
+fn gradient_paint_converts_and_samples_expected_colour() {
+    let stops = [
+        PaintStop {
+            offset: 0.0,
+            rgba: [0, 0, 0, 255],
+        },
+        PaintStop {
+            offset: 1.0,
+            rgba: [255, 255, 255, 255],
+        },
+    ];
+    let mut linear = scene_paint(PaintKind::Linear);
+    linear.coordinates = [0.0, 0.0, 8.0, 0.0, 0.0, 0.0];
+    linear.stops = TableRange { first: 0, count: 2 };
+    let paints = [linear];
+    let mut shape = scene_shape();
+    shape.fill_paint = Some(0);
+    let render =
+        from_scene_shape_with_gradients(&shape, RED, &paints, &[], &stops, &[], &[], &[]).unwrap();
+    let gradient = render.fill_gradient.expect("gradient fill");
+    assert_eq!(gradient.paint.kind, PaintKind::Linear);
+    // t = x / 8 is 0.5 at x = 4: the midpoint of black and white.
+    let mut rgba = [0u8; 4];
+    vexel_svg_paint::sample(gradient.paint, gradient.stops, 4.0, 0.0, &mut rgba);
+    assert_eq!(rgba, [128, 128, 128, 255]);
+}
+
 fn built(case: &'static Case) -> Vec<(Vec<FlatEdge>, Vec<std::ops::Range<usize>>, Vec<bool>)> {
     case.shapes
         .iter()
@@ -581,6 +610,8 @@ fn solid_shapes_render_identically_through_both_entry_points() {
                 let r = 1.0 / det;
                 let (a, b, c, dd) = (m[3] * r, -m[1] * r, -m[2] * r, m[0] * r);
                 RenderShape {
+                    fill_gradient: None,
+                    stroke_gradient: None,
                     edges,
                     subpaths: ranges,
                     subpath_closed: closed,

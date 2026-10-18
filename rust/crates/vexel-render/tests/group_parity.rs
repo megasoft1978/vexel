@@ -278,6 +278,8 @@ fn trivial_groups_equal_ungrouped_render_for_every_existing_parity_case() {
         let shapes: Vec<_> = built
             .iter()
             .map(|(d, edges, ranges, closed)| vexel_render::RenderShape {
+                fill_gradient: None,
+                stroke_gradient: None,
                 edges,
                 subpaths: ranges,
                 subpath_closed: closed,

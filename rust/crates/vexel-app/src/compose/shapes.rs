@@ -5,10 +5,57 @@ use std::sync::Arc;
 use vexel_geometry::Affine;
 use vexel_raster::Tile;
 use vexel_render::{
-    DashedShape, FlatEdge, PatternPaint, RenderError, RenderShape, StrokeStyle, UnsupportedKind,
-    from_scene_shape_with_pattern,
+    DashedShape, FlatEdge, GradientRef, PatternPaint, PatternPaintShape, RenderError, RenderShape,
+    StrokeStyle, UnsupportedKind, from_scene_shape_with_gradients, from_scene_shape_with_pattern,
 };
-use vexel_scene::{SceneView, TableRange, ViewportRead};
+use vexel_scene::{Paint, PaintStop, SceneView, TableRange, ViewportRead};
+
+/// A gradient paint owned by its shape. The stops are copied out of the scene
+/// table and `paint.stops` is rebased to index that copy from zero.
+#[derive(Debug, Clone)]
+pub struct OwnedGradient {
+    paint: Paint,
+    stops: Vec<PaintStop>,
+}
+
+impl OwnedGradient {
+    fn new(gradient: GradientRef<'_>) -> Result<Self, RenderError> {
+        let section = gradient
+            .paint
+            .stops
+            .slice(gradient.stops)
+            .ok_or(RenderError::InvalidGeometry)?
+            .to_vec();
+        let mut paint = *gradient.paint;
+        paint.stops = TableRange {
+            first: 0,
+            count: section.len(),
+        };
+        Ok(Self {
+            paint,
+            stops: section,
+        })
+    }
+
+    fn borrow(&self) -> GradientRef<'_> {
+        GradientRef {
+            paint: &self.paint,
+            stops: &self.stops,
+        }
+    }
+}
+
+#[cfg(test)]
+impl OwnedShape {
+    /// Gives the stroke a gradient paint, with the stops copied from `gradient`.
+    pub(crate) fn set_stroke_gradient_for_test(
+        &mut self,
+        gradient: GradientRef<'_>,
+    ) -> Result<(), RenderError> {
+        self.stroke_gradient = Some(OwnedGradient::new(gradient)?);
+        Ok(())
+    }
+}
 
 /// A renderable shape that owns its geometry so it outlives the scene graph.
 #[derive(Debug, Clone)]
@@ -29,11 +76,16 @@ pub struct OwnedShape {
     /// Fill / stroke paint is a pattern (the solid colour is then unused).
     pub fill_pattern: bool,
     pub stroke_pattern: bool,
+    /// Fill / stroke paint is a linear or radial gradient.
+    pub fill_gradient: Option<OwnedGradient>,
+    pub stroke_gradient: Option<OwnedGradient>,
 }
 
 impl OwnedShape {
     pub fn as_render(&self) -> RenderShape<'_> {
         RenderShape {
+            fill_gradient: self.fill_gradient.as_ref().map(OwnedGradient::borrow),
+            stroke_gradient: self.stroke_gradient.as_ref().map(OwnedGradient::borrow),
             edges: &self.edges,
             subpaths: &self.subpaths,
             subpath_closed: &self.subpath_closed,
@@ -71,13 +123,14 @@ impl OwnedShape {
     /// and joins are not modelled).
     pub fn hit(&self, x: f64, y: f64) -> bool {
         let runs = self.runs();
-        if self.filled && (self.fill_pattern || self.fill_rgba[3] > 0) && self.fill_hit(&runs, x, y)
-        {
+        let fill_paint = self.fill_pattern || self.fill_gradient.is_some() || self.fill_rgba[3] > 0;
+        if self.filled && fill_paint && self.fill_hit(&runs, x, y) {
             return true;
         }
+        let stroke_paint = self.stroke_pattern || self.stroke_gradient.is_some();
         let Some(style) = self
             .stroke
-            .filter(|s| (self.stroke_pattern || s.rgba[3] > 0) && s.width > 0.0)
+            .filter(|s| (stroke_paint || s.rgba[3] > 0) && s.width > 0.0)
         else {
             return false;
         };
@@ -311,6 +364,37 @@ pub(crate) fn prepare<'a, V: ViewportRead, A: Copy>(
         );
         let paint = match converted {
             Ok(paint) => paint,
+            // Gradient paint is drawn per sample by the renderer. The pattern
+            // entry point stays solid-only (it has no scene stop table), so a
+            // gradient shape is retried here. A shape with a pattern channel and
+            // a gradient channel fails this retry with `PatternPaint` and is
+            // skipped. That is deliberate: the renderer's centre-only pattern
+            // sampling does not mark gradient stroke edges, so such a shape
+            // would anti-alias wrongly. Not fixed here.
+            Err(RenderError::Unsupported(UnsupportedKind::GradientPaint)) => {
+                let gradient = from_scene_shape_with_gradients(
+                    &solid,
+                    fill_rgba,
+                    scene.fill_paints,
+                    scene.stroke_paints,
+                    scene.stops,
+                    &edges,
+                    &subpaths,
+                    &subpath_closed,
+                );
+                match gradient {
+                    Ok(render) => PatternPaintShape {
+                        shape: render,
+                        fill: None,
+                        stroke: None,
+                    },
+                    Err(RenderError::Unsupported(kind)) => {
+                        entries.push(Entry::Skip(kind));
+                        continue;
+                    }
+                    Err(error) => return Err(error),
+                }
+            }
             Err(RenderError::Unsupported(kind)) => {
                 entries.push(Entry::Skip(kind));
                 continue;
@@ -346,6 +430,8 @@ pub(crate) fn prepare<'a, V: ViewportRead, A: Copy>(
                 dashes: dashes.to_vec(),
                 fill_pattern: paint.fill.is_some() || image.is_some(),
                 stroke_pattern: paint.stroke.is_some(),
+                fill_gradient: render.fill_gradient.map(OwnedGradient::new).transpose()?,
+                stroke_gradient: render.stroke_gradient.map(OwnedGradient::new).transpose()?,
             },
             fill: lift(scene, paint.fill, shape.fill_paint, scene.fill_paints),
             stroke: lift(scene, paint.stroke, shape.stroke_paint, scene.stroke_paints),
