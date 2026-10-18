@@ -127,3 +127,9 @@ pending gap-closure orders or an owner decision to supersede.
 - Ruled out: ancestor clip-paths, ancestor transforms (all invertible), the `affine_inverse` check at `publication.rs:184-223` (instrumented: never fires for this file), and removing `inkscape:connector-curvature`.
 - Open candidates: a gradient paint publication path that reports `value.offset` (likely `custom_publication.rs` around lines 45 and 263, or `traversal.rs` ~501-525). Not confirmed.
 - Status: left as known-unsupported. A fix needs a traced diagnostic, which is beyond the headless budget used so far.
+
+## Gradient paint and large-file probes (2026-10-18)
+
+- **Gradient fills (feature gap, core Inkscape feature):** greater-coat (4.9 MB) fails at a `<path>` whose fill is `url(#linearGradient31202)`. Replacing only that fill with a solid colour makes the file compose (`ok 128x128`). Removing stroke-dasharray, stroke-miterlimit, stroke-dashoffset, fill-opacity or inkscape:connector-curvature changes nothing. Ideogram fails the same way (a gradient-filled path), and a solid-fill copy of ideogram still fails at another path. Next probe: whether any `url()` paint or specifically the `xlink:href` chain to a radialGradient triggers it. Gradients are therefore not supported on all paths, which is a real gap for Inkscape files.
+- **Kymijoki (17.4 MB):** rejected at the root `<svg>` (byte 152). Removing the root `style` (enable-background), `xml:space`, `inkscape:`/`sodipodi:` attributes, or the document `<style>` block does not change the error. Cause still unknown; the remaining root-tag candidates are the `px` units on x, y, width and height, and the `xmlns:*` declarations.
+- **Norway (20.1 MB):** refused by the root-size-4096 decision (kept). Not a bug.
