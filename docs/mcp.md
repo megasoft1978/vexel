@@ -183,6 +183,32 @@ render. The `inspect-document` prompt directs a client to inspect the open
 document. Tool results include structured JSON and a text fallback; rendering
 also returns an MCP image content block.
 
+## Draw a character
+
+`rust/crates/vexel-app/tests/mcp_draw_character.rs` drives this sequence over
+the stdio JSON-RPC path with no window. Each call passes `documentId`
+`preview-document`, and the shape ids are `vexel-object-1`..`-3`:
+
+1. `element_add`: `parentId` `root`, `template` `rect`, `attributes` `x` 200,
+   `y` 260, `width` 112, `height` 140, `fill` `#3a7bd5` (body).
+2. `element_add`: `template` `ellipse`, `cx` 256, `cy` 200, `rx` 80, `ry` 70,
+   `fill` `#ffe0b0` (head).
+3. `element_add`: `template` `path`, `d` `M 312 300 L 380 330 L 400 390`,
+   `fill` `none`, `stroke` `#202020`, `stroke-width` 6 (arm).
+4. `document_info`: `elementCount` is 3.
+5. `attribute_set`: `elementId` `vexel-object-1`, `name` `fill`, `value` `#2a9d5c`.
+6. `attribute_set`: `elementId` `vexel-object-2`, `name` `fill`, `value` `#ffd0a0`.
+7. `attribute_set`: `elementId` `vexel-object-2`, `name` `transform`, `value`
+   `translate(10 5)`. The head becomes `cx="2.66e2" cy="2.05e2"`.
+8. `animation_add`: `targetId` `vexel-object-2`, `xml`
+   `<animate attributeName="opacity" values="1;0.2;1" dur="1s"/>`.
+9. `export_animation`: `path` inside a granted directory, `format` `gif`,
+   `fps` 10, `duration` 1. The reply's `bytes` equals the file size.
+10. `export_svg`: returns the saved source, including the `<animate>`.
+
+The `native_timeline_*` tools are not in the live-preview tool list, so this
+character uses the SMIL `animation_add` path instead.
+
 ## Limits and known gaps
 
 - JSON requests and responses are limited to 2 MiB, parser depth to 32, and
