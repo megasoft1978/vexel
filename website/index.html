@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vexel</title>
+  <meta name="description" content="Vexel: vector drawing and animation for macOS, with an MCP interface so an agent can draw.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a class="brand" href="#top">Vexel</a>
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#mcp">MCP</a></li>
+          <li><a href="#benchmarks">Benchmarks</a></li>
+          <li><a href="#download">Download</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="wrap">
+        <h1 id="hero-title">Vexel</h1>
+        <p class="lede">Vector drawing and animation for macOS, with an MCP interface so an agent can draw.</p>
+        <p class="meta">Source: <a href="../README.md">README.md</a> · Status: <a href="../HANDOFF.md">HANDOFF.md</a></p>
+      </div>
+    </section>
+
+    <section id="features" aria-labelledby="features-title">
+      <div class="wrap">
+        <h2 id="features-title">Features</h2>
+        <p class="note">Status is taken from <a href="../HANDOFF.md">HANDOFF.md</a>. Items marked <strong>partial</strong> are not fully verified or have listed limits.</p>
+        <ul class="feature-list">
+          <li>
+            <span class="status done">Done</span>
+            <div><strong>Renderer</strong> matches the legacy C goldens byte-exact. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status done">Done</span>
+            <div><strong>.vexel save and reopen</strong>. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>SVG import</strong>: a decode subset. 21 of 39 corpus files open; others are unsupported or limit-blocked. <a href="../HANDOFF.md">HANDOFF.md</a>, <a href="../STATE.md">STATE.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>Native Open, Save and Save As panels</strong>: merged, not yet verified live. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>Drawing tools</strong>: pointer drawing not yet verified live. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>Playback and timeline strip</strong>: playback strip not yet verified live. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status done">Done</span>
+            <div><strong>Animation and GIF export</strong> (<code>vexel-gif</code>). <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status done">Done</span>
+            <div><strong>PNG render</strong> (<code>render_png</code>, <code>vexel-png</code>). <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status done">Done</span>
+            <div><strong>Masks, opacity groups, patterns, filters, markers, PNG images</strong>. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>Text</strong> (CoreText): C parity quirks await a post-parity decision. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>Stroke dashes</strong>: deferred in animation frames. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+          <li>
+            <span class="status partial">Partial</span>
+            <div><strong>MCP tools</strong>: listed and implemented; live sessions with Codex and Claude Code still pending. <a href="../docs/mcp.md">docs/mcp.md</a></div>
+          </li>
+          <li>
+            <span class="status todo">Not supported</span>
+            <div><strong>Blend modes, gradients, JPEG, interlaced PNG</strong>: typed disclosures. <a href="../HANDOFF.md">HANDOFF.md</a></div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="mcp" aria-labelledby="mcp-title">
+      <div class="wrap">
+        <h2 id="mcp-title">MCP</h2>
+        <p>Vexel runs a local MCP server (<code>vexel-mcp</code>) over stdio. An agent edits the same open document as the app. Replace the path with your built binary and grant only the directories you intend to open.</p>
+        <p>Claude Code <code>.mcp.json</code> entry:</p>
+        <pre><code>{
+  "mcpServers": {
+    "vexel": {
+      "type": "stdio",
+      "command": "/absolute/path/to/vexel/build/mac-release/bin/vexel-mcp",
+      "args": [],
+      "env": { "VEXEL_MCP_ALLOWED_DIRS": "/Users/me/Artwork" }
+    }
+  }
+}</code></pre>
+        <p><a href="../docs/mcp.md">Full setup, Codex and Claude Desktop configs, tool list and limits: docs/mcp.md</a></p>
+      </div>
+    </section>
+
+    <section id="benchmarks" aria-labelledby="benchmarks-title">
+      <div class="wrap">
+        <h2 id="benchmarks-title">Benchmarks</h2>
+        <p class="pending"><strong>Pending measurement.</strong></p>
+        <p><a href="../bench/results/">bench/results/</a> has no published results yet.</p>
+      </div>
+    </section>
+
+    <section id="download" aria-labelledby="download-title">
+      <div class="wrap">
+        <h2 id="download-title">Download</h2>
+        <p class="pending"><strong>Unsigned build, not yet published.</strong></p>
+        <p>Developer ID signing and notarization are owner-gated. See <a href="../HANDOFF.md">HANDOFF.md</a> and <a href="../docs/release.md">docs/release.md</a>.</p>
+      </div>
+    </section>
+
+    <section id="demo" aria-labelledby="demo-title">
+      <div class="wrap">
+        <h2 id="demo-title">Demo</h2>
+        <div class="placeholder" role="img" aria-label="Demo video placeholder">
+          <p>Demo video: not yet recorded</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Vexel. Licensed under the terms in <a href="../LICENSE">LICENSE</a>.</p>
+    </div>
+  </footer>
+</body>
+</html>
