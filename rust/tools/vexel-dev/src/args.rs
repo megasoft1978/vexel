@@ -7,6 +7,9 @@ pub enum Command {
     Info,
     Build,
     Check,
+    CheckCi {
+        workflow: PathBuf,
+    },
     Bundle {
         out: Option<PathBuf>,
         icon: Option<PathBuf>,
@@ -28,6 +31,7 @@ pub enum UsageError {
     UnknownCommand(String),
     UnknownFlag { command: String, flag: String },
     MissingValue { flag: String },
+    MissingArgument { command: String, argument: String },
     DuplicateFlag { flag: String },
     UnexpectedArgument { command: String, argument: String },
 }
@@ -41,6 +45,9 @@ impl fmt::Display for UsageError {
                 write!(f, "`{command}` does not accept flag `{flag}`")
             }
             Self::MissingValue { flag } => write!(f, "flag `{flag}` needs a value"),
+            Self::MissingArgument { command, argument } => {
+                write!(f, "`{command}` needs {argument}")
+            }
             Self::DuplicateFlag { flag } => write!(f, "flag `{flag}` was given more than once"),
             Self::UnexpectedArgument { command, argument } => {
                 write!(f, "`{command}` takes no argument `{argument}`")
@@ -50,6 +57,7 @@ impl fmt::Display for UsageError {
 }
 
 pub const USAGE: &str = "Usage: vexel-dev info|build|check\n       \
+vexel-dev check-ci WORKFLOW.yml\n       \
 vexel-dev bundle [--out DIR] [--icon FILE.icns]\n       \
 vexel-dev dmg|sbom|install-smoke [--out DIR]";
 
@@ -68,6 +76,21 @@ pub fn parse(args: &[String]) -> Result<Command, UsageError> {
                 "info" => Command::Info,
                 "build" => Command::Build,
                 _ => Command::Check,
+            })
+        }
+        "check-ci" => {
+            let workflow = rest.first().ok_or_else(|| UsageError::MissingArgument {
+                command: name.clone(),
+                argument: "WORKFLOW.yml".into(),
+            })?;
+            if let Some(extra) = rest.get(1) {
+                return Err(UsageError::UnexpectedArgument {
+                    command: name.clone(),
+                    argument: extra.clone(),
+                });
+            }
+            Ok(Command::CheckCi {
+                workflow: PathBuf::from(workflow),
             })
         }
         "bundle" => {
@@ -133,6 +156,30 @@ mod tests {
         assert_eq!(parse_strs(&["info"]), Ok(Command::Info));
         assert_eq!(parse_strs(&["build"]), Ok(Command::Build));
         assert_eq!(parse_strs(&["check"]), Ok(Command::Check));
+    }
+
+    #[test]
+    fn check_ci_requires_exactly_one_workflow_path() {
+        assert_eq!(
+            parse_strs(&["check-ci"]),
+            Err(UsageError::MissingArgument {
+                command: "check-ci".into(),
+                argument: "WORKFLOW.yml".into(),
+            })
+        );
+        assert_eq!(
+            parse_strs(&["check-ci", "one.yml", "two.yml"]),
+            Err(UsageError::UnexpectedArgument {
+                command: "check-ci".into(),
+                argument: "two.yml".into(),
+            })
+        );
+        assert_eq!(
+            parse_strs(&["check-ci", "workflow.yml"]),
+            Ok(Command::CheckCi {
+                workflow: "workflow.yml".into()
+            })
+        );
     }
 
     #[test]

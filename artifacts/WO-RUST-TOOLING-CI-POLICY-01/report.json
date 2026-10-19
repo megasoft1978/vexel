@@ -1,0 +1,80 @@
+{
+  "status": "complete",
+  "base_sha": "d3daba12acc6e1307267218217d09e9307889710",
+  "head_sha": "c61b192e4c87d15264aae3efe809612d1441da54",
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "run", "-p", "vexel-dev", "--locked", "--offline", "--", "check-ci", ".github/workflows/ci.yml"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["sh", "-c", "set +e\nbuild/rust/aarch64-apple-darwin/debug/vexel-dev check-ci >build/audit-missing.out 2>build/audit-missing.err\nstatus_code=$?\nprintf 'missing-argument exit=%s\\n' \"$status_code\"\ncat build/audit-missing.err\ntest \"$status_code\" -eq 2"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["sh", "-c", "set +e\nbuild/rust/aarch64-apple-darwin/debug/vexel-dev check-ci .github/workflows/ci.yml extra >build/audit-extra.out 2>build/audit-extra.err\nstatus_code=$?\nprintf 'extra-argument exit=%s\\n' \"$status_code\"\ncat build/audit-extra.err\ntest \"$status_code\" -eq 2"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["sh", "-c", "set +e\nbuild/rust/aarch64-apple-darwin/debug/vexel-dev check-ci build/check-ci-invalid.yml >build/audit-policy.out 2>build/audit-policy.err\nstatus_code=$?\nprintf 'policy-violation exit=%s\\n' \"$status_code\"\ncat build/audit-policy.err\ntest \"$status_code\" -eq 1"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "fmt", "--manifest-path", "Cargo.toml", "--package", "vexel-dev", "--", "--check"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["git", "diff", "--check"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["sh", "-c", "! git status --short --untracked-files=all | awk '{print $2}' | grep -Ev '^(rust/tools/vexel-dev/src/args\\.rs|rust/tools/vexel-dev/src/main\\.rs|rust/tools/vexel-dev/src/ci_policy\\.rs|artifacts/WO-RUST-TOOLING-CI-POLICY-01/result\\.md|artifacts/WO-RUST-TOOLING-CI-POLICY-01/report\\.json)$'"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": ["git", "diff", "--exit-code", "--", "Cargo.toml", "Cargo.lock", "rust/tools/vexel-dev/Cargo.toml", ".github/workflows/ci.yml", "scripts/check_ci.py"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["sh", "-c", "! rg -n 'std::process::Command|Command::new|python3' rust/tools/vexel-dev/src/ci_policy.rs"],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "summary": "Implementation complete; 37 Rust unit tests pass. The current workflow command prints exactly `macOS-only CI policy: pass`. Formatting, diff, dependency, and allowlist audits pass. Python/Rust differential audit: 2,395 cases, zero mismatches; Unicode 15.0.0 word table: 1,114,112 code points, zero mismatches. Independent review CLEAN. The supplied base SHA differs from unchanged worktree HEAD. No commit or staging was performed because the frozen work order protects HEAD/index and prohibits staging. The requested external report path was not writable under the workspace sandbox; this report is saved in the allowed worktree artifacts directory."
+}

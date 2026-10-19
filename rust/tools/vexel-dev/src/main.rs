@@ -3,6 +3,7 @@
 compile_error!("Vexel initially supports Apple Silicon macOS 13+ only");
 mod args;
 mod bundle;
+mod ci_policy;
 mod plist;
 mod release;
 mod runner;
@@ -68,6 +69,7 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
             );
             Ok(())
         }
+        Command::CheckCi { workflow } => check_ci_policy(&workflow),
         Command::Build | Command::Check => {
             let verb = if command == Command::Build {
                 "build"
@@ -118,6 +120,16 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
     }
 }
 
+fn check_ci_policy(workflow: &Path) -> Result<(), String> {
+    let text =
+        fs::read_to_string(workflow).map_err(|error| format!("{}: {error}", workflow.display()))?;
+    ci_policy::check_policy(&normalize_workflow_newlines(&text))
+}
+
+fn normalize_workflow_newlines(text: &str) -> String {
+    text.replace("\r\n", "\n").replace('\r', "\n")
+}
+
 fn toolchain_and_cache(runner: &mut dyn Runner, root: &Path) -> Result<bundle::CargoEnv, String> {
     if !verify_toolchain(runner) {
         return Err("Exact installed Rust1.99.0 required; no install attempted".to_string());
@@ -136,11 +148,35 @@ fn main() -> ExitCode {
             return ExitCode::from(2);
         }
     };
+    if let Command::CheckCi { ref workflow } = command {
+        return match check_ci_policy(workflow) {
+            Ok(()) => {
+                println!("macOS-only CI policy: pass");
+                ExitCode::SUCCESS
+            }
+            Err(message) => {
+                eprintln!("CI policy error: {message}");
+                ExitCode::FAILURE
+            }
+        };
+    }
     match run(command, &mut SystemRunner) {
         Ok(()) => ExitCode::SUCCESS,
         Err(message) => {
             eprintln!("vexel-dev: {message}");
             ExitCode::FAILURE
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_workflow_newlines;
+
+    #[test]
+    fn workflow_newlines_normalize_lf_crlf_and_cr() {
+        assert_eq!(normalize_workflow_newlines("a\nb\nc\n"), "a\nb\nc\n");
+        assert_eq!(normalize_workflow_newlines("a\r\nb\r\nc\r\n"), "a\nb\nc\n");
+        assert_eq!(normalize_workflow_newlines("a\rb\rc\r"), "a\nb\nc\n");
     }
 }
