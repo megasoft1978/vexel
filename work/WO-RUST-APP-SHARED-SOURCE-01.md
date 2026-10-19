@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-APP-SHARED-SOURCE-01
-revision: 3
+revision: 4
 status: READY
 milestone: LARGE-DOCUMENT-MEMORY
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: 0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0
-spec_sha256: 209be7ec32011d5beebc2ad72e65ea6a057d5a17c9e0f8d2f80a1f8f44d1d5fa
+base_sha: 61e64ad0a432d84abeaf581148d55bfeb17899b0
+spec_sha256: 58c1f7ca00eda8b8fc82713af98c8923a0ccce91fe1a79f63457c5a4a7f21f12
 parallel_safe: true
 network: false
 ---
@@ -49,7 +49,7 @@ Remove the redundant full-document copy between the composition worker and SVG d
 - AC-3: Existing worker latest-wins and cancellation tests pass unchanged; source-cap and UTF-8/error mapping tests pass unchanged.
 - AC-4: `cargo +stable test -p vexel-app --locked --offline` exits 0.
 - AC-5: `cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check` exits 0; `git diff --check` exits 0; changed paths satisfy the allowlist.
-- AC-6: The result report makes no claim that this single-copy reduction meets the 100 MiB first-visible-content or full large-document goal.
+- AC-6: The result report distinguishes the frozen work-order `base_sha` from the task-start checkpoint used for checks, and makes no claim that this single-copy reduction meets the 100 MiB first-visible-content or full large-document goal.
 
 # Verification commands
 ```text
