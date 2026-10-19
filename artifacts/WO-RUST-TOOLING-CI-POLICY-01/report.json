@@ -77,18 +77,18 @@
     }
   },
   "verification_fix": {
-    "finding": "Rust's librsvg exception was case-sensitive; the Python policy accepts case-insensitive forms.",
+    "finding": "Rust previously accepted uppercase and mixed-case librsvg exceptions; the Python substitution is case-sensitive. The checker now matches the Python oracle.",
     "commands": [
       {"argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"], "exit_code": 0, "result": "37 passed, 0 failed"},
       {"argv": ["cargo", "+stable", "run", "-p", "vexel-dev", "--locked", "--offline", "--", "check-ci", ".github/workflows/ci.yml"], "exit_code": 0, "stdout": "macOS-only CI policy: pass"},
       {"argv": ["cargo", "+stable", "fmt", "--manifest-path", "Cargo.toml", "--package", "vexel-dev", "--", "--check"], "exit_code": 0},
       {"argv": ["git", "diff", "--check"], "exit_code": 0}
     ],
-    "regression_cases": ["BREW INSTALL LIBRSVG", "Brew install librsvg", "brew INSTALL Librsvg", "bReW\\tInStAlL\\tLiBrSvG"]
+    "regression_cases": ["brew install librsvg: accepted", "BREW INSTALL LIBRSVG: rejected", "Brew install librsvg: rejected", "brew INSTALL Librsvg: rejected"]
   },
   "permissions_regex_followup": {
     "finding_assessment": "False positive: the frozen Python re.MULTILINE expression accepts a following permissions entry on the next line; Rust matches that behavior.",
-    "reference_pattern": "^permissions:\s*\n\s+contents:\s*read\s*$",
+    "reference_pattern": "^permissions:\\s*\\n\\s+contents:\\s*read\\s*$",
     "python_oracle": {
       "next-line permission entry": true,
       "same-line non-whitespace suffix": false

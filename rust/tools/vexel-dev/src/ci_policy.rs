@@ -33,7 +33,7 @@ pub fn check_policy(text: &str) -> Result<(), String> {
         return Err("workflow must not reference secrets".to_string());
     }
 
-    // Keep the Python check's case-insensitive librsvg exception, then perform
+    // Keep the Python check's case-sensitive librsvg exception, then perform
     // the forbidden-install scan without regard to case.
     let policy_text = remove_brew_librsvg(text);
     if contains_ascii_case_insensitive(&policy_text, "actions/cache")
@@ -199,19 +199,19 @@ fn contains_secret_expression(text: &str) -> bool {
 fn remove_brew_librsvg(text: &str) -> String {
     let mut output = String::with_capacity(text.len());
     let mut cursor = 0;
-    while let Some(relative_start) = text[cursor..].to_ascii_lowercase().find("brew") {
+    while let Some(relative_start) = text[cursor..].find("brew") {
         let start = cursor + relative_start;
         let after_brew = &text[start + 4..];
         let after_space = skip_whitespace(after_brew);
         let after_install = (after_space.len() != after_brew.len())
-            .then(|| strip_prefix_ascii_case_insensitive(after_space, "install"))
+            .then(|| after_space.strip_prefix("install"))
             .flatten();
         let match_end = after_install.and_then(|tail| {
             let tail = skip_whitespace(tail);
             if tail.len() == after_install.unwrap_or_default().len() {
                 return None;
             }
-            let librsvg = strip_prefix_ascii_case_insensitive(tail, "librsvg")?;
+            let librsvg = tail.strip_prefix("librsvg")?;
             if librsvg.chars().next().is_some_and(is_python_word) {
                 return None;
             }
@@ -227,13 +227,6 @@ fn remove_brew_librsvg(text: &str) -> String {
     }
     output.push_str(&text[cursor..]);
     output
-}
-
-fn strip_prefix_ascii_case_insensitive<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
-    let candidate = text.get(..prefix.len())?;
-    candidate
-        .eq_ignore_ascii_case(prefix)
-        .then_some(&text[prefix.len()..])
 }
 
 // Frozen from Python 3.12.8 str.isalnum() plus underscore (Unicode 15.0.0),
@@ -563,16 +556,15 @@ mod tests {
             check_policy(&VALID.replace("name: CI", "name: CI\n# brew install librsvg")),
             Ok(())
         );
-        for exception in [
+        for non_exempt in [
             "BREW INSTALL LIBRSVG",
             "Brew install librsvg",
             "brew INSTALL Librsvg",
             "bReW\tInStAlL\tLiBrSvG",
         ] {
-            assert_eq!(
-                check_policy(&VALID.replace("name: CI", &format!("name: CI\n# {exception}"))),
-                Ok(()),
-                "expected librsvg exception to be case-insensitive: {exception}"
+            rejected(
+                &VALID.replace("name: CI", &format!("name: CI\n# {non_exempt}")),
+                "workflow must not install packages or configure a cache",
             );
         }
         rejected(

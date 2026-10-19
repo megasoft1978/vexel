@@ -8,7 +8,7 @@ The actual initial and final worktree `HEAD` is `c61b192e4c87d15264aae3efe809612
 
 ## Implementation
 
-- Added a dependency-free Rust text checker matching `scripts/check_ci.py` policy ordering, rejection messages, whitespace behavior, action pinning, and the case-insensitive `brew install librsvg` exception. It preserves the Python 3.12.8 / Unicode 15.0.0 word-boundary behavior used by that exception.
+- Added a dependency-free Rust text checker matching `scripts/check_ci.py` policy ordering, rejection messages, whitespace behavior, action pinning, and the case-sensitive `brew install librsvg` exception. It preserves the Python 3.12.8 / Unicode 15.0.0 word-boundary behavior used by that exception.
 - Added `vexel-dev check-ci WORKFLOW.yml`, with exactly one path argument, exit 2 for invalid invocation, exit 1 with `CI policy error:` for read/policy errors, and success stdout `macOS-only CI policy: pass`.
 - The CLI normalizes CRLF and CR like Python `Path.read_text()`. It does not invoke Python.
 - No dependencies, workflow edits, Python reference edits, or protected-path changes.
@@ -23,10 +23,10 @@ Commands below were run in the task worktree. The recorded argv list is shell-to
 | `cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml` | 0 | App stdout exactly `macOS-only CI policy: pass`. |
 | `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` | 0 | Passed. |
 | `git diff --check` | 0 | Passed. |
-| `cargo +stable test -p vexel-dev --locked --offline` (after case-insensitive exception regression coverage) | 0 | 37 passed, 0 failed. Includes uppercase, mixed-case, and tab-separated exception forms. |
+| `cargo +stable test -p vexel-dev --locked --offline` (after case-sensitive exception regression coverage) | 0 | 37 passed, 0 failed. Lowercase exception is accepted; uppercase and mixed-case forms are rejected. |
 | `cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml` | 0 | App stdout exactly `macOS-only CI policy: pass`. |
 | `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` | 0 | Passed. |
-| `git diff --check` (after case-insensitive exception regression coverage) | 0 | Passed. |
+| `git diff --check` (after case-sensitive exception regression coverage) | 0 | Passed. |
 
 ### Permissions regex parity follow-up
 
@@ -40,6 +40,7 @@ same-line suffix: False
 ```
 
 Frozen verification rerun after the regression addition: 37 tests passed, 0 failed; current workflow check printed `macOS-only CI policy: pass`; format and diff checks passed.
+
 | `python3 scripts/check_ci.py .github/workflows/ci.yml` | 0 | Reference output exactly `macOS-only CI policy: pass`. |
 | `sh -c 'set +e; vexel-dev check-ci; status_code=$?; test "$status_code" -eq 2'` | 0 | Full wrapper below; executable returned 2 and printed usage to stderr. |
 | `sh -c 'set +e; vexel-dev check-ci .github/workflows/ci.yml extra; status_code=$?; test "$status_code" -eq 2'` | 0 | Full wrapper below; executable returned 2 and printed the extra-argument diagnostic. |
@@ -111,3 +112,7 @@ No manifest or lockfile diff exists. The tracked workflow and Python checker are
 Audit commands: `git diff --exit-code -- Cargo.toml Cargo.lock rust/tools/vexel-dev/Cargo.toml .github/workflows/ci.yml scripts/check_ci.py` (exit 0); `git diff --check` (exit 0); `! rg -n 'std::process::Command|Command::new|python3' rust/tools/vexel-dev/src/ci_policy.rs` (exit 0); `! git status --short --untracked-files=all | awk '{print $2}' | grep -Ev '^(rust/tools/vexel-dev/src/args\\.rs|rust/tools/vexel-dev/src/main\\.rs|rust/tools/vexel-dev/src/ci_policy\\.rs|artifacts/WO-RUST-TOOLING-CI-POLICY-01/result\\.md|artifacts/WO-RUST-TOOLING-CI-POLICY-01/report\\.json)$'` (exit 0).
 
 The requested report destination `/Users/megasoft78/Desktop/Freelance/vexel/artifacts/runs/WO-RUST-TOOLING-CI-POLICY-01/028e25d1-7269-45b8-8fd4-2e8815f0abcb/report.json` is outside the writable workspace. The attempted write was rejected with `operation not permitted`; a schema-shaped copy is saved at `artifacts/WO-RUST-TOOLING-CI-POLICY-01/report.json` in this worktree.
+
+### librsvg case-sensitivity correction
+
+The frozen Python exception uses case-sensitive `re.sub(r"brew\s+install\s+librsvg\b", "", text)` before a case-insensitive forbidden-install scan. Only lowercase `brew install librsvg` is exempt; uppercase and mixed-case variants remain forbidden. Rust now matches this behavior, with regression coverage for lowercase acceptance and uppercase/mixed-case rejection.
