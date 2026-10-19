@@ -5,7 +5,7 @@
 //! any in-flight composition cancel at its next checkpoint; results of older
 //! generations are never delivered.
 
-use super::{ComposeError, Composed, compose_document};
+use super::{ComposeError, Composed, compose_document_owned};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, MutexGuard};
 use std::thread::{Builder, JoinHandle};
@@ -119,7 +119,7 @@ fn run(shared: &Shared) {
             shared.shutdown.load(Ordering::SeqCst)
                 || shared.latest.load(Ordering::SeqCst) != job.generation
         };
-        let result = compose_document(&job.bytes, job.width, job.height, &superseded);
+        let result = compose_document_owned(job.bytes.clone(), job.width, job.height, &superseded);
         if !superseded() {
             let mut done = lock(&shared.done);
             if shared.latest.load(Ordering::SeqCst) == job.generation {

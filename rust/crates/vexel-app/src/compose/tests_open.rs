@@ -162,6 +162,30 @@ fn worker_delivers_only_the_newest_generation() {
 }
 
 #[test]
+fn borrowed_and_owned_source_routes_compose_identically() {
+    let svg = fixture("compose-v1.svg");
+    let owner = Arc::new(svg.clone());
+    let graph = decode::decode_owned(owner.clone(), &|| false).unwrap();
+    assert_eq!(graph.source().as_ptr(), owner.as_ptr());
+    let borrowed = compose_document(&svg, 160, 120, &|| false).unwrap();
+    let owned = compose_document_owned(owner.clone(), 160, 120, &|| false).unwrap();
+
+    assert_eq!(borrowed.frame, owned.frame);
+    assert_eq!(borrowed.frame.disclosures, owned.frame.disclosures);
+    assert_eq!(
+        format!("{:?}", borrowed.shapes),
+        format!("{:?}", owned.shapes)
+    );
+    assert_eq!(borrowed.shapes.len(), owned.shapes.len());
+    for (left, right) in borrowed.shapes.iter().zip(&owned.shapes) {
+        assert_eq!(left.scene_index, right.scene_index);
+        for (x, y) in [(14.0, 10.0), (40.0, 25.0), (68.0, 40.0)] {
+            assert_eq!(left.hit(x, y), right.hit(x, y));
+        }
+    }
+}
+
+#[test]
 fn worker_cancel_discards_pending_and_inflight_results() {
     let worker = ComposeWorker::new().unwrap();
     let svg = Arc::new(fixture("compose-v1.svg"));

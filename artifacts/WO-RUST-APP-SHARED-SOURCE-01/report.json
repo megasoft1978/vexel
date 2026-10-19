@@ -1,0 +1,21 @@
+{
+  "status": "complete",
+  "base_sha": "0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0",
+  "acceptance": {
+    "AC-1": {"result": "pass", "evidence": "ComposeWorker passes its Arc<Vec<u8>> to compose_document_owned; decode_owned passes that allocation to LexicalDocument::parse without copying its bytes."},
+    "AC-2": {"result": "pass", "evidence": "borrowed_and_owned_source_routes_compose_identically compares frame, disclosures, shape results and source allocation identity."},
+    "AC-3": {"result": "pass", "evidence": "Existing latest-generation and cancellation tests passed within the package suite; source cap and UTF-8/error tests passed."},
+    "AC-4": {"result": "pass", "command": "cargo +stable test -p vexel-app --locked --offline", "exit_code": 0},
+    "AC-5": {"result": "pass", "commands": [{"argv": ["cargo", "+stable", "fmt", "--manifest-path", "Cargo.toml", "--package", "vexel-app", "--", "--check"], "exit_code": 0}, {"argv": ["git", "diff", "--check"], "exit_code": 0}]},
+    "AC-6": {"result": "pass", "evidence": "No claim that this single-copy reduction meets the 100 MiB first-visible-content target or full large-document goal."}
+  },
+  "changed_paths": [
+    "rust/crates/vexel-app/src/compose/mod.rs",
+    "rust/crates/vexel-app/src/compose/decode.rs",
+    "rust/crates/vexel-app/src/compose/worker.rs",
+    "rust/crates/vexel-app/src/compose/tests_open.rs",
+    "artifacts/WO-RUST-APP-SHARED-SOURCE-01/result.md",
+    "artifacts/WO-RUST-APP-SHARED-SOURCE-01/report.json"
+  ],
+  "summary": "All frozen verification commands exited zero on revision-2 checkpoint 0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0. Package suite: 241 library tests passed; all integration targets passed with one existing measurement-only test ignored; doc tests passed."
+}

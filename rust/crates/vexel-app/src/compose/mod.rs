@@ -49,6 +49,7 @@ pub(crate) use render_scene::render_scene;
 pub use shapes::OwnedShape;
 pub use worker::{ComposeWorker, WorkerEvent};
 
+use std::sync::Arc;
 use vexel_render::{PreserveAspect, ViewBox, offscreen_tile_size};
 
 /// A composed straight-alpha RGBA8 frame (row 0 at the top, no padding).
@@ -94,9 +95,29 @@ pub fn compose_document(
     height: u32,
     cancel: &dyn Fn() -> bool,
 ) -> Result<Composed, ComposeError> {
+    offscreen_tile_size(f64::from(width), f64::from(height))
+        .map_err(|_| ComposeError::InvalidSize)?;
+    if bytes.len() > MAX_SVG_BYTES {
+        return Err(ComposeError::LimitDecode);
+    }
+    if let Err(error) = std::str::from_utf8(bytes) {
+        return Err(ComposeError::InvalidUtf8 {
+            valid_up_to: error.valid_up_to(),
+        });
+    }
+    compose_document_owned(Arc::new(bytes.to_vec()), width, height, cancel)
+}
+
+/// Composes an already-owned source buffer without copying its bytes.
+pub(crate) fn compose_document_owned(
+    bytes: Arc<Vec<u8>>,
+    width: u32,
+    height: u32,
+    cancel: &dyn Fn() -> bool,
+) -> Result<Composed, ComposeError> {
     let (tile_width, tile_height) = offscreen_tile_size(f64::from(width), f64::from(height))
         .map_err(|_| ComposeError::InvalidSize)?;
-    let graph = decode::decode(bytes, cancel)?;
+    let graph = decode::decode_owned(bytes, cancel)?;
     let scene = graph.root();
     let viewport = scene.viewport;
     let view = ViewBox {

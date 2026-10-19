@@ -160,7 +160,12 @@ fn blank(width: u32, height: u32) -> Result<Tile, RenderError> {
     Tile::from_owned_rgba(width, height, rgba).map_err(|_| RenderError::LimitExceeded)
 }
 
-pub(crate) fn decode(bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<SceneGraph, ComposeError> {
+/// Decodes an already-owned source buffer without copying its bytes.
+pub(crate) fn decode_owned(
+    owner: Arc<Vec<u8>>,
+    cancel: &dyn Fn() -> bool,
+) -> Result<SceneGraph, ComposeError> {
+    let bytes = owner.as_slice();
     if bytes.len() > MAX_SVG_BYTES {
         return Err(ComposeError::LimitDecode);
     }
@@ -170,7 +175,6 @@ pub(crate) fn decode(bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<SceneGra
         });
     }
     let mut control = CancelControl { cancel };
-    let owner = Arc::new(bytes.to_vec());
     let diag = |d| from_diagnostic(d, bytes);
     let document =
         LexicalDocument::parse(owner.clone(), TOKEN_STORAGE_LIMIT, &mut control).map_err(diag)?;
