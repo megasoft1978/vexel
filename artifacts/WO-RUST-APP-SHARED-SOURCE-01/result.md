@@ -2,7 +2,9 @@
 
 ## Outcome
 
-Candidate implementation verified on revision-2 checkpoint `0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0`. All frozen commands passed. The package suite completed with zero failures; one measurement-only integration test was ignored by its existing configuration. No acceptance claim is made about the 100 MiB first-visible-content target or the complete large-document goal.
+Frozen revision-4 work-order base: `61e64ad0a432d84abeaf581148d55bfeb17899b0`.
+
+Task-start checkpoint: `61e64ad0a432d84abeaf581148d55bfeb17899b0`. Source implementation candidate: `233f75f3db50bc00a2a6148fa3e7113bd22f48d3`. All frozen checks passed on that source candidate. A fresh runner recheck covers the final evidence commit as well. All frozen commands passed. The package suite completed with zero failures; one measurement-only integration test was ignored by its existing configuration. No acceptance claim is made about the 100 MiB first-visible-content target or the complete large-document goal.
 
 ## Changed paths
 
@@ -35,4 +37,4 @@ The test command emitted two existing unused-code warnings in protected files: a
 
 ## Review constraints
 
-Changed-path scope was checked against the revision-2 allowlist. No manifests, lockfiles, shared interfaces, fixtures, goldens, work orders, ledgers, or protected source/tests were changed. No claim is made that this single-copy reduction meets the 100 MiB first-visible-content target or the full large-document goal.
+Changed-path scope was checked against the revision-4 allowlist. No manifests, lockfiles, shared interfaces, fixtures, goldens, work orders, ledgers, or protected source/tests were changed. No claim is made that this single-copy reduction meets the 100 MiB first-visible-content target or the full large-document goal.
