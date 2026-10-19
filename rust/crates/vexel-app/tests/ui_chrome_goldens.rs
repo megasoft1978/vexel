@@ -141,6 +141,111 @@ fn compare(want: &[u8], got: &[u8]) -> Result<(), String> {
     Ok(())
 }
 
+/// Print a compact mismatch map only when explicitly requested. Region counts
+/// are 8-connected components and stop counting at the fixed cap.
+fn diagnose_mismatch(file: &str, w: u32, h: u32, want: &[u8], got: &[u8]) {
+    if std::env::var_os("VEXEL_CHROME_GOLDEN_DIAGNOSTICS").as_deref() != Some("1".as_ref()) {
+        return;
+    }
+    if want.len() != got.len() || want.len() != (w as usize * h as usize * 4) {
+        eprintln!("golden diagnostic {file}: pixel map unavailable (buffer length mismatch)");
+        return;
+    }
+
+    const REGION_CAP: usize = 256;
+    let (mut pixels, mut worst) = (0usize, 0u8);
+    let (mut min_x, mut min_y, mut max_x, mut max_y) = (w, h, 0, 0);
+    let mut row_bands = 0usize;
+    let mut in_row_band = false;
+    let mut visited = vec![false; w as usize * h as usize];
+    let mut regions = 0usize;
+    let mut stack = Vec::new();
+
+    for y in 0..h as usize {
+        let mut row_differs = false;
+        for x in 0..w as usize {
+            let pixel = y * w as usize + x;
+            let offset = pixel * 4;
+            let delta = want[offset..offset + 4]
+                .iter()
+                .zip(&got[offset..offset + 4])
+                .map(|(a, b)| a.abs_diff(*b))
+                .max()
+                .unwrap_or(0);
+            if delta == 0 {
+                continue;
+            }
+            row_differs = true;
+            pixels += 1;
+            worst = worst.max(delta);
+            min_x = min_x.min(x as u32);
+            min_y = min_y.min(y as u32);
+            max_x = max_x.max(x as u32);
+            max_y = max_y.max(y as u32);
+        }
+        if row_differs && !in_row_band {
+            row_bands += 1;
+        }
+        in_row_band = row_differs;
+    }
+
+    for seed in 0..visited.len() {
+        let offset = seed * 4;
+        if visited[seed]
+            || want[offset..offset + 4]
+                .iter()
+                .zip(&got[offset..offset + 4])
+                .all(|(a, b)| a == b)
+        {
+            continue;
+        }
+        regions += 1;
+        if regions == REGION_CAP {
+            break;
+        }
+        visited[seed] = true;
+        stack.push(seed);
+        while let Some(pixel) = stack.pop() {
+            let x = pixel % w as usize;
+            let y = pixel / w as usize;
+            let y0 = y.saturating_sub(1);
+            let y1 = (y + 1).min(h as usize - 1);
+            let x0 = x.saturating_sub(1);
+            let x1 = (x + 1).min(w as usize - 1);
+            for ny in y0..=y1 {
+                for nx in x0..=x1 {
+                    let neighbor = ny * w as usize + nx;
+                    let no = neighbor * 4;
+                    if !visited[neighbor]
+                        && want[no..no + 4]
+                            .iter()
+                            .zip(&got[no..no + 4])
+                            .any(|(a, b)| a != b)
+                    {
+                        visited[neighbor] = true;
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
+    }
+
+    let region_count = if regions == REGION_CAP {
+        format!(">={REGION_CAP}")
+    } else {
+        regions.to_string()
+    };
+    if pixels == 0 {
+        eprintln!(
+            "golden diagnostic {file}: no differing pixels (comparison failed for another reason)"
+        );
+    } else {
+        eprintln!(
+            "golden diagnostic {file}: bbox=({min_x},{min_y})..({max_x},{max_y}), pixels={pixels}, row_bands={row_bands}, 8-connected_regions={region_count}, worst_channel_delta={worst}"
+        );
+    }
+}
+
 fn name(size: (u32, u32), mode: Mode, dark: bool, scale: u32, with_doc: bool) -> String {
     format!(
         "{}x{}-{}-{}-{}@{}x",
@@ -182,6 +287,7 @@ fn chrome_frames_match_first_party_goldens() {
                         let (gw, gh, want) = unrle(&golden);
                         assert_eq!((gw, gh), (w, h), "{file}: dimensions");
                         if let Err(why) = compare(&want, &rgba) {
+                            diagnose_mismatch(&file, w, h, &want, &rgba);
                             failures.push(format!("{file}: {why}"));
                         }
                     }

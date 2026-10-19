@@ -1,0 +1,18 @@
+# Text-rendering source analysis
+
+## Findings
+
+- `vexel-app::render::render_with` obtains checked pixel dimensions from `checked_pixel_geometry`, allocates an RGBA buffer, and creates a `WidgetCanvas` with the requested `scale`. Its text callback forwards the pixel-space rectangle, `scale`, requested size, color, face, and emphasis to `draw_text_rgba`. `WidgetCanvas::text` in `vexel-ui/src/widget_canvas.rs` converts point sizes to pixel sizes with `ceil(points * scale * text_scale_percent / 100)` before invoking that callback. Thus the native text renderer receives a pixel font size and a backing scale; it does not independently multiply the size by scale.
+- The callback in `render_with` maps `FontFamily::System` to `TextFace::System`, and `Monospaced` to `TextFace::Monospaced`; semibold maps to `TextEmphasis::Semibold`, with all other weights mapped to regular. In `draw_text_rgba`, those faces select the system name `.AppleSystemUIFont` or `SFMono-Regular` for `CTFontCreateWithName`. For semibold, `semibold_font` requests CoreText weight trait `SEMIBOLD_WEIGHT = 0.3`; `use_semibold` uses that font only when descriptor creation succeeds, otherwise the regular font remains selected.
+- `create_attributed` attaches the selected font and `kCTForegroundColorFromContextAttributeName`; `wrap_lines` measures candidate lines using `CTLineGetTypographicBounds`, and `create_line`/`CTLineDraw` delegate shaping and glyph selection to CoreText. This permits CoreText fallback within the attributed line, but the source does not pin which concrete fallback face a given glyph resolves to on either OS.
+- `draw_text_rgba` validates dimensions/stride/clip/size and bounds text, copies the clipped region into a temporary buffer, then configures a named sRGB `CGBitmapContext` with `PremultipliedLast | Order32Big`. It flips the geometry CTM to top-left origin, sets `upright_text_matrix()` for upright glyphs, clips to the local bitmap, sets the requested fill color, positions each baseline, and calls `CTLineDraw`.
+- `copy_to_premultiplied` multiplies RGB by alpha before CoreGraphics draws; `copy_from_premultiplied` unpremultiplies the result (zeroing RGB for alpha zero) before copying it back to the caller’s straight RGBA frame. These are explicit conversions around CoreGraphics’ premultiplied-last bitmap representation.
+- Any text-rendering error marks `text_failed` in `render_with`, and the overall render returns `CoreText rejected bounded workbench text`; it does not silently substitute a different renderer in this path.
+
+## What this establishes
+
+The chrome golden renderer uses native CoreText/CoreGraphics glyph rasterization in the Rust app, and its requested face, emphasis, scale, clipping, coordinate transform, color space, and alpha conversion are visible in source. Font fallback and raster output are OS-provided. Different OS font databases, CoreText shaping/rasterization, or CoreGraphics behavior are therefore plausible contributors to a pixel mismatch, especially at glyph edges.
+
+## What this does not establish
+
+No source inspection can identify the actual font/fallback face or CoreText raster output on hosted macOS 15 versus the local macOS 27 host. The reported maximum channel deltas and aggregate differing-pixel rates do not locate mismatches in glyphs. Without spatial mismatch diagnostics (or captured rendered frames), this evidence cannot isolate text rasterization from a color/compositing issue, a shape/layout difference, or another renderer defect. It therefore supports neither an OS-only root-cause claim nor a production rendering fix. The source shows deliberate scale and premultiplied-alpha handling, but does not prove those paths are equivalent across the two OS versions.

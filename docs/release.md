@@ -1,86 +1,109 @@
 # macOS packaging and release checks
 
-Vexel's first distributable is an Apple Silicon `.app` bundle for macOS 13 and
-later. The CMake project version in `CMakeLists.txt` is the source used for the
-bundle's `CFBundleShortVersionString` and `CFBundleVersion`.
+Vexel's current release tooling is the Rust `vexel-dev` command, supported on
+Apple Silicon macOS 13 or later. The `build`, `check`, and `bundle` commands
+require the exact installed Rust 1.99.0 toolchain and do not install it. CI
+installs Rust 1.99.0 and runs on `macos-15`.
 
-## Local app and disk image
+## Development and CI checks
 
-Run the prerequisite check, then build the Release app and compressed disk
-image:
+Run these from the repository root. The workspace checks use the committed
+lockfile; CI performs them on every push, pull request, and manual dispatch:
 
 ```sh
-./dev doctor
-./dev bundle
-./dev dmg
+python3 scripts/check_rust_fmt.py
+cargo check --workspace --locked
+cargo test --workspace --locked -- --test-threads=1
 ```
 
-`./dev bundle` builds `build/mac-release/bin/svgworkbench` and assembles
-`build/Vexel.app`. The app includes an XML `Info.plist`, a generated placeholder
-icon, an SVG document association for `public.svg-image`, Retina support, the
-graphics-design category, and a macOS 13 minimum. The PNG-backed ICNS icon is
-drawn and assembled by the project's Python standard-library script; the build
-fetches no artwork.
-
-By default, the app is ad-hoc signed with the hardened runtime and verified
-with `codesign`. `./dev dmg` stages the app beside an `/Applications` symlink,
-creates `build/Vexel.dmg` using compressed UDZO format, and verifies the image.
-Build outputs stay under the ignored `build/` directory.
-
-## Developer ID signing and notarization
-
-The packaging scripts accept these environment variables:
-
-- `VEXEL_SIGN_IDENTITY`: a keychain signing identity. It defaults to `-` for
-  ad-hoc signing. Use a Developer ID Application identity for distribution.
-- `VEXEL_NOTARY_PROFILE`: an existing `notarytool` keychain profile. When set,
-  `./dev dmg` submits the signed disk image, waits for notarization, staples the
-  ticket, and validates the staple. It requires a non-ad-hoc signing identity.
-
-For example, after the maintainer has installed the certificate and created a
-notary profile in the local keychain:
+CI also attempts Clippy when available, as an informational step with
+`continue-on-error`; it is not a release gate. The bundle, DMG, SBOM, and
+install smoke run only on `workflow_dispatch`:
 
 ```sh
-VEXEL_SIGN_IDENTITY="Developer ID Application: Example" \
-VEXEL_NOTARY_PROFILE="vexel-notary" ./dev dmg
+cargo run -p vexel-dev --locked -- bundle
+cargo run -p vexel-dev --locked -- dmg
+cargo run -p vexel-dev --locked -- sbom
+cargo run -p vexel-dev --locked -- install-smoke
 ```
 
-The local flow does not require or create an Apple developer account. No
-certificate or notarization secret is stored in the repository or CI workflow.
+The manual CI job first fetches locked dependencies. For a local offline bundle
+build, dependencies must already be available to Cargo. `vexel-dev` uses
+`.cache/cargo` and `build/rust` under the repository by default, with
+`CARGO_HOME` and `CARGO_TARGET_DIR` environment variables taking precedence.
+Its commands use Cargo's `+stable` toolchain selector and require that selected
+toolchain to report Rust 1.99.0.
 
-## Automated render and stress checks
+## Local bundle and packaging sequence
 
-`./dev e2e` builds the Release executable and renders a seeded matrix of 256
-SVGs covering basic shapes, transforms, linear and radial gradients, local
-`use`, and clipping. Every valid document is rendered twice to check PPM
-structure, determinism, clean stderr, and per-render time. The seeded mutations
-include byte flips, truncations, oversized numbers, deep nesting, invalid UTF-8,
-and malformed XML. A failure report includes the seed and input path. Inputs,
-frames, and JSON reports are written under `.cache/e2e/`.
+`vexel-dev` is run through Cargo from the repository root. Its supported
+commands are `info`, `build`, `check`, `check-ci WORKFLOW.yml`, `bundle`,
+`dmg`, `sbom`, and `install-smoke`. `info`, `build`, `check`, and `check-ci`
+take no flags; `check-ci` requires exactly one workflow path. `bundle` accepts
+`--out DIR` and `--icon FILE.icns`; the other three packaging commands accept
+only `--out DIR`. Relative `--out` paths are relative to the current working
+directory. The default output directory is `build/release`.
 
-`./dev soak [--minutes N]` defaults to five minutes and accepts 1–20 minutes.
-The selected time is divided evenly between the existing XML and shape fuzz
-campaigns built with AddressSanitizer and UndefinedBehaviorSanitizer. The
-command also renders one fixture 10,000 times in a single Release process and
-checks that RSS growth stays within 64 MiB and peak RSS stays below 512 MiB.
-It runs the existing worker/snapshot test under ThreadSanitizer. The consolidated
-JSON report is `.cache/soak/latest.json`; child reports and logs are kept under
-`.cache/`.
-
-## CI workflows
-
-`.github/workflows/nightly.yml` runs the seeded e2e matrix, Debug sanitizer
-suites, and bounded soak on macOS 15, then uploads the JSON campaign reports.
-It supports the scheduled weekday run and manual dispatch.
-`.github/workflows/release.yml` builds the bundle and DMG on a `v*` tag or
-manual dispatch. It attaches the DMG to the
-workflow run as an Actions artifact. The workflow does not publish a GitHub
-Release asset or use signing secrets; those steps can be added after the
-maintainer provisions Developer ID signing and notarization.
-
-Both workflows use the repository's pinned-action, macOS-only CI policy:
+The bundle step requires `resources/AppIcon.icns` (or a supplied `.icns` file),
+and builds the Release Apple Silicon app before assembling it:
 
 ```sh
-python3 scripts/check_ci.py .github/workflows/nightly.yml
-python3 scripts/check_ci.py .github/workflows/release.yml
+cargo run -p vexel-dev --locked -- bundle
+```
+
+The result is `build/release/Vexel.app`. The executable is at
+`Contents/MacOS/vexel`; the bundle includes `Info.plist`, the English
+localization strings, and `Contents/Resources/AppIcon.icns`. The plist uses
+the workspace package version and the placeholder identifier
+`app.vexel.Vexel`, with macOS 13 as its minimum version. The supplied icon is
+packaged as `AppIcon`; the app icon artwork and final bundle identity remain
+owner decisions. The command ad-hoc signs the bundle and verifies that
+signature.
+
+After a bundle exists, create and verify the compressed disk image, then create
+the CycloneDX SBOM for the bundled executable:
+
+```sh
+cargo run -p vexel-dev --locked -- dmg
+cargo run -p vexel-dev --locked -- sbom
+```
+
+These produce `build/release/Vexel.dmg` and
+`build/release/sbom.cyclonedx.json`. The DMG contains `Vexel.app` and an
+`Applications` symlink. `dmg` verifies the image after creation. `sbom` records
+the executable's SHA-256 and linked libraries. Both commands require the bundle
+to exist first.
+
+The final smoke step mounts the DMG read-only, copies the app into a temporary
+Applications directory, and checks the plist, signature, arm64 architecture,
+and executable permission. It detaches the mounted image and does **not** launch
+the GUI. It requires the DMG from the previous step:
+
+```sh
+cargo run -p vexel-dev --locked -- install-smoke
+```
+
+The smoke reports `install-smoke: pass` on success. This is a packaging check,
+not evidence of a clean-install GUI launch or product release readiness.
+
+## Signing, notarization, and release evidence
+
+The current Rust packaging command always signs with the ad-hoc identity `-`
+and verifies that signature. It has no CLI or environment-variable option for
+Developer ID signing or notarization. Those actions remain owner-gated; do not
+use the ad-hoc bundle as evidence of Developer ID distribution or notarization.
+The placeholder bundle identifier and final artwork also need owner decisions.
+
+The current CI workflow is `.github/workflows/ci.yml`; it does not publish a
+release or attach a distribution artifact. A manual CI packaging smoke is
+configured but its execution on GitHub is not established by the workflow
+definition. The release work-order evidence records a local packaging run, but
+explicitly says Developer ID signing, notarization, and live GUI launch were
+not performed. No release readiness, full migration, or GUI verification claim
+follows from those checks.
+
+To check the repository's macOS-only CI policy for the active workflow:
+
+```sh
+cargo run -p vexel-dev --locked -- check-ci .github/workflows/ci.yml
 ```

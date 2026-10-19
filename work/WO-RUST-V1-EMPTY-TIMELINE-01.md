@@ -6,7 +6,7 @@ milestone: FULL-RUST-PROJECT
 owner: project-coordinator
 executor: codex-gpt-6-luna
 base_sha: 849371835fa4cb8c3e48ff154778a3ec5d7de196
-spec_sha256: cb4e634c56c58237b8487b13ce392b7bd9bb5b1ce4a0a1c17e76ae9c26978adc
+spec_sha256: 68557fc67cb1467200976c56fedb6c19a6c850ce6ac97705019c4b6e8f4d1248
 parallel_safe: true
 network: false
 ---

@@ -28,6 +28,8 @@ jobs:
         run: cargo check --workspace --locked
       - name: Run tests
         run: cargo test --workspace --locked -- --test-threads=1
+        env:
+          VEXEL_CHROME_GOLDEN_DIAGNOSTICS: "1"
       - name: Clippy (informational, runs only when available)
         continue-on-error: true
         run: |
