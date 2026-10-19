@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-TOOLING-CI-POLICY-01
-revision: 1
+revision: 2
 status: READY
 milestone: FULL-RUST-TOOLING
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: d3daba12acc6e1307267218217d09e9307889710
-spec_sha256: 21f7dc4a0fc453ad243f1db93124fdb171cf09aace347e6ca7b042721e96b169
+base_sha: 6aab4a76be6ca1ce03690e53840c12f72541ca8f
+spec_sha256: 9343c7a85f58776b9d3b461f2317c3cf1273fc234a70f7c3030a38349c3ca553
 parallel_safe: true
 network: false
 ---
@@ -51,12 +51,15 @@ Port the macOS CI policy checker into `vexel-dev` while preserving the existing 
 - AC-5: `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` and `git diff --check` exit 0; changed paths satisfy the allowlist.
 - AC-6: No third-party dependency is added and the new Rust command does not invoke Python.
 
-# Verification sequence
-1. `cargo +stable test -p vexel-dev --locked --offline`
-2. `cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml`
-3. `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check`
-4. `git diff --check`
-5. Audit rejection cases, command exit codes, exact success output, and changed-path allowlist.
+# Verification commands
+```text
+cargo +stable test -p vexel-dev --locked --offline
+cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml
+cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check
+git diff --check
+```
+
+Audit rejection cases, command exit codes, exact success output, and changed-path allowlist.
 
 # Non-goals
 Porting the Rust-format checker, CI workflow itself, YAML parser, other CI providers, Python reference removal, or general work-order/test tooling.
