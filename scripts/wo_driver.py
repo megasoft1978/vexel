@@ -438,7 +438,7 @@ def bounded_review_diff(root: Path, base: str, candidate: str, limit: int = 250_
     return result
 
 
-def assert_verifier_scope(root: Path, wo_id: str, base: str, candidate: str) -> str:
+def assert_verifier_scope(root: Path, wo_id: str, base: str, candidate: str) -> tuple[str, str]:
     try:
         load_wo(wo_id, root)
         body = (root / "work" / f"{wo_id}.md").read_text(encoding="utf-8")
@@ -452,13 +452,13 @@ def assert_verifier_scope(root: Path, wo_id: str, base: str, candidate: str) -> 
         if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer], cwd=root).returncode:
             raise RunnerError("verification candidate does not descend from the frozen task start")
     assert_scope(root, start, candidate, body, wo_id)
-    return body
+    return body, start
 
 
 def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
                  candidate: str, codex: str, timeout: float) -> dict[str, Any]:
     base = fields["base_sha"]
-    body = assert_verifier_scope(root, wo_id, base, candidate)
+    body, start = assert_verifier_scope(root, wo_id, base, candidate)
     run_id = str(uuid.uuid4())
     run_dir = root / "artifacts" / "runs" / wo_id / f"verify-{run_id}"
     run_dir.mkdir(parents=True, exist_ok=False)
@@ -468,7 +468,7 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
     try:
         build_results = prepare_verifier_builds(worktree, run_dir, timeout)
         results = run_checks(worktree, run_dir, body, timeout)
-        diff = bounded_review_diff(worktree, base, candidate)
+        diff = bounded_review_diff(worktree, start, candidate)
         diff_path = run_dir / "candidate.diff"
         diff_path.write_bytes(diff)
         version, exec_help, _ = preflight(codex, evidence=run_dir / "codex-preflight.txt")
@@ -486,6 +486,8 @@ def run_verifier(root: Path, wo_id: str, fields: dict[str, str], spec_hash: str,
                   "terminal preflight-only block, documented in ADR-0003. Assess code and deterministic "
                   "checks for all other acceptance criteria. Return an adversarial review verdict and do "
                   "not modify files.\n\n" +
+                  f"CANDIDATE DIFF RANGE: {start}..{candidate}; frozen work-order base "
+                  f"{base} remains the provenance anchor.\n\n" +
                   "WORK ORDER:\n" + body[:40_000] + "\nCHECK RESULTS:\n" +
                   json.dumps(results)[:30_000] + "\nDIFF:\n" + diff.decode("utf-8", errors="replace"))
         argv = [codex, "exec", "-m", "gpt-6-luna", "-c", "model_reasoning_effort=high",

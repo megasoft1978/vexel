@@ -540,6 +540,75 @@ print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-1
             self.assertIn("-s read-only", argv_record)
             self.assertTrue(result["session_id"])
 
+    def test_verifier_review_diff_starts_at_task_checkpoint(self) -> None:
+        """Coordinator changes before task start must not enter candidate review."""
+        with temporary_directory() as name:
+            root = Path(name)
+            subprocess.run(["git", "init", "-q", "-b", "main"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.email", "test@example.invalid"], cwd=root, check=True)
+            subprocess.run(["git", "config", "user.name", "Test"], cwd=root, check=True)
+            schema_dir = root / "docs/schemas"
+            schema_dir.mkdir(parents=True)
+            for schema in ("executor-report.schema.json", "verifier-verdict.schema.json"):
+                (schema_dir / schema).write_text(
+                    (wo_validate.ROOT / "docs/schemas" / schema).read_text())
+            (root / "scripts").mkdir()
+            (root / "scripts/ok.py").write_text("base\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "frozen base"], cwd=root, check=True)
+            frozen_base = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+
+            # The coordinator freezes the task order after the declared base.
+            (root / "work").mkdir()
+            (root / "work/WO-FAKE.md").write_text(fake_work_order("WO-FAKE", frozen_base))
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "coordinator freezes work order"],
+                           cwd=root, check=True)
+            task_start = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+
+            # The task candidate changes only an allowed source file after its checkpoint.
+            (root / "scripts/ok.py").write_text("candidate change\n")
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            subprocess.run(["git", "commit", "-qm", "task candidate"], cwd=root, check=True)
+            candidate = subprocess.check_output(
+                ["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            cache = root / ".cache/worktrees/WO-FAKE.json"
+            cache.parent.mkdir(parents=True)
+            cache.write_text(json.dumps({
+                "start_sha": task_start,
+                "worktree": str(root / ".worktrees/WO-FAKE"),
+            }) + "\n")
+
+            fake = root / ".cache/fake-verifier"
+            fake.write_text("""#!/usr/bin/env python3
+import json, pathlib, sys
+flags = '--model --config --sandbox -s --json --output-schema --output-last-message --image --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check'
+if '--version' in sys.argv: print('codex-cli fake'); raise SystemExit(0)
+if '--help' in sys.argv: print(flags); raise SystemExit(0)
+target = pathlib.Path(sys.argv[sys.argv.index('--output-last-message') + 1])
+target.parent.mkdir(parents=True, exist_ok=True)
+(target.parent / 'stdin.txt').write_text(sys.stdin.read())
+target.write_text(json.dumps({'verdict':'pass','findings':[],'summary':'reviewed'}))
+print(json.dumps({'type':'thread.started','thread_id':'12345678-1234-1234-1234-123456789abc'}), flush=True)
+""")
+            fake.chmod(0o755)
+            fields, spec_hash = wo_validate.load_wo("WO-FAKE", root)
+            result = wo_driver.run_verifier(
+                root, "WO-FAKE", fields, spec_hash, candidate, str(fake), 10)
+
+            self.assertEqual(result["candidate_sha"], candidate)
+            run_dir = next((root / "artifacts/runs/WO-FAKE").glob("verify-*"))
+            candidate_diff = (run_dir / "candidate.diff").read_text()
+            verifier_stdin = (run_dir / "stdin.txt").read_text()
+            self.assertIn("scripts/ok.py", candidate_diff)
+            self.assertIn("candidate change", candidate_diff)
+            self.assertNotIn("work/WO-FAKE.md", candidate_diff)
+            self.assertIn("scripts/ok.py", verifier_stdin)
+            self.assertIn("candidate change", verifier_stdin)
+            self.assertNotIn("work/WO-FAKE.md", verifier_stdin)
+
     def assert_fake_executor_lifecycle(self, root: Path, body: str,
                                        old_evidence: Path, old_bytes: bytes) -> None:
         candidate = root / ".worktrees/WO-FAKE"
