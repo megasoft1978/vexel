@@ -16,6 +16,7 @@ pub use recovery::{
     project_recovery_decode, project_recovery_encode_into, project_recovery_encoded_size,
     project_recovery_error_name, project_recovery_save,
 };
+pub use recovery_discovery::{project_recovery_discover, RecoveryDiscovery};
 
 #[cfg(test)]
 mod tests;
