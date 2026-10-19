@@ -179,6 +179,13 @@ impl ProjectSession {
     /// extension imports the SVG as an untitled document (Save then asks for a
     /// name and never overwrites the SVG); anything else is a `.vexel` project.
     pub fn open(path: &[u8]) -> Result<Self, SessionError> {
+        Self::open_with_payload_reserver(path, || true)
+    }
+
+    fn open_with_payload_reserver(
+        path: &[u8],
+        mut reserve_allowed: impl FnMut() -> bool,
+    ) -> Result<Self, SessionError> {
         if path.len() > 4 && path[path.len() - 4..].eq_ignore_ascii_case(b".svg") {
             return Self::open_svg(path);
         }
@@ -186,7 +193,8 @@ impl ProjectSession {
         let view = loaded.view();
         let document =
             V1Document::from_source(view.scene_svg).map_err(SessionError::InvalidScene)?;
-        let payload = SessionPayload::from_view(view);
+        let payload = SessionPayload::try_from_view_with(view, &mut reserve_allowed)
+            .map_err(|()| SessionError::OutOfMemory)?;
         Ok(Self {
             document,
             payload,
@@ -219,6 +227,16 @@ impl ProjectSession {
     /// current document, history and path are untouched.
     pub fn open_replacing(&mut self, path: &[u8]) -> Result<(), SessionError> {
         *self = Self::open(path)?;
+        Ok(())
+    }
+
+    #[cfg(test)]
+    fn open_replacing_with_payload_reserver(
+        &mut self,
+        path: &[u8],
+        reserve_allowed: impl FnMut() -> bool,
+    ) -> Result<(), SessionError> {
+        *self = Self::open_with_payload_reserver(path, reserve_allowed)?;
         Ok(())
     }
 }

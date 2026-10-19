@@ -179,6 +179,57 @@ fn opaque_project_payload_survives_edit_save_as_and_reopen() {
 }
 
 #[test]
+fn payload_allocation_failure_preserves_replaced_session() {
+    let dir = Dir::new();
+    let current_path = dir.file("current.vexel");
+    let replacement_path = dir.file("replacement.vexel");
+    let mut session = drawn();
+    session.save_as(bytes(&current_path)).unwrap();
+    session
+        .document_mut()
+        .add_rectangle(1.0, 2.0, 3.0, 4.0, "#123456")
+        .unwrap();
+    let current_source = session.document().source().unwrap();
+    let current_history = (
+        session.document().history_count(),
+        session.document().history_cursor(),
+        session.is_dirty(),
+    );
+
+    let source = V1Document::new(32, 24).unwrap().source().unwrap();
+    let replacement = project::encode(&project::BundleInput {
+        manifest_json: b"{}",
+        scene_svg: &source,
+        timeline_json: b"{}",
+        assets: &[project::Asset {
+            name: b"asset.bin",
+            media_type: b"application/octet-stream",
+            data: b"payload",
+        }],
+    })
+    .unwrap();
+    fs::write(&replacement_path, replacement).unwrap();
+
+    let mut reserve_calls = 0;
+    let result = session.open_replacing_with_payload_reserver(bytes(&replacement_path), || {
+        reserve_calls += 1;
+        reserve_calls < 5
+    });
+
+    assert_eq!(result, Err(SessionError::OutOfMemory));
+    assert_eq!(session.document().source().unwrap(), current_source);
+    assert_eq!(
+        (
+            session.document().history_count(),
+            session.document().history_cursor(),
+            session.is_dirty(),
+        ),
+        current_history
+    );
+    assert_eq!(session.path(), Some(bytes(&current_path)));
+}
+
+#[test]
 fn source_only_write_keeps_default_payload() {
     let dir = Dir::new();
     let path = dir.file("source-only.vexel");

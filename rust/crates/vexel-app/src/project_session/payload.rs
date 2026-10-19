@@ -17,22 +17,27 @@ struct OwnedAsset {
 }
 
 impl SessionPayload {
-    pub(super) fn from_view(view: BundleView<'_>) -> Self {
-        let assets = (0..view.asset_count)
-            .map(|index| {
-                let asset = view.asset_at(index).expect("validated bundle asset");
-                OwnedAsset {
-                    name: asset.name.to_vec(),
-                    media_type: asset.media_type.to_vec(),
-                    data: asset.data.to_vec(),
-                }
-            })
-            .collect();
-        Self {
-            manifest_json: view.manifest_json.to_vec(),
-            timeline_json: view.timeline_json.to_vec(),
-            assets,
+    pub(super) fn try_from_view_with(
+        view: BundleView<'_>,
+        reserve_allowed: &mut impl FnMut() -> bool,
+    ) -> Result<Self, ()> {
+        let manifest_json = copy_bytes(view.manifest_json, reserve_allowed)?;
+        let timeline_json = copy_bytes(view.timeline_json, reserve_allowed)?;
+        let mut assets = Vec::new();
+        reserve(&mut assets, view.asset_count, reserve_allowed)?;
+        for index in 0..view.asset_count {
+            let asset = view.asset_at(index).expect("validated bundle asset");
+            assets.push(OwnedAsset {
+                name: copy_bytes(asset.name, reserve_allowed)?,
+                media_type: copy_bytes(asset.media_type, reserve_allowed)?,
+                data: copy_bytes(asset.data, reserve_allowed)?,
+            });
         }
+        Ok(Self {
+            manifest_json,
+            timeline_json,
+            assets,
+        })
     }
 
     pub(super) fn defaults(width: u32, height: u32) -> Self {
@@ -68,4 +73,25 @@ impl SessionPayload {
         };
         write(&input)
     }
+}
+
+fn copy_bytes(source: &[u8], reserve_allowed: &mut impl FnMut() -> bool) -> Result<Vec<u8>, ()> {
+    let mut bytes = Vec::new();
+    reserve(&mut bytes, source.len(), reserve_allowed)?;
+    bytes.extend_from_slice(source);
+    Ok(bytes)
+}
+
+fn reserve<T>(
+    values: &mut Vec<T>,
+    additional: usize,
+    reserve_allowed: &mut impl FnMut() -> bool,
+) -> Result<(), ()> {
+    if additional == 0 {
+        return Ok(());
+    }
+    if !reserve_allowed() {
+        return Err(());
+    }
+    values.try_reserve_exact(additional).map_err(|_| ())
 }
