@@ -79,6 +79,7 @@ pub fn make_sbom(runner: &mut dyn Runner, _root: &Path, out: &Path) -> Result<Pa
             .path_arg(&binary),
     )?;
     let digest = digest_output.stdout.split_whitespace().next().unwrap_or("");
+    let digest = digest.strip_prefix('\\').unwrap_or(digest);
     if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(format!(
             "`shasum -a 256` returned an invalid SHA-256 digest for {}",
@@ -700,6 +701,29 @@ mod tests {
         }
         assert!(!runner.calls.iter().any(|call| call.starts_with("python")));
         assert!(binary.is_file());
+        fs::remove_dir_all(out).unwrap();
+    }
+
+    #[test]
+    fn sbom_accepts_shasum_escaped_filename_marker() {
+        let (out, binary) = sbom_fixture("sbom-escaped\n\\filename");
+        assert!(binary.to_string_lossy().contains('\n'));
+        assert!(binary.to_string_lossy().contains('\\'));
+        let expected_digest = "c".repeat(64);
+        let mut runner = RecordingRunner::new(|inv| match inv.program.as_str() {
+            "shasum" => Some(ok(&format!("\\{}  {}\n", "c".repeat(64), inv.args[2]))),
+            "otool" => Some(ok("/fixture/vexel\n")),
+            _ => panic!("unexpected command: {}", inv.line()),
+        });
+
+        let sbom = make_sbom(&mut runner, Path::new("/"), &out).unwrap();
+        let document = parse_json(&fs::read_to_string(sbom).unwrap());
+        let hash = &document.field("components").array()[0]
+            .field("hashes")
+            .array()[0];
+        assert_eq!(hash.field("content").string(), expected_digest);
+        assert_eq!(runner.calls.len(), 2);
+        assert!(runner.calls[0].starts_with("shasum -a 256 "));
         fs::remove_dir_all(out).unwrap();
     }
 
