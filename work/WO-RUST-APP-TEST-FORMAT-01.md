@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-APP-TEST-FORMAT-01
-revision: 1
+revision: 2
 status: READY
 milestone: FULL-RUST-TOOLING
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: 2b275861c818b815ea3ff4ff2c0a1adfa7fcc4d3
-spec_sha256: f088d4a07bf65f9be4a8dc717fc1ff3ce8157439cae9cc241802cd650059a290
+base_sha: 6aab4a76be6ca1ce03690e53840c12f72541ca8f
+spec_sha256: 64a729ae7d720cafa2da858ed13513db1575ed520453783cd34546afd3429726
 parallel_safe: true
 network: false
 ---
