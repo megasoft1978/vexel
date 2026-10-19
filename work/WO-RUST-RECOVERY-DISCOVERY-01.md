@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-RECOVERY-DISCOVERY-01
-revision: 1
+revision: 2
 status: READY
 milestone: FULL-RUST-PROJECT
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: 3100010042044e494736f4f2c5c98b4829adec50
-spec_sha256: aac0f6733643b9978c3de977440a19a0d9a370111dc87e00358b47cc8de71b2f
+base_sha: b509b07ce715b5877a43033873e7cb0cd2a3dfa2
+spec_sha256: 8a1733b80027fc392f5c0c770e185c5c3daa83124a75c1230f6df4e49fb76d02
 parallel_safe: true
 network: false
 ---
@@ -19,7 +19,7 @@ Add a bounded, read-only discovery primitive for recovery capsules beside an alr
 - Do not read, fetch, or copy GPL SVG-editor source. Do not fetch external SVG resources.
 
 # Frozen public interface contract
-Implement in a new private module, `rust/crates/vexel-project-io/src/recovery_discovery.rs`, these public-in-module types and function; the coordinator will add the `lib.rs` module/re-exports after candidate verification:
+Implement in a new private module, `rust/crates/vexel-project-io/src/recovery_discovery.rs`, these public-in-module types and function; the worker may add only the private `mod recovery_discovery;` declaration in `lib.rs` so the package tests compile; the coordinator will add public re-exports after candidate verification:
 
 ```rust
 pub enum RecoveryDiscovery {
@@ -47,12 +47,13 @@ pub fn project_recovery_discover(source_path: &[u8], capsule_path: &[u8]) -> Rec
 # Files allowed to touch
 - `rust/crates/vexel-project-io/src/recovery_discovery.rs`
 - `rust/crates/vexel-project-io/src/recovery_discovery_tests.rs`
+- `rust/crates/vexel-project-io/src/lib.rs` (only the exact private `mod recovery_discovery;` declaration; no public re-export)
 - `artifacts/WO-RUST-RECOVERY-DISCOVERY-01/**`
 
 # Protected paths
-- All other source/tests, including `rust/crates/vexel-project-io/src/lib.rs`; coordinator owns public module/re-exports.
-- All docs/work orders/shared ledgers/status, manifests/lockfiles, fixtures, tags, git HEAD/index, C/Objective-C references, and files outside the allowlist.
-- No dependencies, network, installs, GUI actions, test weakening, staging, commits to `main`, resets, or deletions.
+- All other source/tests; public module/re-exports in `lib.rs` remain coordinator-owned.
+- All docs/work orders/shared ledgers/status, manifests/lockfiles, fixtures, tags, main HEAD/index, C/Objective-C references, and files outside the allowlist.
+- No dependencies, network, installs, GUI actions, test weakening, resets, or deletions. Stage and commit the candidate only on the runner-owned task branch; never commit to `main`.
 
 # Required implementation
 1. Implement the frozen result enum/function contract using the existing capsule decoder and bounded filesystem metadata/read operations.
@@ -82,4 +83,4 @@ Executor max runs: 1; verifier: 1; elapsed hard limit: 60 min; output-token soft
 Stop and report exact evidence if the existing codec or macOS metadata APIs cannot support the frozen contract without dependencies or source-format changes. Do not invent fallback semantics.
 
 # Output
-Candidate only until independent read-only review. Do not update shared status/ledgers or commit to `main` from the task worktree. Executor returns JSON report and `result.md` evidence.
+Candidate only until independent read-only review. Do not update shared status/ledgers or commit to `main` from the task worktree. A task-branch commit is required for a reviewable runner candidate. Executor returns JSON report and `result.md` evidence.
