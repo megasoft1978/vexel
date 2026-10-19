@@ -5,16 +5,16 @@
 //! no history section, so a reopened document starts clean with empty history.
 
 mod actions;
+mod payload;
 #[cfg(test)]
 mod tests;
 
 pub use actions::{FileAction, shortcut_action, unsaved_changes_prompt};
 
-use vexel_project::{self as project, BundleInput, Error as BundleError};
+use payload::SessionPayload;
+use vexel_project::{self as project, Error as BundleError};
 use vexel_project_io::{FileError, LoadFailure, project_file_load, project_file_save_as};
 use vexel_v1_document::{V1Document, V1DocumentError};
-
-const TIMELINE_JSON: &[u8] = b"{}";
 
 /// Typed, user-presentable failure. No variant carries partial data.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -86,10 +86,6 @@ fn load_error(failure: LoadFailure) -> SessionError {
     }
 }
 
-fn manifest(width: u32, height: u32) -> Vec<u8> {
-    format!("{{\"format\":\"vexel-project\",\"width\":{width},\"height\":{height}}}").into_bytes()
-}
-
 /// Writes `source` as a project through `vexel-project-io` (atomic publish).
 /// Shared by `ProjectSession` and the MCP preview path.
 pub fn write_project(
@@ -98,14 +94,15 @@ pub fn write_project(
     width: u32,
     height: u32,
 ) -> Result<(), SessionError> {
-    let manifest = manifest(width, height);
-    let input = BundleInput {
-        manifest_json: &manifest,
-        scene_svg: source,
-        timeline_json: TIMELINE_JSON,
-        assets: &[],
-    };
-    let result = project_file_save_as(path, &input);
+    write_project_with_payload(path, source, &SessionPayload::defaults(width, height))
+}
+
+fn write_project_with_payload(
+    path: &[u8],
+    source: &[u8],
+    payload: &SessionPayload,
+) -> Result<(), SessionError> {
+    let result = payload.with_bundle_input(source, |input| project_file_save_as(path, input));
     match result.error {
         FileError::Ok => Ok(()),
         FileError::Durability => Err(SessionError::NotDurable),
@@ -123,6 +120,7 @@ pub fn write_project(
 #[derive(Debug)]
 pub struct ProjectSession {
     document: V1Document,
+    payload: SessionPayload,
     path: Option<Vec<u8>>,
     /// Path of the `.svg` this untitled document was imported from, if any.
     /// Display only: Save never writes to it.
@@ -131,8 +129,10 @@ pub struct ProjectSession {
 
 impl ProjectSession {
     pub fn new(document: V1Document) -> Self {
+        let payload = SessionPayload::defaults(document.width(), document.height());
         Self {
             document,
+            payload,
             path: None,
             svg_origin: None,
         }
@@ -170,7 +170,7 @@ impl ProjectSession {
 
     fn write(&mut self, path: &[u8]) -> Result<(), SessionError> {
         let source = self.document.source().map_err(SessionError::Document)?;
-        write_project(path, &source, self.document.width(), self.document.height())?;
+        write_project_with_payload(path, &source, &self.payload)?;
         self.document.mark_saved();
         Ok(())
     }
@@ -183,10 +183,13 @@ impl ProjectSession {
             return Self::open_svg(path);
         }
         let loaded = project_file_load(path).map_err(load_error)?;
+        let view = loaded.view();
         let document =
-            V1Document::from_source(loaded.view().scene_svg).map_err(SessionError::InvalidScene)?;
+            V1Document::from_source(view.scene_svg).map_err(SessionError::InvalidScene)?;
+        let payload = SessionPayload::from_view(view);
         Ok(Self {
             document,
+            payload,
             path: Some(path.to_vec()),
             svg_origin: None,
         })
@@ -203,8 +206,10 @@ impl ProjectSession {
                 })?;
         let document =
             V1Document::from_source(&opened.bytes).map_err(SessionError::InvalidScene)?;
+        let payload = SessionPayload::defaults(document.width(), document.height());
         Ok(Self {
             document,
+            payload,
             path: None,
             svg_origin: Some(path.to_vec()),
         })

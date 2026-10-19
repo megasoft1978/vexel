@@ -113,6 +113,88 @@ fn unedited_foreign_source_saves_and_reopens_identically() {
 }
 
 #[test]
+fn opaque_project_payload_survives_edit_save_as_and_reopen() {
+    let dir = Dir::new();
+    let original = dir.file("payload.vexel");
+    let save_as = dir.file("payload-copy.vexel");
+    let source = V1Document::new(320, 240).unwrap().source().unwrap();
+    let manifest = br#"{ "format":"vexel-project", "extension":{"future":[1,{"x":"raw"}]}, "width":320, "height":240 }"#;
+    let timeline = br#"{ "unknownTimeline":{"frames":[{"vendor":"keep"}]}, "raw": true }"#;
+    let assets = [
+        project::Asset {
+            name: b"ref.png",
+            media_type: b"image/png",
+            data: b"\x89PNG\r\nopaque",
+        },
+        project::Asset {
+            name: b"font.bin",
+            media_type: b"application/octet-stream",
+            data: b"\0\xfffont-data",
+        },
+    ];
+    let encoded = project::encode(&project::BundleInput {
+        manifest_json: manifest,
+        scene_svg: &source,
+        timeline_json: timeline,
+        assets: &assets,
+    })
+    .unwrap();
+    fs::write(&original, encoded).unwrap();
+
+    let mut session = ProjectSession::open(bytes(&original)).unwrap();
+    session
+        .document_mut()
+        .add_rectangle(4.0, 5.0, 40.0, 50.0, "#123456")
+        .unwrap();
+    let edited_scene = session.document().source().unwrap();
+    assert_ne!(edited_scene, source);
+    session.save().unwrap();
+    let after_save = ProjectSession::open(bytes(&original)).unwrap();
+    assert_eq!(after_save.document().source().unwrap(), edited_scene);
+    let saved_bundle = vexel_project_io::project_file_load(bytes(&original)).unwrap();
+    let saved_view = saved_bundle.view();
+    assert_eq!(saved_view.manifest_json, manifest);
+    assert_eq!(saved_view.timeline_json, timeline);
+    assert_eq!(saved_view.asset_count, assets.len());
+    for (index, expected) in assets.iter().enumerate() {
+        assert_eq!(saved_view.asset_at(index), Some(*expected));
+    }
+    session.save_as(bytes(&save_as)).unwrap();
+    let reopened = ProjectSession::open(bytes(&save_as)).unwrap();
+    assert_eq!(reopened.document().source().unwrap(), edited_scene);
+    assert_eq!(
+        (reopened.document().width(), reopened.document().height()),
+        (320, 240)
+    );
+    let loaded = vexel_project_io::project_file_load(bytes(&save_as)).unwrap();
+    let view = loaded.view();
+    assert_eq!(view.manifest_json, manifest);
+    assert_eq!(view.timeline_json, timeline);
+    assert_eq!(view.asset_count, assets.len());
+    for (index, expected) in assets.iter().enumerate() {
+        assert_eq!(view.asset_at(index), Some(*expected));
+    }
+    assert_eq!(view.scene_svg, reopened.document().source().unwrap());
+    assert_eq!(fs::read(&original).unwrap(), fs::read(&save_as).unwrap());
+}
+
+#[test]
+fn source_only_write_keeps_default_payload() {
+    let dir = Dir::new();
+    let path = dir.file("source-only.vexel");
+    let source = V1Document::new(512, 256).unwrap().source().unwrap();
+    write_project(bytes(&path), &source, 512, 256).unwrap();
+    let loaded = vexel_project_io::project_file_load(bytes(&path)).unwrap();
+    let view = loaded.view();
+    assert_eq!(
+        view.manifest_json,
+        br#"{"format":"vexel-project","width":512,"height":256}"#
+    );
+    assert_eq!(view.timeline_json, b"{}");
+    assert_eq!(view.asset_count, 0);
+}
+
+#[test]
 fn undo_save_redo_and_history_cursor() {
     let dir = Dir::new();
     let path = dir.file("u.vexel");

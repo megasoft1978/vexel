@@ -1,0 +1,14 @@
+{
+  "status": "complete",
+  "worktree": "verify/WO-RUST-PROJECT-PAYLOAD-02",
+  "base_sha": "0a96a711",
+  "acceptance": {
+    "AC-1": {"commands": [{"argv": ["cargo", "+stable", "test", "-p", "vexel-app", "--locked", "--offline"], "exit_code": 0}]},
+    "AC-2": {"commands": [{"argv": ["cargo", "+stable", "test", "-p", "vexel-app", "--locked", "--offline"], "exit_code": 0}]},
+    "AC-3": {"commands": [{"argv": ["cargo", "+stable", "test", "-p", "vexel-app", "--locked", "--offline"], "exit_code": 0}]},
+    "AC-4": {"commands": [{"argv": ["cargo", "+stable", "test", "-p", "vexel-app", "--locked", "--offline"], "exit_code": 0}]},
+    "AC-5": {"commands": [{"argv": ["cargo", "+stable", "test", "-p", "vexel-app", "--locked", "--offline"], "exit_code": 0}]},
+    "AC-6": {"commands": [{"argv": ["cargo", "+stable", "fmt", "--manifest-path", "Cargo.toml", "--package", "vexel-app", "--", "--check"], "exit_code": 0}, {"argv": ["git", "diff", "--check"], "exit_code": 0}]}
+  },
+  "summary": "All frozen verification commands passed in the revision-2 task worktree; candidate files and result evidence are ready for task-branch commit."
+}
