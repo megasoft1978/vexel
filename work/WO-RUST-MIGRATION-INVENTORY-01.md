@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-MIGRATION-INVENTORY-01
-revision: 1
+revision: 2
 status: READY
 milestone: FULL-RUST-MIGRATION
 owner: project-coordinator
 executor: codex-gpt-6-luna
 base_sha: c61b192e4c87d15264aae3efe809612d1441da54
-spec_sha256: b91a0986d715f7f8a6ad5fb24b6e5767ec9e3cecca8868eb6f670377313f52eb
+spec_sha256: f64ed82c476925d754854720ebdcdd8aff0b7eb853eecd29e5672c320118cf42
 parallel_safe: true
 network: false
 ---
@@ -47,11 +47,13 @@ Produce a complete, evidence-linked accounting of the 603-file legacy code basel
 - AC-5: No source, test, document, manifest, ledger, tag, or git index content is changed; only the allowed artifact directory is added.
 - AC-6: `python3 scripts/ledger.py validate ledger.jsonl` exits 0 and `git diff --check` exits 0.
 
-# Verification sequence
-1. `python3 scripts/ledger.py validate ledger.jsonl`
-2. Use `git ls-tree` against `legacy-c-final` to independently verify the baseline count and blob IDs.
-3. Recompute row counts, uniqueness, disposition values and referenced path existence from the generated JSONL/JSON; record the exact validation command and output in `result.md`.
-4. Audit only artifact paths changed; verify no source/status/ledger modifications.
+# Verification commands
+```text
+python3 scripts/ledger.py validate ledger.jsonl
+git diff --check
+```
+
+Also use `git ls-tree` against `legacy-c-final` to verify baseline count/blob IDs. Recompute row counts, uniqueness, disposition values and referenced path existence; record exact outputs in `result.md`. Audit that only artifact paths changed.
 
 # Non-goals
 Porting code, deleting or rewriting legacy references, making completion claims, changing acceptance gates, or resolving every unknown mapping by guesswork.

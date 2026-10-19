@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-TOOLING-SBOM-01
-revision: 1
+revision: 2
 status: READY
 milestone: FULL-RUST-TOOLING
 owner: project-coordinator
 executor: codex-gpt-6-luna
 base_sha: 73195e6742f5911997d647594c6bceb413c2bd40
-spec_sha256: 38a140eecfcbda2803eeb8e42211d8e522e406fb563acb4a329af7e6518e9b27
+spec_sha256: 7fccbeff99055a929951cd05350aa70f30983ea6b170152952dee554b6921b55
 parallel_safe: true
 network: false
 ---
@@ -50,11 +50,14 @@ Generate the application's CycloneDX SBOM entirely in the Rust release tool, rem
 - AC-5: `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` and `git diff --check` exit 0; changed paths satisfy the allowlist.
 - AC-6: No third-party dependency is added, and `make_sbom` no longer invokes Python.
 
-# Verification sequence
-1. `cargo +stable test -p vexel-dev --locked --offline`
-2. `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check`
-3. `git diff --check`
-4. Inspect generated fixture JSON and verify command invocations through the fake runner; audit scope and Python non-invocation.
+# Verification commands
+```text
+cargo +stable test -p vexel-dev --locked --offline
+cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check
+git diff --check
+```
+
+After those commands, inspect generated fixture JSON and verify fake-runner command invocations, scope, and Python non-invocation.
 
 # Non-goals
 Porting the general Python test runner, ledger/WO tooling, CI policy checks, changing SBOM schema/version, changing distribution signing, or deleting the Python migration reference.
