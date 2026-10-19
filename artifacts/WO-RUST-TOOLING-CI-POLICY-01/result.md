@@ -27,6 +27,19 @@ Commands below were run in the task worktree. The recorded argv list is shell-to
 | `cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml` | 0 | App stdout exactly `macOS-only CI policy: pass`. |
 | `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` | 0 | Passed. |
 | `git diff --check` (after case-insensitive exception regression coverage) | 0 | Passed. |
+
+### Permissions regex parity follow-up
+
+The fresh verifier reported that a later permissions entry should be rejected. The frozen Python expression is `^permissions:\s*\n\s+contents:\s*read\s*$` with `re.MULTILINE`; direct oracle checks show that it accepts `contents: read` followed by `other: write` on the next line, and rejects `other: write` on the same line. The Rust checker already matched those results. Added regression coverage for both cases without changing checker behavior.
+
+Python oracle output:
+
+```text
+next-line permission: True
+same-line suffix: False
+```
+
+Frozen verification rerun after the regression addition: 37 tests passed, 0 failed; current workflow check printed `macOS-only CI policy: pass`; format and diff checks passed.
 | `python3 scripts/check_ci.py .github/workflows/ci.yml` | 0 | Reference output exactly `macOS-only CI policy: pass`. |
 | `sh -c 'set +e; vexel-dev check-ci; status_code=$?; test "$status_code" -eq 2'` | 0 | Full wrapper below; executable returned 2 and printed usage to stderr. |
 | `sh -c 'set +e; vexel-dev check-ci .github/workflows/ci.yml extra; status_code=$?; test "$status_code" -eq 2'` | 0 | Full wrapper below; executable returned 2 and printed the extra-argument diagnostic. |

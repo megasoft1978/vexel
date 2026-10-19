@@ -86,5 +86,20 @@
     ],
     "regression_cases": ["BREW INSTALL LIBRSVG", "Brew install librsvg", "brew INSTALL Librsvg", "bReW\\tInStAlL\\tLiBrSvG"]
   },
+  "permissions_regex_followup": {
+    "finding_assessment": "False positive: the frozen Python re.MULTILINE expression accepts a following permissions entry on the next line; Rust matches that behavior.",
+    "reference_pattern": "^permissions:\s*\n\s+contents:\s*read\s*$",
+    "python_oracle": {
+      "next-line permission entry": true,
+      "same-line non-whitespace suffix": false
+    },
+    "regression_added": "A Rust unit assertion preserves the accepted next-line permission entry and rejects a same-line suffix.",
+    "frozen_checks": {
+      "cargo +stable test -p vexel-dev --locked --offline": "exit 0; 37 passed, 0 failed",
+      "cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml": "exit 0; stdout: macOS-only CI policy: pass",
+      "cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check": "exit 0",
+      "git diff --check": "exit 0"
+    }
+  },
   "summary": "Implementation complete; 37 Rust unit tests pass. The current workflow command prints exactly `macOS-only CI policy: pass`. Formatting, diff, dependency, and allowlist audits pass. Python/Rust differential audit: 2,395 cases, zero mismatches; Unicode 15.0.0 word table: 1,114,112 code points, zero mismatches. Independent review CLEAN. The supplied base SHA differs from unchanged worktree HEAD. No commit or staging was performed because the frozen work order protects HEAD/index and prohibits staging. The requested external report path was not writable under the workspace sandbox; this report is saved in the allowed worktree artifacts directory."
 }

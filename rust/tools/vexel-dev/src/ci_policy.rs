@@ -531,6 +531,18 @@ mod tests {
             check_policy(&VALID.replace("  contents: read", "  contents:read")),
             Ok(())
         );
+        assert_eq!(
+            check_policy(&VALID.replace(
+                "  contents: read\njobs:",
+                "  contents: read\n  other: write\njobs:",
+            )),
+            Ok(()),
+            "the Python multiline regex accepts a following permission entry on its own line"
+        );
+        rejected(
+            &VALID.replace("  contents: read", "  contents: read other: write"),
+            "workflow must grant contents: read explicitly",
+        );
         rejected(
             &VALID.replace("name: CI", "name: ${{ SeCrEtS.token }}"),
             "workflow must not reference secrets",
