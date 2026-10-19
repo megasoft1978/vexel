@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-APP-SHARED-SOURCE-01
-revision: 2
+revision: 3
 status: READY
 milestone: LARGE-DOCUMENT-MEMORY
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: c36a257c97334679e6cd65d9c9ad29173a8f9bca
-spec_sha256: 4bd0003371437934ad0da04d786fec4590cf78fc8217b6085c898e5d4e494674
+base_sha: 0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0
+spec_sha256: 209be7ec32011d5beebc2ad72e65ea6a057d5a17c9e0f8d2f80a1f8f44d1d5fa
 parallel_safe: true
 network: false
 ---
@@ -33,8 +33,8 @@ Remove the redundant full-document copy between the composition worker and SVG d
 - `artifacts/WO-RUST-APP-SHARED-SOURCE-01/**`
 
 # Protected paths
-- All other source, tests, fixtures, goldens, work orders, artifacts, manifests, lockfiles, docs, `STATE.md`, `LEDGER.md`, `ledger.jsonl`, git HEAD/index, and all C/Objective-C sources or migration references.
-- No dependencies, network, installs, GUI actions, commits to `main`, staging, resets or deletions.
+- All other source, tests, fixtures, goldens, work orders, artifacts, manifests, lockfiles, docs, `STATE.md`, `LEDGER.md`, `ledger.jsonl`, and all C/Objective-C sources or migration references. The coordinator owns the main branch and its index.
+- No dependencies, network, installs, GUI actions, commits to `main`, resets or deletions. A candidate commit on the isolated task branch is required for runner verification.
 
 # Required implementation
 1. Add an owned-source composition/decode path that accepts `Arc<Vec<u8>>` and carries it into `LexicalDocument` without making another source-sized copy.
@@ -70,4 +70,4 @@ Executor max runs: 2; verifier: 1; elapsed hard limit: 60 min; output-token soft
 Stop if preserving the borrowed API requires changing shared manifests/interfaces or if the scene/XML owner cannot accept the existing `Arc<Vec<u8>>` without copying. Report the exact owner/API blocker; do not expand this order to redesign storage.
 
 # Output
-Candidate only until independent read-only review. Do not update shared status/ledgers or commit to `main` from the task worktree. Executor returns the required JSON report and `result.md` evidence.
+Candidate only until independent read-only review. Do not update shared status/ledgers or commit to `main` from the task worktree. Commit candidate changes on the isolated task branch after checks pass. Executor returns the required JSON report and `result.md` evidence.

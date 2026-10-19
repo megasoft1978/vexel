@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-PROJECT-PAYLOAD-01
-revision: 2
+revision: 3
 status: READY
 milestone: FULL-RUST-PRODUCT-DATA
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: c36a257c97334679e6cd65d9c9ad29173a8f9bca
-spec_sha256: 18e7d67c232a6fcda2e32e23d2ccf8010b76894170a9074c94532ea6e5e7fa80
+base_sha: 0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0
+spec_sha256: 5ac848144b8c384a88305dd362fcb0bbf705a3ea70c3f25e74572f933ee0a9d5
 parallel_safe: true
 network: false
 ---
@@ -35,8 +35,8 @@ Preserve the complete opaque `.vexel` project payload when opening, editing, sav
 - `artifacts/WO-RUST-PROJECT-PAYLOAD-01/**`
 
 # Protected paths
-- All other source, tests, fixtures, docs, manifests/lockfiles, work orders, shared ledgers/status, git HEAD/index, and all C/Objective-C migration references.
-- No dependencies, network, installs, GUI actions, commits to `main`, staging, resets, deletions, timeline interpretation, or UI changes.
+- All other source, tests, fixtures, docs, manifests/lockfiles, work orders, shared ledgers/status, and all C/Objective-C migration references. The coordinator owns the main branch and its index.
+- No dependencies, network, installs, GUI actions, commits to `main`, resets, deletions, timeline interpretation, or UI changes. A candidate commit on the isolated task branch is required for runner verification.
 
 # Required implementation
 1. Add an owned, bounded session payload model for manifest JSON, timeline JSON, and asset names/media types/data. Keep each source field byte-for-byte.
@@ -70,4 +70,4 @@ Executor max runs: 2; verifier: 1; elapsed hard limit: 60 min; output-token soft
 Stop if the existing bundle limits cannot bound the owned payload or if byte-preserving round-trip conflicts with a validated format invariant. Report exact evidence; do not normalize or discard unknown metadata.
 
 # Output
-Candidate only until independent read-only review. Do not update shared status/ledgers or commit to `main` from the task worktree. Executor returns the required JSON report and `result.md` evidence.
+Candidate only until independent read-only review. Do not update shared status/ledgers or commit to `main` from the task worktree. Commit candidate changes on the isolated task branch after checks pass. Executor returns the required JSON report and `result.md` evidence.
