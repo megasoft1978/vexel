@@ -8,7 +8,7 @@ The actual initial and final worktree `HEAD` is `c61b192e4c87d15264aae3efe809612
 
 ## Implementation
 
-- Added a dependency-free Rust text checker matching `scripts/check_ci.py` policy ordering, rejection messages, whitespace behavior, action pinning, and the case-sensitive `brew install librsvg` exception. It preserves the Python 3.12.8 / Unicode 15.0.0 word-boundary behavior used by that exception.
+- Added a dependency-free Rust text checker matching `scripts/check_ci.py` policy ordering, rejection messages, whitespace behavior, action pinning, and the case-insensitive `brew install librsvg` exception. It preserves the Python 3.12.8 / Unicode 15.0.0 word-boundary behavior used by that exception.
 - Added `vexel-dev check-ci WORKFLOW.yml`, with exactly one path argument, exit 2 for invalid invocation, exit 1 with `CI policy error:` for read/policy errors, and success stdout `macOS-only CI policy: pass`.
 - The CLI normalizes CRLF and CR like Python `Path.read_text()`. It does not invoke Python.
 - No dependencies, workflow edits, Python reference edits, or protected-path changes.
@@ -23,6 +23,10 @@ Commands below were run in the task worktree. The recorded argv list is shell-to
 | `cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml` | 0 | App stdout exactly `macOS-only CI policy: pass`. |
 | `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` | 0 | Passed. |
 | `git diff --check` | 0 | Passed. |
+| `cargo +stable test -p vexel-dev --locked --offline` (after case-insensitive exception regression coverage) | 0 | 37 passed, 0 failed. Includes uppercase, mixed-case, and tab-separated exception forms. |
+| `cargo +stable run -p vexel-dev --locked --offline -- check-ci .github/workflows/ci.yml` | 0 | App stdout exactly `macOS-only CI policy: pass`. |
+| `cargo +stable fmt --manifest-path Cargo.toml --package vexel-dev -- --check` | 0 | Passed. |
+| `git diff --check` (after case-insensitive exception regression coverage) | 0 | Passed. |
 | `python3 scripts/check_ci.py .github/workflows/ci.yml` | 0 | Reference output exactly `macOS-only CI policy: pass`. |
 | `sh -c 'set +e; vexel-dev check-ci; status_code=$?; test "$status_code" -eq 2'` | 0 | Full wrapper below; executable returned 2 and printed usage to stderr. |
 | `sh -c 'set +e; vexel-dev check-ci .github/workflows/ci.yml extra; status_code=$?; test "$status_code" -eq 2'` | 0 | Full wrapper below; executable returned 2 and printed the extra-argument diagnostic. |

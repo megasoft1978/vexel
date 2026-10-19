@@ -76,5 +76,15 @@
       ]
     }
   },
+  "verification_fix": {
+    "finding": "Rust's librsvg exception was case-sensitive; the Python policy accepts case-insensitive forms.",
+    "commands": [
+      {"argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"], "exit_code": 0, "result": "37 passed, 0 failed"},
+      {"argv": ["cargo", "+stable", "run", "-p", "vexel-dev", "--locked", "--offline", "--", "check-ci", ".github/workflows/ci.yml"], "exit_code": 0, "stdout": "macOS-only CI policy: pass"},
+      {"argv": ["cargo", "+stable", "fmt", "--manifest-path", "Cargo.toml", "--package", "vexel-dev", "--", "--check"], "exit_code": 0},
+      {"argv": ["git", "diff", "--check"], "exit_code": 0}
+    ],
+    "regression_cases": ["BREW INSTALL LIBRSVG", "Brew install librsvg", "brew INSTALL Librsvg", "bReW\\tInStAlL\\tLiBrSvG"]
+  },
   "summary": "Implementation complete; 37 Rust unit tests pass. The current workflow command prints exactly `macOS-only CI policy: pass`. Formatting, diff, dependency, and allowlist audits pass. Python/Rust differential audit: 2,395 cases, zero mismatches; Unicode 15.0.0 word table: 1,114,112 code points, zero mismatches. Independent review CLEAN. The supplied base SHA differs from unchanged worktree HEAD. No commit or staging was performed because the frozen work order protects HEAD/index and prohibits staging. The requested external report path was not writable under the workspace sandbox; this report is saved in the allowed worktree artifacts directory."
 }
