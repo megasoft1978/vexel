@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-APP-SHARED-SOURCE-01
-revision: 1
+revision: 2
 status: READY
 milestone: LARGE-DOCUMENT-MEMORY
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: 55e85d120392fa747b1aded1016a320532c334c2
-spec_sha256: 8556be931371b066c472aa86905533c832701859c8b9fd26a8bb83554ecab9b0
+base_sha: c36a257c97334679e6cd65d9c9ad29173a8f9bca
+spec_sha256: 4bd0003371437934ad0da04d786fec4590cf78fc8217b6085c898e5d4e494674
 parallel_safe: true
 network: false
 ---
@@ -51,11 +51,14 @@ Remove the redundant full-document copy between the composition worker and SVG d
 - AC-5: `cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check` exits 0; `git diff --check` exits 0; changed paths satisfy the allowlist.
 - AC-6: The result report makes no claim that this single-copy reduction meets the 100 MiB first-visible-content or full large-document goal.
 
-# Verification sequence
-1. `cargo +stable test -p vexel-app --locked --offline`
-2. `cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check`
-3. `git diff --check`
-4. Review exact owned-source flow, cancellation/error paths, and changed-path allowlist; save evidence under the artifact directory.
+# Verification commands
+```text
+cargo +stable test -p vexel-app --locked --offline
+cargo +stable fmt --manifest-path Cargo.toml --package vexel-app -- --check
+git diff --check
+```
+
+Review the owned-source flow, cancellation/error paths, and changed-path allowlist; save evidence under the artifact directory.
 
 # Non-goals
 Streaming or lazy decode, any cap changes, benchmark target changes, edits to scene/XML interfaces, UI changes, or claims about 100 MiB files.

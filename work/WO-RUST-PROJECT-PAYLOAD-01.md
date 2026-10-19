@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-PROJECT-PAYLOAD-01
-revision: 1
+revision: 2
 status: READY
 milestone: FULL-RUST-PRODUCT-DATA
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: 3ed10c5ab31f245cecd9f54a9c5dca204b616246
-spec_sha256: 4fda10d17ec3dc1f1901ce2aa687cae1d4987f4c460c4be3a75dc289b43929ee
+base_sha: c36a257c97334679e6cd65d9c9ad29173a8f9bca
+spec_sha256: 18e7d67c232a6fcda2e32e23d2ccf8010b76894170a9074c94532ea6e5e7fa80
 parallel_safe: true
 network: false
 ---
