@@ -1,0 +1,64 @@
+{
+  "status": "complete",
+  "base_sha": "73195e6742f5911997d647594c6bceb413c2bd40",
+  "head_sha": "d3daba12acc6e1307267218217d09e9307889710",
+  "acceptance": {
+    "AC-1": {
+      "commands": [
+        {
+          "argv": ["rg", "-n", "python3|scripts/make_sbom.py|shasum|otool", "rust/tools/vexel-dev/src/release.rs"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-2": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-3": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-4": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "test", "-p", "vexel-dev", "--locked", "--offline"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-5": {
+      "commands": [
+        {
+          "argv": ["cargo", "+stable", "fmt", "--manifest-path", "Cargo.toml", "--package", "vexel-dev", "--", "--check"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["git", "diff", "--check"],
+          "exit_code": 0
+        }
+      ]
+    },
+    "AC-6": {
+      "commands": [
+        {
+          "argv": ["git", "diff", "--name-only"],
+          "exit_code": 0
+        },
+        {
+          "argv": ["git", "diff", "--cached", "--name-only"],
+          "exit_code": 0
+        }
+      ]
+    }
+  },
+  "summary": "Native Rust CycloneDX 1.5 SBOM generation and focused fake-runner tests are complete. All acceptance commands passed. The source changes remain unstaged and uncommitted. The requested external report path is outside the writable sandbox; this report is saved in the worktree artifact directory instead."
+}
