@@ -1,5 +1,5 @@
 use super::*;
-use crate::recovery::{RECOVERY_HEADER_BYTES, RecoveryInput, project_recovery_encode_into};
+use crate::recovery::{project_recovery_encode_into, RecoveryInput, RECOVERY_HEADER_BYTES};
 use std::fs::{self, File};
 use std::io::Write;
 use std::os::unix::ffi::OsStrExt;
@@ -141,6 +141,11 @@ fn absent_matching_conflict_and_read_only_associations() {
             current.mtime() + 1,
             current.mtime_nsec() as u32,
         ),
+        (
+            current.len(),
+            current.mtime(),
+            ((current.mtime_nsec() + 1) % 1_000_000_000) as u32,
+        ),
     ] {
         let changed_stamp = capsule(&source, Some(stamp));
         write(&recovery, &changed_stamp);
@@ -175,11 +180,34 @@ fn absent_matching_conflict_and_read_only_associations() {
             &source,
             Some((
                 current.len(),
-                current.mtime() + 1,
-                current.mtime_nsec() as u32
+                current.mtime(),
+                ((current.mtime_nsec() + 1) % 1_000_000_000) as u32
             ))
         )
     );
+    cleanup(&[&source, &recovery]);
+}
+
+#[test]
+fn source_edit_during_capsule_read_uses_refreshed_descriptor_stamp() {
+    let source = path("source");
+    let recovery = path("capsule");
+    write(&source, b"original source");
+    let encoded = capsule(&source, None);
+    write(&recovery, &encoded);
+
+    match project_recovery_discover_with_after_capsule_read(&source, &recovery, || {
+        write(&source, b"source edited in place after capsule read");
+    }) {
+        RecoveryDiscovery::Conflict { capsule_bytes } => assert_eq!(capsule_bytes, encoded),
+        _ => panic!("expected conflict from the refreshed source descriptor stamp"),
+    }
+
+    assert_eq!(
+        fs::read(os_path(&source)).unwrap(),
+        b"source edited in place after capsule read"
+    );
+    assert_eq!(fs::read(os_path(&recovery)).unwrap(), encoded);
     cleanup(&[&source, &recovery]);
 }
 

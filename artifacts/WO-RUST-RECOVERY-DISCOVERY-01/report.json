@@ -1,0 +1,50 @@
+{
+  "status": "complete",
+  "work_order": "WO-RUST-RECOVERY-DISCOVERY-01",
+  "revision": 3,
+  "base_sha": "62d2d99937cb989a2d8ad989a6f52218aeea4542",
+  "branch": "wo/WO-RUST-RECOVERY-DISCOVERY-01",
+  "pre_fix_head_sha": "99cfb7b9ac4ae58377a28416533af17ff885a93d",
+  "acceptance": {
+    "AC-1": {
+      "result": "pass",
+      "evidence": "Frozen enum and function remain in the private module. rust/crates/vexel-project-io/src/lib.rs declares mod recovery_discovery; with no public re-export."
+    },
+    "AC-2": {
+      "result": "pass",
+      "evidence": "Existing focused cases plus deterministic in-place source edit during capsule reading; validates refreshed descriptor stamp and returns original capsule bytes as Conflict."
+    },
+    "AC-3": {
+      "result": "pass",
+      "evidence": "No source-body reads or production writes. Capsule remains bounded by RECOVERY_MAX_BYTES + 1; source metadata is refreshed from the open descriptor and its current path association is checked."
+    },
+    "AC-4": {
+      "result": "pass",
+      "command": "cargo +stable test -p vexel-project-io --locked --offline",
+      "exit_code": 0,
+      "tests_passed": 20,
+      "tests_failed": 0,
+      "doc_tests_passed": 0,
+      "warnings": "Six dead_code warnings for private-module items pending coordinator re-exports."
+    },
+    "AC-5": {
+      "result": "pass",
+      "commands": [
+        {
+          "command": "git diff --check",
+          "exit_code": 0
+        },
+        {
+          "command": "rustfmt --check rust/crates/vexel-project-io/src/recovery_discovery.rs rust/crates/vexel-project-io/src/recovery_discovery_tests.rs",
+          "exit_code": 0
+        },
+        {
+          "command": "wc -l rust/crates/vexel-project-io/src/recovery_discovery.rs rust/crates/vexel-project-io/src/recovery_discovery_tests.rs",
+          "exit_code": 0,
+          "output": [150, 268]
+        }
+      ]
+    }
+  },
+  "summary": "Corrected source stamp classification to use refreshed opened-source metadata after capsule reading. Added deterministic regression coverage and updated candidate evidence."
+}

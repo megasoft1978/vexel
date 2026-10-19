@@ -1,4 +1,4 @@
-use super::recovery::{RECOVERY_MAX_BYTES, RecoveryError, project_recovery_decode};
+use super::recovery::{project_recovery_decode, RecoveryError, RECOVERY_MAX_BYTES};
 use std::ffi::OsStr;
 use std::fs::{self, File, Metadata};
 use std::io::Read;
@@ -16,6 +16,14 @@ pub enum RecoveryDiscovery {
 /// Finds and validates a recovery capsule beside a source path supplied by the caller.
 /// This only reads metadata and capsule bytes; it never reads the source body or writes files.
 pub fn project_recovery_discover(source_path: &[u8], capsule_path: &[u8]) -> RecoveryDiscovery {
+    project_recovery_discover_with_after_capsule_read(source_path, capsule_path, || {})
+}
+
+fn project_recovery_discover_with_after_capsule_read(
+    source_path: &[u8],
+    capsule_path: &[u8],
+    after_capsule_read: impl FnOnce(),
+) -> RecoveryDiscovery {
     if !valid_path(source_path) || !valid_path(capsule_path) || source_path == capsule_path {
         return invalid(RecoveryError::InvalidArgument);
     }
@@ -80,6 +88,7 @@ pub fn project_recovery_discover(source_path: &[u8], capsule_path: &[u8]) -> Rec
     if bounded.read_to_end(&mut capsule_bytes).is_err() {
         return invalid(RecoveryError::Io);
     }
+    after_capsule_read();
     if capsule_bytes.len() > RECOVERY_MAX_BYTES {
         return invalid(RecoveryError::Limit);
     }
@@ -98,11 +107,15 @@ pub fn project_recovery_discover(source_path: &[u8], capsule_path: &[u8]) -> Rec
         return invalid(RecoveryError::InvalidArgument);
     }
 
+    let source_metadata_after = match source_file.metadata() {
+        Ok(metadata) if metadata.file_type().is_file() => metadata,
+        _ => return invalid(RecoveryError::InvalidArgument),
+    };
     let source_path_after = match fs::symlink_metadata(source_path_os) {
         Ok(metadata) if metadata.file_type().is_file() => metadata,
         _ => return invalid(RecoveryError::InvalidArgument),
     };
-    if !same_file(&source_metadata, &source_path_after) {
+    if !same_file(&source_metadata_after, &source_path_after) {
         return invalid(RecoveryError::InvalidArgument);
     }
 
@@ -110,9 +123,9 @@ pub fn project_recovery_discover(source_path: &[u8], capsule_path: &[u8]) -> Rec
         Ok(view) => view,
         Err(failure) => return invalid(failure.error),
     };
-    let stamp_matches = view.source_size == source_metadata.len()
-        && view.source_modified_seconds == source_metadata.mtime()
-        && view.source_modified_nanoseconds == source_metadata.mtime_nsec() as u32;
+    let stamp_matches = view.source_size == source_metadata_after.len()
+        && view.source_modified_seconds == source_metadata_after.mtime()
+        && view.source_modified_nanoseconds == source_metadata_after.mtime_nsec() as u32;
     if stamp_matches {
         RecoveryDiscovery::Matching { capsule_bytes }
     } else {
