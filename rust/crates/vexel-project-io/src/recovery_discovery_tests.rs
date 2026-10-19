@@ -189,6 +189,38 @@ fn absent_matching_conflict_and_read_only_associations() {
 }
 
 #[test]
+fn rejects_hard_link_alias_before_reading_source_body() {
+    let source = path("source");
+    let recovery = path("capsule-hard-link");
+    write(&source, b"source bytes are never read");
+    fs::hard_link(os_path(&source), os_path(&recovery)).unwrap();
+    let source_before = fs::symlink_metadata(os_path(&source)).unwrap();
+    let capsule_before = fs::symlink_metadata(os_path(&recovery)).unwrap();
+    assert!(same_file(&source_before, &capsule_before));
+
+    let body_read = std::cell::Cell::new(false);
+    let result = project_recovery_discover_with_after_capsule_read(&source, &recovery, || {
+        body_read.set(true);
+    });
+    assert!(!body_read.get(), "discovery read the aliased source body");
+    assert!(matches!(
+        result,
+        RecoveryDiscovery::Invalid {
+            error: RecoveryError::InvalidArgument
+        }
+    ));
+    let source_after = fs::symlink_metadata(os_path(&source)).unwrap();
+    let capsule_after = fs::symlink_metadata(os_path(&recovery)).unwrap();
+    assert!(same_file(&source_before, &source_after));
+    assert!(same_file(&capsule_before, &capsule_after));
+    assert_eq!(
+        fs::read(os_path(&source)).unwrap(),
+        b"source bytes are never read"
+    );
+    cleanup(&[&source, &recovery]);
+}
+
+#[test]
 fn source_edit_during_capsule_read_uses_refreshed_descriptor_stamp() {
     let source = path("source");
     let recovery = path("capsule");

@@ -65,6 +65,9 @@ fn project_recovery_discover_with_after_capsule_read(
         Ok(metadata) if metadata.file_type().is_file() => metadata,
         _ => return invalid(RecoveryError::InvalidArgument),
     };
+    if same_file(&source_metadata, &capsule_metadata) {
+        return invalid(RecoveryError::InvalidArgument);
+    }
     let capsule_path_metadata = match fs::symlink_metadata(capsule_path_os) {
         Ok(metadata) if metadata.file_type().is_file() => metadata,
         _ => return invalid(RecoveryError::InvalidArgument),
