@@ -41,6 +41,17 @@ fn session_error(error: SessionError) -> &'static str {
         | SessionError::NotDurable
         | SessionError::OutOfMemory
         | SessionError::Document(_) => "file operation failed",
+        SessionError::RecoveryConflict => "recovery conflict; use Save As",
+        SessionError::SourceChanged => "project source changed; reopen it or use Save As",
+        SessionError::PublishedStateUnknown => {
+            "file was saved but project identity could not be confirmed; reopen it"
+        }
+        SessionError::RecoveryUnavailable => "recovery store unavailable",
+        SessionError::RecoveryNotDurable => {
+            "recovery snapshot published but durability is unconfirmed"
+        }
+        SessionError::RecoveryCleanup => "project saved but recovery cleanup failed",
+        SessionError::RecoveryInvalid => "invalid recovery snapshot",
     }
 }
 
