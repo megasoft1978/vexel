@@ -75,7 +75,7 @@ fn frame(kind: Kind, dark: bool, scale: u32) -> (u32, u32, Vec<u8>) {
         std::thread::sleep(Duration::from_millis(2));
     }
     model.chrome = chrome_text(&AppState::from_session(&app, &view));
-    model.sync_history(app.document());
+    model.sync_history(&app);
     let layout = model.layout(SIZE.0, SIZE.1).unwrap();
     let time = Rc::new(Cell::new(1_000_000_000));
     let mut motion = MotionAdapter::with_clock(TestClock(time.clone()), false);

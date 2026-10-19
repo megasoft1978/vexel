@@ -1,0 +1,384 @@
+{
+  "work_order": "WO-RUST-MIGRATION-RECONCILE-01",
+  "candidate_only": true,
+  "migration_closure_claimed": false,
+  "inputs": {
+    "baseline.jsonl": {
+      "path": "artifacts/WO-RUST-MIGRATION-INVENTORY-01/baseline.jsonl",
+      "sha256": "c4b1128df1290120ce27c623d0e38cc5498e2499abbbdd067223bd41349fad60",
+      "rows": 603
+    },
+    "current-additions.jsonl": {
+      "path": "artifacts/WO-RUST-MIGRATION-INVENTORY-01/current-additions.jsonl",
+      "sha256": "5eec6b79c82b37da9e7e5f5830c5bb8efa4e28a5aee8b0ce75348099f56a1c9b",
+      "rows": 1007
+    }
+  },
+  "total_rows": 1610,
+  "reconciliation_counts": {
+    "pending": 609,
+    "reference_historical": 308,
+    "unresolved": 693
+  },
+  "accepted_replacement_rows": 0,
+  "finding": "The frozen source inventory reports zero accepted replacement rows and its result documents no substantiated per-file parity map. Accordingly this candidate records no accepted replacement on similarity alone. All legacy baseline rows remain pending; Rust code additions await explicit mapping; frozen historical assets and explicit legacy fixture copies remain references.",
+  "limitations": [
+    "Read-only evidence reconciliation; no tests/builds/benchmarks or source changes.",
+    "The current-additions inventory is a path/accounting snapshot, not a behavioral parity map.",
+    "No complete accepted Rust work-order-to-legacy-file assertion matrix was found in the frozen inventory evidence.",
+    "Do not delete legacy C/Objective-C, Python, fixtures, or assets under this candidate."
+  ],
+  "groups": {
+    "app/editor_chrome_render.c": {
+      "pending": 1
+    },
+    "app/editor_command_overlay_render.c": {
+      "pending": 1
+    },
+    "app/index_bench.c": {
+      "pending": 1
+    },
+    "app/index_replay.c": {
+      "pending": 1
+    },
+    "app/index_replay.h": {
+      "pending": 1
+    },
+    "app/main.c": {
+      "pending": 1
+    },
+    "app/spatial_cache_bench.c": {
+      "pending": 1
+    },
+    "app/test_driver": {
+      "pending": 4
+    },
+    "app/ui_demo.c": {
+      "pending": 1
+    },
+    "app/ui_demo.h": {
+      "pending": 1
+    },
+    "app/ui_demo_render.c": {
+      "pending": 1
+    },
+    "app/ui_focus_bench.c": {
+      "pending": 1
+    },
+    "app/vexel_mcp_main.c": {
+      "pending": 1
+    },
+    "bench/corpus": {
+      "reference_historical": 24
+    },
+    "bench/generate": {
+      "pending": 3
+    },
+    "bench/harness": {
+      "pending": 4
+    },
+    "dev": {
+      "pending": 1
+    },
+    "packaging/__init__.py": {
+      "pending": 1
+    },
+    "packaging/vexel_packaging.py": {
+      "pending": 1
+    },
+    "reports/M0": {
+      "pending": 1
+    },
+    "reports/M3": {
+      "pending": 2
+    },
+    "reports/M4": {
+      "pending": 2
+    },
+    "resources/AppIcon.icns": {
+      "reference_historical": 1
+    },
+    "rust/crates": {
+      "unresolved": 673,
+      "reference_historical": 8
+    },
+    "rust/fixtures": {
+      "reference_historical": 275,
+      "pending": 1,
+      "unresolved": 2
+    },
+    "rust/tools": {
+      "unresolved": 18
+    },
+    "scripts/bench_vs_inkscape.sh": {
+      "pending": 1
+    },
+    "scripts/check_ci.py": {
+      "pending": 1
+    },
+    "scripts/check_fuzz_workflow.py": {
+      "pending": 1
+    },
+    "scripts/check_rust_fmt.py": {
+      "pending": 1
+    },
+    "scripts/corpus_render_report.py": {
+      "pending": 1
+    },
+    "scripts/demo_run.sh": {
+      "pending": 1
+    },
+    "scripts/doctor.py": {
+      "pending": 1
+    },
+    "scripts/e2e_svg.py": {
+      "pending": 1
+    },
+    "scripts/fetch_corpus.py": {
+      "pending": 1
+    },
+    "scripts/fuzz_smoke.py": {
+      "pending": 1
+    },
+    "scripts/golden_diff.py": {
+      "pending": 1
+    },
+    "scripts/install_smoke.py": {
+      "pending": 1
+    },
+    "scripts/ledger.py": {
+      "pending": 1
+    },
+    "scripts/live_check.sh": {
+      "pending": 1
+    },
+    "scripts/make_icon.py": {
+      "pending": 1
+    },
+    "scripts/make_sbom.py": {
+      "pending": 1
+    },
+    "scripts/perf_gate.py": {
+      "pending": 1
+    },
+    "scripts/pixdiff.py": {
+      "pending": 1
+    },
+    "scripts/quick_test.py": {
+      "pending": 1
+    },
+    "scripts/sanitizer_probes.py": {
+      "pending": 1
+    },
+    "scripts/soak.py": {
+      "pending": 1
+    },
+    "scripts/test_runner.py": {
+      "pending": 1
+    },
+    "scripts/wo-run.sh": {
+      "pending": 1
+    },
+    "scripts/wo-verify.sh": {
+      "pending": 1
+    },
+    "scripts/wo_driver.py": {
+      "pending": 1
+    },
+    "scripts/wo_validate.py": {
+      "pending": 1
+    },
+    "scripts/xml_fuzz.py": {
+      "pending": 1
+    },
+    "scripts/xml_fuzz_campaign.py": {
+      "pending": 1
+    },
+    "src/app": {
+      "pending": 109
+    },
+    "src/base": {
+      "pending": 2
+    },
+    "src/document": {
+      "pending": 16
+    },
+    "src/geom": {
+      "pending": 2
+    },
+    "src/jobs": {
+      "pending": 4
+    },
+    "src/mcp": {
+      "pending": 25
+    },
+    "src/platform": {
+      "pending": 50
+    },
+    "src/project": {
+      "pending": 25
+    },
+    "src/raster": {
+      "pending": 27
+    },
+    "src/spatial": {
+      "pending": 2
+    },
+    "src/svg": {
+      "pending": 61
+    },
+    "src/ui": {
+      "pending": 20
+    },
+    "tests/__init__.py": {
+      "pending": 1
+    },
+    "tests/anim": {
+      "pending": 9
+    },
+    "tests/app": {
+      "pending": 16
+    },
+    "tests/base": {
+      "pending": 1
+    },
+    "tests/bench_raster_culling.py": {
+      "pending": 1
+    },
+    "tests/bench_shape_raster.py": {
+      "pending": 1
+    },
+    "tests/document": {
+      "pending": 2
+    },
+    "tests/e2e": {
+      "pending": 9
+    },
+    "tests/edit": {
+      "pending": 3
+    },
+    "tests/editor": {
+      "pending": 27
+    },
+    "tests/fuzz": {
+      "pending": 2
+    },
+    "tests/jobs": {
+      "pending": 1
+    },
+    "tests/mcp": {
+      "pending": 12
+    },
+    "tests/platform": {
+      "pending": 5
+    },
+    "tests/platform_media": {
+      "pending": 3
+    },
+    "tests/project": {
+      "pending": 10
+    },
+    "tests/raster": {
+      "pending": 1
+    },
+    "tests/realworld": {
+      "pending": 3
+    },
+    "tests/svg": {
+      "pending": 39
+    },
+    "tests/test_benchmark_harness.py": {
+      "pending": 1
+    },
+    "tests/test_boot05.py": {
+      "pending": 1
+    },
+    "tests/test_corpus_fetch.py": {
+      "pending": 1
+    },
+    "tests/test_corpus_render_report.py": {
+      "pending": 1
+    },
+    "tests/test_dev.py": {
+      "pending": 1
+    },
+    "tests/test_document_model.py": {
+      "pending": 1
+    },
+    "tests/test_golden_diff.py": {
+      "pending": 1
+    },
+    "tests/test_golden_oracle.py": {
+      "pending": 1
+    },
+    "tests/test_jobs.py": {
+      "pending": 1
+    },
+    "tests/test_ledger.py": {
+      "pending": 1
+    },
+    "tests/test_literal_lengths.py": {
+      "pending": 1
+    },
+    "tests/test_m3_packet.py": {
+      "pending": 1
+    },
+    "tests/test_perf_gate.py": {
+      "pending": 1
+    },
+    "tests/test_platform_driver.py": {
+      "pending": 1
+    },
+    "tests/test_platform_media.py": {
+      "pending": 1
+    },
+    "tests/test_quick_tools.py": {
+      "pending": 1
+    },
+    "tests/test_shape_render.py": {
+      "pending": 1
+    },
+    "tests/test_source_save.py": {
+      "pending": 1
+    },
+    "tests/test_spatial_cache.py": {
+      "pending": 1
+    },
+    "tests/test_stress_generator.py": {
+      "pending": 1
+    },
+    "tests/test_svg_index.py": {
+      "pending": 1
+    },
+    "tests/test_ui_chrome_golden.py": {
+      "pending": 1
+    },
+    "tests/test_ui_driver.py": {
+      "pending": 1
+    },
+    "tests/test_viewer_frame.py": {
+      "pending": 1
+    },
+    "tests/test_viewer_navigation.py": {
+      "pending": 1
+    },
+    "tests/test_w15_accessibility_localization.py": {
+      "pending": 1
+    },
+    "tests/test_wo_runner.py": {
+      "pending": 1
+    },
+    "tests/test_xml_fuzz_campaign.py": {
+      "pending": 1
+    },
+    "tests/test_xml_tokenizer.py": {
+      "pending": 1
+    },
+    "tests/ui": {
+      "pending": 24
+    },
+    "tests/viewer": {
+      "pending": 7
+    }
+  }
+}

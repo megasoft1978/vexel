@@ -11,7 +11,7 @@
 
 use super::AppDocument;
 use crate::compose::PointMap;
-use crate::project_session::SessionError;
+use crate::project_session::{SessionEditError, SessionError};
 use crate::tools::CanvasMap;
 use vexel_platform_apple::Modifiers;
 use vexel_v1_document::V1Document;
@@ -36,7 +36,10 @@ pub trait PlaybackHost {
 
 impl AppDocument {
     /// Runs `editor` through [`AppDocument::edit`].
-    pub fn apply<E: DocumentEditor>(&mut self, editor: &mut E) -> Result<EditOutcome, E::Error> {
+    pub fn apply<E: DocumentEditor>(
+        &mut self,
+        editor: &mut E,
+    ) -> Result<EditOutcome, SessionEditError<E::Error>> {
         let before = self.revision();
         self.edit(|doc| editor.apply(doc))?;
         Ok(if self.revision() == before {

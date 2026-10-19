@@ -84,8 +84,7 @@ fn dirty_recovery_round_trips_scene_and_opaque_payload() {
     with_test_home(&home, || {
         let mut session = ProjectSession::open(bytes(&source_path)).unwrap();
         session
-            .document_mut()
-            .add_rectangle(10.0, 20.0, 70.0, 80.0, "#123456")
+            .edit(|document| document.add_rectangle(10.0, 20.0, 70.0, 80.0, "#123456"))
             .unwrap();
         let recovered_scene = session.document().source().unwrap();
         session.capture_recovery(1234).unwrap();
@@ -132,8 +131,7 @@ fn conflict_restore_remains_dirty_and_discard_removes_capsule() {
     with_test_home(&home, || {
         let mut edited = ProjectSession::open(bytes(&source_path)).unwrap();
         edited
-            .document_mut()
-            .add_rectangle(1.0, 1.0, 4.0, 4.0, "#abcdef")
+            .edit(|document| document.add_rectangle(1.0, 1.0, 4.0, 4.0, "#abcdef"))
             .unwrap();
         let mut changed_document = V1Document::new(32, 32).unwrap();
         changed_document
@@ -187,8 +185,7 @@ fn successful_save_cleans_capsule_and_failed_discard_keeps_recovery_dirty() {
     with_test_home(&home, || {
         let mut session = ProjectSession::open(bytes(&source_path)).unwrap();
         session
-            .document_mut()
-            .add_rectangle(3.0, 3.0, 12.0, 9.0, "#112233")
+            .edit(|document| document.add_rectangle(3.0, 3.0, 12.0, 9.0, "#112233"))
             .unwrap();
         session.capture_recovery(9012).unwrap();
         assert_eq!(session.recovery_status().unwrap(), RecoveryStatus::Matching);
@@ -197,8 +194,7 @@ fn successful_save_cleans_capsule_and_failed_discard_keeps_recovery_dirty() {
         assert_eq!(session.recovery_status().unwrap(), RecoveryStatus::Absent);
 
         session
-            .document_mut()
-            .add_rectangle(20.0, 20.0, 10.0, 8.0, "#445566")
+            .edit(|document| document.add_rectangle(20.0, 20.0, 10.0, 8.0, "#445566"))
             .unwrap();
         session.capture_recovery(9013).unwrap();
         let canonical = super::recovery_store::canonical_source_path(bytes(&source_path)).unwrap();
@@ -233,8 +229,7 @@ fn durable_save_with_unavailable_new_baseline_reports_published_state() {
 
     let mut session = ProjectSession::open(bytes(&source_path)).unwrap();
     session
-        .document_mut()
-        .add_rectangle(1.0, 2.0, 13.0, 17.0, "#123abc")
+        .edit(|document| document.add_rectangle(1.0, 2.0, 13.0, 17.0, "#123abc"))
         .unwrap();
     let new_scene = session.document().source().unwrap();
     let old_baseline = session.baseline.clone();
@@ -266,8 +261,7 @@ fn corrupt_capsule_is_typed_and_does_not_partially_replace_the_session() {
     with_test_home(&home, || {
         let mut session = ProjectSession::open(bytes(&source_path)).unwrap();
         session
-            .document_mut()
-            .add_rectangle(4.0, 5.0, 16.0, 14.0, "#778899")
+            .edit(|document| document.add_rectangle(4.0, 5.0, 16.0, 14.0, "#778899"))
             .unwrap();
         session.capture_recovery(3344).unwrap();
         let live_scene = session.document().source().unwrap();
@@ -340,8 +334,7 @@ fn mismatched_capsule_identity_is_preserved_by_capture_and_cleanup() {
 
         let mut session = ProjectSession::open(bytes(&source_a)).unwrap();
         session
-            .document_mut()
-            .add_rectangle(2.0, 3.0, 12.0, 15.0, "#abcdef")
+            .edit(|document| document.add_rectangle(2.0, 3.0, 12.0, 15.0, "#abcdef"))
             .unwrap();
         assert_eq!(
             session.capture_recovery(78),

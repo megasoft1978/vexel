@@ -62,15 +62,14 @@ fn saved_project_recovers_edits_and_save_as_preserves_original() {
     let _home = HomeGuard::set(&home);
 
     let source_path = projects.join("source.vexel");
-    let source = ProjectSession::new(V1Document::new(120, 90).unwrap());
+    let source = ProjectSession::new(V1Document::new(120, 90).unwrap()).unwrap();
     let mut source = source;
     source.save_as(source_path.as_os_str().as_bytes()).unwrap();
     let original_bytes = fs::read(&source_path).unwrap();
 
     let mut edited = ProjectSession::open(source_path.as_os_str().as_bytes()).unwrap();
     edited
-        .document_mut()
-        .add_rectangle(8.0, 9.0, 30.0, 25.0, "#345678")
+        .edit(|document| document.add_rectangle(8.0, 9.0, 30.0, 25.0, "#345678"))
         .unwrap();
     let recovered_scene = edited.document().source().unwrap();
     edited.capture_recovery(42).unwrap();

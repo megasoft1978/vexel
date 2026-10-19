@@ -77,15 +77,16 @@ fn bytes(path: &Path) -> &[u8] {
 
 fn saved(path: &Path) -> ProjectSession {
     let document = V1Document::new(120, 80).unwrap();
-    let mut session = ProjectSession::new(document);
+    let mut session = ProjectSession::new(document).unwrap();
     session.save_as(bytes(path)).unwrap();
     session
 }
 
 fn dirty(session: &mut ProjectSession) {
     session
-        .document_mut()
-        .add_rectangle_with_id(2.0, 3.0, 20.0, 12.0, "#123456", "recovered")
+        .edit(|document| {
+            document.add_rectangle_with_id(2.0, 3.0, 20.0, 12.0, "#123456", "recovered")
+        })
         .unwrap();
 }
 
@@ -107,7 +108,7 @@ fn matching_cancel_preserves_the_live_session_and_snapshot() {
             snapshot.recovery_status().unwrap(),
             RecoveryStatus::Matching
         );
-        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap());
+        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap()).unwrap();
         dirty(&mut live);
         let before = live.document().source().unwrap();
         let backend = Backend::default();
@@ -126,6 +127,24 @@ fn matching_cancel_preserves_the_live_session_and_snapshot() {
 }
 
 #[test]
+fn failed_candidate_open_preserves_the_live_session() {
+    let dir = Dir::new();
+    with_recovery_test_home(&dir.home(), || {
+        let path = dir.file("live.vexel");
+        let mut live = recovery(&path);
+        let before = live.document().source().unwrap();
+        let backend = Backend::default();
+        assert!(matches!(
+            open_selected(&mut live, bytes(&dir.file("missing.vexel")), &backend),
+            FlowOutcome::Failed(_)
+        ));
+        assert_eq!(live.document().source().unwrap(), before);
+        assert_eq!(live.path(), Some(bytes(&path)));
+        assert_eq!(live.recovery_status().unwrap(), RecoveryStatus::Matching);
+    });
+}
+
+#[test]
 fn restore_adopts_dirty_snapshot_only_after_success() {
     let dir = Dir::new();
     with_recovery_test_home(&dir.home(), || {
@@ -134,7 +153,7 @@ fn restore_adopts_dirty_snapshot_only_after_success() {
         let recovered = snapshot.document().source().unwrap();
         let backend = Backend::default();
         backend.choice.set(RecoveryChoice::Restore);
-        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap());
+        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap()).unwrap();
         assert_eq!(
             open_selected(&mut live, bytes(&path), &backend),
             FlowOutcome::Opened
@@ -155,7 +174,7 @@ fn discard_adopts_normal_open_and_cancel_is_the_only_prompt_free_stop() {
         let snapshot = recovery(&path);
         let backend = Backend::default();
         backend.choice.set(RecoveryChoice::Discard);
-        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap());
+        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap()).unwrap();
         assert_eq!(
             open_selected(&mut live, bytes(&path), &backend),
             FlowOutcome::Opened
@@ -174,7 +193,7 @@ fn absent_recovery_opens_normally_without_a_prompt() {
         let path = dir.file("plain.vexel");
         let expected = saved(&path).document().source().unwrap();
         let backend = Backend::default();
-        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap());
+        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap()).unwrap();
         assert_eq!(
             open_selected(&mut live, bytes(&path), &backend),
             FlowOutcome::Opened
@@ -209,7 +228,7 @@ fn conflict_restore_is_explicit_and_keeps_changed_source_bytes() {
 
         let backend = Backend::default();
         backend.choice.set(RecoveryChoice::Restore);
-        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap());
+        let mut live = ProjectSession::new(V1Document::new(40, 40).unwrap()).unwrap();
         assert_eq!(
             open_selected(&mut live, bytes(&path), &backend),
             FlowOutcome::Opened

@@ -103,10 +103,10 @@ fn drawn() -> ProjectSession {
     let mut doc = V1Document::new(200, 100).unwrap();
     doc.add_rectangle_with_id(10.0, 10.0, 60.0, 50.0, "#ff0000", "r1")
         .unwrap();
-    ProjectSession::new(doc)
+    ProjectSession::new(doc).unwrap()
 }
 fn blank() -> ProjectSession {
-    ProjectSession::new(V1Document::new(64, 64).unwrap())
+    ProjectSession::new(V1Document::new(64, 64).unwrap()).unwrap()
 }
 /// Writes a valid project and returns its bytes and the scene source saved.
 fn fixture(dir: &Dir, name: &str) -> (PathBuf, Vec<u8>, Vec<u8>) {
@@ -147,8 +147,7 @@ fn save_with_path_writes_without_any_panel() {
     let mut session = drawn();
     session.save_as(bytes(&target)).unwrap();
     session
-        .document_mut()
-        .add_ellipse_with_id(1.0, 1.0, 9.0, 9.0, "#00ff00", "e1")
+        .edit(|document| document.add_ellipse_with_id(1.0, 1.0, 9.0, 9.0, "#00ff00", "e1"))
         .unwrap();
     assert!(session.is_dirty());
     let backend = Fake::default();
@@ -188,8 +187,7 @@ fn cancelling_any_panel_changes_nothing() {
     let (path, on_disk, _) = fixture(&dir, "keep.vexel");
     let mut session = ProjectSession::open(bytes(&path)).unwrap();
     session
-        .document_mut()
-        .add_ellipse_with_id(1.0, 1.0, 9.0, 9.0, "#00ff00", "e1")
+        .edit(|document| document.add_ellipse_with_id(1.0, 1.0, 9.0, 9.0, "#00ff00", "e1"))
         .unwrap();
     let before = session.document().source().unwrap();
     for (action, script) in [(FileAction::SaveAs, "save"), (FileAction::Open, "open")] {
@@ -548,8 +546,7 @@ fn menu_enablement_table() {
     saved.save_as(bytes(&path)).unwrap();
     assert_eq!(menu_enabled(&saved), [true, false, true]);
     saved
-        .document_mut()
-        .add_ellipse_with_id(1.0, 1.0, 9.0, 9.0, "#00ff00", "e1")
+        .edit(|document| document.add_ellipse_with_id(1.0, 1.0, 9.0, 9.0, "#00ff00", "e1"))
         .unwrap();
     assert_eq!(menu_enabled(&saved), [true, true, true]);
 }

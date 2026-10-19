@@ -4,6 +4,8 @@
 use std::{fmt, fmt::Write as FmtWrite, io::Write as IoWrite, sync::Arc};
 use vexel_document_edit::{EditError, EditLimits, Editor, TemplateAttribute, TemplateKind};
 
+pub use vexel_document_edit::EditSnapshot;
+
 mod draw;
 mod path_data;
 
@@ -128,6 +130,13 @@ impl V1Document {
     pub fn is_dirty(&self) -> bool {
         self.editor.is_dirty()
     }
+
+    /// Captures a bounded immutable view of the source without materializing it.
+    /// The snapshot shares the editor's immutable byte owners and can be sent to
+    /// a background recovery writer.
+    pub fn edit_snapshot(&self) -> Result<EditSnapshot, V1DocumentError> {
+        self.editor.snapshot().map_err(V1DocumentError::Edit)
+    }
     pub fn mark_saved(&mut self) {
         self.editor.mark_saved();
     }
@@ -136,6 +145,28 @@ impl V1Document {
     }
     pub fn history_cursor(&self) -> usize {
         self.editor.history_cursor()
+    }
+
+    /// Returns the opaque identity of the current source state.
+    pub fn history_state_id(&self) -> u64 {
+        self.editor.history_bridge_state_id()
+    }
+
+    /// Returns the opaque identity at a reachable history cursor.
+    pub fn history_state_id_at(&self, cursor: usize) -> Option<u64> {
+        self.editor.history_bridge_state_id_at(cursor)
+    }
+
+    /// Moves atomically to a reachable source state identified by `state_id`.
+    pub fn history_navigate(&mut self, state_id: u64) -> Result<(), V1DocumentError> {
+        self.editor
+            .history_bridge_navigate(state_id)
+            .map_err(Into::into)
+    }
+
+    /// Closes the current history command's coalescing group.
+    pub fn history_boundary(&mut self) {
+        self.editor.history_bridge_boundary();
     }
 
     /// Returns a fallibly allocated exact snapshot of the editable SVG bytes.
@@ -473,5 +504,9 @@ impl fmt::Write for FixedText {
 
 #[cfg(test)]
 mod draw_tests;
+#[cfg(test)]
+mod history_bridge_tests;
+#[cfg(test)]
+mod snapshot_tests;
 #[cfg(test)]
 mod tests;

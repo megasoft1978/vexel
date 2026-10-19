@@ -1,0 +1,67 @@
+Vexel native app wave verification
+Date: 2026-10-19
+Work order: WO-RUST-V1-NATIVE-APP-01 revision 1
+Base: 849371835fa4cb8c3e48ff154778a3ec5d7de196
+
+Commands and results
+
+1. `cargo check --workspace --locked`
+   Exit 0.
+
+2. `cargo test --workspace --locked -- --test-threads=1`
+   Exit 0. All unit, integration, and documentation test binaries completed
+   successfully; no failures. Repository-configured measurement/reproducer
+   tests were intentionally ignored.
+
+3. `python3 -m unittest tests.test_ledger tests.test_wo_runner`
+   Ran 51 tests in 4.233s; OK.
+
+4. `python3 scripts/ledger.py validate ledger.jsonl`
+   `valid ledger: 2276 entries`.
+
+5. `python3 scripts/wo_validate.py --ready WO-RUST-V1-NATIVE-APP-01`
+   `valid WO-RUST-V1-NATIVE-APP-01 revision 1 sha256 3c7d74698670e1adc86504858dc40440bb7d849e835374e990aef11baf0b4047`.
+
+6. `cargo run -p vexel-dev --locked -- check-ci .github/workflows/ci.yml`
+   Exit 0. `macOS-only CI policy: pass`.
+
+7. `git diff --check`
+   Exit 0; no output.
+
+Independent Sol review: CLEAN. It found the N0-N8 native app/session/timeline/
+recovery wave and supporting changes clear, and confirmed the fixes for escaped
+string decoding, recovery cadence, and stale-target disabled state.
+
+GUI acceptance and hosted GitHub Actions for a post-change commit were not run;
+they remain unverified. This evidence accepts only the scoped native app wave,
+not the full product goal.
+8. `rustfmt --check --edition 2024 --config skip_children=true` over all 73 changed Rust files
+   Exit 0. The changed Rust files have no formatting diffs.
+
+Workspace-wide formatting check note
+
+`cargo fmt --all -- --check` exits 1 because rustfmt reports formatting differences
+in 141 workspace Rust files that have no working-tree changes. The native-wave
+changed-file check above passes; no repo-wide formatter sweep was applied.
+
+Follow-up coordinator bookkeeping verification (2026-10-19)
+
+After recording scoped acceptance transitions for the verified wave orders,
+`python3 -m unittest tests.test_ledger tests.test_wo_runner` passed again (51
+tests), and `python3 scripts/ledger.py validate ledger.jsonl` reported 2,315
+valid entries. Parent WO readiness validation and `git diff --check` passed
+again. No source changes followed the full workspace test run; only Rust formatting
+and evidence/ledger bookkeeping changed.
+
+Final frozen-tree rerun (2026-10-19)
+
+- `cargo check --workspace --locked`: exit 0.
+- `cargo test --workspace --locked -- --test-threads=1`: exit 0; all unit,
+  integration, and documentation test binaries completed without failures.
+  No aggregate count is reported.
+- `python3 -m unittest tests.test_ledger tests.test_wo_runner`: 51 tests, OK.
+- `python3 scripts/ledger.py validate ledger.jsonl`: 2,315 valid entries.
+- Readiness checks passed for native-app, CI-pan, dependency-scope, lint-cleanup,
+  and automatic-recovery work orders.
+- Changed-file rustfmt check passed for all 73 changed Rust files; `git diff
+  --check` and `git diff --cached --check` passed.

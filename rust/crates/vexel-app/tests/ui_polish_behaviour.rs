@@ -400,10 +400,10 @@ fn redo_is_enabled_only_after_an_undo_and_a_load_resets_it() {
     let cursor = |a: &AppDocument| (a.document().history_cursor(), a.document().history_count());
     edit(&mut app, "a", 10.0);
     edit(&mut app, "b", 50.0);
-    model.sync_history(app.document());
+    model.sync_history(&app);
     assert!(!redo(&model));
     assert!(history::apply(&mut app, EditAction::Undo));
-    model.sync_history(app.document());
+    model.sync_history(&app);
     assert!(redo(&model));
     assert!(history::apply(&mut app, EditAction::Undo));
     assert_eq!(cursor(&app), (0, 2));
@@ -412,11 +412,11 @@ fn redo_is_enabled_only_after_an_undo_and_a_load_resets_it() {
         2
     );
     assert!(history::apply(&mut app, EditAction::Redo));
-    model.sync_history(app.document());
+    model.sync_history(&app);
     assert!(redo(&model));
     assert_eq!(cursor(&app), (1, 2));
     edit(&mut app, "c", 90.0);
-    model.sync_history(app.document());
+    model.sync_history(&app);
     assert!(!redo(&model));
     // Redo while disabled is a no-op: the document does not change.
     let (rev, src) = (app.revision(), app.source_bytes().unwrap());
@@ -424,11 +424,11 @@ fn redo_is_enabled_only_after_an_undo_and_a_load_resets_it() {
     assert_eq!((app.revision(), app.source_bytes().unwrap()), (rev, src));
     // Load resets.
     history::apply(&mut app, EditAction::Undo);
-    assert!(Availability::of(app.document()).redo);
+    assert!(Availability::of(&app).redo);
     let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/v1/compose/compose-v1.svg");
     app.open_path(&fixture).unwrap();
-    assert_eq!(Availability::of(app.document()), Availability::default());
-    assert!(model.sync_history(app.document()));
+    assert_eq!(Availability::of(&app), Availability::default());
+    assert!(model.sync_history(&app));
     assert!(!redo(&model));
 }

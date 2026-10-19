@@ -5,22 +5,41 @@
 //! no history section, so a reopened document starts clean with empty history.
 
 mod actions;
+mod edit_error;
+mod history;
+mod journal_integration;
+#[cfg(test)]
+mod journal_integration_tests;
+mod native_commands;
 mod payload;
 mod recovery;
+mod recovery_snapshot;
 mod recovery_store;
 #[cfg(test)]
 mod recovery_tests;
+mod svg_asset;
+#[cfg(test)]
+mod svg_asset_tests;
 #[cfg(test)]
 mod tests;
+mod timeline_edit;
+#[cfg(test)]
+mod timeline_edit_tests;
 
 pub use actions::{FileAction, shortcut_action, unsaved_changes_prompt};
+pub use edit_error::SessionEditError;
+pub use native_commands::{MAX_SCENE_ID_BYTES, MAX_SCENE_IDS, NativeCommandError, SceneIdsError};
 pub use recovery::RecoveryStatus;
+pub use recovery_snapshot::RecoverySnapshot;
+pub use svg_asset::{OwnedProjectAsset, SvgAssetError};
+pub use timeline_edit::{ProjectTimelineCandidate, ProjectTimelineError};
 
 #[cfg(test)]
 pub(crate) fn with_recovery_test_home<R>(home: &std::path::Path, action: impl FnOnce() -> R) -> R {
     recovery_store::with_test_home(home, action)
 }
 
+use history::Journal;
 use payload::SessionPayload;
 use vexel_project::{self as project, Error as BundleError};
 use vexel_project_io::{FileError, LoadFailure, project_file_load, project_file_save_as};
@@ -66,6 +85,8 @@ pub enum SessionError {
     RecoveryCleanup,
     /// The recovery capsule is invalid or does not match this project.
     RecoveryInvalid,
+    /// The combined project history could not admit or navigate a state.
+    HistoryUnavailable,
     Document(V1DocumentError),
 }
 
@@ -104,6 +125,7 @@ impl SessionError {
             Self::RecoveryInvalid => {
                 "The recovery snapshot is damaged or belongs to another project."
             }
+            Self::HistoryUnavailable => "The project history could not be updated.",
             Self::Document(_) => "The document could not be read for saving.",
         }
     }
@@ -164,6 +186,7 @@ fn write_project_with_payload(
 pub struct ProjectSession {
     document: V1Document,
     payload: SessionPayload,
+    journal: Journal<SessionPayload>,
     path: Option<Vec<u8>>,
     /// Path of the `.svg` this untitled document was imported from, if any.
     /// Display only: Save never writes to it.
@@ -177,23 +200,26 @@ pub struct ProjectSession {
 }
 
 impl ProjectSession {
-    pub fn new(document: V1Document) -> Self {
+    pub fn new(document: V1Document) -> Result<Self, SessionError> {
         let payload = SessionPayload::defaults(document.width(), document.height());
-        Self {
+        let journal = journal_integration::new_journal(&document, payload.clone())?;
+        Ok(Self {
             document,
             payload,
+            journal,
             path: None,
             svg_origin: None,
             recovery_dirty: false,
             recovery_conflict: false,
             baseline: None,
-        }
+        })
     }
     pub fn document(&self) -> &V1Document {
         &self.document
     }
-    pub fn document_mut(&mut self) -> &mut V1Document {
-        &mut self.document
+
+    pub(crate) fn history_state_id(&self) -> u64 {
+        self.journal.current().app_state_id()
     }
     pub fn path(&self) -> Option<&[u8]> {
         self.path.as_deref()
@@ -203,7 +229,33 @@ impl ProjectSession {
         self.svg_origin.as_deref()
     }
     pub fn is_dirty(&self) -> bool {
-        self.document.is_dirty() || self.recovery_dirty
+        self.document.is_dirty() || self.journal.is_dirty() || self.recovery_dirty
+    }
+
+    /// Runs one scene edit after the journal has admitted its possible state.
+    /// The final observed editor state is recorded even when the operation
+    /// returns an error after making a partial change.
+    pub fn edit<R, E>(
+        &mut self,
+        edit: impl FnOnce(&mut V1Document) -> Result<R, E>,
+    ) -> Result<R, SessionEditError<E>> {
+        journal_integration::edit(self, edit)
+    }
+
+    pub fn undo(&mut self) -> Result<bool, SessionError> {
+        journal_integration::undo(self)
+    }
+
+    pub fn redo(&mut self) -> Result<bool, SessionError> {
+        journal_integration::redo(self)
+    }
+
+    pub fn can_undo(&self) -> bool {
+        journal_integration::can_undo(self)
+    }
+
+    pub fn can_redo(&self) -> bool {
+        journal_integration::can_redo(self)
     }
 
     /// Saves to the current path. The document is marked saved only on success.
@@ -278,6 +330,7 @@ impl ProjectSession {
         write_project_with_payload(path, &source, &self.payload)?;
         self.baseline = Some(refresh(path).map_err(|_| SessionError::PublishedStateUnknown)?);
         self.document.mark_saved();
+        self.journal.checkpoint();
         Ok(())
     }
 
@@ -303,9 +356,11 @@ impl ProjectSession {
             V1Document::from_source(view.scene_svg).map_err(SessionError::InvalidScene)?;
         let payload = SessionPayload::try_from_view_with(view, &mut reserve_allowed)
             .map_err(|()| SessionError::OutOfMemory)?;
+        let journal = journal_integration::new_journal(&document, payload.clone())?;
         Ok(Self {
             document,
             payload,
+            journal,
             path: Some(path.to_vec()),
             svg_origin: None,
             recovery_dirty: false,
@@ -326,9 +381,11 @@ impl ProjectSession {
         let document =
             V1Document::from_source(&opened.bytes).map_err(SessionError::InvalidScene)?;
         let payload = SessionPayload::defaults(document.width(), document.height());
+        let journal = journal_integration::new_journal(&document, payload.clone())?;
         Ok(Self {
             document,
             payload,
+            journal,
             path: None,
             svg_origin: Some(path.to_vec()),
             recovery_dirty: false,

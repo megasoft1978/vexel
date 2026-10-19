@@ -6,7 +6,7 @@
 use super::AppDocument;
 use super::mcp::{McpHost, McpOutcome, source};
 use crate::preview::{AttributeChange, DOCUMENT_ID};
-use crate::project_session::SessionError;
+use crate::project_session::{SessionEditError, SessionError};
 use std::ffi::OsStr;
 use std::os::unix::ffi::OsStrExt;
 use vexel_json::JsonBuffer;
@@ -52,6 +52,7 @@ fn session_error(error: SessionError) -> &'static str {
         }
         SessionError::RecoveryCleanup => "project saved but recovery cleanup failed",
         SessionError::RecoveryInvalid => "invalid recovery snapshot",
+        SessionError::HistoryUnavailable => "project history unavailable",
     }
 }
 
@@ -145,7 +146,10 @@ impl McpHost {
         add: impl FnOnce(&mut V1Document, &str) -> Result<(), V1DocumentError>,
     ) -> Result<McpOutcome, &'static str> {
         let (id, count) = self.reserve_id(app)?;
-        app.edit(|doc| add(doc, &id)).map_err(document_error)?;
+        app.edit(|doc| add(doc, &id)).map_err(|error| match error {
+            SessionEditError::Operation(error) => document_error(error),
+            SessionEditError::History(_) => "project history unavailable",
+        })?;
         self.next_id += 1;
         Ok(McpOutcome::Reply(format!(
             "{{\"ok\":true,\"operation\":\"element_add\",\"elementId\":\"{id}\",\"dirty\":{},\"shapeCount\":{},\"message\":\"Shape added\"}}",
@@ -183,13 +187,20 @@ pub(super) fn attribute_set(
         }
         AttributeChange::Translate(dx, dy) => app.edit(|doc| doc.translate(id, *dx, *dy)),
     }
-    .map_err(document_error)?;
+    .map_err(|error| match error {
+        SessionEditError::Operation(error) => document_error(error),
+        SessionEditError::History(_) => "project history unavailable",
+    })?;
     Ok(done("attribute_set", Some(id), app))
 }
 
 pub(super) fn delete(app: &mut AppDocument, id: &str) -> Result<McpOutcome, &'static str> {
     app.document().element_kind(id).map_err(document_error)?;
-    app.edit(|doc| doc.delete(id)).map_err(document_error)?;
+    app.edit(|doc| doc.delete(id))
+        .map_err(|error| match error {
+            SessionEditError::Operation(error) => document_error(error),
+            SessionEditError::History(_) => "project history unavailable",
+        })?;
     Ok(done("element_delete", Some(id), app))
 }
 

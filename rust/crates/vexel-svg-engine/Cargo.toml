@@ -11,9 +11,11 @@ vexel-scene = { path = "../vexel-scene" }
 vexel-svg-paint = { path = "../vexel-svg-paint" }
 vexel-svg-definitions = { path = "../vexel-svg-definitions" }
 vexel-svg-decode = { path = "../vexel-svg-decode" }
-vexel-svg-animation = { path = "../vexel-svg-animation" }
 vexel-base = { path = "../vexel-base" }
 vexel-geometry = { path = "../vexel-geometry" }
 vexel-svg-css = { path = "../vexel-svg-css" }
 vexel-xml = { path = "../vexel-xml" }
 vexel-svg-media = { path = "../vexel-svg-media" }
+
+[dev-dependencies]
+vexel-svg-animation = { path = "../vexel-svg-animation" }

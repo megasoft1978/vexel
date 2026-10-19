@@ -48,3 +48,27 @@ pub fn sync<C: LoopClock>(
     }
     dirty
 }
+
+/// Keeps the static compose current without advancing or publishing SVG SMIL.
+/// The native driver owns animation while this path is active.
+pub fn sync_native<C: LoopClock>(
+    driver: &mut super::driver::Driver<C>,
+    app: &AppDocument,
+    view: &mut DocumentView,
+    stage: (u32, u32),
+) -> bool {
+    let mut dirty = false;
+    let revision = app.revision();
+    if revision > 0 && !view.is_current(revision, stage) {
+        if let Ok(bytes) = app.source_bytes() {
+            let name = app.display_name();
+            view.set_name(name.as_deref().unwrap_or("Untitled"));
+            view.show(&bytes, revision, stage);
+            dirty = true;
+        }
+    }
+    driver.set_size(stage);
+    driver.pause();
+    driver.invalidate();
+    dirty
+}

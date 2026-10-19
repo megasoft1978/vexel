@@ -36,6 +36,8 @@ pub struct DocumentView {
     previous: Option<Composed>,
     /// True while `composed.frame` holds an animated frame (not the static one).
     animated: bool,
+    /// Static compose pixels parked while a native or SMIL frame is shown.
+    static_rgba: Option<Vec<u8>>,
     status: Option<(String, bool)>,
     /// Scene index of the shape picked with the select tool, shown by the
     /// inspector.
@@ -66,6 +68,7 @@ impl DocumentView {
             composed: None,
             previous: None,
             animated: false,
+            static_rgba: None,
             status: None,
             selected: None,
             parsed: None,
@@ -83,6 +86,17 @@ impl DocumentView {
             .shapes
             .iter()
             .find(|s| s.scene_index == index)
+    }
+
+    /// Stable id of the selected source shape, only when it is unique.
+    pub fn selected_target_id(&self) -> Option<&str> {
+        let selected = self.selected?;
+        self.composed
+            .as_ref()?
+            .target_ids
+            .iter()
+            .find(|(index, _)| *index == selected)
+            .map(|(_, id)| id.as_str())
     }
 
     pub fn deselect(&mut self) {
@@ -108,8 +122,26 @@ impl DocumentView {
         {
             return false;
         }
-        composed.frame.rgba = frame.rgba;
+        if self.animated {
+            composed.frame.rgba = frame.rgba;
+        } else {
+            self.static_rgba = Some(std::mem::replace(&mut composed.frame.rgba, frame.rgba));
+        }
         self.animated = true;
+        true
+    }
+
+    /// Restores the latest complete static compose after animated presentation.
+    pub fn restore_static(&mut self) -> bool {
+        if !self.animated {
+            return false;
+        }
+        let (Some(composed), Some(rgba)) = (self.composed.as_mut(), self.static_rgba.take()) else {
+            self.animated = false;
+            return false;
+        };
+        composed.frame.rgba = rgba;
+        self.animated = false;
         true
     }
 
@@ -158,6 +190,7 @@ impl DocumentView {
             self.previous = Some(shown);
         }
         self.animated = false;
+        self.static_rgba = None;
         let name = self.name().unwrap_or("Untitled").to_owned();
         self.status = Some((format!("Composing {name}..."), false));
         match &self.worker {
@@ -228,12 +261,14 @@ impl DocumentView {
                 self.composed = Some(composed);
                 self.previous = None;
                 self.animated = false;
+                self.static_rgba = None;
             }
             Err(ComposeError::Cancelled) => return false,
             Err(error) => {
                 self.composed = None;
                 self.previous = None;
                 self.animated = false;
+                self.static_rgba = None;
                 self.status = Some((format!("{name}: {error}"), true));
             }
         }

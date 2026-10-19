@@ -104,7 +104,106 @@ fn read_baseline(path: &[u8]) -> Result<RecoveryBaseline, SessionError> {
     })
 }
 
+/// Materializes and publishes an immutable capture. This is called from the
+/// recovery worker; owner-thread preparation never reaches this path.
+pub(super) fn publish_recovery_snapshot(
+    snapshot: &super::recovery_snapshot::RecoverySnapshot,
+    published: &mut bool,
+) -> Result<(), SessionError> {
+    let canonical = &snapshot.baseline.canonical_path;
+    let capsule = capsule_path_for_canonical(canonical)?;
+    validate_existing_capsule(&capsule, canonical)?;
+
+    let mut scene = Vec::new();
+    scene
+        .try_reserve_exact(snapshot.scene.byte_length())
+        .map_err(|_| SessionError::OutOfMemory)?;
+    scene.resize(snapshot.scene.byte_length(), 0);
+    snapshot
+        .scene
+        .materialize(&mut scene)
+        .map_err(|error| SessionError::Document(vexel_v1_document::V1DocumentError::Edit(error)))?;
+
+    let mut save_result = Ok(());
+    let prepared = snapshot
+        .payload
+        .try_with_bundle_input(&scene, &mut || true, |project| {
+            let input = RecoveryInput {
+                source_path: canonical,
+                source_size: snapshot.baseline.source_size,
+                source_modified_seconds: snapshot.baseline.modified_seconds,
+                source_modified_nanoseconds: snapshot.baseline.modified_nanoseconds,
+                captured_time_nanoseconds: snapshot.captured_time_ns,
+                project: *project,
+            };
+            let result = project_recovery_save(&capsule, &input);
+            *published = result.published;
+            save_result = match result.error {
+                RecoveryError::Ok => Ok(()),
+                RecoveryError::Durability if result.published => {
+                    Err(SessionError::RecoveryNotDurable)
+                }
+                RecoveryError::Durability => Err(SessionError::RecoveryUnavailable),
+                RecoveryError::OutOfMemory => Err(SessionError::OutOfMemory),
+                RecoveryError::Limit | RecoveryError::PathLimit => Err(SessionError::TooLarge),
+                RecoveryError::InvalidArgument => Err(SessionError::InvalidPath),
+                _ => Err(SessionError::RecoveryUnavailable),
+            };
+            Ok(())
+        });
+    prepared.map_err(|()| SessionError::OutOfMemory)?;
+    save_result
+}
+
 impl ProjectSession {
+    /// Prepares a bounded immutable view for automatic recovery publication.
+    /// The editor source is shared by descriptor; its SVG bytes are materialized
+    /// only when the worker publishes the snapshot.
+    pub fn prepare_recovery_snapshot(
+        &self,
+        epoch: u64,
+        revision: u64,
+        captured_time_ns: u64,
+    ) -> Result<Option<super::recovery_snapshot::RecoverySnapshot>, SessionError> {
+        if !self.is_dirty() {
+            return Ok(None);
+        }
+        let baseline = match (self.path.as_deref(), self.baseline.as_ref()) {
+            (Some(_), Some(baseline)) => baseline,
+            (None, None) => {
+                // Untitled documents and imported SVG sessions have no native
+                // recovery destination.
+                return Ok(None);
+            }
+            _ => return Err(SessionError::RecoveryUnavailable),
+        };
+        let scene = self
+            .document
+            .edit_snapshot()
+            .map_err(SessionError::Document)?;
+        let mut canonical_path = Vec::new();
+        canonical_path
+            .try_reserve_exact(baseline.canonical_path.len())
+            .map_err(|_| SessionError::OutOfMemory)?;
+        canonical_path.extend_from_slice(&baseline.canonical_path);
+        let baseline = RecoveryBaseline {
+            canonical_path,
+            source_size: baseline.source_size,
+            modified_seconds: baseline.modified_seconds,
+            modified_nanoseconds: baseline.modified_nanoseconds,
+            device: baseline.device,
+            inode: baseline.inode,
+        };
+        Ok(Some(super::recovery_snapshot::RecoverySnapshot {
+            baseline,
+            scene,
+            payload: self.payload.clone(),
+            captured_time_ns,
+            epoch,
+            revision,
+        }))
+    }
+
     /// Captures the complete current native project into the private per-user store.
     /// Source SVG imports and untitled sessions have no recovery destination.
     pub fn capture_recovery(&mut self, captured_time_ns: u64) -> Result<(), SessionError> {
@@ -233,6 +332,7 @@ impl ProjectSession {
             V1Document::from_source(view.project.scene_svg).map_err(SessionError::InvalidScene)?;
         let payload = SessionPayload::try_from_view_with(view.project, &mut || true)
             .map_err(|()| SessionError::OutOfMemory)?;
+        let journal = super::journal_integration::new_journal(&document, payload.clone())?;
         let mut restored_baseline = RecoveryBaseline {
             canonical_path: Vec::new(),
             source_size: view.source_size,
@@ -256,6 +356,7 @@ impl ProjectSession {
 
         self.document = document;
         self.payload = payload;
+        self.journal = journal;
         self.path = Some(replacement_path);
         self.svg_origin = None;
         self.baseline = Some(restored_baseline);

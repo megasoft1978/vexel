@@ -14,6 +14,7 @@ use crate::preview::{
     Control, DOCUMENT_ID, Operation, SCENE_LIMIT, Shape, animation_list_json, document_duration,
     object_id, validate_animation_fragment, validate_shape,
 };
+use crate::project_session::{SessionEditError, SessionError};
 use vexel_mcp_access::AccessPolicy;
 use vexel_v1_document::{V1Document, V1DocumentError};
 
@@ -97,14 +98,26 @@ impl McpHost {
             }
             Operation::Add(shape) => self.add(app, shape),
             Operation::AnimationAdd { target_id, xml } => animation_add(app, &target_id, &xml),
-            Operation::Undo => app
-                .undo()
-                .map_err(|_| "nothing to undo")
-                .and_then(|()| changed(app, "Undo complete")),
-            Operation::Redo => app
-                .redo()
-                .map_err(|_| "nothing to redo")
-                .and_then(|()| changed(app, "Redo complete")),
+            Operation::Undo => {
+                if !app.can_undo() {
+                    return Err("nothing to undo");
+                }
+                app.undo()
+                    .map_err(session_edit_error)?
+                    .then_some(())
+                    .ok_or("project history unavailable")
+                    .and_then(|()| changed(app, "Undo complete"))
+            }
+            Operation::Redo => {
+                if !app.can_redo() {
+                    return Err("nothing to redo");
+                }
+                app.redo()
+                    .map_err(session_edit_error)?
+                    .then_some(())
+                    .ok_or("project history unavailable")
+                    .and_then(|()| changed(app, "Redo complete"))
+            }
             Operation::Control(control) => control_playback(app, control, driver),
             Operation::Save => self.save(app),
             Operation::SaveAs { path } => self.save_as(app, &path),
@@ -154,7 +167,10 @@ impl McpHost {
         validate_shape(shape)?;
         let (id, count) = self.reserve_id(app)?;
         app.edit(|doc| add_shape(doc, shape, &id))
-            .map_err(|_| "shape validation failed")?;
+            .map_err(|error| match error {
+                SessionEditError::Operation(_) => "shape validation failed",
+                SessionEditError::History(_) => "project history unavailable",
+            })?;
         self.next_id += 1;
         Ok(McpOutcome::Reply(format!(
             "{{\"ok\":true,\"shapeCount\":{},\"elementId\":\"{id}\",\"message\":\"Shape added\"}}",
@@ -186,6 +202,13 @@ impl McpHost {
             id = object_id(self.next_id);
         }
         Ok((id, ids.len()))
+    }
+}
+
+fn session_edit_error(error: SessionError) -> &'static str {
+    match error {
+        SessionError::HistoryUnavailable => "project history unavailable",
+        _ => "file operation failed",
     }
 }
 
@@ -248,9 +271,17 @@ fn animation_add(
         return Err("unknown preview animation target");
     }
     app.edit(|doc| doc.add_animation_fragment(target_id, xml))
-        .map_err(|_| "invalid preview animation fragment")?;
+        .map_err(|error| match error {
+            SessionEditError::Operation(_) => "invalid preview animation fragment",
+            SessionEditError::History(_) => "project history unavailable",
+        })?;
     if document_duration(app.document()).is_err() {
-        let _ = app.undo();
+        if !app.can_undo() {
+            return Err("project history unavailable");
+        }
+        if !app.undo().map_err(session_edit_error)? {
+            return Err("project history unavailable");
+        }
         return Err("unsupported or malformed preview animation");
     }
     changed(app, "Animation added")

@@ -154,7 +154,7 @@ impl Shell {
             ..AppState::default()
         };
         self.model.chrome = chrome_text(&state);
-        self.model.sync_history(doc.document());
+        self.model.sync_history(doc);
     }
 
     pub fn layout(&self) -> Layout {

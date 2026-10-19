@@ -1,67 +1,121 @@
-# Codex drives Vexel: 6-scene storyboard
+# Preparatory storyboard: Codex edits a Vexel character and blink
 
-Target runtime: under 60 seconds total (budget below sums to 56 s).
+**Status: draft; no recording or live interoperability claim.** This sequence
+is a rehearsal target for the product goal. It must be exercised with a real
+Codex MCP client connected to the same running Vexel app and open native
+`.vexel` project before it can be called a demonstrated workflow. Tool names
+and argument shapes below come from the Rust source schema at
+`rust/crates/vexel-protocol/src/tools.rs`; the connected server's advertised
+schema is authoritative during rehearsal. If a required call is absent, record
+the gap rather than substitute a fictional tool.
 
-Tool status key:
-- **existing**: listed in `docs/mcp.md` (full profile).
-- **preview**: listed in `docs/product/mcp-live-preview.md` (`--mcp-preview` profile: `document_list`, `document_info`, `element_add`, `undo`, `redo` only).
-- **planned**: named in the brief but not in any doc. Do not rely on it.
+The goal is to show successive actual MCP calls creating a character, revising
+the drawing, creating and revising a short blink animation, and the same live
+project visibly changing. Include UI undo/redo, save/reopen, and export if the
+app's native workflow supports them. This document is a preparation plan, not
+proof that those steps currently work end to end.
 
-Open issues for this storyboard:
-- `draw_rect` and `draw_path` are **planned**. No doc defines them. Scene 2 uses `element_add_fragment` (existing) as the working route.
-- The grant is `--grant-dir <directory>` (supported by `rust/crates/vexel-app/src/compose/launch.rs`; not yet in `docs/`).
-- `--mcp-preview` exposes only 5 tools. Scenes 3 to 6 need the full profile from `docs/mcp.md`. Full-profile launch flags are not documented. Confirm before recording.
-- Native timeline tools (scenes 4 and 6) act only on the active app-owned `.vexel` project.
+## Scene 1: Establish the live session
 
-## Scene 1: Inspect the open document (6 s)
+- Show the real Codex conversation and running Vexel window together.
+- Confirm the active app-owned `.vexel` project and its document ID using
+  advertised `document_list`, `document_info`, and `tree_get` calls.
+- State the boundary: a returned tool result is MCP evidence; a visible update
+  requires observing the matching Vexel window. Do not imply an edit happened
+  live based only on a tool result.
+- If the running app or native project cannot be verified, stop; do not record
+  this as the required live showcase.
 
-- Calls: `document_list` (preview), `document_info` (preview), `tree_get` (existing).
-- Expected visible result: the 512 x 512 artboard is listed and its tree is shown in the Vexel window. Nothing changes on screen.
+## Scene 2: Draw the character in successive calls
 
-## Scene 2: Draw a simple character (12 s)
+- Prompt Codex to draw the small blue-and-cream character, dark eyes, and red
+  scarf on the visible canvas.
+- Use `element_add` with schema-supported templates and string attributes.
+  Capture the returned element IDs. Use `element_add_fragment` only when
+  advertised and necessary. `draw_rect` and `draw_path` are not Rust tool names
+  and must not be used unless a later live schema explicitly adds them.
+- Pause on successive calls and show each corresponding app update. Use
+  `document_info`, `tree_get`, `element_get`, or `render_png` when advertised
+  to inspect actual results.
+- Caption the action accurately (for example, “Codex added the head” only
+  after the call succeeds and the head is visible).
 
-Shapes: blue body, skin head, two dark eyes, red scarf.
+## Scene 3: Revise the drawing
 
-- Calls:
-  - `draw_rect` for the scarf (**planned**). Working route: `element_add_fragment` with a `<rect>` fragment (existing).
-  - `draw_path` for the body outline (**planned**). Working route: `element_add_fragment` with a `<path>` fragment (existing).
-  - `element_add` for the head and eyes (ellipses, **preview** and existing).
-  - `render_png` (existing) to confirm.
-- Expected visible result: four shape groups appear one at a time in the open window. Each add shows in the status line. The PNG shows a character in the artboard.
+- Change the scarf fill using `attribute_set`; adjust one facial feature and
+  add a small detail with further advertised editing calls.
+- Keep each call distinct and show the corresponding update in the same
+  Vexel project. Inspect after edits. Avoid unsupported `text_set` or
+  `element_group` calls unless actually advertised.
+- Keep labels/captions readable and do not communicate the change through
+  color alone.
 
-## Scene 3: Refine and label (8 s)
+## Scene 4: Create a blink on the native timeline
 
-- Calls: `attribute_set` (existing) to change the scarf fill, `element_group` (existing) to group the head and eyes, `text_set` (existing) for a caption, `element_reorder` (existing) to move the scarf in front of the body.
-- Expected visible result: the scarf colour changes, the head and eyes move as one group, and the caption appears under the character.
+- Confirm the active project is native `.vexel` and the live schema advertises
+  the relevant native timeline calls. The listed calls include
+  `native_timeline_add_property_track`,
+  `native_timeline_set_property_key`, `native_timeline_set_loop`, and
+  `native_timeline_get`.
+- Add a scalar `opacity` property track targeting the eye element, using an
+  interpolation enum accepted by the schema. Add open/closed/open keys at
+  suitable project ticks; use the actual tick convention and avoid asserting
+  a frame rate until confirmed.
+- Set loop mode to `loop` if supported. Show the timeline changing after the
+  calls, then preview playback only if an advertised tool and the app support
+  it. A timeline data response alone does not prove visible playback.
+- If native property targeting, timeline display, or playback does not work,
+  capture the gap and stop this scene. Do not replace it with SMIL and describe
+  that as native timeline animation.
 
-## Scene 4: Animate the character with the timeline (12 s)
+## Scene 5: Revise the animation and exercise history
 
-- Calls, in order:
-  1. `native_timeline_add_track` (existing, active `.vexel` project only).
-  2. `native_timeline_add_drawing_asset` (existing) for the character group.
-  3. `native_timeline_add_property_track` (existing) for the head `y` position.
-  4. `native_timeline_set_property_key` (existing) at frame 0 and at frame 30.
-  5. `native_timeline_set_loop` (existing).
-- Expected visible result: the timeline footer shows the track, two diamonds, and a loop. Playback bounces the head between keys. Playback is not verified here.
+- Make a second timeline edit through an actual advertised call, such as
+  `native_timeline_set_property_key` or `native_timeline_move_item`.
+- Show the changed timeline and playback in the same project, when supported.
+- Exercise drawing `undo` then `redo`, and timeline
+  `native_timeline_undo` then `native_timeline_redo` if available. Show the
+  affected artwork/timeline state after each call. Report exact tool results.
 
-## Scene 5: Undo, redo, and save (8 s)
+## Scene 6: Save, reopen, export
 
-- Calls: `undo` and `redo` (existing; also preview), `native_timeline_undo` and `native_timeline_redo` (existing), `save_as` (existing) into the granted directory.
-- Expected visible result: the last keyframe is removed and restored. The document title shows the save path. The file is written only inside the granted directory.
+- Save the editable native project using the app's supported UI workflow.
+  Reopen that same project and show both artwork and animation are retained.
+  Do not claim MCP `save`/`save_as` implements native project save unless the
+  current tool schema and app explicitly confirm it.
+- Export a short GIF via `export_animation` only if supported for this project
+  and the output directory is explicitly granted. Confirm success from the
+  tool result and confirm the artifact exists before naming its path. Use
+  `render_png` for a still only when advertised.
+- Show the exported animation playing and identify any limitations plainly.
 
-## Scene 6: Export the animation (10 s)
+## Captioning and capture requirements
 
-- Calls: `export_animation` (existing) as GIF, with 30 FPS and 120 frames or fewer (the documented cap). Then `render_png` (existing) for a still.
-- Expected visible result: a GIF file appears in the granted directory. The status line reports the operation. Before the demo, confirm the export result and file exist. Do not claim them in narration until observed.
+- Keep the Codex conversation, Vexel canvas, timeline, and status/errors
+  legible together. Avoid focus changes that obscure either application.
+- Provide synchronized captions and a transcript. Captions must describe the
+  actual request, call outcome, and visible change without paraphrasing a
+  failure as success. Include relevant errors and disclose any cuts or speed
+  changes in a later published edit.
+- Use a repeatable, dedicated project and record the project file, prompts,
+  exported animation/still, app/build identity, MCP configuration, and grant
+  setup needed to reproduce the session. Do not include private paths or
+  unrelated desktop content.
 
-## Runtime budget
+## Evidence checklist
 
-| Scene | Seconds |
-|---|---|
-| 1 Inspect | 6 |
-| 2 Draw | 12 |
-| 3 Refine | 8 |
-| 4 Animate | 12 |
-| 5 Undo/redo/save | 8 |
-| 6 Export | 10 |
-| **Total** | **56** |
+- [ ] Real Codex client connected to the Rust MCP server; retain sanitized
+      request/result evidence or an equivalent trace with timestamps.
+- [ ] Same running Vexel instance and same native `.vexel` project visibly
+      shown before and after successive drawing calls.
+- [ ] Character drawing revision shown through successful actual MCP calls.
+- [ ] Native timeline blink creation and subsequent revision shown through
+      successful actual MCP calls; timeline and playback visibly update.
+- [ ] Drawing and timeline undo/redo outcomes shown and inspected.
+- [ ] Native project saved, reopened, and checked for artwork and animation.
+- [ ] Export result confirmed; artifact reviewed for appearance and timing.
+- [ ] Captions and transcript checked against actual narration and events;
+      readability/accessibility reviewed.
+- [ ] Project, prompt, export, and capture metadata retained for repeatability.
+- [ ] No unsupported calls, unobserved outcomes, or live interoperability
+      claims appear in the recording or its description.

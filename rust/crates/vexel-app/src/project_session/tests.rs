@@ -44,7 +44,7 @@ fn drawn() -> ProjectSession {
     doc.add_ellipse_with_id(70.0, 20.0, 150.0, 90.0, "#00ff00", "e1")
         .unwrap();
     doc.add_animation_fragment("r1", ANIM).unwrap();
-    ProjectSession::new(doc)
+    ProjectSession::new(doc).unwrap()
 }
 
 #[test]
@@ -80,7 +80,7 @@ fn unknown_source_survives_byte_for_byte() {
     assert_eq!(doc.source().unwrap(), FOREIGN);
     doc.add_rectangle_with_id(5.0, 5.0, 25.0, 25.0, "#abcdef", "new1")
         .unwrap();
-    let mut session = ProjectSession::new(doc);
+    let mut session = ProjectSession::new(doc).unwrap();
     session.save_as(bytes(&path)).unwrap();
     let opened = ProjectSession::open(bytes(&path)).unwrap();
     let after = opened.document().source().unwrap();
@@ -106,7 +106,7 @@ fn unknown_source_survives_byte_for_byte() {
 fn unedited_foreign_source_saves_and_reopens_identically() {
     let dir = Dir::new();
     let path = dir.file("g.vexel");
-    let mut session = ProjectSession::new(V1Document::from_source(FOREIGN).unwrap());
+    let mut session = ProjectSession::new(V1Document::from_source(FOREIGN).unwrap()).unwrap();
     session.save_as(bytes(&path)).unwrap();
     let opened = ProjectSession::open(bytes(&path)).unwrap();
     assert_eq!(opened.document().source().unwrap(), FOREIGN);
@@ -143,8 +143,7 @@ fn opaque_project_payload_survives_edit_save_as_and_reopen() {
 
     let mut session = ProjectSession::open(bytes(&original)).unwrap();
     session
-        .document_mut()
-        .add_rectangle(4.0, 5.0, 40.0, 50.0, "#123456")
+        .edit(|doc| doc.add_rectangle(4.0, 5.0, 40.0, 50.0, "#123456"))
         .unwrap();
     let edited_scene = session.document().source().unwrap();
     assert_ne!(edited_scene, source);
@@ -186,8 +185,7 @@ fn payload_allocation_failure_preserves_replaced_session() {
     let mut session = drawn();
     session.save_as(bytes(&current_path)).unwrap();
     session
-        .document_mut()
-        .add_rectangle(1.0, 2.0, 3.0, 4.0, "#123456")
+        .edit(|doc| doc.add_rectangle(1.0, 2.0, 3.0, 4.0, "#123456"))
         .unwrap();
     let current_source = session.document().source().unwrap();
     let current_history = (
@@ -241,7 +239,7 @@ fn source_only_write_keeps_default_payload() {
         view.manifest_json,
         br#"{"format":"vexel-project","width":512,"height":256}"#
     );
-    assert_eq!(view.timeline_json, b"{}");
+    assert!(view.timeline_json.is_empty());
     assert_eq!(view.asset_count, 0);
 }
 
@@ -249,21 +247,30 @@ fn source_only_write_keeps_default_payload() {
 fn undo_save_redo_and_history_cursor() {
     let dir = Dir::new();
     let path = dir.file("u.vexel");
-    let mut session = drawn();
+    let mut session = ProjectSession::new(V1Document::new(200, 100).unwrap()).unwrap();
+    session
+        .edit(|doc| doc.add_rectangle_with_id(10.0, 10.0, 60.0, 50.0, "#ff0000", "r1"))
+        .unwrap();
+    session
+        .edit(|doc| doc.add_ellipse_with_id(70.0, 20.0, 150.0, 90.0, "#00ff00", "e1"))
+        .unwrap();
+    session
+        .edit(|doc| doc.add_animation_fragment("r1", ANIM))
+        .unwrap();
     let full = session.document().source().unwrap();
     assert_eq!(session.document().history_cursor(), 3);
-    session.document_mut().undo().unwrap(); // drop animation
+    session.undo().unwrap(); // drop animation
     let without_anim = session.document().source().unwrap();
     session.save_as(bytes(&path)).unwrap();
     // Saving neither resets nor corrupts the stack.
     assert_eq!(session.document().history_count(), 3);
     assert_eq!(session.document().history_cursor(), 2);
     assert!(!session.is_dirty());
-    session.document_mut().redo().unwrap();
+    session.redo().unwrap();
     assert_eq!(session.document().history_cursor(), 3);
     assert_eq!(session.document().source().unwrap(), full);
     assert!(session.is_dirty());
-    session.document_mut().undo().unwrap();
+    session.undo().unwrap();
     assert_eq!(session.document().source().unwrap(), without_anim);
     assert!(!session.is_dirty());
     // File holds the state at save time.
@@ -280,7 +287,7 @@ fn edit_undo_edit_save_reopen_yields_post_edit_state() {
     doc.undo().unwrap();
     doc.add_ellipse(30.0, 30.0, 60.0, 60.0, "#222222").unwrap();
     let post = doc.source().unwrap();
-    let mut session = ProjectSession::new(doc);
+    let mut session = ProjectSession::new(doc).unwrap();
     session.save_as(bytes(&path)).unwrap();
     let opened = ProjectSession::open(bytes(&path)).unwrap();
     assert_eq!(opened.document().source().unwrap(), post);
@@ -294,28 +301,26 @@ fn edit_undo_edit_save_reopen_yields_post_edit_state() {
 fn dirty_tracking_edit_save_and_undo_past_saved_point() {
     let dir = Dir::new();
     let path = dir.file("d.vexel");
-    let mut session = ProjectSession::new(V1Document::new(100, 100).unwrap());
+    let mut session = ProjectSession::new(V1Document::new(100, 100).unwrap()).unwrap();
     assert!(!session.is_dirty());
     session
-        .document_mut()
-        .add_rectangle(1.0, 1.0, 9.0, 9.0, "#000000")
+        .edit(|doc| doc.add_rectangle(1.0, 1.0, 9.0, 9.0, "#000000"))
         .unwrap();
     assert!(session.is_dirty());
     session.save_as(bytes(&path)).unwrap();
     assert!(!session.is_dirty());
     session
-        .document_mut()
-        .add_ellipse(2.0, 2.0, 8.0, 8.0, "#000000")
+        .edit(|doc| doc.add_ellipse(2.0, 2.0, 8.0, 8.0, "#000000"))
         .unwrap();
     assert!(session.is_dirty());
     session.save().unwrap();
     assert!(!session.is_dirty());
-    session.document_mut().undo().unwrap();
+    session.undo().unwrap();
     assert!(session.is_dirty());
-    session.document_mut().undo().unwrap();
+    session.undo().unwrap();
     assert!(session.is_dirty());
-    session.document_mut().redo().unwrap();
-    session.document_mut().redo().unwrap();
+    session.redo().unwrap();
+    session.redo().unwrap();
     assert!(!session.is_dirty());
 }
 
@@ -413,8 +418,7 @@ fn unwritable_directory_fails_without_touching_state_or_existing_file() {
 
     let mut session = drawn();
     session
-        .document_mut()
-        .add_rectangle(1.0, 1.0, 5.0, 5.0, "#010101")
+        .edit(|doc| doc.add_rectangle(1.0, 1.0, 5.0, 5.0, "#010101"))
         .unwrap();
     let source = session.document().source().unwrap();
     session.path = Some(bytes(&path).to_vec());
@@ -455,8 +459,7 @@ fn resave_replaces_atomically_and_leaves_no_temp_files() {
     let mut session = drawn();
     session.save_as(bytes(&path)).unwrap();
     session
-        .document_mut()
-        .add_rectangle(1.0, 1.0, 5.0, 5.0, "#010101")
+        .edit(|doc| doc.add_rectangle(1.0, 1.0, 5.0, 5.0, "#010101"))
         .unwrap();
     session.save().unwrap();
     assert_eq!(fs::read_dir(&dir.0).unwrap().count(), 1);

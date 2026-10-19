@@ -16,10 +16,13 @@ mod hooks;
 mod mcp;
 pub(crate) mod mcp_png;
 mod mcp_tools;
+mod native_animation;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tests_mcp;
+#[cfg(test)]
+mod tests_native_animation;
 #[cfg(test)]
 mod tests_playback;
 
@@ -30,7 +33,7 @@ pub use mcp::{McpHost, McpOutcome};
 use crate::project_session::{ProjectSession, SessionError};
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
-use vexel_v1_document::{V1Document, V1DocumentError};
+use vexel_v1_document::V1Document;
 
 /// Window title for a document name (`None` = untitled) and dirty state.
 /// A clean untitled document keeps the bare app name.
@@ -52,24 +55,33 @@ fn file_name(path: &[u8]) -> Option<String> {
 pub struct AppDocument {
     session: ProjectSession,
     revision: u64,
+    state_revision: u64,
 }
 
 impl AppDocument {
     /// A blank, clean, untitled document at revision 0.
-    pub fn new(width: u32, height: u32) -> Result<Self, V1DocumentError> {
-        Ok(Self::from_document(V1Document::new(width, height)?))
+    pub fn new(width: u32, height: u32) -> Result<Self, SessionError> {
+        let document = V1Document::new(width, height).map_err(SessionError::Document)?;
+        Self::from_document(document)
     }
 
-    pub fn from_document(document: V1Document) -> Self {
-        Self {
-            session: ProjectSession::new(document),
+    pub fn from_document(document: V1Document) -> Result<Self, SessionError> {
+        Ok(Self {
+            session: ProjectSession::new(document)?,
             revision: 0,
-        }
+            state_revision: 0,
+        })
     }
 
     /// Increases whenever the source changes (edit, undo, redo, open).
     pub fn revision(&self) -> u64 {
         self.revision
+    }
+
+    /// Increases for any combined session transition, including payload-only
+    /// timeline edits, while `revision` remains source-byte-only.
+    pub fn state_revision(&self) -> u64 {
+        self.state_revision
     }
 
     pub fn source_bytes(&self) -> Result<Vec<u8>, SessionError> {
@@ -85,6 +97,14 @@ impl AppDocument {
 
     pub fn is_dirty(&self) -> bool {
         self.session.is_dirty()
+    }
+
+    pub fn can_undo(&self) -> bool {
+        self.session.can_undo()
+    }
+
+    pub fn can_redo(&self) -> bool {
+        self.session.can_redo()
     }
 
     pub fn path(&self) -> Option<&[u8]> {
@@ -122,12 +142,14 @@ impl AppDocument {
     pub fn open_path(&mut self, path: &Path) -> Result<(), SessionError> {
         self.session.open_replacing(path.as_os_str().as_bytes())?;
         self.revision += 1;
+        self.state_revision += 1;
         Ok(())
     }
 
     /// Records that the flow replaced the whole document (File > Open).
     pub(crate) fn mark_replaced(&mut self) {
         self.revision += 1;
+        self.state_revision += 1;
     }
 
     /// The session for the file flow (open/save panels). Callers that replace
@@ -148,21 +170,64 @@ impl AppDocument {
 
     /// Runs one edit. `revision` moves only when the source bytes changed,
     /// whether or not the closure reported success (a failing edit that left
-    /// partial changes must still re-render).
-    pub fn edit<R, E>(&mut self, f: impl FnOnce(&mut V1Document) -> Result<R, E>) -> Result<R, E> {
+    /// partial changes must still re-render). If source materialization fails,
+    /// the scene history state determines whether to re-render.
+    pub fn edit<R, E>(
+        &mut self,
+        f: impl FnOnce(&mut V1Document) -> Result<R, E>,
+    ) -> Result<R, crate::project_session::SessionEditError<E>> {
+        let before_state_id = self.session.history_state_id();
+        let before_scene_id = self.session.document().history_state_id();
         let before = self.session.document().source().ok();
-        let result = f(self.session.document_mut());
+        let result = self.session.edit(f);
         let after = self.session.document().source().ok();
-        if before.is_none() || before != after {
+        let source_changed = match (before, after) {
+            (Some(before), Some(after)) => before != after,
+            _ => before_scene_id != self.session.document().history_state_id(),
+        };
+        if source_changed {
             self.revision += 1;
+        }
+        if source_changed || before_state_id != self.session.history_state_id() {
+            self.state_revision += 1;
         }
         result
     }
 
-    pub fn undo(&mut self) -> Result<(), V1DocumentError> {
-        self.edit(V1Document::undo)
+    pub fn undo(&mut self) -> Result<bool, SessionError> {
+        let before_state_id = self.session.history_state_id();
+        let before_scene_id = self.session.document().history_state_id();
+        let before = self.session.document().source().ok();
+        let changed = self.session.undo()?;
+        let after = self.session.document().source().ok();
+        let source_changed = match (before, after) {
+            (Some(before), Some(after)) => before != after,
+            _ => before_scene_id != self.session.document().history_state_id(),
+        };
+        if source_changed {
+            self.revision += 1;
+        }
+        if source_changed || before_state_id != self.session.history_state_id() {
+            self.state_revision += 1;
+        }
+        Ok(changed)
     }
-    pub fn redo(&mut self) -> Result<(), V1DocumentError> {
-        self.edit(V1Document::redo)
+    pub fn redo(&mut self) -> Result<bool, SessionError> {
+        let before_state_id = self.session.history_state_id();
+        let before_scene_id = self.session.document().history_state_id();
+        let before = self.session.document().source().ok();
+        let changed = self.session.redo()?;
+        let after = self.session.document().source().ok();
+        let source_changed = match (before, after) {
+            (Some(before), Some(after)) => before != after,
+            _ => before_scene_id != self.session.document().history_state_id(),
+        };
+        if source_changed {
+            self.revision += 1;
+        }
+        if source_changed || before_state_id != self.session.history_state_id() {
+            self.state_revision += 1;
+        }
+        Ok(changed)
     }
 }

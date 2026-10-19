@@ -9,4 +9,6 @@ publish.workspace = true
 [dependencies]
 vexel-base = { path = "../vexel-base" }
 vexel-geometry = { path = "../vexel-geometry" }
+
+[dev-dependencies]
 vexel-svg-values = { path = "../vexel-svg-values" }

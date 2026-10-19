@@ -206,6 +206,7 @@ dependencies = [
  "vexel-svg-animation-frame",
  "vexel-svg-decode",
  "vexel-svg-engine",
+ "vexel-timeline",
  "vexel-ui",
  "vexel-v1-document",
  "vexel-xml",

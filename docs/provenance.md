@@ -40,3 +40,8 @@ project-owned. No Cargo dependency is accepted by a download alone: setup lock,
 compile, graph audit and subsequent real boundary probes are required. Canonical
 license texts and upstream declarations are retained without invented copyright;
 release attribution and SDK distribution review remain explicit final gates.
+
+ADR-0033 adds a direct internal path edge from `vexel-app` to
+`vexel-timeline` for native timeline sampling and editing. This is a
+first-party workspace crate pinned by the repository revision and lockfile;
+it adds no external package, source, or algorithm.

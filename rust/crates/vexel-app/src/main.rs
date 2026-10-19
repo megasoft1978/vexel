@@ -19,6 +19,8 @@ use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
 use vexel_app::model::{self, DragPhase, Layout, Mode, Model, Target, Tool};
 use vexel_app::motion::MotionAdapter;
+use vexel_app::native_animation::{TimelineSurface, host::NativeAnimationHost};
+use vexel_app::native_timeline::interaction::Phase as NativeTimelinePhase;
 use vexel_app::preview::{self, Operation, UiRequest};
 use vexel_app::project_session::shortcut_action;
 use vexel_app::session::{McpGrants, McpHost, McpOutcome, edit_shortcut};
@@ -118,11 +120,13 @@ fn run(
     let mut export: Option<ExportJob> = None;
     let mut exports = Exports::default();
     let mut driver = Driver::new(MonotonicClock::new());
+    let mut native = NativeAnimationHost::new(MonotonicClock::new());
     let mut strip = Strip::default();
     let mut was_playing = false;
     let mut dedup = ShortcutDedup::new();
     let started = Instant::now();
-    let mut menu_revision = files.document().revision();
+    let mut menu_revision = files.document().state_revision();
+    let mut menu_save_enabled = files.document().is_dirty() || files.document().path().is_none();
     // No platform accessor for reduce-motion yet (gap): constant false.
     let mut motion = MotionAdapter::new(false);
     let mut dirty = true;
@@ -147,9 +151,11 @@ fn run(
                 mcp_rx.as_ref().and_then(|rx| rx.try_recv().ok())
             {
                 let opens = matches!(operation, Operation::Open { .. });
-                match mcp_host.handle_with(files.document_mut(), operation, &mut driver) {
+                let handled = files.handle_mcp(&mut mcp_host, operation, &mut driver);
+                match handled {
                     Ok(McpOutcome::Reply(json)) => {
                         if opens {
+                            reset_animation_state(&mut native, &mut driver);
                             // Selection ids belong to the replaced document.
                             let tool = tools.tool();
                             tools = ToolController::new();
@@ -184,23 +190,59 @@ fn run(
                 dirty = true;
             }
         }
+        if let Some(status) = files.tick_recovery(Instant::now()) {
+            model.status = status.user_message();
+            dirty = true;
+        }
         if let Some(layout) = model.layout(logical.0, logical.1) {
             let stage = doc.compose_target(layout.stage, scale as u32);
+            if model.mode != Mode::Animate {
+                native.deactivate();
+                if native.surface() == TimelineSurface::Native {
+                    dirty |= doc.restore_static();
+                }
+            }
             if let Some(path) = pending_open.take() {
-                doc.open(files.document_mut(), &path, stage);
+                files.open_startup(&mut doc, &path, stage);
+                reset_animation_state(&mut native, &mut driver);
                 dirty = true;
             }
-            // Render trigger (revision or stage size moved) and playback.
-            if stage::sync(&mut driver, files.document(), &mut doc, stage) {
+            let prepared = native.prepare_document(files.document(), &mut doc);
+            dirty |= prepared;
+            let stage_changed = if native.surface() == TimelineSurface::Native {
+                stage::sync_native(&mut driver, files.document(), &mut doc, stage)
+            } else {
+                stage::sync(&mut driver, files.document(), &mut doc, stage)
+            };
+            if stage_changed {
                 dirty = true;
+            }
+            if model.mode == Mode::Animate && native.surface() == TimelineSurface::Native {
+                if let Some(composed) = doc.composed() {
+                    if let Some(frame) = native.tick(
+                        files.document(),
+                        (composed.frame.width, composed.frame.height),
+                    ) {
+                        dirty |= doc.present_animated(files.document().revision(), frame);
+                    }
+                }
             }
             if driver.is_playing() != was_playing {
                 was_playing = driver.is_playing();
                 dirty = true;
             }
         }
+        let native_snapshot = if model.mode == Mode::Animate {
+            native
+                .snapshot(
+                    files.document(),
+                    doc.selected_target_id().map(str::to_owned),
+                )
+                .ok()
+        } else {
+            None
+        };
         {
-            // Timeline footer: tracks per document revision, playback every frame.
             let revision = files.document().revision();
             if revision == 0 {
                 if model.timeline.model.open {
@@ -219,16 +261,16 @@ fn run(
                 dirty = true;
             }
         }
-        if files.document().revision() != menu_revision {
-            menu_revision = files.document().revision();
+        let save_enabled = files.document().is_dirty() || files.document().path().is_none();
+        if files.document().state_revision() != menu_revision || save_enabled != menu_save_enabled {
+            menu_revision = files.document().state_revision();
+            menu_save_enabled = save_enabled;
             let _ = files.refresh_menu(&app);
             dirty = true;
         }
         if doc.poll() {
             dirty = true;
         }
-        // Title, top bar, status bar and inspector derive from the open
-        // document; resize and scale handlers never write them.
         let mut app_state = AppState::from_session(files.document(), &doc);
         if driver.knows(files.document().revision()) {
             app_state.loop_seconds = driver.loop_seconds();
@@ -238,7 +280,7 @@ fn run(
             model.chrome = chrome_text;
             dirty = true;
         }
-        dirty |= model.sync_history(files.document().document());
+        dirty |= model.sync_history(files.document());
         motion.sync_focus(model.focus_id());
         dirty |= motion.redraw_after().is_some() | motion.poll_tooltip();
         if dirty || model.dirty {
@@ -263,6 +305,12 @@ fn run(
                             let frame = match bar {
                                 Some(bar) => strip::draw(frame, &bar, &driver, model.dark),
                                 None => frame,
+                            };
+                            let frame = match (layout.footer, native_snapshot.as_ref()) {
+                                (Some(footer), Some(snapshot)) => {
+                                    native.paint_frame(frame, footer, snapshot, model.dark)
+                                }
+                                _ => frame,
                             };
                             overlay::overlay_tooltip(frame, &model, &layout, motion.tooltip())
                         }
@@ -306,7 +354,8 @@ fn run(
                     // The canvas took the event (pan/zoom/cluster); chrome hover and press
                     // state must still follow the pointer.
                     if let WindowEvent::Pointer(pointer) = &event {
-                        let primary = pointer_accepts_mode(pointer.button);
+                        let primary =
+                            vexel_app::native_animation::host::pointer_accepts_mode(pointer.button);
                         dirty |= motion
                             .pointer_in(&layout, pointer.kind, pointer.logical, primary, &model)
                             .1;
@@ -395,7 +444,35 @@ fn run(
                         apply_file_outcome(
                             outcome, &mut model, &files, &app, &mut dirty, &mut tools, &mut doc,
                         );
+                        if outcome == FlowOutcome::Opened {
+                            reset_animation_state(&mut native, &mut driver);
+                        }
                     } else if model.mode == Mode::Animate
+                        && modifiers.0
+                            & (Modifiers::COMMAND | Modifiers::CONTROL | Modifiers::OPTION)
+                            == 0
+                        && vexel_app::native_animation::host::key_for_code(code).is_some_and(
+                            |key| {
+                                let previous = native.surface();
+                                let handled = native
+                                    .key(
+                                        key,
+                                        &mut files,
+                                        doc.selected_target_id().map(str::to_owned),
+                                    )
+                                    .unwrap_or(false);
+                                if previous != native.surface() {
+                                    doc.restore_static();
+                                    driver.pause();
+                                    driver.invalidate();
+                                }
+                                handled
+                            },
+                        )
+                    {
+                        dirty = true;
+                    } else if model.mode == Mode::Animate
+                        && native.surface() == TimelineSurface::Smil
                         && timeline::key(code, modifiers, &mut driver)
                     {
                         dirty = true;
@@ -423,14 +500,51 @@ fn run(
                         apply_file_outcome(
                             outcome, &mut model, &files, &app, &mut dirty, &mut tools, &mut doc,
                         );
+                        if outcome == FlowOutcome::Opened {
+                            reset_animation_state(&mut native, &mut driver);
+                        }
                     }
                 }
                 WindowEvent::Pointer(pointer) => {
                     if let Some(layout) = model.layout(logical.0, logical.1) {
-                        let primary = pointer_accepts_mode(pointer.button);
+                        let primary =
+                            vexel_app::native_animation::host::pointer_accepts_mode(pointer.button);
                         dirty |= motion
                             .pointer_in(&layout, pointer.kind, pointer.logical, primary, &model)
                             .1;
+                        let native_phase = (model.mode == Mode::Animate)
+                            .then(|| match pointer.kind {
+                                PointerKind::Down if primary => Some(NativeTimelinePhase::Down),
+                                PointerKind::Move => Some(NativeTimelinePhase::Move),
+                                PointerKind::Up if primary => Some(NativeTimelinePhase::Up),
+                                _ => None,
+                            })
+                            .flatten();
+                        let native_handled = native_phase.is_some_and(|phase| {
+                            let previous = native.surface();
+                            let handled = native
+                                .pointer(
+                                    phase,
+                                    pointer.logical,
+                                    layout.footer.unwrap_or_default(),
+                                    &mut files,
+                                    doc.selected_target_id().map(str::to_owned),
+                                )
+                                .unwrap_or(false);
+                            if previous != native.surface() {
+                                doc.restore_static();
+                                driver.pause();
+                                driver.invalidate();
+                            }
+                            handled
+                        });
+                        if native_handled {
+                            dirty = true;
+                            if pointer.kind == PointerKind::Down {
+                                let _ = files.refresh_menu(&app);
+                            }
+                            continue;
+                        }
                         dirty |= route_pointer(
                             &pointer,
                             &layout,
@@ -439,6 +553,7 @@ fn run(
                             &mut files,
                             &mut tools,
                             (&mut driver, &mut strip),
+                            native.surface(),
                             &mut exports,
                         );
                         if pointer.kind == PointerKind::Down {
@@ -449,10 +564,9 @@ fn run(
                 WindowEvent::Scroll(scroll) => {
                     if let Some(footer) = model.layout(logical.0, logical.1).and_then(|l| l.footer)
                     {
-                        // Only a wheel over the footer scrolls its rows (not the inspector
-                        // or status bar, which lie right of / below the footer's origin).
-                        if let Some(moved) =
-                            model.timeline.wheel(footer, scroll.logical, scroll.delta.y)
+                        if native.surface() == TimelineSurface::Smil
+                            && let Some(moved) =
+                                model.timeline.wheel(footer, scroll.logical, scroll.delta.y)
                         {
                             dirty |= moved;
                         }
@@ -477,8 +591,6 @@ fn run(
     app.shutdown()
         .map_err(|_| "native application shutdown failed")
 }
-/// A file shortcut, unless the menu just delivered the same action (one press,
-/// two delivery paths). A suppressed press reports `Cancelled`: nothing changes.
 fn file_key(
     files: &mut FileUi<NativePanels>,
     dedup: &mut ShortcutDedup,
@@ -493,7 +605,6 @@ fn file_key(
     files.key(code, modifiers)
 }
 
-/// A File menu activation, with the same duplicate guard as [`file_key`].
 fn file_menu(
     files: &mut FileUi<NativePanels>,
     dedup: &mut ShortcutDedup,
@@ -528,8 +639,13 @@ fn apply_file_outcome(
     let _ = files.refresh_menu(app);
     *dirty = true;
 }
-fn pointer_accepts_mode(button: Option<u8>) -> bool {
-    button == Some(0)
+fn reset_animation_state(
+    native: &mut NativeAnimationHost<MonotonicClock>,
+    driver: &mut Driver<MonotonicClock>,
+) {
+    native.document_replaced();
+    driver.pause();
+    driver.invalidate();
 }
 
 /// Escape, Delete and Return for the tools; Command/Control/Option chords are not tool keys.
@@ -545,9 +661,6 @@ fn tool_key(code: u16, modifiers: Modifiers) -> Option<Key> {
     }
 }
 
-/// Routes one pointer event: mode and tool-rail clicks, the click status line,
-/// and (in Draw mode) stage gestures into the tools, whose edits go through
-/// the session. True when the window needs a redraw.
 fn route_pointer(
     pointer: &PointerEvent,
     layout: &Layout,
@@ -556,11 +669,15 @@ fn route_pointer(
     files: &mut FileUi<NativePanels>,
     tools: &mut ToolController,
     (driver, strip): (&mut Driver<MonotonicClock>, &mut Strip),
+    surface: TimelineSurface,
     exports: &mut Exports,
 ) -> bool {
-    let primary = pointer_accepts_mode(pointer.button);
+    let primary = vexel_app::native_animation::host::pointer_accepts_mode(pointer.button);
     let mut redraw = false;
-    if let Some(footer) = layout.footer.filter(|_| model.mode == Mode::Animate) {
+    if let Some(footer) = layout
+        .footer
+        .filter(|_| model.mode == Mode::Animate && surface == TimelineSurface::Smil)
+    {
         let phase = match pointer.kind {
             PointerKind::Down if primary => Some(timeline::Phase::Down),
             PointerKind::Move => Some(timeline::Phase::Move),
@@ -672,7 +789,7 @@ fn safe_render_geometry(points: (u32, u32), scale: f64) -> ((u32, u32), u32) {
 
 #[cfg(test)]
 mod tests {
-    use super::pointer_accepts_mode;
+    use vexel_app::native_animation::host::pointer_accepts_mode;
     #[test]
     fn only_primary_button_can_activate_modes() {
         assert!(pointer_accepts_mode(Some(0)));

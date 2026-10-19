@@ -21,6 +21,7 @@ mod render_scene;
 mod shapes;
 #[cfg(target_os = "macos")]
 mod text;
+mod viewport;
 mod worker;
 
 #[cfg(test)]
@@ -47,8 +48,10 @@ pub use pointer::PointMap;
 pub use present::{DocumentView, blit_document, fill, status_text};
 pub(crate) use render_scene::render_scene;
 pub use shapes::OwnedShape;
+pub use viewport::{SvgViewport, svg_viewport};
 pub use worker::{ComposeWorker, WorkerEvent};
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use vexel_render::{PreserveAspect, ViewBox, offscreen_tile_size};
 
@@ -68,6 +71,8 @@ pub struct Composed {
     pub frame: Frame,
     pub map: PointMap,
     pub shapes: Vec<OwnedShape>,
+    /// Unique stable SVG ids keyed by source-order shape index.
+    pub target_ids: Vec<(usize, String)>,
 }
 
 impl Composed {
@@ -135,6 +140,16 @@ pub(crate) fn compose_document_owned(
     let mut tile = blank_tile(tile_width, tile_height)?;
     let drawn = render_scene(&scene, view, aspect, &mut tile, false, cancel)?;
     let source = graph.source();
+    let target_ids_by_offset = unique_element_ids(source);
+    let target_ids = drawn
+        .shapes
+        .iter()
+        .filter_map(|shape| {
+            let source_shape = scene.shapes.get(shape.scene_index)?;
+            let id = target_ids_by_offset.get(&source_shape.source.element.start)?;
+            Some((shape.scene_index, id.clone()))
+        })
+        .collect();
     let mut disclosures: Vec<Disclosure> = drawn
         .skipped
         .iter()
@@ -168,7 +183,51 @@ pub(crate) fn compose_document_owned(
         frame,
         map,
         shapes: drawn.shapes,
+        target_ids,
     })
+}
+
+fn unique_element_ids(source: &[u8]) -> HashMap<usize, String> {
+    use vexel_xml::TokenKind;
+
+    let (tokens, result) = vexel_xml::tokenize_large(source);
+    if result.diagnostic.category != vexel_xml::XmlError::None {
+        return HashMap::new();
+    }
+    let mut found = Vec::new();
+    let mut counts = HashMap::<String, usize>::new();
+    for (index, token) in tokens.iter().enumerate() {
+        if !matches!(
+            token.kind,
+            TokenKind::StartElement | TokenKind::EmptyElement
+        ) {
+            continue;
+        }
+        let Some(id) = tokens[index + 1..]
+            .iter()
+            .take_while(|next| next.kind == TokenKind::Attribute)
+            .find(|attribute| attribute.name.slice(source) == Some(&b"id"[..]))
+        else {
+            continue;
+        };
+        let mut decoded = vec![0; id.value.length];
+        let Ok(length) = vexel_xml::decode_attribute_value(source, id.value, &mut decoded) else {
+            continue;
+        };
+        decoded.truncate(length);
+        let Ok(value) = String::from_utf8(decoded) else {
+            continue;
+        };
+        if value.is_empty() {
+            continue;
+        }
+        *counts.entry(value.clone()).or_default() += 1;
+        found.push((token.source.offset, value));
+    }
+    found
+        .into_iter()
+        .filter(|(_, value)| counts.get(value) == Some(&1))
+        .collect()
 }
 
 /// A fresh transparent tile.

@@ -1,6 +1,7 @@
 use crate::chrome::{ChromeText, Inspector};
 use crate::history::Availability;
 use crate::layout::{Button, Focus, INSPECTOR_MIN_WINDOW, SECTIONS, Splitter, UiState, contains};
+use crate::session::AppDocument;
 use crate::timeline::Timeline;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -295,8 +296,8 @@ impl Model {
             _ => None,
         }
     }
-    /// Refreshes undo/redo availability from the document; true on change.
-    pub fn sync_history(&mut self, doc: &vexel_v1_document::V1Document) -> bool {
+    /// Refreshes undo/redo availability from the session; true on change.
+    pub fn sync_history(&mut self, doc: &AppDocument) -> bool {
         let next = Availability::of(doc);
         let changed = next != self.history;
         self.history = next;

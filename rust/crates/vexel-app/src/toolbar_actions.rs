@@ -47,7 +47,7 @@ pub fn edit(model: &mut Model, doc: &mut AppDocument, action: EditAction) -> boo
         (EditAction::Redo, true) => "Redid change",
         (EditAction::Redo, false) => "Nothing to redo",
     };
-    model.sync_history(doc.document());
+    model.sync_history(doc);
     model.dirty = true;
     changed
 }

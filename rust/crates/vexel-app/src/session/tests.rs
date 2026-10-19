@@ -267,11 +267,96 @@ fn undo_and_redo_bump_revision_and_restore_frames() {
     assert!(app.revision() > after_undo);
     assert_eq!(app.source_bytes().unwrap(), two_source);
     assert_eq!(shown_hash(&mut view, &app, size), two);
-    // Nothing to redo: an error, no revision change.
+    // Nothing to redo: return `false` without changing the revision.
     let before = app.revision();
-    assert!(app.redo().is_err());
+    assert!(!app.redo().unwrap());
     assert_eq!(app.revision(), before);
     assert_ne!(blank, two_source);
+}
+
+#[test]
+fn partial_edit_error_is_preserved_and_the_change_is_undoable() {
+    let mut app = AppDocument::new(100, 100).unwrap();
+    let before_source = app.source_bytes().unwrap();
+    let before_revision = app.revision();
+
+    let result = app.edit(|doc| {
+        doc.add_rectangle_with_id(1.0, 1.0, 20.0, 20.0, "#123456", "partial")
+            .unwrap();
+        Err::<(), _>("operation rejected after mutation")
+    });
+
+    assert_eq!(
+        result,
+        Err(crate::project_session::SessionEditError::Operation(
+            "operation rejected after mutation"
+        ))
+    );
+    assert_ne!(app.source_bytes().unwrap(), before_source);
+    assert_eq!(app.revision(), before_revision + 1);
+    assert!(app.can_undo());
+
+    assert!(app.undo().unwrap());
+    assert_eq!(app.source_bytes().unwrap(), before_source);
+    assert!(app.can_redo());
+    assert!(app.revision() > before_revision + 1);
+    assert!(app.redo().unwrap());
+    assert_ne!(app.source_bytes().unwrap(), before_source);
+}
+
+#[test]
+fn no_op_edit_preserves_redo_and_empty_redo_preserves_revision() {
+    let mut app = AppDocument::new(100, 100).unwrap();
+    rect(&mut app, "r1", 5.0);
+    assert!(app.undo().unwrap());
+    let before_noop_revision = app.revision();
+    assert!(app.can_redo());
+
+    assert_eq!(app.edit(|_| Ok::<(), ()>(())), Ok(()));
+    assert_eq!(app.revision(), before_noop_revision);
+    assert!(app.can_redo(), "a no-op edit must keep the redo branch");
+
+    assert!(app.redo().unwrap());
+    let after_redo_revision = app.revision();
+    assert!(!app.can_redo());
+    assert!(!app.redo().unwrap());
+    assert_eq!(app.revision(), after_redo_revision);
+}
+
+#[test]
+fn payload_only_undo_and_redo_do_not_change_scene_revision_or_bytes() {
+    use vexel_timeline::{EditLimits, EmptyTimelineSettings, LoopMode};
+
+    let mut app = AppDocument::new(100, 100).unwrap();
+    let scene = app.source_bytes().unwrap();
+    let revision = app.revision();
+    let settings = EmptyTimelineSettings {
+        ticks_per_second: 24,
+        duration_ticks: 240,
+        fps_numerator: 24,
+        fps_denominator: 1,
+        loop_mode: LoopMode::Once,
+        onion_before: 0,
+        onion_after: 0,
+        onion_opacity: 0.5,
+    };
+
+    assert!(
+        app.session_for_flow()
+            .edit_timeline(settings, EditLimits::default(), |candidate| {
+                candidate.set_loop(LoopMode::Repeat)
+            })
+            .unwrap()
+    );
+    assert_eq!(app.source_bytes().unwrap(), scene);
+    assert_eq!(app.revision(), revision);
+
+    assert!(app.undo().unwrap());
+    assert_eq!(app.source_bytes().unwrap(), scene);
+    assert_eq!(app.revision(), revision);
+    assert!(app.redo().unwrap());
+    assert_eq!(app.source_bytes().unwrap(), scene);
+    assert_eq!(app.revision(), revision);
 }
 
 // ---- hooks ------------------------------------------------------------------
@@ -313,7 +398,10 @@ fn editors_drive_edit_and_noops_do_not_bump_revision() {
     assert_eq!(app.revision(), 1);
     assert_eq!(app.apply(&mut Nothing), Ok(EditOutcome::Unchanged));
     assert_eq!(app.revision(), 1);
-    assert_eq!(app.apply(&mut Fails), Err(()));
+    assert_eq!(
+        app.apply(&mut Fails),
+        Err(crate::project_session::SessionEditError::Operation(()))
+    );
     assert_eq!(app.revision(), 1);
     // A duplicate stable id is rejected without changing the source.
     assert!(app.apply(&mut AddRect("a")).is_err());

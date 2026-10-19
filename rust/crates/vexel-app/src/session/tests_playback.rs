@@ -137,7 +137,7 @@ fn the_driver_receives_bytes_revision_and_seconds_from_the_session() {
 
 #[test]
 fn playback_never_dirties_the_document() {
-    let (mut app, _host) = animated();
+    let (app, _host) = animated();
     let (revision, dirty, source) = (app.revision(), app.is_dirty(), app.source_bytes().unwrap());
     let mut driver = Driver::new(ManualClock::default());
     app.request_frame(&mut driver, 0.0).unwrap();

@@ -8,7 +8,6 @@ use support::{COMPOSE_V1, Scene, composed, render};
 use vexel_app::canvas::{View, ViewMap};
 use vexel_app::compose::DocumentView;
 use vexel_app::tools::CanvasMap;
-use vexel_json::JsonDocument;
 use vexel_ui::Rect;
 
 const STAGE: Rect = Rect {
