@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-RECOVERY-DISCOVERY-01
-revision: 2
+revision: 3
 status: READY
 milestone: FULL-RUST-PROJECT
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: b509b07ce715b5877a43033873e7cb0cd2a3dfa2
-spec_sha256: 8a1733b80027fc392f5c0c770e185c5c3daa83124a75c1230f6df4e49fb76d02
+base_sha: 62d2d99937cb989a2d8ad989a6f52218aeea4542
+spec_sha256: b2b41de0a36c8bdcd4f06cfac6e1ece847d33a2dd9acc2141397d67162968091
 parallel_safe: true
 network: false
 ---
@@ -51,7 +51,7 @@ pub fn project_recovery_discover(source_path: &[u8], capsule_path: &[u8]) -> Rec
 - `artifacts/WO-RUST-RECOVERY-DISCOVERY-01/**`
 
 # Protected paths
-- All other source/tests; public module/re-exports in `lib.rs` remain coordinator-owned.
+- All other source/tests. Public module re-exports remain coordinator-owned; the sole private module declaration listed above is worker-owned for test compilation.
 - All docs/work orders/shared ledgers/status, manifests/lockfiles, fixtures, tags, main HEAD/index, C/Objective-C references, and files outside the allowlist.
 - No dependencies, network, installs, GUI actions, test weakening, resets, or deletions. Stage and commit the candidate only on the runner-owned task branch; never commit to `main`.
 
