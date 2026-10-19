@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-MIGRATION-INVENTORY-01
-revision: 2
+revision: 3
 status: READY
 milestone: FULL-RUST-MIGRATION
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: c61b192e4c87d15264aae3efe809612d1441da54
-spec_sha256: f64ed82c476925d754854720ebdcdd8aff0b7eb853eecd29e5672c320118cf42
+base_sha: e42bfa6e938c016afa7e9c329480f1222b7ae808
+spec_sha256: dd53cc36581754558dbd4441c940035646a0be711f93548c40df400927433371
 parallel_safe: true
 network: false
 ---

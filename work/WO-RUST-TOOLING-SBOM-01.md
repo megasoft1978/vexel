@@ -1,12 +1,12 @@
 ---
 id: WO-RUST-TOOLING-SBOM-01
-revision: 2
+revision: 3
 status: READY
 milestone: FULL-RUST-TOOLING
 owner: project-coordinator
 executor: codex-gpt-6-luna
-base_sha: 73195e6742f5911997d647594c6bceb413c2bd40
-spec_sha256: 7fccbeff99055a929951cd05350aa70f30983ea6b170152952dee554b6921b55
+base_sha: e42bfa6e938c016afa7e9c329480f1222b7ae808
+spec_sha256: 53dd502f50dc73bf6b9ce51e6034726c8ce96b05ab1e68bf4900735df487ec5e
 parallel_safe: true
 network: false
 ---
