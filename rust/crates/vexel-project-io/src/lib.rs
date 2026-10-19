@@ -4,6 +4,7 @@
 mod file;
 mod file_load;
 mod recovery;
+mod recovery_discovery;
 
 pub use file::{
     FileError, FileResult, project_file_error_name, project_file_save_as, project_file_save_encoded,
