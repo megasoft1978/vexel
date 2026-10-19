@@ -3,7 +3,7 @@
   "worktree": "verify/WO-RUST-PROJECT-PAYLOAD-02",
   "candidate_before_review_fix": "489a7fe3a9cb5dc0212f5b7bbb2bcdaff2869c91",
   "base_sha": "0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0",
-  "runner_start_checkpoint": "0a96a711",
+  "runner_start_checkpoint": "61e64ad0a432d84abeaf581148d55bfeb17899b0",
   "summary": "Session payload copying now reserves every owned buffer fallibly and maps allocation failure to OutOfMemory before replacing the current session. A deterministic reservation-gate regression verifies preservation of document, history, dirty state, and path.",
   "acceptance": {
     "AC-1": {

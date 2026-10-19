@@ -4,7 +4,7 @@ Worktree: `verify/WO-RUST-PROJECT-PAYLOAD-02`
 
 Frozen revision-3 work-order base SHA: `0a96a7110c9a9acf326dbf54dfc4d5de9a6e64b0`
 
-Runner start checkpoint: `0a96a711`
+Runner start checkpoint: `61e64ad0a432d84abeaf581148d55bfeb17899b0`
 Candidate before review fix: `489a7fe3a9cb5dc0212f5b7bbb2bcdaff2869c91`
 
 ## Implementation
