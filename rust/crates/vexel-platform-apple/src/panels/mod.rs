@@ -8,7 +8,9 @@ mod native;
 #[cfg(test)]
 mod tests;
 
-pub use native::{NativePanels, confirm_unsaved, open_panel, save_panel, show_error};
+pub use native::{
+    NativePanels, confirm_recovery, confirm_unsaved, open_panel, save_panel, show_error,
+};
 
 /// Longest path accepted from a panel, in bytes.
 pub const MAX_PANEL_PATH: usize = 1024;
@@ -31,6 +33,14 @@ pub enum UnsavedChoice {
     Cancel,
 }
 
+/// Answer to an explicit recovery decision for an opened native project.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RecoveryChoice {
+    Restore,
+    Discard,
+    Cancel,
+}
+
 /// Text of the unsaved-changes alert.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct UnsavedText<'a> {
@@ -41,11 +51,24 @@ pub struct UnsavedText<'a> {
     pub cancel: &'a str,
 }
 
+/// Text for the recovery alert. Conflict wording is supplied by the caller.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct RecoveryText<'a> {
+    pub message: &'a str,
+    pub detail: &'a str,
+    pub restore: &'a str,
+    pub discard: &'a str,
+    pub cancel: &'a str,
+}
+
 /// Swappable front for the native dialogs; the app tests use a fake.
 pub trait PanelBackend {
     fn open_panel(&self, extensions: &[&str]) -> PanelResult;
     fn save_panel(&self, suggested_name: &str) -> PanelResult;
     fn confirm_unsaved(&self, text: &UnsavedText<'_>) -> UnsavedChoice;
+    fn confirm_recovery(&self, _text: &RecoveryText<'_>) -> RecoveryChoice {
+        RecoveryChoice::Cancel
+    }
     fn show_error(&self, title: &str, message: &str);
 }
 

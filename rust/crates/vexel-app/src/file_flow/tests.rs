@@ -8,7 +8,7 @@ use std::{
     path::{Path, PathBuf},
     sync::atomic::{AtomicU32, Ordering},
 };
-use vexel_platform_apple::Modifiers;
+use vexel_platform_apple::{Modifiers, RecoveryChoice, RecoveryText};
 use vexel_v1_document::V1Document;
 
 /// Scripted stand-in for the AppKit dialogs; records every call.
@@ -47,6 +47,9 @@ impl PanelBackend for Fake {
             .borrow_mut()
             .pop_front()
             .expect("unscripted confirm")
+    }
+    fn confirm_recovery(&self, _: &RecoveryText<'_>) -> RecoveryChoice {
+        RecoveryChoice::Cancel
     }
     fn show_error(&self, title: &str, message: &str) {
         self.alerts

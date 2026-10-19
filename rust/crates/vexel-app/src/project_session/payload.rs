@@ -56,15 +56,25 @@ impl SessionPayload {
         scene_svg: &[u8],
         write: impl FnOnce(&BundleInput<'_>) -> R,
     ) -> R {
-        let assets = self
-            .assets
-            .iter()
-            .map(|asset| Asset {
+        self.try_with_bundle_input(scene_svg, &mut || true, |input| Ok(write(input)))
+            .expect("bundle asset vector allocation failed")
+    }
+
+    pub(super) fn try_with_bundle_input<R>(
+        &self,
+        scene_svg: &[u8],
+        reserve_allowed: &mut impl FnMut() -> bool,
+        write: impl FnOnce(&BundleInput<'_>) -> Result<R, ()>,
+    ) -> Result<R, ()> {
+        let mut assets = Vec::new();
+        reserve(&mut assets, self.assets.len(), reserve_allowed)?;
+        for asset in &self.assets {
+            assets.push(Asset {
                 name: &asset.name,
                 media_type: &asset.media_type,
                 data: &asset.data,
-            })
-            .collect::<Vec<_>>();
+            });
+        }
         let input = BundleInput {
             manifest_json: &self.manifest_json,
             scene_svg,

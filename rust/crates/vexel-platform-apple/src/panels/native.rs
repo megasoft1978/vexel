@@ -2,7 +2,8 @@
 //! off the main thread every function returns its error value.
 
 use super::{
-    PanelBackend, PanelResult, UnsavedChoice, UnsavedText, checked_path, with_project_extension,
+    PanelBackend, PanelResult, RecoveryChoice, RecoveryText, UnsavedChoice, UnsavedText,
+    checked_path, with_project_extension,
 };
 use crate::{MainThread, guard_native_call};
 use objc2::{MainThreadMarker, rc::Retained};
@@ -95,6 +96,32 @@ pub fn confirm_unsaved(_main: MainThread, text: &UnsavedText<'_>) -> UnsavedChoi
     .unwrap_or(UnsavedChoice::Cancel)
 }
 
+pub(super) fn recovery_choice_from_modal(response: isize) -> RecoveryChoice {
+    match response {
+        FIRST_BUTTON => RecoveryChoice::Restore,
+        response if response == FIRST_BUTTON + 1 => RecoveryChoice::Discard,
+        _ => RecoveryChoice::Cancel,
+    }
+}
+
+/// Shows the three-button recovery alert. Any failure answers Cancel.
+pub fn confirm_recovery(_main: MainThread, text: &RecoveryText<'_>) -> RecoveryChoice {
+    let Some(mtm) = require_main() else {
+        return RecoveryChoice::Cancel;
+    };
+    guard_native_call(|| {
+        let alert = NSAlert::new(mtm);
+        alert.setAlertStyle(NSAlertStyle::Warning);
+        alert.setMessageText(&NSString::from_str(text.message));
+        alert.setInformativeText(&NSString::from_str(text.detail));
+        for title in [text.restore, text.discard, text.cancel] {
+            alert.addButtonWithTitle(&NSString::from_str(title));
+        }
+        recovery_choice_from_modal(alert.runModal())
+    })
+    .unwrap_or(RecoveryChoice::Cancel)
+}
+
 /// Shows a single-button error alert.
 pub fn show_error(_main: MainThread, title: &str, message: &str) {
     let Some(mtm) = require_main() else {
@@ -129,6 +156,9 @@ impl PanelBackend for NativePanels {
     }
     fn confirm_unsaved(&self, text: &UnsavedText<'_>) -> UnsavedChoice {
         confirm_unsaved(self.0, text)
+    }
+    fn confirm_recovery(&self, text: &RecoveryText<'_>) -> RecoveryChoice {
+        confirm_recovery(self.0, text)
     }
     fn show_error(&self, title: &str, message: &str) {
         show_error(self.0, title, message)

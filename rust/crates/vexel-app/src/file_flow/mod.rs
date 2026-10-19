@@ -6,8 +6,11 @@
 
 mod dedup;
 mod menu;
+mod recovery;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_recovery;
 
 pub use dedup::{DEDUP_WINDOW, ShortcutDedup};
 pub use menu::{FILE_MENU, MenuEntry, action_for_tag, menu_enabled, menu_specs};
@@ -118,10 +121,7 @@ fn open(session: &mut ProjectSession, backend: &dyn PanelBackend) -> FlowOutcome
     match backend.open_panel(OPEN_EXTENSIONS) {
         PanelResult::Cancelled => FlowOutcome::Cancelled,
         PanelResult::Error => fail(backend, "Could not open", SessionError::InvalidPath),
-        PanelResult::Path(path) => match session.open_replacing(&path) {
-            Ok(()) => FlowOutcome::Opened,
-            Err(error) => fail(backend, "Could not open", error),
-        },
+        PanelResult::Path(path) => recovery::open_selected(session, &path, backend),
     }
 }
 

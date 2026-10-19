@@ -89,7 +89,9 @@ impl<B: PanelBackend> FileUi<B> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vexel_platform_apple::{PanelResult, UnsavedChoice, UnsavedText};
+    use vexel_platform_apple::{
+        PanelResult, RecoveryChoice, RecoveryText, UnsavedChoice, UnsavedText,
+    };
 
     struct Never;
     impl PanelBackend for Never {
@@ -101,6 +103,9 @@ mod tests {
         }
         fn confirm_unsaved(&self, _: &UnsavedText<'_>) -> UnsavedChoice {
             UnsavedChoice::Cancel
+        }
+        fn confirm_recovery(&self, _: &RecoveryText<'_>) -> RecoveryChoice {
+            RecoveryChoice::Cancel
         }
         fn show_error(&self, _: &str, _: &str) {}
     }

@@ -60,3 +60,23 @@ fn native_calls_are_rejected_off_the_main_thread() {
         .unwrap();
     assert!(off);
 }
+
+#[test]
+fn recovery_modal_responses_map_to_the_requested_choices() {
+    assert_eq!(
+        native::recovery_choice_from_modal(1000),
+        RecoveryChoice::Restore
+    );
+    assert_eq!(
+        native::recovery_choice_from_modal(1001),
+        RecoveryChoice::Discard
+    );
+    assert_eq!(
+        native::recovery_choice_from_modal(1002),
+        RecoveryChoice::Cancel
+    );
+    assert_eq!(
+        native::recovery_choice_from_modal(-1000),
+        RecoveryChoice::Cancel
+    );
+}

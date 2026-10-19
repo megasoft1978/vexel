@@ -6,10 +6,20 @@
 
 mod actions;
 mod payload;
+mod recovery;
+mod recovery_store;
+#[cfg(test)]
+mod recovery_tests;
 #[cfg(test)]
 mod tests;
 
 pub use actions::{FileAction, shortcut_action, unsaved_changes_prompt};
+pub use recovery::RecoveryStatus;
+
+#[cfg(test)]
+pub(crate) fn with_recovery_test_home<R>(home: &std::path::Path, action: impl FnOnce() -> R) -> R {
+    recovery_store::with_test_home(home, action)
+}
 
 use payload::SessionPayload;
 use vexel_project::{self as project, Error as BundleError};
@@ -41,7 +51,21 @@ pub enum SessionError {
     WriteFailed,
     /// Written, but durability (fsync) could not be confirmed.
     NotDurable,
+    /// The save was durable, but its new source identity could not be recorded.
+    PublishedStateUnknown,
     OutOfMemory,
+    /// A conflict recovery can only be saved under a new path.
+    RecoveryConflict,
+    /// The source changed while the project was being opened.
+    SourceChanged,
+    /// The private recovery store could not be read or written safely.
+    RecoveryUnavailable,
+    /// A recovery capsule was published, but its directory durability is unknown.
+    RecoveryNotDurable,
+    /// The project was saved, but its recovery capsule could not be removed.
+    RecoveryCleanup,
+    /// The recovery capsule is invalid or does not match this project.
+    RecoveryInvalid,
     Document(V1DocumentError),
 }
 
@@ -60,7 +84,26 @@ impl SessionError {
             Self::InvalidScene(_) => "The project does not contain a supported drawing.",
             Self::WriteFailed => "The project could not be saved; the previous file is unchanged.",
             Self::NotDurable => "The project was saved but could not be confirmed on disk.",
+            Self::PublishedStateUnknown => {
+                "The file was saved, but Vexel could not confirm its source identity. Reopen it to continue."
+            }
             Self::OutOfMemory => "Not enough memory.",
+            Self::RecoveryConflict => {
+                "This recovery came from a project that has changed. Use Save As to keep both versions."
+            }
+            Self::SourceChanged => {
+                "The project source changed. Reopen it, or use Save As to keep both versions."
+            }
+            Self::RecoveryUnavailable => "The recovery store is unavailable for this project.",
+            Self::RecoveryNotDurable => {
+                "The recovery snapshot was written, but its durability could not be confirmed."
+            }
+            Self::RecoveryCleanup => {
+                "The project was saved, but its recovery snapshot could not be removed."
+            }
+            Self::RecoveryInvalid => {
+                "The recovery snapshot is damaged or belongs to another project."
+            }
             Self::Document(_) => "The document could not be read for saving.",
         }
     }
@@ -125,6 +168,12 @@ pub struct ProjectSession {
     /// Path of the `.svg` this untitled document was imported from, if any.
     /// Display only: Save never writes to it.
     svg_origin: Option<Vec<u8>>,
+    /// Recovery snapshots are unsaved work even though the parsed SVG starts clean.
+    recovery_dirty: bool,
+    /// A changed source must not be overwritten by normal Save.
+    recovery_conflict: bool,
+    /// Metadata and identity captured around the native project load.
+    baseline: Option<recovery::RecoveryBaseline>,
 }
 
 impl ProjectSession {
@@ -135,6 +184,9 @@ impl ProjectSession {
             payload,
             path: None,
             svg_origin: None,
+            recovery_dirty: false,
+            recovery_conflict: false,
+            baseline: None,
         }
     }
     pub fn document(&self) -> &V1Document {
@@ -151,26 +203,80 @@ impl ProjectSession {
         self.svg_origin.as_deref()
     }
     pub fn is_dirty(&self) -> bool {
-        self.document.is_dirty()
+        self.document.is_dirty() || self.recovery_dirty
     }
 
     /// Saves to the current path. The document is marked saved only on success.
     pub fn save(&mut self) -> Result<(), SessionError> {
+        if self.recovery_conflict {
+            return Err(SessionError::RecoveryConflict);
+        }
         let path = self.path.clone().ok_or(SessionError::NoPath)?;
-        self.write(&path)
+        if let Some(baseline) = self.baseline.as_ref() {
+            if !recovery::path_is_missing(&path)?
+                && !recovery::baseline_matches_current(&path, baseline)?
+            {
+                return Err(SessionError::SourceChanged);
+            }
+        }
+        self.write(&path)?;
+        self.recovery_dirty = false;
+        self.recovery_conflict = false;
+        recovery::cleanup_recovery_for_path(&path).map_err(|_| SessionError::RecoveryCleanup)?;
+        Ok(())
     }
 
     /// Saves to `path`; the session adopts it only on success.
     pub fn save_as(&mut self, path: &[u8]) -> Result<(), SessionError> {
+        if self.recovery_conflict && self.path.as_deref() == Some(path) {
+            return Err(SessionError::RecoveryConflict);
+        }
+        if let (Some(baseline), Ok(target)) =
+            (self.baseline.as_ref(), recovery::canonical_path(path))
+        {
+            if baseline.canonical_path == target {
+                if self.recovery_conflict {
+                    return Err(SessionError::RecoveryConflict);
+                }
+                if !recovery::path_is_missing(path)?
+                    && !recovery::baseline_matches_current(path, baseline)?
+                {
+                    return Err(SessionError::SourceChanged);
+                }
+            }
+        }
+        let previous_path = self.path.clone();
+        let previous_baseline = self.baseline.clone();
         self.write(path)?;
+        let cleanup = previous_baseline
+            .as_ref()
+            .map(recovery::cleanup_recovery_for_baseline)
+            .or_else(|| {
+                previous_path
+                    .as_deref()
+                    .map(recovery::cleanup_recovery_for_path)
+            })
+            .transpose();
         self.path = Some(path.to_vec());
         self.svg_origin = None;
+        self.recovery_dirty = false;
+        self.recovery_conflict = false;
+        cleanup.map_err(|_| SessionError::RecoveryCleanup)?;
         Ok(())
     }
 
     fn write(&mut self, path: &[u8]) -> Result<(), SessionError> {
+        self.write_with_baseline_refresh(path, recovery::refresh_baseline)
+    }
+
+    fn write_with_baseline_refresh(
+        &mut self,
+        path: &[u8],
+        refresh: impl FnOnce(&[u8]) -> Result<recovery::RecoveryBaseline, SessionError>,
+    ) -> Result<(), SessionError> {
         let source = self.document.source().map_err(SessionError::Document)?;
         write_project_with_payload(path, &source, &self.payload)?;
+        self.baseline = Some(refresh(path).map_err(|_| SessionError::PublishedStateUnknown)?);
         self.document.mark_saved();
         Ok(())
     }
@@ -189,7 +295,9 @@ impl ProjectSession {
         if path.len() > 4 && path[path.len() - 4..].eq_ignore_ascii_case(b".svg") {
             return Self::open_svg(path);
         }
+        let before = recovery::begin_open_baseline(path)?;
         let loaded = project_file_load(path).map_err(load_error)?;
+        let baseline = recovery::finish_open_baseline(path, before)?;
         let view = loaded.view();
         let document =
             V1Document::from_source(view.scene_svg).map_err(SessionError::InvalidScene)?;
@@ -200,6 +308,9 @@ impl ProjectSession {
             payload,
             path: Some(path.to_vec()),
             svg_origin: None,
+            recovery_dirty: false,
+            recovery_conflict: false,
+            baseline: Some(baseline),
         })
     }
 
@@ -220,6 +331,9 @@ impl ProjectSession {
             payload,
             path: None,
             svg_origin: Some(path.to_vec()),
+            recovery_dirty: false,
+            recovery_conflict: false,
+            baseline: None,
         })
     }
 

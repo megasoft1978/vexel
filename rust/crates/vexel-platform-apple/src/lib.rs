@@ -18,9 +18,9 @@ pub use text_layout::{
 };
 
 pub use panels::{
-    MAX_PANEL_PATH, NativePanels, PROJECT_EXTENSION, PanelBackend, PanelResult, UnsavedChoice,
-    UnsavedText, checked_path, confirm_unsaved, open_panel, save_panel, show_error,
-    with_project_extension,
+    MAX_PANEL_PATH, NativePanels, PROJECT_EXTENSION, PanelBackend, PanelResult, RecoveryChoice,
+    RecoveryText, UnsavedChoice, UnsavedText, checked_path, confirm_recovery, confirm_unsaved,
+    open_panel, save_panel, show_error, with_project_extension,
 };
 
 pub use main_thread::{MainThread, MainThreadError};
