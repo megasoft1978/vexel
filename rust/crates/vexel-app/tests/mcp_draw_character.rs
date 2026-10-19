@@ -110,11 +110,19 @@ fn draw_character_over_stdio_mcp() {
     assert!(tag(&source, &body).contains(r##"fill="#2a9d5c""##));
     assert!(tag(&source, &head).contains(r##"fill="#ffd0a0""##));
     // The translate is baked into the geometry: cx 256 -> 266, cy 200 -> 205.
-    assert!(tag(&source, &head).contains(r#"cx="2.66e2""#), "{}", tag(&source, &head));
+    assert!(
+        tag(&source, &head).contains(r#"cx="2.66e2""#),
+        "{}",
+        tag(&source, &head)
+    );
     assert!(tag(&source, &head).contains(r#"cy="2.05e2""#));
     assert!(tag(&source, &arm).contains(r##"stroke="#202020""##));
     let info = rig.doc_tool("document_info", "");
-    assert_eq!(number_field(info.ok(), "elementCount"), 3, "edits add nothing");
+    assert_eq!(
+        number_field(info.ok(), "elementCount"),
+        3,
+        "edits add nothing"
+    );
 
     // Animate the head: opacity dips to 0.2 at the half-second mark.
     let reply = rig.doc_tool(
@@ -137,7 +145,10 @@ fn draw_character_over_stdio_mcp() {
     assert_eq!(gif.len() as u64, bytes, "reported bytes match the file");
     let decoded = gif_decoder::decode(&gif).unwrap();
     assert_eq!(decoded.frames.len(), FPS as usize);
-    assert_eq!((u32::from(decoded.width), u32::from(decoded.height)), (SIZE, SIZE));
+    assert_eq!(
+        (u32::from(decoded.width), u32::from(decoded.height)),
+        (SIZE, SIZE)
+    );
     let first = decoded.rgba(0);
     let blink = decoded.rgba(FPS as usize / 2);
     assert_ne!(
@@ -173,9 +184,7 @@ fn malformed_path_data_is_a_typed_error() {
     for d in ["M 0 0 L", "M 0 0 Q 1 1 2 2", "", "L 1 1"] {
         let reply = rig.doc_tool(
             "element_add",
-            &format!(
-                r#""parentId":"root","template":"path","attributes":{{"d":"{d}"}}"#
-            ),
+            &format!(r#""parentId":"root","template":"path","attributes":{{"d":"{d}"}}"#),
         );
         assert!(reply.is_error, "malformed d {d:?} accepted: {}", reply.body);
         assert_eq!(reply.error(), "invalid preview tool arguments", "d {d:?}");

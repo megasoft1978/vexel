@@ -20,9 +20,14 @@ const CASES: [(&str, u32, u32); 5] = [
 ];
 
 fn png(id: &str, width: u32, height: u32) -> Vec<u8> {
-    let source = std::fs::read(format!("{FIXTURES}/{id}.svg")).unwrap_or_else(|e| panic!("{id}: {e}"));
+    let source =
+        std::fs::read(format!("{FIXTURES}/{id}.svg")).unwrap_or_else(|e| panic!("{id}: {e}"));
     let frame = compose_svg(&source, width, height).unwrap_or_else(|e| panic!("{id}: {e}"));
-    assert!(frame.disclosures.is_empty(), "{id}: {:?}", frame.disclosures);
+    assert!(
+        frame.disclosures.is_empty(),
+        "{id}: {:?}",
+        frame.disclosures
+    );
     encode_rgba8(width, height, &frame.rgba, Compression::Fixed).unwrap()
 }
 
@@ -31,13 +36,20 @@ fn gradient_fixtures_match_their_png_goldens() {
     let bless = std::env::var_os("VEXEL_BLESS_GOLDENS").is_some_and(|v| v == "1");
     for (id, width, height) in CASES {
         let rendered = png(id, width, height);
-        assert_eq!(rendered, png(id, width, height), "{id}: rendering is repeatable");
+        assert_eq!(
+            rendered,
+            png(id, width, height),
+            "{id}: rendering is repeatable"
+        );
         let file = format!("{FIXTURES}/{id}.png");
         if bless {
             std::fs::write(&file, &rendered).unwrap();
             continue;
         }
         let golden = std::fs::read(&file).unwrap_or_else(|e| panic!("{id}.png: {e}"));
-        assert!(golden == rendered, "{id}.png differs from the golden (tolerance 0)");
+        assert!(
+            golden == rendered,
+            "{id}.png differs from the golden (tolerance 0)"
+        );
     }
 }
