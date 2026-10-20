@@ -20,7 +20,7 @@ fn resolve(source: &str, fill: &str) -> Result<PaintKind> {
     let mut work = Run;
     let document = LexicalDocument::parse(owner.clone(), 256 * 1024 * 1024, &mut work)?;
     let mut shared = DecodeSource::new(&document, &mut work)?;
-    let mut ledger = ChargeLedger::new(&owner, 16 * 1024 * 1024, 4096)?;
+    let mut ledger = ChargeLedger::new(&owner, 64 * 1024 * 1024, 4096)?;
     let mut cache = PaintCache::default();
     let offset = source.find(fill).unwrap();
     let value = XmlSpan {
@@ -87,6 +87,22 @@ fn gradient_path_fill_inkscape_chain_resolves() {
     );
     assert_eq!(
         resolve(&source, "url(#linear2)").unwrap(),
+        PaintKind::Linear
+    );
+}
+
+/// Corpus regression (ideogram): gradient attributes located in a document
+/// larger than the 16 MiB preview cap must still parse (the value limits used
+/// the whole-source length and rejected `gradientTransform` and coordinates).
+#[test]
+fn corpus_regression_ideogram() {
+    let padding = "x".repeat(17 * 1024 * 1024);
+    let source = format!(
+        "<svg><defs><!--{padding}--><linearGradient id=\"linear0\" gradientUnits=\"userSpaceOnUse\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\" gradientTransform=\"matrix(10,0,0,63.428,20,20.426)\">{STOPS}</linearGradient></defs><path d=\"M1 1L7 1L7 7Z\" style=\"fill:url(#linear0);fill-rule:nonzero\"/></svg>"
+    );
+    assert!(source.len() > 16 * 1024 * 1024);
+    assert_eq!(
+        resolve(&source, "url(#linear0)").unwrap(),
         PaintKind::Linear
     );
 }

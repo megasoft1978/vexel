@@ -6,8 +6,21 @@ use vexel_base::Span;
 use vexel_scene::{DecodeSource, ElementId, Paint, PaintKind, PaintStop, Result, Spread};
 use vexel_svg_color::parse_color;
 use vexel_svg_css::{CssPaint, Property};
-use vexel_svg_values::{affine_inverse, parse_length, parse_transform};
+use vexel_svg_values::{
+    MAX_POLICY_ATTRIBUTES, MAX_POLICY_SOURCE_BYTES, ValueLimits, affine_inverse,
+    parse_length_with_limits, parse_transform_with_limits,
+};
 use vexel_xml::{TokenKind, XmlSpan, XmlToken};
+
+/// Same whole-document policy cap the decoder uses (`1 << 30`). The default
+/// value limit is the 16 MiB preview cap, which rejected every gradient
+/// attribute in a larger document even though only the attribute span is parsed.
+const fn value_limits() -> ValueLimits {
+    ValueLimits {
+        source_bytes: MAX_POLICY_SOURCE_BYTES,
+        attributes: MAX_POLICY_ATTRIBUTES,
+    }
+}
 
 pub(crate) fn inherited_gradient_color(
     shared: &mut DecodeSource<'_>,
@@ -242,8 +255,8 @@ pub(crate) fn read_definition_attributes(
             if let Some(value) = attr(source, tokens, element.0, b"gradientTransform") {
                 let span = Span::from_offset_length(value.offset, value.length)
                     .ok_or_else(|| invalid(offset))?;
-                let (matrix, _) =
-                    parse_transform(source, span).map_err(|error| unsupported(error.offset))?;
+                let (matrix, _) = parse_transform_with_limits(source, span, value_limits())
+                    .map_err(|error| unsupported(error.offset))?;
                 paint.gradient_inverse =
                     affine_inverse(matrix).ok_or_else(|| unsupported(offset))?;
                 transform = true;
@@ -326,7 +339,8 @@ pub(crate) fn read_coordinates(
             let span = Span::from_offset_length(value.offset, value.length)
                 .ok_or_else(|| invalid(offset))?;
             paint.coordinates[coordinate] =
-                parse_length(source, span, reference).map_err(|_| unsupported(offset))?;
+                parse_length_with_limits(source, span, reference, value_limits())
+                    .map_err(|_| unsupported(offset))?;
             break;
         }
     }
