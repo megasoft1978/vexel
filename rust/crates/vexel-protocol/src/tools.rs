@@ -1,6 +1,38 @@
 use super::{ProtocolError, ToolSchema, append_string};
 use vexel_json::{JsonBuffer, JsonDocument, JsonType, MAX_BYTES};
 
+const RECT_KEYS: &[&[u8]] = &[b"x", b"y", b"width", b"height", b"fill"];
+const ELLIPSE_KEYS: &[&[u8]] = &[b"cx", b"cy", b"rx", b"ry", b"fill"];
+const LINE_KEYS: &[&[u8]] = &[b"x1", b"y1", b"x2", b"y2", b"stroke", b"stroke-width"];
+const PATH_KEYS: &[&[u8]] = &[b"d", b"fill", b"stroke", b"stroke-width"];
+
+pub fn element_add_keys(template: &str) -> Option<&'static [&'static [u8]]> {
+    match template {
+        "rect" => Some(RECT_KEYS),
+        "ellipse" => Some(ELLIPSE_KEYS),
+        "line" => Some(LINE_KEYS),
+        "path" => Some(PATH_KEYS),
+        _ => None,
+    }
+}
+
+fn display_keys(keys: &[&[u8]]) -> String {
+    keys.iter()
+        .map(|key| std::str::from_utf8(key).expect("static attribute keys are UTF-8"))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn element_add_description() -> String {
+    format!(
+        "Add a rectangle, ellipse, line, or path to the live preview document. parentId must be \"root\" for the top level or an existing group id. Attributes must be strings. Allowed attributes: rect: {}; ellipse: {}; line: {}; path: {}.",
+        display_keys(RECT_KEYS),
+        display_keys(ELLIPSE_KEYS),
+        display_keys(LINE_KEYS),
+        display_keys(PATH_KEYS),
+    )
+}
+
 pub(super) const TOOLS: &[ToolSchema] = &[
     ToolSchema {
         name: "document_open",
@@ -367,13 +399,13 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         out.literal(",\"description\":")
             .map_err(ProtocolError::Buffer)?;
         let description = if preview && tool.name == "element_add" {
-            "Add a rectangle, ellipse, line, or path to the live preview document."
+            element_add_description()
         } else if preview && tool.name == "export_animation" {
-            "Export the live preview loop as a GIF inside a granted directory."
+            "Export the live preview loop as a GIF inside a granted directory.".to_owned()
         } else if preview && tool.name == "render_png" {
-            "Render the open document to a PNG file inside a granted directory."
+            "Render the open document to a PNG file inside a granted directory.".to_owned()
         } else {
-            tool.description
+            tool.description.to_owned()
         };
         append_string(&mut out, description.as_bytes())?;
         out.literal(",\"inputSchema\":{\"type\":\"object\",\"properties\":")

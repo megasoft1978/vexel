@@ -8,7 +8,8 @@ fn run(app: &mut AppDocument, tool: &str, args: &str) -> Result<String, &'static
     let sep = if args.is_empty() { "" } else { "," };
     let json = format!("{{\"documentId\":\"preview-document\"{sep}{args}}}");
     let doc = JsonDocument::parse(json.as_bytes()).unwrap();
-    let operation = parse_operation(&doc, doc.root(), tool)?;
+    let operation =
+        parse_operation(&doc, doc.root(), tool).map_err(|_| "invalid preview tool arguments")?;
     let mut host = McpHost::new();
     let mut driver = Driver::new(ManualClock::default());
     match host.handle_with(app, operation, &mut driver)? {

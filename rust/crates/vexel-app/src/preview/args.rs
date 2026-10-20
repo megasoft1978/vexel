@@ -2,10 +2,31 @@
 //! path tools. Every value is checked here; the session applies only
 //! operations that already passed these bounds.
 
-use super::{AttributeChange, JsonDocument, Operation, number_field, parse_color, string_field};
+use super::{
+    AttributeChange, JsonDocument, JsonType, Operation, PreviewArgumentError, Shape, number_field,
+    parse_color, string_field, validate_shape,
+};
 
-pub(super) const LINE_KEYS: &[&[u8]] = &[b"x1", b"y1", b"x2", b"y2", b"stroke", b"stroke-width"];
-pub(super) const PATH_KEYS: &[&[u8]] = &[b"d", b"fill", b"stroke", b"stroke-width"];
+pub(super) fn rejected_element_add_attribute(template: &str, key: &str) -> String {
+    let allowed = vexel_protocol::element_add_keys(template)
+        .map(|keys| {
+            keys.iter()
+                .map(|key| std::str::from_utf8(key).expect("static attribute keys are UTF-8"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    format!("element_add {template} does not accept attribute \"{key}\"; allowed: {allowed}")
+}
+
+pub(super) fn rejected_element_add_parent(parent: Option<&str>) -> String {
+    match parent {
+        Some(parent) => format!(
+            "element_add parentId \"{parent}\" is invalid; use \"root\" or an existing group id"
+        ),
+        None => "element_add parentId is required; use \"root\" for the top level or an existing group id".to_owned(),
+    }
+}
 
 const BAD_ARGS: &str = "invalid preview tool arguments";
 /// Longest accepted `path` argument in bytes (matches the access policy cap).
@@ -167,4 +188,92 @@ fn translate(value: &str) -> Option<(f64, f64)> {
     };
     let (dx, dy) = (number(a)?, number(b)?);
     (dx.abs() <= COORDINATE_LIMIT && dy.abs() <= COORDINATE_LIMIT).then_some((dx, dy))
+}
+
+/// `element_add` for rect, ellipse, line and path templates; every attribute
+/// is checked against the template's allowed keys and value bounds.
+pub(super) fn element_add(
+    doc: &JsonDocument<'_>,
+    args: usize,
+) -> Result<Operation, PreviewArgumentError> {
+    let parent = string_field(doc, args, b"parentId");
+    if parent.as_deref().is_some_and(|parent| parent != "root") {
+        return Err(PreviewArgumentError::Actionable(
+            rejected_element_add_parent(parent.as_deref()),
+        ));
+    }
+    let template = string_field(doc, args, b"template").ok_or(PreviewArgumentError::Generic(
+        "invalid preview tool arguments",
+    ))?;
+    let attrs = doc
+        .object_get(args, b"attributes")
+        .ok_or(PreviewArgumentError::Generic(
+            "invalid preview tool arguments",
+        ))?;
+    if doc.token(attrs).is_none_or(|t| t.kind != JsonType::Object) {
+        return Err(PreviewArgumentError::Generic(
+            "invalid preview tool arguments",
+        ));
+    }
+    let allowed = vexel_protocol::element_add_keys(&template)
+        .ok_or(PreviewArgumentError::Generic("unsupported preview shape"))?;
+    let mut key = doc.token(attrs).and_then(|t| t.first_child);
+    while let Some(key_token) = key {
+        let name = doc
+            .decoded_string(key_token)
+            .ok_or(PreviewArgumentError::Generic(
+                "invalid preview tool arguments",
+            ))?;
+        if !allowed
+            .iter()
+            .any(|candidate| *candidate == name.as_slice())
+        {
+            let rejected =
+                String::from_utf8(name).expect("decoded JSON attribute key is valid UTF-8");
+            return Err(PreviewArgumentError::Actionable(
+                rejected_element_add_attribute(&template, &rejected),
+            ));
+        }
+        let value = doc.token(key_token).and_then(|t| t.next_sibling).ok_or(
+            PreviewArgumentError::Generic("invalid preview tool arguments"),
+        )?;
+        if doc.token(value).is_none_or(|t| t.kind != JsonType::String) {
+            return Err(PreviewArgumentError::Generic(
+                "invalid preview tool arguments",
+            ));
+        }
+        key = doc.token(value).and_then(|t| t.next_sibling);
+    }
+    match template.as_str() {
+        "line" => return Ok(line(doc, attrs)?),
+        "path" => return Ok(path(doc, attrs)?),
+        _ => {}
+    }
+    let num = |k: &[u8]| number_field(doc, attrs, k);
+    let fill = parse_color(
+        string_field(doc, attrs, b"fill")
+            .ok_or(PreviewArgumentError::Generic(
+                "invalid preview tool arguments",
+            ))?
+            .as_str(),
+    )?;
+    let shape = match template.as_str() {
+        "rect" => Shape::Rect {
+            x: num(b"x")?,
+            y: num(b"y")?,
+            width: num(b"width")?,
+            height: num(b"height")?,
+            rgb: fill,
+        },
+        "ellipse" => Shape::Ellipse {
+            cx: num(b"cx")?,
+            cy: num(b"cy")?,
+            rx: num(b"rx")?,
+            ry: num(b"ry")?,
+            rgb: fill,
+        },
+        _ => return Err(PreviewArgumentError::Generic("unsupported preview shape")),
+    };
+    validate_shape(shape).map_err(PreviewArgumentError::Generic)?;
+    Ok(Operation::Add(shape))
 }

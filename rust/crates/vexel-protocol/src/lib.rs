@@ -9,7 +9,7 @@ use vexel_json::{JsonBuffer, JsonDocument};
 
 pub use async_protocol::{legacy_progress, tasks_ready, validate_async_payload, AsyncDisposition, AsyncPayloadKind, ProgressError};
 pub use protocol::{handle, handle_async, request_expects_response, ProtocolSession};
-pub use tools::{tool_schemas, validate_tool_arguments, ToolValidationError};
+pub use tools::{element_add_keys, tool_schemas, validate_tool_arguments, ToolValidationError};
 use vexel_json::JsonBufferError;
 
 /// Safe replacement for the former void-pointer synchronous callback table.

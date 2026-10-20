@@ -172,7 +172,7 @@ fn rejects_invalid_shapes_and_caps_scene() {
 
 #[test]
 fn request_mapping_rejects_non_finite_color_and_extra_attributes() {
-    fn parse(attributes: &str) -> Result<Operation, &'static str> {
+    fn parse(attributes: &str) -> Result<Operation, PreviewArgumentError> {
         let json = format!(
             "{{\"documentId\":\"{DOCUMENT_ID}\",\"parentId\":\"root\",\"template\":\"rect\",\"attributes\":{attributes}}}"
         );
@@ -184,6 +184,22 @@ fn request_mapping_rejects_non_finite_color_and_extra_attributes() {
     assert!(
         parse(r##"{"x":"1","y":"1","width":"2","height":"3","fill":"#AABBCC","opacity":"0.5"}"##)
             .is_err()
+    );
+}
+
+#[test]
+fn element_add_rejects_unknown_attribute_with_actionable_error() {
+    let json = format!(
+        r##"{{"documentId":"{DOCUMENT_ID}","parentId":"root","template":"rect","attributes":{{"x":"1","y":"2","width":"3","height":"4","fill":"#AABBCC","rx":"2"}}}}"##
+    );
+    let doc = JsonDocument::parse_owned(json.as_bytes()).unwrap();
+    let error = parse_operation(&doc, doc.root(), "element_add").unwrap_err();
+    assert_eq!(
+        error,
+        PreviewArgumentError::Actionable(
+            "element_add rect does not accept attribute \"rx\"; allowed: x, y, width, height, fill"
+                .to_owned()
+        )
     );
 }
 
