@@ -36,3 +36,8 @@ Async export (from wip branch) -> SVG corpus fidelity (21/39) and large-doc desi
 
 ## Open owner items
 Signing/identity/distribution decisions; showcase publication.
+
+## Decisions 2026-10-20 (coordinator, owner delegated)
+- Native timeline MCP: V1 stays with the six routed property-track tools; add_track, add_drawing_asset, set_cel, remove_cel, move_item stay unrouted and unadvertised until the character-loop demo needs them.
+- Full 42-entry tool schema stays as is (frozen `parity.rs` count); the live-preview list is already limited to routed tools and guarded by `tools_schema_matches_dispatch`.
+- Timing-sensitive tests (pan present, cancel latency) gate in release builds on hosted CI; chrome/footer goldens are informational there until goldens are regenerated on a pinned runner image.
