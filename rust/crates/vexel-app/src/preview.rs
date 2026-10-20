@@ -21,6 +21,18 @@ const ANIMATION_LIMIT: usize = 16;
 const ANIMATION_XML_LIMIT: usize = 4096;
 const SOURCE_LIMIT: usize = 64 * 1024;
 
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum PreviewArgumentError {
+    Generic(&'static str),
+    Actionable(String),
+}
+
+impl From<&'static str> for PreviewArgumentError {
+    fn from(message: &'static str) -> Self {
+        Self::Generic(message)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Shape {
     Rect {
@@ -476,7 +488,8 @@ impl ProtocolBackend for LiveBackend {
     ) -> Option<ToolResponse> {
         let op = match parse_operation(doc, args, name) {
             Ok(v) => v,
-            Err(e) => return Some(tool_error(e)),
+            Err(PreviewArgumentError::Generic(e)) => return Some(tool_error(e)),
+            Err(PreviewArgumentError::Actionable(e)) => return Some(tool_error(&e)),
         };
         let (tx, rx) = std::sync::mpsc::sync_channel(1);
         if self
@@ -519,15 +532,17 @@ fn tool_error(message: &str) -> ToolResponse {
         "document has no path" => message,
         "export_svg too large" => message,
         "file operation failed" => message,
+        m if m.starts_with("element_add ") => m,
         m if m.starts_with("export ") => m,
         _ => "invalid preview tool arguments",
     };
+    let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
     let mut s = b"{\"error\":\"".to_vec();
-    s.extend_from_slice(text.as_bytes());
+    s.extend_from_slice(escaped.as_bytes());
     s.extend_from_slice(b"\"}");
     ToolResponse {
         structured_json: s,
-        content_json: format!("[{{\"type\":\"text\",\"text\":\"{text}\"}}]").into_bytes(),
+        content_json: format!("[{{\"type\":\"text\",\"text\":\"{escaped}\"}}]").into_bytes(),
         is_error: true,
     }
 }
@@ -535,93 +550,112 @@ pub(super) fn parse_operation(
     doc: &JsonDocument<'_>,
     args: usize,
     name: &str,
-) -> Result<Operation, &'static str> {
+) -> Result<Operation, PreviewArgumentError> {
     if name == "document_list" {
         return Ok(Operation::List);
     }
     if name == "document_open" {
-        return args::open(doc, args);
+        return Ok(args::open(doc, args)?);
     }
     if string_field(doc, args, b"documentId").as_deref() != Some(DOCUMENT_ID) {
-        return Err("unknown preview document");
+        return Err(PreviewArgumentError::Generic("unknown preview document"));
     }
     match name {
         "document_info" => Ok(Operation::Info),
         "save" => Ok(Operation::Save),
         "export_svg" => Ok(Operation::ExportSvg),
-        "render_png" => crate::session::mcp_png::parse(doc, args),
-        "save_as" => args::save_as(doc, args),
-        "attribute_set" => args::attribute_set(doc, args),
-        "element_delete" => args::delete(doc, args),
+        "render_png" => Ok(crate::session::mcp_png::parse(doc, args)?),
+        "save_as" => Ok(args::save_as(doc, args)?),
+        "attribute_set" => Ok(args::attribute_set(doc, args)?),
+        "element_delete" => Ok(args::delete(doc, args)?),
         "animation_list" => Ok(Operation::AnimationList),
         "undo" => Ok(Operation::Undo),
         "redo" => Ok(Operation::Redo),
         "animation_add" => {
-            let target_id =
-                string_field(doc, args, b"targetId").ok_or("invalid preview tool arguments")?;
+            let target_id = string_field(doc, args, b"targetId").ok_or(
+                PreviewArgumentError::Generic("invalid preview tool arguments"),
+            )?;
             if target_id.len() > 128 || !target_id.starts_with("vexel-object-") {
-                return Err("invalid preview tool arguments");
+                return Err(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ));
             }
             let token = doc
                 .object_get(args, b"xml")
-                .ok_or("invalid preview tool arguments")?;
+                .ok_or(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ))?;
             if doc
                 .raw_token(token)
                 .is_none_or(|raw| raw.len() > ANIMATION_XML_LIMIT * 6 + 2)
             {
-                return Err("invalid preview tool arguments");
+                return Err(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ));
             }
             let xml = doc
                 .decoded_string(token)
-                .ok_or("invalid preview tool arguments")?;
+                .ok_or(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ))?;
             validate_animation_fragment(&xml)?;
             Ok(Operation::AnimationAdd { target_id, xml })
         }
         "animation_control" => {
             let action = string_field(doc, args, b"action")
                 .or_else(|| string_field(doc, args, b"operation"))
-                .ok_or("invalid preview tool arguments")?;
+                .ok_or(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ))?;
             let control = match action.as_str() {
                 "play" => Control::Play,
                 "pause" => Control::Pause,
                 "seek" => {
-                    let token = doc
-                        .object_get(args, b"timeMs")
-                        .ok_or("invalid preview tool arguments")?;
+                    let token =
+                        doc.object_get(args, b"timeMs")
+                            .ok_or(PreviewArgumentError::Generic(
+                                "invalid preview tool arguments",
+                            ))?;
                     if doc
                         .token(token)
                         .is_none_or(|t| !matches!(t.kind, JsonType::Number | JsonType::String))
                     {
-                        return Err("invalid preview tool arguments");
+                        return Err(PreviewArgumentError::Generic(
+                            "invalid preview tool arguments",
+                        ));
                     }
                     let raw = if doc.token(token).is_some_and(|t| t.kind == JsonType::String) {
-                        String::from_utf8(
-                            doc.decoded_string(token)
-                                .ok_or("invalid preview tool arguments")?,
-                        )
+                        String::from_utf8(doc.decoded_string(token).ok_or(
+                            PreviewArgumentError::Generic("invalid preview tool arguments"),
+                        )?)
                         .map_err(|_| "invalid preview tool arguments")?
                     } else {
-                        std::str::from_utf8(
-                            doc.raw_token(token)
-                                .ok_or("invalid preview tool arguments")?,
-                        )
+                        std::str::from_utf8(doc.raw_token(token).ok_or(
+                            PreviewArgumentError::Generic("invalid preview tool arguments"),
+                        )?)
                         .map_err(|_| "invalid preview tool arguments")?
                         .to_owned()
                     };
                     if raw.len() > 32 {
-                        return Err("invalid preview tool arguments");
+                        return Err(PreviewArgumentError::Generic(
+                            "invalid preview tool arguments",
+                        ));
                     }
-                    let milliseconds = raw
-                        .parse::<f64>()
-                        .ok()
-                        .filter(|n| n.is_finite())
-                        .ok_or("invalid preview tool arguments")?;
+                    let milliseconds = raw.parse::<f64>().ok().filter(|n| n.is_finite()).ok_or(
+                        PreviewArgumentError::Generic("invalid preview tool arguments"),
+                    )?;
                     if !(0.0..=10_000.0).contains(&milliseconds) {
-                        return Err("invalid preview tool arguments");
+                        return Err(PreviewArgumentError::Generic(
+                            "invalid preview tool arguments",
+                        ));
                     }
                     Control::Seek(milliseconds / 1000.0)
                 }
-                _ => return Err("invalid preview tool arguments"),
+                _ => {
+                    return Err(PreviewArgumentError::Generic(
+                        "invalid preview tool arguments",
+                    ));
+                }
             };
             Ok(Operation::Control(control))
         }
@@ -635,9 +669,13 @@ pub(super) fn parse_operation(
                 .and_then(|t| doc.decoded_string(t))
                 .and_then(|bytes| String::from_utf8(bytes).ok())
                 .filter(|p| !p.is_empty() && p.len() < 1024)
-                .ok_or("invalid preview tool arguments")?;
+                .ok_or(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ))?;
             if string_field(doc, args, b"format").as_deref() != Some("gif") {
-                return Err("invalid preview tool arguments");
+                return Err(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ));
             }
             let json_number = |key: &[u8]| {
                 doc.object_get(args, key)
@@ -649,7 +687,9 @@ pub(super) fn parse_operation(
                     .filter(|raw| raw.len() <= 32)
                     .and_then(|raw| std::str::from_utf8(raw).ok()?.parse::<f64>().ok())
                     .filter(|n| n.is_finite())
-                    .ok_or("invalid preview tool arguments")
+                    .ok_or(PreviewArgumentError::Generic(
+                        "invalid preview tool arguments",
+                    ))
             };
             let fps = json_number(b"fps")?;
             let duration = json_number(b"duration")?;
@@ -657,7 +697,9 @@ pub(super) fn parse_operation(
                 || !(1.0..=30.0).contains(&fps)
                 || !(0.01..=10.0).contains(&duration)
             {
-                return Err("invalid preview tool arguments");
+                return Err(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ));
             }
             Ok(Operation::Export {
                 path,
@@ -666,56 +708,65 @@ pub(super) fn parse_operation(
             })
         }
         "element_add" => {
-            if string_field(doc, args, b"parentId")
-                .as_deref()
-                .is_some_and(|p| p != "root")
-            {
-                return Err("invalid preview tool arguments");
+            let parent = string_field(doc, args, b"parentId");
+            if parent.as_deref().is_some_and(|parent| parent != "root") {
+                return Err(PreviewArgumentError::Actionable(
+                    args::rejected_element_add_parent(parent.as_deref()),
+                ));
             }
-            let template =
-                string_field(doc, args, b"template").ok_or("invalid preview tool arguments")?;
-            let attrs = doc
-                .object_get(args, b"attributes")
-                .ok_or("invalid preview tool arguments")?;
+            let template = string_field(doc, args, b"template").ok_or(
+                PreviewArgumentError::Generic("invalid preview tool arguments"),
+            )?;
+            let attrs =
+                doc.object_get(args, b"attributes")
+                    .ok_or(PreviewArgumentError::Generic(
+                        "invalid preview tool arguments",
+                    ))?;
             if doc.token(attrs).is_none_or(|t| t.kind != JsonType::Object) {
-                return Err("invalid preview tool arguments");
+                return Err(PreviewArgumentError::Generic(
+                    "invalid preview tool arguments",
+                ));
             }
-            let allowed: &[&[u8]] = match template.as_str() {
-                "rect" => &[b"x", b"y", b"width", b"height", b"fill"],
-                "ellipse" => &[b"cx", b"cy", b"rx", b"ry", b"fill"],
-                "line" => args::LINE_KEYS,
-                "path" => args::PATH_KEYS,
-                _ => return Err("unsupported preview shape"),
-            };
+            let allowed = vexel_protocol::element_add_keys(&template)
+                .ok_or(PreviewArgumentError::Generic("unsupported preview shape"))?;
             let mut key = doc.token(attrs).and_then(|t| t.first_child);
             while let Some(key_token) = key {
                 let name = doc
                     .decoded_string(key_token)
-                    .ok_or("invalid preview tool arguments")?;
+                    .ok_or(PreviewArgumentError::Generic(
+                        "invalid preview tool arguments",
+                    ))?;
                 if !allowed
                     .iter()
                     .any(|candidate| *candidate == name.as_slice())
                 {
-                    return Err("invalid preview tool arguments");
+                    let rejected =
+                        String::from_utf8(name).expect("decoded JSON attribute key is valid UTF-8");
+                    return Err(PreviewArgumentError::Actionable(
+                        args::rejected_element_add_attribute(&template, &rejected),
+                    ));
                 }
-                let value = doc
-                    .token(key_token)
-                    .and_then(|t| t.next_sibling)
-                    .ok_or("invalid preview tool arguments")?;
+                let value = doc.token(key_token).and_then(|t| t.next_sibling).ok_or(
+                    PreviewArgumentError::Generic("invalid preview tool arguments"),
+                )?;
                 if doc.token(value).is_none_or(|t| t.kind != JsonType::String) {
-                    return Err("invalid preview tool arguments");
+                    return Err(PreviewArgumentError::Generic(
+                        "invalid preview tool arguments",
+                    ));
                 }
                 key = doc.token(value).and_then(|t| t.next_sibling);
             }
             match template.as_str() {
-                "line" => return args::line(doc, attrs),
-                "path" => return args::path(doc, attrs),
+                "line" => return Ok(args::line(doc, attrs)?),
+                "path" => return Ok(args::path(doc, attrs)?),
                 _ => {}
             }
             let num = |k: &[u8]| number_field(doc, attrs, k);
             let fill = parse_color(
                 string_field(doc, attrs, b"fill")
-                    .ok_or("invalid preview tool arguments")?
+                    .ok_or(PreviewArgumentError::Generic(
+                        "invalid preview tool arguments",
+                    ))?
                     .as_str(),
             )?;
             let shape = match template.as_str() {
@@ -733,15 +784,15 @@ pub(super) fn parse_operation(
                     ry: num(b"ry")?,
                     rgb: fill,
                 },
-                _ => return Err("unsupported preview shape"),
+                _ => return Err(PreviewArgumentError::Generic("unsupported preview shape")),
             };
-            validate_shape(shape)?;
+            validate_shape(shape).map_err(PreviewArgumentError::Generic)?;
             Ok(Operation::Add(shape))
         }
-        _ => name
+        _ => Ok(name
             .strip_prefix("native_timeline_")
             .and_then(|tool| native_timeline::parse(doc, args, tool))
-            .unwrap_or(Err("unsupported preview operation")),
+            .ok_or("unsupported preview operation")??),
     }
 }
 fn string_field(doc: &JsonDocument<'_>, obj: usize, key: &[u8]) -> Option<String> {

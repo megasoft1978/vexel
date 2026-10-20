@@ -4,8 +4,26 @@
 
 use super::{AttributeChange, JsonDocument, Operation, number_field, parse_color, string_field};
 
-pub(super) const LINE_KEYS: &[&[u8]] = &[b"x1", b"y1", b"x2", b"y2", b"stroke", b"stroke-width"];
-pub(super) const PATH_KEYS: &[&[u8]] = &[b"d", b"fill", b"stroke", b"stroke-width"];
+pub(super) fn rejected_element_add_attribute(template: &str, key: &str) -> String {
+    let allowed = vexel_protocol::element_add_keys(template)
+        .map(|keys| {
+            keys.iter()
+                .map(|key| std::str::from_utf8(key).expect("static attribute keys are UTF-8"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+        .unwrap_or_default();
+    format!("element_add {template} does not accept attribute \"{key}\"; allowed: {allowed}")
+}
+
+pub(super) fn rejected_element_add_parent(parent: Option<&str>) -> String {
+    match parent {
+        Some(parent) => format!(
+            "element_add parentId \"{parent}\" is invalid; use \"root\" or an existing group id"
+        ),
+        None => "element_add parentId is required; use \"root\" for the top level or an existing group id".to_owned(),
+    }
+}
 
 const BAD_ARGS: &str = "invalid preview tool arguments";
 /// Longest accepted `path` argument in bytes (matches the access policy cap).
