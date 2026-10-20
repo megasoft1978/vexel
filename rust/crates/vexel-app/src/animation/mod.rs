@@ -28,6 +28,8 @@ mod native_driver_tests;
 #[cfg(test)]
 mod native_export_tests;
 #[cfg(test)]
+mod native_export_walkthrough_tests;
+#[cfg(test)]
 mod native_properties_tests;
 #[cfg(test)]
 mod native_stage_tests;

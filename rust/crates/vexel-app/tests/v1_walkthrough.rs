@@ -3,13 +3,11 @@
 //!
 //! Calls go through `vexel_mcp_stdio::serve` to the app's `LiveBackend`; the
 //! test thread plays the UI loop through `McpHost`. Covered: create, draw,
-//! revise, undo/redo, save_as, save, reopen, export_svg.
+//! revise, undo/redo, save_as, save, reopen, export_svg, and (second test)
+//! native timeline tracks/keys/loop with undo/redo, save_as, save, reopen.
 //!
-//! Not covered (blocked, see the S6 report): the native timeline steps and the
-//! native GIF export. `native_timeline_*` is routed by `McpHost` but the
-//! live-preview `tools/call` gate in `vexel-protocol` rejects it as
-//! `unknown_tool`, and `NativeOp` / `animation::native_export` are not
-//! reachable from an integration test without crate-visibility changes.
+//! Native GIF export is covered in-crate by
+//! `animation/native_export_walkthrough_tests.rs`.
 
 mod common;
 
@@ -174,4 +172,109 @@ fn v1_walkthrough_create_revise_save_reopen_export_svg() {
     assert_eq!(svg, reopened.source, "export_svg equals saved bytes");
     let composed = compose_svg(&svg, SIZE, SIZE).expect("exported SVG renders");
     assert!(composed.rgba.iter().any(|b| *b != 255));
+}
+
+/// One native timeline tool call; the reply must be a success.
+fn native(rig: &mut Rig, tool: &str, extra: &str) -> String {
+    rig.doc_tool(tool, extra).ok().to_owned()
+}
+
+#[test]
+fn v1_walkthrough_native_timeline_save_reopen() {
+    let grant = Dir::new();
+    let project = grant.text("motion.vexel");
+
+    // 1. Draw a shape, then add an opacity track with keys and a loop mode.
+    let app = AppDocument::new(SIZE, SIZE).unwrap();
+    let mut rig = Rig::with_document(app, policy_for(&[&grant.0]));
+    let shape = ellipse(&mut rig, 64, 64, 20, "#3a7bd5");
+    let drawn = rig.state();
+    native(
+        &mut rig,
+        "native_timeline_add_property_track",
+        &format!(
+            r#""trackId":"fade","targetId":"{shape}","property":"opacity","valueType":"scalar","interpolation":"linear","value":0"#
+        ),
+    );
+    assert_eq!(rig.state().source, drawn.source, "timeline keeps SVG bytes");
+    assert!(rig.state().dirty);
+    native(
+        &mut rig,
+        "native_timeline_set_property_key",
+        r#""trackId":"fade","tick":12,"value":1"#,
+    );
+    native(
+        &mut rig,
+        "native_timeline_set_property_key",
+        r#""trackId":"fade","tick":24,"value":0"#,
+    );
+    native(
+        &mut rig,
+        "native_timeline_set_loop",
+        r#""mode":"ping_pong""#,
+    );
+    let keyed = native(&mut rig, "native_timeline_get", "");
+    for needle in [
+        r#""id":"fade""#,
+        r#""tick":12"#,
+        r#""tick":24"#,
+        r#""loop":"ping_pong""#,
+    ] {
+        assert!(keyed.contains(needle), "{needle} missing: {keyed}");
+    }
+    assert_eq!(rig.state().source, drawn.source, "keys keep SVG bytes");
+
+    // 2. Undo the loop change, then redo it.
+    native(&mut rig, "native_timeline_undo", "");
+    let undone = native(&mut rig, "native_timeline_get", "");
+    assert!(!undone.contains(r#""loop":"ping_pong""#), "{undone}");
+    assert!(undone.contains(r#""tick":24"#), "keys survive undo");
+    native(&mut rig, "native_timeline_redo", "");
+    assert_eq!(native(&mut rig, "native_timeline_get", ""), keyed, "redo");
+
+    // 3. Save as the project, add one more key, then save again.
+    let reply = rig.doc_tool("save_as", &format!(r#""path":"{project}""#));
+    assert_eq!(reply.ok(), OK_SAVE_AS);
+    assert!(!rig.state().dirty);
+    native(
+        &mut rig,
+        "native_timeline_set_property_key",
+        r#""trackId":"fade","tick":36,"value":0.5"#,
+    );
+    assert!(rig.state().dirty);
+    let reply = rig.doc_tool("save", "");
+    assert_eq!(reply.ok(), OK_SAVE);
+    let saved = rig.state();
+    assert!(!saved.dirty);
+    let saved_timeline = native(&mut rig, "native_timeline_get", "");
+    assert!(saved_timeline.contains(r#""tick":36"#), "{saved_timeline}");
+
+    // 4. Reopen in a fresh host; tracks, keys and loop mode must survive.
+    let mut fresh = Rig::new(policy_for(&[&grant.0]));
+    let reply = fresh.tool("document_open", &format!(r#"{{"path":"{project}"}}"#));
+    assert_eq!(reply.ok(), OK_OPEN);
+    let reopened = fresh.state();
+    assert_eq!(reopened.source, saved.source, "reopened equals saved");
+    assert_eq!(reopened.history, 0);
+    assert!(!reopened.dirty);
+    assert_eq!(
+        native(&mut fresh, "native_timeline_get", ""),
+        saved_timeline,
+        "reopened timeline equals saved"
+    );
+    native(
+        &mut fresh,
+        "native_timeline_set_property_key",
+        r#""trackId":"fade","tick":48,"value":1"#,
+    );
+    assert_ne!(
+        native(&mut fresh, "native_timeline_get", ""),
+        saved_timeline
+    );
+    native(&mut fresh, "native_timeline_undo", "");
+    assert_eq!(
+        native(&mut fresh, "native_timeline_get", ""),
+        saved_timeline,
+        "undo after reopen"
+    );
 }
