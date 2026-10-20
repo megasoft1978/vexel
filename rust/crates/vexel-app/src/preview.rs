@@ -5,6 +5,7 @@ use vexel_v1_document::{V1Document, V1DocumentError};
 
 mod animation;
 mod args;
+mod native_args;
 #[path = "session/mcp_native.rs"]
 pub(crate) mod native_timeline;
 pub(crate) use animation::{
@@ -718,10 +719,18 @@ pub(super) fn parse_operation(
             })
         }
         "element_add" => Ok(args::element_add(doc, args)?),
-        _ => Ok(name
-            .strip_prefix("native_timeline_")
-            .and_then(|tool| native_timeline::parse(doc, args, tool))
-            .ok_or("unsupported preview operation")??),
+        _ => {
+            let tool = name
+                .strip_prefix("native_timeline_")
+                .ok_or("unsupported preview operation")?;
+            if let Some(parsed) = native_args::parse(doc, args, tool) {
+                parsed
+            } else {
+                native_timeline::parse(doc, args, tool)
+                    .ok_or("unsupported preview operation")?
+                    .map_err(PreviewArgumentError::Generic)
+            }
+        }
     }
 }
 fn string_field(doc: &JsonDocument<'_>, obj: usize, key: &[u8]) -> Option<String> {

@@ -39,7 +39,10 @@ fn tools_schema_matches_dispatch() {
     let mut session = ProtocolSession::live_preview();
     let init = r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}"#;
     call(&mut session, init);
-    call(&mut session, r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#);
+    call(
+        &mut session,
+        r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#,
+    );
 
     let listing = call(
         &mut session,
@@ -48,7 +51,7 @@ fn tools_schema_matches_dispatch() {
     let doc = JsonDocument::parse(listing.as_bytes()).unwrap();
     let result = doc.object_get(doc.root(), b"result").unwrap();
     let advertised = names(&doc, doc.object_get(result, b"tools").unwrap());
-    assert_eq!(advertised.len(), 22);
+    assert_eq!(advertised.len(), 27);
 
     let full = tool_schemas().unwrap();
     let full_doc = JsonDocument::parse(&full).unwrap();

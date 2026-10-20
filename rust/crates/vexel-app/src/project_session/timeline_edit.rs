@@ -153,6 +153,38 @@ impl ProjectTimelineCandidate {
         self.with_timeline(editor.source(), staged_assets)
     }
 
+    /// Import a validated SVG asset without changing the timeline.
+    pub fn add_drawing_asset(
+        &self,
+        name: &[u8],
+        media_type: &[u8],
+        source: &[u8],
+        geometry: SvgGeometry,
+    ) -> Result<Self, ProjectTimelineError> {
+        self.require_editable()?;
+        let asset = OwnedProjectAsset::import(name, media_type, source, geometry, &self.assets)
+            .map_err(ProjectTimelineError::Asset)?;
+        let mut assets = copy_assets(&self.assets)?;
+        assets
+            .try_reserve(1)
+            .map_err(|_| ProjectTimelineError::OutOfMemory)?;
+        assets.push(asset);
+        self.with_timeline(&self.timeline, assets)
+    }
+
+    /// Add a drawing track that references an already imported asset.
+    pub fn add_drawing_track(
+        &self,
+        track_id: &[u8],
+        target_id: &[u8],
+        asset_name: &[u8],
+        track_name: &[u8],
+    ) -> Result<Self, ProjectTimelineError> {
+        self.transact(|editor, context| {
+            editor.add_drawing_track(context, track_id, target_id, asset_name, track_name)
+        })
+    }
+
     pub fn add_property_track(
         &self,
         track_id: &[u8],

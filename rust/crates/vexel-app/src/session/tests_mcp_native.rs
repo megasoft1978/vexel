@@ -80,6 +80,79 @@ fn mcp_native_timeline_set_key_roundtrip() {
 }
 
 #[test]
+fn mcp_native_cels_roundtrip() {
+    use std::os::unix::ffi::OsStrExt;
+
+    let mut app = AppDocument::new(64, 64).unwrap();
+    rect(&mut app);
+    run(
+        &mut app,
+        "native_timeline_add_drawing_asset",
+        "\"assetName\":\"loop.svg\",\"svg\":\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" width=\\\"64\\\" height=\\\"64\\\" viewBox=\\\"0 0 64 64\\\"><rect width=\\\"64\\\" height=\\\"64\\\"/></svg>\"",
+    )
+    .unwrap();
+    run(
+        &mut app,
+        "native_timeline_add_track",
+        "\"trackId\":\"draw\",\"targetId\":\"vexel-object-1\",\"assetName\":\"loop.svg\",\"name\":\"Loop\"",
+    )
+    .unwrap();
+    run(
+        &mut app,
+        "native_timeline_set_cel",
+        "\"trackId\":\"draw\",\"tick\":1,\"assetName\":\"loop.svg\",\"label\":\"first\"",
+    )
+    .unwrap();
+    run(
+        &mut app,
+        "native_timeline_move_item",
+        "\"trackId\":\"draw\",\"fromTick\":1,\"toTick\":2",
+    )
+    .unwrap();
+    run(
+        &mut app,
+        "native_timeline_remove_cel",
+        "\"trackId\":\"draw\",\"tick\":2",
+    )
+    .unwrap();
+
+    run(&mut app, "native_timeline_undo", "").unwrap();
+    let restored = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(restored.contains("\"tick\":2"), "{restored}");
+    run(&mut app, "native_timeline_redo", "").unwrap();
+    let removed = run(&mut app, "native_timeline_get", "").unwrap();
+    assert!(!removed.contains("\"tick\":2"), "{removed}");
+
+    run(
+        &mut app,
+        "native_timeline_set_cel",
+        "\"trackId\":\"draw\",\"tick\":5,\"assetName\":\"loop.svg\"",
+    )
+    .unwrap();
+    let path = std::env::temp_dir().join(format!("vexel-mcp-cels-{}.vexel", std::process::id()));
+    app.save_as(path.as_os_str().as_bytes()).unwrap();
+    let saved_timeline = run(&mut app, "native_timeline_get", "").unwrap();
+    let saved_asset = app
+        .native_timeline_candidate(settings(), EditLimits::default())
+        .unwrap()
+        .assets()[0]
+        .source
+        .clone();
+
+    let mut reopened = AppDocument::new(64, 64).unwrap();
+    reopened.open_path(&path).unwrap();
+    assert_eq!(
+        run(&mut reopened, "native_timeline_get", "").unwrap(),
+        saved_timeline
+    );
+    let reopened_candidate = reopened
+        .native_timeline_candidate(settings(), EditLimits::default())
+        .unwrap();
+    assert_eq!(reopened_candidate.assets()[0].source, saved_asset);
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
 fn mcp_native_rejects_bad_arguments() {
     let mut app = AppDocument::new(64, 64).unwrap();
     for (tool, args) in [

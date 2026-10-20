@@ -5,11 +5,12 @@
 //! history. Payload-only edits advance `state_revision()`, which the native
 //! animation host observes, so the UI refreshes without extra wiring.
 
+use crate::animation::native_drawing::SvgGeometry;
 use crate::preview::Operation;
 use crate::project_session::{NativeCommandError, ProjectTimelineError, SessionError};
 use crate::session::{AppDocument, McpOutcome};
 use vexel_json::{JsonDocument, JsonType};
-use vexel_timeline::{EditLimits, EmptyTimelineSettings, LoopMode};
+use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode};
 
 const BAD_ARGS: &str = "invalid preview tool arguments";
 const ID_LIMIT: usize = 256;
@@ -19,6 +20,16 @@ const VALUE_LIMIT: usize = 4096;
 #[derive(Clone, Debug, PartialEq)]
 pub enum NativeOp {
     Get,
+    AddTrack {
+        track_id: Vec<u8>,
+        target_id: Vec<u8>,
+        asset_name: Vec<u8>,
+        name: Vec<u8>,
+    },
+    AddDrawingAsset {
+        asset_name: Vec<u8>,
+        svg: Vec<u8>,
+    },
     AddPropertyTrack {
         track_id: Vec<u8>,
         target_id: Vec<u8>,
@@ -32,6 +43,21 @@ pub enum NativeOp {
         track_id: Vec<u8>,
         tick: u32,
         value: Vec<u8>,
+    },
+    SetCel {
+        track_id: Vec<u8>,
+        tick: u32,
+        asset_name: Vec<u8>,
+        label: Vec<u8>,
+    },
+    RemoveCel {
+        track_id: Vec<u8>,
+        tick: u32,
+    },
+    MoveItem {
+        track_id: Vec<u8>,
+        from_tick: u32,
+        to_tick: u32,
     },
     SetLoop(LoopMode),
     Undo,
@@ -212,12 +238,103 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
                 c.set_property_key(&track_id, tick, &value)
             })
             .map_err(error)?,
+        NativeOp::AddTrack {
+            track_id,
+            target_id,
+            asset_name,
+            name,
+        } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.add_drawing_track(&track_id, &target_id, &asset_name, &name)
+            })
+            .map_err(|error| operation_error(error, "add_track"))?,
+        NativeOp::AddDrawingAsset { asset_name, svg } => {
+            let (width, height) = app.size();
+            let geometry = SvgGeometry {
+                width: f64::from(width),
+                height: f64::from(height),
+                view_box: [0.0, 0.0, f64::from(width), f64::from(height)],
+            };
+            app.edit_timeline(settings(), limits, |c| {
+                c.add_drawing_asset(&asset_name, b"image/svg+xml", &svg, geometry)
+            })
+            .map_err(|error| operation_error(error, "add_drawing_asset"))?
+        }
+        NativeOp::SetCel {
+            track_id,
+            tick,
+            asset_name,
+            label,
+        } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.set_cel(&track_id, tick, &asset_name, &label)
+            })
+            .map_err(|error| operation_error(error, "set_cel"))?,
+        NativeOp::RemoveCel { track_id, tick } => app
+            .edit_timeline(settings(), limits, |c| c.remove_cel(&track_id, tick))
+            .map_err(|error| operation_error(error, "remove_cel"))?,
+        NativeOp::MoveItem {
+            track_id,
+            from_tick,
+            to_tick,
+        } => app
+            .edit_timeline(settings(), limits, |c| {
+                c.move_item(&track_id, from_tick, to_tick)
+            })
+            .map_err(|error| operation_error(error, "move_item"))?,
     };
     Ok(done(if edited {
         "Timeline updated"
     } else {
         "Timeline unchanged"
     }))
+}
+
+fn operation_error<E>(failure: NativeCommandError<E>, operation: &str) -> &'static str {
+    if let NativeCommandError::Timeline(ProjectTimelineError::Edit(edit)) = &failure {
+        let msg = match (operation, edit.error) {
+            ("add_track", TimelineError::InvalidReference) => {
+                "native_timeline_add_track targetId or assetName is invalid; use an existing scene ID and SVG asset name"
+            }
+            ("add_track", TimelineError::Duplicate) => {
+                "native_timeline_add_track trackId already exists; use a unique 1-128 character ASCII ID"
+            }
+            ("set_cel", TimelineError::InvalidReference) => {
+                "native_timeline_set_cel trackId or assetName is invalid; use an existing drawing track and SVG asset"
+            }
+            ("set_cel", TimelineError::Duplicate) => {
+                "native_timeline_set_cel tick already has a cel; use an unused tick or move/remove the existing cel"
+            }
+            ("remove_cel", TimelineError::InvalidReference) => {
+                "native_timeline_remove_cel trackId or tick is invalid; use an existing drawing cel"
+            }
+            ("move_item", TimelineError::InvalidReference) => {
+                "native_timeline_move_item fromTick is invalid; use a tick containing an item on trackId"
+            }
+            ("move_item", TimelineError::Duplicate) => {
+                "native_timeline_move_item toTick is occupied; use an unused integer tick from 0 through 4294967295"
+            }
+            ("add_drawing_asset", TimelineError::Duplicate) => {
+                "native_timeline_add_drawing_asset assetName already exists; use a unique SVG asset name"
+            }
+            (_, TimelineError::Limit) => {
+                "native timeline limit reached; reduce timeline or asset size"
+            }
+            (_, _) => "",
+        };
+        if !msg.is_empty() {
+            return msg;
+        }
+    }
+    if operation == "add_drawing_asset"
+        && matches!(
+            failure,
+            NativeCommandError::Timeline(ProjectTimelineError::Asset(_))
+        )
+    {
+        return "native_timeline_add_drawing_asset svg is invalid; use a self-contained SVG matching the document dimensions with no external references";
+    }
+    error(failure)
 }
 
 fn done(message: &str) -> McpOutcome {

@@ -95,8 +95,8 @@ fn library_target_links_and_lists_routed_tools() {
         assert!(names.iter().any(|n| n == name), "missing {name}");
     }
     // render_png is routed since WO-RUST-V1-PNG-01.
-    // Six native_timeline_* tools are routed since the V1 native MCP slice.
-    assert_eq!(names.len(), ROUTED.len() + ORIGINAL.len() + 1 + 6);
+    // Eleven native_timeline_* tools are routed since the V1 native MCP slice.
+    assert_eq!(names.len(), ROUTED.len() + ORIGINAL.len() + 1 + 11);
     assert!(names.iter().any(|n| n == "render_png"));
 }
 

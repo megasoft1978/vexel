@@ -67,9 +67,9 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     let tools = doc.object_get(result, b"tools").unwrap();
     // The 9 original preview tools plus the 6 routed by WO-RUST-V1-MCP-TOOLS-01
     // (document_open, attribute_set, element_delete, save, save_as, export_svg)
-    // plus render_png added by WO-RUST-V1-PNG-01, plus the 6 native_timeline_*
+    // plus render_png added by WO-RUST-V1-PNG-01, plus the 11 native_timeline_*
     // tools routed by the V1 native MCP slice, in declaration order.
-    assert_eq!(doc.token(tools).unwrap().child_count, 22);
+    assert_eq!(doc.token(tools).unwrap().child_count, 27);
     assert!(String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
         "document_open",
@@ -87,9 +87,14 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
         "animation_add",
         "animation_control",
         "native_timeline_get",
+        "native_timeline_add_track",
+        "native_timeline_add_drawing_asset",
         "native_timeline_add_property_track",
         "native_timeline_set_loop",
         "native_timeline_set_property_key",
+        "native_timeline_set_cel",
+        "native_timeline_remove_cel",
+        "native_timeline_move_item",
         "native_timeline_undo",
         "native_timeline_redo",
         "export_animation",
@@ -119,10 +124,9 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
         )
         .contains("circle")
     );
-    assert!(
-        String::from_utf8_lossy(&listing)
-            .contains("\"template\":{\"type\":\"string\",\"enum\":[\"rect\",\"ellipse\",\"line\",\"path\"]}")
-    );
+    assert!(String::from_utf8_lossy(&listing).contains(
+        "\"template\":{\"type\":\"string\",\"enum\":[\"rect\",\"ellipse\",\"line\",\"path\"]}"
+    ));
     assert!(
         String::from_utf8_lossy(&listing)
             .contains("Add a rectangle, ellipse, line, or path to the live preview document.")
@@ -150,22 +154,43 @@ fn preview_export_animation_validates_gif_fps_duration_and_path() {
             r#"{{"jsonrpc":"2.0","id":{id},"method":"tools/call","params":{{"name":"export_animation","arguments":{{"documentId":"d",{args}}}}}}}"#
         )
     };
-    let valid = request(2, r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":1.5"#);
+    let valid = request(
+        2,
+        r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":1.5"#,
+    );
     assert!(
         String::from_utf8_lossy(&call(&mut session, &mut backend, &valid))
             .contains("\"isError\":false")
     );
     for (id, args) in [
-        (3, r#""path":"/tmp/a.gif","format":"frames","fps":10,"duration":1"#),
-        (4, r#""path":"/tmp/a.gif","format":"gif","fps":31,"duration":1"#),
-        (5, r#""path":"/tmp/a.gif","format":"gif","fps":0,"duration":1"#),
-        (6, r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":10.5"#),
-        (7, r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":0"#),
+        (
+            3,
+            r#""path":"/tmp/a.gif","format":"frames","fps":10,"duration":1"#,
+        ),
+        (
+            4,
+            r#""path":"/tmp/a.gif","format":"gif","fps":31,"duration":1"#,
+        ),
+        (
+            5,
+            r#""path":"/tmp/a.gif","format":"gif","fps":0,"duration":1"#,
+        ),
+        (
+            6,
+            r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":10.5"#,
+        ),
+        (
+            7,
+            r#""path":"/tmp/a.gif","format":"gif","fps":10,"duration":0"#,
+        ),
         (8, r#""path":"","format":"gif","fps":10,"duration":1"#),
         (9, r#""format":"gif","fps":10,"duration":1"#),
     ] {
         let out = call(&mut session, &mut backend, &request(id, args));
-        assert!(String::from_utf8_lossy(&out).contains("\"isError\":true"), "{args}");
+        assert!(
+            String::from_utf8_lossy(&out).contains("\"isError\":true"),
+            "{args}"
+        );
     }
     assert_eq!(backend.calls, ["export_animation"]);
 }
