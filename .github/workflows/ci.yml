@@ -27,9 +27,11 @@ jobs:
       - name: Check workspace
         run: cargo check --workspace --locked
       - name: Run tests
-        run: cargo test --workspace --locked -- --test-threads=1
+        run: cargo test --workspace --locked -- --test-threads=1 --skip a_thousand_pan_events_present_within_the_frame_budget
         env:
           VEXEL_CHROME_GOLDEN_DIAGNOSTICS: "1"
+      - name: Pan-present timing gate (release build, unchanged 15,657 ms budget)
+        run: cargo test --release --locked -p vexel-app --test ui_canvas_pointer a_thousand_pan_events_present_within_the_frame_budget -- --test-threads=1
       - name: Clippy (informational, runs only when available)
         continue-on-error: true
         run: |
