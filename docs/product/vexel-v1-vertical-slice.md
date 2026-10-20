@@ -31,6 +31,19 @@ timeline and MCP activity stay compact and contextual. Use clear sentence-case
 actions and visible focus. Blender may inform workspace and timeline concepts,
 without copying its chrome.
 
+Current implementation details: Select provides eight resize handles. The
+inspector includes fill and stroke swatches plus stroke-width presets. The MCP
+popover reports Ready/Active and the last request. Live-preview MCP includes
+`native_timeline_get`, `native_timeline_add_property_track`,
+`native_timeline_set_property_key`, `native_timeline_set_loop`,
+`native_timeline_undo`, and `native_timeline_redo`; the latter two operate on
+shared project history and the latest edit. `native_timeline_add_track`,
+`native_timeline_add_drawing_asset`, `native_timeline_set_cel`,
+`native_timeline_remove_cel`, and `native_timeline_move_item` remain unrouted.
+Native GIF export is synchronous and stride-samples loops over 120 frames,
+multiplying frame delay by the stride. CI runs the pan-timing gate in release
+mode; chrome and footer goldens are informational on hosted runners.
+
 ```text
 +---------------------------------------------------------------+
 | Vexel   Character.vexel       Draw  Animate      Undo  Redo   |

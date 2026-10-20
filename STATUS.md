@@ -2,6 +2,20 @@
 
 Updated 2026-10-20. Plan: V1 vertical slice per `docs/adr/0029-v1-vertical-slice-cutline.md`, then post-V1 items.
 
+## Status 2026-10-20
+
+- The live-preview MCP allowlist includes six native timeline tools: get,
+  add-property-track, set-property-key, set-loop, undo, and redo. Add-track,
+  add-drawing-asset, set-cel, remove-cel, and move-item remain unrouted.
+- Native timeline undo/redo use shared project history and act on the latest
+  edit, including edits outside the native timeline. Native GIF export is
+  synchronous; loops over 120 frames are stride-sampled with delay multiplied
+  by the stride.
+- Select has eight resize handles. The inspector has fill/stroke swatches and
+  stroke-width presets. The MCP popover shows Ready/Active and the last request.
+- CI runs the pan-timing gate in release mode. Chrome and footer goldens are
+  informational on hosted runners.
+
 ## Baseline
 - `main` @ a072511d: 43 Rust crates, ~218k lines. `cargo check --workspace --locked` passes.
 - In-flight dirty work (async export, svg-decode lease/lifetime, timeline, recovery) snapshotted on `wip/async-export` (bce34c83; does not compile: `vexel-svg-decode/src/definition_finish.rs` E0500). Not merged.
