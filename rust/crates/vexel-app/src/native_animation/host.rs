@@ -3,7 +3,7 @@
 use crate::animation::native_driver::NativeDriver;
 use crate::animation::native_stage::{NativeStage, OnionSettings, StageUpdate};
 use crate::animation::playback::LoopClock;
-use crate::compose::{svg_viewport, Frame};
+use crate::compose::{Frame, svg_viewport};
 use crate::file_ui::FileUi;
 use crate::native_timeline::interaction::{Key, Phase};
 use crate::native_timeline::layout::{Hit, TimelineLayout};
@@ -465,11 +465,13 @@ mod tests {
             onion_after: 0,
             onion_opacity: 0.5,
         };
-        assert!(document
-            .edit_timeline(settings, EditLimits::default(), |candidate| {
-                candidate.set_loop(LoopMode::Repeat)
-            })
-            .unwrap());
+        assert!(
+            document
+                .edit_timeline(settings, EditLimits::default(), |candidate| {
+                    candidate.set_loop(LoopMode::Repeat)
+                })
+                .unwrap()
+        );
 
         assert!(host.prepare_document(&document, &mut view));
         assert_eq!(host.controller.selected_track, None);
