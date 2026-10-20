@@ -9,12 +9,8 @@ use crate::animation::native_drawing::SvgGeometry;
 use crate::preview::Operation;
 use crate::project_session::{NativeCommandError, ProjectTimelineError, SessionError};
 use crate::session::{AppDocument, McpOutcome};
-use vexel_json::{JsonDocument, JsonType};
+use vexel_json::JsonDocument;
 use vexel_timeline::{EditLimits, EmptyTimelineSettings, Error as TimelineError, LoopMode};
-
-const BAD_ARGS: &str = "invalid preview tool arguments";
-const ID_LIMIT: usize = 256;
-const VALUE_LIMIT: usize = 4096;
 
 /// One validated native timeline request.
 #[derive(Clone, Debug, PartialEq)]
@@ -64,83 +60,19 @@ pub enum NativeOp {
     Redo,
 }
 
-fn text(
-    doc: &JsonDocument<'_>,
-    args: usize,
-    key: &[u8],
-    min: usize,
-) -> Result<Vec<u8>, &'static str> {
-    let token = doc.object_get(args, key).ok_or(BAD_ARGS)?;
-    if doc.raw_token(token).ok_or(BAD_ARGS)?.len() > ID_LIMIT * 6 + 2 {
-        return Err(BAD_ARGS);
-    }
-    let bytes = doc.decoded_string(token).ok_or(BAD_ARGS)?;
-    if bytes.len() < min || bytes.len() > ID_LIMIT || std::str::from_utf8(&bytes).is_err() {
-        return Err(BAD_ARGS);
-    }
-    Ok(bytes)
-}
-
-fn value(doc: &JsonDocument<'_>, args: usize) -> Result<Vec<u8>, &'static str> {
-    let token = doc.object_get(args, b"value").ok_or(BAD_ARGS)?;
-    let kind = doc.token(token).ok_or(BAD_ARGS)?.kind;
-    if !matches!(
-        kind,
-        JsonType::Number | JsonType::True | JsonType::False | JsonType::Array
-    ) {
-        return Err(BAD_ARGS);
-    }
-    let raw = doc.raw_token(token).ok_or(BAD_ARGS)?;
-    if raw.len() > VALUE_LIMIT {
-        return Err(BAD_ARGS);
-    }
-    Ok(raw.to_vec())
-}
-
-/// Validates the arguments of one `native_timeline_*` tool (without the
-/// prefix). Returns `None` for tools this route does not handle.
+/// Parses the argument-free `native_timeline_*` tools (without the prefix).
+/// Tools with arguments are parsed with specific messages in
+/// `preview/native_args.rs`. Returns `None` for tools this route does not
+/// handle.
 pub(crate) fn parse(
-    doc: &JsonDocument<'_>,
-    args: usize,
+    _doc: &JsonDocument<'_>,
+    _args: usize,
     tool: &str,
 ) -> Option<Result<Operation, &'static str>> {
     let op = match tool {
         "get" => Ok(NativeOp::Get),
         "undo" => Ok(NativeOp::Undo),
         "redo" => Ok(NativeOp::Redo),
-        "set_loop" => text(doc, args, b"mode", 1).and_then(|mode| match mode.as_slice() {
-            b"once" => Ok(NativeOp::SetLoop(LoopMode::Once)),
-            b"loop" => Ok(NativeOp::SetLoop(LoopMode::Repeat)),
-            b"ping_pong" => Ok(NativeOp::SetLoop(LoopMode::PingPong)),
-            _ => Err(BAD_ARGS),
-        }),
-        "add_property_track" => (|| {
-            Ok(NativeOp::AddPropertyTrack {
-                track_id: text(doc, args, b"trackId", 1)?,
-                target_id: text(doc, args, b"targetId", 1)?,
-                property: text(doc, args, b"property", 1)?,
-                value_type: text(doc, args, b"valueType", 1)?,
-                interpolation: text(doc, args, b"interpolation", 1)?,
-                value: value(doc, args)?,
-                name: if doc.object_get(args, b"name").is_some() {
-                    text(doc, args, b"name", 0)?
-                } else {
-                    Vec::new()
-                },
-            })
-        })(),
-        "set_property_key" => (|| {
-            let tick = doc
-                .object_get(args, b"tick")
-                .and_then(|t| doc.uint(t))
-                .and_then(|t| u32::try_from(t).ok())
-                .ok_or(BAD_ARGS)?;
-            Ok(NativeOp::SetPropertyKey {
-                track_id: text(doc, args, b"trackId", 1)?,
-                tick,
-                value: value(doc, args)?,
-            })
-        })(),
         _ => return None,
     };
     Some(op.map(Operation::Native))
@@ -228,7 +160,13 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
                     &name,
                 )
             })
-            .map_err(error)?,
+            .map_err(|error| {
+                let refs = Refs {
+                    asset: true,
+                    target: known_target(app, &target_id),
+                };
+                operation_error(error, "add_property_track", refs)
+            })?,
         NativeOp::SetPropertyKey {
             track_id,
             tick,
@@ -237,7 +175,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             .edit_timeline(settings(), limits, |c| {
                 c.set_property_key(&track_id, tick, &value)
             })
-            .map_err(error)?,
+            .map_err(|error| operation_error(error, "set_property_key", Refs::default()))?,
         NativeOp::AddTrack {
             track_id,
             target_id,
@@ -247,7 +185,13 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             .edit_timeline(settings(), limits, |c| {
                 c.add_drawing_track(&track_id, &target_id, &asset_name, &name)
             })
-            .map_err(|error| operation_error(error, "add_track"))?,
+            .map_err(|error| {
+                let refs = Refs {
+                    asset: known_asset(app, &asset_name),
+                    target: known_target(app, &target_id),
+                };
+                operation_error(error, "add_track", refs)
+            })?,
         NativeOp::AddDrawingAsset { asset_name, svg } => {
             let (width, height) = app.size();
             let geometry = SvgGeometry {
@@ -258,7 +202,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             app.edit_timeline(settings(), limits, |c| {
                 c.add_drawing_asset(&asset_name, b"image/svg+xml", &svg, geometry)
             })
-            .map_err(|error| operation_error(error, "add_drawing_asset"))?
+            .map_err(|error| asset_error(error, &svg))?
         }
         NativeOp::SetCel {
             track_id,
@@ -269,10 +213,16 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             .edit_timeline(settings(), limits, |c| {
                 c.set_cel(&track_id, tick, &asset_name, &label)
             })
-            .map_err(|error| operation_error(error, "set_cel"))?,
+            .map_err(|error| {
+                let refs = Refs {
+                    asset: known_asset(app, &asset_name),
+                    target: true,
+                };
+                operation_error(error, "set_cel", refs)
+            })?,
         NativeOp::RemoveCel { track_id, tick } => app
             .edit_timeline(settings(), limits, |c| c.remove_cel(&track_id, tick))
-            .map_err(|error| operation_error(error, "remove_cel"))?,
+            .map_err(|error| operation_error(error, "remove_cel", Refs::default()))?,
         NativeOp::MoveItem {
             track_id,
             from_tick,
@@ -281,7 +231,7 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
             .edit_timeline(settings(), limits, |c| {
                 c.move_item(&track_id, from_tick, to_tick)
             })
-            .map_err(|error| operation_error(error, "move_item"))?,
+            .map_err(|error| operation_error(error, "move_item", Refs::default()))?,
     };
     Ok(done(if edited {
         "Timeline updated"
@@ -290,51 +240,167 @@ pub(crate) fn apply(app: &mut AppDocument, op: NativeOp) -> Result<McpOutcome, &
     }))
 }
 
-fn operation_error<E>(failure: NativeCommandError<E>, operation: &str) -> &'static str {
-    if let NativeCommandError::Timeline(ProjectTimelineError::Edit(edit)) = &failure {
-        let msg = match (operation, edit.error) {
-            ("add_track", TimelineError::InvalidReference) => {
-                "native_timeline_add_track targetId or assetName is invalid; use an existing scene ID and SVG asset name"
-            }
-            ("add_track", TimelineError::Duplicate) => {
-                "native_timeline_add_track trackId already exists; use a unique 1-128 character ASCII ID"
-            }
-            ("set_cel", TimelineError::InvalidReference) => {
-                "native_timeline_set_cel trackId or assetName is invalid; use an existing drawing track and SVG asset"
-            }
-            ("set_cel", TimelineError::Duplicate) => {
-                "native_timeline_set_cel tick already has a cel; use an unused tick or move/remove the existing cel"
-            }
-            ("remove_cel", TimelineError::InvalidReference) => {
-                "native_timeline_remove_cel trackId or tick is invalid; use an existing drawing cel"
-            }
-            ("move_item", TimelineError::InvalidReference) => {
-                "native_timeline_move_item fromTick is invalid; use a tick containing an item on trackId"
-            }
-            ("move_item", TimelineError::Duplicate) => {
-                "native_timeline_move_item toTick is occupied; use an unused integer tick from 0 through 4294967295"
-            }
-            ("add_drawing_asset", TimelineError::Duplicate) => {
-                "native_timeline_add_drawing_asset assetName already exists; use a unique SVG asset name"
-            }
-            (_, TimelineError::Limit) => {
-                "native timeline limit reached; reduce timeline or asset size"
-            }
-            (_, _) => "",
-        };
-        if !msg.is_empty() {
-            return msg;
+/// What a failed reference check can still be narrowed to.
+#[derive(Clone, Copy)]
+struct Refs {
+    asset: bool,
+    target: bool,
+}
+
+impl Default for Refs {
+    fn default() -> Self {
+        Self {
+            asset: true,
+            target: true,
         }
     }
-    if operation == "add_drawing_asset"
-        && matches!(
-            failure,
-            NativeCommandError::Timeline(ProjectTimelineError::Asset(_))
-        )
-    {
-        return "native_timeline_add_drawing_asset svg is invalid; use a self-contained SVG matching the document dimensions with no external references";
+}
+
+fn known_asset(app: &AppDocument, name: &[u8]) -> bool {
+    app.native_timeline_candidate(settings(), EditLimits::default())
+        .map(|c| c.assets().iter().any(|asset| asset.name == name))
+        .unwrap_or(true)
+}
+
+fn known_target(app: &AppDocument, id: &[u8]) -> bool {
+    let Ok(source) = app.source_bytes() else {
+        return true;
+    };
+    [b'"', b'\''].iter().any(|quote| {
+        let needle = [b"id=".as_slice(), &[*quote], id, &[*quote]].concat();
+        source.windows(needle.len()).any(|part| part == needle)
+    })
+}
+
+fn edit_message(operation: &str, kind: TimelineError, refs: Refs) -> &'static str {
+    match (operation, kind) {
+        ("add_track", TimelineError::InvalidReference) if !refs.asset => {
+            "native_timeline_add_track assetName is not an existing asset; add it first with native_timeline_add_drawing_asset"
+        }
+        ("add_track", TimelineError::InvalidReference) if !refs.target => {
+            "native_timeline_add_track targetId is not an element id in the document; use an id such as vexel-object-1 (the elementId returned by element_add)"
+        }
+        ("add_track", TimelineError::InvalidReference) => {
+            "native_timeline_add_track targetId or assetName is invalid; use an existing element id and an asset added with native_timeline_add_drawing_asset"
+        }
+        ("add_track", TimelineError::Duplicate) => {
+            "native_timeline_add_track trackId already exists; use a unique 1-128 character ID of ASCII letters, digits, `_` or `-`"
+        }
+        ("add_track", _) => {
+            "native_timeline_add_track trackId must be 1-128 ASCII letters, digits, `_` or `-` and name at most 256 UTF-8 bytes"
+        }
+        ("set_cel", TimelineError::InvalidReference) if !refs.asset => {
+            "native_timeline_set_cel assetName is not an existing asset; add it first with native_timeline_add_drawing_asset"
+        }
+        ("set_cel", TimelineError::InvalidReference) => {
+            "native_timeline_set_cel trackId is not an existing track; create a drawing track with native_timeline_add_track"
+        }
+        ("set_cel", TimelineError::InvalidArgument) => {
+            "native_timeline_set_cel trackId must be a drawing track (property tracks use set_property_key) and label at most 256 UTF-8 bytes"
+        }
+        ("set_cel", TimelineError::InvalidValue) => {
+            "native_timeline_set_cel tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline)"
+        }
+        ("remove_cel", TimelineError::InvalidReference) => {
+            "native_timeline_remove_cel trackId is not a track or tick has no cel; read cel ticks with native_timeline_get"
+        }
+        ("remove_cel", TimelineError::InvalidArgument) => {
+            "native_timeline_remove_cel trackId must be a drawing track"
+        }
+        ("remove_cel", TimelineError::InvalidValue) => {
+            "native_timeline_remove_cel cannot remove the last cel of a track; add another cel first"
+        }
+        ("move_item", TimelineError::InvalidReference) => {
+            "native_timeline_move_item trackId is not a track or fromTick has no item; read item ticks with native_timeline_get"
+        }
+        ("move_item", TimelineError::Duplicate) => {
+            "native_timeline_move_item toTick is occupied; use an unused tick"
+        }
+        ("move_item", TimelineError::InvalidValue) => {
+            "native_timeline_move_item fromTick 0 cannot be moved, and toTick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline)"
+        }
+        ("add_property_track", TimelineError::InvalidReference) if !refs.target => {
+            "native_timeline_add_property_track targetId is not an element id in the document; use an id such as vexel-object-1 (the elementId returned by element_add)"
+        }
+        ("add_property_track", TimelineError::Duplicate) => {
+            "native_timeline_add_property_track trackId already exists; use a unique 1-128 character ID of ASCII letters, digits, `_` or `-`"
+        }
+        ("add_property_track", _) => {
+            "native_timeline_add_property_track rejected: trackId must be ASCII letters, digits, `_` or `-`; property/valueType pairs are x,y,width,height,cx,cy,r,rx,ry,opacity,fill-opacity,stroke-opacity,stroke-width,stroke-dashoffset with scalar; fill or stroke with rgba (4 numbers 0-1); transform with transform2d (6 numbers); visibility with boolean (interpolation step); interpolation is step, linear or cubic"
+        }
+        ("set_property_key", TimelineError::InvalidReference) => {
+            "native_timeline_set_property_key trackId is not an existing track"
+        }
+        ("set_property_key", TimelineError::InvalidArgument) => {
+            "native_timeline_set_property_key trackId must be a property track (drawing tracks use set_cel)"
+        }
+        ("set_property_key", _) => {
+            "native_timeline_set_property_key tick must be an integer from 0 through durationTicks-1 (0-47 for the default 48-tick timeline) and value must match the track valueType"
+        }
+        (_, TimelineError::Limit) => "native timeline limit reached; reduce timeline or asset size",
+        (_, _) => "",
+    }
+}
+
+/// The timeline error of a failed edit: closures report it as
+/// `Operation`, candidate construction as `Timeline`.
+fn inner(failure: &NativeCommandError<ProjectTimelineError>) -> Option<&ProjectTimelineError> {
+    match failure {
+        NativeCommandError::Operation(e) | NativeCommandError::Timeline(e) => Some(e),
+        _ => None,
+    }
+}
+
+fn operation_error(
+    failure: NativeCommandError<ProjectTimelineError>,
+    operation: &str,
+    refs: Refs,
+) -> &'static str {
+    match inner(&failure) {
+        Some(ProjectTimelineError::Edit(edit)) => {
+            let msg = edit_message(operation, edit.error, refs);
+            if !msg.is_empty() {
+                return msg;
+            }
+        }
+        Some(ProjectTimelineError::Limit) => {
+            return "native timeline limit reached; reduce timeline or asset size";
+        }
+        Some(ProjectTimelineError::OutOfMemory) => return "preview allocation failed",
+        Some(ProjectTimelineError::UnsupportedTimeline) => return "unsupported native timeline",
+        _ => {}
     }
     error(failure)
+}
+
+fn asset_error(failure: NativeCommandError<ProjectTimelineError>, svg: &[u8]) -> &'static str {
+    use crate::animation::native_drawing::DrawingError;
+    use crate::project_session::SvgAssetError;
+    let Some(ProjectTimelineError::Asset(asset)) = inner(&failure) else {
+        return operation_error(failure, "add_drawing_asset", Refs::default());
+    };
+    match asset {
+        SvgAssetError::InvalidName => {
+            "native_timeline_add_drawing_asset assetName must be 1-128 ASCII letters, digits, `.`, `_` or `-`, and not `.` or `..`"
+        }
+        SvgAssetError::InvalidMediaType => {
+            "native_timeline_add_drawing_asset only accepts SVG (image/svg+xml)"
+        }
+        SvgAssetError::DuplicateName => {
+            "native_timeline_add_drawing_asset assetName already exists; use a unique SVG asset name"
+        }
+        SvgAssetError::Limit => {
+            "native_timeline_add_drawing_asset asset count or size limit reached; reduce or reuse assets"
+        }
+        SvgAssetError::OutOfMemory => "preview allocation failed",
+        SvgAssetError::Drawing(DrawingError::GeometryMismatch) => super::native_svg::GEOMETRY,
+        SvgAssetError::Drawing(DrawingError::InvalidSvg | DrawingError::UnsafeSvg) => {
+            super::native_svg::reason(svg)
+        }
+        SvgAssetError::Drawing(_) => {
+            "native_timeline_add_drawing_asset svg is invalid; send a self-contained SVG whose root width, height and viewBox equal the document size"
+        }
+    }
 }
 
 fn done(message: &str) -> McpOutcome {

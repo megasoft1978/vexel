@@ -5,7 +5,9 @@ use vexel_v1_document::{V1Document, V1DocumentError};
 
 mod animation;
 mod args;
+mod errors;
 mod native_args;
+mod native_svg;
 #[path = "session/mcp_native.rs"]
 pub(crate) mod native_timeline;
 pub(crate) use animation::{
@@ -13,6 +15,7 @@ pub(crate) use animation::{
 };
 #[cfg(test)]
 pub(crate) use animation::{rasterize, rasterize_at};
+use errors::tool_error;
 
 pub const DOCUMENT_ID: &str = "preview-document";
 pub const SCENE_LIMIT: usize = 128;
@@ -512,49 +515,6 @@ impl ProtocolBackend for LiveBackend {
             Ok(Err(e)) => tool_error(e),
             Err(_) => tool_error("preview window is closed"),
         })
-    }
-}
-fn tool_error(message: &str) -> ToolResponse {
-    let text = match message {
-        "preview window is closed" => message,
-        "nothing to undo" => message,
-        "nothing to redo" => message,
-        "preview scene limit reached" => message,
-        "unsupported preview shape" => message,
-        "unknown preview document" => message,
-        "invalid preview fill color" => message,
-        "unsupported preview operation" => message,
-        "path not granted" => message,
-        "path not found" => message,
-        "unsupported file type" => message,
-        "invalid project file" => message,
-        "unknown element" => message,
-        "unsupported attribute" => message,
-        "document has no path" => message,
-        "export_svg too large" => message,
-        "file operation failed" => message,
-        m if m.starts_with("element_add ") => m,
-        m if m.starts_with("export ") => m,
-        _ => "invalid preview tool arguments",
-    };
-    let mut escaped = String::with_capacity(text.len());
-    for c in text.chars() {
-        match c {
-            '\\' => escaped.push_str("\\\\"),
-            '"' => escaped.push_str("\\\""),
-            c if (c as u32) < 0x20 || matches!(c, '\u{2028}' | '\u{2029}') => {
-                escaped.push_str(&format!("\\u{:04x}", c as u32))
-            }
-            c => escaped.push(c),
-        }
-    }
-    let mut s = b"{\"error\":\"".to_vec();
-    s.extend_from_slice(escaped.as_bytes());
-    s.extend_from_slice(b"\"}");
-    ToolResponse {
-        structured_json: s,
-        content_json: format!("[{{\"type\":\"text\",\"text\":\"{escaped}\"}}]").into_bytes(),
-        is_error: true,
     }
 }
 pub(super) fn parse_operation(

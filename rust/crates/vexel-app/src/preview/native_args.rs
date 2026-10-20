@@ -1,6 +1,9 @@
 //! Bounded, actionable argument parsing for native timeline MCP tools.
 
 use super::{JsonDocument, JsonType, Operation, PreviewArgumentError, native_timeline::NativeOp};
+use vexel_timeline::LoopMode;
+
+const VALUE_LIMIT: usize = 4096;
 
 fn sanitized(value: &[u8]) -> String {
     value
@@ -15,8 +18,10 @@ fn sanitized(value: &[u8]) -> String {
 fn invalid(tool: &str, key: &str, form: &str, value: Option<&[u8]>) -> PreviewArgumentError {
     let echo = value.map(sanitized).filter(|s| !s.is_empty());
     PreviewArgumentError::Actionable(match echo {
-        Some(value) => format!("{tool} argument {key} `{value}` is invalid; use {form}"),
-        None => format!("{tool} argument {key} is invalid; use {form}"),
+        Some(value) => {
+            format!("native_timeline_{tool} argument {key} `{value}` is invalid; use {form}")
+        }
+        None => format!("native_timeline_{tool} argument {key} is missing or invalid; use {form}"),
     })
 }
 
@@ -66,6 +71,23 @@ fn tick(
         .ok_or_else(|| invalid(tool, key, "an integer from 0 through 4294967295", None))
 }
 
+fn value(doc: &JsonDocument<'_>, args: usize, tool: &str) -> Result<Vec<u8>, PreviewArgumentError> {
+    let form = "a JSON number, true/false, or an array of numbers (at most 4096 bytes)";
+    doc.object_get(args, b"value")
+        .filter(|token| {
+            doc.token(*token).is_some_and(|value| {
+                matches!(
+                    value.kind,
+                    JsonType::Number | JsonType::True | JsonType::False | JsonType::Array
+                )
+            })
+        })
+        .and_then(|token| doc.raw_token(token))
+        .filter(|raw| raw.len() <= VALUE_LIMIT)
+        .map(<[u8]>::to_vec)
+        .ok_or_else(|| invalid(tool, "value", form, None))
+}
+
 fn parse_one(
     doc: &JsonDocument<'_>,
     args: usize,
@@ -94,7 +116,7 @@ fn parse_one(
                 "targetId",
                 1,
                 256,
-                "an existing scene ID (1-256 UTF-8 bytes)",
+                "an existing scene element id (1-256 UTF-8 bytes), e.g. `vexel-object-1`",
             )?,
             asset_name: string(
                 doc,
@@ -103,7 +125,7 @@ fn parse_one(
                 "assetName",
                 1,
                 128,
-                "an existing SVG asset name (1-128 ASCII letters, digits, `.`, `_` or `-`)",
+                "the name of an SVG asset already added with native_timeline_add_drawing_asset (1-128 ASCII letters, digits, `.`, `_` or `-`)",
             )?,
             name: if doc.object_get(args, b"name").is_some() {
                 name("name")?
@@ -128,7 +150,7 @@ fn parse_one(
                 "svg",
                 1,
                 1_048_576,
-                "a complete SVG string of 1-1048576 UTF-8 bytes",
+                "a complete SVG string of 1-1048576 UTF-8 bytes whose root <svg> has width, height and viewBox equal to the document size",
             )?,
         },
         "set_cel" => NativeOp::SetCel {
@@ -141,7 +163,7 @@ fn parse_one(
                 "assetName",
                 1,
                 128,
-                "an existing SVG asset name (1-128 ASCII letters, digits, `.`, `_` or `-`)",
+                "the name of an SVG asset already added with native_timeline_add_drawing_asset (1-128 ASCII letters, digits, `.`, `_` or `-`)",
             )?,
             label: if doc.object_get(args, b"label").is_some() {
                 string(
@@ -156,6 +178,66 @@ fn parse_one(
             } else {
                 Vec::new()
             },
+        },
+        "set_loop" => {
+            let form = "one of `once`, `loop` or `ping_pong`";
+            let mode = string(doc, args, tool, "mode", 1, 16, form)?;
+            NativeOp::SetLoop(match mode.as_slice() {
+                b"once" => LoopMode::Once,
+                b"loop" => LoopMode::Repeat,
+                b"ping_pong" => LoopMode::PingPong,
+                _ => return Err(invalid(tool, "mode", form, Some(&mode))),
+            })
+        }
+        "add_property_track" => NativeOp::AddPropertyTrack {
+            track_id: id("trackId")?,
+            target_id: string(
+                doc,
+                args,
+                tool,
+                "targetId",
+                1,
+                256,
+                "an existing scene element id (1-256 UTF-8 bytes), e.g. `vexel-object-1`",
+            )?,
+            property: string(
+                doc,
+                args,
+                tool,
+                "property",
+                1,
+                128,
+                "a property name, e.g. `opacity`",
+            )?,
+            value_type: string(
+                doc,
+                args,
+                tool,
+                "valueType",
+                1,
+                32,
+                "one of `scalar`, `rgba`, `transform2d` or `boolean`",
+            )?,
+            interpolation: string(
+                doc,
+                args,
+                tool,
+                "interpolation",
+                1,
+                32,
+                "one of `step`, `linear` or `cubic`",
+            )?,
+            value: value(doc, args, tool)?,
+            name: if doc.object_get(args, b"name").is_some() {
+                name("name")?
+            } else {
+                Vec::new()
+            },
+        },
+        "set_property_key" => NativeOp::SetPropertyKey {
+            track_id: id("trackId")?,
+            tick: tick(doc, args, tool, "tick")?,
+            value: value(doc, args, tool)?,
         },
         "remove_cel" => NativeOp::RemoveCel {
             track_id: id("trackId")?,
@@ -184,7 +266,14 @@ pub(super) fn parse(
 ) -> Option<Result<Operation, PreviewArgumentError>> {
     matches!(
         tool,
-        "add_track" | "add_drawing_asset" | "set_cel" | "remove_cel" | "move_item"
+        "add_track"
+            | "add_drawing_asset"
+            | "set_cel"
+            | "remove_cel"
+            | "move_item"
+            | "set_loop"
+            | "add_property_track"
+            | "set_property_key"
     )
     .then(|| parse_one(doc, args, tool).map(Operation::Native))
 }
