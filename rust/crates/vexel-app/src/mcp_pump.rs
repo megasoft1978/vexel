@@ -86,14 +86,24 @@ impl McpPump {
                 fps,
                 duration,
             }) => {
-                match ExportJob::spawn(
-                    source,
-                    self.host.policy().clone(),
-                    path.into(),
-                    fps,
-                    duration,
-                    reply.clone(),
-                ) {
+                let job = if source.starts_with(b"VEXEL_NATIVE_GIF\0") {
+                    ExportJob::spawn_native_packed(
+                        source,
+                        self.host.policy().clone(),
+                        path.into(),
+                        reply.clone(),
+                    )
+                } else {
+                    ExportJob::spawn(
+                        source,
+                        self.host.policy().clone(),
+                        path.into(),
+                        fps,
+                        duration,
+                        reply.clone(),
+                    )
+                };
+                match job {
                     Ok(job) => self.export = Some(job),
                     Err(message) => {
                         model.mcp_last = Some(message);
