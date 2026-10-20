@@ -171,6 +171,75 @@ fn set_fill_and_set_stroke_recolour_only_the_selection_and_update_defaults() {
 }
 
 #[test]
+fn select_resize_resizes_rect_ellipse_line_and_path_with_one_undo_step() {
+    for (body, id, center, handle, end, expected) in [
+        (
+            "<rect id=\"r\" x=\"10\" y=\"10\" width=\"50\" height=\"40\" fill=\"#000000\"/>",
+            "r",
+            (20.0, 20.0),
+            (60.0, 50.0),
+            (80.0, 70.0),
+            "width=\"7e1\"",
+        ),
+        (
+            "<ellipse id=\"e\" cx=\"35\" cy=\"30\" rx=\"25\" ry=\"20\" fill=\"#000000\"/>",
+            "e",
+            (35.0, 30.0),
+            (60.0, 50.0),
+            (80.0, 70.0),
+            "rx=\"3.5e1\"",
+        ),
+        (
+            "<line id=\"l\" x1=\"10\" y1=\"20\" x2=\"60\" y2=\"20\" stroke=\"#000000\"/>",
+            "l",
+            (35.0, 20.0),
+            (60.0, 20.0),
+            (80.0, 20.0),
+            "x2=\"8e1\"",
+        ),
+        (
+            "<path id=\"p\" d=\"M 10 10 L 60 10 L 60 50 Z\" fill=\"#000000\"/>",
+            "p",
+            (35.0, 20.0),
+            (60.0, 50.0),
+            (80.0, 70.0),
+            "M 1e1 1e1 L 8e1 1e1 L 8e1 7e1 Z",
+        ),
+    ] {
+        let mut doc = with(body);
+        let mut c = ToolController::new();
+        click(&mut c, &mut doc, center).unwrap();
+        let map = map();
+        down(&mut c, &mut doc, &map, handle).unwrap();
+        mv(&mut c, &mut doc, &map, end).unwrap();
+        let count = doc.history_count();
+        assert_eq!(
+            up(&mut c, &mut doc, &map, end).unwrap(),
+            Outcome::Committed,
+            "{id}"
+        );
+        assert_eq!(doc.history_count(), count + 1, "{id}");
+        let after = src(&doc);
+        assert!(after.contains(expected), "{id}: {after}");
+        doc.undo().unwrap();
+        assert!(src(&doc).contains(body), "undo {id}");
+    }
+}
+
+#[test]
+fn inspector_recolor_dispatch_uses_controller_edits_and_is_undoable() {
+    let mut doc =
+        with("<rect id=\"r\" x=\"10\" y=\"10\" width=\"50\" height=\"40\" fill=\"#000000\"/>");
+    let mut c = ToolController::new();
+    c.select_id(&doc, "r").unwrap();
+    let filled = one_undoable_entry(&mut doc, |d| c.set_fill(d, "#e53935").unwrap());
+    assert!(filled.contains("fill=\"#e53935\""));
+    let stroked = one_undoable_entry(&mut doc, |d| c.set_stroke(d, "#1e88e5", 3.0).unwrap());
+    assert!(stroked.contains("stroke=\"#1e88e5\""));
+    assert!(stroked.contains("stroke-width=\"3e0\""));
+}
+
+#[test]
 fn invalid_colours_widths_and_ids_return_typed_errors_and_keep_source_identical() {
     let mut doc = with("<rect id=\"r\" x=\"10\" y=\"10\" width=\"50\" height=\"50\"/>");
     let mut c = selector();

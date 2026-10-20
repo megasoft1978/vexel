@@ -43,7 +43,7 @@ pub const SECTION_HEADER_H: u32 = 32;
 /// Selection body height while it holds the empty-state card.
 pub const EMPTY_CARD_BODY_H: u32 = 112;
 /// Body heights of Selection, Fill, Stroke, Transform, Animation.
-pub const SECTION_BODY_H: [u32; SECTIONS] = [52, 44, 76, 84, 52];
+pub const SECTION_BODY_H: [u32; SECTIONS] = [52, 72, 136, 84, 52];
 pub const SECTION_NAMES: [&str; SECTIONS] =
     ["Selection", "Fill", "Stroke", "Transform", "Animation"];
 const EMPTY: Rect = Rect {
@@ -319,7 +319,8 @@ impl Layout {
             Target::Button(Button::Connect) => self.mcp_connect,
             Target::Button(b) => self.buttons[b as usize],
             Target::MenuItem(f) => self.export_items()[f as usize],
-            Target::SectionHeader(i) => *self.section_headers.get(i)?,
+            Target::SectionHeader(i) if i < SECTIONS => *self.section_headers.get(i)?,
+            Target::SectionHeader(i) => self.inspector_control_rect(i)?,
             Target::Splitter(Splitter::Inspector) => self.inspector_splitter?,
             Target::Splitter(Splitter::Footer) => self.footer_splitter?,
         })
@@ -371,6 +372,12 @@ impl Layout {
                 return None;
             }
         }
+        for index in 5..21 {
+            let target = Target::SectionHeader(index);
+            if self.target_rect(target).is_some_and(|r| contains(r, point)) {
+                return Some(target);
+            }
+        }
         if contains(self.draw_mode, point) {
             return Some(Target::DrawMode);
         }
@@ -416,6 +423,50 @@ impl Layout {
             return Some(Target::Splitter(Splitter::Footer));
         }
         None
+    }
+
+    fn inspector_control_rect(&self, index: usize) -> Option<Rect> {
+        if (5..11).contains(&index) {
+            return self.inspector_color_rect(false, (index - 5) as u8);
+        }
+        if (11..17).contains(&index) {
+            return self.inspector_color_rect(true, (index - 11) as u8);
+        }
+        if (17..21).contains(&index) {
+            return self.inspector_width_rect((index - 17) as u8);
+        }
+        None
+    }
+
+    fn inspector_color_rect(&self, stroke: bool, index: u8) -> Option<Rect> {
+        let section = if stroke { 2 } else { 1 };
+        let body = *self.section_bodies.get(section)?;
+        if body.height != SECTION_BODY_H[section] || index >= 6 {
+            return None;
+        }
+        let row_y = body.y + if stroke { 78 } else { 42 };
+        let size = 20;
+        let gap = 8;
+        let x = body.x + 12 + u32::from(index) * (size + gap);
+        Some(Rect {
+            x,
+            y: row_y,
+            width: size,
+            height: size,
+        })
+    }
+
+    fn inspector_width_rect(&self, index: u8) -> Option<Rect> {
+        let body = *self.section_bodies.get(2)?;
+        if body.height != SECTION_BODY_H[2] || index >= 4 {
+            return None;
+        }
+        Some(Rect {
+            x: body.x + 64 + u32::from(index) * 38,
+            y: body.y + 106,
+            width: 32,
+            height: 22,
+        })
     }
 }
 

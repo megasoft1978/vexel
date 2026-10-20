@@ -134,7 +134,7 @@ fn draw_body(
                 );
                 text(
                     c,
-                    "Read-only for now",
+                    "Drag a handle to resize",
                     inset(body, 12, 28, 20),
                     t.text_tertiary,
                     12,
@@ -142,12 +142,15 @@ fn draw_body(
                 );
             }
         },
-        1 => colour_field(
-            c,
-            inset(body, 12, 8, 28),
-            shape.map(ShapeProps::fill_text),
-            shape.and_then(|p| p.fill),
-        ),
+        1 => {
+            colour_field(
+                c,
+                inset(body, 12, 8, 28),
+                shape.map(ShapeProps::fill_text),
+                shape.and_then(|p| p.fill),
+            );
+            draw_swatches(c, body, false, shape.and_then(|p| p.fill));
+        }
         2 => {
             colour_field(
                 c,
@@ -157,6 +160,8 @@ fn draw_body(
             );
             let w = shape.map(ShapeProps::width_text);
             number_field(c, inset(body, 12, 44, 28), "Width", w.as_deref(), "px");
+            draw_swatches(c, body, true, shape.and_then(|p| p.stroke));
+            draw_width_presets(c, body, shape.map(|p| p.stroke_width));
         }
         3 => {
             let (x, y) = shape.map_or((None, None), |p| {
@@ -209,6 +214,73 @@ fn draw_body(
                 );
             }
         }
+    }
+}
+
+fn draw_swatches(c: &mut WidgetCanvas<'_>, body: Rect, stroke: bool, selected: Option<[u8; 4]>) {
+    let t = c.tokens;
+    let y = body.y + if stroke { 78 } else { 42 };
+    for (index, hex) in crate::model::INSPECTOR_SWATCHES.iter().enumerate() {
+        let x = body.x + 12 + index as u32 * 28;
+        let r = Rect {
+            x,
+            y,
+            width: 20,
+            height: 20,
+        };
+        let rgba = [
+            u8::from_str_radix(&hex[1..3], 16).unwrap_or(0),
+            u8::from_str_radix(&hex[3..5], 16).unwrap_or(0),
+            u8::from_str_radix(&hex[5..7], 16).unwrap_or(0),
+            255,
+        ];
+        let rgb = u32::from_be_bytes(rgba);
+        c.paint_round(r, 5, rgb, t.control_edge, 1);
+        if selected.is_some_and(|s| s == rgba) {
+            c.paint_round(
+                Rect {
+                    x: x.saturating_sub(2),
+                    y: y.saturating_sub(2),
+                    width: 24,
+                    height: 24,
+                },
+                6,
+                0,
+                t.accent,
+                1,
+            );
+            c.paint_round(r, 5, rgb, t.control_edge, 1);
+        }
+    }
+}
+
+fn draw_width_presets(c: &mut WidgetCanvas<'_>, body: Rect, selected: Option<f64>) {
+    let labels = ["1", "2", "4", "8"];
+    for (index, label) in labels.iter().enumerate() {
+        let r = Rect {
+            x: body.x + 64 + index as u32 * 38,
+            y: body.y + 106,
+            width: 32,
+            height: 22,
+        };
+        let t = c.tokens;
+        c.paint_round(r, 5, t.surface[3], t.control_edge, 1);
+        if selected == Some([1.0, 2.0, 4.0, 8.0][index]) {
+            c.paint_round(
+                Rect {
+                    x: r.x.saturating_sub(1),
+                    y: r.y.saturating_sub(1),
+                    width: r.width + 2,
+                    height: r.height + 2,
+                },
+                6,
+                0,
+                t.accent,
+                1,
+            );
+            c.paint_round(r, 5, t.surface[3], t.control_edge, 1);
+        }
+        centred(c, label, r, t.text_primary, 12, FontWeight::Semibold);
     }
 }
 

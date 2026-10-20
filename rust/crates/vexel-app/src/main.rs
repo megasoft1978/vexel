@@ -674,6 +674,11 @@ fn route_pointer(
         .then(|| (pointer.logical.0 as u32, pointer.logical.1 as u32));
     if pointer.kind == PointerKind::Down && primary {
         if let Some(point) = point {
+            if let Some(Target::SectionHeader(index @ 5..=20)) =
+                layout.hit_test_menus(point, model.ui.mcp_open, model.export_open)
+            {
+                return toolbar_actions::inspector_edit(index, model, files, tools);
+            }
             if let Some(Target::Tool(tool)) = layout.hit_test(point) {
                 tools.set_tool(tool);
                 model.tool = tool;
