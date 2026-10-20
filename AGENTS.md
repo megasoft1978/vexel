@@ -1,6 +1,6 @@
 # Agent rules
 
-Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first; it overrides conflicting roadmap and tooling text. Follow the active `work/WO-*.md` and its allowed and protected paths.
+Read [OWNER-DIRECTIVES.md](OWNER-DIRECTIVES.md) first (esp. #6 lean process); it overrides conflicting roadmap and tooling text. Current status: [STATUS.md](STATUS.md). Follow the slice's allowed and protected paths.
 
 ## Locks
 
