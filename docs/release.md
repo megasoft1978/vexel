@@ -88,6 +88,31 @@ not evidence of a clean-install GUI launch or product release readiness.
 
 ## Signing, notarization, and release evidence
 
+### Owner-gated release checklist
+
+`bundle` accepts `--bundle-id` and `--display-name`, with `VEXEL_BUNDLE_ID`
+and `VEXEL_DISPLAY_NAME` environment defaults. Without either override it
+retains the placeholder identifier `app.vexel.Vexel` and display name `Vexel`.
+`vexel-dev notarize --path build/release/Vexel.app` validates the path and
+prints the signing, notary submission, and stapling commands. It is a dry run
+unless `--execute` is supplied; execution additionally requires
+`VEXEL_SIGN_IDENTITY` and `VEXEL_NOTARY_PROFILE`. The tool does not inspect or
+print credential contents.
+
+Before distribution, the owner must supply or approve:
+
+- A Developer ID Application certificate and its signing identity.
+- A configured notarytool keychain profile.
+- The final bundle identifier and production display name.
+- Final app icon artwork.
+- VoiceOver and IME review on the release build.
+- Hosted golden regeneration and review.
+
+Vexel code supports local bundle creation, configurable plist identity and
+name, and explicit signing/notarization command execution. It cannot supply
+the certificate, credentials/profile, product identity decisions, icon
+artwork, accessibility/input-method approval, or hosted golden results.
+
 The current Rust packaging command always signs with the ad-hoc identity `-`
 and verifies that signature. It has no CLI or environment-variable option for
 Developer ID signing or notarization. Those actions remain owner-gated; do not

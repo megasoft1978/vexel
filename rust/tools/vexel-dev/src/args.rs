@@ -13,6 +13,8 @@ pub enum Command {
     Bundle {
         out: Option<PathBuf>,
         icon: Option<PathBuf>,
+        bundle_id: Option<String>,
+        display_name: Option<String>,
     },
     Dmg {
         out: Option<PathBuf>,
@@ -22,6 +24,10 @@ pub enum Command {
     },
     InstallSmoke {
         out: Option<PathBuf>,
+    },
+    Notarize {
+        path: PathBuf,
+        execute: bool,
     },
 }
 
@@ -94,8 +100,13 @@ pub fn parse(args: &[String]) -> Result<Command, UsageError> {
             })
         }
         "bundle" => {
-            let (out, icon) = flags(name, rest, true)?;
-            Ok(Command::Bundle { out, icon })
+            let (out, icon, bundle_id, display_name) = bundle_flags(rest)?;
+            Ok(Command::Bundle {
+                out,
+                icon,
+                bundle_id,
+                display_name,
+            })
         }
         "dmg" => Ok(Command::Dmg {
             out: flags(name, rest, false)?.0,
@@ -106,8 +117,110 @@ pub fn parse(args: &[String]) -> Result<Command, UsageError> {
         "install-smoke" => Ok(Command::InstallSmoke {
             out: flags(name, rest, false)?.0,
         }),
+        "notarize" => parse_notarize(name, rest),
         other => Err(UsageError::UnknownCommand(other.to_string())),
     }
+}
+
+fn parse_notarize(name: &str, rest: &[String]) -> Result<Command, UsageError> {
+    let mut path = None;
+    let mut execute = false;
+    let mut iter = rest.iter();
+    while let Some(flag) = iter.next() {
+        match flag.as_str() {
+            "--execute" if !execute => execute = true,
+            "--path" if path.is_none() => {
+                path = Some(PathBuf::from(
+                    iter.next()
+                        .filter(|v| !v.starts_with("--"))
+                        .ok_or_else(|| UsageError::MissingValue { flag: flag.clone() })?,
+                ));
+            }
+            "--execute" | "--path" => return Err(UsageError::DuplicateFlag { flag: flag.clone() }),
+            f if f.starts_with("--") => {
+                return Err(UsageError::UnknownFlag {
+                    command: name.into(),
+                    flag: flag.clone(),
+                });
+            }
+            _ => {
+                return Err(UsageError::UnexpectedArgument {
+                    command: name.into(),
+                    argument: flag.clone(),
+                });
+            }
+        }
+    }
+    Ok(Command::Notarize {
+        path: path.ok_or_else(|| UsageError::MissingArgument {
+            command: name.into(),
+            argument: "--path APP.app|FILE.dmg".into(),
+        })?,
+        execute,
+    })
+}
+
+fn bundle_flags(
+    rest: &[String],
+) -> Result<
+    (
+        Option<PathBuf>,
+        Option<PathBuf>,
+        Option<String>,
+        Option<String>,
+    ),
+    UsageError,
+> {
+    let mut out = None;
+    let mut icon = None;
+    let mut bundle_id = None;
+    let mut display_name = None;
+    let mut iter = rest.iter();
+    while let Some(flag) = iter.next() {
+        if !flag.starts_with("--") {
+            return Err(UsageError::UnexpectedArgument {
+                command: "bundle".into(),
+                argument: flag.clone(),
+            });
+        }
+        if !["--out", "--icon", "--bundle-id", "--display-name"].contains(&flag.as_str()) {
+            return Err(UsageError::UnknownFlag {
+                command: "bundle".into(),
+                flag: flag.clone(),
+            });
+        }
+        let value = iter
+            .next()
+            .filter(|v| !v.starts_with("--"))
+            .ok_or_else(|| UsageError::MissingValue { flag: flag.clone() })?;
+        let slot = match flag.as_str() {
+            "--out" => &mut out,
+            "--icon" => &mut icon,
+            "--bundle-id" => &mut bundle_id,
+            "--display-name" => &mut display_name,
+            f if f.starts_with("--") => {
+                return Err(UsageError::UnknownFlag {
+                    command: "bundle".into(),
+                    flag: flag.clone(),
+                });
+            }
+            _ => {
+                return Err(UsageError::UnexpectedArgument {
+                    command: "bundle".into(),
+                    argument: flag.clone(),
+                });
+            }
+        };
+        if slot.replace(value.clone()).is_some() {
+            return Err(UsageError::DuplicateFlag { flag: flag.clone() });
+        }
+    }
+    Ok((
+        out.map(PathBuf::from),
+        icon.map(PathBuf::from),
+        bundle_id,
+        display_name,
+    ))
 }
 
 type OutIcon = (Option<PathBuf>, Option<PathBuf>);
@@ -187,6 +300,8 @@ mod tests {
         let expected = Command::Bundle {
             out: Some("o".into()),
             icon: Some("i.icns".into()),
+            bundle_id: None,
+            display_name: None,
         };
         assert_eq!(
             parse_strs(&["bundle", "--out", "o", "--icon", "i.icns"]),
@@ -200,7 +315,31 @@ mod tests {
             parse_strs(&["bundle"]),
             Ok(Command::Bundle {
                 out: None,
-                icon: None
+                icon: None,
+                bundle_id: None,
+                display_name: None
+            })
+        );
+        assert_eq!(
+            parse_strs(&[
+                "bundle",
+                "--bundle-id",
+                "io.vexel.test",
+                "--display-name",
+                "Vexel Test"
+            ]),
+            Ok(Command::Bundle {
+                out: None,
+                icon: None,
+                bundle_id: Some("io.vexel.test".into()),
+                display_name: Some("Vexel Test".into())
+            })
+        );
+        assert_eq!(
+            parse_strs(&["notarize", "--path", "x.dmg"]),
+            Ok(Command::Notarize {
+                path: "x.dmg".into(),
+                execute: false
             })
         );
     }

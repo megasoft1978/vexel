@@ -24,14 +24,19 @@ pub fn escape(text: &str) -> String {
 }
 
 /// Renders the bundle `Info.plist`.
+#[cfg(test)]
 pub fn render_info_plist(version: &str, bundle_id: &str) -> String {
+    render_info_plist_named(version, bundle_id, "Vexel")
+}
+
+pub fn render_info_plist_named(version: &str, bundle_id: &str, display_name: &str) -> String {
     let entries: Vec<(&str, String)> = vec![
         ("CFBundleDevelopmentRegion", string("en")),
         ("CFBundleExecutable", string(EXECUTABLE)),
         ("CFBundleIconFile", string(ICON_NAME)),
         ("CFBundleIdentifier", string(bundle_id)),
         ("CFBundleInfoDictionaryVersion", string("6.0")),
-        ("CFBundleName", string("Vexel")),
+        ("CFBundleName", string(display_name)),
         ("CFBundlePackageType", string("APPL")),
         ("CFBundleShortVersionString", string(version)),
         ("CFBundleVersion", string(version)),

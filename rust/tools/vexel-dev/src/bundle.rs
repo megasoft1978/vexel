@@ -1,5 +1,5 @@
 //! `Vexel.app` assembly: release build, bundle layout, ad-hoc signing.
-use crate::plist::{BUNDLE_ID, EXECUTABLE, ICON_NAME, render_info_plist};
+use crate::plist::{EXECUTABLE, ICON_NAME, render_info_plist_named};
 use crate::runner::{Invocation, Runner, run_checked};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -117,6 +117,8 @@ pub fn assemble(
     strings_source: &Path,
     icon_source: &Path,
     version: &str,
+    bundle_id: &str,
+    display_name: &str,
 ) -> Result<(), String> {
     require_icon(icon_source)?;
     if plan.app.exists() {
@@ -131,7 +133,7 @@ pub fn assemble(
         .map_err(|e| io_err("chmod", &plan.executable, e))?;
     fs::copy(strings_source, &plan.strings).map_err(|e| io_err("copy", strings_source, e))?;
     fs::copy(icon_source, &plan.icon).map_err(|e| io_err("copy icon", icon_source, e))?;
-    let plist = render_info_plist(version, BUNDLE_ID);
+    let plist = render_info_plist_named(version, bundle_id, display_name);
     fs::write(&plan.plist, plist).map_err(|e| io_err("write", &plan.plist, e))?;
     run_checked(
         runner,
@@ -151,6 +153,7 @@ pub fn assemble(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::plist::BUNDLE_ID;
     use crate::runner::fake::{RecordingRunner, fail};
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -222,7 +225,17 @@ mod tests {
         fs::write(&icon, b"icns").unwrap();
         let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| None);
-        assemble(&mut runner, &plan, &binary, &strings, &icon, "9.8.7").unwrap();
+        assemble(
+            &mut runner,
+            &plan,
+            &binary,
+            &strings,
+            &icon,
+            "9.8.7",
+            BUNDLE_ID,
+            "Vexel",
+        )
+        .unwrap();
         assert_eq!(
             runner.calls,
             [
@@ -254,7 +267,17 @@ mod tests {
         }
         let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| None);
-        assemble(&mut runner, &plan, &binary, &strings, &icon, "1.0.0").unwrap();
+        assemble(
+            &mut runner,
+            &plan,
+            &binary,
+            &strings,
+            &icon,
+            "1.0.0",
+            BUNDLE_ID,
+            "Vexel",
+        )
+        .unwrap();
         assert_eq!(fs::read(&plan.icon).unwrap(), b"icns-bytes");
         assert!(plan.icon.ends_with("Contents/Resources/AppIcon.icns"));
         fs::remove_dir_all(&dir).unwrap();
@@ -269,7 +292,17 @@ mod tests {
         let icon = dir.join("AppIcon.icns");
         let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| None);
-        let error = assemble(&mut runner, &plan, &binary, &strings, &icon, "1.0.0").unwrap_err();
+        let error = assemble(
+            &mut runner,
+            &plan,
+            &binary,
+            &strings,
+            &icon,
+            "1.0.0",
+            BUNDLE_ID,
+            "Vexel",
+        )
+        .unwrap_err();
         assert!(error.contains("scripts/make_icon.py"), "{error}");
         assert!(runner.calls.is_empty());
         assert!(!plan.app.exists());
@@ -286,7 +319,17 @@ mod tests {
         fs::write(&icon, b"icns").unwrap();
         let plan = plan(&dir.join("out"), &icon).unwrap();
         let mut runner = RecordingRunner::new(|_| Some(fail("no identity")));
-        let error = assemble(&mut runner, &plan, &binary, &strings, &icon, "1.0.0").unwrap_err();
+        let error = assemble(
+            &mut runner,
+            &plan,
+            &binary,
+            &strings,
+            &icon,
+            "1.0.0",
+            BUNDLE_ID,
+            "Vexel",
+        )
+        .unwrap_err();
         assert!(error.contains("codesign") && error.contains("no identity"));
         assert_eq!(runner.calls.len(), 1);
         fs::remove_dir_all(&dir).unwrap();

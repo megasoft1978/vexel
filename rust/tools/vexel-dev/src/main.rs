@@ -84,12 +84,19 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
             );
             run_checked(runner, &invocation).map(|_| ())
         }
-        Command::Bundle { out, icon } => {
+        Command::Bundle {
+            out,
+            icon,
+            bundle_id,
+            display_name,
+        } => {
             let cargo = toolchain_and_cache(runner, &root)?;
             let out = out_dir(&root, out)?;
             let icon = icon.unwrap_or_else(|| root.join(bundle::ICON_SOURCE));
             bundle::require_icon(&icon)?;
             let plan = bundle::plan(&out, &icon)?;
+            let bundle_id_env = env::var("VEXEL_BUNDLE_ID").ok();
+            let display_name_env = env::var("VEXEL_DISPLAY_NAME").ok();
             run_checked(runner, &bundle::release_build(&root, &cargo))?;
             bundle::assemble(
                 runner,
@@ -98,6 +105,14 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
                 &root.join("resources/en.lproj/Localizable.strings"),
                 &icon,
                 env!("CARGO_PKG_VERSION"),
+                bundle_id
+                    .as_deref()
+                    .or(bundle_id_env.as_deref())
+                    .unwrap_or(crate::plist::BUNDLE_ID),
+                display_name
+                    .as_deref()
+                    .or(display_name_env.as_deref())
+                    .unwrap_or("Vexel"),
             )?;
             println!("bundle: {}", plan.app.display());
             Ok(())
@@ -117,6 +132,13 @@ fn run(command: Command, runner: &mut dyn Runner) -> Result<(), String> {
             println!("install-smoke: pass");
             Ok(())
         }
+        Command::Notarize { path, execute } => release::notarize(
+            &path,
+            execute,
+            env::var("VEXEL_SIGN_IDENTITY").ok().as_deref(),
+            env::var("VEXEL_NOTARY_PROFILE").ok().as_deref(),
+            runner,
+        ),
     }
 }
 
