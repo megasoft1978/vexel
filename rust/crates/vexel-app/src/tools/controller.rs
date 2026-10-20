@@ -221,7 +221,7 @@ impl ToolController {
                     return Ok(Outcome::Ignored);
                 };
                 self.gesture = Gesture::None;
-                self.down(p, doc, map)
+                self.down(p, doc)
             }
             PointerInput::Move { x, y } => {
                 let Some(p) = map.to_doc(x, y) else {
@@ -315,21 +315,13 @@ impl ToolController {
         }
     }
 
-    fn down(
-        &mut self,
-        p: Point,
-        doc: &mut V1Document,
-        map: &dyn CanvasMap,
-    ) -> Result<Outcome, ToolError> {
+    fn down(&mut self, p: Point, doc: &mut V1Document) -> Result<Outcome, ToolError> {
         match self.tool {
             Tool::Select => {
                 self.validate_selection(doc);
                 if let Some(id) = self.selection.clone() {
                     if let Ok(bounds) = doc.geometry_bounds(&id) {
-                        let tol = map
-                            .to_doc(p.0 + 8.0, p.1 + 8.0)
-                            .map_or(8.0, |q| (q.0 - p.0).abs().max((q.1 - p.1).abs()));
-                        if let Some(handle) = handle_at(bounds, p, tol) {
+                        if let Some(handle) = handle_at(bounds, p) {
                             self.gesture = Gesture::Resize {
                                 id,
                                 bounds,
@@ -528,10 +520,12 @@ fn handle_points(b: (f64, f64, f64, f64)) -> [Point; 8] {
         (b.0, my),
     ]
 }
-fn handle_at(b: (f64, f64, f64, f64), p: Point, tol: f64) -> Option<usize> {
-    handle_points(b)
-        .iter()
-        .position(|h| (h.0 - p.0).abs() <= tol && (h.1 - p.1).abs() <= tol)
+fn handle_at(b: (f64, f64, f64, f64), p: Point) -> Option<usize> {
+    handle_points(b).iter().position(|h| {
+        let dx = (h.0 - p.0).abs();
+        let dy = (h.1 - p.1).abs();
+        dx <= 2.0 && dy <= 2.0
+    })
 }
 fn resize_bounds(b: (f64, f64, f64, f64), h: usize, p: Point) -> (f64, f64, f64, f64) {
     let (mut l, mut t, mut r, mut bot) = b;
