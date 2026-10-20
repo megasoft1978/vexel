@@ -22,6 +22,8 @@ mod svg_asset;
 mod svg_asset_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_reopen_native;
 mod timeline_edit;
 #[cfg(test)]
 mod timeline_edit_tests;

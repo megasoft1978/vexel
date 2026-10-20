@@ -27,6 +27,14 @@ pub fn timeline_text(open: bool, loop_seconds: f64) -> String {
     }
 }
 
+/// MCP popover line: the outcome of the most recent request.
+pub fn mcp_last_line(last: Option<&str>) -> String {
+    match last {
+        None => "Last request: none".to_owned(),
+        Some(text) => format!("Last request: {text}"),
+    }
+}
+
 /// Everything the chrome shows about the document, as plain data.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AppState {

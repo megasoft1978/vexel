@@ -53,7 +53,7 @@ const EMPTY: Rect = Rect {
     height: 0,
 };
 const SEGMENT_W: u32 = 88;
-const POPOVER: (u32, u32) = (288, 132);
+const POPOVER: (u32, u32) = (288, 156);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Button {

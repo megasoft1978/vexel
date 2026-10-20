@@ -454,6 +454,14 @@ pub fn draw_popover(c: &mut WidgetCanvas<'_>, l: &Layout, model: &Model) {
         12,
         FontWeight::Regular,
     );
+    text(
+        c,
+        &crate::chrome::mcp_last_line(model.mcp_last),
+        row(86, 20),
+        t.text_secondary,
+        11,
+        FontWeight::Regular,
+    );
     let mut s = WidgetDrawSpec::new(WidgetKind::ButtonSecondary, l.mcp_connect);
     s.label = Some("Connect");
     s.state = ControlState::Disabled;

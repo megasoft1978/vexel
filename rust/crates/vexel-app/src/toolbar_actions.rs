@@ -10,7 +10,10 @@
 //! `AccessPolicy`, then the finished file is renamed over the chosen path and
 //! the directory removed. SVG writes a temp sibling and renames it.
 
-use crate::animation::{driver::Driver, frame, job::ExportJob, playback::MonotonicClock};
+use crate::animation::{
+    driver::Driver, frame, job::ExportJob, native_export::NativeExportSource,
+    playback::MonotonicClock,
+};
 use crate::file_ui::FileUi;
 use crate::history;
 use crate::layout::Layout;
@@ -269,9 +272,7 @@ impl Exports {
         let result = match format {
             ExportFormat::Svg => write_svg(files.document(), &target).map(|()| "Exported SVG"),
             ExportFormat::Png => write_png(files.document_mut(), &target).map(|()| "Exported PNG"),
-            ExportFormat::Gif => self
-                .spawn_gif(files.document(), target)
-                .map(|()| "Exporting GIF"),
+            ExportFormat::Gif => self.spawn_gif(files.document(), target),
         };
         model.status = match result {
             Ok(done) => done,
@@ -282,7 +283,20 @@ impl Exports {
         };
     }
 
-    fn spawn_gif(&mut self, doc: &AppDocument, target: PathBuf) -> Result<(), &'static str> {
+    /// Native timeline: rendered and written synchronously. Otherwise the SMIL
+    /// animation renders on a worker. Returns the status line.
+    fn spawn_gif(
+        &mut self,
+        doc: &AppDocument,
+        target: PathBuf,
+    ) -> Result<&'static str, &'static str> {
+        if let Some(native) = NativeExportSource::from_document(doc) {
+            return write_native_gif(&native, target).map(|()| "Exported GIF");
+        }
+        self.spawn_smil_gif(doc, target).map(|()| "Exporting GIF")
+    }
+
+    fn spawn_smil_gif(&mut self, doc: &AppDocument, target: PathBuf) -> Result<(), &'static str> {
         let source = doc.source_bytes().map_err(|_| WRITE_FAILED)?;
         let scene = frame::decode(&source).map_err(|_| "Export could not read the animation")?;
         let duration = scene.loop_seconds();
@@ -313,6 +327,21 @@ impl Exports {
             }
         }
     }
+}
+
+/// Renders the native timeline into a private staging file, then publishes it.
+fn write_native_gif(native: &NativeExportSource, target: PathBuf) -> Result<(), &'static str> {
+    let gif = native
+        .export_gif()
+        .map_err(|_| "Export could not render the timeline")?;
+    let stage = Stage::create(&target)?;
+    let written = fs::File::create(&stage.file)
+        .and_then(|mut file| file.write_all(&gif.bytes).and_then(|()| file.sync_all()));
+    if written.is_err() {
+        stage.discard();
+        return Err(WRITE_FAILED);
+    }
+    stage.publish(&target)
 }
 
 /// Save-panel suggestion: the document name without its extension.

@@ -144,6 +144,7 @@ impl McpHost {
             } => self.add_element(app, |doc, id| {
                 doc.add_path_with_id(&d, &fill, &stroke, width, id)
             }),
+            Operation::Native(op) => crate::preview::native_timeline::apply(app, op),
             Operation::ExportSvg => export_svg(app),
             Operation::RenderPng {
                 path,

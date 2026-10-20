@@ -1,14 +1,15 @@
 #![forbid(unsafe_code)]
 
+mod mcp_pump;
+
 use std::{
     num::NonZeroUsize,
-    sync::mpsc::{self, Receiver},
+    sync::mpsc,
     thread,
     time::{Duration, Instant},
 };
 use vexel_app::animation::{
     driver::Driver,
-    job::ExportJob,
     keys::{self, playback_key},
     playback::MonotonicClock,
     stage,
@@ -18,12 +19,13 @@ use vexel_app::chrome::{self, AppState};
 use vexel_app::file_flow::{FlowOutcome, ShortcutDedup, action_for_tag};
 use vexel_app::file_ui::FileUi;
 use vexel_app::model::{self, DragPhase, Layout, Mode, Model, Target, Tool};
+use mcp_pump::McpPump;
 use vexel_app::motion::MotionAdapter;
 use vexel_app::native_animation::{TimelineSurface, host::NativeAnimationHost};
 use vexel_app::native_timeline::interaction::Phase as NativeTimelinePhase;
-use vexel_app::preview::{self, Operation, UiRequest};
+use vexel_app::preview;
 use vexel_app::project_session::shortcut_action;
-use vexel_app::session::{McpGrants, McpHost, McpOutcome, edit_shortcut};
+use vexel_app::session::{McpGrants, edit_shortcut};
 use vexel_app::toolbar_actions::{self, Exports};
 use vexel_app::tools::{Key, Outcome, PointerInput, ToolController};
 use vexel_app::{canvas, compose, overlay, preview_app, render, timeline};
@@ -109,15 +111,15 @@ fn run(
         .map_err(|_| "could not install the File menu")?;
     let mut doc = compose::DocumentView::new();
     let mut tools = ToolController::new();
-    let mcp_rx: Option<Receiver<UiRequest>> = if mcp {
+    let mcp_rx = if mcp {
         let (tx, rx) = mpsc::sync_channel(8);
         preview_app::start_server(tx)?;
         Some(rx)
     } else {
         None
     };
-    let mut mcp_host = McpHost::with_policy(grants.unwrap_or_default().policy());
-    let mut export: Option<ExportJob> = None;
+    let mut mcp_pump = McpPump::new(mcp_rx, grants.unwrap_or_default());
+    model.mcp = mcp_pump.idle_state();
     let mut exports = Exports::default();
     let mut driver = Driver::new(MonotonicClock::new());
     let mut native = NativeAnimationHost::new(MonotonicClock::new());
@@ -137,58 +139,8 @@ fn run(
             model.status = done;
             dirty = true;
         }
-        if let Some(done) = export.as_mut().and_then(ExportJob::poll) {
-            export = None;
-            model.status = if done.starts_with("Exported") {
-                "Exported GIF"
-            } else {
-                "GIF export failed"
-            };
+        if mcp_pump.poll(&mut files, &mut native, &mut driver, &mut tools, &mut model) {
             dirty = true;
-        }
-        if export.is_none() {
-            if let Some(UiRequest { operation, reply }) =
-                mcp_rx.as_ref().and_then(|rx| rx.try_recv().ok())
-            {
-                let opens = matches!(operation, Operation::Open { .. });
-                let handled = files.handle_mcp(&mut mcp_host, operation, &mut driver);
-                match handled {
-                    Ok(McpOutcome::Reply(json)) => {
-                        if opens {
-                            reset_animation_state(&mut native, &mut driver);
-                            // Selection ids belong to the replaced document.
-                            let tool = tools.tool();
-                            tools = ToolController::new();
-                            tools.set_tool(tool);
-                        }
-                        let _ = reply.send(Ok(json));
-                    }
-                    Ok(McpOutcome::Export {
-                        source,
-                        path,
-                        fps,
-                        duration,
-                    }) => {
-                        match ExportJob::spawn(
-                            source,
-                            mcp_host.policy().clone(),
-                            path.into(),
-                            fps,
-                            duration,
-                            reply.clone(),
-                        ) {
-                            Ok(job) => export = Some(job),
-                            Err(message) => {
-                                let _ = reply.send(Err(message));
-                            }
-                        }
-                    }
-                    Err(message) => {
-                        let _ = reply.send(Err(message));
-                    }
-                }
-                dirty = true;
-            }
         }
         if let Some(status) = files.tick_recovery(Instant::now()) {
             model.status = status.user_message();

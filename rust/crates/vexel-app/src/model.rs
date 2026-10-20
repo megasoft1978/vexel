@@ -111,6 +111,15 @@ impl McpState {
             Self::Active => "Handling a request",
         }
     }
+    /// Ready once directory grants exist; Active while a request or an
+    /// export it started is still in flight.
+    pub fn for_session(granted: bool, busy: bool) -> Self {
+        match (granted, busy) {
+            (false, _) => Self::Unavailable,
+            (true, false) => Self::Ready,
+            (true, true) => Self::Active,
+        }
+    }
 }
 
 /// Pointer phase for splitter drags (kept free of platform types).
@@ -132,6 +141,8 @@ pub struct Model {
     /// Document-derived text, refreshed by the shell from the open document.
     pub chrome: ChromeText,
     pub mcp: McpState,
+    /// Outcome of the most recent MCP request: `None` before any request.
+    pub mcp_last: Option<&'static str>,
     /// Panel sizes, collapsed sections, focus and popover (in memory only).
     pub ui: UiState,
     /// Animate footer: tracks, playback readout and interaction state.
@@ -155,6 +166,7 @@ impl Model {
             status: "",
             chrome: ChromeText::default(),
             mcp: McpState::Unavailable,
+            mcp_last: None,
             ui: UiState::default(),
             timeline: Timeline::default(),
             history: Availability::default(),
@@ -480,6 +492,22 @@ impl Model {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn mcp_state_transitions() {
+        assert_eq!(McpState::for_session(false, false), McpState::Unavailable);
+        assert_eq!(McpState::for_session(false, true), McpState::Unavailable);
+        assert_eq!(McpState::for_session(true, false), McpState::Ready);
+        assert_eq!(McpState::for_session(true, true), McpState::Active);
+        let mut model = Model::new(true);
+        assert_eq!(model.mcp, McpState::Unavailable);
+        assert_eq!(model.mcp_last, None);
+        model.mcp = McpState::for_session(true, false);
+        assert_eq!(model.mcp.label(), "MCP on");
+        model.mcp = McpState::for_session(true, true);
+        assert_eq!(model.mcp.label(), "MCP busy");
+        model.mcp_last = Some("Export needs an animation");
+        assert_eq!(model.mcp_last, Some("Export needs an animation"));
+    }
     #[test]
     fn standard_workbench_keeps_stage_dominant_and_footer_docked() {
         let draw = Layout::new(1280, 820, Mode::Draw).unwrap();

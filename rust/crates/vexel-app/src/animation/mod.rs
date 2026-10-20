@@ -12,6 +12,7 @@ pub mod job;
 pub mod keys;
 pub mod native_drawing;
 pub mod native_driver;
+pub mod native_export;
 pub mod native_frame;
 pub mod native_properties;
 pub mod native_stage;
@@ -24,6 +25,8 @@ pub mod strip;
 mod native_drawing_tests;
 #[cfg(test)]
 mod native_driver_tests;
+#[cfg(test)]
+mod native_export_tests;
 #[cfg(test)]
 mod native_properties_tests;
 #[cfg(test)]

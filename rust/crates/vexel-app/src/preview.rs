@@ -5,6 +5,8 @@ use vexel_v1_document::{V1Document, V1DocumentError};
 
 mod animation;
 mod args;
+#[path = "session/mcp_native.rs"]
+pub(crate) mod native_timeline;
 pub(crate) use animation::{
     animation_list_json, document_duration, validate_animation_fragment, validate_shape,
 };
@@ -84,6 +86,7 @@ pub enum Operation {
         width: f64,
     },
     ExportSvg,
+    Native(native_timeline::NativeOp),
     RenderPng {
         path: String,
         width: Option<u32>,
@@ -735,7 +738,10 @@ pub(super) fn parse_operation(
             validate_shape(shape)?;
             Ok(Operation::Add(shape))
         }
-        _ => Err("unsupported preview operation"),
+        _ => name
+            .strip_prefix("native_timeline_")
+            .and_then(|tool| native_timeline::parse(doc, args, tool))
+            .unwrap_or(Err("unsupported preview operation")),
     }
 }
 fn string_field(doc: &JsonDocument<'_>, obj: usize, key: &[u8]) -> Option<String> {
