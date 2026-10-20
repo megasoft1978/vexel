@@ -80,7 +80,12 @@ pub(crate) fn number_list(source: &[u8], span: XmlSpan, max: usize) -> Result<Ve
             start: span.offset,
             end,
         },
-        vexel_svg_values::ValueLimits::default(),
+        // Whole-document policy cap, as the decoder uses; the 16 MiB default
+        // rejected any number list located in a larger document.
+        vexel_svg_values::ValueLimits {
+            source_bytes: vexel_svg_values::MAX_POLICY_SOURCE_BYTES,
+            attributes: vexel_svg_values::MAX_POLICY_ATTRIBUTES,
+        },
     )
     .map_err(|e| map_value(e, span.offset))?;
     let mut out = Vec::new();
