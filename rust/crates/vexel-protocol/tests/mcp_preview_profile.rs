@@ -67,8 +67,9 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
     let tools = doc.object_get(result, b"tools").unwrap();
     // The 9 original preview tools plus the 6 routed by WO-RUST-V1-MCP-TOOLS-01
     // (document_open, attribute_set, element_delete, save, save_as, export_svg)
-    // plus render_png added by WO-RUST-V1-PNG-01, in declaration order.
-    assert_eq!(doc.token(tools).unwrap().child_count, 16);
+    // plus render_png added by WO-RUST-V1-PNG-01, plus the 6 native_timeline_*
+    // tools routed by the V1 native MCP slice, in declaration order.
+    assert_eq!(doc.token(tools).unwrap().child_count, 22);
     assert!(String::from_utf8_lossy(&listing).contains("render_png"));
     for (idx, name) in [
         "document_open",
@@ -85,6 +86,12 @@ fn live_preview_advertises_only_supported_tools_and_narrow_shapes() {
         "animation_list",
         "animation_add",
         "animation_control",
+        "native_timeline_get",
+        "native_timeline_add_property_track",
+        "native_timeline_set_loop",
+        "native_timeline_set_property_key",
+        "native_timeline_undo",
+        "native_timeline_redo",
         "export_animation",
         "export_svg",
     ]

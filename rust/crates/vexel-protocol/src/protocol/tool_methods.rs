@@ -39,27 +39,7 @@ pub(super) fn append_tool_call<B: ProtocolBackend + ?Sized, A: AsyncBackend + ?S
             None,
         );
     }
-    if session.live_preview
-        && ![
-            "document_list",
-            "document_info",
-            "element_add",
-            "undo",
-            "redo",
-            "animation_list",
-            "animation_add",
-            "animation_control",
-            "export_animation",
-            "document_open",
-            "attribute_set",
-            "element_delete",
-            "save",
-            "save_as",
-            "export_svg",
-            "render_png",
-        ]
-        .contains(&name.as_str())
-    {
+    if session.live_preview && !crate::tools::PREVIEW_TOOLS.contains(&name.as_str()) {
         return append_tool_error(out, doc, id, session.modern, "unknown tool", "unknown_tool");
     }
     if !session.live_preview && name == "animation_control" {

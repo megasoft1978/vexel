@@ -305,6 +305,33 @@ pub(super) const TOOLS: &[ToolSchema] = &[
     },
 ];
 
+/// Tools the live preview advertises and routes. The `tools/list` filter and
+/// the `tools/call` gate both read this list; `vexel-app` dispatches each one.
+pub(crate) const PREVIEW_TOOLS: &[&str] = &[
+    "document_list",
+    "document_info",
+    "element_add",
+    "undo",
+    "redo",
+    "animation_list",
+    "animation_add",
+    "animation_control",
+    "export_animation",
+    "document_open",
+    "attribute_set",
+    "element_delete",
+    "save",
+    "save_as",
+    "export_svg",
+    "render_png",
+    "native_timeline_get",
+    "native_timeline_add_property_track",
+    "native_timeline_set_property_key",
+    "native_timeline_set_loop",
+    "native_timeline_undo",
+    "native_timeline_redo",
+];
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ToolValidationError {
     UnknownTool,
@@ -328,26 +355,7 @@ pub(super) fn tool_schemas_for_preview(preview: bool) -> Result<Vec<u8>, Protoco
         .iter()
         .filter(|tool| {
             !(tool.name == "animation_control" && !preview)
-                && (!preview
-                    || matches!(
-                        tool.name,
-                        "document_list"
-                            | "document_info"
-                            | "element_add"
-                            | "undo"
-                            | "redo"
-                            | "animation_list"
-                            | "animation_add"
-                            | "animation_control"
-                            | "export_animation"
-                            | "document_open"
-                            | "attribute_set"
-                            | "element_delete"
-                            | "save"
-                            | "save_as"
-                            | "export_svg"
-                            | "render_png"
-                    ))
+                && (!preview || PREVIEW_TOOLS.contains(&tool.name))
         })
         .collect();
     for (index, tool) in selected.iter().enumerate() {
